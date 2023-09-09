@@ -16,12 +16,16 @@ struct GifImage: NSViewRepresentable {
     var isResizable: Bool = false
     var contentMode: ContentMode = .fill
     
-    init(_ gifName: String) {
+    var animates: Bool
+    
+    init(_ gifName: String, animates: Bool = true) {
         self.gifName = gifName
+        self.animates = animates
     }
     
-    init(contentsOf url: URL) {
+    init(contentsOf url: URL, animates: Bool = true) {
         self.gifUrl = url
+        self.animates = animates
     }
     
     func makeNSView(context: Context) -> NSImageView {
@@ -29,7 +33,7 @@ struct GifImage: NSViewRepresentable {
         
         nsView.canDrawSubviewsIntoLayer = true
         nsView.imageScaling = .scaleProportionallyUpOrDown
-        nsView.animates = true
+        nsView.animates = animates
         
         if let gifName = self.gifName {
             if let url = Bundle.main.url(forResource: gifName, withExtension: "gif") {
@@ -52,6 +56,7 @@ struct GifImage: NSViewRepresentable {
     }
     
     func updateNSView(_ nsView: NSImageView, context: Context) {
+        nsView.animates = animates
         updateModifiers(nsView)
     }
     
