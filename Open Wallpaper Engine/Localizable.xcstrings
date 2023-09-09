@@ -89,6 +89,9 @@
         }
       }
     },
+    "!!! Notice that this may affects performance !!!" : {
+
+    },
     "@haren724" : {
       "localizations" : {
         "zh-Hans" : {
@@ -254,6 +257,9 @@
           }
         }
       }
+    },
+    "Animates" : {
+
     },
     "Anti-aliasing" : {
       "localizations" : {
@@ -465,6 +471,9 @@
         }
       }
     },
+    "Come out soon..." : {
+
+    },
     "Comment" : {
       "localizations" : {
         "zh-Hans" : {
@@ -554,6 +563,9 @@
           }
         }
       }
+    },
+    "Description..." : {
+
     },
     "Developer" : {
       "localizations" : {
@@ -906,6 +918,9 @@
           }
         }
       }
+    },
+    "Internal" : {
+
     },
     "Keep Running" : {
       "localizations" : {
@@ -1922,6 +1937,15 @@
         }
       }
     },
+    "Third-party" : {
+
+    },
+    "This plugin enables animation of GIF thumbnail images in wallpaper explorer" : {
+
+    },
+    "Those all settings above don't have to be saved for taking effect." : {
+
+    },
     "Titles per page" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2291,6 +2315,9 @@
           }
         }
       }
+    },
+    "􀄪 You can toggle this to have a preview" : {
+
     }
   },
   "version" : "1.0"
