@@ -26,7 +26,7 @@ struct WallpaperPreview: SubviewOfContentView {
     }
     
     var wallpaperSize: String {
-        guard let sizeBytes = try? wallpaperViewModel.currentWallpaper.wallpaperDirectory.directoryTotalAllocatedSize(includingSubfolders: true) 
+        guard let sizeBytes = try? wallpaperViewModel.currentWallpaper.wallpaperDirectory.directoryTotalAllocatedSize(includingSubfolders: true)
         else {
             return "??? MB"
         }
@@ -37,7 +37,7 @@ struct WallpaperPreview: SubviewOfContentView {
         VStack {
             ScrollView {
                 VStack(spacing: 16) {
-                    VStack {
+                    VStack(spacing: 10) {
                         GifImage(contentsOf: { (url: URL) in
                             if let selectedProject = try? JSONDecoder()
                                 .decode(WEProject.self, from: Data(contentsOf: url.appending(path: "project.json"))) {
@@ -48,8 +48,9 @@ struct WallpaperPreview: SubviewOfContentView {
                             .resizable()
                             .aspectRatio(contentMode: .fit)
                             .background(Color(nsColor: NSColor.controlBackgroundColor))
-                            .clipShape(RoundedRectangle(cornerRadius: 16.0))
                             .frame(width: 280, height: 280)
+                            .clipShape(RoundedRectangle(cornerRadius: 16.0))
+                            .border(Color.white, width: 4)
                         HStack {
                             if isEditingId == "title" {
                                 TextField("Wallpaper Title", text: $title)
