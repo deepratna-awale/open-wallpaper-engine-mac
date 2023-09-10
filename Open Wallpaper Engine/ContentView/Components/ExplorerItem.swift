@@ -40,14 +40,14 @@ struct ExplorerItem: SubviewOfContentView {
                 .multilineTextAlignment(.center)
                 .foregroundStyle(Color(white: viewModel.imageScaleIndex == index ? 0.9 : 0.7))
             
-            Spacer()
-                .onHover { onHover in
-                    if onHover {
-                        viewModel.imageScaleIndex = index
-                    } else {
-                        viewModel.imageScaleIndex = -1
-                    }
-                }
+//            Spacer()
+//                .onHover { onHover in
+//                    if onHover {
+//                        viewModel.imageScaleIndex = index
+//                    } else {
+//                        viewModel.imageScaleIndex = -1
+//                    }
+//                }
         }
         .selected(wallpaper.wallpaperDirectory == wallpaperViewModel.currentWallpaper.wallpaperDirectory)
         .border(Color.accentColor, width: viewModel.imageScaleIndex == index ? 1.0 : 0)
