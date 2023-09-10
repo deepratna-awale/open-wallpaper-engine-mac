@@ -698,6 +698,7 @@
       }
     },
     "Favorite" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -718,6 +719,7 @@
       }
     },
     "File Size" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -963,6 +965,7 @@
       }
     },
     "Last Updated" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1133,6 +1136,7 @@
       }
     },
     "Name" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1527,6 +1531,7 @@
       }
     },
     "Rating" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1837,6 +1842,9 @@
         }
       }
     },
+    "Sort By" : {
+
+    },
     "Source" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1878,6 +1886,7 @@
       }
     },
     "Subscription Date" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
