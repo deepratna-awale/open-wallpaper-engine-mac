@@ -77,7 +77,7 @@ struct WEProject: Codable, Equatable, Hashable {
     
     static let invalid = Self(file: "",
                               preview: "",
-                              title: "Error", 
+                              title: "Error",
                               type: "video")
 }
 
@@ -96,6 +96,12 @@ struct WEWallpaper: Codable, RawRepresentable, Identifiable {
     
     var wallpaperDirectory: URL
     var project: WEProject
+    
+    var wallpaperSize: Int {
+        guard let sizeBytes = try? self.wallpaperDirectory.directoryTotalAllocatedSize(includingSubfolders: true)
+        else { return 0 }
+        return sizeBytes
+    }
     
     init(using project: WEProject, where url: URL) {
         self.wallpaperDirectory = url
