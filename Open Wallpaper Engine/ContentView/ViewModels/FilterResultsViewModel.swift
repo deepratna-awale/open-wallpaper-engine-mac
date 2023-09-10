@@ -41,19 +41,18 @@ struct FRType: FilterResultsModel {
         "Scene",
         "Video",
         "Web",
-        "Application",
-        "Wallpaper",
-        "Preset"
+        "Application"
+//        "Wallpaper",
+//        "Preset"
     ]
-    
     static let scene            = FRType(rawValue: 1 << 0)
     static let video            = FRType(rawValue: 1 << 1)
     static let web              = FRType(rawValue: 1 << 2)
     static let application      = FRType(rawValue: 1 << 3)
-    static let wallpaper        = FRType(rawValue: 1 << 4)
-    static let preset           = FRType(rawValue: 1 << 5)
+//    static let wallpaper        = FRType(rawValue: 1 << 4)
+//    static let preset           = FRType(rawValue: 1 << 5)
     
-    static let all: FRType      = [.scene, .video, .web, .application, .wallpaper, .preset]
+    static let all: FRType      = [.scene, .video, .web, .application/*, .wallpaper, .preset*/]
     static let none: FRType     = []
 }
 
