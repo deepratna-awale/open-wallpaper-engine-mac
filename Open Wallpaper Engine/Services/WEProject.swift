@@ -34,9 +34,23 @@ struct WEProjectGeneral: Codable, Equatable, Hashable {
     var properties: WEProjectProperties
 }
 
-enum WorkshopId: Codable, Equatable, Hashable {
+enum WorkshopId: Codable, Equatable, Hashable, RawRepresentable {
     case int(Int)
     case string(String)
+    
+    var rawValue: String {
+        switch self {
+        case .int(let x):
+            return String(x)
+        case .string(let x):
+            return x
+        }
+    }
+    
+    init?(rawValue: String) {
+        guard rawValue.allSatisfy({ $0.isASCII && $0.isNumber }) else { return nil }
+        self = .string(rawValue)
+    }
     
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
@@ -63,6 +77,7 @@ enum WorkshopId: Codable, Equatable, Hashable {
 }
 
 struct WEProject: Codable, Equatable, Hashable {
+    var approved: Bool?
     var contentrating: String?
     var description: String?
     var file: String
@@ -72,6 +87,7 @@ struct WEProject: Codable, Equatable, Hashable {
     var title: String
     var visibility: String?
     var workshopid: WorkshopId?
+    var workshopurl: String?
     var type: String
     var version: Int?
     
