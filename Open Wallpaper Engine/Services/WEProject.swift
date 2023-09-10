@@ -138,12 +138,20 @@ struct WEWallpaper: Codable, RawRepresentable, Identifiable {
     }
 }
 
-enum WEWallpaperSortingMethod: String {
-    case name, rating, likes, size, dateSubscribed, dateAdded
+enum WEWallpaperSortingMethod: String, CaseIterable, Identifiable {
+    
+    var id: Self { self }
+    
+    case name = "Name"
+    case rating = "Rating"
+//    case favorite = "Favorite"
+    case fileSize = "File Size"
+//    case subDate = "Subscription Date"
+//    case lastUpdated = "Last Updated"
 }
 
-enum WEWallpaperSortingSequence: String, CaseIterable {
-    case increased, decreased
+enum WEWallpaperSortingSequence: Int {
+    case decrease = 0, increase = 1
 }
 
 enum WEInitError: Error {
