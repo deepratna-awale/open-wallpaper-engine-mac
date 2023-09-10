@@ -11,7 +11,7 @@ import UniformTypeIdentifiers
 
 class ContentViewModel: ObservableObject, DropDelegate {
     @AppStorage("SortingBy") var sortingBy: WEWallpaperSortingMethod = .name
-    @AppStorage("SortingSequence") var sortingSequence: WEWallpaperSortingSequence = .increased
+    @AppStorage("SortingSequence") var sortingSequence: WEWallpaperSortingSequence = .increase
     
     @AppStorage("FRShowOnly")                   public var showOnly                     =                   FRShowOnly.all
     @AppStorage("FRType")                       public var type                         =                       FRType.all
@@ -48,7 +48,9 @@ class ContentViewModel: ObservableObject, DropDelegate {
     
     @Published var isUnsubscribeConfirming = false
     
-    @AppStorage("WallpapersPerPage") var wallpapersPerPage: Int = 2
+    @Published var searchText = ""
+    
+    @AppStorage("WallpapersPerPage") var wallpapersPerPage: Int = 50
     
     var importAlertError: WPImportError? = nil
     
@@ -92,8 +94,63 @@ class ContentViewModel: ObservableObject, DropDelegate {
         })
     }
     
+    private var searchedWallpapers: [WEWallpaper] {
+        allWallpapers.filter { wallpaper in
+            let project = wallpaper.project
+            let searchText = searchText.lowercased()
+            
+            guard !searchText.isEmpty else { return true }
+            
+            guard !project.title.lowercased().contains(searchText) else { return true }
+            
+            guard !project.type.lowercased().contains(searchText) else { return true }
+            
+            if let description = project.description?.lowercased() {
+                guard !description.contains(searchText) else { return true }
+            }
+            
+            if let tags = project.tags {
+                guard !tags.allSatisfy({ $0.lowercased().contains(searchText) })
+                else { return true }
+            }
+            
+            if let workshopid = project.workshopid {
+                guard !workshopid.rawValue.contains(searchText) else { return true }
+            }
+            
+            guard !wallpaper.wallpaperDirectory.lastPathComponent
+                .lowercased()
+                .contains(searchText) else { return true }
+            
+            return false
+        }
+    }
+    
     private var filteredWallpapers: [WEWallpaper] {
-        let result = allWallpapers.filter { wallpaper in
+        searchedWallpapers.filter { wallpaper in
+
+            // Show Only
+            var showOnly = FRShowOnly.none
+            if let approved = wallpaper.project.approved, approved { showOnly.insert(.approved) }
+            guard self.showOnly.contains(showOnly) else { return false }
+            
+            // Type
+            var type = FRType.none
+            switch wallpaper.project.type.lowercased() {
+            case "video":
+                type = .video
+            case "scene":
+                type = .scene
+            case "web":
+                type = .web
+            case "application":
+                type = .application
+            default:
+                break
+            }
+            guard self.type.contains(type) else { return false }
+            
+            // 
             
             // Age Rating
             var ageRating: FRAgeRating
@@ -107,14 +164,122 @@ class ContentViewModel: ObservableObject, DropDelegate {
             default:
                 ageRating = .none
             }
-            return self.ageRating.contains(ageRating)
+            guard self.ageRating.contains(ageRating) else { return false }
+            
+            // Tags
+            var tags = FRTag.none
+            var transformedTags: [FRTag] = []
+            if let someTags = wallpaper.project.tags {
+//                tags = someTags.map { tag in
+//                    switch tag.lowercased() {
+//                    case "abstract":
+//                        return FRTag.abstract
+//                    case "animal":
+//                        return FRTag.animal
+//                    case "anime":
+//                        return FRTag.anime
+//                    case "cartoon":
+//                        return FRTag.cartoon
+//                    case "cgi":
+//                        return FRTag.cgi
+//                    case "cyberpunk":
+//                        return FRTag.cyberpunk
+//                    case "fantasy":
+//                        return FRTag.fantasy
+//                    case "game":
+//                        return FRTag.game
+//                    case "girls":
+//                        return FRTag.girls
+//                    case "guys":
+//                        return FRTag.guys
+//                    case "landscape":
+//                        return FRTag.landscape
+//                    case "medieval":
+//                        return FRTag.medieval
+//                    case "memes":
+//                        return FRTag.memes
+//                    case "mmd":
+//                        return FRTag.mmd
+//                    case "music":
+//                        return FRTag.music
+//                    case "nature":
+//                        return FRTag.nature
+//                    case "pixelart":
+//                        return FRTag.pixelArt
+//                    case "relaxing":
+//                        return FRTag.relaxing
+//                    case "retro":
+//                        return FRTag.retro
+//                    case "sci-fi":
+//                        return FRTag.sciFi
+//                    case "sports":
+//                        return FRTag.sports
+//                    case "technology":
+//                        return FRTag.technology
+//                    case "television":
+//                        return FRTag.television
+//                    case "vehicle":
+//                        return FRTag.vehicle
+//                    default:
+//                        return FRTag.unspecifiedGenre
+//                    }
+//                }
+            } else {
+                tags = .none
+            }
+            guard self.tag != .none else { return false }
+            
+            // Finish Filtering
+            return true
         }
-        return result
+    }
+    
+    private var sortedWallpapers: [WEWallpaper] {
+        filteredWallpapers.sorted {
+            switch sortingBy {
+            case .name:
+                if $0.project.title <= $1.project.title,
+                      sortingSequence == .increase
+                 { return false }
+                
+                if $0.project.title >= $1.project.title,
+                      sortingSequence == .decrease
+                 { return false }
+                
+                return true
+            case .rating:
+                if $0.project.contentrating ?? "0" <= $1.project.contentrating ?? "0",
+                      sortingSequence == .increase
+                 { return false }
+                
+                if $0.project.contentrating ?? "0" >= $1.project.contentrating ?? "0",
+                      sortingSequence == .decrease
+                 { return false }
+                
+                return true
+//            case .favorite:
+//                return false
+            case .fileSize:
+                if $0.wallpaperSize <= $1.wallpaperSize,
+                      sortingSequence == .increase
+                 { return false }
+                
+                if $0.project.title >= $1.project.title,
+                      sortingSequence == .decrease
+                 { return false }
+                
+                return true
+//            case .subDate:
+//                return false
+//            case .lastUpdated:
+//                return false
+            }
+        }
     }
     
     /// Provide wallpapers information for UI, being filtered by FilterResults and divided in pages
     public var autoRefreshWallpapers: [WEWallpaper] {
-        filteredWallpapers
+        sortedWallpapers
 //        let startIndex = (self.currentPage - 1) * self.wallpapersPerPage
 //        let filteredWallpapers = self.filteredWallpapers
 //        let clip = filteredWallpapers[startIndex..<filteredWallpapers.endIndex]
