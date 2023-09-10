@@ -46,7 +46,7 @@ struct WallpaperExplorer: SubviewOfContentView {
                                 ExplorerGlobalMenu(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel)
                             }
                             .animation(.spring(), value: viewModel.imageScaleIndex)
-                            .animation(.spring(), value: wallpaperViewModel.currentWallpaper.rawValue)
+//                            .animation(.spring(), value: wallpaperViewModel.currentWallpaper.rawValue)
                     }
                 }
                 .padding(.trailing)
