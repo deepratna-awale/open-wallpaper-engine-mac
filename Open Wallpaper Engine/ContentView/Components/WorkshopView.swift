@@ -78,6 +78,12 @@ private struct SteamCmdNotInstalledView: View {
             }
             .buttonStyle(.bordered)
 
+            if let error = steamCmd.pathError {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
+
             Button("Re-detect") {
                 steamCmd.detectSteamCmd()
             }

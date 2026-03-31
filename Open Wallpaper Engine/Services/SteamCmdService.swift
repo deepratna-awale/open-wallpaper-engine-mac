@@ -94,9 +94,21 @@ class SteamCmdService: ObservableObject {
 
         let homeDir = FileManager.default.homeDirectoryForCurrentUser.path
         let searchPaths = [
+            // Homebrew / system installs
             "/usr/local/bin/steamcmd",
             "/opt/homebrew/bin/steamcmd",
             "/usr/bin/steamcmd",
+            // Steam client / SDK locations
+            "\(homeDir)/Library/Application Support/Steam/steamcmd",
+            "\(homeDir)/Library/Application Support/Steam/steamcmd/steamcmd",
+            "\(homeDir)/Library/Application Support/Steam/steamcmd.sh",
+            // Standalone SteamCMD package (common extract locations)
+            "\(homeDir)/steamcmd/steamcmd.sh",
+            "\(homeDir)/steamcmd/steamcmd",
+            "\(homeDir)/Downloads/steamcmd/steamcmd.sh",
+            "\(homeDir)/Downloads/steamcmd/steamcmd",
+            "/Applications/steamcmd/steamcmd.sh",
+            "/Applications/steamcmd/steamcmd",
             "\(homeDir)/Projects/SteamSDK/tools/ContentBuilder/builder_osx/steamcmd",
         ]
 
@@ -132,11 +144,22 @@ class SteamCmdService: ObservableObject {
 
     var isInstalled: Bool { steamCmdPath != nil }
 
+    @Published var pathError: String?
+
     func setCustomPath(_ path: String) {
-        if FileManager.default.isExecutableFile(atPath: path) {
-            UserDefaults.standard.set(path, forKey: "SteamCmdPath")
-            steamCmdPath = path
+        guard FileManager.default.fileExists(atPath: path) else {
+            pathError = "File not found at selected path."
+            return
         }
+        // Make executable if needed (e.g. steamcmd.sh from Steam package)
+        if !FileManager.default.isExecutableFile(atPath: path) {
+            try? FileManager.default.setAttributes(
+                [.posixPermissions: 0o755], ofItemAtPath: path
+            )
+        }
+        pathError = nil
+        UserDefaults.standard.set(path, forKey: "SteamCmdPath")
+        steamCmdPath = path
     }
 
     /// Attempt login with username and password. Steam Guard code is optional.
