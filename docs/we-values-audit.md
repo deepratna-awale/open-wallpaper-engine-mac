@@ -332,6 +332,24 @@ Scripts see the same values (`SceneScriptSceneDescriber`). Tests: `WETextDefault
 
 The recordings' numbers weren't in the brief, so these are listed for comparison: any that differs is a mismatch to fix.
 
+**7.13 Texture resolution, and `quarter` — WE has no quarter; `auto` fixed for sized scenes.** Captures of 3270035750 at `resolution` full, half and quarter (tools/peer README, batch 3, item 7: shared GPU memory full 707 MB, half 327 MB; quarter's reading failed).
+- **The settings offer three values.** `ui/dist/scripts/scripts.js` `textureResolutionOptions`: High Quality (`full`), High Performance (`half`) and Automatic (`auto`). Ours has the same labels. WE's presets (`getQualityPreset`) all use `full`, and so do ours.
+- **`quarter` is `auto`.** `wallpaper64.exe` has no `quarter` string. It reads `general.resolution` with `""` as the default (0x1401155b3), then compares the value with `full` (0x1401155f6) and `half` (0x14011560e) only. Any other value sets engine flag 0x10, which is `auto` (0x140115629). That covers `auto`, a missing key and a hand-written `quarter`; WE keeps `quarter` in `config.json` because the UI only stores the string. The reduction is 1 + a bool (0x140187e37…0x140187e3c), so it can't be 4, and the `.tex` loader skips at most one mipmap.
+  - The stills agree. The Laplacian variance of the lace crops (Nami's bodice, her stocking, Robin's lace and Boa's stocking) is:
+    - full: 2370, 976, 2646 and 965
+    - quarter: 2253, 1006, 2628 and 810
+    - half: 1100, 533, 1267 and 415
+  - So quarter is as sharp as full. Its `auto` doesn't reduce this 1920 × 1080 scene on a 1920 × 1080 display (see the next point). `half` also passes `-halfresolution` to `webwallpaper64.exe` (0x14011a681…0x14011a729; only `half`, not `auto`).
+- **`auto` depends on the scene — fixed.** 0x14017e6f0 first checks engine flag 0x400, which is set at load when `general.orthogonalprojection` has a nonzero width and height (0x1401875b5…0x14018768a).
+  - With the flag, `auto` reduces when the scene's width × height is more than 3.9 × the window's pixels (0x140492848; the window is `g_Screen`'s size, 0x1400d84eb). A 3840 × 2160 scene on a 1080p display reduces. A 1920 × 1080 scene never reduces, even on a small display.
+  - Without the flag (a perspective scene), `auto` reduces below 0.95 × 1080p, as before.
+  - Ours only applied the window rule. `TextureReduction.factor(_:outputPixels:sceneSize:)` now applies both, with the scene's size from `TextureReduction.orthographicSize(of:)`.
+  - An `orthogonalprojection` with `auto: true` also sets the flag (0x140187565), but its size stays 0, so `auto` never reduces that scene; ours does the same (`WESceneProjection.orthographicAuto`).
+- **Our half against WE's (headless, `WEReferenceComparisonTests`, `texres_*` captures).** Colours match; mean luma is 142.6 for WE and 142.3 for ours.
+  - Our half has lower lace variance than our full, as WE's does: 920/2085, 474/975, 889/2297 and 523/973. WE's are 1100/2370, 533/976, 1267/2646 and 415/965.
+  - SSIM is 0.69 for half and 0.91 for full; the lower half score comes mostly from the figures' bob phase. `texres_half/still2` is a frame without the side figures, so it isn't ranked.
+- Tests: `TextureReductionTests` (both `auto` rules, the flag's both-sides rule, and WE's config values including `quarter`).
+
 ## Tests
 
 `OpenWallpaperEngineTests/WEAuthoredValuesTests.swift`:
