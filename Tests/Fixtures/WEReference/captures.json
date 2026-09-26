@@ -25,7 +25,7 @@
     {
       "id": "3270035750",
       "title": "One piece girls",
-      "focus": "Tube-light bands: the three vertical coloured gradients behind the figures. The figures bob (Nami about ±12 px in WE's clip), so their phase differs.",
+      "focus": "Tube-light bands: the three vertical coloured gradients behind the figures. The figures bob (Nami about ±12 px in WE's clip), so their phase differs. texres_*: WE's `resolution` full, half and quarter (which WE reads as auto: full on this 1920×1080 scene); texres_half's still2 lacks the side figures (a transition frame).",
       "regions": [
         {
           "name": "pink band, bottom",
@@ -44,6 +44,19 @@
         {
           "folder": "default",
           "localTime": "15:15"
+        },
+        {
+          "folder": "texres_full",
+          "textureResolution": "full"
+        },
+        {
+          "folder": "texres_half",
+          "textureResolution": "half",
+          "unreliable": ["still2.png"]
+        },
+        {
+          "folder": "texres_quarter",
+          "textureResolution": "quarter"
         }
       ]
     },

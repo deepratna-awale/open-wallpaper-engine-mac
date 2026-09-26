@@ -80,6 +80,7 @@ final class WEReferenceComparisonTests: XCTestCase {
                 return WEReferenceRenderer.Shot(time: still.time, cursor: cursor ?? SIMD2(Double(size.x) / 2, Double(size.y) / 2))
             }
             let renderer = WEReferenceRenderer(directory: directory, project: project, settings: Self.settings(capture),
+                                               textureResolution: GSTextureResolutionQuality(weConfigValue: capture.textureResolution ?? "full"),
                                                storage: storage, localTime: capture.localTime)
             let frames = try renderer.render(shots)
             for (still, frame) in zip(stills, frames) {
@@ -112,14 +113,14 @@ final class WEReferenceComparisonTests: XCTestCase {
     }
 
     /// WE's settings for the captures (tools/peer/README.md): the user's config (medium preset,
-    /// post-processing on, reflections, full textures) with the capture's post-processing, volumetrics and shadows.
+    /// post-processing on, reflections, full textures) with the capture's post-processing, volumetrics and shadows;
+    /// the texture resolution is resolved by the renderer (`WEReferenceRenderer.textureResolution`).
     /// WE has no particle budget.
     private static func settings(_ capture: WEReferenceConfig.Capture) -> SceneRenderSettings {
         var settings = SceneRenderSettings()
         settings.postProcessing = .enabled
         settings.reflection = true
         settings.particleBudget = .unlimited
-        settings.textureReduction = 1
         // WE's own detail, whatever the app's default, one pixel per point.
         settings.sceneDetail = .full
         settings.renderResolution = .native

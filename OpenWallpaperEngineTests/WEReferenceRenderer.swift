@@ -21,6 +21,9 @@ struct WEReferenceRenderer {
     let directory: URL
     let project: WEProject
     let settings: SceneRenderSettings
+    /// WE's `resolution` setting; its texture reduction is resolved for the scene on the
+    /// 1920×1080 display, as WE resolves it at load (`TextureReduction`).
+    var textureResolution = GSTextureResolutionQuality.highQuality
     /// Where scripts keep their storage.
     let storage: URL
     /// The capture's wall-clock time at the first shot (`WEReferenceLocalTime`), if known.
@@ -33,6 +36,9 @@ struct WEReferenceRenderer {
         let restoreTime = localTime.map(WEReferenceLocalTime.set) ?? {}
         defer { restoreTime() }
         let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        var settings = settings
+        settings.textureReduction = TextureReduction.factor(textureResolution, outputPixels: SIMD2<Float>(Self.size),
+                                                             sceneSize: model.textureReductionSceneSize)
         model.setRenderSettings(settings)
         let content = try XCTUnwrap(model.metalContent(), "\(directory.lastPathComponent): no content")
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())

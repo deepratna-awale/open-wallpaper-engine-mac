@@ -67,6 +67,9 @@ struct WEReferenceConfig: Decodable {
         var shadows: String?
         /// WE's `postprocessing` setting (`GSPostProcessingQuality` raw value); enabled when absent.
         var postProcessing: String?
+        /// WE's `resolution` setting as its config holds it (`full`, `half`, anything else is
+        /// `auto`: `GSTextureResolutionQuality(weConfigValue:)`); full when absent.
+        var textureResolution: String?
         /// Stills; WE's two, 10 s and 12 s after the wallpaper opened, when absent.
         var stills: [Still]?
         /// Another capture of the item whose first still is the baseline for this one's: the
