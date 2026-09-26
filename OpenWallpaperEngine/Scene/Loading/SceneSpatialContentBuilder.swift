@@ -13,6 +13,7 @@ struct SceneSpatialContentBuilder {
         var content = SceneSpatialContent()
         content.camera = SceneCameraSettings(scene.general, in: context)
         content.drawOrder = SceneDrawOrderMode(content.camera)
+        content.transforms = SceneTransformHierarchy3D(objects: scene.objects)
         if let eye = scene.camera.eye { content.staticEye = Self.vector(eye) }
         if let center = scene.camera.center { content.staticCenter = Self.vector(center) }
         if let up = scene.camera.up { content.staticUp = Self.vector(up) }

@@ -56,5 +56,47 @@ struct SceneObjectMotion {
                                    tilt: angles.map { SIMD2($0.x, $0.y) } ?? base.tilt)
     }
 
+    /// The object's own 3D transform this frame, for the 3D hierarchy (`SceneTransformHierarchy3D`):
+    /// the same precedence as `local` (scripts, then timelines, then authored moved by user
+    /// bindings), with every component. `authored` is the object's node in the 3D hierarchy: it
+    /// carries `origin.z`, `scale.z` and WE's own defaults, which the 2D values this motion was
+    /// built with (`origin`, `scale`, `angle`, `tilt`) may not (a fullscreen layer's placement,
+    /// a root's centring in an orthographic scene), so only the user bindings' change since the
+    /// build is applied to it. A script or timeline writes all three components of a field.
+    func local3D(authored: SceneLocalTransform3D, animation: SceneObjectAnimation? = nil,
+                 script: SceneScriptObjectState? = nil, scriptValues: Bool = true) -> SceneLocalTransform3D {
+        let owned = scriptValues ? script : nil
+        let base = bindings.isEmpty ? authored : Self.bound(authored, by: bindings, in: LiveSceneValueContext())
+        return SceneLocalTransform3D(origin: owned?.vector3(.origin) ?? animation?.origin ?? base.origin,
+                                     scale: owned?.vector3(.scale) ?? animation?.scale ?? base.scale,
+                                     angles: owned?.vector3(.angles) ?? animation?.angles ?? base.angles)
+    }
+
+    /// `value` moved by the user bindings' change since the build, as `SceneLayerBindings` moves
+    /// the 2D values: origin and angles by the difference, scale by the ratio.
+    static func bound(_ value: SceneLocalTransform3D, by bindings: SceneLayerBindings,
+                      in context: SceneValueContext) -> SceneLocalTransform3D {
+        var result = value
+        for field in [SceneObjectValueField.origin, .angles, .scale] {
+            guard let binding = bindings.fields[field] else { continue }
+            let now = field.resolve(binding.source, in: context).vec3
+            let built = binding.built.vec3
+            guard now != built else { continue }
+            switch field {
+            case .origin: result.origin += now - built
+            case .angles: result.angles += now - built
+            default:
+                for index in 0..<3 {
+                    if built[index] != 0 {
+                        result.scale[index] *= now[index] / built[index]
+                    } else if result.scale[index] == 0 {
+                        result.scale[index] = now[index]
+                    }
+                }
+            }
+        }
+        return result
+    }
+
     private static func xy(_ value: SIMD3<Float>) -> SIMD2<Float> { SIMD2(value.x, value.y) }
 }

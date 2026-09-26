@@ -13,4 +13,7 @@ struct SceneSpatialContent: Equatable {
     var cameraLayers: [SceneCameraLayerObject] = []
     var models: [SceneModelObject] = []
     var drawOrder = SceneDrawOrderMode.sceneOrder
+    /// Every object's authored 3D transform, parent and bone attachment, with WE's defaults
+    /// (`SceneTransformHierarchy3D`): the model matrices of a perspective scene.
+    var transforms = SceneTransformHierarchy3D.empty
 }
