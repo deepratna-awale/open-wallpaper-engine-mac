@@ -9,7 +9,7 @@ struct WEModel: Codable {
     /// Util models (solidlayer): the material has no texture; the layer is a flat `color` quad.
     var solidlayer: Bool?
     var material: String?    // path to material JSON
-    var puppet: String?      // path to a Puppet Warp rig (.mdl); unsupported, rendered as a flat atlas otherwise
+    var puppet: String?      // path to a Puppet Warp rig (.mdl): its mesh draws the image (`ScenePuppetPlan`)
 }
 
 struct WEMaterial: Decodable {

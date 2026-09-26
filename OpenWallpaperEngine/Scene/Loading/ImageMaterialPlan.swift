@@ -25,21 +25,66 @@ final class ImageMaterialPlan {
     /// Texture slots sampled with clamp-to-edge (the `.tex` ClampUVs flag, or the object's
     /// `clampuvs` for the layer image); every other slot repeats, as in WE.
     let clampedSlots: Set<Int>
+    /// The first pass's `cullmode` as authored (nil: WE's default, back faces culled). Only a
+    /// puppet's mesh has faces to cull; a layer's quad is drawn whole.
+    let cullmode: String?
 
     init(materialPath: String, pass: SceneEffectPassPlan, prelighting: SceneEffectPassPlan? = nil, usesSpriteSheetUniforms: Bool,
-         liveFactors: [String: Float], clampedSlots: Set<Int> = [0]) {
+         liveFactors: [String: Float], clampedSlots: Set<Int> = [0], cullmode: String? = nil) {
         self.materialPath = materialPath
         self.pass = pass
         self.prelighting = prelighting
         self.usesSpriteSheetUniforms = usesSpriteSheetUniforms
         self.liveFactors = liveFactors
         self.clampedSlots = clampedSlots
+        self.cullmode = cullmode
     }
+
+    /// WE draws the mesh two-sided when the material says `nocull` (0x1402071b5); anything else
+    /// culls back faces.
+    var cullsBackFaces: Bool { cullmode?.lowercased() != "nocull" }
 
     var readsSceneSnapshot: Bool { pass.readsSceneSnapshot }
 
     /// Uniforms that follow the layer's live colour, alpha and brightness rather than a constant.
     static let liveUniforms: Set<String> = ["g_Brightness", "g_UserAlpha", "g_Alpha", "g_Color", "g_Color4"]
+}
+
+/// The combos WE lays over a Puppet Warp image's material for its mesh (0x140207100, and the same
+/// list at 0x14020a5d2 for the in-scene copy; docs/models-plan.md §2.13): `SKINNING` always,
+/// `BONECOUNT` the skeleton's exact bone count (not rounded, unlike a model's), `SKINNING_ALPHA`
+/// with mesh flag 0x4, `MORPHING` when the mesh carries `a_PositionVec4` (w is the morph index)
+/// and `MORPHING_MODIFIERS` when it also has flag 0x2000. WE reads them from the first mesh.
+struct ImagePuppetCombos: Equatable {
+    var boneCount: Int
+    var skinningAlpha: Bool
+    var morphing: Bool
+    var morphingModifiers: Bool
+
+    init(boneCount: Int, skinningAlpha: Bool = false, morphing: Bool = false, morphingModifiers: Bool = false) {
+        self.boneCount = boneCount
+        self.skinningAlpha = skinningAlpha
+        self.morphing = morphing
+        self.morphingModifiers = morphingModifiers
+    }
+
+    init(mesh: MDLMesh, boneCount: Int) {
+        let morphing = mesh.format.contains(.positionVec4)
+        self.init(boneCount: boneCount, skinningAlpha: mesh.usesSkinningAlpha, morphing: morphing,
+                  morphingModifiers: morphing && mesh.flags & 0x2000 != 0)
+    }
+
+    var combos: [String: Int] {
+        var combos = ["SKINNING": 1, "BONECOUNT": boneCount]
+        if skinningAlpha { combos["SKINNING_ALPHA"] = 1 }
+        if morphing { combos["MORPHING"] = 1 }
+        if morphingModifiers { combos["MORPHING_MODIFIERS"] = 1 }
+        return combos
+    }
+
+    /// `g_Texture5`, WE's "morph_<n>" texture of position deltas: the engine binds it, the
+    /// material doesn't list it.
+    static let morphSlot = 5
 }
 
 enum ImageMaterialPlanError: Error, CustomStringConvertible {
@@ -77,6 +122,17 @@ struct ImageMaterialPlanBuilder {
                   prelit: prelit)
     }
 
+    /// A Puppet Warp image's mesh pass (docs/models-plan.md §2.13, §4.3 P1): the layer's own material
+    /// with WE's puppet combos (`ImagePuppetCombos`), drawn into the image-sized albedo target that
+    /// the layer's effects and its own draw then read (`ScenePuppetRenderer`). `LIGHTING` and
+    /// `REFLECTION` are off and the object's blend mode isn't applied: the layer's own pass lights
+    /// and blends that target, as WE's base material does for a layer with effects (0x140206fcb).
+    /// `plan.pass` is the mesh pass; `plan.prelighting` is nil.
+    func buildPuppetMesh(materialPath: String, puppet: ImagePuppetCombos) throws -> ImageMaterialPlan? {
+        try build(materialPath: materialPath, colorBlendMode: nil, clampUVs: nil, listsItsImage: true, prelit: false,
+                  puppet: puppet)
+    }
+
     /// A text object's font material (`materials/fonts/basefont*.json`, WE's `font` shader). It
     /// lists no texture: `g_Texture0` is the rasterised text, a coverage mask the shader tints with
     /// `g_Color4` (the text's colour, brightness and alpha). Clamped, since it is exactly the text.
@@ -85,7 +141,7 @@ struct ImageMaterialPlanBuilder {
     }
 
     private func build(materialPath: String, colorBlendMode: Int?, clampUVs: Bool?,
-                       listsItsImage: Bool, prelit: Bool) throws -> ImageMaterialPlan? {
+                       listsItsImage: Bool, prelit: Bool, puppet: ImagePuppetCombos? = nil) throws -> ImageMaterialPlan? {
         guard let data = readFile(materialPath) else { throw ImageMaterialPlanError.missing(materialPath) }
         let material: MaterialDocument
         do {
@@ -155,7 +211,9 @@ struct ImageMaterialPlanBuilder {
                 inputs[slot] = try textureInput(named: name, materialPath: materialPath)
             }
             inputs[0] = .current
-            if let unbound = sampled.subtracting(inputs.keys).min() {
+            // The puppet renderer binds the morph texture itself.
+            let engineBound: Set<Int> = puppet?.morphing == true ? [ImagePuppetCombos.morphSlot] : []
+            if let unbound = sampled.subtracting(inputs.keys).subtracting(engineBound).min() {
                 throw ImageMaterialPlanError.unsupported("g_Texture\(unbound) has no texture")
             }
             return SceneEffectPassPlan(command: .render,
@@ -165,7 +223,9 @@ struct ImageMaterialPlanBuilder {
 
         var drawn = combos(colorBlendMode.map { [["BLENDMODE": $0]] } ?? [])
         var prelighting: SceneEffectPassPlan?
-        if prelit, (drawn["LIGHTING"] ?? 0) != 0 || (drawn["REFLECTION"] ?? 0) != 0 {
+        if let puppet {
+            drawn = combos([["LIGHTING": 0, "REFLECTION": 0], puppet.combos])
+        } else if prelit, (drawn["LIGHTING"] ?? 0) != 0 || (drawn["REFLECTION"] ?? 0) != 0 {
             // WE's prelighting (0x140209540, docs/lighting-plan.md §2.3): the material, lit, with
             // `PRELIGHTING` (and `cullmode` nocull) draws the layer image into the buffer its effects
             // start from; the layer itself draws with both combos off. Neither takes the object's
@@ -189,7 +249,7 @@ struct ImageMaterialPlanBuilder {
         }
         return ImageMaterialPlan(materialPath: materialPath, pass: layerPass, prelighting: prelighting,
                                  usesSpriteSheetUniforms: (layerPass.variant?.combos["SPRITESHEET"] ?? 0) != 0,
-                                 liveFactors: liveFactors, clampedSlots: clampedSlots)
+                                 liveFactors: liveFactors, clampedSlots: clampedSlots, cullmode: materialPass.cullmode)
     }
 
     /// The `.tex` ClampUVs flag (TEXI flags bit 2) of texture `name`, looked up like the texture

@@ -1,0 +1,310 @@
+import XCTest
+import MetalKit
+import simd
+@testable import OpenWallpaperEngine
+
+/// Every Puppet Warp layer of the library (docs/models-plan.md §2.13: 32 layers in 7 scenes),
+/// loaded by the real loader and drawn by the real renderer in the bind pose:
+///
+/// - none falls back to its unwarped image: each has its mesh plan, with WE's combos
+///   (`SKINNING`, the exact `BONECOUNT`);
+/// - each drawn image reproduces what its rig assembles from the source texture: a CPU
+///   rasterisation of the bind-pose mesh (nearest texel, straight-alpha "over" in index order) is
+///   the oracle, compared over a grid of pixel centres (coverage mask, alpha, colour). For the rigs
+///   laid over their own picture, the oracle is the source image itself where the mesh covers it,
+///   and the mesh covers the picture; the witcher's (3803167460) rearranges an atlas.
+///
+/// `OWE_PUPPET_OUT` names a folder for each layer's source texture and drawn image as PNG.
+/// Skipped when the library is absent (CI); roots as `LightingLibraryDecodeTests`.
+final class ScenePuppetLibraryTests: XCTestCase {
+    private var storage: URL!
+
+    override func setUpWithError() throws {
+        storage = FileManager.default.temporaryDirectory.appending(path: "owe-puppet-sweep-\(UUID().uuidString)")
+    }
+
+    override func tearDownWithError() throws {
+        if let storage, FileManager.default.fileExists(atPath: storage.path) {
+            try FileManager.default.removeItem(at: storage)
+        }
+    }
+
+    func testEveryLibraryPuppetDrawsItsBindPose() throws {
+        let roots = LightingLibraryDecodeTests.roots.filter { FileManager.default.fileExists(atPath: $0.path) }
+        try XCTSkipIf(roots.count < LightingLibraryDecodeTests.roots.count, "wallpaper library not present")
+        let items = try Self.puppetScenes(in: roots)
+        let ids = Set(items.map(\.workshopID))
+        for expected in ["2542737668", "3803167460", "2804817823", "2321732083", "2515150033", "3802767544", "3803042537"] {
+            XCTAssertTrue(ids.contains(expected), "\(expected)'s puppets weren't found")
+        }
+        XCTAssertGreaterThanOrEqual(items.reduce(0) { $0 + $1.layers.count }, 32, "the survey's 32 puppet layers")
+        let output = ProcessInfo.processInfo.environment["OWE_PUPPET_OUT"].map { URL(fileURLWithPath: $0, isDirectory: true) }
+        var report = "scene\tlayer\tbones\tvertices\ttexture\tIoU\talpha MAE\tcolour MAE\tpicture covered\tunwarped\n"
+        for item in items { report += try sweep(item, output: output) }
+        print("Library puppets in the bind pose:\n\(report)")
+    }
+
+    // MARK: - One scene
+
+    private func sweep(_ item: Item, output: URL?) throws -> String {
+        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: item.project, where: item.directory))
+        var content = try XCTUnwrap(model.metalContent(), "\(item.id): no content")
+        defer { Fixtures.removeStoredSettings(for: item.directory) }
+        var plans: [String: ScenePuppetPlan] = [:]
+        for id in item.layers {
+            guard let layer = content.layers.first(where: { $0.id == id }) else {
+                XCTFail("\(item.id) layer \(id): not in the content")
+                continue
+            }
+            guard let plan = layer.puppet else {
+                XCTFail("\(item.id) layer \(id) (\(layer.name)): drawn unwarped")
+                continue
+            }
+            let variant = try XCTUnwrap(plan.material.pass.variant)
+            XCTAssertEqual(variant.combos["SKINNING"], 1, "\(item.id) \(id)")
+            XCTAssertEqual(variant.combos["BONECOUNT"], plan.skeleton.bones.count, "\(item.id) \(id): the exact bone count")
+            plans[id] = plan
+            // Hidden puppets (a user property's variant) are drawn too, for the check.
+            content.visibility[id] = true
+        }
+
+        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
+        let view = MTKView(frame: CGRect(x: 0, y: 0, width: 320, height: 180), device: device)
+        view.colorPixelFormat = .bgra8Unorm
+        view.autoResizeDrawable = false
+        view.drawableSize = CGSize(width: 320, height: 180)
+        let services = SceneScriptServices(prelude: SceneScriptPrelude.load(), storage: SceneScriptStorage(directory: storage),
+                                           media: SceneScriptReplayMediaSource(), spectrum: { .silent })
+        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: services, screenID: "puppets"))
+        defer { renderer.releaseContent() }
+        view.isPaused = true
+        var now: CFTimeInterval = 1000
+        renderer.wallTime = { now }
+        renderer.setContent(content)
+        var deadline = Date().addingTimeInterval(60)
+        while !renderer.hasContent, Date() < deadline { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
+        XCTAssertTrue(renderer.hasContent, "\(item.id) never got its content")
+        deadline = Date().addingTimeInterval(90)
+        while plans.keys.contains(where: { renderer.puppetImage(ofLayer: $0) == nil }), Date() < deadline {
+            renderer.renderShared([SceneViewport(drawableSize: SIMD2(320, 180), pointSize: SIMD2(320, 180),
+                                                 cursor: SIMD2(160, 90), frameRateLimit: 30)])
+            renderer.lastCommandBuffer?.waitUntilCompleted()
+            RunLoop.main.run(until: Date().addingTimeInterval(0.005))
+            now += 1.0 / 30
+        }
+
+        var lines = ""
+        for (id, plan) in plans.sorted(by: { $0.key < $1.key }) {
+            guard let drawn = renderer.puppetImage(ofLayer: id) else {
+                XCTFail("\(item.id) layer \(id): its mesh was never drawn")
+                continue
+            }
+            let source = try ScenePuppetTestSupport.rgba8(drawn.source, device: device)
+            let image = try ScenePuppetTestSupport.rgba8(drawn.image, device: device)
+            let size = SIMD2(drawn.image.width, drawn.image.height)
+            XCTAssertEqual(size, SIMD2(drawn.source.width, drawn.source.height), "\(item.id) \(id): the source's layout")
+            let result = Self.compare(plan, source: source, image: image, size: size)
+            let label = "\(item.id) layer \(id)"
+            XCTAssertGreaterThanOrEqual(result.iou, 0.99, "\(label): coverage")
+            XCTAssertLessThanOrEqual(result.alphaError, 3, "\(label): alpha")
+            XCTAssertLessThanOrEqual(result.colourError, result.unwarped ? 2 : 6, "\(label): colour")
+            if result.unwarped {
+                XCTAssertGreaterThanOrEqual(result.pictureCovered, 0.97, "\(label): the rig covers its picture")
+            }
+            lines += [item.id, id, String(plan.boneCount), String(plan.vertexData.count / plan.format.stride),
+                      "\(size.x)×\(size.y)", String(format: "%.4f", result.iou), String(format: "%.2f", result.alphaError),
+                      String(format: "%.2f", result.colourError), String(format: "%.4f", result.pictureCovered),
+                      result.unwarped ? "yes" : "no"].joined(separator: "\t") + "\n"
+            if let output {
+                let folder = output.appending(path: item.id, directoryHint: .isDirectory)
+                try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+                try Self.png(source, size: size).write(to: folder.appending(path: "\(id)-source.png"))
+                try Self.png(image, size: size).write(to: folder.appending(path: "\(id)-bindpose.png"))
+            }
+        }
+        return lines
+    }
+
+    // MARK: - The oracle
+
+    struct Comparison {
+        /// Intersection over union of the drawn and expected coverage (alpha ≥ ½).
+        var iou: Double
+        /// Mean absolute alpha difference, 0…255, over the samples.
+        var alphaError: Double
+        /// Mean absolute colour difference, 0…255, where both are nearly opaque.
+        var colourError: Double
+        /// The share of the source picture's opaque texels the mesh covers (rigs laid over their picture).
+        var pictureCovered: Double
+        /// Every vertex sits where its texture coordinate is in the picture: the bind pose is the picture.
+        var unwarped: Bool
+    }
+
+    /// The bind-pose mesh rasterised on the CPU at pixel centres (every `step`th row and column):
+    /// the source texel nearest each centre's texture coordinate, triangles composited "over" in
+    /// index order; compared with the drawn image there.
+    static func compare(_ plan: ScenePuppetPlan, source: [UInt8], image: [UInt8], size: SIMD2<Int>) -> Comparison {
+        let content = SIMD2(Float(plan.contentPixels.x), Float(plan.contentPixels.y))
+        let texture = SIMD2(Float(size.x), Float(size.y))
+        let mesh = MDLMesh(materials: [], flags: plan.usesUInt32Indices ? 1 : 0, format: plan.format,
+                           vertexData: plan.vertexData, indexData: plan.indexData)
+        let positions = mesh.floatValues(.position) ?? mesh.floatValues(.positionVec4)!
+        let components = mesh.format.contains(.position) ? 3 : 4
+        let uvs = mesh.floatValues(.texCoord)!
+        let count = mesh.vertexCount
+        // Vertices in target pixels, y down; texture coordinates in texels.
+        let pixel = (0..<count).map { index -> SIMD2<Float> in
+            let p = SIMD2(positions[index * components], positions[index * components + 1])
+            return SIMD2((p.x / plan.imageSize.x + 0.5) * content.x, (0.5 - p.y / plan.imageSize.y) * content.y)
+        }
+        let texel = (0..<count).map { SIMD2(uvs[$0 * 2], uvs[$0 * 2 + 1]) * texture }
+        let unwarped = zip(pixel, texel).allSatisfy { simd_length($0 - $1) < 0.05 }
+
+        let step = max(1, Int((Double(plan.contentPixels.x * plan.contentPixels.y) / 400_000).squareRoot().rounded(.up)))
+        let columns = (plan.contentPixels.x + step - 1) / step, rows = (plan.contentPixels.y + step - 1) / step
+        var expected = [SIMD4<Float>](repeating: .zero, count: columns * rows) // premultiplied
+        let indices = mesh.indices
+        for triangle in stride(from: 0, to: indices.count - 2, by: 3) {
+            let (a, b, c) = (Int(indices[triangle]), Int(indices[triangle + 1]), Int(indices[triangle + 2]))
+            let (pa, pb, pc) = (pixel[a], pixel[b], pixel[c])
+            let area = (pb.x - pa.x) * (pc.y - pa.y) - (pb.y - pa.y) * (pc.x - pa.x)
+            guard abs(area) > 1e-8 else { continue }
+            let low = simd_max(simd_min(simd_min(pa, pb), pc), .zero), high = simd_max(simd_max(pa, pb), pc)
+            let firstColumn = max(0, Int(((low.x - 0.5) / Float(step)).rounded(.up)))
+            let firstRow = max(0, Int(((low.y - 0.5) / Float(step)).rounded(.up)))
+            guard firstColumn < columns, firstRow < rows else { continue }
+            let lastColumn = min(columns - 1, Int(((high.x - 0.5) / Float(step)).rounded(.down)))
+            let lastRow = min(rows - 1, Int(((high.y - 0.5) / Float(step)).rounded(.down)))
+            guard firstColumn <= lastColumn, firstRow <= lastRow else { continue }
+            for row in firstRow...lastRow {
+                for column in firstColumn...lastColumn {
+                    let point = SIMD2(Float(column * step) + 0.5, Float(row * step) + 0.5)
+                    let wa = ((pb.x - point.x) * (pc.y - point.y) - (pb.y - point.y) * (pc.x - point.x)) / area
+                    let wb = ((pc.x - point.x) * (pa.y - point.y) - (pc.y - point.y) * (pa.x - point.x)) / area
+                    let wc = 1 - wa - wb
+                    guard wa >= 0, wb >= 0, wc >= 0 else { continue }
+                    let uv = texel[a] * wa + texel[b] * wb + texel[c] * wc
+                    let tx = min(max(Int(uv.x.rounded(.down)), 0), size.x - 1)
+                    let ty = min(max(Int(uv.y.rounded(.down)), 0), size.y - 1)
+                    let offset = (ty * size.x + tx) * 4
+                    let colour = SIMD4(Float(source[offset]), Float(source[offset + 1]), Float(source[offset + 2]),
+                                       Float(source[offset + 3])) / 255
+                    let premultiplied = SIMD4(colour.x * colour.w, colour.y * colour.w, colour.z * colour.w, colour.w)
+                    let slot = row * columns + column
+                    expected[slot] = premultiplied + expected[slot] * (1 - colour.w)
+                }
+            }
+        }
+
+        var union = 0, intersection = 0, samples = 0, opaque = 0, pictureOpaque = 0, pictureCovered = 0
+        var alphaError = 0.0, colourError = 0.0
+        for row in 0..<rows {
+            for column in 0..<columns {
+                let x = column * step, y = row * step
+                let offset = (y * size.x + x) * 4
+                let want = expected[row * columns + column]
+                let wantAlpha = Double(want.w) * 255
+                let gotAlpha = Double(image[offset + 3])
+                samples += 1
+                alphaError += abs(wantAlpha - gotAlpha)
+                let wantCovered = wantAlpha >= 127.5, gotCovered = gotAlpha >= 127.5
+                if wantCovered || gotCovered { union += 1 }
+                if wantCovered && gotCovered { intersection += 1 }
+                if wantAlpha >= 230, gotAlpha >= 230 {
+                    opaque += 1
+                    for channel in 0..<3 {
+                        colourError += abs(Double(want[channel] / want.w) * 255 - Double(image[offset + channel])) / 3
+                    }
+                }
+                if source[offset + 3] >= 128 {
+                    pictureOpaque += 1
+                    if gotCovered { pictureCovered += 1 }
+                }
+            }
+        }
+        return Comparison(iou: union == 0 ? 1 : Double(intersection) / Double(union),
+                          alphaError: alphaError / Double(max(samples, 1)),
+                          colourError: colourError / Double(max(opaque, 1)),
+                          pictureCovered: pictureOpaque == 0 ? 1 : Double(pictureCovered) / Double(pictureOpaque),
+                          unwarped: unwarped)
+    }
+
+    static func png(_ pixels: [UInt8], size: SIMD2<Int>) throws -> Data {
+        let provider = try XCTUnwrap(CGDataProvider(data: Data(pixels) as CFData))
+        let image = try XCTUnwrap(CGImage(width: size.x, height: size.y, bitsPerComponent: 8, bitsPerPixel: 32,
+                                          bytesPerRow: size.x * 4, space: CGColorSpaceCreateDeviceRGB(),
+                                          bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.last.rawValue),
+                                          provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent))
+        let rep = NSBitmapImageRep(cgImage: image)
+        return try XCTUnwrap(rep.representation(using: .png, properties: [:]))
+    }
+
+    // MARK: - The library
+
+    private struct Item {
+        var id: String
+        var workshopID: String
+        var directory: URL
+        var project: WEProject
+        /// The ids of the image objects whose model names a `puppet`.
+        var layers: [String]
+    }
+
+    /// Scenes with Puppet Warp images (de-duplicated by Workshop id, the first root first).
+    private static func puppetScenes(in roots: [URL]) throws -> [Item] {
+        var seen = Set<String>(), items: [Item] = []
+        for root in roots {
+            for name in try FileManager.default.contentsOfDirectory(atPath: root.path).sorted() {
+                let directory = root.appending(path: name, directoryHint: .isDirectory)
+                // `try?`: a folder without a readable project.json isn't a wallpaper.
+                guard let data = try? Data(contentsOf: directory.appending(path: "project.json")) else { continue }
+                let text = Data(String(decoding: data, as: UTF8.self).trimmingCharacters(in: CharacterSet(charactersIn: "\u{FEFF}")).utf8)
+                guard let json = try? JSONSerialization.jsonObject(with: text, options: [.json5Allowed]) as? [String: Any] else { continue }
+                let workshopID = json["workshopid"].map { "\($0)" } ?? ""
+                let key = workshopID.isEmpty || workshopID == "0" ? name : workshopID
+                guard !seen.contains(key), !seen.contains(name) else { continue }
+                seen.formUnion([key, name])
+                guard (json["type"] as? String)?.lowercased() == "scene" else { continue }
+                let reader = Reader(directory: directory)
+                guard let file = reader.read(json["file"] as? String ?? "scene.json") else { continue }
+                let scene = try decodeTolerant(WEScene.self, from: file)
+                var layers: [String] = []
+                for object in scene.objects {
+                    // Optional: an object whose model can't be read has no rig to check.
+                    guard let image = object.image, let modelData = reader.read(image),
+                          let model = try? decodeTolerant(WEModel.self, from: modelData), model.puppet != nil else { continue }
+                    layers.append(String(object.id ?? -1))
+                }
+                guard !layers.isEmpty else { continue }
+                let project = try decodeTolerant(WEProject.self, from: text)
+                items.append(Item(id: name, workshopID: key, directory: directory, project: project, layers: layers))
+            }
+        }
+        return items
+    }
+
+    /// A loose file wins over the same path inside the folder's `.pkg`, as WE reads a wallpaper.
+    private struct Reader {
+        let directory: URL
+        private let packages: [PKGParser]
+
+        init(directory: URL) {
+            self.directory = directory
+            var packages: [PKGParser] = []
+            let enumerator = FileManager.default.enumerator(at: directory, includingPropertiesForKeys: nil)
+            while let url = enumerator?.nextObject() as? URL {
+                guard url.pathExtension == "pkg" else { continue }
+                do { packages.append(try PKGParser(url: url)) } catch { XCTFail("\(url.path): \(error)") }
+            }
+            self.packages = packages
+        }
+
+        func read(_ file: String) -> Data? {
+            if let loose = FileManager.default.contents(atPath: directory.appending(path: file).path) { return loose }
+            for package in packages {
+                if let data = package.extractFile(named: file) { return data }
+            }
+            return nil
+        }
+    }
+}

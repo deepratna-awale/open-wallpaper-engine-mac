@@ -93,6 +93,9 @@ struct SceneMetalLayer {
     var bindings = SceneLayerBindings()
     /// The image object's own material, drawn through WE's shader; nil draws the layer natively.
     var imageMaterial: ImageMaterialPlan? = nil
+    /// A Puppet Warp image's mesh: it draws the layer image each frame (`ScenePuppetRenderer`),
+    /// which the layer's effects and its own draw then read in place of `source`.
+    var puppet: ScenePuppetPlan? = nil
     /// An animated texture's name (`textures[0]` of the image's material): every layer drawing the
     /// same texture shares its clock (docs/timeline-plan.md §2.7). Nil for a still one.
     var textureKey: String? = nil

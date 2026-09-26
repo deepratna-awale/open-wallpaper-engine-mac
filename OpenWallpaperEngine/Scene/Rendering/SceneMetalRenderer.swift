@@ -105,6 +105,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private lazy var particleMaterials = ParticleMaterialRenderer(device: device)
     /// Draws image layers through their own WE material.
     private lazy var imageMaterials = ImageMaterialRenderer(device: device, archive: effectGraph?.pipelineArchive)
+    /// Draws Puppet Warp layers' meshes into their images (`ScenePuppetRenderer`).
+    private lazy var puppets = ScenePuppetRenderer(device: device, archive: effectGraph?.pipelineArchive)
+    /// Puppet layers' images this frame, by layer id: what `textureFrame(for:)` hands out for them.
+    private var puppetAlbedos: [String: MTLTexture] = [:]
     /// Asset textures used by effect passes, materialised once per content.
     private var effectAssetTextures: [String: MTLTexture] = [:]
     /// Animated asset textures' sprite frames, by the same key.
@@ -158,6 +162,15 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// Layers drawn through their material, and prelighting passes run (tests, diagnostics).
     var imageMaterialDraws: Int { imageMaterials?.drawsEncoded ?? 0 }
     var imageMaterialPrelitDraws: Int { imageMaterials?.prelitDraws ?? 0 }
+    /// Puppet meshes drawn into their images (tests, diagnostics).
+    var puppetMeshDraws: Int { puppets?.drawsEncoded ?? 0 }
+    /// A puppet layer's image once its mesh has been drawn, and the texture the mesh samples (tests,
+    /// diagnostics).
+    func puppetImage(ofLayer id: String) -> (source: MTLTexture, image: MTLTexture)? {
+        guard puppets?.hasDrawn(id) == true, let image = puppetAlbedos[id],
+              let source = layers.first(where: { $0.layer.id == id })?.frames.first?.texture else { return nil }
+        return (source, image)
+    }
     /// Effect passes encoded so far, for tests.
     var effectPassesEncoded: Int { effectGraph?.passesEncoded ?? 0 }
     /// The last frame's scene target, before the post-process (tests, diagnostics).
@@ -169,7 +182,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
          "mip-mapped frame buffer": mipMappedFrameBuffer?.texture?.allocatedSize ?? 0,
          "target pool (snapshots, regions)": renderTargetPool.residentBytes,
          "volumetrics": volumetrics?.residentBytes ?? 0,
-         "prelit images": imageMaterials?.prelitBytes ?? 0]
+         "prelit images": imageMaterials?.prelitBytes ?? 0,
+         "puppet images": puppets?.allocatedBytes ?? 0]
     }
     /// A drawn layer's effect plans (tests, diagnostics).
     func effectPlans(ofLayer id: String) -> [SceneEffectPlan] {
@@ -340,6 +354,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         textFrameCache.trim(to: layers.filter { $0.layer.text != nil }.count)
         effectGraph?.trimMemory(dropIdlePipelines: level == .critical)
         imageMaterials?.trimMemory(dropIdlePipelines: level == .critical)
+        puppets?.trimMemory()
         particleMaterials?.trimMemory(dropIdlePipelines: level == .critical)
         if level == .critical {
             effectAssetTextures.removeAll()
@@ -361,6 +376,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         effectGraph?.releaseTargets()
         particleMaterials?.releaseAll()
         imageMaterials?.releaseAll()
+        puppets?.releaseAll()
+        puppetAlbedos.removeAll()
         contentGenerationLock.lock()
         contentGeneration &+= 1
         let generation = contentGeneration
@@ -632,6 +649,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         deferredReleases.drain(live: Set(layers.map(\.layer.id))) { id in
             effectGraph?.releaseLayer(id)
             imageMaterials?.releaseLayer(id)
+            puppets?.releaseLayer(id)
+            puppetAlbedos.removeValue(forKey: id)
         }
     }
 
@@ -835,6 +854,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             let draw = layerDraw(entry, baseSize: textFrames[layerIndex]?.baseSize ?? layerBaseSize(entry),
                                  motion: motion)
             draws[layerIndex] = draw
+            // A puppet's mesh draws its image before anything reads it: its effects, its own draw.
+            if let puppet = entry.layer.puppet { drawPuppet(puppet, entry, frame: effectFrame, commandBuffer: commandBuffer) }
             // Layers that read the scene run inside the scene pass, once what's beneath them is drawn.
             if entry.layer.readsScene { continue }
             if !entry.layer.weEffects.isEmpty {
@@ -1562,6 +1583,18 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         return draw.quad.extent * renderPixelsPerUnit / shown
     }
 
+    /// Draws a puppet layer's mesh into its image (`puppetAlbedos`) in the bind pose: every bone the
+    /// identity until skinning poses them (docs/models-plan.md §4.3 M6, P2).
+    private func drawPuppet(_ puppet: ScenePuppetPlan, _ entry: PreparedLayer, frame: BuiltinFrameContext,
+                            commandBuffer: MTLCommandBuffer) {
+        guard let puppets, let source = entry.frames.first?.texture else { return }
+        puppetAlbedos[entry.layer.id] = puppets.albedo(puppet, ScenePuppetRenderer.Draw(
+            layerID: entry.layer.id, source: source, pose: .bind(boneCount: puppet.boneCount), frame: frame,
+            values: timelines.values,
+            assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) }),
+            commandBuffer: commandBuffer)
+    }
+
     /// A lit or reflective layer's image as its effects start from it: lit by its material's
     /// prelighting pass (`ImageMaterialRenderer.prelight`); nil for any other layer.
     private func prelit(_ entry: PreparedLayer, draw: LayerDraw, input: MTLTexture, snapshot: MTLTexture?,
@@ -1993,6 +2026,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// animated texture from the instance's texture clocks (docs/timeline-plan.md §2.7, §3.2),
     /// taken once per frame (a script's override advances each time it is asked).
     private func textureFrame(for entry: PreparedLayer) -> RenderTextureFrame {
+        // A puppet's image is its mesh's drawing, laid out like its source texture.
+        if entry.layer.puppet != nil, let albedo = puppetAlbedos[entry.layer.id] {
+            let source = entry.frames[0]
+            return RenderTextureFrame(texture: albedo, duration: source.duration, uvOrigin: source.uvOrigin,
+                                      uvAxisX: source.uvAxisX, uvAxisY: source.uvAxisY)
+        }
         // A video layer's texture is replaced every frame, so the decoded frame list is only a seed.
         if case let .video(stream) = entry.layer.source, let texture = stream.currentTexture() {
             return RenderTextureFrame(texture: texture, duration: .greatestFiniteMagnitude,

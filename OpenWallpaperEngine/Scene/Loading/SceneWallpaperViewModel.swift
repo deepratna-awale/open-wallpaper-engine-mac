@@ -808,9 +808,6 @@ class SceneWallpaperViewModel: ObservableObject {
               let source = loadMetalTexture(named: textureName, materialDir: materialPath, wallpaperDir: wallpaperDir) else {
             return nil
         }
-        if model.puppet != nil {
-            Self.log("Puppet Warp rig found for \(imagePath); rendering authored atlas until mesh rig data is available")
-        }
         let sceneInput = textureName == "_rt_FullFrameBuffer" || textureName == "_rt_MipMappedFrameBuffer"
         let size: SIMD2<Float>
         if model.fullscreen == true {
@@ -846,12 +843,37 @@ class SceneWallpaperViewModel: ObservableObject {
         // A layer whose image is the scene only exists to run effects on it; WE skips it without any.
         if sceneInput, effectPlans.plans.isEmpty { return nil }
         if !sceneInput {
-            // WE prelights a puppet too (0x140209540), drawing its mesh lit; its mesh isn't drawn
-            // here, and its atlas is lit where it is drawn, as the still mesh would be.
+            // A puppet is lit like any image: its mesh draws the image (`layer.puppet`) that its
+            // effects, prelighting and own draw read.
             layer.imageMaterial = buildImageMaterial(materialPath, object: object, wallpaperDir: wallpaperDir,
                                                      prelit: !effectPlans.plans.isEmpty)
         }
+        if let rig = model.puppet, !sceneInput {
+            let imageSize = source.pixelSize * textureReductionApplied(named: textureName, materialDir: materialPath,
+                                                                       wallpaperDir: wallpaperDir)
+            layer.puppet = buildPuppet(rig, materialPath: materialPath, object: object, source: source,
+                                       imageSize: imageSize, wallpaperDir: wallpaperDir)
+        }
         return layer
+    }
+
+    /// A Puppet Warp image's mesh (`ScenePuppetPlan`); nil (logged) draws the image unwarped.
+    private func buildPuppet(_ rig: String, materialPath: String, object: WESceneObject, source: SceneMetalTextureSource,
+                             imageSize: SIMD2<Float>, wallpaperDir: URL) -> ScenePuppetPlan? {
+        guard let translator = Self.effectTranslator else { return nil }
+        let builder = ImageMaterialPlanBuilder(
+            translator: translator,
+            readFile: { [weak self] path in self?.assetData(named: path, wallpaperDir: wallpaperDir) },
+            loadTexture: { [weak self] name, path in self?.loadMetalTexture(named: name, materialDir: path, wallpaperDir: wallpaperDir) },
+            sceneEngineCombos: sceneEngineCombos)
+        do {
+            let model = try MDLModel.load(path: rig, package: pkgParser, directory: wallpaperDir)
+            return try ScenePuppetPlan.make(model: model, rigPath: rig, materialPath: materialPath, source: source,
+                                            imageSize: imageSize, builder: builder)
+        } catch {
+            OWELog.error(.scene, "Puppet layer \(object.id ?? -1) draws its image unwarped, rig \(rig): \(error)")
+            return nil
+        }
     }
 
     /// The image's own material through WE's shader; nil (logged when it's a failure) keeps the native draw.
