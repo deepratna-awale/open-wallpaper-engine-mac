@@ -11,7 +11,15 @@ import MetalKit
 /// Plan §4.6's target is under 0.5 ms per frame; the table is how it is checked (in an optimized
 /// build signed with the app's entitlements, so JavaScriptCore JIT-compiles as in the app; an
 /// unsigned host such as CI's runs the interpreter, `SceneScriptJIT`). The assertion only guards
-/// against regressions an order of magnitude past it.
+/// against regressions an order of magnitude past it, and only where scripts are JIT-compiled.
+///
+/// The interpreter's numbers are not the app's: it runs scripts about 15 times slower, and a
+/// script that steps a fixed-timestep simulation per `engine.frametime` (3657770939's rigid-body
+/// solver: 96 steps per scene second, up to 96 per frame) then can't keep up with the wall clock
+/// the renderer feeds it, so every frame runs more steps than the last until the scene clock's
+/// 0.25 s clamp: 24 steps a frame, ~370 ms, against 0.5 ms with the JIT (measured with the replay
+/// harness at a fixed 1/60 s: 22 ms against 1.5 ms per frame). An unsigned run still writes the
+/// table, then skips.
 final class SceneScriptLibraryCostTests: XCTestCase {
     /// Plan §4.6: under half a millisecond of script time per frame.
     static let budgetMilliseconds = 0.5
@@ -77,6 +85,8 @@ final class SceneScriptLibraryCostTests: XCTestCase {
         if let path = ProcessInfo.processInfo.environment["OWE_SCRIPT_COST_REPORT"] {
             try report.write(toFile: path, atomically: true, encoding: .utf8)
         }
+        try XCTSkipUnless(SceneScriptJIT.isEnabled, "JavaScriptCore runs its interpreter in this unsigned host, so "
+                          + "these are not the app's costs (table: OWE_SCRIPT_COST_REPORT)\n\(report)")
         XCTAssertTrue(over.isEmpty, "script frames at or over \(Self.regressionGuard) ms (p50): \(over)\n\(report)")
     }
 

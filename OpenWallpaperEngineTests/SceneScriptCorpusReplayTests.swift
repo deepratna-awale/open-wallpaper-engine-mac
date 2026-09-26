@@ -83,8 +83,9 @@ final class SceneScriptCorpusReplayTests: XCTestCase {
         ExpectedFailure(key: "454480144e55", check: .finite,
                         reason: "3455121165 reads shared.d before a later object sets it: NaN on frame 0 (P3)"),
         ExpectedFailure(key: "3657770939", check: .budget,
-                        reason: "3657770939 runs a rigid-body solver (7c2224f16732) over every sphere its click "
-                            + "handler spawns, 243 after the harness's clicks: the script's own work, not ours"),
+                        reason: "3657770939 runs a rigid-body solver (7c2224f16732) at 96 steps a second over the 243 "
+                            + "spheres its spawner creates in init (initSpawnCount): the script's own work, not ours "
+                            + "(JIT: ~1.5 ms a frame, 0.3 % of it in our Swift)"),
         ExpectedFailure(key: "0a3a85274f2b", check: .exception,
                         reason: "our gap, not WE's: 3734636606 builds its geometry with IScene.createModelData, still "
                             + "a stub returning null (roadmap WP12)"),
