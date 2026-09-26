@@ -222,6 +222,14 @@ class SceneWallpaperViewModel: ObservableObject {
         if rebuild { bumpRevision() }
     }
 
+    /// The loaded scene's size as WE's automatic texture resolution weighs it
+    /// (`TextureReduction.orthographicSize(of:)`); nil for a perspective scene or none.
+    var textureReductionSceneSize: SIMD2<Float>? {
+        sceneLock.lock()
+        defer { sceneLock.unlock() }
+        return loadedScene.flatMap(TextureReduction.orthographicSize(of:))
+    }
+
     // MARK: - Scene Loading
 
     func loadScene(from wallpaper: WEWallpaper, prepareDefaults: Bool = true) {

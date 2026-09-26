@@ -13,7 +13,7 @@ struct SceneRenderSettings: Equatable {
     /// The most particles a scene may hold (`ParticleBudget`); the content is built for it.
     var particleBudget = GSParticleBudget.medium
     /// WE's texture reduction (`TextureReduction`), 1 or 2: the user's setting resolved for the
-    /// displays showing the scene (`init(_:outputPixels:)`). Textures load for it.
+    /// displays showing the scene and its size (`init(_:outputPixels:sceneSize:)`). Textures load for it.
     var textureReduction = 1
     /// The scene target's pixels per display point.
     var renderResolution = GSRenderResolution.native
@@ -52,10 +52,12 @@ struct SceneRenderSettings: Equatable {
     }
 
     /// `settings` with the texture reduction WE's `resolution` setting gives on displays whose
-    /// largest drawable is `outputPixels` (zero while none is known).
-    init(_ settings: GlobalSettings, outputPixels: SIMD2<Float>) {
+    /// largest drawable is `outputPixels` (zero while none is known), for a scene of orthographic
+    /// size `sceneSize` (`TextureReduction.orthographicSize(of:)`; nil when it has none).
+    init(_ settings: GlobalSettings, outputPixels: SIMD2<Float>, sceneSize: SIMD2<Float>? = nil) {
         self.init(settings)
-        textureReduction = TextureReduction.factor(settings.textureResolution, outputPixels: outputPixels)
+        textureReduction = TextureReduction.factor(settings.textureResolution, outputPixels: outputPixels,
+                                                   sceneSize: sceneSize)
     }
 }
 

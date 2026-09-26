@@ -75,9 +75,22 @@ enum GSParticleBudget: String, CaseIterable, Identifiable, Codable {
 }
 
 /// WE's "Texture Resolution" (config `resolution`: `full`, `half`, `auto`; `TextureReduction`).
+/// WE's settings offer these three, labelled High Quality, High Performance and Automatic
+/// (`ui/dist/scripts/scripts.js`, `textureResolutionOptions`).
 enum GSTextureResolutionQuality: String, CaseIterable, Identifiable, Codable {
     var id: Self { self }
     case highQuality, highPerformance, automatic
+
+    /// The setting a WE `config.json` `resolution` value means, as `wallpaper64.exe` reads it
+    /// (0x1401155f6…0x14011562f): `full` and `half` exactly; anything else, including `auto`, a
+    /// hand-written `quarter` or no value, is automatic.
+    init(weConfigValue value: String?) {
+        switch value {
+        case "full": self = .highQuality
+        case "half": self = .highPerformance
+        default: self = .automatic
+        }
+    }
 }
 
 /// How many pixels the scene target gets per point of the display (`SceneRenderResolution`):

@@ -212,13 +212,14 @@ final class SceneWallpaperInstance {
         viewModel.setRenderSettings(renderSettings)
     }
 
-    /// `settings` for this scene's displays: WE's automatic texture resolution follows the largest.
+    /// `settings` for this scene's displays: WE's automatic texture resolution follows the largest
+    /// and the scene's size.
     private func renderSettings(for settings: GlobalSettings) -> SceneRenderSettings {
         let largest = displays.values.reduce(SIMD2<Float>(repeating: 0)) { largest, display in
             guard let view = display.view else { return largest }
             return simd_max(largest, SIMD2(Float(view.drawableSize.width), Float(view.drawableSize.height)))
         }
-        return SceneRenderSettings(settings, outputPixels: largest)
+        return SceneRenderSettings(settings, outputPixels: largest, sceneSize: viewModel.textureReductionSceneSize)
     }
 
     /// Applies `settings` when they differ from the renderer's, rebuilding the content only when

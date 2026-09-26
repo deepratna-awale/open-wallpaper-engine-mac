@@ -141,7 +141,7 @@ struct PerformancePage: SettingsPage {
                     Text("High Performance").tag(GSTextureResolutionQuality.highPerformance)
                     Text("Automatic").tag(GSTextureResolutionQuality.automatic)
                 }
-                .help("Wallpaper Engine's setting: High Performance loads textures at half their size and runs effects at half size too; Automatic does so on displays smaller than 1080p.")
+                .help("Wallpaper Engine's setting: High Performance loads textures at half their size and runs effects at half size too; Automatic does so for a scene with more than 3.9 times the display's pixels (a 4K scene on a 1080p display), and for a 3D scene on a display smaller than 1080p.")
                 Picker("Scene Detail", selection: $viewModel.settings.sceneDetail) {
                     Text("Match Display").tag(GSSceneDetail.matchDisplay)
                     Text("Full (Wallpaper Engine)").tag(GSSceneDetail.full)

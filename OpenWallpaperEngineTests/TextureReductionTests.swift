@@ -16,6 +16,45 @@ final class TextureReductionTests: XCTestCase {
         XCTAssertEqual(TextureReduction.factor(.automatic, outputPixels: .zero), 1, "no display yet")
     }
 
+    func testAutoWeighsASizedSceneAgainstTheWindow() {
+        // 0x14017e6f0 under engine flag 0x400: the scene's pixels over 3.9 × the window's.
+        let uhd = SIMD2<Float>(3840, 2160), fullHD = SIMD2<Float>(1920, 1080), small = SIMD2<Float>(1280, 800)
+        XCTAssertEqual(TextureReduction.factor(.automatic, outputPixels: fullHD, sceneSize: uhd), 2,
+                       "8 294 400 > 3.9 × 2 073 600")
+        XCTAssertEqual(TextureReduction.factor(.automatic, outputPixels: fullHD, sceneSize: fullHD), 1)
+        XCTAssertEqual(TextureReduction.factor(.automatic, outputPixels: small, sceneSize: fullHD), 1,
+                       "a small window alone doesn't reduce a sized scene")
+        XCTAssertEqual(TextureReduction.factor(.automatic, outputPixels: SIMD2(1458, 1458), sceneSize: uhd), 2)
+        XCTAssertEqual(TextureReduction.factor(.automatic, outputPixels: SIMD2(1459, 1459), sceneSize: uhd), 1)
+        XCTAssertEqual(TextureReduction.factor(.automatic, outputPixels: .zero, sceneSize: uhd), 1, "no display yet")
+        XCTAssertEqual(TextureReduction.factor(.highQuality, outputPixels: SIMD2(640, 480), sceneSize: uhd), 1)
+        XCTAssertEqual(TextureReduction.factor(.highPerformance, outputPixels: uhd, sceneSize: fullHD), 2)
+    }
+
+    func testTheSceneSizeFollowsWEsOrthographicFlag() throws {
+        func scene(_ projection: String) throws -> WEScene {
+            try JSONDecoder().decode(WEScene.self, from: Data(#"{"camera": {}, "general": {"orthogonalprojection": \#(projection)}, "objects": []}"#.utf8))
+        }
+        XCTAssertEqual(TextureReduction.orthographicSize(of: try scene(#"{"width": 3840, "height": 2160}"#)), SIMD2(3840, 2160))
+        XCTAssertNil(TextureReduction.orthographicSize(of: try scene("null")), "a perspective scene")
+        XCTAssertNil(TextureReduction.orthographicSize(of: try scene(#"{"width": 1920, "height": 0}"#)),
+                     "flag 0x400 needs both sides")
+        let auto = try XCTUnwrap(TextureReduction.orthographicSize(of: try scene(#"{"auto": true}"#)))
+        XCTAssertEqual(auto, .zero, "auto sets the flag with no size")
+        XCTAssertEqual(TextureReduction.factor(.automatic, outputPixels: SIMD2(640, 480), sceneSize: auto), 1,
+                       "so Automatic never reduces it")
+    }
+
+    func testWEsConfigValuesAreFullHalfOrAuto() {
+        // 0x1401155f6…0x14011562f compares with "full" and "half" only.
+        XCTAssertEqual(GSTextureResolutionQuality(weConfigValue: "full"), .highQuality)
+        XCTAssertEqual(GSTextureResolutionQuality(weConfigValue: "half"), .highPerformance)
+        XCTAssertEqual(GSTextureResolutionQuality(weConfigValue: "auto"), .automatic)
+        XCTAssertEqual(GSTextureResolutionQuality(weConfigValue: "quarter"), .automatic, "WE has no quarter")
+        XCTAssertEqual(GSTextureResolutionQuality(weConfigValue: nil), .automatic)
+        XCTAssertEqual(GSTextureResolutionQuality(weConfigValue: "Half"), .automatic, "compared exactly")
+    }
+
     func testOnlyAnImageWithSeveralMipmapsSkipsItsFirst() {
         XCTAssertEqual(TextureReduction.loadedMipmap(reduction: 2, mipmapCount: 5), 1)
         XCTAssertEqual(TextureReduction.loadedMipmap(reduction: 2, mipmapCount: 1), 0, "a single mipmap loads whole")
@@ -91,6 +130,10 @@ final class TextureReductionTests: XCTestCase {
         settings.textureResolution = .highPerformance
         XCTAssertEqual(SceneRenderSettings(settings, outputPixels: SIMD2(3840, 2160)).textureReduction, 2)
         XCTAssertEqual(SceneRenderSettings().textureReduction, 1, "a settings-less renderer draws as WE's full")
+        settings.textureResolution = .automatic
+        let fullHD = SIMD2<Float>(1920, 1080)
+        XCTAssertEqual(SceneRenderSettings(settings, outputPixels: fullHD, sceneSize: SIMD2(3840, 2160)).textureReduction, 2)
+        XCTAssertEqual(SceneRenderSettings(settings, outputPixels: SIMD2(1280, 800), sceneSize: fullHD).textureReduction, 1)
     }
 
     // MARK: - Fixtures
