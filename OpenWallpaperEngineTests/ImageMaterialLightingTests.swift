@@ -197,13 +197,15 @@ final class ImageMaterialLightingTests: XCTestCase {
                                                    mipmapLevel: 0)
             return Float(bytes[(y * size + x) * 4 + 2]) / 255
         }
-        // The native draw (the albedo, unlit) shows until the material's pipeline is ready.
+        // The native draw (the albedo, unlit) shows until the material's pipeline is ready. Under
+        // load the first frames can be blank too (nothing drawn yet), which isn't the lit frame
+        // either: wait while both the spot's dark side and its lit side are black.
         let deadline = Date().addingTimeInterval(20)
         repeat {
             RunLoop.main.run(until: Date().addingTimeInterval(0.02))
             renderer.draw(in: view)
             renderer.lastCommandBuffer?.waitUntilCompleted()
-        } while Date() < deadline && red(x: 64, y: 125) > 0.3
+        } while Date() < deadline && (red(x: 64, y: 125) > 0.3 || red(x: 64, y: 125) + red(x: 64, y: 30) == 0)
         XCTAssertLessThan(red(x: 64, y: 125), 0.01, "dark behind the spot (scene y ≈ 2), with no ambient")
         XCTAssertGreaterThan(red(x: 64, y: 30), 0.05, "lit up from it (scene y ≈ 98)")
         XCTAssertLessThan(red(x: 4, y: 110), 0.01, "dark to its side, outside the cone")
