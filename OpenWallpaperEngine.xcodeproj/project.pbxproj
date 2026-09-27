@@ -217,9 +217,11 @@
 			knownRegions = (
 				en,
 				Base,
+				ar,
 				de,
 				es,
 				fr,
+				hi,
 				it,
 				ja,
 				ko,
