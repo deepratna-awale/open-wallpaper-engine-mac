@@ -1,0 +1,62 @@
+{
+	"camera": {
+		"center": "0.00000 0.00000 -1.00000",
+		"eye": "0.00000 0.00000 0.00000",
+		"up": "0.00000 1.00000 0.00000"
+	},
+	"general": {
+		"ambientcolor": "0.30000 0.30000 0.30000",
+		"bloom": true,
+		"bloomhdrfeather": 0.1,
+		"bloomhdriterations": 8,
+		"bloomhdrscatter": 1.619,
+		"bloomhdrstrength": 2.0,
+		"bloomhdrthreshold": 1.0,
+		"bloomstrength": 2.0,
+		"bloomthreshold": 0.64999998,
+		"bloomtint": "1.00000 1.00000 1.00000",
+		"camerafade": true,
+		"cameraparallax": false,
+		"cameraparallaxamount": 0.5,
+		"cameraparallaxdelay": 0.1,
+		"cameraparallaxmouseinfluence": 0.5,
+		"camerapreview": true,
+		"camerashake": false,
+		"camerashakeamplitude": 0.5,
+		"camerashakeroughness": 1.0,
+		"camerashakespeed": 3.0,
+		"clearcolor": "0.15000 0.15000 0.15000",
+		"clearenabled": true,
+		"farz": 10000.0,
+		"fov": 50.0,
+		"gravitydirection": "0.00000 -1.00000 0.00000",
+		"gravitystrength": 1.0,
+		"hdr": false,
+		"nearz": 0.0099999998,
+		"orthogonalprojection": {
+			"height": 1080,
+			"width": 1920
+		},
+		"perspectiveoverridefov": 95.0,
+		"skylightcolor": "0.30000 0.30000 0.30000",
+		"winddirection": "0.70700 0.70700 0.00000",
+		"windenabled": false,
+		"windstrength": 1.0,
+		"zoom": 1.0
+	},
+	"objects": [
+		{
+			"disablepropagation": false,
+			"id": 10,
+			"image": "models/rope.json",
+			"name": "rope",
+			"origin": {
+				"script": "'use strict';\n\n// SceneScript for the puppet layer's `origin` (Properties \u2192 Origin \u2192 the script icon).\n// Moves the layer 200 px right at 2 s and back at 5 s, gives the tail an impulse at 6 s,\n// resets it at 8 s, and logs the tail's world matrix and angles every frame until 9 s.\nlet t = 0;\nlet impulsed = false;\nlet reset = false;\n\nexport function update(value) {\n\tconst dt = engine.frametime;\n\tt += dt;\n\tvalue.x = (t >= 2 && t < 5) ? 1160 : 960;\n\tvalue.y = 540;\n\tif (t >= 6 && !impulsed) {\n\t\timpulsed = true;\n\t\tthisLayer.applyBonePhysicsImpulse('tail', new Vec3(0, 0, 0), new Vec3(0, 0, 45));\n\t}\n\tif (t >= 8 && !reset) {\n\t\treset = true;\n\t\tthisLayer.resetBonePhysicsSimulation('tail');\n\t}\n\tif (t < 9) {\n\t\tconst m = thisLayer.getBoneTransform('tail').m;\n\t\tconst a = thisLayer.getLocalBoneAngles('tail');\n\t\tconsole.log('BP ' + t.toFixed(5) + ' ' + dt.toFixed(6) + ' ' + value.x + ' ' +\n\t\t\t[m[0], m[1], m[4], m[5], m[12], m[13]].map(function (v) { return v.toFixed(4); }).join(' ') +\n\t\t\t' ' + a.z.toFixed(5));\n\t}\n\treturn value;\n}\n",
+				"scriptproperties": {},
+				"value": "960.00000 540.00000 0.00000"
+			},
+			"size": "96.00000 512.00000"
+		}
+	],
+	"version": 0
+}

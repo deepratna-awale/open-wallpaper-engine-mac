@@ -1,0 +1,1 @@
+screen 1920x1080 at 1920,0; crop at 2580,140; open command at 10:20:57.460 (~0.7 s into the clip)
