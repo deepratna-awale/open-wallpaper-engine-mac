@@ -17,14 +17,19 @@ final class ModelMaterialPlan {
     /// Texture slots sampled with clamp-to-edge (the `.tex` ClampUVs flag); the others repeat.
     let clampedSlots: Set<Int>
     let meshCombos: ModelMeshCombos
+    /// The material's "shadow" variant (docs/models-plan.md §2.10), which draws the mesh into the
+    /// shadow atlas: made for an opaque material while the scene's light budget has a shadowed
+    /// light and the shadows setting is on; nil otherwise.
+    let shadowCaster: ModelMaterialPlan?
 
     init(materialPath: String, pass: SceneEffectPassPlan, raster: SceneRasterState, clampedSlots: Set<Int>,
-         meshCombos: ModelMeshCombos) {
+         meshCombos: ModelMeshCombos, shadowCaster: ModelMaterialPlan? = nil) {
         self.materialPath = materialPath
         self.pass = pass
         self.raster = raster
         self.clampedSlots = clampedSlots
         self.meshCombos = meshCombos
+        self.shadowCaster = shadowCaster
     }
 
     /// WE's blending byte (+0x1f0): normal 0, translucent 1, additive 2, alphatocoverage 3.
@@ -161,11 +166,100 @@ struct ModelMaterialPlanBuilder {
             default: break
             }
         }
+        var shadowCaster: ModelMaterialPlan?
+        if sceneEngineCombos.castsShadows, ["normal", "alphatocoverage", "disabled", ""].contains(pass.blending.lowercased()) {
+            do {
+                shadowCaster = try buildShadowCaster(
+                    ShadowCasterSource(materialPath: materialPath, pass: materialPass, vertex: vertex, fragment: fragment,
+                                       combos: combos, textures: inputs, clampedSlots: clampedSlots, mesh: mesh))
+            } catch {
+                OWELog.error(.shader, "Model material \(materialPath)'s shadow variant can't be made; its meshes cast no shadow: \(error)")
+            }
+        }
         return ModelMaterialPlan(materialPath: materialPath, pass: pass,
                                  raster: SceneRasterState(depthtest: materialPass.depthtest, depthwrite: materialPass.depthwrite,
                                                           cullmode: materialPass.cullmode),
-                                 clampedSlots: clampedSlots, meshCombos: mesh)
+                                 clampedSlots: clampedSlots, meshCombos: mesh, shadowCaster: shadowCaster)
     }
+
+    /// What a material's shadow variant takes from it.
+    struct ShadowCasterSource {
+        let materialPath: String
+        let pass: MaterialPass
+        let vertex: ShaderSource
+        let fragment: ShaderSource
+        /// The material's resolved combos.
+        let combos: [String: Int]
+        let textures: [Int: SceneEffectTextureInput]
+        let clampedSlots: Set<Int>
+        let mesh: ModelMeshCombos
+    }
+
+    /// WE's shadow variant of a material pass (0x140155fc0, docs/models-plan.md §2.10): the shader
+    /// its source names in a `// [PASS] shadow <name>` header (0x14016de11: `fur4` →
+    /// `shadowcasterfur4`, `foliage4` → `shadowcasterfoliage4`), else `materials/util/
+    /// shadowcaster.json`'s; every combo the caster declares takes the material's value (0 where
+    /// the material has none); `ALPHATOCOVERAGE` = 1 with alpha-to-coverage blending when the
+    /// material blends so (0x1401564a4); the util material's pass state; the material's
+    /// constants; its textures by slot (the albedo an alpha-to-coverage caster reads), the
+    /// engine's morph texture for a caster's "morph" sampler.
+    func buildShadowCaster(_ source: ShadowCasterSource) throws -> ModelMaterialPlan {
+        guard let data = readFile(Self.shadowCasterMaterial) else { throw ModelMaterialPlanError.missing(Self.shadowCasterMaterial) }
+        let util: MaterialDocument
+        do {
+            util = try decodeTolerant(MaterialDocument.self, from: data)
+        } catch {
+            throw ModelMaterialPlanError.invalid(Self.shadowCasterMaterial, error)
+        }
+        guard let utilPass = util.passes.first else { throw ModelMaterialPlanError.missing("\(Self.shadowCasterMaterial) passes") }
+        let shader = Self.shadowPassShader(in: source.fragment.text) ?? Self.shadowPassShader(in: source.vertex.text) ?? utilPass.shader
+        let loader = ShaderSourceLoader(readFile: readFile)
+        let vertex = try loader.load(shader, stage: .vertex)
+        let fragment = try loader.load(shader, stage: .fragment)
+        var inherited: [String: Int] = [:]
+        for declaration in vertex.combos + fragment.combos {
+            inherited[declaration.name] = source.combos[declaration.name] ?? 0
+        }
+        let alphaToCoverage = source.pass.blending?.lowercased() == "alphatocoverage"
+        let coverage = alphaToCoverage ? ["ALPHATOCOVERAGE": 1] : [:]
+        let listed = source.textures
+        let combos = sceneEngineCombos.applied(to: ShaderVariantTranslator.resolveCombos(
+            vertex: vertex, fragment: fragment, overrides: [inherited, coverage], boundTextureSlots: Set(listed.keys)))
+        let uniforms = ShaderUniformDeclaration.merged(vertex: vertex.uniforms.filter { !$0.isSampler },
+                                                       fragment: fragment.uniforms.filter { !$0.isSampler })
+        let constants = ShaderConstantResolver.resolve(
+            uniforms: uniforms.map { .init(name: $0.name, glslType: $0.type, arrayCount: $0.arrayCount ?? 1, annotation: $0.annotation) },
+            material: source.pass.constantSources(uniforms: uniforms), instance: [:])
+        let variant = try translator.variant(vertex: vertex, fragment: fragment, combos: combos)
+        let msl = variant.vertexMSL + variant.fragmentMSL
+        let sampled = Set(variant.textureSlots).filter { msl.contains("[[texture(\($0))]]") }
+        let morph = Set((vertex.samplers + fragment.samplers).filter { ($0.annotation["material"] as? String) == "morph" }
+            .compactMap(\.textureSlot))
+        let inputs = listed.filter { sampled.contains($0.key) && !morph.contains($0.key) }
+        if let unbound = sampled.subtracting(inputs.keys).subtracting(morph).min() {
+            throw ModelMaterialPlanError.unsupported("the shadow variant's g_Texture\(unbound) has no texture")
+        }
+        let pass = SceneEffectPassPlan(command: .render,
+                                       variantKey: ShaderVariantTranslator.cacheKey(vertex: vertex, fragment: fragment, combos: combos),
+                                       variant: variant, blending: alphaToCoverage ? "alphatocoverage" : (utilPass.blending ?? "normal"),
+                                       target: nil, textures: inputs, constants: constants)
+        return ModelMaterialPlan(materialPath: "\(source.materialPath) (shadow: \(shader))", pass: pass,
+                                 raster: SceneRasterState(depthtest: utilPass.depthtest, depthwrite: utilPass.depthwrite,
+                                                          cullmode: utilPass.cullmode),
+                                 clampedSlots: source.clampedSlots.intersection(inputs.keys), meshCombos: source.mesh)
+    }
+
+    /// The util material every shadow variant takes its pass state (and its default shader) from.
+    static let shadowCasterMaterial = "materials/util/shadowcaster.json"
+
+    /// The shader a `// [PASS] shadow <name>` line names; nil without one.
+    static func shadowPassShader(in text: String) -> String? {
+        shadowPassPattern.firstMatch(in: text, range: NSRange(text.startIndex..., in: text))
+            .flatMap { Range($0.range(at: 1), in: text) }
+            .map { String(text[$0]) }
+    }
+
+    private static let shadowPassPattern = NSRegularExpression.shader(#"//[ \t]*\[PASS\][ \t]+shadow[ \t]+([\w/.-]+)"#)
 
     /// nil (logged) for a texture that isn't there: the slot stays unbound, and so does its combo.
     private func textureInput(named name: String, materialPath: String) throws -> SceneEffectTextureInput? {
@@ -173,9 +267,11 @@ struct ModelMaterialPlanBuilder {
         // Another layer's image after its effects (a dependency of the model, drawn whether it is
         // visible or not): the renderer hands it out by layer id (`SceneModelDraw.layerComposite`).
         if Self.compositeLayerID(name) != nil { return .fbo(name) }
+        // The frame's shadow atlas (`SceneModelDraw.shadowAtlas`).
+        if name == SceneShadowAtlas.name { return .fbo(name) }
         if name.hasPrefix("_rt_") || name.hasPrefix("_alias_") {
-            // `_rt_shadowAtlas` (M8), `_rt_Reflection` (M9), `_alias_lightCookie` and the scene's
-            // own buffers have no source for a model yet.
+            // `_rt_Reflection` (M9), `_alias_lightCookie` and the scene's own buffers have no
+            // source for a model yet.
             throw ModelMaterialPlanError.unsupported("render target \(name)")
         }
         guard let source = loadTexture(name, materialPath) else {

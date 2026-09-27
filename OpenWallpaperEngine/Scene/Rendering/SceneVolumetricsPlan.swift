@@ -74,7 +74,7 @@ struct SceneVolumetricsPlan {
     static func combos(for light: SceneLight, quality: Int, shadowQuality: Int) -> [String: Int] {
         var combos = ["QUALITY": quality]
         if light.useCookie { combos["COOKIE"] = 1 }
-        if light.castShadow && shadowQuality > 0 { combos["SHADOW"] = 1 }
+        if castsShadow(light, shadowQuality: shadowQuality) { combos["SHADOW"] = 1 }
         if light.kind == .point {
             combos["POINTLIGHT"] = 1
             combos["LIGHTS_SHADOW_MAPPING_QUALITY"] = shadowQuality
@@ -87,8 +87,13 @@ struct SceneVolumetricsPlan {
         guard light.kind == .point || light.kind == .spot else {
             return "a \(light.kind) light's volume isn't a point's or a spot's [?]"
         }
-        if light.castShadow && shadowQuality > 0 { return "SHADOW needs the shadow atlas (D2)" }
         return nil
+    }
+
+    /// The light's volume reads its shadow map (`SHADOW`): it casts shadows while the shadows
+    /// setting is on.
+    static func castsShadow(_ light: SceneLight, shadowQuality: Int) -> Bool {
+        light.castShadow && shadowQuality > 0
     }
 
     /// Plans `lights` with `builder`'s translator, files and engine combos; nil when the setting

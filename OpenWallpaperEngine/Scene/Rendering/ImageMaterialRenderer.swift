@@ -16,6 +16,8 @@ final class ImageMaterialRenderer {
     private let archive: EffectPipelineArchive?
     private let zeroAttributes: MTLBuffer
     private let clampSampler: MTLSamplerState
+    /// `_rt_shadowAtlas`'s comparison sampler (`SceneShadowAtlas.makeSampler`).
+    private let shadowSampler: MTLSamplerState
     private let repeatSampler: MTLSamplerState
     /// Uniform blocks over 4 KB. Render thread only (see `SceneUniformArena`).
     let uniformArena: SceneUniformArena
@@ -80,8 +82,10 @@ final class ImageMaterialRenderer {
             descriptor.tAddressMode = mode
             return device.makeSamplerState(descriptor: descriptor)
         }
-        guard let clamp = sampler(.clampToEdge), let wrap = sampler(.repeat) else { return nil }
+        guard let clamp = sampler(.clampToEdge), let wrap = sampler(.repeat),
+              let shadow = SceneShadowAtlas.makeSampler(device: device) else { return nil }
         clampSampler = clamp
+        shadowSampler = shadow
         repeatSampler = wrap
     }
 
@@ -113,6 +117,9 @@ final class ImageMaterialRenderer {
         /// `_rt_MipMappedFrameBuffer` (`SceneMipMappedFrameBuffer`), for a material that samples it
         /// (`REFLECTION`).
         var mipMappedFrameBuffer: MTLTexture? = nil
+        /// `_rt_shadowAtlas` this frame (`SceneShadowAtlas`), for a lit material under a shadowed
+        /// light budget (`genericimage4`'s `g_Texture6`).
+        var shadowAtlas: MTLTexture? = nil
         let frame: BuiltinFrameContext
         let values: SceneValueContext
         let assetTexture: (String, SceneMetalTextureSource) -> MTLTexture?
@@ -342,6 +349,9 @@ final class ImageMaterialRenderer {
             case .asset(let key, let source):
                 guard let texture = draw.assetTexture(key, source) else { return nil }
                 textureInfo.append((slot, texture, sampler, source.contentSize, draw.assetSprite?(key, source)))
+            case .fbo(SceneShadowAtlas.name):
+                guard let atlas = draw.shadowAtlas else { return nil }
+                textureInfo.append((slot, atlas, shadowSampler, nil, nil))
             case .fbo:
                 return nil
             }

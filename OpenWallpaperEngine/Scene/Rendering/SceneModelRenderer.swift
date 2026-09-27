@@ -20,6 +20,8 @@ final class SceneModelRenderer: SceneModelDrawing {
     private let zeroAttributes: MTLBuffer
     private let clampSampler: MTLSamplerState
     private let repeatSampler: MTLSamplerState
+    /// `_rt_shadowAtlas`'s comparison sampler (`SceneShadowAtlas.makeSampler`).
+    private let shadowSampler: MTLSamplerState
     /// WE's "morph" texture stand-in for a `MORPHING` mesh (M7 fills it).
     private let emptyMorphTexture: MTLTexture
 
@@ -41,7 +43,7 @@ final class SceneModelRenderer: SceneModelDrawing {
     /// The frame time each animator last advanced at (one evaluation a frame).
     private var advancedAt: [String: Double] = [:]
 
-    private struct MeshBuffers {
+    struct MeshBuffers {
         let vertices: MTLBuffer
         let indices: MTLBuffer
     }
@@ -81,11 +83,13 @@ final class SceneModelRenderer: SceneModelDrawing {
         let morph = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba16Float, width: 1, height: 1, mipmapped: false)
         morph.usage = .shaderRead
         guard let clamp = sampler(.clampToEdge), let wrap = sampler(.repeat), let zero = device.makeBuffer(length: 64),
-              let morphTexture = device.makeTexture(descriptor: morph) else { return nil }
+              let morphTexture = device.makeTexture(descriptor: morph),
+              let shadow = SceneShadowAtlas.makeSampler(device: device) else { return nil }
         morphTexture.replace(region: MTLRegionMake2D(0, 0, 1, 1), mipmapLevel: 0, withBytes: [UInt16](repeating: 0, count: 4),
                              bytesPerRow: 8)
         clampSampler = clamp
         repeatSampler = wrap
+        shadowSampler = shadow
         zeroAttributes = zero
         emptyMorphTexture = morphTexture
     }
@@ -207,8 +211,9 @@ final class SceneModelRenderer: SceneModelDrawing {
     }
 
     /// Poses the model once this frame (only while visible, which is when the renderer draws it)
-    /// and returns its `g_Bones` components; nil for a model without bones.
-    private func advance(_ model: SceneModelObject, plan: SceneModelPlan, frame: BuiltinFrameContext,
+    /// and returns its `g_Bones` components; nil for a model without bones. The shadow pass poses
+    /// its casters so before the scene pass draws them.
+    func advance(_ model: SceneModelObject, plan: SceneModelPlan, frame: BuiltinFrameContext,
                          values: SceneValueContext) -> [Float]? {
         guard let animator = animator(for: model.id) else { return nil }
         if advancedAt[model.id] != frame.time {
@@ -265,7 +270,7 @@ final class SceneModelRenderer: SceneModelDrawing {
 
     // MARK: - Resources
 
-    private func meshBuffers(_ plan: SceneModelPlan) -> [MeshBuffers?] {
+    func meshBuffers(_ plan: SceneModelPlan) -> [MeshBuffers?] {
         let key = ObjectIdentifier(plan)
         if let existing = buffers[key] { return existing }
         let made = plan.meshes.map { mesh -> MeshBuffers? in
@@ -305,6 +310,9 @@ final class SceneModelRenderer: SceneModelDrawing {
             case .mipMappedFrameBuffer:
                 guard let texture = draw.mipMappedFrameBuffer else { return nil }
                 bound.append((slot, texture, clampSampler, nil))
+            case .fbo(SceneShadowAtlas.name):
+                guard let atlas = draw.shadowAtlas else { return nil }
+                bound.append((slot, atlas, shadowSampler, nil))
             case .fbo(let name):
                 guard let id = ModelMaterialPlanBuilder.compositeLayerID(name), let texture = draw.layerComposite(id) else {
                     return nil

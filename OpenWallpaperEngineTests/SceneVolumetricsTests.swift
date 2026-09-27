@@ -132,13 +132,16 @@ final class SceneVolumetricsTests: XCTestCase {
         XCTAssertFalse(SceneVolumetrics.runs(nil, settings: Self.settings(.ultra)))
     }
 
-    /// A shadow caster needs the shadow atlas (D2) while shadows are on; with them off WE compiles
-    /// it without `SHADOW`, as it does.
-    func testShadowCastersWaitForTheShadowAtlas() throws {
+    /// A shadow caster reads its map in the shadow atlas (`SHADOW`, LR22) while shadows are on;
+    /// with them off WE compiles it without `SHADOW`, as it does.
+    func testShadowCastersReadTheShadowAtlas() throws {
         let caster = Self.object("9", Self.spot(cookie: true, shadow: true))
         let on = try XCTUnwrap(plan([caster, Self.object("1", Self.spot())], .high))
-        XCTAssertEqual(on.lights.map(\.id), ["1"])
-        XCTAssertEqual(on.skipped.map(\.id), ["9"])
+        XCTAssertEqual(on.lights.map(\.id), ["9", "1"])
+        XCTAssertEqual(on.skipped.map(\.id), [])
+        XCTAssertEqual(on.lights[0].front.variant.combos["SHADOW"], 1)
+        XCTAssertEqual(on.lights[0].fullscreen.variant.combos["SHADOW"], 1)
+        XCTAssertEqual(on.lights[1].front.variant.combos["SHADOW"] ?? 0, 0)
         XCTAssertEqual(SceneVolumetricsPlan.combos(for: caster.light, quality: 3, shadowQuality: 2)["SHADOW"], 1)
         let off = try XCTUnwrap(plan([caster], .high, shadows: .disabled))
         XCTAssertEqual(off.lights.map(\.id), ["9"])

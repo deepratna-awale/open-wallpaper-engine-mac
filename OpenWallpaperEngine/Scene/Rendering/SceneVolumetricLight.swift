@@ -29,7 +29,7 @@ struct SceneVolumetricLight: Equatable {
         let forward = SIMD3(world.columns.0.x, world.columns.0.y, world.columns.0.z)
         let color = light.color
         // 0x140198716…0x1401987f5. The shadow transform (+0x310) and a point's projection info
-        // (+0x320) only feed SHADOW, which needs the shadow atlas (D2): zero until then.
+        // (+0x320) are the frame's shadow maps' (`SceneShadowFrame`), which `SceneVolumetrics` sets.
         var var3 = SIMD4<Float>.zero
         if light.kind == .point {
             lightProjection = matrix_identity_float4x4

@@ -242,6 +242,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var spatial = SceneSpatialContent()
     /// Draws model objects at their place in the object loop (docs/models-plan.md M5); nil draws none.
     var modelDrawing: (any SceneModelDrawing)?
+    /// Draws the frame's shadow maps into `_rt_shadowAtlas` (docs/models-plan.md §2.10).
+    private(set) var shadowPass: SceneShadowPass?
+    /// This frame's `_rt_shadowAtlas` (`drawShadows`).
+    private var frameShadowAtlas: MTLTexture?
     /// WE's depth-stencil states and this frame's depth buffer (docs/models-plan.md §2.4): a
     /// perspective scene's pass has one.
     private lazy var depthStates = SceneDepthStates(device: device)
@@ -376,6 +380,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         sounds = SceneSoundLayers(label: screenID.isEmpty ? "sounds" : "sounds \(screenID)")
         super.init()
         modelDrawing = SceneModelRenderer(device: device, archive: effectGraph?.pipelineArchive)
+        shadowPass = SceneShadowPass(device: device, archive: effectGraph?.pipelineArchive)
         memoryPressure = SceneMemoryPressure { [weak self] level in self?.trimMemory(level) }
     }
 
@@ -497,6 +502,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 self.cameraTransforms = content.spatial.transforms
                 self.spatial = content.spatial
                 self.modelDrawing?.setContent(content.spatial.models, content: content)
+                self.shadowPass?.setContent()
                 for stage in self.frameStages { stage.setContent(content) }
                 self.postProcess.setContent(content)
                 self.particleSystems = preparedParticleSystems
@@ -580,6 +586,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                     spatial.transforms.remove(key)
                     objectMotions.removeValue(forKey: key)
                     models?.remove(key)
+                    shadowPass?.remove(key)
                 }
                 layers.removeAll { $0.layer.id == key }
                 textRasterScales.removeValue(forKey: key)
@@ -928,6 +935,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         effectFrame.lighting = frameLighting(eye: effectFrame.eyePosition, forward: effectFrame.viewForward,
                                              shake: motion.shake)
         drawProbe?.record(lighting: effectFrame.lighting)
+        frameShadowAtlas = drawShadows(frame: effectFrame, commandBuffer: commandBuffer)
         // Text is rasterised first so its effects run on the finished text, like an image layer's.
         var textFrames: [Int: (frame: RenderTextureFrame, baseSize: SIMD2<Float>)] = [:]
         // Only visible layers get an entry; the draw loop skips the rest.
@@ -1249,7 +1257,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                    color: SIMD3(draw.color.x, draw.color.y, draw.color.z) * textTint, alpha: draw.opacity, brightness: draw.brightness,
                    texture: materialTexture, contentSize: entry.layer.source.contentSize,
                    uvOrigin: textureFrame.uvOrigin, uvAxisX: textureFrame.uvAxisX, uvAxisY: textureFrame.uvAxisY,
-                   sceneSnapshot: layerSnapshot, mipMappedFrameBuffer: mipMappedTarget, frame: effectFrame,
+                   sceneSnapshot: layerSnapshot, mipMappedFrameBuffer: mipMappedTarget, shadowAtlas: frameShadowAtlas,
+                   frame: effectFrame,
                    values: timelines.values,
                    assetTexture: { [unowned self] key, source in
                        self.puppetWarps[entry.layer.id]?[key] ?? self.effectAssetTexture(key: key, source: source)
@@ -1280,6 +1289,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                                   frame: effectFrame, settings: renderSettings)
         stageContext.assetTexture = { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) }
         stageContext.sceneDepth = frameDepth == nil ? nil : depthBuffer.texture
+        stageContext.shadowAtlas = frameShadowAtlas
         for stage in frameStages { stage.encode(stageContext) }
         // The scene-resolution target goes onto the real drawable, placement applied exactly once.
         postProcess.encode(ScenePostProcess.Frame(
@@ -1348,13 +1358,27 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             local: { [unowned self] id in self.liveLocal(id) ?? self.transforms.nodes[id]?.local },
             parentWorld: { [unowned self] id in self.transforms.parentWorld(of: id) { self.liveLocal($0) } },
             isVisible: { [unowned self] id in self.scripts.isVisible(id) },
+            world3D: isPerspective ? { [unowned self] id in self.world3D(id, in: self.spatial.transforms) } : nil,
             sceneColor: { scene.vector3($0) },
             live: { [unowned self] object in
                 object.live(script: self.scripts.object(object.id), animation: self.timelines.object(object.id),
                             timeline: { self.timelines.objectField(object.id, $0) })
             },
-            shadows: renderSettings.shadows != .disabled, cameraShake: shake,
+            shadows: renderSettings.shadows != .disabled, shadowQuality: renderSettings.shadows.level,
+            orthographic: !isPerspective, shadowAtlasExtent: shadowPass?.atlas.extent ?? .zero, cameraShake: shake,
             eyePosition: eye, viewForward: forward))
+    }
+
+    /// This frame's `_rt_shadowAtlas` (docs/models-plan.md §2.10): the lighting's shadow maps
+    /// drawn with the visible model objects that cast, before the scene pass reads them, or the
+    /// cleared stand-in without maps.
+    private func drawShadows(frame: BuiltinFrameContext, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
+        guard let shadowPass, let models else { return nil }
+        let casters = spatial.models.filter { scripts.isVisible($0.id) && SceneShadowPass.castsShadow($0) }
+            .map { SceneShadowPass.Caster(model: $0, world: world3D($0.id, in: spatial.transforms)) }
+        return shadowPass.encode(frame.lighting.shadows, casters: casters, models: models, frame: frame, values: timelines.values,
+                                 assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
+                                 commandBuffer: commandBuffer)
     }
 
     /// WE's sound layers each frame: the volumes scripts set, then their timers, in real time. A
@@ -1721,7 +1745,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             values: timelines.values, pixelFormat: pixelFormat, sampleCount: sceneSampleCount, depth: frameDepth,
             mipMappedFrameBuffer: mipMappedTarget,
             assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
-            layerComposite: { [unowned self] id in self.layerComposites[id] }),
+            layerComposite: { [unowned self] id in self.layerComposites[id] }, shadowAtlas: frameShadowAtlas),
             encoder: encoder, commandBuffer: commandBuffer)
         encoder.setRenderPipelineState(renderPipeline)
     }
@@ -2059,7 +2083,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             layerID: entry.layer.id, quad: draw.quad, sceneSize: sceneSize, color: SIMD3(repeating: 1), alpha: 1,
             brightness: 1, texture: input, contentSize: entry.layer.source.contentSize, uvOrigin: .zero,
             uvAxisX: SIMD2(1, 0), uvAxisY: SIMD2(0, 1), sceneSnapshot: snapshot, mipMappedFrameBuffer: mipMappedTarget,
-            frame: frame, values: timelines.values,
+            shadowAtlas: frameShadowAtlas, frame: frame, values: timelines.values,
             assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
             assetSprite: { [unowned self] key, source in self.effectAssetSprite(key: key, source: source) }),
             // The layer's effect buffers' format: RGBA16F in HDR (docs/lighting-plan.md §2.3, §2.6).

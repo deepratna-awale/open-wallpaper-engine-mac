@@ -49,6 +49,8 @@ final class SceneVolumetrics: SceneFrameStage {
     /// The far clip depth as one texel, `_rt_volumetricsBack` without a scene depth.
     private var farBack: MTLTexture?
     private var reportedFailure = false
+    /// `_rt_shadowAtlas`'s comparison sampler, for a shadow-casting light (`SHADOW`).
+    private lazy var shadowSampler = SceneShadowAtlas.makeSampler(device: device)
 
     private struct Targets {
         let sceneSize: SIMD2<Int>
@@ -116,7 +118,12 @@ final class SceneVolumetrics: SceneFrameStage {
         let viewProjection = Self.viewProjection(camera)
         var drawn: [(id: String, fullscreen: Bool)] = []
         for (index, (light, world)) in shown.enumerated() {
-            let volume = SceneVolumetricLight(light: light.light, world: world, camera: camera)
+            var volume = SceneVolumetricLight(light: light.light, world: world, camera: camera)
+            // The light's map transform (+0x310) and a point's projection info (+0x320), as the
+            // shadow maps left them (docs/models-plan.md §2.10).
+            let shadows = context.frame.lighting.shadows
+            volume.renderVars[0] = shadows.lightTransforms[light.id] ?? .zero
+            if light.light.kind == .point { volume.renderVars[3] = shadows.pointProjections[light.id] ?? .zero }
             guard encodeLight(light, volume: volume, camera: camera, viewProjection: viewProjection, back: back,
                               targets: targets, clear: index == 0, context: context, pipelines: pipelines) else { return }
             drawn.append((light.id, volume.cameraInside))
@@ -198,6 +205,15 @@ final class SceneVolumetrics: SceneFrameStage {
         for (slot, texture) in [(1, back), (3, targets.single)] {
             encoder.setFragmentTexture(texture, index: slot)
             encoder.setFragmentSamplerState(pipelines.nearestClamp, index: slot)
+        }
+        // A shadow-casting light reads its map (`SHADOW`, `_rt_shadowAtlas` as `g_Texture0`).
+        if SceneVolumetricsPlan.castsShadow(light.light, shadowQuality: context.settings.shadows.level) {
+            guard let atlas = context.shadowAtlas, let shadowSampler else {
+                encoder.endEncoding()
+                return false
+            }
+            encoder.setFragmentTexture(atlas, index: 0)
+            encoder.setFragmentSamplerState(shadowSampler, index: 0)
         }
         if let cookie = light.cookie, let texture = context.assetTexture?(cookie.key, cookie.source) {
             encoder.setFragmentTexture(texture, index: 2)

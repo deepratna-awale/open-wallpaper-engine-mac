@@ -1,6 +1,13 @@
 import Foundation
 
 extension SceneEngineCombos {
+    /// Shadow maps are drawn: the shadows setting is on and the (folded) budget has a shadowed
+    /// light (docs/models-plan.md §2.10), so opaque model materials get their shadow variant.
+    var castsShadows: Bool {
+        guard shadowQuality > 0, let budget = lightBudget else { return false }
+        return budget.spotShadowCookie + budget.spotShadow + budget.directionalShadow + budget.pointShadow != 0
+    }
+
     /// The lighting part of WE's engine combos (0x1401a5c40; docs/lighting-plan.md §2.2):
     /// - when the material's `LIGHTING` is set and not 0, all nine `LIGHTS_*` counts from
     ///   `lightBudget` (0 without a `lightconfig`, as WE's budget word is then 0);

@@ -28,11 +28,13 @@ final class ModelMaterialUniforms {
     private let frameBuiltins: [UniformMember]
     private let passBuiltins: [UniformMember]
     private let bones: UniformMember?
+    private let layout: UniformLayout?
     private var lastKey: PassKey?
     private var lastBones: [Float]?
 
     init(layout: UniformLayout?, constants: ShaderConstantResolver.ResolvedConstants) {
         size = layout?.size ?? 0
+        self.layout = layout
         bytes = [UInt8](repeating: 0, count: size)
         let dynamicByName = Dictionary(constants.dynamic.map { ($0.uniform, $0) }, uniquingKeysWith: { a, _ in a })
         var dynamic: [(UniformMember, ShaderConstantResolver.DynamicConstant)] = []
@@ -87,6 +89,15 @@ final class ModelMaterialUniforms {
     }
 
     var hasBones: Bool { bones != nil }
+
+    /// Writes an engine value the material doesn't set and the built-ins don't cover (the shadow
+    /// variant's `g_ViewportViewProjectionMatrices`); false when the layout has no such member.
+    @discardableResult
+    func write(_ components: [Float], member name: String) -> Bool {
+        guard let member = layout?.members[name] else { return false }
+        UniformWriter.write(components, member: member, into: &bytes)
+        return true
+    }
 
     private func write(_ members: [UniformMember], frame: BuiltinFrameContext, pass: BuiltinPassContext) {
         for member in members {

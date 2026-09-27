@@ -23,6 +23,19 @@ enum SceneLightPacker {
         var localOrigin: SIMD3<Float>
         /// Its own `visible` and every ancestor's (0x140185010).
         var visible: Bool
+        /// The light object's id (its shadow map's, `SceneShadowMap.lightID`).
+        var id = ""
+    }
+
+    /// What the shadow maps are made from (docs/models-plan.md §2.10): the user's shadows setting
+    /// (1 low … 4 ultra; 0 makes none), the camera the cascades follow (ctx+0x68, ctx+0x160), the
+    /// scene's projection, and the atlas's size so far, which the layout never shrinks.
+    struct ShadowContext: Equatable {
+        var quality: Int
+        var eye: SIMD3<Float>
+        var forward: SIMD3<Float>
+        var orthographic: Bool
+        var atlasExtent = SIMD2<Int>.zero
     }
 
     /// The `LightingV1` arrays by uniform name, flattened per element (`vec4` 4 floats, `mat4`
@@ -32,12 +45,20 @@ enum SceneLightPacker {
     /// user's shadows are off, which `shadows` also says (WE reads it from ctx+0x1ac).
     static func lightingV1(_ lights: [Light], budget: WELightConfig, shadows: Bool,
                            viewForward: SIMD3<Float>) -> [String: [Float]] {
-        var buffer = LightBuffer(budget)
+        lightingV1(lights, budget: budget, shadows: shadows, viewForward: viewForward, shadowContext: nil).arrays
+    }
+
+    /// The same, with the shadow and cookie projections (`g_LFeature_*`) and the frame's shadow
+    /// maps laid out in the atlas (0x140190c80 through 0x1401939ed), when `shadowContext` is given.
+    static func lightingV1(_ lights: [Light], budget: WELightConfig, shadows: Bool, viewForward: SIMD3<Float>,
+                           shadowContext: ShadowContext?) -> (arrays: [String: [Float]], shadows: SceneShadowFrame) {
+        var buffer = LightBuffer(budget, shadowContext: shadowContext)
         for entry in sorted(lights, viewForward: viewForward) where entry.visible {
             buffer.pack(entry, shadows: shadows)
         }
         buffer.fillUnusedDirectionals()
-        return buffer.arrays
+        buffer.layOutShadows()
+        return (buffer.arrays, buffer.shadowFrame)
     }
 
     /// WE's order: by type, then by shadow and cookie flags descending (shadow and cookie,
@@ -142,8 +163,23 @@ private struct LightBuffer {
     private var directionalLeft: [Int]
     private var tubeCursor = 0
 
-    init(_ budget: WELightConfig) {
+    /// The shadow part (0x140190fb8…0x14019105c): how many spot and directional entries may
+    /// still get a projection (`F`, one per spot and one per directional light, though a
+    /// directional writes three), how many shadowed points may get a cell, and the cursors of the
+    /// directionals' cascades and of the points' projections.
+    private let shadowContext: SceneLightPacker.ShadowContext?
+    private var featureEntriesLeft: Int
+    private var pointShadowsLeft: Int
+    private var cascadeCursor: Int
+    private var pointShadowCursor = 0
+    private(set) var shadowFrame = SceneShadowFrame()
+
+    init(_ budget: WELightConfig, shadowContext: SceneLightPacker.ShadowContext? = nil) {
         self.budget = budget
+        self.shadowContext = shadowContext
+        featureEntriesLeft = budget.spotShadowCookie + budget.spotCookie + budget.spotShadow + 3 * budget.directionalShadow
+        pointShadowsLeft = budget.pointShadow
+        cascadeCursor = budget.spotShadowCookie + budget.spotCookie + budget.spotShadow
         features = budget.spotShadowCookie + budget.spotCookie + budget.spotShadow + 3 * budget.directionalShadow
         remaining = (budget.point, budget.spot, budget.tube, budget.directional)
         pointCursor = [budget.pointShadow, 0]
@@ -178,6 +214,7 @@ private struct LightBuffer {
             pointCursor[group] += 1
             write(color, at: index)
             write(SIMD4(position, light.exponent), at: index + budget.point)
+            if shadows, light.castShadow { packPointShadow(entry) }
         case .spot:
             guard remaining.spot > 0 else { return }
             remaining.spot -= 1
@@ -190,6 +227,8 @@ private struct LightBuffer {
             write(SIMD4(world.columns.0.xyz, cos(light.outerCone * Self.radiansPerDegree)), at: index + 2 * budget.spot)
             // Only `.x`: the rest keeps whatever the buffer holds.
             write(light.exponent, at: index + 3 * budget.spot, component: 0)
+            // The group's projection slot is its cursor, which is the spot's index here.
+            packSpotFeature(entry, slot: index - spotBase, shadowed: shadows && light.castShadow)
         case .tube:
             guard remaining.tube > 0 else { return }
             remaining.tube -= 1
@@ -208,6 +247,7 @@ private struct LightBuffer {
             write(SIMD4(light.color * light.intensity, 1), at: index)
             // Toward the light: the negated local +X.
             write(SIMD4(-world.columns.0.xyz, 0), at: index + budget.directional)
+            if shadows, light.castShadow { packCascades(entry) }
         case .legacyPoint:
             return
         }
@@ -223,6 +263,83 @@ private struct LightBuffer {
                 write(SIMD4(0, 1, 0, 0), at: directionalBase + directionalCursor[group] + budget.directional)
                 directionalCursor[group] += 1
             }
+        }
+    }
+
+    // MARK: Shadows
+
+    /// A spot with a shadow (shadows on) or a cookie (0x140192ee0…0x140193178): its projection
+    /// (light+0x338) goes into `g_LFeature_ShadowProjection` at its group's cursor; only a
+    /// shadowed one gets a map, whose rectangle goes into the transform at the same slot.
+    private mutating func packSpotFeature(_ entry: SceneLightPacker.Light, slot: Int, shadowed: Bool) {
+        guard let context = shadowContext, shadowed || entry.light.useCookie, featureEntriesLeft > 0 else { return }
+        featureEntriesLeft -= 1
+        let projection = SceneShadowViews.spot(entry.light, world: entry.world, orthographic: context.orthographic)
+        writeProjection(projection, slot: slot)
+        guard shadowed, context.quality > 0 else { return }
+        shadowFrame.maps.append(SceneShadowMap(
+            kind: .spot, lightID: entry.id, size: SceneShadowAtlas.mapSize(quality: context.quality),
+            renderViews: [SceneShadowViews.biased(projection, by: SceneShadowViews.spotBias)], transformIndex: slot))
+    }
+
+    /// A shadowed directional light (0x14019123d…0x140192a14): one entry of `F`, three cascades
+    /// from the cascade cursor. WE's generated shader advances its cascade base by one per light
+    /// (`LightingV1Require`), which the cursor here doesn't copy: it writes where WE writes.
+    private mutating func packCascades(_ entry: SceneLightPacker.Light) {
+        guard let context = shadowContext, context.quality > 0, featureEntriesLeft > 0 else { return }
+        featureEntriesLeft -= 1
+        let size = SceneShadowAtlas.mapSize(quality: context.quality)
+        let cascades = SceneShadowViews.cascades(world: entry.world, distances: entry.light.cascadeDistances, mapSize: size,
+                                                 eye: context.eye, forward: context.forward,
+                                                 orthographic: context.orthographic)
+        for projection in cascades {
+            writeProjection(projection, slot: cascadeCursor)
+            shadowFrame.maps.append(SceneShadowMap(
+                kind: .cascade, lightID: entry.id, size: size,
+                renderViews: [SceneShadowViews.biased(projection, by: SceneShadowViews.spotBias)],
+                transformIndex: cascadeCursor))
+            cascadeCursor += 1
+        }
+    }
+
+    /// A shadowed point light (0x14019331d…0x140193526): its projection's info into
+    /// `g_LFeature_ShadowPointProjection` and a cell of six faces.
+    private mutating func packPointShadow(_ entry: SceneLightPacker.Light) {
+        guard let context = shadowContext, context.quality > 0, pointShadowsLeft > 0 else { return }
+        pointShadowsLeft -= 1
+        let projection = SceneShadowViews.pointProjection(entry.light, quality: context.quality,
+                                                          orthographic: context.orthographic)
+        let info = SceneShadowViews.projectionInfo(projection)
+        write(info, at: pointShadowBase + pointShadowCursor)
+        shadowFrame.pointProjections[entry.id] = info
+        shadowFrame.maps.append(SceneShadowMap(
+            kind: .point, lightID: entry.id, size: SceneShadowAtlas.mapSize(quality: context.quality),
+            renderViews: SceneShadowViews.pointRenderViews(projection: projection, origin: entry.world.columns.3.xyz),
+            transformIndex: pointShadowCursor))
+        pointShadowCursor += 1
+    }
+
+    /// A projection into `g_LFeature_ShadowProjection[slot]`, WE's matrix as it stands.
+    private mutating func writeProjection(_ projection: simd_float4x4, slot: Int) {
+        guard slot < features else { return }
+        let base = featureBase + 4 * slot
+        for column in 0..<4 { write(projection[column], at: base + column) }
+    }
+
+    /// The atlas layout (0x1401935dc…) and each map's rectangle into its transform (0x1401960b1,
+    /// 0x140196269).
+    mutating func layOutShadows() {
+        guard let context = shadowContext else { return }
+        shadowFrame.layOut(minimumExtent: context.atlasExtent)
+        for map in shadowFrame.maps {
+            let transform = map.transform(extent: shadowFrame.extent)
+            if map.isPoint {
+                write(transform, at: pointShadowBase + budget.pointShadow + map.transformIndex)
+            } else if map.transformIndex < features {
+                write(transform, at: featureBase + 4 * features + map.transformIndex)
+            }
+            // The light's own copy (+0x310), which its volume reads: its last map's.
+            shadowFrame.lightTransforms[map.lightID] = transform
         }
     }
 
@@ -244,7 +361,6 @@ private struct LightBuffer {
         slice("g_LTube_OriginB", vectorOffset: tubeBase + 2 * budget.tube, count: budget.tube)
         slice("g_LDirectional_Color", vectorOffset: directionalBase, count: budget.directional)
         slice("g_LDirectional_Direction", vectorOffset: directionalBase + budget.directional, count: budget.directional)
-        // The shadow and cookie projections stay zero until shadows (D2) and cookies (D1) fill them.
         slice("g_LFeature_ShadowProjection", vectorOffset: featureBase, count: features, vectorsPerElement: 4)
         slice("g_LFeature_ShadowProjectionTransform", vectorOffset: featureBase + 4 * features, count: features)
         slice("g_LFeature_ShadowPointProjection", vectorOffset: pointShadowBase, count: budget.pointShadow)

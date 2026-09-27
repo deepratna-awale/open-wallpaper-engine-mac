@@ -16,6 +16,9 @@ struct SceneFrameStageContext {
     var sceneDepth: MTLTexture? = nil
     /// An asset texture of the content (a light's cookie), from the renderer's texture cache.
     var assetTexture: ((String, SceneMetalTextureSource) -> MTLTexture?)? = nil
+    /// This frame's `_rt_shadowAtlas` (`SceneShadowPass`), which a shadow-casting light's volume
+    /// reads; nil without one.
+    var shadowAtlas: MTLTexture? = nil
 }
 
 /// Work WE does on the finished frame before its bloom (docs/lighting-plan.md §2.6 "Frame

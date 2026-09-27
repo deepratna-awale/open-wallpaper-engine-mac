@@ -364,6 +364,24 @@
           "baseline": "shadowsOff_t10"
         }
       ]
+    },
+    {
+      "id": "2350874185",
+      "title": "Razer",
+      "focus": "3D (area 6): the dome's models under a shadowed light, shadows high against off.",
+      "captures": [
+        {
+          "folder": "shadowsOff_t10",
+          "shadows": "disabled",
+          "volumetrics": "high"
+        },
+        {
+          "folder": "shadowsHigh_t10",
+          "shadows": "high",
+          "volumetrics": "high",
+          "baseline": "shadowsOff_t10"
+        }
+      ]
     }
   ]
 }

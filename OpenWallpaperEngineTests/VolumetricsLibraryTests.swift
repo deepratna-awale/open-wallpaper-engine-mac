@@ -237,13 +237,13 @@ final class VolumetricsLibraryTests: XCTestCase {
     private static let testSet: [String: Expected] = [
         // The sun's point light; its visibility is a user property.
         "3455121165": Expected(planned: ["85"], withoutShadows: ["85"]),
-        // Three shadow-casting points: SHADOW needs the atlas (D2) while shadows are on.
-        "3657770939": Expected(planned: [], skipped: ["115", "608", "603"], withoutShadows: ["115", "608", "603"]),
+        // Three shadow-casting points: they read the shadow atlas (SHADOW) while shadows are on.
+        "3657770939": Expected(planned: ["115", "608", "603"], withoutShadows: ["115", "608", "603"]),
         // A shadow-casting cookie spot.
-        "3233200129": Expected(planned: [], skipped: ["24"], withoutShadows: ["24"]),
+        "3233200129": Expected(planned: ["24"], withoutShadows: ["24"]),
         // Lights, none with volumetrics.
         "3159348391": Expected(planned: [], withoutShadows: []),
-        "3378346807": Expected(planned: [], skipped: ["58", "322"], withoutShadows: ["58", "322"]),
+        "3378346807": Expected(planned: ["58", "322"], withoutShadows: ["58", "322"]),
         // Moon: three points, two of them hidden.
         "3453730450": Expected(planned: ["39", "285", "339"], withoutShadows: ["39", "285", "339"]),
     ]
@@ -263,7 +263,8 @@ final class VolumetricsLibraryTests: XCTestCase {
                 XCTAssertEqual(plan?.lights.map(\.id) ?? [], want, "\(id), shadows \(shadows)")
                 if shadows == .medium { XCTAssertEqual(plan?.skipped.map(\.id) ?? [], expected.skipped, id) }
                 for light in plan?.lights ?? [] {
-                    XCTAssertEqual(light.front.variant.combos["SHADOW"] ?? 0, 0, "\(id) \(light.id)")
+                    XCTAssertEqual(light.front.variant.combos["SHADOW"] ?? 0,
+                                   light.light.castShadow && shadows != .disabled ? 1 : 0, "\(id) \(light.id)")
                     XCTAssertEqual(light.front.variant.combos["POINTLIGHT"] ?? 0, light.light.kind == .point ? 1 : 0)
                     XCTAssertEqual(light.front.variant.combos["COOKIE"] ?? 0, light.light.useCookie ? 1 : 0)
                 }

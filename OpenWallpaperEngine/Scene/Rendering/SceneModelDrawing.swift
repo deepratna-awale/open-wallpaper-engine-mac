@@ -45,6 +45,9 @@ struct SceneModelDraw {
     /// id: the layers a model's materials sample (`SceneModelPlan.compositeLayerIDs`), drawn
     /// whether they are visible or not; nil for any other.
     var layerComposite: (String) -> MTLTexture? = { _ in nil }
+    /// `_rt_shadowAtlas` this frame (`SceneShadowAtlas`): the maps `SceneShadowPass` drew, or the
+    /// cleared stand-in; nil draws no mesh whose material reads it.
+    var shadowAtlas: MTLTexture?
 
     /// The matrices a model's material takes (`BuiltinPassContext.place`): world, camera view,
     /// and the view-projection in the translated shaders' convention.

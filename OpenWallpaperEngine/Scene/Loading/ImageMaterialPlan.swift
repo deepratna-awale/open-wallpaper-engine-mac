@@ -318,6 +318,8 @@ struct ImageMaterialPlanBuilder {
     private func textureInput(named name: String, materialPath: String) throws -> SceneEffectTextureInput? {
         if name == "_rt_FullFrameBuffer" { return .sceneSnapshot }
         if name == SceneMipMappedFrameBuffer.name { return .mipMappedFrameBuffer }
+        // The frame's shadow atlas (`ImageMaterialRenderer.Draw.shadowAtlas`).
+        if name == SceneShadowAtlas.name { return .fbo(name) }
         if name.hasPrefix("_rt_") || name.hasPrefix("_alias_") {
             throw ImageMaterialPlanError.unsupported("render target \(name)")
         }

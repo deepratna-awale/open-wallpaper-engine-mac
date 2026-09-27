@@ -63,6 +63,10 @@ struct SceneFrameLightingInput {
     var parentWorld: (String) -> SceneAffineTransform
     /// Whether an object and all its ancestors are shown this frame (scripts included).
     var isVisible: (String) -> Bool
+    /// A perspective scene's world matrix of an object this frame (M3's 3D hierarchy with live
+    /// values: parents' depth and tilt included, which the 2D chain drops); nil in an orthographic
+    /// scene, whose lights take `parentWorld` and their own depth (`world(parent:local:depth:)`).
+    var world3D: ((String) -> simd_float4x4)? = nil
     /// A `general` colour scripts set this frame (`thisScene.ambientcolor`, `skylightcolor`); nil
     /// when no script owns it.
     var sceneColor: (SceneScriptSceneField) -> SIMD3<Float>?
@@ -71,6 +75,11 @@ struct SceneFrameLightingInput {
     var live: ((SceneLightObject) -> SceneLightObject)?
     /// The user's shadows setting isn't "disabled" (WE's ctx+0x1ac).
     var shadows = true
+    /// The shadow maps' inputs (`SceneLightPacker.ShadowContext`): the shadows setting's level
+    /// (0 makes no map), the scene's projection and the atlas's size so far.
+    var shadowQuality = 0
+    var orthographic = true
+    var shadowAtlasExtent = SIMD2<Int>.zero
     /// The camera shake this frame, in scene units. WE moves the camera's eye and centre by it
     /// (0x140199580) while every world matrix stays; the renderer instead moves every object by
     /// its negative, so the lights move with them and stay where the layers they light are.
@@ -95,6 +104,8 @@ struct SceneFrameLighting: Equatable {
     /// Every light object this frame, in scene order, whatever the budget: the volumetrics
     /// (`SceneVolumetrics`) draw each one's volume from it.
     var objects: [SceneFrameLightObject] = []
+    /// This frame's shadow maps (docs/models-plan.md §2.10), which `SceneShadowPass` draws.
+    var shadows = SceneShadowFrame()
 
     static func frame(_ content: SceneLightingContent, input: SceneFrameLightingInput) -> SceneFrameLighting {
         var lighting = SceneFrameLighting(ambient: input.sceneColor(.ambientcolor) ?? content.settings.ambient,
@@ -104,12 +115,12 @@ struct SceneFrameLighting: Equatable {
         let lights = content.lights.compactMap { built -> SceneLightPacker.Light? in
             guard let local = input.local(built.id) else { return nil }
             let object = input.live?(built) ?? built
-            var world = world(parent: input.parentWorld(object.id), local: local, depth: object.depth)
+            var world = input.world3D?(object.id) ?? world(parent: input.parentWorld(object.id), local: local, depth: object.depth)
             world.columns.3 -= SIMD4(lowHalf: input.cameraShake, highHalf: .zero)
             let light = SceneLightPacker.Light(
                 light: object.light, world: world,
                 localOrigin: SIMD3(local.origin, object.depth.originZ),
-                visible: input.isVisible(object.id))
+                visible: input.isVisible(object.id), id: object.id)
             objects.append(SceneFrameLightObject(id: object.id, world: light.world, visible: light.visible,
                                                  light: object.light))
             return light
@@ -118,8 +129,13 @@ struct SceneFrameLighting: Equatable {
         lighting.arrays = SceneLightPacker.legacy(lights)
         if let config = content.settings.lightConfig {
             let budget = input.shadows ? config : config.withShadowsDisabled
-            lighting.arrays.merge(SceneLightPacker.lightingV1(lights, budget: budget, shadows: input.shadows,
-                                                               viewForward: input.viewForward)) { _, new in new }
+            let context = SceneLightPacker.ShadowContext(
+                quality: input.shadows ? input.shadowQuality : 0, eye: input.eyePosition, forward: input.viewForward,
+                orthographic: input.orthographic, atlasExtent: input.shadowAtlasExtent)
+            let packed = SceneLightPacker.lightingV1(lights, budget: budget, shadows: input.shadows,
+                                                     viewForward: input.viewForward, shadowContext: context)
+            lighting.arrays.merge(packed.arrays) { _, new in new }
+            lighting.shadows = packed.shadows
         }
         return lighting
     }
