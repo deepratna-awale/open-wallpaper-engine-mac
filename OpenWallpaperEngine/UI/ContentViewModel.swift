@@ -102,6 +102,22 @@ class ContentViewModel: ObservableObject, DropDelegate {
 
     init() {
         _ = steamCmd
+        memoCancellables = [
+            objectWillChange.sink { [weak self] _ in self?.invalidateSortedMemo() },
+            FavoritesStore.shared.objectWillChange.sink { [weak self] _ in self?.invalidateSortedMemo() },
+            // The filters and sorting are app storage.
+            NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
+                .sink { [weak self] _ in self?.invalidateSortedMemo() },
+        ]
+    }
+
+    /// Changes can be announced on any thread; the memo is main-thread state.
+    private func invalidateSortedMemo() {
+        if Thread.isMainThread {
+            sortedMemo = nil
+        } else {
+            DispatchQueue.main.async { [weak self] in self?.sortedMemo = nil }
+        }
     }
     
     convenience init(isStaging: Bool, topTabBarSelection: Int = 0) {
@@ -122,10 +138,19 @@ class ContentViewModel: ObservableObject, DropDelegate {
 //        }
 //    }
     
+    /// Re-reads only the wallpapers that changed on disk.
+    private let library = InstalledLibraryCache()
+    /// `sortedWallpapers` for the current update: the Installed tab reads it many times per redraw
+    /// (grid, page count, pagination, selection). Cleared whenever this model changes, when
+    /// favourites or stored filters and sorting change, and after the current main-queue turn, so a
+    /// redraw never sees stale data. Main thread only, like every reader of the list.
+    private var sortedMemo: [WEWallpaper]?
+    private var memoCancellables: [AnyCancellable] = []
+
     /// The Installed wallpapers, before search and filters: no asset items, no dependency-only items.
     private var allWallpapers: [WEWallpaper] {
-        InstalledLibrary.wallpapers(in: FileManager.default.wallpapersDirectory,
-                                    hiding: steamCmd.dependencyIndex.ids)
+        library.wallpapers(in: FileManager.default.wallpapersDirectory,
+                           hiding: steamCmd.dependencyIndex.ids)
     }
 
     /// After wallpapers were deleted: removes the dependency-only items none of the remaining ones use.
@@ -184,7 +209,7 @@ class ContentViewModel: ObservableObject, DropDelegate {
             if FavoritesStore.shared.contains(wallpaper) { showOnly.insert(.myFavourites) }
             if wallpaper.isMobileCompatible { showOnly.insert(.mobileCompatible) }
             if wallpaper.isAudioResponsive { showOnly.insert(.audioResponsive) }
-            if wallpaper.hasCustomizableProperties { showOnly.insert(.customizable) }
+            if library.hasCustomizableProperties(wallpaper) { showOnly.insert(.customizable) }
             guard self.showOnly.isEmpty || !self.showOnly.intersection(showOnly).isEmpty else { return false }
             
             // Type
@@ -227,6 +252,14 @@ class ContentViewModel: ObservableObject, DropDelegate {
     }
     
     private var sortedWallpapers: [WEWallpaper] {
+        if let sortedMemo { return sortedMemo }
+        let sorted = computeSortedWallpapers()
+        sortedMemo = sorted
+        DispatchQueue.main.async { [weak self] in self?.sortedMemo = nil }
+        return sorted
+    }
+
+    private func computeSortedWallpapers() -> [WEWallpaper] {
         filteredWallpapers.sorted {
             switch sortingBy {
             case .name:
@@ -252,7 +285,7 @@ class ContentViewModel: ObservableObject, DropDelegate {
 //            case .favorite:
 //                return false
             case .fileSize:
-                if $0.wallpaperSize <= $1.wallpaperSize,
+                if library.size(of: $0) <= library.size(of: $1),
                       sortingSequence == .increase
                  { return false }
                 
@@ -305,7 +338,7 @@ class ContentViewModel: ObservableObject, DropDelegate {
     
     /// Caculates the maximium possible page index for all wallpapers in your application wallpaper directory
     var maxPage: Int {
-        max(1, Int(ceil(Double(filteredWallpapers.count) / Double(installedItemsPerPage))))
+        max(1, Int(ceil(Double(sortedWallpapers.count) / Double(installedItemsPerPage))))
     }
     
     func toggleSelection(for wallpaper: WEWallpaper) {

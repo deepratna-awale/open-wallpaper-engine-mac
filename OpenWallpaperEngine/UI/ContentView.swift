@@ -170,19 +170,23 @@ struct ContentView: View {
         .navigationSplitViewColumnWidth(min: tab == 3 ? 220 : 200, ideal: tab == 3 ? 260 : 225, max: 360)
     }
 
+    /// Every sidebar stays alive and only the current tab's is shown, so switching tabs keeps each
+    /// sidebar's scroll position and collapsed sections instead of rebuilding it.
     @ViewBuilder private var sidebarContent: some View {
         if viewModel.isStaging {
-            switch tab {
-            case 0:
-                FilterResults(viewModel: viewModel)
-            case 1:
-                WorkshopFiltersSidebar(viewModel: viewModel.workshopVM)
-            case 3:
-                PlaylistSidebar(wallpaperViewModel: wallpaperViewModel)
-            default:
-                Color.clear
+            keptAlive(FilterResults(viewModel: viewModel), isShown: tab == 0)
+            if viewModel.steamCmd.isInstalled && viewModel.steamCmd.isLoggedIn {
+                keptAlive(WorkshopFiltersSidebar(viewModel: viewModel.workshopVM), isShown: tab == 1)
             }
+            keptAlive(PlaylistSidebar(wallpaperViewModel: wallpaperViewModel), isShown: tab == 3)
         }
+    }
+
+    private func keptAlive(_ view: some View, isShown: Bool) -> some View {
+        view
+            .opacity(isShown ? 1 : 0)
+            .allowsHitTesting(isShown)
+            .accessibilityHidden(!isShown)
     }
 
     private var detail: some View {

@@ -16,7 +16,16 @@ struct TopTabBar: SubviewOfContentView {
     }
 
     var body: some View {
-        Picker("Section", selection: $viewModel.topTabBarSelection) {
+        Picker("Section", selection: Binding(
+            get: { viewModel.topTabBarSelection },
+            set: { tab in
+                // A tab switch swaps the columns' contents at once; animating the Details
+                // inspector in and out on every switch read as lag.
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) { viewModel.topTabBarSelection = tab }
+            }
+        )) {
             segment("Installed", systemImage: "square.and.arrow.down.fill").tag(0)
             segment("Workshop", systemImage: "cloud.fill").tag(1)
             segment("Downloads", systemImage: "arrow.down.circle.fill").tag(2)

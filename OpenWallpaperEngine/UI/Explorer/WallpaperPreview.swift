@@ -29,9 +29,19 @@ struct WallpaperPreview: SubviewOfContentView {
         self.wallpaperViewModel = wallpaperViewModel
     }
     
+    /// The displayed wallpaper's size on disk, measured off the main thread once per wallpaper: it
+    /// walks every file, which stalled each redraw of the panel.
+    @State private var measuredSize: (directory: URL, text: String)?
+
     var wallpaperSize: String {
-        guard let sizeBytes = try? wallpaperViewModel.displayedWallpaper.wallpaperDirectory.directoryTotalAllocatedSize(includingSubfolders: true)
-        else {
+        guard let measuredSize, measuredSize.directory == wallpaperViewModel.displayedWallpaper.wallpaperDirectory
+        else { return "…" }
+        return measuredSize.text
+    }
+
+    private static func sizeText(of directory: URL) -> String {
+        // An unreadable folder has no size to show; the placeholder says so.
+        guard let sizeBytes = try? directory.directoryTotalAllocatedSize(includingSubfolders: true) else {
             return "??? MB"
         }
         return ByteCountFormatter.string(fromByteCount: Int64(sizeBytes), countStyle: .file)
@@ -48,14 +58,10 @@ struct WallpaperPreview: SubviewOfContentView {
             ScrollView {
                 VStack(spacing: 16) {
                     VStack(spacing: 10) {
-                        GifImage(contentsOf: { (url: URL) in
-                            if let selectedProject = try? JSONDecoder()
-                                .decode(WEProject.self, from: Data(contentsOf: url.appending(path: "project.json"))),
-                               let preview = selectedProject.previewURL(in: url) {
-                                return preview
-                            }
-                            return Bundle.main.url(forResource: "WallpaperNotFound", withExtension: "mp4")!
-                        }(wallpaperViewModel.displayedWallpaper.wallpaperDirectory), animates: viewModel.isApplicationActive)
+                        GifImage(contentsOf: wallpaperViewModel.displayedWallpaper.project
+                                    .previewURL(in: wallpaperViewModel.displayedWallpaper.wallpaperDirectory)
+                                    ?? Bundle.main.url(forResource: "WallpaperNotFound", withExtension: "mp4")!,
+                                 animates: viewModel.isApplicationActive)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
                             .background(Color(nsColor: NSColor.controlBackgroundColor))
@@ -123,6 +129,11 @@ struct WallpaperPreview: SubviewOfContentView {
                     HStack {
                         Text(wallpaperViewModel.displayedWallpaper.project.type)
                         Text(wallpaperSize)
+                            .task(id: wallpaperViewModel.displayedWallpaper.wallpaperDirectory) {
+                                let directory = wallpaperViewModel.displayedWallpaper.wallpaperDirectory
+                                let text = await Task.detached(priority: .utility) { Self.sizeText(of: directory) }.value
+                                measuredSize = (directory, text)
+                            }
                     }
                     .font(.footnote)
                     

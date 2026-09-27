@@ -20,14 +20,11 @@ struct ExplorerItem: SubviewOfContentView {
     
     var body: some View {
         ZStack(alignment: .bottom) {
-            GifImage(contentsOf: { (url: URL) in
-                if let selectedProject = try? JSONDecoder()
-                    .decode(WEProject.self, from: Data(contentsOf: url.appending(path: "project.json"))),
-                   let preview = selectedProject.previewURL(in: url) {
-                    return preview
-                }
-                return Bundle.main.url(forResource: "WallpaperNotFound", withExtension: "mp4")!
-            }(wallpaper.wallpaperDirectory), animates: animates && viewModel.isApplicationActive)
+            // The library already decoded project.json; decoding it again per redraw made tab
+            // switches slow.
+            GifImage(contentsOf: wallpaper.project.previewURL(in: wallpaper.wallpaperDirectory)
+                        ?? Bundle.main.url(forResource: "WallpaperNotFound", withExtension: "mp4")!,
+                     animates: animates && viewModel.isApplicationActive)
             .resizable()
             .scaleEffect((viewModel.imageScaleIndex == index ? 1.2 : 1.0) * 1.08)
             .aspectRatio(1.0, contentMode: .fill)
