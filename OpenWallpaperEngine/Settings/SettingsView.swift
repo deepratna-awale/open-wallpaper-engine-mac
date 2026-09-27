@@ -99,15 +99,15 @@ struct SettingsView: View {
 
 extension AppDelegate: NSToolbarDelegate {
     func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        [SettingsToolbarIdentifiers.performance, SettingsToolbarIdentifiers.general, SettingsToolbarIdentifiers.plugins, SettingsToolbarIdentifiers.permissions, SettingsToolbarIdentifiers.diagnostics, SettingsToolbarIdentifiers.about]
+        SettingsToolbarIdentifiers.all
     }
         
     func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        [SettingsToolbarIdentifiers.performance, SettingsToolbarIdentifiers.general, SettingsToolbarIdentifiers.plugins, SettingsToolbarIdentifiers.permissions, SettingsToolbarIdentifiers.diagnostics, SettingsToolbarIdentifiers.about]
+        SettingsToolbarIdentifiers.all
     }
     
     func toolbarSelectableItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        [SettingsToolbarIdentifiers.performance, SettingsToolbarIdentifiers.general, SettingsToolbarIdentifiers.plugins, SettingsToolbarIdentifiers.permissions, SettingsToolbarIdentifiers.about]
+        SettingsToolbarIdentifiers.all
     }
     
     func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier, willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {

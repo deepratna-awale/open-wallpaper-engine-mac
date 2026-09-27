@@ -10,4 +10,8 @@ enum SettingsToolbarIdentifiers {
     static let permissions = NSToolbarItem.Identifier(rawValue: "permissions")
     static let diagnostics = NSToolbarItem.Identifier(rawValue: "diagnostics")
     static let about = NSToolbarItem.Identifier(rawValue: "about")
+
+    /// Every tab in toolbar order. Each is shown, allowed and selectable, so the selected tab
+    /// highlights whichever it is.
+    static let all: [NSToolbarItem.Identifier] = [performance, general, plugins, permissions, diagnostics, about]
 }
