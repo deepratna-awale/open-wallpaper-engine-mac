@@ -60,12 +60,14 @@ enum ShaderPairRewriter {
             }
         }
 
-        // Varyings: vertex outputs and fragment inputs, located by name.
+        // Varyings: vertex outputs and fragment inputs, located by name. Only a vertex input is an
+        // attribute; a varying may be named `a_…` too (the default project dna_fragment's
+        // `a_TexCloudsCoord`).
         struct Varying { let qualifier: String; let type: String; let name: String; let arrayCount: Int? }
         func varyings(_ text: String, direction: String) -> [Varying] {
             varyingPattern.matches(in: text, range: NSRange(text.startIndex..., in: text)).compactMap { match in
                 let name = group(match, 4, text)!
-                guard group(match, 2, text) == direction, !name.hasPrefix("a_"), name != "out_FragColor" else { return nil }
+                guard group(match, 2, text) == direction, name != "out_FragColor" else { return nil }
                 return Varying(qualifier: group(match, 1, text) ?? "", type: group(match, 3, text)!,
                                name: name, arrayCount: group(match, 5, text).flatMap(Int.init))
             }

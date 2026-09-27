@@ -215,6 +215,13 @@ final class ShaderVariantTests: XCTestCase {
         XCTAssertTrue(variant.fragmentMSL.contains("float4 v_TexCoord_weVarying"), variant.fragmentMSL)
     }
 
+    /// A varying may be named `a_…`: only the vertex stage's inputs are attributes.
+    func testAVaryingNamedLikeAnAttributeLinks() throws {
+        let variant = try translateDialectFixture("avaryings")
+        XCTAssertEqual(variant.attributes.keys.sorted(), ["a_Position", "a_TexCoord"])
+        XCTAssertTrue(variant.fragmentMSL.contains("a_TexCloudsCoord [[user(locn0)]]"), variant.fragmentMSL)
+    }
+
     /// A header's own include is emitted before the header that uses it.
     func testNestedIncludesComeBeforeTheirIncluder() throws {
         let source = try ShaderSourceLoader(roots: [Fixtures.url("ShaderAssets")])
