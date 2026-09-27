@@ -119,6 +119,8 @@ final class SceneScriptModelDataStore {
 
     private let lock = NSLock()
     private var entries: [Int: (data: SceneScriptModelData, revision: UInt64)] = [:]
+    /// How many times each token's data was replaced (`replaceData`).
+    private var generations: [Int: UInt64] = [:]
     private var nextToken = 1
 
     /// Stores new data; returns its token.
@@ -137,6 +139,7 @@ final class SceneScriptModelDataStore {
         defer { lock.unlock() }
         guard let entry = entries[token] else { throw Failure.invalidToken }
         entries[token] = (data, entry.revision &+ 1)
+        generations[token, default: 0] &+= 1
     }
 
     /// `applyData`: new contents for dynamic buffers of the same or a smaller size.
@@ -176,17 +179,38 @@ final class SceneScriptModelDataStore {
     func snapshot(_ token: Int) -> (data: SceneScriptModelData, revision: UInt64)? {
         lock.withLock { entries[token] }
     }
+
+    /// The data under `token` with how many times it was replaced; nil when there is none.
+    func replaced(_ token: Int) -> (data: SceneScriptModelData, generation: UInt64)? {
+        lock.withLock { entries[token].map { ($0.data, generations[token] ?? 0) } }
+    }
 }
 
 /// A model layer's view of its model data (`SceneModelPlan.geometry`): the meshes' vertices and
-/// triangle lists as the scripts last left them.
+/// triangle lists as the scripts last left them, and a new plan once `replaceData` replaced them.
+/// The renderer asks from its render thread, which owns `plannedGeneration`.
 final class SceneScriptModelGeometry: SceneModelGeometrySource {
     private let store: SceneScriptModelDataStore
     let token: Int
+    /// Plans the model again from replaced data (the loader's `SceneScriptModelPlanBuilder`).
+    var replan: ((SceneScriptModelData) -> SceneModelPlan?)?
+    /// The replacement the current plan was made from.
+    private var plannedGeneration: UInt64
 
     init(store: SceneScriptModelDataStore, token: Int) {
         self.store = store
         self.token = token
+        plannedGeneration = store.replaced(token)?.generation ?? 0
+    }
+
+    /// WE re-creates a model whose data a script replaced, whatever its shapes now are (other
+    /// counts, formats, materials or index types; scenescript64.dll hands the new data to the
+    /// engine as `createModelData` does, 0x1816362d9). Nil when nothing was replaced, or when the
+    /// new data plans nothing that draws (logged by the builder): the model keeps what it drew.
+    func replacement(for plan: SceneModelPlan) -> SceneModelPlan? {
+        guard let (data, generation) = store.replaced(token), generation != plannedGeneration else { return nil }
+        plannedGeneration = generation
+        return replan?(data)
     }
 
     func geometry(newerThan revision: UInt64) -> SceneModelGeometry? {

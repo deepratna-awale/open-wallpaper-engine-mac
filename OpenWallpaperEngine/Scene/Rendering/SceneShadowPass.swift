@@ -50,9 +50,11 @@ final class SceneShadowPass {
     /// Per object, each mesh's shadow-variant uniforms. Render thread only.
     private var uniforms: [String: [ModelMaterialUniforms?]] = [:]
 
-    /// Diagnostics and tests: batches and caster draws encoded, and the maps drawn last frame.
+    /// Diagnostics and tests: batches, caster draws and their indices encoded, and the maps drawn
+    /// last frame.
     private(set) var batchesEncoded = 0
     private(set) var casterDraws = 0
+    private(set) var casterIndices = 0
     private(set) var lastMapCount = 0
 
     init?(device: MTLDevice, archive: EffectPipelineArchive?) {
@@ -134,7 +136,8 @@ final class SceneShadowPass {
         encoder.setCullMode(.none)
         encoder.setFrontFacing(SceneModelRenderer.frontFacing)
         let posed = casters.compactMap { caster -> (Caster, SceneModelPlan, [Float]?)? in
-            guard let plan = caster.model.plan, !plan.isTranslucent,
+            // A script's `replaceData` re-plans its model (`SceneModelRenderer.currentPlan`).
+            guard let plan = caster.model.plan.map({ models.currentPlan($0, objectID: caster.model.id) }), !plan.isTranslucent,
                   plan.meshes.contains(where: { $0.material.shadowCaster != nil }) else { return nil }
             return (caster, plan, models.advance(caster.model, plan: plan, frame: frame, values: values))
         }
@@ -236,11 +239,14 @@ final class SceneShadowPass {
                 encoder.setVertexTexture(entry.texture, index: entry.slot)
                 encoder.setVertexSamplerState(entry.sampler, index: entry.slot)
             }
-            encoder.drawIndexedPrimitives(type: .triangle, indexCount: mesh.indexCount,
+            // A script's `applyData` may have shortened the triangle list since the plan was made.
+            let indexCount = models.indexCount(of: mesh, in: plan)
+            encoder.drawIndexedPrimitives(type: .triangle, indexCount: indexCount,
                                           indexType: mesh.usesUInt32Indices ? .uint32 : .uint16,
                                           indexBuffer: meshBuffers.indices, indexBufferOffset: 0,
                                           instanceCount: matrices.count)
             casterDraws += 1
+            casterIndices += indexCount
         }
     }
 

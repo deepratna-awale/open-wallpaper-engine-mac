@@ -97,9 +97,9 @@ final class SceneShadowRenderTests: XCTestCase {
     /// The plane drawn with the light, once with the cube casting and once without; RGBA bytes of
     /// each, and the atlas drawn.
     private func render(light: SceneLight, world: simd_float4x4, budget: WELightConfig,
-                        quality: Int = 3) throws -> (without: [UInt8], with: [UInt8]) {
+                        quality: Int = 3, cube custom: SceneModelPlan? = nil) throws -> (without: [UInt8], with: [UInt8]) {
         let builder = builder(budget, quality: quality)
-        let cube = try plan(ModelRenderTests.cube(), material: "materials/facecolor.json", builder: builder, half: 1)
+        let cube = try custom ?? plan(ModelRenderTests.cube(), material: "materials/facecolor.json", builder: builder, half: 1)
         let plane = try plan(Self.plane(), material: "materials/lit.json", builder: builder, half: Self.planeHalf)
         XCTAssertNotNil(cube.meshes[0].material.shadowCaster, "an opaque material under a shadow budget casts")
         XCTAssertEqual(plane.meshes[0].material.pass.variant?.combos["LIGHTS_SHADOW_MAPPING"], 1)
@@ -259,6 +259,39 @@ final class SceneShadowRenderTests: XCTestCase {
         light.intensity = 1.5
         let images = try render(light: light, world: world, budget: WELightConfig(directional: 1, directionalShadow: 1))
         compare(images, towardLight: { _ in (-direction, 100) }, label: "directional")
+    }
+
+    /// A script's model data casts with the triangle list `applyData` left, not the one it was
+    /// planned with (`SceneModelRenderer.indexCount(of:in:)`): the cube cut to its bottom face
+    /// draws 6 indices into the atlas and still shadows the plane.
+    func testAScriptMeshCastsWithItsCurrentTriangleList() throws {
+        let budget = WELightConfig(spot: 1, spotShadow: 1)
+        let mesh = ModelRenderTests.cube()
+        let store = SceneScriptModelDataStore()
+        let token = store.create(SceneScriptModelData(shapes: [SceneScriptModelData.Shape(
+            format: mesh.format, materialPaths: ["materials/facecolor.json"], vertices: mesh.vertexData, indices: mesh.indexData,
+            usesUInt32Indices: false, dynamicVertices: false, dynamicIndices: true)],
+            bounds: MDLBounds(min: SIMD3(-1, -1, -1), max: SIMD3(1, 1, 1))))
+        let cube = try XCTUnwrap(SceneScriptModelPlanBuilder(materials: builder(budget, quality: 3)).plan(
+            try XCTUnwrap(store.snapshot(token)?.data), geometry: SceneScriptModelGeometry(store: store, token: token),
+            objectName: "cube"))
+        let position = SIMD3<Float>(1.2, 7, -0.8)
+        let world = Self.lightWorld(position: position, direction: SIMD3(-0.1, -1, 0.05))
+        func shadowed(_ images: (without: [UInt8], with: [UInt8])) -> Int {
+            stride(from: 0, to: images.without.count, by: 4).filter {
+                images.without[$0] > 40 && Float(images.with[$0]) < Float(images.without[$0]) * 0.5
+            }.count
+        }
+        var before = shadowPass.casterIndices
+        let whole = try render(light: Self.light(.spot), world: world, budget: budget, cube: cube)
+        XCTAssertEqual(shadowPass.casterIndices - before, mesh.indexCount)
+        let bottom = Array(mesh.indexData.withUnsafeBytes { Array($0.bindMemory(to: UInt16.self)) }[18..<24])
+        try store.apply(token, [SceneScriptModelDataUpdate(indices: bottom.withUnsafeBytes { Data($0) })])
+        before = shadowPass.casterIndices
+        let face = try render(light: Self.light(.spot), world: world, budget: budget, cube: cube)
+        XCTAssertEqual(shadowPass.casterIndices - before, 6, "the list applyData left")
+        XCTAssertGreaterThan(shadowed(face), 300, "the bottom face still casts")
+        XCTAssertLessThan(shadowed(face), shadowed(whole), "a face casts less than the cube")
     }
 
     /// Without casters the atlas is cleared and every lookup reads lit; a frame without maps binds

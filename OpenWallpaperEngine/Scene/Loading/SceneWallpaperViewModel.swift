@@ -958,8 +958,13 @@ class SceneWallpaperViewModel: ObservableObject {
             loadTexture: { [weak self] name, path in self?.loadMetalTexture(named: name, materialDir: path, wallpaperDir: wallpaperDir) },
             sceneEngineCombos: sceneEngineCombos)
         var built = object
-        built.plan = SceneScriptModelPlanBuilder(materials: materials, wallpaperName: wallpaperDir.lastPathComponent)
-            .plan(data, geometry: SceneScriptModelGeometry(store: modelData, token: token), objectName: object.name)
+        let planner = SceneScriptModelPlanBuilder(materials: materials, wallpaperName: wallpaperDir.lastPathComponent)
+        let geometry = SceneScriptModelGeometry(store: modelData, token: token)
+        // `replaceData` re-creates the model from its new shapes (`SceneScriptModelGeometry.replacement`).
+        geometry.replan = { [weak geometry] data in
+            geometry.flatMap { planner.plan(data, geometry: $0, objectName: object.name) }
+        }
+        built.plan = planner.plan(data, geometry: geometry, objectName: object.name)
         return built
     }
 

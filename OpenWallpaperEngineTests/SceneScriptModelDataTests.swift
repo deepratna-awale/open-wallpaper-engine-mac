@@ -151,8 +151,12 @@ final class SceneScriptModelDataTests: XCTestCase {
             vertices: Self.quad(left: -1.5).withUnsafeBytes { Data($0) }, indices: indices.withUnsafeBytes { Data($0) },
             usesUInt32Indices: false, dynamicVertices: true, dynamicIndices: false)
         let token = store.create(SceneScriptModelData(shapes: [shape], bounds: MDLBounds(min: SIMD3(-2, -1, -1), max: SIMD3(2, 1, 1))))
+        let geometry = SceneScriptModelGeometry(store: store, token: token)
+        geometry.replan = { [weak geometry] data in
+            geometry.flatMap { SceneScriptModelPlanBuilder(materials: materials).plan(data, geometry: $0, objectName: "cloth") }
+        }
         let plan = try XCTUnwrap(SceneScriptModelPlanBuilder(materials: materials).plan(
-            try XCTUnwrap(store.snapshot(token)?.data), geometry: SceneScriptModelGeometry(store: store, token: token),
+            try XCTUnwrap(store.snapshot(token)?.data), geometry: geometry,
             objectName: "cloth"), "the first material path that exists plans")
         XCTAssertEqual(plan.meshes.first?.material.materialPath, "materials/facecolor.json")
 
@@ -202,5 +206,20 @@ final class SceneScriptModelDataTests: XCTestCase {
         let moved = try draw()
         XCTAssertFalse(lit(moved, x: size / 2 - 12), "the old geometry is gone")
         XCTAssertTrue(lit(moved, x: size / 2 + 12), "the new geometry draws")
+        // `replaceData` with other shapes (two, one with 32-bit indices): WE re-creates the model,
+        // so both draw (test-risks GP3).
+        let wide: [UInt32] = [0, 1, 2, 0, 2, 3]
+        var second = shape
+        second.vertices = Self.quad(left: -1.5).withUnsafeBytes { Data($0) }
+        second.indices = wide.withUnsafeBytes { Data($0) }
+        second.usesUInt32Indices = true
+        var right = shape
+        right.vertices = Self.quad(left: 0.5).withUnsafeBytes { Data($0) }
+        try store.replace(token, with: SceneScriptModelData(shapes: [right, second], bounds: MDLBounds(min: SIMD3(-2, -1, -1),
+                                                                                                        max: SIMD3(2, 1, 1))))
+        let replaced = try draw()
+        XCTAssertTrue(lit(replaced, x: size / 2 - 12), "the new second shape draws")
+        XCTAssertTrue(lit(replaced, x: size / 2 + 12), "the first shape draws")
+        XCTAssertNil(geometry.replacement(for: plan), "planned once per replacement")
     }
 }

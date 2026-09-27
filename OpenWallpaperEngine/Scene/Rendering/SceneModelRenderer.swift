@@ -46,6 +46,8 @@ final class SceneModelRenderer: SceneModelDrawing {
     /// and each mesh's index count there.
     private var geometryRevisions: [ObjectIdentifier: UInt64] = [:]
     private var geometryIndexCounts: [ObjectIdentifier: [Int: Int]] = [:]
+    /// The plans a script's `replaceData` put in place of the content's, by the content's plan.
+    private var replacedPlans: [ObjectIdentifier: SceneModelPlan] = [:]
 
     struct MeshBuffers {
         let vertices: MTLBuffer
@@ -106,6 +108,7 @@ final class SceneModelRenderer: SceneModelDrawing {
         buffers.removeAll()
         geometryRevisions.removeAll()
         geometryIndexCounts.removeAll()
+        replacedPlans.removeAll()
         uniforms.removeAll()
         animators.removeAll()
         advancedAt.removeAll()
@@ -135,7 +138,8 @@ final class SceneModelRenderer: SceneModelDrawing {
 
     func draw(_ model: SceneModelObject, _ draw: SceneModelDraw, encoder: MTLRenderCommandEncoder,
               commandBuffer: MTLCommandBuffer) {
-        guard let plan = model.plan else { return }
+        guard let authored = model.plan else { return }
+        let plan = currentPlan(authored, objectID: model.id)
         // WE poses a visible model every frame, culled or not (0x14021c480).
         let bones = advance(model, plan: plan, frame: draw.frame, values: draw.values)
         guard Self.isInsideFrustum(plan.bounds, world: draw.world, viewProjection: draw.camera.viewProjection) else {
@@ -277,6 +281,17 @@ final class SceneModelRenderer: SceneModelDrawing {
 
     // MARK: - Resources
 
+    /// The plan `plan`'s model draws with now: a new one once a script replaced its data
+    /// (`SceneModelGeometrySource.replacement`); the object's uniforms are made again for it.
+    func currentPlan(_ plan: SceneModelPlan, objectID: String) -> SceneModelPlan {
+        let key = ObjectIdentifier(plan)
+        let current = replacedPlans[key] ?? plan
+        guard let replacement = current.geometry?.replacement(for: current) else { return current }
+        replacedPlans[key] = replacement
+        uniforms.removeValue(forKey: objectID)
+        return replacement
+    }
+
     func meshBuffers(_ plan: SceneModelPlan) -> [MeshBuffers?] {
         let key = ObjectIdentifier(plan)
         if let source = plan.geometry { refreshGeometry(plan, from: source) }
@@ -316,7 +331,7 @@ final class SceneModelRenderer: SceneModelDrawing {
     }
 
     /// How many indices of `mesh` draw: its plan's, or what its model data has now.
-    private func indexCount(of mesh: SceneModelPlan.Mesh, in plan: SceneModelPlan) -> Int {
+    func indexCount(of mesh: SceneModelPlan.Mesh, in plan: SceneModelPlan) -> Int {
         geometryIndexCounts[ObjectIdentifier(plan)]?[mesh.index] ?? mesh.indexCount
     }
 

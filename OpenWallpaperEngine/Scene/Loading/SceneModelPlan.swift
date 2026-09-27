@@ -95,4 +95,7 @@ struct SceneModelGeometry {
 protocol SceneModelGeometrySource: AnyObject {
     /// The geometry now, or nil when it is still at `revision`.
     func geometry(newerThan revision: UInt64) -> SceneModelGeometry?
+    /// A new plan for the model when its data was replaced since `plan` was made (a script's
+    /// `replaceData`, after which WE re-creates the model); nil keeps `plan`.
+    func replacement(for plan: SceneModelPlan) -> SceneModelPlan?
 }
