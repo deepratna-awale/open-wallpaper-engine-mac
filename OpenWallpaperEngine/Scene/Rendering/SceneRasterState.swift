@@ -22,18 +22,30 @@ struct SceneRasterState: Hashable {
 
     /// The pass keys as authored: `depthtest`/`depthwrite` "enabled" (0) or "disabled" (1),
     /// `cullmode` "normal" (0, back faces) or "nocull" (1). A missing or unknown value keeps the
-    /// default (the enum parser leaves the zeroed byte).
-    init(depthtest: String?, depthwrite: String?, cullmode: String?) {
+    /// default (the enum parser leaves the zeroed byte). `blending` is the pass's: a translucent or
+    /// additive draw never writes depth (`writesDepth(blending:)`).
+    init(depthtest: String?, depthwrite: String?, cullmode: String?, blending: String? = nil) {
         depthTest = depthtest?.lowercased() != "disabled"
-        depthWrite = depthwrite?.lowercased() != "disabled"
+        depthWrite = depthwrite?.lowercased() != "disabled" && Self.writesDepth(blending: blending)
         cullsBackFaces = cullmode?.lowercased() != "nocull"
     }
 
-    /// A text object's state: WE draws it through `materials/fonts/basefont_depth.json` (test and
-    /// write on) when the object's `depthtest` is set, else `basefont.json` (both off); both are
-    /// `nocull` (0x1401b385e…0x1401b38b5).
+    /// Whether a draw with this blending can write depth. WE's pass only pushes the states that
+    /// differ from the context's (0x140157160…0x1401571dc: blending, then depth test, write and
+    /// cull when "disabled"), and the context picks its depth-stencil state when it draws
+    /// (0x140099f84): the index is the pass's depth bits ORed with 1, "no write", whenever the
+    /// blend byte is translucent (1) or additive (2); normal (0) and alpha-to-coverage (3) keep
+    /// the authored write. So nothing blended writes depth, whatever its material authors
+    /// (3455121165's orbit rings are translucent images authoring `depthwrite` "enabled").
+    static func writesDepth(blending: String?) -> Bool {
+        !["translucent", "additive"].contains(blending?.lowercased() ?? "")
+    }
+
+    /// A text object's state: WE draws it through `materials/fonts/basefont_depth.json` (test on)
+    /// when the object's `depthtest` is set, else `basefont.json` (test off); both are `nocull`
+    /// (0x1401b385e…0x1401b38b5) and translucent, so neither writes depth (`writesDepth`).
     static func text(depthTest: Bool) -> SceneRasterState {
-        SceneRasterState(depthTest: depthTest, depthWrite: depthTest, cullsBackFaces: false)
+        SceneRasterState(depthTest: depthTest, depthWrite: false, cullsBackFaces: false)
     }
 
     /// WE's three depth-stencil states (0x140099050): test and write, test only, off. D3D writes

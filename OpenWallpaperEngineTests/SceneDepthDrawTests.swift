@@ -36,9 +36,23 @@ final class SceneDepthDrawTests: XCTestCase {
         XCTAssertEqual(SceneRasterState.disabled.cullMode, .none)
     }
 
+    /// WE's context ORs "no write" into the depth-stencil state of every translucent or additive
+    /// draw (0x140099f84), whatever the pass authors; normal and alpha-to-coverage keep it.
+    func testBlendedPassesWriteNoDepth() {
+        let cases: [(String?, SceneRasterState.DepthMode)] = [
+            (nil, .testAndWrite), ("normal", .testAndWrite), ("alphatocoverage", .testAndWrite), ("disabled", .testAndWrite),
+            ("translucent", .testOnly), ("Additive", .testOnly),
+        ]
+        for (blending, mode) in cases {
+            let state = SceneRasterState(depthtest: "enabled", depthwrite: "enabled", cullmode: "nocull", blending: blending)
+            XCTAssertEqual(state.depthMode, mode, String(describing: blending))
+        }
+        XCTAssertEqual(SceneRasterState(depthtest: "disabled", depthwrite: nil, cullmode: nil, blending: "translucent").depthMode, .off)
+    }
+
     func testTextDrawsThroughBasefontOrBasefontDepth() {
-        // basefont_depth.json: test and write on; basefont.json: both off; both nocull.
-        XCTAssertEqual(SceneRasterState.text(depthTest: true).depthMode, .testAndWrite)
+        // basefont_depth.json: test on; basefont.json: off; both nocull and translucent, so neither writes.
+        XCTAssertEqual(SceneRasterState.text(depthTest: true).depthMode, .testOnly)
         XCTAssertEqual(SceneRasterState.text(depthTest: false).depthMode, .off)
         XCTAssertEqual(SceneRasterState.text(depthTest: true).cullMode, .none)
     }
@@ -296,8 +310,8 @@ final class SceneDepthDrawTests: XCTestCase {
         var raster: SceneRasterState? = nil
     }
 
-    /// Draws `quads` in order through `depthcull.json` (translucent, depth test and write, back
-    /// faces culled) and the test camera into a bgra8 target with a depth32Float attachment
+    /// Draws `quads` in order through `depthcull.json` (normal blending, depth test and write, back
+    /// faces culled; or `material`) and the test camera into a bgra8 target with a depth32Float attachment
     /// cleared to WE's far depth; returns RGBA bytes.
     private func render(_ quads: [Quad], material: String = "depthcull", nativeQuads: [Quad] = []) throws -> [UInt8] {
         let plan = try XCTUnwrap(try builder.build(materialPath: "materials/\(material).json", colorBlendMode: nil))
@@ -407,6 +421,24 @@ final class SceneDepthDrawTests: XCTestCase {
         var untested = far
         untested.raster = .disabled
         XCTAssertEqual(color(try render([near, untested]), centre), [0, 255, 0], "depthtest disabled draws over")
+    }
+
+    /// 3455121165's orbit rings: a translucent image authoring depth test and write, drawn before
+    /// what lies behind it, doesn't hide it (WE writes no depth for a blended draw).
+    func testATranslucentLayerDoesNotHideWhatIsDrawnBehindItLater() throws {
+        try setUpGPU()
+        let near = Quad(local: SceneLocalTransform3D(origin: SIMD3(0, 0, 0), scale: SIMD3(2, 2, 1), angles: .zero), color: Self.red)
+        let far = Quad(local: SceneLocalTransform3D(origin: SIMD3(0.5, 0, -2), scale: SIMD3(4, 4, 1), angles: .zero), color: Self.green)
+        let centre = Self.targetSize / 2
+        XCTAssertEqual(color(try render([near, far], material: "depthcull_translucent"), centre), [0, 255, 0],
+                       "the translucent quad in front wrote no depth")
+        // It still tests: behind a quad that wrote depth, it stays hidden.
+        var writing = far
+        writing.raster = .engineDefault
+        var behind = near
+        behind.local.origin.z = -3
+        XCTAssertEqual(color(try render([writing, behind], material: "depthcull_translucent"), centre), [0, 255, 0],
+                       "the translucent quad behind is depth-tested")
     }
 
     func testBackFacesAreCulledUnlessNocull() throws {

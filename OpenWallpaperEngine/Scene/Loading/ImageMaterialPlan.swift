@@ -267,7 +267,7 @@ struct ImageMaterialPlanBuilder {
                                      usesSpriteSheetUniforms: (layerPass.variant?.combos["SPRITESHEET"] ?? 0) != 0,
                                      liveFactors: liveFactors, clampedSlots: clampedSlots, cullmode: materialPass.cullmode)
         plan.raster = SceneRasterState(depthtest: materialPass.depthtest, depthwrite: materialPass.depthwrite,
-                                       cullmode: materialPass.cullmode)
+                                       cullmode: materialPass.cullmode, blending: materialPass.blending)
         return plan
     }
 

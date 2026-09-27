@@ -178,7 +178,7 @@ struct ModelMaterialPlanBuilder {
         }
         return ModelMaterialPlan(materialPath: materialPath, pass: pass,
                                  raster: SceneRasterState(depthtest: materialPass.depthtest, depthwrite: materialPass.depthwrite,
-                                                          cullmode: materialPass.cullmode),
+                                                          cullmode: materialPass.cullmode, blending: materialPass.blending),
                                  clampedSlots: clampedSlots, meshCombos: mesh, shadowCaster: shadowCaster)
     }
 
