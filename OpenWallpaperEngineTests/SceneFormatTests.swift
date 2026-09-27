@@ -11,7 +11,7 @@ final class SceneFormatTests: XCTestCase {
         XCTAssertEqual(scene.objects.map(\.id), [1, 2, 3])
         XCTAssertEqual(scene.objects[0].textValue, "Hello")
         XCTAssertEqual(scene.objects[1].image, "models/util/solidlayer.json")
-        XCTAssertEqual(scene.general.orthogonalprojection?.width, 1920)
+        XCTAssertEqual(scene.general.projection, .orthographic(width: 1920, height: 1080))
     }
 
     func testUserBoundVisibilityKeepsPropertyAndDefault() throws {

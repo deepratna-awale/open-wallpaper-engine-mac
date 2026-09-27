@@ -25,7 +25,8 @@ struct MaterialPass: Decodable {
     var textures: [String?]
     var combos: [String: Int]
     var constantshadervalues: [String: SceneRawValue]
-    /// Maps a shader uniform to a user property (e.g. `"schemecolor": "tint"`).
+    /// Binds material keys to user properties, property first: `{"schemecolor": "tint"}` gives
+    /// the key `tint` the wallpaper's `schemecolor` (`constantSources(uniforms:)`).
     var usershadervalues: [String: String]?
 
     enum CodingKeys: String, CodingKey {

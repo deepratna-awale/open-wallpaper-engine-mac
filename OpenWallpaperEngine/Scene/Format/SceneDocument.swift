@@ -120,11 +120,6 @@ struct WECamera: Decodable {
 }
 
 struct WESceneGeneral: Decodable {
-    var orthogonalprojection: WEOrthogonalProjection?
-    /// `orthogonalprojection` is present but `null`. The renderer's gate for its perspective path
-    /// today; WE's rule is `projection` (a missing key, a zero size and `auto` differ). M2 of
-    /// docs/models-plan.md moves the callers to `projection` and deletes this.
-    var usesPerspectiveProjection = false
     /// `orthogonalprojection` as WE reads it (docs/models-plan.md §2.1).
     var projection = WESceneProjection.perspective
     var bloomtint: String?
@@ -156,20 +151,9 @@ struct WESceneGeneral: Decodable {
         }
         let projectionKey = AnyCodingKey(stringValue: "orthogonalprojection")
         projection = WESceneProjection(json: container.decodeLogged(SceneJSON.self, forKey: projectionKey, userInfo: info))
-        if container.contains(projectionKey), (try? container.decodeNil(forKey: projectionKey)) == true {
-            // `try?`: decodeNil only fails when the key is missing, which `contains` just ruled out.
-            usesPerspectiveProjection = true
-        } else {
-            orthogonalprojection = container.decodeLogged(WEOrthogonalProjection.self, forKey: projectionKey, userInfo: info)
-        }
         bloomtint = container.decodeLogged(SceneRawValue.self, forKey: AnyCodingKey(stringValue: "bloomtint"), userInfo: info)?.literalString
         lightconfig = container.decodeLogged(WELightConfig.self, forKey: AnyCodingKey(stringValue: "lightconfig"), userInfo: info)
     }
-}
-
-struct WEOrthogonalProjection: Codable {
-    var width: Int
-    var height: Int
 }
 
 // MARK: - Scene Objects

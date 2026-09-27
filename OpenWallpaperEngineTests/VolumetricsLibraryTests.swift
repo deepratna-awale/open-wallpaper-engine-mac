@@ -52,7 +52,7 @@ final class VolumetricsLibraryTests: XCTestCase {
         XCTAssertNotNil(light.cookie)
         XCTAssertEqual(light.front.variant.combos["COOKIE"], 1)
         XCTAssertEqual(SceneVolumetricLight.shape(of: light.light), .box)
-        XCTAssertTrue(plan.camera.isOrthographic)
+        XCTAssertFalse(content.spatial.camera.projection.isPerspective)
 
         let scene = try Scene(content: content, scripts: scripts)
         defer { scene.close() }
@@ -196,9 +196,9 @@ final class VolumetricsLibraryTests: XCTestCase {
                                              local: content.motions[id].map {
                                                  SceneLocalTransform(origin: $0.origin, scale: $0.scale, angle: $0.angle)
                                              } ?? node.local, depth: object.depth)
-        let plan = try XCTUnwrap(content.volumetrics)
-        let volume = SceneVolumetricLight(light: light, world: world, camera: plan.camera)
-        let transform = SceneVolumetrics.viewProjection(plan.camera, target: buffer) * volume.volume
+        let camera = Self.frameCamera(content)
+        let volume = SceneVolumetricLight(light: light, world: world, camera: camera)
+        let transform = SceneVolumetrics.viewProjection(camera) * volume.volume
         let mesh = SceneVolumeMesh.make(volume.shape)
         var lit = 0, outside = 0, centroid = SIMD2<Float>.zero
         let spread = SceneVolumetricsPlan.blurs(quality: record.quality) ? 1 : 0
@@ -254,12 +254,11 @@ final class VolumetricsLibraryTests: XCTestCase {
         for (id, expected) in Self.testSet.sorted(by: { $0.key < $1.key }) {
             let (scene, directory) = try decodedScene(id)
             let lights = SceneWallpaperViewModel.lights(in: scene.objects, context: StaticContext())
-            let camera = SceneVolumetricsCamera(scene: scene, size: SIMD2(1920, 1080))
-            XCTAssertFalse(camera.isOrthographic, "\(id) is 3D")
+            XCTAssertTrue(scene.general.projection.isPerspective, "\(id) is 3D")
             for (shadows, want) in [(GSLightingQuality.medium, expected.planned), (.disabled, expected.withoutShadows)] {
                 var settings = SceneRenderSettings()
                 settings.shadows = shadows
-                let plan = try SceneVolumetricsPlan.build(lights: lights, camera: camera, settings: settings,
+                let plan = try SceneVolumetricsPlan.build(lights: lights, settings: settings,
                                                           builder: builder.scoped(to: directory))
                 XCTAssertEqual(plan?.lights.map(\.id) ?? [], want, "\(id), shadows \(shadows)")
                 if shadows == .medium { XCTAssertEqual(plan?.skipped.map(\.id) ?? [], expected.skipped, id) }
@@ -274,8 +273,9 @@ final class VolumetricsLibraryTests: XCTestCase {
         print("Volumetric lights of the test set:\n\(report)")
     }
 
-    /// The lights at a 3D scene's root, drawn through the scene's own camera onto an empty frame
-    /// (no models, so no depth): the volume shows, only where its mesh projects.
+    /// The lights at a 3D scene's root, drawn through WE's camera for the scene (its active camera
+    /// layer, `ScenePerspectiveCameraRig`) onto an empty frame (no models, so no depth): the
+    /// volume shows only where its mesh projects.
     func testTheTestSetsRootLightsDrawThroughTheSceneCamera() throws {
         let builder = try makeBuilder()
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
@@ -284,11 +284,16 @@ final class VolumetricsLibraryTests: XCTestCase {
         for (id, lightID) in [("3233200129", "24"), ("3453730450", "39")] {
             let (scene, directory) = try decodedScene(id)
             let lights = SceneWallpaperViewModel.lights(in: scene.objects, context: StaticContext())
-            let camera = SceneVolumetricsCamera(scene: scene, size: SIMD2(1920, 1080))
+            let spatial = SceneSpatialContentBuilder(
+                readFile: { FileManager.default.contents(atPath: directory.appending(path: $0).path) },
+                wallpaperName: id).build(scene, context: StaticContext())
+            let camera = ScenePerspectiveCameraRig(spatial, values: StaticContext()).frameCamera(
+                SceneCameraRigInput(sceneSize: SIMD2(1920, 1080), aspect: 16.0 / 9, time: 0, deltaTime: 0))
+            XCTAssertTrue(camera.isPerspective, id)
             var settings = SceneRenderSettings()
             settings.shadows = .disabled
             settings.volumetrics = .ultra
-            let plan = try XCTUnwrap(try SceneVolumetricsPlan.build(lights: lights, camera: camera, settings: settings,
+            let plan = try XCTUnwrap(try SceneVolumetricsPlan.build(lights: lights, settings: settings,
                                                                     builder: builder.scoped(to: directory)))
             let object = try XCTUnwrap(scene.objects.first { $0.id.map(String.init) == lightID })
             XCTAssertNil(object.parent, "\(id) \(lightID) is at the root")
@@ -305,6 +310,7 @@ final class VolumetricsLibraryTests: XCTestCase {
             let target = try XCTUnwrap(device.makeTexture(descriptor: descriptor))
             let commands = try XCTUnwrap(queue.makeCommandBuffer())
             var frame = BuiltinFrameContext()
+            frame.camera = camera
             frame.lighting.objects = [SceneFrameLightObject(id: lightID, world: world, visible: true)]
             var context = SceneFrameStageContext(scene: target, commandBuffer: commands, sceneSize: SIMD2(1920, 1080),
                                                  frame: frame, settings: settings)
@@ -329,7 +335,7 @@ final class VolumetricsLibraryTests: XCTestCase {
             let buffer = record.lightBuffer
             let drawn = try TextureUploadTests.read(buffer, device: device)
             let volume = SceneVolumetricLight(light: lightObject.light, world: world, camera: camera)
-            let transform = SceneVolumetrics.viewProjection(camera, target: target) * volume.volume
+            let transform = SceneVolumetrics.viewProjection(camera) * volume.volume
             let mesh = SceneVolumeMesh.make(volume.shape)
             let scale = lightObject.light.kind == .point ? SIMD3<Float>(repeating: 1) : SIMD3(0.99, 0.99, 1)
             var lit = 0, outside = 0
@@ -353,6 +359,12 @@ final class VolumetricsLibraryTests: XCTestCase {
     }
 
     // MARK: - Helpers
+
+    /// The camera the renderer draws `content` with, at its first frame.
+    private static func frameCamera(_ content: SceneMetalContent) -> SceneFrameCamera {
+        SceneCameraRigs.make(for: content).frameCamera(SceneCameraRigInput(
+            sceneSize: content.size, aspect: content.size.x / content.size.y, time: 0, deltaTime: 0))
+    }
 
     private struct StaticContext: SceneValueContext {
         func userProperty(_ name: String) -> String? { nil }

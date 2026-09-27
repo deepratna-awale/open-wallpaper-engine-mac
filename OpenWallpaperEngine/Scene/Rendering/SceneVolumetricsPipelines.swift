@@ -57,8 +57,9 @@ final class SceneVolumetricsPipelines {
             OWELog.error(.scene, "The volumetrics depth kernel can't be made: \(error)")
             return nil
         }
+        // Reversed depth: the nearest far face is the greatest (WE's GREATER, 0x140099050).
         let depth = MTLDepthStencilDescriptor()
-        depth.depthCompareFunction = .less
+        depth.depthCompareFunction = .greater
         depth.isDepthWriteEnabled = true
         let none = MTLDepthStencilDescriptor()
         none.depthCompareFunction = .always
@@ -192,11 +193,12 @@ final class SceneVolumetricsPipelines {
     }
 
     /// Faces wound outward (`SceneVolumeMesh`) that face the camera turn counter-clockwise on
-    /// screen after `transform` (object to clip space) when it keeps orientation: with WE's
-    /// clip depth growing away from the eye, a kept orientation mirrors them once, and the
-    /// translator's y flip mirrors them back.
-    static func frontWinding(_ transform: simd_float4x4) -> MTLWinding {
-        transform.determinant > 0 ? .counterClockwise : .clockwise
+    /// screen after `transform` (object to clip space) when it keeps orientation: with clip depth
+    /// growing away from the eye, a kept orientation mirrors them once, and the translator's y
+    /// flip mirrors them back. A reversed projection's depth grows towards the eye, which flips
+    /// the determinant's sign and not the screen's winding.
+    static func frontWinding(_ transform: simd_float4x4, reversedDepth: Bool) -> MTLWinding {
+        (transform.determinant > 0) != reversedDepth ? .counterClockwise : .clockwise
     }
 
     /// The pass's `WEUniforms` block: `values` by uniform name, then WE's built-ins.

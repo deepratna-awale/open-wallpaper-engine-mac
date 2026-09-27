@@ -216,6 +216,9 @@ struct SceneMetalContent {
     /// WE's colour correction (`ccsimple`) for the user's image filter and colour options; nil
     /// without a shader toolchain.
     var colorCorrection: SceneColorCorrection?
+    /// WE's camera fade, made for a scene with camera paths; nil otherwise or without a shader
+    /// toolchain.
+    var cameraFade: SceneCameraFade?
 }
 
 /// `scene.json` as the content was built from it, for the wallpaper instance's `SceneAnimationSet`

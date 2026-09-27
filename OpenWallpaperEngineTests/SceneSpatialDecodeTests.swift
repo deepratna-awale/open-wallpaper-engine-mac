@@ -225,13 +225,22 @@ final class SceneSpatialDecodeTests: XCTestCase {
         }
     }
 
-    /// The renderer still gates its perspective path on an explicit `null` (models-plan M2 moves
-    /// it to `projection`): a scene without the key is perspective in WE.
-    func testTheRenderersGateMissesAMissingProjection() throws {
-        let missing = try general(#"{}"#)
-        XCTAssertTrue(missing.projection.isPerspective)
-        XCTExpectFailure("models-plan M2: `usesPerspectiveProjection` treats a missing orthogonalprojection as ortho")
-        XCTAssertTrue(missing.usesPerspectiveProjection)
+    /// The renderer's gates follow `projection`: a scene without the key is perspective in WE, so
+    /// it has no parallax displacement, no pixel-unit particle defaults and WE's perspective rig.
+    func testTheRenderersGatesFollowTheProjection() throws {
+        for (json, perspective) in [(#"{}"#, true), (#"{"orthogonalprojection": null}"#, true),
+                                    (#"{"orthogonalprojection": {"width": 0, "height": 1080}}"#, true),
+                                    (#"{"orthogonalprojection": {"width": 1920, "height": 1080}}"#, false),
+                                    (#"{"orthogonalprojection": {"auto": true}}"#, false)] {
+            let scene = try decodeTolerant(WEScene.self, from: Data(#"{"camera": {}, "general": \#(json), "objects": []}"#.utf8))
+            XCTAssertEqual(SceneCameraEffects(scene.general, in: SpatialProperties()).orthographic, !perspective, json)
+            XCTAssertEqual(SceneWallpaperViewModel.particlesUsePixelUnits(scene), !perspective, json)
+            var content = SceneMetalContent(size: SIMD2(1920, 1080), layers: [], particleSystems: [],
+                                            bloom: SceneBloomSettings(enabled: false, strength: 0, threshold: 0,
+                                                                      tint: SIMD3(repeating: 1)))
+            content.spatial.camera = SceneCameraSettings(scene.general, in: SpatialProperties())
+            XCTAssertEqual(SceneCameraRigs.make(for: content) is ScenePerspectiveCameraRig, perspective, json)
+        }
     }
 
     func testCameraSettingsDefaultsAndBindings() throws {

@@ -187,7 +187,7 @@ struct SceneEffectPlanBuilder {
         }
         let constants = ShaderConstantResolver.resolve(
             uniforms: uniforms.map { .init(name: $0.name, glslType: $0.type, arrayCount: $0.arrayCount ?? 1, annotation: $0.annotation) },
-            material: materialPass.constantshadervalues.compactMapValues(\.valueSource),
+            material: materialPass.constantSources(uniforms: uniforms),
             instance: Self.applyingOverrides(overrides, to: Self.instanceSources(instance, animationSite: animationSite),
                                              uniforms: uniforms))
         var textureFlags: [Int: TEXFlags] = [:]

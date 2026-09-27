@@ -9,9 +9,9 @@ import simd
 /// WE's LDR bloom (`SceneBloomChain`), gated like WE's by the scene's live `bloom` and the user's
 /// post-processing setting; in a content drawn in HDR it is the HDR chain (`SceneHDRChain`), or
 /// `combine_srgb` while bloom doesn't run. Step 6 is WE's colour correction (`SceneColorCorrection`)
-/// when the user's image filter or colour options aren't identity. The composite then puts the
-/// frame on the drawable at the user's placement with the app's own adjustments (`AppExtras`),
-/// which aren't WE's.
+/// when the user's image filter or colour options aren't identity. Step 7 is the camera fade
+/// (`SceneCameraFade`) while a camera path starts or ends. The composite then puts the frame on the
+/// drawable at the user's placement with the app's own adjustments (`AppExtras`), which aren't WE's.
 final class ScenePostProcess {
     /// The scene's bloom this frame, scripts' and timelines' values included.
     struct Bloom: Equatable {
@@ -95,6 +95,8 @@ final class ScenePostProcess {
     private var hdrChain: SceneHDRChain?
     /// WE's colour correction pass; nil without a shader toolchain.
     private var colorCorrection: SceneColorCorrection?
+    /// WE's camera fade, for a scene with camera paths.
+    private(set) var cameraFade: SceneCameraFade?
     /// The colour correction's targets are held by the effect graph.
     private var holdsColorCorrection = false
     /// Frames corrected so far: its input changes every frame while the texture stays.
@@ -127,6 +129,7 @@ final class ScenePostProcess {
         bloomChain = content.bloomChain
         hdrChain = content.hdrChain
         colorCorrection = content.colorCorrection
+        cameraFade = content.cameraFade
         drawsHDR = content.engineCombos.hdr
         // The last frame's textures (a full-size float frame and combine at worst) go with it.
         encodedView = nil
@@ -142,9 +145,10 @@ final class ScenePostProcess {
     func encode(_ frame: Frame) {
         // Step 5: the bloom and its combine.
         let combined = (drawsHDR ? combinedHDR(frame) : bloomed(frame)) ?? frame.scene
-        // Step 6: WE's colour correction. Step 7, the camera fade, isn't drawn yet: WE makes it
-        // only for scenes with camera paths (0x140181bae).
+        // Step 6: WE's colour correction. Step 7: the camera fade, over what the frame shows.
         let finished = colorCorrected(combined, frame) ?? combined
+        cameraFade?.encode(on: finished, alpha: frame.builtins.camera.fade, builtins: frame.builtins,
+                           values: frame.values, commandBuffer: frame.commandBuffer)
         composite(finished, frame)
     }
 

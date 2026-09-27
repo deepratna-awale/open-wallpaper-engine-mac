@@ -22,10 +22,15 @@ import simd
 /// objects WE would draw after a light's run are under its volumetrics here. It runs before the
 /// `_rt_MipMappedFrameBuffer` copy, which in WE follows the object loop.
 ///
-/// **Depth.** The scene pass has no depth buffer yet (area 6), so `_rt_volumetricsBack` holds the
-/// cleared far depth; `SceneFrameStageContext.sceneDepth` takes the scene's depth once it has one.
-/// WE copies it for every light; nothing between them writes depth, so it is copied once a frame.
-/// The shaders read clip depth, D3D's rows (`volumetricsClipDepth`), from both targets.
+/// **Camera and depth.** The volumes are drawn through the frame's scene camera
+/// (`BuiltinFrameContext.camera`), whose depth is reversed as WE's is everywhere: 1 at the near
+/// plane, 0 at the far one. The passes get `REVERSEDEPTH` (`SceneEngineCombos`), the far faces go
+/// into `_rt_volumetricsSingle` cleared to 0 and compared GREATER, and the volume meshes put their
+/// near and far planes at clip depths 1 and 0 (`SceneVolumeMesh`). The scene pass has no depth
+/// buffer yet (area 6), so `_rt_volumetricsBack` holds the far depth, 0;
+/// `SceneFrameStageContext.sceneDepth` takes the scene's depth once it has one. WE copies it for
+/// every light; nothing between them writes depth, so it is copied once a frame. The shaders read
+/// clip depth, D3D's rows (`volumetricsClipDepth`), from both targets.
 final class SceneVolumetrics: SceneFrameStage {
     /// What the last frame drew (tests, diagnostics).
     struct Record {
@@ -107,11 +112,12 @@ final class SceneVolumetrics: SceneFrameStage {
         }
         guard !shown.isEmpty, let targets = targets(for: context.scene, quality: plan.quality),
               let back = back(context, targets: targets) else { return }
-        let viewProjection = Self.viewProjection(plan.camera, target: context.scene)
+        let camera = context.frame.camera
+        let viewProjection = Self.viewProjection(camera)
         var drawn: [(id: String, fullscreen: Bool)] = []
         for (index, (light, world)) in shown.enumerated() {
-            let volume = SceneVolumetricLight(light: light.light, world: world, camera: plan.camera)
-            guard encodeLight(light, volume: volume, camera: plan.camera, viewProjection: viewProjection, back: back,
+            let volume = SceneVolumetricLight(light: light.light, world: world, camera: camera)
+            guard encodeLight(light, volume: volume, camera: camera, viewProjection: viewProjection, back: back,
                               targets: targets, clear: index == 0, context: context, pipelines: pipelines) else { return }
             drawn.append((light.id, volume.cameraInside))
         }
@@ -124,14 +130,13 @@ final class SceneVolumetrics: SceneFrameStage {
     /// the scene's top in its first row and the translator flips clip y (`ImageMaterialRenderer`),
     /// so y is mirrored first. `g_EffectModelMatrix` is this one's inverse, so the shaders' world
     /// positions are WE's.
-    static func viewProjection(_ camera: SceneVolumetricsCamera, target: MTLTexture) -> simd_float4x4 {
-        let aspect = Float(target.width) / Float(max(target.height, 1))
-        return simd_float4x4(diagonal: SIMD4(1, -1, 1, 1)) * camera.viewProjection(aspect: aspect)
+    static func viewProjection(_ camera: SceneFrameCamera) -> simd_float4x4 {
+        simd_float4x4(diagonal: SIMD4(1, -1, 1, 1)) * camera.viewProjection
     }
 
     // MARK: - Per light
 
-    private func encodeLight(_ light: SceneVolumetricsPlan.Light, volume: SceneVolumetricLight, camera: SceneVolumetricsCamera,
+    private func encodeLight(_ light: SceneVolumetricsPlan.Light, volume: SceneVolumetricLight, camera: SceneFrameCamera,
                              viewProjection: simd_float4x4, back: MTLTexture, targets: Targets, clear: Bool,
                              context: SceneFrameStageContext, pipelines: SceneVolumetricsPipelines) -> Bool {
         let front = volume.cameraInside ? light.fullscreen : light.front
@@ -141,7 +146,7 @@ final class SceneVolumetrics: SceneFrameStage {
               let frontPipeline = pipelines.pipeline(front, color: format,
                                                      raster: volume.cameraInside ? .everything : .nearFaces) else { return false }
         let transform = viewProjection * volume.volume
-        let winding = SceneVolumetricsPipelines.frontWinding(transform)
+        let winding = SceneVolumetricsPipelines.frontWinding(transform, reversedDepth: camera.reversedDepth)
         var values: [String: [Float]] = [
             "g_ViewProjectionMatrix": SceneVolumetricsPipelines.flat(viewProjection),
             "g_AltViewProjectionMatrix": SceneVolumetricsPipelines.flat(volume.volume),
@@ -157,11 +162,13 @@ final class SceneVolumetrics: SceneFrameStage {
         }
         let size = SIMD2<Float>(Float(targets.lightBuffer.width), Float(targets.lightBuffer.height))
 
-        // The far faces into `_rt_volumetricsSingle`, cleared to the far depth.
+        // The far faces into `_rt_volumetricsSingle`, cleared to the far depth: WE's clear value,
+        // 0 (0x14009b130). The translator maps clip depth d to Metal's (d + 1) / 2, so the far
+        // plane is 0.5 there, still in front of the clear.
         let backPass = MTLRenderPassDescriptor()
         backPass.depthAttachment.texture = targets.singleDepth
         backPass.depthAttachment.loadAction = .clear
-        backPass.depthAttachment.clearDepth = 1
+        backPass.depthAttachment.clearDepth = 0
         backPass.depthAttachment.storeAction = .store
         guard let backEncoder = context.commandBuffer.makeRenderCommandEncoder(descriptor: backPass) else { return false }
         backEncoder.label = "volumetrics back \(light.id)"

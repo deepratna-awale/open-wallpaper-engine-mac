@@ -37,10 +37,14 @@ struct SceneEngineCombos: Equatable {
     }
 
     /// The combos to lay over a material whose own combos resolved to `material` (its `LIGHTING`
-    /// decides the light combos): the lighting ones (`SceneEngineCombos+Lighting.swift`) and the
-    /// HDR ones (`SceneEngineCombos+HDR.swift`).
+    /// decides the light combos): the lighting ones (`SceneEngineCombos+Lighting.swift`), the
+    /// HDR ones (`SceneEngineCombos+HDR.swift`) and `REVERSEDEPTH`.
     func combos(for material: [String: Int]) -> [String: Int] {
-        lightingCombos(for: material).merging(hdrCombos(for: material)) { _, hdr in hdr }
+        var combos = lightingCombos(for: material).merging(hdrCombos(for: material)) { _, hdr in hdr }
+        // WE's depth is reversed everywhere (docs/models-plan.md §2.4), and 0x1401a5c40 says so to
+        // every material. Only shaders that name it see it (`effectiveCombos`).
+        combos["REVERSEDEPTH"] = 1
+        return combos
     }
 
     /// `material` with the engine's combos laid over it.

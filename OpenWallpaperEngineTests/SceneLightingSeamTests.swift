@@ -13,10 +13,11 @@ final class SceneLightingSeamTests: XCTestCase {
         let combos = SceneEngineCombos(hdr: true, sceneOrtho: false, lightBudget: WELightConfig(point: 4, tube: 2),
                                        shadowQuality: 4)
         XCTAssertEqual(combos.combos(for: ["LIGHTING": 1, "REFLECTION": 1])["HDR"], 1)
-        XCTAssertEqual(combos.applied(to: ["LIGHTING": 0, "BLENDMODE": 3]), ["LIGHTING": 0, "BLENDMODE": 3, "HDR": 1])
-        XCTAssertEqual(combos.applied(to: ["HDR": 0]), ["HDR": 1], "the engine's value wins")
+        XCTAssertEqual(combos.applied(to: ["LIGHTING": 0, "BLENDMODE": 3]),
+                       ["LIGHTING": 0, "BLENDMODE": 3, "HDR": 1, "REVERSEDEPTH": 1])
+        XCTAssertEqual(combos.applied(to: ["HDR": 0])["HDR"], 1, "the engine's value wins")
         let ldr = SceneEngineCombos(hdr: false, sceneOrtho: false)
-        XCTAssertEqual(ldr.applied(to: ["LIGHTING": 0, "BLENDMODE": 3]), ["LIGHTING": 0, "BLENDMODE": 3])
+        XCTAssertEqual(ldr.applied(to: ["LIGHTING": 0, "BLENDMODE": 3]), ["LIGHTING": 0, "BLENDMODE": 3, "REVERSEDEPTH": 1])
         XCTAssertNil(ldr.combos(for: ["LIGHTING": 1])["HDR"])
     }
 

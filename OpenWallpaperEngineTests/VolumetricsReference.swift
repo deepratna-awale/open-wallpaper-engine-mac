@@ -101,6 +101,7 @@ enum VolumetricsReference {
 
     /// `volumetricsfront.frag` for a light without a cookie or a shadow, at WE clip point (`x`,
     /// `y`), ray-marching from `near` to the nearer of `far` and the scene's depth (the far plane).
+    /// Depth is reversed (`REVERSEDEPTH`): the far plane is 0, and nearer is greater.
     static func march(_ light: SceneVolumetricLight, point: Bool, viewProjection: simd_float4x4, x: Float, y: Float,
                       near: Float, far: Float, quality: Int) -> SIMD3<Float> {
         let sampleCount: Float = [1: 2, 2: 3, 3: 5, 4: 8][quality] ?? 2
@@ -112,7 +113,7 @@ enum VolumetricsReference {
         let spot = light.renderVars[1], origin = light.renderVars[2], forward = light.renderVars[3]
         let color = light.renderVars[4]
         var position = world(near)
-        let end = world(min(1, far))
+        let end = world(max(0, far))
         let step = (end - position) / (sampleCount + 1)
         let invRadius = 1 / spot.x
         var maxLightScale = spot.w * simd_length(end - position) * invRadius

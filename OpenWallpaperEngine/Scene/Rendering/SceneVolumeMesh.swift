@@ -24,10 +24,11 @@ struct SceneVolumeMesh: Equatable {
     let positions: [SIMD3<Float>]
     let indices: [UInt16]
 
-    /// The clip depths of the near and far planes: 0 and 1, as WE writes them without reversed
-    /// depth (0x14025c5d0, 0x14025c5f0).
-    static let nearDepth: Float = 0
-    static let farDepth: Float = 1
+    /// The clip depths of the near and far planes: 1 and 0, as WE writes them with reversed depth
+    /// (0x14025c5f0 and 0x14025c5d0 test the context's reversed-depth flag, 0x1000 of ctx+0x118;
+    /// the light and scene projections are reversed, so the flag is set [I]).
+    static let nearDepth: Float = 1
+    static let farDepth: Float = 0
 
     static func make(_ shape: Shape) -> SceneVolumeMesh {
         switch shape {

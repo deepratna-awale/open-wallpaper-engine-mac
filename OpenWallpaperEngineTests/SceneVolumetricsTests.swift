@@ -74,12 +74,17 @@ final class SceneVolumetricsTests: XCTestCase {
         return settings
     }
 
-    static let camera = SceneVolumetricsCamera(projection: .orthographic(width: 256, height: 144))
+    /// An orthographic scene's camera for a 256×144 scene (`SceneOrthographicCameraRig`).
+    static let camera = orthographicCamera(SIMD2(256, 144))
+
+    static func orthographicCamera(_ size: SIMD2<Float>) -> SceneFrameCamera {
+        SceneOrthographicCameraRig().frameCamera(SceneCameraRigInput(sceneSize: size, aspect: size.x / size.y,
+                                                                     time: 0, deltaTime: 0))
+    }
 
     private func plan(_ lights: [SceneLightObject], _ volumetrics: GSLightingQuality,
                       shadows: GSLightingQuality = .medium) throws -> SceneVolumetricsPlan? {
-        try SceneVolumetricsPlan.build(lights: lights, camera: Self.camera,
-                                       settings: Self.settings(volumetrics, shadows: shadows), builder: builder)
+        try SceneVolumetricsPlan.build(lights: lights, settings: Self.settings(volumetrics, shadows: shadows), builder: builder)
     }
 
     // MARK: - The plan
@@ -156,7 +161,7 @@ final class SceneVolumetricsTests: XCTestCase {
             readFile: { FileManager.default.contents(atPath: root.appending(path: $0).path) },
             loadTexture: { _, _ in nil })
         let plan = try XCTUnwrap(try SceneVolumetricsPlan.build(
-            lights: [Self.object("1", missing), Self.object("2", Self.spot())], camera: Self.camera,
+            lights: [Self.object("1", missing), Self.object("2", Self.spot())],
             settings: Self.settings(.medium), builder: noCookies))
         XCTAssertEqual(plan.lights.map(\.id), ["2"], "the other light still draws")
         XCTAssertEqual(plan.skipped.map(\.id), ["1"])
@@ -213,19 +218,20 @@ final class SceneVolumetricsTests: XCTestCase {
         XCTAssertEqual(volume.renderVars[2], SIMD4(100, 50, -20, 2))
         XCTAssertEqual(volume.renderVars[3], SIMD4(1, 0, 0, 0), "the light's local +X")
         XCTAssertEqual(volume.renderVars[4], SIMD4(1, 0.8, 0.6, 1.5), "the colour without the intensity")
-        // Down the light's +X: the axis projects to the clip centre, 1 (orthographic near) at depth 0, the radius at 1.
+        // Down the light's +X: the axis projects to the clip centre, reversed like every WE
+        // projection: 1 (orthographic near) at depth 1, the radius at 0.
         func clip(_ distance: Float) -> SIMD3<Float> {
             let p = volume.lightProjection * SIMD4(100 + distance, 50, -20, 1)
             return SIMD3(p.x, p.y, p.z) / p.w
         }
-        XCTAssertEqual(clip(1).z, 0, accuracy: 1e-5)
-        XCTAssertEqual(clip(120).z, 1, accuracy: 1e-5)
+        XCTAssertEqual(clip(1).z, 1, accuracy: 1e-5)
+        XCTAssertEqual(clip(120).z, 0, accuracy: 1e-5)
         XCTAssertEqual(clip(60).x, 0, accuracy: 1e-5)
         // The outer cone reaches the clip square's edge.
         let edge = volume.lightProjection * SIMD4(100 + 60, 50 + 60 * tan(30 * .pi / 180), -20, 1)
         XCTAssertEqual(abs(edge.y / edge.w), 1, accuracy: 1e-4)
-        // The volume is the projection's inverse: WE's far corner lands on the far plane.
-        let corner = volume.volume * SIMD4(1, 1, 1, 1)
+        // The volume is the projection's inverse: WE's far corner (clip depth 0) lands on the far plane.
+        let corner = volume.volume * SIMD4(1, 1, SceneVolumeMesh.farDepth, 1)
         XCTAssertEqual(corner.x / corner.w, 100 + 120, accuracy: 1e-2)
         XCTAssertEqual(SceneVolumetricLight(light: Self.spot(), world: world, camera: Self.camera).shape, .cone)
 
@@ -237,8 +243,10 @@ final class SceneVolumetricsTests: XCTestCase {
 
     /// WE's inside tests: a sphere around the eye, a cone and a frustum the eye looks down.
     func testTheCameraInsideTests() {
-        let camera = SceneVolumetricsCamera(eye: SIMD3(0, 0, 10), center: .zero,
-                                            projection: .perspective(fieldOfViewDegrees: 50, near: 0.01, far: 1000))
+        let eye = SIMD3<Float>(0, 0, 10)
+        let camera = SceneFrameCamera(view: SceneCamera.lookAt(eye: eye, center: .zero, up: SIMD3(0, 1, 0)),
+                                      projection: SceneCamera.perspective(fovDegrees: 50, aspect: 16.0 / 9, near: 0.01, far: 1000),
+                                      eye: eye, forward: SIMD3(0, 0, -1), fieldOfView: 50)
         func at(_ position: SIMD3<Float>, forward: SIMD3<Float> = SIMD3(0, 0, -1)) -> simd_float4x4 {
             let f = simd_normalize(forward)
             let side = simd_normalize(simd_cross(SIMD3(0, 1, 0), f))
@@ -316,6 +324,7 @@ final class SceneVolumetricsTests: XCTestCase {
                                         usage: [.renderTarget, .shaderRead])
                 let commands = try XCTUnwrap(queue.makeCommandBuffer())
                 var frame = BuiltinFrameContext()
+                frame.camera = Self.camera
                 frame.lighting.objects = [SceneFrameLightObject(id: name, world: world, visible: true)]
                 stage.encode(SceneFrameStageContext(scene: scene, commandBuffer: commands, sceneSize: SIMD2(256, 144),
                                                     frame: frame, settings: Self.settings(quality)))
@@ -328,7 +337,7 @@ final class SceneVolumetricsTests: XCTestCase {
                 XCTAssertEqual(buffer.width, width / 4)
                 let drawn = try TextureUploadTests.read(buffer, device: device)
                 let volume = SceneVolumetricLight(light: light, world: world, camera: Self.camera)
-                let viewProjection = SceneVolumetrics.viewProjection(Self.camera, target: scene)
+                let viewProjection = SceneVolumetrics.viewProjection(Self.camera)
                 let transform = viewProjection * volume.volume
                 let mesh = SceneVolumeMesh.make(volume.shape)
                 let frontScale = light.kind == .point ? SIMD3<Float>(repeating: 1) : SIMD3(0.99, 0.99, 1)
@@ -341,7 +350,8 @@ final class SceneVolumetricsTests: XCTestCase {
                         let front = VolumetricsReference.depths(of: mesh, transform: transform, x: x, y: y, scale: frontScale)
                         let back = VolumetricsReference.depths(of: mesh, transform: transform, x: x, y: y)
                         // Pixels on a silhouette may round either way.
-                        let near = [(-1, 0), (1, 0), (0, -1), (0, 1)].map { dx, dy in
+                        let offsets: [(Int, Int)] = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+                        let near: [Bool] = offsets.map { (dx: Int, dy: Int) -> Bool in
                             VolumetricsReference.depths(of: mesh, transform: transform,
                                                         x: x + 2 * Float(dx) / Float(buffer.width),
                                                         y: y + 2 * Float(dy) / Float(buffer.height), scale: frontScale) != nil
@@ -349,9 +359,10 @@ final class SceneVolumetricsTests: XCTestCase {
                         guard near.allSatisfy({ $0 == (front != nil) }) else { continue }
                         var expected = SIMD3<Float>.zero
                         if let front, let back {
+                            // Reversed depth: the near faces are the greatest depth, the far ones the least.
                             expected = VolumetricsReference.march(volume, point: light.kind == .point,
                                                                   viewProjection: viewProjection, x: x, y: y,
-                                                                  near: front.min, far: back.max, quality: quality.level)
+                                                                  near: front.max, far: back.min, quality: quality.level)
                         }
                         let i = (row * buffer.width + column) * 4
                         compared += 1
@@ -394,6 +405,7 @@ final class SceneVolumetricsTests: XCTestCase {
             let scene = try texture(black, usage: [.renderTarget, .shaderRead])
             let commands = try XCTUnwrap(queue.makeCommandBuffer())
             var frame = BuiltinFrameContext()
+            frame.camera = Self.camera
             frame.lighting.objects = [SceneFrameLightObject(id: "1", world: world, visible: visible)]
             stage.encode(SceneFrameStageContext(scene: scene, commandBuffer: commands, sceneSize: SIMD2(256, 144),
                                                 frame: frame, settings: Self.settings(setting)))
@@ -409,16 +421,16 @@ final class SceneVolumetricsTests: XCTestCase {
     /// What volumetrics cost on the GPU at 1920×1080, per quality: two spots and a point.
     func testTheCost() throws {
         let lights = [Self.object("1", Self.spot()), Self.object("2", Self.spot(cookie: true)), Self.object("3", Self.point())]
-        let camera = SceneVolumetricsCamera(projection: .orthographic(width: 1920, height: 1080))
         var report = "quality\tlights\tGPU min ms\tGPU median ms\n"
         for quality in [GSLightingQuality.low, .medium, .high, .ultra] {
-            let plan = try XCTUnwrap(try SceneVolumetricsPlan.build(lights: lights, camera: camera,
-                                                                    settings: Self.settings(quality), builder: builder))
+            let plan = try XCTUnwrap(try SceneVolumetricsPlan.build(lights: lights, settings: Self.settings(quality),
+                                                                    builder: builder))
             let stage = SceneVolumetrics(device: device)
             stage.setPlan(plan)
             XCTAssertTrue(try XCTUnwrap(stage.pipelines).waitUntilReady(plan, sceneFormat: .rgba8Unorm))
             let scene = try blank(width: 1920, height: 1080)
             var frame = BuiltinFrameContext()
+            frame.camera = Self.orthographicCamera(SIMD2(1920, 1080))
             frame.lighting.objects = [(1, SIMD4<Float>(400, 500, -100, 1)), (2, SIMD4(1200, 900, -300, 1)),
                                       (3, SIMD4(960, 540, 0, 1))].map { id, position in
                 var world = simd_float4x4(diagonal: SIMD4(1, 1, 1, 1))

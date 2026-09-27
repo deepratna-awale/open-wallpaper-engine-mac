@@ -105,16 +105,20 @@ final class SceneLightCameraTests: XCTestCase {
         XCTAssertEqual(lighting.objects[0].world.columns.3, SIMD4(288, 205, 100, 1), "the volumetrics' light moves too")
     }
 
-    /// An orthographic scene's camera is WE's reset one (0x14018866b): the eye at the origin,
-    /// looking down −z, whatever scene.json's `camera` says.
+    /// An orthographic scene's camera is WE's reset one (0x14018866b), whatever scene.json's
+    /// `camera` says: the view from the origin down −z, and the eye WE then reports at the
+    /// scene's centre, 2000 in front (0x140189da0).
     func testAnOrthographicCameraIsWEsReset() throws {
-        let scene = try decodeTolerant(WEScene.self, from: Data(#"""
-            {"camera": {"eye": "0 0 1", "center": "0 0 0", "up": "0 1 0"},
-             "general": {"orthogonalprojection": {"width": 1920, "height": 1080}}, "objects": []}
-            """#.utf8))
-        let camera = SceneVolumetricsCamera(scene: scene, size: SIMD2(1920, 1080))
-        XCTAssertEqual(camera.eye, .zero)
+        var content = SceneMetalContent(size: SIMD2(1920, 1080), layers: [], particleSystems: [],
+                                        bloom: SceneBloomSettings(enabled: false, strength: 0, threshold: 0,
+                                                                  tint: SIMD3(repeating: 1)))
+        content.spatial.camera.projection = .orthographic(width: 1920, height: 1080)
+        content.spatial.staticEye = SIMD3(0, 0, 1)
+        let camera = SceneCameraRigs.make(for: content).frameCamera(
+            SceneCameraRigInput(sceneSize: content.size, aspect: 16.0 / 9, time: 0, deltaTime: 0))
+        XCTAssertEqual(camera.eye, SIMD3(960, 540, 2000))
         XCTAssertEqual(camera.forward, SIMD3(0, 0, -1))
-        XCTAssertTrue(camera.isOrthographic)
+        XCTAssertEqual(camera.view, matrix_identity_float4x4)
+        XCTAssertFalse(camera.isPerspective)
     }
 }

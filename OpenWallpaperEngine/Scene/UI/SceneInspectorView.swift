@@ -581,8 +581,8 @@ private final class SceneInspectorModel: ObservableObject {
     }
 
     private static func sceneSize(for scene: WEScene) -> SIMD2<Double> {
-        if let projection = scene.general.orthogonalprojection {
-            return SIMD2<Double>(Double(projection.width), Double(projection.height))
+        if case .orthographic(let width, let height) = scene.general.projection {
+            return SIMD2<Double>(Double(width), Double(height))
         }
         let bounds = scene.objects.compactMap { object -> SIMD2<Double>? in
             guard let origin = object.origin?.parseVector3(), let size = object.size?.parseVector2() else { return nil }

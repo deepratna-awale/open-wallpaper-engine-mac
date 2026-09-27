@@ -517,10 +517,11 @@ class SceneWallpaperViewModel: ObservableObject {
         scene.objects = SceneObjectIdentity.assigningFallbackIDs(
             authoredScene.objects.map { $0.resolvingUserBindings(in: valueContext) })
         let sceneSize = metalSceneSize(for: scene)
+        if scene.general.projection == .orthographicAuto { Self.centreFirstImage(of: &scene, sceneSize: sceneSize) }
         let bloom = bloomSettings(for: scene.general)
         let lighting = SceneLightingSettings(scene.general, in: valueContext)
         sceneEngineCombos = SceneEngineCombos(bloom: bloom, lighting: lighting,
-                                              orthographic: !scene.general.usesPerspectiveProjection,
+                                              orthographic: !scene.general.projection.isPerspective,
                                               settings: renderSettings)
         // Hidden objects are built too: a script can show them (docs/scenescript-plan.md §4.3).
         let visibility = Dictionary(scene.objects.map { (String($0.id ?? -1), isObjectVisible($0)) },
@@ -568,10 +569,8 @@ class SceneWallpaperViewModel: ObservableObject {
                                     document: $0.document, signature: $0.signature)
             }
             content.sounds = soundBuilder(wallpaperDir: wallpaperDir).sounds(in: scene.objects, context: valueContext)
-            content.lighting = SceneLightingContent(settings: lighting, lights: Self.lights(in: scene.objects, context: valueContext),
-                                                    camera: SceneVolumetricsCamera(scene: scene, size: sceneSize))
-            content.volumetrics = volumetricsPlan(content.lighting.lights, camera: content.lighting.camera,
-                                                  wallpaperDir: wallpaperDir)
+            content.lighting = SceneLightingContent(settings: lighting, lights: Self.lights(in: scene.objects, context: valueContext))
+            content.volumetrics = volumetricsPlan(content.lighting.lights, wallpaperDir: wallpaperDir)
             content.engineCombos = sceneEngineCombos
             // An HDR content blooms through the HDR chain only (its `combine_srgb` when bloom is off).
             if sceneEngineCombos.hdr {
@@ -581,6 +580,10 @@ class SceneWallpaperViewModel: ObservableObject {
             }
             content.colorCorrection = engineChain("WE's colour correction", wallpaperDir: wallpaperDir,
                                                   SceneColorCorrection.build)
+            // WE makes the fade only for a scene with camera paths (0x140181bae).
+            if !content.spatial.cameraPaths.isEmpty {
+                content.cameraFade = engineChain("WE's camera fade", wallpaperDir: wallpaperDir, SceneCameraFade.build)
+            }
             cachedContent = content
             cachedContentRevision = metalRevision
             return content
@@ -771,20 +774,35 @@ class SceneWallpaperViewModel: ObservableObject {
         LiveSceneValueContext(wallpaper: propertyStoreKey)
     }
 
+    /// The scene's size in scene units (`general.orthogonalprojection` as WE reads it,
+    /// docs/models-plan.md §2.1): an orthographic scene's width and height; `{"auto": true}`'s
+    /// first image's size (0x14018b2c0); a perspective scene, whose objects are in world units,
+    /// WE's default canvas.
     private func metalSceneSize(for scene: WEScene) -> SIMD2<Float> {
-        if let projection = scene.general.orthogonalprojection {
-            return SIMD2<Float>(Float(projection.width), Float(projection.height))
+        switch scene.general.projection {
+        case .orthographic(let width, let height):
+            return SIMD2<Float>(Float(width), Float(height))
+        case .orthographicAuto:
+            if let size = Self.firstImage(of: scene)?.size?.parseVector2(), size.0 != 0, size.1 != 0 {
+                return SIMD2<Float>(Float(size.0), Float(size.1))
+            }
+            OWELog.error(.scene, "\(loadedWallpaperDirectory?.lastPathComponent ?? "?"): orthogonalprojection auto "
+                         + "needs an image with a size; the scene is 1920×1080")
+            return SIMD2<Float>(1920, 1080)
+        case .perspective:
+            return SIMD2<Float>(1920, 1080)
         }
-        // `orthogonalprojection: null` is a perspective scene: objects are in world units, so their
-        // bounds say nothing about the canvas. Render at WE's default canvas.
-        if scene.general.usesPerspectiveProjection { return SIMD2<Float>(1920, 1080) }
-        let imageBounds = scene.objects.compactMap { object -> SIMD2<Float>? in
-            guard let origin = object.origin?.parseVector3(), let size = object.size?.parseVector2() else { return nil }
-            return SIMD2<Float>(Float(origin.0 + size.0 / 2), Float(origin.1 + size.1 / 2))
-        }
-        guard let widest = imageBounds.map(\.x).max(), let tallest = imageBounds.map(\.y).max(),
-              widest > 0, tallest > 0 else { return SIMD2<Float>(1920, 1080) }
-        return SIMD2<Float>(widest, tallest)
+    }
+
+    /// `{"auto": true}` sizes the scene from its first image object, which WE puts at the
+    /// scene's centre (0x14018b2c0; it does so every frame, over what a script set [I]).
+    private static func firstImage(of scene: WEScene) -> WESceneObject? {
+        scene.objects.first { $0.image != nil }
+    }
+
+    private static func centreFirstImage(of scene: inout WEScene, sceneSize: SIMD2<Float>) {
+        guard let index = scene.objects.firstIndex(where: { $0.image != nil }) else { return }
+        scene.objects[index].origin = "\(sceneSize.x / 2) \(sceneSize.y / 2) 0"
     }
 
     /// An object's own `origin`, relative to its parent.
@@ -1142,8 +1160,7 @@ class SceneWallpaperViewModel: ObservableObject {
     }
 
     /// WE's volumetric lights (`SceneVolumetricsPlan`); nil, logged, when they can't be planned.
-    private func volumetricsPlan(_ lights: [SceneLightObject], camera: SceneVolumetricsCamera,
-                                 wallpaperDir: URL) -> SceneVolumetricsPlan? {
+    private func volumetricsPlan(_ lights: [SceneLightObject], wallpaperDir: URL) -> SceneVolumetricsPlan? {
         guard lights.contains(where: \.light.castVolumetrics), let translator = Self.effectTranslator else { return nil }
         let builder = SceneEffectPlanBuilder(
             translator: translator,
@@ -1153,7 +1170,7 @@ class SceneWallpaperViewModel: ObservableObject {
             },
             sceneEngineCombos: sceneEngineCombos)
         do {
-            return try SceneVolumetricsPlan.build(lights: lights, camera: camera, settings: renderSettings, builder: builder)
+            return try SceneVolumetricsPlan.build(lights: lights, settings: renderSettings, builder: builder)
         } catch {
             OWELog.error(.scene, "WE's volumetrics can't be planned; the scene draws without them: \(error)")
             return nil
@@ -1349,11 +1366,10 @@ class SceneWallpaperViewModel: ObservableObject {
     }
 
     /// A particle object's system followed by its children (`ParticleFamilyBuilder`).
-    /// WE's particle defaults are in pixels in an orthographic scene with a size (its parser's flag,
-    /// `wallpaper64.exe` 0x14018768a), in world units otherwise.
+    /// WE's particle defaults are in pixels in an orthographic scene (its parser's flag,
+    /// `wallpaper64.exe` 0x14018768a, set with the scene's ortho bit), in world units otherwise.
     static func particlesUsePixelUnits(_ scene: WEScene) -> Bool {
-        guard let projection = scene.general.orthogonalprojection else { return false }
-        return projection.width != 0 || projection.height != 0
+        !scene.general.projection.isPerspective
     }
 
     private func buildParticleFamily(_ object: WESceneObject, wallpaperDir: URL, sceneSize: SIMD2<Float>, pixelUnits: Bool,

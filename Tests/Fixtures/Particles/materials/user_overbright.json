@@ -5,7 +5,7 @@
 			"constantshadervalues" : { "ui_editor_properties_overbright" : 1 },
 			"shader" : "genericparticle",
 			"textures" : [ "particle/solid" ],
-			"usershadervalues" : { "ui_editor_properties_overbright" : "glow" }
+			"usershadervalues" : { "glow" : "ui_editor_properties_overbright" }
 		}
 	]
 }

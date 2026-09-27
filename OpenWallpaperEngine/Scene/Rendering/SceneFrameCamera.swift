@@ -13,9 +13,11 @@ struct SceneFrameCamera: Equatable {
     var up = SIMD3<Float>(0, 1, 0)
     /// The vertical fov in degrees, when the projection is a perspective one.
     var fieldOfView: Float?
-    /// Depth runs 1 at near to 0 at far, cleared to 0, compared GREATER: WE's everywhere
-    /// (§2.4). False while the scene pass has no depth buffer.
-    var reversedDepth = false
+    /// The projection's depth runs 1 at the near plane to 0 at the far one, as WE's does
+    /// everywhere (§2.4): a depth buffer for it clears to 0 and compares GREATER.
+    var reversedDepth = true
+    /// `camerafade`'s alpha this frame (`materials/util/fade.json`); 0 draws no fade.
+    var fade: Float = 0
 
     var viewProjection: simd_float4x4 { projection * view }
     var isPerspective: Bool { fieldOfView != nil }
@@ -30,6 +32,27 @@ struct SceneCameraRigInput {
     /// Seconds since the scene started, and since the last frame.
     var time: Double
     var deltaTime: Float
+    /// Camera shake this frame (`SceneCameraShake`) for a camera that carries it: a perspective
+    /// scene's. An orthographic scene's layers are drawn without the camera, so the renderer moves
+    /// them by the shake's negative instead and this stays zero.
+    var shake = SIMD3<Float>.zero
+    /// A camera layer's own `visible` this frame (scripts included).
+    var isVisible: (String) -> Bool = { _ in true }
+    /// An object's own transform this frame where scripts or timelines set it
+    /// (`SceneObjectMotion.local3D`); nil keeps the authored one. Camera layers and their parents
+    /// are composed with it through `SceneSpatialContent.transforms`.
+    var live: SceneTransformHierarchy3D.Live = { _ in nil }
+    /// A camera layer's `fov` as a script set it.
+    var layerFov: (String) -> Float? = { _ in nil }
+    /// `thisScene.fov`, `nearz`, `farz` and `camerafade` as scripts or timelines set them; nil
+    /// keeps the scene's.
+    var fov: Float?
+    var nearZ: Float?
+    var farZ: Float?
+    var cameraFade: Bool?
+    /// The scene's default camera as `thisScene.setCameraTransforms` set it; nil keeps the
+    /// `camera` block.
+    var scriptCamera: SceneCameraPose?
 }
 
 /// Where a frame's camera comes from: WE's camera layers, the scene's camera paths, or the
@@ -40,26 +63,39 @@ protocol SceneCameraRig: AnyObject {
 }
 
 enum SceneCameraRigs {
-    /// The rig for a content. Today every scene gets `SceneLayerPassCameraRig`, which reproduces
-    /// the camera the renderer draws with; M2 returns WE's rig here for perspective scenes.
+    /// The rig for a content: WE's perspective camera (`ScenePerspectiveCameraRig`) for a
+    /// perspective scene, the orthographic camera otherwise. Bound values resolve against the
+    /// content's user properties.
     static func make(for content: SceneMetalContent) -> any SceneCameraRig {
-        SceneLayerPassCameraRig(camera: content.lighting.camera)
+        guard content.spatial.camera.projection.isPerspective else { return SceneOrthographicCameraRig() }
+        return ScenePerspectiveCameraRig(content.spatial, values: LiveSceneValueContext(wallpaper: content.wallpaperKey))
     }
 }
 
-/// Today's camera: layers are drawn in scene units through the layer pass's orthographic matrix
-/// (`ImageMaterialRenderer.viewProjection(sceneSize:)`, as `projection` with an identity view),
-/// and `g_EyePosition` and the forward come from the lighting's camera
-/// (`SceneLightingContent.camera`).
-final class SceneLayerPassCameraRig: SceneCameraRig {
-    private let camera: SceneVolumetricsCamera
-
-    init(camera: SceneVolumetricsCamera) {
-        self.camera = camera
-    }
-
+/// An orthographic scene's camera (0x1401891a0 without camera paths): the view from the origin
+/// down −z (identity), `ortho(0, width, 0, height)` over z −2000…2000, and the eye WE reports
+/// afterwards, (width/2, height/2, 2000) (0x140189da0). Camera shake isn't in it: the renderer
+/// moves the layers and lights by its negative instead, which leaves every eye-to-object vector
+/// as WE's. The layer pass draws with its own matrix (`ImageMaterialRenderer.viewProjection`);
+/// the volumetrics draw with this one.
+final class SceneOrthographicCameraRig: SceneCameraRig {
     func frameCamera(_ input: SceneCameraRigInput) -> SceneFrameCamera {
-        SceneFrameCamera(projection: ImageMaterialRenderer.viewProjection(sceneSize: input.sceneSize),
-                         eye: camera.eye, forward: camera.forward, up: camera.up)
+        let size = simd_max(input.sceneSize, SIMD2(1, 1))
+        return SceneFrameCamera(projection: SceneCamera.orthographic(size: size),
+                                eye: SIMD3(size.x / 2, size.y / 2, SceneCamera.orthographicDepth))
+    }
+}
+
+extension SceneScriptSceneState {
+    /// The default camera as `thisScene.setCameraTransforms` left it (the eye, centre, up and
+    /// zoom of the scene buffer), once a script has set any of them; nil before.
+    var scriptCamera: SceneCameraPose? {
+        let fields: [SceneScriptSceneField] = [.cameraEye, .cameraCenter, .cameraUp, .cameraZoom]
+        guard fields.contains(where: owned.contains) else { return nil }
+        func vector(_ field: SceneScriptSceneField) -> SIMD3<Float> {
+            SIMD3(values[field.offset], values[field.offset + 1], values[field.offset + 2])
+        }
+        return SceneCameraPose(eye: vector(.cameraEye), center: vector(.cameraCenter), up: vector(.cameraUp),
+                               zoom: values[SceneScriptSceneField.cameraZoom.offset])
     }
 }

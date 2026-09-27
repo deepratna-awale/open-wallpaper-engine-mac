@@ -45,7 +45,6 @@ struct SceneVolumetricsPlan {
     let blurH: SceneVolumetricsPass?
     let blurV: SceneVolumetricsPass?
     let combine: SceneVolumetricsPass
-    let camera: SceneVolumetricsCamera
 
     /// WE blurs the light buffer below quality 3, and renders it at 1/8 of the frame there, 1/4
     /// from quality 3 up (0x140196d79…0x140196d88).
@@ -94,7 +93,7 @@ struct SceneVolumetricsPlan {
 
     /// Plans `lights` with `builder`'s translator, files and engine combos; nil when the setting
     /// is disabled or no light casts volumetrics.
-    static func build(lights: [SceneLightObject], camera: SceneVolumetricsCamera, settings: SceneRenderSettings,
+    static func build(lights: [SceneLightObject], settings: SceneRenderSettings,
                       builder: SceneEffectPlanBuilder) throws -> SceneVolumetricsPlan? {
         let quality = settings.volumetrics.level
         let casting = lights.filter(\.light.castVolumetrics)
@@ -127,7 +126,7 @@ struct SceneVolumetricsPlan {
         return SceneVolumetricsPlan(quality: quality, lights: planned, skipped: skipped,
                                     blurH: blurs ? try resolver.pass(blurHMaterial) : nil,
                                     blurV: blurs ? try resolver.pass(blurVMaterial) : nil,
-                                    combine: try resolver.pass(combineMaterial), camera: camera)
+                                    combine: try resolver.pass(combineMaterial))
     }
 
     /// A cookie light's texture: the one it names, else WE's default (0x14025d19f…0x14025d1cd

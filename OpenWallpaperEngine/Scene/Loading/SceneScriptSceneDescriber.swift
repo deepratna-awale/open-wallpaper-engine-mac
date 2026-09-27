@@ -33,7 +33,37 @@ struct SceneScriptSceneDescriber {
                 }
             }
         }
+        for (field, value) in Self.defaultCamera(root) { description.settings[field] = value }
         return description
+    }
+
+    /// `getCameraTransforms()`'s camera before a script sets it: WE's default camera, the `camera`
+    /// block with its defaults (eye (2, 2, 2), centre 0, up +y, zoom 1), which an orthographic
+    /// scene without camera paths resets to the origin looking down −z (0x14018866b). Camera
+    /// layers and paths don't move it (docs/models-plan.md §2.3 "Script camera").
+    static func defaultCamera(_ root: [String: SceneJSON]) -> [SceneScriptSceneField: [Float]] {
+        var eye = SceneCameraDefaults.eye, center = SceneCameraDefaults.center, up = SceneCameraDefaults.up
+        var hasPaths = false
+        if case .object(let camera)? = root["camera"] {
+            func vector(_ key: String, _ fallback: SIMD3<Float>) -> SIMD3<Float> {
+                guard case .string(let text)? = camera[key] else { return fallback }
+                let (x, y, z) = text.parseVector3()
+                return SIMD3(Float(x), Float(y), Float(z))
+            }
+            eye = vector("eye", eye)
+            center = vector("center", center)
+            up = vector("up", up)
+            if case .array(let paths)? = camera["paths"] { hasPaths = !paths.isEmpty }
+        }
+        var projection = WESceneProjection.perspective
+        if case .object(let general)? = root["general"] { projection = WESceneProjection(json: general["orthogonalprojection"]) }
+        if !projection.isPerspective, !hasPaths {
+            eye = .zero
+            center = SIMD3(0, 0, -1)
+            up = SIMD3(0, 1, 0)
+        }
+        return [.cameraEye: [eye.x, eye.y, eye.z], .cameraCenter: [center.x, center.y, center.z],
+                .cameraUp: [up.x, up.y, up.z], .cameraZoom: [1]]
     }
 
     /// The objects of a document (`scene.json` or an asset pack's `assets.json`).

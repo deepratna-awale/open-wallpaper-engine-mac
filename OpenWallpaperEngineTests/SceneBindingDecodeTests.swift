@@ -36,12 +36,10 @@ final class SceneBindingDecodeTests: XCTestCase {
 
     func testNullOrthogonalProjectionMeansPerspective() throws {
         let general = try loadScene().0.general
-        XCTAssertNil(general.orthogonalprojection)
-        XCTAssertTrue(general.usesPerspectiveProjection)
+        XCTAssertEqual(general.projection, .perspective)
 
         let ortho = try JSONDecoder().decode(WEScene.self, from: Fixtures.data("Scenes/layers/scene.json")).general
-        XCTAssertFalse(ortho.usesPerspectiveProjection)
-        XCTAssertEqual(ortho.orthogonalprojection?.height, 1080)
+        XCTAssertEqual(ortho.projection, .orthographic(width: 1920, height: 1080))
     }
 
     func testObjectFieldsKeepBindingsAndTypedLiterals() throws {

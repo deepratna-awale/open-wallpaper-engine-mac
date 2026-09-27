@@ -1,87 +1,5 @@
 import simd
 
-/// The camera WE's volumetrics see: the scene camera's view and projection (ctx+0x930), in the
-/// depth convention the volumetric shaders assume (clip z from 0 at the near plane to 1 at the
-/// far one, D3D's), right-handed as WE's light views are.
-///
-/// - **Orthographic scenes** (0x140183e1b…0x140183e95): `ortho(0, width, 0, height)` with near
-///   −2000 and far 2000, whatever `nearz`/`farz` say.
-/// - **Perspective scenes**: `SceneCamera`'s field of view, near and far planes.
-///
-/// The view is `lookAt(eye, center, up)`: scene.json's `camera` in a perspective scene; in an
-/// orthographic one WE resets it at load to the eye (0, 0, 0) looking down −z with +y up
-/// (0x14018866b, a scene without camera paths). Camera shake moves WE's eye and centre; the
-/// renderer moves the lights by it instead (`SceneFrameLightingInput.cameraShake`), as it moves
-/// the layers. Parallax moves neither (it translates the draws' model matrices only).
-struct SceneVolumetricsCamera: Equatable {
-    enum Projection: Equatable {
-        case orthographic(width: Float, height: Float)
-        case perspective(fieldOfViewDegrees: Float, near: Float, far: Float)
-    }
-
-    var eye = SIMD3<Float>(0, 0, 1)
-    var center = SIMD3<Float>(0, 0, 0)
-    var up = SIMD3<Float>(0, 1, 0)
-    var projection = Projection.orthographic(width: 1920, height: 1080)
-
-    static let orthographicDepth: Float = 2000
-
-    init(eye: SIMD3<Float> = SIMD3(0, 0, 1), center: SIMD3<Float> = .zero, up: SIMD3<Float> = SIMD3(0, 1, 0),
-         projection: Projection = .orthographic(width: 1920, height: 1080)) {
-        self.eye = eye
-        self.center = center
-        self.up = up
-        self.projection = projection
-    }
-
-    init(scene: WEScene, size: SIMD2<Float>) {
-        if let camera = SceneCamera(scene: scene) {
-            self.init(eye: camera.eye, center: camera.center, up: camera.up,
-                      projection: .perspective(fieldOfViewDegrees: camera.fieldOfView,
-                                               near: camera.nearPlane, far: camera.farPlane))
-        } else {
-            self.init(eye: .zero, center: SIMD3(0, 0, -1), up: SIMD3(0, 1, 0),
-                      projection: .orthographic(width: size.x, height: size.y))
-        }
-    }
-
-    var isOrthographic: Bool {
-        if case .orthographic = projection { return true }
-        return false
-    }
-
-    /// The view direction (ctx+0x160).
-    var forward: SIMD3<Float> { simd_normalize(center - eye) }
-
-    func view() -> simd_float4x4 {
-        SceneVolumetricLight.lookAt(eye: eye, forward: forward, up: up)
-    }
-
-    /// `aspect` is the render target's width over height (perspective scenes only).
-    func viewProjection(aspect: Float) -> simd_float4x4 {
-        let projectionMatrix: simd_float4x4
-        switch projection {
-        case let .orthographic(width, height):
-            projectionMatrix = Self.orthographic(left: 0, right: width, bottom: 0, top: height,
-                                                 near: -Self.orthographicDepth, far: Self.orthographicDepth)
-        case let .perspective(fieldOfView, near, far):
-            projectionMatrix = SceneVolumetricLight.perspective(fieldOfView: fieldOfView * .pi / 180, aspect: aspect,
-                                                                near: near, far: far)
-        }
-        return projectionMatrix * view()
-    }
-
-    /// Right-handed, depth 0…1 (the device's ortho, vt+0x18).
-    static func orthographic(left: Float, right: Float, bottom: Float, top: Float,
-                             near: Float, far: Float) -> simd_float4x4 {
-        simd_float4x4(columns: (
-            SIMD4(2 / (right - left), 0, 0, 0),
-            SIMD4(0, 2 / (top - bottom), 0, 0),
-            SIMD4(0, 0, 1 / (near - far), 0),
-            SIMD4(-(right + left) / (right - left), -(top + bottom) / (top - bottom), near / (near - far), 1)))
-    }
-}
-
 /// One light's volume in one frame (`wallpaper64.exe` 0x140196ce0; docs/lighting-plan.md §2.8):
 /// where its mesh goes, what the volumetric shaders read about it, and whether the camera is inside.
 struct SceneVolumetricLight: Equatable {
@@ -103,7 +21,9 @@ struct SceneVolumetricLight: Equatable {
         }
     }
 
-    init(light: SceneLight, world: simd_float4x4, camera: SceneVolumetricsCamera) {
+    /// `camera` is the scene camera this frame (`SceneFrameCamera`), which WE's volumetrics draw
+    /// through (ctx+0x930).
+    init(light: SceneLight, world: simd_float4x4, camera: SceneFrameCamera) {
         shape = Self.shape(of: light)
         let position = SIMD3(world.columns.3.x, world.columns.3.y, world.columns.3.z)
         let forward = SIMD3(world.columns.0.x, world.columns.0.y, world.columns.0.z)
@@ -118,7 +38,7 @@ struct SceneVolumetricLight: Equatable {
             volume = simd_float4x4(diagonal: SIMD4(light.radius, light.radius, light.radius, 1))
             volume.columns.3 = SIMD4(position, 1)
         } else {
-            lightProjection = Self.spotProjection(light: light, world: world, orthographic: camera.isOrthographic)
+            lightProjection = Self.spotProjection(light: light, world: world, orthographic: !camera.isPerspective)
             volume = lightProjection.inverse
             // WE's row 0 of the world matrix as it stands, scale included (0x1401985b3).
             var3 = SIMD4(forward, 0)
@@ -160,19 +80,17 @@ struct SceneVolumetricLight: Equatable {
         ])
     }
 
-    /// Right-handed, depth 0…1 (the device's perspective, vt+0x10).
+    /// The device's perspective (vt+0x10), right-handed and reversed like the scene camera's
+    /// (`SceneCamera.perspective`); `fieldOfView` in radians.
     static func perspective(fieldOfView: Float, aspect: Float, near: Float, far: Float) -> simd_float4x4 {
-        let y = 1 / tan(fieldOfView / 2)
-        let x = y / max(aspect, 0.0001)
-        let z = far / (near - far)
-        return simd_float4x4(columns: (SIMD4(x, 0, 0, 0), SIMD4(0, y, 0, 0), SIMD4(0, 0, z, -1), SIMD4(0, 0, z * near, 0)))
+        SceneCamera.perspective(fovDegrees: fieldOfView * 180 / .pi, aspect: aspect, near: near, far: far)
     }
 
     /// WE's test for the camera inside the volume (0x1401979c3…0x1401980e5), at a point just in
     /// front of the eye.
     static func cameraInside(shape: SceneVolumeMesh.Shape, light: SceneLight, position: SIMD3<Float>,
                              forward: SIMD3<Float>, lightProjection: simd_float4x4,
-                             camera: SceneVolumetricsCamera) -> Bool {
+                             camera: SceneFrameCamera) -> Bool {
         switch shape {
         case .box:
             // 0.1 ahead, inside all six planes of the light's frustum (0x1401849e0).

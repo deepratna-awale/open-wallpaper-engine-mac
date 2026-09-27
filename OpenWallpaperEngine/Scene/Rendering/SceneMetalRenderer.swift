@@ -35,8 +35,12 @@ private struct CameraMotion {
     /// This frame's parallax and `cameraparallaxamount` (times the app's amount), when objects
     /// are displaced: parallax on in an orthographic scene.
     let parallax: (state: SceneCameraParallax, amount: Float)?
-    /// How far camera shake moved the camera; the scene moves the other way.
+    /// How far camera shake moved the camera, where the renderer moves the scene the other way
+    /// instead: an orthographic scene, whose layers aren't drawn through the camera.
     let shake: SIMD2<Float>
+    /// The shake a perspective scene's camera carries (`SceneCameraRigInput.shake`); zero in an
+    /// orthographic scene.
+    var cameraShake = SIMD3<Float>.zero
     let audioLevel: Double
 }
 
@@ -218,7 +222,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// The scene's lighting settings and light objects (`SceneMetalContent.lighting`).
     private var lighting = SceneLightingContent()
     /// Where each frame's camera comes from (`SceneCameraRigs.make(for:)`).
-    private var cameraRig: any SceneCameraRig = SceneLayerPassCameraRig(camera: SceneVolumetricsCamera())
+    private var cameraRig: any SceneCameraRig = SceneOrthographicCameraRig()
+    /// Every object's authored 3D transform (`SceneSpatialContent.transforms`), for the rig's live values.
+    private var cameraTransforms = SceneTransformHierarchy3D.empty
     /// The user's quality settings (post-processing, reflection, shadows, volumetrics); the view sets them.
     var renderSettings = SceneRenderSettings()
     private var sceneRenderTarget: MTLTexture?
@@ -441,6 +447,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 self.bloom = content.bloom
                 self.lighting = content.lighting
                 self.cameraRig = SceneCameraRigs.make(for: content)
+                self.cameraTransforms = content.spatial.transforms
                 for stage in self.frameStages { stage.setContent(content) }
                 self.postProcess.setContent(content)
                 self.particleSystems = preparedParticleSystems
@@ -835,11 +842,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         effectFrame.audio = WallpaperServices.shared.advanceAudioSpectrumFrame()
         let motion = cameraMotion(pointer: pointer, time: time, deltaTime: Float(clock.delta))
         effectFrame.parallax = parallaxEnabled ? cameraParallax.shaderPosition(sceneSize: sceneSize) : SIMD2(0.5, 0.5)
-        // WE's camera eye and forward (ctx+0x68, ctx+0x160); the renderer keeps the camera still
-        // and moves the objects by the shake instead (`SceneFrameLightingInput.cameraShake`).
-        effectFrame.camera = cameraRig.frameCamera(SceneCameraRigInput(
-            sceneSize: sceneSize, aspect: sceneSize.x / max(sceneSize.y, 1), time: sceneTime,
-            deltaTime: Float(clock.delta)))
+        // WE's camera eye and forward (ctx+0x68, ctx+0x160). An orthographic scene's camera stays
+        // still and the objects move by the shake instead (`SceneFrameLightingInput.cameraShake`).
+        effectFrame.camera = cameraRig.frameCamera(cameraRigInput(time: sceneTime, motion: motion))
         effectFrame.eyePosition = effectFrame.camera.eye
         effectFrame.viewForward = effectFrame.camera.forward
         effectFrame.lighting = frameLighting(eye: effectFrame.eyePosition, forward: effectFrame.viewForward,
@@ -1311,7 +1316,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private func cameraMotion(pointer: SIMD2<Float>, time: Float, deltaTime: Float) -> CameraMotion {
         let scene = scripts.state.scene
         let shaking = scene.flag(.camerashake) ?? camera.shake
-        let shake = shaking
+        let shake: SIMD3<Float> = shaking
             ? SceneCameraShake.cameraOffset(time: time, speed: sceneSetting(.camerashakespeed) ?? camera.shakeSpeed,
                                             amplitude: sceneSetting(.camerashakeamplitude) ?? camera.shakeAmplitude,
                                             roughness: sceneSetting(.camerashakeroughness) ?? camera.shakeRoughness,
@@ -1328,6 +1333,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 * WallpaperServices.shared.userPropertyValue("_owe_effect_parallax_amount", fallback: 1)
             if camera.orthographic { parallax = (cameraParallax, amount) }
         }
+        // WE moves the camera by the shake (0x140199580). A perspective scene's camera carries it;
+        // an orthographic scene's layers are drawn without the camera, so they move the other way.
+        guard camera.orthographic else {
+            return CameraMotion(parallax: parallax, shake: .zero, cameraShake: shake,
+                                audioLevel: WallpaperServices.shared.audioLevel)
+        }
         return CameraMotion(parallax: parallax, shake: SIMD2(shake.x, shake.y),
                             audioLevel: WallpaperServices.shared.audioLevel)
     }
@@ -1336,6 +1347,30 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// the authored (or user-bound) one.
     private func sceneSetting(_ field: SceneScriptSceneField) -> Float? {
         scripts.state.scene.scalar(field) ?? timelines.sceneScalar(field)
+    }
+
+    /// What the camera rig needs this frame (`SceneCameraRigInput`): the camera layers' live
+    /// visibility and transforms, the shake and the settings scripts and timelines set, and the
+    /// default camera `thisScene.setCameraTransforms` set.
+    private func cameraRigInput(time: Double, motion: CameraMotion) -> SceneCameraRigInput {
+        var input = SceneCameraRigInput(sceneSize: sceneSize, aspect: sceneSize.x / max(sceneSize.y, 1), time: time,
+                                        deltaTime: Float(clock.delta))
+        input.shake = motion.cameraShake
+        input.isVisible = { [unowned self] id in scripts.object(id)?.flag(.visible) ?? scripts.baseVisible(id) }
+        input.live = { [unowned self] id in
+            // Only what scripts or timelines move differs from the authored transform the rig holds.
+            let script = scripts.object(id), animation = timelines.object(id)
+            guard script != nil || animation != nil, let authored = cameraTransforms.nodes[id]?.local,
+                  let motion = objectMotions[id] ?? layers.first(where: { $0.layer.id == id })?.motion else { return nil }
+            return motion.local3D(authored: authored, animation: animation, script: script)
+        }
+        input.layerFov = { [unowned self] id in scripts.object(id)?.scalar(.fov) }
+        input.fov = sceneSetting(.fov)
+        input.nearZ = sceneSetting(.nearz)
+        input.farZ = sceneSetting(.farz)
+        input.cameraFade = scripts.state.scene.flag(.camerafade)
+        input.scriptCamera = scripts.state.scene.scriptCamera
+        return input
     }
 
     /// The parallax offset of a layer: its root object's live origin and `parallaxDepth`.

@@ -52,9 +52,6 @@ struct SceneLightDepth: Equatable {
 struct SceneLightingContent {
     var settings = SceneLightingSettings()
     var lights: [SceneLightObject] = []
-    /// The scene's camera (WE's ctx+0x930 and its eye, ctx+0x68, and forward, ctx+0x160):
-    /// `g_EyePosition`, the packer's sort direction and the volumetrics' view.
-    var camera = SceneVolumetricsCamera()
 }
 
 /// What the renderer hands the lighting each frame, after scripts and timelines ran.

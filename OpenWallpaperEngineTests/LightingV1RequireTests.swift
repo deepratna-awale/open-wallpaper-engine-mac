@@ -101,15 +101,18 @@ final class LightingV1RequireTests: XCTestCase {
     /// Without a `lightconfig` WE's budget word is 0: a lit material gets every count at 0.
     func testLitMaterialWithoutBudgetGetsZeroCounts() {
         let combos = SceneEngineCombos(sceneOrtho: false).combos(for: ["LIGHTING": 1])
-        XCTAssertEqual(combos, Dictionary(uniqueKeysWithValues: Self.lightNames.map { ($0, 0) }))
+        XCTAssertEqual(combos, Dictionary(uniqueKeysWithValues: Self.lightNames.map { ($0, 0) }).merging(["REVERSEDEPTH": 1]) { $1 })
     }
 
-    func testUnlitMaterialGetsOnlySceneOrtho() {
+    /// An unlit material gets no light combo: `SCENE_ORTHO` in an orthographic scene, and WE's
+    /// `REVERSEDEPTH` everywhere.
+    func testUnlitMaterialGetsOnlySceneOrthoAndReversedDepth() {
         let engine = SceneEngineCombos(sceneOrtho: true, lightBudget: WELightConfig(point: 4), shadowQuality: 2)
-        XCTAssertEqual(engine.combos(for: ["LIGHTING": 0, "REFLECTION": 1]), ["SCENE_ORTHO": 1])
-        XCTAssertEqual(engine.combos(for: [:]), ["SCENE_ORTHO": 1])
-        XCTAssertEqual(SceneEngineCombos(sceneOrtho: false).combos(for: [:]), [:])
-        XCTAssertEqual(engine.applied(to: ["BLENDMODE": 3, "SCENE_ORTHO": 0]), ["BLENDMODE": 3, "SCENE_ORTHO": 1])
+        XCTAssertEqual(engine.combos(for: ["LIGHTING": 0, "REFLECTION": 1]), ["SCENE_ORTHO": 1, "REVERSEDEPTH": 1])
+        XCTAssertEqual(engine.combos(for: [:]), ["SCENE_ORTHO": 1, "REVERSEDEPTH": 1])
+        XCTAssertEqual(SceneEngineCombos(sceneOrtho: false).combos(for: [:]), ["REVERSEDEPTH": 1])
+        XCTAssertEqual(engine.applied(to: ["BLENDMODE": 3, "SCENE_ORTHO": 0]),
+                       ["BLENDMODE": 3, "SCENE_ORTHO": 1, "REVERSEDEPTH": 1])
     }
 
     /// One piece girls (`{"tube":4}`), Hinata (`{"spot":1,"spotcookie":1}`) and Moon (`{"point":3}`).
