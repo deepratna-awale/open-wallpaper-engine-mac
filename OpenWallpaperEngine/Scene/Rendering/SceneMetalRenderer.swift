@@ -1731,12 +1731,14 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     // MARK: - Depth, draw order and 3D placement (docs/models-plan.md §2.4)
 
-    /// Gives a perspective scene's pass WE's depth buffer (`SceneDepthBuffer`), cleared to the far
-    /// depth, and sets `sceneDepthFormat` for this frame's pipelines. An orthographic scene's pass
-    /// has none: every object there lies at z = 0.
+    /// Gives the pass WE's depth buffer (`SceneDepthBuffer`), cleared to the far depth, and sets
+    /// `sceneDepthFormat` for this frame's pipelines: a perspective scene's, and an orthographic
+    /// one's with model objects, whose models, and whatever tests depth, then test as in WE (MG6).
+    /// WE's frame buffer always has depth (0x14017f59c); an orthographic scene without models
+    /// keeps none here, which draws the same while every object lies at z = 0 [I].
     private func attachSceneDepth(to pass: MTLRenderPassDescriptor, scene: MTLTexture) {
         sceneDepthFormat = .invalid
-        guard isPerspective, depthStates != nil,
+        guard isPerspective || !spatial.models.isEmpty, depthStates != nil,
               layerPipelines.pipelines(for: scene.pixelFormat, sampleCount: sceneSampleCount,
                                        depthFormat: SceneDepthStates.format) != nil,
               depthBuffer.prepare(width: scene.width, height: scene.height, sampleCount: sceneSampleCount) else {

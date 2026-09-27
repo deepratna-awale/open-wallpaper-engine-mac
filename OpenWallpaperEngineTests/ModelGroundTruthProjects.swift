@@ -80,6 +80,133 @@ final class ModelGroundTruthProjects: XCTestCase {
         }
     }
 
+    /// MG6 against WE's captures: an orthographic scene with models depth-tests them, so the
+    /// nearer red cube covers the overlap at (960, 540) whichever is drawn first (WE: (253, 0, 0)
+    /// in both).
+    func testOrthographicDepthMatchesWEsCaptures() throws {
+        let scratch = FileManager.default.temporaryDirectory.appending(path: "owe-mg6-\(UUID().uuidString)")
+        defer {
+            if FileManager.default.fileExists(atPath: scratch.path) {
+                do { try FileManager.default.removeItem(at: scratch) } catch { XCTFail("\(scratch.path): \(error)") }
+            }
+        }
+        let storage = scratch.appending(path: "storage", directoryHint: .isDirectory)
+        for project in try orthographicDepth(scratch) {
+            let harness = try ModelSceneHarness(directory: project.directory, settings: SceneRenderSettings(),
+                                                size: SIMD2(1920, 1080), storage: storage)
+            defer { harness.close() }
+            try harness.settle(seconds: 3)
+            let bytes = try TextureUploadTests.read(try XCTUnwrap(harness.renderer.sharedFrame), device: harness.device)
+            let index = (540 * 1920 + 960) * 4
+            let pixel = SIMD3<Int>(Int(bytes[index]), Int(bytes[index + 1]), Int(bytes[index + 2]))
+            let name = project.directory.lastPathComponent
+            XCTAssertGreaterThan(pixel.x, 200, "\(name): \(pixel)")
+            XCTAssertLessThan(pixel.y, 40, "\(name): \(pixel)")
+            XCTAssertEqual(harness.gpuErrors, [], name)
+        }
+    }
+
+    /// MG6's particles: WE's `collisionmodel` element preview (an orthographic scene) hides the
+    /// particles behind its sphere when their material tests depth. The orange density inside the
+    /// sphere's disc over that outside it, 1.5–5 s after load, was 0.28 (shipped, depth test on),
+    /// 0.13 (on) and 1.55 (off) in WE's captures.
+    func testCollisionModelParticlesHideBehindTheSphereAsInWE() throws {
+        let preview = URL(fileURLWithPath: Self.weAssets + "/scenes/particleelementpreviews/collisionmodel", isDirectory: true)
+        guard FileManager.default.fileExists(atPath: preview.appending(path: "scene.json").path) else {
+            throw XCTSkip("WE's collisionmodel preview isn't installed")
+        }
+        let scratch = FileManager.default.temporaryDirectory.appending(path: "owe-mg6p-\(UUID().uuidString)")
+        defer {
+            if FileManager.default.fileExists(atPath: scratch.path) {
+                do { try FileManager.default.removeItem(at: scratch) } catch { XCTFail("\(scratch.path): \(error)") }
+            }
+        }
+        try FileManager.default.createDirectory(at: scratch, withIntermediateDirectories: true)
+        var ratios: [String: Double] = [:]
+        for depthTest in ["enabled", "disabled"] {
+            let directory = scratch.appending(path: "colmodel-\(depthTest)", directoryHint: .isDirectory)
+            try FileManager.default.copyItem(at: preview, to: directory)
+            let project = directory.appending(path: "project.json")
+            if !FileManager.default.fileExists(atPath: project.path) {
+                try Data(#"{"file":"scene.json","title":"colmodel","type":"scene","general":{"properties":{}}}"#.utf8).write(to: project)
+            }
+            let materials = directory.appending(path: "materials/particle", directoryHint: .isDirectory)
+            for file in try FileManager.default.contentsOfDirectory(at: materials, includingPropertiesForKeys: nil)
+            where file.pathExtension == "json" {
+                let text = try String(contentsOf: file, encoding: .utf8)
+                let changed = text.replacingOccurrences(of: #"("depthtest"\s*:\s*)"\w+""#, with: "$1\"\(depthTest)\"",
+                                                        options: .regularExpression)
+                try changed.write(to: file, atomically: true, encoding: .utf8)
+            }
+            let harness = try ModelSceneHarness(directory: directory, settings: SceneRenderSettings(), size: SIMD2(1920, 1080),
+                                                storage: scratch.appending(path: "storage", directoryHint: .isDirectory))
+            defer { harness.close() }
+            try harness.settle(seconds: 3)
+            var frames: [[UInt8]] = []
+            var width = 0
+            for frame in 1...150 {
+                harness.frame()
+                if frame >= 45, frame % 15 == 0 {
+                    let texture = try XCTUnwrap(harness.renderer.sharedFrame)
+                    width = texture.width
+                    frames.append(try TextureUploadTests.read(texture, device: harness.device))
+                }
+            }
+            ratios[depthTest] = try XCTUnwrap(Self.discDensityRatio(frames, width: width), depthTest)
+            XCTAssertEqual(harness.gpuErrors, [], depthTest)
+        }
+        print("MG6 collisionmodel density ratios: \(ratios)")
+        let enabled = try XCTUnwrap(ratios["enabled"]), disabled = try XCTUnwrap(ratios["disabled"])
+        XCTAssertLessThan(enabled, 0.3, "WE: 0.13–0.28")
+        XCTAssertGreaterThan(disabled, 0.8, "WE: 1.55")
+        XCTAssertGreaterThan(disabled, 4 * enabled, "the depth test hides most of what is over the sphere")
+    }
+
+    private static let weAssets = "/Volumes/980Pro/Crossover/bottles/Steam Bottle/drive_c/Program Files (x86)/Steam/"
+        + "steamapps/common/wallpaper_engine/assets"
+
+    /// The orange pixels' density inside the sphere's disc over their density outside it, over
+    /// `frames` (RGBA rows), as the capture measured it. The disc is the widest row of the pixels
+    /// grey in at least half the frames (the particles pass over it; the frame may crop its top
+    /// and bottom, not its sides).
+    static func discDensityRatio(_ frames: [[UInt8]], width: Int) -> Double? {
+        guard let first = frames.first, width > 0 else { return nil }
+        let count = first.count / 4
+        var greyFrames = [Int](repeating: 0, count: count)
+        for bytes in frames {
+            for pixel in 0..<count {
+                let r = Int(bytes[pixel * 4]), g = Int(bytes[pixel * 4 + 1]), b = Int(bytes[pixel * 4 + 2])
+                if abs(r - g) < 10, abs(g - b) < 10 { greyFrames[pixel] += 1 }
+            }
+        }
+        var widest = (row: 0, first: 0, last: -1)
+        for row in 0..<(count / width) {
+            let columns = (0..<width).filter { greyFrames[row * width + $0] * 2 >= frames.count }
+            guard let first = columns.first, let last = columns.last, last - first > widest.last - widest.first else { continue }
+            widest = (row, first, last)
+        }
+        guard widest.last > widest.first else { return nil }
+        let centre = SIMD2<Double>(Double(widest.first + widest.last) / 2, Double(widest.row))
+        let radius: Double = Double(widest.last - widest.first) / 2 * 0.95
+        var inside = 0.0, outside = 0.0, orangeInside = 0.0, orangeOutside = 0.0
+        for bytes in frames {
+            for pixel in 0..<count {
+                let r = Int(bytes[pixel * 4]), g = Int(bytes[pixel * 4 + 1]), b = Int(bytes[pixel * 4 + 2])
+                let orange = r > b + 25 && r > g + 25
+                let point = SIMD2<Double>(Double(pixel % width), Double(pixel / width))
+                if simd_distance(point, centre) < radius {
+                    inside += 1
+                    if orange { orangeInside += 1 }
+                } else {
+                    outside += 1
+                    if orange { orangeOutside += 1 }
+                }
+            }
+        }
+        guard inside > 0, outside > 0, orangeOutside > 0 else { return nil }
+        return (orangeInside / inside) / (orangeOutside / outside)
+    }
+
     /// Degrees, y up, from the white pixels' centroid to the red ones' (RGBA rows); nil without both.
     static func armAngle(_ bytes: [UInt8], width: Int) -> Double? {
         var red = SIMD3<Double>(0, 0, 0), white = SIMD3<Double>(0, 0, 0)

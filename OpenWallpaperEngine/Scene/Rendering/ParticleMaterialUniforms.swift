@@ -59,8 +59,11 @@ struct ParticleMaterialUniforms {
     /// facing) parallel to them too.
     static let eyeDistance: Float = 100_000
 
+    /// `orthographicDepth`: the system is drawn in an orthographic scene whose pass has depth (it
+    /// has models), through WE's orthographic projection (`SceneCamera.orthographic`, z −2000…2000),
+    /// whose depth the models share; the x and y are the 2D view's.
     init(plan: ParticleMaterialPlan, system: ParticleSystemRuntime, sceneSize: SIMD2<Float>,
-         texture0: BuiltinTextureInfo?, placement: Placement? = nil) {
+         texture0: BuiltinTextureInfo?, placement: Placement? = nil, orthographicDepth: Bool = false) {
         let size = simd_max(sceneSize, SIMD2(1, 1))
         let axes: (right: SIMD3<Float>, up: SIMD3<Float>, forward: SIMD3<Float>)
         if let placement {
@@ -74,10 +77,12 @@ struct ParticleMaterialUniforms {
             viewRight = placement.direction(simd_cross(camera.forward, camera.up))
             viewForward = forward
         } else {
-            // Particles have depth (`Particle.z`), which an orthographic view doesn't show; the
-            // depth range keeps it from clipping them.
-            modelViewProjection = PassMatrices.ortho(left: 0, right: size.x, bottom: size.y, top: 0,
-                                                     near: -Self.eyeDistance, far: Self.eyeDistance)
+            // Particles have depth (`Particle.z`), which an orthographic view doesn't show; without
+            // a depth test the wide range keeps it from clipping them.
+            modelViewProjection = orthographicDepth
+                ? PassMatrices.shaderViewProjection(SceneCamera.orthographic(size: size))
+                : PassMatrices.ortho(left: 0, right: size.x, bottom: size.y, top: 0,
+                                     near: -Self.eyeDistance, far: Self.eyeDistance)
             eyePosition = SIMD3(size.x / 2, size.y / 2, Self.eyeDistance)
             axes = system.configuration.orientation.axes(linear: system.drawLinear)
             viewUp = Self.viewUp2D

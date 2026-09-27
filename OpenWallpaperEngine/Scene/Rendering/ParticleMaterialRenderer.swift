@@ -291,7 +291,8 @@ final class ParticleMaterialRenderer {
         let program = self.program(for: stage, state: state)
         if program.size > 0, let layout = stage.variant.uniforms {
             let uniforms = ParticleMaterialUniforms(plan: plan, system: system, sceneSize: context.sceneSize,
-                                                    texture0: textures[0], placement: context.placement)
+                                                    texture0: textures[0], placement: context.placement,
+                                                    orthographicDepth: context.depth != nil)
             var pass = BuiltinPassContext(targetSize: context.sceneSize)
             pass.modelViewProjection = uniforms.modelViewProjection
             pass.textures = textures

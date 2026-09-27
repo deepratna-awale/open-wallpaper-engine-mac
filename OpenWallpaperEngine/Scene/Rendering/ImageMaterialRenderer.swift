@@ -161,7 +161,7 @@ final class ImageMaterialRenderer {
         let uniforms = program.uniforms
         if uniforms.size > 0 {
             let model = draw.placement?.world ?? Self.modelMatrix(draw.quad)
-            let viewProjection = draw.placement?.shaderViewProjection ?? Self.viewProjection(sceneSize: draw.sceneSize)
+            let viewProjection = draw.placement?.shaderViewProjection ?? Self.sceneViewProjection(draw, depth: depth)
             let rotation = SIMD4<Float>(draw.uvAxisX.x, draw.uvAxisX.y, draw.uvAxisY.x, draw.uvAxisY.y)
             let key = ImageMaterialUniforms.PassKey(
                 model: model, viewProjection: viewProjection, color: draw.color, alpha: draw.alpha,
@@ -396,6 +396,15 @@ final class ImageMaterialRenderer {
     /// scene's top maps to GL clip y = −1.
     static func viewProjection(sceneSize: SIMD2<Float>) -> simd_float4x4 {
         PassMatrices.ortho(left: 0, right: max(sceneSize.x, 1), bottom: max(sceneSize.y, 1), top: 0)
+    }
+
+    /// The view-projection of a layer drawn without a camera placement. In an orthographic scene
+    /// whose pass has depth (it has models) it is WE's orthographic projection
+    /// (`SceneCamera.orthographic`: z −2000…2000, z = 0 at half depth), whose depth the models
+    /// share, so a layer tests against them as in WE; its x and y are `viewProjection`'s.
+    static func sceneViewProjection(_ draw: Draw, depth: SceneDepthStates?) -> simd_float4x4 {
+        guard depth != nil, !draw.frame.camera.isPerspective else { return viewProjection(sceneSize: draw.sceneSize) }
+        return PassMatrices.shaderViewProjection(SceneCamera.orthographic(size: draw.sceneSize))
     }
 
     // MARK: - Uniforms
