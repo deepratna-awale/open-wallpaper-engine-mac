@@ -23,6 +23,11 @@ final class ScenePuppetAnimator {
     /// The rig's blend shapes, and their weights per mesh this frame (`SceneMorphWeights`).
     let morphRig: SceneMorphRig?
     private(set) var morphs: [SceneMorphWeights]
+    /// The rig's physics bones (docs/models-plan.md §2.14); nil without one.
+    private(set) var physics: SceneBonePhysics?
+    /// The object's world matrix at the last `advance`, which with `worlds` gives the physics
+    /// last frame's bones.
+    private var lastObjectWorld: simd_float4x4?
 
     /// An authored layer's bound values: user bindings and `animation` timelines on `rate`,
     /// `blend` and `visible`, re-read every frame until a script sets the field.
@@ -44,6 +49,7 @@ final class ScenePuppetAnimator {
     /// no layer (WE's parser, 0x1402230fe), and is reported through `missing`.
     init(skeleton: MDLSkeleton, clips: [MDLAnimation], layers: [WEAnimationLayer], morphRig: SceneMorphRig? = nil,
          missing: (WEAnimationLayer) -> Void = { _ in }) {
+        physics = SceneBonePhysics(skeleton)
         let skeleton = SceneSkeleton(skeleton)
         self.skeleton = skeleton
         self.morphRig = morphRig
@@ -92,7 +98,9 @@ final class ScenePuppetAnimator {
     /// layers is posed from its bind pose again the next frame, which replaces what scripts set;
     /// one without keeps its bones as scripts leave them (0x1401fdf90 poses only from layers).
     /// Blend-shape weights start over every frame (0x14021c5b0, 0x1401fecba), layers or not.
-    func advance(delta: Float, values: SceneValueContext) {
+    /// Physics bones then step in the object's world (`objectWorld`) as the bones are posed,
+    /// layers or not, from the second frame on (WE's last-frame bones are null before that).
+    func advance(delta: Float, values: SceneValueContext, objectWorld: simd_float4x4 = matrix_identity_float4x4) {
         resolveBindings(delta: delta, values: values)
         var update = SceneAnimationLayerUpdate()
         for index in morphs.indices { morphs[index].reset() }
@@ -104,7 +112,13 @@ final class ScenePuppetAnimator {
         lastUpdate = update
         endedSinceFeedback += update.ended
         eventsSinceFeedback += update.events
-        recompute()
+        var frame: SceneBonePhysics.Frame?
+        // A frame without time (a held clock) keeps the physics where it was [I: WE doesn't update then].
+        if physics != nil, delta > 0, let last = lastObjectWorld {
+            frame = SceneBonePhysics.Frame(delta: delta, objectWorld: objectWorld, previousWorlds: worlds.map { last * $0 })
+        }
+        lastObjectWorld = objectWorld
+        recompute(physics: frame)
     }
 
     /// The layers whose clip ended since the last call, for scripts' `addEndedCallback`.
@@ -144,9 +158,10 @@ final class ScenePuppetAnimator {
         }
     }
 
-    /// Worlds from the locals, then `setBoneTransform`'s overrides, then the palette.
-    private func recompute() {
-        var worlds = skeleton.worlds(locals: locals)
+    /// Worlds from the locals (and the physics bones), then `setBoneTransform`'s overrides, then
+    /// the palette.
+    private func recompute(physics frame: SceneBonePhysics.Frame? = nil) {
+        var worlds = physics?.worlds(locals: locals, skeleton: skeleton, frame: frame) ?? skeleton.worlds(locals: locals)
         var palette = skeleton.palette(worlds: worlds)
         for (bone, matrix) in worldOverrides where bone < worlds.count {
             worlds[bone] = matrix
@@ -213,6 +228,10 @@ final class ScenePuppetAnimator {
             guard !morphs.isEmpty else { return }
             morphs[0].setFromScript(index, weight)
             recompute()
+        case let .physicsImpulse(bone, linear, angularDegrees):
+            physics?.applyImpulse(bone: bone, linear: linear, angularDegrees: angularDegrees)
+        case .resetPhysics(let bone):
+            physics?.reset(bone: bone)
         }
     }
 

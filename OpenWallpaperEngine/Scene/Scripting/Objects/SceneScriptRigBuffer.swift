@@ -238,6 +238,12 @@ enum SceneScriptRigLayout {
             guard numbers.count == 2, numbers[1].isFinite,
                   let index = SceneScriptNumber.index(numbers[0], in: 0...Int(UInt16.max)) else { return nil }
             return .setBlendShape(index: index, weight: numbers[1])
+        case .rigBonePhysicsImpulse:
+            guard numbers.count == 7, numbers.allSatisfy(\.isFinite), let bone = bone(numbers[0]) else { return nil }
+            return .physicsImpulse(bone: bone, linear: SIMD3(numbers[1], numbers[2], numbers[3]),
+                                   angularDegrees: SIMD3(numbers[4], numbers[5], numbers[6]))
+        case .rigBonePhysicsReset:
+            return bone(numbers.first).map { .resetPhysics(bone: $0) }
         default:
             return nil
         }

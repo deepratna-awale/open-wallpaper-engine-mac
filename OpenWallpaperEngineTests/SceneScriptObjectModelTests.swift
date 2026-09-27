@@ -465,7 +465,8 @@ final class SceneScriptObjectModelTests: XCTestCase {
             var bg = thisScene.getLayer(0);
             [bg.getVideoTexture(), bg.getVideoTexture(), bg.resetBonePhysicsSimulation()].join()
             """)?.toString(), ",,")
-        XCTAssertEqual(f.model.unsupportedMembers, ["IImageLayer.getVideoTexture", "IImageLayer.resetBonePhysicsSimulation"])
+        XCTAssertEqual(f.model.unsupportedMembers, ["IImageLayer.getVideoTexture"],
+                       "bone physics is supported: a layer without a rig ignores it")
         // A layer without a rig answers the bone and attachment API as WE does for one: nothing.
         XCTAssertEqual(f.evaluate("[bg.getBoneCount(), bg.getAnimationLayer(0), bg.getAttachmentMatrix('a') instanceof Mat4].join()")?
             .toString(), "0,,true")

@@ -250,7 +250,8 @@ final class SceneScriptObjectModel: SceneScriptRuntimeExtension {
             guard let number = numbers.first else { return .emitParticles(slot: target, count: nil) }
             guard let count = SceneScriptNumber.integer(number, clampedTo: 0...Self.maximumEmitCount) else { return nil }
             return .emitParticles(slot: target, count: count)
-        case .rigLayerCreate, .rigLayerDestroy, .rigLayerSet, .rigLayerPlayback, .rigBoneLocal, .rigBoneWorld, .rigBlendShape:
+        case .rigLayerCreate, .rigLayerDestroy, .rigLayerSet, .rigLayerPlayback, .rigBoneLocal, .rigBoneWorld, .rigBlendShape,
+             .rigBonePhysicsImpulse, .rigBonePhysicsReset:
             guard store.rigSlot(of: target) != nil else { return nil }
             return SceneScriptRigLayout.decode(command.opcode, numbers: numbers, strings: command.strings)
                 .map { .rig(slot: target, $0) }

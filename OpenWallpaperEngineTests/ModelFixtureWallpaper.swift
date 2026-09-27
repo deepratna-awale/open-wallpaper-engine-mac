@@ -64,10 +64,21 @@ struct FixtureMDL {
         var tracks: [[MDLBonePose]]
     }
 
+    /// A bone written as given (`MDLS0001`): its parent (0xFFFFFFFF for a root), bind matrix
+    /// relative to it, and properties JSON (docs/models-plan.md §1.3).
+    struct Bone {
+        var name: String
+        var parent: UInt32 = 0xFFFF_FFFF
+        var matrix = matrix_identity_float4x4
+        var properties = ""
+    }
+
     var format: UInt32
     var materialsPerMesh: Int
     var meshes: [Mesh]
     var bones = 0
+    /// Bones to write instead of `bones` identity children of the root.
+    var skeleton: [Bone] = []
     var attachments: [Attachment] = []
     var clips: [Clip] = []
 
@@ -92,18 +103,20 @@ struct FixtureMDL {
                 : mesh.indices.flatMap { value -> [UInt8] in withUnsafeBytes(of: UInt16(truncatingIfNeeded: value).littleEndian) { Array($0) } }
             w.blob(indexBytes)
         }
-        if bones > 0 {
-            let count = bones
+        if bones > 0 || !skeleton.isEmpty {
+            // Every bone a child of the root, at the origin: the bind pose is the identity.
+            let list = skeleton.isEmpty
+                ? (0..<bones).map { Bone(name: "bone\($0)", parent: $0 == 0 ? 0xFFFF_FFFF : 0) } : skeleton
             w.section("MDLS0001") { s in
-                s.u32(UInt32(count))
-                for bone in 0..<count {
-                    s.cstr("bone\(bone)")
+                s.u32(UInt32(list.count))
+                for bone in list {
+                    s.cstr(bone.name)
                     s.u32(1)
-                    // Every bone a child of the root, at the origin: the bind pose is the identity.
-                    s.u32(bone == 0 ? 0xFFFF_FFFF : 0)
+                    s.u32(bone.parent)
                     s.u32(64)
-                    s.floats([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
-                    s.cstr("")
+                    let m = bone.matrix
+                    s.floats([m.columns.0, m.columns.1, m.columns.2, m.columns.3].flatMap { (c: SIMD4<Float>) -> [Float] in [c.x, c.y, c.z, c.w] })
+                    s.cstr(bone.properties)
                 }
             }
         }

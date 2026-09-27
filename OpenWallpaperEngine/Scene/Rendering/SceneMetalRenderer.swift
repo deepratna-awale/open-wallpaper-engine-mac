@@ -2236,7 +2236,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         for entry in layers {
             guard let puppet = entry.layer.puppet else { continue }
             let animator = puppetAnimator(entry.layer.id, puppet)
-            animator.advance(delta: delta, values: timelines.values)
+            // Physics bones move in the scene: the image's world this frame, before the scripts'.
+            animator.advance(delta: delta, values: timelines.values,
+                             objectWorld: ScenePuppetAttachments.matrix(worldTransform(entry)))
             if !scripts.isRunning {
                 _ = animator.takeEnded()
                 _ = animator.takeEvents()

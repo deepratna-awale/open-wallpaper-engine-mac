@@ -213,15 +213,14 @@
     }
 
     // Members WE has that need engine features this app lacks yet (runtime parenting, object-space
-    // rotation, bone physics (no rig has physics bones), video textures). A puppet image's
-    // animation layers, bones, blend shapes and attachments are below.
+    // rotation, video textures). A puppet image's animation layers, bones, bone physics, blend
+    // shapes and attachments are below.
     const none = function () { return null; };
     const P = Layer.prototype;
     [['rotateObjectSpace'], ['lookAt'], ['lookAtYaw'], ['setParent']]
         .forEach(function (s) { objects.stub(P, 'ILayer', s[0], s[1]); });
     objects.stub(P, 'IEffectLayer', 'transformAttachmentToTexture', function () { return objects.mat3(); });
-    [['getVideoTexture', none], ['applyBonePhysicsImpulse'], ['resetBonePhysicsSimulation']]
-        .forEach(function (s) { objects.stub(P, 'IImageLayer', s[0], s[1]); });
+    objects.stub(P, 'IImageLayer', 'getVideoTexture', none);
 
     // MARK: puppet and model rigs (docs/models-plan.md §2.8, §4.3 P2 and M6)
     //
@@ -654,6 +653,28 @@
         const v = vectorArgument(origin);
         if (v === undefined) return;
         setLocal(this, which, function (m) { m[12] = v[0]; m[13] = v[1]; m[14] = v[2]; return m; });
+    });
+
+    // Bone physics (0x140210990, 0x140210e10; docs/models-plan.md §2.14): one bone, by index or
+    // by the first bone of that name (the host matches an empty name with the first bone). The
+    // state changes for the renderer's next frame. [?: what the DLL hands the host for a missing
+    // bone; the host itself acts only on a number or a string.]
+    function physicsBone(rig, which) {
+        if (typeof which === 'number') return rigBone(rig, which);
+        if (typeof which !== 'string') return -1;
+        return which === '' ? (rig.bones.length > 0 ? 0 : -1) : rigBone(rig, which);
+    }
+    objects.defineMethod(P, 'applyBonePhysicsImpulse', function (which, directionalImpulse, angularImpulse) {
+        const rig = boneRigOf(this);
+        const bone = rig ? physicsBone(rig, which) : -1;
+        const linear = vectorArgument(directionalImpulse), angular = vectorArgument(angularImpulse);
+        if (bone < 0 || linear === undefined || angular === undefined) return;
+        objects.push(OP.rigBonePhysicsImpulse, this._slot, [bone].concat(linear, angular));
+    });
+    objects.defineMethod(P, 'resetBonePhysicsSimulation', function (which) {
+        const rig = boneRigOf(this);
+        const bone = rig ? physicsBone(rig, which) : -1;
+        if (bone >= 0) objects.push(OP.rigBonePhysicsReset, this._slot, [bone]);
     });
 
     // Blend shapes: the targets of the rig's first mesh (MDMP), on images only (0x140210400,

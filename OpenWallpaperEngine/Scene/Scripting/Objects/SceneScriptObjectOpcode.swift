@@ -50,6 +50,10 @@ extension SceneScriptCommandRing.Opcode {
     static let rigBoneWorld = Self(rawValue: 455)
     /// target slot; numbers [target index, weight].
     static let rigBlendShape = Self(rawValue: 456)
+    /// target slot; numbers [bone, directional impulse xyz, angular impulse xyz (degrees)].
+    static let rigBonePhysicsImpulse = Self(rawValue: 457)
+    /// target slot; numbers [bone].
+    static let rigBonePhysicsReset = Self(rawValue: 458)
 
     /// Every object-model opcode with its JS name, for `__rt.objects.OP`.
     static let objectModelOpcodes: [String: Self] = [
@@ -62,6 +66,7 @@ extension SceneScriptCommandRing.Opcode {
         "animationStop": .animationStop, "animationSetFrame": .animationSetFrame, "animationJoin": .animationJoin,
         "rigLayerCreate": .rigLayerCreate, "rigLayerDestroy": .rigLayerDestroy, "rigLayerSet": .rigLayerSet,
         "rigLayerPlayback": .rigLayerPlayback, "rigBoneLocal": .rigBoneLocal, "rigBoneWorld": .rigBoneWorld,
-        "rigBlendShape": .rigBlendShape,
+        "rigBlendShape": .rigBlendShape, "rigBonePhysicsImpulse": .rigBonePhysicsImpulse,
+        "rigBonePhysicsReset": .rigBonePhysicsReset,
     ]
 }

@@ -40,6 +40,11 @@ enum SceneScriptRigCommand: Equatable {
     case setWorld(bone: Int, matrix: simd_float4x4)
     /// `setBlendShapeWeight` on the rig's first mesh's target `index` (0x1402105c0).
     case setBlendShape(index: Int, weight: Float)
+    /// `applyBonePhysicsImpulse` (0x140210990): `linear` joins the bone's velocity and its
+    /// angular velocity turns by the Euler angles `angularDegrees` (docs/models-plan.md §2.14).
+    case physicsImpulse(bone: Int, linear: SIMD3<Float>, angularDegrees: SIMD3<Float>)
+    /// `resetBonePhysicsSimulation` (0x140210e10): the bone's physics state as it loaded.
+    case resetPhysics(bone: Int)
 }
 
 /// A puppet's or model's skeleton as this frame posed it (the renderer poses rigs before the
