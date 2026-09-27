@@ -1,4 +1,5 @@
 import Metal
+import QuartzCore
 import simd
 
 /// Runs WE effects on a layer's image with WE's own shaders.
@@ -98,16 +99,32 @@ final class EffectGraphRenderer {
     }
 
     /// Targets a layer gave back when its size changed, by size and format. Layers whose size
-    /// alternates (text on a clock) take them back instead of allocating new ones.
+    /// changes with their content (text on a clock) take them back instead of allocating new ones,
+    /// at exactly the size asked for, so a chain's output is the same as on fresh targets.
     private struct TargetKey: Hashable {
         let width: Int
         let height: Int
         let format: MTLPixelFormat
     }
-    private var spareTargets: [TargetKey: [MTLTexture]] = [:]
-    private var spareOrder: [TargetKey] = []
-    /// Upper bound on spare textures kept; the oldest sizes go first.
-    static let maxSpareTargets = 32
+    /// A spare target and when it was given back.
+    private struct Spare {
+        let texture: MTLTexture
+        let since: TimeInterval
+        /// Order of the hand-back, to break ties between spares given back at the same instant.
+        let order: UInt64
+    }
+    private var spareTargets: [TargetKey: [Spare]] = [:]
+    private var spareBytes = 0
+    private var spareCounter: UInt64 = 0
+    private var lastSpareSweep: TimeInterval = 0
+    /// Bytes of spare targets kept; past it the longest idle go first. Only spares are evicted,
+    /// never a layer's own targets, so the budget never refuses or skips a render.
+    let spareByteBudget: Int
+    /// Spares unused this long are dropped. A minute covers every size a clock showing seconds
+    /// cycles through, so it keeps reusing its targets.
+    let spareIdleSeconds: TimeInterval
+    /// A monotonic clock in seconds (injectable for tests).
+    private let now: () -> TimeInterval
 
     /// Counters for tests and diagnostics.
     private(set) var passesEncoded = 0
@@ -128,8 +145,13 @@ final class EffectGraphRenderer {
 
     /// `pipelineArchiveDirectory` holds the persisted pipeline archive, shared by every renderer of
     /// the device; nil keeps none.
-    init?(device: MTLDevice, pipelineArchiveDirectory: URL? = EffectPipelineArchive.defaultDirectory) {
+    init?(device: MTLDevice, pipelineArchiveDirectory: URL? = EffectPipelineArchive.defaultDirectory,
+          spareByteBudget: Int = 256 << 20, spareIdleSeconds: TimeInterval = 60,
+          now: @escaping () -> TimeInterval = CACurrentMediaTime) {
         self.device = device
+        self.spareByteBudget = spareByteBudget
+        self.spareIdleSeconds = spareIdleSeconds
+        self.now = now
         uniformArena = SceneUniformArena(device: device)
         pipelineArchive = pipelineArchiveDirectory.map { EffectPipelineArchive.shared(device: device, directory: $0) }
         // Triangle strip over the full target; with the translator's GL-style y flip, texcoord
@@ -171,7 +193,7 @@ final class EffectGraphRenderer {
         detail?.releaseAll()
         layers.removeAll()
         spareTargets.removeAll()
-        spareOrder.removeAll()
+        spareBytes = 0
     }
 
     /// Memory pressure: drops the spare targets and free uniform chunks, and with
@@ -179,7 +201,7 @@ final class EffectGraphRenderer {
     /// the binary archive, if needed again). Layers' own targets are in use and kept.
     func trimMemory(dropIdlePipelines: Bool) {
         spareTargets.removeAll()
-        spareOrder.removeAll()
+        spareBytes = 0
         uniformArena.trim()
         guard dropIdlePipelines else { return }
         pipelineLock.withLock {
@@ -204,6 +226,9 @@ final class EffectGraphRenderer {
 
     /// Layers holding state, for tests and diagnostics.
     var layerStateCount: Int { layers.count }
+    /// Spare targets kept and their allocated bytes, for tests and diagnostics.
+    var spareTargetCount: Int { spareTargets.values.reduce(0) { $0 + $1.count } }
+    var spareTargetBytes: Int { spareBytes }
 
     struct Context {
         let frame: BuiltinFrameContext
@@ -273,6 +298,7 @@ final class EffectGraphRenderer {
     /// including while the chain's pipelines are still compiling (the layer then draws plain).
     func apply(_ effects: [SceneEffectPlan], to image: MTLTexture, layerID: String,
                context: Context, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
+        sweepIdleSpares()
         var input = image
         var standIn = context.inputStandInSize ?? SIMD2(image.width, image.height)
         if let footprint = context.footprint, let detail {
@@ -804,26 +830,51 @@ final class EffectGraphRenderer {
         owned.forEach(recycle)
     }
 
-    /// Hands one target to the spare list, the oldest sizes leaving it past `maxSpareTargets`.
+    /// Hands one target to the spare list (`evictSpares`).
     private func recycle(_ texture: MTLTexture) {
         let key = TargetKey(width: texture.width, height: texture.height, format: texture.pixelFormat)
-        spareTargets[key, default: []].append(texture)
-        spareOrder.removeAll { $0 == key }
-        spareOrder.append(key)
-        var count = spareTargets.values.reduce(0) { $0 + $1.count }
-        while count > Self.maxSpareTargets, let oldest = spareOrder.first {
-            count -= spareTargets[oldest]?.count ?? 0
-            spareTargets[oldest] = nil
-            spareOrder.removeFirst()
+        spareCounter += 1
+        spareTargets[key, default: []].append(Spare(texture: texture, since: now(), order: spareCounter))
+        spareBytes += texture.allocatedSize
+        evictSpares()
+    }
+
+    /// At most once a second: drops spares idle past `spareIdleSeconds` even while no layer
+    /// changes size.
+    private func sweepIdleSpares() {
+        guard !spareTargets.isEmpty else { return }
+        let time = now()
+        guard time - lastSpareSweep >= 1 else { return }
+        lastSpareSweep = time
+        evictSpares()
+    }
+
+    /// Drops spares idle past `spareIdleSeconds`, then the longest idle until the rest fit
+    /// `spareByteBudget`. Each size's list stays oldest first, so `target` takes the newest.
+    private func evictSpares() {
+        let cutoff = now() - spareIdleSeconds
+        var kept: [(key: TargetKey, spare: Spare)] = []
+        for (key, spares) in spareTargets {
+            for spare in spares where spare.since >= cutoff { kept.append((key, spare)) }
         }
+        kept.sort { ($0.spare.since, $0.spare.order) < ($1.spare.since, $1.spare.order) }
+        var total = kept.reduce(0) { $0 + $1.spare.texture.allocatedSize }
+        var first = 0
+        while total > spareByteBudget, first < kept.count {
+            total -= kept[first].spare.texture.allocatedSize
+            first += 1
+        }
+        spareTargets.removeAll(keepingCapacity: true)
+        for entry in kept[first...] { spareTargets[entry.key, default: []].append(entry.spare) }
+        spareBytes = total
     }
 
     private func target(width: Int, height: Int, format: MTLPixelFormat) -> MTLTexture? {
         let key = TargetKey(width: max(width, 1), height: max(height, 1), format: format)
-        if var spares = spareTargets[key], let texture = spares.popLast() {
+        if var spares = spareTargets[key], let spare = spares.popLast() {
             spareTargets[key] = spares.isEmpty ? nil : spares
-            if spares.isEmpty { spareOrder.removeAll { $0 == key } }
-            return texture
+            spareBytes -= spare.texture.allocatedSize
+            return spare.texture
         }
         targetsAllocated += 1
         return makeTarget(width: width, height: height, format: format)

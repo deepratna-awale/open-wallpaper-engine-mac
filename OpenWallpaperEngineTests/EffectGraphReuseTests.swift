@@ -121,6 +121,90 @@ final class EffectGraphReuseTests: XCTestCase {
         XCTAssertEqual(renderer.targetsAllocated, allocated, "sizes seen before come from the spare list")
     }
 
+    /// Text on a clock changes size with its content: every size it cycles through comes back
+    /// from the spare list, however many there are (a count cap used to evict them past 32).
+    func testAClockCyclingThroughManySizesReusesItsTargets() throws {
+        let plan = try tintPlan()
+        XCTAssertTrue(renderer.waitUntilReady([plan], width: 64, height: 64))
+        var inputs: [MTLTexture] = []
+        for index in 0..<40 { inputs.append(try texture(40 + index, 20)) }
+        for input in inputs { try apply(plan, input, context()) }
+        let allocated = renderer.targetsAllocated
+        for _ in 0..<2 {
+            for input in inputs { XCTAssertEqual(try apply(plan, input, context()).width, input.width) }
+        }
+        XCTAssertEqual(renderer.targetsAllocated, allocated, "every size seen before is reused")
+    }
+
+    /// Reused targets give the same output as fresh ones: the size asked for, never a larger one.
+    func testReusedTargetsGiveTheSameOutput() throws {
+        let plan = try tintPlan()
+        XCTAssertTrue(renderer.waitUntilReady([plan], width: 64, height: 64))
+        let small = try texture(40, 20), large = try texture(80, 20)
+        let first = try readBack(try apply(plan, small, context(color: SIMD3(1, 0.5, 0.25))))
+        try apply(plan, large, context())
+        let reused = try apply(plan, small, context(color: SIMD3(1, 0.5, 0.25)))
+        XCTAssertEqual(reused.width, 40)
+        XCTAssertEqual(reused.height, 20)
+        XCTAssertEqual(try readBack(reused), first)
+    }
+
+    /// Spares idle past `spareIdleSeconds` are dropped even while nothing changes size, and the
+    /// rest fit `spareByteBudget`, longest idle out first. A layer's own targets are never evicted.
+    func testSparesIdleOutAndFitTheirBudget() throws {
+        let clock = TestClock()
+        // The renderer's targets are private render targets; the sizes below round to the same allocation.
+        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: 43, height: 20, mipmapped: false)
+        descriptor.usage = [.renderTarget, .shaderRead]
+        descriptor.storageMode = .private
+        let one = try XCTUnwrap(device.makeTexture(descriptor: descriptor)).allocatedSize
+        let timed = try XCTUnwrap(EffectGraphRenderer(device: device, pipelineArchiveDirectory: cache.appending(path: "archives"),
+                                                      spareByteBudget: 2 * one, spareIdleSeconds: 60,
+                                                      now: { clock.seconds }))
+        renderer.pipelineArchive?.flush()
+        renderer = timed
+        let plan = try tintPlan()
+        XCTAssertTrue(renderer.waitUntilReady([plan], width: 64, height: 64))
+        let sizes = [try texture(40, 20), try texture(41, 20), try texture(42, 20), try texture(43, 20)]
+        for input in sizes {
+            try apply(plan, input, context())
+            clock.seconds += 1
+        }
+        XCTAssertEqual(renderer.spareTargetCount, 2, "three given back; the budget keeps two")
+        XCTAssertLessThanOrEqual(renderer.spareTargetBytes, renderer.spareByteBudget)
+        var allocated = renderer.targetsAllocated
+        try apply(plan, sizes[2], context())
+        XCTAssertEqual(renderer.targetsAllocated, allocated, "the newest spares are the ones kept")
+        allocated = renderer.targetsAllocated
+        try apply(plan, sizes[0], context())
+        XCTAssertEqual(renderer.targetsAllocated, allocated + 1, "the longest idle was evicted")
+        clock.seconds += 61
+        let output = try apply(plan, sizes[0], context())
+        XCTAssertEqual(renderer.spareTargetCount, 0, "idle spares are swept")
+        XCTAssertEqual(output.width, 40, "the layer's own target stays and still renders")
+    }
+
+    private final class TestClock {
+        var seconds: TimeInterval = 1000
+    }
+
+    private func readBack(_ texture: MTLTexture) throws -> [UInt8] {
+        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: texture.pixelFormat, width: texture.width,
+                                                                  height: texture.height, mipmapped: false)
+        descriptor.storageMode = .shared
+        let shared = try XCTUnwrap(device.makeTexture(descriptor: descriptor))
+        let buffer = try XCTUnwrap(queue.makeCommandBuffer())
+        let blit = try XCTUnwrap(buffer.makeBlitCommandEncoder())
+        blit.copy(from: texture, to: shared)
+        blit.endEncoding()
+        buffer.commit()
+        buffer.waitUntilCompleted()
+        var bytes = [UInt8](repeating: 0, count: texture.width * texture.height * 4)
+        shared.getBytes(&bytes, bytesPerRow: texture.width * 4,
+                        from: MTLRegionMake2D(0, 0, texture.width, texture.height), mipmapLevel: 0)
+        return bytes
+    }
+
     /// Memory pressure drops spare targets and, when critical, pipelines idle since the last such
     /// trim; the pipelines layers keep drawing with stay.
     func testMemoryPressureDropsSpareTargetsAndIdlePipelinesOnly() throws {
