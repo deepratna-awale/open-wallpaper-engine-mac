@@ -297,6 +297,40 @@ final class ParticleSimulationParityTests: XCTestCase {
         XCTAssertEqual(gpu.count, 0)
     }
 
+    /// A hidden object's system is cleared once on the GPU too (`ParticleFrameInputs.hidden`), and
+    /// shown again it starts over as the CPU's does.
+    func testAHiddenSystemClearsOnTheGPUAndStartsOverWhenShown() throws {
+        let (cpu, gpu) = try runBoth(ParticleTestSystem(), frames: 30)
+        XCTAssertGreaterThan(gpu.count, 0)
+        for runtime in [cpu, gpu.runtime] {
+            let holds = runtime === cpu ? !cpu.particles.isEmpty : gpu.count > 0
+            let inputs = try XCTUnwrap(ParticleFrameInputs.hidden(runtime, deltaTime: 1 / 60, holdsParticles: holds))
+            XCTAssertNil(ParticleFrameInputs.hidden(runtime, deltaTime: 1 / 60, holdsParticles: holds), "cleared once")
+            if runtime === cpu {
+                ParticleCPUSimulation.step(cpu, inputs: inputs)
+            } else {
+                let commandBuffer = try XCTUnwrap(queue.makeCommandBuffer())
+                simulator.encode([.init(system: runtime, inputs: inputs, kind: .sprite)], sceneSize: SIMD2(1280, 720),
+                                 targetSize: SIMD2(1280, 720), commandBuffer: commandBuffer)
+                commandBuffer.commit()
+                commandBuffer.waitUntilCompleted()
+            }
+        }
+        XCTAssertTrue(cpu.particles.isEmpty)
+        XCTAssertEqual(gpu.count, 0)
+        for _ in 0..<10 {
+            ParticleCPUSimulation.step(cpu, inputs: ParticleFrameInputs.advance(cpu, deltaTime: 1 / 60, cursor: Self.cursor))
+            let inputs = ParticleFrameInputs.advance(gpu.runtime, deltaTime: 1 / 60, cursor: Self.cursor)
+            let commandBuffer = try XCTUnwrap(queue.makeCommandBuffer())
+            simulator.encode([.init(system: gpu.runtime, inputs: inputs, kind: .sprite)], sceneSize: SIMD2(1280, 720),
+                             targetSize: SIMD2(1280, 720), commandBuffer: commandBuffer)
+            commandBuffer.commit()
+            commandBuffer.waitUntilCompleted()
+        }
+        XCTAssertGreaterThan(cpu.particles.count, 0)
+        XCTAssertEqual(gpu.count, cpu.particles.count)
+    }
+
     func testEmitterBurstSpeedRingAndSign() throws {
         var system = ParticleTestSystem()
         system.instantaneous = 300

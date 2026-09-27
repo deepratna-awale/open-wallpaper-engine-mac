@@ -51,6 +51,11 @@ final class ParticleSystemRuntime {
     var elapsedTime: Float = 0
     /// Steps taken (`ParticleFrameInputs.frameIndex`).
     var frameIndex: UInt32 = 0
+    /// Steps taken while its object was hidden (`ParticleFrameInputs.hidden`): such a system is never
+    /// pre-simulated (`ParticlePrewarm`).
+    var hiddenSteps: UInt32 = 0
+    /// Its particles were removed since its object was hidden: WE clears a hidden system once.
+    var clearedWhileHidden = false
     /// The next particle's serial number: particles spawned so far.
     var nextSerial: UInt32 = 0
     /// The serial of the first spawn of the current emission period: the `mapsequence…`

@@ -157,6 +157,7 @@ struct ParticleFrameInputs {
                         modelCapsules: (String) -> [ParticleCapsule] = { _ in [] }) -> ParticleFrameInputs {
         let configuration = system.configuration
         restartWithParent(system)
+        system.clearedWhileHidden = false
         system.elapsedTime += deltaTime
         system.frameIndex &+= 1
         var inputs = ParticleFrameInputs()
@@ -258,9 +259,42 @@ struct ParticleFrameInputs {
     private static func restartWithParent(_ system: ParticleSystemRuntime) {
         guard let link = system.configuration.link, link.restartsWithParentPeriod, !system.configuration.isInstanced,
               system.parent?.startedPeriod == true else { return }
+        restart(system)
+    }
+
+    /// WE's system restart (`wallpaper64.exe` 0x14022f6c0): its time, every emitter's clock (delay,
+    /// duration, burst and period), carry and period count, and the sequences restarting with each
+    /// period. Its particles are left to the caller.
+    private static func restart(_ system: ParticleSystemRuntime) {
         system.elapsedTime = 0
         system.emitterStates = system.emitterStates.map { _ in ParticleEmitterState() }
         system.periodSerial = system.nextSerial
+    }
+
+    /// A step of a system whose object is hidden (its own `visible` or a parent's), as WE's particle
+    /// object update runs it (`wallpaper64.exe` 0x140230650). On the first hidden step that finds
+    /// particles alive (0x14023068e) WE restarts the system (0x1402306bc, `restart`) and removes its
+    /// particles (0x1402306c1…0x1402307a2); every hidden step then advances the system's time with
+    /// emission off (0x140230869: `emit` is the visibility), so the emitters' clocks stay where the
+    /// restart left them. Shown again, the system emits from those clocks: no pre-simulation, which
+    /// runs only when the system is built. `holdsParticles` says whether any particle is alive.
+    /// Returns the clearing step to simulate, or nil when there is nothing to clear.
+    static func hidden(_ system: ParticleSystemRuntime, deltaTime: Float, holdsParticles: Bool) -> ParticleFrameInputs? {
+        let clears = holdsParticles && !system.clearedWhileHidden
+        if clears { restart(system) }
+        system.elapsedTime += deltaTime
+        system.hiddenSteps &+= 1
+        guard clears else { return nil }
+        system.clearedWhileHidden = true
+        var inputs = ParticleFrameInputs()
+        inputs.deltaTime = deltaTime
+        inputs.frameTime = deltaTime
+        inputs.elapsedTime = system.elapsedTime
+        inputs.engineTime = system.elapsedTime
+        inputs.frameIndex = system.frameIndex
+        inputs.emitters = system.configuration.emitters.map { _ in ParticleEmitterStep() }
+        inputs.clears = true
+        return inputs
     }
 
     /// A child's emitter this frame: from its parent's, which stepped first.

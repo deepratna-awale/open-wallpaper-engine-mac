@@ -1099,9 +1099,13 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             .map(\.element)
         let particleSignpost = OWESignpost.begin(OWESignpost.render, "updateParticles")
         for system in orderedSystems {
-            // A hidden system (its own `visible` or a parent's) neither steps nor draws.
+            // A hidden system (its own `visible` or a parent's) draws nothing; WE clears it once and
+            // keeps its time running with emission off (`ParticleFrameInputs.hidden`).
             let objectID = particleObjectID(system)
-            if let objectID, !scripts.isVisible(objectID) { continue }
+            if let objectID, !scripts.isVisible(objectID) {
+                stepHiddenParticles(system, deltaTime: Float(clock.delta), pixelFormat: sceneTexture.pixelFormat)
+                continue
+            }
             let script = objectID.flatMap(scripts.object)
             let scripted = script.flatMap(SceneScriptInstanceOverrides.init)
             let base = particleInstances.count
@@ -2206,6 +2210,27 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             steps += 1
         }
         return nil
+    }
+
+    /// Steps a system whose object is hidden (`ParticleFrameInputs.hidden`): the one step that
+    /// clears it runs on whichever simulation holds it; nothing is drawn.
+    private func stepHiddenParticles(_ system: ParticleSystemRuntime, deltaTime: Float, pixelFormat: MTLPixelFormat) {
+        // The GPU's count is its last finished step's.
+        let holdsParticles = system.gpu.map { $0.completedCount > 0 } ?? !system.particles.isEmpty
+        guard let inputs = ParticleFrameInputs.hidden(system, deltaTime: deltaTime, holdsParticles: holdsParticles) else { return }
+        guard particleSimulator != nil else {
+            ParticleCPUSimulation.step(system, inputs: inputs)
+            return
+        }
+        let rendererName = system.configuration.rendererName
+        if let simulated = particleMaterials?.prepareSimulated(system, pixelFormat: pixelFormat, sampleCount: sceneSampleCount,
+                                                               depthFormat: sceneDepthFormat) {
+            particleRequests.append(.init(system: system, inputs: inputs,
+                                          kind: .material(simulated.format, rendererName: rendererName),
+                                          materialVertexCount: simulated.vertexCount))
+        } else {
+            particleRequests.append(.init(system: system, inputs: inputs, kind: .fallback(rendererName: rendererName)))
+        }
     }
 
     /// A step as scripts' playback leaves it: paused emits nothing (its clock stands still),
