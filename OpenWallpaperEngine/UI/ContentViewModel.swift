@@ -105,6 +105,13 @@ class ContentViewModel: ObservableObject, DropDelegate {
         memoCancellables = [
             objectWillChange.sink { [weak self] _ in self?.invalidateSortedMemo() },
             FavoritesStore.shared.objectWillChange.sink { [weak self] _ in self?.invalidateSortedMemo() },
+            // Steam tags arriving for installed wallpapers: the grid, Details and filters use them.
+            DownloadedWallpaperIndex.shared.objectWillChange.sink { [weak self] _ in
+                DispatchQueue.main.async {
+                    self?.sortedMemo = nil
+                    self?.objectWillChange.send()
+                }
+            },
             // The filters and sorting are app storage.
             NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
                 .sink { [weak self] _ in self?.invalidateSortedMemo() },
@@ -147,10 +154,21 @@ class ContentViewModel: ObservableObject, DropDelegate {
     private var sortedMemo: [WEWallpaper]?
     private var memoCancellables: [AnyCancellable] = []
 
+    /// Reads the Steam tags of installed wallpapers whose project.json has too few.
+    private let tagSync = InstalledWorkshopTagSync()
+
     /// The Installed wallpapers, before search and filters: no asset items, no dependency-only items.
     private var allWallpapers: [WEWallpaper] {
-        library.wallpapers(in: FileManager.default.wallpapersDirectory,
-                           hiding: steamCmd.dependencyIndex.ids)
+        let wallpapers = library.wallpapers(in: FileManager.default.wallpapersDirectory,
+                                            hiding: steamCmd.dependencyIndex.ids)
+        tagSync.schedule(wallpapers)
+        return wallpapers
+    }
+
+    /// The wallpaper's tags to show and filter by: project.json's, then the Workshop item's
+    /// stored ones, without "Wallpaper".
+    func tags(of wallpaper: WEWallpaper) -> [String] {
+        InstalledWorkshopTags.tags(of: wallpaper, in: .shared)
     }
 
     /// After wallpapers were deleted: removes the dependency-only items none of the remaining ones use.
@@ -183,10 +201,8 @@ class ContentViewModel: ObservableObject, DropDelegate {
                 guard !description.contains(searchText) else { return true }
             }
             
-            if let tags = project.tags {
-                guard !tags.allSatisfy({ $0.lowercased().contains(searchText) })
-                else { return true }
-            }
+            guard !tags(of: wallpaper).contains(where: { $0.lowercased().contains(searchText) })
+            else { return true }
             
             if let workshopid = project.workshopid {
                 guard !workshopid.rawValue.contains(searchText) else { return true }
@@ -201,11 +217,21 @@ class ContentViewModel: ObservableObject, DropDelegate {
     }
     
     private var filteredWallpapers: [WEWallpaper] {
-        searchedWallpapers.filter { wallpaper in
+        let resolutionGroups: [[String]] = [
+            InstalledTagFilter.checked(widescreenResolution), InstalledTagFilter.checked(ultraWidescreenResolution),
+            InstalledTagFilter.checked(dualscreenResolution), InstalledTagFilter.checked(triplescreenResolution),
+            InstalledTagFilter.checked(potraitscreenResolution), InstalledTagFilter.checked(miscResolution),
+        ]
+        let resolutions = Set<String>(resolutionGroups.joined())
+        return searchedWallpapers.filter { wallpaper in
+            let wallpaperTags = self.tags(of: wallpaper)
 
             // Show Only
             var showOnly = FRShowOnly.none
-            if let approved = wallpaper.project.approved, approved { showOnly.insert(.approved) }
+            if wallpaper.project.approved == true
+                || wallpaperTags.contains(where: { $0.caseInsensitiveCompare(WorkshopTags.approved) == .orderedSame }) {
+                showOnly.insert(.approved)
+            }
             if FavoritesStore.shared.contains(wallpaper) { showOnly.insert(.myFavourites) }
             if wallpaper.isMobileCompatible { showOnly.insert(.mobileCompatible) }
             if wallpaper.isAudioResponsive { showOnly.insert(.audioResponsive) }
@@ -232,7 +258,7 @@ class ContentViewModel: ObservableObject, DropDelegate {
             
             // Age Rating
             var ageRating: FRAgeRating
-            switch wallpaper.project.contentrating {
+            switch wallpaper.project.contentrating ?? InstalledWorkshopTags.contentRating(in: wallpaperTags) {
             case "Everyone":
                 ageRating = .everyone
             case "Questionable":
@@ -244,7 +270,8 @@ class ContentViewModel: ObservableObject, DropDelegate {
             }
             guard self.ageRating.contains(ageRating) else { return false }
             
-            guard self.tag != .none else { return false }
+            guard InstalledTagFilter.matchesResolutions(wallpaperTags, checked: resolutions) else { return false }
+            guard InstalledTagFilter.matchesGenres(wallpaperTags, checked: self.tag) else { return false }
             
             // Finish Filtering
             return true

@@ -432,10 +432,13 @@ struct WallpaperPreview: SubviewOfContentView {
         }
     }
     
-    /// Shows all tags about current wallpaper in horizontal
+    /// Shows all tags about current wallpaper in horizontal: project.json's, then the Workshop
+    /// item's. Only project.json's can be removed here.
     var tags: some View {
         HStack {
-            if let tags = wallpaperViewModel.displayedWallpaper.project.tags {
+            let tags = viewModel.tags(of: wallpaperViewModel.displayedWallpaper)
+            let projectTags = wallpaperViewModel.displayedWallpaper.project.tags ?? []
+            if !tags.isEmpty {
                 ForEach(tags, id: \.self) { tag in
                     Text(tag)
                         .padding(5)
@@ -448,7 +451,7 @@ struct WallpaperPreview: SubviewOfContentView {
                             }
                         }
                         .overlay(alignment: .topTrailing) {
-                            if hoveredTag == tag {
+                            if hoveredTag == tag, projectTags.contains(tag) {
                                 Button {
                                     var wallpaper = wallpaperViewModel.displayedWallpaper
                                     

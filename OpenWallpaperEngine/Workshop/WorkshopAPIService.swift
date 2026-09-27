@@ -15,6 +15,9 @@ struct WorkshopItem: Identifiable, Codable {
     /// The item's key/value tags (QueryFiles `kvtags`), e.g. the Workshop EULA version that
     /// allows the mobile app. Nil for items stored before these were read.
     var kvTags: [String: String]? = nil
+    /// Steam's `time_updated` (Unix seconds): when the item last changed. Nil for items stored
+    /// before it was read.
+    var timeUpdated: Int? = nil
 
     var previewImageURL: URL? {
         guard let urlString = previewURL else { return nil }
@@ -385,7 +388,8 @@ class WorkshopAPIService {
             description: description,
             votesUp: votesUp,
             votesDown: votesDown,
-            kvTags: parseKVTags(from: dict["kvtags"])
+            kvTags: parseKVTags(from: dict["kvtags"]),
+            timeUpdated: dict["time_updated"] as? Int
         )
     }
 

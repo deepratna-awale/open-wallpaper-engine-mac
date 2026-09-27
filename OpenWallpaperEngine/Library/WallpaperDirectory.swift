@@ -103,8 +103,11 @@ final class DownloadedWallpaperIndex: ObservableObject {
     static let shared = DownloadedWallpaperIndex()
 
     @Published private(set) var ids: Set<String>
+    /// Steam's tags of installed Workshop wallpapers, by Workshop id (`InstalledWorkshopTagSync`).
+    @Published private(set) var workshopTags: [String: InstalledWorkshopTags]
     private let storageKey = "DownloadedWorkshopWallpaperIds"
     private let dateStorageKey = "DownloadedWorkshopWallpaperDates"
+    private let tagsStorageKey = "DownloadedWorkshopWallpaperTags"
     private var downloadDates: [String: Date]
     private let defaults: UserDefaults
     private let libraryDirectory: () -> URL
@@ -115,6 +118,7 @@ final class DownloadedWallpaperIndex: ObservableObject {
         self.libraryDirectory = libraryDirectory
         ids = Set(defaults.stringArray(forKey: storageKey) ?? [])
         downloadDates = Self.decodeDates(defaults.dictionary(forKey: dateStorageKey))
+        workshopTags = Self.decodeTags(defaults.data(forKey: tagsStorageKey))
         if ids.isEmpty || downloadDates.isEmpty {
             rebuildFromLibrary()
         }
@@ -140,8 +144,21 @@ final class DownloadedWallpaperIndex: ObservableObject {
         return (try? directory.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? .distantPast
     }
 
+    func workshopTags(for workshopId: String) -> InstalledWorkshopTags? {
+        workshopTags[workshopId]
+    }
+
+    func setWorkshopTags(_ entries: [String: InstalledWorkshopTags]) {
+        guard !entries.isEmpty else { return }
+        workshopTags.merge(entries) { _, new in new }
+        saveTags()
+    }
+
     func remove(directory: URL) {
         let workshopId = directory.lastPathComponent
+        if workshopTags.removeValue(forKey: workshopId) != nil {
+            saveTags()
+        }
         guard ids.remove(workshopId) != nil else { return }
         downloadDates.removeValue(forKey: workshopId)
         save()
@@ -184,6 +201,25 @@ final class DownloadedWallpaperIndex: ObservableObject {
             downloadDates.mapValues(\.timeIntervalSince1970),
             forKey: dateStorageKey
         )
+    }
+
+    private func saveTags() {
+        do {
+            defaults.set(try JSONEncoder().encode(workshopTags), forKey: tagsStorageKey)
+        } catch {
+            OWELog.error(.library, "Can't save the installed wallpapers' Workshop tags: \(error)")
+        }
+    }
+
+    /// The stored tags; a list that doesn't decode is dropped and read again from Steam.
+    private static func decodeTags(_ data: Data?) -> [String: InstalledWorkshopTags] {
+        guard let data else { return [:] }
+        do {
+            return try JSONDecoder().decode([String: InstalledWorkshopTags].self, from: data)
+        } catch {
+            OWELog.error(.library, "Can't read the installed wallpapers' Workshop tags: \(error)")
+            return [:]
+        }
     }
 
     private static func decodeDates(_ storedDates: [String: Any]?) -> [String: Date] {

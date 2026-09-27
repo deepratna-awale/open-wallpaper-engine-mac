@@ -18,6 +18,16 @@ struct ExplorerItem: SubviewOfContentView {
     var wallpaper: WEWallpaper
     var index: Int
     
+    /// project.json's tags and the Workshop item's, as the Workshop cards show them.
+    private var tags: [String] {
+        viewModel.tags(of: wallpaper)
+    }
+
+    /// The title, and all the tags under it.
+    private var tooltip: String {
+        tags.isEmpty ? wallpaper.project.title : wallpaper.project.title + "\n" + tags.joined(separator: ", ")
+    }
+
     var body: some View {
         ZStack(alignment: .bottom) {
             // The library already decoded project.json; decoding it again per redraw made tab
@@ -30,14 +40,22 @@ struct ExplorerItem: SubviewOfContentView {
             .aspectRatio(1.0, contentMode: .fill)
             .clipped()
             
-            Text(wallpaper.project.title)
-                .lineLimit(2)
-                .frame(maxWidth: .infinity, minHeight: 30)
-                .padding(4)
-                .background(Color(white: 0, opacity: viewModel.imageScaleIndex == index ? 0.4 : 0.2))
-                .font(.footnote)
-                .multilineTextAlignment(.center)
-                .foregroundStyle(Color(white: viewModel.imageScaleIndex == index ? 0.9 : 0.7))
+            VStack(spacing: 2) {
+                Text(wallpaper.project.title)
+                    .lineLimit(2)
+                    .font(.footnote)
+                if !tags.isEmpty {
+                    Text(verbatim: tags.joined(separator: " · "))
+                        .lineLimit(1)
+                        .font(.caption2)
+                        .opacity(0.75)
+                }
+            }
+            .frame(maxWidth: .infinity, minHeight: 30)
+            .padding(4)
+            .background(Color(white: 0, opacity: viewModel.imageScaleIndex == index ? 0.4 : 0.2))
+            .multilineTextAlignment(.center)
+            .foregroundStyle(Color(white: viewModel.imageScaleIndex == index ? 0.9 : 0.7))
             
 //            Spacer()
 //                .onHover { onHover in
@@ -48,6 +66,7 @@ struct ExplorerItem: SubviewOfContentView {
 //                    }
 //                }
         }
+        .help(tooltip)
         .selected(wallpaper.wallpaperDirectory == wallpaperViewModel.displayedWallpaper.wallpaperDirectory)
         .overlay(
             RoundedRectangle(cornerRadius: 2)

@@ -43,20 +43,19 @@ struct FilterResults: View {
             Section("Age Rating", isExpanded: isExpanded("Age Rating")) {
                 toggles(\.ageRating, name: "ageRating")
             }
-            // Resolution, Source and Tags aren't matched against wallpapers yet.
-            Group {
-                Section("Resolution", isExpanded: isExpanded("Resolution")) {
-                    ResolutionFilterRows(isOn: resolutionIsOn, set: setResolution)
-                }
-                Section("Source", isExpanded: isExpanded("Source")) {
-                    toggles(\.source, name: "source")
-                }
-                Section("Tags", isExpanded: isExpanded("Tags")) {
-                    allNoneButtons(\.tag)
-                    toggles(\.tag, name: "tag")
-                }
+            // Resolution and Tags match the wallpaper's tags, project.json's and the Workshop item's.
+            Section("Resolution", isExpanded: isExpanded("Resolution")) {
+                ResolutionFilterRows(isOn: resolutionIsOn, set: setResolution)
+            }
+            // Source isn't matched against wallpapers yet.
+            Section("Source", isExpanded: isExpanded("Source")) {
+                toggles(\.source, name: "source")
             }
             .disabled(true)
+            Section("Tags", isExpanded: isExpanded("Tags")) {
+                allNoneButtons(\.tag)
+                toggles(\.tag, name: "tag")
+            }
         }
         .listStyle(.sidebar)
         .toggleStyle(.checkbox)
