@@ -122,7 +122,7 @@ extension AppDelegate {
 
         if let button = self.statusItem.button {
             if let image = NSImage(named: "OWEStatusIcon") {
-                image.isTemplate = false
+                image.isTemplate = true  // white on dark menu bars, black on light ones
                 button.image = image
                 button.imageScaling = .scaleProportionallyDown
             } else {
