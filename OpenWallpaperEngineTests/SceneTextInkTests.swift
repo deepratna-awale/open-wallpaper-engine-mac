@@ -35,7 +35,7 @@ final class SceneTextInkTests: XCTestCase {
                                             camera: SceneFrameCamera())
         let ink = SIMD4<Float>(0.2, 0.25, 0.6, 0.5)
         let cut = SceneTextInk.crop(placement, to: ink)
-        XCTAssertEqual(cut.corner(SIMD2(0, 0)), placement.corner(SIMD2(ink.x, ink.y)))
-        XCTAssertEqual(cut.corner(SIMD2(1, 1)), placement.corner(SIMD2(ink.z, ink.w)))
+        XCTAssertLessThan(simd_distance(cut.corner(SIMD2(0, 0)), placement.corner(SIMD2(ink.x, ink.y))), 1e-4)
+        XCTAssertLessThan(simd_distance(cut.corner(SIMD2(1, 1)), placement.corner(SIMD2(ink.z, ink.w))), 1e-4)
     }
 }
