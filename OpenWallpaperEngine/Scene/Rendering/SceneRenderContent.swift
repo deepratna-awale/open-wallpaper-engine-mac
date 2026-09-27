@@ -132,8 +132,10 @@ struct SceneMetalText {
     let maxWidth: Float?
     let maxRows: Int?
     let useEllipsis: Bool
-    /// Dynamic screen anchor. The scene is always drawn with its authored projection, so every
-    /// anchor resolves to the authored position.
+    /// WE's `anchor` (none, center, top, topright, …, 0x14025a22b). WE's text translates its model
+    /// matrix by four render-context floats per anchor (0x1402585c0), but nothing in
+    /// `wallpaper64.exe` writes the first two, and WE's text captures (all `center`) sit where
+    /// the unanchored layout puts them, so it moves nothing here (docs/roadmap.md §8.13).
     let anchor: String?
     let blockAlign: Bool
     /// `outline`, `blur` and `dropshadow` (`SceneTextEffects`); nil for plain text.
