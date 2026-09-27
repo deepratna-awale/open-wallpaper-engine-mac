@@ -426,6 +426,89 @@ Ours followed a box: the authored size, grown to fit, with the edge named by the
 - Gap: the `layerimage` emitter (particles emitted from a layer's image; only WE's element preview uses it) isn't built. It used to become a `sphererandom` silently and is now logged.
 - Test: `ParticleProgramTests.testEveryRegisteredInitializerAndOperatorBuilds`.
 
+## 10. WE 2.8.0.42's particle editor schema (ground truth, data only)
+
+`docs/we-particle-editor-schema.json` holds the particle editor's property panels. For every renderer, emitter, initializer and operator, the `children[]` and `controlpoint[]` entries, and the system panel (52 panels, 429 fields), it gives:
+- label (WE's `ui_editor_properties_*` key and its English text)
+- type, slider range, step, whether typed values are clamped
+- the value the editor writes when the component is added (2D, and 3D when it differs: 45 fields)
+- combo options with their JSON values
+- the visibility condition
+- the VA it came from
+
+How it was read:
+- **Panels.** `wallpaperui.exe`'s panel builder (0x1401bba44) has one branch per component id. Each field is one call: number box 0x1401f39d0 / 0x1401f36f0, float slider 0x14015f0f0 (min and max as float arguments), int slider 0x14015f470, vector 0x14015d310, flag checkbox 0x140161620 (bit as an immediate), checkbox 0x140160f60, combo 0x14015fd90, and condition 0x1401641c0.
+- **Shared groups.** Renderer orientation, axis and worldspace are at 0x1401b7e80. The operator blend window is 0x1401b76a0, audio response 0x1401b78c0, collision behaviour 0x1401b8ca0 and limit behaviour 0x1401b8630. The system panel is 0x1401b68e0.
+- **Add-defaults.** When a component is added, a filler for it (0x140150070…0x140159b70) writes every absent key. Like the runtime, the filler takes the scene's orthographic flag, so 2D and 3D values can differ.
+- **Option values.** They come from the editor's value tables (0x140abac30: remap values, operations, event verbs, transforms, components). Labels come from `locale/ui_en-us.json`.
+- **Steps and clamping.** These come from the property templates in `ui/dist/scripts/scripts.js`:
+  - `number` is `<input type=number step=any>` with no min or max (arrow keys ±1).
+  - `slider` steps 0.01 (`sliderHighPrecision` 0.001); `sliderint` steps 1.
+  - The typed box next to a slider has no range, and rzslider's `enforceRange` is off. **The editor clamps nothing**, except the colour list's count, which is a 1–10 slider with no box.
+- **Cross-check.** The Windows session's UI Automation read of the editor (`particle_fields.json`) matches every one of its 327 values: order, value and option list. That settles which JSON key each unlabeled X/Y/Z box edits.
+
+**Ranges.** Only these fields have one; every other number is an unranged box:
+
+| Field | Range |
+|---|---|
+| rope / ropetrail `subdivision` | 0–16 |
+| ropetrail `segments` | 2–16 |
+| rope / ropetrail `uvscale` | 0.1–3 |
+| hsvcolorrandom `huesteps` | 1–30 |
+| colorlist count | 1–10 |
+| mapsequencebetweencontrolpoints `sizereductionamount` | 0–1 |
+| mapsequencebetweencontrolpoints `arcamount` | −1–1 |
+| audio response `audioprocessingfrequencystart` / `…end` | 0–15 (int) |
+
+The material panel's overbright is 0–5 (UIA).
+
+**Flag bits** (checkboxes on `flags`):
+
+| Where | Bits |
+|---|---|
+| System | 1 worldspace, 2 no frame blending, 4 perspective, 8 / 0x10 / 0x20 / 0x40 / 0x80 disable colour / speed / count / lifetime / size overrides. The five override bits match `SceneParticleOverrides`. |
+| Renderers, movement | 1 worldspace |
+| Emitters | 2 limit to one per frame, 4 random periodic emission (shows min/max periodic duration and delay, and max to emit per period) |
+| layerimage | 0x10000 copy layer colour (**on** when added), 0x20000 update the emission bitmap periodically, 0x40000 inherit layer motion, 0x80000 random offset |
+| mapsequencearoundcontrolpoint | 1 modify count with layer settings, 2 restart with periodic emission |
+| mapsequencebetweencontrolpoints | 0x10 modify count, 0x20 restart, 1 / 2 / 4 reduce outer positions / velocities / sizes, 8 arc |
+| remap | 1 clamp input, 2 clamp output |
+| controlpointattract | 1 delete in centre, 2 reduce velocity near centre (**on**) |
+| vortex / vortex_v2 | 1 infinite axis; v2: 2 maintain distance to centre, 4 ring shape |
+| boids | 1 clamp speed (**on**) |
+| collision plane / sphere / quad | 1 lock to control point, 2 stop rotation on collision |
+| Child | 1 set control points to particle positions, 2 restart with periodic emission |
+| Control point | 1 lock to pointer, 2 worldspace, 4 copy from parent (shows raw value 8 and the parent index), 0x10 hide gizmo in editor |
+
+The control point's 0x10 is editor-only, which confirms §6: the runtime never tests it.
+
+**Against our runtime defaults — no change.** Every add-default the fillers write equals the parse default we use for an absent field (§6), in 2D and 3D. This covers:
+- emitter rate 10, periodic 2/3/1/2
+- `distancemax` 256 / 1
+- `sizerandom` 5…50 / 0.001…1
+- `rotationrandom` max 0 0 2π (shown as 360°)
+- `turbulentvelocityrandom` 100…250 / 0.5…1
+- turbulence, vortex, vortex_v2 ring values, boids, capvelocity, collision, children (maxcount 10, probability 1, static)
+- the flags defaults: controlpointattract 2, boids 1
+- remap: multiply, `maxlifetime` / `lifetimefraction` → `size`, components `all`, transform scale 2, octaves 3
+- inherit verbs: `setcolor` / `setcoloropacity`
+- rope smoothing on; ropetrail fade alpha / size off
+
+So the fillers are the engine's defaults written out, and our runtime values stay. The only editor values that differ are these:
+- **The new-system template.** `particles/example.json` (§7.4) is what the editor writes into a new system, e.g. `maxcount` 500 and `rate` 20.
+- **layerimage `flags` 0x10000 (copy layer colour).** We don't build `layerimage` (§9.8).
+- **`uvscale` is written as the int 1.**
+- **controlpointattract offset.** The panel edits `origin`, while the filler writes `offset` "0 0 0". The VM reads neither (0x140241554).
+
+**WE quirks kept in the data:**
+- The limit-behaviour combo of both map-sequence initializers is labelled "Orientation" (it passes `ui_editor_properties_orientation`).
+- `rotationrandom` shows degrees and stores radians (vector mode `angle`).
+- The system panel shows the parsed system's values (e.g. `sequencemultiplier` at object +0x3bc), so an absent field shows the runtime default.
+
+**Open:**
+- **Our child `flags` bit 2.** It means "keeps its own colours" in `ParticleFamilyBuilder` (no VA cited). The editor calls bit 2 "Restart with periodic emission" (0x1401c44d1). This needs a render check. It's listed with the few remaining UIA spot checks (checkbox states, colour and hue pickers, and the legacy `vortex` and child panels) in `/Volumes/980Pro/agentPS-out/unresolved.md`.
+- **Our inspector** shows particle JSON raw, so there is nothing to range yet. A particle property editor should take its types, ranges, steps and conditions from this file.
+
 ## Tests
 
 `OpenWallpaperEngineTests/WEAuthoredValuesTests.swift`:
