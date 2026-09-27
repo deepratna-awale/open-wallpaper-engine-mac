@@ -170,6 +170,37 @@ final class ParticleProgramTests: XCTestCase {
         XCTAssertEqual(values.count, 3, "not the middle of the range for all")
     }
 
+    /// `colorrandom` keeps `min` and `max − min` as they are (parser 0x1401c74bb…0x1401c7778, the
+    /// span from 0x14005f0a0), so a minimum above the maximum (the snowstorm fog's "220 250 255" …
+    /// "149 180 255") draws between the two, from the minimum down; nothing sorts or clamps it.
+    func testColorRandomWithItsMinimumAboveItsMaximumDrawsBetweenThem() throws {
+        let record = try initializer(#"{"name":"colorrandom","min":"220 250 255","max":"149 180 255"}"#)
+        let minimum = SIMD3<Float>(220, 250, 255) / 255
+        let maximum = SIMD3<Float>(149, 180, 255) / 255
+        XCTAssertEqual(record.a.x, minimum.x, accuracy: 1e-5)
+        XCTAssertEqual(record.b.x, maximum.x, accuracy: 1e-5)
+        var sum = SIMD3<Float>.zero
+        let count: Int = 400
+        for serial in 0..<count {
+            var particle = state(age: 0)
+            particle.baseColor = SIMD3(repeating: 1)
+            var context = ParticleProgramContext()
+            context.serial = UInt32(serial)
+            ParticleProgramCPU.runInitializers([record], on: &particle, context: context)
+            let color: SIMD3<Float> = particle.baseColor
+            let red: Float = color.x, green: Float = color.y
+            XCTAssertLessThanOrEqual(red, minimum.x + 1e-5)
+            XCTAssertGreaterThanOrEqual(red, maximum.x - 1e-5)
+            XCTAssertLessThanOrEqual(green, minimum.y + 1e-5)
+            XCTAssertGreaterThanOrEqual(green, maximum.y - 1e-5)
+            sum += color
+        }
+        let mean: SIMD3<Float> = sum / Float(count)
+        let middle: SIMD3<Float> = (minimum + maximum) / 2
+        XCTAssertEqual(mean.x, middle.x, accuracy: 0.02, "uniform between the two")
+        XCTAssertEqual(mean.y, middle.y, accuracy: 0.02)
+    }
+
     func testHSVColorRandomPicksHueSteps() {
         let record = ParticleInitializer(.hsvColorRandom, a: SIMD4(0, 1.0 / 6.0, 6, 0), b: SIMD4(1, 1, 1, 1)).record
         var hues: Set<[Float]> = []
