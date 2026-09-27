@@ -1,7 +1,8 @@
 import simd
 
 /// A Puppet Warp image's skeleton in motion (docs/models-plan.md §2.8, §2.13, §4.3 M6/P2): its
-/// animation layers evaluated every frame the layer is visible (0x1401fdf90), the local and
+/// animation layers evaluated every frame (0x1401fdf90, the image's update: WE's object loop
+/// 0x1401891a0 calls it for every object, hidden or not, before the scripts' `update`), the local and
 /// model-space bone matrices WE keeps (puppet+0x310, +0x2c8) and the bone palette the mesh is
 /// drawn with (`ScenePuppetPose`, puppet+0x2f8). Scripts reach it through `SceneScriptRigCommand`s
 /// and read it back through `SceneScriptRigFeedback`. Render thread only.
@@ -17,11 +18,11 @@ final class ScenePuppetAnimator {
     private(set) var lastUpdate = SceneAnimationLayerUpdate()
     /// Layers whose clip ended since scripts were last told (`takeEnded`).
     private var endedSinceFeedback: [Int] = []
+    /// Clip events the layers crossed since scripts were last told (`takeEvents`).
+    private var eventsSinceFeedback: [SceneAnimationLayerUpdate.Event] = []
     /// The rig's blend shapes, and their weights per mesh this frame (`SceneMorphWeights`).
     let morphRig: SceneMorphRig?
     private(set) var morphs: [SceneMorphWeights]
-    /// `setBlendShapeWeight` calls this frame, laid over the evaluated weights once.
-    private var pendingBlendShapes: [(index: Int, weight: Float)] = []
 
     /// An authored layer's bound values: user bindings and `animation` timelines on `rate`,
     /// `blend` and `visible`, re-read every frame until a script sets the field.
@@ -34,8 +35,6 @@ final class ScenePuppetAnimator {
     }
 
     private var bindings: [Int: Binding] = [:]
-    /// Local matrices scripts set this frame, laid over the evaluated pose once.
-    private var pendingLocals: [Int: simd_float4x4] = [:]
     /// Model-space matrices `setBoneTransform` set: that bone's palette entry only, its children
     /// untouched (0x14020f350). Kept until the next evaluation or local write recomputes the bones.
     private var worldOverrides: [Int: simd_float4x4] = [:]
@@ -86,11 +85,13 @@ final class ScenePuppetAnimator {
         }
     }
 
-    /// One frame (`delta` scene seconds): the bound values, the layers, then scripts' bone writes.
-    /// A rig with layers is posed from its bind pose every frame, which replaces what scripts set
-    /// before; one without keeps its bones as scripts leave them [I: 0x1401fdf90 wasn't traced].
-    /// Blend-shape weights start over every frame (0x14021c5b0, 0x1401fecba), layers or not; a
-    /// script's weight holds for the frame it arrives in.
+    /// One frame (`delta` scene seconds): the bound values, then the layers. It runs before the
+    /// scripts' frame, as WE updates its objects before the scripts' `update` (0x1401891a0 at
+    /// 0x14017fd26; the scripts at 0x1401802e5), so a script reads this frame's pose, and its bone
+    /// and blend-shape writes (`perform`) land on it and show in this frame's draw. A rig with
+    /// layers is posed from its bind pose again the next frame, which replaces what scripts set;
+    /// one without keeps its bones as scripts leave them (0x1401fdf90 poses only from layers).
+    /// Blend-shape weights start over every frame (0x14021c5b0, 0x1401fecba), layers or not.
     func advance(delta: Float, values: SceneValueContext) {
         resolveBindings(delta: delta, values: values)
         var update = SceneAnimationLayerUpdate()
@@ -100,12 +101,9 @@ final class ScenePuppetAnimator {
             locals = transforms.map(\.matrix)
             worldOverrides.removeAll()
         }
-        for (bone, matrix) in pendingLocals where bone < locals.count { locals[bone] = matrix }
-        pendingLocals.removeAll()
-        for write in pendingBlendShapes where !morphs.isEmpty { morphs[0].setFromScript(write.index, write.weight) }
-        pendingBlendShapes.removeAll()
         lastUpdate = update
         endedSinceFeedback += update.ended
+        eventsSinceFeedback += update.events
         recompute()
     }
 
@@ -113,6 +111,12 @@ final class ScenePuppetAnimator {
     func takeEnded() -> [Int] {
         defer { endedSinceFeedback.removeAll() }
         return endedSinceFeedback
+    }
+
+    /// The clip events crossed since the last call, for scripts' `animationEvent`.
+    func takeEvents() -> [SceneAnimationLayerUpdate.Event] {
+        defer { eventsSinceFeedback.removeAll() }
+        return eventsSinceFeedback
     }
 
     private func resolveBindings(delta: Float, values: SceneValueContext) {
@@ -198,7 +202,6 @@ final class ScenePuppetAnimator {
             }
         case let .setLocal(bone, matrix):
             guard bone >= 0, bone < locals.count else { return }
-            pendingLocals[bone] = matrix
             locals[bone] = matrix
             worldOverrides.removeAll()
             recompute()
@@ -208,7 +211,6 @@ final class ScenePuppetAnimator {
             recompute()
         case let .setBlendShape(index, weight):
             guard !morphs.isEmpty else { return }
-            pendingBlendShapes.append((index, weight))
             morphs[0].setFromScript(index, weight)
             recompute()
         }

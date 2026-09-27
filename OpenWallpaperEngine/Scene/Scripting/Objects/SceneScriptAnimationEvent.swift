@@ -16,3 +16,23 @@ extension SceneScriptEvent {
                          coalescing: .keep)
     }
 }
+
+extension SceneScriptEvent.Kind {
+    /// A puppet's or model's animation layers this frame (`objects-layers.js`): each clip event
+    /// crossed, as `animationEvent`, then the layers' ended callbacks; payload:
+    /// `["slot": objectSlot, "events": [String]]` (each event's name, as the `.mdl` stores it).
+    static let rigAnimation = Self(rawValue: "rigAnimation")
+}
+
+extension SceneScriptEvent {
+    /// WE's object update (0x1401fdf90 for images, 0x14021c480 for models) sends each clip event
+    /// its layers crossed to the object's scripts as callback 6, `animationEvent` (0x14020022e,
+    /// 0x14021cdbf → 0x140177ad0: the scripts whose object is the updated one), passing only the
+    /// event's name (the record's string at +8, 0x1401aa1c0), and runs the ended callbacks right
+    /// after (0x140200290…0x1402002f1). All of it comes before the cursor pass and the scene's
+    /// update (media, timelines, the scripts' `update`), so this is handled first.
+    static func rigAnimation(objectSlot: Int, events: [String]) -> SceneScriptEvent {
+        SceneScriptEvent(kind: .rigAnimation, payload: ["slot": objectSlot, "events": events], target: objectSlot,
+                         coalescing: .keep)
+    }
+}

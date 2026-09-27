@@ -42,7 +42,8 @@ enum SceneScriptRigCommand: Equatable {
     case setBlendShape(index: Int, weight: Float)
 }
 
-/// A puppet's skeleton as the renderer left it after a frame, for the next script frame.
+/// A puppet's or model's skeleton as this frame posed it (the renderer poses rigs before the
+/// scripts run, as WE's object loop does), for this frame's scripts.
 struct SceneScriptRigFeedback: Equatable {
     struct Layer: Equatable {
         var key: Int
@@ -66,4 +67,7 @@ struct SceneScriptRigFeedback: Equatable {
     var ended: [Int] = []
     /// The first mesh's blend-shape weights (`getBlendShapeWeight`).
     var blendShapeWeights: [Float] = []
+    /// Clip events the layers crossed since the last feedback, in the order they were crossed:
+    /// each is an `animationEvent` for the object's scripts (`SceneScriptEvent.rigAnimation`).
+    var events: [SceneAnimationLayerUpdate.Event] = []
 }

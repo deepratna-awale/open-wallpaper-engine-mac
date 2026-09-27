@@ -932,7 +932,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         releaseFinishedEffectState()
         prelitImages.removeAll(keepingCapacity: true)
         beginTransformFrame()
+        advanceRigs()
         if scripts.isRunning {
+
             // Like WE, the scripts run before the frame that shows what they did (§4.4): this
             // frame's clock, cursor and animated values go in, and their results are drawn now
             // unless they overrun the wait (then they show from the next draw on).
@@ -1519,14 +1521,16 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             let world = ScenePuppetAttachments.matrix(worldTransform(entry))
             input.rigs[id] = SceneScriptRigFeedback(layers: animator.layerStates, locals: animator.locals,
                                                     worlds: animator.worlds.map { world * $0 }, ended: animator.takeEnded(),
-                                                    blendShapeWeights: animator.blendShapeWeights)
+                                                    blendShapeWeights: animator.blendShapeWeights, events: animator.takeEvents())
         }
         for key in models?.riggedObjectIDs ?? [] {
             guard let id = Int(key), let animator = models?.animator(for: key) else { continue }
             let world = world3D(key, in: spatial.transforms)
             input.rigs[id] = SceneScriptRigFeedback(layers: animator.layerStates, locals: animator.locals,
-                                                    worlds: animator.worlds.map { world * $0 }, ended: animator.takeEnded())
+                                                    worlds: animator.worlds.map { world * $0 }, ended: animator.takeEnded(),
+                                                    events: animator.takeEvents())
         }
+
         scripts.submit(input)
     }
 
@@ -2139,8 +2143,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private func drawPuppet(_ puppet: ScenePuppetPlan, _ entry: PreparedLayer, frame: BuiltinFrameContext,
                             commandBuffer: MTLCommandBuffer) {
         guard let puppets, let source = entry.frames.first?.texture else { return }
+        // Posed this frame by `advanceRigs`, before the scripts ran.
         let animator = puppetAnimator(entry.layer.id, puppet)
-        animator.advance(delta: Float(frame.frameTime), values: timelines.values)
+
         puppetAlbedos[entry.layer.id] = puppets.albedo(puppet, ScenePuppetRenderer.Draw(
             layerID: entry.layer.id, source: source, pose: animator.pose, frame: frame,
             values: timelines.values,
@@ -2185,7 +2190,38 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     }
 
     /// The layer's animator, made on first use.
+    /// WE's object loop (0x1401891a0, at 0x14017fd26 in the frame): every object's update before
+    /// the scripts' frame (0x1401802e5), so scripts read this frame's pose and get the layers'
+    /// clip events (`animationEvent`) and ends (`addEndedCallback`) before their `update`, and
+    /// their bone writes land on this frame's pose. A puppet updates hidden or not (0x1401fdf90
+    /// tests only that it has a rig and layers, through 0x1402076e0); a model only while it and
+    /// its parents are visible (0x14021c4d8), as its draw asks too. Without scripts nobody reads
+    /// the events and ends, so they are dropped.
+    private func advanceRigs() {
+        let delta = Float(clock.delta)
+        for entry in layers {
+            guard let puppet = entry.layer.puppet else { continue }
+            let animator = puppetAnimator(entry.layer.id, puppet)
+            animator.advance(delta: delta, values: timelines.values)
+            if !scripts.isRunning {
+                _ = animator.takeEnded()
+                _ = animator.takeEvents()
+            }
+        }
+        guard let models else { return }
+        var frame = BuiltinFrameContext()
+        frame.time = clock.time
+        frame.frameTime = clock.delta
+        for model in spatial.models where scripts.isVisible(model.id) {
+            guard let plan = model.plan, models.advance(model, plan: plan, frame: frame, values: timelines.values) != nil,
+                  !scripts.isRunning, let animator = models.animator(for: model.id) else { continue }
+            _ = animator.takeEnded()
+            _ = animator.takeEvents()
+        }
+    }
+
     private func puppetAnimator(_ id: String, _ puppet: ScenePuppetPlan) -> ScenePuppetAnimator {
+
         if let animator = puppetAnimators[id] { return animator }
         let animator = puppet.makeAnimator()
         puppetAnimators[id] = animator

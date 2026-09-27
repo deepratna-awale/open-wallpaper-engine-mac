@@ -306,13 +306,10 @@
         return null;
     };
 
-    // Sends `animationEvent(event, value)` to every initialised script whose `thisObject` owns the
-    // animation (WE: the scripts attached to the owner, and the animated property's own script),
-    // in list order; the return is applied like `update`'s (P3). Payload: {slot, name, frame}.
-    // SceneScriptEvent.animationEvent posts it after the clocks advanced, before timers and `update`.
-    objects.dispatchAnimationEvent = function (payload) {
-        const owner = objects.animationOwner(payload.slot);
-        if (owner === null) return;
+    // Sends `animationEvent(event, value)` to every initialised script whose `thisObject` is
+    // `owner` (WE: the scripts attached to the owner, and the animated property's own script), in
+    // list order, each with its own `makeEvent()`; the return is applied like `update`'s (P3).
+    objects.sendAnimationEvent = function (owner, makeEvent) {
         const records = rt.records;
         for (let i = 0; i < records.length; i++) {
             const record = records[i];
@@ -324,9 +321,16 @@
                 exported = true; // Let `invoke` report the throwing getter.
             }
             if (!exported || rt.hooks.scope(record).thisObject !== owner) continue;
-            const event = { name: String(payload.name), frame: payload.frame };
-            rt.apply(record, rt.invoke(record, 'animationEvent', [event, rt.argument(record)]));
+            rt.apply(record, rt.invoke(record, 'animationEvent', [makeEvent(), rt.argument(record)]));
         }
+    };
+
+    // A timeline event for the owner of animation `slot`. Payload: {slot, name, frame}.
+    // SceneScriptEvent.animationEvent posts it after the clocks advanced, before timers and `update`.
+    objects.dispatchAnimationEvent = function (payload) {
+        const owner = objects.animationOwner(payload.slot);
+        if (owner === null) return;
+        objects.sendAnimationEvent(owner, function () { return { name: String(payload.name), frame: payload.frame }; });
     };
 
     // After media events (§1.9 P1: timeline animations and `animationEvent` follow them).

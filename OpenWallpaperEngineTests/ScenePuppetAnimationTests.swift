@@ -56,7 +56,9 @@ final class ScenePuppetAnimationTests: XCTestCase {
     }
 
     /// A script's `setLocalBoneTransform` lasts on a rig without layers; a rig with layers is
-    /// posed again each frame. `setBoneTransform` moves only that bone's palette entry.
+    /// posed again each frame. `setBoneTransform` moves only that bone's palette entry. Scripts
+    /// run after the frame's evaluation (WE's object loop 0x1401891a0 runs before the scripts'
+    /// `update`), so a write lands on this frame's pose and the next evaluation replaces it.
     func testScriptBoneWrites() throws {
         let still = ScenePuppetAnimator(skeleton: Self.rig(), clips: [], layers: [])
         let moved = ScenePuppetTests.translation(SIMD3(0, 30, 0))
@@ -68,9 +70,10 @@ final class ScenePuppetAnimationTests: XCTestCase {
 
         let clip = SceneAnimationLayersTests.clip(id: 1, bones: 2, pose: SceneAnimationLayersTests.still(SIMD3(5, 0, 0)))
         let animated = ScenePuppetAnimator(skeleton: Self.rig(), clips: [clip], layers: try Self.layers(#"[{"animation": 1}]"#))
-        animated.perform(.setLocal(bone: 0, matrix: moved))
         animated.advance(delta: 0.1, values: EmptySceneValues())
-        XCTAssertEqual(animated.locals[0], moved, "applied over the frame it was set in")
+        animated.perform(.setLocal(bone: 0, matrix: moved))
+        XCTAssertEqual(animated.locals[0], moved, "on this frame's pose")
+        XCTAssertEqual(animated.pose.bones[0] * SIMD4(0, 0, 0, 1), SIMD4(0, 30, 0, 1), "and drawn this frame")
         animated.advance(delta: 0.1, values: EmptySceneValues())
         XCTAssertEqual(animated.locals[0].columns.3, SIMD4(5, 0, 0, 1), "the layers pose it again")
 

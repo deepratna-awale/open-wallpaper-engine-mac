@@ -437,10 +437,12 @@
         return layer;
     }
 
-    // `addEndedCallback`: once per time the renderer counted the clip's end (before `update`).
-    rt.addPhaseHandler('animations', function () {
+    // `addEndedCallback`: once per time the renderer counted the clip's end, for the layers of
+    // `owner` (every layer when undefined).
+    function runEndedCallbacks(owner) {
         for (let i = 0; i < animationLayers.length; i++) {
             const layer = animationLayers[i];
+            if (owner !== undefined && layer._owner !== owner) continue;
             if (layer._index() < 0) continue;
             const ended = layer._get(RL.layerEnded);
             if (ended <= layer._seenEnded) continue;
@@ -453,7 +455,38 @@
                 }
             }
         }
+    }
+
+    // A clip event's `event` argument: scenescript64.dll parses the name the host passes as JSON
+    // (callback 6's case, 0x18164eac2: `JSON.parse` in a TryCatch, 0x180014a00), which is how WE's
+    // editor stores a clip event's name in the `.mdl` (2321732083's is
+    // `{"$$hashKey":"object:752","frame":0,"name":"sword"}`). A name that isn't JSON gives
+    // undefined [I: the fallback handle the DLL takes, isolate+0x378, read as `undefined`].
+    function clipEvent(name) {
+        try {
+            return JSON.parse(name);
+        } catch (error) {
+            return undefined;
+        }
+    }
+
+    // A puppet's or model's layers this frame (SceneScriptEvent.rigAnimation): WE's object update
+    // sends each clip event the layers crossed to the object's scripts as `animationEvent`, then
+    // runs the layers' ended callbacks, before the cursor pass, the media events, the timelines'
+    // events and `update`.
+    rt.addEventHandler('rigAnimation', rt.EVENT_ORDER.cursor - 50, function (event) {
+        const owner = objects.bySlot.get(event.payload.slot);
+        if (owner === undefined || owner._dead) return;
+        const names = event.payload.events || [];
+        for (let i = 0; i < names.length; i++) {
+            const name = String(names[i]);
+            objects.sendAnimationEvent(owner, function () { return clipEvent(name); });
+        }
+        runEndedCallbacks(owner);
     });
+
+    // Ends counted without an event for their object (none is lost; each runs once).
+    rt.addPhaseHandler('animations', function () { runEndedCallbacks(undefined); });
 
     // createAnimationLayer / playSingleAnimation: a clip by name (or id), or a JSON config with
     // `animation`, and the config keys (`name`, `blendin`, `blendout`, `blendtime`, `autosort`,

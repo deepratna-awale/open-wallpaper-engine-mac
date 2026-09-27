@@ -268,6 +268,19 @@ final class SceneScriptSceneMirror: SceneScriptObjectHost {
         }
     }
 
+    /// The `rigAnimation` inbox events for this frame's puppets and models with clip events or
+    /// ended layers, in object order (WE's object loop, 0x1401891a0, walks the scene's objects in
+    /// order [I: the slots follow the scene's order]). Objects no script can reach are left out.
+    func rigAnimationEvents(_ rigs: [Int: SceneScriptRigFeedback]) -> [SceneScriptEvent] {
+        var events: [SceneScriptEvent] = []
+        for (id, feedback) in rigs where !feedback.events.isEmpty || !feedback.ended.isEmpty {
+            guard let slot = slotsByID[id] else { continue }
+            events.append(.rigAnimation(objectSlot: slot, events: feedback.events.map(\.name)))
+        }
+        events.sort { ($0.target ?? 0) < ($1.target ?? 0) }
+        return events
+    }
+
     /// The `animationEvent` inbox events for this frame's timeline events, each for the slot of
     /// its clock owner (docs/timeline-plan.md §3.3). Events of a site no script can reach are dropped.
     func animationEvents(_ events: [SceneAnimationEvent]) -> [SceneScriptEvent] {

@@ -242,6 +242,7 @@ final class SceneScriptWallpaper {
         if engine.input != scriptInput { engine.input = scriptInput }
         mirror.prepare(frameInput, cursor: usesCursor ? cursor : nil)
         // After the clocks advanced, before `__rt.frame` drains the inbox (§1.9 P1).
+        for event in mirror.rigAnimationEvents(frameInput.rigs) { runtime.inbox.post(event) }
         for event in mirror.animationEvents(frameInput.animationEvents) { runtime.inbox.post(event) }
         runtime.frame(deltaTime: frameInput.deltaTime)
         finish(runtime, frameStart: start)
