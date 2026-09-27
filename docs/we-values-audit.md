@@ -428,7 +428,7 @@ Ours followed a box: the authored size, grown to fit, with the edge named by the
 **9.7 Image layer material and light fields — no gap.** genericimage4's combos (LIGHTING 0, REFLECTION 0, FOG 1), textures and material values (roughness 0.7, metallic 0, … reflectivitydistance 4) reach the renderer from the shader's own annotations. Every light field EXTRAS.md lists (`light` lpoint/lspot/ltube/ldirectional, color, intensity, radius, exponent, innercone, outercone, lightsourcesize, castshadow, castvolumetrics, density, volumetricsexponent, usecookie/cookie, cascadedistance0/1/2) is decoded.
 
 **9.8 Particle registry — checked.** The strings in `wallpaper64.exe` list 3 emitters, 16 initializers, 26 operators, 4 renderers and 3 child events. The operator EXTRAS.md calls `vortex_v` is `vortex_v2`.
-- All initializers and operators build, except two that are expected to return nothing: `collisionbox`, whose VM entry does nothing in WE (0x140240279), and `collisionmodel`, which needs 3D models and is logged.
+- All initializers and operators build, except `collisionbox`, whose VM entry does nothing in WE (0x140240279). `collisionmodel` collides with its linked model since M10 (models-plan §2.12).
 - The renderers `sprite`, `spritetrail`, `rope` and `ropetrail` and the events `eventfollow`, `eventspawn` and `eventdeath` are handled.
 - The `layerimage` emitter (particles emitted from a layer's image; only WE's element preview uses it) is built (§11.2).
 - Test: `ParticleProgramTests.testEveryRegisteredInitializerAndOperatorBuilds`.
