@@ -75,6 +75,11 @@ class VideoWallpaperViewModel: ObservableObject {
         self.player = WallpaperAVPlayer.make(item: AVPlayerItem(url: currentWallpaper.mediaURL))
         self.audioPlayer = WallpaperAVPlayer.make(item: AVPlayerItem(url: currentWallpaper.mediaURL))
         self.player.isMuted = true
+        // The default `.pause` drops the rate to 0 at the end, and the rate cache then never sets
+        // it back, so the video stopped after one pass. With `.none` it keeps its rate across the
+        // seek back to the start.
+        self.player.actionAtItemEnd = .none
+        self.audioPlayer.actionAtItemEnd = .none
         self.audioPlayer.currentItem?.audioTimePitchAlgorithm = .timeDomain
         self.audioPlayer.isMuted = !playsAudio
         if let audioItem = self.audioPlayer.currentItem { ownAudioTap.attach(to: audioItem) }
@@ -227,6 +232,9 @@ class VideoWallpaperViewModel: ObservableObject {
         probe.reset()
         self.player.seek(to: CMTime.zero)
         self.audioPlayer.seek(to: CMTime.zero)
+        // Whatever the players' rates are now, reapply the wanted ones.
+        appliedVideoRate = nil
+        appliedAudioRate = nil
         updatePlaybackRates(audioLevel: WallpaperServices.shared.audioLevel)
     }
 

@@ -40,4 +40,23 @@ final class VideoWallpaperPlaybackTests: XCTestCase {
         XCTAssertFalse(stream.player.preventsDisplaySleepDuringVideoPlayback, "Metal path")
         stream.stop()
     }
+
+    /// V9: a short clip played past its end keeps playing from the start.
+    func testAVKitVideoLoopsPastItsEnd() throws {
+        let clip = try VideoClipFixture.make(frames: 10, in: directory) // 1/3 s
+        let wallpapers = WallpaperViewModel(persistsWallpapers: false)
+        wallpapers.audioOutputEnabled = false
+        let model = VideoWallpaperViewModel(wallpaper: wallpaper(clip), wallpaperViewModel: wallpapers)
+        defer { model.stop() }
+        XCTAssertEqual(model.player.actionAtItemEnd, .none)
+        var ended = 0
+        let observer = NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime,
+                                                              object: model.player.currentItem, queue: .main) { _ in ended += 1 }
+        defer { NotificationCenter.default.removeObserver(observer) }
+        let deadline = Date().addingTimeInterval(5)
+        while ended < 2, Date() < deadline { RunLoop.main.run(until: Date().addingTimeInterval(0.05)) }
+        XCTAssertGreaterThanOrEqual(ended, 2, "the clip reached its end a second time")
+        let rate: Float = model.player.rate
+        XCTAssertGreaterThan(rate, 0)
+    }
 }
