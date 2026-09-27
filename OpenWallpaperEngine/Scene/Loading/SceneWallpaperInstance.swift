@@ -42,6 +42,8 @@ final class SceneWallpaperInstance {
     private var pendingImpact: SceneChangeImpact = .none
     private var pendingUpdate: DispatchWorkItem?
     private var scriptsNotice: SafeRestartNotice?
+    /// `playbackDidStop` asked for an update that hasn't paused the displays yet.
+    private var stopReported = false
 
     /// `screenID` is the display that starts it; its scripts keep their per-display storage there.
     /// `properties` is the store of user properties it runs with (`WallpaperInstanceKey.properties`).
@@ -139,8 +141,14 @@ final class SceneWallpaperInstance {
     // MARK: - Updates
 
     /// Follows the app's controls: a rebuilt content, the placement, playback, the sound's gain, the
-    /// frame rate and pause. Displays call it when SwiftUI updates them. A display the playback
-    /// rules pause keeps its last frame and stops driving the frames (`DisplayPlaybackRouting`).
+    /// frame rate and pause. Displays call it when SwiftUI updates them.
+    ///
+    /// A paused wallpaper (the app's pause, or the playback rules pausing every display it shows
+    /// on) eases its clock to a stop, as WE eases a paused wallpaper's rate to 0 and stops drawing
+    /// only then (`SceneClock`); its displays draw until the renderer reports the stop. A display
+    /// the rules pause while others play the instance keeps its last frame at once and stops
+    /// driving the frames (`DisplayPlaybackRouting`): its frames are the instance's, which go on
+    /// at full speed for the others, so they can't slow down for it alone.
     func update() {
         guard let wallpapers = environment.wallpapers else { return }
         if metalRevision != viewModel.metalRevision {
@@ -153,14 +161,27 @@ final class SceneWallpaperInstance {
         updateVideoPlayback()
         renderer?.sounds.setTargetGain(soundGain)
         let fps = Int(environment.settings.settings.fps)
+        let plays = displays.mapValues { wallpapers.playback(onScreen: $0.screenID).rendersFrames }
+        let paused = wallpapers.playRate == 0 || !plays.values.contains(true)
+        renderer?.pausesPlayback = paused
+        let easing = paused && renderer?.hasStoppedPlayback == false
+        if !paused || !easing { stopReported = false }
         for (id, display) in displays {
             guard let view = display.view else { continue }
-            let frozen = !wallpapers.playback(onScreen: display.screenID).rendersFrames
+            let frozen = plays[id] == false && !easing
             displays[id]?.frozen = frozen
             view.preferredFramesPerSecond = fps
-            view.isPaused = wallpapers.playRate == 0 || frozen
+            view.isPaused = frozen || (paused && !easing)
             schedule.setFrameRate(frozen ? 0 : Self.frameRate(of: view), of: id)
         }
+    }
+
+    /// The renderer's clock eased to a stop (`SceneMetalRenderer.onPlaybackStopped`, from its
+    /// draw): the displays stop drawing once this draw is over.
+    private func playbackDidStop() {
+        guard !stopReported else { return }
+        stopReported = true
+        DispatchQueue.main.async { [weak self] in self?.update() }
     }
 
     private func loadContent() {
@@ -210,6 +231,10 @@ final class SceneWallpaperInstance {
     private func configureRenderer() {
         guard let renderer else { return }
         renderer.sounds.setTargetGain(soundGain)
+        renderer.onPlaybackStopped = { [weak self] in
+            // The renderer draws on the main thread.
+            MainActor.assumeIsolated { self?.playbackDidStop() }
+        }
         renderer.scripts.onHalt = { [weak self] error in
             // `take()` reports it from the renderer's draw, on the main thread.
             MainActor.assumeIsolated { self?.showScriptsHalted(error: error) }

@@ -6,9 +6,11 @@ import AVFoundation
 ///
 /// The wallpaper's gain is the app's volume, mute and pause (and whether this display is the one
 /// that plays the wallpaper's sound). Like WE's wallpaper volume (0x140114d7c, 0x1401816d0) it
-/// fades towards its target, `v += (target − v) × min(dt × 6, 1)` snapping within 0.01
-/// (0x140492860, 0x140492620), on its own timer, so it also fades while no frames are drawn; at 0
-/// the layers pause, above 0 they resume where they were.
+/// fades towards its target with WE's ease (`SceneClock.ease`: the gap shrinks by min(6·dt, 1) a
+/// frame, and closes once under 0.01), stepped by each drawn frame's wall step (`advanceFade`),
+/// as WE's main loop steps it. WE's loop keeps running while no wallpaper frame is drawn (it
+/// sleeps 250 ms a turn while paused, 0x140111486), so while no frame comes a timer steps it
+/// instead; at 0 the layers pause, above 0 they resume where they were.
 final class SceneSoundLayers {
     private struct Layer {
         var content: SceneSoundContent
@@ -16,9 +18,8 @@ final class SceneSoundLayers {
         var playback: SceneSoundPlayback
     }
 
-    /// WE's fade rate and snap distance.
-    static let fadeRate = 6.0
-    static let fadeSnap: Float = 0.01
+    /// How long without a drawn frame before the timer steps the fade.
+    static let frameGap: CFTimeInterval = 0.25
 
     private let label: String
     private let offline: AVAudioFormat?
@@ -30,6 +31,8 @@ final class SceneSoundLayers {
     private(set) var targetGain: Float = 0
     private var fadeTimer: Timer?
     private var lastFadeTime: CFTimeInterval = 0
+    /// When a drawn frame last stepped the fade (`advanceFade`).
+    private var lastFrameFade: CFTimeInterval = -.infinity
 
     /// `offline` renders through a manual-rendering engine (tests).
     init(label: String, offline: AVAudioFormat? = nil, random: @escaping () -> Double = { Double.random(in: 0..<1) }) {
@@ -143,18 +146,28 @@ final class SceneSoundLayers {
         let timer = Timer(timeInterval: 1.0 / 60.0, repeats: true) { [weak self] _ in
             guard let self else { return }
             let now = CACurrentMediaTime()
-            self.stepFade(now - self.lastFadeTime)
+            let seconds = now - self.lastFadeTime
             self.lastFadeTime = now
+            // Frames step the fade while they come.
+            guard now - self.lastFrameFade > Self.frameGap else { return }
+            self.stepFade(min(max(seconds, SceneClock.minimumFrameDelta), SceneClock.maximumFrameDelta))
         }
         fadeTimer = timer
         // Default-mode timers stall while menus track; the fade must finish regardless.
         RunLoop.main.add(timer, forMode: .common)
     }
 
-    /// One step of the fade (the timer's; tests call it directly).
+    /// A drawn frame's step of the fade: `frameSeconds` is its wall step, clamped as the scene
+    /// clock clamps it (`SceneClock.frame`).
+    func advanceFade(frameSeconds: Double) {
+        lastFrameFade = CACurrentMediaTime()
+        guard gain != targetGain else { return }
+        stepFade(frameSeconds)
+    }
+
+    /// One step of WE's fade, `seconds` long.
     func stepFade(_ seconds: Double) {
-        var next = gain + (targetGain - gain) * Float(min(max(seconds, 0) * Self.fadeRate, 1))
-        if abs(targetGain - next) < Self.fadeSnap { next = targetGain }
+        let next = SceneClock.ease(gain, toward: targetGain, seconds: max(seconds, 0))
         if next != gain {
             gain = next
             for id in order { layers[id]?.playback.setSceneGain(next) }

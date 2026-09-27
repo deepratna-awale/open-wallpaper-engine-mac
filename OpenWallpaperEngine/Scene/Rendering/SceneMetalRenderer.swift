@@ -137,8 +137,16 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var clock = SceneClock()
     /// The wall clock `clock` follows (tests step it).
     var wallTime: () -> CFTimeInterval = { CACurrentMediaTime() }
-    /// The playback rate `clock` runs at: the app's Animation Speed, WE's `rate` (tests set it).
-    var playbackRate: () -> Double = { Double(WallpaperServices.shared.userPropertyValue("_owe_speed", fallback: 1)) }
+    /// The playback rate `clock` runs at, when set (tests); otherwise the Animation Speed of this
+    /// instance's own property store (`ScenePlaybackSpeed`), WE's `rate`.
+    var playbackRate: (() -> Double)?
+    /// The wallpaper is paused (the app's pause, or every display it shows on): the clock eases to
+    /// a stop as WE's does (`SceneClock.paused`), and `onPlaybackStopped` fires on each frame drawn
+    /// once it stood still, so the displays can stop drawing.
+    var pausesPlayback = false
+    var onPlaybackStopped: (() -> Void)?
+    /// The paused clock has eased to a stop.
+    var hasStoppedPlayback: Bool { clock.hasStopped }
     /// Advances the audio spectrum by one frame at a playback rate: the app's capture (tests feed
     /// their own).
     var audioSpectrumFrame: (Double) -> AudioSpectrumSnapshot = {
@@ -179,8 +187,6 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     let scripts: SceneRendererScripts
     /// The scene's sound layers; the view sets their gain (`sounds.setTargetGain`).
     let sounds: SceneSoundLayers
-    /// When the sounds last advanced (real time: their timers follow the audio, not scene speed).
-    private var lastSoundTime: CFTimeInterval?
     /// Particle systems and sounds scripts created, by object id, kept across content rebuilds
     /// like `scriptLayers`.
     private var scriptParticles: [String: (systems: [ParticleSystemRuntime], motion: SceneObjectMotion)] = [:]
@@ -469,7 +475,6 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             scripts.stop()
             timelines.clear()
             sounds.stopAll()
-            lastSoundTime = nil
             scriptParticles.removeAll()
             scriptSounds.removeAll()
             scriptLayers.removeAll()
@@ -907,9 +912,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let multisampledScene = sceneMultisample(for: sceneTexture)
         // Draws sample the last frame's copy; this frame's is made after the scene pass.
         mipMappedTarget = mipMappedFrameBuffer?.target(matching: sceneTexture, commandBuffer: commandBuffer)
-        let rate = playbackRate()
+        clock.paused = pausesPlayback
+        let rate = playbackRate?() ?? ScenePlaybackSpeed.speed(ofStore: wallpaperKey)
         clock.advance(to: wallTime(), speed: rate)
         let sceneTime = clock.time
+        if clock.hasStopped { onPlaybackStopped?() }
         let time = Float(sceneTime)
         // What a script frame that overran the last draw's wait left (they run on their own thread, §4.5).
         let orderBefore = scripts.state.order
@@ -1445,24 +1452,22 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         return planarReflection.encode(pass, drawing: modelDrawing, depthStates: depthStates, commandBuffer: commandBuffer)
     }
 
-    /// WE's sound layers each frame: the volumes scripts set, then their timers, in real time. A
-    /// gap in drawing (a paused wallpaper) counts as at most `maxSoundStep`: its sounds were paused.
+    /// WE's sound layers each frame, on the scene clock: the wallpaper gain's fade takes the
+    /// frame's wall step, as WE's main loop fades the wallpaper volume (0x1401113f8…0x140111444);
+    /// then the volumes scripts set, and the layers' timers, which take the objects' update step
+    /// (0x1401891a0: the scene's step, rate and pause ease applied; the sound's update divides it
+    /// by a render-context value its constructor sets to 1, 0x1401f4f93, 0x14017c81e [I: nothing
+    /// else was seen to change it]).
     private func updateSounds() {
-        guard !sounds.isEmpty else {
-            lastSoundTime = nil
-            return
-        }
+        sounds.advanceFade(frameSeconds: clock.frame)
+        guard !sounds.isEmpty else { return }
         for id in sounds.ids {
             if let volume = scripts.object(String(id))?.scalar(.volume) ?? timelines.object(String(id))?.volume {
                 sounds.setVolume(volume, of: id)
             }
         }
-        let now = CACurrentMediaTime()
-        if let last = lastSoundTime { sounds.update(deltaTime: min(now - last, Self.maxSoundStep)) }
-        lastSoundTime = now
+        sounds.update(deltaTime: clock.delta)
     }
-
-    static let maxSoundStep: CFTimeInterval = 0.25
 
     /// Hands the scripts this frame: the clock, the display and cursor, and every object at this
     /// frame's time with the last drawn frame's transforms, text sizes and camera
