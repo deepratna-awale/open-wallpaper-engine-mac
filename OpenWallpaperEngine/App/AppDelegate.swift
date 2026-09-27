@@ -64,7 +64,12 @@ private struct WorkshopPreviewContent: View {
                                                fractionDigits: 0, sliderWidth: 110, fieldWidth: 36)
                         }
                         .glassBackground(in: Capsule(),
-                                         padding: EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)) { $0 }
+                                         padding: EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)) { controls in
+                            // Before glass: a frosted capsule keeps the controls legible over the video.
+                            controls
+                                .padding(EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12))
+                                .background(.regularMaterial, in: Capsule())
+                        }
                     }
 
                     Button("Set Wallpaper") {

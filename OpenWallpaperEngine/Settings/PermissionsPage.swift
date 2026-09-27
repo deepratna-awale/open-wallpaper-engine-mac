@@ -38,6 +38,7 @@ struct PermissionsPage: SettingsPage {
             }
         }
         .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
         .onAppear(perform: refresh)
     }
 

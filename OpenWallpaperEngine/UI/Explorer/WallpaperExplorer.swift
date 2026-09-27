@@ -93,6 +93,7 @@ struct WallpaperExplorer: SubviewOfContentView {
                     }
                 )
                 .frame(width: 480, height: 360)
+                .presentationBackground(.regularMaterial)
             }
         }
     }

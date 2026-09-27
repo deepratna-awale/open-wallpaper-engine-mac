@@ -82,6 +82,7 @@ struct PluginsPage: SettingsPage {
             }
         }
         .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
     }
 }
 

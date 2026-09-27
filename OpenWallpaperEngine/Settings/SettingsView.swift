@@ -99,6 +99,7 @@ struct SettingsView: View {
             .padding(20)
         }
         .frame(minWidth: 500)
+        .frostedWindowBackground()
     }
 }
 

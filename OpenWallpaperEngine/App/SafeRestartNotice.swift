@@ -23,7 +23,14 @@ final class SafeRestartNotice {
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        let hosting = NSHostingView(rootView: NoticeView(message: message, onRetry: onRetry, onDismiss: onDismiss))
+        let notice = NoticeView(message: message, onRetry: onRetry, onDismiss: onDismiss)
+        let hosting: NSView
+        if #available(macOS 26, *) {
+            hosting = NSHostingView(rootView: notice)
+        } else {
+            // Before glass: a frosted panel the desktop shows through.
+            hosting = NSHostingView(rootView: notice.frostedWindowBackground(.hudWindow))
+        }
         if #available(macOS 26, *) {
             // The panel itself is the glass: a clear window whose content is one glass view.
             let glass = NSGlassEffectView()
@@ -34,6 +41,8 @@ final class SafeRestartNotice {
             panel.contentView = glass
         } else {
             panel.contentView = hosting
+            panel.isOpaque = false
+            panel.backgroundColor = .clear
         }
         panel.setContentSize(hosting.fittingSize)
     }

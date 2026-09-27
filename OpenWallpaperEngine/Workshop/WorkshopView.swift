@@ -52,8 +52,7 @@ private struct SteamCmdNotInstalledView: View {
                     .padding(.vertical, 8)
                     .glassBackground(in: RoundedRectangle(cornerRadius: 8)) { snippet in
                         snippet
-                            .background(Color(nsColor: .controlBackgroundColor))
-                            .cornerRadius(6)
+                            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 6))
                     }
 
                 Button {

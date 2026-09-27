@@ -843,6 +843,7 @@ struct SceneInspectorView: View {
     var body: some View {
         inspectorSplitView
             .frame(minWidth: 1120, minHeight: 560)
+            .frostedWindowBackground()
             .onAppear {
                 selectedID = model.initiallySelectedID
                 loadSelectedTextures()

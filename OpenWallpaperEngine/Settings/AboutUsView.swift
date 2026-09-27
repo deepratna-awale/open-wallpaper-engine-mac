@@ -13,7 +13,7 @@ extension AppDelegate {
         window.styleMask = [.closable, .titled]
         window.isReleasedWhenClosed = false
         window.title = ""
-        window.contentView = NSHostingView(rootView: AboutUsView())
+        window.contentView = NSHostingView(rootView: AboutUsView().frostedWindowBackground())
         window.center()
         window.makeKeyAndOrderFront(nil)
     }

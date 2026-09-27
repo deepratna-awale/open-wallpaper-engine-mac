@@ -57,6 +57,7 @@ struct DiagnosticsPage: SettingsPage {
             }
         }
         .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
         .onAppear { shaderCounts = DiagnosticsPage.shaderCacheCounts() }
     }
 

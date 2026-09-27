@@ -224,6 +224,7 @@ struct GeneralPage: SettingsPage {
             }
         }
         .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
         .onAppear {
             DispatchQueue.global(qos: .utility).async {
                 let bytes = WallpaperPackageConverter.reclaimableBytes()

@@ -441,12 +441,10 @@ struct WallpaperPreview: SubviewOfContentView {
                         .padding(5)
                         .padding(.horizontal, 2)
                         .glassBackground(in: Capsule()) { pill in
+                            // Before glass: a frosted pill with the old outline.
                             pill.background {
-                                RoundedRectangle(cornerRadius: 25.0)
-                                    .colorInvert()
-                                    .foregroundStyle(Color.primary)
-                                RoundedRectangle(cornerRadius: 25.0)
-                                    .stroke(Color.secondary, lineWidth: 1.6)
+                                Capsule().fill(.regularMaterial)
+                                Capsule().stroke(Color.secondary, lineWidth: 1.6)
                             }
                         }
                         .overlay(alignment: .topTrailing) {

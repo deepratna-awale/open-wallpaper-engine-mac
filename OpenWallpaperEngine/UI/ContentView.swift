@@ -81,6 +81,8 @@ struct ContentView: View {
                 }
                 .toolbar { mainToolbar }
         }
+        // Frosted: the live wallpaper shows through the window, blurred, under the panes.
+        .frostedWindowBackground()
         .confirmationDialog("Unsubscribe Confirmation",
                             isPresented: $viewModel.isUnsubscribeConfirming) {
             if let url = viewModel.hoveredWallpaper?.wallpaperDirectory {
@@ -142,19 +144,23 @@ struct ContentView: View {
         .sheet(isPresented: $globalSettingsViewModel.isFirstLaunch) {
             FirstLaunchView()
                 .environmentObject(globalSettingsViewModel)
+                .presentationBackground(.regularMaterial)
         }
         .sheet(isPresented: $viewModel.isUnsafeWallpaperWarningPresented) {
             UnsafeWallpaper(wallpaper: wallpaperViewModel.nextCurrentWallpaper)
                 .frame(width: 600, height: 300)
+                .presentationBackground(.regularMaterial)
         }
         .sheet(isPresented: $isRemoteWallpaperSheetPresented) {
             RemoteWallpaperURLSheet(wallpaperViewModel: wallpaperViewModel)
                 .frame(width: 500, height: 180)
+                .presentationBackground(.regularMaterial)
         }
         .sheet(isPresented: $viewModel.isDisplaySettingsReveal) {
             DisplaySettings(viewModel: viewModel)
                 .padding()
                 .frame(width: 520, height: 450)
+                .presentationBackground(.regularMaterial)
         }
         .frame(minWidth: 1000, minHeight: 640, idealHeight: 800)
     }

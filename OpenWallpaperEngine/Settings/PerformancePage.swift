@@ -157,6 +157,7 @@ struct PerformancePage: SettingsPage {
             }
         }
         .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
     }
 
     /// A setting's title, followed by a warning triangle (with `help`) when `warning` is set.
