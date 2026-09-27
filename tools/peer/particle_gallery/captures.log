@@ -1,0 +1,117 @@
+
+== abstract_0 ok
+== bubbles_0 ok
+== bubbles_1 ok
+== clock_0 ok
+== clock_1 ok
+== countdown_0 ok
+== ember_0 ok
+== ember_1 ok
+== ember_2 ok
+== fire_0 ok
+== fire_1 ok
+== fireworks_0 ok
+== fireworks_1 ok
+== fireworks_2 ok
+== fog_0 ok
+== fog_1 ok
+== interactive_0 ok
+== interactive_1 ok
+== interactive_2 ok
+== interactive_3 ok
+== leaves_0 ok
+== leaves_1 ok
+== leaves_2 ok
+== leaves_3 ok
+== leaves_4 ok
+== lightning_0 ok
+== lightning_1 ok
+== lightning_2 ok
+== lightning_3 ok
+== lightning_4 ok
+== lightshafts_0 ok
+== lightshafts_1 ERRORS:
+2026-09-27T00:54:58Z, 1020: Failed opening: materials/effects/lightshafts.json
+2026-09-27T00:54:58Z, 1020: Material materials/effects/lightshafts.json error: * Line 1, Column 1
+  Syntax error: value, object or array expected.
+== lightshafts_2 ERRORS:
+2026-09-27T00:55:12Z, 1020: Failed opening: materials/effects/lightshafts.json
+2026-09-27T00:55:12Z, 1020: Material materials/effects/lightshafts.json error: * Line 1, Column 1
+  Syntax error: value, object or array expected.
+== lightshafts_3 ok
+== lightshafts_4 ok
+== lightshafts_5 ok
+== lightshafts_6 ok
+== magic_0 ok
+== magic_1 ok
+== magic_10 ok
+== magic_11 ok
+== magic_12 ok
+== magic_2 ok
+== magic_3 ok
+== magic_4 ok
+== magic_5 ok
+== magic_6 ok
+== magic_7 ok
+== magic_8 ok
+== magic_9 ok
+== rain_0 ok
+== rain_1 ok
+== rain_2 ok
+== rain_3 ok
+== rain_4 ok
+== rain_5 ok
+== smoke_0 ok
+== smoke_1 ok
+== smoke_2 ok
+== smoke_3 ok
+== smoke_4 ok
+== snow_0 ok
+== snow_1 ok
+== snow_2 ok
+== spark_0 ok
+== stars_0 ok
+== stars_1 ok
+== stars_2 ok
+== water_0 ok
+== water_1 ok
+== water_2 ok
+== water_3 ok
+== water_4 ok
+== water_5 ok
+done
+== bubbles_1 ok
+== countdown_0 ok
+== ember_2 ok
+== fire_1 ok
+== fireworks_1 ok
+== fog_0 ok
+== interactive_0 ok
+== interactive_2 ok
+== leaves_0 ok
+== leaves_2 ok
+== leaves_4 ok
+== lightning_1 ok
+== lightning_3 ok
+== lightshafts_1 ok
+== lightshafts_3 ok
+== lightshafts_5 ok
+== magic_11 ok
+== magic_2 ok
+== magic_5 ok
+== magic_7 ok
+== magic_9 ok
+== rain_1 ok
+== rain_3 ok
+== rain_5 ok
+== smoke_1 ok
+== smoke_3 ok
+== snow_1 ok
+== spark_0 ok
+== stars_1 ok
+== water_0 ok
+== water_2 ok
+== water_5 ok
+done
+== abstract_0 ok
+done

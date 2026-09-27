@@ -1,0 +1,46 @@
+{
+ "camera": {
+  "center": "0 0 -1",
+  "eye": "0 0 0",
+  "up": "0 1 0"
+ },
+ "general": {
+  "clearcolor": "0.15 0.15 0.15",
+  "ambientcolor": "0.3 0.3 0.3",
+  "skylightcolor": "0.3 0.3 0.3",
+  "orthogonalprojection": {
+   "width": 1920,
+   "height": 1080
+  },
+  "lightconfig": {
+   "point": 1
+  }
+ },
+ "objects": [
+  {
+   "id": 10,
+   "name": "checker",
+   "image": "models/checker.json",
+   "origin": "960 540 0",
+   "angles": "0 0 0",
+   "scale": "1 1 1",
+   "size": "1024 1024",
+   "visible": true
+  },
+  {
+   "id": 20,
+   "name": "point",
+   "light": "lpoint",
+   "origin": "700 700 200",
+   "angles": "0 0 0",
+   "color": "1 0.3 0.3",
+   "intensity": 5.0,
+   "radius": 600.0,
+   "exponent": 2.0,
+   "density": 2.0,
+   "volumetricsexponent": 1.0,
+   "castshadow": true,
+   "visible": true
+  }
+ ]
+}

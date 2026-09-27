@@ -1,0 +1,520 @@
+[
+ [
+  "ptcl_abstract_0",
+  "bg_black",
+  [
+   "DNA"
+  ]
+ ],
+ [
+  "ptcl_bubbles_0",
+  "bg_black",
+  [
+   "Cartoon bubbles"
+  ]
+ ],
+ [
+  "ptcl_bubbles_1",
+  "bg_black",
+  [
+   "Ocean bubbles"
+  ]
+ ],
+ [
+  "ptcl_clock_0",
+  "bg_black",
+  [
+   "Clock"
+  ]
+ ],
+ [
+  "ptcl_clock_1",
+  "bg_black",
+  [
+   "3D Clock"
+  ]
+ ],
+ [
+  "ptcl_countdown_0",
+  "bg_black",
+  [
+   "Countdown"
+  ]
+ ],
+ [
+  "ptcl_ember_0",
+  "bg_black",
+  [
+   "Ember beams"
+  ]
+ ],
+ [
+  "ptcl_ember_1",
+  "bg_black",
+  [
+   "Ember"
+  ]
+ ],
+ [
+  "ptcl_ember_2",
+  "bg_black",
+  [
+   "Ember small"
+  ]
+ ],
+ [
+  "ptcl_fire_0",
+  "bg_black",
+  [
+   "Torch"
+  ]
+ ],
+ [
+  "ptcl_fire_1",
+  "bg_black",
+  [
+   "Wildfire"
+  ]
+ ],
+ [
+  "ptcl_fireworks_0",
+  "bg_black",
+  [
+   "Fireworks 1"
+  ]
+ ],
+ [
+  "ptcl_fireworks_1",
+  "bg_black",
+  [
+   "Fireworks 2"
+  ]
+ ],
+ [
+  "ptcl_fireworks_2",
+  "bg_black",
+  [
+   "Fireworks 3"
+  ]
+ ],
+ [
+  "ptcl_fog_0",
+  "bg_grey",
+  [
+   "Fog 1"
+  ]
+ ],
+ [
+  "ptcl_fog_1",
+  "bg_grey",
+  [
+   "Fog 2"
+  ]
+ ],
+ [
+  "ptcl_interactive_0",
+  "bg_black",
+  [
+   "Trails 1"
+  ]
+ ],
+ [
+  "ptcl_interactive_1",
+  "bg_black",
+  [
+   "Trails 2"
+  ]
+ ],
+ [
+  "ptcl_interactive_2",
+  "bg_black",
+  [
+   "Drops"
+  ]
+ ],
+ [
+  "ptcl_interactive_3",
+  "bg_black",
+  [
+   "Fireflies"
+  ]
+ ],
+ [
+  "ptcl_leaves_0",
+  "bg_black",
+  [
+   "Leaves 1"
+  ]
+ ],
+ [
+  "ptcl_leaves_1",
+  "bg_black",
+  [
+   "Leaves 2"
+  ]
+ ],
+ [
+  "ptcl_leaves_2",
+  "bg_black",
+  [
+   "Leaves 3"
+  ]
+ ],
+ [
+  "ptcl_leaves_3",
+  "bg_black",
+  [
+   "Leaves 4"
+  ]
+ ],
+ [
+  "ptcl_leaves_4",
+  "bg_black",
+  [
+   "Sakura"
+  ]
+ ],
+ [
+  "ptcl_lightning_0",
+  "bg_black",
+  [
+   "Lightning cloud"
+  ]
+ ],
+ [
+  "ptcl_lightning_1",
+  "bg_black",
+  [
+   "Thunderbolt (Deprecated)"
+  ]
+ ],
+ [
+  "ptcl_lightning_2",
+  "bg_black",
+  [
+   "Discharge"
+  ]
+ ],
+ [
+  "ptcl_lightning_3",
+  "bg_black",
+  [
+   "Discharge arc"
+  ]
+ ],
+ [
+  "ptcl_lightning_4",
+  "bg_black",
+  [
+   "Thunderbolt"
+  ]
+ ],
+ [
+  "ptcl_lightshafts_0",
+  "bg_black",
+  [
+   "Light shafts - corner"
+  ]
+ ],
+ [
+  "ptcl_lightshafts_1",
+  "bg_black",
+  [
+   "Light shafts - radial"
+  ]
+ ],
+ [
+  "ptcl_lightshafts_2",
+  "bg_black",
+  [
+   "Light shafts - linear"
+  ]
+ ],
+ [
+  "ptcl_lightshafts_3",
+  "bg_black",
+  [
+   "Dust motes"
+  ]
+ ],
+ [
+  "ptcl_lightshafts_4",
+  "bg_black",
+  [
+   "Light shafts 0"
+  ]
+ ],
+ [
+  "ptcl_lightshafts_5",
+  "bg_black",
+  [
+   "Light shafts 1"
+  ]
+ ],
+ [
+  "ptcl_lightshafts_6",
+  "bg_black",
+  [
+   "Light shafts 2"
+  ]
+ ],
+ [
+  "ptcl_magic_0",
+  "bg_black",
+  [
+   "Magic charge"
+  ]
+ ],
+ [
+  "ptcl_magic_1",
+  "bg_black",
+  [
+   "Magic sparkle"
+  ]
+ ],
+ [
+  "ptcl_magic_2",
+  "bg_black",
+  [
+   "Magic gravitation"
+  ]
+ ],
+ [
+  "ptcl_magic_3",
+  "bg_black",
+  [
+   "Magic vortex 1"
+  ]
+ ],
+ [
+  "ptcl_magic_4",
+  "bg_black",
+  [
+   "Magic vortex 2"
+  ]
+ ],
+ [
+  "ptcl_magic_5",
+  "bg_black",
+  [
+   "Glyphs 1"
+  ]
+ ],
+ [
+  "ptcl_magic_6",
+  "bg_black",
+  [
+   "Glyphs 2"
+  ]
+ ],
+ [
+  "ptcl_magic_7",
+  "bg_black",
+  [
+   "Magic focus"
+  ]
+ ],
+ [
+  "ptcl_magic_8",
+  "bg_black",
+  [
+   "Magic trinity"
+  ]
+ ],
+ [
+  "ptcl_magic_9",
+  "bg_black",
+  [
+   "Magic pulse"
+  ]
+ ],
+ [
+  "ptcl_magic_10",
+  "bg_black",
+  [
+   "Power up"
+  ]
+ ],
+ [
+  "ptcl_magic_11",
+  "bg_black",
+  [
+   "Color sparkle"
+  ]
+ ],
+ [
+  "ptcl_magic_12",
+  "bg_black",
+  [
+   "Magic vortex orb"
+  ]
+ ],
+ [
+  "ptcl_rain_0",
+  "bg_black",
+  [
+   "Rain perspective"
+  ]
+ ],
+ [
+  "ptcl_rain_1",
+  "bg_black",
+  [
+   "Rain downpour"
+  ]
+ ],
+ [
+  "ptcl_rain_2",
+  "bg_pattern",
+  [
+   "Rain refractive"
+  ]
+ ],
+ [
+  "ptcl_rain_3",
+  "bg_black",
+  [
+   "Rain splashes"
+  ]
+ ],
+ [
+  "ptcl_rain_4",
+  "bg_black",
+  [
+   "Rain screen drops 1080p"
+  ]
+ ],
+ [
+  "ptcl_rain_5",
+  "bg_black",
+  [
+   "Rain screen drops 4k"
+  ]
+ ],
+ [
+  "ptcl_smoke_0",
+  "bg_grey",
+  [
+   "Vapor 1"
+  ]
+ ],
+ [
+  "ptcl_smoke_1",
+  "bg_grey",
+  [
+   "Vapor 2"
+  ]
+ ],
+ [
+  "ptcl_smoke_2",
+  "bg_grey",
+  [
+   "Smoke stream"
+  ]
+ ],
+ [
+  "ptcl_smoke_3",
+  "bg_grey",
+  [
+   "Smoke cloud"
+  ]
+ ],
+ [
+  "ptcl_smoke_4",
+  "bg_grey",
+  [
+   "Ash"
+  ]
+ ],
+ [
+  "ptcl_snow_0",
+  "bg_black",
+  [
+   "Snow perspective"
+  ]
+ ],
+ [
+  "ptcl_snow_1",
+  "bg_black",
+  [
+   "Snow flat"
+  ]
+ ],
+ [
+  "ptcl_snow_2",
+  "bg_black",
+  [
+   "Snow storm"
+  ]
+ ],
+ [
+  "ptcl_spark_0",
+  "bg_black",
+  [
+   "Spark"
+  ]
+ ],
+ [
+  "ptcl_stars_0",
+  "bg_black",
+  [
+   "Star field"
+  ]
+ ],
+ [
+  "ptcl_stars_1",
+  "bg_black",
+  [
+   "Star circle"
+  ]
+ ],
+ [
+  "ptcl_stars_2",
+  "bg_black",
+  [
+   "Shooting star"
+  ]
+ ],
+ [
+  "ptcl_water_0",
+  "bg_black",
+  [
+   "Dripping water"
+  ]
+ ],
+ [
+  "ptcl_water_1",
+  "bg_black",
+  [
+   "Dripping water single"
+  ]
+ ],
+ [
+  "ptcl_water_2",
+  "bg_black",
+  [
+   "Droplets"
+  ]
+ ],
+ [
+  "ptcl_water_3",
+  "bg_black",
+  [
+   "Faucet"
+  ]
+ ],
+ [
+  "ptcl_water_4",
+  "bg_black",
+  [
+   "Faucet large"
+  ]
+ ],
+ [
+  "ptcl_water_5",
+  "bg_black",
+  [
+   "Water impact"
+  ]
+ ]
+]

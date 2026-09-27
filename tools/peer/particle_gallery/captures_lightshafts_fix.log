@@ -1,0 +1,12 @@
+
+== lightshafts_0 ERRORS:
+2026-09-27T01:05:01Z, 1020: Failed opening: materials/effects/lightshafts.json
+2026-09-27T01:05:01Z, 1020: Material materials/effects/lightshafts.json error: * Line 1, Column 1
+  Syntax error: value, object or array expected.
+== lightshafts_1 ok
+== lightshafts_2 ok
+== lightshafts_3 ok
+== lightshafts_4 ok
+== lightshafts_5 ok
+== lightshafts_6 ok
+done

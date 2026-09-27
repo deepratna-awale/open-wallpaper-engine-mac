@@ -1,0 +1,10 @@
+
+== lt_control_nolight_lit1 ok
+== lt_lit0_cs0_cfgP1 ok
+== lt_lit0_cs1_cfgP1S1 ok
+== lt_lit1_cs0_cfgP1 ok
+== lt_lit1_cs0_nocfg ok
+== lt_lit1_cs1_cfgP1 ok
+== lt_lit1_cs1_cfgP1S1 ok
+== lt_lit1_cs1_nocfg ok
+done
