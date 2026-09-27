@@ -1147,9 +1147,11 @@ class SceneWallpaperViewModel: ObservableObject {
         } else {
             size = Self.shapeSize(sceneSize: sceneSize)
         }
+        // Its transform is any object's (the base class 0x1401e6980 reads `scale` as for an image).
+        let staticScale = object.scale?.parseVector3() ?? (1, 1, 1)
         var layer = SceneMetalLayer(id: String(object.id ?? -1), name: object.name ?? String(object.id ?? -1),
                        source: .image(transparentPlaceholderImage), position: position, size: size,
-                       scale: SIMD2<Float>(repeating: 1),
+                       scale: SIMD2<Float>(Float(staticScale.0), Float(staticScale.1)),
                        opacity: Float(object.alpha ?? 1),
                        brightness: 1, color: SIMD4<Float>(repeating: 1), text: nil, parallaxDepth: Self.parallaxDepth(of: object), perspective: object.perspective ?? false,
                        rotation: Float(object.angles?.parseVector3().2 ?? 0),
@@ -1157,6 +1159,8 @@ class SceneWallpaperViewModel: ObservableObject {
         layer.weEffects = plans
         layer.alignment = object.alignment
         layer.solidFill = SIMD4(1, 1, 1, 0)
+        // Its last pass adds to the scene (the shape class's blend state, 0x140260790).
+        layer.additive = true
         return layer
     }
 

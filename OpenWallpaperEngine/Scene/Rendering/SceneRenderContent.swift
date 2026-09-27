@@ -83,6 +83,10 @@ struct SceneMetalLayer {
     /// layer's `size`, rounded (`wallpaper64.exe` 0x140209206…0x14020923c), so its effects start
     /// from the fill at that size (`SceneMetalRenderer.solidEffectInput`).
     var solidFill: SIMD4<Float>? = nil
+    /// The layer's quad adds to the scene instead of blending over it. A `shape` object's blend
+    /// state is WE's `additive` (the shape class's +0x108, `wallpaper64.exe` 0x140260790, writes
+    /// blending 2, which `0x140157e0e` names `additive`), where an image's is its material's.
+    var additive = false
     /// Index of the object in scene.json: layers and particle systems draw in that order.
     var order = 0
     /// `alignment` (images) or the text block's aligned edge: where the quad sits against `position`.

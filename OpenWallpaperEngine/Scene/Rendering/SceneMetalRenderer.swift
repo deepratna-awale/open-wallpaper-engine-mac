@@ -1527,15 +1527,19 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             return
         }
         target.depth?.apply(layerRaster(entry), to: encoder)
-        if var placed = draw.placement?.native, let pipeline = target.pipelines.placedNormal {
+        let additive = entry.layer.additive
+        if var placed = draw.placement?.native,
+           let pipeline = additive ? target.pipelines.placedAdditive : target.pipelines.placedNormal {
             encoder.setRenderPipelineState(pipeline)
             encoder.setVertexBytes(&placed, length: MemoryLayout<LayerPlacement3D>.stride, index: 1)
+        } else if additive {
+            encoder.setRenderPipelineState(target.pipelines.additive)
         }
         encoder.setVertexBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
         encoder.setFragmentBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
         encoder.setFragmentTexture(effectOutput ?? textureFrame.texture, index: 0)
         encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
-        if draw.placement != nil { encoder.setRenderPipelineState(target.pipelines.normal) }
+        if draw.placement != nil || additive { encoder.setRenderPipelineState(target.pipelines.normal) }
     }
 
     /// This frame's `_rt_Reflection` (docs/models-plan.md §2.11): while a model is reflective, the
