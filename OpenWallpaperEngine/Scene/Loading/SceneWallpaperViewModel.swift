@@ -1517,9 +1517,11 @@ class SceneWallpaperViewModel: ObservableObject {
         guard let materialPath = particleSystem.material,
               let material: WEMaterial = loadJSON(path: materialPath, wallpaperDir: wallpaperDir),
               let textureName = material.passes?.first?.textures?.first else { return nil }
-        let source = loadMetalTexture(named: textureName, materialDir: materialPath, wallpaperDir: wallpaperDir)
-            ?? generateProceduralTexture(named: textureName).map(SceneMetalTextureSource.image)
-        guard let source else { return nil }
+        guard let source = loadMetalTexture(named: textureName, materialDir: materialPath, wallpaperDir: wallpaperDir) else {
+            OWELog.error(.scene, "\(wallpaperDir.lastPathComponent): particle \(particlePath) (object \(object.id ?? -1)): "
+                         + "texture \(textureName) of \(materialPath) not found")
+            return nil
+        }
         let spriteSheet = loadSpriteSheet(named: textureName, materialDir: materialPath,
                           wallpaperDir: wallpaperDir, source: source)
 
@@ -1698,51 +1700,4 @@ class SceneWallpaperViewModel: ObservableObject {
         Self.log("  No texture found for '\(name)'")
         return nil
     }
-
-    /// Generate simple procedural textures for built-in particle names
-    private func generateProceduralTexture(named name: String) -> NSImage? {
-        let size: CGFloat = 32
-
-        switch name {
-        case "particle/drop":
-            // Elongated raindrop: bright center, soft edges
-            return generateRadialGradient(size: CGSize(width: 4, height: 16), color: .white)
-
-        case _ where name.contains("halo"):
-            // Soft circular glow
-            return generateRadialGradient(size: CGSize(width: size, height: size), color: .white)
-
-        default:
-            // Generic soft circle
-            return generateRadialGradient(size: CGSize(width: size, height: size), color: .white)
-        }
-    }
-
-    private func generateRadialGradient(size: CGSize, color: NSColor) -> NSImage {
-        let image = NSImage(size: size)
-        image.lockFocus()
-
-        let ctx = NSGraphicsContext.current!.cgContext
-        let colorSpace = CGColorSpaceCreateDeviceRGB()
-        // Convert to RGB color space to guarantee 4 components (r, g, b, a)
-        let rgbColor = color.usingColorSpace(.deviceRGB) ?? color
-        let r = rgbColor.redComponent
-        let g = rgbColor.greenComponent
-        let b = rgbColor.blueComponent
-        let a = rgbColor.alphaComponent
-        let colors = [
-            CGColor(colorSpace: colorSpace, components: [r, g, b, a])!,
-            CGColor(colorSpace: colorSpace, components: [r, g, b, 0])!
-        ] as CFArray
-        let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: [0, 1])!
-
-        let center = CGPoint(x: size.width / 2, y: size.height / 2)
-        let radius = min(size.width, size.height) / 2
-        ctx.drawRadialGradient(gradient, startCenter: center, startRadius: 0,
-                               endCenter: center, endRadius: radius, options: [])
-
-        image.unlockFocus()
-        return image
-    }
-
 }

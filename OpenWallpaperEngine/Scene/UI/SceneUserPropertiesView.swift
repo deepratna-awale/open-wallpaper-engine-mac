@@ -134,7 +134,6 @@ private final class SceneUserPropertiesModel: ObservableObject {
             let visibilityProperties = isScene
                 ? undeclaredVisibilityToggles(for: wallpaper, excluding: Set(properties.map(\.id)))
                 : []
-            authoredPropertyIDs.formUnion(visibilityProperties.filter { $0.id == "hyperdrive" }.map(\.id))
             properties.append(contentsOf: [
                 SceneUserProperty(id: "_owe_hue", title: String(localized: "Hue", comment: "Wallpaper setting added by the app"), type: "slider", order: Int.max - 5, defaultValue: "0", options: [], minimum: -Double.pi, maximum: Double.pi),
                 SceneUserProperty(id: "_owe_saturation", title: String(localized: "Saturation", comment: "Wallpaper setting added by the app"), type: "slider", order: Int.max - 4, defaultValue: "1", options: [], minimum: 0, maximum: 2),

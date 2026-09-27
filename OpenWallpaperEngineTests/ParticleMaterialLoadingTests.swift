@@ -23,4 +23,13 @@ final class ParticleMaterialLoadingTests: XCTestCase {
         XCTAssertEqual(system.opacityMultiplier, 1)
         XCTAssertFalse(system.refractive)
     }
+
+    /// A particle texture that loads from nowhere isn't replaced by one generated from its name
+    /// (a soft dot for `*halo*`, a streak for `particle/drop`; roadmap 8.9): the system is logged
+    /// and not built, as a missing effect texture is. Systems whose texture loads are built as usual.
+    func testAMissingParticleTextureIsNotGeneratedFromItsName() throws {
+        let systems = try content("particle-missing-texture").particleSystems
+        XCTAssertEqual(systems.count, 1, "only the system whose texture exists")
+        XCTAssertEqual(systems.first?.objectID, "11")
+    }
 }
