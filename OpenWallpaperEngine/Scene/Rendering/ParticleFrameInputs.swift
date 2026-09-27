@@ -170,8 +170,9 @@ struct ParticleFrameInputs {
         inputs.emitters = emitters.map { emitter in
             var step = ParticleEmitterStep()
             // The emitter parser binds `rate` and `maxtoemitperperiod` to the `count` override
-            // (0x1401c6e6c…0x1401c6ef6, gated by the system's flag 0x20), besides the `rate` override.
-            step.rate = emitter.rate * overrides.rate * overrides.count
+            // (0x1401c6e6c…0x1401c6ef6, gated by the system's flag 0x20). The `rate` override
+            // binds only the turbulence operators' `timescale` (`encodeProgram`).
+            step.rate = emitter.rate * overrides.count
             step.instantaneous = max(emitter.instantaneous, 0)
             step.periodLimit = emitter.timing.periodLimit(countScale: overrides.count)
             step.onePerFrame = emitter.timing.onePerFrame
@@ -218,11 +219,11 @@ struct ParticleFrameInputs {
         inputs.drawLinear = system.drawLinear
         inputs.drawSizeScale = system.drawSizeScale
         inputs.spriteLinear = system.spriteLinear
-        inputs.ropeRateScale = overrides.rate * overrides.count
+        inputs.ropeRateScale = overrides.count
         inputs.ropeLifetimeScale = inputs.spawnScale.z
         system.ropeFrame = SIMD3(inputs.ropeRateScale, inputs.ropeLifetimeScale, Float(frameRateLimit))
         inputs.placeControlPoints(system, world: world, cursor: cursor, overrides: overrides)
-        inputs.encodeProgram(system, audio: audio, countScale: overrides.count)
+        inputs.encodeProgram(system, audio: audio, countScale: overrides.count, rateScale: overrides.rate)
         return inputs
     }
 
@@ -346,10 +347,11 @@ struct ParticleFrameInputs {
         }
     }
 
-    /// This step's records: each with its audio response and, for the `mapsequence…`
+    /// This step's records: each with its audio response, the turbulence operators' `timescale`
+    /// times the `rate` override (the parser's only binding to it, 0x1401c8bc5, 0x1401cd7ba) and, for the `mapsequence…`
     /// initializers, the `count` override applied to their step.
     private mutating func encodeProgram(_ system: ParticleSystemRuntime, audio: AudioSpectrumSnapshot,
-                                        countScale: Float) {
+                                        countScale: Float, rateScale: Float = 1) {
         let program = system.configuration.program
         var collision: UInt32 = 0
         operators = program.operators.map { element in
@@ -360,11 +362,13 @@ struct ParticleFrameInputs {
                 record.header.z = collision | (UInt32(count) << 16)
                 collision += UInt32(count)
             }
+            if element.kind == .turbulence { record.b.w *= rateScale }
             return record
         }
         initializers = program.initializers.map { element in
             var record = element.record
             if let response = element.audio { record.e.w = response.response(audio) }
+            if element.kind == .turbulentVelocityRandom { record.b.x *= rateScale }
             if let count = element.sequenceCount {
                 let scaled = (record.header.y & ParticleProgramCPU.sequenceFollowsCountFlag(element.kind)) != 0
                     ? count * countScale : count

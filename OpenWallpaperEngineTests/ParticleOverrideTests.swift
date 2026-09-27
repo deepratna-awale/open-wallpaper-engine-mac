@@ -36,14 +36,14 @@ final class ParticleOverrideTests: XCTestCase {
         configuration.liveOverrides = try boundOverride()
         let runtime = ParticleSystemRuntime(texture: texture, configuration: configuration)
         let defaults = ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero, values: Properties())
-        // `rate` and `count` both scale the emitter's rate (0x1401c6e6c binds it to the count).
-        XCTAssertEqual(defaults.emissionRate, 25, accuracy: 1e-4)
+        // `count` scales the emitter's rate (0x1401c6e6c binds it to the count); `rate` doesn't.
+        XCTAssertEqual(defaults.emissionRate, 50, accuracy: 1e-4)
         XCTAssertEqual(defaults.maximum, 500)
         XCTAssertEqual(defaults.spawnScale, SIMD4(2, 0.5, 3, 2))
         XCTAssertEqual(defaults.colorScale, SIMD3(2, 1, 0.5))
         let changed = ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero, values: Properties(values: [
             "amount": "0.25", "flakesize": "4", "tint": "0 1 0"]))
-        XCTAssertEqual(changed.emissionRate, 6.25, accuracy: 1e-4)
+        XCTAssertEqual(changed.emissionRate, 25, accuracy: 1e-4)
         XCTAssertEqual(changed.maximum, 250)
         XCTAssertEqual(changed.spawnScale.x, 4)
         XCTAssertEqual(changed.colorScale, SIMD3(0, 2, 0))
@@ -72,6 +72,24 @@ final class ParticleOverrideTests: XCTestCase {
         let inputs = ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero, values: Properties())
         XCTAssertEqual(inputs.colorScale, configuration.overrides.tint * configuration.overrides.brightness)
         XCTAssertNotEqual(inputs.colorScale, SIMD3(repeating: 1))
+    }
+
+    /// WE's particle parser binds the `rate` override to the turbulence operators' `timescale`
+    /// only (0x1401c8bc5 `turbulentvelocityrandom`, 0x1401cd7ba `turbulence`); the emitters' rate
+    /// is bound to `count` (0x1401c6e6c). WE's element previews with `rate` 2.33
+    /// (maintaindistancetocontrolpoint, reducemovementnearcontrolpoint) emit at their authored rate.
+    func testTheRateOverrideScalesTurbulenceNotEmission() throws {
+        var system = ParticleTestSystem()
+        system.emissionRate = 100
+        system.operators = [ParticleOperator(.turbulence, b: SIMD4(0.01, 500, 1000, 20))]
+        system.initializers = [ParticleInitializer(.turbulentVelocityRandom, a: SIMD4(100, 250, 0, 0.1), b: SIMD4(1, 1, 0, 0))]
+        var configuration = system.configuration
+        configuration.overrides.rate = 2.5
+        let runtime = ParticleSystemRuntime(texture: texture, configuration: configuration)
+        let inputs = ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero, values: Properties())
+        XCTAssertEqual(inputs.emissionRate, 100)
+        XCTAssertEqual(try XCTUnwrap(inputs.operators.last).b.w, 50)
+        XCTAssertEqual(try XCTUnwrap(inputs.initializers.last).b.x, 2.5)
     }
 
     func testOverriddenSpawnsMatchOnTheGPU() throws {

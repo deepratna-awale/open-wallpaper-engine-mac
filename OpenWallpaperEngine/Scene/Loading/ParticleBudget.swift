@@ -31,8 +31,8 @@ enum ParticleBudget {
         return Int(min(perInstance * instances, Double(Int.max / 2)))
     }
 
-    /// The most particles `system`'s emitters keep alive: each emitter's rate (times the `rate` and
-    /// `count` overrides; audio only ever lowers it) over the longest lifetime its `lifetimerandom` gives
+    /// The most particles `system`'s emitters keep alive: each emitter's rate (times the `count`
+    /// override, which WE binds it to; audio only ever lowers it) over the longest lifetime its `lifetimerandom` gives
     /// (WE's default 1 s without one, times the `lifetime` override), one more for the carried
     /// fraction, plus its `instantaneous` burst. Nil when a remap writes the lifetime, which this
     /// can't bound; then only `maxcount` counts.
@@ -47,7 +47,7 @@ enum ParticleBudget {
         // The last `lifetimerandom` is the one a particle keeps (they run in order).
         let authored = program.initializers.last { $0.kind == .lifetimeRandom }.map { max($0.record.a.x, $0.record.a.y) } ?? 1
         let lifetime = Double(max(authored, 0.001)) * Double(max(overrides.lifetime, 0))
-        let rate = Double(max(overrides.rate, 0)) * Double(max(overrides.count, 0))
+        let rate = Double(max(overrides.count, 0))
         return system.emitters.reduce(0) { total, emitter in
             total + (Double(emitter.rate) * rate * lifetime).rounded(.up) + 1 + Double(max(emitter.instantaneous, 0))
         }

@@ -91,11 +91,11 @@ final class ParticleBudgetTests: XCTestCase {
         rain.overrides.lifetime = 0.5
         rain.overrides.rate = 2
         rain.instantaneous = 50
-        XCTAssertEqual(ParticleBudget.capacity(of: rain), 4_051, "4 000 a second (the count scales the rate too) for up to 1 s, plus 1 and the burst")
+        XCTAssertEqual(ParticleBudget.capacity(of: rain), 2_051, "2 000 a second (the count scales the rate; the rate override doesn't) for up to 1 s, plus 1 and the burst")
         rain.extraEmitters = [ParticleEmitter(rate: 100)]
-        XCTAssertEqual(ParticleBudget.capacity(of: rain), 5_052)
+        XCTAssertEqual(ParticleBudget.capacity(of: rain), 2_552)
         var systems = [rain, system(maximum: 5_000)]
-        XCTAssertNil(ParticleBudget.apply(11_000, to: &systems), "10 052 fit, whatever the maxcounts say")
+        XCTAssertNil(ParticleBudget.apply(10_000, to: &systems), "7 552 fit, whatever the maxcounts say")
         // A remap that writes the lifetime can't be bounded: the maximum counts.
         var remapped = system(maximum: 3_000, rate: 10)
         var remap = ParticleInitializer(.remapInitialValue)
