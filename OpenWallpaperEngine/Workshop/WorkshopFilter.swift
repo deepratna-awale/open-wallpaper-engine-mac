@@ -195,6 +195,19 @@ struct WorkshopQuery: Equatable {
         }
     }
 
+    /// Whether `item` passes the whole query, the part Steam would check included: for results
+    /// that didn't come from QueryFiles (an author's items).
+    func matchesAllTags(_ item: WorkshopItem, isFavorite: (WorkshopItem) -> Bool) -> Bool {
+        func has(_ tag: String) -> Bool {
+            item.tags.contains { $0.caseInsensitiveCompare(tag) == .orderedSame }
+        }
+        guard !excludedTags.contains(where: has) else { return false }
+        if !requiredTags.isEmpty {
+            guard matchAllTags ? requiredTags.allSatisfy(has) : requiredTags.contains(where: has) else { return false }
+        }
+        return matches(item, isFavorite: isFavorite)
+    }
+
     /// Whether `item` passes the options that are checked on the results.
     func matches(_ item: WorkshopItem, isFavorite: (WorkshopItem) -> Bool) -> Bool {
         func has(_ tag: String) -> Bool {

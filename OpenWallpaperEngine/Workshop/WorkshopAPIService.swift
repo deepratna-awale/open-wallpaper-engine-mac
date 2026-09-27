@@ -45,9 +45,18 @@ final class WorkshopMetadataStore {
     }
 
     func save(_ item: WorkshopItem) {
+        save([item])
+    }
+
+    /// Saves a response's items with one write. The store holds thousands of items, so encoding
+    /// it once per item made every QueryFiles page take seconds.
+    func save(_ items: [WorkshopItem]) {
+        guard !items.isEmpty else { return }
         lock.lock()
         defer { lock.unlock() }
-        metadata[item.id] = item
+        for item in items {
+            metadata[item.id] = item
+        }
         if let data = try? JSONEncoder().encode(metadata) {
             UserDefaults.app.set(data, forKey: storageKey)
         }
@@ -174,7 +183,7 @@ class WorkshopAPIService {
 
         let data = try await sendKeyed(url, key: key)
         let items = try Self.parseItems(from: data)
-        items.forEach { WorkshopMetadataStore.shared.save($0) }
+        WorkshopMetadataStore.shared.save(items)
         return items
     }
 
@@ -230,7 +239,7 @@ class WorkshopAPIService {
         guard httpResponse.statusCode == 200 else { throw WorkshopAPIError.requestFailed }
 
         let items = try Self.parseItems(from: data)
-        items.forEach { WorkshopMetadataStore.shared.save($0) }
+        WorkshopMetadataStore.shared.save(items)
         return items
     }
 

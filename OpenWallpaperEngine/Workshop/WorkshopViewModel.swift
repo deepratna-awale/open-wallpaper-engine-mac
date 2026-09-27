@@ -20,6 +20,11 @@ class WorkshopViewModel: ObservableObject {
 
     let steamCmd: SteamCmdService
     private let api = WorkshopAPIService()
+    /// One QueryFiles page: search text, filter, sort, page, page size.
+    typealias PageSearch = (String, WorkshopQuery, WorkshopSortOrder, Int, Int) async throws -> [WorkshopItem]
+    private let searchPage: PageSearch
+    /// Bumped by every search, so a search that a newer one overtook doesn't show its results.
+    private var searchGeneration = 0
     private var cancellable: AnyCancellable?
     private var downloadedIndexCancellable: AnyCancellable?
     private var favoritesCancellable: AnyCancellable?
@@ -34,8 +39,12 @@ class WorkshopViewModel: ObservableObject {
     /// (Show Only options Steam can't express): 2,000 items.
     static let maxSourcePages = 40
 
-    init(steamCmd: SteamCmdService) {
+    init(steamCmd: SteamCmdService, searchPage: PageSearch? = nil) {
         self.steamCmd = steamCmd
+        let service = WorkshopAPIService()
+        self.searchPage = searchPage ?? { text, query, sortOrder, page, perPage in
+            try await service.searchItems(query: text, filter: query, sortOrder: sortOrder, page: page, perPage: perPage)
+        }
         // Forward steamCmd changes (e.g. downloadProgress) to trigger view updates
         self.cancellable = steamCmd.objectWillChange.sink { [weak self] _ in
             self?.objectWillChange.send()
@@ -55,15 +64,25 @@ class WorkshopViewModel: ObservableObject {
         }
     }
 
+    /// Shows the current page for the current search text, sort and filter. Searches overlap
+    /// (every filter click starts one); only the newest one shows its results or its error, and
+    /// pages are cached only under the search they were read for.
     @MainActor
     func search() async {
+        searchGeneration += 1
+        let generation = searchGeneration
         isLoading = true
         errorMessage = nil
         if let authorId {
+            let query = WorkshopQuery(filter)
             do {
-                items = try await api.getAuthorWorkshopItems(steamId: authorId)
+                let results = try await api.getAuthorWorkshopItems(steamId: authorId)
+                guard generation == searchGeneration else { return }
+                // The author's items come unfiltered; the whole filter is checked here.
+                items = results.filter { query.matchesAllTags($0, isFavorite: isFavorite) }
                 preloadThumbnails(items)
             } catch {
+                guard generation == searchGeneration else { return }
                 errorMessage = error.localizedDescription
             }
             isLoading = false
@@ -77,15 +96,19 @@ class WorkshopViewModel: ObservableObject {
             cachedSearchKey = searchKey
         }
 
+        let page = currentPage
         do {
-            let results = try await pageItems(for: currentPage)
+            let results = try await pageItems(for: page, searchKey: searchKey)
+            guard generation == searchGeneration else { return }
             items = results
             preloadThumbnails(results)
-            await preloadAdjacentPages(for: currentPage, searchKey: searchKey)
+            await preloadAdjacentPages(for: page, searchKey: searchKey)
         } catch {
+            guard generation == searchGeneration else { return }
             errorMessage = error.localizedDescription
         }
 
+        guard generation == searchGeneration else { return }
         isLoading = false
     }
 
@@ -185,6 +208,8 @@ class WorkshopViewModel: ObservableObject {
         guard updated != filter else { return }
         filter = updated
         currentPage = 1
+        // The shown results no longer match: show the search in progress instead of them.
+        items = []
         Task { @MainActor in await search() }
     }
 
@@ -239,13 +264,15 @@ class WorkshopViewModel: ObservableObject {
     }
 
     @MainActor
-    private func pageItems(for page: Int) async throws -> [WorkshopItem] {
+    private func pageItems(for page: Int, searchKey: String) async throws -> [WorkshopItem] {
         if let cachedItems = cachedPages[page] {
             return cachedItems
         }
 
-        let results = try await displayedPageItems(for: page)
-        cachedPages[page] = results
+        let results = try await displayedPageItems(for: page, searchKey: searchKey)
+        if cachedSearchKey == searchKey {
+            cachedPages[page] = results
+        }
         return results
     }
 
@@ -253,15 +280,19 @@ class WorkshopViewModel: ObservableObject {
     /// client-side Show Only check is counted, so a displayed page starts where the previous one
     /// ended whatever was filtered out.
     @MainActor
-    private func displayedPageItems(for displayedPage: Int) async throws -> [WorkshopItem] {
+    private func displayedPageItems(for displayedPage: Int, searchKey: String) async throws -> [WorkshopItem] {
         let sourcePageSize = 50
         let query = WorkshopQuery(filter)
+        let text = searchText
+        let sortOrder = sortOrder
+        let itemsPerPage = itemsPerPage
         var sourcePage = 1
         var skippedItems = (displayedPage - 1) * itemsPerPage
         var visibleItems: [WorkshopItem] = []
 
         while visibleItems.count < itemsPerPage, sourcePage <= Self.maxSourcePages {
-            let sourceItems = try await sourceItems(page: sourcePage, pageSize: sourcePageSize, query: query)
+            let sourceItems = try await sourceItems(page: sourcePage, pageSize: sourcePageSize, text: text,
+                                                    sortOrder: sortOrder, query: query, searchKey: searchKey)
             guard !sourceItems.isEmpty else { break }
 
             for item in sourceItems where query.matches(item, isFavorite: isFavorite) {
@@ -283,11 +314,13 @@ class WorkshopViewModel: ObservableObject {
     }
 
     @MainActor
-    private func sourceItems(page: Int, pageSize: Int, query: WorkshopQuery) async throws -> [WorkshopItem] {
-        if let cached = cachedSourcePages[page] { return cached }
-        let items = try await api.searchItems(query: searchText, filter: query, sortOrder: sortOrder,
-                                              page: page, perPage: pageSize)
-        cachedSourcePages[page] = items
+    private func sourceItems(page: Int, pageSize: Int, text: String, sortOrder: WorkshopSortOrder,
+                             query: WorkshopQuery, searchKey: String) async throws -> [WorkshopItem] {
+        if cachedSearchKey == searchKey, let cached = cachedSourcePages[page] { return cached }
+        let items = try await searchPage(text, query, sortOrder, page, pageSize)
+        if cachedSearchKey == searchKey {
+            cachedSourcePages[page] = items
+        }
         return items
     }
 
@@ -296,11 +329,12 @@ class WorkshopViewModel: ObservableObject {
         let adjacentPages = [page - 1, page + 1].filter { $0 > 0 }
         for adjacentPage in adjacentPages {
             do {
-                let adjacentItems = try await pageItems(for: adjacentPage)
+                let adjacentItems = try await pageItems(for: adjacentPage, searchKey: searchKey)
                 guard cachedSearchKey == searchKey, currentPage == page else { return }
                 preloadThumbnails(adjacentItems)
                 if adjacentPage == page + 1 {
-                    hasNextPage = adjacentItems.count == itemsPerPage
+                    // A short last page is still a page.
+                    hasNextPage = !adjacentItems.isEmpty
                 }
             } catch {
                 guard cachedSearchKey == searchKey, currentPage == page else { return }
