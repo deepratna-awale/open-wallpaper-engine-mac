@@ -14,7 +14,7 @@ import Foundation
 struct WESceneCameraLayer: Equatable {
     /// `queuemode` (0x1401f347a…): how the layer moves from one path of its file to the next.
     enum QueueMode: Equatable {
-        /// "random" (0): a shuffle bag [I].
+        /// "random" (0): a bag of the visible paths (`SceneCameraLayers`).
         case random
         /// "sequential" (1): the next enabled path, wrapping.
         case sequential

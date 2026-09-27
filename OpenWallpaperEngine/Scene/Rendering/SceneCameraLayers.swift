@@ -6,8 +6,11 @@ import simd
 /// **Playback** (the layer's update, `wallpaper64.exe` 0x1401f2ad0, only while it is visible):
 /// 1. A path finished since the last frame (a "single" clock) is rewound and a new one picked; so
 ///    is one when none plays yet. `queuemode` "sequential" takes the next visible path, wrapping;
-///    "random" draws from a shuffle bag of the visible paths, refilled when empty, never the path
-///    it drew last unless that is the only one left.
+///    "random" draws from a bag of the visible paths at a uniform index, steps past entries equal
+///    to the path it drew last, and removes what it drew; an empty bag is refilled with each
+///    visible path once. The first bag is the one the path file's load leaves, which holds most
+///    paths twice (`loadedBag`). The generator is seeded per load, so the order differs every
+///    time, as in WE (docs/test-risks.md MG1).
 /// 2. The path's clock advances (the timeline clock, `SceneTimelineClock`) and its channels are
 ///    sampled between whole frames. A component without keyframes follows the layer's world
 ///    matrix: eye = its translation, centre = eye − 5·normalize(row 2), up = normalize(row 1).
@@ -49,11 +52,14 @@ final class SceneCameraLayers {
         var fovChannel: SceneTimelineAnimation?
         /// `visible`, resolved at load: a hidden path isn't queued.
         let visible: Bool
+        /// Whether the file gives the path a `visible` key, whose load runs WE's visibility hook.
+        let authorsVisible: Bool
         /// The path's fov (+0x33c): 50 until its channel sets it.
         var fov = Float(SceneCameraDefaults.fov)
 
         init(_ path: WECameraLayerPath, values: SceneValueContext, layer: String) {
             visible = Self.flag(path.visible, in: values) ?? true
+            authorsVisible = path.visible != nil
             clock = SceneTimelineClock(options: path.options)
             func animation(_ document: SceneTimelineDocument?, _ name: String) -> SceneTimelineAnimation? {
                 guard let document else { return nil }
@@ -103,8 +109,31 @@ final class SceneCameraLayers {
             self.paths = paths
             queue = paths.indices.filter { paths[$0].visible && paths[$0].clock != nil }
             sequential = object.authored.queueMode == .sequential
-            bag = queue
+            bag = Self.loadedBag(paths)
             random = SceneCameraLayers.SplitMix(state: seed)
+        }
+
+        /// The bag as WE's path-file load leaves it (0x1401f2030). Loading a path's `visible` key
+        /// calls the visibility hook (0x1401f1ca0, the property's change callback, called
+        /// unconditionally by the bool loader 0x1401e1a90), which queues every path already loaded
+        /// (not the one loading) that is visible and not yet queued; after the loop the load queues
+        /// every visible path again (0x1401f2919: the set insert dedups, the bag push doesn't). A
+        /// file of paths that all author `visible` so starts with each path twice but the last
+        /// once. A path whose options give no clock is dropped after its `visible` loaded.
+        static func loadedBag(_ paths: [Path]) -> [Int] {
+            var queued = Set<Int>()
+            var bag: [Int] = []
+            var loaded: [Int] = []
+            for index in paths.indices {
+                if paths[index].authorsVisible {
+                    for earlier in loaded where paths[earlier].visible && !queued.contains(earlier) {
+                        queued.insert(earlier)
+                        bag.append(earlier)
+                    }
+                }
+                if paths[index].clock != nil { loaded.append(index) }
+            }
+            return bag + loaded.filter { paths[$0].visible }
         }
     }
 
@@ -112,10 +141,12 @@ final class SceneCameraLayers {
     private let transforms: SceneTransformHierarchy3D
 
     /// `transforms` holds every object's authored transform and parent (`SceneSpatialContent.transforms`).
-    init(_ objects: [SceneCameraLayerObject], transforms: SceneTransformHierarchy3D, values: SceneValueContext) {
+    /// `seed` seeds the random queues; WE's differ on every load (MG1), so the default is random.
+    init(_ objects: [SceneCameraLayerObject], transforms: SceneTransformHierarchy3D, values: SceneValueContext,
+         seed: UInt64 = UInt64.random(in: UInt64.min...UInt64.max)) {
         self.transforms = transforms
         layers = objects.sorted { $0.order < $1.order }.enumerated().map { index, object in
-            Layer(object, values: values, seed: 0x9E37_79B9_7F4A_7C15 &* UInt64(index + 1))
+            Layer(object, values: values, seed: seed &+ 0x9E37_79B9_7F4A_7C15 &* UInt64(index + 1))
         }
     }
 
@@ -226,8 +257,8 @@ final class SceneCameraLayers {
         return transforms.world(of: id, local: input.live(id) ?? own, live: input.live)
     }
 
-    /// A seeded generator for the random queue: WE's own generator (behind 0x140077e10) isn't
-    /// reproduced, only its bag [I: the order WE draws is its generator's].
+    /// A seeded generator for the random queue: WE's own generator (behind 0x140077e10, a uniform
+    /// integer in 0…count − 1) isn't reproduced, only the distribution of its draws.
     struct SplitMix {
         var state: UInt64
 

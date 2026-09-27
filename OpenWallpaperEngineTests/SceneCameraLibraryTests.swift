@@ -75,6 +75,41 @@ final class SceneCameraLibraryTests: XCTestCase {
         }
     }
 
+    /// MG1: in WE, PaRappa (style 0) opens with the same ~4.4 s door dolly on every load, then
+    /// random paths. The dolly is no path of "Dynamic Cam" (203) but "Camera Start" (222), the last
+    /// camera layer: its `origin` timeline (132 frames at 30 fps, "single") fires "end" on its last
+    /// frame, its `animationEvent` script sets `shared.camoff` and its `visible` script then hides
+    /// it. 203 plays its paths underneath from load, and its first path (132 frames too) ends on
+    /// the same frame, so the first path seen is a fresh draw.
+    func testPaRappasIntroIsTheCameraStartLayer() throws {
+        let (scene, spatial) = try scene("3159348391")
+        let start = try XCTUnwrap(scene.objects.first { $0.id == 222 })
+        XCTAssertEqual(start.name, "Camera Start")
+        XCTAssertEqual(spatial.cameraLayers.last?.id, "222")
+        XCTAssertEqual(spatial.cameraLayers.last?.pathFile?.paths.count, 0, "the dolly is its origin timeline, not a path")
+
+        let data = try XCTUnwrap(FileManager.default.contents(atPath: Self.storage.appending(path: "3159348391/scene.json").path))
+        let animations = SceneAnimationSet(document: try JSONDecoder().decode(SceneJSON.self, from: data), wallpaperID: "3159348391")
+        let origin = SceneAnimationSite(owner: .object(222), key: "origin")
+        var end: Int?
+        for frame in 1...200 where end == nil {
+            if animations.advance(by: 1.0 / 30).events.contains(where: { $0.site == origin && $0.name == "end" }) { end = frame }
+        }
+        let endFrame = try XCTUnwrap(end, "the dolly's end event")
+        XCTAssertEqual(Double(endFrame), 132, accuracy: 1)
+
+        let rig = ScenePerspectiveCameraRig(spatial, values: SpatialProperties())
+        var playing: [Int] = []
+        for frame in 1...(endFrame + 2) {
+            let input = Self.input(scene, properties: ["camerastyle": "0"], hidden: frame > endFrame ? ["222"] : [])
+            _ = rig.frameCamera(input)
+            playing.append(try XCTUnwrap(rig.cameraLayers.playingPath("203"), "203 plays under the intro"))
+        }
+        let switchFrame = try XCTUnwrap(playing.indices.first { playing[$0] != playing[0] }) + 1
+        XCTAssertEqual(Double(switchFrame), Double(endFrame + 1), accuracy: 1,
+                       "the hidden first path ends as the intro does: \(playing)")
+    }
+
     /// Every library scene with camera layers starts with a finite perspective camera, from its last
     /// visible camera layer.
     func testLibraryScenesStartFromTheirLastVisibleCameraLayer() throws {

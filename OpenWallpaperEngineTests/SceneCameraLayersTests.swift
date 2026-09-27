@@ -122,22 +122,85 @@ final class SceneCameraLayersTests: XCTestCase {
         XCTAssertEqual(second.fov, 50, "a path without a fov channel keeps WE's 50, not the layer's")
     }
 
-    /// "random": a shuffle bag of the visible paths, refilled when empty, never drawing the path it
-    /// drew last.
-    func testRandomPathsDrawFromAShuffleBag() throws {
-        let paths = (0..<3).map { Self.path(eye: SIMD3(Float($0), 0, 1), frames: 1) }
-        let layers = SceneCameraLayers([try Self.layer("cam", order: 0, paths: paths, queue: .random)],
-                                       transforms: Self.transforms(), values: SpatialProperties())
-        var played: [Int] = []
-        for _ in 0..<30 {
-            let camera = try XCTUnwrap(layers.update(Self.input()))
-            played.append(try XCTUnwrap(layers.playingPath("cam")))
-            XCTAssertEqual(camera.pose.eye.x, Float(played.last!))
+    /// `count` one-frame paths (each update draws the next), each authoring `visible` or not.
+    private static func randomLayers(_ count: Int, authorsVisible: Bool = true, seed: UInt64) throws -> SceneCameraLayers {
+        var paths = (0..<count).map { path(eye: SIMD3(Float($0), 0, 1), frames: 1) }
+        if !authorsVisible { paths = paths.map { $0.replacingOccurrences(of: #", "visible": true"#, with: "") } }
+        return SceneCameraLayers([try layer("cam", order: 0, paths: paths, queue: .random)],
+                                 transforms: transforms(), values: SpatialProperties(), seed: seed)
+    }
+
+    private static func draws(_ layers: SceneCameraLayers, _ count: Int) throws -> [Int] {
+        try (0..<count).map { _ in
+            let camera = try XCTUnwrap(layers.update(input()))
+            let index = try XCTUnwrap(layers.playingPath("cam"))
+            XCTAssertEqual(camera.pose.eye.x, Float(index), "the drawn path is the one playing")
+            return index
         }
-        for start in stride(from: 0, to: 30, by: 3) {
-            XCTAssertEqual(Set(played[start..<start + 3]), [0, 1, 2], "each bag holds every path once: \(played)")
+    }
+
+    /// "random" (0x1401f2bab…0x1401f2e70): a uniform index into a bag, stepped past the path drawn
+    /// last, removed once drawn; an empty bag is refilled with each visible path once. The first
+    /// bag is what the file's load leaves: every path that authors `visible` queues the ones loaded
+    /// before it, and the load queues them all again, so 13 paths start as 12 twice and the last
+    /// once (25 draws), then bags of 13. A path can follow itself only when the bag holds nothing
+    /// else: the first bag's 25th draw, when its two last entries are one path (0x1401f2e2d takes
+    /// the drawn entry once the step found no other).
+    func testRandomPathsDrawFromTheBagTheLoadLeaves() throws {
+        for seed in UInt64(1)...40 {
+            let played = try Self.draws(try Self.randomLayers(13, seed: seed), 25 + 13 * 2)
+            let first = Dictionary(grouping: played[..<25], by: { $0 }).mapValues(\.count)
+            XCTAssertEqual(first, Dictionary(uniqueKeysWithValues: (0..<13).map { ($0, $0 == 12 ? 1 : 2) }), "seed \(seed): \(played)")
+            XCTAssertEqual(Set(played[25..<38]).count, 13, "a refill holds each path once: \(played)")
+            XCTAssertEqual(Set(played[38..<51]).count, 13, "\(played)")
+            for index in 1..<played.count where index != 24 {
+                XCTAssertNotEqual(played[index], played[index - 1], "seed \(seed): \(played)")
+            }
         }
-        for index in 1..<played.count { XCTAssertNotEqual(played[index], played[index - 1], "\(played)") }
+        // Without `visible` keys the hook never runs: the first bag holds each path once.
+        let plain = try Self.draws(try Self.randomLayers(5, authorsVisible: false, seed: 3), 10)
+        XCTAssertEqual(Set(plain[..<5]).count, 5, "\(plain)")
+        XCTAssertEqual(Set(plain[5...]).count, 5, "\(plain)")
+    }
+
+    /// WE's measured behaviour on PaRappa's 13 paths (docs/test-risks.md MG1, three 70 s runs): no
+    /// path follows itself, a path repeats before all 13 have played, none plays three times in
+    /// the first 15, and the order and the first path differ from load to load.
+    func testRandomPathsMatchWEsStatistics() throws {
+        let runs = 2000
+        var selfFollows = 0, repeatsEarly = 0, triples = 0
+        var firsts = [Int](repeating: 0, count: 13)
+        var orders = Set<[Int]>()
+        for run in 0..<runs {
+            // One draw plays hidden under the intro (MG1), then 15 are seen.
+            let played = Array(try Self.draws(try Self.randomLayers(13, seed: UInt64(run) &* 7919 &+ 17), 16).dropFirst())
+            selfFollows += zip(played, played.dropFirst()).filter { $0 == $1 }.count
+            if Set(played[..<13]).count < 13 { repeatsEarly += 1 }
+            if Dictionary(grouping: played, by: { $0 }).values.contains(where: { $0.count >= 3 }) { triples += 1 }
+            firsts[played[0]] += 1
+            orders.insert(played)
+        }
+        XCTAssertEqual(selfFollows, 0)
+        XCTAssertEqual(triples, 0, "a two-copy bag never plays a path three times in its first 25 draws")
+        XCTAssertGreaterThan(Double(repeatsEarly) / Double(runs), 0.95, "WE repeated a path before all 13 in every run")
+        XCTAssertEqual(orders.count, runs, "every load draws its own order")
+        // The first seen path over the 13 (the last one, queued once, is half as likely).
+        let expected = (0..<13).map { Double(runs) * ($0 == 12 ? 1.0 / 25 : 2.0 / 25) }
+        for (index, count) in firsts.enumerated() {
+            XCTAssertEqual(Double(count), expected[index], accuracy: 5 * expected[index].squareRoot(), "path \(index): \(firsts)")
+        }
+    }
+
+    /// Two loads without a given seed draw different orders (WE has no fixed seed).
+    func testRandomQueuesAreSeededPerLoad() throws {
+        let paths = (0..<13).map { Self.path(eye: SIMD3(Float($0), 0, 1), frames: 1) }
+        var orders = Set<[Int]>()
+        for _ in 0..<4 {
+            let layers = SceneCameraLayers([try Self.layer("cam", order: 0, paths: paths, queue: .random)],
+                                           transforms: Self.transforms(), values: SpatialProperties())
+            orders.insert(try Self.draws(layers, 13))
+        }
+        XCTAssertGreaterThan(orders.count, 1)
     }
 
     /// A hidden layer doesn't play: its path's time stands until it shows again.
