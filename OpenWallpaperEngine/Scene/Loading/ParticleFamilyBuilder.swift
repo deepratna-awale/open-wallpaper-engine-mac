@@ -49,11 +49,8 @@ struct ParticleFamilyBuilder {
                 continue
             }
             let childLink = Self.link(child, kind: kind, parentIndex: index, parent: link)
-            let before = family.count
             append(name, link: childLink, world: childLink.emitter(parent: world), overrides: overrides,
                    ancestors: ancestors + [path], into: &family)
-            // Bit 1: the child keeps its own colours (WE's "disable color overrides on child particles").
-            if ((child.flags ?? 0) & 2) != 0, family.count > before { family[before].keepsOwnColors = true }
         }
     }
 
@@ -86,6 +83,7 @@ struct ParticleFamilyBuilder {
         let controlPointStart = ((child.flags ?? 0) & 1) != 0 ? max(child.controlpointstartindex ?? 0, 0) : nil
         return ParticleChildLink(parentIndex: parentIndex, kind: kind, local: local,
                                  probability: Float(child.probability ?? 1), maximumInstances: instances,
-                                 instanced: kind != .static || parentInstanced, controlPointStart: controlPointStart)
+                                 instanced: kind != .static || parentInstanced, controlPointStart: controlPointStart,
+                                 restartsWithParentPeriod: ((child.flags ?? 0) & 2) != 0)
     }
 }

@@ -52,6 +52,9 @@ final class ParticleSystemRuntime {
     let seed: UInt32
     /// The system's state on the GPU, when `ParticleGPUSimulator` runs it.
     var gpu: ParticleGPUSystem?
+    /// A periodic emitter started a period in the last step: children linked with flag 2 restart
+    /// (`ParticleChildLink.restartsWithParentPeriod`).
+    var startedPeriod = false
     /// The emitter's world transform at the last step (`ParticleFrameInputs.motion`).
     var lastEmitter: SceneAffineTransform?
     /// The control points in the scene at the last step (a child's flag 4 control points copy them).

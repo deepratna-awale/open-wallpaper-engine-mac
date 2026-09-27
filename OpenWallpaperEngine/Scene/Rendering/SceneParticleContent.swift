@@ -75,8 +75,6 @@ struct SceneMetalParticleSystem {
     var budgetScale: Float = 1
     /// The instance overrides the system's `flags` switch off (`SceneParticleOverrides.Parts`).
     var ignoredOverrides: SceneParticleOverrides.Parts = []
-    /// A child that keeps its own colours (link flag 2): the overrides' tint and brightness skip it.
-    var keepsOwnColors = false
     /// The emitter's audio response, on its rate.
     var rateAudio: ParticleAudioResponse? = nil
     /// The emitters after the first, in authored order. WE runs every emitter of a system, each

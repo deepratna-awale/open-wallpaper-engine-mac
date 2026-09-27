@@ -57,14 +57,20 @@ final class ParticleOverrideTests: XCTestCase {
         XCTAssertEqual(bound.controlPoints[2], SIMD3(5, 6, 0))
     }
 
-    func testAChildThatKeepsItsColoursSkipsTheTint() throws {
+    /// WE 2.8.0.42 (flagtests `pf_childflags_0/2`): a static child with link flags 0 and one with 2
+    /// both come out in the layer's `colorn` (mean 133,12,14 and 134,12,14). Flag 2 restarts the
+    /// child with its parent's periods; it doesn't keep the child's colours.
+    func testAChildWithLinkFlag2TakesTheTint() throws {
+        let child = try JSONDecoder().decode(WEParticleChild.self, from: Data(#"{"name": "c.json", "flags": 2}"#.utf8))
+        let link = ParticleFamilyBuilder.link(child, kind: .static, parentIndex: 0, parent: nil)
+        XCTAssertTrue(link.restartsWithParentPeriod)
         var configuration = ParticleTestSystem().configuration
         configuration.overrides = SceneParticleOverrides(try boundOverride(), in: Properties())
-        configuration.keepsOwnColors = true
+        configuration.link = link
         let runtime = ParticleSystemRuntime(texture: texture, configuration: configuration)
         let inputs = ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero, values: Properties())
-        XCTAssertEqual(inputs.colorScale, SIMD3(repeating: 1))
-        XCTAssertEqual(inputs.spawnScale.x, 2, "the other overrides still apply")
+        XCTAssertEqual(inputs.colorScale, configuration.overrides.tint * configuration.overrides.brightness)
+        XCTAssertNotEqual(inputs.colorScale, SIMD3(repeating: 1))
     }
 
     func testOverriddenSpawnsMatchOnTheGPU() throws {

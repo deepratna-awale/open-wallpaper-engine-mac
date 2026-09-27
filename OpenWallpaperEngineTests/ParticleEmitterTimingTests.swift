@@ -35,6 +35,41 @@ final class ParticleEmitterTimingTests: XCTestCase {
         XCTAssertEqual(inverted.periodDuration, 3...3, "a minimum above the maximum is lowered to it")
     }
 
+    // MARK: - Children restarting with their parent
+
+    /// Link flag 2: each period a periodic parent starts restarts the child's time and clocks
+    /// (`wallpaper64.exe` 0x14022f790 → 0x14022f6c0); a child without it runs on.
+    func testALinkFlag2ChildRestartsWithItsParentsPeriods() throws {
+        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
+        let texture = try XCTUnwrap(device.makeTexture(descriptor: .texture2DDescriptor(
+            pixelFormat: .rgba8Unorm, width: 1, height: 1, mipmapped: false)))
+        var parentSystem = ParticleTestSystem()
+        parentSystem.emitterTiming.periodic = true
+        parentSystem.emitterTiming.periodDuration = 0.5...0.5
+        parentSystem.emitterTiming.periodDelay = 1...1
+        func restarts(linked: Bool) -> Int {
+            let parent = ParticleSystemRuntime(texture: texture, configuration: parentSystem.configuration)
+            var configuration = ParticleTestSystem().configuration
+            configuration.link = ParticleChildLink(parentIndex: 0, kind: .static,
+                                                   local: SceneLocalTransform(origin: .zero, scale: SIMD2(1, 1), angle: 0),
+                                                   probability: 1, maximumInstances: 1, instanced: false,
+                                                   restartsWithParentPeriod: linked)
+            let child = ParticleSystemRuntime(texture: texture, configuration: configuration)
+            child.parent = parent
+            var count = 0, last: Float = 0
+            for _ in 0..<256 {
+                _ = ParticleFrameInputs.advance(parent, deltaTime: Self.step, cursor: .zero)
+                _ = ParticleFrameInputs.advance(child, deltaTime: Self.step, cursor: .zero)
+                if child.elapsedTime < last { count += 1 }
+                last = child.elapsedTime
+            }
+            return count
+        }
+        // Periods start at 0, 1.5 and 3 s; the one at 0 restarts a child that has just started.
+        XCTAssertEqual(restarts(linked: true), 2)
+        XCTAssertEqual(restarts(linked: false), 0)
+    }
+
     // MARK: - Clock
 
     func testDelayHoldsTheBurstAndTheRate() {

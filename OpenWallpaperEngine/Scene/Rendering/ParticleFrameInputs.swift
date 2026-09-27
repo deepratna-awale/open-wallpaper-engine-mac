@@ -148,6 +148,7 @@ struct ParticleFrameInputs {
                         scripted: SceneScriptInstanceOverrides? = nil, audio: AudioSpectrumSnapshot = .silent, frameTime: Float? = nil,
                         frameRateLimit: Int = 0) -> ParticleFrameInputs {
         let configuration = system.configuration
+        restartWithParent(system)
         system.elapsedTime += deltaTime
         system.frameIndex &+= 1
         var inputs = ParticleFrameInputs()
@@ -194,6 +195,9 @@ struct ParticleFrameInputs {
             // Silence stops an audio-responsive emitter without clearing what it emitted.
             if let response = emitter.audio { inputs.emitters[index].rate *= response.response(audio) }
         }
+        // A periodic emitter starting a period restarts the children linked with flag 2 (0x14022f790).
+        system.startedPeriod = !configuration.isInstanced
+            && zip(emitters, inputs.emitters).contains { $0.timing.periodic && $1.startsPeriod }
         inputs.space = configuration.worldSpace ? .identity : world
         inputs.layerOrigin = world.translation
         inputs.emitterLinear = configuration.worldSpace ? world.linear : matrix_identity_float2x2
@@ -232,8 +236,20 @@ struct ParticleFrameInputs {
         maximum = max(Int((Float(configuration.maximumParticleCount) * overrides.count).rounded()), 0)
         // Negative multipliers would invert the ranges; WE treats them as 0.
         spawnScale = SIMD4(overrides.size, max(overrides.alpha, 0), max(overrides.lifetime, 0), overrides.speed)
-        colorScale = configuration.keepsOwnColors ? SIMD3(repeating: 1) : overrides.tint * overrides.brightness
+        colorScale = overrides.tint * overrides.brightness
         return overrides
+    }
+
+    /// A child linked with flag 2 starts over when its parent started a period in its step, which
+    /// came first (`ParticleChildLink.restartsWithParentPeriod`, 0x14022f6c0): its time, every
+    /// emitter's clock (delay, duration, burst and period), carry and period count, and the
+    /// sequences restarting with each period. Its particles live on.
+    private static func restartWithParent(_ system: ParticleSystemRuntime) {
+        guard let link = system.configuration.link, link.restartsWithParentPeriod, !system.configuration.isInstanced,
+              system.parent?.startedPeriod == true else { return }
+        system.elapsedTime = 0
+        system.emitterStates = system.emitterStates.map { _ in ParticleEmitterState() }
+        system.periodSerial = system.nextSerial
     }
 
     /// A child's emitter this frame: from its parent's, which stepped first.
