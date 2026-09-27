@@ -162,13 +162,21 @@ struct SceneTransformHierarchy {
         let local: SceneLocalTransform
         /// `parallaxDepth` x y; WE's default is 1 1 (`WESceneObject.parallaxDepthValue`).
         let parallaxDepth: SIMD2<Float>
+        /// The `attachment` name, when the object hangs from a bone of its parent's rig.
+        var attachment: String?
 
-        init(parentID: String?, local: SceneLocalTransform, parallaxDepth: SIMD2<Float> = SIMD2(1, 1)) {
+        init(parentID: String?, local: SceneLocalTransform, parallaxDepth: SIMD2<Float> = SIMD2(1, 1),
+             attachment: String? = nil) {
             self.parentID = parentID
             self.local = local
             self.parallaxDepth = parallaxDepth
+            self.attachment = attachment
         }
     }
+
+    /// A child's attachment on its parent this frame, in the parent's space (`boneWorld ·
+    /// attachment matrix`, 0x1401dd7d0); nil hangs it from the parent's origin.
+    typealias Attachments = (_ child: String, _ parent: String, _ name: String) -> SceneAffineTransform?
 
     private(set) var nodes: [String: Node]
 
@@ -182,7 +190,8 @@ struct SceneTransformHierarchy {
             let depth = object.parallaxDepthValue
             nodes[String(object.id ?? index)] = Node(parentID: object.parent.map(String.init),
                                                      local: SceneLocalTransform(object: object, sceneSize: sceneSize),
-                                                     parallaxDepth: SIMD2(Float(depth.0), Float(depth.1)))
+                                                     parallaxDepth: SIMD2(Float(depth.0), Float(depth.1)),
+                                                     attachment: object.attachment)
         }
         self.nodes = nodes
     }
@@ -205,7 +214,8 @@ struct SceneTransformHierarchy {
     /// The composed transform of `id`'s ancestors, root first. `live` supplies this frame's
     /// local transform for objects that are drawn (scripts and animations move them); other
     /// ancestors use their authored transform. Cycles stop the walk.
-    func parentWorld(of id: String, live: (String) -> SceneLocalTransform? = { _ in nil }) -> SceneAffineTransform {
+    func parentWorld(of id: String, live: (String) -> SceneLocalTransform? = { _ in nil },
+                     attachments: Attachments? = nil) -> SceneAffineTransform {
         var chain: [String] = []
         var visited: Set<String> = [id]
         var next = nodes[id]?.parentID
@@ -214,14 +224,23 @@ struct SceneTransformHierarchy {
             next = node.parentID
         }
         return chain.reversed().reduce(.identity) { world, ancestor in
-            world * SceneAffineTransform(live(ancestor) ?? nodes[ancestor]!.local)
+            world * attachment(of: ancestor, attachments) * SceneAffineTransform(live(ancestor) ?? nodes[ancestor]!.local)
         }
     }
 
     func world(of id: String, local: SceneLocalTransform? = nil,
-               live: (String) -> SceneLocalTransform? = { _ in nil }) -> SceneAffineTransform {
+               live: (String) -> SceneLocalTransform? = { _ in nil }, attachments: Attachments? = nil) -> SceneAffineTransform {
         guard let own = local ?? live(id) ?? nodes[id]?.local else { return .identity }
-        return parentWorld(of: id, live: live) * SceneAffineTransform(own)
+        return parentWorld(of: id, live: live, attachments: attachments) * attachment(of: id, attachments)
+            * SceneAffineTransform(own)
+    }
+
+    /// `id`'s attachment on its parent (world = parentWorld · attachment · local), identity when
+    /// it has none, its parent isn't in the hierarchy or the parent has no such attachment.
+    private func attachment(of id: String, _ attachments: Attachments?) -> SceneAffineTransform {
+        guard let attachments, let node = nodes[id], let name = node.attachment, let parentID = node.parentID,
+              nodes[parentID] != nil else { return .identity }
+        return attachments(id, parentID, name) ?? .identity
     }
 }
 

@@ -184,13 +184,13 @@ struct SceneTransformHierarchy3D: Equatable {
     init(nodes: [String: Node]) { self.nodes = nodes }
 
     /// Every object of `objects`, keyed like the 2D hierarchy (`id`, else its index). The
-    /// `attachment` is read where the decoder keeps it (model objects, `WESceneModel.attachment`).
+    /// `attachment` is every object's (`WESceneObject.attachment`).
     init(objects: [WESceneObject], rootOrigin: SIMD3<Float> = .zero) {
         var nodes: [String: Node] = [:]
         for (index, object) in objects.enumerated() {
             nodes[String(object.id ?? index)] = Node(parentID: object.parent.map(String.init),
                                                      local: SceneLocalTransform3D(object: object, rootOrigin: rootOrigin),
-                                                     attachment: object.model?.attachment)
+                                                     attachment: object.attachment ?? object.model?.attachment)
         }
         self.nodes = nodes
     }

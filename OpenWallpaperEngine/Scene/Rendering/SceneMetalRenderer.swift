@@ -1284,7 +1284,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             input.objects[id] = SceneScriptObjectFeedback(
                 origin: own.origin, scale: own.scale, angle: own.angle, alpha: nil, color: nil, brightness: nil,
                 visible: scripts.baseVisible(key), size: nil,
-                world: transforms.world(of: key) { [self] id in liveLocal(id) },
+                world: transforms.world(of: key, live: { [self] id in liveLocal(id) }, attachments: puppetAttachments.affine),
                 animated: animation?.fields ?? SceneScriptOwnedFields(), playing: sounds.isPlaying(id))
         }
         scripts.submit(input)
@@ -1463,7 +1463,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// The full transform of a layer's ancestors this frame. Every ancestor uses its live
     /// (scripted, animated) transform, so moving a parent moves its children.
     private func parentWorld(_ entry: PreparedLayer) -> SceneAffineTransform {
-        transforms.parentWorld(of: entry.layer.id) { [self] id in liveLocal(id) }
+        transforms.parentWorld(of: entry.layer.id, live: { [self] id in liveLocal(id) }, attachments: puppetAttachments.affine)
     }
 
     /// A particle system's emitter transform this frame: its object's, parents included, moved by
@@ -1473,7 +1473,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private func emitterWorld(_ configuration: SceneMetalParticleSystem,
                               motion: CameraMotion) -> SceneAffineTransform? {
         guard let id = configuration.objectID else { return nil }
-        var world = transforms.world(of: id) { [self] id in liveLocal(id) }
+        var world = transforms.world(of: id, live: { [self] id in liveLocal(id) }, attachments: puppetAttachments.affine)
         world.translation += particleParallaxOffset(id, motion: motion) - motion.shake
         return world
     }
@@ -1618,6 +1618,15 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                        commandBuffer: commandBuffer)
         }
         puppetWarps[entry.layer.id] = warped
+    }
+
+    /// Bone attachments on puppets, as their animators last posed them.
+    private var puppetAttachments: ScenePuppetAttachments {
+        ScenePuppetAttachments { [unowned self] id in
+            guard let animator = self.puppetAnimators[id], let index = self.layerIndexByStateId[id],
+                  let plan = self.layers[index].layer.puppet else { return nil }
+            return (plan, animator)
+        }
     }
 
     /// The layer's animator, made on first use.

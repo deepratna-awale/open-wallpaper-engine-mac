@@ -86,6 +86,9 @@ struct WESceneObject: Decodable {
     /// `animationlayers`, element by element: a model's, or a puppet image's (the same parser,
     /// 0x1402230c0 and 0x1401fcc20). Empty when not authored.
     var animationLayers: [WEAnimationLayer] = []
+    /// `attachment`: the name of an attachment point of the parent's model or puppet rig, which
+    /// every object's base loader reads (0x1401de5b2; docs/models-plan.md §5.15).
+    var attachment: String?
 
     /// Every value-bearing field in its full authored form (literal, `user`, `script`, `animation`).
     /// The typed fields above hold only the literal fallback.
@@ -146,6 +149,8 @@ struct WESceneObject: Decodable {
                                             userInfo: decoder.userInfo)
         animationLayers = keyed.decodeElements(WEAnimationLayer.self, forKey: AnyCodingKey(stringValue: "animationlayers"),
                                                userInfo: decoder.userInfo) ?? []
+        attachment = keyed.decodeLogged(SceneRawValue.self, forKey: AnyCodingKey(stringValue: "attachment"),
+                                        userInfo: decoder.userInfo)?.literalString
         effects = c.decodeElements(WEObjectEffect.self, forKey: .effects, userInfo: decoder.userInfo)
         shape = try? c.decodeIfPresent(String.self, forKey: .shape)
         if let scriptedText = try? c.decode(WEScriptedProperty.self, forKey: .text) {
