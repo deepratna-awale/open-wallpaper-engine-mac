@@ -60,6 +60,9 @@ final class ShaderVariantCacheTests: XCTestCase {
         7: "46033e7a708b9df4b268e1f4e9be409c228d6ad367b7b6455c036729440ad2af",
         // A uniform both stages declare differently is split (`ShaderUniformDeclaration.stageLocalNames`).
         8: "616d3b76809585413a7bbb7d5942804144cd677e791048d5add9de350471d667",
+        // WE's depth comparison (`texSample2DCompare`) and system-value declarations, and headers
+        // kept after the macros they test: shadowed lit variants and the shadow casters only.
+        9: "616d3b76809585413a7bbb7d5942804144cd677e791048d5add9de350471d667",
     ]
 
     /// Fails when translated output changes without a `revision` bump, which would let users keep

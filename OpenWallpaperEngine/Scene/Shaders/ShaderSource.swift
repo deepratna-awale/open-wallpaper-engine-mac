@@ -204,7 +204,7 @@ struct ShaderSourceLoader {
         main = dropUnmatchedEndifs(in: commentUnknownRequires(in: main, path: path))
         guard !bodies.isEmpty else { return main }
         let blob = "\n" + bodies.joined(separator: "\n") + "\n"
-        let insertion = includeInsertionOffset(in: main)
+        let insertion = includeInsertionOffset(in: main, testedMacros: testedMacros(in: bodies.joined(separator: "\n")))
         let index = main.utf16.index(main.utf16.startIndex, offsetBy: insertion)
         main.insert(contentsOf: blob, at: index)
         return main
@@ -229,8 +229,12 @@ struct ShaderSourceLoader {
         return lines.joined(separator: "\n")
     }
 
-    /// Character offset (UTF-16) where includes go.
-    static func includeInsertionOffset(in text: String) -> Int {
+    /// Character offset (UTF-16) where includes go. A macro the headers test (`testedMacros`:
+    /// `genericparticle`'s `SHADOW_ATLAS_SAMPLER`, which `common_pbr_2.h` tests with `#ifdef`)
+    /// that the shader defines further down, before `main`, moves them past the top-level block
+    /// defining it: WE's headers stand where they are included, so they see the definitions
+    /// above that point.
+    static func includeInsertionOffset(in text: String, testedMacros: Set<String> = []) -> Int {
         let lines = text.components(separatedBy: "\n")
         let mains = lines.filter { mainPattern.matches($0) }.count
         guard mains < 2 else { return 0 }
@@ -240,12 +244,20 @@ struct ShaderSourceLoader {
         // Braces open at the start of the line, so a multi-line `struct` is passed whole.
         var braces = 0
         var pending = false
+        var pendingDefinition = false
         for line in lines {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
             if trimmed.hasPrefix("#if") { depth += 1 }
             if trimmed.hasPrefix("#endif") { depth = max(0, depth - 1) }
             let lineEnd = offset + line.utf16.count + 1
             if mainPattern.matches(trimmed) { break }
+            if !testedMacros.isEmpty, let name = definedMacro(trimmed), testedMacros.contains(name) {
+                pendingDefinition = true
+            }
+            if pendingDefinition, depth == 0 {
+                insertion = max(insertion, lineEnd)
+                pendingDefinition = false
+            }
             if depth == 0, braces == 0,
                declarationPattern.matches(trimmed) {
                 pending = true
@@ -258,6 +270,27 @@ struct ShaderSourceLoader {
             offset = lineEnd
         }
         return min(insertion, text.utf16.count)
+    }
+
+    private static let definePattern = NSRegularExpression.shader(#"^#\s*define\s+(\w+)"#)
+    private static let testPattern = NSRegularExpression.shader(#"(?m)^[ \t]*#[ \t]*(?:ifdef|ifndef)[ \t]+(\w+)|\bdefined[ \t]*\(?[ \t]*(\w+)"#)
+
+    /// The macro a `#define` line defines; nil for any other line.
+    private static func definedMacro(_ line: String) -> String? {
+        guard let match = definePattern.firstMatch(in: line, range: NSRange(line.startIndex..., in: line)),
+              let range = Range(match.range(at: 1), in: line) else { return nil }
+        return String(line[range])
+    }
+
+    /// The macros `text` tests with `#ifdef`, `#ifndef` or `defined`.
+    static func testedMacros(in text: String) -> Set<String> {
+        var names = Set<String>()
+        for match in testPattern.matches(in: text, range: NSRange(text.startIndex..., in: text)) {
+            for group in 1...2 {
+                if let range = Range(match.range(at: group), in: text) { names.insert(String(text[range])) }
+            }
+        }
+        return names
     }
 
     /// WE knows one `#require`, `LightingV1`, whose source depends on the variant's combos: it

@@ -209,11 +209,10 @@ final class LightingV1RequireTests: XCTestCase {
         }
     }
 
-    /// Shadowed lights need WE's comparison sampler (`sampler2DComparison`, `texSample2DCompare`)
-    /// for `_rt_shadowAtlas`, which comes with shadows (D2, with area 6). No library scene casts a
-    /// shadow.
+    /// Shadowed lights read `_rt_shadowAtlas` through WE's comparison sampler
+    /// (`sampler2DComparison`, `texSample2DCompare`): a Metal `depth2d` read with `sample_compare`
+    /// (docs/models-plan.md §2.10).
     func testShadowBudgetsNeedTheShadowAtlas() throws {
-        XCTExpectFailure("lighting-plan D2: no sampler2DComparison in the prelude yet")
         for budget in [WELightConfig(spot: 1, spotShadow: 1), WELightConfig(point: 1, pointShadow: 1),
                        WELightConfig(directional: 2, directionalShadow: 2)] {
             XCTAssertEqual(try translateShipped(budget, quality: 4), [], "\(budget)")

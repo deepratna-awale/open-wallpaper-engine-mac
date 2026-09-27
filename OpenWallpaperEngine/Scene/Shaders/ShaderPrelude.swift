@@ -23,6 +23,9 @@ enum ShaderPrelude {
         let clips: Bool
         /// The shader samples a volume texture (`texSample3D`, `ccsimple`'s LUT).
         let samplesVolumes: Bool
+        /// The shader compares against a depth texture (`sampler2DComparison`, `texSample2DCompare`:
+        /// the shadow atlas).
+        let comparesDepth: Bool
         /// GLSL reserved words the shader uses as names (`GLSLReservedWords`), sorted.
         let glslReservedNames: [String]
         /// Every identifier the source names (comments and `// [COMBO]` declarations included).
@@ -37,6 +40,7 @@ enum ShaderPrelude {
             loadsTexels = Self.loadNames.contains { identifiers.contains(Substring($0)) }
             clips = identifiers.contains("clip")
             samplesVolumes = identifiers.contains("texSample3D")
+            comparesDepth = identifiers.contains("texSample2DCompare") || identifiers.contains("sampler2DComparison")
             reservedLocals = cppReservedWords.subtracting(macros).sorted().filter { name in
                 identifiers.contains(Substring(name)) && declaresLocal(name, in: source)
             }
@@ -97,6 +101,9 @@ enum ShaderPrelude {
         if analysis.loadsTexels { lines.append(loadFunctions) }
         if analysis.clips && stage == .fragment && !defined.contains("clip") { lines.append(clipFunctions) }
         if analysis.samplesVolumes && !defined.contains("texSample3D") { lines.append(volumeFunctions) }
+        if analysis.comparesDepth && !defined.contains("texSample2DCompare") {
+            lines.append(stage == .fragment ? compareFunctions : compareFunctionsWithoutDerivatives)
+        }
         lines.append(conversionFunctions)
         // After every helper, so their own `mix` calls stay the built-in.
         if !defined.contains("mix") { lines.append("#define mix(a, b, t) weMix(a, b, t)") }
@@ -286,6 +293,23 @@ enum ShaderPrelude {
     vec4 texSample3DLod(sampler3D s, vec3 uvw, float lod) { return textureLod(s, uvw, lod); }
     """
 
+    /// WE's depth comparison (`common_pbr_2.h`'s shadow lookups, `volumetricsfront`): a
+    /// `sampler2DComparison` is D3D's comparison sampler over a depth texture, and
+    /// `texSample2DCompare(s, uv, z)` its `SampleCmp`, 1 where `z` passes the sampler's test against
+    /// the texel and 0 where it fails, filtered. As GLSL that is a shadow sampler, which SPIRV-Cross
+    /// makes a Metal `depth2d` read with `sample_compare`; the test (WE's GREATER, reversed depth)
+    /// is the bound sampler's (`SceneShadowAtlas.sampler`). Only shaders that name them get them.
+    private static let compareFunctions = """
+    #define sampler2DComparison sampler2DShadow
+    vec4 texSample2DCompare(sampler2DShadow s, vec2 uv, float z) { return vec4(texture(s, vec3(uv, z))); }
+    """
+
+    /// The same where there are no derivatives: the base level.
+    private static let compareFunctionsWithoutDerivatives = """
+    #define sampler2DComparison sampler2DShadow
+    vec4 texSample2DCompare(sampler2DShadow s, vec2 uv, float z) { return vec4(textureLod(s, vec3(uv, z), 0.0)); }
+    """
+
     /// HLSL's `clip`: discards the fragment when any component is below zero.
     private static let clipFunctions = """
     void clip(float x) { if (x < 0.0) discard; }
@@ -294,10 +318,31 @@ enum ShaderPrelude {
     void clip(vec4 x) { if (any(lessThan(x, vec4(0.0)))) discard; }
     """
 
-    /// HLSL's implicit conversions, applied to preprocessed text (see the extension below).
+    /// HLSL's implicit conversions, applied to preprocessed text (see the extension below), after
+    /// WE's declarations of system values (`builtInDeclarations`).
     static func fixupAfterPreprocess(_ text: String) -> String {
-        applyImplicitConversions(to: text)
+        applyImplicitConversions(to: builtInDeclarations(text))
     }
+
+    /// WE's shaders declare the system values they read and write like other interface
+    /// variables: `shadowcaster.vert`'s `in uint gl_InstanceID;` and `varying uint
+    /// gl_ViewportIndex;` (D3D's `SV_InstanceID` and `SV_ViewportArrayIndex`: each instance of a
+    /// caster draws into one view of the shadow atlas). GLSL has them built in and forbids the
+    /// declarations, so they are dropped, and writing the viewport index from the vertex stage
+    /// takes `GL_ARB_shader_viewport_layer_array` (Metal's `[[viewport_array_index]]`).
+    static func builtInDeclarations(_ text: String) -> String {
+        let range = NSRange(text.startIndex..., in: text)
+        guard builtInDeclarationPattern.firstMatch(in: text, range: range) != nil else { return text }
+        var result = builtInDeclarationPattern.stringByReplacingMatches(in: text, range: range, withTemplate: "")
+        if result.contains("gl_ViewportIndex"), let version = versionPattern.firstRange(in: result) {
+            result.insert(contentsOf: "\n#extension GL_ARB_shader_viewport_layer_array : require", at: version.upperBound)
+        }
+        return result
+    }
+
+    private static let builtInDeclarationPattern = NSRegularExpression.shader(
+        #"(?m)^[ \t]*(?:in|out)[ \t]+u?int[ \t]+gl_(?:InstanceID|VertexID|ViewportIndex)[ \t]*;"#)
+    private static let versionPattern = NSRegularExpression.shader(#"(?m)^[ \t]*#[ \t]*version[^\n]*"#)
 }
 
 // MARK: - HLSL implicit conversions
