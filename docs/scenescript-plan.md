@@ -341,7 +341,8 @@ Legend: ✅ works like WE · 🟡 partial or wrong in a way the corpus hits · �
 | `getEffect`, `getMaterial`, `setMaterialProperty` | effect and material control | ⚪ stubs returning null/{} | 0 |
 | sound layer API | play/stop/pause/volume | ⚪ stubs; sound objects are not script-visible | 3 (volume) |
 | particle `instance`, `emitParticles`, `play/stop` | | ⚪ stub object | 0 |
-| animation layers, bones, blend shapes, attachments, `lookAt`, `setParent`, `getTransformMatrix` | | ⚪ stubs (need areas 6/7) | 0 |
+| animation layers, bones, attachments (puppet images) | | ✅ P2 (docs/models-plan.md §4.3): over the rig buffer, driving the renderer's animator | 0 |
+| blend shapes, bone physics, `lookAt`, `setParent`, model animation layers | | ⚪ stubs (M5, M7) | 0 |
 | camera transforms, scene settings (`bloom*`, `clearcolor`, …) | read/write | 🟡 only `camerashake` | 1 |
 | `destroy` | before destruction | 🟡 only on reconfigure | |
 | exceptions | logged | 🟡 logged with the **entire script source** in the context key; rate-limited | |
