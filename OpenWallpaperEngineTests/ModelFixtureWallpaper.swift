@@ -58,10 +58,12 @@ struct FixtureMDL {
         var name: String
         var fps: Float = 30
         var frames: UInt32
-        /// MDLA clip flags (0x1f800 are WE's root-motion bits, docs/models-plan.md §5.3).
+        /// MDLA clip flags (`MDLAnimation.Flag`: 0x400 Match loop, 0x1f800 the root-motion axes).
         var flags: UInt32 = 0
         /// Per bone, per sample: position, Euler angles (radians, X first), scale.
         var tracks: [[MDLBonePose]]
+        /// The model editor's clip record (flag 0x1, written with it): source clip, frames, root bone.
+        var reference: MDLAnimation.Reference?
     }
 
     /// A bone written as given (`MDLS0001`): its parent (0xFFFFFFFF for a root), bind matrix
@@ -130,7 +132,7 @@ struct FixtureMDL {
                     s.cstr("loop")
                     s.f32(clip.fps)
                     s.u32(clip.frames)
-                    s.u32(clip.flags)
+                    s.u32(clip.reference == nil ? clip.flags : clip.flags | MDLAnimation.Flag.reference)
                     s.i32(Int32(clip.tracks.count))
                     for track in clip.tracks {
                         s.u32(0)
@@ -145,6 +147,13 @@ struct FixtureMDL {
                     s.u8(0) // no scalar tracks B
                     s.u8(0) // no mesh tracks (MDLA 4)
                     s.floats([-1, -1, -1, 1, 1, 1]) // the clip's box (MDLA 5)
+                    if let reference = clip.reference {
+                        s.u16(reference.animation)
+                        s.u32(reference.startFrame)
+                        s.u32(reference.endFrame)
+                        s.u32(reference.frameOffset)
+                        s.u32(UInt32(bitPattern: reference.rootBone))
+                    }
                     s.i32(0) // events
                 }
             }

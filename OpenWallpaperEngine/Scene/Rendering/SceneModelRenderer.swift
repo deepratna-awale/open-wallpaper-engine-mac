@@ -235,26 +235,37 @@ final class SceneModelRenderer: SceneModelDrawing {
     func animator(for id: String) -> ScenePuppetAnimator? {
         if let animator = animators[id] { return animator }
         guard let model = objects[id], let plan = model.plan,
-              let animator = plan.makeAnimator(layers: model.animationLayers, objectName: model.name) else { return nil }
+              let animator = plan.makeAnimator(layers: model.animationLayers, objectName: model.name,
+                                               rootMotion: model.authored.rootMotion) else { return nil }
         animators[id] = animator
         return animator
     }
 
     /// Poses the model once this frame (only while visible, which is when the renderer draws it)
     /// and returns its `g_Bones` components; nil for a model without bones. The shadow pass poses
-    /// its casters so before the scene pass draws them.
+    /// its casters so before the scene pass draws them. `objectWorld` is the object's world
+    /// matrix, which root motion moves the object through.
     func advance(_ model: SceneModelObject, plan: SceneModelPlan, frame: BuiltinFrameContext,
-                         values: SceneValueContext) -> [Float]? {
+                 values: SceneValueContext, objectWorld: simd_float4x4 = matrix_identity_float4x4) -> [Float]? {
         guard let animator = animator(for: model.id) else { return nil }
         if advancedAt[model.id] != frame.time {
             advancedAt[model.id] = frame.time
-            animator.advance(delta: Float(frame.frameTime), values: values)
+            animator.advance(delta: Float(frame.frameTime), values: values, objectWorld: objectWorld)
             boneComponents[model.id] = animator.pose.boneComponents
         }
         if let components = boneComponents[model.id] { return components }
         let components = animator.pose.boneComponents
         boneComponents[model.id] = components
         return components
+    }
+
+    /// Whether the model's clips move it (root motion), so its world is needed as it advances.
+    func hasRootMotion(_ id: String) -> Bool { animator(for: id)?.stack.hasRootMotion ?? false }
+
+    /// What root motion moved the model by (`SceneRootMotion`); nil when it has none.
+    func rootMotion(of id: String) -> SceneRootMotion.Motion? {
+        guard let motion = animators[id]?.rootMotion, !motion.isZero else { return nil }
+        return motion
     }
 
     /// The model objects with a posed skeleton (script feedback).

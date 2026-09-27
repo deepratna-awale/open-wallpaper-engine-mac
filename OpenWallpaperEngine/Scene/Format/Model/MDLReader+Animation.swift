@@ -53,12 +53,19 @@ extension MDLReader {
         if version >= 6, try r.u8() != 0 {
             clip.scalarTracksC = try scalarTracks(&r, count: boneTracks.count, samples: samples, "scalar track")
         }
-        if flags & 1 != 0 {
+        if flags & MDLAnimation.Flag.reference != 0 {
             let animation = try r.u16()
             let values = try r.u32s(4)
             // 0x14026519a: WE fast-fails unless the clip it is relative to comes before it.
             guard Int(animation) < index else { throw MDLError.malformed("clip \(index) relative to clip \(animation)") }
-            clip.reference = .init(animation: animation, values: values)
+            // 0x140265232…0x140265245: with root motion and without Match loop (which reads frames
+            // 0 and `frames`), the Start and End frames must lie within this clip's frame count.
+            if flags & MDLAnimation.Flag.rootMotion != 0, flags & MDLAnimation.Flag.matchLoop == 0,
+               max(values[0], values[1]) > frames {
+                throw MDLError.malformed("clip \(index)'s root-motion frames \(values[0])…\(values[1]) past its \(frames)")
+            }
+            clip.reference = .init(animation: animation, startFrame: values[0], endFrame: values[1],
+                                   frameOffset: values[2], rootBone: Int32(bitPattern: values[3]))
         }
         let eventCount = Int(try r.i32())
         for _ in 0..<max(eventCount, 0) {

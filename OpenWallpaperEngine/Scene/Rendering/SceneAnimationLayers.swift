@@ -28,6 +28,8 @@ struct SceneAnimationLayer: Equatable {
     var visible: Bool
     /// `playSingleAnimation`: the layer goes once its clip finished [I].
     var removesWhenFinished = false
+    /// Its clip's root motion last frame (`SceneRootMotion`).
+    var rootMotion = SceneRootMotion.State()
 
     init(key: Int, name: String, clip: Int, animation: MDLAnimation, additive: Bool = false, blendIn: Bool = false,
          blendOut: Bool = false, blendTime: Float = 0.5, rate: Float = 1, blend: Float = 1, visible: Bool = true) {
@@ -114,11 +116,40 @@ struct SceneAnimationLayerStack: Equatable {
     let skeleton: SceneSkeleton
     let clips: [MDLAnimation]
     private(set) var layers: [SceneAnimationLayer] = []
+    /// Per clip, its root motion (`SceneRootMotion`); empty unless the stack's object runs it (a
+    /// model whose `rootmotion` is on: 0x14021cbf8 tests obj+0x310; puppets' update 0x1401fdf90
+    /// has none).
+    let rootMotions: [SceneRootMotion?]
+    /// What root motion moved the object by since the load.
+    private(set) var rootMotion = SceneRootMotion.Motion()
 
-    init(skeleton: SceneSkeleton, clips: [MDLAnimation]) {
+    /// A model's stack (its update 0x14021c480), where a clip the editor cut without Match loop
+    /// reads its source clip's tracks (`source(of:)`); puppets' update (0x1401fdf90) doesn't.
+    let readsCutClipsFromSource: Bool
+
+    /// `model`: WE's model update (cut clips read their source); `rootMotion`: the model's
+    /// `rootmotion` is on.
+    init(skeleton: SceneSkeleton, clips: [MDLAnimation], model: Bool = false, rootMotion: Bool = false) {
         self.skeleton = skeleton
         self.clips = clips
+        readsCutClipsFromSource = model
+        rootMotions = model && rootMotion ? clips.map { SceneRootMotion(clip: $0, clips: clips, skeleton: skeleton) } : []
     }
+
+    /// The clip whose tracks a layer on clip `index` samples, and the frame its frames count
+    /// from: in a model, a clip with a clip record but without Match loop (flags & 0x401 == 1)
+    /// reads its source clip from its Start frame (0x14021c6b3; the loader leaves its own tracks
+    /// untransposed, 0x140263f8a); any other clip reads itself from frame 0.
+    func source(of index: Int) -> (clip: MDLAnimation, firstFrame: Int) {
+        let clip = clips[index]
+        let flags = clip.flags & (MDLAnimation.Flag.reference | MDLAnimation.Flag.matchLoop)
+        guard readsCutClipsFromSource, flags == MDLAnimation.Flag.reference, let reference = clip.reference,
+              Int(reference.animation) < clips.count else { return (clip, 0) }
+        return (clips[Int(reference.animation)], Int(reference.startFrame))
+    }
+
+    /// Whether any clip moves the object (then its world is needed each frame).
+    var hasRootMotion: Bool { rootMotions.contains { $0 != nil } }
 
     /// The clip with that id, what an authored layer's `animation` names.
     func clipIndex(id: UInt64) -> Int? { clips.firstIndex { $0.id == id } }
@@ -169,7 +200,7 @@ struct SceneAnimationLayerStack: Equatable {
 
     /// The same, with each layer's morph tracks laid over `morphs` (`applyMorphs`) as it applies.
     mutating func evaluate(delta: Float, update: inout SceneAnimationLayerUpdate, morphs: inout [SceneMorphWeights],
-                           kind: SceneMorphRig.Kind) -> [SceneBoneTransform] {
+                           kind: SceneMorphRig.Kind, objectWorld: simd_float3x3 = matrix_identity_float3x3) -> [SceneBoneTransform] {
         var pose = skeleton.bindPose
         var index = 0
         while index < layers.count {
@@ -186,6 +217,7 @@ struct SceneAnimationLayerStack: Equatable {
             let weight = layers[index].weight()
             apply(layers[index], weight: weight, to: &pose)
             if !morphs.isEmpty { applyMorphs(layers[index], weight: weight, to: &morphs, kind: kind) }
+            applyRootMotion(at: index, weight: weight, objectWorld: objectWorld, to: &pose)
             if layers[index].removesWhenFinished, after.flags.contains(.finished) {
                 layers.remove(at: index)
                 update.removed.append(key)
@@ -194,6 +226,36 @@ struct SceneAnimationLayerStack: Equatable {
             index += 1
         }
         return pose
+    }
+
+    /// After layer `index` applied (0x14021cbf8…0x14021cd50): when its clip has root motion, the
+    /// weight the later visible non-additive layers leave, `Π(1 − w)` (0x14026c8b0 for each), and
+    /// while that is positive the root motion itself; the layer then counts as running root
+    /// motion and keeps its clock time. A clip without root motion clears that.
+    private mutating func applyRootMotion(at index: Int, weight: Float, objectWorld: simd_float3x3,
+                                          to pose: inout [SceneBoneTransform]) {
+        let clip = layers[index].clip
+        guard clip < rootMotions.count, let motion = rootMotions[clip] else {
+            layers[index].rootMotion.active = false
+            return
+        }
+        var remaining: Float = 1
+        for later in layers[(index + 1)...] where later.visible && !later.additive {
+            var copy = later
+            remaining *= 1 - copy.weight()
+        }
+        if remaining > 0 {
+            let position = layers[index].clock.samplePosition
+            let (sampled, first) = source(of: clip)
+            var state = layers[index].rootMotion
+            motion.apply(clip: sampled, skeleton: skeleton, frame0: Int(position.frame0) + first, frame1: Int(position.frame1) + first,
+                         fraction: position.fraction, time: layers[index].clock.time, weight: weight,
+                         remaining: remaining, objectWorld: objectWorld, pose: &pose, state: &state,
+                         motion: &rootMotion)
+            layers[index].rootMotion = state
+        }
+        layers[index].rootMotion.active = true
+        layers[index].rootMotion.previousTime = layers[index].clock.time
     }
 
     /// Whether the clip reached its end this frame (0x14021c6e6…0x14021c743): not when it was
@@ -209,7 +271,7 @@ struct SceneAnimationLayerStack: Equatable {
     /// The clip's pose at the clock's position for every bone; nil where the track is disabled
     /// or missing (the bone keeps what is below).
     func sample(_ layer: SceneAnimationLayer) -> [SceneBoneTransform?] {
-        let clip = clips[layer.clip]
+        let (clip, first) = source(of: layer.clip)
         let position = layer.clock.samplePosition
         let t = position.fraction
         return (0..<skeleton.boneCount).map { bone -> SceneBoneTransform? in
@@ -217,8 +279,8 @@ struct SceneAnimationLayerStack: Equatable {
             let track = clip.boneTracks[bone]
             let frames = track.samples.count / MDLBonePose.floatCount
             guard !track.isDisabled, frames > 0 else { return nil }
-            let a = SceneBoneTransform(track.pose(at: Self.frame(position.frame0, frames)))
-            let b = SceneBoneTransform(track.pose(at: Self.frame(position.frame1, frames)))
+            let a = SceneBoneTransform(track.pose(at: Self.frame(position.frame0 + Int32(first), frames)))
+            let b = SceneBoneTransform(track.pose(at: Self.frame(position.frame1 + Int32(first), frames)))
             return SceneBoneTransform.blend(a, b, t)
         }
     }

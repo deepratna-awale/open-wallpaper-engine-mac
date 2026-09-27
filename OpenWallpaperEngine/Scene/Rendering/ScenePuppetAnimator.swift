@@ -47,14 +47,16 @@ final class ScenePuppetAnimator {
 
     /// `layers` are the image's authored `animationlayers`; one naming no clip of `clips` makes
     /// no layer (WE's parser, 0x1402230fe), and is reported through `missing`.
+    /// `model`: a model object's rig (WE's model update); `rootMotion`: it runs its clips' root
+    /// motion (its `rootmotion` is on).
     init(skeleton: MDLSkeleton, clips: [MDLAnimation], layers: [WEAnimationLayer], morphRig: SceneMorphRig? = nil,
-         missing: (WEAnimationLayer) -> Void = { _ in }) {
+         model: Bool = false, rootMotion: Bool = false, missing: (WEAnimationLayer) -> Void = { _ in }) {
         physics = SceneBonePhysics(skeleton)
         let skeleton = SceneSkeleton(skeleton)
         self.skeleton = skeleton
         self.morphRig = morphRig
         morphs = (morphRig?.targetCounts ?? []).map(SceneMorphWeights.init(count:))
-        stack = SceneAnimationLayerStack(skeleton: skeleton, clips: clips)
+        stack = SceneAnimationLayerStack(skeleton: skeleton, clips: clips, model: model, rootMotion: rootMotion)
         locals = skeleton.bindLocal
         worlds = skeleton.bindWorld
         pose = .bind(boneCount: skeleton.boneCount)
@@ -105,7 +107,8 @@ final class ScenePuppetAnimator {
         var update = SceneAnimationLayerUpdate()
         for index in morphs.indices { morphs[index].reset() }
         if !stack.layers.isEmpty {
-            let transforms = stack.evaluate(delta: delta, update: &update, morphs: &morphs, kind: morphRig?.kind ?? .model)
+            let transforms = stack.evaluate(delta: delta, update: &update, morphs: &morphs, kind: morphRig?.kind ?? .model,
+                                            objectWorld: SceneRootMotion.rotation(objectWorld))
             locals = transforms.map(\.matrix)
             worldOverrides.removeAll()
         }
@@ -120,6 +123,9 @@ final class ScenePuppetAnimator {
         lastObjectWorld = objectWorld
         recompute(physics: frame)
     }
+
+    /// What root motion moved the object by since the load (`SceneRootMotion`).
+    var rootMotion: SceneRootMotion.Motion { stack.rootMotion }
 
     /// The layers whose clip ended since the last call, for scripts' `addEndedCallback`.
     func takeEnded() -> [Int] {

@@ -114,7 +114,8 @@ extension SceneAnimationLayerStack {
     /// the layer's two frames. Models take every mesh's tracks, puppets the first mesh's.
     func applyMorphs(_ layer: SceneAnimationLayer, weight: Float, to morphs: inout [SceneMorphWeights],
                      kind: SceneMorphRig.Kind) {
-        guard weight != 0, let tracks = clips[layer.clip].meshTracks else { return }
+        let (clip, first) = source(of: layer.clip)
+        guard weight != 0, let tracks = clip.meshTracks else { return }
         let position = layer.clock.samplePosition
         let t = position.fraction
         for (mesh, meshTrack) in tracks.enumerated() {
@@ -122,8 +123,8 @@ extension SceneAnimationLayerStack {
             guard mesh < morphs.count, meshTrack.flags & 1 != 0 else { continue }
             for track in meshTrack.morphTracks ?? [] where !track.samples.isEmpty {
                 let last = track.samples.count - 1
-                let a = track.samples[max(0, min(Int(position.frame0), last))]
-                let b = track.samples[max(0, min(Int(position.frame1), last))]
+                let a = track.samples[max(0, min(Int(position.frame0) + first, last))]
+                let b = track.samples[max(0, min(Int(position.frame1) + first, last))]
                 morphs[mesh].apply(track: (1 - t) * a + t * b, to: Int(track.morph), layerWeight: weight,
                                    additive: layer.additive, clampsBlend: kind == .model)
             }

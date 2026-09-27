@@ -158,8 +158,8 @@ struct MDLReferenceDump {
             }),
             "bounds": Self.optional(a.bounds.map { Self.list([$0.min.x, $0.min.y, $0.min.z, $0.max.x, $0.max.y, $0.max.z]) }),
             "reference": Self.optional(a.reference.map { r -> Object in
-                ["anim": Self.int(r.animation), "u0": Self.int(r.values[0]), "u1": Self.int(r.values[1]),
-                 "u2": Self.int(r.values[2]), "u3": Self.int(r.values[3])]
+                ["anim": Self.int(r.animation), "u0": Self.int(r.startFrame), "u1": Self.int(r.endFrame),
+                 "u2": Self.int(r.frameOffset), "u3": Self.int(UInt32(bitPattern: r.rootBone))]
             }),
             "events": a.events.map { ["frame": $0.frame, "name": $0.name] as Object },
         ] as [String: Any]

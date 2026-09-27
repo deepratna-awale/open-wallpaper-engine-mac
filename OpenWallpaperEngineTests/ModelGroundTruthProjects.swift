@@ -250,8 +250,9 @@ final class ModelGroundTruthProjects: XCTestCase {
     // MARK: - MG4: root motion
 
     /// A box on one bone whose looping 1 s clip moves the bone by (1, 2, 3)·t and turns it by
-    /// (0.3, 0.6, 0.9)·t rad, with one of the clip flags 0x800…0x10000 set (or none): with root
-    /// motion, WE carries the motion over into the object, so the box drifts instead of looping.
+    /// (0.3, 0.6, 0.9)·t rad, with one of the root-motion flags 0x800…0x10000 set (or none). The
+    /// flagged clip is cut from the first as WE's model editor cuts one (Match loop, the clip
+    /// record with the root bone; docs/test-risks.md MG4: without the record WE refuses the model).
     private func rootMotion(_ out: URL) throws -> [ModelFixtureWallpaper] {
         let box = FixtureMDL.cube(material: "materials/gt_red.json", bone: 0, size: SIMD3(1, 0.5, 0.25), uv: true)
         let frames: UInt32 = 30
@@ -263,11 +264,14 @@ final class ModelGroundTruthProjects: XCTestCase {
         for flag in [0, 0x800, 0x1000, 0x2000, 0x4000, 0x8000, 0x10000] as [UInt32] {
             var mdl = FixtureMDL(format: FixtureMDL.skinned | FixtureMDL.uv, materialsPerMesh: 1, meshes: [FixtureMDL.Mesh(
                 materials: ["materials/gt_red.json"], vertices: box.vertices, indices: box.indices)], bones: 1)
-            mdl.clips = [FixtureMDL.Clip(id: 1, name: "drift", frames: frames, flags: flag, tracks: [track])]
+            let cut = MDLAnimation.Reference(animation: 0, startFrame: 0, endFrame: frames, frameOffset: 0, rootBone: 0)
+            mdl.clips = [FixtureMDL.Clip(id: 1, name: "source", frames: frames, tracks: [track]),
+                         FixtureMDL.Clip(id: 2, name: "drift", frames: frames, flags: MDLAnimation.Flag.matchLoop | flag,
+                                         tracks: [track], reference: flag == 0 ? nil : cut)]
             var files = Self.materials
             files["models/gt_rootmotion.mdl"] = mdl.data
             let object = #"{"id":1,"name":"box","model":"models/gt_rootmotion.mdl","origin":"0 0 0","#
-                + #""animationlayers":[{"animation":1,"id":1,"name":"drift","rate":1,"blend":1,"visible":true}]}"#
+                + #""animationlayers":[{"animation":2,"id":1,"name":"drift","rate":1,"blend":1,"visible":true}]}"#
             projects.append(try ModelFixtureWallpaper(in: out, name: String(format: "gt-rootmotion-0x%05x", flag), objects: [object],
                                                       eye: "0 3 15", center: "0 2 0", files: files))
         }

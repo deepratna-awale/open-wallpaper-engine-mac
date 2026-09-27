@@ -52,10 +52,40 @@ struct MDLAnimation: Equatable {
         var morphTracks: [MorphTrack]?
     }
 
-    /// When flags & 1: the clip is relative to an earlier one [I]; the four u32s are unresolved.
+    /// When flags & 1: the clip the model editor cut from an earlier one ("Add Clip"), with its
+    /// root-motion bone (0x140264fc9…0x140265348, the 0xc0-byte record at anim+0x150: the index
+    /// at +0x8, the four u32s at +0xc…+0x18). WE's editor writes one for every clip it cuts
+    /// (docs/test-risks.md MG4: start 0, end 30, offset 0, bone −1 or 2 for a 30-frame clip).
     struct Reference: Equatable {
+        /// The clip it was cut from (earlier in the file).
         var animation: UInt16
-        var values: [UInt32]
+        /// The editor's Start frame and End frame, in the source clip; with root motion WE reads
+        /// the root's start and end matrices there (unless the clip matches its loop, flag 0x400).
+        var startFrame: UInt32
+        var endFrame: UInt32
+        /// The editor's Frame offset: where the root's previous matrix starts [I: the editor
+        /// always wrote 0].
+        var frameOffset: UInt32
+        /// The editor's Motion root bone; −1 for None.
+        var rootBone: Int32
+    }
+
+    /// The clip flags the model editor sets (docs/test-risks.md MG4; 0x14021cc0c, 0x140225900).
+    enum Flag {
+        /// `reference` follows.
+        static let reference: UInt32 = 0x1
+        /// "Match loop" (on by default): the root's start and end matrices come from this clip's
+        /// first and last frames rather than the source clip's Start and End frames.
+        static let matchLoop: UInt32 = 0x400
+        /// Root motion on position x, y, z and rotation x, y, z; the editor offers only yaw of the
+        /// rotations, and WE applies only yaw.
+        static let rootPositionX: UInt32 = 0x800
+        static let rootPositionY: UInt32 = 0x1000
+        static let rootPositionZ: UInt32 = 0x2000
+        static let rootRotationX: UInt32 = 0x4000
+        static let rootRotationY: UInt32 = 0x8000
+        static let rootRotationZ: UInt32 = 0x10000
+        static let rootMotion: UInt32 = 0x1f800
     }
 
     struct Event: Equatable {
@@ -70,7 +100,8 @@ struct MDLAnimation: Equatable {
     var fps: Float
     /// The last frame index: every track has `frames + 1` samples.
     var frames: UInt32
-    /// Bit 0: `reference` follows. WE sets 0x80000000 in its copy when a track is disabled.
+    /// `Flag`s: bit 0, `reference` follows; 0x400 Match loop; 0x1f800 the root-motion axes. WE
+    /// sets 0x80000000 in its copy when a track is disabled.
     var flags: UInt32
     /// One per bone in the library.
     var boneTracks: [Track]
