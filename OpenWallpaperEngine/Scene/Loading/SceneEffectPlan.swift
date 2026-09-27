@@ -126,6 +126,9 @@ struct SceneEffectPlanBuilder {
     /// folder is searched only when the wallpaper has the effect (a Workshop effect's item keeps
     /// its materials there), and only in the wallpaper's files.
     var readWallpaperFile: ((String) -> Data?)? = nil
+    /// Combos the effect's object writes into each of its passes' `combos` before the effect
+    /// loads, over the authored ones: a shape object's `DIRECTDRAW` 1 (0x14025ff50).
+    var objectCombos: [String: Int] = [:]
 
     /// `overrides` returns the user's edit for a WE material key (inspector), as a WE value string.
     /// `owner` is the layer's id and the effect's index in its `effects`: an animated constant of
@@ -205,7 +208,7 @@ struct SceneEffectPlanBuilder {
         let formats = formatCombos(samplers, names: names, materialPath: materialPath, effectDirectory: effectDirectory)
         let combos = sceneEngineCombos.applied(to: ShaderVariantTranslator.resolveCombos(
             vertex: vertex, fragment: fragment,
-            overrides: [formats, materialPass.combos, instance?.combos ?? [:],
+            overrides: [formats, materialPass.combos, instance?.combos ?? [:], objectCombos,
                         Self.comboOverrides(overrides, declared: vertex.combos + fragment.combos)],
             boundTextureSlots: boundSlots.union([0])))
         guard Self.conditionsHold(pass.conditions, combos: combos) else { return nil }

@@ -1119,11 +1119,15 @@ class SceneWallpaperViewModel: ObservableObject {
         }
     }
 
-    /// Standalone "shape" objects (e.g. a DIRECTDRAW light-shaft quad) have no image/particle of their own;
-    /// they exist purely to host a procedural effect, so give them a full-scene solid layer to render onto.
+    /// A `shape` object (the light-shaft presets' `"shape": "quad"`): an image object without an
+    /// image that only hosts its effects. WE builds it as an image subclass (0x1401907af) whose load
+    /// (0x14025fac0) sizes it as a square the scene's orthographic height on each side, and which
+    /// writes `DIRECTDRAW` 1 into the combos of every pass of its effects before they load
+    /// (0x14025ff50, called per pass at 0x1401e7ad2), so an effect draws on nothing, not on an image.
     private func buildShapeLayer(_ object: WESceneObject, wallpaperDir: URL, sceneSize: SIMD2<Float>) -> SceneMetalLayer? {
         guard object.shape != nil, let effects = object.effects, !effects.isEmpty else { return nil }
-        let plans = buildEffectPlans(effects, objectID: object.id ?? -1, wallpaperDir: wallpaperDir).plans
+        let plans = buildEffectPlans(effects, objectID: object.id ?? -1, wallpaperDir: wallpaperDir,
+                                     objectCombos: Self.shapeEffectCombos).plans
         guard !plans.isEmpty else { return nil }
         let position = localOrigin(for: object, sceneSize: sceneSize)
         let size: SIMD2<Float>
@@ -1131,7 +1135,7 @@ class SceneWallpaperViewModel: ObservableObject {
             let value = sizeString.parseVector2()
             size = SIMD2<Float>(Float(value.0), Float(value.1))
         } else {
-            size = sceneSize
+            size = Self.shapeSize(sceneSize: sceneSize)
         }
         var layer = SceneMetalLayer(id: String(object.id ?? -1), name: object.name ?? String(object.id ?? -1),
                        source: .image(transparentPlaceholderImage), position: position, size: size,
@@ -1144,6 +1148,15 @@ class SceneWallpaperViewModel: ObservableObject {
         layer.alignment = object.alignment
         layer.solidFill = SIMD4(1, 1, 1, 0)
         return layer
+    }
+
+    /// The combos a shape object writes into each pass of its effects (0x14025ff50).
+    static let shapeEffectCombos = ["DIRECTDRAW": 1]
+
+    /// A shape object's size: the scene's orthographic height on both sides (0x14025fac0 reads
+    /// the height the scene stored from `orthogonalprojection` at 0x1401875fb).
+    static func shapeSize(sceneSize: SIMD2<Float>) -> SIMD2<Float> {
+        SIMD2<Float>(repeating: sceneSize.y)
     }
 
     /// A fully transparent 1x1 placeholder texture for procedural shape layers (e.g. light shafts) that
@@ -1269,10 +1282,10 @@ class SceneWallpaperViewModel: ObservableObject {
 
     /// Plans each visible effect for Wallpaper Engine's own shaders. An effect that can't be
     /// planned (no toolchain, sources missing) is left out, with the reason logged.
-    private func buildEffectPlans(_ effects: [WEObjectEffect], objectID: Int,
-                                  wallpaperDir: URL) -> (plans: [SceneEffectPlan], handled: Set<Int>) {
+    private func buildEffectPlans(_ effects: [WEObjectEffect], objectID: Int, wallpaperDir: URL,
+                                  objectCombos: [String: Int] = [:]) -> (plans: [SceneEffectPlan], handled: Set<Int>) {
         guard !effects.isEmpty, let translator = Self.effectTranslator else { return ([], []) }
-        let builder = SceneEffectPlanBuilder(
+        var builder = SceneEffectPlanBuilder(
             translator: translator,
             readFile: { [weak self] path in self?.assetData(named: path, wallpaperDir: wallpaperDir) },
             loadTexture: { [weak self] name, materialPath in
@@ -1280,6 +1293,7 @@ class SceneWallpaperViewModel: ObservableObject {
             },
             sceneEngineCombos: sceneEngineCombos,
             readWallpaperFile: { [weak self] path in self?.wallpaperData(named: path, wallpaperDir: wallpaperDir) })
+        builder.objectCombos = objectCombos
         var plans: [SceneEffectPlan] = []
         var handled = Set<Int>()
         let storeKey = propertyStoreKey

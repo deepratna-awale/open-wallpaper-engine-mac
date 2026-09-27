@@ -155,20 +155,17 @@
  {
   "name": "lightshafts_0",
   "coverage": 1.05,
-  "motion": 0.14,
-  "knownGap": "PG3: the lightshafts effect's gradient rendering draws white (effects)"
+  "motion": 0.14
  },
  {
   "name": "lightshafts_1",
   "coverage": 0.4,
-  "motion": 0.05,
-  "knownGap": "PG3: the lightshafts effect's gradient rendering draws white (effects)"
+  "motion": 0.05
  },
  {
   "name": "lightshafts_2",
   "coverage": 0.64,
-  "motion": 0.07,
-  "knownGap": "PG3: the lightshafts effect's gradient rendering draws white (effects)"
+  "motion": 0.07
  },
  {
   "name": "lightshafts_3",
