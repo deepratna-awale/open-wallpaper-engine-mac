@@ -7,7 +7,7 @@ Open Wallpaper Engine（修補版）
 
 這是 [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) 針對 macOS 的修補分支，加入了場景背景圖片渲染，並修正了網頁背景圖片的問題。
 
-> **注意：** 本專案與 Steam 上的商業軟體 Wallpaper Engine 無關。這是一款開源的 macOS App，可顯示來自 Wallpaper Engine Steam 工作坊的背景圖片素材。
+> **注意：** 本專案與 Steam 上的商業軟體 Wallpaper Engine 無關。這是一款開源的 macOS App，可顯示來自 Wallpaper Engine Steam 工作坊的背景圖片素材。 → [ATTRIBUTION.txt](../../Vendor/we-assets/ATTRIBUTION.txt)
 
 ## 相關專案
 

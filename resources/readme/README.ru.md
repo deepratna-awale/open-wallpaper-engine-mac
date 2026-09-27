@@ -7,7 +7,7 @@ Open Wallpaper Engine (с исправлениями)
 
 Форк [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) для macOS с исправлениями: добавлен рендеринг обоев типа «Сцена» и исправлена работа веб-обоев.
 
-> **Примечание.** Этот проект НЕ связан с коммерческим Wallpaper Engine в Steam. Это приложение для macOS с открытым исходным кодом, которое умеет показывать ресурсы обоев из Мастерской Steam для Wallpaper Engine.
+> **Примечание.** Этот проект НЕ связан с коммерческим Wallpaper Engine в Steam. Это приложение для macOS с открытым исходным кодом, которое умеет показывать ресурсы обоев из Мастерской Steam для Wallpaper Engine. → [ATTRIBUTION.txt](../../Vendor/we-assets/ATTRIBUTION.txt)
 
 ## Связанные проекты
 

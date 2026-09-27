@@ -7,7 +7,7 @@ Open Wallpaper Engine (पैच किया गया)
 
 macOS के लिए [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) का एक पैच किया गया fork, जो सीन वॉलपेपर रेंडरिंग और वेब वॉलपेपर के सुधार जोड़ता है.
 
-> **नोट:** यह Steam पर उपलब्ध कमर्शियल Wallpaper Engine से संबद्ध नहीं है. यह एक ओपन-सोर्स macOS ऐप है, जो Wallpaper Engine के Steam Workshop के वॉलपेपर एसेट दिखा सकता है.
+> **नोट:** यह Steam पर उपलब्ध कमर्शियल Wallpaper Engine से संबद्ध नहीं है. यह एक ओपन-सोर्स macOS ऐप है, जो Wallpaper Engine के Steam Workshop के वॉलपेपर एसेट दिखा सकता है. → [ATTRIBUTION.txt](../../Vendor/we-assets/ATTRIBUTION.txt)
 
 ## संबंधित प्रोजेक्ट
 

@@ -9,7 +9,7 @@ Open Wallpaper Engine (نسخة مُعدَّلة)
 
 نسخة مُعدَّلة (fork) من [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) لنظام macOS، تضيف عرض خلفيات المشهد وإصلاحات لخلفيات الويب.
 
-> **ملاحظة:** هذا المشروع غير تابع لتطبيق Wallpaper Engine التجاري على Steam. إنه تطبيق مفتوح المصدر لنظام macOS يمكنه عرض ملفات خلفيات الشاشة من ورشة Steam الخاصة بـ Wallpaper Engine.
+> **ملاحظة:** هذا المشروع غير تابع لتطبيق Wallpaper Engine التجاري على Steam. إنه تطبيق مفتوح المصدر لنظام macOS يمكنه عرض ملفات خلفيات الشاشة من ورشة Steam الخاصة بـ Wallpaper Engine. → [ATTRIBUTION.txt](../../Vendor/we-assets/ATTRIBUTION.txt)
 
 ## مشاريع ذات صلة
 

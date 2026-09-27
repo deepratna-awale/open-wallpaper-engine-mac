@@ -7,7 +7,7 @@ Open Wallpaper Engine (com patches)
 
 Um fork com patches do [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) para macOS, que adiciona a renderização de imagens de fundo de cena e correções para imagens de fundo web.
 
-> **Observação:** este projeto NÃO tem nenhuma relação com o Wallpaper Engine comercial vendido no Steam. É um app de código aberto para macOS capaz de exibir os recursos de imagens de fundo da Oficina Steam do Wallpaper Engine.
+> **Observação:** este projeto NÃO tem nenhuma relação com o Wallpaper Engine comercial vendido no Steam. É um app de código aberto para macOS capaz de exibir os recursos de imagens de fundo da Oficina Steam do Wallpaper Engine. → [ATTRIBUTION.txt](../../Vendor/we-assets/ATTRIBUTION.txt)
 
 ## Projetos Relacionados
 

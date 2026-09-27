@@ -7,7 +7,7 @@ Open Wallpaper Engine (Yamalı Sürüm)
 
 [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac)’in macOS için yamalı bir çatalı; sahne duvar kâğıdı işleme ve web duvar kâğıdı düzeltmeleri ekler.
 
-> **Not:** Bu proje, Steam’deki ticari Wallpaper Engine ile bağlantılı DEĞİLDİR. Wallpaper Engine’in Steam Atölyesi’ndeki duvar kâğıdı varlıklarını görüntüleyebilen açık kaynaklı bir macOS uygulamasıdır.
+> **Not:** Bu proje, Steam’deki ticari Wallpaper Engine ile bağlantılı DEĞİLDİR. Wallpaper Engine’in Steam Atölyesi’ndeki duvar kâğıdı varlıklarını görüntüleyebilen açık kaynaklı bir macOS uygulamasıdır. → [ATTRIBUTION.txt](../../Vendor/we-assets/ATTRIBUTION.txt)
 
 ## İlgili Projeler
 

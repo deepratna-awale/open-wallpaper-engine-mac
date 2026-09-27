@@ -7,7 +7,7 @@ Open Wallpaper Engine (패치 버전)
 
 macOS용 [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac)의 패치 포크로, 장면 배경화면 렌더링과 웹 배경화면 수정 사항을 추가합니다.
 
-> **참고:** 이 프로젝트는 Steam의 상용 Wallpaper Engine과 관련이 없습니다. Wallpaper Engine의 Steam 창작마당에 있는 배경화면 에셋을 표시할 수 있는 오픈 소스 macOS 앱입니다.
+> **참고:** 이 프로젝트는 Steam의 상용 Wallpaper Engine과 관련이 없습니다. Wallpaper Engine의 Steam 창작마당에 있는 배경화면 에셋을 표시할 수 있는 오픈 소스 macOS 앱입니다. → [ATTRIBUTION.txt](../../Vendor/we-assets/ATTRIBUTION.txt)
 
 ## 관련 프로젝트
 

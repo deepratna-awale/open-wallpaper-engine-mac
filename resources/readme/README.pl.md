@@ -7,7 +7,7 @@ Open Wallpaper Engine (wersja poprawiona)
 
 Poprawiony fork [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) dla macOS, który dodaje renderowanie tapet typu scena i poprawki tapet internetowych.
 
-> **Uwaga:** Ten projekt NIE jest powiązany z komercyjnym programem Wallpaper Engine dostępnym w Steam. To aplikacja open source dla macOS, która potrafi wyświetlać zasoby tapet z Warsztatu Steam programu Wallpaper Engine.
+> **Uwaga:** Ten projekt NIE jest powiązany z komercyjnym programem Wallpaper Engine dostępnym w Steam. To aplikacja open source dla macOS, która potrafi wyświetlać zasoby tapet z Warsztatu Steam programu Wallpaper Engine. → [ATTRIBUTION.txt](../../Vendor/we-assets/ATTRIBUTION.txt)
 
 ## Powiązane projekty
 

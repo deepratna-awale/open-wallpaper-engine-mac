@@ -7,7 +7,7 @@ Open Wallpaper Engine (gepatcht)
 
 Ein gepatchter Fork von [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) für macOS, der das Rendern von Szenen-Hintergrundbildern und Korrekturen für Web-Hintergrundbilder hinzufügt.
 
-> **Hinweis:** Dieses Projekt steht in KEINER Verbindung zum kommerziellen Wallpaper Engine auf Steam. Es handelt sich um eine Open-Source-App für macOS, die Hintergrundbild-Assets aus dem Steam Workshop von Wallpaper Engine anzeigen kann.
+> **Hinweis:** Dieses Projekt steht in KEINER Verbindung zum kommerziellen Wallpaper Engine auf Steam. Es handelt sich um eine Open-Source-App für macOS, die Hintergrundbild-Assets aus dem Steam Workshop von Wallpaper Engine anzeigen kann. → [ATTRIBUTION.txt](../../Vendor/we-assets/ATTRIBUTION.txt)
 
 ## Verwandte Projekte
 

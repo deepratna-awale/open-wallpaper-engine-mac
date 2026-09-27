@@ -25,8 +25,13 @@ ASSETS="${1:-}"
 [[ -d "$ASSETS" ]] || { echo "error: $ASSETS is not a directory" >&2; exit 1; }
 
 echo "source: $ASSETS"
+# ATTRIBUTION.txt is the project's single Wallpaper Engine attribution file; keep it.
+NOTICE="$(mktemp)"
+[[ -f "$DEST/ATTRIBUTION.txt" ]] && cp "$DEST/ATTRIBUTION.txt" "$NOTICE"
 rm -rf "$DEST"
 mkdir -p "$DEST"
+[[ -s "$NOTICE" ]] && cp "$NOTICE" "$DEST/ATTRIBUTION.txt"
+rm -f "$NOTICE"
 
 rsync -a --prune-empty-dirs \
     --exclude '*/preview*/' --exclude 'preview*/' --exclude '.DS_Store' \
@@ -44,10 +49,6 @@ LOCALE="$(dirname "$ASSETS")/locale"
 if [[ -d "$LOCALE" ]]; then
     mkdir -p "$DEST/locale"
     rsync -a --include 'ui_*.json' --exclude '*' "$LOCALE/" "$DEST/locale/"
-fi
-
-if [[ -f "$REPO/Scripts/we-assets-attribution.txt" ]]; then
-    cp "$REPO/Scripts/we-assets-attribution.txt" "$DEST/ATTRIBUTION.txt"
 fi
 
 echo "done: $(find "$DEST" -type f | wc -l | tr -d ' ') files"

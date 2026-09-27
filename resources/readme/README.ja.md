@@ -7,7 +7,7 @@ Open Wallpaper Engine（パッチ版）
 
 macOS 向け [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) のパッチ適用フォークです。シーン壁紙のレンダリングと Web 壁紙の修正を追加しています。
 
-> **注意：** 本プロジェクトは Steam の商用版 Wallpaper Engine とは一切関係ありません。Wallpaper Engine の Steam ワークショップにある壁紙アセットを表示できる、オープンソースの macOS アプリです。
+> **注意：** 本プロジェクトは Steam の商用版 Wallpaper Engine とは一切関係ありません。Wallpaper Engine の Steam ワークショップにある壁紙アセットを表示できる、オープンソースの macOS アプリです。 → [ATTRIBUTION.txt](../../Vendor/we-assets/ATTRIBUTION.txt)
 
 ## 関連プロジェクト
 
