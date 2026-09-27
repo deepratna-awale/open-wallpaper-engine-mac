@@ -1,14 +1,9 @@
 import Foundation
 
 /// Resolves the Wallpaper Engine asset tree used for effects, shared materials and the SceneScript
-/// runtime.
-///
-/// A user-configured Wallpaper Engine installation always wins, so an existing install stays the
-/// source of truth and can be updated independently. Otherwise the translated copy bundled inside
-/// the app is used, which is what makes effects work without Wallpaper Engine installed.
+/// runtime: the translated copy bundled inside the app, which is what makes effects work without
+/// Wallpaper Engine installed.
 enum WallpaperEngineAssets {
-    static let defaultsKey = "WallpaperEngineAssetsDirectory"
-
     /// The translated assets shipped inside the app, if present.
     static var bundled: URL? {
         guard let url = Bundle.main.url(forResource: "we-assets", withExtension: nil),
@@ -16,9 +11,12 @@ enum WallpaperEngineAssets {
         return url
     }
 
-    /// The user's own installation, normalised to the `assets` folder.
-    static var configured: URL? {
-        guard let path = UserDefaults.app.string(forKey: defaultsKey), !path.isEmpty else { return nil }
+    /// Under XCTest only: the Wallpaper Engine install (or its `assets` folder) named by
+    /// `OWE_WE_ASSETS`, for tests that need files the bundled copy leaves out (the particle
+    /// gallery's presets). Always nil in the app.
+    static var testInstall: URL? {
+        guard NSClassFromString("XCTestCase") != nil,
+              let path = ProcessInfo.processInfo.environment["OWE_WE_ASSETS"], !path.isEmpty else { return nil }
         let root = URL(fileURLWithPath: path, isDirectory: true).standardizedFileURL
         let assets = root.lastPathComponent.caseInsensitiveCompare("assets") == .orderedSame
             ? root
@@ -27,18 +25,13 @@ enum WallpaperEngineAssets {
     }
 
     static var directory: URL? {
-        configured ?? bundled
+        testInstall ?? bundled
     }
 
-    static var isUsingBundledAssets: Bool {
-        configured == nil && bundled != nil
-    }
-
-    /// Where shared assets are looked up, in order: the user's installation, then the bundled
-    /// copy, so a file an older installation lacks still resolves and the app works without WE.
+    /// Where shared assets are looked up, in order.
     static var searchDirectories: [URL] {
         var directories: [URL] = []
-        for directory in [configured, bundled].compactMap({ $0 }) where !directories.contains(directory) {
+        for directory in [testInstall, bundled].compactMap({ $0 }) where !directories.contains(directory) {
             directories.append(directory)
         }
         return directories

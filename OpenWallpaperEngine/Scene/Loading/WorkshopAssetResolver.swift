@@ -38,29 +38,9 @@ struct WorkshopAssetResolver {
         self.roots = roots
     }
 
-    /// The app's own download folder, then the Steam Workshop content folder of the configured
-    /// Wallpaper Engine install (`steamapps/workshop/content/431960`), when there is one.
+    /// The app's own download folder (the Wallpaper Storage folder).
     static func defaultRoots(fileManager: FileManager = .default) -> [URL] {
-        var roots = [fileManager.wallpapersDirectory]
-        if let steam = steamWorkshopContentDirectory(assetsDirectory: WallpaperEngineAssets.configured),
-           fileManager.fileExists(atPath: steam.path) {
-            roots.append(steam)
-        }
-        return roots
-    }
-
-    /// `…/steamapps/common/wallpaper_engine/assets` → `…/steamapps/workshop/content/431960`.
-    static func steamWorkshopContentDirectory(assetsDirectory: URL?) -> URL? {
-        guard let assetsDirectory else { return nil }
-        var url = assetsDirectory.standardizedFileURL
-        while url.pathComponents.count > 1 {
-            if url.lastPathComponent.caseInsensitiveCompare("steamapps") == .orderedSame {
-                return url.appending(path: "workshop/content/\(WorkshopAPIService.wallpaperEngineAppId)",
-                                     directoryHint: .isDirectory)
-            }
-            url.deleteLastPathComponent()
-        }
-        return nil
+        [fileManager.wallpapersDirectory]
     }
 
     private static let referencePattern = try! NSRegularExpression(

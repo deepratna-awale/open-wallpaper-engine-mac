@@ -2,7 +2,8 @@ import Foundation
 
 /// WE's own English UI strings (`locale/ui_en-us.json` of a Wallpaper Engine install), which
 /// translate the localisation keys wallpapers and shaders use as labels
-/// (`ui_editor_properties_speed` → "Speed"). Without an install, keys are shown as words.
+/// (`ui_editor_properties_speed` → "Speed"). Without the file (the bundled assets carry none),
+/// keys are shown as words.
 struct WallpaperEngineLabels {
     private let strings: [String: String]
 
@@ -10,9 +11,9 @@ struct WallpaperEngineLabels {
         self.strings = strings
     }
 
-    /// The table of the configured install; empty with the bundled assets only (they carry no
-    /// locale files).
-    static func load(assets: URL? = WallpaperEngineAssets.configured) -> WallpaperEngineLabels {
+    /// The table next to `assets` (`<install>/locale` beside `<install>/assets`); empty for the
+    /// bundled assets, which carry no locale files.
+    static func load(assets: URL? = WallpaperEngineAssets.directory) -> WallpaperEngineLabels {
         guard let assets else { return WallpaperEngineLabels() }
         let file = assets.deletingLastPathComponent().appending(path: "locale/ui_en-us.json")
         guard FileManager.default.fileExists(atPath: file.path) else { return WallpaperEngineLabels() }

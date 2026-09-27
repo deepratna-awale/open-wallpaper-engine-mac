@@ -79,27 +79,6 @@ struct GeneralPage: SettingsPage {
                 Text("Workshop downloads, their dependencies and imported wallpapers go into this folder. You can move the current library to the new location.")
             }
             Section {
-                HStack {
-                    Text(viewModel.settings.wallpaperEngineAssetsDirectory ?? "Using built-in assets")
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Button("Choose...") {
-                        chooseWallpaperEngineAssetsDirectory()
-                    }
-                }
-                if viewModel.settings.wallpaperEngineAssetsDirectory != nil {
-                    Button("Use Built-in Assets") {
-                        viewModel.setWallpaperEngineAssetsDirectory(nil)
-                    }
-                }
-            } header: {
-                Label("Wallpaper Engine Assets", systemImage: "shippingbox")
-            } footer: {
-                Text("Shared textures, effects and presets ship with the app, so this is optional. Point it at the assets folder of a Wallpaper Engine installation to use that copy instead \u{2014} useful if it is newer than the bundled one.")
-            }
-            Section {
                 Toggle("Remove original packages after conversion", isOn: $reclaimOriginalPackages)
                 HStack {
                     Text(reclaimableDescription)
@@ -259,17 +238,6 @@ struct GeneralPage: SettingsPage {
         if panel.runModal() == .OK, let directory = panel.url {
             pendingStorageDirectory = directory
             isStorageMoveConfirming = true
-        }
-    }
-
-    private func chooseWallpaperEngineAssetsDirectory() {
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = false
-        panel.canChooseDirectories = true
-        panel.allowsMultipleSelection = false
-        panel.message = "Choose Wallpaper Engine assets folder"
-        if panel.runModal() == .OK, let directory = panel.url {
-            viewModel.setWallpaperEngineAssetsDirectory(directory)
         }
     }
 

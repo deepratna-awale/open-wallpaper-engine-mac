@@ -12,7 +12,6 @@ import ServiceManagement
 
 @MainActor
 class GlobalSettingsViewModel: ObservableObject {
-    private static let wallpaperEngineAssetsDirectoryKey = "WallpaperEngineAssetsDirectory"
     private static let audioPermissionAlertDismissedKey = "SuppressAudioPermissionPrompt"
 
     /// The user chose "Don't Ask Again" on the missing Screen Recording permission alert.
@@ -48,8 +47,6 @@ class GlobalSettingsViewModel: ObservableObject {
         } else {
             self.settings = GlobalSettings()
         }
-        UserDefaults.app.set(settings.wallpaperEngineAssetsDirectory,
-                                  forKey: Self.wallpaperEngineAssetsDirectoryKey)
         OWELog.apply(logLevel: settings.logLevel)
 
         // Add observers
@@ -142,13 +139,6 @@ class GlobalSettingsViewModel: ObservableObject {
         UserDefaults.app.set(data, forKey: "GlobalSettings")
     }
 
-    func setWallpaperEngineAssetsDirectory(_ directory: URL?) {
-        settings.wallpaperEngineAssetsDirectory = directory?.standardizedFileURL.path
-        UserDefaults.app.set(settings.wallpaperEngineAssetsDirectory,
-                                  forKey: Self.wallpaperEngineAssetsDirectoryKey)
-        NotificationCenter.default.post(name: .wallpaperEngineAssetsDirectoryDidChange, object: nil)
-    }
-    
     func setQuality(_ quality: GSQuality) {
         switch quality {
         case .low:

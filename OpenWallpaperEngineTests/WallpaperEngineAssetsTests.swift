@@ -1,19 +1,16 @@
 import XCTest
 @testable import OpenWallpaperEngine
 
-/// Risk #19: the WE assets without a WE install, with one, and with one that comes and goes.
+/// Risk #19: the WE assets without a WE install. The app always uses its bundled copy.
 final class WallpaperEngineAssetsTests: XCTestCase {
     private var scratch: URL!
-    private var savedDefault: Any?
 
     override func setUpWithError() throws {
         scratch = FileManager.default.temporaryDirectory.appending(path: "owe-assets-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: scratch, withIntermediateDirectories: true)
-        savedDefault = UserDefaults.app.object(forKey: WallpaperEngineAssets.defaultsKey)
     }
 
     override func tearDownWithError() throws {
-        UserDefaults.app.set(savedDefault, forKey: WallpaperEngineAssets.defaultsKey)
         try? FileManager.default.removeItem(at: scratch) // scratch cleanup
     }
 
@@ -23,29 +20,20 @@ final class WallpaperEngineAssetsTests: XCTestCase {
         try Data(text.utf8).write(to: url)
     }
 
-    /// The app ships its own copy, so effects work with no WE install at all.
-    func testBundledAssetsAreShipped() throws {
+    /// The app ships its own copy, so effects work with no WE install at all. A value left in the
+    /// removed `WallpaperEngineAssetsDirectory` setting is ignored.
+    func testBundledAssetsAreShippedAndUsed() throws {
+        try XCTSkipIf(WallpaperEngineAssets.testInstall != nil, "OWE_WE_ASSETS names a WE install for this run")
         let bundled = try XCTUnwrap(WallpaperEngineAssets.bundled)
         XCTAssertTrue(FileManager.default.fileExists(atPath: bundled.appending(path: "shaders/genericimage2.frag").path))
-        UserDefaults.app.removeObject(forKey: WallpaperEngineAssets.defaultsKey)
+        let key = "WallpaperEngineAssetsDirectory", before = UserDefaults.app.object(forKey: key)
+        defer { UserDefaults.app.set(before, forKey: key) }
+        UserDefaults.app.set(scratch.path, forKey: key)
+        XCTAssertEqual(WallpaperEngineAssets.directory, bundled)
         XCTAssertEqual(WallpaperEngineAssets.searchDirectories, [bundled])
-        XCTAssertTrue(WallpaperEngineAssets.isUsingBundledAssets)
     }
 
-    /// A configured install on a drive that isn't mounted is skipped, and used again once it is.
-    func testConfiguredInstallIsReadEachTime() throws {
-        let install = scratch.appending(path: "wallpaper_engine")
-        UserDefaults.app.set(install.path, forKey: WallpaperEngineAssets.defaultsKey)
-        XCTAssertNil(WallpaperEngineAssets.configured, "not there yet")
-        try FileManager.default.createDirectory(at: install.appending(path: "assets"), withIntermediateDirectories: true)
-        XCTAssertEqual(WallpaperEngineAssets.configured?.lastPathComponent, "assets", "normalised to its assets folder")
-        XCTAssertEqual(WallpaperEngineAssets.searchDirectories.first, WallpaperEngineAssets.configured)
-        if let bundled = WallpaperEngineAssets.bundled {
-            XCTAssertEqual(WallpaperEngineAssets.searchDirectories.last, bundled, "the bundled copy backs it up")
-        }
-    }
-
-    /// The configured install wins, and a file it lacks (an older WE) still resolves from the next.
+    /// A file the first directory lacks still resolves from the next.
     func testLookupFallsBackToTheNextDirectory() throws {
         let install = scratch.appending(path: "install"), bundled = scratch.appending(path: "bundled")
         try write("install", to: "shaders/both.frag", in: install)

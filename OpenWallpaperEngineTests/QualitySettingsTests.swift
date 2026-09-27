@@ -63,7 +63,6 @@ final class QualitySettingsTests: XCTestCase {
         settings.reflections = false
         settings.shadows = .ultra
         settings.volumetrics = .low
-        settings.wallpaperEngineAssetsDirectory = "/tmp/we"
         let data = try JSONEncoder().encode(settings)
         let keys = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any]).keys
         XCTAssertTrue(keys.contains("postProcessingQuality"))

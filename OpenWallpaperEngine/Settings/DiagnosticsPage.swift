@@ -14,7 +14,6 @@ struct DiagnosticsPage: SettingsPage {
     var body: some View {
         Form {
             Section {
-                row("Source", WallpaperEngineAssets.isUsingBundledAssets ? "Built-in" : "Wallpaper Engine install")
                 if let directory = WallpaperEngineAssets.directory {
                     row("Path", directory.path, monospaced: true)
                 } else {

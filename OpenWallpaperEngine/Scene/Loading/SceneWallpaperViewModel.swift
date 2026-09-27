@@ -192,15 +192,6 @@ class SceneWallpaperViewModel: ObservableObject {
         return value == "video" || value == "remote-video"
     }
 
-    func reloadSharedAssets() {
-        sceneLock.lock()
-        defer { sceneLock.unlock() }
-        assetDataCache.removeAll(keepingCapacity: true)
-        Self.sharedTextureCache.removeAllObjects()
-        registeredFontNames.removeAll(keepingCapacity: true)
-        bumpRevision()
-    }
-
     func reloadCurrentScene() {
         loadScene(from: currentWallpaper, prepareDefaults: false)
     }
@@ -1161,7 +1152,7 @@ class SceneWallpaperViewModel: ObservableObject {
         if let registered = registeredFontNames[path] { return registered }
         let resolver = SceneFontResolver(
             wallpaperData: { self.loadFontData(named: $0) },
-            assetDirectories: [WallpaperEngineAssets.configured, WallpaperEngineAssets.bundled].compactMap { $0 },
+            assetDirectories: WallpaperEngineAssets.searchDirectories,
             workshop: WorkshopAssetResolver(roots: WorkshopAssetResolver.defaultRoots()))
         let data: Data
         switch resolver.resolve(path) {

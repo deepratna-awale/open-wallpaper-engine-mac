@@ -3,10 +3,6 @@ import Combine
 import SwiftUI
 import ServiceManagement
 
-extension Notification.Name {
-    static let wallpaperEngineAssetsDirectoryDidChange = Notification.Name("WallpaperEngineAssetsDirectoryDidChange")
-}
-
 enum GSQuality {
     case low, medium, high, ultra
 }
@@ -205,9 +201,6 @@ struct GlobalSettings: Codable, Equatable {
     // MARK: Misc
     var autoRefresh = true
 
-    // MARK: Scene Assets
-    var wallpaperEngineAssetsDirectory: String?
-
     /// The stored keys. `postProcessing`, `reflections` and `antiAliasing` moved to new keys when
     /// the renderer started reading them: the old keys hold values saved while the settings did
     /// nothing (post-processing then defaulted to "disabled", anti-aliasing to MSAA x2), so they
@@ -221,7 +214,7 @@ struct GlobalSettings: Codable, Equatable {
         case reflections = "reflection"
         case autoStart, safeMode, language, adjustMenuBarTint, appearance, audioOutput
         case reloadWhenChangingOutputDevice, videoFramework, processPiority, pauseOnVRAMExhausted
-        case restartAfterCrashing, logLevel, autoRefresh, wallpaperEngineAssetsDirectory
+        case restartAfterCrashing, logLevel, autoRefresh
         case syncPropertiesAcrossDisplays
     }
 }
@@ -267,7 +260,6 @@ extension GlobalSettings {
         read(.restartAfterCrashing, &restartAfterCrashing)
         read(.logLevel, &logLevel)
         read(.autoRefresh, &autoRefresh)
-        read(.wallpaperEngineAssetsDirectory, &wallpaperEngineAssetsDirectory)
         read(.syncPropertiesAcrossDisplays, &syncPropertiesAcrossDisplays)
     }
 }

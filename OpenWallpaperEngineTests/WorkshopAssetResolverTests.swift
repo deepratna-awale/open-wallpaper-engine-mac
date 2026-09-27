@@ -29,13 +29,6 @@ final class WorkshopAssetResolverTests: XCTestCase {
         XCTAssertFalse(resolver.isInstalled("9999999999"))
     }
 
-    func testSteamWorkshopFolderIsDerivedFromTheInstall() {
-        let assets = URL(fileURLWithPath: "/x/Steam/steamapps/common/wallpaper_engine/assets")
-        XCTAssertEqual(WorkshopAssetResolver.steamWorkshopContentDirectory(assetsDirectory: assets)?.path,
-                       "/x/Steam/steamapps/workshop/content/431960")
-        XCTAssertNil(WorkshopAssetResolver.steamWorkshopContentDirectory(assetsDirectory: URL(fileURLWithPath: "/opt/assets")))
-    }
-
     func testScansSceneMaterialsAndProjectDependency() {
         let ids = WorkshopDependencyResolver.referencedWorkshopIds(inItemAt: Fixtures.url("Workshop/wallpaper"))
         XCTAssertEqual(ids, ["2981960200", "3333333333", "4444444444"])

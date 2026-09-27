@@ -248,14 +248,6 @@ final class SceneWallpaperInstance {
                 self.scheduleSceneUpdate(impact)
             }
         })
-        observers.append(center.addObserver(forName: .wallpaperEngineAssetsDirectoryDidChange, object: nil, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated {
-                guard let self else { return }
-                self.viewModel.reloadSharedAssets()
-                self.metalRevision = self.viewModel.metalRevision
-                self.loadContent()
-            }
-        })
         observers.append(center.addObserver(forName: .workshopDependenciesDidInstall, object: nil, queue: .main) { [weak self] notification in
             let directory = notification.userInfo?["wallpaperDirectory"] as? URL
             MainActor.assumeIsolated {

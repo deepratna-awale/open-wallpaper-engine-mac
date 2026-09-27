@@ -533,9 +533,6 @@
     "Clear selection" : {
 
     },
-    "Clear Wallpaper Engine Assets Location" : {
-
-    },
     "Click a display to select it. Hold Shift while clicking to select multiple desktops." : {
 
     },
@@ -2010,9 +2007,6 @@
     "Select item" : {
 
     },
-    "Select the assets folder from a Wallpaper Engine installation. Its shared textures and presets will be used when a wallpaper does not include them." : {
-
-    },
     "Select wallpaper" : {
 
     },
@@ -2485,9 +2479,6 @@
           }
         }
       }
-    },
-    "Wallpaper Engine Assets" : {
-
     },
     "Wallpaper Engine for Mac" : {
       "localizations" : {
