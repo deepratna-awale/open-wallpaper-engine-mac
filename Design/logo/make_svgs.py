@@ -99,7 +99,7 @@ def flat_logo():
     """Transparent, un-glassed logo for the in-app placeholder and the docs."""
     body = (f'<path fill="{P["body"]}" d="{rrect(*BODY)}{stand_path()}"/>'
             f'<path fill="{P["screen"]}" d="{rrect(*SCREEN)}"/>'
-            f'<path fill="{P["gear"]}" fill-opacity="0.8" fill-rule="evenodd" d="{gear(GX, GY, G_TIP, G_ROOT)}{circle(GX, GY, G_HOLE)}"/>')
+            f'<path fill="{P["gear"]}" fill-opacity="0.6" fill-rule="evenodd" d="{gear(GX, GY, G_TIP, G_ROOT)}{circle(GX, GY, G_HOLE)}"/>')
     # Centre the artwork vertically on the square canvas.
     shift = (C - (BASE[1] + BASE[3] + BODY[1])) / 2
     write("logo-flat.svg", svg(C, f'<g transform="translate(0 {fmt(shift)})">{body}</g>'))

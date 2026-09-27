@@ -23,7 +23,7 @@
       },
       "translucency" : {
         "enabled" : true,
-        "value" : 0.6
+        "value" : 0.8
       },
       "specular" : true,
       "blur-material" : 0.5
