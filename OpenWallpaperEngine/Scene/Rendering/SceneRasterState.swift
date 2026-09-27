@@ -78,8 +78,13 @@ final class SceneDepthStates {
     static let clearDepth: Double = 0.5
 
     private let states: [SceneRasterState.DepthMode: MTLDepthStencilState]
+    /// The states of a pass drawn through a mirrored view (the planar reflection, docs/models-plan.md
+    /// §2.11): its mirror flips every triangle's winding, and WE flips its cull mode there
+    /// (0x14018070e), so the front faces are the other winding.
+    let mirrored: Bool
 
-    init?(device: MTLDevice) {
+    init?(device: MTLDevice, mirrored: Bool = false) {
+        self.mirrored = mirrored
         var states: [SceneRasterState.DepthMode: MTLDepthStencilState] = [:]
         for mode in [SceneRasterState.DepthMode.testAndWrite, .testOnly, .off] {
             let descriptor = MTLDepthStencilDescriptor()
@@ -99,10 +104,10 @@ final class SceneDepthStates {
     /// Sets `raster`'s depth-stencil state and cull mode for the draws that follow. Front faces
     /// are clockwise on screen, as D3D's `FrontCounterClockwise = FALSE` (0x1400990f9): the
     /// translated stages flip y back after the view-projection flipped it, so what reaches the
-    /// rasteriser is WE's clip space.
+    /// rasteriser is WE's clip space; counter-clockwise when `mirrored`.
     func apply(_ raster: SceneRasterState, to encoder: MTLRenderCommandEncoder) {
         encoder.setDepthStencilState(state(raster))
-        encoder.setFrontFacing(.clockwise)
+        encoder.setFrontFacing(mirrored ? .counterClockwise : .clockwise)
         encoder.setCullMode(raster.cullMode)
     }
 }

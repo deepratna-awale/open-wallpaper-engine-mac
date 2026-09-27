@@ -113,7 +113,7 @@ final class ScenePlanarReflectionTests: XCTestCase {
         let buffer = try XCTUnwrap(queue.makeCommandBuffer())
         let pass = ScenePlanarReflection.Pass(
             width: Self.size, height: Self.size, pixelFormat: .bgra8Unorm, clearColor: Self.clear, enabled: enabled,
-            models: models.map { (model: $0.0, world: $0.1) }, frame: frame(), values: EffectGraphTests.FixedValues(),
+            objects: models.map { .model($0.0, world: $0.1) }, frame: frame(), values: EffectGraphTests.FixedValues(),
             mipMappedFrameBuffer: nil, shadowAtlas: nil, assetTexture: { [white] _, _ in white })
         let target = try XCTUnwrap(reflection.encode(pass, drawing: renderer, depthStates: depthStates, commandBuffer: buffer))
         buffer.commit()

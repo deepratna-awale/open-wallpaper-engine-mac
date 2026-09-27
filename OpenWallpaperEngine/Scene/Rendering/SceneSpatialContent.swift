@@ -23,6 +23,10 @@ struct SceneSpatialContent: Equatable {
     /// `sortorder`, `castshadow`, `reflected` and `depthtest` of every object that authors one, by
     /// object id (`WESceneObject.renderValues`).
     var renderValues: [String: [SceneObjectRenderField: SceneRawValue]] = [:]
+    /// Objects WE's factory keeps out of the planar reflection's list whatever their `reflected`
+    /// (0x14018ff60: only models, particles, images, sprites and texts join it, 0x1401908f9): the
+    /// shapes, the one kind of those that draws here.
+    var unreflectable: Set<String> = []
 
     /// An object's `sortorder` (`customsortorder`'s key; WE reads it as an int, 0 unset).
     func sortOrder(of id: String) -> Int {
@@ -33,6 +37,11 @@ struct SceneSpatialContent: Equatable {
         case .bool(let flag): return flag ? 1 : 0
         case .object: return 0
         }
+    }
+
+    /// Whether an object draws into the planar reflection (`ScenePlanarReflection.isReflected`).
+    func isReflected(_ id: String) -> Bool {
+        !unreflectable.contains(id) && ScenePlanarReflection.isReflected(renderValues[id]?[.reflected])
     }
 
     /// A text object's `depthtest` (WE's enum: "disabled" is off, anything else on); nil when not

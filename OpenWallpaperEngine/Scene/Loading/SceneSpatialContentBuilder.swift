@@ -36,6 +36,10 @@ struct SceneSpatialContentBuilder {
             let id = String(object.id ?? -1)
             let name = object.name ?? "#\(index)"
             if !object.renderValues.isEmpty { content.renderValues[id] = object.renderValues }
+            // WE's factory tries model, particle, image, sprite and text before shape (0x14019075e).
+            if object.shape != nil, object.model == nil, object.particle == nil, object.image == nil, object.textValue == nil {
+                content.unreflectable.insert(id)
+            }
             if let model = object.model {
                 content.models.append(SceneModelObject(id: id, name: name, order: index, authored: model,
                                                        animationLayers: object.animationLayers,

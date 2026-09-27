@@ -192,10 +192,13 @@ final class ParticleMaterialRenderer {
         }
     }
 
-    private func program(for stage: ParticleMaterialPlan.Stage, state: SystemState) -> UniformProgram {
-        if let program = state.programs[stage.variantKey] { return program }
+    /// `stage`'s uniforms. The planar reflection's draw has its own (`reflected`): a program writes
+    /// its pass values only when they change, so the two passes' cameras mustn't share one.
+    private func program(for stage: ParticleMaterialPlan.Stage, state: SystemState, reflected: Bool = false) -> UniformProgram {
+        let key = reflected ? "reflection|" + stage.variantKey : stage.variantKey
+        if let program = state.programs[key] { return program }
         let program = UniformProgram(layout: stage.variant.uniforms, constants: stage.constants)
-        state.programs[stage.variantKey] = program
+        state.programs[key] = program
         return program
     }
 
@@ -235,6 +238,36 @@ final class ParticleMaterialRenderer {
               let state = systems[ObjectIdentifier(system)], state.owner === system,
               let prepared = state.prepared else { return }
         state.prepared = nil
+        encode(system, plan: plan, state: state, prepared: prepared, pipeline: prepared.pipeline, reflected: false,
+               encoder: encoder, commandBuffer: commandBuffer, context: context)
+    }
+
+    /// Encodes the draw `prepare` set up for `system` this frame into another pass as well, before
+    /// `draw` encodes it into the scene pass: the planar reflection's (docs/models-plan.md §2.11),
+    /// a `pixelFormat` target of `sampleCount` samples with `depthFormat` depth. The same stage and
+    /// records draw through a pipeline for that target, and the uniforms, `context`'s camera
+    /// included, go through the arena (the GPU step patches only the scene draw's block, so a
+    /// GPU-simulated rope keeps its material's `g_RenderVar0` here). Nothing is drawn while that
+    /// pipeline compiles or the system has no draw this frame.
+    func draw(_ system: ParticleSystemRuntime, alsoInto pixelFormat: MTLPixelFormat, sampleCount: Int,
+              depthFormat: MTLPixelFormat, encoder: MTLRenderCommandEncoder, commandBuffer: MTLCommandBuffer,
+              context: DrawContext) {
+        guard let plan = system.configuration.material,
+              let state = systems[ObjectIdentifier(system)], state.owner === system,
+              let prepared = state.prepared,
+              case .ready(let stage, let pipeline) = readiness(plan, pixelFormat: pixelFormat, sampleCount: sampleCount,
+                                                               depthFormat: depthFormat, state: state),
+              stage.variantKey == prepared.stage.variantKey else { return }
+        encode(system, plan: plan, state: state, prepared: prepared, pipeline: pipeline, reflected: true,
+               encoder: encoder, commandBuffer: commandBuffer, context: context)
+    }
+
+    /// Encodes `prepared` through `pipeline`; `reflected` for the planar reflection's draw, whose
+    /// uniforms have their own program and go through the arena, not the block the GPU step patches.
+    private func encode(_ system: ParticleSystemRuntime, plan: ParticleMaterialPlan, state: SystemState,
+                        prepared: (stage: ParticleMaterialPlan.Stage, pipeline: MTLRenderPipelineState, records: Records),
+                        pipeline: MTLRenderPipelineState, reflected: Bool, encoder: MTLRenderCommandEncoder,
+                        commandBuffer: MTLCommandBuffer, context: DrawContext) {
         let recordBuffer: MTLBuffer
         switch prepared.records {
         case .cpu(let buffer, let count):
@@ -245,7 +278,7 @@ final class ParticleMaterialRenderer {
             recordBuffer = records
         }
         let stage = prepared.stage
-        encoder.setRenderPipelineState(prepared.pipeline)
+        encoder.setRenderPipelineState(pipeline)
         context.depth?.apply(plan.raster, to: encoder)
         encoder.setVertexBuffer(recordBuffer, offset: 0, index: Self.recordBuffer)
         encoder.setVertexBuffer(zeroAttributes, offset: 0, index: Self.zeroBuffer)
@@ -288,7 +321,7 @@ final class ParticleMaterialRenderer {
             textures[slot] = EffectGraphRenderer.textureInfo(for: texture, contentSize: contentSize)
         }
 
-        let program = self.program(for: stage, state: state)
+        let program = self.program(for: stage, state: state, reflected: reflected)
         if program.size > 0, let layout = stage.variant.uniforms {
             let uniforms = ParticleMaterialUniforms(plan: plan, system: system, sceneSize: context.sceneSize,
                                                     texture0: textures[0], placement: context.placement,
@@ -310,7 +343,7 @@ final class ParticleMaterialRenderer {
             state.scratch.append(contentsOf: program.bytes)
             uniforms.patch(&state.scratch, members: members)
             state.scratch.withUnsafeBytes { raw in
-                if case .gpu(let block?) = prepared.records, block.length >= raw.count {
+                if !reflected, case .gpu(let block?) = prepared.records, block.length >= raw.count {
                     // The simulation's step, which runs before this draw, patches the block.
                     block.contents().copyMemory(from: raw.baseAddress!, byteCount: raw.count)
                     encoder.setVertexBuffer(block, offset: 0, index: 0)

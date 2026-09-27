@@ -988,7 +988,6 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                              shake: motion.shake)
         drawProbe?.record(lighting: effectFrame.lighting)
         frameShadowAtlas = drawShadows(frame: effectFrame, commandBuffer: commandBuffer)
-        frameReflection = drawReflection(frame: effectFrame, scene: sceneTexture, commandBuffer: commandBuffer)
         // Text is rasterised first so its effects run on the finished text, like an image layer's.
         var textFrames: [Int: (frame: RenderTextureFrame, baseSize: SIMD2<Float>)] = [:]
         // Only visible layers get an entry; the draw loop skips the rest.
@@ -1155,6 +1154,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         particleSignpost.end()
         particleSimulator?.encode(particleRequests, sceneSize: sceneSize, targetSize: drawableSize,
                                   commandBuffer: commandBuffer)
+        frameReflection = drawReflection(frame: effectFrame, scene: sceneTexture, draws: draws,
+                                         image: { [unowned self] in textFrames[$0]?.frame ?? self.textureFrame(for: self.layers[$0]) },
+                                         effectOutputs: dynamicTextures,
+                                         batches: particleBatches.map { ($0.system, $0.material) }, commandBuffer: commandBuffer)
         guard var encoder = commandBuffer.makeRenderCommandEncoder(descriptor: sceneRenderPass) else { return }
         encoder.setRenderPipelineState(renderPipeline)
         let particleBuffer = particleInstanceBuffer(for: particleInstances.count)
@@ -1278,70 +1281,17 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 // Until its effects are ready the layer has nothing of its own to draw.
                 if entry.layer.sceneInput, dynamicTextures[layerIndex] == nil { continue }
             }
-            var uniform = layerUniform(position: draw.quad.center, size: draw.quad.extent,
-                                       opacity: draw.opacity, drawableSize: drawableSize, placement: .stretch)
-            setQuadAxes(&uniform, quad: draw.quad)
-            // Text is rasterised white; its user colour tints it when drawn, like its authored one.
-            // Text with font effects or layer effects has its colours in its raster (`textFill`).
-            let textTint = entry.layer.text == nil ? SIMD3<Float>(repeating: 1) : self.textTint(layerID: entry.layer.id)
-            uniform.color = entry.layer.text?.effects == nil && entry.layer.weEffects.isEmpty ? draw.color * SIMD4(textTint, 1)
-                : SIMD4(1, 1, 1, draw.color.w)
-            let materialEffects = entry.layer.effects
-            uniform.effects = SIMD4<Float>(materialEffects.brightness * draw.brightness, materialEffects.contrast,
-                                           materialEffects.saturation
-                                               * (1 + (entry.layer.musicSync?.saturationAmount ?? 0) * Float(draw.musicSyncLevel)),
-                                           materialEffects.bloom * WallpaperServices.shared.userPropertyValue("_owe_bloom", fallback: 1))
-            uniform.blur = materialEffects.blur * WallpaperServices.shared.userPropertyValue("_owe_blur", fallback: 1)
-            uniform.colorEffects = SIMD4<Float>(materialEffects.exposure, materialEffects.gamma,
-                                                materialEffects.hue, materialEffects.bloomThreshold)
-            uniform.transform = SIMD4<Float>(materialEffects.transformAngle, materialEffects.transformOffset.x,
-                                             materialEffects.transformOffset.y, materialEffects.transformScale.x)
-            uniform.transformScaleY = materialEffects.transformScale.y
-            let textureFrame = textFrames[layerIndex]?.frame ?? self.textureFrame(for: entry)
-            uniform.uvOrigin = textureFrame.uvOrigin
-            uniform.uvAxisX = textureFrame.uvAxisX
-            uniform.uvAxisY = textureFrame.uvAxisY
             // Drawn below, natively or through its material; through a camera, anywhere.
             if draw.placement != nil {
                 snapshotTracker.sceneDrawn(in: nil)
             } else if let drawn = SceneSnapshotTracker.pixelRect(of: draw.quad, sceneSize: sceneSize, targetSize: targetSize) {
                 snapshotTracker.sceneDrawn(in: drawn)
             }
-            // A text layer's `font` material reads the glyphs' coverage; colour glyphs have none.
-            // A prelit layer whose chain rendered nothing (every effect hidden, or compiling) draws
-            // its prelit image: its own draw has the lighting off, so the raw image would be unlit.
-            let materialTexture = entry.layer.text == nil
-                ? dynamicTextures[layerIndex] ?? prelitImages[entry.layer.id] ?? textureFrame.texture
-                : textureFrame.coverage
-            if let plan = entry.layer.imageMaterial, let imageMaterials, let materialTexture, imageMaterials.draw(plan, ImageMaterialRenderer.Draw(
-                   layerID: entry.layer.id, quad: draw.quad, sceneSize: sceneSize,
-                   color: SIMD3(draw.color.x, draw.color.y, draw.color.z) * textTint, alpha: draw.opacity, brightness: draw.brightness,
-                   texture: materialTexture, contentSize: entry.layer.source.contentSize,
-                   uvOrigin: textureFrame.uvOrigin, uvAxisX: textureFrame.uvAxisX, uvAxisY: textureFrame.uvAxisY,
-                   sceneSnapshot: layerSnapshot, mipMappedFrameBuffer: mipMappedTarget, shadowAtlas: frameShadowAtlas,
-                   frame: effectFrame,
-                   values: timelines.values,
-                   assetTexture: { [unowned self] key, source in
-                       self.puppetWarps[entry.layer.id]?[key] ?? self.effectAssetTexture(key: key, source: source)
-                   },
-                   assetSprite: { [unowned self] key, source in self.effectAssetSprite(key: key, source: source) },
-                   ignoredAdjustments: !ImageMaterialRenderer.nativeAdjustmentsAreIdentity(uniform, brightness: draw.brightness),
-                   placement: draw.placement, raster: layerRaster(entry)),
-                   pixelFormat: sceneTexture.pixelFormat, sampleCount: sceneSampleCount, depth: frameDepth, encoder: encoder,
-                   commandBuffer: commandBuffer) {
-                encoder.setRenderPipelineState(renderPipeline)
-                continue
-            }
-            frameDepth?.apply(layerRaster(entry), to: encoder)
-            if var placed = draw.placement?.native, let pipeline = scenePassPipelines.placedNormal {
-                encoder.setRenderPipelineState(pipeline)
-                encoder.setVertexBytes(&placed, length: MemoryLayout<LayerPlacement3D>.stride, index: 1)
-            }
-            encoder.setVertexBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
-            encoder.setFragmentBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
-            encoder.setFragmentTexture(dynamicTextures[layerIndex] ?? textureFrame.texture, index: 0)
-            encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
-            if draw.placement != nil { encoder.setRenderPipelineState(renderPipeline) }
+            encodeLayer(entry, draw, image: textFrames[layerIndex]?.frame ?? textureFrame(for: entry),
+                        effectOutput: dynamicTextures[layerIndex], snapshot: layerSnapshot, frame: effectFrame,
+                        target: LayerTarget(size: drawableSize, pixelFormat: sceneTexture.pixelFormat,
+                                            sampleCount: sceneSampleCount, depth: frameDepth, pipelines: scenePassPipelines),
+                        encoder: encoder, commandBuffer: commandBuffer)
         }
         guard drawParticleBatches(before: .max) else { return }
         encoder.endEncoding()
@@ -1451,29 +1401,192 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                  commandBuffer: commandBuffer)
     }
 
+    /// The pass a layer's quad draws into: its target's format and samples, its depth states (nil
+    /// without depth) and the native layer pipelines for it.
+    private struct LayerTarget {
+        /// The target's size in pixels.
+        var size: SIMD2<Float>
+        var pixelFormat: MTLPixelFormat
+        var sampleCount: Int
+        var depth: SceneDepthStates?
+        var pipelines: SceneLayerPipelines.Pipelines
+    }
+
+    /// Draws a layer's quad into `encoder`'s pass: through its material, or natively when it has
+    /// none or its material can't draw this frame. `image` is its texture frame (its text raster
+    /// for a text layer), `effectOutput` what its effects made this frame, `snapshot` the scene
+    /// under it for a material that reads it. Leaves `target.pipelines.normal` set.
+    private func encodeLayer(_ entry: PreparedLayer, _ draw: LayerDraw, image textureFrame: RenderTextureFrame,
+                             effectOutput: MTLTexture?, snapshot layerSnapshot: MTLTexture?, frame: BuiltinFrameContext,
+                             target: LayerTarget, encoder: MTLRenderCommandEncoder, commandBuffer: MTLCommandBuffer) {
+        var uniform = layerUniform(position: draw.quad.center, size: draw.quad.extent,
+                                   opacity: draw.opacity, drawableSize: target.size, placement: .stretch)
+        setQuadAxes(&uniform, quad: draw.quad)
+        // Text is rasterised white; its user colour tints it when drawn, like its authored one.
+        // Text with font effects or layer effects has its colours in its raster (`textFill`).
+        let textTint = entry.layer.text == nil ? SIMD3<Float>(repeating: 1) : self.textTint(layerID: entry.layer.id)
+        uniform.color = entry.layer.text?.effects == nil && entry.layer.weEffects.isEmpty ? draw.color * SIMD4(textTint, 1)
+            : SIMD4(1, 1, 1, draw.color.w)
+        let materialEffects = entry.layer.effects
+        uniform.effects = SIMD4<Float>(materialEffects.brightness * draw.brightness, materialEffects.contrast,
+                                       materialEffects.saturation
+                                           * (1 + (entry.layer.musicSync?.saturationAmount ?? 0) * Float(draw.musicSyncLevel)),
+                                       materialEffects.bloom * WallpaperServices.shared.userPropertyValue("_owe_bloom", fallback: 1))
+        uniform.blur = materialEffects.blur * WallpaperServices.shared.userPropertyValue("_owe_blur", fallback: 1)
+        uniform.colorEffects = SIMD4<Float>(materialEffects.exposure, materialEffects.gamma,
+                                            materialEffects.hue, materialEffects.bloomThreshold)
+        uniform.transform = SIMD4<Float>(materialEffects.transformAngle, materialEffects.transformOffset.x,
+                                         materialEffects.transformOffset.y, materialEffects.transformScale.x)
+        uniform.transformScaleY = materialEffects.transformScale.y
+        uniform.uvOrigin = textureFrame.uvOrigin
+        uniform.uvAxisX = textureFrame.uvAxisX
+        uniform.uvAxisY = textureFrame.uvAxisY
+        // A text layer's `font` material reads the glyphs' coverage; colour glyphs have none.
+        // A prelit layer whose chain rendered nothing (every effect hidden, or compiling) draws
+        // its prelit image: its own draw has the lighting off, so the raw image would be unlit.
+        let materialTexture = entry.layer.text == nil
+            ? effectOutput ?? prelitImages[entry.layer.id] ?? textureFrame.texture
+            : textureFrame.coverage
+        if let plan = entry.layer.imageMaterial, let imageMaterials, let materialTexture, imageMaterials.draw(plan, ImageMaterialRenderer.Draw(
+               layerID: entry.layer.id, quad: draw.quad, sceneSize: sceneSize,
+               color: SIMD3(draw.color.x, draw.color.y, draw.color.z) * textTint, alpha: draw.opacity, brightness: draw.brightness,
+               texture: materialTexture, contentSize: entry.layer.source.contentSize,
+               uvOrigin: textureFrame.uvOrigin, uvAxisX: textureFrame.uvAxisX, uvAxisY: textureFrame.uvAxisY,
+               sceneSnapshot: layerSnapshot, mipMappedFrameBuffer: mipMappedTarget, shadowAtlas: frameShadowAtlas,
+               frame: frame,
+               values: timelines.values,
+               assetTexture: { [unowned self] key, source in
+                   self.puppetWarps[entry.layer.id]?[key] ?? self.effectAssetTexture(key: key, source: source)
+               },
+               assetSprite: { [unowned self] key, source in self.effectAssetSprite(key: key, source: source) },
+               ignoredAdjustments: !ImageMaterialRenderer.nativeAdjustmentsAreIdentity(uniform, brightness: draw.brightness),
+               placement: draw.placement, raster: layerRaster(entry)),
+               pixelFormat: target.pixelFormat, sampleCount: target.sampleCount, depth: target.depth, encoder: encoder,
+               commandBuffer: commandBuffer) {
+            encoder.setRenderPipelineState(target.pipelines.normal)
+            return
+        }
+        target.depth?.apply(layerRaster(entry), to: encoder)
+        if var placed = draw.placement?.native, let pipeline = target.pipelines.placedNormal {
+            encoder.setRenderPipelineState(pipeline)
+            encoder.setVertexBytes(&placed, length: MemoryLayout<LayerPlacement3D>.stride, index: 1)
+        }
+        encoder.setVertexBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
+        encoder.setFragmentBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
+        encoder.setFragmentTexture(effectOutput ?? textureFrame.texture, index: 0)
+        encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
+        if draw.placement != nil { encoder.setRenderPipelineState(target.pipelines.normal) }
+    }
+
     /// This frame's `_rt_Reflection` (docs/models-plan.md §2.11): while a model is reflective, the
-    /// visible reflected models drawn through the mirrored camera in the object loop's order (its
+    /// visible reflected objects drawn through the mirrored camera in the object loop's order (its
     /// sort keyed on the mirrored forward, as WE sorts inside the mirrored pass), or the clear
-    /// colour with the reflection setting off; nil while no model is reflective.
-    private func drawReflection(frame: BuiltinFrameContext, scene: MTLTexture, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
+    /// colour with the reflection setting off; nil while no model is reflective. It is drawn once
+    /// the layers' effects and the particle systems' steps of this frame are encoded, before the
+    /// scene pass that samples it: the layers draw this frame's images, as WE's object draws do.
+    /// `draws`, `image` (a layer's texture frame, or text raster) and `effectOutputs` are the scene
+    /// pass's, by layer index; `batches` its particle systems, and which of them draw through their
+    /// material.
+    private func drawReflection(frame: BuiltinFrameContext, scene: MTLTexture, draws: [Int: LayerDraw],
+                                image: (Int) -> RenderTextureFrame, effectOutputs: [Int: MTLTexture],
+                                batches: [(system: ParticleSystemRuntime, material: Bool)],
+                                commandBuffer: MTLCommandBuffer) -> MTLTexture? {
         guard let planarReflection, let modelDrawing, let depthStates, planarReflection.isNeeded(spatial.models) else {
             if planarReflection?.texture != nil { planarReflection?.release() }
             return nil
         }
-        var indices = planarReflection.reflectedList(spatial.models).filter { scripts.isVisible(spatial.models[$0].id) }
-        if spatial.drawOrder.reorders {
-            let forward = ScenePlanarReflection.mirrored(frame.camera).forward
-            indices = spatial.drawOrder.ordered(indices.map { drawEntry(.model($0), batches: []) }, forward: forward)
-                .compactMap { if case .model(let index) = $0 { return index } else { return nil } }
+        let reflectedModels = Set(planarReflection.reflectedList(spatial.models))
+        let sequence = drawSequence(batches: batches.map(\.system), forward: ScenePlanarReflection.mirrored(frame.camera).forward)
+        var objects: [ScenePlanarReflection.Object] = []
+        var next = 0
+        func systems(before barrier: Int) {
+            while next < sequence.batchOrder.count, sequence.batchKeys[next] < barrier {
+                let batch = batches[sequence.batchOrder[next]]
+                next += 1
+                if batch.material, let object = reflectedSystem(batch.system) { objects.append(object) }
+            }
         }
+        for (item, barrier) in sequence.items {
+            systems(before: barrier)
+            switch item {
+            case .model(let index):
+                let model = spatial.models[index]
+                guard reflectedModels.contains(index), scripts.isVisible(model.id) else { continue }
+                objects.append(.model(model, world: world3D(model.id, in: spatial.transforms)))
+            case .layer(let index):
+                guard let draw = draws[index] else { continue }
+                if let object = reflectedLayer(index, draw, image: image(index), effectOutput: effectOutputs[index]) {
+                    objects.append(object)
+                }
+            case .particles:
+                continue
+            }
+        }
+        systems(before: .max)
         let pass = ScenePlanarReflection.Pass(
             width: scene.width, height: scene.height, pixelFormat: scene.pixelFormat,
             clearColor: scripts.state.scene.vector3(.clearcolor) ?? clearColor, enabled: renderSettings.reflection,
-            models: indices.map { (spatial.models[$0], world3D(spatial.models[$0].id, in: spatial.transforms)) },
+            objects: objects,
             frame: frame, values: timelines.values, mipMappedFrameBuffer: mipMappedTarget, shadowAtlas: frameShadowAtlas,
             assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
             layerComposite: { [unowned self] id in self.layerComposites[id] })
         return planarReflection.encode(pass, drawing: modelDrawing, depthStates: depthStates, commandBuffer: commandBuffer)
+    }
+
+    /// A layer's draw into the planar reflection, or nil when it isn't in the reflected list (its
+    /// `reflected`, or a shape) or hidden. Drawn as in the scene pass with the mirrored camera:
+    /// through it where the scene pass draws through the frame camera (a perspective scene's
+    /// layers; an orthographic scene's, whose view the mirror makes a camera placement), and
+    /// unchanged where WE's view doesn't reach the layer (a fullscreen layer in screen space, a
+    /// `perspective` layer through its own temporary camera, 0x1401e5b60). A layer whose image
+    /// is made inside the scene pass (it reads the scene, or samples a layer that does) isn't
+    /// drawn: its image doesn't exist yet (docs/models-plan.md §4.3 M9).
+    private func reflectedLayer(_ index: Int, _ draw: LayerDraw, image: RenderTextureFrame,
+                                effectOutput: MTLTexture?) -> ScenePlanarReflection.Object? {
+        let entry = layers[index]
+        let id = entry.layer.id
+        guard scripts.isVisible(id), spatial.isReflected(id), !entry.layer.readsScene,
+              !compositeOrder().inScene.contains(id) else { return nil }
+        return .other(id: id) { [unowned self] mirrored in
+            var reflected = draw
+            if self.isPerspective, var placement = draw.placement {
+                placement.camera = mirrored.frame.camera
+                reflected.placement = placement
+            } else if !self.isPerspective, draw.placement == nil, !entry.layer.fillsScene {
+                reflected.placement = SceneLayerPlacement(world: ImageMaterialRenderer.modelMatrix(draw.quad),
+                                                          size: draw.quad.extent, camera: mirrored.frame.camera)
+            }
+            guard let pipelines = self.layerPipelines.pipelines(for: mirrored.pixelFormat, sampleCount: 1,
+                                                                depthFormat: SceneDepthStates.format) else { return }
+            mirrored.encoder.setRenderPipelineState(pipelines.normal)
+            let size = SIMD2<Float>(Float(self.sceneRenderTargetSize.x), Float(self.sceneRenderTargetSize.y))
+            self.encodeLayer(entry, reflected, image: image, effectOutput: effectOutput, snapshot: nil, frame: mirrored.frame,
+                             target: LayerTarget(size: size, pixelFormat: mirrored.pixelFormat, sampleCount: 1,
+                                                 depth: mirrored.depth, pipelines: pipelines),
+                             encoder: mirrored.encoder, commandBuffer: mirrored.commandBuffer)
+        }
+    }
+
+    /// A particle system's draw into the planar reflection through its material, or nil when it
+    /// isn't in the reflected list or reads the scene drawn so far (refraction; that scene isn't
+    /// the reflection's). Its camera is the mirrored one, except a `perspective` system's
+    /// temporary camera in an orthographic scene, which WE's view doesn't reach.
+    private func reflectedSystem(_ system: ParticleSystemRuntime) -> ScenePlanarReflection.Object? {
+        guard let particleMaterials, !particleMaterials.readsSceneSnapshot(system) else { return nil }
+        let id = particleObjectID(system)
+        if let id, !spatial.isReflected(id) { return nil }
+        return .other(id: id ?? "particles") { [unowned self] mirrored in
+            // `particlePlacement` keeps a `perspective` system's temporary camera; an orthographic
+            // scene's other systems take the mirrored orthographic view.
+            let placement = self.particlePlacement(system, camera: mirrored.frame.camera)
+                ?? ParticleMaterialUniforms.Placement(camera: mirrored.frame.camera)
+            particleMaterials.draw(system, alsoInto: mirrored.pixelFormat, sampleCount: 1, depthFormat: SceneDepthStates.format,
+                                   encoder: mirrored.encoder, commandBuffer: mirrored.commandBuffer, context: .init(
+                                       sceneSize: self.sceneSize, frame: mirrored.frame, values: self.timelines.values,
+                                       assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
+                                       sceneSnapshot: nil, mipMappedFrameBuffer: self.mipMappedTarget, shadowAtlas: self.frameShadowAtlas,
+                                       depth: mirrored.depth, placement: placement))
+        }
     }
 
     /// WE's sound layers each frame, on the scene clock: the wallpaper gain's fade takes the

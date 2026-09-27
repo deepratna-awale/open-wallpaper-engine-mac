@@ -16,9 +16,14 @@ import simd
 ///   the reflection too); the eye and the camera basis are mirrored and the winding flips; the
 ///   target is cleared to the clear colour and far depth, and the reflected list is drawn. With
 ///   the setting off the target is only cleared to the clear colour, every frame (0x14018089c).
-/// - **The reflected list** (0x1401908f4…0x140190926): objects with `reflected` (true unless it is
-///   authored as a literal `false`) that aren't reflective. Only models are drawn into it here
-///   (models-plan §4.3 M9 deviations).
+/// - **The reflected list** (0x1401908f4…0x140190926): objects of the kinds WE's factory lists
+///   (models, particle systems, images, sprites and texts; 0x14018ff60 clears the flag for lights,
+///   sounds, cameras and shapes) with `reflected` (true unless it is authored as a literal `false`),
+///   that aren't reflective. The pass calls each object's own draw (vtable +0x50, the one the scene
+///   pass calls; nothing an object draws tells the passes apart: only the object loop reads the
+///   main-pass flag, scene+0x468), so a layer or particle system draws through its material, with
+///   the frame's built-ins mirrored. Models draw here; the renderer hands in the others' draws
+///   (`Object.other`).
 ///
 /// Materials sample it at their own screen position (`generic2`: `clip.xy / w · 0.5 + 0.5`); the
 /// target is drawn through the same translated stages as the scene, so that is where the
@@ -36,10 +41,16 @@ final class ScenePlanarReflection {
     private var reflectivePlans: [ObjectIdentifier: Bool] = [:]
     /// The model objects drawn into the target last frame, in order (tests, diagnostics).
     private(set) var drawnModels: [String] = []
+    /// Every object drawn into the target last frame, models included, in order.
+    private(set) var drawnObjects: [String] = []
+    /// The depth and cull states of the layers and particle systems drawn here: the scene pass's
+    /// with the other winding in front (`SceneDepthStates.mirrored`). Nil when they can't be made.
+    let mirroredDepthStates: SceneDepthStates?
 
     init(device: MTLDevice) {
         self.device = device
         depth = SceneDepthBuffer(device: device)
+        mirroredDepthStates = SceneDepthStates(device: device, mirrored: true)
     }
 
     var residentBytes: Int { (texture?.allocatedSize ?? 0) + depth.residentBytes }
@@ -54,6 +65,7 @@ final class ScenePlanarReflection {
         texture = nil
         depth.releaseAll()
         drawnModels.removeAll()
+        drawnObjects.removeAll()
     }
 
     // MARK: - Objects
@@ -79,7 +91,11 @@ final class ScenePlanarReflection {
     /// `reflected`: only a literal `false` turns it off (0x1401908f9: any value that isn't a JSON
     /// bool, a user binding included, leaves it on).
     static func isReflected(_ model: SceneModelObject) -> Bool {
-        guard case .bool(let flag)? = model.renderValues[.reflected] else { return true }
+        isReflected(model.renderValues[.reflected])
+    }
+
+    static func isReflected(_ value: SceneRawValue?) -> Bool {
+        guard case .bool(let flag)? = value else { return true }
         return flag
     }
 
@@ -119,6 +135,26 @@ final class ScenePlanarReflection {
 
     // MARK: - The pass
 
+    /// One object of the reflected list.
+    enum Object {
+        /// A model, drawn with its world matrix through `SceneModelDrawing`.
+        case model(SceneModelObject, world: simd_float4x4)
+        /// A layer or particle system, which the renderer draws through its material into the pass.
+        case other(id: String, draw: (MirroredDraw) -> Void)
+    }
+
+    /// What a layer or particle system draws into the pass with.
+    struct MirroredDraw {
+        let encoder: MTLRenderCommandEncoder
+        let commandBuffer: MTLCommandBuffer
+        /// The frame's built-ins through the mirrored camera (`mirrored(_:)`).
+        let frame: BuiltinFrameContext
+        /// The target's format; the pass is single-sampled and has `SceneDepthStates.format` depth.
+        let pixelFormat: MTLPixelFormat
+        /// WE's depth states with the flipped winding (`mirroredDepthStates`).
+        let depth: SceneDepthStates
+    }
+
     /// What one frame's pass draws.
     struct Pass {
         /// The scene target's size and format.
@@ -129,8 +165,8 @@ final class ScenePlanarReflection {
         var clearColor: SIMD3<Float>
         /// The user's `reflection` setting.
         var enabled: Bool
-        /// The visible reflected models in draw order, with their world matrices.
-        var models: [(model: SceneModelObject, world: simd_float4x4)]
+        /// The visible reflected objects in draw order.
+        var objects: [Object]
         /// The frame's built-ins, unmirrored.
         var frame: BuiltinFrameContext
         var values: SceneValueContext
@@ -145,6 +181,7 @@ final class ScenePlanarReflection {
     func encode(_ pass: Pass, drawing: any SceneModelDrawing, depthStates: SceneDepthStates,
                 commandBuffer: MTLCommandBuffer) -> MTLTexture? {
         drawnModels.removeAll(keepingCapacity: true)
+        drawnObjects.removeAll(keepingCapacity: true)
         guard let target = target(width: pass.width, height: pass.height, pixelFormat: pass.pixelFormat) else { return nil }
         let descriptor = MTLRenderPassDescriptor()
         descriptor.colorAttachments[0].texture = target
@@ -152,23 +189,32 @@ final class ScenePlanarReflection {
         descriptor.colorAttachments[0].storeAction = .store
         descriptor.colorAttachments[0].clearColor = MTLClearColor(red: Double(pass.clearColor.x), green: Double(pass.clearColor.y),
                                                                   blue: Double(pass.clearColor.z), alpha: 1)
-        let drawsModels = pass.enabled && !pass.models.isEmpty
-        if drawsModels {
+        let drawsObjects = pass.enabled && !pass.objects.isEmpty
+        if drawsObjects {
             guard depth.prepare(width: target.width, height: target.height, sampleCount: 1) else { return target }
             depth.attach(to: descriptor, clear: true)
         }
         guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor) else { return target }
         encoder.label = "planar reflection"
-        if drawsModels {
+        if drawsObjects {
             let frame = Self.mirrored(pass.frame)
-            for (model, world) in pass.models {
-                var draw = SceneModelDraw(world: world, camera: frame.camera, frame: frame, values: pass.values,
-                                          pixelFormat: target.pixelFormat, sampleCount: 1, depth: depthStates,
-                                          mipMappedFrameBuffer: pass.mipMappedFrameBuffer, assetTexture: pass.assetTexture,
-                                          layerComposite: pass.layerComposite, shadowAtlas: pass.shadowAtlas)
-                draw.mirrored = true
-                drawing.draw(model, draw, encoder: encoder, commandBuffer: commandBuffer)
-                drawnModels.append(model.id)
+            for object in pass.objects {
+                switch object {
+                case .model(let model, let world):
+                    var draw = SceneModelDraw(world: world, camera: frame.camera, frame: frame, values: pass.values,
+                                              pixelFormat: target.pixelFormat, sampleCount: 1, depth: depthStates,
+                                              mipMappedFrameBuffer: pass.mipMappedFrameBuffer, assetTexture: pass.assetTexture,
+                                              layerComposite: pass.layerComposite, shadowAtlas: pass.shadowAtlas)
+                    draw.mirrored = true
+                    drawing.draw(model, draw, encoder: encoder, commandBuffer: commandBuffer)
+                    drawnModels.append(model.id)
+                    drawnObjects.append(model.id)
+                case .other(let id, let draw):
+                    guard let mirroredDepthStates else { continue }
+                    draw(MirroredDraw(encoder: encoder, commandBuffer: commandBuffer, frame: frame,
+                                      pixelFormat: target.pixelFormat, depth: mirroredDepthStates))
+                    drawnObjects.append(id)
+                }
             }
         }
         encoder.endEncoding()
