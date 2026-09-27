@@ -22,8 +22,10 @@ final class VideoTextureStream {
     private var textureCache: CVMetalTextureCache?
     private let ownAudioTap = AudioLevelTap()
     private var audioIsAudible = false
-    /// The CVMetalTexture must outlive the MTLTexture handed to the renderer, so it is held until
-    /// the next frame replaces it.
+    /// The CVMetalTexture (and so its pool CVPixelBuffer) must outlive every GPU read of the
+    /// MTLTexture handed to the renderer. This holds the newest frame; `holdCurrentFrame(until:)`
+    /// keeps it alive past replacement until each command buffer that sampled it completes, so the
+    /// decoder can't be handed the buffer back while a frame in flight still reads it.
     private var retainedTexture: CVMetalTexture?
     private var latestTexture: MTLTexture?
     private var observers: [NSObjectProtocol] = []
@@ -103,6 +105,14 @@ final class VideoTextureStream {
         return texture
     }
 
+    /// Keeps the current frame's CVMetalTexture alive until `commandBuffer` completes. Call it for
+    /// every command buffer that sampled `currentTexture()`, before committing it.
+    func holdCurrentFrame(until commandBuffer: MTLCommandBuffer) {
+        guard let retainedTexture else { return }
+        let frame = HeldVideoFrame(retainedTexture)
+        commandBuffer.addCompletedHandler { _ in withExtendedLifetime(frame) {} }
+    }
+
     func setAudio(enabled: Bool, volume: Float) {
         audioPlayer.isMuted = !enabled
         audioPlayer.volume = volume
@@ -149,4 +159,11 @@ final class VideoTextureStream {
         appliedVideoRate = nil
         appliedAudioRate = nil
     }
+}
+
+/// A decoded frame kept alive by a command buffer's completion handler; CoreVideo objects are
+/// thread-safe to retain and release.
+private final class HeldVideoFrame: @unchecked Sendable {
+    let texture: CVMetalTexture
+    init(_ texture: CVMetalTexture) { self.texture = texture }
 }

@@ -1393,6 +1393,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         } else {
             sharedFrame = descriptor.colorAttachments[0].texture
         }
+        // A video frame's pixel buffer returns to the decoder's pool once released; hold each one
+        // this frame sampled until the GPU is done reading it.
+        for entry in layers { if case let .video(stream) = entry.layer.source { stream.holdCurrentFrame(until: commandBuffer) } }
         commandBuffer.commit()
         lastCommandBuffer = commandBuffer
     }
