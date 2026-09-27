@@ -217,6 +217,11 @@
 			knownRegions = (
 				en,
 				Base,
+				de,
+				es,
+				fr,
+				it,
+				"pt-BR",
 				"zh-Hans",
 			);
 			packageReferences = (
