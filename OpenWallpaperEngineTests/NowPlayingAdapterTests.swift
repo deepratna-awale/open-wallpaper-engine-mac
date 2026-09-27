@@ -262,6 +262,68 @@ final class NowPlayingAdapterTests: XCTestCase {
         XCTAssertTrue(message.contains("syntax OK"), message)
     }
 
+    /// Live: while something plays whose artwork MediaRemote has (its metadata's
+    /// `artworkAvailable`, which Music and most players set without putting the image in the
+    /// item), the shipped adapter's session carries the image within a few seconds. Skipped when
+    /// nothing plays or the item has no artwork (CI).
+    func testTheLiveSessionCarriesItsArtwork() throws {
+        let probe = #"""
+            require Foundation; PerlObjCBridge::setDieOnExceptions(0);
+            NSBundle->bundleWithPath_('/System/Library/PrivateFrameworks/MediaRemote.framework')->load;
+            @MRNowPlayingRequest::ISA = ('PerlObjCBridge');
+            my $item = MRNowPlayingRequest->localNowPlayingItem;
+            my $metadata = (defined($item) && $$item) ? $item->metadata : undef;
+            print((defined($metadata) && $$metadata && $metadata->artworkAvailable) ? "1" : "0");
+            """#
+        let available = try Self.runPerl(["-e", probe], seconds: 10)
+        try XCTSkipUnless(available.hasPrefix("1"), "nothing with artwork is playing")
+        let script = try XCTUnwrap(Bundle.main.url(forResource: NowPlayingBackend.script.name,
+                                                   withExtension: NowPlayingBackend.script.extension))
+        let output = try Self.runPerl([script.path], seconds: 5)
+        let sessions: [NSDictionary] = output.split(separator: "\n").compactMap { line in
+            guard case .session(let info, _)? = NowPlayingAdapter.parse(String(line)) else { return nil }
+            return info
+        }
+        XCTAssertFalse(sessions.isEmpty, output)
+        let artwork = sessions.last.flatMap { $0[MediaRemote.Key.artworkData] as? Data }
+        let bytes: Int = artwork?.count ?? 0
+        XCTAssertGreaterThan(bytes, 0, "the session has the item's artwork")
+    }
+
+    /// Runs `/usr/bin/perl` with `arguments` for at most `seconds` (its input closes then, which
+    /// ends the adapter) and returns its output.
+    private static func runPerl(_ arguments: [String], seconds: Double) throws -> String {
+        let process = Process()
+        process.executableURL = PerlNowPlayingAdapterProcess.perl
+        process.arguments = arguments
+        process.environment = ["PATH": "/usr/bin:/bin", "LANG": "en_US.UTF-8"]
+        let input = Pipe(), output = Pipe()
+        process.standardInput = input
+        process.standardOutput = output
+        process.standardError = Pipe()
+        let received = ReceivedOutput()
+        output.fileHandleForReading.readabilityHandler = { handle in received.append(handle.availableData) }
+        try process.run()
+        let deadline = Date().addingTimeInterval(seconds)
+        while process.isRunning, Date() < deadline { RunLoop.current.run(until: Date().addingTimeInterval(0.05)) }
+        try input.fileHandleForWriting.close()
+        process.waitUntilExit()
+        output.fileHandleForReading.readabilityHandler = nil
+        let rest = output.fileHandleForReading.readDataToEndOfFile()
+        received.append(rest)
+        return received.text
+    }
+
+    /// A process's output as it arrives on Foundation's queue. `lock` owns `data`.
+    private final class ReceivedOutput: @unchecked Sendable {
+        private let lock = NSLock()
+        private var data = Data()
+
+        func append(_ chunk: Data) { lock.withLock { data.append(chunk) } }
+
+        var text: String { lock.withLock { String(decoding: data, as: UTF8.self) } }
+    }
+
     func testTheAppShipsTheAdapterScript() {
         let version = OperatingSystemVersion(majorVersion: 15, minorVersion: 4, patchVersion: 0)
         XCTAssertNotNil(Bundle.main.url(forResource: NowPlayingBackend.script.name, withExtension: NowPlayingBackend.script.extension))
