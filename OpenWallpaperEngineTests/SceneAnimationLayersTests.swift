@@ -178,6 +178,25 @@ final class SceneAnimationLayersTests: XCTestCase {
         XCTAssertEqual(stack.evaluate(delta: 0, update: &update)[0].translation.x, 12, accuracy: 1e-4)
     }
 
+    /// Additive rotations on non-commuting axes (0x1401f9820; WE's capture MG3): the change from
+    /// the bind pose is `bind⁻¹ · sample`, nlerped from the identity by w, and composed after the
+    /// pose: `pose · Δ`. A pose turned 90° about x with Δ = 90° about z sends +y to −x (as WE draws
+    /// it, not +z); at w = 0.5 Δ is 45°.
+    func testAdditiveRotationsComposeAfterThePose() {
+        let bind = SceneBoneTransform(translation: .zero, rotation: simd_quatf(angle: 0.4, axis: SIMD3<Float>(1, 0, 0)),
+                                      scale: SIMD3<Float>(repeating: 1))
+        let turn = simd_quatf(angle: Float.pi / 2, axis: SIMD3<Float>(0, 0, 1))
+        let sample = SceneBoneTransform(translation: .zero, rotation: bind.rotation * turn, scale: SIMD3<Float>(repeating: 1))
+        let pose = SceneBoneTransform(translation: .zero, rotation: simd_quatf(angle: Float.pi / 2, axis: SIMD3<Float>(1, 0, 0)),
+                                      scale: SIMD3<Float>(repeating: 1))
+        let up = SIMD3<Float>(0, 1, 0)
+        let full = SceneAnimationLayerStack.add(sample, over: pose, bind: bind, weight: 1).rotation.act(up)
+        XCTAssertLessThan(simd_distance(full, SIMD3<Float>(-1, 0, 0)), 1e-4, "\(full)")
+        let half = SceneAnimationLayerStack.add(sample, over: pose, bind: bind, weight: 0.5).rotation.act(up)
+        let expected = SIMD3<Float>(-Float(0.5).squareRoot(), 0, Float(0.5).squareRoot())
+        XCTAssertLessThan(simd_distance(half, expected), 1e-4, "\(half)")
+    }
+
     /// A disabled track leaves its bone as the layers below (or the bind pose) have it.
     func testADisabledTrackKeepsThePoseBelow() {
         let bind = [ScenePuppetTests.translation(SIMD3(5, 0, 0)), ScenePuppetTests.translation(SIMD3(0, 7, 0))]

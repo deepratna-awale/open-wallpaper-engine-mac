@@ -57,6 +57,44 @@ final class ModelGroundTruthProjects: XCTestCase {
         }
     }
 
+    /// MG3 against WE 2.8.0.42's captures of the two projects: the arm's screen angle (the red
+    /// centroid from the white one, y up) is 168.8° with the additive layer at blend 1 (−x:
+    /// `base · additive`) and −175.3° at 0.5 (45° about z, the delta nlerped by the blend).
+    func testAdditiveLayersMatchWEsCaptures() throws {
+        let scratch = FileManager.default.temporaryDirectory.appending(path: "owe-mg3-\(UUID().uuidString)")
+        defer {
+            if FileManager.default.fileExists(atPath: scratch.path) {
+                do { try FileManager.default.removeItem(at: scratch) } catch { XCTFail("\(scratch.path): \(error)") }
+            }
+        }
+        let storage = scratch.appending(path: "storage", directoryHint: .isDirectory)
+        for (project, weAngle) in zip(try additive(scratch), [168.8, -175.3]) {
+            let harness = try ModelSceneHarness(directory: project.directory, settings: SceneRenderSettings(),
+                                                size: SIMD2(1920, 1080), storage: storage)
+            defer { harness.close() }
+            try harness.settle(seconds: 3)
+            let bytes = try TextureUploadTests.read(try XCTUnwrap(harness.renderer.sharedFrame), device: harness.device)
+            let angle = try XCTUnwrap(Self.armAngle(bytes, width: 1920), project.directory.lastPathComponent)
+            XCTAssertEqual(angle, weAngle, accuracy: 1.5, project.directory.lastPathComponent)
+            XCTAssertEqual(harness.gpuErrors, [], project.directory.lastPathComponent)
+        }
+    }
+
+    /// Degrees, y up, from the white pixels' centroid to the red ones' (RGBA rows); nil without both.
+    static func armAngle(_ bytes: [UInt8], width: Int) -> Double? {
+        var red = SIMD3<Double>(0, 0, 0), white = SIMD3<Double>(0, 0, 0)
+        for pixel in 0..<(bytes.count / 4) {
+            let r = bytes[pixel * 4], g = bytes[pixel * 4 + 1], b = bytes[pixel * 4 + 2]
+            let point = SIMD3<Double>(Double(pixel % width), Double(pixel / width), 1)
+            if r > 150, g < 60, b < 60 { red += point }
+            if r > 235, g > 235, b > 235 { white += point }
+        }
+        guard red.z > 0, white.z > 0 else { return nil }
+        let dx: Double = red.x / red.z - white.x / white.z
+        let dy: Double = red.y / red.z - white.y / white.z
+        return atan2(-dy, dx) * 180 / Double.pi
+    }
+
     // MARK: - MG6: depth in an orthographic frame with models
 
     /// Two cubes overlapping on screen at different depths, in both draw orders: if WE's
@@ -113,8 +151,8 @@ final class ModelGroundTruthProjects: XCTestCase {
 
     /// A red arm (bone 1, along +y) on a white base (bone 0): a replacing layer turns the arm
     /// 90° about x (+y → +z), an additive layer 90° about z (+y → −x). Composed as
-    /// `additive · base` the arm points along +z; as `base · additive` along −x. The second
-    /// project weighs the additive layer 0.5.
+    /// `additive · base` the arm points along +z; as `base · additive` along −x, which is WE's.
+    /// The second project weighs the additive layer 0.5.
     private func additive(_ out: URL) throws -> [ModelFixtureWallpaper] {
         let base = FixtureMDL.cube(material: "materials/gt_white.json", bone: 0, size: SIMD3(repeating: 0.6), uv: true)
         let arm = FixtureMDL.cube(material: "materials/gt_red.json", centre: SIMD3(0, 1.5, 0), bone: 1,

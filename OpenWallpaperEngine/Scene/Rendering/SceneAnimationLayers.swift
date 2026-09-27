@@ -241,16 +241,16 @@ struct SceneAnimationLayerStack: Equatable {
         }
     }
 
-    /// 0x1401f9820: translation and scale gain `w · (sample − bind)`; the rotation is composed with
-    /// the sample's rotation away from the bind pose, nlerped from the identity by `w` (shorter
-    /// arc) [I: the order of the two quaternion products; it doesn't matter for rotations about
-    /// one axis, which every library puppet's are].
+    /// 0x1401f9820: translation and scale gain `w · (sample − bind)`; the rotation's change from the
+    /// bind pose, `bind⁻¹ · sample`, is nlerped from the identity by `w` (shorter arc) and composed
+    /// after the pose, `pose · Δ` (the SoA products at 0x1401f9e48 and 0x1401f9fc8). WE's capture of
+    /// `gt-additive-full`/`-half` (docs/test-risks.md MG3) confirms the order.
     static func add(_ sample: SceneBoneTransform, over pose: SceneBoneTransform, bind: SceneBoneTransform,
                     weight: Float) -> SceneBoneTransform {
-        let delta = (sample.rotation * bind.rotation.inverse).normalized
+        let delta = (bind.rotation.inverse * sample.rotation).normalized
         let scaled = SceneBoneTransform.nlerp(SceneBoneTransform.identity.rotation, delta, weight)
         return SceneBoneTransform(translation: pose.translation + (sample.translation - bind.translation) * weight,
-                                  rotation: (scaled * pose.rotation).normalized,
+                                  rotation: (pose.rotation * scaled).normalized,
                                   scale: pose.scale + (sample.scale - bind.scale) * weight)
     }
 }
