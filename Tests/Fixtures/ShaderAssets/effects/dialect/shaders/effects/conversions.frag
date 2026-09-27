@@ -12,6 +12,12 @@ void main() {
 	int count = u_Count;
 	uint bar = u_Count * 3.0 % 16;
 	float level = g_AudioSpectrum16Left[u_Count / 4][bar % 4] + g_AudioSpectrum16Left[pointer];
+	vec2 shapeCoord = v_TexCoord.xy;
+	shapeCoord.x += shapeCoord.y - 0.5 < 0.0;
+	int inside = step(shapeCoord.x, level);
+	bool isLeftChannel = shapeCoord.y < 0.49;
+	inside *= isLeftChannel;
+	level *= shapeCoord.x > 0.0 && shapeCoord.x < 1.0;
 	color = mix(albedo, color, 0.5) * level + radial.x + center.y;
-	gl_FragColor = vec4(color, float(count) + mix(albedo.a, 1, step(albedo.a, 0)));
+	gl_FragColor = vec4(color, float(count + inside) + mix(albedo.a, 1, step(albedo.a, 0)));
 }

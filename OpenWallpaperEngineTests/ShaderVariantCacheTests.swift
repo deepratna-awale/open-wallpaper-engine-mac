@@ -63,6 +63,9 @@ final class ShaderVariantCacheTests: XCTestCase {
         // WE's depth comparison (`texSample2DCompare`) and system-value declarations, and headers
         // kept after the macros they test: shadowed lit variants and the shadow casters only.
         9: "616d3b76809585413a7bbb7d5942804144cd677e791048d5add9de350471d667",
+        // A bool operand of compound arithmetic, and compound assignments to vector components,
+        // convert as in HLSL (`int *= bool`, `v.x += bool`).
+        10: "cc9c735c67b115ac936d80245638bbf7b1b98d1a9e2b5a996917b81c3bd7067a",
     ]
 
     /// Fails when translated output changes without a `revision` bump, which would let users keep

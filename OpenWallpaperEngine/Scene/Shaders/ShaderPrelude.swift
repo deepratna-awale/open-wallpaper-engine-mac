@@ -363,8 +363,14 @@ extension ShaderPrelude {
     /// - `weCast_T(x)`: initialising a `T` from `x`.
     /// - `weMod(x, y)`: `%`, which HLSL also defines for floats (as `fmod`).
     /// - `weMix(a, b, t)`: `mix`/`lerp` whose operands differ in size (the wider ones truncate).
+    /// - `weArith(x)`: an operand of arithmetic, where HLSL takes a bool as 0 or 1 (`int *= bool`).
     static let conversionFunctions: String = {
         var lines: [String] = []
+        for type in ["float", "int", "uint"] + floatVectors + (2...4).flatMap({ ["ivec\($0)", "uvec\($0)"] }) {
+            lines.append("\(type) weArith(\(type) x) { return x; }")
+        }
+        lines.append("int weArith(bool x) { return int(x); }")
+        for n in 2...4 { lines.append("ivec\(n) weArith(bvec\(n) x) { return ivec\(n)(x); }") }
         let sources = ["float", "int", "uint", "bool"] + floatVectors
         for target in ["float", "int", "uint"] {
             for source in sources {
@@ -700,10 +706,12 @@ extension ShaderPrelude {
     }
 
     private static let typedNamePattern = try! NSRegularExpression(pattern: #"\b(float|int|uint|vec[234]|bool|ivec[234]|uvec[234]|bvec[234]|mat[234])\s+(\w+)\s*[=;,)\[]"#)
-    private static let compoundPattern = try! NSRegularExpression(pattern: #"(?<![\w.\]])(\w+)\s*([-+*/])=(?!=)"#)
+    private static let compoundPattern = try! NSRegularExpression(
+        pattern: #"(?<![\w.\]])(\w+)(?:\.([xyzwrgba]{1,4}))?\s*([-+*/])=(?!=)"#)
 
-    /// `x op= e` → `x = weCast_T(x op e)` for a local of float/int type `T` (HLSL converts the
-    /// result, e.g. `int *= float`); for a float or float vector `x op= weCast_T(e)` (splat, truncate, bool).
+    /// `x op= e` → `x = weCast_T(x op weArith(e))` for a local of int type `T` (HLSL converts the
+    /// result, e.g. `int *= float`, and a bool operand, `int *= bool`); for a float or float vector,
+    /// or components of one (`v.x += bool`), `x op= weCast_T(e)` (splat, truncate, bool).
     /// Only names declared with a single type in the shader are touched.
     /// Name → type for every name the shader declares with one type only.
     private static func declaredTypes(_ text: NSString) -> [String: String] {
@@ -725,8 +733,14 @@ extension ShaderPrelude {
         var removed: [Int] = []
         for match in compoundPattern.matches(in: text as String, range: whole) {
             let name = text.substring(with: match.range(at: 1))
-            guard let type = types[name],
+            guard var type = types[name],
                   ["float", "int", "uint", "vec2", "vec3", "vec4"].contains(type) else { continue }
+            if match.range(at: 2).location != NSNotFound {
+                // Components of a float vector: a float or a narrower vector.
+                guard type.hasPrefix("vec") else { continue }
+                let count = match.range(at: 2).length
+                type = count == 1 ? "float" : "vec\(count)"
+            }
             var start = match.range.location + match.range.length
             while start < code.count, isSpace(code[start]) { start += 1 }
             guard let end = expressionEnd(code, from: start), code[end] == ascii(";") else { continue }
@@ -734,11 +748,11 @@ extension ShaderPrelude {
                 edits.append((start, "weCast_\(type)("))
                 edits.append((end, ")"))
             } else {
-                // `x op= e` → `x = weCast_T(x op (e))`: the two operator characters are replaced.
+                // `x op= e` → `x = weCast_T(x op weArith(e))`: the two operator characters are replaced.
                 let operatorStart = match.range.location + match.range.length - 2
                 removed += [operatorStart, operatorStart + 1]
                 edits.append((operatorStart, "="))
-                edits.append((start, "weCast_\(type)(\(name) \(text.substring(with: match.range(at: 2))) ("))
+                edits.append((start, "weCast_\(type)(\(name) \(text.substring(with: match.range(at: 3))) weArith("))
                 edits.append((end, "))"))
             }
         }

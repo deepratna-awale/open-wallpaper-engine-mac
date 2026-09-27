@@ -130,15 +130,20 @@ final class ShaderVariantTests: XCTestCase {
          return col;
         }
         void main() {
-         int bar = 1; bool left = true; float level = 1.0; vec2 uv = vec2(0.0);
-         bar *= level * 0.5; level *= left; uv += 1.0; uv.x -= 2.0;
+         int bar = 1; bool left = true; float level = 1.0; vec2 uv = vec2(0.0); vec4 c = vec4(0.0);
+         bar *= level * 0.5; level *= left; uv += 1.0; uv.x -= 2.0; bar *= left;
+         uv.x += level - 1.0 < 0.0; c.xy *= 2.0;
         }
         """)
         XCTAssertTrue(out.contains("return weCast_vec3(col);"), out)
-        XCTAssertTrue(out.contains("bar = weCast_int(bar * (level * 0.5));"), out)
+        XCTAssertTrue(out.contains("bar = weCast_int(bar * weArith(level * 0.5));"), out)
         XCTAssertTrue(out.contains("level *= weCast_float(left);"), out)
         XCTAssertTrue(out.contains("uv += weCast_vec2(1.0);"), out)
-        XCTAssertTrue(out.contains("uv.x -= 2.0;"), out)
+        XCTAssertTrue(out.contains("uv.x -= weCast_float(2.0);"), out)
+        // HLSL takes a bool as 0 or 1 in arithmetic (Simple Audio Bars' circle and centre shapes).
+        XCTAssertTrue(out.contains("bar = weCast_int(bar * weArith(left));"), out)
+        XCTAssertTrue(out.contains("uv.x += weCast_float(level - 1.0 < 0.0);"), out)
+        XCTAssertTrue(out.contains("c.xy *= weCast_vec2(2.0);"), out)
     }
 
     /// `vec4 * vec2` is a `vec2` in HLSL; only whole operands of evident size are truncated.
