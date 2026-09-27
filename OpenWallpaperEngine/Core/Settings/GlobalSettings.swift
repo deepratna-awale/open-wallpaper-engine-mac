@@ -111,9 +111,41 @@ enum GSAppearance: String, CaseIterable, Identifiable, Codable {
     case light, dark, followSystem
 }
 
+/// The app's language: the system's order, or one of the languages the app is translated into.
+/// The raw values of English and Simplified Chinese predate the others and stay as stored.
 enum GSLocalization: String, CaseIterable, Identifiable, Codable {
     var id: Self { self }
-    case en_US, zh_CN, followSystem
+    case followSystem
+    case en_US, zh_CN
+    case de, fr, es, ptBR = "pt-BR", it, ja, ko, zhHant = "zh-Hant", ru, pl, tr, uk, ar, hi
+
+    /// The BCP 47 language the app runs in; nil to follow the system.
+    var languageIdentifier: String? {
+        switch self {
+        case .followSystem: return nil
+        case .en_US: return "en"
+        case .zh_CN: return "zh-Hans"
+        default: return rawValue
+        }
+    }
+
+    /// The language's name in that language, as language pickers show it; nil to follow the system.
+    var endonym: String? {
+        languageIdentifier.map { identifier in
+            Locale(identifier: identifier).localizedString(forIdentifier: identifier) ?? identifier
+        }
+    }
+
+    /// Writes the choice where macOS reads an app's language (`AppleLanguages` in the app's
+    /// defaults, which is also what System Settings › Language & Region sets per app). It takes
+    /// effect at the next launch.
+    func apply(to defaults: UserDefaults) {
+        if let languageIdentifier {
+            defaults.set([languageIdentifier], forKey: "AppleLanguages")
+        } else {
+            defaults.removeObject(forKey: "AppleLanguages")
+        }
+    }
 }
 
 enum GSVideoFramework: String, CaseIterable, Identifiable, Codable {

@@ -111,6 +111,7 @@
       "comment" : "Scene Inspector tooltip for the blurprecise effect"
     },
     "A live wallpaper engine for macOS" : {},
+    "A new language takes effect the next time Open Wallpaper Engine opens." : {},
     "A placeholder that does nothing. Authors use it to reserve a slot in the effect stack." : {
       "comment" : "Scene Inspector tooltip for the empty effect"
     },
@@ -521,16 +522,6 @@
     "Change when video ends" : {},
     "Check & Save" : {},
     "Check the selected folders and try again." : {},
-    "Chinese Simplified" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "简体中文"
-          }
-        }
-      }
-    },
     "Chinese i18n" : {},
     "Choose Wallpaper Storage Folder" : {},
     "Choose what happens on battery, when another app goes fullscreen, or when your displays sleep — from lowering the frame rate to pausing entirely." : {},
@@ -870,16 +861,6 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "启用"
-          }
-        }
-      }
-    },
-    "English" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "英文"
           }
         }
       }

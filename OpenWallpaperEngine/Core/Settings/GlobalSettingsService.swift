@@ -27,6 +27,8 @@ class GlobalSettingsViewModel: ObservableObject {
             save()
             validate()
             OWELog.apply(logLevel: settings.logLevel)
+            // Only on a change: following the system mustn't clear a language set in System Settings.
+            if settings.language != oldValue.language { settings.language.apply(to: .app) }
         }
     }
     

@@ -40,12 +40,18 @@ struct GeneralPage: SettingsPage {
             // MARK: Basic Setup
             Section {
                 Picker("Language", selection: $viewModel.settings.language) {
-                    Text("Follow System").tag(GSLocalization.followSystem)
-                    Text("English").tag(GSLocalization.en_US)
-                    Text("Chinese Simplified").tag(GSLocalization.zh_CN)
-                }.disabled(true)
+                    ForEach(GSLocalization.allCases) { language in
+                        if let endonym = language.endonym {
+                            Text(verbatim: endonym).tag(language)
+                        } else {
+                            Text("Follow System").tag(language)
+                        }
+                    }
+                }
             } header: {
                 Label("Basic Setup", systemImage: "gearshape.fill")
+            } footer: {
+                Text("A new language takes effect the next time Open Wallpaper Engine opens.")
             }
             Section {
                 HStack {
