@@ -90,7 +90,10 @@ enum ParticleRecordWriter {
         case "once":
             phase = min(particle.age / max(particle.lifetime, 0.0001) * configuration.sequenceMultiplier, 0.9999)
         default:
-            let cycle = particle.age * configuration.sequenceMultiplier / max(sheet.duration, 0.001)
+            // WE's life value for a sprite sheet (0x14023703b…0x140237075): the life fraction times
+            // `sequencemultiplier`, whose fraction the shader takes (`ComputeSpriteFrame`), so a
+            // sequence plays over the particle's life, not over the sheet's `duration`.
+            let cycle = particle.age / max(particle.lifetime, 0.0001) * configuration.sequenceMultiplier
             phase = cycle - cycle.rounded(.down)
         }
         return phase.isFinite ? phase : 0

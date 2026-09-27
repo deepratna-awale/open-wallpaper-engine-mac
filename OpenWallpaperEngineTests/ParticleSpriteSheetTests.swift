@@ -7,6 +7,25 @@ import MetalKit
 /// 256 × 256, RG88 albedo and an RGBA normal map) drawn through the real loader and renderer; and a
 /// sheet from a `.tex`'s own `TEXS` frames, with no `.tex-json` (`Scenes/particle-texs-sheet`).
 final class ParticleSpriteSheetTests: XCTestCase {
+    // MARK: - Playback
+
+    /// WE writes a sprite-sheet particle's life value as its life fraction times the system's
+    /// `sequencemultiplier` (0x14023703b…0x140237075) and the shader takes its fraction's frame
+    /// (`ComputeSpriteFrame`): a sequence plays over the particle's life, `sequencemultiplier` times,
+    /// whatever the sheet's `duration`.
+    func testASequencePlaysOverTheParticlesLife() {
+        let configuration = SceneMetalParticleSystem(
+            source: .image(NSImage()), origin: .zero, emissionRate: 1, maximumParticleCount: 1, rendererName: "sprite",
+            trailLength: 0, trailSegments: 1, ropeSubdivision: 0, fadeTrailAlpha: false, fadeTrailSize: false,
+            spriteSheet: SpriteSheet(columns: 8, rows: 8, frames: 64, duration: 1), animationMode: "sequence",
+            sequenceMultiplier: 3, opacityMultiplier: 1, refractive: false, blending: "translucent")
+        let particle = Particle(position: .zero, velocity: .zero, age: 1.25, lifetime: 2.5, size: 1, baseSize: 1, alpha: 1,
+                                baseAlpha: 1, rotation: 0, angularVelocity: 0, color: SIMD4(repeating: 1),
+                                baseColor: SIMD4(repeating: 1), spriteFrame: 0, history: [], historyStart: 0)
+        XCTAssertEqual(ParticleRecordWriter.spritePhase(particle, configuration: configuration), 0.5, accuracy: 1e-5,
+                       "halfway through its life, 3 plays: 1.5, frame 32 of 64")
+    }
+
     // MARK: - The grid
 
     /// The grid counts the image's pixels, not its points: an `NSImage` made from a `CGImage`

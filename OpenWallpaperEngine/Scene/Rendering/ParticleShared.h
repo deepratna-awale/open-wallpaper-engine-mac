@@ -227,7 +227,7 @@ static float spritePhase(ParticleState particle, constant ParticleParameters &p)
     } else if (p.sprite.x == 1) {
         phase = min(particle.life.x / max(particle.life.y, 0.0001f) * p.sprite.y, 0.9999f);
     } else {
-        const float cycle = particle.life.x * p.sprite.y / max(p.spriteSheet.w, 0.001f);
+        const float cycle = particle.life.x / max(particle.life.y, 0.0001f) * p.sprite.y;
         phase = cycle - floor(cycle);
     }
     return isfinite(phase) ? phase : 0;
@@ -243,8 +243,8 @@ static float4 spriteSheetCell(ParticleState particle, constant ParticleParameter
     } else if (p.sprite.x == 1) {
         frame = min(int((particle.life.x / particle.life.y) * float(frames) * p.sprite.y), frames - 1);
     } else {
-        const float duration = max(p.spriteSheet.w, 0.001f);
-        frame = int(particle.life.x * p.sprite.y / duration * float(frames)) % frames;
+        const float cycle = particle.life.x / max(particle.life.y, 0.0001f) * p.sprite.y;
+        frame = min(int((cycle - floor(cycle)) * float(frames)), frames - 1);
     }
     const int columns = int(p.spriteSheet.y);
     const float2 size = float2(1 / p.spriteSheet.y, 1 / p.spriteSheet.z);
