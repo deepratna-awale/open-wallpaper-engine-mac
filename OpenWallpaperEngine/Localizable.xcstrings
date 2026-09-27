@@ -16768,91 +16768,91 @@
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "سطح المكتب (بكسل واحد لكل نقطة)"
+            "value" : "دقة منخفضة (بكسل واحد لكل نقطة)"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Schreibtisch (1 Pixel pro Punkt)"
+            "value" : "Niedrige Auflösung (1 Pixel pro Punkt)"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Escritorio (1 píxel por punto)"
+            "value" : "Baja resolución (1 píxel por punto)"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bureau (1 pixel par point)"
+            "value" : "Basse résolution (1 pixel par point)"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "डेस्कटॉप (1 पिक्सेल प्रति पॉइंट)"
+            "value" : "निम्न रिज़ोल्यूशन (1 पिक्सेल प्रति पॉइंट)"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Scrivania (1 pixel per punto)"
+            "value" : "Bassa risoluzione (1 pixel per punto)"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "デスクトップ（1ポイントあたり1ピクセル）"
+            "value" : "低解像度（1ポイントあたり1ピクセル）"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "데스크탑(포인트당 1픽셀)"
+            "value" : "저해상도(포인트당 1픽셀)"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Biurko (1 piksel na punkt)"
+            "value" : "Niska rozdzielczość (1 piksel na punkt)"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mesa (1 pixel por ponto)"
+            "value" : "Baixa Resolução (1 pixel por ponto)"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Рабочий стол (1 пиксель на точку)"
+            "value" : "Низкое разрешение (1 пиксель на точку)"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Masaüstü (nokta başına 1 piksel)"
+            "value" : "Düşük Çözünürlük (nokta başına 1 piksel)"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Робочий стіл (1 піксель на пункт)"
+            "value" : "Низька роздільність (1 піксель на пункт)"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "桌面（每点 1 像素）"
+            "value" : "低分辨率（每点 1 像素）"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "桌面（每點 1 像素）"
+            "value" : "低解析度（每點 1 像素）"
           }
         }
       }
@@ -41103,91 +41103,91 @@
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يرسم الخيار «أصلي» بكامل عدد وحدات البكسل في شاشة العرض. أما الخيار «سطح المكتب» فيرسم بكسلًا واحدًا لكل نقطة (نصف العرض والارتفاع على شاشة Retina) ثم يكبّر الإطار، مقابل ربع الجهد."
+            "value" : "يرسم الخيار «أصلي» بكامل عدد وحدات البكسل في شاشة العرض. أما الخيار «دقة منخفضة» فيرسم بكسلًا واحدًا لكل نقطة (نصف العرض والارتفاع على شاشة Retina) ثم يكبّر الإطار، مقابل ربع الجهد."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "„Nativ“ zeichnet mit der vollen Pixelanzahl des Displays. „Schreibtisch“ zeichnet ein Pixel pro Punkt (halbe Breite und Höhe auf einem Retina-Display) und skaliert das Bild hoch – bei einem Viertel des Aufwands."
+            "value" : "„Nativ“ zeichnet mit der vollen Pixelanzahl des Displays. „Niedrige Auflösung“ zeichnet ein Pixel pro Punkt (halbe Breite und Höhe auf einem Retina-Display) und skaliert das Bild hoch – bei einem Viertel des Aufwands."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nativa dibuja con todos los píxeles de la pantalla. Escritorio dibuja un píxel por punto (la mitad de ancho y de alto en una pantalla Retina) y amplía el fotograma, con una cuarta parte del trabajo."
+            "value" : "Nativa dibuja con todos los píxeles de la pantalla. Baja resolución dibuja un píxel por punto (la mitad de ancho y de alto en una pantalla Retina) y amplía el fotograma, con una cuarta parte del trabajo."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "« Native » dessine avec tous les pixels du moniteur. « Bureau » dessine un pixel par point (la moitié de la largeur et de la hauteur sur un écran Retina) puis agrandit l’image, pour un quart du travail."
+            "value" : "« Native » dessine avec tous les pixels du moniteur. « Basse résolution » dessine un pixel par point (la moitié de la largeur et de la hauteur sur un écran Retina) puis agrandit l’image, pour un quart du travail."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "नेटिव डिस्प्ले के सभी पिक्सेल पर बनाता है. डेस्कटॉप हर पॉइंट पर एक पिक्सेल बनाता है (Retina डिस्प्ले पर आधी चौड़ाई और ऊँचाई) और फ़्रेम को बड़ा करता है, जिससे काम एक-चौथाई रह जाता है."
+            "value" : "नेटिव डिस्प्ले के सभी पिक्सेल पर बनाता है. निम्न रिज़ोल्यूशन हर पॉइंट पर एक पिक्सेल बनाता है (Retina डिस्प्ले पर आधी चौड़ाई और ऊँचाई) और फ़्रेम को बड़ा करता है, जिससे काम एक-चौथाई रह जाता है."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "“Nativa” disegna con tutti i pixel dello schermo. “Scrivania” disegna un pixel per punto (metà larghezza e metà altezza su uno schermo Retina) e ingrandisce il fotogramma, con un quarto del lavoro."
+            "value" : "“Nativa” disegna con tutti i pixel dello schermo. “Bassa risoluzione” disegna un pixel per punto (metà larghezza e metà altezza su uno schermo Retina) e ingrandisce il fotogramma, con un quarto del lavoro."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "「ネイティブ」はディスプレイのフルピクセル数で描画します。「デスクトップ」は1ポイントあたり1ピクセル（Retinaディスプレイでは幅と高さが半分）で描画してフレームを拡大するため、処理量は4分の1になります。"
+            "value" : "「ネイティブ」はディスプレイのフルピクセル数で描画します。「低解像度」は1ポイントあたり1ピクセル（Retinaディスプレイでは幅と高さが半分）で描画してフレームを拡大するため、処理量は4分の1になります。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "네이티브는 디스플레이의 전체 픽셀 수로 그립니다. 데스크탑은 포인트당 1픽셀로 그린 다음(Retina 디스플레이에서는 너비와 높이가 절반) 프레임을 확대하므로 작업량이 4분의 1입니다."
+            "value" : "네이티브는 디스플레이의 전체 픽셀 수로 그립니다. 저해상도은 포인트당 1픽셀로 그린 다음(Retina 디스플레이에서는 너비와 높이가 절반) 프레임을 확대하므로 작업량이 4분의 1입니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "„Natywna” rysuje w pełnej liczbie pikseli wyświetlacza. „Biurko” rysuje jeden piksel na punkt (połowa szerokości i wysokości na wyświetlaczu Retina) i powiększa klatkę, co wymaga czterokrotnie mniej pracy."
+            "value" : "„Natywna” rysuje w pełnej liczbie pikseli wyświetlacza. „Niska rozdzielczość” rysuje jeden piksel na punkt (połowa szerokości i wysokości na wyświetlaczu Retina) i powiększa klatkę, co wymaga czterokrotnie mniej pracy."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nativa desenha com a contagem total de pixels da tela. Mesa desenha um pixel por ponto (metade da largura e da altura em uma tela Retina) e amplia o quadro, com um quarto do trabalho."
+            "value" : "Nativa desenha com a contagem total de pixels da tela. Baixa Resolução desenha um pixel por ponto (metade da largura e da altura em uma tela Retina) e amplia o quadro, com um quarto do trabalho."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "«Исходное» рисует с полным числом пикселей дисплея. «Рабочий стол» рисует один пиксель на точку (половина ширины и высоты на дисплее Retina) и масштабирует кадр — вчетверо меньше работы."
+            "value" : "«Исходное» рисует с полным числом пикселей дисплея. «Низкое разрешение» рисует один пиксель на точку (половина ширины и высоты на дисплее Retina) и масштабирует кадр — вчетверо меньше работы."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Yerel, ekranın tam piksel sayısında çizer. Masaüstü, nokta başına bir piksel çizer (Retina ekranda genişlik ve yüksekliğin yarısı) ve kareyi büyütür; iş yükü dörtte birine iner."
+            "value" : "Yerel, ekranın tam piksel sayısında çizer. Düşük Çözünürlük, nokta başına bir piksel çizer (Retina ekranda genişlik ve yüksekliğin yarısı) ve kareyi büyütür; iş yükü dörtte birine iner."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "«Власна» малює з повною кількістю пікселів дисплея. «Робочий стіл» малює один піксель на пункт (половина ширини й висоти на дисплеї Retina) і збільшує кадр — це вчетверо менше роботи."
+            "value" : "«Власна» малює з повною кількістю пікселів дисплея. «Низька роздільність» малює один піксель на пункт (половина ширини й висоти на дисплеї Retina) і збільшує кадр — це вчетверо менше роботи."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "“原生”以显示器的全部像素绘制。“桌面”以每点 1 像素绘制（在 Retina 显示器上为宽度和高度的一半）并放大画面，工作量仅为四分之一。"
+            "value" : "“原生”以显示器的全部像素绘制。“低分辨率”以每点 1 像素绘制（在 Retina 显示器上为宽度和高度的一半）并放大画面，工作量仅为四分之一。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "「原生」會以顯示器的完整像素數繪製。「桌面」會以每點一個像素繪製（在 Retina 顯示器上為一半的寬度和高度），再將畫面放大，工作量只有四分之一。"
+            "value" : "「原生」會以顯示器的完整像素數繪製。「低解析度」會以每點一個像素繪製（在 Retina 顯示器上為一半的寬度和高度），再將畫面放大，工作量只有四分之一。"
           }
         }
       }
@@ -51139,91 +51139,91 @@
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "مثير للشك"
+            "value" : "للمراهقين"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fragwürdig"
+            "value" : "Ab 12"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dudoso"
+            "value" : "Sugerente"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Discutable"
+            "value" : "Suggestif"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "संदिग्ध"
+            "value" : "UA 13+"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Discutibile"
+            "value" : "Allusivo"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "疑わしい"
+            "value" : "12歳以上"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "선정적"
+            "value" : "12세 이용가"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wątpliwe"
+            "value" : "Od 12 lat"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Questionável"
+            "value" : "12+"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Сомнительное"
+            "value" : "12+"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Şüpheli"
+            "value" : "13+"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Сумнівне"
+            "value" : "12+"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "有争议"
+            "value" : "轻度暗示"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "爭議性"
+            "value" : "輔12級"
           }
         }
       }

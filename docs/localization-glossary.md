@@ -21,6 +21,14 @@ In order of precedence:
 4. **Wallpaper Engine's own UI** (`Vendor/we-assets/locale/ui_*.json`) for wallpaper-domain terms:
    scene, bloom, parallax, audio responsive, particle, age ratings.
 
+**Age rating “Questionable”** is Wallpaper Engine's middle tier between Everyone and Mature
+(mildly suggestive content, roughly PG-13), not “doubtful”. Neither Steam nor Wallpaper Engine
+localizes the rating tags (Steam shows them in English, except its zh-Hant tag panel's 爭議性,
+“controversial”), so each language uses its country's usual age-rating label for teen content
+where one exists (FSK/USK, CERO, GRAC, Taiwan's 分級, 436-ФЗ, PEGI, RTÜK, ClassInd, CBFC), and
+otherwise a short content term (fr Suggestif, es Sugerente, it Allusivo, zh-Hans 轻度暗示,
+ar للمراهقين). The stored value stays `Questionable`.
+
 Product names stay as the platforms write them: Open Wallpaper Engine, Wallpaper Engine, Steam,
 Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايندر).
 
@@ -97,7 +105,8 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Audio responsive | Audio-reaktiv | [WE `ui_de-de.json`](../Vendor/we-assets/locale/ui_de-de.json) |
 | Anti-aliasing / Post-processing / Frame rate (FPS) | Antialiasing / Post-Processing / Bildrate (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_de-de.json`](../Vendor/we-assets/locale/ui_de-de.json) |
 | Texture / Shader / Material / Layer / Effect | Textur / Shader / Material / Ebene / Effekt | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_de-de.json`](../Vendor/we-assets/locale/ui_de-de.json) |
-| Age rating: Everyone / Questionable / Mature | Altersfreigabe: Jeder / Fragwürdig / Nicht jugendfrei | [WE `ui_de-de.json`](../Vendor/we-assets/locale/ui_de-de.json) |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | Altersfreigabe: Jeder / Ab 12 / Nicht jugendfrei | [WE `ui_de-de.json`](../Vendor/we-assets/locale/ui_de-de.json) · [FSK/USK „ab 12“](https://usk.de/alle-lernangebote/die-usk-alterskennzeichen/) |
+| Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | Niedrige Auflösung | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | Bildschirmfüllend / An Bildschirm anpassen / Zentriert / Bildschirmfüllend vergrößern / Zoomen | [Apple](https://support.apple.com/de-de/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | Plug-ins / Diagnose / Berechtigungen / Leistung / Allgemein / Info | [WE `ui_de-de.json`](../Vendor/we-assets/locale/ui_de-de.json) · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | Hintergrundbild-Speicher | derived from “Wallpaper” |
@@ -137,7 +146,8 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Audio responsive | Réactif au son | [WE `ui_fr-fr.json`](../Vendor/we-assets/locale/ui_fr-fr.json) |
 | Anti-aliasing / Post-processing / Frame rate (FPS) | Anticrénelage / Post-traitement / Fréquence d’images (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_fr-fr.json`](../Vendor/we-assets/locale/ui_fr-fr.json) |
 | Texture / Shader / Material / Layer / Effect | Texture / Nuanceur / Matériau / Calque / Effet | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_fr-fr.json`](../Vendor/we-assets/locale/ui_fr-fr.json) |
-| Age rating: Everyone / Questionable / Mature | Classification : Tout public / Discutable / Adulte | [WE `ui_fr-fr.json`](../Vendor/we-assets/locale/ui_fr-fr.json) |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | Classification : Tout public / Suggestif / Adulte | [WE `ui_fr-fr.json`](../Vendor/we-assets/locale/ui_fr-fr.json) · content term (suggestive); CSA ratings are ages only |
+| Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | Basse résolution | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | Occuper tout l’écran / Adapter à l’écran / Centrer / Étirer pour remplir l’écran / Zoomer | [Apple](https://support.apple.com/fr-fr/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | Plug-ins / Diagnostic / Autorisations / Performances / Général / À propos | [WE `ui_fr-fr.json`](../Vendor/we-assets/locale/ui_fr-fr.json) · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | Stockage des fonds d’écran | derived from “Wallpaper” |
@@ -177,7 +187,8 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Audio responsive | Reacciona al audio | [WE `ui_es-es.json`](../Vendor/we-assets/locale/ui_es-es.json) |
 | Anti-aliasing / Post-processing / Frame rate (FPS) | Suavizado de contorno / Posprocesado / Velocidad de fotogramas (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_es-es.json`](../Vendor/we-assets/locale/ui_es-es.json) |
 | Texture / Shader / Material / Layer / Effect | Textura / Sombreador / Material / Capa / Efecto | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_es-es.json`](../Vendor/we-assets/locale/ui_es-es.json) |
-| Age rating: Everyone / Questionable / Mature | Clasificación: Todos / Dudoso / Adulto | [WE `ui_es-es.json`](../Vendor/we-assets/locale/ui_es-es.json) |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | Clasificación: Todos / Sugerente / Adulto | [WE `ui_es-es.json`](../Vendor/we-assets/locale/ui_es-es.json) · content term (suggestive); ICAA ratings are ages only |
+| Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | Baja resolución | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | Llenar pantalla / Ajustar a pantalla / Centrar / Ampliar para rellenar / Acercar | [Apple](https://support.apple.com/es-es/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | Complementos / Diagnóstico / Permisos / Rendimiento / General / Acerca de | [WE `ui_es-es.json`](../Vendor/we-assets/locale/ui_es-es.json) · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | Almacenamiento de fondos de pantalla | derived from “Wallpaper” |
@@ -217,7 +228,8 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Audio responsive | Sensível a áudio | [WE `ui_pt-br.json`](../Vendor/we-assets/locale/ui_pt-br.json) |
 | Anti-aliasing / Post-processing / Frame rate (FPS) | Suavização / Pós-processamento / Taxa de quadros (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_pt-br.json`](../Vendor/we-assets/locale/ui_pt-br.json) |
 | Texture / Shader / Material / Layer / Effect | Textura / Shader / Material / Camada / Efeito | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_pt-br.json`](../Vendor/we-assets/locale/ui_pt-br.json) |
-| Age rating: Everyone / Questionable / Mature | Classificação: Livre / Questionável / Adulto | [WE `ui_pt-br.json`](../Vendor/we-assets/locale/ui_pt-br.json) |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | Classificação: Livre / 12+ / Adulto | [WE `ui_pt-br.json`](../Vendor/we-assets/locale/ui_pt-br.json) · [ClassInd “12”](https://www.gov.br/mj/pt-br/assuntos/seus-direitos/classificacao-1) |
+| Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | Baixa Resolução | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | Preencher Tela / Ajustar à Tela / Centralizar / Estender e Preencher Tela / Zoom | [Apple](https://support.apple.com/pt-br/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | Plug-ins / Diagnóstico / Permissões / Desempenho / Geral / Sobre | [WE `ui_pt-br.json`](../Vendor/we-assets/locale/ui_pt-br.json) · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | Armazenamento de Imagens de Fundo | derived from “Wallpaper” |
@@ -257,7 +269,8 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Audio responsive | Reattivo all’audio | [WE `ui_it-it.json`](../Vendor/we-assets/locale/ui_it-it.json) |
 | Anti-aliasing / Post-processing / Frame rate (FPS) | Anti-aliasing / Post-elaborazione / Frequenza fotogrammi (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_it-it.json`](../Vendor/we-assets/locale/ui_it-it.json) |
 | Texture / Shader / Material / Layer / Effect | Texture / Shader / Materiale / Livello / Effetto | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_it-it.json`](../Vendor/we-assets/locale/ui_it-it.json) |
-| Age rating: Everyone / Questionable / Mature | Classificazione: Per tutti / Discutibile / Per adulti | [WE `ui_it-it.json`](../Vendor/we-assets/locale/ui_it-it.json) |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | Classificazione: Per tutti / Allusivo / Per adulti | [WE `ui_it-it.json`](../Vendor/we-assets/locale/ui_it-it.json) · content term (allusive): “suggestivo” means evocative in Italian |
+| Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | Bassa risoluzione | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | A schermo pieno / Adatta allo schermo / Centro / Amplia per riempire lo schermo / Zoom | [Apple](https://support.apple.com/it-it/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | Plug-in / Diagnosi / Autorizzazioni / Prestazioni / Generali / Informazioni | [WE `ui_it-it.json`](../Vendor/we-assets/locale/ui_it-it.json) · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | Archivio sfondi | derived from “Wallpaper” |
@@ -297,7 +310,8 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Audio responsive | オーディオレスポンス | [WE `ui_ja-jp.json`](../Vendor/we-assets/locale/ui_ja-jp.json) |
 | Anti-aliasing / Post-processing / Frame rate (FPS) | アンチエイリアシング / ポストプロセッシング / フレームレート (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_ja-jp.json`](../Vendor/we-assets/locale/ui_ja-jp.json) |
 | Texture / Shader / Material / Layer / Effect | テクスチャ / シェーダー / マテリアル / レイヤー / エフェクト | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_ja-jp.json`](../Vendor/we-assets/locale/ui_ja-jp.json) |
-| Age rating: Everyone / Questionable / Mature | 年齢制限: 全年齢 / 疑わしい / 成人向け | [WE `ui_ja-jp.json`](../Vendor/we-assets/locale/ui_ja-jp.json) |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | 年齢制限: 全年齢 / 12歳以上 / 成人向け | [WE `ui_ja-jp.json`](../Vendor/we-assets/locale/ui_ja-jp.json) · [CERO B “12歳以上対象”](https://www.cero.gr.jp/publics/index/17/) |
+| Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | 低解像度 | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | 画面全体に表示 / 画面に収まるサイズで表示 / 中央に配置 / 引き伸ばして画面全体に表示 / ズーム | [Apple](https://support.apple.com/ja-jp/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | プラグイン / 診断 / アクセス権 / パフォーマンス / 一般 / 情報 | [WE `ui_ja-jp.json`](../Vendor/we-assets/locale/ui_ja-jp.json) · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | 壁紙の保存場所 | derived from “Wallpaper” |
@@ -337,7 +351,8 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Audio responsive | 오디오 응답 | [WE `ui_ko-kr.json`](../Vendor/we-assets/locale/ui_ko-kr.json) |
 | Anti-aliasing / Post-processing / Frame rate (FPS) | 앤티앨리어싱 / 포스트 프로세싱 / 프레임 속도(FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_ko-kr.json`](../Vendor/we-assets/locale/ui_ko-kr.json) |
 | Texture / Shader / Material / Layer / Effect | 텍스처 / 셰이더 / 머티리얼 / 레이어 / 효과 | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_ko-kr.json`](../Vendor/we-assets/locale/ui_ko-kr.json) |
-| Age rating: Everyone / Questionable / Mature | 연령 등급: 전체 이용가 / 선정적 / 성인 | [WE `ui_ko-kr.json`](../Vendor/we-assets/locale/ui_ko-kr.json) |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | 연령 등급: 전체 이용가 / 12세 이용가 / 성인 | [WE `ui_ko-kr.json`](../Vendor/we-assets/locale/ui_ko-kr.json) · [GRAC “12세 이용가”](https://www.grac.or.kr/) |
+| Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | 저해상도 | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | 화면 채우기 / 화면에 맞추기 / 중앙 정렬 / 전체 화면으로 펼치기 / 확대 | [Apple](https://support.apple.com/ko-kr/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | 플러그인 / 진단 / 권한 / 성능 / 일반 / 정보 | [WE `ui_ko-kr.json`](../Vendor/we-assets/locale/ui_ko-kr.json) · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | 배경화면 저장 공간 | derived from “Wallpaper” |
@@ -377,7 +392,8 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Audio responsive | 音频响应 | [WE `ui_zh-chs.json`](../Vendor/we-assets/locale/ui_zh-chs.json) |
 | Anti-aliasing / Post-processing / Frame rate (FPS) | 抗锯齿 / 后处理 / 帧速率 (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_zh-chs.json`](../Vendor/we-assets/locale/ui_zh-chs.json) |
 | Texture / Shader / Material / Layer / Effect | 纹理 / 着色器 / 材质 / 图层 / 效果 | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_zh-chs.json`](../Vendor/we-assets/locale/ui_zh-chs.json) |
-| Age rating: Everyone / Questionable / Mature | 年龄分级：所有人 / 有争议 / 成人 | [WE `ui_zh-chs.json`](../Vendor/we-assets/locale/ui_zh-chs.json) |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | 年龄分级：所有人 / 轻度暗示 / 成人 | [WE `ui_zh-chs.json`](../Vendor/we-assets/locale/ui_zh-chs.json) · content term (mildly suggestive); no national rating system |
+| Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | 低分辨率 | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | 充满屏幕 / 适合于屏幕 / 居中 / 拉伸以充满屏幕 / 缩放 | [Apple](https://support.apple.com/zh-cn/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | 插件 / 诊断 / 权限 / 性能 / 通用 / 关于 | [WE `ui_zh-chs.json`](../Vendor/we-assets/locale/ui_zh-chs.json) · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | 墙纸存储位置 | derived from “Wallpaper” |
@@ -417,7 +433,8 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Audio responsive | 音訊回應式 | [WE `ui_zh-cht.json`](../Vendor/we-assets/locale/ui_zh-cht.json) |
 | Anti-aliasing / Post-processing / Frame rate (FPS) | 消除鋸齒 / 後處理 / 畫面播放速率 (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_zh-cht.json`](../Vendor/we-assets/locale/ui_zh-cht.json) |
 | Texture / Shader / Material / Layer / Effect | 紋理 / 著色器 / 材質 / 圖層 / 效果 | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_zh-cht.json`](../Vendor/we-assets/locale/ui_zh-cht.json) |
-| Age rating: Everyone / Questionable / Mature | 年齡分級：全年齡 / 爭議性 / 成人 | [WE `ui_zh-cht.json`](../Vendor/we-assets/locale/ui_zh-cht.json) |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | 年齡分級：全年齡 / 輔12級 / 成人 | [WE `ui_zh-cht.json`](../Vendor/we-assets/locale/ui_zh-cht.json) · [Taiwan 分級 “輔12級”](https://law.moj.gov.tw/) |
+| Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | 低解析度 | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | 填滿螢幕 / 符合螢幕大小 / 置中 / 擴展至填滿螢幕 / 縮放 | [Apple](https://support.apple.com/zh-tw/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | 外掛程式 / 診斷 / 權限 / 效能 / 一般 / 關於 | [WE `ui_zh-cht.json`](../Vendor/we-assets/locale/ui_zh-cht.json) · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | 背景圖片儲存位置 | derived from “Wallpaper” |
@@ -457,7 +474,8 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Audio responsive | Реагирующие на звук | [WE `ui_ru-ru.json`](../Vendor/we-assets/locale/ui_ru-ru.json) |
 | Anti-aliasing / Post-processing / Frame rate (FPS) | Сглаживание / Постобработка / Частота кадров (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_ru-ru.json`](../Vendor/we-assets/locale/ui_ru-ru.json) |
 | Texture / Shader / Material / Layer / Effect | Текстура / Шейдер / Материал / Слой / Эффект | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_ru-ru.json`](../Vendor/we-assets/locale/ui_ru-ru.json) |
-| Age rating: Everyone / Questionable / Mature | Возрастной рейтинг: Для всех / Сомнительное / Для взрослых | [WE `ui_ru-ru.json`](../Vendor/we-assets/locale/ui_ru-ru.json) |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | Возрастной рейтинг: Для всех / 12+ / Для взрослых | [WE `ui_ru-ru.json`](../Vendor/we-assets/locale/ui_ru-ru.json) · [436-ФЗ “12+”](http://www.consultant.ru/document/cons_doc_LAW_108808/) |
+| Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | Низкое разрешение | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | Во весь экран / По размеру экрана / По центру / Заполнить весь экран / Масштаб | [Apple](https://support.apple.com/ru-ru/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | Плагины / Диагностика / Разрешения / Производительность / Основные / О программе | [WE `ui_ru-ru.json`](../Vendor/we-assets/locale/ui_ru-ru.json) · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | Хранилище обоев | derived from “Wallpaper” |
@@ -497,7 +515,8 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Audio responsive | Reakcja na dźwięk | [WE `ui_pl-pl.json`](../Vendor/we-assets/locale/ui_pl-pl.json) |
 | Anti-aliasing / Post-processing / Frame rate (FPS) | Antyaliasing / Przetwarzanie końcowe / Liczba klatek (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_pl-pl.json`](../Vendor/we-assets/locale/ui_pl-pl.json) |
 | Texture / Shader / Material / Layer / Effect | Tekstura / Shader / Materiał / Warstwa / Efekt | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_pl-pl.json`](../Vendor/we-assets/locale/ui_pl-pl.json) |
-| Age rating: Everyone / Questionable / Mature | Klasyfikacja wiekowa: Dla wszystkich / Wątpliwe / Dla dorosłych | [WE `ui_pl-pl.json`](../Vendor/we-assets/locale/ui_pl-pl.json) |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | Klasyfikacja wiekowa: Dla wszystkich / Od 12 lat / Dla dorosłych | [WE `ui_pl-pl.json`](../Vendor/we-assets/locale/ui_pl-pl.json) · [PEGI “od 12 lat”](https://pegi.info/pl) |
+| Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | Niska rozdzielczość | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | Wypełnij ekran / Dopasuj do ekranu / Na środku / Rozciągnij, aby wypełnić ekran / Powiększ | [Apple](https://support.apple.com/pl-pl/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | Wtyczki / Diagnostyka / Uprawnienia / Wydajność / Ogólne / Informacje | [WE `ui_pl-pl.json`](../Vendor/we-assets/locale/ui_pl-pl.json) · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | Magazyn tapet | derived from “Wallpaper” |
@@ -537,7 +556,8 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Audio responsive | Sese duyarlı | [WE `ui_tr-tr.json`](../Vendor/we-assets/locale/ui_tr-tr.json) |
 | Anti-aliasing / Post-processing / Frame rate (FPS) | Kenar yumuşatma / Son işleme / Kare hızı (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_tr-tr.json`](../Vendor/we-assets/locale/ui_tr-tr.json) |
 | Texture / Shader / Material / Layer / Effect | Doku / Gölgelendirici / Malzeme / Katman / Efekt | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_tr-tr.json`](../Vendor/we-assets/locale/ui_tr-tr.json) |
-| Age rating: Everyone / Questionable / Mature | Yaş sınırı: Herkes / Şüpheli / Yetişkin | [WE `ui_tr-tr.json`](../Vendor/we-assets/locale/ui_tr-tr.json) |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | Yaş sınırı: Herkes / 13+ / Yetişkin | [WE `ui_tr-tr.json`](../Vendor/we-assets/locale/ui_tr-tr.json) · [RTÜK Akıllı İşaretler “13+”](https://www.rtuk.gov.tr/) |
+| Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | Düşük Çözünürlük | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | Ekranı Doldur / Ekrana Sığdır / Ortala / Ekranı Dolduracak Şekilde Büyüt / Yakınlaştır | [Apple](https://support.apple.com/tr-tr/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | Eklentiler / Tanılar / İzinler / Performans / Genel / Hakkında | [WE `ui_tr-tr.json`](../Vendor/we-assets/locale/ui_tr-tr.json) · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | Duvar Kâğıdı Deposu | derived from “Wallpaper” |
@@ -577,7 +597,8 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Audio responsive | Реагують на звук | [WE `ui_uk-ua.json`](../Vendor/we-assets/locale/ui_uk-ua.json) |
 | Anti-aliasing / Post-processing / Frame rate (FPS) | Згладжування / Постобробка / Частота кадрів (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_uk-ua.json`](../Vendor/we-assets/locale/ui_uk-ua.json) |
 | Texture / Shader / Material / Layer / Effect | Текстура / Шейдер / Матеріал / Шар / Ефект | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_uk-ua.json`](../Vendor/we-assets/locale/ui_uk-ua.json) |
-| Age rating: Everyone / Questionable / Mature | Вікова категорія: Для всіх / Сумнівне / Для дорослих | [WE `ui_uk-ua.json`](../Vendor/we-assets/locale/ui_uk-ua.json) |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | Вікова категорія: Для всіх / 12+ / Для дорослих | [WE `ui_uk-ua.json`](../Vendor/we-assets/locale/ui_uk-ua.json) · age marking “12+” as in Ukrainian film/TV ratings |
+| Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | Низька роздільність | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | Заповнити екран / Припасувати до екрана / По центру / Розтягнути до заповнення екрана / Масштаб | [Apple](https://support.apple.com/uk-ua/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | Плагіни / Діагностика / Дозволи / Продуктивність / Загальні / Про програму | [WE `ui_uk-ua.json`](../Vendor/we-assets/locale/ui_uk-ua.json) · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | Сховище шпалер | derived from “Wallpaper” |
@@ -617,7 +638,8 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Audio responsive | تستجيب للصوت | [WE `ui_ar-sa.json`](../Vendor/we-assets/locale/ui_ar-sa.json) |
 | Anti-aliasing / Post-processing / Frame rate (FPS) | مانع التشويش / المعالجة اللاحقة / معدل الإطارات (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_ar-sa.json`](../Vendor/we-assets/locale/ui_ar-sa.json) |
 | Texture / Shader / Material / Layer / Effect | نسيج / مظلل / مادة / طبقة / تأثير | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_ar-sa.json`](../Vendor/we-assets/locale/ui_ar-sa.json) |
-| Age rating: Everyone / Questionable / Mature | التصنيف العمري: للجميع / مثير للشك / للبالغين | [WE `ui_ar-sa.json`](../Vendor/we-assets/locale/ui_ar-sa.json) |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | التصنيف العمري: للجميع / للمراهقين / للبالغين | [WE `ui_ar-sa.json`](../Vendor/we-assets/locale/ui_ar-sa.json) · content term (for teens); no common Arab rating label |
+| Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | دقة منخفضة | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | تعبئة الشاشة / الاحتواء ضمن الشاشة / الوسط / التمديد لتعبئة الشاشة / تكبير | [Apple](https://support.apple.com/ar-ae/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | الإضافات / التشخيصات / الأذونات / الأداء / عام / حول | [WE `ui_ar-sa.json`](../Vendor/we-assets/locale/ui_ar-sa.json) · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | مخزن خلفيات الشاشة | derived from “Wallpaper” |
@@ -657,7 +679,8 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Audio responsive | ऑडियो पर प्रतिक्रिया | WE (no file for this language) |
 | Anti-aliasing / Post-processing / Frame rate (FPS) | एंटीएलियासिंग / पोस्ट-प्रोसेसिंग / फ़्रेम दर (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE (no file for this language) |
 | Texture / Shader / Material / Layer / Effect | टेक्सचर / शेडर / मटीरियल / लेयर / इफ़ेक्ट | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE (no file for this language) |
-| Age rating: Everyone / Questionable / Mature | आयु रेटिंग: सभी / संदिग्ध / वयस्क | WE (no file for this language) |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | आयु रेटिंग: सभी / UA 13+ / वयस्क | WE (no file for this language) · [CBFC “UA 13+”](https://www.cbfcindia.gov.in/) |
+| Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | निम्न रिज़ोल्यूशन | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | फ़ुल स्क्रीन / स्क्रीन पर फ़िट करें / सेंटर / फ़ुल स्क्रीन पर स्ट्रेच करें / ज़ूम | [Apple](https://support.apple.com/hi-in/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | प्लग-इन / डायग्नॉस्टिक / अनुमतियाँ / परफ़ॉर्मेंस / सामान्य / जानकारी | WE (no file for this language) · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | वॉलपेपर स्टोरेज | derived from “Wallpaper” |
