@@ -413,29 +413,20 @@ class TEXParser {
                                 visibleWidth: visibleWidth, visibleHeight: visibleHeight)
         case 8:
             guard bytes.count >= width * height * 2 else { return nil }
-            // As a two-channel texture samples in WE: (r, g, 0, 1). Shaders that read RG88 as
-            // luminance and alpha convert it by `TEX<n>FORMAT` (`ConvertTexture0Format`'s
-            // `.rrrg`); normal maps (`DecompressNormal`) and flow maps read `.rg`.
-            var rgba = [UInt8](repeating: 255, count: width * height * 4)
-            for pixel in 0..<(width * height) {
-                rgba[pixel * 4] = bytes[pixel * 2]
-                rgba[pixel * 4 + 1] = bytes[pixel * 2 + 1]
-                rgba[pixel * 4 + 2] = 0
-            }
-            return rawRGBAImage(rgba, width: width, height: height, visibleWidth: visibleWidth, visibleHeight: visibleHeight)
+            // As a two-channel texture samples in WE: (r, g, 0, 1), which an `.rg8Unorm` texture
+            // returns. Shaders that read RG88 as luminance and alpha convert it by `TEX<n>FORMAT`
+            // (`ConvertTexture0Format`'s `.rrrg`); normal maps (`DecompressNormal`) and flow maps
+            // read `.rg`.
+            return TEXRawImageRep.image(bytes: bytes, channels: .rg, rowPixels: width,
+                                        width: visibleWidth, height: visibleHeight)
         case 9:
             guard width > 0, height > 0, visibleWidth > 0, visibleHeight > 0,
                   bytes.count >= width * height else { return nil }
-            // As a one-channel texture samples in WE: (r, 0, 0, 1). Opacity masks and depth maps
-            // read `.r`; particle shaders turn an R8 albedo into (1, 1, 1, r) by `TEX<n>FORMAT`
-            // (`ConvertTexture0Format`).
-            var rgba = [UInt8](repeating: 0, count: width * height * 4)
-            for pixel in 0..<(width * height) {
-                rgba[pixel * 4] = bytes[pixel]
-                rgba[pixel * 4 + 3] = 255
-            }
-            return rawRGBAImage(rgba, width: width, height: height,
-                                visibleWidth: visibleWidth, visibleHeight: visibleHeight)
+            // As a one-channel texture samples in WE: (r, 0, 0, 1), which an `.r8Unorm` texture
+            // returns. Opacity masks and depth maps read `.r`; particle shaders turn an R8 albedo
+            // into (1, 1, 1, r) by `TEX<n>FORMAT` (`ConvertTexture0Format`).
+            return TEXRawImageRep.image(bytes: bytes, channels: .r, rowPixels: width,
+                                        width: visibleWidth, height: visibleHeight)
         case 10:
             guard bytes.count >= width * height * 4 else { return nil }
             var rgba = [UInt8](repeating: 255, count: width * height * 4)
@@ -528,18 +519,9 @@ class TEXParser {
     /// Decodes an uncompressed RGBA8888 mipmap (TEXI format 0); these carry no image container header.
     private func rawRGBAImage(_ bytes: [UInt8], width: Int, height: Int,
                               visibleWidth: Int, visibleHeight: Int) -> NSImage? {
-        guard width > 0, height > 0, visibleWidth > 0, visibleHeight > 0,
-              bytes.count >= width * height * 4,
-              let provider = CGDataProvider(data: Data(bytes) as CFData),
-              let image = CGImage(width: visibleWidth, height: visibleHeight, bitsPerComponent: 8,
-                                  bitsPerPixel: 32, bytesPerRow: width * 4,
-                                  space: CGColorSpaceCreateDeviceRGB(),
-                                  bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.last.rawValue)
-                                      .union(.byteOrder32Big), provider: provider, decode: nil,
-                                  shouldInterpolate: true, intent: .defaultIntent) else {
-            return nil
-        }
-        return NSImage(cgImage: image, size: NSSize(width: visibleWidth, height: visibleHeight))
+        guard width > 0, height > 0, bytes.count >= width * height * 4 else { return nil }
+        return TEXRawImageRep.image(bytes: bytes, channels: .rgba, rowPixels: width,
+                                    width: visibleWidth, height: visibleHeight)
     }
 
     /// Wallpaper Engine stores some TEX mipmaps as a raw MP4 file (video-backed materials).

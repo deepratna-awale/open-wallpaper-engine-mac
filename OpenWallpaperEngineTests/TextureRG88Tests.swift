@@ -59,6 +59,45 @@ final class TextureRG88Tests: XCTestCase {
         XCTAssertEqual(try upload(converted)[3], 0, "no coverage where the mask is 0")
     }
 
+    /// R8 and RG88 upload in their own channels, and RGBA8888 as it is stored, with the visible rect
+    /// cropped from the padded rows: the texels are the ones the RGBA expansion held, so sampling
+    /// (missing channels 0, alpha 1) is unchanged.
+    func testRawFormatsUploadNatively() throws {
+        let r8 = try XCTUnwrap(TEXRawImageRep.of(try XCTUnwrap(TEXParser(data: Self.tex(format: 9, width: 2, height: 1,
+                                                                                         pixels: [7, 200])).extractImage())))
+        let r8Texture = try XCTUnwrap(r8.makeTexture(device: device))
+        XCTAssertEqual(r8Texture.pixelFormat, .r8Unorm)
+        XCTAssertEqual(try Self.texels(r8Texture, bytesPerPixel: 1), [7, 200])
+        let rg = try XCTUnwrap(TEXRawImageRep.of(try XCTUnwrap(TEXParser(data: Self.tex(format: 8, width: 2, height: 1,
+                                                                                         pixels: [64, 200, 255, 0])).extractImage())))
+        let rgTexture = try XCTUnwrap(rg.makeTexture(device: device))
+        XCTAssertEqual(rgTexture.pixelFormat, .rg8Unorm)
+        XCTAssertEqual(try Self.texels(rgTexture, bytesPerPixel: 2), [64, 200, 255, 0])
+        // A 3-texel-wide allocation whose image is 2×2: the third column is padding.
+        let padded = try XCTUnwrap(TEXRawImageRep(bytes: [1, 2, 3, 4, 5, 6, 9, 9, 9, 9, 9, 9,
+                                                          7, 8, 9, 10, 11, 12, 9, 9, 9, 9, 9, 9],
+                                                  channels: .rgba, rowPixels: 3, width: 2, height: 2))
+        let paddedTexture = try XCTUnwrap(padded.makeTexture(device: device))
+        XCTAssertEqual(paddedTexture.width, 2)
+        XCTAssertEqual(try Self.texels(paddedTexture, bytesPerPixel: 4), [1, 2, 3, 4, 5, 6, 9, 9, 7, 8, 9, 10, 11, 12, 9, 9])
+        let expanded = try XCTUnwrap(padded.cgImage)
+        XCTAssertEqual(Array(try upload(NSImage(cgImage: expanded, size: NSSize(width: 2, height: 2)))),
+                       [1, 2, 3, 4, 5, 6, 9, 9, 7, 8, 9, 10, 11, 12, 9, 9], "the CGImage is the same crop")
+        XCTAssertEqual(SceneMetalTextureSource.pixelSize(of: NSImage(size: .zero)), SIMD2<Float>(0, 0))
+        let size: SIMD2<Float> = SceneMetalTextureSource.image(try XCTUnwrap(TEXRawImageRep.image(
+            bytes: padded.bytes, channels: .rgba, rowPixels: 3, width: 2, height: 2))).pixelSize
+        XCTAssertEqual(size, SIMD2<Float>(2, 2))
+    }
+
+    private static func texels(_ texture: MTLTexture, bytesPerPixel: Int) throws -> [UInt8] {
+        var bytes = [UInt8](repeating: 0, count: texture.width * texture.height * bytesPerPixel)
+        bytes.withUnsafeMutableBytes { raw in
+            texture.getBytes(raw.baseAddress!, bytesPerRow: texture.width * bytesPerPixel,
+                             from: MTLRegionMake2D(0, 0, texture.width, texture.height), mipmapLevel: 0)
+        }
+        return bytes
+    }
+
     private func upload(_ image: NSImage) throws -> [UInt8] {
         let cgImage = try XCTUnwrap(image.cgImage(forProposedRect: nil, context: nil, hints: nil))
         let texture = try SceneTextureUpload.texture(from: cgImage, loader: MTKTextureLoader(device: device), device: device)

@@ -26,7 +26,7 @@ enum ParticleFallbackTexture {
     /// `image` as `ConvertTexture0Format` reads it: red as luminance (rgb) and green as alpha for
     /// RG88, white with red as alpha for R8.
     static func luminanceAlpha(_ image: NSImage, format: TEXImageFormat) -> NSImage? {
-        guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
+        guard let cgImage = image.oweCGImage else { return nil }
         let bytes: [UInt8]
         do {
             bytes = try SceneTextureUpload.straightRGBA(cgImage)

@@ -46,6 +46,7 @@ enum SceneMetalTextureSource {
     }
 
     static func pixelSize(of image: NSImage) -> SIMD2<Float> {
+        if let raw = TEXRawImageRep.of(image) { return SIMD2(Float(raw.pixelsWide), Float(raw.pixelsHigh)) }
         if let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) {
             return SIMD2(Float(cgImage.width), Float(cgImage.height))
         }

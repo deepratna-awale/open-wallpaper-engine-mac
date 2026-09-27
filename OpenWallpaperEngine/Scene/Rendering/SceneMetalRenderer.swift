@@ -2976,6 +2976,14 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private func makeTextureFrames(from source: SceneMetalTextureSource) -> [RenderTextureFrame]? {
         switch source {
         case let .image(image):
+            if let raw = TEXRawImageRep.of(image) {
+                guard let texture = raw.makeTexture(device: device) else {
+                    OWELog.error(.scene, "Could not upload a \(raw.pixelsWide)×\(raw.pixelsHigh) .tex image")
+                    return nil
+                }
+                return [RenderTextureFrame(texture: texture, duration: .greatestFiniteMagnitude,
+                                           uvOrigin: .zero, uvAxisX: SIMD2<Float>(1, 0), uvAxisY: SIMD2<Float>(0, 1))]
+            }
             guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
             let texture: MTLTexture
             do {
@@ -2998,6 +3006,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                        uvOrigin: .zero, uvAxisX: SIMD2<Float>(1, 0), uvAxisY: SIMD2<Float>(0, 1))]
         case let .animated(animation):
             let textures = animation.images.compactMap { image -> MTLTexture? in
+                if let raw = TEXRawImageRep.of(image) { return raw.makeTexture(device: device) }
                 guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
                 do {
                     return try SceneTextureUpload.texture(from: cgImage, loader: textureLoader, device: device)
