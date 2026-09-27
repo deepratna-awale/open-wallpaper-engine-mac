@@ -25,7 +25,9 @@ struct ProgramState {
     float3 position, velocity, previous;
     float age, lifetime, size, baseSize, alpha, baseAlpha, rotation, angularVelocity;
     float3 color, baseColor;
+    float2 rotationXY, angularVelocityXY;
 };
+
 
 /// `ParticleProgramContext`.
 struct ProgramContext {
@@ -433,8 +435,15 @@ static void runInitializers(constant ProgramOp *records, uint count, thread Prog
                                     record.a.y + (record.b.y - record.a.y) * shaped(unitRandom(seed, serial, initializerStream(index, 1)), exponent),
                                     record.a.z + (record.b.z - record.a.z) * shaped(unitRandom(seed, serial, initializerStream(index, 2)), exponent));
             if (record.header.x == iVelocityRandom) p.velocity += c.emitterAxes * (v * c.spawnScale.w);
-            else if (record.header.x == iRotationRandom) p.rotation += v.z;
-            else p.angularVelocity += v.z * c.spawnScale.w;
+            else if (record.header.x == iRotationRandom) {
+                p.rotation += v.z;
+                p.rotationXY += v.xy;
+            } else {
+                const float3 spin = v * c.spawnScale.w;
+                p.angularVelocity += spin.z;
+                p.angularVelocityXY += spin.xy;
+            }
+
             break;
         }
         case iInheritControlPointVelocity: {
@@ -579,6 +588,10 @@ static bool runOperator(ProgramOp record, thread ProgramState &p, thread Program
             const float spin = p.angularVelocity + blend * record.a.z * dt;
             p.rotation += blend * dt * spin;
             p.angularVelocity = spin * (1 - blend * damping);
+            const float2 spinXY = p.angularVelocityXY + blend * record.a.xy * dt;
+            p.rotationXY += blend * dt * spinXY;
+            p.angularVelocityXY = spinXY * (1 - blend * damping);
+
             break;
         }
         case oAlphaFade: {

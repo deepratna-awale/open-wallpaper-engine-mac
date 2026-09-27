@@ -32,7 +32,8 @@ final class ParticleGPUSystem {
     let pointStates: MTLBuffer?
     private(set) var serialStates: MTLBuffer?
     /// `PointState` and `SerialState` in `ParticleProgram.h`.
-    static let pointStateStride = 400, serialStateStride = 128
+    static let pointStateStride = 400, serialStateStride = 144
+
     /// Counters and indirect arguments; shared so tests and metrics can read the count.
     let control: MTLBuffer
     let historyLimit: Int

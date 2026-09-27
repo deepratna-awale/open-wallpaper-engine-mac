@@ -71,7 +71,9 @@ enum ParticleRecordWriter {
         for (index, particle) in system.particles.prefix(count).enumerated() {
             records[index] = ParticleSpriteInstance(
                 position: SIMD4(particle.position.x, particle.position.y, particle.z, 0),
-                rotationSize: SIMD4(0, 0, particle.rotation, shaderSize(particle, scale: scale)),
+                rotationSize: SIMD4(particle.rotationXY.x, particle.rotationXY.y, particle.rotation,
+                                    shaderSize(particle, scale: scale)),
+
                 velocityLifetime: SIMD4(particle.velocity.x, particle.velocity.y, particle.zVelocity,
                                         spritePhase(particle, configuration: configuration)),
                 color: color(particle, opacity: opacity))

@@ -18,7 +18,12 @@ struct ParticleProgramState {
     var baseAlpha: Float = 1
     var rotation: Float = 0
     var angularVelocity: Float = 0
+    /// The rotation and angular velocity about x and y: WE keeps all three axes (system+0x280,
+    /// +0x288, +0x290 and +0x298, +0x2a0, +0x2a8); z is `rotation`/`angularVelocity`.
+    var rotationXY = SIMD2<Float>.zero
+    var angularVelocityXY = SIMD2<Float>.zero
     var color = SIMD3<Float>(repeating: 1)
+
     var baseColor = SIMD3<Float>(repeating: 1)
 
     /// Age over lifetime.

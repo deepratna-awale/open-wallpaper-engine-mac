@@ -177,7 +177,10 @@ static ParticleState spawn(uint serial, constant ParticleParameters &p, constant
     state.baseAlpha = f.spawnScale.y;
     state.rotation = 0;
     state.angularVelocity = 0;
+    state.rotationXY = float2(0);
+    state.angularVelocityXY = float2(0);
     state.color = float3(1);
+
     state.baseColor = f.colorScale.xyz;
     c.emitterAxes = programAxes(c, uint(emitter.origin.w));
     if (emitter.flags.x == 2) {
@@ -201,8 +204,10 @@ static ParticleState spawn(uint serial, constant ParticleParameters &p, constant
     particle.trail = float4(0);
     particle.identity = uint4(serial, min(uint(unitRandom(p.counts.z, serial, sSpriteFrame) * float(frames)), frames - 1), 0, 0);
     particle.depth = float4(state.position.z, state.velocity.z, 0, 0);
+    particle.spin = float4(state.rotationXY, state.angularVelocityXY);
     return particle;
 }
+
 
 /// The instance whose spawns this step include spawn `index` (`ParticleCPUSimulation.step`
 /// spawns instance by instance): the last one starting at or before it.
@@ -430,7 +435,10 @@ static ProgramState simulateState(ParticleState particle, thread const ProgramCo
     state.baseAlpha = particle.alphaRotation.y;
     state.rotation = particle.alphaRotation.z;
     state.angularVelocity = particle.alphaRotation.w;
+    state.rotationXY = particle.spin.xy;
+    state.angularVelocityXY = particle.spin.zw;
     state.color = particle.color.xyz;
+
     state.baseColor = particle.baseColor.xyz;
     return state;
 }
@@ -449,7 +457,9 @@ static void endSimulate(uint gid, ParticleState particle, ProgramState state, th
     particle.alphaRotation = float4(state.alpha, particle.alphaRotation.y, state.rotation, state.angularVelocity);
     particle.color = float4(state.color, particle.color.w);
     particle.depth = float4(state.position.z, state.velocity.z, 0, 0);
+    particle.spin = float4(state.rotationXY, state.angularVelocityXY);
     if (flags & kHistory) {
+
         const uint limit = p.counts.w;
         particle.trail.x += f.time.x;
         if (particle.trail.x >= p.trail.x || particle.identity.z == 0) {

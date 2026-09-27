@@ -20,7 +20,9 @@ struct ParticleState {
     float4 trail;            // history timer, -, instance
     uint4 identity;          // serial, sprite frame, history count, history start
     float4 depth;            // z, z velocity (along the system's z), -, -
+    float4 spin;             // rotation about x and y, angular velocity about x and y
 };
+
 
 struct ParticleParameters {
     uint4 counts;            // maximum, flags, seed, history limit

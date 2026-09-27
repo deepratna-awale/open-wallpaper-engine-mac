@@ -28,6 +28,11 @@ struct Particle {
     /// Depth along the system's z and its velocity (`ParticleProgramState.z`).
     var z: Float = 0
     var zVelocity: Float = 0
+    /// The rotation and angular velocity about x and y (`ParticleProgramState.rotationXY`); the
+    /// renderer reads them as `a_TexCoordVec4.xy` (`genericparticle.vert`'s `in_ParticleRotation`).
+    var rotationXY = SIMD2<Float>.zero
+    var angularVelocityXY = SIMD2<Float>.zero
+
 
     /// `history` is a circular buffer; this returns it oldest-first so a trail can be walked.
     var orderedHistory: [SIMD2<Float>] {
@@ -365,7 +370,8 @@ enum ParticleCPUSimulation {
             color: color, baseColor: color,
             spriteFrame: ParticleRandom.index(configuration.spriteSheet?.frames ?? 1, seed: system.seed, serial: serial, .spriteFrame),
             history: [], historyStart: 0, serial: serial, instance: instance, z: state.position.z,
-            zVelocity: state.velocity.z)
+            zVelocity: state.velocity.z, rotationXY: state.rotationXY, angularVelocityXY: state.angularVelocityXY)
+
     }
 
     /// One step of every operator for the particle at `index`.
@@ -398,7 +404,10 @@ enum ParticleCPUSimulation {
         state.baseColor = SIMD3(particle.baseColor.x, particle.baseColor.y, particle.baseColor.z)
         state.rotation = particle.rotation
         state.angularVelocity = particle.angularVelocity
+        state.rotationXY = particle.rotationXY
+        state.angularVelocityXY = particle.angularVelocityXY
         return state
+
     }
 
     /// Takes the operators' `state` back into `particle` and records its trail history.
@@ -413,7 +422,10 @@ enum ParticleCPUSimulation {
         particle.color = SIMD4(state.color, particle.color.w)
         particle.rotation = state.rotation
         particle.angularVelocity = state.angularVelocity
+        particle.rotationXY = state.rotationXY
+        particle.angularVelocityXY = state.angularVelocityXY
         particle.z = state.position.z
+
         particle.zVelocity = state.velocity.z
         // A deleted particle dies when it next ages (WE sets its age to its lifetime).
         if dies { particle.age = particle.lifetime }

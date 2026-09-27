@@ -142,9 +142,16 @@ extension ParticleProgramCPU {
             case .turbulentVelocityRandom:
                 p.velocity += turbulentVelocity(record, random: random, context: context) * context.spawnScale.w
             case .rotationRandom:
-                p.rotation += vector(0).z
+                // 0x14023bf55…0x14023bffb: each axis its own draw, added to +0x280, +0x288, +0x290.
+                let v = vector(0)
+                p.rotation += v.z
+                p.rotationXY += SIMD2(v.x, v.y)
             case .angularVelocityRandom:
-                p.angularVelocity += vector(0).z * context.spawnScale.w
+                // 0x14023c3d5…0x14023c4c3: the same on +0x298, +0x2a0, +0x2a8, times the speed.
+                let v = vector(0) * context.spawnScale.w
+                p.angularVelocity += v.z
+                p.angularVelocityXY += SIMD2(v.x, v.y)
+
             case .positionOffsetRandom:
                 p.position = positionOffset(record, p.position, context: context)
             case .mapSequenceAroundControlPoint:

@@ -19,7 +19,11 @@ struct ParticleGPUState {
     var identity: SIMD4<UInt32>
     /// Depth and its velocity (`Particle.z`, `zVelocity`), -, -.
     var depth: SIMD4<Float>
+    /// Rotation about x and y, angular velocity about x and y (`Particle.rotationXY`,
+    /// `angularVelocityXY`).
+    var spin: SIMD4<Float>
 }
+
 
 /// One instance of an instanced child system on the GPU (`ParticleInstance` on the CPU).
 struct ParticleGPUInstance {

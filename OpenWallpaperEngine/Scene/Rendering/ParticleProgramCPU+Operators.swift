@@ -100,7 +100,8 @@ extension ParticleProgramCPU {
         p.velocity = velocity * damping
     }
 
-    /// `angularmovement` (0x14023ffc7, blended 0x1402400e7): the same scheme on the spin about z.
+    /// `angularmovement` (0x14023ffc7, blended 0x1402400e7): the same scheme on the spin, about
+    /// each axis with its own force (the three SoA arrays at +0x280…+0x2a8 in one loop).
     static func angularMovement(_ record: ParticleProgramOp, _ p: inout ParticleProgramState,
                                 _ context: ParticleProgramContext, blend: Float) {
         let dt = context.deltaTime
@@ -108,7 +109,11 @@ extension ParticleProgramCPU {
         let spin = p.angularVelocity + blend * record.a.z * dt
         p.rotation += blend * dt * spin
         p.angularVelocity = spin * (1 - blend * damping)
+        let spinXY: SIMD2<Float> = p.angularVelocityXY + blend * SIMD2<Float>(record.a.x, record.a.y) * dt
+        p.rotationXY += blend * dt * spinXY
+        p.angularVelocityXY = spinXY * (1 - blend * damping)
     }
+
 
     // MARK: - Life-driven values
 

@@ -52,7 +52,8 @@ kernel void particleWriteSprites(device const ParticleState *particles [[buffer(
     SpriteRecord record;
     record.position = float4(particle.positionVelocity.xy, particle.depth.x, 0);
     // Sprites take the emitter's transform through `g_Orientation*`; trails scale by its area.
-    record.rotationSize = float4(0, 0, particle.alphaRotation.z, particle.life.z * f.motionExtras.w);
+    record.rotationSize = float4(particle.spin.xy, particle.alphaRotation.z, particle.life.z * f.motionExtras.w);
+
     record.velocityLifetime = float4(particle.positionVelocity.zw, particle.depth.y, spritePhase(particle, p));
     record.color = recordColor(particle, p, f);
     records[gid] = record;
