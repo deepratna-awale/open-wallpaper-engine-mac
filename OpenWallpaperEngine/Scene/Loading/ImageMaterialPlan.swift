@@ -155,6 +155,11 @@ struct ImageMaterialPlanBuilder {
 
     static let blendCompositeMaterial = "materials/util/effectpassthrough_4.json"
 
+    /// `ALPHATOCOVERAGE` = 1 for a pass blending alpha-to-coverage (blend byte 3, 0x140154bc1).
+    static func coverageCombos(blending: String?) -> [String: Int] {
+        blending?.lowercased() == "alphatocoverage" ? ["ALPHATOCOVERAGE": 1] : [:]
+    }
+
     private func build(materialPath: String, colorBlendMode: Int?, clampUVs: Bool?,
                        listsItsImage: Bool, prelit: Bool, puppet: ImagePuppetCombos? = nil,
                        extraCombos: [String: Int] = [:]) throws -> ImageMaterialPlan? {
@@ -187,9 +192,12 @@ struct ImageMaterialPlanBuilder {
             if listed[slot] != nil, !name.hasPrefix("_rt_") { headers[slot] = textureHeader(name, materialPath: materialPath) }
         }
         let formats = Self.formatCombos(vertex.samplers + fragment.samplers, headers: headers)
+        // WE's material pass loader sets `ALPHATOCOVERAGE` for a pass blending alpha-to-coverage,
+        // whatever the object (0x140154bc1, as for models).
+        let coverage = Self.coverageCombos(blending: materialPass.blending)
         let combos = { (overrides: [[String: Int]]) in
             sceneEngineCombos.applied(to: ShaderVariantTranslator.resolveCombos(
-                vertex: vertex, fragment: fragment, overrides: [materialPass.combos, extraCombos] + overrides + [formats],
+                vertex: vertex, fragment: fragment, overrides: [materialPass.combos, coverage, extraCombos] + overrides + [formats],
                 boundTextureSlots: Set(listed.keys).union([0]),
                 textureFlags: headers.compactMapValues { TEXImageFormat.texiWord(1, in: $0) }))
         }

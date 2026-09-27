@@ -370,6 +370,28 @@ final class ImageMaterialRenderTests: XCTestCase {
         XCTAssertThrowsError(try builder.build(materialPath: "materials/missingshader.json", colorBlendMode: nil))
     }
 
+    /// WE's material pass loader sets `ALPHATOCOVERAGE` for a pass blending alpha-to-coverage
+    /// (0x140154bc1), images as models; the pipeline takes coverage from alpha and doesn't blend.
+    func testAlphaToCoverageBlendingSetsItsCombo() throws {
+        let plan = try XCTUnwrap(try builder.build(materialPath: "materials/coverage.json", colorBlendMode: nil))
+        XCTAssertEqual(plan.pass.variant?.combos["ALPHATOCOVERAGE"], 1)
+        XCTAssertEqual(plan.pass.blending, "alphatocoverage")
+        XCTAssertTrue(plan.pass.variant?.fragmentMSL.contains("fwidth") ?? false, "the shader's coverage sharpening")
+        let normal = try XCTUnwrap(try builder.build(materialPath: "materials/depthcull.json", colorBlendMode: nil))
+        XCTAssertEqual(normal.pass.variant?.combos["ALPHATOCOVERAGE"] ?? 0, 0)
+        let texture = try Self.solidTexture(device: device, color: [255, 0, 0, 255])
+        let pixels = try render { encoder, format in
+            XCTAssertTrue(self.renderer.waitUntilReady(plan, pixelFormat: format), "the alpha-to-coverage pipeline compiles")
+            XCTAssertTrue(self.renderer.draw(plan, ImageMaterialRenderer.Draw(
+                layerID: "coverage", quad: SceneQuadGeometry(center: SIMD2(200, 128), axisX: SIMD2(160, 0), axisY: SIMD2(0, 96)),
+                sceneSize: Self.sceneSize, color: SIMD3(1, 1, 1), alpha: 1, brightness: 1,
+                texture: texture, contentSize: nil, uvOrigin: .zero, uvAxisX: SIMD2(1, 0), uvAxisY: SIMD2(0, 1),
+                sceneSnapshot: nil, frame: BuiltinFrameContext(), values: EffectGraphTests.FixedValues(),
+                assetTexture: { _, _ in nil }), pixelFormat: format, encoder: encoder, commandBuffer: currentCommands!))
+        }
+        XCTAssertEqual(Self.pixel(pixels, x: 100, y: 64).red, 1, accuracy: 2 / 255, "an opaque texel is covered")
+    }
+
     /// Risk I23: depth and cull state in a material (including WE's own `culling` spelling) never
     /// makes an invalid pipeline for the depth-less scene pass, and a mirrored layer stays visible.
     func testDepthAndCullStateKeepMirroredLayersVisible() throws {

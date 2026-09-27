@@ -488,7 +488,10 @@ final class ImageMaterialRenderer {
                 descriptor.colorAttachments[0].pixelFormat = pixelFormat
                 descriptor.rasterSampleCount = sampleCount
                 descriptor.depthAttachmentPixelFormat = depthFormat
-                if let blend = EffectGraphRenderer.blendMode(blending) {
+                if blending.lowercased() == "alphatocoverage" {
+                    // WE's blend byte 3: coverage from the shader's alpha (`ALPHATOCOVERAGE`), no blending.
+                    descriptor.isAlphaToCoverageEnabled = true
+                } else if let blend = EffectGraphRenderer.blendMode(blending) {
                     let attachment = descriptor.colorAttachments[0]!
                     attachment.isBlendingEnabled = true
                     attachment.sourceRGBBlendFactor = blend.source
