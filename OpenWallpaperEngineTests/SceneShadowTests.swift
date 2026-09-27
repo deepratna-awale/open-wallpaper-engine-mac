@@ -100,7 +100,7 @@ final class SceneShadowTests: XCTestCase {
             centre.x -= fmodf(centre.x, texel)
             centre.z -= fmodf(centre.z, texel)
             func project(_ p: SIMD3<Float>) -> SIMD3<Float> {
-                let clip = matrix * SIMD4(p, 1)
+                let clip: SIMD4<Float> = matrix * SIMD4<Float>(p, 1)
                 return SIMD3(clip.x, clip.y, clip.z) / clip.w
             }
             Self.assertNear(project(centre), SIMD3(0, 0, 0.5), 1e-4, "the snapped centre is the box's middle")
@@ -113,7 +113,7 @@ final class SceneShadowTests: XCTestCase {
         // An orthographic scene's centre lies at z = 0 before the snap (which keeps it there).
         let ortho = SceneShadowViews.cascades(world: Self.downward, distances: SIMD3(3, 10, 100), mapSize: size,
                                               eye: SIMD3(960, 540, 2000), forward: SIMD3(0, 0, -1), orthographic: true)
-        let middle = ortho[0].inverse * SIMD4(0, 0, 0.5, 1)
+        let middle: SIMD4<Float> = ortho[0].inverse * SIMD4<Float>(0, 0, 0.5, 1)
         XCTAssertEqual(middle.z / middle.w, 0, accuracy: 1e-3)
         XCTAssertEqual(middle.y / middle.w, 540, accuracy: 1e-2, "no snap along the light")
         XCTAssertEqual(middle.x / middle.w, 960, accuracy: 3.0 / 512 + 1e-2)
@@ -138,7 +138,8 @@ final class SceneShadowTests: XCTestCase {
                                        SIMD2(0, steps.y * 2), SIMD2(steps.x, steps.y * 2)]
         let view = SceneShadowViews.pointFaceViews(origin: o)[face]
         let project = simd_float4x4(columns: (SIMD4(1, 0, 0, 0), SIMD4(0, 1, 0, 0), SIMD4(0, 0, info.x, info.z), SIMD4(0, 0, info.y, info.w)))
-        var p = project * view * SIMD4(world, 1)
+        let viewProject: simd_float4x4 = project * view
+        var p: SIMD4<Float> = viewProject * SIMD4<Float>(world, 1)
         p = SIMD4(p.x / p.w, p.y / p.w, p.z / p.w, p.w)
         var uv = SIMD2(p.x, p.y) * SIMD2(compensation, -compensation) + 0.5
         uv = uv * SIMD2(transform.z, transform.w) * scale + SIMD2(transform.x, transform.y) + offsets[face]
@@ -169,9 +170,11 @@ final class SceneShadowTests: XCTestCase {
                                                             Float.random(in: -1...1, using: &generator)))
                 let world = origin + direction * Float.random(in: 0.5...10, using: &generator)
                 let shader = Self.calculateProjectedCoordsPoint(world, origin: origin, info: info, transform: transform, quality: quality)
-                let unbiased = projection * SceneShadowViews.pointFaceViews(origin: origin)[shader.face] * SIMD4(world, 1)
+                let faceView: simd_float4x4 = SceneShadowViews.pointFaceViews(origin: origin)[shader.face]
+                let faceProjection: simd_float4x4 = projection * faceView
+                let unbiased: SIMD4<Float> = faceProjection * SIMD4<Float>(world, 1)
                 XCTAssertEqual(shader.coords.z, unbiased.z / unbiased.w, accuracy: 1e-4)
-                let clip = map.renderViews[shader.face] * SIMD4(world, 1)
+                let clip: SIMD4<Float> = map.renderViews[shader.face] * SIMD4<Float>(world, 1)
                 let ndc = SIMD2(clip.x, clip.y) / clip.w
                 XCTAssertLessThanOrEqual(max(abs(ndc.x), abs(ndc.y)), 1.0001, "inside its face's view")
                 let rect = map.viewports[shader.face]
