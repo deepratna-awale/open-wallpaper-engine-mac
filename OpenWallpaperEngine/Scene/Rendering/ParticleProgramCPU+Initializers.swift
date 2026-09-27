@@ -47,7 +47,8 @@ extension ParticleProgramCPU {
             heading = SIMD3(flat.x, flat.y, fallback.z)
         }
         let length = simd_length(heading)
-        let speed = emitter.speed.x + random(.emitterSpeed) * (emitter.speed.y - emitter.speed.x)
+        // The `speed` instance override scales `speedmin` and `speedmax` (bound at 0x1401c6354).
+        let speed = (emitter.speed.x + random(.emitterSpeed) * (emitter.speed.y - emitter.speed.x)) * context.spawnScale.w
         let launch = length > 0 ? heading / length * speed : .zero
         return (position, SIMD2(launch.x, launch.y), emitter.origin.z + offset.z, launch.z)
     }

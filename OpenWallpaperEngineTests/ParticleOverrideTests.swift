@@ -92,12 +92,35 @@ final class ParticleOverrideTests: XCTestCase {
         XCTAssertEqual(try XCTUnwrap(inputs.initializers.last).b.x, 2.5)
     }
 
+    /// WE's particle parser binds every emitter's `speedmin` and `speedmax` to the `speed`
+    /// override (0x1401c6354, 0x1401c6a86, 0x1401c6f9c; not with the system's flag 0x10), so the
+    /// `collisionbounds` preview's `speed` 2.9 launches its particles 2.9 × as fast.
+    func testTheSpeedOverrideScalesTheEmittersSpeed() throws {
+        var system = ParticleTestSystem()
+        system.emissionRate = 60
+        system.emitterSpeed = SIMD2(100, 100)
+        system.minimumVelocity = .zero
+        system.maximumVelocity = .zero
+        func launchSpeeds(_ speed: Float) -> [Float] {
+            var configuration = system.configuration
+            configuration.overrides.speed = speed
+            let runtime = ParticleSystemRuntime(texture: texture, configuration: configuration, seed: 2)
+            ParticleCPUSimulation.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero,
+                                                                                    values: Properties()))
+            return runtime.particles.map { simd_length($0.velocity) }
+        }
+        XCTAssertEqual(launchSpeeds(1), [100])
+        let fast = try XCTUnwrap(launchSpeeds(2.9).first)
+        XCTAssertEqual(fast, 290, accuracy: 1e-3)
+    }
+
     func testOverriddenSpawnsMatchOnTheGPU() throws {
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let queue = try XCTUnwrap(device.makeCommandQueue())
         let simulator = try ParticleGPUSimulator(device: device)
         var system = ParticleTestSystem()
         system.emissionRate = 3000
+        system.emitterSpeed = SIMD2(20, 80)
         var configuration = system.configuration
         configuration.overrides = SceneParticleOverrides(try boundOverride(), in: Properties())
         let cpu = ParticleSystemRuntime(texture: texture, configuration: configuration, seed: 5)

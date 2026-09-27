@@ -366,7 +366,7 @@ static void emitParticle(EmitterParameters e, thread const ProgramContext &c, th
         heading = float3(c.emitterLinear * fallback.xy, fallback.z);
     }
     const float headingLength = length(heading);
-    const float speed = e.minimum.w + unitRandom(seed, serial, sEmitterSpeed) * (e.maximum.w - e.minimum.w);
+    const float speed = (e.minimum.w + unitRandom(seed, serial, sEmitterSpeed) * (e.maximum.w - e.minimum.w)) * c.spawnScale.w;
     const float3 launch = headingLength > 0 ? heading / headingLength * speed : float3(0);
     velocity = launch.xy;
     zVelocity = launch.z;

@@ -298,8 +298,7 @@
  {
   "name": "ptce_collisionbounds",
   "coverage": 4.36,
-  "motion": 7.57,
-  "knownGap": "PG4: twice WE's coverage and 1.6 times its motion"
+  "motion": 7.57
  },
  {
   "name": "ptce_collisionmodel",
