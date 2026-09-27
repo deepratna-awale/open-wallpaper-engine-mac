@@ -40,6 +40,18 @@ kernel void particleFinish(device uint *control [[buffer(0)]],
     }
 }
 
+/// `ParticleRecordWriter.writeSprites`: one particle's record.
+static SpriteRecord spriteRecord(ParticleState particle, constant ParticleParameters &p, constant ParticleFrame &f) {
+    SpriteRecord record;
+    record.position = float4(particle.positionVelocity.xy, particle.depth.x, 0);
+    // Sprites take the emitter's transform through `g_Orientation*`; trails scale by its area.
+    record.rotationSize = float4(particle.spin.xy, particle.alphaRotation.z, particle.life.z * f.motionExtras.w);
+
+    record.velocityLifetime = float4(particle.positionVelocity.zw, particle.depth.y, spritePhase(particle, p));
+    record.color = recordColor(particle, p, f);
+    return record;
+}
+
 /// `ParticleRecordWriter.writeSprites`.
 kernel void particleWriteSprites(device const ParticleState *particles [[buffer(0)]],
                                  device SpriteRecord *records [[buffer(1)]],
@@ -48,15 +60,7 @@ kernel void particleWriteSprites(device const ParticleState *particles [[buffer(
                                  constant ParticleFrame &f [[buffer(4)]],
                                  uint gid [[thread_position_in_grid]]) {
     if (gid >= control[cCount]) return;
-    const ParticleState particle = particles[gid];
-    SpriteRecord record;
-    record.position = float4(particle.positionVelocity.xy, particle.depth.x, 0);
-    // Sprites take the emitter's transform through `g_Orientation*`; trails scale by its area.
-    record.rotationSize = float4(particle.spin.xy, particle.alphaRotation.z, particle.life.z * f.motionExtras.w);
-
-    record.velocityLifetime = float4(particle.positionVelocity.zw, particle.depth.y, spritePhase(particle, p));
-    record.color = recordColor(particle, p, f);
-    records[gid] = record;
+    records[gid] = spriteRecord(particles[gid], p, f);
 }
 
 /// `ParticleRopeStrands` for particle `gid`: the next and previous particle of its strand (`count`
@@ -187,15 +191,8 @@ kernel void particleWriteRopeTrails(device const ParticleState *particles [[buff
 
 // MARK: - Built-in draw
 
-/// `sprite` and `*trail` sprites through the renderer's own quad.
-kernel void particleWriteFallbackSprites(device const ParticleState *particles [[buffer(0)]],
-                                         device FallbackInstance *instances [[buffer(1)]],
-                                         device const uint *control [[buffer(2)]],
-                                         constant ParticleParameters &p [[buffer(3)]],
-                                         constant ParticleFrame &f [[buffer(4)]],
-                                         uint gid [[thread_position_in_grid]]) {
-    if (gid >= control[cCount]) return;
-    const ParticleState particle = particles[gid];
+/// One `sprite` or `*trail` sprite through the renderer's own quad.
+static FallbackInstance fallbackSprite(ParticleState particle, constant ParticleParameters &p, constant ParticleFrame &f) {
     const float opacity = particleOpacity(particle, p, f);
     FallbackInstance instance;
     if (f.indices.w == kFallbackSpriteTrail) {
@@ -220,7 +217,57 @@ kernel void particleWriteFallbackSprites(device const ParticleState *particles [
     instance.uvOrigin = cell.xy;
     instance.uvAxisX = float2(cell.z, 0);
     instance.uvAxisY = float2(0, cell.w);
-    instances[gid] = instance;
+    return instance;
+}
+
+/// `sprite` and `*trail` sprites through the renderer's own quad.
+kernel void particleWriteFallbackSprites(device const ParticleState *particles [[buffer(0)]],
+                                         device FallbackInstance *instances [[buffer(1)]],
+                                         device const uint *control [[buffer(2)]],
+                                         constant ParticleParameters &p [[buffer(3)]],
+                                         constant ParticleFrame &f [[buffer(4)]],
+                                         uint gid [[thread_position_in_grid]]) {
+    if (gid >= control[cCount]) return;
+    instances[gid] = fallbackSprite(particles[gid], p, f);
+}
+
+// MARK: - Compaction with records
+
+/// `particleCompact` for sprites (no trail history), writing each survivor's record where it
+/// lands, so the sprite writers' pass over the compacted particles isn't needed.
+kernel void particleCompactSprites(device const ParticleState *stepped [[buffer(0)]],
+                                   device ParticleState *particles [[buffer(1)]],
+                                   device const uint *alive [[buffer(2)]],
+                                   device const uint *offsets [[buffer(3)]],
+                                   device const uint *blockSums [[buffer(4)]],
+                                   device const uint *control [[buffer(5)]],
+                                   constant ParticleParameters &p [[buffer(6)]],
+                                   constant ParticleFrame &f [[buffer(7)]],
+                                   device SpriteRecord *records [[buffer(8)]],
+                                   uint gid [[thread_position_in_grid]]) {
+    if (gid >= control[cTotal] || alive[gid] == 0) return;
+    const uint destination = offsets[gid] + blockSums[gid / kGroup];
+    const ParticleState particle = stepped[gid];
+    particles[destination] = particle;
+    records[destination] = spriteRecord(particle, p, f);
+}
+
+/// `particleCompactSprites` for the built-in draw's sprites.
+kernel void particleCompactFallbackSprites(device const ParticleState *stepped [[buffer(0)]],
+                                           device ParticleState *particles [[buffer(1)]],
+                                           device const uint *alive [[buffer(2)]],
+                                           device const uint *offsets [[buffer(3)]],
+                                           device const uint *blockSums [[buffer(4)]],
+                                           device const uint *control [[buffer(5)]],
+                                           constant ParticleParameters &p [[buffer(6)]],
+                                           constant ParticleFrame &f [[buffer(7)]],
+                                           device FallbackInstance *instances [[buffer(8)]],
+                                           uint gid [[thread_position_in_grid]]) {
+    if (gid >= control[cTotal] || alive[gid] == 0) return;
+    const uint destination = offsets[gid] + blockSums[gid / kGroup];
+    const ParticleState particle = stepped[gid];
+    particles[destination] = particle;
+    instances[destination] = fallbackSprite(particle, p, f);
 }
 
 /// A quad the built-in draw skips (shorter than 0.01): nothing drawn.

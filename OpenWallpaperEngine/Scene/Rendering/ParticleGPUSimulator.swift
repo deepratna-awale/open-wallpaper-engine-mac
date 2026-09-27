@@ -28,6 +28,8 @@ final class ParticleGPUSimulator {
     private let emitSerial, simulateSerial: MTLComputePipelineState
     private let eventMark, eventScatter, instanceStep, linkPoints: MTLComputePipelineState
     private let boidsMark, boidsScatter: MTLComputePipelineState
+    /// Compactions that also write sprite records, by draw kind.
+    private let compactWriters: [ParticleGPUDrawKind: MTLComputePipelineState]
     private let writers: [ParticleGPUDrawKind: MTLComputePipelineState]
 
     init(device: MTLDevice) throws {
@@ -55,6 +57,9 @@ final class ParticleGPUSimulator {
         linkPoints = try pipeline("particleLinkPoints")
         boidsMark = try pipeline("particleBoidsMark")
         boidsScatter = try pipeline("particleBoidsScatter")
+        let compactFallback = try pipeline("particleCompactFallbackSprites")
+        compactWriters = [.sprite: try pipeline("particleCompactSprites"), .fallbackSprite: compactFallback,
+                          .fallbackSpriteTrail: compactFallback]
         let sprites = try pipeline("particleWriteFallbackSprites")
         writers = [
             .sprite: try pipeline("particleWriteSprites"),
@@ -109,7 +114,8 @@ final class ParticleGPUSimulator {
         var lastWave: [ObjectIdentifier: Int] = [:]
         for request in requests {
             guard let gpu = request.system.gpu, gpu.isReady,
-                  let plan = StepPlan(request, gpu: gpu, sceneSize: sceneSize, targetSize: targetSize) else { continue }
+                  let plan = StepPlan(request, gpu: gpu, sceneSize: sceneSize, targetSize: targetSize,
+                                         compactWriters: compactWriters) else { continue }
             let own = lastWave[ObjectIdentifier(request.system)].map { $0 + 1 } ?? 0
             let parent = request.system.parent.flatMap { lastWave[ObjectIdentifier($0)] }.map { $0 + 1 } ?? 0
             let wave = max(own, parent)
@@ -156,8 +162,11 @@ final class ParticleGPUSimulator {
         let serialPoints: MTLBuffer?
         /// The boids slice's list, for a parallel step with a boids operator.
         let boidsMembers: MTLBuffer?
+        /// The compaction that also writes the step's sprite records (no `.write` stage).
+        let compactWriter: MTLComputePipelineState?
 
-        init?(_ request: Request, gpu: ParticleGPUSystem, sceneSize: SIMD2<Float>, targetSize: SIMD2<Float>) {
+        init?(_ request: Request, gpu: ParticleGPUSystem, sceneSize: SIMD2<Float>, targetSize: SIMD2<Float>,
+              compactWriters: [ParticleGPUDrawKind: MTLComputePipelineState]) {
             let configuration = request.system.configuration
             let subdivision = max(configuration.ropeSubdivision, 1)
             guard let particles = gpu.particles, let stepped = gpu.stepped, let alive = gpu.alive,
@@ -197,6 +206,8 @@ final class ParticleGPUSimulator {
             serialPoints = gpu.writesControlPoints ? gpu.pointStates : nil
             let boids = request.inputs.operators.contains { $0.header.x == ParticleOperatorKind.boids.rawValue }
             boidsMembers = boids && serialPoints == nil ? gpu.boidsMembers() : nil
+            // Sprites have no trail history to move; a step nothing draws writes no records.
+            compactWriter = request.writesRecords && !gpu.tracksHistory ? compactWriters[request.kind] : nil
         }
     }
 
@@ -387,6 +398,20 @@ final class ParticleGPUSimulator {
             scanSums(count: ParticleGPUSystem.Control.total, into: ParticleGPUSystem.Control.count, blockSums: plan.blockSums,
                      control: control, totals: control, encoder: encoder)
         case .compact:
+            if let compactWriter = plan.compactWriter {
+                encoder.setComputePipelineState(compactWriter)
+                encoder.setBuffer(plan.stepped, offset: 0, index: 0)
+                encoder.setBuffer(plan.particles, offset: 0, index: 1)
+                encoder.setBuffer(plan.alive, offset: 0, index: 2)
+                encoder.setBuffer(plan.offsets, offset: 0, index: 3)
+                encoder.setBuffer(plan.blockSums, offset: 0, index: 4)
+                encoder.setBuffer(control, offset: 0, index: 5)
+                encoder.setBuffer(gpu.parameters, offset: 0, index: 6)
+                encoder.setBytes(&plan.frame, length: frameLength, index: 7)
+                encoder.setBuffer(plan.records, offset: 0, index: 8)
+                perParticle()
+                return true
+            }
             encoder.setComputePipelineState(compact)
             encoder.setBuffer(plan.stepped, offset: 0, index: 0)
             encoder.setBuffer(plan.particles, offset: 0, index: 1)
@@ -415,7 +440,7 @@ final class ParticleGPUSimulator {
             encoder.setBytes(&plan.frame, length: frameLength, index: 3)
             encoder.dispatchThreads(single, threadsPerThreadgroup: single)
         case .write:
-            guard let writer = writers[plan.request.kind] else { return false }
+            guard plan.compactWriter == nil, let writer = writers[plan.request.kind] else { return false }
             encoder.setComputePipelineState(writer)
             encoder.setBuffer(plan.particles, offset: 0, index: 0)
             encoder.setBuffer(plan.records, offset: 0, index: 1)
