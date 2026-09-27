@@ -1416,6 +1416,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             input.rigs[id] = SceneScriptRigFeedback(layers: animator.layerStates, locals: animator.locals,
                                                     worlds: animator.worlds.map { world * $0 }, ended: animator.takeEnded())
         }
+        for key in models?.riggedObjectIDs ?? [] {
+            guard let id = Int(key), let animator = models?.animator(for: key) else { continue }
+            let world = world3D(key, in: spatial.transforms)
+            input.rigs[id] = SceneScriptRigFeedback(layers: animator.layerStates, locals: animator.locals,
+                                                    worlds: animator.worlds.map { world * $0 }, ended: animator.takeEnded())
+        }
         scripts.submit(input)
     }
 
@@ -2004,7 +2010,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// the rig keeps it in its model space (0x14020f350 multiplies by the object's inverse world).
     private func performRigCommand(_ command: SceneScriptRigCommand, on id: String) {
         guard let index = layers.firstIndex(where: { $0.layer.id == id }),
-              let puppet = layers[index].layer.puppet else { return }
+              let puppet = layers[index].layer.puppet else {
+            models?.perform(command, on: id)
+            return
+        }
         let animator = puppetAnimator(id, puppet)
         if case let .setWorld(bone, matrix) = command {
             animator.perform(.setWorld(bone: bone, matrix: ScenePuppetAttachments.matrix(worldTransform(layers[index])).inverse * matrix))

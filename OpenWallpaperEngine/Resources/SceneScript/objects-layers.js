@@ -226,9 +226,9 @@
         ['getBlendShapeIndex', minusOne], ['getBlendShapeWeight', zero], ['setBlendShapeWeight']]
         .forEach(function (s) { objects.stub(P, 'IImageLayer', s[0], s[1]); });
 
-    // MARK: puppet rigs (docs/models-plan.md §2.8, §4.3 P2)
+    // MARK: puppet and model rigs (docs/models-plan.md §2.8, §4.3 P2 and M6)
     //
-    // A puppet image's record has `rig` {slot, bones, clips, layers, attachments}; its state is
+    // A puppet image's or a model's record has `rig` {slot, bones, clips, layers, attachments}; its state is
     // slot `rig.slot` of the rig buffer (SceneScriptRigLayout), which the renderer's animator
     // writes before every frame. Calls change it at once, so a script reads back what it did, and
     // reach the animator as commands. Matrices are WE's Mat4 memory (column-major here, translation
@@ -556,28 +556,31 @@
         return true;
     });
 
+    // The bone API is the image's (0x140211327); a model has its animation layers and attachment
+    // points but no bone API (0x140227814), so it answers as a layer without a rig.
+    function boneRigOf(layer) { return layer._record.kind === 'model' ? null : rigOf(layer); }
     objects.defineMethod(P, 'getBoneCount', function () {
-        const rig = rigOf(this);
+        const rig = boneRigOf(this);
         return rig ? rig.bones.length : 0;
     });
     objects.defineMethod(P, 'getBoneIndex', function (name) {
-        const rig = rigOf(this);
+        const rig = boneRigOf(this);
         return rig && typeof name === 'string' ? rigBone(rig, name) : -1;
     });
     objects.defineMethod(P, 'getBoneParentIndex', function (child) {
-        const rig = rigOf(this);
+        const rig = boneRigOf(this);
         const bone = rig ? rigBone(rig, child) : -1;
         return bone < 0 ? -1 : rig.bones[bone].parent;
     });
     // The bone's world matrix (the object's world times its model-space matrix, 0x14020f1d0).
     objects.defineMethod(P, 'getBoneTransform', function (which) {
-        const rig = rigOf(this);
+        const rig = boneRigOf(this);
         const bone = rig ? rigBone(rig, which) : -1;
         return objects.mat4(bone < 0 ? undefined : rigMatrix(rig, bone, RL.boneWorld));
     });
     // Sets the bone's world matrix; only its own palette entry moves (0x14020f350).
     objects.defineMethod(P, 'setBoneTransform', function (which, transform) {
-        const rig = rigOf(this);
+        const rig = boneRigOf(this);
         const bone = rig ? rigBone(rig, which) : -1;
         const m = matrixArgument(transform);
         if (bone < 0 || m === undefined) return;
@@ -585,12 +588,12 @@
         objects.push(OP.rigBoneWorld, this._slot, [bone].concat(m));
     });
     objects.defineMethod(P, 'getLocalBoneTransform', function (which) {
-        const rig = rigOf(this);
+        const rig = boneRigOf(this);
         const bone = rig ? rigBone(rig, which) : -1;
         return objects.mat4(bone < 0 ? undefined : rigMatrix(rig, bone, 0));
     });
     function setLocal(layer, which, change) {
-        const rig = rigOf(layer);
+        const rig = boneRigOf(layer);
         const bone = rig ? rigBone(rig, which) : -1;
         if (bone < 0) return;
         const m = change(rigMatrix(rig, bone, 0));
@@ -602,7 +605,7 @@
         setLocal(this, which, function () { return matrixArgument(transform); });
     });
     objects.defineMethod(P, 'getLocalBoneAngles', function (which) {
-        const rig = rigOf(this);
+        const rig = boneRigOf(this);
         const bone = rig ? rigBone(rig, which) : -1;
         return bone < 0 ? objects.vec3(0, 0, 0) : eulerDegrees(rigMatrix(rig, bone, 0));
     });
@@ -611,7 +614,7 @@
         if (degrees !== undefined) setLocal(this, which, function (m) { return withAngles(m, degrees); });
     });
     objects.defineMethod(P, 'getLocalBoneOrigin', function (which) {
-        const rig = rigOf(this);
+        const rig = boneRigOf(this);
         const bone = rig ? rigBone(rig, which) : -1;
         if (bone < 0) return objects.vec3(0, 0, 0);
         const m = rigMatrix(rig, bone, 0);
