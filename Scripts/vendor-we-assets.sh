@@ -11,7 +11,8 @@
 # Kept: effect manifests, materials and their GLSL shaders (translated to Metal at runtime,
 # per option set), the shared shaders/headers in `shaders/`, textures, models, particles and the
 # SceneScript runtime, and the built-in fonts text layers name as "fonts/<file>" together with
-# their licence files. Editor preview art and Direct3D (HLSL) shaders are left out.
+# their licence files, and WE's UI strings (`<install>/locale/ui_*.json`, beside `assets`) that
+# translate the label keys wallpapers use. Editor preview art and Direct3D (HLSL) shaders are left out.
 
 set -euo pipefail
 
@@ -38,6 +39,12 @@ for dir in fonts materials models particles scripts zcompat; do
     [[ -d "$ASSETS/$dir" ]] || continue
     rsync -a --exclude '.DS_Store' "$ASSETS/$dir/" "$DEST/$dir/"
 done
+
+LOCALE="$(dirname "$ASSETS")/locale"
+if [[ -d "$LOCALE" ]]; then
+    mkdir -p "$DEST/locale"
+    rsync -a --include 'ui_*.json' --exclude '*' "$LOCALE/" "$DEST/locale/"
+fi
 
 if [[ -f "$REPO/Scripts/we-assets-attribution.txt" ]]; then
     cp "$REPO/Scripts/we-assets-attribution.txt" "$DEST/ATTRIBUTION.txt"
