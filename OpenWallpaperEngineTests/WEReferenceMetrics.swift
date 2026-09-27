@@ -83,8 +83,10 @@ struct WEReferenceMetrics {
     static let edgeFactor = 4
     private static let block = 8
 
+    /// `edges` false skips the edge alignment (most of the cost in a Debug build) for callers that
+    /// read only the colour and SSIM.
     static func compare(we: WEReferenceImage, ours: WEReferenceImage, mask: WEReferenceMask,
-                        grid: WEReferenceConfig.Grid, taskbar: Int) -> WEReferenceMetrics {
+                        grid: WEReferenceConfig.Grid, taskbar: Int, edges: Bool = true) -> WEReferenceMetrics {
         var result = WEReferenceMetrics()
         let usedHeight = we.height - taskbar
         let cellWidth = we.width / grid.columns
@@ -108,7 +110,7 @@ struct WEReferenceMetrics {
             result.oursLuma = totals.z / weights
         }
         result.addSSIM(we: we, ours: ours, mask: mask, cellSize: SIMD2(cellWidth, cellHeight))
-        result.addEdges(we: we, ours: ours, mask: mask)
+        if edges { result.addEdges(we: we, ours: ours, mask: mask) }
         return result
     }
 

@@ -2,6 +2,7 @@ import XCTest
 import MetalKit
 import ImageIO
 import UniformTypeIdentifiers
+import Accelerate
 @testable import OpenWallpaperEngine
 
 /// Risks I1, I7, I18 and I19: what the renderer's textures hold. WE's textures are straight alpha
@@ -37,7 +38,15 @@ final class TextureUploadTests: XCTestCase {
         commands.waitUntilCompleted()
         var bytes = [UInt8](UnsafeBufferPointer(start: buffer.contents().assumingMemoryBound(to: UInt8.self), count: buffer.length))
         if texture.pixelFormat == .bgra8Unorm {
-            for index in stride(from: 0, to: bytes.count, by: 4) { bytes.swapAt(index, index + 2) }
+            // vImage, not a Swift loop: the reference renderers read dozens of 1080p frames a scene
+            // and a per-pixel loop in a Debug build costs ~150 ms a frame.
+            let map: [UInt8] = [2, 1, 0, 3]
+            let error = bytes.withUnsafeMutableBytes { (raw: UnsafeMutableRawBufferPointer) -> vImage_Error in
+                var image = vImage_Buffer(data: raw.baseAddress, height: vImagePixelCount(texture.height),
+                                          width: vImagePixelCount(texture.width), rowBytes: rowBytes)
+                return vImagePermuteChannels_ARGB8888(&image, &image, map, vImage_Flags(kvImageNoFlags))
+            }
+            XCTAssertEqual(error, kvImageNoError, "swizzling BGRA to RGBA")
         }
         return bytes
     }
