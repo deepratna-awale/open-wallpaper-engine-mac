@@ -1,16 +1,18 @@
 name: Release
 
-# Builds, signs, notarizes and publishes the app.
+# Builds a Developer ID signed, hardened-runtime, notarized and stapled app and publishes it
+# as a draft GitHub release (zip + DMG). Secrets and the release procedure: docs/releasing.md.
 #
 # Required repository secrets:
-#   BUILD_CERTIFICATE_BASE64  Developer ID Application .p12, base64 encoded
-#                             (base64 -i cert.p12 | pbcopy)
+#   BUILD_CERTIFICATE_BASE64  Developer ID Application .p12 (cert + private key), base64
 #   P12_PASSWORD              password used when exporting that .p12
 #   KEYCHAIN_PASSWORD         any throwaway string; secures the temporary keychain
-#   DEVELOPMENT_TEAM          10-character Apple Team ID
-#   APPLE_ID                  Apple ID email used for notarization
-#   APPLE_APP_PASSWORD        app-specific password from appleid.apple.com
-#   USER_PAT                  PAT used to publish the release
+#   DEVELOPMENT_TEAM          10-character Apple Team ID that owns the certificate
+#   USER_PAT                  token used to publish the release
+# Notarization, either (preferred) an App Store Connect API key:
+#   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8_BASE64
+# or an Apple ID fallback:
+#   APPLE_ID, APPLE_APP_PASSWORD
 #
 # Trigger by pushing a tag (git tag v0.9.0 && git push origin v0.9.0) or manually.
 
@@ -34,15 +36,64 @@ permissions:
 jobs:
   release:
     runs-on: macos-15
-    timeout-minutes: 60
+    timeout-minutes: 90
     env:
       SCHEME: "OpenWallpaperEngine"
       PROJECT: "OpenWallpaperEngine.xcodeproj"
       APP_NAME: "Open Wallpaper Engine"
 
     steps:
+      - name: Check secrets
+        # Fail before any work, naming every missing secret (values are never printed).
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+          DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
+          USER_PAT: ${{ secrets.USER_PAT }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          echo "KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db" >> "$GITHUB_ENV"
+          missing=()
+          for name in BUILD_CERTIFICATE_BASE64 P12_PASSWORD KEYCHAIN_PASSWORD DEVELOPMENT_TEAM USER_PAT; do
+            [ -n "${!name:-}" ] || missing+=("$name")
+          done
+          if [ -n "$ASC_KEY_ID" ] && [ -n "$ASC_ISSUER_ID" ] && [ -n "$ASC_KEY_P8_BASE64" ]; then
+            echo "Notarizing with the App Store Connect API key."
+          elif [ -n "$APPLE_ID" ] && [ -n "$APPLE_APP_PASSWORD" ]; then
+            echo "Notarizing with the Apple ID fallback."
+          else
+            missing+=("ASC_KEY_ID + ASC_ISSUER_ID + ASC_KEY_P8_BASE64 (or APPLE_ID + APPLE_APP_PASSWORD)")
+          fi
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing repository secrets (see docs/releasing.md):"
+            printf '  - %s\n' "${missing[@]}"
+            exit 1
+          fi
+
+      - name: Resolve version
+        id: version
+        env:
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          TAG="${INPUT_TAG:-$REF_NAME}"
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] \
+            || { echo "::error::tag '$TAG' is not vX.Y.Z"; exit 1; }
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+          echo "build=${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+
       - name: Check out source
         uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ steps.version.outputs.tag }}
 
       - name: Use the supported Xcode
         # The same Xcode as CI (26.3, macOS 26 SDK), so a release builds what CI tested.
@@ -55,38 +106,39 @@ jobs:
           BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
           P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+          DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
         run: |
           set -euo pipefail
           CERT_PATH="$RUNNER_TEMP/certificate.p12"
-          KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
-
-          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o "$CERT_PATH"
+          printf '%s' "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o "$CERT_PATH"
 
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security import "$CERT_PATH" -P "$P12_PASSWORD" -A \
             -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          rm -f "$CERT_PATH"
           # Let codesign use the key without an interactive prompt.
           security set-key-partition-list -S apple-tool:,apple:,codesign: \
             -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH" >/dev/null
           security list-keychain -d user -s "$KEYCHAIN_PATH" login.keychain
 
-          rm -f "$CERT_PATH"
-          security find-identity -v -p codesigning "$KEYCHAIN_PATH"
-
-      - name: Resolve version
-        id: version
-        run: |
-          TAG="${{ github.event.inputs.tag || github.ref_name }}"
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+          # The exact identity, so neither archive nor export can pick another certificate.
+          IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN_PATH" \
+            | grep -o "\"Developer ID Application: .*($DEVELOPMENT_TEAM)\"" | head -n1 | tr -d '"' || true)
+          [ -n "$IDENTITY" ] || {
+            echo "::error::the .p12 holds no 'Developer ID Application' identity for team DEVELOPMENT_TEAM"
+            security find-identity -v -p codesigning "$KEYCHAIN_PATH" | sed -E 's/[0-9A-F]{40}/<sha1>/'
+            exit 1; }
+          echo "SIGN_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
+          echo "Signing as: $IDENTITY"
 
       - name: Archive
         env:
           DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
         run: |
           set -euo pipefail
+          # CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO keeps get-task-allow out; notarization rejects it.
           xcodebuild archive \
             -project "$PROJECT" \
             -scheme "$SCHEME" \
@@ -94,31 +146,30 @@ jobs:
             -destination "generic/platform=macOS" \
             -archivePath "$RUNNER_TEMP/app.xcarchive" \
             CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="Developer ID Application" \
+            CODE_SIGN_IDENTITY="$SIGN_IDENTITY" \
             DEVELOPMENT_TEAM="$DEVELOPMENT_TEAM" \
-            OTHER_CODE_SIGN_FLAGS="--timestamp"
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            ENABLE_HARDENED_RUNTIME=YES \
+            CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO \
+            OTHER_CODE_SIGN_FLAGS="--timestamp --keychain $KEYCHAIN_PATH" \
+            MARKETING_VERSION="${{ steps.version.outputs.version }}" \
+            CURRENT_PROJECT_VERSION="${{ steps.version.outputs.build }}"
 
       - name: Export signed app
         env:
           DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
         run: |
           set -euo pipefail
-          cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key><string>developer-id</string>
-            <key>teamID</key><string>$DEVELOPMENT_TEAM</string>
-            <key>signingStyle</key><string>manual</string>
-            <key>destination</key><string>export</string>
-          </dict>
-          </plist>
-          PLIST
+          PLIST="$RUNNER_TEMP/ExportOptions.plist"
+          /usr/libexec/PlistBuddy -c "Add :method string developer-id" \
+            -c "Add :signingStyle string manual" \
+            -c "Add :signingCertificate string Developer ID Application" \
+            -c "Add :teamID string $DEVELOPMENT_TEAM" \
+            -c "Add :destination string export" "$PLIST"
 
           xcodebuild -exportArchive \
             -archivePath "$RUNNER_TEMP/app.xcarchive" \
-            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportOptionsPlist "$PLIST" \
             -exportPath "$RUNNER_TEMP/export"
 
       - name: Verify bundle before notarizing
@@ -135,11 +186,29 @@ jobs:
             || { echo "::error::bundled WE assets missing"; exit 1; }
 
           codesign --verify --deep --strict --verbose=2 "$APP"
-          codesign -dv --verbose=4 "$APP" 2>&1 | tee "$RUNNER_TEMP/codesign.txt"
-          grep -q "Authority=Developer ID Application" "$RUNNER_TEMP/codesign.txt" \
-            || { echo "::error::not Developer ID signed"; exit 1; }
-          grep -Eq "flags=.*runtime" "$RUNNER_TEMP/codesign.txt" \
-            || { echo "::error::hardened runtime is off"; exit 1; }
+
+          # Every Mach-O in the bundle (app, nested frameworks, dylibs, helpers): Developer ID,
+          # hardened runtime, secure timestamp.
+          fail=0
+          while IFS= read -r -d '' f; do
+            file -b "$f" | grep -q 'Mach-O' || continue
+            info=$(codesign -dv --verbose=4 "$f" 2>&1)
+            grep -q "Authority=Developer ID Application" <<<"$info" || { echo "::error::not Developer ID signed: $f"; fail=1; }
+            grep -Eq "flags=.*runtime" <<<"$info" || { echo "::error::hardened runtime off: $f"; fail=1; }
+            grep -q "^Timestamp=" <<<"$info" || { echo "::error::no secure timestamp: $f"; fail=1; }
+          done < <(find "$APP/Contents" -type f -print0)
+          [ "$fail" = 0 ]
+
+          ENTS=$(codesign -d --entitlements - --xml "$APP" 2>/dev/null | plutil -p - || true)
+          echo "$ENTS"
+          if grep -q "get-task-allow" <<<"$ENTS"; then
+            echo "::error::get-task-allow is set; notarization rejects it"; exit 1
+          fi
+
+          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" -c "Print :CFBundleVersion" \
+            "$APP/Contents/Info.plist"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist")" \
+            = "${{ steps.version.outputs.version }}" || { echo "::error::version is not the tag's"; exit 1; }
 
           # Only system libraries: nothing from Homebrew or elsewhere.
           # (A universal binary lists each architecture under a "<path> (architecture …):" line.)
@@ -147,12 +216,53 @@ jobs:
                | grep -Ev '^(/usr/lib/|/System/Library/)'; then
             echo "::error::the app links a non-system library"; exit 1
           fi
-          # No executables besides the app's own.
+          # No executables besides the app's own (nowPlayingAdapter.pl runs as an argument to
+          # /usr/bin/perl and is a plain resource).
           extra=$(find "$APP/Contents" -type f -perm -u+x ! -path "$BINARY" -print)
           test -z "$extra" || { echo "::error::unexpected executables: $extra"; exit 1; }
 
-      - name: Notarize and staple
+      - name: Set up notarization credentials
         env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+        run: |
+          set -euo pipefail
+          # Writes a notarize helper that the zip and DMG steps share.
+          if [ -n "$ASC_KEY_ID" ] && [ -n "$ASC_ISSUER_ID" ] && [ -n "$ASC_KEY_P8_BASE64" ]; then
+            KEY="$RUNNER_TEMP/AuthKey_$ASC_KEY_ID.p8"
+            printf '%s' "$ASC_KEY_P8_BASE64" | base64 --decode -o "$KEY"
+            chmod 600 "$KEY"
+            echo "NOTARY_MODE=api" >> "$GITHUB_ENV"
+            echo "NOTARY_KEY=$KEY" >> "$GITHUB_ENV"
+          else
+            echo "NOTARY_MODE=appleid" >> "$GITHUB_ENV"
+          fi
+          cat > "$RUNNER_TEMP/notarize.sh" <<'SH'
+          #!/bin/bash
+          # notarize.sh <file>: submit, wait, print the log on anything but Accepted.
+          set -euo pipefail
+          if [ "$NOTARY_MODE" = api ]; then
+            auth=(--key "$NOTARY_KEY" --key-id "$ASC_KEY_ID" --issuer "$ASC_ISSUER_ID")
+          else
+            auth=(--apple-id "$APPLE_ID" --password "$APPLE_APP_PASSWORD" --team-id "$DEVELOPMENT_TEAM")
+          fi
+          out=$(xcrun notarytool submit "$1" "${auth[@]}" --wait --timeout 45m --output-format json) || true
+          echo "$out"
+          id=$(plutil -extract id raw - <<<"$out" 2>/dev/null || true)
+          status=$(plutil -extract status raw - <<<"$out" 2>/dev/null || true)
+          if [ "$status" != "Accepted" ]; then
+            echo "::error::notarization of $(basename "$1") ended with status '${status:-unknown}'"
+            [ -n "$id" ] && xcrun notarytool log "$id" "${auth[@]}" || true
+            exit 1
+          fi
+          SH
+          chmod +x "$RUNNER_TEMP/notarize.sh"
+
+      - name: Notarize and staple the app
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
           DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
@@ -160,35 +270,66 @@ jobs:
           set -euo pipefail
           APP="$RUNNER_TEMP/export/$APP_NAME.app"
           ZIP="$RUNNER_TEMP/notarize.zip"
-
           ditto -c -k --keepParent "$APP" "$ZIP"
-          xcrun notarytool submit "$ZIP" \
-            --apple-id "$APPLE_ID" \
-            --password "$APPLE_APP_PASSWORD" \
-            --team-id "$DEVELOPMENT_TEAM" \
-            --wait
-
+          "$RUNNER_TEMP/notarize.sh" "$ZIP"
+          rm -f "$ZIP"
           # Staple the app itself, then repackage; a zip cannot hold the ticket.
           xcrun stapler staple "$APP"
-          xcrun stapler validate "$APP"
 
-      - name: Package release archive
+      - name: Package zip and DMG
         id: package
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
         run: |
           set -euo pipefail
           APP="$RUNNER_TEMP/export/$APP_NAME.app"
-          OUT="$RUNNER_TEMP/OpenWallpaperEngine-${{ steps.version.outputs.version }}.zip"
-          ditto -c -k --keepParent "$APP" "$OUT"
-          echo "path=$OUT" >> "$GITHUB_OUTPUT"
-          shasum -a 256 "$OUT" | tee "$OUT.sha256"
+          BASE="$RUNNER_TEMP/OpenWallpaperEngine-${{ steps.version.outputs.version }}"
+
+          ditto -c -k --keepParent "$APP" "$BASE.zip"
+
+          # DMG: the stapled app plus an /Applications link, signed, notarized and stapled.
+          STAGE="$RUNNER_TEMP/dmg"
+          mkdir -p "$STAGE"
+          ditto "$APP" "$STAGE/$APP_NAME.app"
+          ln -s /Applications "$STAGE/Applications"
+          hdiutil create -volname "$APP_NAME" -srcfolder "$STAGE" -fs HFS+ -format UDZO -ov "$BASE.dmg"
+          codesign --sign "$SIGN_IDENTITY" --timestamp --keychain "$KEYCHAIN_PATH" "$BASE.dmg"
+          "$RUNNER_TEMP/notarize.sh" "$BASE.dmg"
+          xcrun stapler staple "$BASE.dmg"
+
+          (cd "$RUNNER_TEMP" && shasum -a 256 "$(basename "$BASE.zip")" "$(basename "$BASE.dmg")") \
+            | tee "$BASE.sha256"
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+
+      - name: Verify what ships
+        run: |
+          set -euo pipefail
+          BASE="${{ steps.package.outputs.base }}"
+          CHECK="$RUNNER_TEMP/check"
+          rm -rf "$CHECK" && mkdir -p "$CHECK"
+          # Check the app as a user gets it: unzipped from the release zip.
+          ditto -x -k "$BASE.zip" "$CHECK"
+          APP="$CHECK/$APP_NAME.app"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          spctl -a -t exec -vv "$APP"
+          xcrun stapler validate "$APP"
+
+          codesign --verify --strict --verbose=2 "$BASE.dmg"
+          spctl -a -t open --context context:primary-signature -vv "$BASE.dmg"
+          xcrun stapler validate "$BASE.dmg"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v7.0.1
         with:
           name: OpenWallpaperEngine-${{ steps.version.outputs.version }}
           path: |
-            ${{ steps.package.outputs.path }}
-            ${{ steps.package.outputs.path }}.sha256
+            ${{ steps.package.outputs.base }}.zip
+            ${{ steps.package.outputs.base }}.dmg
+            ${{ steps.package.outputs.base }}.sha256
           if-no-files-found: error
 
       - name: Publish release
@@ -199,11 +340,14 @@ jobs:
           draft: true
           generate_release_notes: true
           files: |
-            ${{ steps.package.outputs.path }}
-            ${{ steps.package.outputs.path }}.sha256
+            ${{ steps.package.outputs.base }}.zip
+            ${{ steps.package.outputs.base }}.dmg
+            ${{ steps.package.outputs.base }}.sha256
         env:
           GITHUB_TOKEN: ${{ secrets.USER_PAT }}
 
-      - name: Clean up keychain
+      - name: Clean up keychain and keys
         if: always()
-        run: security delete-keychain "$RUNNER_TEMP/app-signing.keychain-db" || true
+        run: |
+          security delete-keychain "$RUNNER_TEMP/app-signing.keychain-db" 2>/dev/null || true
+          rm -f "$RUNNER_TEMP"/AuthKey_*.p8 "$RUNNER_TEMP/certificate.p12"
