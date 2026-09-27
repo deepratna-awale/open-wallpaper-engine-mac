@@ -246,10 +246,15 @@ struct ParticleGPUEmitter {
     /// and maximum; periodic delay minimum and maximum, periodic, -.
     var timing: SIMD4<Float>
     var period: SIMD4<Float>
-    /// Box (1), applies its sign (1), `instantaneous`, -.
+    /// Kind (`ParticleEmitterShape.Kind`), applies its sign (1), `instantaneous`, -.
     var flags: SIMD4<UInt32>
+    /// A `layerimage` emitter's points in the system's point buffer: first, count, takes the
+    /// image's colour (1), offsets randomly (1).
+    var image: SIMD4<UInt32>
 
-    init(_ emitter: ParticleEmitter) {
+    /// `imagePoints`: where the emitter's points start in the system's point buffer and how many
+    /// there are (`ParticleGPUSystem.imagePoints`).
+    init(_ emitter: ParticleEmitter, imagePoints: (first: Int, count: Int) = (0, 0)) {
         let shape = emitter.shape
         origin = SIMD4(shape.origin, Float(shape.controlPoint))
         directions = SIMD4(shape.directions, -cos(shape.cone * .pi))
@@ -259,7 +264,9 @@ struct ParticleGPUEmitter {
         let timing = emitter.timing
         self.timing = SIMD4(timing.delay, timing.duration, timing.periodDuration.lowerBound, timing.periodDuration.upperBound)
         period = SIMD4(timing.periodDelay.lowerBound, timing.periodDelay.upperBound, timing.periodic ? 1 : 0, 0)
-        flags = SIMD4(shape.kind == .box ? 1 : 0, shape.appliesSign ? 1 : 0, UInt32(clamping: max(emitter.instantaneous, 0)), 0)
+        flags = SIMD4(shape.kind.rawValue, shape.appliesSign ? 1 : 0, UInt32(clamping: max(emitter.instantaneous, 0)), 0)
+        image = SIMD4(UInt32(clamping: imagePoints.first), UInt32(clamping: imagePoints.count),
+                      shape.takesImageColor ? 1 : 0, shape.offsetsRandomly ? 1 : 0)
     }
 }
 
@@ -269,9 +276,16 @@ struct ParticleGPUEmitterStep {
     var rate: SIMD4<Float>
     /// Burst, period limit (`ParticleGPUFrame.noLimit`: none), starts a period, one per frame.
     var control: SIMD4<UInt32>
+    /// A `layerimage` emitter's image in the system's space (`ParticleEmitterStep.image`): the
+    /// linear part's columns, then the translation.
+    var imageLinear: SIMD4<Float>
+    var imageTranslation: SIMD4<Float>
 
     init(_ step: ParticleEmitterStep) {
         rate = SIMD4(step.rate, 0, 0, 0)
+        let linear = step.image.linear
+        imageLinear = SIMD4(linear.columns.0.x, linear.columns.0.y, linear.columns.1.x, linear.columns.1.y)
+        imageTranslation = SIMD4(step.image.translation.x, step.image.translation.y, 0, 0)
         control = SIMD4(UInt32(clamping: max(step.burst, 0)), step.periodLimit.map { UInt32(clamping: $0) } ?? ParticleGPUFrame.noLimit,
                         step.startsPeriod ? 1 : 0, step.onePerFrame ? 1 : 0)
     }

@@ -17,8 +17,13 @@ enum ParticleSystemBuilder {
         let emitter = particleSystem.emitter?.first
         let defaults = ParticleDefaults(pixelUnits: pixelUnits)
         for name in (particleSystem.emitter ?? []).compactMap(\.name) where !Self.supportedEmitters.contains(name.lowercased()) {
-            // WE's registry also has `layerimage` (emits from a layer's image), which isn't built.
             OWELog.error(.scene, "Particle system \(particlePath): emitter \(name) isn't supported; it emits as sphererandom")
+        }
+        for flags in (particleSystem.emitter ?? []).filter({ $0.name?.lowercased() == "layerimage" }).compactMap(\.flags)
+        where flags & 0x60000 != 0 {
+            // 0x20000 samples the layer again every second (0x140238d4f); 0x40000 moves the points
+            // with a puppet-warped layer's bones (0x1402397d3).
+            OWELog.error(.scene, "Particle system \(particlePath): layerimage flags \(String(flags, radix: 16)) (resampling, puppet bones) aren't supported")
         }
         // Emitter rate: 10 a second (0x1401b8e59).
         let rate = Float(emitter?.rate ?? 10)
@@ -66,6 +71,12 @@ enum ParticleSystemBuilder {
                             instantaneous: max(authored.instantaneous ?? 0, 0),
                             timing: ParticleEmitterTiming(authored), audio: ParticleAudioResponse(authored))
         }
+        // A `layerimage` emitter's dependency index is its ordinal among them (0x1401c6fbf).
+        var imageIndex = 0
+        for index in 0...system.extraEmitters.count where (index == 0 ? system.emitter : system.extraEmitters[index - 1].shape).kind == .image {
+            if index == 0 { system.emitter.imageIndex = imageIndex } else { system.extraEmitters[index - 1].shape.imageIndex = imageIndex }
+            imageIndex += 1
+        }
         system.controlPoints = controlPoints(particleSystem.controlpoint ?? [])
         system.ropeUV = ParticleRopeUV(renderer, rate: ropeRate(particleSystem.emitter ?? []),
                                        lifetime: ropeLifetime(particleSystem.initializer ?? []))
@@ -79,15 +90,31 @@ enum ParticleSystemBuilder {
         return system
     }
 
-    /// The emitters built (`wallpaper64.exe`'s registry also has `layerimage`).
-    static let supportedEmitters: Set<String> = ["sphererandom", "boxrandom"]
+    /// The emitters `wallpaper64.exe` registers.
+    static let supportedEmitters: Set<String> = ["sphererandom", "boxrandom", "layerimage"]
 
     /// The emitter's shape (sphere defaults 0x1401b9100, box 0x1401b9520; shared fields 0x1401b8df0).
     static func emitterShape(_ emitter: WEParticleEmitter, defaults: ParticleDefaults) -> ParticleEmitterShape {
         var shape = ParticleEmitterShape()
-        shape.kind = emitter.name?.lowercased() == "boxrandom" ? .box : .sphere
+        switch emitter.name?.lowercased() {
+        case "boxrandom": shape.kind = .box
+        case "layerimage": shape.kind = .image
+        default: shape.kind = .sphere
+        }
         shape.origin = ParticleDefaults.vector(emitter.origin, .zero)
         switch shape.kind {
+        case .image:
+            // Defaults 0x1401b9930: flags 0x10000 (the image's colour), `offsetmin` "-5 -5 0" and
+            // `offsetmax` "5 5 0" in 2D, "0 0 0" in 3D. Its `speedmin` / `speedmax` (0.1, 0.2) only
+            // drive a puppet-warped layer's points, which aren't supported.
+            let flags = emitter.flags ?? 0x10000
+            shape.takesImageColor = flags & 0x10000 != 0
+            shape.offsetsRandomly = flags & 0x80000 != 0
+            shape.distanceMinimum = ParticleDefaults.vector(emitter.offsetmin, defaults.pick(SIMD3(-5, -5, 0), .zero))
+            shape.distanceMaximum = ParticleDefaults.vector(emitter.offsetmax, defaults.pick(SIMD3(5, 5, 0), .zero))
+            shape.directions = .zero
+            shape.controlPoint = 0
+            return shape
         case .sphere:
             shape.directions = ParticleDefaults.vector(emitter.directions, SIMD3(1, 1, 0))
             // Scalars (0x140086220).

@@ -32,6 +32,9 @@ extension ParticleProgramCPU {
             offset = SIMD3(a.x > 0 ? 1 : (a.x < 0 ? -1 : 0), a.y > 0 ? 1 : (a.y < 0 ? -1 : 0), a.z > 0 ? 1 : (a.z < 0 ? -1 : 0))
                 * magnitude
             if emitter.appliesSign { offset = signed(offset, emitter.sign) }
+        case .image:
+            // Placed from its layer's points (`emit(image:…)`).
+            offset = .zero
         }
         let turned = context.emitterLinear * SIMD2(offset.x, offset.y)
         let position = point(context.controlPoints, emitter.controlPoint) + SIMD2(emitter.origin.x, emitter.origin.y) + turned
@@ -44,6 +47,31 @@ extension ParticleProgramCPU {
         let length = simd_length(heading)
         let speed = emitter.speed.x + random(.emitterSpeed) * (emitter.speed.y - emitter.speed.x)
         return (position, length > 0 ? heading / length * speed : .zero)
+    }
+
+    /// A `layerimage` emitter's placement for spawn `serial` (0x140238c45): one of `points`
+    /// (`ParticleEmitterImagePoints`) at random, moved by a random offset between `offsetmin`
+    /// and `offsetmax` with flag 0x80000, through `image` into the system's space. It launches at
+    /// rest; with flag 0x10000 its colour multiplies the base colour (0x140239765). Nil without
+    /// points: WE spawns nothing then.
+    static func emit(image points: [SIMD4<Int32>], shape: ParticleEmitterShape, image: SceneAffineTransform,
+                     context: ParticleProgramContext) -> (position: SIMD2<Float>, color: SIMD3<Float>)? {
+        guard !points.isEmpty else { return nil }
+        func random(_ stream: ParticleRandom.Stream) -> Float {
+            ParticleRandom.unit(seed: context.seed, serial: context.serial, stream: stream.rawValue)
+        }
+        let point = points[min(Int(random(.spawnAngle) * Float(points.count)), points.count - 1)]
+        var local = SIMD2(Float(point.x), Float(point.y))
+        if shape.offsetsRandomly {
+            let span = shape.distanceMaximum - shape.distanceMinimum
+            local += SIMD2(shape.distanceMinimum.x + random(.spawnHeight) * span.x,
+                           shape.distanceMinimum.y + random(.spawnRadius) * span.y)
+        }
+        let packed = point.z
+        let color = shape.takesImageColor
+            ? SIMD3(Float(packed >> 16 & 0xff), Float(packed >> 8 & 0xff), Float(packed & 0xff)) / 255
+            : SIMD3<Float>(repeating: 1)
+        return (image.apply(local), color)
     }
 
     /// `sign`: forces each axis with a non-zero sign to that sign.

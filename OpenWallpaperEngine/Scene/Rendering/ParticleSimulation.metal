@@ -147,9 +147,29 @@ static ProgramContext programContext(constant ParticleParameters &p, constant Pa
     return c;
 }
 
+/// `ParticleProgramCPU.emit(image:…)`: a `layerimage` emitter's spawn, at one of its points at
+/// random; false without points.
+static bool emitFromImage(EmitterParameters e, EmitterStep step, device const int4 *imagePoints,
+                          thread const ProgramContext &c, thread float2 &position, thread float3 &color) {
+    const uint count = e.image.y;
+    if (count == 0) return false;
+    const uint pick = min(uint(unitRandom(c.seed, c.serial, sSpawnAngle) * float(count)), count - 1);
+    const int4 point = imagePoints[e.image.x + pick];
+    float2 local = float2(point.xy);
+    if (e.image.w != 0) {
+        const float3 span = e.maximum.xyz - e.minimum.xyz;
+        local += float2(e.minimum.x + unitRandom(c.seed, c.serial, sSpawnHeight) * span.x,
+                        e.minimum.y + unitRandom(c.seed, c.serial, sSpawnRadius) * span.y);
+    }
+    position = float2x2(step.imageLinear.xy, step.imageLinear.zw) * local + step.imageTranslation.xy;
+    color = e.image.z != 0 ? float3((point.z >> 16) & 0xff, (point.z >> 8) & 0xff, point.z & 0xff) / 255.0f : float3(1);
+    return true;
+}
+
 /// `ParticleCPUSimulation.spawn`.
 static ParticleState spawn(uint serial, constant ParticleParameters &p, constant ParticleFrame &f,
-                           constant ProgramOp *program, thread ProgramContext &c, EmitterParameters emitter) {
+                           constant ProgramOp *program, thread ProgramContext &c, EmitterParameters emitter,
+                           EmitterStep step, device const int4 *imagePoints) {
     ProgramState state;
     state.age = 0;
     state.lifetime = 1;
@@ -161,7 +181,14 @@ static ParticleState spawn(uint serial, constant ParticleParameters &p, constant
     state.angularVelocity = 0;
     state.color = float3(1);
     state.baseColor = f.colorScale.xyz;
-    emitParticle(emitter, c, state.position, state.velocity);
+    if (emitter.flags.x == 2) {
+        state.position = float2(0);
+        state.velocity = float2(0);
+        float3 color;
+        if (emitFromImage(emitter, step, imagePoints, c, state.position, color)) state.baseColor *= color;
+    } else {
+        emitParticle(emitter, c, state.position, state.velocity);
+    }
     state.previous = state.position;
     runInitializers(program, f.extra.w & 0xFFFFu, state, c);
     const float size = state.baseSize * f.motionExtras.x;
@@ -197,6 +224,8 @@ kernel void particleEmit(device ParticleState *particles [[buffer(0)]],
                          constant ProgramOp *program [[buffer(6)]],
                          constant EmitterParameters *emitterParameters [[buffer(7)]],
                          device const EmitterState *emitters [[buffer(8)]],
+                         constant EmitterStep *steps [[buffer(10)]],
+                         device const int4 *imagePoints [[buffer(11)]],
                          uint gid [[thread_position_in_grid]]) {
     if (gid >= control[cEmit]) return;
     const uint serial = control[cSerialBase] + gid;
@@ -215,14 +244,14 @@ kernel void particleEmit(device ParticleState *particles [[buffer(0)]],
         const uint index = source.spawn.y + local;
         c.sequenceIndex = index;
         c.sequenceRestartIndex = index - own[e].counts.w;
-        particle = spawn(serial, p, f, program, c, emitterParameters[e]);
+        particle = spawn(serial, p, f, program, c, emitterParameters[e], steps[e], imagePoints);
         particle.trail.z = float(instance);
     } else {
         placeProgramPoints(c, p, f, float2(0), float2(0), true, p.linking.x != 0 ? linked[0] : LinkedPoints{});
         const uint e = spawningEmitter(emitters, emitterCount, gid);
         c.sequenceIndex = serial;
         c.sequenceRestartIndex = serial - emitters[e].counts.w;
-        particle = spawn(serial, p, f, program, c, emitterParameters[e]);
+        particle = spawn(serial, p, f, program, c, emitterParameters[e], steps[e], imagePoints);
     }
     particles[control[cCount] + gid] = particle;
 }
@@ -472,7 +501,9 @@ kernel void particleEmitSerial(device ParticleState *particles [[buffer(0)]],
                                constant ProgramOp *program [[buffer(6)]],
                                constant EmitterParameters *emitterParameters [[buffer(7)]],
                                device const EmitterState *emitters [[buffer(8)]],
-                               device PointState *points [[buffer(9)]]) {
+                               device PointState *points [[buffer(9)]],
+                               constant EmitterStep *steps [[buffer(10)]],
+                               device const int4 *imagePoints [[buffer(11)]]) {
     const bool instanced = (p.counts.y & kInstanced) != 0;
     const uint slots = instanced ? max(p.instancing.y, 1u) : 1u;
     for (uint slot = 0; slot < slots; ++slot) {
@@ -503,7 +534,7 @@ kernel void particleEmitSerial(device ParticleState *particles [[buffer(0)]],
             const uint index = source.spawn.y + local;
             c.sequenceIndex = index;
             c.sequenceRestartIndex = index - own[e].counts.w;
-            particle = spawn(serial, p, f, program, c, emitterParameters[e]);
+            particle = spawn(serial, p, f, program, c, emitterParameters[e], steps[e], imagePoints);
             particle.trail.z = float(slot);
         } else {
             placeProgramPoints(c, p, f, float2(0), float2(0), true, p.linking.x != 0 ? linked[0] : LinkedPoints{});
@@ -512,7 +543,7 @@ kernel void particleEmitSerial(device ParticleState *particles [[buffer(0)]],
             const uint e = spawningEmitter(emitters, emitterCount, gid);
             c.sequenceIndex = serial;
             c.sequenceRestartIndex = serial - emitters[e].counts.w;
-            particle = spawn(serial, p, f, program, c, emitterParameters[e]);
+            particle = spawn(serial, p, f, program, c, emitterParameters[e], steps[e], imagePoints);
         }
         storePoints(points[slot].points, c);
         particles[control[cCount] + gid] = particle;

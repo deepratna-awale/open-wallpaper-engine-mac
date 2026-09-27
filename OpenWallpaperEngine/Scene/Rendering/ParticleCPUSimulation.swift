@@ -334,9 +334,18 @@ enum ParticleCPUSimulation {
         state.baseAlpha = inputs.spawnScale.y
         state.baseColor = inputs.colorScale
         let shape = emitter == 0 ? configuration.emitter : configuration.extraEmitters[emitter - 1].shape
-        let emitted = ParticleProgramCPU.emit(shape, context: context)
-        state.position = emitted.position
-        state.velocity = emitted.velocity
+        if shape.kind == .image {
+            let points = shape.imageIndex < configuration.emitterImages.count ? configuration.emitterImages[shape.imageIndex].points : []
+            let image = emitter < inputs.emitters.count ? inputs.emitters[emitter].image : .identity
+            if let emitted = ParticleProgramCPU.emit(image: points, shape: shape, image: image, context: context) {
+                state.position = emitted.position
+                state.baseColor *= emitted.color
+            }
+        } else {
+            let emitted = ParticleProgramCPU.emit(shape, context: context)
+            state.position = emitted.position
+            state.velocity = emitted.velocity
+        }
         ParticleProgramCPU.runInitializers(inputs.initializers, on: &state, in: &context)
         inputs.controlPoints = context.controlPoints
         // A worldspace particle leaves the emitter's space: it takes the emitter's scale and turn now.

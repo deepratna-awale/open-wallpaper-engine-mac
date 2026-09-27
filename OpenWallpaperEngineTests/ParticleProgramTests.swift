@@ -33,8 +33,7 @@ final class ParticleProgramTests: XCTestCase {
 
     /// Every initializer and operator name in `wallpaper64.exe`'s particle registry (its strings;
     /// effect gallery EXTRAS.md item 6, with `vortex_v2` in full) builds, except `collisionbox`,
-    /// whose VM entry does nothing in WE, and `collisionmodel`, which needs 3D models. Of the
-    /// emitters, `layerimage` isn't built (docs/test-risks.md).
+    /// whose VM entry does nothing in WE, and `collisionmodel`, which needs 3D models.
     func testEveryRegisteredInitializerAndOperatorBuilds() throws {
         let initializers = ["colorrandom", "hsvcolorrandom", "colorlist", "sizerandom", "alpharandom", "velocityrandom",
                             "lifetimerandom", "rotationrandom", "angularvelocityrandom", "positionoffsetrandom",
@@ -57,7 +56,7 @@ final class ParticleProgramTests: XCTestCase {
             XCTAssertNil(ParticleOperatorBuilder.make(element, defaults: ParticleDefaults(pixelUnits: true),
                                                       sceneSize: SIMD2(100, 100), path: "t"), name)
         }
-        XCTAssertEqual(ParticleSystemBuilder.supportedEmitters, ["sphererandom", "boxrandom"])
+        XCTAssertEqual(ParticleSystemBuilder.supportedEmitters, ["sphererandom", "boxrandom", "layerimage"])
     }
 
     // MARK: - Defaults

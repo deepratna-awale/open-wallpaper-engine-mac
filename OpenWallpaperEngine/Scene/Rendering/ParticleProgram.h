@@ -335,7 +335,7 @@ static void emitParticle(EmitterParameters e, thread const ProgramContext &c, th
     const uint seed = c.seed, serial = c.serial;
     const float3 directions = e.directions.xyz;
     float3 offset;
-    if (e.flags.x != 0) {
+    if (e.flags.x == 1) {
         const float3 a = (float3(unitRandom(seed, serial, sSpawnAngle), unitRandom(seed, serial, sSpawnHeight),
                                  unitRandom(seed, serial, sSpawnRadius)) * 2 - 1) * e.maximum.xyz;
         const float3 span = e.maximum.xyz - e.minimum.xyz;

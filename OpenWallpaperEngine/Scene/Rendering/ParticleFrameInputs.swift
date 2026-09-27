@@ -146,7 +146,8 @@ struct ParticleFrameInputs {
     static func advance(_ system: ParticleSystemRuntime, deltaTime: Float, cursor: SIMD2<Float>,
                         emitter: SceneAffineTransform? = nil, values: SceneValueContext? = nil,
                         scripted: SceneScriptInstanceOverrides? = nil, audio: AudioSpectrumSnapshot = .silent, frameTime: Float? = nil,
-                        frameRateLimit: Int = 0) -> ParticleFrameInputs {
+                        frameRateLimit: Int = 0,
+                        layerWorld: (String) -> SceneAffineTransform? = { _ in nil }) -> ParticleFrameInputs {
         let configuration = system.configuration
         restartWithParent(system)
         system.elapsedTime += deltaTime
@@ -199,6 +200,7 @@ struct ParticleFrameInputs {
         system.startedPeriod = !configuration.isInstanced
             && zip(emitters, inputs.emitters).contains { $0.timing.periodic && $1.startsPeriod }
         inputs.space = configuration.worldSpace ? .identity : world
+        inputs.placeImages(configuration, layerWorld: layerWorld)
         inputs.layerOrigin = world.translation
         inputs.emitterLinear = configuration.worldSpace ? world.linear : matrix_identity_float2x2
         if configuration.worldSpace {
@@ -320,6 +322,28 @@ struct ParticleFrameInputs {
         }
     }
 
+    /// Each `layerimage` emitter's image in the system's space this step: its layer's world
+    /// transform, which WE multiplies by the inverse of the system's model matrix (0x140238cc8,
+    /// 0x140238db9) unless the system is `worldspace`.
+    private mutating func placeImages(_ configuration: SceneMetalParticleSystem,
+                                      layerWorld: (String) -> SceneAffineTransform?) {
+        let toSpace = space.inverse ?? .identity
+        for (index, emitter) in configuration.emitters.enumerated() where emitter.shape.kind == .image {
+            let slot = emitter.shape.imageIndex
+            guard index < emitters.count, slot < configuration.emitterImages.count,
+                  !configuration.emitterImages[slot].points.isEmpty,
+                  let world = layerWorld(configuration.emitterImages[slot].layerID) else {
+                // Without its layer's points WE's emitter spawns nothing (0x140238dca).
+                if index < emitters.count {
+                    emitters[index].rate = 0
+                    emitters[index].burst = 0
+                }
+                continue
+            }
+            emitters[index].image = toSpace * world
+        }
+    }
+
     /// This step's records: each with its audio response and, for the `mapsequence…`
     /// initializers, the `count` override applied to their step.
     private mutating func encodeProgram(_ system: ParticleSystemRuntime, audio: AudioSpectrumSnapshot,
@@ -381,4 +405,6 @@ struct ParticleEmitterStep: Equatable {
     var periodLimit: Int?
     /// The rate emits at most one particle a step.
     var onePerFrame = false
+    /// A `layerimage` emitter's image (its points' space, the layer's) in the system's space.
+    var image = SceneAffineTransform.identity
 }

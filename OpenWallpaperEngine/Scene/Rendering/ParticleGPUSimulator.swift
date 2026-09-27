@@ -293,6 +293,8 @@ final class ParticleGPUSimulator {
             bindProgram(plan.program, index: 6, fallback: control, encoder: encoder)
             encoder.setBuffer(gpu.emitterParameters, offset: 0, index: 7)
             encoder.setBuffer(gpu.emitterStates, offset: 0, index: 8)
+            bindEmitterSteps(plan.steps, index: 10, encoder: encoder)
+            encoder.setBuffer(gpu.imagePoints ?? control, offset: 0, index: 11)
             if let serialPoints = plan.serialPoints {
                 encoder.setBuffer(serialPoints, offset: 0, index: 9)
                 encoder.dispatchThreads(single, threadsPerThreadgroup: single)

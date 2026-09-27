@@ -22,6 +22,9 @@ final class ParticleGPUSystem {
     /// Each emitter's running state (`ParticleGPUEmitterState`), `slots` × emitters of them.
     let emitterStates: MTLBuffer
     let emitterCount: Int
+    /// Every `layerimage` emitter's points (`ParticleEmitterImage.points`), one after another;
+    /// nil without any.
+    let imagePoints: MTLBuffer?
     /// A program that writes control points (`ParticleProgram.writesControlPoints`) steps in one
     /// thread (`particleEmitSerial`, `particleSimulateSerial`): each slot's points (`PointState`), and
     /// the particles' program state between records (`SerialState`, sized with the particles).
@@ -75,7 +78,15 @@ final class ParticleGPUSystem {
 
     init?(device: MTLDevice, configuration: SceneMetalParticleSystem, seed: UInt32) {
         var values = ParticleGPUParameters(configuration, seed: seed)
-        let emitters = configuration.emitters.map(ParticleGPUEmitter.init)
+        var pointList: [SIMD4<Int32>] = []
+        let emitters = configuration.emitters.map { emitter -> ParticleGPUEmitter in
+            guard emitter.shape.kind == .image, emitter.shape.imageIndex < configuration.emitterImages.count else {
+                return ParticleGPUEmitter(emitter)
+            }
+            let points = configuration.emitterImages[emitter.shape.imageIndex].points
+            defer { pointList += points }
+            return ParticleGPUEmitter(emitter, imagePoints: (pointList.count, points.count))
+        }
         let slotCount = configuration.isInstanced ? max(configuration.link?.maximumInstances ?? 0, 1) : 1
         guard let parameters = device.makeBuffer(bytes: &values, length: MemoryLayout<ParticleGPUParameters>.stride,
                                                  options: .storageModeShared),
@@ -91,6 +102,14 @@ final class ParticleGPUSystem {
         self.emitterParameters = emitterParameters
         self.emitterStates = emitterStates
         emitterCount = emitters.count
+        if pointList.isEmpty {
+            imagePoints = nil
+        } else {
+            guard let buffer = device.makeBuffer(bytes: pointList, length: pointList.count * MemoryLayout<SIMD4<Int32>>.stride,
+                                                 options: .storageModeShared) else { return nil }
+            buffer.label = "Particle layer image points"
+            imagePoints = buffer
+        }
         writesControlPoints = configuration.program.writesControlPoints
         if writesControlPoints {
             guard let points = device.makeBuffer(length: slotCount * Self.pointStateStride, options: .storageModeShared) else {

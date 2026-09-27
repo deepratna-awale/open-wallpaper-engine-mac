@@ -41,13 +41,16 @@ struct EmitterParameters {
     float4 sign;             // sign xyz
     float4 timing;           // `ParticleEmitterTiming`: delay, duration, periodic duration min, max
     float4 period;           // periodic delay min, max, periodic
-    uint4 flags;             // box, applies sign, instantaneous
+    uint4 flags;             // kind (0 sphere, 1 box, 2 layer image), applies sign, instantaneous
+    uint4 image;             // layer image: first point, points, takes the image's colour, offsets randomly
 };
 
 /// One emitter's part of the step (`ParticleGPUEmitterStep`).
 struct EmitterStep {
     float4 rate;             // rate
     uint4 control;           // burst, period limit (~0: none), starts a period, one per frame
+    float4 imageLinear;      // layer image in the system's space: linear columns
+    float4 imageTranslation; // translation
 };
 
 /// One emitter's running state (`ParticleGPUEmitterState`), per slot.

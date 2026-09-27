@@ -67,6 +67,9 @@ struct WEParticleEmitter: Codable {
     var sign: WEFlexValue?
     /// A sphere's spread around its +x axis: 0 a full sphere, 1 one direction.
     @WEFlexibleDouble var cone: Double?
+    /// `layerimage`: the random offset's range (flag 0x80000).
+    var offsetmin: WEFlexValue?
+    var offsetmax: WEFlexValue?
     /// Audio response: 0 off, 1 left, 2 right, 3 both channels (`ParticleAudioResponse`).
     @WEFlexibleInt var audioprocessingmode: Int?
     @WEFlexibleDouble var audioprocessingexponent: Double?

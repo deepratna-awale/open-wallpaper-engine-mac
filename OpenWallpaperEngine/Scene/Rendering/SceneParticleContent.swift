@@ -86,6 +86,9 @@ struct SceneMetalParticleSystem {
     var hasEventChildren = false
     /// `starttime`: seconds WE simulates before the first frame.
     var startTime: Float = 0
+    /// The layers the `layerimage` emitters emit from, by the emitter's ordinal among them (the
+    /// object's `emitterimage` dependencies); the renderer samples each layer's image into its points.
+    var emitterImages: [ParticleEmitterImage] = []
 
     /// Runs as instances (`ParticleChildLink`).
     var isInstanced: Bool { link?.instanced == true }
@@ -115,10 +118,11 @@ struct ParticleEmitter {
     var audio: ParticleAudioResponse?
 }
 
-/// An emitter's shape and launch speed (`sphererandom`, `boxrandom`), in the system's space.
-/// WE's spawn code: `wallpaper64.exe` 0x140237c14 (sphere), 0x14023847f (box).
+/// An emitter's shape and launch speed (`sphererandom`, `boxrandom`, `layerimage`), in the
+/// system's space. WE's spawn code: `wallpaper64.exe` 0x140237c14 (sphere), 0x14023847f (box),
+/// 0x140238c45 (layer image).
 struct ParticleEmitterShape: Equatable {
-    enum Kind: UInt32 { case sphere = 0, box }
+    enum Kind: UInt32 { case sphere = 0, box, image }
 
     var kind = Kind.sphere
     /// `origin`, added to the control point's position.
@@ -138,6 +142,26 @@ struct ParticleEmitterShape: Equatable {
     var cone: Float = 0
     /// `controlpoint`: where the emitter sits.
     var controlPoint = 0
+    /// A `layerimage` emitter's ordinal among the system's `layerimage` emitters: the index of its
+    /// `emitterimage` dependency (`SceneMetalParticleSystem.emitterImages`).
+    var imageIndex = 0
+    /// A `layerimage` emitter's `flags` 0x10000 (WE's default): the particle's base colour takes
+    /// the image's colour where it spawns (0x140239765).
+    var takesImageColor = true
+    /// A `layerimage` emitter's `flags` 0x80000: the spawn moves by a random offset between
+    /// `offsetmin` and `offsetmax` (`distanceMinimum`, `distanceMaximum`; 0x140238fad).
+    var offsetsRandomly = false
+}
+
+/// The layer a `layerimage` emitter emits from and the points it picks among
+/// (`ParticleEmitterImagePoints`).
+struct ParticleEmitterImage: Equatable {
+    /// The layer's object id.
+    var layerID: String
+    /// Filled by the renderer when it has the layer's texture: one point per texel of the image
+    /// reduced to a quarter (x, y in the layer's pixels from its centre, y up; the texel's
+    /// colour packed as 0xRRGGBB).
+    var points: [SIMD4<Int32>] = []
 }
 
 /// A control point (WE's `controlpoint` array entry, by index; `wallpaper64.exe` updates them each
@@ -186,5 +210,21 @@ extension SpriteSheet {
         let time = frames.reduce(Float(0)) { $0 + max($1.duration, 0) }
         self.init(frames: frames.count, frameSize: SIMD2(Double(first.width), Double(first.height)),
                   duration: time > 0 ? time : 1, textureSize: textureSize)
+    }
+}
+
+extension ParticleEmitterImage {
+    /// The layers a particle object's `emitterimage` dependencies name, by their `index` (the
+    /// `layerimage` emitter's ordinal; WE parses them at 0x14022b1d9 and binds them by index at
+    /// 0x140238d43). An index nothing names has no layer and emits nothing, as in WE.
+    static func bound(_ dependencies: [WEObjectDependency]) -> [ParticleEmitterImage] {
+        var images: [ParticleEmitterImage] = []
+        for case let .link(id, type, index) in dependencies where type?.lowercased() == "emitterimage" {
+            let slot = max(index ?? 0, 0)
+            guard slot < 64 else { continue }
+            while images.count <= slot { images.append(ParticleEmitterImage(layerID: "")) }
+            images[slot].layerID = String(id)
+        }
+        return images
     }
 }

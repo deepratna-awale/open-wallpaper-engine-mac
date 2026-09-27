@@ -460,7 +460,17 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 guard let frames = self.makeTextureFrames(from: layer.source), !frames.isEmpty else { return nil }
                 return PreparedLayer(frames: frames, layer: layer)
             }
+            let imageSources = Dictionary(preparedLayers.compactMap { entry -> (String, ParticleEmitterImagePoints.Source)? in
+                guard let frame = entry.frames.first else { return nil }
+                let size = entry.layer.source.pixelSize
+                return (entry.layer.id, .init(texture: frame.texture, uvExtent: SIMD2(frame.uvAxisX.x, frame.uvAxisY.y),
+                                              imageSize: SIMD2(Int(size.x), Int(size.y))))
+            }, uniquingKeysWith: { first, _ in first })
+            var imagePoints: [String: [SIMD4<Int32>]] = [:]
             let runtimes: [ParticleSystemRuntime?] = content.particleSystems.enumerated().map { index, system in
+                var system = system
+                ParticleEmitterImagePoints.fill(&system.emitterImages, sources: imageSources, device: self.device,
+                                                queue: self.commandQueue, cache: &imagePoints)
                 guard let texture = self.makeTextureFrames(from: system.source)?.first?.texture else { return nil }
                 let fallback = system.fallbackSource.flatMap { self.makeTextureFrames(from: $0)?.first?.texture }
                 // Seeded by position in the scene, so a wallpaper's particles replay the same way.
@@ -952,18 +962,20 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             // `starttime`: the system's first frame comes after WE's pre-simulation.
             // WE's engine frame time and frame-rate limit steer drag and the operators' half steps
             // (`ParticleFrameInputs.dragDeltaTime`, `substeps`); the pre-simulation runs in this frame.
+            let layerWorld = { [self] (id: String) in emitterImageLayerWorld(id, motion: motion) }
             let prewarm = ParticlePrewarm.steps(system).map {
                 ParticleFrameInputs.advance(system, deltaTime: $0, cursor: cursor, emitter: emitter, values: timelines.values,
                                             scripted: scripted,
                                             audio: effectFrame.audio, frameTime: Float(clock.delta),
-                                            frameRateLimit: destination.frameRateLimit)
+                                            frameRateLimit: destination.frameRateLimit, layerWorld: layerWorld)
             }
             // A script's `pause()` holds the system as it is; `stop()` clears it until `play()`.
             let paused = script?.playback == .pause
             var inputs = ParticleFrameInputs.advance(system, deltaTime: paused ? 0 : Float(clock.delta), cursor: cursor,
                                                      emitter: emitter, values: timelines.values, scripted: scripted,
                                                      audio: effectFrame.audio,
-                                                     frameTime: Float(clock.delta), frameRateLimit: destination.frameRateLimit)
+                                                     frameTime: Float(clock.delta), frameRateLimit: destination.frameRateLimit,
+                                                     layerWorld: layerWorld)
             Self.applyScriptPlayback(script?.playback, emitting: objectID.flatMap { pendingEmits.removeValue(forKey: $0) },
                                      to: &inputs)
             if particleSimulator != nil {
@@ -1773,6 +1785,15 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private func emitterWorld(_ configuration: SceneMetalParticleSystem,
                               motion: CameraMotion) -> SceneAffineTransform? {
         guard let id = configuration.objectID else { return nil }
+        var world = transforms.world(of: id, live: { [self] id in liveLocal(id) }, attachments: puppetAttachments.affine)
+        world.translation += particleParallaxOffset(id, motion: motion) - motion.shake
+        return world
+    }
+
+    /// A `layerimage` emitter's layer this frame (`ParticleFrameInputs.placeImages`), moved by
+    /// camera parallax and shake as an emitter is (`emitterWorld`); nil when no such object exists.
+    private func emitterImageLayerWorld(_ id: String, motion: CameraMotion) -> SceneAffineTransform? {
+        guard transforms.nodes[id] != nil else { return nil }
         var world = transforms.world(of: id, live: { [self] id in liveLocal(id) }, attachments: puppetAttachments.affine)
         world.translation += particleParallaxOffset(id, motion: motion) - motion.shake
         return world
