@@ -1083,22 +1083,23 @@ enum UniformWriter {
             || member.type.hasPrefix("uint") || member.type.hasPrefix("uvec") || member.type == "bool"
         let perElement = componentsPerElement(member.type)
         let columns = matrixColumns(member.type)
-        func put(_ value: Float, at offset: Int) {
-            guard offset >= 0, offset + 4 <= bytes.count else { return }
-            withUnsafeBytes(of: isInteger ? integerBits(value) : value.bitPattern) { raw in
-                for (index, byte) in raw.enumerated() { bytes[offset + index] = byte }
-            }
-        }
-        for element in 0..<member.count {
-            let base = member.offset + element * member.arrayStride
-            for component in 0..<perElement {
-                let index = element * perElement + component
-                guard index < components.count else { return }
-                if let columns, member.matrixStride > 0 {
-                    let rows = perElement / columns
-                    put(components[index], at: base + (component / rows) * member.matrixStride + (component % rows) * 4)
-                } else {
-                    put(components[index], at: base + component * 4)
+        // One store per component into the buffer's memory: the shadow pass writes each caster's
+        // view matrices through here, and per-byte copies made it most of a model scene's frame.
+        let rows = columns.flatMap { member.matrixStride > 0 ? perElement / $0 : nil }
+        let count = min(member.count * perElement, components.count)
+        components.withUnsafeBufferPointer { values in
+            bytes.withUnsafeMutableBytes { raw in
+                var index = 0
+                while index < count {
+                    let element = index / perElement, component = index % perElement
+                    let base = member.offset + element * member.arrayStride
+                    let offset = rows.map { base + (component / $0) * member.matrixStride + (component % $0) * 4 }
+                        ?? base + component * 4
+                    if offset >= 0, offset + 4 <= raw.count {
+                        let value = values[index]
+                        raw.storeBytes(of: isInteger ? integerBits(value) : value.bitPattern, toByteOffset: offset, as: UInt32.self)
+                    }
+                    index += 1
                 }
             }
         }
