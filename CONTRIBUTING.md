@@ -42,6 +42,11 @@ There is **one type per file** unless the types are tiny and private to it. A fi
 6. **Caches are versioned.** Any on-disk cache is keyed on its inputs *and* a revision constant you bump whenever the producing code changes. `ShaderVariantTranslator.revision` is the example; `ShaderVariantCacheTests` fails when translated output changes without a bump.
 7. **Concurrency.** Mark UI types `@MainActor`. Don't share mutable state across threads without an owner: prefer actors, or one lock that is documented and owns specific fields. Don't add `nonisolated(unsafe)` without a comment explaining why it's safe.
 8. **Keep dead code out.** Delete it; git has history. Don't comment code out, and don't keep an unused alternate render path.
+9. **UI text goes through `Localizable.xcstrings`.**
+   - Pass literals to localizing APIs (`Text`, `Button`, `Label`, `.help`…), or use `String(localized:)` / `LocalizedStringResource` where the text travels as a value (AppKit, errors, view models). A `String` handed to `Text` shows in English in every language.
+   - Counts use the catalog's plural variations, not a hand-made "s"; numbers, sizes, durations and lists use the Foundation formatters.
+   - Values that are stored or sent (tags, types, ratings) stay English; show them through `LocalizedLabels`.
+   - The app ships in 15 languages besides English. A new string needs a translation in each, using the terms in [`docs/localization-glossary.md`](docs/localization-glossary.md). `LocalizationCatalogTests` and `LocalizationLintTests` fail otherwise.
 
 ## Tests
 
