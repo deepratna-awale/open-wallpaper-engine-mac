@@ -18,6 +18,26 @@ could not be carried over, the item says so in bold.
 
 Paths are relative to `OpenWallpaperEngine/`.
 
+## Frosted surfaces ("acrylic")
+
+Window and pane backgrounds are frosted on every macOS version: `FrostedBackground`
+(`UI/Components/FrostedBackground.swift`) is an `NSVisualEffectView` that blends behind the window,
+so the desktop's live wallpaper shows through blurred. It follows the window's active state (it
+doesn't force `.active`), so inactive windows dim as usual and Reduce Transparency makes it opaque.
+It sits under the main window (sidebar, grid area, Details), the Settings window and its pages
+(`scrollContentBackground(.hidden)` on the grouped Forms), the Scene Inspector and About. The
+restart notice is frosted before macOS 26 and glass on 26. Sheets use `presentationBackground(.regularMaterial)`.
+
+Before macOS 26 the glass pieces fall back to materials where that reads well: the tag pills,
+the `brew install steamcmd` snippet, the Plugins GIF tile and the controls capsule over the
+Workshop preview. Buttons keep the bordered styles. Content stays opaque: wallpaper previews,
+grid tiles, thumbnails, the Metal/AV/Web views, JSON editors and texture previews.
+No capability changed.
+
+Switching to the Installed tab no longer rebuilds the sidebars (their scroll position and
+collapsed sections survive a switch) and no longer rescans the library several times per redraw
+(`Library/InstalledLibraryCache.swift`).
+
 ## W. Windows and window behaviour
 
 - [x] **W1** Main window: titled, closable, miniaturizable, resizable; title "Open Wallpaper Engine &lt;version&gt;"; frame autosaved as `MainWindow`; not released when closed; transparent titlebar; movable by window background. Before: `UI/MainWindow.swift:21-36`. **Now:** Same window, now with a unified toolbar and full-size content view (`UI/MainWindow.swift`); still movable by its background. The title is kept for the Window menu and Mission Control but hidden in the toolbar, whose centre holds the tabs.
