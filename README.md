@@ -83,7 +83,7 @@ Licensed under [GPL-3.0](LICENSE), same as the original project.
 
 ### Wallpaper playback
 - **Scene wallpapers** rendered natively with Metal — image layers, transforms, keyframe timelines, depth ordering, and camera/projection data from `scene.json`.
-- **Video wallpapers** (`.mp4`, `.webm`) with playback rate, volume, audio/video speed linking, and optional music-synced zoom/tilt/saturation.
+- **Video wallpapers** (`.mp4`, `.webm`) with playback rate, volume, audio/video speed linking, and optional music-synced zoom/tilt/saturation. WebM (VP8/VP9) plays through WebKit, where music sync doesn't apply.
 - **Web wallpapers** (HTML/WebGL) with local file access enabled so WebGL textures and assets load correctly, plus external embeds (YouTube/Vimeo).
 - **Placement modes** — Fill, Fit, Center, Stretch, Zoom.
 - **Multi-display** — a different wallpaper per monitor, per-screen enable/disable, visual monitor layout, and auto-detection of newly connected displays.

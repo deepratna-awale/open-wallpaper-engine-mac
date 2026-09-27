@@ -22,8 +22,11 @@ struct WallpaperView: View {
         switch wallpaper.project.type.lowercased() {
         // A remote video is the same pipeline as a local one; only the URL differs.
         case "video", "remote-video":
+            // A video AVFoundation can't decode (WebM) plays through WebKit on either framework.
+            if WebKitVideoPlayer.handles(wallpaper.mediaURL) {
+                WebKitVideoWallpaperView(wallpaperViewModel: viewModel, screenId: screenId).id(instance.wallpaper)
             // The Metal path draws video as a scene layer so the effect stack applies to it.
-            if AppDelegate.shared.globalSettingsViewModel.settings.videoFramework == .metal {
+            } else if AppDelegate.shared.globalSettingsViewModel.settings.videoFramework == .metal {
                 SceneWallpaperView(wallpaperViewModel: viewModel, screenId: screenId).id(instance)
             } else {
                 AudioReactiveVideoWallpaperView(wallpaperViewModel: viewModel, screenId: screenId).id(instance.wallpaper)

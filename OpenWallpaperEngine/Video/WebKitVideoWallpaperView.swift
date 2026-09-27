@@ -1,0 +1,50 @@
+//
+//  WebKitVideoWallpaperView.swift
+//  Open Wallpaper Engine
+//
+
+import SwiftUI
+import WebKit
+
+/// A video wallpaper AVFoundation can't decode (`WebKitVideoPlayer.handles`) on one display: a
+/// page per display, like a web wallpaper, paused by that display's playback rule and heard only
+/// on the wallpaper's audible display.
+struct WebKitVideoWallpaperView: NSViewRepresentable {
+    @ObservedObject var wallpaperViewModel: WallpaperViewModel
+    let screenId: String
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    func makeNSView(context: Context) -> WKWebView {
+        let wallpaper = wallpaperViewModel.wallpaper(for: screenId)
+        let player = WebKitVideoPlayer(url: wallpaper.mediaURL, readAccess: wallpaper.wallpaperDirectory)
+        context.coordinator.player = player
+        player.state = state(for: wallpaper)
+        return player.webView
+    }
+
+    func updateNSView(_ nsView: WKWebView, context: Context) {
+        context.coordinator.player?.state = state(for: wallpaperViewModel.wallpaper(for: screenId))
+    }
+
+    static func dismantleNSView(_ nsView: WKWebView, coordinator: Coordinator) {
+        coordinator.player?.stop()
+        coordinator.player = nil
+    }
+
+    private func state(for wallpaper: WEWallpaper) -> WebKitVideoPlayer.State {
+        let key = WallpaperInstanceKey(wallpaper)
+        let muted = !wallpaperViewModel.shouldPlayAudio(on: screenId) || wallpaperViewModel.playVolume == 0
+            || !wallpaperViewModel.wallpaperPlayback(of: key).playsSound
+        return WebKitVideoPlayer.State(placement: wallpaperViewModel.wallpaperPlacement,
+                                       paused: !wallpaperViewModel.playback(onScreen: screenId).rendersFrames,
+                                       muted: muted,
+                                       volume: wallpaperViewModel.playVolume,
+                                       rate: wallpaperViewModel.playRate)
+    }
+
+    @MainActor
+    final class Coordinator {
+        var player: WebKitVideoPlayer?
+    }
+}
