@@ -1,0 +1,3831 @@
+{
+ "_system": {
+  "_files": 410,
+  "fields": {
+   "animationmode": {
+    "types": [
+     "NoneType",
+     "string"
+    ],
+    "occurrences": 200,
+    "distinct_values": [
+     "randomframe",
+     "sequence",
+     null
+    ]
+   },
+   "flags": {
+    "types": [
+     "NoneType",
+     "int"
+    ],
+    "occurrences": 308,
+    "observed_min": 0,
+    "observed_max": 248,
+    "distinct_values": [
+     0,
+     1,
+     2,
+     248,
+     3,
+     4,
+     6,
+     7,
+     8,
+     9,
+     null
+    ]
+   },
+   "material": {
+    "types": [
+     "string"
+    ],
+    "occurrences": 410,
+    "distinct_values": [
+     "materials/particle/halo.json",
+     "materials/particle/halo_1.json",
+     "materials/particle/halo_1_1.json",
+     "materials/particle/halo_1_1_1.json",
+     "materials/particle/halo_1_1_1_1.json",
+     "materials/particle/halo_1_1_1_1_1.json",
+     "materials/particle/halo_1_1_1_1_1_1.json",
+     "materials/particle/halo_1_1_1_1_2.json",
+     "materials/particle/halo_1_1_1_2.json",
+     "materials/particle/halo_1_1_1_4.json",
+     "materials/particle/halo_1_1_2.json",
+     "materials/particle/halo_2.json",
+     "materials/particle/halo_3.json",
+     "materials/particle/halo_6.json",
+     "materials/particle/halo_translucent.json",
+     "materials/particle/refractiverain.json",
+     "materials/presets/ash.json",
+     "materials/presets/bubbles1.json",
+     "materials/presets/bubbles2.json",
+     "materials/presets/discharge.json",
+     "materials/presets/dischargearc.json",
+     "materials/presets/dna.json",
+     "materials/presets/dripping_water.json",
+     "materials/presets/dripping_water_droplets.json",
+     "materials/presets/dripping_water_droplets_single.json"
+    ],
+    "distinct_values_truncated": 168
+   },
+   "maxcount": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 410,
+    "observed_min": 1,
+    "observed_max": 100000,
+    "distinct_values": [
+     1,
+     10,
+     100,
+     1000,
+     10000,
+     100000,
+     12,
+     120,
+     128,
+     15,
+     150,
+     15000,
+     16,
+     20,
+     200,
+     25,
+     250,
+     25000,
+     256,
+     3,
+     300,
+     32,
+     35,
+     350,
+     360
+    ],
+    "distinct_values_truncated": 41
+   },
+   "sequencemultiplier": {
+    "types": [
+     "NoneType",
+     "int"
+    ],
+    "occurrences": 167,
+    "observed_min": 1,
+    "observed_max": 111,
+    "distinct_values": [
+     1,
+     111,
+     2,
+     25,
+     3,
+     4,
+     null
+    ]
+   },
+   "starttime": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 410,
+    "observed_min": 0,
+    "observed_max": 100,
+    "distinct_values": [
+     0,
+     0.01,
+     0.80000001,
+     1,
+     10,
+     100,
+     15,
+     2,
+     3,
+     5,
+     9
+    ]
+   }
+  }
+ },
+ "children": {
+  "_files": 101,
+  "fields": {
+   "angles": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 16,
+    "distinct_values": [
+     "0 0 -50",
+     "0 0 0"
+    ]
+   },
+   "controlpointstartindex": {
+    "types": [
+     "NoneType",
+     "int"
+    ],
+    "occurrences": 14,
+    "observed_min": 1,
+    "observed_max": 1,
+    "distinct_values": [
+     1,
+     null
+    ]
+   },
+   "flags": {
+    "types": [
+     "NoneType",
+     "int"
+    ],
+    "occurrences": 25,
+    "observed_min": 0,
+    "observed_max": 2,
+    "distinct_values": [
+     0,
+     1,
+     2,
+     null
+    ]
+   },
+   "maxcount": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 50,
+    "observed_min": 1,
+    "observed_max": 500,
+    "distinct_values": [
+     1,
+     10,
+     100,
+     16,
+     20,
+     25,
+     30,
+     32,
+     350,
+     40,
+     5,
+     500,
+     80,
+     85
+    ]
+   },
+   "origin": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 49,
+    "distinct_values": [
+     "0 0 0",
+     "0 650 0",
+     "1020 0 0",
+     "1080 0 0",
+     "1140 0 0",
+     "120 0 0",
+     "1200 0 0",
+     "1260 0 0",
+     "1320 0 0",
+     "1380 0 0",
+     "1440 0 0",
+     "1500 0 0",
+     "1560 0 0",
+     "1620 0 0",
+     "1680 0 0",
+     "1740 0 0",
+     "180 0 0",
+     "1800 0 0",
+     "1860 0 0",
+     "1920 0 0",
+     "240 0 0",
+     "300 0 0",
+     "360 0 0",
+     "420 0 0",
+     "480 0 0"
+    ],
+    "distinct_values_truncated": 34
+   },
+   "probability": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 19,
+    "observed_min": 0.2,
+    "observed_max": 1.0,
+    "distinct_values": [
+     0.2,
+     0.5,
+     1,
+     1.0
+    ]
+   },
+   "scale": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 24,
+    "distinct_values": [
+     "0.2 0.2 0.2",
+     "0.55 0.55 0.55",
+     "1 1 1",
+     "1 1 2",
+     "1.8 1.8 1.8",
+     "2.5 2.5 1"
+    ]
+   },
+   "type": {
+    "types": [
+     "string"
+    ],
+    "occurrences": 82,
+    "distinct_values": [
+     "eventdeath",
+     "eventfollow",
+     "eventspawn",
+     "static"
+    ]
+   }
+  }
+ },
+ "controlpoint": {
+  "_files": 351,
+  "fields": {
+   "flags": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 2628,
+    "observed_min": 0,
+    "observed_max": 16,
+    "distinct_values": [
+     0,
+     1,
+     16,
+     2,
+     4
+    ]
+   },
+   "locktopointer": {
+    "types": [
+     "bool"
+    ],
+    "occurrences": 16,
+    "distinct_values": [
+     false,
+     true
+    ]
+   },
+   "offset": {
+    "types": [
+     "NoneType",
+     "vec3"
+    ],
+    "occurrences": 2605,
+    "distinct_values": [
+     "0 -450 0",
+     "0 -9999 0",
+     "0 0 0",
+     "0 500 0",
+     "100 0 0",
+     "450 0 0",
+     "50 0 0",
+     "512 512 0",
+     null
+    ]
+   },
+   "parentcontrolpoint": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 108,
+    "observed_min": 0,
+    "observed_max": 2,
+    "distinct_values": [
+     0,
+     1,
+     2
+    ]
+   }
+  }
+ },
+ "emitter:boxrandom": {
+  "_files": 61,
+  "fields": {
+   "audioprocessingbounds": {
+    "types": [
+     "vec2"
+    ],
+    "occurrences": 3,
+    "distinct_values": [
+     "0.5 1",
+     "0.8 1"
+    ]
+   },
+   "audioprocessingexponent": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 1,
+    "observed_min": 3,
+    "observed_max": 3,
+    "distinct_values": [
+     3
+    ]
+   },
+   "audioprocessingfrequencyend": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 2,
+    "observed_min": 3,
+    "observed_max": 15,
+    "distinct_values": [
+     15,
+     3
+    ]
+   },
+   "audioprocessingfrequencystart": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 2,
+    "observed_min": 0,
+    "observed_max": 1,
+    "distinct_values": [
+     0,
+     1
+    ]
+   },
+   "audioprocessingmode": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 9,
+    "observed_min": 0,
+    "observed_max": 3,
+    "distinct_values": [
+     0,
+     3
+    ]
+   },
+   "directions": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 22,
+    "distinct_values": [
+     "0 0 0",
+     "1 -1 1",
+     "1 0 0",
+     "1 0.1 0",
+     "1 0.5 0",
+     "1 1 1",
+     "1 5 0"
+    ]
+   },
+   "distancemax": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 57,
+    "distinct_values": [
+     "100 100 0",
+     "100 256 0",
+     "1000 1000 0",
+     "1000 400 0",
+     "1000 500 0",
+     "1024 0 0",
+     "1024 0 1000",
+     "1024 1024 0",
+     "1024 512 0",
+     "128 64 0",
+     "1900 1100 0",
+     "1900 200 0",
+     "1920 1080 0",
+     "200 256 0",
+     "2000 800 0",
+     "360 360 0",
+     "512 128 0",
+     "512 256 0",
+     "550 360 0",
+     "600 1000 32",
+     "950 100 0",
+     "950 550 0"
+    ]
+   },
+   "distancemin": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 1,
+    "distinct_values": [
+     "0 0 16"
+    ]
+   },
+   "duration": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 1,
+    "observed_min": 0,
+    "observed_max": 0,
+    "distinct_values": [
+     0
+    ]
+   },
+   "flags": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 1,
+    "observed_min": 0,
+    "observed_max": 0,
+    "distinct_values": [
+     0
+    ]
+   },
+   "instantaneous": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 2,
+    "observed_min": 1,
+    "observed_max": 20,
+    "distinct_values": [
+     1,
+     20
+    ]
+   },
+   "origin": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 17,
+    "distinct_values": [
+     "-128 256 0",
+     "-250 250 0",
+     "-256 256 0",
+     "0 1000 0",
+     "0 1024 0",
+     "0 1400 0",
+     "0 500 0",
+     "0 700 0",
+     "0 768 0"
+    ]
+   },
+   "rate": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 55,
+    "observed_min": 1,
+    "observed_max": 1000,
+    "distinct_values": [
+     1,
+     10,
+     1000,
+     2,
+     200,
+     25,
+     32,
+     40,
+     400,
+     50,
+     6,
+     8,
+     85
+    ]
+   }
+  }
+ },
+ "emitter:layerimage": {
+  "_files": 1,
+  "fields": {
+   "rate": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 1,
+    "observed_min": 5000,
+    "observed_max": 5000,
+    "distinct_values": [
+     5000
+    ]
+   }
+  }
+ },
+ "emitter:sphererandom": {
+  "_files": 350,
+  "fields": {
+   "audioprocessingbounds": {
+    "types": [
+     "vec2"
+    ],
+    "occurrences": 3,
+    "distinct_values": [
+     "0.8 1"
+    ]
+   },
+   "audioprocessingfrequencyend": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 1,
+    "observed_min": 4,
+    "observed_max": 4,
+    "distinct_values": [
+     4
+    ]
+   },
+   "audioprocessingfrequencystart": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 1,
+    "observed_min": 0,
+    "observed_max": 0,
+    "distinct_values": [
+     0
+    ]
+   },
+   "audioprocessingmode": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 2,
+    "observed_min": 0,
+    "observed_max": 3,
+    "distinct_values": [
+     0,
+     3
+    ]
+   },
+   "cone": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 2,
+    "observed_min": 0,
+    "observed_max": 0,
+    "distinct_values": [
+     0
+    ]
+   },
+   "controlpoint": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 7,
+    "observed_min": 1,
+    "observed_max": 2,
+    "distinct_values": [
+     1,
+     2
+    ]
+   },
+   "delay": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 4,
+    "observed_min": 0,
+    "observed_max": 0.2,
+    "distinct_values": [
+     0,
+     0.2
+    ]
+   },
+   "directions": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 258,
+    "distinct_values": [
+     "0 0 0.01",
+     "0.1 1 0",
+     "0.2 1 0",
+     "0.9 0.03 1",
+     "1 -1 0",
+     "1 0 0",
+     "1 0 1",
+     "1 0.03 0",
+     "1 0.03 1",
+     "1 0.07 0",
+     "1 0.1 0",
+     "1 0.1 1",
+     "1 0.2 0",
+     "1 0.2 1",
+     "1 0.25 1",
+     "1 0.5 0",
+     "1 0.5 0.5",
+     "1 0.6 1",
+     "1 1 0",
+     "1 1 0.3",
+     "1 1 1",
+     "2 2 0",
+     "2.5 0.5 1"
+    ]
+   },
+   "distancemax": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 353,
+    "observed_min": 0,
+    "observed_max": 2000,
+    "distinct_values": [
+     0,
+     1,
+     10,
+     1000,
+     1024,
+     1200,
+     128,
+     14,
+     150,
+     16,
+     1600,
+     2,
+     200,
+     2000,
+     256,
+     32,
+     320,
+     4,
+     450,
+     5,
+     50,
+     500,
+     512,
+     6,
+     64
+    ],
+    "distinct_values_truncated": 31
+   },
+   "distancemin": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 338,
+    "observed_min": 0,
+    "observed_max": 2222,
+    "distinct_values": [
+     0,
+     0.1,
+     0.5,
+     1,
+     1.5,
+     10,
+     16,
+     200,
+     2222,
+     250,
+     256,
+     3,
+     300,
+     32,
+     400,
+     5,
+     64
+    ]
+   },
+   "duration": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 36,
+    "observed_min": 0,
+    "observed_max": 42,
+    "distinct_values": [
+     0,
+     1,
+     42
+    ]
+   },
+   "flags": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 26,
+    "observed_min": 0,
+    "observed_max": 4,
+    "distinct_values": [
+     0,
+     2,
+     4
+    ]
+   },
+   "instantaneous": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 62,
+    "observed_min": 0,
+    "observed_max": 500,
+    "distinct_values": [
+     0,
+     1,
+     100,
+     150,
+     200,
+     5,
+     50,
+     500,
+     8
+    ]
+   },
+   "maxperiodicdelay": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 6,
+    "observed_min": 1,
+    "observed_max": 9999,
+    "distinct_values": [
+     1,
+     9999
+    ]
+   },
+   "maxperiodicduration": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 6,
+    "observed_min": 1,
+    "observed_max": 1,
+    "distinct_values": [
+     1
+    ]
+   },
+   "maxtoemitperperiod": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 4,
+    "observed_min": 8,
+    "observed_max": 32,
+    "distinct_values": [
+     32,
+     8
+    ]
+   },
+   "minperiodicdelay": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 6,
+    "observed_min": 0.5,
+    "observed_max": 9999,
+    "distinct_values": [
+     0.5,
+     1,
+     9999
+    ]
+   },
+   "minperiodicduration": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 6,
+    "observed_min": 0.5,
+    "observed_max": 1,
+    "distinct_values": [
+     0.5,
+     1
+    ]
+   },
+   "origin": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 216,
+    "distinct_values": [
+     "-256 256 0",
+     "-300 0 0",
+     "-70 0 0",
+     "0 -128 0",
+     "0 0 0",
+     "0 100 0",
+     "0 1200 0",
+     "0 250 0",
+     "0 650 0",
+     "0 768 0",
+     "1 1 1",
+     "150 550 0",
+     "150 650 0",
+     "350 750 0",
+     "400 -850 0"
+    ]
+   },
+   "rate": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 349,
+    "observed_min": 0,
+    "observed_max": 25000,
+    "distinct_values": [
+     0,
+     0.2,
+     0.20000001192092895,
+     0.3,
+     0.5,
+     0.6,
+     0.60000002,
+     0.7,
+     1,
+     1.5,
+     10,
+     100,
+     10000,
+     11,
+     13,
+     15,
+     150,
+     15000,
+     2,
+     20,
+     25,
+     250,
+     25000,
+     3,
+     30
+    ],
+    "distinct_values_truncated": 39
+   },
+   "sign": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 18,
+    "distinct_values": [
+     "0 0 0",
+     "0 0 1",
+     "0 1 0",
+     "10 10 10"
+    ]
+   },
+   "speedmax": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 79,
+    "observed_min": -260,
+    "observed_max": 1500,
+    "distinct_values": [
+     -2,
+     -260,
+     0,
+     1,
+     100,
+     1000,
+     1024,
+     1100,
+     120,
+     128,
+     15,
+     1500,
+     2,
+     20,
+     200,
+     250,
+     300,
+     350,
+     500,
+     750,
+     800
+    ]
+   },
+   "speedmin": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 63,
+    "observed_min": -260,
+    "observed_max": 500,
+    "distinct_values": [
+     -260,
+     -6,
+     0,
+     1,
+     10,
+     100,
+     128,
+     150,
+     200,
+     300,
+     40,
+     400,
+     5,
+     50,
+     500
+    ]
+   }
+  }
+ },
+ "initializer:alpharandom": {
+  "_files": 82,
+  "fields": {
+   "exponent": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 17,
+    "observed_min": 2,
+    "observed_max": 2,
+    "distinct_values": [
+     2
+    ]
+   },
+   "max": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 78,
+    "observed_min": 0.1,
+    "observed_max": 1,
+    "distinct_values": [
+     0.1,
+     0.15,
+     0.2,
+     0.3,
+     0.30000001,
+     0.4,
+     0.5,
+     0.60000002,
+     0.69999999,
+     0.7,
+     1
+    ]
+   },
+   "min": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 79,
+    "observed_min": 0.05,
+    "observed_max": 1,
+    "distinct_values": [
+     0.05,
+     0.1,
+     0.15,
+     0.2,
+     0.25,
+     0.30000001,
+     0.40000001,
+     0.5,
+     0.55000001,
+     0.6,
+     0.60000002,
+     1
+    ]
+   }
+  }
+ },
+ "initializer:angularvelocityrandom": {
+  "_files": 58,
+  "fields": {
+   "max": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 45,
+    "distinct_values": [
+     "0 0 -0.05",
+     "0 0 -3.141",
+     "0 0 -30",
+     "0 0 1",
+     "0 0 10",
+     "0 0 2",
+     "0 0 3.141",
+     "1 1 2",
+     "5 5 5"
+    ]
+   },
+   "min": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 45,
+    "distinct_values": [
+     "-1 -1 -2",
+     "-5 -5 -5",
+     "0 0 -0.05",
+     "0 0 -1",
+     "0 0 -10",
+     "0 0 -2",
+     "0 0 -3.141",
+     "0 0 10",
+     "0 0 3.141"
+    ]
+   }
+  }
+ },
+ "initializer:colorlist": {
+  "_files": 1,
+  "fields": {
+   "colors": {
+    "types": [
+     "list"
+    ],
+    "occurrences": 1,
+    "distinct_values": []
+   }
+  }
+ },
+ "initializer:colorrandom": {
+  "_files": 362,
+  "fields": {
+   "exponent": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 22,
+    "observed_min": 1,
+    "observed_max": 1,
+    "distinct_values": [
+     1
+    ]
+   },
+   "max": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 254,
+    "distinct_values": [
+     "0 0 0",
+     "100 255 255",
+     "114 114 114",
+     "117 255 248",
+     "128 210 255",
+     "129 5 5",
+     "130 178 255",
+     "132 140 244",
+     "132 185 255",
+     "134 132 255",
+     "142 166 255",
+     "148 171 255",
+     "149 180 255",
+     "150 255 132",
+     "16 152 0",
+     "161 157 127",
+     "163 223 255",
+     "170 110 40",
+     "174 255 106",
+     "181 207 255",
+     "183 199 255",
+     "184 184 184",
+     "187 196 255",
+     "187 217 255",
+     "191 191 191"
+    ],
+    "distinct_values_truncated": 58
+   },
+   "min": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 361,
+    "distinct_values": [
+     "0 53 255",
+     "110 92 20",
+     "112 186 255",
+     "124 64 255",
+     "125 205 255",
+     "134 255 64",
+     "136 255 67",
+     "136 255 80",
+     "146 146 146",
+     "15 255 0",
+     "162 230 253",
+     "169 141 141",
+     "18 247 255",
+     "181 230 255",
+     "189 194 255",
+     "190 226 255",
+     "193 220 255",
+     "196 255 255",
+     "197 214 255",
+     "198 255 255",
+     "200 248 255",
+     "206 206 206",
+     "216 0 0",
+     "219 230 255",
+     "220 250 255"
+    ],
+    "distinct_values_truncated": 58
+   }
+  }
+ },
+ "initializer:hsvcolorrandom": {
+  "_files": 6,
+  "fields": {
+   "huemax": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 4,
+    "observed_min": 0,
+    "observed_max": 1.0,
+    "distinct_values": [
+     0,
+     0.93267971,
+     1.0
+    ]
+   },
+   "huemin": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 4,
+    "observed_min": 0.0,
+    "observed_max": 0.49150327,
+    "distinct_values": [
+     0,
+     0.0,
+     0.49150327
+    ]
+   },
+   "huesteps": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 3,
+    "observed_min": 6,
+    "observed_max": 12,
+    "distinct_values": [
+     12,
+     6,
+     9
+    ]
+   },
+   "saturationmax": {
+    "types": [
+     "float"
+    ],
+    "occurrences": 2,
+    "observed_min": 0.5,
+    "observed_max": 1.0,
+    "distinct_values": [
+     0.5,
+     1.0
+    ]
+   },
+   "saturationmin": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 3,
+    "observed_min": 1,
+    "observed_max": 1,
+    "distinct_values": [
+     1,
+     1.0
+    ]
+   },
+   "valuemax": {
+    "types": [
+     "float"
+    ],
+    "occurrences": 1,
+    "observed_min": 1.0,
+    "observed_max": 1.0,
+    "distinct_values": [
+     1.0
+    ]
+   },
+   "valuemin": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 4,
+    "observed_min": 1,
+    "observed_max": 1,
+    "distinct_values": [
+     1,
+     1.0
+    ]
+   }
+  }
+ },
+ "initializer:inheritcontrolpointvelocity": {
+  "_files": 1,
+  "fields": {
+   "controlpoint": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 1,
+    "observed_min": 1,
+    "observed_max": 1,
+    "distinct_values": [
+     1
+    ]
+   },
+   "max": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 1,
+    "observed_min": 1,
+    "observed_max": 1,
+    "distinct_values": [
+     1
+    ]
+   },
+   "min": {
+    "types": [
+     "float"
+    ],
+    "occurrences": 1,
+    "observed_min": 0.30000001,
+    "observed_max": 0.30000001,
+    "distinct_values": [
+     0.30000001
+    ]
+   }
+  }
+ },
+ "initializer:lifetimerandom": {
+  "_files": 410,
+  "fields": {
+   "exponent": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 22,
+    "observed_min": 1,
+    "observed_max": 10,
+    "distinct_values": [
+     1,
+     10,
+     2
+    ]
+   },
+   "max": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 410,
+    "observed_min": 0.02,
+    "observed_max": 10000000000000.0,
+    "distinct_values": [
+     0.02,
+     0.1,
+     0.15,
+     0.2,
+     0.3,
+     0.40000001,
+     0.5,
+     0.6,
+     0.60000002,
+     0.69999999,
+     0.7,
+     0.8,
+     1,
+     1.1,
+     1.3,
+     1.5,
+     10,
+     10000000000000.0,
+     15,
+     16,
+     2,
+     2.25,
+     2.5,
+     20,
+     23
+    ],
+    "distinct_values_truncated": 33
+   },
+   "min": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 410,
+    "observed_min": 0.02,
+    "observed_max": 1000000000000.0,
+    "distinct_values": [
+     0.02,
+     0.05,
+     0.1,
+     0.2,
+     0.3,
+     0.30000001,
+     0.4,
+     0.40000001,
+     0.5,
+     0.6,
+     0.60000002,
+     0.7,
+     0.8,
+     0.80000001,
+     0.9,
+     1,
+     1.1,
+     1.3,
+     10,
+     1000000000000.0,
+     11,
+     120,
+     15,
+     2,
+     3
+    ],
+    "distinct_values_truncated": 31
+   }
+  }
+ },
+ "initializer:mapsequencearoundcontrolpoint": {
+  "_files": 8,
+  "fields": {
+   "axis": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 2,
+    "distinct_values": [
+     "0 1 0"
+    ]
+   },
+   "bounds": {
+    "types": [
+     "vec2"
+    ],
+    "occurrences": 3,
+    "distinct_values": [
+     "0 1"
+    ]
+   },
+   "count": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 6,
+    "observed_min": 2.2,
+    "observed_max": 128,
+    "distinct_values": [
+     128,
+     2.2,
+     3.02,
+     5
+    ]
+   },
+   "limitbehavior": {
+    "types": [
+     "string"
+    ],
+    "occurrences": 3,
+    "distinct_values": [
+     "repeat"
+    ]
+   },
+   "speedmax": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 3,
+    "distinct_values": [
+     "0 100 0"
+    ]
+   },
+   "speedmin": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 3,
+    "distinct_values": [
+     "0 10 0",
+     "0 100 0"
+    ]
+   }
+  }
+ },
+ "initializer:mapsequencebetweencontrolpoints": {
+  "_files": 12,
+  "fields": {
+   "arcamount": {
+    "types": [
+     "float"
+    ],
+    "occurrences": 6,
+    "observed_min": 0.1,
+    "observed_max": 0.44,
+    "distinct_values": [
+     0.1,
+     0.44
+    ]
+   },
+   "controlpointend": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 2,
+    "observed_min": 2,
+    "observed_max": 2,
+    "distinct_values": [
+     2
+    ]
+   },
+   "controlpointstart": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 2,
+    "observed_min": 1,
+    "observed_max": 1,
+    "distinct_values": [
+     1
+    ]
+   },
+   "count": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 8,
+    "observed_min": 8,
+    "observed_max": 64,
+    "distinct_values": [
+     10,
+     64,
+     8
+    ]
+   },
+   "flags": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 10,
+    "observed_min": 3,
+    "observed_max": 23,
+    "distinct_values": [
+     15,
+     19,
+     23,
+     3,
+     4,
+     7
+    ]
+   },
+   "limitbehavior": {
+    "types": [
+     "string"
+    ],
+    "occurrences": 4,
+    "distinct_values": [
+     "mirror"
+    ]
+   }
+  }
+ },
+ "initializer:positionoffsetrandom": {
+  "_files": 5,
+  "fields": {
+   "distance": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 5,
+    "observed_min": 100,
+    "observed_max": 200,
+    "distinct_values": [
+     100,
+     150,
+     200
+    ]
+   },
+   "scale": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 4,
+    "observed_min": 0,
+    "observed_max": 0,
+    "distinct_values": [
+     0
+    ]
+   },
+   "timescale": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 4,
+    "observed_min": 5,
+    "observed_max": 10,
+    "distinct_values": [
+     10,
+     5
+    ]
+   }
+  }
+ },
+ "initializer:remapinitialvalue": {
+  "_files": 3,
+  "fields": {
+   "input": {
+    "types": [
+     "string"
+    ],
+    "occurrences": 3,
+    "distinct_values": [
+     "distancetocontrolpoint"
+    ]
+   },
+   "inputcontrolpoint0": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 3,
+    "observed_min": 1,
+    "observed_max": 1,
+    "distinct_values": [
+     1
+    ]
+   },
+   "inputrangemax": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 3,
+    "observed_min": 50,
+    "observed_max": 300,
+    "distinct_values": [
+     300,
+     50
+    ]
+   },
+   "operation": {
+    "types": [
+     "string"
+    ],
+    "occurrences": 2,
+    "distinct_values": [
+     "multiply",
+     "remap"
+    ]
+   },
+   "output": {
+    "types": [
+     "string"
+    ],
+    "occurrences": 1,
+    "distinct_values": [
+     "color"
+    ]
+   },
+   "outputrangemax": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 1,
+    "distinct_values": [
+     "1 0 0"
+    ]
+   },
+   "outputrangemin": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 1,
+    "distinct_values": [
+     "0 0 1"
+    ]
+   }
+  }
+ },
+ "initializer:rotationrandom": {
+  "_files": 114,
+  "fields": {
+   "exponent": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 1,
+    "observed_min": 1,
+    "observed_max": 1,
+    "distinct_values": [
+     1
+    ]
+   },
+   "max": {
+    "types": [
+     "float",
+     "vec3"
+    ],
+    "occurrences": 40,
+    "observed_min": -0.3,
+    "observed_max": -0.3,
+    "distinct_values": [
+     "0 0 -1.6",
+     "0 0 0",
+     "0 0 0.2617993877991494",
+     "0 0 1.7",
+     "0 0 2",
+     "0 0 20",
+     "0 0 3.141",
+     "0 0 6",
+     "0 0 6.283",
+     "0 6.283185307179586 0",
+     "1 0 6.283",
+     "1.0471975511965976 0 6.283185307179586",
+     "1.0471975511965976 1.0471975511965976 6.283185307179586",
+     "6.283 6.283 6.283",
+     -0.3
+    ]
+   },
+   "min": {
+    "types": [
+     "float",
+     "vec3"
+    ],
+    "occurrences": 22,
+    "observed_min": -0.4,
+    "observed_max": -0.4,
+    "distinct_values": [
+     "-1.0471975511965976 -1.0471975511965976 0",
+     "0 0 -0.2617993877991494",
+     "0 0 -1.5",
+     "0 0 0",
+     "0 0 1.4",
+     "0 0 15",
+     "0 0 3.141",
+     "1 0 0",
+     "1.0471975511965976 0 0",
+     -0.4
+    ]
+   }
+  }
+ },
+ "initializer:sizerandom": {
+  "_files": 408,
+  "fields": {
+   "exponent": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 52,
+    "observed_min": 1,
+    "observed_max": 50,
+    "distinct_values": [
+     1,
+     2,
+     3,
+     30,
+     5,
+     50
+    ]
+   },
+   "max": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 408,
+    "observed_min": 0.02,
+    "observed_max": 3000,
+    "distinct_values": [
+     0.02,
+     0.17,
+     0.5,
+     0.69999999,
+     1,
+     10,
+     100,
+     1000,
+     115,
+     12,
+     120,
+     1200,
+     15,
+     150,
+     1500,
+     160,
+     1600,
+     18,
+     180,
+     190,
+     2,
+     20,
+     200,
+     2000,
+     2200
+    ],
+    "distinct_values_truncated": 51
+   },
+   "min": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 408,
+    "observed_min": 0.0099999998,
+    "observed_max": 1500,
+    "distinct_values": [
+     0.0099999998,
+     0.08,
+     0.1,
+     0.5,
+     0.69999999,
+     1,
+     10,
+     100,
+     1000,
+     11,
+     115,
+     12,
+     1200,
+     14,
+     15,
+     150,
+     1500,
+     160,
+     2,
+     20,
+     200,
+     25,
+     250,
+     3,
+     30
+    ],
+    "distinct_values_truncated": 44
+   }
+  }
+ },
+ "initializer:turbulentvelocityrandom": {
+  "_files": 66,
+  "fields": {
+   "audioprocessingbounds": {
+    "types": [
+     "vec2"
+    ],
+    "occurrences": 2,
+    "distinct_values": [
+     "0.8 1"
+    ]
+   },
+   "audioprocessingmode": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 1,
+    "observed_min": 3,
+    "observed_max": 3,
+    "distinct_values": [
+     3
+    ]
+   },
+   "offset": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 37,
+    "observed_min": -0.5,
+    "observed_max": 3,
+    "distinct_values": [
+     -0.1,
+     -0.5,
+     0,
+     3
+    ]
+   },
+   "phasemax": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 17,
+    "observed_min": 0,
+    "observed_max": 1,
+    "distinct_values": [
+     0,
+     0.1,
+     0.10000000149011612,
+     0.5,
+     1
+    ]
+   },
+   "scale": {
+    "types": [
+     "float"
+    ],
+    "occurrences": 64,
+    "observed_min": 0.1,
+    "observed_max": 0.5,
+    "distinct_values": [
+     0.1,
+     0.2,
+     0.3,
+     0.5
+    ]
+   },
+   "speedmax": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 49,
+    "observed_min": 50,
+    "observed_max": 300,
+    "distinct_values": [
+     100,
+     120,
+     250,
+     260,
+     300,
+     50,
+     90
+    ]
+   },
+   "speedmin": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 47,
+    "observed_min": 0,
+    "observed_max": 250,
+    "distinct_values": [
+     0,
+     10,
+     250,
+     35,
+     40
+    ]
+   },
+   "timescale": {
+    "types": [
+     "float"
+    ],
+    "occurrences": 19,
+    "observed_min": 0.2,
+    "observed_max": 0.9,
+    "distinct_values": [
+     0.2,
+     0.30000001,
+     0.5,
+     0.9
+    ]
+   }
+  }
+ },
+ "initializer:velocityrandom": {
+  "_files": 180,
+  "fields": {
+   "exponent": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 1,
+    "observed_min": 1,
+    "observed_max": 1,
+    "distinct_values": [
+     1
+    ]
+   },
+   "max": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 180,
+    "distinct_values": [
+     "-0.1 0 0",
+     "-10 0 0",
+     "-100 -300 0",
+     "-120 10 0",
+     "-20 -250 0",
+     "-3 4 5",
+     "-37 -90 0",
+     "-40 -3500 0",
+     "-5 10 0",
+     "-50 -15 0",
+     "-50 64 0",
+     "0 -100 0",
+     "0 -200 0",
+     "0 -250 0",
+     "0 -30 0",
+     "0 -3000 0",
+     "0 -500 0",
+     "0 -600 0",
+     "0 0 0",
+     "0 0 2000",
+     "0 100 0",
+     "0 120 0",
+     "0 320 0",
+     "0 50 0",
+     "0 600 0"
+    ],
+    "distinct_values_truncated": 53
+   },
+   "min": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 180,
+    "distinct_values": [
+     "-0.1 -0.1 -0.1",
+     "-0.1 0 0",
+     "-1 -1 -1",
+     "-10 -10 0",
+     "-10 -100 0",
+     "-10 -200 0",
+     "-10 -50 0",
+     "-100 -10 0",
+     "-100 -100 0",
+     "-100 0 0",
+     "-1000 2500 0",
+     "-2 2 -2",
+     "-20 -1500 0",
+     "-20 0 0",
+     "-200 -200 0",
+     "-3 2 -5",
+     "-30 -350 0",
+     "-300 -1500 0",
+     "-300 -300 0",
+     "-400 -400 0",
+     "-5 -200 0",
+     "-5 -250 0",
+     "-5 -5 0",
+     "-5 -50 0",
+     "-50 -50 0"
+    ],
+    "distinct_values_truncated": 49
+   }
+  }
+ },
+ "operator:alphachange": {
+  "_files": 13,
+  "fields": {
+   "endtime": {
+    "types": [
+     "float"
+    ],
+    "occurrences": 9,
+    "observed_min": 0.2,
+    "observed_max": 0.8,
+    "distinct_values": [
+     0.2,
+     0.6,
+     0.8
+    ]
+   },
+   "endvalue": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 10,
+    "observed_min": 0,
+    "observed_max": 1,
+    "distinct_values": [
+     0,
+     1
+    ]
+   },
+   "starttime": {
+    "types": [
+     "float"
+    ],
+    "occurrences": 6,
+    "observed_min": 0.1,
+    "observed_max": 0.5,
+    "distinct_values": [
+     0.1,
+     0.5
+    ]
+   },
+   "startvalue": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 10,
+    "observed_min": 0,
+    "observed_max": 10,
+    "distinct_values": [
+     0,
+     1,
+     10
+    ]
+   }
+  }
+ },
+ "operator:alphafade": {
+  "_files": 354,
+  "fields": {
+   "fadeintime": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 304,
+    "observed_min": 0,
+    "observed_max": 0.7,
+    "distinct_values": [
+     0,
+     0.0099999998,
+     0.01,
+     0.05,
+     0.050000001,
+     0.1,
+     0.2,
+     0.3,
+     0.5,
+     0.69999999,
+     0.7
+    ]
+   },
+   "fadeouttime": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 165,
+    "observed_min": 0,
+    "observed_max": 1,
+    "distinct_values": [
+     0,
+     0.0099999998,
+     0.01,
+     0.050000001,
+     0.1,
+     0.2,
+     0.3,
+     0.30000001,
+     0.5,
+     0.69999999,
+     0.7,
+     0.75,
+     0.8,
+     0.80000001,
+     0.89999998,
+     0.9,
+     1
+    ]
+   }
+  }
+ },
+ "operator:angularmovement": {
+  "_files": 61,
+  "fields": {
+   "drag": {
+    "types": [
+     "float"
+    ],
+    "occurrences": 3,
+    "observed_min": 0.1,
+    "observed_max": 0.5,
+    "distinct_values": [
+     0.1,
+     0.5
+    ]
+   },
+   "force": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 60,
+    "distinct_values": [
+     "0 0 -1",
+     "0 0 0",
+     "0 0 10",
+     "0.02 0.01 0.05",
+     "0.02 0.05 0.01",
+     "1 1 1"
+    ]
+   }
+  }
+ },
+ "operator:boids": {
+  "_files": 5,
+  "fields": {
+   "alignmentfactor": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 4,
+    "observed_min": 5,
+    "observed_max": 5,
+    "distinct_values": [
+     5
+    ]
+   },
+   "cohesionfactor": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 5,
+    "observed_min": 4,
+    "observed_max": 5,
+    "distinct_values": [
+     4,
+     5
+    ]
+   },
+   "flags": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 4,
+    "observed_min": 0,
+    "observed_max": 0,
+    "distinct_values": [
+     0
+    ]
+   },
+   "neighborthreshold": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 5,
+    "observed_min": 50,
+    "observed_max": 150,
+    "distinct_values": [
+     150,
+     50
+    ]
+   },
+   "separationfactor": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 5,
+    "observed_min": 0,
+    "observed_max": 25,
+    "distinct_values": [
+     0,
+     25
+    ]
+   }
+  }
+ },
+ "operator:capvelocity": {
+  "_files": 3,
+  "fields": {
+   "blendinend": {
+    "types": [
+     "float"
+    ],
+    "occurrences": 3,
+    "observed_min": 0.2,
+    "observed_max": 0.6,
+    "distinct_values": [
+     0.2,
+     0.6
+    ]
+   },
+   "blendinstart": {
+    "types": [
+     "float"
+    ],
+    "occurrences": 3,
+    "observed_min": 0.2,
+    "observed_max": 0.5,
+    "distinct_values": [
+     0.2,
+     0.5
+    ]
+   },
+   "maxspeed": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 3,
+    "observed_min": 50,
+    "observed_max": 100,
+    "distinct_values": [
+     100,
+     50
+    ]
+   }
+  }
+ },
+ "operator:collisionplane": {
+  "_files": 1,
+  "fields": {
+   "bouncefactor": {
+    "types": [
+     "float"
+    ],
+    "occurrences": 1,
+    "observed_min": 0.69999999,
+    "observed_max": 0.69999999,
+    "distinct_values": [
+     0.69999999
+    ]
+   },
+   "distance": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 1,
+    "observed_min": -200,
+    "observed_max": -200,
+    "distinct_values": [
+     -200
+    ]
+   }
+  }
+ },
+ "operator:collisionquad": {
+  "_files": 1,
+  "fields": {
+   "collisionbehavior": {
+    "types": [
+     "string"
+    ],
+    "occurrences": 1,
+    "distinct_values": [
+     "slide"
+    ]
+   },
+   "origin": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 1,
+    "distinct_values": [
+     "0 -100 0"
+    ]
+   },
+   "size": {
+    "types": [
+     "vec2"
+    ],
+    "occurrences": 1,
+    "distinct_values": [
+     "100 100"
+    ]
+   }
+  }
+ },
+ "operator:collisionsphere": {
+  "_files": 1,
+  "fields": {
+   "collisionbehavior": {
+    "types": [
+     "string"
+    ],
+    "occurrences": 1,
+    "distinct_values": [
+     "slide"
+    ]
+   },
+   "origin": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 1,
+    "distinct_values": [
+     "0 -100 0"
+    ]
+   }
+  }
+ },
+ "operator:colorchange": {
+  "_files": 36,
+  "fields": {
+   "endtime": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 15,
+    "observed_min": 0.6,
+    "observed_max": 2,
+    "distinct_values": [
+     0.6,
+     0.69999999,
+     0.7,
+     0.8,
+     0.80000001,
+     2
+    ]
+   },
+   "endvalue": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 35,
+    "distinct_values": [
+     "0.1450980392156863 0 0",
+     "0.2823529411764706 0.7450980392156863 1",
+     "0.42745098039215684 0.42745098039215684 0.42745098039215684",
+     "0.47843137254901963 0.47843137254901963 0.47843137254901963",
+     "0.7098039215686275 1 0.5725490196078431",
+     "0.7137254901960784 0.7137254901960784 0.7137254901960784",
+     "0.7411764705882353 0.7411764705882353 0.7411764705882353",
+     "1 0 0",
+     "1 0.615686274509804 0",
+     "1 0.7098039215686275 0.24313725490196078",
+     "1 0.8352941176470589 0.5725490196078431",
+     "1 1 1"
+    ]
+   },
+   "starttime": {
+    "types": [
+     "float"
+    ],
+    "occurrences": 11,
+    "observed_min": 0.2,
+    "observed_max": 0.5,
+    "distinct_values": [
+     0.2,
+     0.5
+    ]
+   },
+   "startvalue": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 29,
+    "distinct_values": [
+     "0 0.03137254901960784 1",
+     "0.5137254901960784 0.6549019607843137 1",
+     "0.8509803921568627 0.01568627450980392 0.01568627450980392",
+     "1 0 0",
+     "1 0.49019607843137253 0.49019607843137253",
+     "1 0.5137254901960784 0.5137254901960784",
+     "1 0.7490196078431373 0",
+     "1 0.8901960784313725 0.3333333333333333",
+     "1 1 1"
+    ]
+   }
+  }
+ },
+ "operator:controlpointattract": {
+  "_files": 39,
+  "fields": {
+   "blendinstart": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 1,
+    "observed_min": 0,
+    "observed_max": 0,
+    "distinct_values": [
+     0
+    ]
+   },
+   "controlpoint": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 29,
+    "observed_min": 1,
+    "observed_max": 2,
+    "distinct_values": [
+     1,
+     2
+    ]
+   },
+   "flags": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 1,
+    "observed_min": 0,
+    "observed_max": 0,
+    "distinct_values": [
+     0
+    ]
+   },
+   "origin": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 31,
+    "distinct_values": [
+     "0 0 0"
+    ]
+   },
+   "scale": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 40,
+    "observed_min": -20000,
+    "observed_max": 10000,
+    "distinct_values": [
+     -10000,
+     -1024,
+     -1500,
+     -20000,
+     -2048,
+     -300,
+     -350,
+     -500,
+     -5000,
+     -512,
+     -550,
+     -600,
+     -650,
+     -750,
+     0,
+     1000,
+     10000,
+     1024,
+     1200,
+     200,
+     2000,
+     500
+    ]
+   },
+   "threshold": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 38,
+    "observed_min": 32,
+    "observed_max": 999999,
+    "distinct_values": [
+     100,
+     1000,
+     128,
+     20000,
+     32,
+     50,
+     5000,
+     512,
+     64,
+     96,
+     9999,
+     99999,
+     999999
+    ]
+   }
+  }
+ },
+ "operator:maintaindistancetocontrolpoint": {
+  "_files": 3,
+  "fields": {
+   "variablestrength": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 3,
+    "observed_min": 5,
+    "observed_max": 5,
+    "distinct_values": [
+     5
+    ]
+   }
+  }
+ },
+ "operator:movement": {
+  "_files": 369,
+  "fields": {
+   "drag": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 143,
+    "observed_min": 0,
+    "observed_max": 10,
+    "distinct_values": [
+     0,
+     0.01,
+     0.05,
+     0.1,
+     0.2,
+     0.4,
+     0.5,
+     1,
+     10,
+     2,
+     2.5,
+     3,
+     3.5,
+     4,
+     4.0,
+     5
+    ]
+   },
+   "flags": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 6,
+    "observed_min": 1,
+    "observed_max": 1,
+    "distinct_values": [
+     1
+    ]
+   },
+   "gravity": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 263,
+    "distinct_values": [
+     "0 -1 0",
+     "0 -10 0",
+     "0 -100 0",
+     "0 -1000 0",
+     "0 -150 0",
+     "0 -1500 0",
+     "0 -200 0",
+     "0 -2000 0",
+     "0 -30 0",
+     "0 -3500 0",
+     "0 -40 0",
+     "0 -400 0",
+     "0 -4500 0",
+     "0 -5 0",
+     "0 -50 0",
+     "0 -500 0",
+     "0 -80 0",
+     "0 0 0",
+     "0 0 250",
+     "0 10 0",
+     "0 100 0",
+     "0 150 0",
+     "0 5 0",
+     "0 50 0",
+     "0 500 0"
+    ],
+    "distinct_values_truncated": 27
+   }
+  }
+ },
+ "operator:oscillatealpha": {
+  "_files": 67,
+  "fields": {
+   "blendinend": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 6,
+    "observed_min": 0,
+    "observed_max": 0.6,
+    "distinct_values": [
+     0,
+     0.6
+    ]
+   },
+   "blendinstart": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 6,
+    "observed_min": 0,
+    "observed_max": 0.5,
+    "distinct_values": [
+     0,
+     0.5
+    ]
+   },
+   "frequencymax": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 62,
+    "observed_min": 3,
+    "observed_max": 100,
+    "distinct_values": [
+     100,
+     15,
+     20,
+     25,
+     3,
+     30,
+     4,
+     50,
+     6,
+     7
+    ]
+   },
+   "frequencymin": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 44,
+    "observed_min": 0.5,
+    "observed_max": 30,
+    "distinct_values": [
+     0.5,
+     10,
+     15,
+     2,
+     20,
+     3,
+     30,
+     5
+    ]
+   },
+   "phasemax": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 10,
+    "observed_min": 0.1,
+    "observed_max": 5,
+    "distinct_values": [
+     0.1,
+     5
+    ]
+   },
+   "phasemin": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 1,
+    "observed_min": 0,
+    "observed_max": 0,
+    "distinct_values": [
+     0
+    ]
+   },
+   "scalemax": {
+    "types": [
+     "float"
+    ],
+    "occurrences": 6,
+    "observed_min": 0.8,
+    "observed_max": 0.80000001,
+    "distinct_values": [
+     0.8,
+     0.80000001
+    ]
+   },
+   "scalemin": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 64,
+    "observed_min": 0,
+    "observed_max": 0.7,
+    "distinct_values": [
+     0,
+     0.1,
+     0.2,
+     0.3,
+     0.30000001,
+     0.5,
+     0.6,
+     0.69999999,
+     0.7
+    ]
+   }
+  }
+ },
+ "operator:oscillateposition": {
+  "_files": 25,
+  "fields": {
+   "blendinend": {
+    "types": [
+     "float"
+    ],
+    "occurrences": 2,
+    "observed_min": 0.69999999,
+    "observed_max": 0.69999999,
+    "distinct_values": [
+     0.69999999
+    ]
+   },
+   "blendinstart": {
+    "types": [
+     "float"
+    ],
+    "occurrences": 2,
+    "observed_min": 0.5,
+    "observed_max": 0.5,
+    "distinct_values": [
+     0.5
+    ]
+   },
+   "frequencymax": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 23,
+    "observed_min": 0.6,
+    "observed_max": 25,
+    "distinct_values": [
+     0.6,
+     1,
+     1.0,
+     20,
+     25,
+     3
+    ]
+   },
+   "frequencymin": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 23,
+    "observed_min": 0.1,
+    "observed_max": 10,
+    "distinct_values": [
+     0.1,
+     0.3,
+     0.30000001,
+     0.5,
+     0.8,
+     0.80000001,
+     10,
+     2,
+     5
+    ]
+   },
+   "mask": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 12,
+    "distinct_values": [
+     "1 0.5 0",
+     "75 75 25"
+    ]
+   },
+   "phasemax": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 12,
+    "observed_min": 1,
+    "observed_max": 10,
+    "distinct_values": [
+     1,
+     10
+    ]
+   },
+   "phasemin": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 12,
+    "observed_min": 0,
+    "observed_max": 5,
+    "distinct_values": [
+     0,
+     5
+    ]
+   },
+   "scalemax": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 23,
+    "observed_min": 4,
+    "observed_max": 35,
+    "distinct_values": [
+     10,
+     15,
+     25,
+     35,
+     4,
+     8
+    ]
+   },
+   "scalemin": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 22,
+    "observed_min": 2,
+    "observed_max": 20,
+    "distinct_values": [
+     15,
+     2,
+     20,
+     3,
+     5,
+     8
+    ]
+   }
+  }
+ },
+ "operator:oscillatesize": {
+  "_files": 13,
+  "fields": {
+   "frequencymax": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 6,
+    "observed_min": 4,
+    "observed_max": 25,
+    "distinct_values": [
+     25,
+     4,
+     6
+    ]
+   },
+   "frequencymin": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 9,
+    "observed_min": 2,
+    "observed_max": 10,
+    "distinct_values": [
+     10,
+     2,
+     3,
+     5
+    ]
+   },
+   "scalemax": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 11,
+    "observed_min": 1.1,
+    "observed_max": 2,
+    "distinct_values": [
+     1.1,
+     1.5,
+     2
+    ]
+   },
+   "scalemin": {
+    "types": [
+     "float"
+    ],
+    "occurrences": 11,
+    "observed_min": 0.30000001,
+    "observed_max": 0.9,
+    "distinct_values": [
+     0.30000001,
+     0.60000002,
+     0.89999998,
+     0.9
+    ]
+   }
+  }
+ },
+ "operator:reducemovementnearcontrolpoint": {
+  "_files": 5,
+  "fields": {
+   "controlpoint": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 5,
+    "observed_min": 1,
+    "observed_max": 1,
+    "distinct_values": [
+     1
+    ]
+   },
+   "distanceinner": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 9,
+    "observed_min": 20,
+    "observed_max": 50,
+    "distinct_values": [
+     20,
+     50
+    ]
+   },
+   "distanceouter": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 9,
+    "observed_min": 50,
+    "observed_max": 150,
+    "distinct_values": [
+     150,
+     50
+    ]
+   },
+   "reductioninner": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 9,
+    "observed_min": 10,
+    "observed_max": 1000,
+    "distinct_values": [
+     10,
+     1000
+    ]
+   },
+   "reductionouter": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 1,
+    "observed_min": 0,
+    "observed_max": 0,
+    "distinct_values": [
+     0
+    ]
+   }
+  }
+ },
+ "operator:remapvalue": {
+  "_files": 11,
+  "fields": {
+   "blendinend": {
+    "types": [
+     "float"
+    ],
+    "occurrences": 2,
+    "observed_min": 0.60000002,
+    "observed_max": 0.60000002,
+    "distinct_values": [
+     0.60000002
+    ]
+   },
+   "blendinstart": {
+    "types": [
+     "float"
+    ],
+    "occurrences": 2,
+    "observed_min": 0.5,
+    "observed_max": 0.5,
+    "distinct_values": [
+     0.5
+    ]
+   },
+   "flags": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 6,
+    "observed_min": 0,
+    "observed_max": 3,
+    "distinct_values": [
+     0,
+     3
+    ]
+   },
+   "input": {
+    "types": [
+     "string"
+    ],
+    "occurrences": 3,
+    "distinct_values": [
+     "distancetocontrolpoint",
+     "particlesystemtime"
+    ]
+   },
+   "inputcontrolpoint0": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 1,
+    "observed_min": 1,
+    "observed_max": 1,
+    "distinct_values": [
+     1
+    ]
+   },
+   "inputrangemax": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 1,
+    "observed_min": 200,
+    "observed_max": 200,
+    "distinct_values": [
+     200
+    ]
+   },
+   "inputrangemin": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 1,
+    "observed_min": 150,
+    "observed_max": 150,
+    "distinct_values": [
+     150
+    ]
+   },
+   "operation": {
+    "types": [
+     "string"
+    ],
+    "occurrences": 9,
+    "distinct_values": [
+     "remap"
+    ]
+   },
+   "output": {
+    "types": [
+     "string"
+    ],
+    "occurrences": 15,
+    "distinct_values": [
+     "color",
+     "opacity",
+     "speed",
+     "velocity"
+    ]
+   },
+   "outputrangemax": {
+    "types": [
+     "int",
+     "vec3"
+    ],
+    "occurrences": 13,
+    "observed_min": 7,
+    "observed_max": 7,
+    "distinct_values": [
+     "0 0 1",
+     "100 -1200 1",
+     "100 -500 0",
+     "200 -1000 0",
+     "200 -2400 1",
+     7
+    ]
+   },
+   "outputrangemin": {
+    "types": [
+     "int",
+     "vec3"
+    ],
+    "occurrences": 13,
+    "observed_min": -5,
+    "observed_max": -5,
+    "distinct_values": [
+     "-100 -200 0",
+     "-100 -50 0",
+     "-200 -100 0",
+     "-200 -400 0",
+     "1 0 0",
+     -5
+    ]
+   },
+   "transformfunction": {
+    "types": [
+     "string"
+    ],
+    "occurrences": 14,
+    "distinct_values": [
+     "fbmnoise",
+     "simplexnoise",
+     "sine"
+    ]
+   },
+   "transforminputscale": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 14,
+    "observed_min": 6,
+    "observed_max": 10,
+    "distinct_values": [
+     10,
+     6,
+     8
+    ]
+   }
+  }
+ },
+ "operator:sizechange": {
+  "_files": 138,
+  "fields": {
+   "endtime": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 36,
+    "observed_min": 0.05,
+    "observed_max": 1,
+    "distinct_values": [
+     0.05,
+     0.2,
+     0.5,
+     0.75,
+     1
+    ]
+   },
+   "endvalue": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 93,
+    "observed_min": 0,
+    "observed_max": 5,
+    "distinct_values": [
+     0,
+     0.05,
+     0.050000001,
+     0.2,
+     0.5,
+     1,
+     1.15,
+     1.5,
+     2,
+     5
+    ]
+   },
+   "starttime": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 71,
+    "observed_min": 0,
+    "observed_max": 0.8,
+    "distinct_values": [
+     0,
+     0.2,
+     0.5,
+     0.69999999,
+     0.7,
+     0.8
+    ]
+   },
+   "startvalue": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 71,
+    "observed_min": 0,
+    "observed_max": 2,
+    "distinct_values": [
+     0,
+     0.1,
+     0.2,
+     0.3,
+     0.5,
+     1,
+     2
+    ]
+   }
+  }
+ },
+ "operator:turbulence": {
+  "_files": 39,
+  "fields": {
+   "audioprocessingfrequencyend": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 1,
+    "observed_min": 2,
+    "observed_max": 2,
+    "distinct_values": [
+     2
+    ]
+   },
+   "audioprocessingmode": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 1,
+    "observed_min": 3,
+    "observed_max": 3,
+    "distinct_values": [
+     3
+    ]
+   },
+   "blendinend": {
+    "types": [
+     "float"
+    ],
+    "occurrences": 4,
+    "observed_min": 0.5,
+    "observed_max": 0.5,
+    "distinct_values": [
+     0.5
+    ]
+   },
+   "blendinstart": {
+    "types": [
+     "float"
+    ],
+    "occurrences": 4,
+    "observed_min": 0.1,
+    "observed_max": 0.1,
+    "distinct_values": [
+     0.1
+    ]
+   },
+   "blendoutend": {
+    "types": [
+     "float"
+    ],
+    "occurrences": 4,
+    "observed_min": 0.69999999,
+    "observed_max": 0.69999999,
+    "distinct_values": [
+     0.69999999
+    ]
+   },
+   "blendoutstart": {
+    "types": [
+     "float"
+    ],
+    "occurrences": 4,
+    "observed_min": 0.60000002,
+    "observed_max": 0.60000002,
+    "distinct_values": [
+     0.60000002
+    ]
+   },
+   "mask": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 21,
+    "distinct_values": [
+     "0.5 0.5 0",
+     "1 0 0",
+     "1 0.4 0",
+     "1 1 0",
+     "1 1 1"
+    ]
+   },
+   "phasemax": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 13,
+    "observed_min": 5,
+    "observed_max": 50,
+    "distinct_values": [
+     5,
+     50
+    ]
+   },
+   "phasemin": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 4,
+    "observed_min": 5,
+    "observed_max": 5,
+    "distinct_values": [
+     5
+    ]
+   },
+   "scale": {
+    "types": [
+     "float"
+    ],
+    "occurrences": 24,
+    "observed_min": 0.0019999999,
+    "observed_max": 0.6,
+    "distinct_values": [
+     0.0019999999,
+     0.001999999977648258,
+     0.002,
+     0.0025,
+     0.004999999977648258,
+     0.005300000002607703,
+     0.01,
+     0.1,
+     0.6
+    ]
+   },
+   "speedmax": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 38,
+    "observed_min": 15,
+    "observed_max": 1500,
+    "distinct_values": [
+     1000,
+     120,
+     15,
+     150,
+     1500,
+     170,
+     25,
+     250,
+     30,
+     50
+    ]
+   },
+   "speedmin": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 34,
+    "observed_min": 5,
+    "observed_max": 1000,
+    "distinct_values": [
+     10,
+     100,
+     1000,
+     200,
+     25,
+     250,
+     30,
+     5,
+     500,
+     85
+    ]
+   },
+   "timescale": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 20,
+    "observed_min": -50,
+    "observed_max": 10000,
+    "distinct_values": [
+     -50,
+     1,
+     10,
+     10000,
+     5,
+     50,
+     8
+    ]
+   }
+  }
+ },
+ "operator:vortex": {
+  "_files": 12,
+  "fields": {
+   "audioprocessingbounds": {
+    "types": [
+     "vec2"
+    ],
+    "occurrences": 1,
+    "distinct_values": [
+     "0.5 1"
+    ]
+   },
+   "audioprocessingmode": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 1,
+    "observed_min": 3,
+    "observed_max": 3,
+    "distinct_values": [
+     3
+    ]
+   },
+   "axis": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 4,
+    "distinct_values": [
+     "0 0 1",
+     "0 1 0"
+    ]
+   },
+   "distanceinner": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 9,
+    "observed_min": 0,
+    "observed_max": 32,
+    "distinct_values": [
+     0,
+     32
+    ]
+   },
+   "distanceouter": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 9,
+    "observed_min": 0,
+    "observed_max": 7000,
+    "distinct_values": [
+     0,
+     1,
+     128,
+     32,
+     50,
+     7000
+    ]
+   },
+   "flags": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 4,
+    "observed_min": 0,
+    "observed_max": 1,
+    "distinct_values": [
+     0,
+     1
+    ]
+   },
+   "offset": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 1,
+    "distinct_values": [
+     "0 0 0"
+    ]
+   },
+   "speedinner": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 10,
+    "observed_min": -250,
+    "observed_max": 300,
+    "distinct_values": [
+     -250,
+     0,
+     100,
+     128,
+     300
+    ]
+   },
+   "speedouter": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 7,
+    "observed_min": -250,
+    "observed_max": 3000,
+    "distinct_values": [
+     -250,
+     0,
+     1200,
+     2500,
+     3000,
+     5
+    ]
+   }
+  }
+ },
+ "operator:vortex_v2": {
+  "_files": 5,
+  "fields": {
+   "controlpoint": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 2,
+    "observed_min": 1,
+    "observed_max": 1,
+    "distinct_values": [
+     1
+    ]
+   },
+   "distanceinner": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 4,
+    "observed_min": 0,
+    "observed_max": 0,
+    "distinct_values": [
+     0
+    ]
+   },
+   "distanceouter": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 4,
+    "observed_min": 1,
+    "observed_max": 32,
+    "distinct_values": [
+     1,
+     32
+    ]
+   },
+   "flags": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 4,
+    "observed_min": 2,
+    "observed_max": 3,
+    "distinct_values": [
+     2,
+     3
+    ]
+   },
+   "ringpulldistance": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 2,
+    "observed_min": 250,
+    "observed_max": 250,
+    "distinct_values": [
+     250
+    ]
+   },
+   "ringradius": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 2,
+    "observed_min": 256,
+    "observed_max": 256,
+    "distinct_values": [
+     256
+    ]
+   },
+   "ringwidth": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 2,
+    "observed_min": 5,
+    "observed_max": 5,
+    "distinct_values": [
+     5
+    ]
+   },
+   "speedinner": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 4,
+    "observed_min": 0,
+    "observed_max": 0,
+    "distinct_values": [
+     0
+    ]
+   },
+   "speedouter": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 4,
+    "observed_min": 2500,
+    "observed_max": 3000,
+    "distinct_values": [
+     2500,
+     3000
+    ]
+   }
+  }
+ },
+ "renderer:rope": {
+  "_files": 28,
+  "fields": {
+   "flags": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 2,
+    "observed_min": 1,
+    "observed_max": 1,
+    "distinct_values": [
+     1
+    ]
+   },
+   "subdivision": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 16,
+    "observed_min": 0,
+    "observed_max": 100,
+    "distinct_values": [
+     0,
+     100,
+     3
+    ]
+   },
+   "uvscale": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 8,
+    "observed_min": 0.5,
+    "observed_max": 2,
+    "distinct_values": [
+     0.5,
+     2
+    ]
+   },
+   "uvscrolling": {
+    "types": [
+     "bool"
+    ],
+    "occurrences": 8,
+    "distinct_values": [
+     true
+    ]
+   },
+   "uvsmoothing": {
+    "types": [
+     "bool"
+    ],
+    "occurrences": 12,
+    "distinct_values": [
+     false
+    ]
+   }
+  }
+ },
+ "renderer:ropetrail": {
+  "_files": 25,
+  "fields": {
+   "fadealpha": {
+    "types": [
+     "bool"
+    ],
+    "occurrences": 4,
+    "distinct_values": [
+     true
+    ]
+   },
+   "length": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 25,
+    "observed_min": 0.2,
+    "observed_max": 30,
+    "distinct_values": [
+     0.2,
+     0.4,
+     0.40000001,
+     0.5,
+     1,
+     1.5,
+     3,
+     30
+    ]
+   },
+   "segments": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 5,
+    "observed_min": 6,
+    "observed_max": 10,
+    "distinct_values": [
+     10,
+     6
+    ]
+   }
+  }
+ },
+ "renderer:sprite": {
+  "_files": 284,
+  "fields": {
+   "axis": {
+    "types": [
+     "vec3"
+    ],
+    "occurrences": 12,
+    "distinct_values": [
+     "0 0 0",
+     "0 0 1",
+     "1 1 1"
+    ]
+   },
+   "flags": {
+    "types": [
+     "int"
+    ],
+    "occurrences": 7,
+    "observed_min": 1,
+    "observed_max": 1,
+    "distinct_values": [
+     1
+    ]
+   },
+   "orientation": {
+    "types": [
+     "string"
+    ],
+    "occurrences": 15,
+    "distinct_values": [
+     "fixed",
+     "screen",
+     "upright"
+    ]
+   }
+  }
+ },
+ "renderer:spritetrail": {
+  "_files": 60,
+  "fields": {
+   "length": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 44,
+    "observed_min": 0.0020000001,
+    "observed_max": 1,
+    "distinct_values": [
+     0.0020000001,
+     0.003,
+     0.005,
+     0.007000000074505806,
+     0.0070000001,
+     0.0099999998,
+     0.01,
+     0.01000000074505806,
+     0.02,
+     0.03,
+     0.05,
+     0.1,
+     1
+    ]
+   },
+   "maxlength": {
+    "types": [
+     "float",
+     "int"
+    ],
+    "occurrences": 41,
+    "observed_min": 1,
+    "observed_max": 100,
+    "distinct_values": [
+     1,
+     1.5,
+     100,
+     2,
+     20,
+     3,
+     5,
+     6
+    ]
+   },
+   "minlength": {
+    "types": [
+     "NoneType",
+     "int"
+    ],
+    "occurrences": 14,
+    "observed_min": 1,
+    "observed_max": 1,
+    "distinct_values": [
+     1,
+     null
+    ]
+   }
+  }
+ }
+}
