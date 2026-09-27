@@ -55,6 +55,8 @@ private struct RenderTextureFrame {
     let uvAxisY: SIMD2<Float>
     /// Text only: the glyphs' coverage, which WE's `font` material samples; nil for colour glyphs.
     var coverage: MTLTexture? = nil
+    /// Text only: the box the glyphs cover, u0, v0, u1, v1 (`SceneTextInk`).
+    var ink: SIMD4<Float>? = nil
 }
 
 final class SceneMetalRenderer: NSObject, MTKViewDelegate {
@@ -950,6 +952,15 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                  motion: motion)
             draw.placement = layerPlacement(entry, size: textFrames[layerIndex]?.baseSize ?? layerBaseSize(entry),
                                             musicSyncLevel: draw.musicSyncLevel, motion: motion, camera: effectFrame.camera)
+            // Text through a camera covers its glyphs only, as WE's glyph quads do (`SceneTextInk`);
+            // effects may draw beyond them.
+            if let placement = draw.placement, entry.layer.weEffects.isEmpty, let text = textFrames[layerIndex],
+               let ink = text.frame.ink {
+                draw.placement = SceneTextInk.crop(placement, to: ink)
+                textFrames[layerIndex]?.frame = RenderTextureFrame(
+                    texture: text.frame.texture, duration: text.frame.duration, uvOrigin: SIMD2(ink.x, ink.y),
+                    uvAxisX: SIMD2(ink.z - ink.x, 0), uvAxisY: SIMD2(0, ink.w - ink.y), coverage: text.frame.coverage, ink: ink)
+            }
             if visible { draws[layerIndex] = draw }
             // A puppet's mesh draws its image before anything reads it: its effects, its own draw.
             if let puppet = entry.layer.puppet { drawPuppet(puppet, entry, frame: effectFrame, commandBuffer: commandBuffer) }
@@ -2323,7 +2334,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             coverage = nil
         }
         let entry = (RenderTextureFrame(texture: texture, duration: .greatestFiniteMagnitude,
-                                        uvOrigin: .zero, uvAxisX: SIMD2(1, 0), uvAxisY: SIMD2(0, 1), coverage: coverage),
+                                        uvOrigin: .zero, uvAxisX: SIMD2(1, 0), uvAxisY: SIMD2(0, 1), coverage: coverage,
+                                        ink: text.effects == nil ? SceneTextInk.bounds(of: image) : nil),
                      layout.boxSize)
         // Strings change every second for clocks; the LRU keeps the live ones and drops the rest.
         textFrameCache.insert(entry, for: cacheKey)
