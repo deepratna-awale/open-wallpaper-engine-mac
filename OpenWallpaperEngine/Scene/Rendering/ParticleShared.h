@@ -162,7 +162,8 @@ constant uint lStatic = 1, lFollow = 2, lSpawn = 3, lDeath = 4;
 // Particles that died aging since the system started (a rope's scrolling UVs).
 constant uint cCount = 0, cEmit = 1, cTotal = 2, cSerial = 3, cDied = 4, cTrailTotal = 6;
 constant uint cSerialBase = 7;
-constant uint cDispatch = 8, cMaterialDraw = 12, cFallbackDraw = 16, cEventTotal = 20;
+// The material draw's arguments are indexed (five words), the built-in draw's are not (four).
+constant uint cDispatch = 8, cMaterialDraw = 12, cFallbackDraw = 24, cEventTotal = 20;
 // Particles that died aging this step, the live particles after this step's spawns, the serial the
 // current emission period started at.
 constant uint cDead = 21, cLive = 22, cPeriodSerial = 23;

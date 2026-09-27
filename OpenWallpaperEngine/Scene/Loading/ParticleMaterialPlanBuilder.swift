@@ -196,7 +196,8 @@ struct ParticleMaterialPlanBuilder {
         if let geometry {
             let emulation = try GeometryShaderEmulation.make(geometry, combos: combos, compiler: translator.compiler)
             vertex = try synthetic("shaders/\(shader)+geom.vert", emulation.vertexText)
-            stageGeometry = .emulated(vertexCount: try emulation.vertexCountPerInstance(combos: combos))
+            stageGeometry = .emulated(vertexCount: try emulation.vertexCountPerInstance(combos: combos),
+                                      restartsStrips: emulation.restartsStrips)
         } else {
             vertex = try synthetic("shaders/\(shader)+quads.vert", ParticleQuadExpansion.rewrite(declarations.text, format: format))
             stageGeometry = .expandedQuads

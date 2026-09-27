@@ -11,7 +11,7 @@ final class ParticleGPUSimulator {
         let inputs: ParticleFrameInputs
         /// What the step writes records for.
         let kind: ParticleGPUDrawKind
-        /// The material draw's vertices per instance (ignored for the built-in draw).
+        /// The material draw's indices per instance (ignored for the built-in draw).
         var materialVertexCount = 0
         /// A rope material's uniform block: the step writes `g_RenderVar0` (the point count) at
         /// this byte offset.

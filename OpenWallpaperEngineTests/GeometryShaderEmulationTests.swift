@@ -66,6 +66,26 @@ final class GeometryShaderEmulationTests: XCTestCase {
         XCTAssertEqual(try emulation.maxVertexCount(combos: [:]), 4)
     }
 
+    func testWEGeometryStagesDrawEachStripVertexOnce() throws {
+        for shader in ["genericparticle", "genericropeparticle", "flatpoint"] {
+            let (_, emulation) = try translate(shader, combos: ["GS_ENABLED": 1])
+            XCTAssertFalse(emulation.restartsStrips, "\(shader) never restarts its strip")
+            XCTAssertFalse(emulation.vertexText.contains("owe_gs_restartStrip"), shader)
+        }
+    }
+
+    func testStripIndicesKeepTheStripWinding() {
+        let quad: [UInt32] = [0, 1, 2, 2, 1, 3]
+        XCTAssertEqual(GeometryShaderEmulation.stripIndices(vertices: 4), quad)
+        let six: [UInt32] = [0, 1, 2, 2, 1, 3, 2, 3, 4, 4, 3, 5]
+        XCTAssertEqual(GeometryShaderEmulation.stripIndices(vertices: 6), six)
+        let list: [UInt32] = [0, 1, 2, 3, 4, 5]
+        XCTAssertEqual(GeometryShaderEmulation.listIndices(count: 6), list)
+        XCTAssertEqual(ParticleMaterialPlan.Stage.Geometry.expandedQuads.indices, quad, "a quad is a 4-vertex strip")
+        XCTAssertEqual(ParticleMaterialPlan.Stage.Geometry.emulated(vertexCount: 12).indices, six)
+        XCTAssertEqual(ParticleMaterialPlan.Stage.Geometry.emulated(vertexCount: 6, restartsStrips: true).indices, list)
+    }
+
     func testFlatPointGeometryCompiles() throws {
         let (variant, _) = try translate("flatpoint", combos: ["GS_ENABLED": 1])
         try assertBuildsPipeline(variant)
@@ -111,6 +131,7 @@ final class GeometryShaderEmulationTests: XCTestCase {
         """
         let emulation = try GeometryShaderEmulation.combine(vertex: vertex, geometry: geometry, path: "custom.geom")
         XCTAssertEqual(try emulation.vertexCountPerInstance(combos: [:]), 18)
+        XCTAssertTrue(emulation.restartsStrips, "drawn one vertex per list entry")
         let path = "shaders/custom+geom.vert"
         let fragmentText = "varying vec4 v_Color;\nvoid main() { gl_FragColor = v_Color; }"
         let loader = ShaderSourceLoader(readFile: { name in

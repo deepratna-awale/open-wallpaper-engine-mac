@@ -8,12 +8,13 @@ final class ParticleGPUSystem {
     enum Control {
         static let count = 0, emitted = 1, total = 2, serial = 3, died = 4, boidsTotal = 5, trailTotal = 6
         static let dispatchOffset = 8 * 4
-        /// `MTLDrawPrimitivesIndirectArguments` for the material draw and the built-in draw.
+        /// `MTLDrawIndexedPrimitivesIndirectArguments` for the material draw (five words).
         static let materialDrawOffset = 12 * 4
-        static let fallbackDrawOffset = 16 * 4
+        /// `MTLDrawPrimitivesIndirectArguments` for the built-in draw.
+        static let fallbackDrawOffset = 24 * 4
         /// Events an instanced system's parent made this step (`ParticleInstances.metal`).
         static let eventTotal = 20
-        static let words = 24
+        static let words = 28
     }
 
     let parameters: MTLBuffer

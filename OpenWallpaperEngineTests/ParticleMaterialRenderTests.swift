@@ -192,7 +192,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
     /// `stripquads.geom` emits `size / 20` separate 20-unit quads (one strip each, 20 units apart)
     /// under a bound of 16 vertices.
     private func stripQuads(size: Float, cull: (MTLCullMode, MTLWinding)? = nil) throws -> Pixels {
-        let plan = try self.plan("materials/stripquads.json", renderer: "sprite", keeping: .emulated(vertexCount: 3 * 14))
+        let plan = try self.plan("materials/stripquads.json", renderer: "sprite", keeping: .emulated(vertexCount: 3 * 14, restartsStrips: true))
         return try render(plan, particles: [particle(at: SIMD2(48, 128), size: size)], cull: cull)
     }
 

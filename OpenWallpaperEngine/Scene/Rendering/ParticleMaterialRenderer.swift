@@ -36,6 +36,9 @@ final class ParticleMaterialRenderer {
 
     /// Per system, render thread only.
     private var systems: [ObjectIdentifier: SystemState] = [:]
+    /// Each stage geometry's index list (`ParticleMaterialPlan.Stage.Geometry.indices`), built
+    /// once. Render thread only.
+    private var indexBuffers: [ParticleMaterialPlan.Stage.Geometry: (buffer: MTLBuffer, type: MTLIndexType)] = [:]
 
     private final class SystemState {
         weak var owner: ParticleSystemRuntime?
@@ -185,11 +188,32 @@ final class ParticleMaterialRenderer {
         return Simulated(format: plan.format, vertexCount: Self.vertexCount(ready.stage), renderVar: renderVar)
     }
 
+    /// Indices each instance of `stage`'s draw lists.
     private static func vertexCount(_ stage: ParticleMaterialPlan.Stage) -> Int {
         switch stage.geometry {
-        case .emulated(let count): return count
+        case .emulated(let count, _): return count
         case .expandedQuads: return ParticleQuadExpansion.verticesPerInstance
         }
+    }
+
+    /// `geometry`'s index list, 16-bit when its vertex ids fit.
+    private func indexBuffer(for geometry: ParticleMaterialPlan.Stage.Geometry) -> (buffer: MTLBuffer, type: MTLIndexType)? {
+        if let known = indexBuffers[geometry] { return known }
+        let indices = geometry.indices
+        let buffer: MTLBuffer?
+        let type: MTLIndexType
+        if (indices.max() ?? 0) <= UInt32(UInt16.max) {
+            let narrow = indices.map { UInt16($0) }
+            buffer = device.makeBuffer(bytes: narrow, length: max(narrow.count, 1) * 2, options: .storageModeShared)
+            type = .uint16
+        } else {
+            buffer = device.makeBuffer(bytes: indices, length: max(indices.count, 1) * 4, options: .storageModeShared)
+            type = .uint32
+        }
+        guard let buffer else { return nil }
+        buffer.label = "Particle material indices"
+        indexBuffers[geometry] = (buffer, type)
+        return (buffer, type)
     }
 
     /// `stage`'s uniforms. The planar reflection's draw has its own (`reflected`): a program writes
@@ -358,14 +382,17 @@ final class ParticleMaterialRenderer {
                 }
             }
         }
+        guard let indices = indexBuffer(for: stage.geometry) else { return }
         switch prepared.records {
         case .cpu(_, let count):
-            encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: Self.vertexCount(stage), instanceCount: count)
+            encoder.drawIndexedPrimitives(type: .triangle, indexCount: Self.vertexCount(stage), indexType: indices.type,
+                                          indexBuffer: indices.buffer, indexBufferOffset: 0, instanceCount: count)
         case .gpu:
-            // `ParticleGPUSimulator` wrote the arguments: the stage's vertex count and the records.
+            // `ParticleGPUSimulator` wrote the arguments: the stage's index count and the records.
             guard let control = system.gpu?.control else { return }
-            encoder.drawPrimitives(type: .triangle, indirectBuffer: control,
-                                   indirectBufferOffset: ParticleGPUSystem.Control.materialDrawOffset)
+            encoder.drawIndexedPrimitives(type: .triangle, indexType: indices.type, indexBuffer: indices.buffer,
+                                          indexBufferOffset: 0, indirectBuffer: control,
+                                          indirectBufferOffset: ParticleGPUSystem.Control.materialDrawOffset)
         }
         drawsEncoded += 1
     }

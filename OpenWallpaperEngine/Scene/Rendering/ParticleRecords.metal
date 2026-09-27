@@ -22,10 +22,12 @@ kernel void particleFinish(device uint *control [[buffer(0)]],
     case kFallbackRopeTrail: fallback = control[cTrailTotal] * subdivision; break;
     default: break;
     }
+    // Index count, instances, first index, base vertex, base instance.
     control[cMaterialDraw] = f.indices.y;
     control[cMaterialDraw + 1] = material;
     control[cMaterialDraw + 2] = 0;
     control[cMaterialDraw + 3] = 0;
+    control[cMaterialDraw + 4] = 0;
     control[cFallbackDraw] = 4;
     control[cFallbackDraw + 1] = fallback;
     control[cFallbackDraw + 2] = 0;

@@ -23,12 +23,19 @@ enum GeometryShaderEmulationError: Error, CustomStringConvertible {
 /// a new one). The input primitive is a point (`IN[1]`), which is what particles feed; WE's
 /// `[input:triangles]` form is reported as unsupported.
 ///
-/// The emulation draws every input point as one instance of `3 × (N − 2)` vertices, a triangle
+/// The emulation draws every input point as one instance of `3 × (N − 2)` indices, a triangle
 /// list covering every triangle the strip could hold. Each vertex runs the original vertex stage
 /// (renamed, its varyings turned into globals), fills `IN[0]` from them, then runs the geometry
-/// stage, which only records the three strip vertices its triangle needs. Triangles past the
-/// emitted vertices, or spanning a `RestartStrip`, collapse to a point and rasterise nothing. So
-/// any geometry stage with a fixed vertex bound works, whatever it emits, including workshop ones.
+/// stage, which only records the strip vertex it stands for. So any geometry stage with a fixed
+/// vertex bound works, whatever it emits, including workshop ones.
+///
+/// - A stage without `RestartStrip` (WE's own) is one strip: vertex `k` of `N` is strip vertex `k`,
+///   and the indices (`stripIndices`) list each triangle's three, so the stage runs once per strip
+///   vertex. A vertex past the emitted ones repeats the last, so the triangles past the strip have
+///   no area and rasterise nothing.
+/// - A stage with `RestartStrip` draws one vertex per list entry (`listIndices`); each records the
+///   three strip vertices its triangle needs, and a triangle past the emitted vertices, or spanning
+///   a restart, collapses to a point.
 struct GeometryShaderEmulation {
     /// The vertex stage and the geometry stage as one WE-dialect vertex shader, ready for
     /// `ShaderSourceLoader`: includes are inlined, so it reads no other file.
@@ -37,6 +44,8 @@ struct GeometryShaderEmulation {
     let maxVertexCountExpression: String
     /// Numeric `#define`s of the sources, the fallback for names in the expression.
     let defines: [String: Int]
+    /// The geometry stage calls `OUT.RestartStrip()`: it is drawn one vertex per list entry.
+    let restartsStrips: Bool
 
     /// Prefix of every name the emulation introduces.
     static let prefix = "owe_gs_"
@@ -50,9 +59,23 @@ struct GeometryShaderEmulation {
         return count
     }
 
-    /// Vertices each instance draws: every triangle the strip can hold, as a list.
+    /// Indices each instance draws: every triangle the strip can hold, as a list.
     func vertexCountPerInstance(combos: [String: Int]) throws -> Int {
         3 * (try maxVertexCount(combos: combos) - 2)
+    }
+
+    /// The index list of a strip of `vertices` vertices: triangle `t` is `(t, t+1, t+2)`, its first
+    /// two swapped when `t` is odd, keeping the winding.
+    static func stripIndices(vertices: Int) -> [UInt32] {
+        (0..<max(vertices - 2, 0)).flatMap { (t: Int) -> [UInt32] in
+            let first = UInt32(t)
+            return t % 2 == 0 ? [first, first + 1, first + 2] : [first + 1, first, first + 2]
+        }
+    }
+
+    /// The index list of a stage that restarts strips: every list entry its own vertex.
+    static func listIndices(count: Int) -> [UInt32] {
+        (0..<UInt32(max(count, 0))).map { $0 }
     }
 
     // MARK: - Building
@@ -72,6 +95,7 @@ struct GeometryShaderEmulation {
             throw GeometryShaderEmulationError.missingMaxVertexCount(path)
         }
         let expression = String(geometry[expressionRange]).trimmingCharacters(in: .whitespaces)
+        let restartsStrips = restartPattern.firstMatch(in: geometry, range: NSRange(geometry.startIndex..., in: geometry)) != nil
 
         let geometryLines = topLevelLines(geometry)
         let inputs = geometryLines.compactMap { $0.declaration }.filter { $0.direction == "in" }
@@ -107,7 +131,7 @@ struct GeometryShaderEmulation {
         interface += "struct PS_INPUT {\n" + conditional(geometryLines, direction: "out") { declaration in
             "\t\(declaration.type) \(declaration.name)\(declaration.array);"
         } + "\tvec4 owe_Position;\n};\n"
-        interface += emitSupport
+        interface += restartsStrips ? listEmitSupport : stripEmitSupport
 
         // Geometry stage: interface declarations go (they are the structs now), `gl_Position`
         // members get a legal name, and emission goes through the capture functions.
@@ -134,7 +158,7 @@ struct GeometryShaderEmulation {
         let copyOut = conditional(geometryLines, direction: "out") { declaration in
             "\t\(declaration.name) = \(prefix)vertex.\(declaration.name);"
         }
-        let main = """
+        let main = restartsStrips ? """
         void main() {
         \t\(prefix)vertexMain();
         \(fill)\t\(prefix)first = gl_VertexID / 3;
@@ -150,11 +174,21 @@ struct GeometryShaderEmulation {
         }
 
         """
+        : """
+        void main() {
+        \t\(prefix)vertexMain();
+        \(fill)\t\(prefix)first = gl_VertexID;
+        \t\(prefix)geometryMain();
+        \tPS_INPUT \(prefix)vertex = \(prefix)captured;
+        \(copyOut)\tgl_Position = \(prefix)emitted > 0 ? \(prefix)vertex.owe_Position : vec4(0.0, 0.0, 0.0, 0.0);
+        }
+
+        """
 
         let text = [stageGlobals, vertexText, "// (geometry emulation) interface", interface, geometryText,
                     "// (geometry emulation) entry point", main].joined(separator: "\n")
         return GeometryShaderEmulation(vertexText: text, maxVertexCountExpression: expression,
-                                       defines: numericDefines(in: vertex + "\n" + geometry))
+                                       defines: numericDefines(in: vertex + "\n" + geometry), restartsStrips: restartsStrips)
     }
 
     /// A shader's vertex and geometry stage texts, includes inlined; a header both include is
@@ -225,10 +259,25 @@ struct GeometryShaderEmulation {
 
     // MARK: - Emission capture
 
+    /// Globals and the function `OUT.Append` becomes, for a stage that never restarts its strip.
+    /// `first` is this vertex's strip index; `captured` ends as that strip vertex, or the last one
+    /// emitted when the stage emits fewer.
+    private static let stripEmitSupport = """
+    VS_OUTPUT IN[1];
+    int \(prefix)first = 0;
+    int \(prefix)emitted = 0;
+    PS_INPUT \(prefix)captured;
+    void \(prefix)emit(PS_INPUT v) {
+    \tif (\(prefix)emitted <= \(prefix)first) { \(prefix)captured = v; }
+    \t\(prefix)emitted = \(prefix)emitted + 1;
+    }
+
+    """
+
     /// Globals and functions `OUT.Append` / `OUT.RestartStrip` become. `first` is the strip index
     /// of this vertex's triangle; `strip0`/`strip2` tell whether its first and last vertex are in
     /// the same strip; `parity` is the triangle's position within its strip.
-    private static let emitSupport = """
+    private static let listEmitSupport = """
     VS_OUTPUT IN[1];
     int \(prefix)first = 0;
     int \(prefix)emitted = 0;

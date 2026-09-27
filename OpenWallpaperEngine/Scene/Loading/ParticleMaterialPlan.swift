@@ -7,13 +7,24 @@ struct ParticleMaterialPlan {
     /// One way to run the material's shader. The renderer uses the first stage whose pipeline
     /// builds; when none does, the system keeps the built-in particle draw.
     struct Stage {
-        enum Geometry: Equatable {
+        enum Geometry: Hashable {
             /// The `.geom` stage folded into the vertex stage (`GeometryShaderEmulation`): one
-            /// instance per record, `vertexCount` vertices each, as a triangle list.
-            case emulated(vertexCount: Int)
+            /// instance per record, `vertexCount` indices each, as a triangle list. Over the strip's
+            /// vertices, or one vertex per index when the stage restarts strips.
+            case emulated(vertexCount: Int, restartsStrips: Bool = false)
             /// WE's no-geometry-shader stream (`GS_ENABLED` 0): each record expanded on the GPU to
             /// four vertices, drawn as two triangles.
             case expandedQuads
+
+            /// The triangle list each instance draws, over the vertex ids the stage reads
+            /// (`gl_VertexID`): the strip's triangles, each strip vertex once.
+            var indices: [UInt32] {
+                switch self {
+                case .emulated(let count, true): return GeometryShaderEmulation.listIndices(count: count)
+                case .emulated(let count, false): return GeometryShaderEmulation.stripIndices(vertices: count / 3 + 2)
+                case .expandedQuads: return GeometryShaderEmulation.stripIndices(vertices: 4)
+                }
+            }
         }
 
         let geometry: Geometry

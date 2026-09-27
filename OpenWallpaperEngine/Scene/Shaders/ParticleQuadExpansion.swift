@@ -7,10 +7,12 @@ import Foundation
 /// corner: `genericparticle` packs the corner into `a_TexCoordVec4.xy` (rotation z and size in
 /// `.zw`) and moves rotation xy to `a_TexCoordC2`; `genericropeparticle` reads the corner from
 /// `a_TexCoordC3` (thin) or `a_TexCoordC4` (thick). Here those attributes become globals the
-/// stage fills on entry from the instance's record and a corner picked by `gl_VertexID`, so each
-/// instance draws `verticesPerInstance` vertices as two triangles and no vertex is stored twice.
+/// stage fills on entry from the instance's record and the corner `gl_VertexID` names, so each
+/// instance draws `verticesPerInstance` indices as two triangles over its four corners and no
+/// vertex is stored or run twice.
 enum ParticleQuadExpansion {
-    /// Two triangles over the corners `(0,0) (0,1) (1,0) (1,1)`.
+    /// Two triangles over the corners `(0,0) (0,1) (1,0) (1,1)`
+    /// (`ParticleMaterialPlan.Stage.Geometry.indices`).
     static let verticesPerInstance = 6
 
     /// The sprite record's `rotationSize` slot, read whole before the corner replaces `.xy`.
@@ -42,8 +44,7 @@ enum ParticleQuadExpansion {
         }
         let corner = """
         vec2 owe_quadCorner() {
-        \tint index = gl_VertexID - (gl_VertexID / 6) * 6;
-        \tint corner = index < 3 ? index : (index == 3 ? 2 : (index == 4 ? 1 : 3));
+        \tint corner = gl_VertexID;
         \treturn vec2(float(corner / 2), float(corner - (corner / 2) * 2));
         }
 
