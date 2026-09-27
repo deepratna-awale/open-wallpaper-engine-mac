@@ -1,0 +1,4 @@
+{"camera":{"center":"960 540 -1","eye":"960 540 0","up":"0 1 0"},
+ "general":{"clearcolor":"0 0 0","orthogonalprojection":{"width":1920,"height":1080}},
+ "objects":[{"id":2,"name":"far green","model":"models/gt_green_cube.mdl","origin":"1020 540 -1500","scale":"150 150 150"},
+{"id":1,"name":"near red","model":"models/gt_red_cube.mdl","origin":"900 540 -500","scale":"150 150 150"}]}

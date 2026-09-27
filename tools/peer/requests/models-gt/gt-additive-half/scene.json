@@ -1,0 +1,3 @@
+{"camera":{"center":"0 1 0","eye":"6 4 10","up":"0 1 0"},
+ "general":{"clearcolor":"0 0 0"},
+ "objects":[{"id":1,"name":"rig","model":"models/gt_additive.mdl","origin":"0 0 0","animationlayers":[{"animation":1,"id":1,"name":"base","rate":1,"blend":1,"visible":true},{"animation":2,"id":2,"name":"additive","rate":1,"blend":0.5,"visible":true,"additive":true}]}]}
