@@ -242,6 +242,26 @@ final class NowPlayingAdapterTests: XCTestCase {
         XCTAssertEqual(backend(26, 0), .adapter)
     }
 
+    /// The shipped script compiles under the system perl: a mistake in it would only show as a
+    /// wallpaper that never gets a media event.
+    func testTheAdapterScriptCompilesUnderTheSystemPerl() throws {
+        let script = try XCTUnwrap(Bundle.main.url(forResource: NowPlayingBackend.script.name,
+                                                   withExtension: NowPlayingBackend.script.extension))
+        let process = Process()
+        process.executableURL = PerlNowPlayingAdapterProcess.perl
+        process.arguments = ["-c", script.path]
+        process.environment = ["PATH": "/usr/bin:/bin"]
+        let errors = Pipe()
+        process.standardError = errors
+        process.standardOutput = Pipe()
+        try process.run()
+        process.waitUntilExit()
+        let message: String = String(decoding: errors.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
+        let status: Int32 = process.terminationStatus
+        XCTAssertEqual(status, 0, message)
+        XCTAssertTrue(message.contains("syntax OK"), message)
+    }
+
     func testTheAppShipsTheAdapterScript() {
         let version = OperatingSystemVersion(majorVersion: 15, minorVersion: 4, patchVersion: 0)
         XCTAssertNotNil(Bundle.main.url(forResource: NowPlayingBackend.script.name, withExtension: NowPlayingBackend.script.extension))

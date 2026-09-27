@@ -50,8 +50,70 @@ my @KEYS = map { string("kMRMediaRemoteNowPlayingInfo$_") }
 my $ARTWORK = string('kMRMediaRemoteNowPlayingInfoArtworkData');
 my $IS_PLAYING = string('isPlaying');
 
+# The artwork. Most players (Music among them) don't put the image in the now-playing item; its
+# metadata only says one is available, and MediaRemote sends the image to a client that asks for
+# it at a size: a now-playing controller whose playback-queue request names one. One controller
+# runs per item; once loaded, its response's queue holds the item with its artwork. Without these
+# classes the session is sent without artwork.
+my $ARTWORK_SIZE = 600; # MRPlaybackQueueRequest's defaultArtworkWidth and defaultArtworkHeight
+my $artworkRequests = 1;
+for my $class (qw(MRNowPlayingController MRNowPlayingControllerConfiguration MRPlaybackQueueRequest MRDestination)) {
+    if (!present($bundle->classNamed_($class))) {
+        print STDERR "MediaRemote has no $class; now-playing artwork is only read when the player includes it\n";
+        $artworkRequests = 0;
+        last;
+    }
+    no strict 'refs';
+    @{"${class}::ISA"} = ('PerlObjCBridge');
+}
+my ($artworkController, $artworkItem) = (undef, '');
+# The item has artwork that hasn't loaded yet, so the session is read again on the next tick.
+my $artworkPending = 0;
+
+sub identifier {
+    my ($item) = @_;
+    my $identifier = $item->identifier;
+    return present($identifier) ? $identifier->UTF8String : '';
+}
+
+# The item's artwork from a controller that requests it, or undef while it loads or has none.
+sub requestedArtwork {
+    my ($item) = @_;
+    return undef unless $artworkRequests;
+    my $metadata = $item->metadata;
+    return undef unless present($metadata) && $metadata->artworkAvailable;
+    my $id = identifier($item);
+    if ($id ne $artworkItem || !present($artworkController)) {
+        $artworkController->endLoadingUpdates if present($artworkController);
+        my $request = MRPlaybackQueueRequest->defaultPlaybackQueueRequest;
+        $request->setArtworkWidth_($ARTWORK_SIZE);
+        $request->setArtworkHeight_($ARTWORK_SIZE);
+        my $configuration = MRNowPlayingControllerConfiguration->alloc->initWithDestination_(MRDestination->localDestination);
+        $configuration->setPlaybackQueueRequest_($request);
+        $configuration->setRequestPlaybackQueue_(1);
+        $artworkController = MRNowPlayingController->alloc->initWithConfiguration_($configuration);
+        $artworkController->beginLoadingUpdates;
+        $artworkItem = $id;
+    }
+    $artworkPending = 1;
+    my $response = $artworkController->response;
+    my $queue = present($response) && $response->respondsToSelector_('playbackQueue') ? $response->playbackQueue : undef;
+    my $items = present($queue) ? $queue->contentItems : undef;
+    return undef unless present($items);
+    for my $index (0 .. $items->count - 1) {
+        my $queued = $items->objectAtIndex_($index);
+        next unless identifier($queued) eq $id;
+        my $artwork = $queued->artwork;
+        my $data = present($artwork) ? $artwork->imageData : undef;
+        $artworkPending = 0 if present($data);
+        return $data;
+    }
+    return undef;
+}
+
 # The session as one line (without the "S "), or undef when it can't be read.
 sub session {
+    $artworkPending = 0;
     my $out = NSMutableDictionary->dictionary;
     my $item = MRNowPlayingRequest->localNowPlayingItem;
     if (present($item)) {
@@ -65,6 +127,10 @@ sub session {
         if (!present($out->objectForKey_($ARTWORK)) && $item->respondsToSelector_('artwork')) {
             my $artwork = $item->artwork;
             my $data = present($artwork) ? $artwork->imageData : undef;
+            $out->setObject_forKey_($data, $ARTWORK) if present($data);
+        }
+        if (!present($out->objectForKey_($ARTWORK))) {
+            my $data = requestedArtwork($item);
             $out->setObject_forKey_($data, $ARTWORK) if present($data);
         }
         $out->setObject_forKey_(NSNumber->numberWithBool_(MRNowPlayingRequest->localIsPlaying ? 1 : 0), $IS_PLAYING);
@@ -105,7 +171,8 @@ for my $name (qw(kMRMediaRemoteNowPlayingInfoDidChangeNotification
 }
 
 # MediaRemote posts those notifications on the queue it is given; the main queue runs in the run
-# loop below. Without notifications the session is read once a second instead.
+# loop below. Without notifications the session is read once a second instead, and so it is while
+# the item's artwork loads (no notification says when it has).
 my $registered = 0;
 my $service = MRMediaRemoteServiceClient->sharedServiceClient;
 my $client = present($service) ? $service->notificationClient : undef;
@@ -128,5 +195,5 @@ while (1) {
         exit 0 unless sysread(STDIN, $buffer, 4096);
     }
     exit 0 if getppid() != $parent;
-    emit() unless $registered;
+    emit() if !$registered || $artworkPending;
 }
