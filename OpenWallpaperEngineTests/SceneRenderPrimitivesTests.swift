@@ -212,6 +212,56 @@ final class SceneRenderPrimitivesTests: XCTestCase {
         XCTAssertEqual(cache.value(for: "c"), 3)
     }
 
+    /// A seconds clock never reuses its old strings: the byte cap keeps the cache near its budget
+    /// instead of 128 full rasters.
+    func testLRUEvictsOldEntriesPastItsByteBudget() {
+        var cache = SceneLRUCache<String, Int>(capacity: 128, costLimit: 100)
+        for second in 0..<60 {
+            cache.beginGeneration()
+            cache.insert(second, for: "12:00:\(second)", cost: 30)
+        }
+        let count: Int = cache.count
+        let total: Int = cache.totalCost
+        XCTAssertEqual(count, 3)
+        XCTAssertEqual(total, 90)
+        XCTAssertEqual(cache.value(for: "12:00:59"), 59)
+        XCTAssertEqual(cache.value(for: "12:00:57"), 57)
+        XCTAssertNil(cache.value(for: "12:00:56"))
+    }
+
+    /// What the current frame draws stays even over the budget, so a frame never rasterises its own
+    /// strings twice; the cap applies again to what the next frame doesn't use.
+    func testLRUKeepsTheCurrentGenerationPastItsByteBudget() {
+        var cache = SceneLRUCache<String, Int>(capacity: 128, costLimit: 100)
+        cache.beginGeneration()
+        cache.insert(1, for: "a", cost: 80)
+        cache.insert(2, for: "b", cost: 80)
+        let pinnedCount: Int = cache.count
+        XCTAssertEqual(pinnedCount, 2)
+        cache.beginGeneration()
+        XCTAssertEqual(cache.value(for: "b"), 2)
+        cache.insert(3, for: "c", cost: 10)
+        XCTAssertNil(cache.value(for: "a"), "a was not drawn this frame")
+        let total: Int = cache.totalCost
+        XCTAssertEqual(total, 90)
+    }
+
+    /// Re-inserting a key replaces its cost; trimming and clearing keep the total right.
+    func testLRUCostAccounting() {
+        var cache = SceneLRUCache<String, Int>(capacity: 10, costLimit: 1_000)
+        cache.insert(1, for: "a", cost: 40)
+        cache.insert(2, for: "a", cost: 10)
+        cache.insert(3, for: "b", cost: 20)
+        let replaced: Int = cache.totalCost
+        XCTAssertEqual(replaced, 30)
+        cache.trim(to: 1)
+        let trimmed: Int = cache.totalCost
+        XCTAssertEqual(trimmed, 20)
+        cache.removeAll()
+        let cleared: Int = cache.totalCost
+        XCTAssertEqual(cleared, 0)
+    }
+
     func testTextRasterScaleIsRetainedWhileScaleAnimatesDown() {
         var retained: Float?
         var scales = Set<Float>()

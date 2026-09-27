@@ -316,7 +316,14 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var sceneRenderTargetSize = SIMD2<Int>.zero
     /// Render-target pixels per scene unit this frame (see `SceneRenderResolution`).
     private var renderPixelsPerUnit: Float = 1
-    private var textFrameCache = SceneLRUCache<String, (frame: RenderTextureFrame, baseSize: SIMD2<Float>)>(capacity: 128)
+    /// Rendered text, by string and style. Capped at 128 entries and 32 MB of rasters not drawn this
+    /// frame: a clock with seconds never reuses its old strings, and at 128 entries of ~1.5 MB (a
+    /// 1000x300 px raster plus its coverage) it held ~190 MB, 300 MB or more on Retina/5K. 32 MB
+    /// still keeps 20 such rasters (and the full 128 small labels) for scripts that cycle or toggle
+    /// strings; every string a frame draws stays regardless (`beginGeneration`).
+    private var textFrameCache = SceneLRUCache<String, (frame: RenderTextureFrame, baseSize: SIMD2<Float>)>(
+        capacity: 128, costLimit: SceneMetalRenderer.textCacheByteBudget)
+    static let textCacheByteBudget = 32 << 20
     /// The finest raster scale each text layer has needed, so an animated scale doesn't
     /// re-rasterise at every step (see `SceneTextRasterScale.retained`).
     private var textRasterScales: [String: Float] = [:]
@@ -924,6 +931,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let frameSignpost = OWESignpost.begin(OWESignpost.render, "frame")
         WallpaperServices.shared.beginFrame(wallpaper: wallpaperKey)
         renderTargetPool.endFrame()
+        textFrameCache.beginGeneration()
         defer {
             WallpaperServices.shared.endFrame()
             frameSignpost.end()
@@ -2885,7 +2893,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                         textCenter: layout.boxCenter),
                      layout.boxSize)
         // Strings change every second for clocks; the LRU keeps the live ones and drops the rest.
-        textFrameCache.insert(entry, for: cacheKey)
+        textFrameCache.insert(entry, for: cacheKey,
+                              cost: texture.allocatedSize + (coverage?.allocatedSize ?? 0))
         return entry
     }
 
