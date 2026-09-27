@@ -49,7 +49,7 @@ Where WE authors nothing, we use WE's own default and cite where it comes from.
 | `SceneInspectorView` — `[COMBO]` with a `material` key | not shown | a checkbox, or a picker with the authored options in authored order; the choice is stored under `combo_<NAME>` and applied by `SceneEffectPlanBuilder.comboOverrides` | fixed |
 | `SceneInspectorView` — combos with `"type":"imageblending"` (`BLENDMODE`) and no `options` | not shown | WE's editor list (`wallpaperui.exe` 0x140160040): 33 modes in its order and groups, §7.2 | fixed (`WEImageBlendModes`); an image layer's own `colorBlendMode` gets the same picker |
 | `SceneInspectorView` — a combo's `require` (for example `RIMLIGHTING` needs `LIGHTING=1`) | — | WE hides a combo whose requirements don't hold | fixed |
-| Labels | `ui_editor_properties_x` turned into words | WE's `locale/ui_en-us.json` (`WallpaperEngineLabels`), when an install is configured; the words are the fallback | fixed |
+| Labels | `ui_editor_properties_x` turned into words | WE's `locale/ui_*.json`, bundled in `we-assets/locale` (`WallpaperEngineLabels`: the user's language over English); the words are the fallback | fixed |
 
 ## 2. project.json properties (sidebar) — fixed
 

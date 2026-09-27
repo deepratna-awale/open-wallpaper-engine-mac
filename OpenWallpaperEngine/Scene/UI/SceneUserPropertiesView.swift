@@ -2,11 +2,11 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 /// Wallpaper Engine authors often put a localization key in a property's `text` field rather than
-/// a label. The translations live inside Wallpaper Engine's compiled binaries, so the key is turned
-/// into readable words here instead of being shown raw.
+/// a label. WE's own translation (`WallpaperEngineLabels`, from the bundled locale files) is used;
+/// a key it doesn't know is turned into readable words instead of being shown raw.
 private func sceneUserPropertyTitle(_ raw: String, labels: WallpaperEngineLabels = WallpaperEngineLabels()) -> String {
     let trimmed = raw.trimmingCharacters(in: .whitespaces)
-    // WE's own translation of a localisation key, when a WE install is configured.
+    // WE's own translation of a localisation key.
     if let translated = labels.translation(trimmed) { return translated }
     // Authors write these keys inconsistently — ui_browse_ vs ui_browser_, property vs properties,
     // and stray hyphens — so the prefix is matched loosely rather than from a fixed list.

@@ -43,14 +43,9 @@ final class WEImageBlendModesTests: XCTestCase {
         }
     }
 
-    /// The labels are WE's own keys, and the English text is WE's (`locale/ui_en-us.json` of a local
-    /// install; skipped without one).
+    /// The labels are WE's own keys, and the English text is WE's (`locale/ui_en-us.json`, bundled).
     func testLabelsAreWEsLocalisationKeysAndText() throws {
-        let install = URL(fileURLWithPath: ProcessInfo.processInfo.environment["OWE_WE_INSTALL"]
-            ?? "/Volumes/980Pro/Crossover/bottles/Steam Bottle/drive_c/Program Files (x86)/Steam/steamapps/common/wallpaper_engine")
-        try XCTSkipUnless(FileManager.default.fileExists(atPath: install.appending(path: "locale/ui_en-us.json").path),
-                          "no local WE install")
-        let labels = WallpaperEngineLabels.load(assets: install.appending(path: "assets"))
+        let labels = WallpaperEngineLabels.load(assets: try XCTUnwrap(WallpaperEngineAssets.bundled), languages: ["en"])
         for mode in WEImageBlendModes.all {
             XCTAssertEqual(labels.translation(mode.label), mode.english, mode.label)
         }
