@@ -30,9 +30,9 @@ The scripts are `setup.ps1` (copies the generated projects into WE as `mg_*` and
 1. WE's "pause when an app is maximized" rule. Two maximized windows were open on the primary monitor, so WE showed the plain Windows desktop.
 2. The MG4 flagged models leaving WE's renderer stuck (see below).
 
-- **MG4: root-motion flags.** With **any** of the six clip-flag bits set (0x00800 … 0x10000), WE 2.8.0.42 **silently refuses to load the model**. `config.json` switches to the project, but the screen keeps the previous wallpaper even after 20 s, and nothing is logged. Each project differs from the working `0x00000` by exactly one byte of `gt_rootmotion.mdl` (offset 0x710, 00?10 for 0x01000). Loading several flagged models in a row left the renderer black until WE was restarted (`rootmotion_isolation.log` tests each variant after a clean restart). So there is no axis mapping to observe: WE does not accept these flags.
+- **MG4: root-motion flags.** With **any** of the six clip-flag bits set (0x00800 ... 0x10000), WE 2.8.0.42 **silently refuses to load the model**. `config.json` switches to the project, but the screen keeps the previous wallpaper even after 20 s, and nothing is logged. Each project differs from the working `0x00000` by exactly one byte of `gt_rootmotion.mdl` (offset 0x710, 00->10 for 0x01000). Loading several flagged models in a row left the renderer black until WE was restarted (`rootmotion_isolation.log` tests each variant after a clean restart). So there is no axis mapping to observe: WE does not accept these flags.
 - **MG6: ortho depth.** The pixel at (960,540), 2 s after load, is **(253,0,0), red, in both `near-first` and `far-first`**. WE's orthographic 2D frame **depth-tests models**, and draw order doesn't matter. Ours (last-drawn) is wrong. Stills: `MG6_ortho_*_t2.png`.
-- **MG6: collisionmodel particles and depth test.** Orange particle density inside the sphere's screen area relative to outside it, over 1.5–5 s:
+- **MG6: collisionmodel particles and depth test.** Orange particle density inside the sphere's screen area relative to outside it, over 1.5-5 s:
 
 | Variant | Ratio |
 |---|---|
