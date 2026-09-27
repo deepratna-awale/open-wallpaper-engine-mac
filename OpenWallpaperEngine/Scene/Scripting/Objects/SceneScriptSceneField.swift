@@ -16,9 +16,17 @@ enum SceneScriptSceneField: String, CaseIterable {
     /// `bloomhdrstrength`), and WE recomputes the bloom's constants whenever the scene changes
     /// (0x140184020).
     case bloomhdrstrength, bloomhdrthreshold, bloomhdrfeather, bloomhdrscatter, bloomhdriterations
+    /// The distance and height fog (`SceneFogSettings`). WE registers them in the scene's property
+    /// table with the other `general` settings (0x14019a312…, beside `skylightcolor`), each with the
+    /// fog's writer 0x140186440 as its change handler, so a script's write moves `g_Fog*` at once.
+    /// scenescript64.dll resolves `thisScene` members by name through that table (it holds no
+    /// member names), so they are members although `IScene` doesn't declare them.
+    case fogdistance, fogheight, fogdistancecolor, fogheightcolor
+    case fogdistancestart, fogdistanceend, fogdistancestartdensity, fogdistanceenddensity
+    case fogheightstart, fogheightend, fogheightstartdensity, fogheightenddensity
 
     enum Layout {
-        static let stride = 40  // 40 used
+        static let stride = 56  // 56 used
         /// Dirty flags: one for the settings, one for the camera transforms.
         static let settingsDirty = 0
         static let cameraDirty = 1
@@ -27,8 +35,10 @@ enum SceneScriptSceneField: String, CaseIterable {
 
     var type: SceneScriptObjectField.ValueType {
         switch self {
-        case .bloom, .clearenabled, .camerafade, .camerashake, .cameraparallax: return .bool
-        case .clearcolor, .ambientcolor, .skylightcolor, .cameraEye, .cameraCenter, .cameraUp: return .vec3
+        case .bloom, .clearenabled, .camerafade, .camerashake, .cameraparallax, .fogdistance, .fogheight: return .bool
+        case .clearcolor, .ambientcolor, .skylightcolor, .cameraEye, .cameraCenter, .cameraUp, .fogdistancecolor,
+             .fogheightcolor:
+            return .vec3
         default: return .number
         }
     }
@@ -80,6 +90,13 @@ enum SceneScriptSceneField: String, CaseIterable {
         case .bloomhdrfeather: return [SceneGeneralDefaults.bloomHDRFeather]
         case .bloomhdrscatter: return [SceneGeneralDefaults.bloomHDRScatter]
         case .bloomhdriterations: return [Float(SceneGeneralDefaults.bloomHDRIterations)]
+        case .fogdistancecolor, .fogheightcolor: return Array(repeating: 0, count: 3)
+        case .fogdistancestart: return [SceneFogDefaults.distanceStart]
+        case .fogdistanceend: return [SceneFogDefaults.distanceEnd]
+        case .fogheightstart: return [SceneFogDefaults.heightStart]
+        case .fogheightend: return [SceneFogDefaults.heightEnd]
+        case .fogdistancestartdensity, .fogheightstartdensity: return [SceneFogDefaults.startDensity]
+        case .fogdistanceenddensity, .fogheightenddensity: return [SceneFogDefaults.endDensity]
         default: return Array(repeating: 0, count: components)
         }
     }

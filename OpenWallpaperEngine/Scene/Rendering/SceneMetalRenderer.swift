@@ -147,6 +147,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     var onPlaybackStopped: (() -> Void)?
     /// The paused clock has eased to a stop.
     var hasStoppedPlayback: Bool { clock.hasStopped }
+    /// A script's fog on/off switch was reported (`frameLighting`).
+    private var loggedFogToggle = false
+
     /// Advances the audio spectrum by one frame at a playback rate: the app's capture (tests feed
     /// their own).
     var audioSpectrumFrame: (Double) -> AudioSpectrumSnapshot = {
@@ -1402,7 +1405,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// visibility, the scripts' scene colours and the user's shadows setting.
     private func frameLighting(eye: SIMD3<Float>, forward: SIMD3<Float>, shake: SIMD2<Float>) -> SceneFrameLighting {
         let scene = scripts.state.scene
-        return SceneFrameLighting.frame(lighting, input: SceneFrameLightingInput(
+        var frame = SceneFrameLighting.frame(lighting, input: SceneFrameLightingInput(
+
             local: { [unowned self] id in self.liveLocal(id) ?? self.transforms.nodes[id]?.local },
             parentWorld: { [unowned self] id in self.transforms.parentWorld(of: id) { self.liveLocal($0) } },
             isVisible: { [unowned self] id in self.scripts.isVisible(id) },
@@ -1415,7 +1419,15 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             shadows: renderSettings.shadows != .disabled, shadowQuality: renderSettings.shadows.level,
             orthographic: !isPerspective, shadowAtlasExtent: shadowPass?.atlas.extent ?? .zero, cameraShake: shake,
             eyePosition: eye, viewForward: forward))
+        frame.fog = frame.fog.live(number: { [unowned self] in self.sceneSetting($0) }, color: { scene.vector3($0) })
+        if !loggedFogToggle, frame.fog.distance != lighting.settings.fog.distance || frame.fog.height != lighting.settings.fog.height {
+            loggedFogToggle = true
+            OWELog.error(.scene, "A script turned the scene's fog on or off: the materials keep the fog combos they were built with, so only its colours, ranges and densities follow the script")
+        }
+        return frame
+
     }
+
 
     /// This frame's `_rt_shadowAtlas` (docs/models-plan.md §2.10): the lighting's shadow maps
     /// drawn with the visible model objects that cast, before the scene pass reads them, or the
