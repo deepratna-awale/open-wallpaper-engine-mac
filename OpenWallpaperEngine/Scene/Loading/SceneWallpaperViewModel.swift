@@ -960,9 +960,14 @@ class SceneWallpaperViewModel: ObservableObject {
         var built = object
         let planner = SceneScriptModelPlanBuilder(materials: materials, wallpaperName: wallpaperDir.lastPathComponent)
         let geometry = SceneScriptModelGeometry(store: modelData, token: token)
-        // `replaceData` re-creates the model from its new shapes (`SceneScriptModelGeometry.replacement`).
-        geometry.replan = { [weak geometry] data in
-            geometry.flatMap { planner.plan(data, geometry: $0, objectName: object.name) }
+        // `replaceData` re-creates the model from its new shapes, on the script's thread
+        // (`SceneScriptModelGeometry.dataReplaced`). The planner reads this model's assets and
+        // caches, which the scene lock owns, so it plans under it as `createLayer` does.
+        geometry.replan = { [weak self, weak geometry] data in
+            guard let self, let geometry else { return nil }
+            self.sceneLock.lock()
+            defer { self.sceneLock.unlock() }
+            return planner.plan(data, geometry: geometry, objectName: object.name)
         }
         built.plan = planner.plan(data, geometry: geometry, objectName: object.name)
         return built
