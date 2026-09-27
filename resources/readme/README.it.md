@@ -26,7 +26,60 @@ Questo progetto si basa sul lavoro di:
 
 Distribuito con licenza [GPL-3.0](../../LICENSE), come il progetto originale.
 
-## Cosa supporta la versione 0.8.1
+## Cosa supporta la versione 0.9.0
+
+### Rendering delle scene
+- **Gli shader originali di Wallpaper Engine**: livelli, effetti e materiali ora vengono disegnati con gli shader originali di ogni sfondo, tradotti in Metal, compresi gli effetti creati dagli autori del Workshop.
+- Livelli di composizione, a schermo intero e a tinta unita, livelli che campionano altri livelli, tutte le 33 modalità di fusione e altre maschere degli effetti.
+- **Impaginazione fedele del testo**: il testo viene dimensionato, allineato e posizionato come in Wallpaper Engine, con effetti di contorno, sfocatura e ombra esterna per i font.
+- **Timeline**: le animazioni con keyframe e delle texture seguono le regole di Wallpaper Engine per la riproduzione singola, in loop e a specchio.
+- Tabelle di ricerca dei colori, la correzione colore di Wallpaper Engine e le opzioni di filtro immagine e colore nelle proprietà di uno sfondo.
+- Immagini con **Puppet Warp** mosse dalle proprie animazioni, con fisica delle ossa (molle, gravità, limiti) e oggetti agganciati alle ossa.
+
+### 3D e illuminazione
+- **Modelli 3D** con skinning, livelli di animazione, morph target e root motion.
+- Videocamere di scena in prospettiva con percorsi, dissolvenze e vibrazione; i livelli 2D si collocano in profondità.
+- **Luci di scena** con cookie di luce, ombre, riflessi planari, nebbia per distanza e altezza e luci volumetriche.
+- **HDR**: le scene HDR vengono renderizzate con il bloom HDR di Wallpaper Engine, e la qualità "Ultra (Display HDR)" produce EDR sugli schermi in grado di mostrarlo.
+
+### Particelle
+- **Particelle sulla GPU**: ogni sistema di particelle è simulato sulla GPU, in 3D, con punti di controllo 3D.
+- Sistemi figli, compresi quelli attivati dalle particelle del sistema padre; raffiche di emissione, ritardi ed emissione periodica; emissione dall’immagine di un livello.
+- Collisioni, anche con le ossa di un modello, risposta all’audio e rotazione su tutti gli assi.
+- Impostazioni delle particelle collegate alle proprietà utente di uno sfondo.
+
+### SceneScript e contenuti multimediali
+- Un **runtime di SceneScript** completo: moduli, il modello a oggetti scena/livello/effetto/materiale, eventi di animazione, `localStorage` e rilevamento del cursore, con gli script di ogni sfondo in un thread dedicato.
+- Gli script possono creare livelli, sistemi di particelle e suoni, spostare la nebbia, controllare il bloom e mettere in posa marionette e modelli.
+- **In riproduzione**: gli sfondi di tipo scena e web ricevono il brano corrente e lo stato di riproduzione (macOS 15.4 o versioni successive).
+- Gli sfondi web ricevono le proprie proprietà utente e l’audio in tempo reale.
+
+### Audio
+- Lo spettro audio viene calcolato come lo calcola Wallpaper Engine, in stereo.
+- I **livelli audio** vengono riprodotti sull’orologio della scena, con **audio spaziale** posizionato come in Wallpaper Engine.
+
+### Schermi e riproduzione
+- **Pausa per schermo** o **Pausa su tutti**, con le regole di riproduzione valutate per ogni schermo, compresa la regola di Wallpaper Engine per le finestre ingrandite.
+- Proprietà utente per schermo, con "Sincronizza le proprietà tra gli schermi".
+- Uno sfondo mostrato su più schermi viene renderizzato una sola volta e presentato su ciascuno.
+- Nuove impostazioni di qualità: Risoluzione di rendering, Risoluzione texture, dettaglio della scena adattato allo schermo, riflessi, ombre ed effetti volumetrici.
+- **Riavvio sicuro**: uno sfondo che ha bloccato o fatto chiudere inaspettatamente l’app viene saltato all’avvio successivo e segnalato nella libreria.
+
+### Workshop e libreria
+- I filtri del Workshop di Wallpaper Engine: Mostra solo, un filtro per risoluzione, generi combinati con E/O e tag su ogni scheda.
+- Gli sfondi installati mostrano i propri tag del Workshop e si possono filtrare in base a essi; gli elementi che sono solo risorse o dipendenze restano fuori da Installati.
+- Le dipendenze del Workshop mancanti vengono scaricate automaticamente e quelle non più usate vengono rimosse dopo un’eliminazione. Ogni download finisce nella cartella Archivio sfondi.
+- **Ripristina** in Dettagli riporta le proprietà di uno sfondo, e le sue modifiche nell’Inspector scena, ai valori predefiniti scelti dall’autore.
+- Le condizioni delle proprietà, le righe di testo e i formati dei cursori definiti nelle impostazioni dello sfondo vengono rispettati.
+- Le password di Steam non vengono mai memorizzate e la chiave dell’API Web di Steam è conservata nel portachiavi.
+
+### Interfaccia e lingue
+- **Liquid Glass** su macOS 26: una vista divisa nativa con barra degli strumenti, Inspector e controlli in vetro. Le versioni precedenti di macOS mantengono l’aspetto consueto.
+- **15 nuove lingue**: tedesco, francese, spagnolo, portoghese brasiliano, italiano, giapponese, coreano, cinese semplificato e tradizionale, russo, polacco, turco, ucraino, arabo e hindi, da scegliere nel selettore della lingua delle impostazioni.
+- Una nuova icona dell’app e un’icona della barra dei menu che segue l’aspetto della barra dei menu.
+
+<details>
+<summary>In precedenza nella versione 0.8.1</summary>
 
 ### Riproduzione degli sfondi
 - **Sfondi di tipo scena** renderizzati in modo nativo con Metal: livelli di immagine, trasformazioni, timeline con keyframe, ordinamento per profondità e dati di videocamera/proiezione da `scene.json`.
@@ -88,6 +141,8 @@ Distribuito con licenza [GPL-3.0](../../LICENSE), come il progetto originale.
 - Menu degli sfondi recenti nella barra di stato.
 - Impostazioni delle prestazioni: qualità, anti-aliasing, post-elaborazione e comportamento di riproduzione quando l’app perde il focus.
 - Diagnosi: il percorso delle risorse incluse, le versioni delle librerie del compilatore di shader integrato e le statistiche della cache degli shader.
+
+</details>
 
 <details>
 <summary>In precedenza nella versione 0.8.0</summary>

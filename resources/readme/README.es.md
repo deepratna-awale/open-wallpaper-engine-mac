@@ -26,7 +26,60 @@ Este proyecto se basa en el trabajo de:
 
 Con licencia [GPL-3.0](../../LICENSE), igual que el proyecto original.
 
-## Funciones compatibles de la versión 0.8.1
+## Funciones compatibles de la versión 0.9.0
+
+### Renderizado de escenas
+- **Los sombreadores propios de Wallpaper Engine**: las capas, los efectos y los materiales se dibujan ahora con los sombreadores originales de cada fondo de pantalla, traducidos a Metal, incluidos los efectos creados por los autores del Workshop.
+- Capas de composición, de pantalla completa y de color sólido, capas que muestrean otras capas, los 33 modos de fusión y más máscaras de efecto.
+- **Maquetación fiel del texto**: el texto se dimensiona, alinea y coloca como en Wallpaper Engine, con efectos de fuente de contorno, desenfoque y sombra paralela.
+- **Líneas de tiempo**: las animaciones de fotogramas clave y de texturas siguen las reglas de Wallpaper Engine para reproducción única, en bucle y en espejo.
+- Tablas de consulta de color, la corrección de color de Wallpaper Engine y las opciones de filtro de imagen y de color en las propiedades de un fondo de pantalla.
+- Imágenes con **Puppet Warp** animadas por sus animaciones, con física de huesos (muelles, gravedad, límites) y objetos sujetos a sus huesos.
+
+### 3D e iluminación
+- **Modelos 3D** con skinning, capas de animación, morph targets y root motion.
+- Cámaras de escena en perspectiva con trayectorias, fundidos y vibración; las capas 2D se sitúan en profundidad.
+- **Luces de escena** con cookies de luz, sombras, reflejos planos, niebla por distancia y por altura, y luces volumétricas.
+- **HDR**: las escenas HDR se renderizan con el bloom HDR de Wallpaper Engine, y la calidad «Ultra (HDR de pantalla)» genera EDR en las pantallas que pueden mostrarlo.
+
+### Partículas
+- **Partículas en la GPU**: cada sistema de partículas se simula en la GPU, en 3D, con puntos de control 3D.
+- Sistemas hijos, incluidos los que activan las partículas de su padre; ráfagas de emisión, retardos y emisión periódica; emisión desde la imagen de una capa.
+- Colisiones, también con los huesos de un modelo, respuesta al audio y rotación en todos los ejes.
+- Ajustes de partículas vinculados a las propiedades de usuario de un fondo de pantalla.
+
+### SceneScript y multimedia
+- Un **entorno de ejecución de SceneScript** completo: módulos, el modelo de objetos de escena/capa/efecto/material, eventos de animación, `localStorage` y detección del cursor, con los scripts de cada fondo de pantalla en su propio hilo.
+- Los scripts pueden crear capas, sistemas de partículas y sonidos, mover la niebla, controlar el bloom y posar marionetas y modelos.
+- **Ahora suena**: los fondos de pantalla de escena y web reciben la pista actual y el estado de reproducción (macOS 15.4 o posterior).
+- Los fondos de pantalla web reciben sus propiedades de usuario y el audio en directo.
+
+### Audio
+- El espectro de audio se calcula como lo calcula Wallpaper Engine, en estéreo.
+- Las **capas de sonido** se reproducen al ritmo del reloj de la escena, con **sonido espacial** situado como en Wallpaper Engine.
+
+### Pantallas y reproducción
+- **Pausar por pantalla** o **Pausar todas**, con las reglas de reproducción evaluadas para cada pantalla, incluida la regla de Wallpaper Engine para ventanas maximizadas.
+- Propiedades de usuario por pantalla, con «Sincronizar propiedades entre pantallas».
+- Un fondo de pantalla que se muestra en varias pantallas se renderiza una sola vez y se presenta en cada una.
+- Nuevos ajustes de calidad: Resolución de renderizado, Resolución de texturas, nivel de detalle de escena ajustado a la pantalla, reflejos, sombras y volumétricos.
+- **Reinicio seguro**: un fondo de pantalla que bloqueó la app o la hizo fallar se omite en el siguiente arranque y se marca en la biblioteca.
+
+### Workshop y biblioteca
+- Los filtros del Workshop de Wallpaper Engine: Mostrar solo, un filtro de resolución, géneros combinados con Y/O y etiquetas en cada tarjeta.
+- Los fondos de pantalla instalados muestran sus etiquetas del Workshop y se pueden filtrar por ellas; los elementos que solo son recursos o dependencias no aparecen en Instalados.
+- Las dependencias del Workshop que faltan se descargan automáticamente, y las que ya no se usan se eliminan tras un borrado. Cada descarga va a la carpeta Almacenamiento de fondos de pantalla.
+- **Restablecer** en Detalles devuelve las propiedades de un fondo de pantalla, y sus cambios en el Inspector de escenas, a los valores por defecto que fijó su autor.
+- Se respetan las condiciones de propiedades, las filas de texto y los formatos de los reguladores definidos en los ajustes del fondo de pantalla.
+- Las contraseñas de Steam nunca se guardan, y la clave de la API web de Steam se guarda en el llavero.
+
+### Interfaz e idiomas
+- **Liquid Glass** en macOS 26: una vista dividida nativa con barra de herramientas, inspector y controles de cristal. Las versiones anteriores de macOS mantienen el aspecto de siempre.
+- **15 idiomas nuevos**: alemán, francés, español, portugués de Brasil, italiano, japonés, coreano, chino simplificado y tradicional, ruso, polaco, turco, ucraniano, árabe e hindi, que se eligen en el selector de idioma de los ajustes.
+- Un nuevo icono de la app y un icono de la barra de menús que sigue el aspecto de la barra de menús.
+
+<details>
+<summary>Novedades anteriores de la versión 0.8.1</summary>
 
 ### Reproducción de fondos de pantalla
 - **Fondos de pantalla de escena** renderizados de forma nativa con Metal: capas de imagen, transformaciones, líneas de tiempo con fotogramas clave, orden de profundidad y datos de cámara y proyección de `scene.json`.
@@ -88,6 +141,8 @@ Con licencia [GPL-3.0](../../LICENSE), igual que el proyecto original.
 - Menú de fondos de pantalla recientes en la barra de menús.
 - Ajustes de rendimiento: calidad, suavizado de contorno, posprocesado y comportamiento de la reproducción al perder el foco.
 - Diagnóstico: la ruta de los recursos incluidos, las versiones de las bibliotecas del compilador de sombreadores integrado y las estadísticas de la caché de sombreadores.
+
+</details>
 
 <details>
 <summary>Novedades anteriores de la versión 0.8.0</summary>

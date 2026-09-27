@@ -26,7 +26,60 @@ Ce projet s’appuie sur le travail de :
 
 Distribué sous licence [GPL-3.0](../../LICENSE), comme le projet d’origine.
 
-## Fonctionnalités prises en charge par la version 0.8.1
+## Fonctionnalités prises en charge par la version 0.9.0
+
+### Rendu des scènes
+- **Les nuanceurs d’origine de Wallpaper Engine** — les calques, effets et matériaux sont désormais dessinés avec les nuanceurs d’origine de chaque fond d’écran, traduits en Metal, y compris les effets créés par les auteurs du Workshop.
+- Calques de composition, plein écran et de couleur unie, calques qui échantillonnent d’autres calques, les 33 modes de fusion et davantage de masques d’effet.
+- **Mise en page fidèle du texte** — le texte est dimensionné, aligné et positionné comme dans Wallpaper Engine, avec les effets de police contour, flou et ombre portée.
+- **Chronologies** — les animations par images clés et de textures suivent les règles de Wallpaper Engine pour la lecture unique, en boucle et en miroir.
+- Tables de correspondance des couleurs, correction colorimétrique de Wallpaper Engine, et options de filtre d’image et de couleur dans les propriétés d’un fond d’écran.
+- Images **Puppet Warp** animées par leurs animations, avec une physique des os (ressorts, gravité, limites) et des objets attachés à leurs os.
+
+### 3D et éclairage
+- **Modèles 3D** avec skinning, calques d’animation, cibles de morphing et root motion.
+- Caméras de scène en perspective avec trajectoires, fondus et tremblements ; les calques 2D sont placés en profondeur.
+- **Lumières de scène** avec cookies de lumière, ombres, réflexions planes, brouillard de distance et de hauteur, et lumières volumétriques.
+- **HDR** — les scènes HDR sont rendues avec le bloom HDR de Wallpaper Engine, et la qualité « Ultra (HDR du moniteur) » produit de l’EDR sur les moniteurs capables de l’afficher.
+
+### Particules
+- **Particules sur le GPU** — chaque système de particules est simulé sur le GPU, en 3D, avec des points de contrôle 3D.
+- Systèmes enfants, y compris ceux déclenchés par les particules de leur parent ; salves d’émission, délais et émission périodique ; émission depuis l’image d’un calque.
+- Collisions, y compris avec les os d’un modèle, réaction au son et rotation sur tous les axes.
+- Réglages de particules liés aux propriétés utilisateur d’un fond d’écran.
+
+### SceneScript et médias
+- Un **environnement d’exécution SceneScript** complet — modules, modèle objet scène/calque/effet/matériau, événements d’animation, `localStorage` et détection du curseur, les scripts de chaque fond d’écran s’exécutant sur leur propre fil.
+- Les scripts peuvent créer des calques, des systèmes de particules et des sons, déplacer le brouillard, piloter le bloom et poser des marionnettes et des modèles.
+- **À l’écoute** — les fonds d’écran de scène et web reçoivent le morceau en cours et l’état de lecture (macOS 15.4 ou ultérieur).
+- Les fonds d’écran web reçoivent leurs propriétés utilisateur et l’audio en direct.
+
+### Audio
+- Le spectre audio est calculé comme le calcule Wallpaper Engine, en stéréo.
+- Les **calques sonores** sont lus au rythme de l’horloge de la scène, avec un **son spatial** placé comme dans Wallpaper Engine.
+
+### Moniteurs et lecture
+- **Pause par moniteur** ou **Tout mettre en pause**, les règles de lecture étant évaluées pour chaque moniteur, y compris la règle de Wallpaper Engine pour les fenêtres agrandies.
+- Propriétés utilisateur par moniteur, avec « Synchroniser les propriétés entre les moniteurs ».
+- Un fond d’écran affiché sur plusieurs moniteurs est rendu une seule fois et présenté sur chacun.
+- Nouveaux réglages de qualité : Résolution de rendu, Résolution des textures, niveau de détail de scène adapté au moniteur, réflexions, ombres et effets volumétriques.
+- **Redémarrage sécurisé** — un fond d’écran qui a bloqué ou fait planter l’app est ignoré au lancement suivant et signalé dans la bibliothèque.
+
+### Workshop et bibliothèque
+- Les filtres Workshop de Wallpaper Engine : Afficher uniquement, un filtre de résolution, des genres combinés en ET/OU et des tags sur chaque carte.
+- Les fonds d’écran installés affichent leurs tags Workshop et peuvent être filtrés par ces tags ; les éléments qui ne sont que des ressources ou des dépendances restent hors de Installés.
+- Les dépendances Workshop manquantes sont téléchargées automatiquement, et celles devenues inutiles sont supprimées après une suppression. Chaque téléchargement arrive dans le dossier Stockage des fonds d’écran.
+- **Réinitialiser** dans Détails rétablit les propriétés d’un fond d’écran, ainsi que ses modifications dans l’inspecteur de scène, aux valeurs par défaut choisies par son auteur.
+- Les conditions de propriétés, les lignes de texte et les formats de curseur définis dans les réglages du fond d’écran sont respectés.
+- Les mots de passe Steam ne sont jamais enregistrés, et la clé de l’API Web Steam est conservée dans le trousseau.
+
+### Interface et langues
+- **Liquid Glass** sous macOS 26 — une présentation divisée native avec barre d’outils, inspecteur et commandes en verre. Les versions antérieures de macOS conservent l’apparence habituelle.
+- **15 nouvelles langues** : allemand, français, espagnol, portugais du Brésil, italien, japonais, coréen, chinois simplifié et traditionnel, russe, polonais, turc, ukrainien, arabe et hindi, à choisir dans le sélecteur de langue des réglages.
+- Une nouvelle icône d’app, et une icône de barre des menus qui suit l’apparence de la barre des menus.
+
+<details>
+<summary>Précédemment dans la version 0.8.1</summary>
 
 ### Lecture des fonds d’écran
 - **Fonds d’écran de scène** rendus nativement avec Metal — calques d’image, transformations, chronologies d’images clés, ordre de profondeur et données de caméra et de projection issues de `scene.json`.
@@ -88,6 +141,8 @@ Distribué sous licence [GPL-3.0](../../LICENSE), comme le projet d’origine.
 - Menu des fonds d’écran récents dans la barre des menus.
 - Réglages de performances — qualité, anticrénelage, post-traitement et comportement de lecture en cas de perte du premier plan.
 - Diagnostic — le chemin des ressources intégrées, les versions des bibliothèques du compilateur de nuanceurs intégré et les statistiques du cache des nuanceurs.
+
+</details>
 
 <details>
 <summary>Précédemment dans la version 0.8.0</summary>

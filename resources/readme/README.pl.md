@@ -26,7 +26,60 @@ Ten projekt powstał na bazie pracy następujących osób:
 
 Projekt jest udostępniany na licencji [GPL-3.0](../../LICENSE), tak samo jak projekt oryginalny.
 
-## Co obsługuje wersja 0.8.1
+## Co obsługuje wersja 0.9.0
+
+### Renderowanie scen
+- **Własne shadery Wallpaper Engine** — warstwy, efekty i materiały są teraz rysowane oryginalnymi shaderami każdej tapety, przetłumaczonymi na Metal, w tym efekty stworzone samodzielnie przez autorów z Warsztatu.
+- Warstwy kompozycji, pełnoekranowe i jednolite, warstwy próbkujące inne warstwy, wszystkie 33 tryby mieszania i więcej masek efektów.
+- **Wierny układ tekstu** — tekst ma taki rozmiar, wyrównanie i położenie jak w Wallpaper Engine, z efektami czcionki: kontur, rozmycie i cień.
+- **Osie czasu** — animacje klatek kluczowych i tekstur działają według reguł Wallpaper Engine dla odtwarzania jednokrotnego, w pętli i lustrzanego.
+- Tablice korekcji kolorów (LUT), korekcja kolorów Wallpaper Engine oraz opcje filtra obrazu i koloru we właściwościach tapety.
+- Obrazy **Puppet Warp** poruszane własnymi animacjami, z fizyką kości (sprężyny, grawitacja, ograniczenia) i obiektami przyczepionymi do kości.
+
+### 3D i oświetlenie
+- **Modele 3D** ze skinningiem, warstwami animacji, morph targetami i root motion.
+- Perspektywiczne kamery sceny ze ścieżkami, przejściami i drganiem; warstwy 2D są umieszczane w głębi.
+- **Światła sceny** z maskami światła (cookies), cieniami, odbiciami planarnymi, mgłą zależną od odległości i wysokości oraz światłami wolumetrycznymi.
+- **HDR** — sceny HDR są renderowane z poświatą HDR Wallpaper Engine, a jakość „Ultra (HDR wyświetlacza)” wysyła obraz EDR na wyświetlacze, które mogą go pokazać.
+
+### Cząsteczki
+- **Cząsteczki na GPU** — każdy system cząsteczek jest symulowany na GPU, w 3D, z punktami kontrolnymi 3D.
+- Systemy potomne, w tym uruchamiane przez cząsteczki systemu nadrzędnego; serie emisji, opóźnienia i emisja okresowa; emisja z obrazu warstwy.
+- Kolizje, także z kośćmi modelu, reakcja na dźwięk i obrót wokół każdej osi.
+- Ustawienia cząsteczek powiązane z właściwościami użytkownika tapety.
+
+### SceneScript i multimedia
+- Pełne **środowisko uruchomieniowe SceneScript** — moduły, model obiektowy sceny/warstwy/efektu/materiału, zdarzenia animacji, `localStorage` i wykrywanie obiektu pod kursorem; skrypty każdej tapety działają we własnym wątku.
+- Skrypty mogą tworzyć warstwy, systemy cząsteczek i dźwięki, przesuwać mgłę, sterować poświatą oraz ustawiać pozy marionetek i modeli.
+- **Teraz odtwarzane** — tapety typu scena i tapety internetowe otrzymują bieżący utwór i stan odtwarzania (macOS 15.4 lub nowszy).
+- Tapety internetowe otrzymują swoje właściwości użytkownika i dźwięk na żywo.
+
+### Dźwięk
+- Widmo dźwięku jest obliczane tak, jak oblicza je Wallpaper Engine, w stereo.
+- **Warstwy dźwiękowe** są odtwarzane według zegara sceny, z **dźwiękiem przestrzennym** rozmieszczonym jak w Wallpaper Engine.
+
+### Wyświetlacze i odtwarzanie
+- **Wstrzymaj na danym wyświetlaczu** lub **Wstrzymaj wszystkie**; reguły odtwarzania są sprawdzane dla każdego wyświetlacza, w tym reguła Wallpaper Engine dla zmaksymalizowanych okien.
+- Właściwości użytkownika dla każdego wyświetlacza oraz opcja „Synchronizuj właściwości między wyświetlaczami”.
+- Tapeta pokazywana na kilku wyświetlaczach jest renderowana raz i wyświetlana na każdym z nich.
+- Nowe ustawienia jakości: rozdzielczość renderowania, rozdzielczość tekstur, szczegółowość sceny dopasowana do wyświetlacza, odbicia, cienie i efekty wolumetryczne.
+- **Bezpieczne ponowne uruchomienie** — tapeta, która zablokowała aplikację lub spowodowała jej awarię, jest pomijana przy następnym uruchomieniu i oznaczana w bibliotece.
+
+### Warsztat i biblioteka
+- Filtry Warsztatu z Wallpaper Engine: Pokaż tylko, filtr rozdzielczości, gatunki łączone przez I/LUB oraz tagi na każdej karcie.
+- Zainstalowane tapety pokazują swoje tagi z Warsztatu i można je według nich filtrować; elementy zawierające wyłącznie zasoby lub zależności nie trafiają do sekcji Zainstalowane.
+- Brakujące zależności z Warsztatu są pobierane automatycznie, a nieużywane są usuwane po usunięciu tapety. Każde pobranie trafia do folderu Magazyn tapet.
+- **Resetuj** w Szczegółach przywraca właściwości tapety, a także jej zmiany w inspektorze sceny, do wartości domyślnych ustawionych przez autora.
+- Uwzględniane są warunki właściwości, wiersze tekstu i formaty suwaków z ustawień tapety.
+- Hasła Steam nigdy nie są zapisywane, a klucz Steam Web API jest przechowywany w pęku kluczy.
+
+### Interfejs i języki
+- **Liquid Glass** w macOS 26 — natywny widok dzielony z paskiem narzędzi, inspektorem i szklanymi elementami sterującymi. Starsze wersje macOS zachowują dotychczasowy wygląd.
+- **15 nowych języków**: niemiecki, francuski, hiszpański, portugalski (Brazylia), włoski, japoński, koreański, chiński uproszczony i tradycyjny, rosyjski, polski, turecki, ukraiński, arabski i hindi, do wyboru w ustawieniach języka.
+- Nowa ikona aplikacji i ikona na pasku menu, która dopasowuje się do wyglądu paska menu.
+
+<details>
+<summary>Wcześniej w wersji 0.8.1</summary>
 
 ### Odtwarzanie tapet
 - **Tapety typu scena** renderowane natywnie za pomocą Metal — warstwy obrazów, przekształcenia, osie czasu z klatkami kluczowymi, kolejność głębi oraz dane kamery i projekcji z pliku `scene.json`.
@@ -88,6 +141,8 @@ Projekt jest udostępniany na licencji [GPL-3.0](../../LICENSE), tak samo jak pr
 - Menu ostatnich tapet na pasku menu.
 - Ustawienia wydajności — jakość, antyaliasing, przetwarzanie końcowe oraz zachowanie odtwarzania po utracie aktywności.
 - Diagnostyka — ścieżka dołączonych zasobów, wersje bibliotek wbudowanego kompilatora shaderów i statystyki bufora shaderów.
+
+</details>
 
 <details>
 <summary>Wcześniej w wersji 0.8.0</summary>

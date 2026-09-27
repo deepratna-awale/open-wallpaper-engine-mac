@@ -26,7 +26,60 @@ Bu proje aşağıdaki kişilerin çalışmaları üzerine inşa edilmiştir:
 
 Orijinal projeyle aynı şekilde [GPL-3.0](../../LICENSE) lisansı altında lisanslanmıştır.
 
-## 0.8.1 Sürümünün Destekledikleri
+## 0.9.0 Sürümünün Destekledikleri
+
+### Sahne işleme
+- **Wallpaper Engine’in kendi gölgelendiricileri** — katmanlar, efektler ve malzemeler artık her duvar kâğıdının Metal’e çevrilmiş özgün gölgelendiricileriyle çiziliyor; Atölye yazarlarının kendi yaptığı efektler de buna dahil.
+- Kompozisyon, tam ekran ve düz renk katmanları, başka katmanları örnekleyen katmanlar, 33 karışım modunun tümü ve daha fazla efekt maskesi.
+- **Özgününe sadık metin yerleşimi** — metin, Wallpaper Engine’deki gibi boyutlandırılır, hizalanır ve konumlandırılır; kontur, bulanıklık ve gölge yazı tipi efektleri de desteklenir.
+- **Zaman çizelgeleri** — ana kare ve doku animasyonları, Wallpaper Engine’in tek seferlik, döngü ve ayna oynatma kurallarına uyar.
+- Renk arama tabloları, Wallpaper Engine’in renk düzeltmesi ve bir duvar kâğıdının özelliklerindeki görüntü filtresi ve renk seçenekleri.
+- Kendi animasyonlarıyla hareket eden **Puppet Warp** görüntüleri; kemik fiziği (yaylar, yerçekimi, sınırlar) ve kemiklere bağlı nesnelerle birlikte.
+
+### 3D ve aydınlatma
+- Skinning, animasyon katmanları, morph hedefleri ve root motion destekli **3D modeller**.
+- Kamera yolları, geçişler ve sarsıntı destekli perspektif sahne kameraları; 2D katmanlar da derinlikte yer alır.
+- Işık maskeleri (cookie), gölgeler, düzlemsel yansımalar, mesafe ve yükseklik sisi ile hacimsel ışıklar destekli **sahne ışıkları**.
+- **HDR** — HDR sahneler Wallpaper Engine’in HDR parlamasıyla işlenir ve “Ultra (Ekran HDR)” kalitesi, gösterebilen ekranlara EDR çıktısı verir.
+
+### Parçacıklar
+- **GPU parçacıkları** — her parçacık sistemi GPU’da, 3D olarak ve 3D kontrol noktalarıyla simüle edilir.
+- Üst sistemin parçacıklarıyla tetiklenenler dahil alt sistemler; yayıcı patlamaları, gecikmeler ve periyodik yayım; bir katmanın görüntüsünden yayım.
+- Bir modelin kemikleriyle de çarpışma, sese tepki ve her eksen etrafında dönme.
+- Bir duvar kâğıdının kullanıcı özelliklerine bağlı parçacık ayarları.
+
+### SceneScript ve medya
+- Eksiksiz bir **SceneScript çalışma zamanı** — modüller, sahne/katman/efekt/malzeme nesne modeli, animasyon olayları, `localStorage` ve imleç isabet testi; her duvar kâğıdının betikleri kendi iş parçacığında çalışır.
+- Betikler katman, parçacık sistemi ve ses oluşturabilir, sisi hareket ettirebilir, parlamayı yönetebilir, kuklalara ve modellere poz verebilir.
+- **Şu An Çalıyor** — sahne ve web duvar kâğıtları çalan parçayı ve oynatma durumunu alır (macOS 15.4 veya sonrası).
+- Web duvar kâğıtları kendi kullanıcı özelliklerini ve canlı sesi alır.
+
+### Ses
+- Ses spektrumu, Wallpaper Engine’in hesapladığı şekilde ve stereo olarak hesaplanır.
+- **Ses katmanları** sahnenin saatine göre çalar; **uzamsal ses** Wallpaper Engine’deki gibi konumlandırılır.
+
+### Ekranlar ve oynatma
+- **Ekran Başına Duraklat** veya **Tümünü Duraklat**; oynatma kuralları, Wallpaper Engine’in büyütülmüş pencere kuralı dahil her ekran için ayrı değerlendirilir.
+- Ekran başına kullanıcı özellikleri ve “Özellikleri ekranlar arasında eşitle”.
+- Birden fazla ekranda gösterilen bir duvar kâğıdı bir kez işlenir ve her ekranda gösterilir.
+- Yeni kalite ayarları: İşleme Çözünürlüğü, Doku Çözünürlüğü, ekrana göre sahne ayrıntısı, yansımalar, gölgeler ve hacimsel efektler.
+- **Güvenli yeniden başlatma** — uygulamayı kilitleyen ya da çökerten bir duvar kâğıdı sonraki açılışta atlanır ve arşivde işaretlenir.
+
+### Atölye ve arşiv
+- Wallpaper Engine’in Atölye filtreleri: Yalnızca Şunları Göster, bir çözünürlük filtresi, VE/VEYA ile birleştirilen türler ve her kartta etiketler.
+- Yüklü duvar kâğıtları Atölye etiketlerini gösterir ve bunlara göre filtrelenebilir; yalnızca varlık ya da bağımlılık içeren öğeler Yüklü bölümünde görünmez.
+- Eksik Atölye bağımlılıkları otomatik olarak indirilir, artık kullanılmayanlar silme işleminden sonra kaldırılır. Her indirme Duvar Kâğıdı Deposu klasörüne kaydedilir.
+- Ayrıntılar’daki **Sıfırla**, bir duvar kâğıdının özelliklerini ve Sahne Denetçisi’ndeki düzenlemelerini yazarının belirlediği varsayılanlara döndürür.
+- Duvar kâğıdının ayarlarındaki özellik koşulları, metin satırları ve sürgü biçimleri dikkate alınır.
+- Steam parolaları asla saklanmaz, Steam Web API anahtarı Anahtar Zinciri’nde tutulur.
+
+### Arayüz ve diller
+- macOS 26’da **Liquid Glass** — araç çubuğu, denetçi ve cam denetimleriyle yerel bölünmüş görünüm. Daha eski macOS sürümleri alışılmış görünümü korur.
+- **15 yeni dil**: Almanca, Fransızca, İspanyolca, Brezilya Portekizcesi, İtalyanca, Japonca, Korece, Basitleştirilmiş ve Geleneksel Çince, Rusça, Lehçe, Türkçe, Ukraynaca, Arapça ve Hintçe; Ayarlar’daki dil seçiciden seçilebilir.
+- Yeni bir uygulama simgesi ve menü çubuğunun görünümüne uyan bir menü çubuğu simgesi.
+
+<details>
+<summary>Önceki sürüm 0.8.1’deki yenilikler</summary>
 
 ### Duvar kâğıdı oynatma
 - **Sahne duvar kâğıtları** Metal ile yerel olarak işlenir — görüntü katmanları, dönüşümler, ana kare zaman çizelgeleri, derinlik sıralaması ve `scene.json` dosyasındaki kamera/projeksiyon verileri.
@@ -88,6 +141,8 @@ Orijinal projeyle aynı şekilde [GPL-3.0](../../LICENSE) lisansı altında lisa
 - Menü çubuğunda son kullanılan duvar kâğıtları menüsü.
 - Performans ayarları — kalite, kenar yumuşatma, son işleme ve odak kaybında oynatma davranışı.
 - Tanılar — paketlenmiş varlıkların yolu, yerleşik gölgelendirici derleyicisinin kitaplık sürümleri ve gölgelendirici önbelleği istatistikleri.
+
+</details>
 
 <details>
 <summary>Önceki sürüm 0.8.0’daki yenilikler</summary>

@@ -26,7 +26,60 @@ This project is built on top of the work of:
 
 Licensed under [GPL-3.0](LICENSE), same as the original project.
 
-## What 0.8.1 Supports
+## What 0.9.0 Supports
+
+### Scene rendering
+- **Wallpaper Engine's own shaders** — layers, effects and materials now draw through each wallpaper's original shaders, translated to Metal, including effects that Workshop authors made themselves.
+- Composition, fullscreen and solid layers, layers that sample other layers, all 33 blend modes, and more effect masks.
+- **Faithful text layout** — text is sized, aligned and positioned as in Wallpaper Engine, with outline, blur and drop-shadow font effects.
+- **Timelines** — keyframe and texture animations follow Wallpaper Engine's single, loop and mirror rules.
+- Colour lookup tables, Wallpaper Engine's colour correction, and the image filter and colour options in a wallpaper's properties.
+- **Puppet Warp** images posed by their animations, with bone physics (springs, gravity, limits) and objects attached to their bones.
+
+### 3D & lighting
+- **3D models** with skinning, animation layers, morph targets and root motion.
+- Perspective scene cameras with camera paths, fades and shake; 2D layers sit in depth.
+- **Scene lights** with light cookies, shadows, planar reflections, distance and height fog, and volumetric lights.
+- **HDR** — HDR scenes render with Wallpaper Engine's HDR bloom, and the "Ultra (Display HDR)" quality outputs EDR on displays that can show it.
+
+### Particles
+- **GPU particles** — every particle system is simulated on the GPU, in 3D, with 3D control points.
+- Child systems, including ones triggered by their parent's particles; emitter bursts, delays and periodic emission; emitting from a layer's image.
+- Collision, including with a model's bones, audio response, and rotation about every axis.
+- Particle settings bound to a wallpaper's user properties.
+
+### SceneScript & media
+- A complete **SceneScript runtime** — modules, the scene/layer/effect/material object model, animation events, `localStorage`, and cursor hit testing, with each wallpaper's scripts on their own thread.
+- Scripts can create layers, particle systems and sounds, move the fog, drive bloom, and pose puppets and models.
+- **Now Playing** — scenes and web wallpapers receive the current track and playback state (macOS 15.4 or later).
+- Web wallpapers receive their user properties and live audio.
+
+### Audio
+- The audio spectrum is computed the way Wallpaper Engine computes it, in stereo.
+- **Sound layers** play on the scene's clock, with **spatial sound** placed as in Wallpaper Engine.
+
+### Displays & playback
+- **Pause per Display** or **Pause All**, with the playback rules checked for each display, including Wallpaper Engine's maximized-window rule.
+- Per-display user properties, with "Sync properties across displays".
+- A wallpaper shown on several displays renders once and is presented on each.
+- New quality settings: Render Resolution, Texture Resolution, Match Display scene detail, reflections, shadows and volumetrics.
+- **Safe restart** — a wallpaper that stalled or crashed the app is skipped on the next launch and marked in the library.
+
+### Workshop & library
+- Wallpaper Engine's Workshop filters: Show Only, a resolution filter, genres combined with AND/OR, and tags on every card.
+- Installed wallpapers show and filter by their Workshop tags; asset-only and dependency-only items stay out of Installed.
+- Missing Workshop dependencies download automatically, and unused ones are removed after a delete. Every download lands in the Wallpaper Storage folder.
+- **Reset** in Details returns a wallpaper's properties, and its Scene Inspector edits, to the defaults its author set.
+- Property conditions, text rows and slider formats from the wallpaper's settings are honoured.
+- Steam passwords are never stored, and the Steam Web API key is kept in the Keychain.
+
+### Interface & languages
+- **Liquid Glass** on macOS 26 — a native split view, toolbar and inspector with glass controls. Earlier macOS versions keep the familiar look.
+- **15 new languages**: German, French, Spanish, Brazilian Portuguese, Italian, Japanese, Korean, Simplified and Traditional Chinese, Russian, Polish, Turkish, Ukrainian, Arabic and Hindi, chosen from the Language picker in Settings.
+- A new app icon, and a menu bar icon that follows the menu bar's appearance.
+
+<details>
+<summary>Previously in 0.8.1</summary>
 
 ### Wallpaper playback
 - **Scene wallpapers** rendered natively with Metal — image layers, transforms, keyframe timelines, depth ordering, and camera/projection data from `scene.json`.
@@ -88,6 +141,8 @@ Licensed under [GPL-3.0](LICENSE), same as the original project.
 - Recent wallpapers menu in the status bar.
 - Performance settings — quality, anti-aliasing, post-processing, and focus-loss playback behaviour.
 - Diagnostics — the bundled assets path, the built-in shader compiler's library versions, and shader cache statistics.
+
+</details>
 
 <details>
 <summary>Previously in 0.8.0</summary>

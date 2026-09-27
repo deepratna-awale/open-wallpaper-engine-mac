@@ -26,7 +26,60 @@ Este projeto foi construído sobre o trabalho de:
 
 Licenciado sob a [GPL-3.0](../../LICENSE), assim como o projeto original.
 
-## O que a versão 0.8.1 suporta
+## O que a versão 0.9.0 suporta
+
+### Renderização de cenas
+- **Os próprios shaders do Wallpaper Engine** — camadas, efeitos e materiais agora são desenhados com os shaders originais de cada imagem de fundo, traduzidos para Metal, incluindo efeitos criados pelos próprios autores da Oficina.
+- Camadas de composição, de tela cheia e de cor sólida, camadas que amostram outras camadas, todos os 33 modos de mesclagem e mais máscaras de efeito.
+- **Layout de texto fiel** — o texto é dimensionado, alinhado e posicionado como no Wallpaper Engine, com efeitos de fonte de contorno, desfoque e sombra projetada.
+- **Linhas do tempo** — animações de quadros-chave e de texturas seguem as regras do Wallpaper Engine para reprodução única, em loop e espelhada.
+- Tabelas de consulta de cores, a correção de cor do Wallpaper Engine e as opções de filtro de imagem e de cor nas propriedades de uma imagem de fundo.
+- Imagens com **Puppet Warp** animadas pelas suas animações, com física de ossos (molas, gravidade, limites) e objetos presos aos seus ossos.
+
+### 3D e iluminação
+- **Modelos 3D** com skinning, camadas de animação, morph targets e root motion.
+- Câmeras de cena em perspectiva com trajetórias, transições e tremor; camadas 2D ficam em profundidade.
+- **Luzes de cena** com cookies de luz, sombras, reflexos planares, névoa por distância e por altura, e luzes volumétricas.
+- **HDR** — cenas HDR são renderizadas com o bloom HDR do Wallpaper Engine, e a qualidade "Ultra (HDR da Tela)" gera EDR nas telas capazes de exibi-lo.
+
+### Partículas
+- **Partículas na GPU** — todo sistema de partículas é simulado na GPU, em 3D, com pontos de controle 3D.
+- Sistemas filhos, incluindo os disparados pelas partículas do sistema pai; rajadas de emissão, atrasos e emissão periódica; emissão a partir da imagem de uma camada.
+- Colisão, inclusive com os ossos de um modelo, resposta ao áudio e rotação em todos os eixos.
+- Ajustes de partículas vinculados às propriedades do usuário de uma imagem de fundo.
+
+### SceneScript e mídia
+- Um **runtime do SceneScript** completo — módulos, o modelo de objetos de cena/camada/efeito/material, eventos de animação, `localStorage` e detecção do cursor, com os scripts de cada imagem de fundo em sua própria thread.
+- Scripts podem criar camadas, sistemas de partículas e sons, mover a névoa, controlar o bloom e posicionar marionetes e modelos.
+- **Tocando Agora** — imagens de fundo de cena e web recebem a faixa atual e o estado de reprodução (macOS 15.4 ou posterior).
+- Imagens de fundo web recebem suas propriedades do usuário e o áudio ao vivo.
+
+### Áudio
+- O espectro de áudio é calculado da mesma forma que o Wallpaper Engine o calcula, em estéreo.
+- **Camadas de som** tocam no relógio da cena, com **som espacial** posicionado como no Wallpaper Engine.
+
+### Telas e reprodução
+- **Pausar por Tela** ou **Pausar Todas**, com as regras de reprodução avaliadas para cada tela, incluindo a regra do Wallpaper Engine para janelas maximizadas.
+- Propriedades do usuário por tela, com "Sincronizar propriedades entre as telas".
+- Uma imagem de fundo exibida em várias telas é renderizada uma única vez e apresentada em cada uma.
+- Novos ajustes de qualidade: Resolução de Renderização, Resolução das Texturas, detalhe de cena conforme a tela, reflexos, sombras e volumétricos.
+- **Reinício seguro** — uma imagem de fundo que travou ou fez o app falhar é ignorada na próxima abertura e marcada na biblioteca.
+
+### Oficina e biblioteca
+- Os filtros da Oficina do Wallpaper Engine: Mostrar Apenas, um filtro de resolução, gêneros combinados com E/OU e tags em cada cartão.
+- Imagens de fundo instaladas mostram suas tags da Oficina e podem ser filtradas por elas; itens que são apenas recursos ou dependências ficam fora de Instaladas.
+- Dependências da Oficina que faltam são baixadas automaticamente, e as que não são mais usadas são removidas após uma exclusão. Todo download vai para a pasta Armazenamento de Imagens de Fundo.
+- **Redefinir** em Detalhes devolve as propriedades de uma imagem de fundo, e suas edições no Inspetor de Cena, aos padrões definidos pelo autor.
+- Condições de propriedades, linhas de texto e formatos de controles deslizantes definidos nos ajustes da imagem de fundo são respeitados.
+- Senhas da Steam nunca são armazenadas, e a chave da API Web da Steam fica nas Chaves.
+
+### Interface e idiomas
+- **Liquid Glass** no macOS 26 — uma visualização dividida nativa com barra de ferramentas, inspetor e controles de vidro. Versões anteriores do macOS mantêm a aparência de sempre.
+- **15 novos idiomas**: alemão, francês, espanhol, português do Brasil, italiano, japonês, coreano, chinês simplificado e tradicional, russo, polonês, turco, ucraniano, árabe e hindi, escolhidos no seletor de idioma dos ajustes.
+- Um novo ícone do app e um ícone da barra de menus que acompanha a aparência da barra de menus.
+
+<details>
+<summary>Anteriormente na versão 0.8.1</summary>
 
 ### Reprodução de imagens de fundo
 - **Imagens de fundo de cena** renderizadas nativamente com Metal — camadas de imagem, transformações, linhas do tempo com quadros-chave, ordenação por profundidade e dados de câmera/projeção do `scene.json`.
@@ -88,6 +141,8 @@ Licenciado sob a [GPL-3.0](../../LICENSE), assim como o projeto original.
 - Menu de imagens de fundo recentes na barra de status.
 - Ajustes de desempenho — qualidade, suavização, pós-processamento e comportamento de reprodução ao perder o foco.
 - Diagnóstico — o caminho dos recursos incluídos, as versões das bibliotecas do compilador de shaders integrado e as estatísticas do cache de shaders.
+
+</details>
 
 <details>
 <summary>Anteriormente na versão 0.8.0</summary>

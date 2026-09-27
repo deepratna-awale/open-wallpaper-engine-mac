@@ -26,7 +26,60 @@ Dieses Projekt baut auf der Arbeit folgender Personen auf:
 
 Lizenziert unter [GPL-3.0](../../LICENSE), wie das ursprüngliche Projekt.
 
-## Funktionsumfang von 0.8.1
+## Funktionsumfang von 0.9.0
+
+### Szenen-Rendering
+- **Die eigenen Shader von Wallpaper Engine** – Ebenen, Effekte und Materialien werden jetzt mit den Original-Shadern des jeweiligen Hintergrundbilds gezeichnet, nach Metal übersetzt, auch Effekte, die Workshop-Autoren selbst erstellt haben.
+- Kompositions-, Vollbild- und Farbflächenebenen, Ebenen, die andere Ebenen abtasten, alle 33 Füllmethoden und weitere Effektmasken.
+- **Originalgetreues Textlayout** – Text wird wie in Wallpaper Engine skaliert, ausgerichtet und platziert, mit Kontur-, Weichzeichner- und Schlagschatten-Schrifteffekten.
+- **Zeitleisten** – Keyframe- und Texturanimationen folgen den Regeln von Wallpaper Engine für einmalige, wiederholte und gespiegelte Wiedergabe.
+- Farb-Lookup-Tabellen, die Farbkorrektur von Wallpaper Engine sowie die Bildfilter- und Farboptionen in den Eigenschaften eines Hintergrundbilds.
+- **Puppet Warp**-Bilder, die ihren Animationen folgen, mit Knochenphysik (Federn, Schwerkraft, Grenzen) und an ihren Knochen befestigten Objekten.
+
+### 3D & Beleuchtung
+- **3D-Modelle** mit Skinning, Animationsebenen, Morph-Targets und Root Motion.
+- Perspektivische Szenenkameras mit Kamerapfaden, Überblendungen und Wackeln; 2D-Ebenen liegen in der Tiefe.
+- **Szenenlichter** mit Lichtmasken (Cookies), Schatten, planaren Reflexionen, Entfernungs- und Höhennebel sowie volumetrischen Lichtern.
+- **HDR** – HDR-Szenen werden mit dem HDR-Bloom von Wallpaper Engine gerendert, und die Qualität „Ultra (Display-HDR)“ gibt auf Displays, die es darstellen können, EDR aus.
+
+### Partikel
+- **GPU-Partikel** – jedes Partikelsystem wird auf der GPU simuliert, in 3D und mit 3D-Kontrollpunkten.
+- Untergeordnete Systeme, auch solche, die von den Partikeln ihres übergeordneten Systems ausgelöst werden; Emitter-Stöße, Verzögerungen und periodische Emission; Emission aus dem Bild einer Ebene.
+- Kollision, auch mit den Knochen eines Modells, Audioreaktion und Rotation um jede Achse.
+- Partikeleinstellungen, die an die Benutzereigenschaften eines Hintergrundbilds gebunden sind.
+
+### SceneScript & Medien
+- Eine vollständige **SceneScript-Laufzeitumgebung** – Module, das Objektmodell für Szene/Ebene/Effekt/Material, Animationsereignisse, `localStorage` und Treffertests für den Cursor, wobei die Skripte jedes Hintergrundbilds in einem eigenen Thread laufen.
+- Skripte können Ebenen, Partikelsysteme und Sounds erstellen, den Nebel bewegen, Bloom steuern und Puppets und Modelle posieren.
+- **Jetzt läuft** – Szenen- und Web-Hintergrundbilder erhalten den aktuellen Titel und den Wiedergabestatus (macOS 15.4 oder neuer).
+- Web-Hintergrundbilder erhalten ihre Benutzereigenschaften und Live-Audio.
+
+### Audio
+- Das Audiospektrum wird so berechnet, wie Wallpaper Engine es berechnet, in Stereo.
+- **Sound-Ebenen** werden im Takt der Szenenuhr abgespielt, mit **räumlichem Klang**, der wie in Wallpaper Engine platziert wird.
+
+### Displays & Wiedergabe
+- **Pro Display pausieren** oder **Alle pausieren**, wobei die Wiedergaberegeln für jedes Display geprüft werden, einschließlich der Regel von Wallpaper Engine für maximierte Fenster.
+- Benutzereigenschaften pro Display, mit „Eigenschaften über Displays synchronisieren“.
+- Ein Hintergrundbild, das auf mehreren Displays angezeigt wird, wird einmal gerendert und auf jedem dargestellt.
+- Neue Qualitätseinstellungen: Renderauflösung, Texturauflösung, Szenendetail „Wie Display“, Reflexionen, Schatten und Volumetrie.
+- **Sicherer Neustart** – ein Hintergrundbild, das die App blockiert oder zum Absturz gebracht hat, wird beim nächsten Start übersprungen und in der Mediathek markiert.
+
+### Workshop & Mediathek
+- Die Workshop-Filter von Wallpaper Engine: „Nur anzeigen“, ein Auflösungsfilter, mit UND/ODER kombinierte Genres und Tags auf jeder Karte.
+- Installierte Hintergrundbilder zeigen ihre Workshop-Tags und lassen sich danach filtern; reine Asset- und Abhängigkeitselemente erscheinen nicht unter „Installiert“.
+- Fehlende Workshop-Abhängigkeiten werden automatisch geladen, und nicht mehr benötigte werden nach dem Löschen entfernt. Jeder Download landet im Ordner „Hintergrundbild-Speicher“.
+- **Zurücksetzen** unter „Details“ setzt die Eigenschaften eines Hintergrundbilds und seine Änderungen im Szeneninspektor auf die Standardwerte seines Autors zurück.
+- Bedingungen für Eigenschaften, Textzeilen und Schiebereglerformate aus den Einstellungen des Hintergrundbilds werden berücksichtigt.
+- Steam-Passwörter werden nie gespeichert, und der Steam-Web-API-Schlüssel liegt im Schlüsselbund.
+
+### Oberfläche & Sprachen
+- **Liquid Glass** unter macOS 26 – eine native geteilte Ansicht mit Symbolleiste, Inspektor und Glas-Bedienelementen. Ältere macOS-Versionen behalten das gewohnte Aussehen.
+- **15 neue Sprachen**: Deutsch, Französisch, Spanisch, brasilianisches Portugiesisch, Italienisch, Japanisch, Koreanisch, vereinfachtes und traditionelles Chinesisch, Russisch, Polnisch, Türkisch, Ukrainisch, Arabisch und Hindi, auswählbar über die Sprachauswahl in den Einstellungen.
+- Ein neues App-Symbol und ein Menüleistensymbol, das sich dem Erscheinungsbild der Menüleiste anpasst.
+
+<details>
+<summary>Bisher in 0.8.1</summary>
 
 ### Wiedergabe von Hintergrundbildern
 - **Szenen-Hintergrundbilder** werden nativ mit Metal gerendert – Bildebenen, Transformationen, Keyframe-Zeitleisten, Tiefenreihenfolge sowie Kamera- und Projektionsdaten aus `scene.json`.
@@ -88,6 +141,8 @@ Lizenziert unter [GPL-3.0](../../LICENSE), wie das ursprüngliche Projekt.
 - Menü mit zuletzt verwendeten Hintergrundbildern in der Menüleiste.
 - Leistungseinstellungen – Qualität, Antialiasing, Post-Processing und Wiedergabeverhalten bei Fokusverlust.
 - Diagnose – der Pfad der mitgelieferten Assets, die Bibliotheksversionen des integrierten Shader-Compilers und Statistiken zum Shader-Cache.
+
+</details>
 
 <details>
 <summary>Bisher in 0.8.0</summary>
