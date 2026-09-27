@@ -15,7 +15,7 @@ SVG = os.path.join(HERE, "svg")
 # shadows and the dark/clear/tinted looks, so the art itself carries no depth.
 # `background` is the solid fill in AppIcon.icon/icon.json; the rest are layers.
 PALETTES = {
-    "a": dict(background="#1C1C1E", body="#E5E5EA", screen="#2C2C2E", gear="#1462C4", hole="#2C2C2E"),
+    "a": dict(background="#1C1C1E", body="#E5E5EA", screen="#2C2C2E", gear="#5AA2F0", hole="#2C2C2E"),
     "b": dict(background="#0B6E66", body="#FFFFFF", screen="#08564F", gear="#FFFFFF", hole="#08564F"),
     "c": dict(background="#18181B", body="#F4F4F5", screen="#F4F4F5", gear="#FF5A4E", hole="#F4F4F5"),
 }
@@ -99,7 +99,7 @@ def flat_logo():
     """Transparent, un-glassed logo for the in-app placeholder and the docs."""
     body = (f'<path fill="{P["body"]}" d="{rrect(*BODY)}{stand_path()}"/>'
             f'<path fill="{P["screen"]}" d="{rrect(*SCREEN)}"/>'
-            f'<path fill="{P["gear"]}" fill-rule="evenodd" d="{gear(GX, GY, G_TIP, G_ROOT)}{circle(GX, GY, G_HOLE)}"/>')
+            f'<path fill="{P["gear"]}" fill-opacity="0.8" fill-rule="evenodd" d="{gear(GX, GY, G_TIP, G_ROOT)}{circle(GX, GY, G_HOLE)}"/>')
     # Centre the artwork vertically on the square canvas.
     shift = (C - (BASE[1] + BASE[3] + BODY[1])) / 2
     write("logo-flat.svg", svg(C, f'<g transform="translate(0 {fmt(shift)})">{body}</g>'))
