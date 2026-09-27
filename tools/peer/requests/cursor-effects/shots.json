@@ -1,0 +1,171 @@
+[
+ {
+  "project": "curs_none",
+  "stills": [
+   [
+    960,
+    540
+   ]
+  ],
+  "sweep": null,
+  "control": null
+ },
+ {
+  "project": "curs_xray_plain",
+  "stills": [
+   [
+    960,
+    540
+   ],
+   [
+    700,
+    350
+   ],
+   [
+    1250,
+    760
+   ],
+   [
+    560,
+    540
+   ],
+   [
+    960,
+    180
+   ]
+  ],
+  "sweep": null,
+  "control": null
+ },
+ {
+  "project": "curs_xray_moved",
+  "stills": [
+   [
+    1250,
+    460
+   ],
+   [
+    1100,
+    340
+   ],
+   [
+    1400,
+    600
+   ],
+   [
+    1000,
+    520
+   ]
+  ],
+  "sweep": null,
+  "control": null
+ },
+ {
+  "project": "curs_xray_zoom",
+  "stills": [
+   [
+    960,
+    540
+   ],
+   [
+    1200,
+    700
+   ],
+   [
+    700,
+    380
+   ]
+  ],
+  "sweep": null,
+  "control": null
+ },
+ {
+  "project": "curs_xray_crop",
+  "stills": [
+   [
+    960,
+    540
+   ],
+   [
+    1200,
+    800
+   ],
+   [
+    700,
+    250
+   ]
+  ],
+  "sweep": null,
+  "control": null
+ },
+ {
+  "project": "curs_xray_parallax",
+  "stills": [
+   [
+    960,
+    540
+   ],
+   [
+    1100,
+    620
+   ],
+   [
+    840,
+    460
+   ]
+  ],
+  "sweep": null,
+  "control": "curs_parallax_none"
+ },
+ {
+  "project": "curs_parallax_none",
+  "stills": [
+   [
+    960,
+    540
+   ],
+   [
+    1100,
+    620
+   ],
+   [
+    840,
+    460
+   ]
+  ],
+  "sweep": null,
+  "control": null
+ },
+ {
+  "project": "curs_ripple_sweep",
+  "stills": [],
+  "sweep": {
+   "start": [
+    560,
+    540
+   ],
+   "end": [
+    1360,
+    540
+   ],
+   "seconds": 1.0
+  },
+  "control": null
+ },
+ {
+  "project": "curs_fluid_sweep",
+  "stills": [],
+  "sweep": {
+   "start": [
+    560,
+    540
+   ],
+   "end": [
+    1360,
+    540
+   ],
+   "seconds": 1.0
+  },
+  "control": null
+ }
+]
