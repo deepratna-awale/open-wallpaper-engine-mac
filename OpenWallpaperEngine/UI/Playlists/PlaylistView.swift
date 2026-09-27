@@ -34,13 +34,14 @@ struct PlaylistView: View {
                         ))
                         HStack {
                             Text("Wallpaper duration")
+                            // No `step:` (AppKit would draw a tick per step); the binding snaps instead.
                             Slider(value: Binding(
                                 get: { playlist.duration },
-                                set: { wallpaperViewModel.setPlaylistDuration($0) }
-                            ), in: 5...3600)
-                            Text("\(Int(playlist.duration))s")
+                                set: { wallpaperViewModel.setPlaylistDuration(PlaylistDurationFormat.snapped($0)) }
+                            ), in: PlaylistDurationFormat.range)
+                            Text(PlaylistDurationFormat.label(playlist.duration))
                                 .font(.caption.monospacedDigit())
-                                .frame(width: 48, alignment: .trailing)
+                                .frame(width: 64, alignment: .trailing)
                         }
                     }
                     GlassGroup {
