@@ -90,7 +90,9 @@ extension SceneBloomSettings {
     init(_ general: WESceneGeneral, in context: SceneValueContext) {
         let tint = general.bloomtint.map { $0.parseVector3() }
             .map { SIMD3<Float>(Float($0.0), Float($0.1), Float($0.2)) } ?? SceneGeneralDefaults.bloomTint
-        self.init(enabled: (general.value(.bloom, in: context)?.float ?? 0) != 0,
+        // A scene without `bloom` blooms: the constructor's flags (0x26, 0x140186d1f) hold bit 2,
+        // which `bloom` sets and clears (0x14019b4e0).
+        self.init(enabled: (general.value(.bloom, in: context)?.float ?? 1) != 0,
                   strength: general.value(.bloomstrength, in: context)?.float ?? SceneGeneralDefaults.bloomStrength,
                   threshold: general.value(.bloomthreshold, in: context)?.float ?? SceneGeneralDefaults.bloomThreshold,
                   tint: tint, hdr: SceneHDRBloomSettings(general, in: context))

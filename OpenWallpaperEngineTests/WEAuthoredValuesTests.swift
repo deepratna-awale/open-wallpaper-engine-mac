@@ -224,6 +224,17 @@ final class WEAuthoredValuesTests: XCTestCase {
         XCTAssertNil(lighting.lightConfig)
     }
 
+    /// A scene that leaves `bloom` out blooms (the constructor's flags 0x26 hold `bloom`'s bit 2):
+    /// WE 2.8's captures of generated scenes without it glow, and their solid band (0.2 0.6 1.0)
+    /// comes out (51, 255, 255), its bloom added (effect gallery EXTRAS.md item 3).
+    func testBloomIsOnWhenTheSceneLeavesItOut() throws {
+        let absent = try JSONDecoder().decode(WEScene.self, from: Data(#"{"camera":{},"general":{"orthogonalprojection":{"width":100,"height":100}},"objects":[]}"#.utf8))
+        XCTAssertTrue(SceneBloomSettings(absent.general, in: NoValues()).enabled)
+        XCTAssertFalse(SceneBloomSettings(absent.general, in: NoValues()).hdr.enabled, "hdr's bit 0x400 starts clear")
+        let off = try JSONDecoder().decode(WEScene.self, from: Data(#"{"camera":{},"general":{"bloom":false},"objects":[]}"#.utf8))
+        XCTAssertFalse(SceneBloomSettings(off.general, in: NoValues()).enabled)
+    }
+
     func testAuthoredGeneralValuesWin() throws {
         let json = #"{"camera":{},"general":{"bloom":true,"bloomstrength":1.2,"bloomthreshold":0.3,"cameraparallaxamount":0.8,"orthogonalprojection":{"width":100,"height":100}},"objects":[]}"#
         let scene = try JSONDecoder().decode(WEScene.self, from: Data(json.utf8))
