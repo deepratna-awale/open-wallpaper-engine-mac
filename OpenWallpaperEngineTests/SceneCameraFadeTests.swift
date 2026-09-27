@@ -60,19 +60,41 @@ final class SceneCameraFadeTests: XCTestCase {
             let bytes = try TextureUploadTests.read(frame, device: device)
             let base = SIMD3<Float>(200, 100, 50) / 255
             let expected = base * (1 - alpha) + color * 0.7 * alpha
-            for channel in 0..<3 {
-                XCTAssertEqual(Float(bytes[channel]) / 255, expected[channel], accuracy: 1.5 / 255,
-                               "alpha \(alpha), channel \(channel)")
+            // Every pixel of the target: the fade covers it whole.
+            var wrong = 0
+            for pixel in 0..<(bytes.count / 4) {
+                for channel in 0..<3 where abs(Float(bytes[4 * pixel + channel]) / 255 - expected[channel]) > 1.5 / 255 {
+                    wrong += 1
+                }
             }
+            XCTAssertEqual(wrong, 0, "alpha \(alpha): components off the expected fade")
         }
     }
 
-    private func target(filledWith value: SIMD4<UInt8>) throws -> MTLTexture {
-        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: 8, height: 8, mipmapped: false)
+    /// The fade runs after the colour correction, on the frame's own targets, drawn by the same
+    /// renderer after other passes: it still covers the whole target (it drew a trapezoid over part
+    /// of the default projects arsenal and fantasticcar).
+    func testTheFadeCoversAWideTargetAfterOtherDraws() throws {
+        let fade = try SceneCameraFade.build(with: builder)
+        for _ in 0..<2 {
+            let frame = try target(filledWith: SIMD4(0, 0, 0, 255), width: 192, height: 108)
+            let commands = try XCTUnwrap(queue.makeCommandBuffer())
+            fade.encode(on: frame, alpha: 1, builtins: BuiltinFrameContext(), values: Properties(), commandBuffer: commands)
+            commands.commit()
+            commands.waitUntilCompleted()
+            let bytes = try TextureUploadTests.read(frame, device: device)
+            let covered = stride(from: 0, to: bytes.count, by: 4).filter { bytes[$0] > 0 }.count
+            XCTAssertEqual(covered, 192 * 108, "every pixel faded")
+        }
+    }
+
+    private func target(filledWith value: SIMD4<UInt8>, width: Int = 8, height: Int = 8) throws -> MTLTexture {
+        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: width, height: height,
+                                                                  mipmapped: false)
         descriptor.usage = [.renderTarget, .shaderRead]
         let texture = try XCTUnwrap(device.makeTexture(descriptor: descriptor))
-        let bytes = [UInt8](repeating: 0, count: 8 * 8 * 4).enumerated().map { value[$0.offset % 4] }
-        texture.replace(region: MTLRegionMake2D(0, 0, 8, 8), mipmapLevel: 0, withBytes: bytes, bytesPerRow: 8 * 4)
+        let bytes = [UInt8](repeating: 0, count: width * height * 4).enumerated().map { value[$0.offset % 4] }
+        texture.replace(region: MTLRegionMake2D(0, 0, width, height), mipmapLevel: 0, withBytes: bytes, bytesPerRow: width * 4)
         return texture
     }
 }
