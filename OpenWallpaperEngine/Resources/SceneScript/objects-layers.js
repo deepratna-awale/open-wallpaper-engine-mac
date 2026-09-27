@@ -213,17 +213,14 @@
     }
 
     // Members WE has that need engine features this app lacks yet (runtime parenting, object-space
-    // rotation, blend shapes (no rig has morph targets), bone physics (no rig has physics bones),
-    // video textures). A puppet image's animation layers, bones and attachments are below.
-    const zero = function () { return 0; };
+    // rotation, bone physics (no rig has physics bones), video textures). A puppet image's
+    // animation layers, bones, blend shapes and attachments are below.
     const none = function () { return null; };
-    const minusOne = function () { return -1; };
     const P = Layer.prototype;
     [['rotateObjectSpace'], ['lookAt'], ['lookAtYaw'], ['setParent']]
         .forEach(function (s) { objects.stub(P, 'ILayer', s[0], s[1]); });
     objects.stub(P, 'IEffectLayer', 'transformAttachmentToTexture', function () { return objects.mat3(); });
-    [['getVideoTexture', none], ['applyBonePhysicsImpulse'], ['resetBonePhysicsSimulation'],
-        ['getBlendShapeIndex', minusOne], ['getBlendShapeWeight', zero], ['setBlendShapeWeight']]
+    [['getVideoTexture', none], ['applyBonePhysicsImpulse'], ['resetBonePhysicsSimulation']]
         .forEach(function (s) { objects.stub(P, 'IImageLayer', s[0], s[1]); });
 
     // MARK: puppet and model rigs (docs/models-plan.md §2.8, §4.3 P2 and M6)
@@ -624,6 +621,35 @@
         const v = vectorArgument(origin);
         if (v === undefined) return;
         setLocal(this, which, function (m) { m[12] = v[0]; m[13] = v[1]; m[14] = v[2]; return m; });
+    });
+
+    // Blend shapes: the targets of the rig's first mesh (MDMP), on images only (0x140210400,
+    // 0x1402104b0, 0x1402105c0). A weight holds for the renderer's next frame: every frame starts
+    // the weights over, then the rig's morph tracks set theirs (docs/models-plan.md §2.9).
+    function blendShapeIndex(rig, which) {
+        const count = rigValues[rigBase(rig) + RL.blendShapeCount] | 0;
+        if (typeof which === 'number') {
+            const index = Math.floor(which);
+            return index >= 0 && index < count ? index : -1;
+        }
+        if (typeof which !== 'string') return -1;
+        return rig.blendShapes ? rig.blendShapes.indexOf(which) : -1;
+    }
+    objects.defineMethod(P, 'getBlendShapeIndex', function (name) {
+        const rig = boneRigOf(this);
+        return rig && typeof name === 'string' ? blendShapeIndex(rig, name) : -1;
+    });
+    objects.defineMethod(P, 'getBlendShapeWeight', function (which) {
+        const rig = boneRigOf(this);
+        const index = rig ? blendShapeIndex(rig, which) : -1;
+        return index < 0 ? 0 : rigValues[rigBase(rig) + RL.blendShapes + index];
+    });
+    objects.defineMethod(P, 'setBlendShapeWeight', function (which, weight) {
+        const rig = boneRigOf(this);
+        const index = rig ? blendShapeIndex(rig, which) : -1;
+        if (index < 0 || typeof weight !== 'number' || !isFinite(weight)) return;
+        if (index < RL.maximumBlendShapes) rigValues[rigBase(rig) + RL.blendShapes + index] = weight;
+        objects.push(OP.rigBlendShape, this._slot, [index, weight]);
     });
 
     // ILayer attachments: the layer's own rig's attachment points (MDAT), in the world.

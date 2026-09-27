@@ -1494,7 +1494,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             guard let id = Int(entry.layer.id), let animator = puppetAnimators[entry.layer.id] else { continue }
             let world = ScenePuppetAttachments.matrix(worldTransform(entry))
             input.rigs[id] = SceneScriptRigFeedback(layers: animator.layerStates, locals: animator.locals,
-                                                    worlds: animator.worlds.map { world * $0 }, ended: animator.takeEnded())
+                                                    worlds: animator.worlds.map { world * $0 }, ended: animator.takeEnded(),
+                                                    blendShapeWeights: animator.blendShapeWeights)
         }
         for key in models?.riggedObjectIDs ?? [] {
             guard let id = Int(key), let animator = models?.animator(for: key) else { continue }

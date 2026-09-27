@@ -45,6 +45,8 @@ struct SceneScriptRigDescription: Equatable {
     var clips: [Clip]
     var layers: [Layer]
     var attachments: [Attachment]
+    /// The first mesh's blend-shape (`MDMP` target) names, in index order (`getBlendShapeIndex`).
+    var blendShapes: [String] = []
 
     /// The JS record's `rig` (with the buffer slot the store gave it).
     func javaScriptRecord(slot: Int) -> [String: Any] {
@@ -57,6 +59,7 @@ struct SceneScriptRigDescription: Equatable {
             },
             "layers": layers.map { ["key": $0.key, "name": $0.name, "clip": $0.clip, "additive": $0.additive] as [String: Any] },
             "attachments": attachments.map { ["name": $0.name, "bone": $0.bone, "matrix": $0.matrix] as [String: Any] },
+            "blendShapes": blendShapes,
         ]
     }
 }
@@ -85,6 +88,7 @@ extension SceneScriptRigDescription {
             return Attachment(name: attachment.name, bone: Int(attachment.bone),
                               matrix: [m.columns.0, m.columns.1, m.columns.2, m.columns.3].flatMap { [$0.x, $0.y, $0.z, $0.w] })
         }
+        blendShapes = model.morphTargets?.first { $0.mesh == 0 }?.targets.map(\.name) ?? []
     }
 }
 
@@ -94,9 +98,11 @@ extension SceneScriptRigDescription {
 enum SceneScriptRigLayout {
     static let maximumBones = 128
     static let maximumLayers = 32
+    static let maximumBlendShapes = 256
     // Header.
     static let boneCount = 0
     static let layerCount = 1
+    static let blendShapeCount = 2
     // Layers, in evaluation order, from `layers`, `layerStride` floats each.
     static let layers = 4
     static let layerStride = 12
@@ -119,7 +125,9 @@ enum SceneScriptRigLayout {
     static let bones = layers + maximumLayers * layerStride
     static let boneStride = 32
     static let boneWorld = 16
-    static let stride = bones + maximumBones * boneStride
+    // The first mesh's blend-shape weights, one float each.
+    static let blendShapes = bones + maximumBones * boneStride
+    static let stride = blendShapes + maximumBlendShapes
 
     static var javaScriptObject: [String: Int] {
         ["boneCount": boneCount, "layerCount": layerCount, "layers": layers, "layerStride": layerStride,
@@ -127,7 +135,8 @@ enum SceneScriptRigLayout {
          "layerFlags": layerFlags, "layerRate": layerRate, "layerBlend": layerBlend, "layerVisible": layerVisible,
          "layerAdditive": layerAdditive, "layerEnded": layerEnded, "flagPaused": flagPaused,
          "flagFinished": flagFinished, "flagBackwards": flagBackwards, "bones": bones, "boneStride": boneStride,
-         "boneWorld": boneWorld, "maximumLayers": maximumLayers, "maximumBones": maximumBones]
+         "boneWorld": boneWorld, "maximumLayers": maximumLayers, "maximumBones": maximumBones,
+         "blendShapeCount": blendShapeCount, "blendShapes": blendShapes, "maximumBlendShapes": maximumBlendShapes]
     }
 
     /// The rig as placed: its authored layers at time 0 and its bind pose (in model space, the
@@ -146,6 +155,7 @@ enum SceneScriptRigLayout {
             buffer.write(bone.local, slot: slot, offset: self.bones + index * boneStride)
             buffer.write(bone.model, slot: slot, offset: self.bones + index * boneStride + boneWorld)
         }
+        buffer[slot, blendShapeCount] = Float(min(rig.blendShapes.count, maximumBlendShapes))
         buffer.dirty[slot] = 0
     }
 
@@ -171,6 +181,7 @@ enum SceneScriptRigLayout {
             buffer.write(components(feedback.locals[bone]), slot: slot, offset: base)
             buffer.write(components(feedback.worlds[bone]), slot: slot, offset: base + boneWorld)
         }
+        buffer.write(Array(feedback.blendShapeWeights.prefix(maximumBlendShapes)), slot: slot, offset: blendShapes)
     }
 
     static func components(_ m: simd_float4x4) -> [Float] {
@@ -223,6 +234,10 @@ enum SceneScriptRigLayout {
         case .rigBoneLocal, .rigBoneWorld:
             guard numbers.count == 17, let bone = bone(numbers[0]), let matrix = matrix(numbers[1...]) else { return nil }
             return opcode == .rigBoneLocal ? .setLocal(bone: bone, matrix: matrix) : .setWorld(bone: bone, matrix: matrix)
+        case .rigBlendShape:
+            guard numbers.count == 2, numbers[1].isFinite,
+                  let index = SceneScriptNumber.index(numbers[0], in: 0...Int(UInt16.max)) else { return nil }
+            return .setBlendShape(index: index, weight: numbers[1])
         default:
             return nil
         }

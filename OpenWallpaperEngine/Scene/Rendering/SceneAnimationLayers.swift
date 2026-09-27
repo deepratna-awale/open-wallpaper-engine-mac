@@ -163,6 +163,13 @@ struct SceneAnimationLayerStack: Equatable {
 
     /// Advances every visible layer by `delta` seconds and returns the pose, one transform per bone.
     mutating func evaluate(delta: Float, update: inout SceneAnimationLayerUpdate) -> [SceneBoneTransform] {
+        var morphs: [SceneMorphWeights] = []
+        return evaluate(delta: delta, update: &update, morphs: &morphs, kind: .model)
+    }
+
+    /// The same, with each layer's morph tracks laid over `morphs` (`applyMorphs`) as it applies.
+    mutating func evaluate(delta: Float, update: inout SceneAnimationLayerUpdate, morphs: inout [SceneMorphWeights],
+                           kind: SceneMorphRig.Kind) -> [SceneBoneTransform] {
         var pose = skeleton.bindPose
         var index = 0
         while index < layers.count {
@@ -178,6 +185,7 @@ struct SceneAnimationLayerStack: Equatable {
             if Self.ended(before: before, after: after) { update.ended.append(key) }
             let weight = layers[index].weight()
             apply(layers[index], weight: weight, to: &pose)
+            if !morphs.isEmpty { applyMorphs(layers[index], weight: weight, to: &morphs, kind: kind) }
             if layers[index].removesWhenFinished, after.flags.contains(.finished) {
                 layers.remove(at: index)
                 update.removed.append(key)

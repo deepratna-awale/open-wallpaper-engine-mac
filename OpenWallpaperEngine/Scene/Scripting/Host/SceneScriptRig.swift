@@ -38,6 +38,8 @@ enum SceneScriptRigCommand: Equatable {
     case setLocal(bone: Int, matrix: simd_float4x4)
     /// `setBoneTransform`, in the rig's model space (the renderer takes the object's world off).
     case setWorld(bone: Int, matrix: simd_float4x4)
+    /// `setBlendShapeWeight` on the rig's first mesh's target `index` (0x1402105c0).
+    case setBlendShape(index: Int, weight: Float)
 }
 
 /// A puppet's skeleton as the renderer left it after a frame, for the next script frame.
@@ -62,4 +64,6 @@ struct SceneScriptRigFeedback: Equatable {
     var worlds: [simd_float4x4] = []
     /// Layers whose clip reached its end since the last feedback (`addEndedCallback`).
     var ended: [Int] = []
+    /// The first mesh's blend-shape weights (`getBlendShapeWeight`).
+    var blendShapeWeights: [Float] = []
 }

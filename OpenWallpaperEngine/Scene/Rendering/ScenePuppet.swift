@@ -41,12 +41,15 @@ final class ScenePuppetPlan {
     let animationLayers: [WEAnimationLayer]
     /// The rig's attachment points (`MDAT`), which children name in `attachment`.
     let attachments: [MDLAttachment]
+    /// The first mesh's blend shapes (`MDMP`) and flags: its "morph_<n>" texture and uniforms.
+    let morphs: MDLMorphTargets?
+    let meshFlags: UInt32
 
     var boneCount: Int { combos.boneCount }
 
     init(rigPath: String, material: ImageMaterialPlan, combos: ImagePuppetCombos, mesh: MDLMesh, vertexData: Data,
          imageSize: SIMD2<Float>, contentPixels: SIMD2<Int>, skeleton: MDLSkeleton, clips: [MDLAnimation] = [],
-         animationLayers: [WEAnimationLayer] = [], attachments: [MDLAttachment] = []) {
+         animationLayers: [WEAnimationLayer] = [], attachments: [MDLAttachment] = [], morphs: MDLMorphTargets? = nil) {
         self.rigPath = rigPath
         self.material = material
         self.combos = combos
@@ -61,11 +64,14 @@ final class ScenePuppetPlan {
         self.clips = clips
         self.animationLayers = animationLayers
         self.attachments = attachments
+        self.morphs = morphs
+        meshFlags = mesh.flags
     }
 
     /// The animator that poses this rig from the image's animation layers.
     func makeAnimator() -> ScenePuppetAnimator {
-        ScenePuppetAnimator(skeleton: skeleton, clips: clips, layers: animationLayers) { [rigPath] layer in
+        ScenePuppetAnimator(skeleton: skeleton, clips: clips, layers: animationLayers,
+                            morphRig: SceneMorphRig.puppet(morphs, meshFlags: meshFlags)) { [rigPath] layer in
             OWELog.error(.scene, "Puppet rig \(rigPath) has no clip \(layer.animation.map(String.init) ?? "(none)") for "
                          + "animation layer \(layer.name ?? "?"); WE makes no layer for it")
         }
@@ -113,7 +119,8 @@ final class ScenePuppetPlan {
         return ScenePuppetPlan(rigPath: rigPath, material: material, combos: combos, mesh: mesh,
                                vertexData: scaledTexCoords(mesh, by: fraction), imageSize: imageSize,
                                contentPixels: content, skeleton: skeleton, clips: model.animations ?? [],
-                               animationLayers: animationLayers, attachments: model.attachments ?? [])
+                               animationLayers: animationLayers, attachments: model.attachments ?? [],
+                               morphs: model.morphTargets?.first { $0.mesh == 0 })
     }
 
     /// The vertices with the first texture coordinate's u and v multiplied by `scale`, as WE's copy
@@ -154,6 +161,8 @@ enum ScenePuppetError: Error, CustomStringConvertible {
 struct ScenePuppetPose: Equatable {
     var bones: [simd_float4x4]
     var bonesAlpha: [Float]
+    /// The blend shapes' uniforms (`SceneMorphRig.puppetUniforms`); nil for a rig without targets.
+    var morph: SceneMorphUniforms? = nil
 
     static func bind(boneCount: Int) -> ScenePuppetPose {
         ScenePuppetPose(bones: Array(repeating: matrix_identity_float4x4, count: boneCount),
@@ -182,7 +191,7 @@ final class ScenePuppetRenderer {
     private let clampSampler: MTLSamplerState
     private let repeatSampler: MTLSamplerState
     private let zeroAttributes: MTLBuffer
-    /// WE's "morph_<n>" texture stand-in for a `MORPHING` mesh without targets (M7 fills it).
+    /// WE's "morph_<n>" texture stand-in for a `MORPHING` mesh without targets.
     private let emptyMorphTexture: MTLTexture
     private let uniformArena: SceneUniformArena
 
@@ -213,6 +222,8 @@ final class ScenePuppetRenderer {
         let uniforms: ImageMaterialUniforms
         let vertices: MTLBuffer
         let indices: MTLBuffer
+        /// The rig's "morph_<n>" texture (`SceneMorphTexture.puppet`); nil without targets.
+        let morphTexture: MTLTexture?
         var target: MTLTexture?
         var drawnPose: ScenePuppetPose?
         var drawnSource: ObjectIdentifier?
@@ -228,6 +239,11 @@ final class ScenePuppetRenderer {
             else { return nil }
             self.vertices = vertices
             self.indices = indices
+            morphTexture = plan.morphs.flatMap { morphs -> MTLTexture? in
+                guard !morphs.targets.isEmpty else { return nil }
+                return SceneMorphTexture.makeTexture(SceneMorphTexture.puppet(morphs, meshFlags: plan.meshFlags),
+                                                     device: device, label: "morph_puppet")
+            }
         }
     }
 
@@ -446,7 +462,7 @@ final class ScenePuppetRenderer {
                             content: SIMD2<Int>, commandBuffer: MTLCommandBuffer) -> Bool {
         let pass = plan.material.pass
         let pipeline = self.pipeline(for: plan)
-        let bound = pipeline == nil ? nil : textures(of: plan, draw)
+        let bound = pipeline == nil ? nil : textures(of: plan, draw, morph: state.morphTexture)
         let renderPass = MTLRenderPassDescriptor()
         renderPass.colorAttachments[0].texture = scratch
         renderPass.colorAttachments[0].loadAction = .clear
@@ -512,8 +528,9 @@ final class ScenePuppetRenderer {
                                 SIMD4(0, 0, 1 / 2000, 0), SIMD4(0, 0, 0.5, 1)))
     }
 
-    /// `g_Bones`, `g_BonesAlpha`; the morph uniforms stay zero (no active targets).
+    /// `g_Bones`, `g_BonesAlpha` and the morph uniforms (zero without targets: none applies).
     static func writePose(_ pose: ScenePuppetPose, layout: UniformLayout, into bytes: inout [UInt8]) {
+        pose.morph?.write(into: &bytes, layout: layout)
         if let member = layout.members["g_Bones"] {
             UniformWriter.write(pose.boneComponents, member: member, into: &bytes)
         }
@@ -525,14 +542,14 @@ final class ScenePuppetRenderer {
     private typealias BoundTexture = (slot: Int, texture: MTLTexture, sampler: MTLSamplerState, contentSize: SIMD2<Float>?)
 
     /// The textures the mesh pass reads; nil when one isn't there this frame.
-    private func textures(of plan: ScenePuppetPlan, _ draw: Draw) -> [BoundTexture]? {
+    private func textures(of plan: ScenePuppetPlan, _ draw: Draw, morph: MTLTexture?) -> [BoundTexture]? {
         var bound: [BoundTexture] = []
         let pass = plan.material.pass
         for slot in pass.variant?.textureSlots ?? [] {
             let sampler = plan.material.clampedSlots.contains(slot) ? clampSampler : repeatSampler
             guard let input = pass.textures[slot] else {
                 if plan.combos.morphing, slot == ImagePuppetCombos.morphSlot {
-                    bound.append((slot, emptyMorphTexture, clampSampler, nil))
+                    bound.append((slot, morph ?? emptyMorphTexture, clampSampler, nil))
                 }
                 continue
             }

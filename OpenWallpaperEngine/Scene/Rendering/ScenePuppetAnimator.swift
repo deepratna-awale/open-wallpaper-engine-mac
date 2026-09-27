@@ -17,6 +17,11 @@ final class ScenePuppetAnimator {
     private(set) var lastUpdate = SceneAnimationLayerUpdate()
     /// Layers whose clip ended since scripts were last told (`takeEnded`).
     private var endedSinceFeedback: [Int] = []
+    /// The rig's blend shapes, and their weights per mesh this frame (`SceneMorphWeights`).
+    let morphRig: SceneMorphRig?
+    private(set) var morphs: [SceneMorphWeights]
+    /// `setBlendShapeWeight` calls this frame, laid over the evaluated weights once.
+    private var pendingBlendShapes: [(index: Int, weight: Float)] = []
 
     /// An authored layer's bound values: user bindings and `animation` timelines on `rate`,
     /// `blend` and `visible`, re-read every frame until a script sets the field.
@@ -38,10 +43,12 @@ final class ScenePuppetAnimator {
 
     /// `layers` are the image's authored `animationlayers`; one naming no clip of `clips` makes
     /// no layer (WE's parser, 0x1402230fe), and is reported through `missing`.
-    init(skeleton: MDLSkeleton, clips: [MDLAnimation], layers: [WEAnimationLayer],
+    init(skeleton: MDLSkeleton, clips: [MDLAnimation], layers: [WEAnimationLayer], morphRig: SceneMorphRig? = nil,
          missing: (WEAnimationLayer) -> Void = { _ in }) {
         let skeleton = SceneSkeleton(skeleton)
         self.skeleton = skeleton
+        self.morphRig = morphRig
+        morphs = (morphRig?.targetCounts ?? []).map(SceneMorphWeights.init(count:))
         stack = SceneAnimationLayerStack(skeleton: skeleton, clips: clips)
         locals = skeleton.bindLocal
         worlds = skeleton.bindWorld
@@ -82,16 +89,21 @@ final class ScenePuppetAnimator {
     /// One frame (`delta` scene seconds): the bound values, the layers, then scripts' bone writes.
     /// A rig with layers is posed from its bind pose every frame, which replaces what scripts set
     /// before; one without keeps its bones as scripts leave them [I: 0x1401fdf90 wasn't traced].
+    /// Blend-shape weights start over every frame (0x14021c5b0, 0x1401fecba), layers or not; a
+    /// script's weight holds for the frame it arrives in.
     func advance(delta: Float, values: SceneValueContext) {
         resolveBindings(delta: delta, values: values)
         var update = SceneAnimationLayerUpdate()
+        for index in morphs.indices { morphs[index].reset() }
         if !stack.layers.isEmpty {
-            let transforms = stack.evaluate(delta: delta, update: &update)
+            let transforms = stack.evaluate(delta: delta, update: &update, morphs: &morphs, kind: morphRig?.kind ?? .model)
             locals = transforms.map(\.matrix)
             worldOverrides.removeAll()
         }
         for (bone, matrix) in pendingLocals where bone < locals.count { locals[bone] = matrix }
         pendingLocals.removeAll()
+        for write in pendingBlendShapes where !morphs.isEmpty { morphs[0].setFromScript(write.index, write.weight) }
+        pendingBlendShapes.removeAll()
         lastUpdate = update
         endedSinceFeedback += update.ended
         recompute()
@@ -137,7 +149,8 @@ final class ScenePuppetAnimator {
             palette[bone] = matrix * skeleton.inverseBind[bone]
         }
         self.worlds = worlds
-        let next = ScenePuppetPose(bones: palette, bonesAlpha: pose.bonesAlpha)
+        let next = ScenePuppetPose(bones: palette, bonesAlpha: pose.bonesAlpha,
+                                   morph: morphRig?.puppetUniforms(morphs, boneMatrices: worlds))
         if next != pose { pose = next }
     }
 
@@ -193,8 +206,16 @@ final class ScenePuppetAnimator {
             guard bone >= 0, bone < locals.count else { return }
             worldOverrides[bone] = matrix
             recompute()
+        case let .setBlendShape(index, weight):
+            guard !morphs.isEmpty else { return }
+            pendingBlendShapes.append((index, weight))
+            morphs[0].setFromScript(index, weight)
+            recompute()
         }
     }
+
+    /// The first mesh's blend-shape weights as scripts see them (`getBlendShapeWeight`).
+    var blendShapeWeights: [Float] { morphs.first?.weights ?? [] }
 
     /// The layers as scripts see them, in evaluation order.
     var layerStates: [SceneScriptRigFeedback.Layer] {

@@ -22,8 +22,9 @@ final class SceneModelRenderer: SceneModelDrawing {
     private let repeatSampler: MTLSamplerState
     /// `_rt_shadowAtlas`'s comparison sampler (`SceneShadowAtlas.makeSampler`).
     private let shadowSampler: MTLSamplerState
-    /// WE's "morph" texture stand-in for a `MORPHING` mesh (M7 fills it).
+    /// WE's "morph" texture stand-in for a `MORPHING` mesh without targets, and the meshes' own.
     private let emptyMorphTexture: MTLTexture
+    let morphTextures: SceneMorphTextureCache
 
     private let compileQueue = DispatchQueue(label: "owe.model-pipelines", qos: .userInitiated, attributes: .concurrent)
     /// Owns `pipelines`, `pending` and `failed`, which compile threads write.
@@ -98,6 +99,7 @@ final class SceneModelRenderer: SceneModelDrawing {
         shadowSampler = shadow
         zeroAttributes = zero
         emptyMorphTexture = morphTexture
+        morphTextures = SceneMorphTextureCache(device: device)
     }
 
     // MARK: - SceneModelDrawing
@@ -114,6 +116,7 @@ final class SceneModelRenderer: SceneModelDrawing {
         advancedAt.removeAll()
         meshDraws.removeAll()
         culledModels.removeAll()
+        morphTextures.removeAll()
     }
 
     /// A model a script created (`SceneScriptCreatedObject.model`), drawn from its next frame.
@@ -156,7 +159,8 @@ final class SceneModelRenderer: SceneModelDrawing {
             guard let buffers = meshBuffers[index], mesh.material.pass.variant != nil,
                   let pipeline = pipeline(for: mesh, pixelFormat: draw.pixelFormat, sampleCount: draw.sampleCount,
                                           depthFormat: depthFormat),
-                  let bound = textures(of: mesh.material, draw) else { continue }
+                  let bound = textures(of: mesh.material, draw, morph: morphTextures.texture(plan, mesh: mesh.index))
+            else { continue }
             let program = meshUniforms[index]
             if program.size > 0 {
                 let key = ModelMaterialUniforms.PassKey(
@@ -173,6 +177,7 @@ final class SceneModelRenderer: SceneModelDrawing {
                     return pass
                 }
                 if let bones { program.writeBones(bones) }
+                if mesh.material.meshCombos.morphing { program.writeMorphs(morphUniforms(model.id, plan: plan, mesh: mesh)) }
             }
             encoder.setRenderPipelineState(pipeline)
             if let depth = draw.depth {
@@ -240,7 +245,7 @@ final class SceneModelRenderer: SceneModelDrawing {
     /// A script's call on a model's animation layers (models have no bone API, §2.8).
     func perform(_ command: SceneScriptRigCommand, on id: String) {
         switch command {
-        case .setLocal, .setWorld: return
+        case .setLocal, .setWorld, .setBlendShape: return
         default: animator(for: id)?.perform(command)
         }
     }
@@ -345,13 +350,13 @@ final class SceneModelRenderer: SceneModelDrawing {
     private typealias BoundTexture = (slot: Int, texture: MTLTexture, sampler: MTLSamplerState, contentSize: SIMD2<Float>?)
 
     /// The textures the mesh's pass reads this frame; nil when one isn't there.
-    private func textures(of material: ModelMaterialPlan, _ draw: SceneModelDraw) -> [BoundTexture]? {
+    private func textures(of material: ModelMaterialPlan, _ draw: SceneModelDraw, morph: MTLTexture?) -> [BoundTexture]? {
         var bound: [BoundTexture] = []
         for slot in material.pass.variant?.textureSlots ?? [] {
             let sampler = material.clampedSlots.contains(slot) ? clampSampler : repeatSampler
             guard let input = material.pass.textures[slot] else {
                 if material.meshCombos.morphing, slot == ModelMeshCombos.morphSlot {
-                    bound.append((slot, emptyMorphTexture, clampSampler, nil))
+                    bound.append((slot, morph ?? emptyMorphTexture, clampSampler, nil))
                 }
                 continue
             }

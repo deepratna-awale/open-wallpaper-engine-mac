@@ -212,7 +212,8 @@ final class SceneShadowPass {
         for (index, mesh) in plan.meshes.enumerated() where mesh.material.isOpaque {
             guard let material = mesh.material.shadowCaster, let variant = material.pass.variant,
                   let meshBuffers = buffers[index], let pipeline = pipeline(for: mesh, material: material, variant: variant),
-                  let bound = textures(of: material, assetTexture: assetTexture) else { continue }
+                  let bound = textures(of: material, assetTexture: assetTexture,
+                                       morph: models.morphTextures.texture(plan, mesh: mesh.index)) else { continue }
             if let program = meshUniforms[index], program.size > 0 {
                 let key = ModelMaterialUniforms.PassKey(
                     world: caster.world, view: frame.camera.view, viewProjection: placement.shaderViewProjection,
@@ -228,6 +229,10 @@ final class SceneShadowPass {
                 }
                 program.write(flatMatrices, member: "g_ViewportViewProjectionMatrices")
                 if let bones { program.writeBones(bones) }
+                // The caster's `MORPHING` is the source material's; its morph texture and uniforms too.
+                if mesh.material.meshCombos.morphing {
+                    program.writeMorphs(models.morphUniforms(caster.model.id, plan: plan, mesh: mesh))
+                }
                 program.bytes.withUnsafeBytes { raw in uniformArena.bind(raw, index: 0, to: encoder, commandBuffer: commandBuffer) }
             }
             encoder.setRenderPipelineState(pipeline)
@@ -261,10 +266,10 @@ final class SceneShadowPass {
 
     private typealias BoundTexture = (slot: Int, texture: MTLTexture, sampler: MTLSamplerState)
 
-    /// The shadow variant's textures: the material's by slot, the empty morph texture for the
-    /// engine's; nil when one isn't there this frame.
-    private func textures(of material: ModelMaterialPlan,
-                          assetTexture: (String, SceneMetalTextureSource) -> MTLTexture?) -> [BoundTexture]? {
+    /// The shadow variant's textures: the material's by slot, the mesh's morph texture (or the
+    /// empty one) for the engine's; nil when one isn't there this frame.
+    private func textures(of material: ModelMaterialPlan, assetTexture: (String, SceneMetalTextureSource) -> MTLTexture?,
+                          morph: MTLTexture?) -> [BoundTexture]? {
         var bound: [BoundTexture] = []
         for slot in material.pass.variant?.textureSlots ?? [] {
             let sampler = material.clampedSlots.contains(slot) ? clampSampler : repeatSampler
@@ -273,7 +278,7 @@ final class SceneShadowPass {
                 guard let texture = assetTexture(key, source) else { return nil }
                 bound.append((slot, texture, sampler))
             case nil:
-                bound.append((slot, emptyMorphTexture, clampSampler))
+                bound.append((slot, morph ?? emptyMorphTexture, clampSampler))
             default:
                 return nil
             }

@@ -81,6 +81,7 @@ struct SceneModelBuilder {
             return nil
         }
         return SceneModelPlan(path: path, meshes: meshes, bounds: model.bounds, skeleton: model.skeleton,
-                              clips: model.animations ?? [], attachments: model.attachments ?? [])
+                              clips: model.animations ?? [], attachments: model.attachments ?? [],
+                              morphs: SceneModelMorphs(model: model))
     }
 }

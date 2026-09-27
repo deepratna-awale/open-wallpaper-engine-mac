@@ -31,9 +31,11 @@ final class SceneModelPlan {
     /// Where a script-made model's changing geometry comes from (`IModelData.applyData`); nil for
     /// a `.mdl`, whose meshes' data never change. `Mesh.index` is the shape's index there.
     let geometry: SceneModelGeometrySource?
+    /// The meshes' blend shapes (`MDMP`); nil without any.
+    let morphs: SceneModelMorphs?
 
     init(path: String, meshes: [Mesh], bounds: MDLBounds, skeleton: MDLSkeleton?, clips: [MDLAnimation] = [],
-         attachments: [MDLAttachment] = [], geometry: SceneModelGeometrySource? = nil) {
+         attachments: [MDLAttachment] = [], geometry: SceneModelGeometrySource? = nil, morphs: SceneModelMorphs? = nil) {
         self.path = path
         self.meshes = Self.drawOrder(meshes)
         self.bounds = bounds
@@ -41,6 +43,7 @@ final class SceneModelPlan {
         self.clips = clips
         self.attachments = attachments
         self.geometry = geometry
+        self.morphs = morphs
     }
 
     /// WE's translucent flag (0x140225241): every mesh blending normal or alpha-to-coverage clears
@@ -71,7 +74,8 @@ final class SceneModelPlan {
     /// without bones. A layer naming no clip of the `.mdl` makes no layer (logged).
     func makeAnimator(layers: [WEAnimationLayer], objectName: String) -> ScenePuppetAnimator? {
         guard let skeleton, !skeleton.bones.isEmpty else { return nil }
-        return ScenePuppetAnimator(skeleton: skeleton, clips: clips, layers: layers) { [path] layer in
+        return ScenePuppetAnimator(skeleton: skeleton, clips: clips, layers: layers,
+                                   morphRig: morphs.map(SceneMorphRig.model)) { [path] layer in
             OWELog.error(.scene, "Model \(objectName) (\(path)) has no clip \(layer.animation.map(String.init) ?? "(none)") for "
                          + "animation layer \(layer.name ?? "?"); WE makes no layer for it")
         }

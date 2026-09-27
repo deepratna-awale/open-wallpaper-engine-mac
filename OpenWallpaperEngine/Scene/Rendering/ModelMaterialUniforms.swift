@@ -90,6 +90,12 @@ final class ModelMaterialUniforms {
 
     var hasBones: Bool { bones != nil }
 
+    /// The morph uniforms (`g_MorphOffsets`, `g_MorphWeights`) of a `MORPHING` mesh.
+    func writeMorphs(_ morph: SceneMorphUniforms) {
+        guard let layout else { return }
+        morph.write(into: &bytes, layout: layout)
+    }
+
     /// Writes an engine value the material doesn't set and the built-ins don't cover (the shadow
     /// variant's `g_ViewportViewProjectionMatrices`); false when the layout has no such member.
     @discardableResult
