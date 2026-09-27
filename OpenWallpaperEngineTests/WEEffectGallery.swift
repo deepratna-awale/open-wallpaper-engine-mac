@@ -15,11 +15,18 @@ enum WEEffectGallery {
     static let fixtures = Fixtures.url("WEEffectGallery")
     /// Rows at the bottom of WE's captures covered by the taskbar (summarize.py keeps 1030).
     static let comparedHeight = 1030
-    /// The still is taken about 5 s after the wallpaper opened; the clip runs 3 s from there.
+    /// The still is taken 5 s after the wallpaper opened: film grain's noise in WE's still fits
+    /// `frac(g_Time)` = 0.004.
     static let stillTime = 5.0
-    /// summarize.py samples the clip at 5 fps.
-    static let motionStep = 0.2
-    static let motionFrames = 16
+    /// capture_gallery.ps1 saves the still, then starts ffmpeg: the clip starts later. Pulse's
+    /// brightness over WE's 15 clip frames (`smoothstep(sin(3t − π/2)·½ + ½)`) fits a start 0.3 s
+    /// after the still, modulo its 2.09 s period.
+    static let clipStart = 5.3
+    /// The clip is 3 s, recorded at WE's frame rate; summarize.py samples it at 5 fps.
+    static let clipDuration = 3.0
+    /// WE's own frame rate for the gallery (its README: FPS 25). Effects that integrate per frame
+    /// (the fluid simulation's fixed pressure iterations) move by it.
+    static let frameRate = 25.0
     /// Screen pixels from the top-left. The cursor wasn't over the captured display (cursor
     /// ripple and x-ray show nothing in WE's captures), so it's off the screen here.
     static let cursor = SIMD2<Double>(-1920, -1080)
@@ -42,7 +49,9 @@ enum WEEffectGallery {
         var knownGap: String?
 
         var allowedDiff: Double { diffTolerance ?? max(2, diff * 0.25) }
-        var allowedMotion: Double { motionTolerance ?? max(0.35, motion * 0.4) }
+        /// Since the clip is timed and encoded as WE's (`clipStart`, `clipMotion`), every animated
+        /// effect but film grain (FX2) is within 7 % of WE's motion, the fluid simulation and VHS included.
+        var allowedMotion: Double { motionTolerance ?? max(0.15, motion * 0.15) }
         /// The layers' scene.json effect `passes` (they map to effect.json's passes by position).
         var passes: [Any]?
 
@@ -178,37 +187,54 @@ enum WEEffectGallery {
         return Double(sum) / Double(count * 3)
     }
 
-    /// summarize.py's motion: frames at 5 fps, scaled to 480×270 luma (ffmpeg's `format=gray` of the
-    /// clip: full-range BT.601 luma), the top 257 rows, mean absolute change between consecutive frames.
-    static func motion(_ frames: [WEReferenceImage]) -> Double {
-        let lumas = frames.map(smallLuma)
-        guard lumas.count > 1 else { return 0 }
-        var total = 0.0
-        for (a, b) in zip(lumas, lumas.dropFirst()) {
-            var sum: Float = 0
-            for i in 0..<a.count { sum += abs(a[i] - b[i]) }
-            total += Double(sum) / Double(a.count)
-        }
-        return total / Double(lumas.count - 1)
-    }
+    /// ffmpeg, which measures the clip as summarize.py measured WE's.
+    static let ffmpeg = ["/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg"].first(where: FileManager.default.isExecutableFile)
 
-    private static func smallLuma(_ image: WEReferenceImage) -> [Float] {
-        let factor = 4, width = image.width / factor, rows = 257
-        var values = [Float](repeating: 0, count: width * rows)
-        image.pixels.withUnsafeBufferPointer { p in
-            for y in 0..<rows {
-                for x in 0..<width {
-                    var sum: Float = 0
-                    for dy in 0..<factor {
-                        for dx in 0..<factor {
-                            let o = ((y * factor + dy) * image.width + x * factor + dx) * 4
-                            sum += 0.299 * Float(p[o]) + 0.587 * Float(p[o + 1]) + 0.114 * Float(p[o + 2])
-                        }
-                    }
-                    values[y * width + x] = sum / Float(factor * factor)
-                }
+    /// summarize.py's motion of a clip recorded as capture_gallery.ps1 recorded WE's: the frames
+    /// (at `frameRate`) are encoded as its ffmpeg encoded the screen (libx264, CRF 28, yuv420p), then
+    /// read back as summarize.py reads the clip (`fps=5,scale=480:270,format=gray`, the top 257
+    /// rows): the mean absolute change between consecutive frames. The encoding is part of WE's
+    /// number: CRF 28 flattens fine per-pixel noise (film grain, VHS, glitter) between frames.
+    static func clipMotion(_ frames: [WEReferenceImage], scratch: URL) throws -> Double {
+        guard let first = frames.first else { return 0 }
+        let ffmpeg = try XCTUnwrap(ffmpeg, "the effect gallery measures motion through ffmpeg")
+        let clip = scratch.appending(path: "clip-\(UUID().uuidString).mp4")
+        defer { try? FileManager.default.removeItem(at: clip) } // Scratch output; a leftover is harmless.
+        let encoder = Process()
+        encoder.executableURL = URL(fileURLWithPath: ffmpeg)
+        encoder.arguments = ["-loglevel", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgba",
+                             "-s", "\(first.width)x\(first.height)", "-r", String(frameRate), "-i", "-",
+                             "-c:v", "libx264", "-crf", "28", "-pix_fmt", "yuv420p", clip.path]
+        let input = Pipe()
+        encoder.standardInput = input
+        try encoder.run()
+        for frame in frames { try input.fileHandleForWriting.write(contentsOf: Data(frame.pixels)) }
+        try input.fileHandleForWriting.close()
+        encoder.waitUntilExit()
+        XCTAssertEqual(encoder.terminationStatus, 0, "ffmpeg couldn't encode the clip")
+
+        let decoder = Process()
+        decoder.executableURL = URL(fileURLWithPath: ffmpeg)
+        decoder.arguments = ["-loglevel", "error", "-i", clip.path, "-vf", "fps=5,scale=480:270,format=gray",
+                             "-f", "rawvideo", "-"]
+        let output = Pipe()
+        decoder.standardOutput = output
+        try decoder.run()
+        let data = output.fileHandleForReading.readDataToEndOfFile()
+        decoder.waitUntilExit()
+        let frameBytes = 480 * 270, comparedBytes = 480 * 257
+        let count = data.count / frameBytes
+        guard count > 1 else { return 0 }
+        var total = 0.0
+        data.withUnsafeBytes { (raw: UnsafeRawBufferPointer) in
+            let bytes = raw.bindMemory(to: UInt8.self)
+            for index in 1..<count {
+                let a = (index - 1) * frameBytes, b = index * frameBytes
+                var sum = 0
+                for offset in 0..<comparedBytes { sum += abs(Int(bytes[a + offset]) - Int(bytes[b + offset])) }
+                total += Double(sum) / Double(comparedBytes)
             }
         }
-        return values
+        return total / Double(count - 1)
     }
 }

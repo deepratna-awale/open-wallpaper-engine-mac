@@ -4,13 +4,12 @@ import simd
 @testable import OpenWallpaperEngine
 
 /// Draws a library wallpaper headlessly as WE was captured (tools/peer/shoot.ps1): the real loader
-/// and renderer, one 1920×1080 display at 100 % and 30 fps, the wallpaper's default properties and
-/// the given quality settings. The scene clock stands still until every pipeline has compiled and
-/// the frame stops changing, then runs at 1/30 s a frame to each still's time; particles are
-/// seeded (`ParticleRandom`, seed 0), so they draw the same each run.
+/// and renderer, one 1920×1080 display at 100 % and 30 fps (`frameRate`), the wallpaper's default
+/// properties and the given quality settings. The scene clock stands still until every pipeline has
+/// compiled and the frame stops changing, then runs at 1 / `frameRate` s a frame to each still's
+/// time; particles are seeded (`ParticleRandom`, seed 0), so they draw the same each run.
 struct WEReferenceRenderer {
     static let size = SIMD2(1920, 1080)
-    private static let frameStep = 1.0 / 30
 
     struct Shot {
         var time: Double
@@ -30,6 +29,8 @@ struct WEReferenceRenderer {
     var localTime: String?
     /// The particles' random outcome (`SceneMetalRenderer.particleSeed`); 0 is the replayable one.
     var particleSeed: UInt32 = 0
+    /// The frames a second the clock steps at and the viewport asks for: WE's FPS setting.
+    var frameRate = 30.0
 
     /// The frames at `shots` (in time order), placed on the screen as WE places a scene (cover).
     func render(_ shots: [Shot]) throws -> [WEReferenceImage] {
@@ -87,10 +88,11 @@ struct WEReferenceRenderer {
 
         var images: [WEReferenceImage] = []
         var time = 0.0
+        let frameStep = 1 / frameRate
         for shot in shots {
-            while time + Self.frameStep / 2 < shot.time {
-                now += Self.frameStep
-                time += Self.frameStep
+            while time + frameStep / 2 < shot.time {
+                now += frameStep
+                time += frameStep
                 draw(renderer, cursor: shot.cursor)
             }
             let texture = try XCTUnwrap(renderer.sharedFrame)
@@ -105,7 +107,8 @@ struct WEReferenceRenderer {
         let size = SIMD2<Float>(Float(Self.size.x), Float(Self.size.y))
         // The viewport's cursor is in points from the bottom-left.
         let point = SIMD2(Float(cursor.x), size.y - Float(cursor.y))
-        renderer.renderShared([SceneViewport(drawableSize: size, pointSize: size, cursor: point, frameRateLimit: 30)])
+        renderer.renderShared([SceneViewport(drawableSize: size, pointSize: size, cursor: point,
+                                             frameRateLimit: Int(frameRate.rounded()))])
         renderer.lastCommandBuffer?.waitUntilCompleted()
         renderer.scripts.wallpaper?.waitUntilIdle()
         RunLoop.main.run(until: Date())

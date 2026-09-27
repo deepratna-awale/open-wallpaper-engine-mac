@@ -4,8 +4,9 @@ import simd
 
 /// Every built-in effect at its defaults against WE's effect gallery (`WEEffectGallery`): each
 /// gallery scene is built from the fixture pictures and the WE assets' effect, drawn headlessly by
-/// `WEReferenceRenderer` (the still at 5 s, then 3 s at 5 fps), and measured as the gallery's
-/// summarize.py measures WE's captures: the difference from the no-effect scene and the motion.
+/// `WEReferenceRenderer` (the still at 5 s, then a 3 s clip at 25 fps), and measured as the
+/// gallery's summarize.py measures WE's captures: the difference from the no-effect scene, and the
+/// motion of the clip encoded as WE's was (`WEEffectGallery.clipMotion`).
 /// Those two must match WE's (`Tests/Fixtures/WEEffectGallery/expected.json`) within tolerance;
 /// random or animated effects are matched by these statistics, not by pixels.
 ///
@@ -34,6 +35,7 @@ final class WEEffectGalleryTests: XCTestCase {
             throw XCTSkip("set OWE_EFFECT_GALLERY to 1 or to the effect gallery folder")
         }
         try XCTSkipUnless(Fixtures.hasWEShaderSources, "WE's effect shader sources aren't available")
+        try XCTSkipUnless(WEEffectGallery.ffmpeg != nil, "the gallery's motion is measured through ffmpeg")
         let assets = try XCTUnwrap(WallpaperEngineAssets.directory)
         let captures: URL? = gallery == "1" ? nil : URL(fileURLWithPath: gallery, isDirectory: true)
         let output = environment["OWE_EFFECT_GALLERY_OUT"].map { URL(fileURLWithPath: $0, isDirectory: true) }
@@ -58,7 +60,7 @@ final class WEEffectGalleryTests: XCTestCase {
             }
             let frames = try render(directory, stillOnly: false)
             let diff = WEEffectGallery.meanAbsoluteDifference(frames[0], control)
-            let motion = WEEffectGallery.motion(frames)
+            let motion = try WEEffectGallery.clipMotion(Array(frames.dropFirst()), scratch: scratch)
             try frames[0].write(to: output.appending(path: "\(expectation.effect)-ours.png"))
             var versusWE = "\t\t"
             if let captures {
@@ -69,7 +71,7 @@ final class WEEffectGalleryTests: XCTestCase {
                     let taskbar = size.y - WEEffectGallery.comparedHeight
                     let mask = WEReferenceMask(width: size.x, height: size.y, masks: [], taskbar: taskbar)
                     let metrics = WEReferenceMetrics.compare(we: we, ours: frames[0], mask: mask,
-                                                             grid: .init(columns: 4, rows: 2), taskbar: taskbar)
+                                                             grid: .init(columns: 4, rows: 2), taskbar: taskbar, edges: false)
                     versusWE = String(format: "%.1f\t%.3f", metrics.meanAbs, metrics.ssim)
                     let difference = WEReferenceMetrics.differenceImage(we: we, ours: frames[0], mask: mask)
                     try WEReferenceImage.sideBySide([we.reduced(by: 2), frames[0].reduced(by: 2), difference])
@@ -96,7 +98,7 @@ final class WEEffectGalleryTests: XCTestCase {
         print("Effect gallery against WE (output \(output.path)):\n\(text)")
     }
 
-    /// The still at 5 s, and unless `stillOnly` the 5 fps frames after it through 8 s.
+    /// The still at 5 s, then unless `stillOnly` the clip's frames from `clipStart` at WE's frame rate.
     private func render(_ directory: URL, stillOnly: Bool) throws -> [WEReferenceImage] {
         let data = try Data(contentsOf: directory.appending(path: "project.json"))
         let project = try decodeTolerant(WEProject.self, from: data)
@@ -108,12 +110,15 @@ final class WEEffectGalleryTests: XCTestCase {
         settings.sceneDetail = .full
         settings.renderResolution = .native
         settings.antiAliasing = .msaa_x2
-        let renderer = WEReferenceRenderer(directory: directory, project: project, settings: settings,
+        var renderer = WEReferenceRenderer(directory: directory, project: project, settings: settings,
                                            storage: scratch.appending(path: "storage-\(directory.lastPathComponent)"))
-        let count = stillOnly ? 1 : WEEffectGallery.motionFrames
-        let shots = (0..<count).map {
-            WEReferenceRenderer.Shot(time: WEEffectGallery.stillTime + Double($0) * WEEffectGallery.motionStep,
-                                     cursor: WEEffectGallery.cursor)
+        renderer.frameRate = WEEffectGallery.frameRate
+        let clipFrames = Int((WEEffectGallery.clipDuration * WEEffectGallery.frameRate).rounded())
+        let clip: [Double] = stillOnly ? [] : (0..<clipFrames).map { (index: Int) -> Double in
+            WEEffectGallery.clipStart + Double(index) / WEEffectGallery.frameRate
+        }
+        let shots = ([WEEffectGallery.stillTime] + clip).map {
+            WEReferenceRenderer.Shot(time: $0, cursor: WEEffectGallery.cursor)
         }
         defer { Fixtures.removeStoredSettings(for: directory) }
         return try renderer.render(shots)
