@@ -49,8 +49,8 @@ class VideoWallpaperViewModel: ObservableObject {
         audioPlayer.volume = displayPlayback.playsSound ? playVolume : 0
     }
 
-    var player = AVPlayer()
-    private var audioPlayer = AVPlayer()
+    var player = WallpaperAVPlayer.make()
+    private var audioPlayer = WallpaperAVPlayer.make()
     private let ownAudioTap = AudioLevelTap()
     private var cancellables = Set<AnyCancellable>()
     private var itemEndObserver: NSObjectProtocol?
@@ -72,8 +72,8 @@ class VideoWallpaperViewModel: ObservableObject {
         self.currentWallpaper = currentWallpaper
         self.playsAudio = wallpaperViewModel.playsInstanceAudio
         self.wallpaperViewModel = wallpaperViewModel
-        self.player = AVPlayer(url: currentWallpaper.mediaURL)
-        self.audioPlayer = AVPlayer(url: currentWallpaper.mediaURL)
+        self.player = WallpaperAVPlayer.make(item: AVPlayerItem(url: currentWallpaper.mediaURL))
+        self.audioPlayer = WallpaperAVPlayer.make(item: AVPlayerItem(url: currentWallpaper.mediaURL))
         self.player.isMuted = true
         self.audioPlayer.currentItem?.audioTimePitchAlgorithm = .timeDomain
         self.audioPlayer.isMuted = !playsAudio

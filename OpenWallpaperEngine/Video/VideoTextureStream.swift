@@ -46,13 +46,13 @@ final class VideoTextureStream {
         ])
         let item = AVPlayerItem(url: url)
         item.add(output)
-        player = AVPlayer(playerItem: item)
+        player = WallpaperAVPlayer.make(item: item)
         player.isMuted = true
         player.actionAtItemEnd = .none
 
         let audioItem = AVPlayerItem(url: url)
         audioItem.audioTimePitchAlgorithm = .timeDomain
-        audioPlayer = AVPlayer(playerItem: audioItem)
+        audioPlayer = WallpaperAVPlayer.make(item: audioItem)
         audioPlayer.actionAtItemEnd = .none
         ownAudioTap.attach(to: audioItem)
 
