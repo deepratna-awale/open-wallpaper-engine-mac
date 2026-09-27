@@ -170,13 +170,13 @@
                          "section":  "",
                          "field":  "Show Stats",
                          "type":  "bool",
-                         "add_default":  false
+                         "add_default":  true
                      },
                      {
                          "section":  "",
                          "field":  "Show Axis",
                          "type":  "bool",
-                         "add_default":  false
+                         "add_default":  true
                      }
                  ],
     "Control point 0 (Origin)":  [

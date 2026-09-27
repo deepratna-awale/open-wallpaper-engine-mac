@@ -98,7 +98,7 @@
                      "section":  "",
                      "field":  "UV smoothing",
                      "type":  "bool",
-                     "add_default":  false
+                     "add_default":  true
                  },
                  {
                      "section":  "",

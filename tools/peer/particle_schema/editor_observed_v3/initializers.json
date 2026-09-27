@@ -729,7 +729,7 @@
                                     "section":  "",
                                     "field":  "Clamp input value",
                                     "type":  "bool",
-                                    "add_default":  false
+                                    "add_default":  true
                                 },
                                 {
                                     "section":  "",

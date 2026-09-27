@@ -108,7 +108,7 @@
    {
     "field": "UV smoothing",
     "type": "bool",
-    "add_default": false
+    "add_default": true
    },
    {
     "field": "UV scrolling",
@@ -525,7 +525,7 @@
    {
     "field": "Copy layer color",
     "type": "bool",
-    "add_default": false
+    "add_default": true
    },
    {
     "field": "Update emission bitmap periodically",
@@ -1368,7 +1368,7 @@
    {
     "field": "Clamp input value",
     "type": "bool",
-    "add_default": false
+    "add_default": true
    },
    {
     "field": "Output",
@@ -1993,7 +1993,7 @@
    {
     "field": "Reduce velocity near center",
     "type": "bool",
-    "add_default": false
+    "add_default": true
    },
    {
     "field": "Delete particles in center",
@@ -2477,7 +2477,7 @@
    {
     "field": "Clamp speed",
     "type": "bool",
-    "add_default": false
+    "add_default": true
    },
    {
     "field": "Max speed",
@@ -2571,7 +2571,7 @@
    {
     "field": "Clamp input value",
     "type": "bool",
-    "add_default": false
+    "add_default": true
    },
    {
     "field": "Output",
@@ -3173,12 +3173,12 @@
    {
     "field": "Show Stats",
     "type": "bool",
-    "add_default": false
+    "add_default": true
    },
    {
     "field": "Show Axis",
     "type": "bool",
-    "add_default": false
+    "add_default": true
    }
   ]
  },

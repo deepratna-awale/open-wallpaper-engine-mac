@@ -322,7 +322,7 @@
                             "section":  "",
                             "field":  "Copy layer color",
                             "type":  "bool",
-                            "add_default":  false
+                            "add_default":  true
                         },
                         {
                             "section":  "",

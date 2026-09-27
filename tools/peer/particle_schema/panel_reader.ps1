@@ -25,8 +25,10 @@ function Read-PanelV3([string]$title) {
     if ($t -eq 'Text' -and $pt -eq 'ControlType.Group' -and $parent.Current.BoundingRectangle.Width -lt 40) {
       $code = if ($raw.Length) { [int][char]$raw[0] } else { 0 }
       $prevRow = if ($rows.Count) { $rows[$rows.Count - 1] } else { $null }
-      if (($code -eq 0xF0C8 -or $code -eq 0xF14A) -and -not ($prevRow -and $prevRow.field -eq $label -and $prevRow.type -eq 'bool')) {
-        [void]$rows.Add([pscustomobject][ordered]@{ section = $section; field = $label; type = 'bool'; add_default = ($code -eq 0xF14A) })
+      if ($code -eq 0xF0C8 -or $code -eq 0xF14A) {
+        # each checkbox draws an empty square (F0C8, always) and a ticked square (F14A, only when checked)
+        if ($prevRow -and $prevRow.field -eq $label -and $prevRow.type -eq 'bool') { if ($code -eq 0xF14A) { $prevRow.add_default = $true } }
+        else { [void]$rows.Add([pscustomobject][ordered]@{ section = $section; field = $label; type = 'bool'; add_default = ($code -eq 0xF14A) }) }
         $gotControl = $true
       }
       continue
@@ -56,6 +58,7 @@ function Read-PanelV3([string]$title) {
   if ($combo) { [void]$rows.Add([pscustomobject]$combo) }
   $rows.ToArray()
 }
+
 
 
 

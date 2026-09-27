@@ -469,7 +469,7 @@
                                     "section":  "",
                                     "field":  "Reduce velocity near center",
                                     "type":  "bool",
-                                    "add_default":  false
+                                    "add_default":  true
                                 },
                                 {
                                     "section":  "",
@@ -927,7 +927,7 @@
                       "section":  "",
                       "field":  "Clamp speed",
                       "type":  "bool",
-                      "add_default":  false
+                      "add_default":  true
                   },
                   {
                       "section":  "",
@@ -1007,7 +1007,7 @@
                             "section":  "",
                             "field":  "Clamp input value",
                             "type":  "bool",
-                            "add_default":  false
+                            "add_default":  true
                         },
                         {
                             "section":  "",
