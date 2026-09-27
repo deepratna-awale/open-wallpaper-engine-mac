@@ -108,12 +108,7 @@ class GlobalSettingsViewModel: ObservableObject {
                 try? NSWorkspace.shared.setDesktopImageURL(wallpaper, for: .main!)
             }
         } else {
-            do {
-                let url = AppStorageLocation.current.cachesDirectory.appending(path: "staticWP_\(AppDelegate.shared.wallpaperViewModel.currentWallpaper.wallpaperDirectory.hashValue).tiff")
-                try NSWorkspace.shared.setDesktopImageURL(url, for: .main!)
-            } catch {
-                OWELog.error(.settings, "Menu bar tint wallpaper update failed: \(error)")
-            }
+            DesktopSnapshotCache.restoreDesktopPicture(for: NSScreen.main.map { [$0] } ?? [])
         }
     }
     

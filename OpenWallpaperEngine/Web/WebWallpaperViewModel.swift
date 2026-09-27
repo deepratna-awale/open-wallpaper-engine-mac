@@ -257,17 +257,14 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         if isPaused { applyPaused(to: webView) }
         
         if AppDelegate.shared.globalSettingsViewModel.settings.adjustMenuBarTint {
-            webView.takeSnapshot(with: nil) { [weak self] nsImage, error in
-                guard let self = self else { return }
-                if let data = nsImage?.tiffRepresentation {
-                    do {
-                        let url = AppStorageLocation.current.cachesDirectory.appending(path: "staticWP_\(self.currentWallpaper.wallpaperDirectory.hashValue).tiff")
-                        try data.write(to: url, options: .atomic)
-                        try NSWorkspace.shared.setDesktopImageURL(url, for: .main!)
-                    } catch {
-                        OWELog.error(.web, "Menu bar tint snapshot failed: \(error)")
-                    }
+            // The display this page shows on gets its snapshot (small, under a stable name).
+            webView.takeSnapshot(with: nil) { [weak webView] nsImage, error in
+                guard let image = nsImage?.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+                    if let error { OWELog.error(.web, "Menu bar tint snapshot failed: \(error)") }
+                    return
                 }
+                guard let screen = webView?.window?.screen ?? NSScreen.main else { return }
+                DesktopSnapshotCache.setDesktopPicture(image, for: [screen])
             }
         }
     }

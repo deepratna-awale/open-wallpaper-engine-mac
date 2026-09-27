@@ -242,19 +242,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             }
         }
         
-        let cacheDirectory = AppStorageLocation.current.cachesDirectory
-        do {
-            let filesURL = try FileManager.default.contentsOfDirectory(at: cacheDirectory,
-                                                                       includingPropertiesForKeys: nil,
-                                                                       options: .skipsHiddenFiles)
-            for url in filesURL {
-                if url.lastPathComponent.contains("staticWP") {
-                    try FileManager.default.removeItem(at: url)
-                }
-            }
-        } catch {
-            OWELog.error(.app, "Clearing cached desktop snapshots failed: \(error)")
-        }
+        // The user's pictures are back: OWE's snapshots (only its own folder) go, and any
+        // full-screen TIFFs earlier versions left in Caches go to the Trash.
+        let snapshots = DesktopSnapshotCache.current
+        snapshots.removeAll()
+        snapshots.trashLegacySnapshots()
     }
     
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
@@ -475,7 +467,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             var osWallpaper: URL { NSWorkspace.shared.desktopImageURL(for: mainScreen)! }
             if let wallpaper = UserDefaults.app.url(forKey: "OSWallpaper") {
                 if wallpaper != osWallpaper {
-                    if !wallpaper.lastPathComponent.contains("staticWP") {
+                    if !DesktopSnapshotCache.current.isSnapshot(wallpaper) {
                         return wallpaper
                     }
                 }
@@ -497,17 +489,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 if let error = error {
                     OWELog.error(.app, "Video thumbnail for desktop picture failed: \(error)")
                 } else if let cgImage = cgImage {
-                    let nsImage = NSImage(cgImage: cgImage, size: .zero)
-                    if let data = nsImage.tiffRepresentation {
-                        do {
-                            let url = AppStorageLocation.current.cachesDirectory.appending(path: "staticWP_\(wallpaper.wallpaperDirectory.hashValue).tiff")
-                            try data.write(to: url, options: .atomic)
-                            for screen in NSScreen.screens {
-                                try NSWorkspace.shared.setDesktopImageURL(url, for: screen)
-                            }
-                        } catch {
-                            OWELog.error(.app, "Setting desktop picture failed: \(error)")
-                        }
+                    DispatchQueue.main.async {
+                        DesktopSnapshotCache.setDesktopPicture(cgImage, for: NSScreen.screens)
                     }
                 }
             }
