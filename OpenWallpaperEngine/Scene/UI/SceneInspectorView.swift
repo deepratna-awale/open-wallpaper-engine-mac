@@ -810,6 +810,7 @@ struct SceneInspectorView: View {
     @State private var selectedID: String?
     @State private var searchText = ""
     @State private var didCopyPath = false
+    @State private var isMovementPresented = true
     @FocusState private var isSearchFocused: Bool
     private let wallpaperDirectory: URL
 
@@ -849,29 +850,61 @@ struct SceneInspectorView: View {
             .onChange(of: selectedID) { _, _ in loadSelectedTextures() }
     }
 
-    /// Both side columns (the object list and the movement controls) share one width.
+    /// Both side columns (the object list and the movement controls) start at one width.
     private static let sidebarWidth: CGFloat = 300
 
     private var inspectorSplitView: some View {
-        HSplitView {
+        NavigationSplitView {
             sidebarColumn
-                .frame(width: Self.sidebarWidth)
+                .navigationSplitViewColumnWidth(min: 240, ideal: Self.sidebarWidth, max: 440)
+        } detail: {
             detailColumn
-                .frame(minWidth: 500, maxWidth: .infinity, maxHeight: .infinity)
+                .inspector(isPresented: $isMovementPresented) {
+                    movementColumn(for: model.items.first(where: { $0.id == selectedID }))
+                        .inspectorColumnWidth(min: 260, ideal: Self.sidebarWidth, max: 400)
+                }
+                .toolbar {
+                    ToolbarItem(placement: .primaryAction) {
+                        pathControl
+                    }
+                    ToolbarItem(placement: .primaryAction) {
+                        Button {
+                            withAnimation { isMovementPresented.toggle() }
+                        } label: {
+                            Label("Move & Align", systemImage: "sidebar.right")
+                        }
+                        .help("Show or hide the move, size and align controls")
+                    }
+                }
         }
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                searchField
-            }
-            ToolbarItem(placement: .primaryAction) {
-                pathControl
-            }
-        }
+        .searchable(text: $searchText, placement: .sidebar, prompt: "Search")
+        .modifier(SearchFieldFocus(isFocused: $isSearchFocused))
         .background {
-            Button("") { isSearchFocused = true }
+            Button("") { focusSearch() }
                 .keyboardShortcut("k", modifiers: .command)
                 .hidden()
         }
+    }
+
+    /// ⌘K. macOS 15 focuses a search field through `searchFocused`; macOS 14 has no API for it,
+    /// so the window's search field is made first responder directly.
+    private func focusSearch() {
+        if #available(macOS 15, *) {
+            isSearchFocused = true
+        } else {
+            guard let window = NSApp.keyWindow,
+                  let field = Self.searchField(in: window.contentView?.superview ?? window.contentView) else { return }
+            window.makeFirstResponder(field)
+        }
+    }
+
+    private static func searchField(in view: NSView?) -> NSSearchField? {
+        guard let view else { return nil }
+        if let field = view as? NSSearchField { return field }
+        for subview in view.subviews {
+            if let field = searchField(in: subview) { return field }
+        }
+        return nil
     }
 
     private var sidebarColumn: some View {
@@ -908,63 +941,19 @@ struct SceneInspectorView: View {
 
     private var detailColumn: some View {
         let selectedItem = model.items.first(where: { $0.id == selectedID })
-        return HStack(spacing: 0) {
-            Group {
-                if let item = selectedItem {
-                    selectedItemDetail(item)
-                } else if let error = model.errorMessage {
-                    ContentUnavailableView("Scene Unavailable", systemImage: "exclamationmark.triangle", description: Text(error))
-                } else {
-                    ContentUnavailableView("Select a Scene Object", systemImage: "square.stack.3d.up")
-                }
+        return Group {
+            if let item = selectedItem {
+                selectedItemDetail(item)
+            } else if let error = model.errorMessage {
+                ContentUnavailableView("Scene Unavailable", systemImage: "exclamationmark.triangle", description: Text(error))
+            } else {
+                ContentUnavailableView("Select a Scene Object", systemImage: "square.stack.3d.up")
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            Divider()
-            movementColumn(for: selectedItem)
         }
-        .focusable()
-        .onMoveCommand { direction in
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .modifier(ArrowKeyMove { direction in
             if let selectedItem { move(selectedItem, direction: direction) }
-        }
-    }
-
-    /// Styled after the Apple Music search field: a soft filled capsule that brightens and picks up
-    /// an accent ring while focused.
-    private var searchField: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(isSearchFocused ? Color.accentColor : .secondary)
-            TextField("Search", text: $searchText)
-                .textFieldStyle(.plain)
-                .font(.system(size: 13))
-                .focused($isSearchFocused)
-            if !searchText.isEmpty {
-                Button {
-                    searchText = ""
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-                .transition(.opacity)
-            }
-        }
-        .padding(.horizontal, 9)
-        .frame(width: isSearchFocused ? 300 : 240, height: 24)
-        .background {
-            Capsule()
-                .fill(Color.primary.opacity(isSearchFocused ? 0.10 : 0.06))
-        }
-        .overlay {
-            Capsule()
-                .strokeBorder(Color.accentColor.opacity(isSearchFocused ? 0.55 : 0), lineWidth: 1)
-        }
-        .animation(.easeOut(duration: 0.18), value: isSearchFocused)
-        .animation(.easeOut(duration: 0.12), value: searchText.isEmpty)
-        .contentShape(Capsule())
-        .onTapGesture { isSearchFocused = true }
+        })
     }
 
     /// Shows where the wallpaper lives and copies that path, so its files can be opened elsewhere.
@@ -975,20 +964,9 @@ struct SceneInspectorView: View {
             didCopyPath = true
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { didCopyPath = false }
         } label: {
-            HStack(spacing: 6) {
-                Image(systemName: didCopyPath ? "checkmark" : "doc.on.doc")
-                    .font(.system(size: 12))
-                Text(didCopyPath ? "Copied" : "Copy Path")
-                    .font(.system(size: 12))
-                    .lineLimit(1)
-            }
-            .padding(.horizontal, 9)
-            .frame(minHeight: 24)
-            .background {
-                Capsule().fill(Color.primary.opacity(0.06))
-            }
+            Label(didCopyPath ? "Copied" : "Copy Path", systemImage: didCopyPath ? "checkmark" : "doc.on.doc")
+                .labelStyle(.titleAndIcon)
         }
-        .buttonStyle(.plain)
         .help(didCopyPath ? "Copied" : "Copy wallpaper folder path\n\(wallpaperDirectory.path)")
     }
 
@@ -1205,8 +1183,6 @@ struct SceneInspectorView: View {
                     Text("Move")
                         .font(.callout.weight(.semibold))
                         .frame(width: 58, height: 40)
-                        .background(Color(nsColor: .controlBackgroundColor))
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
                     moveButton(systemImage: "arrow.right", help: "Move right") {
                         guard let item else { return }
                         model.moveObject(item, deltaX: movementStep(), deltaY: 0)
@@ -1227,23 +1203,19 @@ struct SceneInspectorView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
-        .padding(14)
+        .padding(6)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.accentColor.opacity(0.12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(Color.accentColor.opacity(0.45), lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .modifier(GroupBoxed())
     }
 
     private func moveButton(systemImage: String, help: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: systemImage)
+            Label(help, systemImage: systemImage)
+                .labelStyle(.iconOnly)
                 .font(.title3.weight(.semibold))
                 .frame(width: 48, height: 40)
         }
-        .buttonStyle(.borderedProminent)
+        .glassButtonStyle(.prominent)
         .help("\(help). Shift = 50 px, Control = 1 px, default = 10 px")
     }
 
@@ -1294,28 +1266,30 @@ struct SceneInspectorView: View {
     }
 
     private func movementColumn(for item: SceneInspectorItem?) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            movementControls(for: item)
-            Divider()
-            scaleControls(for: item)
-            Divider()
-            alignmentControls(for: item)
-            Divider()
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Step")
-                    .font(.headline)
-                Text("Default 10 px")
-                Text("Shift 50 px")
-                Text("Control 1 px")
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                movementControls(for: item)
+                Divider()
+                scaleControls(for: item)
+                Divider()
+                alignmentControls(for: item)
+                Divider()
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Step")
+                        .font(.headline)
+                    Text("Default 10 px")
+                    Text("Shift 50 px")
+                    Text("Control 1 px")
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            Spacer()
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
         }
-        .padding(14)
-        .frame(width: Self.sidebarWidth)
-        .frame(maxHeight: .infinity, alignment: .topLeading)
-        .background(Color(nsColor: .controlBackgroundColor))
+        .modifier(ArrowKeyMove { direction in
+            if let item { move(item, direction: direction) }
+        })
     }
 
     private func alignmentControls(for item: SceneInspectorItem?) -> some View {
@@ -1375,7 +1349,7 @@ struct SceneInspectorView: View {
             }
             .frame(width: 68, height: 46)
         }
-        .buttonStyle(.bordered)
+        .glassButtonStyle()
         .help("Align \(title.lowercased())")
     }
 
@@ -1524,6 +1498,38 @@ struct SceneInspectorView: View {
                 .background(Color(nsColor: .controlBackgroundColor))
                 .clipShape(RoundedRectangle(cornerRadius: 6))
             }
+        }
+    }
+}
+
+/// Arrow keys nudge the selected object while this panel has keyboard focus.
+private struct ArrowKeyMove: ViewModifier {
+    let onMove: (MoveCommandDirection) -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .focusable()
+            .focusEffectDisabled()
+            .onMoveCommand(perform: onMove)
+    }
+}
+
+/// A native group box around a block of controls.
+private struct GroupBoxed: ViewModifier {
+    func body(content: Content) -> some View {
+        GroupBox { content }
+    }
+}
+
+/// Ties a `FocusState` to the window's search field, where the OS can (`searchFocused`, macOS 15).
+private struct SearchFieldFocus: ViewModifier {
+    let isFocused: FocusState<Bool>.Binding
+
+    func body(content: Content) -> some View {
+        if #available(macOS 15, *) {
+            content.searchFocused(isFocused)
+        } else {
+            content
         }
     }
 }
