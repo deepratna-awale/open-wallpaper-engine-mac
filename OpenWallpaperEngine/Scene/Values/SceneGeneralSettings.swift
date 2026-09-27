@@ -69,13 +69,14 @@ struct SceneHDRBloomSettings: Equatable {
     }
 }
 
-/// `general.ambientcolor`, `skylightcolor` and `lightconfig`, resolved against the user
-/// properties: the scene-wide lighting inputs (docs/lighting-plan.md §1.2, §2.2).
+/// `general.ambientcolor`, `skylightcolor`, `lightconfig` and the fog, resolved against the user
+/// properties: the scene-wide lighting inputs (docs/lighting-plan.md §1.2, §2.2, §2.9).
 struct SceneLightingSettings: Equatable {
     var ambient = SceneGeneralDefaults.ambientColor
     var skylight = SceneGeneralDefaults.skylightColor
     /// The light budget; nil packs no new-style light.
     var lightConfig: WELightConfig?
+    var fog = SceneFogSettings()
 
     init() {}
 
@@ -83,6 +84,7 @@ struct SceneLightingSettings: Equatable {
         ambient = general.value(.ambientcolor, in: context)?.vec3 ?? SceneGeneralDefaults.ambientColor
         skylight = general.value(.skylightcolor, in: context)?.vec3 ?? SceneGeneralDefaults.skylightColor
         lightConfig = general.lightconfig
+        fog = SceneFogSettings(general, in: context)
     }
 }
 

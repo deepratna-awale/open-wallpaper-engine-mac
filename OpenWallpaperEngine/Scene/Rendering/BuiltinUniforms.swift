@@ -110,6 +110,7 @@ enum BuiltinUniforms {
         "g_Color4", "g_Color", "g_Alpha", "g_UserAlpha", "g_Brightness",
         "g_EyePosition", "g_ViewUp", "g_ViewRight",
         "g_ViewForward", "g_TextureReductionScale",
+        "g_FogDistanceColor", "g_FogDistanceParams", "g_FogHeightColor", "g_FogHeightParams",
     ]
 
     static func isBuiltin(_ name: String) -> Bool {
@@ -189,6 +190,10 @@ enum BuiltinUniforms {
         case "g_ViewRight": return flat(frame.viewRight)
         case "g_ViewForward": return flat(frame.viewForward)
         case "g_TextureReductionScale": return [frame.textureReductionScale]
+        case "g_FogDistanceColor": return flat(frame.lighting.fog.distanceColor)
+        case "g_FogDistanceParams": return flat(frame.lighting.fog.distanceParams)
+        case "g_FogHeightColor": return flat(frame.lighting.fog.heightColor)
+        case "g_FogHeightParams": return flat(frame.lighting.fog.heightParams)
         default: return nil
         }
     }

@@ -103,7 +103,8 @@ enum VolumetricsReference {
     /// `y`), ray-marching from `near` to the nearer of `far` and the scene's depth (the far plane).
     /// Depth is reversed (`REVERSEDEPTH`): the far plane is 0, and nearer is greater.
     static func march(_ light: SceneVolumetricLight, point: Bool, viewProjection: simd_float4x4, x: Float, y: Float,
-                      near: Float, far: Float, quality: Int) -> SIMD3<Float> {
+                      near: Float, far: Float, quality: Int,
+                      fog: SceneFogSettings? = nil, eye: SIMD3<Float> = .zero) -> SIMD3<Float> {
         let sampleCount: Float = [1: 2, 2: 3, 3: 5, 4: 8][quality] ?? 2
         let inverse = viewProjection.inverse
         func world(_ depth: Float) -> SIMD3<Float> {
@@ -129,7 +130,22 @@ enum VolumetricsReference {
                 let t = simd_clamp((cosine - spot.z) / (spot.y - spot.z), 0, 1)
                 cone = t * t * (3 - 2 * t)
             }
-            factor += falloff * cone
+            var sample = falloff * cone
+            if let fog, fog.distance || fog.height {
+                // `common_fog.h`'s ApplyFogAlpha, which the shader multiplies into the sample it
+                // was given: `shadowSample *= ApplyFogAlpha(shadowSample, …)`.
+                func curve(_ state: Float, _ params: SIMD4<Float>) -> Float {
+                    let t = simd_clamp(state, 0, 1)
+                    return params.z + params.w * t * t
+                }
+                let distance = fog.distance
+                    ? curve((simd_length(eye - position) - fog.distanceParams.x) / fog.distanceParams.y, fog.distanceParams) : 0
+                let height = fog.height
+                    ? curve((position.y - fog.heightParams.x) / fog.heightParams.y, fog.heightParams) : 0
+                let fogFactor = simd_clamp(max(distance, height), 0, 1)
+                sample *= sample * (1 - fogFactor * fogFactor)
+            }
+            factor += sample
         }
         factor /= sampleCount
         return origin.w * maxLightScale * factor * SIMD3(color.x, color.y, color.z) * 0.1

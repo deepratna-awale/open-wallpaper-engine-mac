@@ -251,7 +251,8 @@ final class ModelRenderTests: XCTestCase {
     // MARK: - Planning
 
     /// WE's model combos (0x140224c70) over `generic4`: `SKINNING` from the mesh's blend indices,
-    /// `BONECOUNT` rounded up to 16, 32, 64 or 128, `FOG` off, the engine's `REVERSEDEPTH`;
+    /// `BONECOUNT` rounded up to 16, 32, 64 or 128, `FOG` at its default (no fog without the
+    /// scene's, `SceneFogTests`), the engine's `REVERSEDEPTH`;
     /// `REFLECTION` reads `_rt_MipMappedFrameBuffer`, slot 0 the listed albedo.
     func testGeneric4TakesWEsModelCombos() throws {
         XCTAssertEqual([0, 1, 16, 17, 33, 64, 65, 115, 128, 200].map(ModelMeshCombos.boneCount),
@@ -263,7 +264,8 @@ final class ModelRenderTests: XCTestCase {
         let variant = try XCTUnwrap(plan.pass.variant)
         XCTAssertEqual(variant.combos["SKINNING"], 1)
         XCTAssertEqual(variant.combos["BONECOUNT"], 64)
-        XCTAssertEqual(variant.combos["FOG"] ?? 0, 0)
+        XCTAssertEqual(variant.combos["FOG"], 1, "generic4's default")
+        XCTAssertNil(variant.combos["FOG_DIST"])
         XCTAssertEqual(variant.combos["LIGHTING"], 1, "generic4's default")
         XCTAssertEqual(variant.combos["REFLECTION"], 1)
         guard case .mipMappedFrameBuffer? = plan.pass.textures[3] else { return XCTFail("g_Texture3: \(String(describing: plan.pass.textures[3]))") }

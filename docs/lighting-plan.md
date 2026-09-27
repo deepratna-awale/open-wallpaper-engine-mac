@@ -375,6 +375,16 @@ The disassembly is `volumetrics.asm` (the per-light function `0x140196ce0`, a me
 - **Finish** (`0x140198d00`): below quality 3, `volumetrics_blur_h` (the light buffer into B) and `_v` (B back); then `volumetrics_combine` adds the light buffer to the frame. The object loop (`0x14018ade4`…`0x14018b21e`) finishes a run of lights before the next object that isn't a light, and at its end. So the volumetrics sit in the object order, and the `_rt_MipMappedFrameBuffer` copy (§2.6 step 4) sees them.
 - **The camera** (`0x140183a70`): an orthographic scene's projection is `ortho(0, width, 0, height)` from −2000 to 2000, whatever `nearz`/`farz` say.
 
+### 2.9 Fog
+
+`general.fogdistance` and `fogheight` turn on WE's distance and height fog. Only 3378346807 uses it in the library (distance fog, 1 to 48, its colour bound to the `backgroundcolor` property).
+
+- **Fields** (the scene's property table, 0x14019a274…0x14019a8c4): `fogdistance` and `fogheight` are flags (+0xe0 bits 0x4000 and 0x8000); `fogdistancecolor` (+0x380) and `fogheightcolor` (+0x38c); `fogdistancestart`, `end`, `startdensity`, `enddensity` (+0x398…+0x3a4); `fogheightstart`, `end`, `startdensity`, `enddensity` (+0x3a8…+0x3b4). The constructor's defaults (0x140187063…0x1401870a1): colours black, distance 1 to 5, height 1 to −3, densities 0 to 1.
+- **Uniforms** (0x140186440…0x1401865ad, each frame): `g_FogDistanceColor`, `g_FogHeightColor`, `g_FogDistanceParams` = (start, end − start, start density, end density − start density), `g_FogHeightParams` likewise. The flags set render flags bits 23 and 24.
+- **Combos** (0x1401a64ae…0x1401a666a, the engine combos every material gets): with bit 23 or 24 set, a material whose `FOG` combo resolves to a value other than 0 gets `FOG_DIST` (bit 23) and `FOG_HEIGHT` (bit 24). `generic4`, `genericimage4`, `genericparticle`, `volumetricsfront` and a few others default `FOG` to 1.
+- **In the volumetrics** (`volumetricsfront.frag`): `shadowSample *= ApplyFogAlpha(shadowSample, …)`, and `ApplyFogAlpha` returns `alpha · (1 − fog²)`. So under fog each sample of the march is **squared**, then faded. This is what made 3378346807's glow about twice WE's before the fog was implemented (docs/models-plan.md, M8's open points).
+- **Here:** `SceneFogSettings` (resolved with the lighting settings), `SceneEngineCombos.fogCombos`, the four uniforms in `BuiltinUniforms` from `SceneFrameLighting.fog`. Models no longer force `FOG` to 0. Scripts can't change the fog here yet (WE registers the fields; no library script sets them).
+
 ## 3. Where we stand
 
 Code references are to `OpenWallpaperEngine/Scene/…`.
@@ -397,6 +407,7 @@ Code references are to `OpenWallpaperEngine/Scene/…`.
 | `postprocessing` / `shadows` / `volumetrics` / `reflection` user settings | 2.2, 2.6 | 🟡 settings in place (L0); `postprocessing` gates bloom (B1) | all bloom/HDR scenes |
 | Shadows (`_rt_shadowAtlas`, casters) | 2.7 | ❌ | 0 (no `castshadow` true) |
 | Volumetrics | 2.8 | ✅ D1: WE's util passes as a frame stage (`Rendering/SceneVolumetrics.swift`); shadow casters read their map (D2) | Hinata (2D), Moon and the test set (3D) |
+| Distance and height fog | 2.9 | ✅ `SceneFogSettings`, `FOG_DIST`/`FOG_HEIGHT`, `g_Fog*` | 3378346807 |
 | Light cookie (`_alias_lightCookie`) | one per scene (2.2) | 🟡 the key is `cookie` (default `cookie/flashlight1`, 2.8), decoded by D1; the volumetrics bind each light's own; the alias for lit materials is A3's | Hinata |
 | Fog (`FOG_*`, `g_Fog*`) | per general fog | ❌ (must stay off) | 0 |
 | Depth buffer, perspective models | area 6 | ❌ | Moon, default projects |

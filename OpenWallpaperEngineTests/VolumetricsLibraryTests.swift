@@ -183,6 +183,32 @@ final class VolumetricsLibraryTests: XCTestCase {
         }
     }
 
+    /// 3378346807's distance fog (`general.fogdistance`, 1…48, its colour the background colour
+    /// property) reaches its volumetric passes as WE's engine gives it (`FOG_DIST`,
+    /// 0x1401a64ae…0x1401a6602): each sample of the march is squared and faded by it. Without it
+    /// the scene's glow was about twice WE's (docs/lighting-plan.md §2.9).
+    func testSnowflakesVolumesCompileWithTheScenesFog() throws {
+        let (directory, project) = try wallpaper("3378346807")
+        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        defer { Fixtures.removeStoredSettings(for: directory) }
+        var settings = SceneRenderSettings()
+        settings.volumetrics = .high
+        model.setRenderSettings(settings)
+        let content = try XCTUnwrap(model.metalContent())
+        let fog = content.lighting.settings.fog
+        XCTAssertTrue(fog.distance)
+        XCTAssertFalse(fog.height)
+        XCTAssertEqual(fog.distanceParams, SIMD4<Float>(1, 47, 0, 1))
+        XCTAssertEqual(fog.distanceColor.x, 0.2549, accuracy: 1e-3)
+        XCTAssertTrue(content.engineCombos.fogDistance)
+        let plan = try XCTUnwrap(content.volumetrics)
+        XCTAssertEqual(plan.lights.map(\.id), ["58", "322"])
+        for light in plan.lights {
+            XCTAssertEqual(light.front.variant.combos["FOG_DIST"], 1, light.id)
+            XCTAssertEqual(light.fullscreen.variant.combos["FOG_DIST"], 1, light.id)
+        }
+    }
+
     /// Every lit texel of the light buffer lies where the light's frustum projects (the blur
     /// spreads it by a texel each way); returns the lit texels' centroid.
     @discardableResult

@@ -17,6 +17,10 @@ enum SceneGeneralValueField: String, CaseIterable {
     /// The camera and draw order (docs/models-plan.md §2.1; `SceneCameraSettings`).
     case fov, perspectiveoverridefov, nearz, farz, zoom, camerafade
     case transparentsorting, customsortorder
+    /// Distance and height fog (`SceneFogSettings`).
+    case fogdistance, fogheight, fogdistancecolor, fogheightcolor
+    case fogdistancestart, fogdistanceend, fogdistancestartdensity, fogdistanceenddensity
+    case fogheightstart, fogheightend, fogheightstartdensity, fogheightenddensity
 }
 
 /// Fields any scene object may author that decide how it draws in a 3D scene

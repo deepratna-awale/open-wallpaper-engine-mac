@@ -106,10 +106,13 @@ struct SceneFrameLighting: Equatable {
     var objects: [SceneFrameLightObject] = []
     /// This frame's shadow maps (docs/models-plan.md §2.10), which `SceneShadowPass` draws.
     var shadows = SceneShadowFrame()
+    /// The scene's fog, behind `g_FogDistance*` and `g_FogHeight*` (`SceneFogSettings`).
+    var fog = SceneFogSettings()
 
     static func frame(_ content: SceneLightingContent, input: SceneFrameLightingInput) -> SceneFrameLighting {
         var lighting = SceneFrameLighting(ambient: input.sceneColor(.ambientcolor) ?? content.settings.ambient,
                                           skylight: input.sceneColor(.skylightcolor) ?? content.settings.skylight)
+        lighting.fog = content.settings.fog
         guard !content.lights.isEmpty else { return lighting }
         var objects: [SceneFrameLightObject] = []
         let lights = content.lights.compactMap { built -> SceneLightPacker.Light? in

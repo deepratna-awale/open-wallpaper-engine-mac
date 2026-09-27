@@ -17,12 +17,18 @@ struct SceneEngineCombos: Equatable {
     var lightBudget: WELightConfig?
     /// The user's shadows setting (0 disabled … 4 ultra), for `LIGHTS_SHADOW_MAPPING_QUALITY`.
     var shadowQuality = 0
+    /// `general.fogdistance` and `fogheight` (`SceneEngineCombos+Fog.swift`).
+    var fogDistance = false
+    var fogHeight = false
 
-    init(hdr: Bool = false, sceneOrtho: Bool = true, lightBudget: WELightConfig? = nil, shadowQuality: Int = 0) {
+    init(hdr: Bool = false, sceneOrtho: Bool = true, lightBudget: WELightConfig? = nil, shadowQuality: Int = 0,
+         fogDistance: Bool = false, fogHeight: Bool = false) {
         self.hdr = hdr
         self.sceneOrtho = sceneOrtho
         self.lightBudget = lightBudget
         self.shadowQuality = shadowQuality
+        self.fogDistance = fogDistance
+        self.fogHeight = fogHeight
     }
 
     /// The engine combos for a scene: HDR only when `bloom` and `hdr` are both on and the
@@ -33,14 +39,16 @@ struct SceneEngineCombos: Equatable {
         self.init(hdr: bloom.enabled && bloom.hdr.enabled && settings.postProcessing.allowsHDR,
                   sceneOrtho: orthographic,
                   lightBudget: shadows == 0 ? lighting.lightConfig?.withShadowsDisabled : lighting.lightConfig,
-                  shadowQuality: shadows)
+                  shadowQuality: shadows, fogDistance: lighting.fog.distance, fogHeight: lighting.fog.height)
     }
 
     /// The combos to lay over a material whose own combos resolved to `material` (its `LIGHTING`
     /// decides the light combos): the lighting ones (`SceneEngineCombos+Lighting.swift`), the
-    /// HDR ones (`SceneEngineCombos+HDR.swift`) and `REVERSEDEPTH`.
+    /// HDR ones (`SceneEngineCombos+HDR.swift`), the fog ones (`SceneEngineCombos+Fog.swift`) and
+    /// `REVERSEDEPTH`.
     func combos(for material: [String: Int]) -> [String: Int] {
         var combos = lightingCombos(for: material).merging(hdrCombos(for: material)) { _, hdr in hdr }
+            .merging(fogCombos(for: material)) { _, fog in fog }
         // WE's depth is reversed everywhere (docs/models-plan.md §2.4), and 0x1401a5c40 says so to
         // every material. Only shaders that name it see it (`effectiveCombos`).
         combos["REVERSEDEPTH"] = 1

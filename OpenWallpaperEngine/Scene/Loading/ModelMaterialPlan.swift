@@ -89,12 +89,9 @@ struct ModelMaterialPlanBuilder {
     let readFile: (String) -> Data?
     /// Loads a texture by WE name relative to a material path.
     let loadTexture: (_ name: String, _ materialPath: String) -> SceneMetalTextureSource?
-    /// The combos WE's engine lays over every material of the scene (`LIGHTS_*`, `HDR`, `REVERSEDEPTH`).
+    /// The combos WE's engine lays over every material of the scene (`LIGHTS_*`, `HDR`, `FOG_*`,
+    /// `REVERSEDEPTH`).
     var sceneEngineCombos = SceneEngineCombos()
-
-    /// Combos the app fixes on every model material: `FOG` stays off (docs/lighting-plan.md,
-    /// general fog isn't implemented; WE's own `FOG_DIST`/`FOG_HEIGHT` are the engine's).
-    static let appCombos = ["FOG": 0]
 
     func build(materialPath: String, mesh: ModelMeshCombos) throws -> ModelMaterialPlan {
         guard let data = readFile(materialPath) else { throw ModelMaterialPlanError.missing(materialPath) }
@@ -126,7 +123,7 @@ struct ModelMaterialPlanBuilder {
         // additive one `ADDITIVE` (0x140154c5a).
         let coverage = ImageMaterialPlanBuilder.blendingCombos(blending: materialPass.blending)
         let combos = sceneEngineCombos.applied(to: ShaderVariantTranslator.resolveCombos(
-            vertex: vertex, fragment: fragment, overrides: [materialPass.combos, coverage, mesh.combos, Self.appCombos, formats],
+            vertex: vertex, fragment: fragment, overrides: [materialPass.combos, coverage, mesh.combos, formats],
             boundTextureSlots: Set(listed.keys),
             textureFlags: headers.compactMapValues { TEXImageFormat.texiWord(1, in: $0) }))
 
