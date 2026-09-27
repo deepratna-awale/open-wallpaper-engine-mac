@@ -18,7 +18,7 @@ enum WallpaperEngineAssets {
 
     /// The user's own installation, normalised to the `assets` folder.
     static var configured: URL? {
-        guard let path = UserDefaults.standard.string(forKey: defaultsKey), !path.isEmpty else { return nil }
+        guard let path = UserDefaults.app.string(forKey: defaultsKey), !path.isEmpty else { return nil }
         let root = URL(fileURLWithPath: path, isDirectory: true).standardizedFileURL
         let assets = root.lastPathComponent.caseInsensitiveCompare("assets") == .orderedSame
             ? root

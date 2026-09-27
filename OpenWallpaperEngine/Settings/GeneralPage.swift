@@ -13,7 +13,7 @@ struct GeneralPage: SettingsPage {
     @State private var pendingStorageDirectory: URL?
     @State private var isStorageMoveConfirming = false
     @State private var storageError: String?
-    @AppStorage("ReclaimOriginalPackages") private var reclaimOriginalPackages = false
+    @AppStorage("ReclaimOriginalPackages", store: .app) private var reclaimOriginalPackages = false
     @State private var reclaimableBytes: Int64 = 0
     @State private var reclaimedCount: Int?
     @State private var isReclaiming = false

@@ -133,7 +133,7 @@ class SceneWallpaperViewModel: ObservableObject {
     /// have to take part in the cache key or a reload serves the pre-edit scene and the object
     /// snaps back to its authored position.
     private static func overrideSignature(settingsKey: String) -> String {
-        let values = UserDefaults.standard.dictionary(forKey: settingsKey) as? [String: String] ?? [:]
+        let values = UserDefaults.app.dictionary(forKey: settingsKey) as? [String: String] ?? [:]
         let edits = values.filter { $0.key.hasPrefix("_owe_scene_object_") }
         guard !edits.isEmpty else { return "-" }
         return String(edits.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }
@@ -344,7 +344,7 @@ class SceneWallpaperViewModel: ObservableObject {
               var objects = root["objects"] as? [[String: Any]] else {
             return (try JSONDecoder().decode(WEScene.self, from: data), Self.document(data))
         }
-            let values = UserDefaults.standard.dictionary(forKey: settingsKey) as? [String: String] ?? [:]
+            let values = UserDefaults.app.dictionary(forKey: settingsKey) as? [String: String] ?? [:]
         for index in objects.indices {
             let objectID = (objects[index]["id"] as? NSNumber)?.intValue ?? index
             guard let override = values["_owe_scene_object_\(objectID)_json"],
@@ -433,7 +433,7 @@ class SceneWallpaperViewModel: ObservableObject {
         let identity = settingsIdentity(for: wallpaper.wallpaperDirectory)
         let key = identity.key(.userProperties, scope: propertyScope)
         let explicitKey = identity.key(.explicitUserProperties, scope: propertyScope)
-        let defaults = UserDefaults.standard
+        let defaults = UserDefaults.app
         let stored = defaults.bool(forKey: explicitKey)
             ? defaults.dictionary(forKey: key) as? [String: String] ?? [:]
             : [:]
@@ -1542,7 +1542,7 @@ class SceneWallpaperViewModel: ObservableObject {
         let storageKey = settingsIdentity(for: wallpaperDir).key(.userProperties, scope: propertyScope)
         let overrideKey = "_owe_scene_asset_\(path)_json"
         let data: Data
-        if let values = UserDefaults.standard.dictionary(forKey: storageKey) as? [String: String],
+        if let values = UserDefaults.app.dictionary(forKey: storageKey) as? [String: String],
            let override = values[overrideKey], let overrideData = override.data(using: .utf8) {
             data = overrideData
         } else {

@@ -31,9 +31,9 @@ final class ParticleSimulationSweepTests: XCTestCase {
                 keys.append(identity.key(family))
                 keys.append(family.rawValue + directory.path)
             }
-            let hadSettings = keys.contains { UserDefaults.standard.object(forKey: $0) != nil }
+            let hadSettings = keys.contains { UserDefaults.app.object(forKey: $0) != nil }
             defer {
-                if !hadSettings { keys.forEach(UserDefaults.standard.removeObject(forKey:)) }
+                if !hadSettings { keys.forEach(UserDefaults.app.removeObject(forKey:)) }
             }
             guard let content = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory)).metalContent()
             else { continue }

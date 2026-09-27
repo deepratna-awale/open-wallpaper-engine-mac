@@ -259,7 +259,11 @@ final class SceneFrameBenchmarkTests: XCTestCase {
             return request.split(separator: ",").map { library.appending(path: String($0), directoryHint: .isDirectory) }
         }
         let name = String(request.dropFirst("playlist:".count))
-        let data = try XCTUnwrap(UserDefaults.standard.data(forKey: "WallpaperPlaylists"), "no playlists stored")
+        // Reads the user's REAL playlists on purpose (the "Test Wallpapers" benchmark), read-only:
+        // the test host's own defaults are an isolated suite (`AppStorageLocation`). Never write here.
+        let data = try XCTUnwrap(CFPreferencesCopyAppValue("WallpaperPlaylists" as CFString,
+                                                           AppStorageLocation.realBundleIdentifier as CFString) as? Data,
+                                 "no playlists stored")
         struct Playlist: Decodable {
             struct Item: Decodable {
                 struct Wallpaper: Decodable { let wallpaperDirectory: URL }
@@ -282,10 +286,10 @@ final class SceneFrameBenchmarkTests: XCTestCase {
             keys.append(identity.key(family))
             keys.append(family.rawValue + directory.path)
         }
-        let before = keys.map { UserDefaults.standard.object(forKey: $0) }
+        let before = keys.map { UserDefaults.app.object(forKey: $0) }
         return {
             for (key, value) in zip(keys, before) {
-                if let value { UserDefaults.standard.set(value, forKey: key) } else { UserDefaults.standard.removeObject(forKey: key) }
+                if let value { UserDefaults.app.set(value, forKey: key) } else { UserDefaults.app.removeObject(forKey: key) }
             }
         }
     }

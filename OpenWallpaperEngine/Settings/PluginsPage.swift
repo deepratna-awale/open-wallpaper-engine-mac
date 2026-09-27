@@ -13,7 +13,7 @@ struct PluginsPage: SettingsPage {
     @State var bigGearAngle = 0.0
     @State var smallGearAngle = 0.0
     
-    @AppStorage("TestAnimates") var animates = false
+    @AppStorage("TestAnimates", store: .app) var animates = false
     
     @State var isExpanded = false
     

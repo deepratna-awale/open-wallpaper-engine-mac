@@ -49,13 +49,13 @@ extension WallpaperSettingsIdentity {
 
     /// `scope`'s stored values of `family`, falling back to the shared ones for a display whose own
     /// were never saved: a display starts from the properties the wallpaper had before.
-    func stored(_ family: Family, scope: WallpaperPropertyScope, defaults: UserDefaults = .standard) -> Any? {
+    func stored(_ family: Family, scope: WallpaperPropertyScope, defaults: UserDefaults = .app) -> Any? {
         defaults.object(forKey: key(family, scope: scope)) ?? defaults.object(forKey: key(family))
     }
 
     /// Saves the shared values under `scope`'s own keys when it has none yet, so a display's store
     /// starts from the wallpaper's properties and is read and written under its own key from then on.
-    func seed(_ scope: WallpaperPropertyScope, defaults: UserDefaults = .standard) {
+    func seed(_ scope: WallpaperPropertyScope, defaults: UserDefaults = .app) {
         guard scope != .shared else { return }
         for family in Family.allCases where defaults.object(forKey: key(family, scope: scope)) == nil {
             if let shared = defaults.object(forKey: key(family)) { defaults.set(shared, forKey: key(family, scope: scope)) }

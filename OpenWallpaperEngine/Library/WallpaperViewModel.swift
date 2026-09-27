@@ -24,7 +24,7 @@ class WallpaperViewModel: ObservableObject {
         willSet {
             guard confirmApply?(newValue) ?? true else { return }
             if ["web", "application"].contains(newValue.project.type) {
-                if let trustedWallpapers = UserDefaults.standard.array(forKey: "TrustedWallpapers") as? [String],
+                if let trustedWallpapers = UserDefaults.app.array(forKey: "TrustedWallpapers") as? [String],
                    trustedWallpapers.contains(newValue.wallpaperDirectory.path(percentEncoded: false)) {
                     self.setWallpaper(newValue, for: selectedScreenIds)
                 } else {
@@ -49,7 +49,7 @@ class WallpaperViewModel: ObservableObject {
     /// Screens where wallpaper display is enabled.
     @Published var enabledScreens: Set<String> = [] {
         didSet {
-            UserDefaults.standard.set(Array(enabledScreens), forKey: "EnabledScreens")
+            UserDefaults.app.set(Array(enabledScreens), forKey: "EnabledScreens")
         }
     }
 
@@ -68,7 +68,7 @@ class WallpaperViewModel: ObservableObject {
 
     @Published var wallpaperPlacement: WallpaperPlacement = .fill {
         didSet {
-            UserDefaults.standard.set(wallpaperPlacement.rawValue, forKey: "WallpaperPlacement")
+            UserDefaults.app.set(wallpaperPlacement.rawValue, forKey: "WallpaperPlacement")
         }
     }
 
@@ -120,14 +120,14 @@ class WallpaperViewModel: ObservableObject {
     private var playlistIndex = 0
 
     private func loadRecents() {
-        guard let data = UserDefaults.standard.data(forKey: Self.recentsKey),
+        guard let data = UserDefaults.app.data(forKey: Self.recentsKey),
               let saved = try? JSONDecoder().decode([WEWallpaper].self, from: data) else { return }
         recentWallpapers = saved.filter { $0.project != .invalid }
     }
 
     private func saveRecents() {
         if let data = try? JSONEncoder().encode(recentWallpapers) {
-            UserDefaults.standard.set(data, forKey: Self.recentsKey)
+            UserDefaults.app.set(data, forKey: Self.recentsKey)
         }
     }
 
@@ -557,14 +557,14 @@ class WallpaperViewModel: ObservableObject {
 
     private func savePlaylists() {
         guard let data = try? JSONEncoder().encode(playlists) else { return }
-        UserDefaults.standard.set(data, forKey: "WallpaperPlaylists")
+        UserDefaults.app.set(data, forKey: "WallpaperPlaylists")
     }
 
     private func savePlaylistSettings() {
-        UserDefaults.standard.set(activePlaylistID?.uuidString, forKey: "ActiveWallpaperPlaylist")
-        UserDefaults.standard.set(playlistShuffle, forKey: "WallpaperPlaylistShuffle")
-        UserDefaults.standard.set(playlistRepeats, forKey: "WallpaperPlaylistRepeats")
-        UserDefaults.standard.set(playlistEnabled, forKey: "WallpaperPlaylistEnabled")
+        UserDefaults.app.set(activePlaylistID?.uuidString, forKey: "ActiveWallpaperPlaylist")
+        UserDefaults.app.set(playlistShuffle, forKey: "WallpaperPlaylistShuffle")
+        UserDefaults.app.set(playlistRepeats, forKey: "WallpaperPlaylistRepeats")
+        UserDefaults.app.set(playlistEnabled, forKey: "WallpaperPlaylistEnabled")
     }
 
     func selectScreen(_ screenId: String, extendingSelection: Bool) {
@@ -760,7 +760,7 @@ class WallpaperViewModel: ObservableObject {
 
     init(persistsWallpapers: Bool = true) {
         self.persistsWallpapers = persistsWallpapers
-        if let storedPlacement = UserDefaults.standard.string(forKey: "WallpaperPlacement"),
+        if let storedPlacement = UserDefaults.app.string(forKey: "WallpaperPlacement"),
            let placement = WallpaperPlacement(rawValue: storedPlacement) {
             wallpaperPlacement = placement
         }
@@ -775,36 +775,36 @@ class WallpaperViewModel: ObservableObject {
             return
         }
 
-        if let data = UserDefaults.standard.data(forKey: "WallpaperPlaylists"),
+        if let data = UserDefaults.app.data(forKey: "WallpaperPlaylists"),
            let saved = try? JSONDecoder().decode([WallpaperPlaylist].self, from: data) {
             self.playlists = saved
         }
-        if let value = UserDefaults.standard.string(forKey: "ActiveWallpaperPlaylist") {
+        if let value = UserDefaults.app.string(forKey: "ActiveWallpaperPlaylist") {
             self.activePlaylistID = UUID(uuidString: value)
         }
         if self.activePlaylistID == nil {
             self.activePlaylistID = self.playlists.first?.id
         }
-        self.playlistShuffle = UserDefaults.standard.bool(forKey: "WallpaperPlaylistShuffle")
-        self.playlistRepeats = UserDefaults.standard.object(forKey: "WallpaperPlaylistRepeats") == nil
-            ? true : UserDefaults.standard.bool(forKey: "WallpaperPlaylistRepeats")
-        self.playlistEnabled = UserDefaults.standard.bool(forKey: "WallpaperPlaylistEnabled")
+        self.playlistShuffle = UserDefaults.app.bool(forKey: "WallpaperPlaylistShuffle")
+        self.playlistRepeats = UserDefaults.app.object(forKey: "WallpaperPlaylistRepeats") == nil
+            ? true : UserDefaults.app.bool(forKey: "WallpaperPlaylistRepeats")
+        self.playlistEnabled = UserDefaults.app.bool(forKey: "WallpaperPlaylistEnabled")
 
         // Load per-screen wallpapers
-        if let data = UserDefaults.standard.data(forKey: "ScreenWallpapers"),
+        if let data = UserDefaults.app.data(forKey: "ScreenWallpapers"),
            let saved = try? JSONDecoder().decode([String: WEWallpaper].self, from: data) {
             // Filter out any compound keys (screenId_spaceId) from previous per-space experiment
             self.wallpapers = saved.filter { !$0.key.contains("_") }
         }
         // Migrate legacy single wallpaper
-        else if let json = UserDefaults.standard.data(forKey: "CurrentWallpaper"),
+        else if let json = UserDefaults.app.data(forKey: "CurrentWallpaper"),
                 let wallpaper = try? JSONDecoder().decode(WEWallpaper.self, from: json) {
             let mainId = Self.mainScreenId()
             self.wallpapers = [mainId: wallpaper]
         }
 
         // Load enabled screens (default: all connected screens enabled)
-        if let saved = UserDefaults.standard.array(forKey: "EnabledScreens") as? [String] {
+        if let saved = UserDefaults.app.array(forKey: "EnabledScreens") as? [String] {
             self.enabledScreens = Set(saved)
         } else {
             self.enabledScreens = Set(NSScreen.screens.map { Self.screenId(for: $0) })
@@ -840,11 +840,11 @@ class WallpaperViewModel: ObservableObject {
 
     private func saveWallpapers() {
         if let data = try? JSONEncoder().encode(wallpapers) {
-            UserDefaults.standard.set(data, forKey: "ScreenWallpapers")
+            UserDefaults.app.set(data, forKey: "ScreenWallpapers")
         }
         // Keep legacy key updated for backward compat
         if let data = try? JSONEncoder().encode(currentWallpaper) {
-            UserDefaults.standard.set(data, forKey: "CurrentWallpaper")
+            UserDefaults.app.set(data, forKey: "CurrentWallpaper")
         }
     }
 }

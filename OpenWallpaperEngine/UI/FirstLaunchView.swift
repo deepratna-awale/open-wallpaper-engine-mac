@@ -87,7 +87,7 @@ struct FirstLaunchView: View {
                 .disabled(pageIndex == 0)
                 Button(isLastPage ? "Finish" : "Next") {
                     if isLastPage {
-                        UserDefaults.standard.set(!checked, forKey: "IsFirstLaunch")
+                        UserDefaults.app.set(!checked, forKey: "IsFirstLaunch")
                         dismiss()
                     } else {
                         withAnimation(.easeInOut(duration: 0.15)) { pageIndex += 1 }
@@ -213,7 +213,7 @@ extension FirstLaunchView {
 
 extension AppDelegate {
     @objc func resetFirstLaunch() {
-        UserDefaults.standard.set(true, forKey: "IsFirstLaunch")
+        UserDefaults.app.set(true, forKey: "IsFirstLaunch")
     }
 }
 

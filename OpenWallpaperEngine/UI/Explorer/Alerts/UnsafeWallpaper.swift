@@ -59,11 +59,11 @@ struct UnsafeWallpaper: View {
                     
                     if isIgnored {
                         var trustedWallpapers =
-                        UserDefaults.standard.array(forKey: "TrustedWallpapers") as? [String] ?? [String]()
+                        UserDefaults.app.array(forKey: "TrustedWallpapers") as? [String] ?? [String]()
                         
                         trustedWallpapers.append(AppDelegate.shared.wallpaperViewModel.nextCurrentWallpaper.wallpaperDirectory.path(percentEncoded: false))
                         
-                        UserDefaults.standard.set(trustedWallpapers, forKey: "TrustedWallpapers")
+                        UserDefaults.app.set(trustedWallpapers, forKey: "TrustedWallpapers")
                     }
                     
                     dismiss()

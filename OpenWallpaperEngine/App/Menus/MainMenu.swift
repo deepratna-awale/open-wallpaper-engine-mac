@@ -128,7 +128,7 @@ extension AppDelegate {
     }
     
     @objc func resetTrustedWallpapers() {
-        UserDefaults.standard.set([String](), forKey: "TrustedWallpapers")
+        UserDefaults.app.set([String](), forKey: "TrustedWallpapers")
     }
 }
 

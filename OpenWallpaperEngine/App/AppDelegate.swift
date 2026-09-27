@@ -201,7 +201,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         DispatchQueue.global(qos: .utility).async {
             WallpaperPackageConverter.convertInstalledLibrary()
-            if UserDefaults.standard.bool(forKey: "ReclaimOriginalPackages") {
+            if UserDefaults.app.bool(forKey: "ReclaimOriginalPackages") {
                 WallpaperPackageConverter.reclaimEligibleSources()
             }
         }
@@ -226,13 +226,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     
     func applicationWillTerminate(_ notification: Notification) {
         safeRestart.applicationWillTerminate()
-        if let wallpaper = UserDefaults.standard.url(forKey: "OSWallpaper") {
+        if let wallpaper = UserDefaults.app.url(forKey: "OSWallpaper") {
             for screen in NSScreen.screens {
                 try? NSWorkspace.shared.setDesktopImageURL(wallpaper, for: screen)
             }
         }
         
-        let cacheDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+        let cacheDirectory = AppStorageLocation.current.cachesDirectory
         do {
             let filesURL = try FileManager.default.contentsOfDirectory(at: cacheDirectory,
                                                                        includingPropertiesForKeys: nil,
@@ -463,7 +463,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         guard let mainScreen = NSScreen.main else { return }
         var wallpaper: URL {
             var osWallpaper: URL { NSWorkspace.shared.desktopImageURL(for: mainScreen)! }
-            if let wallpaper = UserDefaults.standard.url(forKey: "OSWallpaper") {
+            if let wallpaper = UserDefaults.app.url(forKey: "OSWallpaper") {
                 if wallpaper != osWallpaper {
                     if !wallpaper.lastPathComponent.contains("staticWP") {
                         return wallpaper
@@ -472,7 +472,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             }
             return osWallpaper
         }
-        UserDefaults.standard.set(wallpaper, forKey: "OSWallpaper")
+        UserDefaults.app.set(wallpaper, forKey: "OSWallpaper")
     }
     
     func setPlacehoderWallpaper(with wallpaper: WEWallpaper) {
@@ -490,7 +490,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                     let nsImage = NSImage(cgImage: cgImage, size: .zero)
                     if let data = nsImage.tiffRepresentation {
                         do {
-                            let url = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appending(path: "staticWP_\(wallpaper.wallpaperDirectory.hashValue).tiff")
+                            let url = AppStorageLocation.current.cachesDirectory.appending(path: "staticWP_\(wallpaper.wallpaperDirectory.hashValue).tiff")
                             try data.write(to: url, options: .atomic)
                             for screen in NSScreen.screens {
                                 try NSWorkspace.shared.setDesktopImageURL(url, for: screen)

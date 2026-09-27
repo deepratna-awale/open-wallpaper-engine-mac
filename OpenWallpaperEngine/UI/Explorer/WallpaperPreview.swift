@@ -398,18 +398,18 @@ struct WallpaperPreview: SubviewOfContentView {
         let enabledKey = "SceneMusicEnabled.\(wallpaper.wallpaperDirectory.path)"
         let volumeKey = "SceneMusicVolume.\(wallpaper.wallpaperDirectory.path)"
         let enabled = Binding<Bool>(
-            get: { UserDefaults.standard.object(forKey: enabledKey) == nil ? true : UserDefaults.standard.bool(forKey: enabledKey) },
+            get: { UserDefaults.app.object(forKey: enabledKey) == nil ? true : UserDefaults.app.bool(forKey: enabledKey) },
             set: {
-                UserDefaults.standard.set($0, forKey: enabledKey)
+                UserDefaults.app.set($0, forKey: enabledKey)
                 musicSync.objectWillChange.send()
                 NotificationCenter.default.post(name: .sceneMusicSettingsDidChange, object: nil,
                                                 userInfo: ["path": wallpaper.wallpaperDirectory.path])
             }
         )
         let volume = Binding<Double>(
-            get: { UserDefaults.standard.object(forKey: volumeKey) == nil ? 1 : UserDefaults.standard.double(forKey: volumeKey) },
+            get: { UserDefaults.app.object(forKey: volumeKey) == nil ? 1 : UserDefaults.app.double(forKey: volumeKey) },
             set: {
-                UserDefaults.standard.set($0, forKey: volumeKey)
+                UserDefaults.app.set($0, forKey: volumeKey)
                 musicSync.objectWillChange.send()
                 NotificationCenter.default.post(name: .sceneMusicSettingsDidChange, object: nil,
                                                 userInfo: ["path": wallpaper.wallpaperDirectory.path])

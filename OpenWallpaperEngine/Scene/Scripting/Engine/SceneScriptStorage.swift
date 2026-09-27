@@ -45,11 +45,11 @@ final class SceneScriptStorage: @unchecked Sendable {
         }
     }
 
-    /// `<Application Support>/Open Wallpaper Engine/scenestorage`, the counterpart of WE's
+    /// `<AppStorageLocation.supportDirectory>/scenestorage`, the counterpart of WE's
     /// `bin/scenestorage/`.
     static var defaultDirectory: URL {
-        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appending(path: "Open Wallpaper Engine/scenestorage")
+        AppStorageLocation.current.supportDirectory
+            .appending(path: "scenestorage")
     }
 
     deinit {

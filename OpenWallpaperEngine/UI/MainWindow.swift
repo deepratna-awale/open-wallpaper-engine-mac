@@ -30,7 +30,8 @@ class MainWindowController: NSWindowController, NSWindowDelegate {
         self.window.toolbarStyle = .unified
         // The tabs sit in the toolbar's centre; the title stays for the Window menu and Mission Control.
         self.window.titleVisibility = .hidden
-        self.window.setFrameAutosaveName("MainWindow")
+        // The frame autosaves into UserDefaults.standard, which an isolated copy must not write.
+        if !AppStorageLocation.current.isIsolated { self.window.setFrameAutosaveName("MainWindow") }
         self.window.isMovableByWindowBackground = true
         self.window.contentView = NSHostingView(rootView: ContentView(
                 viewModel: AppDelegate.shared.contentViewModel,

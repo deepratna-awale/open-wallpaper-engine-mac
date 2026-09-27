@@ -18,8 +18,8 @@ class GlobalSettingsViewModel: ObservableObject {
     /// The user chose "Don't Ask Again" on the missing Screen Recording permission alert.
     /// Nonisolated because the audio engine reads it off the settings view model's lifetime.
     nonisolated static var isAudioPermissionAlertDismissed: Bool {
-        get { UserDefaults.standard.bool(forKey: audioPermissionAlertDismissedKey) }
-        set { UserDefaults.standard.set(newValue, forKey: audioPermissionAlertDismissedKey) }
+        get { UserDefaults.app.bool(forKey: audioPermissionAlertDismissedKey) }
+        set { UserDefaults.app.set(newValue, forKey: audioPermissionAlertDismissedKey) }
     }
 
     @Published var settings: GlobalSettings
@@ -33,7 +33,7 @@ class GlobalSettingsViewModel: ObservableObject {
     
     @Published var selection = 0
     
-    @Published var isFirstLaunch = UserDefaults.standard.value(forKey: "IsFirstLaunch") as? Bool ?? true
+    @Published var isFirstLaunch = UserDefaults.app.value(forKey: "IsFirstLaunch") as? Bool ?? true
     
     var didFinishLaunchingNotificationCancellable: Cancellable?
     var didActivateApplicationNotificationCancellable: Cancellable?
@@ -42,13 +42,13 @@ class GlobalSettingsViewModel: ObservableObject {
     var didChangeAdjustMenuBarTintCancellable: Cancellable?
     
     init() {
-        if let data = UserDefaults.standard.data(forKey: "GlobalSettings"),
+        if let data = UserDefaults.app.data(forKey: "GlobalSettings"),
            let settings = try? JSONDecoder().decode(GlobalSettings.self, from: data) {
             self.settings = settings
         } else {
             self.settings = GlobalSettings()
         }
-        UserDefaults.standard.set(settings.wallpaperEngineAssetsDirectory,
+        UserDefaults.app.set(settings.wallpaperEngineAssetsDirectory,
                                   forKey: Self.wallpaperEngineAssetsDirectoryKey)
         OWELog.apply(logLevel: settings.logLevel)
 
@@ -111,12 +111,12 @@ class GlobalSettingsViewModel: ObservableObject {
     
     func didChangeAdjustMenuBarTint(_ newValue: Bool) {
         if newValue != true {
-            if let wallpaper = UserDefaults.standard.url(forKey: "OSWallpaper") {
+            if let wallpaper = UserDefaults.app.url(forKey: "OSWallpaper") {
                 try? NSWorkspace.shared.setDesktopImageURL(wallpaper, for: .main!)
             }
         } else {
             do {
-                let url = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appending(path: "staticWP_\(AppDelegate.shared.wallpaperViewModel.currentWallpaper.wallpaperDirectory.hashValue).tiff")
+                let url = AppStorageLocation.current.cachesDirectory.appending(path: "staticWP_\(AppDelegate.shared.wallpaperViewModel.currentWallpaper.wallpaperDirectory.hashValue).tiff")
                 try NSWorkspace.shared.setDesktopImageURL(url, for: .main!)
             } catch {
                 OWELog.error(.settings, "Menu bar tint wallpaper update failed: \(error)")
@@ -131,7 +131,7 @@ class GlobalSettingsViewModel: ObservableObject {
     func reset() {
         settings = (try? JSONDecoder()
             .decode(GlobalSettings.self,
-                from: UserDefaults.standard.data(forKey: "GlobalSettings")
+                from: UserDefaults.app.data(forKey: "GlobalSettings")
             ?? Data()))
         ?? GlobalSettings()
     }
@@ -139,12 +139,12 @@ class GlobalSettingsViewModel: ObservableObject {
     func save() {
         let data = try! JSONEncoder().encode(settings)
         OWELog.debug(.settings, "Saved settings: \(String(describing: String(data: data, encoding: .utf8)))")
-        UserDefaults.standard.set(data, forKey: "GlobalSettings")
+        UserDefaults.app.set(data, forKey: "GlobalSettings")
     }
 
     func setWallpaperEngineAssetsDirectory(_ directory: URL?) {
         settings.wallpaperEngineAssetsDirectory = directory?.standardizedFileURL.path
-        UserDefaults.standard.set(settings.wallpaperEngineAssetsDirectory,
+        UserDefaults.app.set(settings.wallpaperEngineAssetsDirectory,
                                   forKey: Self.wallpaperEngineAssetsDirectoryKey)
         NotificationCenter.default.post(name: .wallpaperEngineAssetsDirectoryDidChange, object: nil)
     }

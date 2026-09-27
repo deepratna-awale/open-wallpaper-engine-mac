@@ -47,7 +47,7 @@ private final class RemoteImageLoader: ObservableObject {
 
     func load(url: URL?) {
         guard let url else { return }
-        let cacheDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+        let cacheDirectory = AppStorageLocation.current.cachesDirectory
             .appending(path: "Open Wallpaper Engine/RemoteImages")
         let cacheURL = cacheDirectory.appending(path: String(url.absoluteString.hashValue) + ".image")
         if let cached = NSImage(contentsOf: cacheURL) {

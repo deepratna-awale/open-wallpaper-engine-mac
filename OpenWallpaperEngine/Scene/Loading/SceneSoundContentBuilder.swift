@@ -16,7 +16,7 @@ struct SceneSoundContentBuilder {
     var cacheDirectory = Self.defaultCacheDirectory
 
     static var defaultCacheDirectory: URL {
-        FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+        AppStorageLocation.current.cachesDirectory
             .appending(path: "Open Wallpaper Engine/SceneAudio")
     }
 

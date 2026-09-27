@@ -29,10 +29,10 @@ extension Fixtures {
         let identity = WallpaperSettingsIdentity(directory: directory,
                                                  projectData: FileManager.default.contents(atPath: directory.appending(path: "project.json").path))
         for family in WallpaperSettingsIdentity.Family.allCases {
-            UserDefaults.standard.removeObject(forKey: identity.key(family))
-            UserDefaults.standard.removeObject(forKey: family.rawValue + directory.path)
+            UserDefaults.app.removeObject(forKey: identity.key(family))
+            UserDefaults.app.removeObject(forKey: family.rawValue + directory.path)
         }
-        UserDefaults.standard.removeObject(forKey: "SceneAdditionalControlsVersion." + directory.path)
+        UserDefaults.app.removeObject(forKey: "SceneAdditionalControlsVersion." + directory.path)
     }
 
     /// True when WE's effect shader sources are reachable (a configured install or a bundled copy

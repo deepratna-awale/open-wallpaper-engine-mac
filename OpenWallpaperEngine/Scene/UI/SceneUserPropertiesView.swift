@@ -124,7 +124,7 @@ private final class SceneUserPropertiesModel: ObservableObject {
             usesSceneRenderer = true
         } else if wallpaperType == "video" || wallpaperType == "remote-video" {
             // Read the persisted blob rather than the main-actor view model: this loader is nonisolated.
-            let stored = UserDefaults.standard.data(forKey: "GlobalSettings")
+            let stored = UserDefaults.app.data(forKey: "GlobalSettings")
                 .flatMap { try? JSONDecoder().decode(GlobalSettings.self, from: $0) }
             usesSceneRenderer = (stored ?? GlobalSettings()).videoFramework == .metal
         } else {

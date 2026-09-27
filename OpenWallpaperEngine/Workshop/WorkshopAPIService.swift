@@ -49,13 +49,13 @@ final class WorkshopMetadataStore {
         defer { lock.unlock() }
         metadata[item.id] = item
         if let data = try? JSONEncoder().encode(metadata) {
-            UserDefaults.standard.set(data, forKey: storageKey)
+            UserDefaults.app.set(data, forKey: storageKey)
         }
     }
 
     private static func storedData(forKey key: String) -> Data? {
-        if let data = UserDefaults.standard.data(forKey: key) { return data }
-        return UserDefaults.standard.string(forKey: key)?.data(using: .utf8)
+        if let data = UserDefaults.app.data(forKey: key) { return data }
+        return UserDefaults.app.string(forKey: key)?.data(using: .utf8)
     }
 }
 
@@ -86,13 +86,13 @@ final class SteamPlayerStore {
         defer { lock.unlock() }
         players[player.steamId] = player
         if let data = try? JSONEncoder().encode(players) {
-            UserDefaults.standard.set(data, forKey: storageKey)
+            UserDefaults.app.set(data, forKey: storageKey)
         }
     }
 
     private static func storedData(forKey key: String) -> Data? {
-        if let data = UserDefaults.standard.data(forKey: key) { return data }
-        return UserDefaults.standard.string(forKey: key)?.data(using: .utf8)
+        if let data = UserDefaults.app.data(forKey: key) { return data }
+        return UserDefaults.app.string(forKey: key)?.data(using: .utf8)
     }
 }
 

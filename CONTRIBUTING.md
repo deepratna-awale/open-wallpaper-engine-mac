@@ -36,7 +36,7 @@ There is **one type per file** unless the types are tiny and private to it. A fi
    - `try?` is fine for genuinely optional lookups, and a comment should say so.
    - Decode collections element by element, so one bad entry doesn't drop its siblings.
 3. **No new global state.**
-   - Don't add a new `static let shared`, `AppDelegate.shared` lookups from engine code, or `UserDefaults.standard` reads outside the settings store.
+   - Don't add a new `static let shared`, `AppDelegate.shared` lookups from engine code, or `UserDefaults.standard`. Defaults go through `UserDefaults.app` (`@AppStorage(…, store: .app)`) and files through `AppStorageLocation.current` (`supportDirectory`, `cachesDirectory`), so tests and development copies stay isolated from the user's data.
    - Pass dependencies in. State belongs to a wallpaper instance.
 4. **Typed keys.** Don't add new `"_owe_…"` string keys. Add a case to the typed settings or property identifiers instead.
 5. **Logging** goes through `OWELog`: `.debug` for per-frame detail, `.info` for lifecycle, `.error` for failures. Don't use `print` or raw `NSLog`, and don't log anything every frame at `.info` or above.
@@ -49,6 +49,8 @@ There is **one type per file** unless the types are tiny and private to it. A fi
 - **Where tests go:** the `OpenWallpaperEngineTests` target (unit tests hosted in the app, which starts without its delegate under XCTest). Fixtures live in `Tests/Fixtures/`, outside the target, and are read with `Fixtures.url(_:)`.
 - **Every fix or feature comes with a test.** Format and value tests decode fixtures. Rendering checks go in `RenderCheckTests`.
 - **Known gaps** are asserted with `XCTExpectFailure("<snapshot id>: …")`. It's strict, so fixing a gap makes its test fail until you delete the expectation.
+- **Tests never touch the user's state.** The test host is the app, so under XCTest `AppStorageLocation` switches to the defaults suite `com.winddog.wallpaper-engine.isolated.tests`, `Open Wallpaper Engine (isolated tests)` under Application Support and Caches, and isolated keychain services. `AppStorageIsolationTests` guards this. To run the asset-dependent tests against a WE install, set it once in that suite: `defaults write com.winddog.wallpaper-engine.isolated.tests WallpaperEngineAssetsDirectory <path>`.
+- **Launch development copies isolated.** Every build shares the bundle id, so an agent or script that launches a copy of the app (screenshots, smoke runs) must set `OWE_ISOLATED_STATE=<tag>` in its environment or pass `-OWEIsolatedState <tag>`, e.g. `OWE_ISOLATED_STATE=shots "<build>/Open Wallpaper Engine.app/Contents/MacOS/Open Wallpaper Engine" -CustomWallpapersDirectory <library>`. Launch arguments (`-Key value`) still override defaults in the isolated suite. Never launch a dev copy against the real domain: it overwrites the user's playlists, per-screen wallpapers and safe-restart sentinel.
 - **Before pushing,** run `xcodebuild test -project OpenWallpaperEngine.xcodeproj -scheme OpenWallpaperEngine`. CI (`.github/workflows/ci.yml`) runs the same command on every push and PR.
 
 ## Commits and PRs

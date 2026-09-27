@@ -39,7 +39,7 @@ struct WallpaperSettingsIdentity: Hashable {
     /// The identity of the wallpaper in `directory`, with any settings still stored under a path
     /// key moved to it: the directory's own path, or else a single path with the same folder name
     /// that no longer exists (the library moved). Settings already under the identity win.
-    static func resolve(directory: URL, defaults: UserDefaults = .standard) -> WallpaperSettingsIdentity {
+    static func resolve(directory: URL, defaults: UserDefaults = .app) -> WallpaperSettingsIdentity {
         let projectURL = directory.appending(path: "project.json")
         let projectData: Data?
         do {
@@ -53,7 +53,7 @@ struct WallpaperSettingsIdentity: Hashable {
         return identity
     }
 
-    static func resolve(_ wallpaper: WEWallpaper, defaults: UserDefaults = .standard) -> WallpaperSettingsIdentity {
+    static func resolve(_ wallpaper: WEWallpaper, defaults: UserDefaults = .app) -> WallpaperSettingsIdentity {
         resolve(directory: wallpaper.wallpaperDirectory, defaults: defaults)
     }
 

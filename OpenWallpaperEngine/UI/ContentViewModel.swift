@@ -33,26 +33,26 @@ private struct URLListStorage: RawRepresentable {
 }
 
 class ContentViewModel: ObservableObject, DropDelegate {
-    @AppStorage("SortingBy") var sortingBy: WEWallpaperSortingMethod = .name
-    @AppStorage("SortingSequence") var sortingSequence: WEWallpaperSortingSequence = .increase
+    @AppStorage("SortingBy", store: .app) var sortingBy: WEWallpaperSortingMethod = .name
+    @AppStorage("SortingSequence", store: .app) var sortingSequence: WEWallpaperSortingSequence = .increase
     
-    @AppStorage("FRShowOnly")                   public var showOnly                     =                   FRShowOnly.all
-    @AppStorage("FRType")                       public var type                         =                       FRType.all
-    @AppStorage("FRAgeRating")                  public var ageRating                    =                  FRAgeRating.all
-    @AppStorage("FRWidescreenResolution")       public var widescreenResolution         =       FRWidescreenResolution.all
-    @AppStorage("FRUltraWidescreenResolution")  public var ultraWidescreenResolution    =  FRUltraWidescreenResolution.all
-    @AppStorage("FRDualscreenResolution")       public var dualscreenResolution         =       FRDualscreenResolution.all
-    @AppStorage("FRTriplescreenResolution")     public var triplescreenResolution       =     FRTriplescreenResolution.all
-    @AppStorage("FRPortraitScreenResolution")   public var potraitscreenResolution      =   FRPortraitScreenResolution.all
-    @AppStorage("FRMiscResolution")             public var miscResolution               =             FRMiscResolution.all
-    @AppStorage("FRSource")                     public var source                       =                     FRSource.all
-    @AppStorage("FRTag")                        public var tag                          =                        FRTag.all
+    @AppStorage("FRShowOnly", store: .app)                   public var showOnly                     =                   FRShowOnly.all
+    @AppStorage("FRType", store: .app)                       public var type                         =                       FRType.all
+    @AppStorage("FRAgeRating", store: .app)                  public var ageRating                    =                  FRAgeRating.all
+    @AppStorage("FRWidescreenResolution", store: .app)       public var widescreenResolution         =       FRWidescreenResolution.all
+    @AppStorage("FRUltraWidescreenResolution", store: .app)  public var ultraWidescreenResolution    =  FRUltraWidescreenResolution.all
+    @AppStorage("FRDualscreenResolution", store: .app)       public var dualscreenResolution         =       FRDualscreenResolution.all
+    @AppStorage("FRTriplescreenResolution", store: .app)     public var triplescreenResolution       =     FRTriplescreenResolution.all
+    @AppStorage("FRPortraitScreenResolution", store: .app)   public var potraitscreenResolution      =   FRPortraitScreenResolution.all
+    @AppStorage("FRMiscResolution", store: .app)             public var miscResolution               =             FRMiscResolution.all
+    @AppStorage("FRSource", store: .app)                     public var source                       =                     FRSource.all
+    @AppStorage("FRTag", store: .app)                        public var tag                          =                        FRTag.all
     
-    @AppStorage("FilterReveal") var isFilterReveal = false
-    @AppStorage("WallpaperURLs") private var storedWallpaperUrls = URLListStorage()
-    @AppStorage("SelectedIndex") var selectedIndex = 0
+    @AppStorage("FilterReveal", store: .app) var isFilterReveal = false
+    @AppStorage("WallpaperURLs", store: .app) private var storedWallpaperUrls = URLListStorage()
+    @AppStorage("SelectedIndex", store: .app) var selectedIndex = 0
     
-    @AppStorage("ExplorerIconSize") var explorerIconSize: Double = 200
+    @AppStorage("ExplorerIconSize", store: .app) var explorerIconSize: Double = 200
     
     @Published var isDisplaySettingsReveal = false
     @Published var importAlertPresented = false

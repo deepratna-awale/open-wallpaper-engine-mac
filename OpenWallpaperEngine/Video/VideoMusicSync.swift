@@ -8,12 +8,12 @@ enum VideoMusicSyncSettings {
     }
 
     static func bool(_ wallpaper: WEWallpaper, _ name: String) -> Bool {
-        UserDefaults.standard.bool(forKey: key(wallpaper, name))
+        UserDefaults.app.bool(forKey: key(wallpaper, name))
     }
 
     static func double(_ wallpaper: WEWallpaper, _ name: String, default defaultValue: Double = 0) -> Double {
         let key = key(wallpaper, name)
-        return UserDefaults.standard.object(forKey: key) == nil ? defaultValue : UserDefaults.standard.double(forKey: key)
+        return UserDefaults.app.object(forKey: key) == nil ? defaultValue : UserDefaults.app.double(forKey: key)
     }
 }
 
@@ -28,12 +28,12 @@ final class VideoMusicSyncStore: ObservableObject {
     private init() {}
 
     func set(_ value: Bool, _ wallpaper: WEWallpaper, _ name: String) {
-        UserDefaults.standard.set(value, forKey: VideoMusicSyncSettings.key(wallpaper, name))
+        UserDefaults.app.set(value, forKey: VideoMusicSyncSettings.key(wallpaper, name))
         didChange(wallpaper)
     }
 
     func set(_ value: Double, _ wallpaper: WEWallpaper, _ name: String) {
-        UserDefaults.standard.set(value, forKey: VideoMusicSyncSettings.key(wallpaper, name))
+        UserDefaults.app.set(value, forKey: VideoMusicSyncSettings.key(wallpaper, name))
         didChange(wallpaper)
     }
 

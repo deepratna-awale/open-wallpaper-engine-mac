@@ -87,7 +87,7 @@ class SteamCmdService: ObservableObject {
 
     func detectSteamCmd() {
         // Check user-configured path first
-        if let customPath = UserDefaults.standard.string(forKey: "SteamCmdPath"),
+        if let customPath = UserDefaults.app.string(forKey: "SteamCmdPath"),
            FileManager.default.isExecutableFile(atPath: customPath) {
             steamCmdPath = customPath
             return
@@ -159,7 +159,7 @@ class SteamCmdService: ObservableObject {
             )
         }
         pathError = nil
-        UserDefaults.standard.set(path, forKey: "SteamCmdPath")
+        UserDefaults.app.set(path, forKey: "SteamCmdPath")
         steamCmdPath = path
     }
 

@@ -197,7 +197,7 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
                 guard let self = self else { return }
                 if let data = nsImage?.tiffRepresentation {
                     do {
-                        let url = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appending(path: "staticWP_\(self.currentWallpaper.wallpaperDirectory.hashValue).tiff")
+                        let url = AppStorageLocation.current.cachesDirectory.appending(path: "staticWP_\(self.currentWallpaper.wallpaperDirectory.hashValue).tiff")
                         try data.write(to: url, options: .atomic)
                         try NSWorkspace.shared.setDesktopImageURL(url, for: .main!)
                     } catch {

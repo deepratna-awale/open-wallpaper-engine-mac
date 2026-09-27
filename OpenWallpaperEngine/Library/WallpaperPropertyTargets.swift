@@ -29,7 +29,7 @@ struct WallpaperPropertyTargets {
 
     /// Saves `values` as every scope's, marked as set by the user, and lets the displays regroup
     /// by their properties (`Notification.Name.wallpaperPropertiesDidSave`).
-    func save(_ values: [String: String], defaults: UserDefaults = .standard) {
+    func save(_ values: [String: String], defaults: UserDefaults = .app) {
         for scope in scopes {
             defaults.set(values, forKey: identity.key(.userProperties, scope: scope))
             defaults.set(true, forKey: identity.key(.explicitUserProperties, scope: scope))

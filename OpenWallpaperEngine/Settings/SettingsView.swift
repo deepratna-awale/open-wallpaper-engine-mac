@@ -69,7 +69,7 @@ struct SettingsView: View {
             HStack {
                 if let savedSettings = try? JSONDecoder()
                     .decode(GlobalSettings.self,
-                        from: UserDefaults.standard.data(forKey: "GlobalSettings")
+                        from: UserDefaults.app.data(forKey: "GlobalSettings")
                             ?? Data()), viewModel.settings != savedSettings {
                     Image(systemName: "exclamationmark.circle.fill")
                         .foregroundStyle(.yellow)

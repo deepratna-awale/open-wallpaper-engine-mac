@@ -8,7 +8,7 @@ import Foundation
 /// The Steam password and Steam Guard codes are never stored: they are piped to steamcmd once,
 /// and steamcmd keeps its own login token for later sessions (it never stores the password).
 enum SteamCredentials {
-    static func webAPIKey(defaults: UserDefaults = .standard) -> KeychainSecret {
+    static func webAPIKey(defaults: UserDefaults = .app) -> KeychainSecret {
         KeychainSecret(
             keychain: KeychainStore(service: KeychainSecret.service("steam-web-api-key")),
             account: "SteamWebAPIKey",
@@ -17,7 +17,7 @@ enum SteamCredentials {
         )
     }
 
-    static func steamCmdAccount(defaults: UserDefaults = .standard) -> KeychainSecret {
+    static func steamCmdAccount(defaults: UserDefaults = .app) -> KeychainSecret {
         KeychainSecret(
             keychain: KeychainStore(service: KeychainSecret.service("steamcmd-account")),
             account: "SteamLastUsername",

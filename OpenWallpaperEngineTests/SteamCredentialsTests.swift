@@ -87,8 +87,10 @@ final class SteamCredentialsTests: XCTestCase {
         XCTAssertNil(secret.load())
     }
 
-    func testCredentialServicesLiveUnderTheBundleIdentifier() {
-        let bundleId = Bundle.main.bundleIdentifier ?? "com.winddog.wallpaper-engine"
+    func testCredentialServicesLiveUnderTheIsolatedPrefix() {
+        // Under XCTest the prefix is the isolated suite, so no test can touch the real items.
+        let bundleId = AppStorageLocation.current.keychainServicePrefix
+        XCTAssertTrue(bundleId.contains(".isolated."), bundleId)
         XCTAssertEqual(SteamCredentials.webAPIKey(defaults: defaults).keychain.service, "\(bundleId).steam-web-api-key")
         XCTAssertEqual(SteamCredentials.steamCmdAccount(defaults: defaults).keychain.service, "\(bundleId).steamcmd-account")
     }

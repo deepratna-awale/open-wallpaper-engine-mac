@@ -11,9 +11,10 @@ struct KeychainSecret {
     let legacyDefaultsKey: String
     let defaults: UserDefaults
 
-    /// A service name under the app's bundle identifier, e.g. `<bundle id>.steam-web-api-key`.
-    static func service(_ suffix: String, bundle: Bundle = .main) -> String {
-        "\(bundle.bundleIdentifier ?? "com.winddog.wallpaper-engine").\(suffix)"
+    /// A service name under the app's bundle identifier, e.g. `<bundle id>.steam-web-api-key`, or
+    /// under the isolated suite for tests and development copies, so they never touch the real item.
+    static func service(_ suffix: String, prefix: String = AppStorageLocation.current.keychainServicePrefix) -> String {
+        "\(prefix).\(suffix)"
     }
 
     /// The stored value, or `nil` when there is none or the keychain can't be read.

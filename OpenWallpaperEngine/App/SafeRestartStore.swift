@@ -11,8 +11,8 @@ struct SafeRestartStore {
     let fileURL: URL
 
     static var defaultFileURL: URL {
-        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appending(path: "Open Wallpaper Engine/SafeRestart.json")
+        AppStorageLocation.current.supportDirectory
+            .appending(path: "SafeRestart.json")
     }
 
     init(fileURL: URL = Self.defaultFileURL) {

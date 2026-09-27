@@ -10,14 +10,14 @@ enum WallpaperStorage {
     }
 
     static var directory: URL {
-        if let customPath = UserDefaults.standard.string(forKey: customPathKey), !customPath.isEmpty {
+        if let customPath = UserDefaults.app.string(forKey: customPathKey), !customPath.isEmpty {
             return URL(fileURLWithPath: customPath, isDirectory: true)
         }
         return defaultDirectory
     }
 
     static var usesCustomDirectory: Bool {
-        UserDefaults.standard.string(forKey: customPathKey) != nil
+        UserDefaults.app.string(forKey: customPathKey) != nil
     }
 
     /// The storage folder can't be used: it is on a volume that isn't connected, or can't be created.
@@ -90,12 +90,12 @@ enum WallpaperStorage {
             // Hidden, so the loop above skips it; it lists which of the moved items are dependencies.
             try WorkshopDependencyIndex.carry(from: sourceDirectory, to: destinationDirectory, movedItems: moved)
         }
-        UserDefaults.standard.set(destinationDirectory.path, forKey: customPathKey)
+        UserDefaults.app.set(destinationDirectory.path, forKey: customPathKey)
         return moveExisting ? (sourceDirectory, destinationDirectory) : nil
     }
 
     static func resetToDefault() {
-        UserDefaults.standard.removeObject(forKey: customPathKey)
+        UserDefaults.app.removeObject(forKey: customPathKey)
     }
 }
 
@@ -109,7 +109,7 @@ final class DownloadedWallpaperIndex: ObservableObject {
     private let defaults: UserDefaults
     private let libraryDirectory: () -> URL
 
-    init(defaults: UserDefaults = .standard,
+    init(defaults: UserDefaults = .app,
          libraryDirectory: @escaping () -> URL = { FileManager.default.wallpapersDirectory }) {
         self.defaults = defaults
         self.libraryDirectory = libraryDirectory
@@ -203,7 +203,7 @@ final class FavoritesStore: ObservableObject {
     private let storageKey = "FavoriteWallpaperIds"
 
     private init() {
-        ids = Set(UserDefaults.standard.stringArray(forKey: storageKey) ?? [])
+        ids = Set(UserDefaults.app.stringArray(forKey: storageKey) ?? [])
     }
 
     func contains(_ id: String) -> Bool {
@@ -216,7 +216,7 @@ final class FavoritesStore: ObservableObject {
         } else {
             ids.insert(id)
         }
-        UserDefaults.standard.set(ids.sorted(), forKey: storageKey)
+        UserDefaults.app.set(ids.sorted(), forKey: storageKey)
     }
 
     /// A Workshop wallpaper keeps one identity whether or not it is installed, so favouriting it in
@@ -242,7 +242,7 @@ final class FavoritesStore: ObservableObject {
         } else {
             ids.insert(Self.key(for: wallpaper))
         }
-        UserDefaults.standard.set(ids.sorted(), forKey: storageKey)
+        UserDefaults.app.set(ids.sorted(), forKey: storageKey)
     }
 }
 

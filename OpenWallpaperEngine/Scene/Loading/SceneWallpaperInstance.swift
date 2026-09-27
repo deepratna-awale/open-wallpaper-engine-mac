@@ -174,13 +174,13 @@ final class SceneWallpaperInstance {
 
     private var sceneMusicEnabled: Bool {
         let key = "SceneMusicEnabled.\(viewModel.currentWallpaper.wallpaperDirectory.path)"
-        return UserDefaults.standard.object(forKey: key) == nil ? true : UserDefaults.standard.bool(forKey: key)
+        return UserDefaults.app.object(forKey: key) == nil ? true : UserDefaults.app.bool(forKey: key)
     }
 
     private var sceneMusicVolume: Float {
         let key = "SceneMusicVolume.\(viewModel.currentWallpaper.wallpaperDirectory.path)"
-        guard UserDefaults.standard.object(forKey: key) != nil else { return 1 }
-        return Float(UserDefaults.standard.double(forKey: key))
+        guard UserDefaults.app.object(forKey: key) != nil else { return 1 }
+        return Float(UserDefaults.app.double(forKey: key))
     }
 
     /// The wallpaper's sound gain (its sound layers fade to it): the app's volume times this

@@ -13,7 +13,7 @@ struct ExplorerItem: SubviewOfContentView {
     @ObservedObject var wallpaperViewModel: WallpaperViewModel
     @ObservedObject var safeRestart = AppDelegate.shared.safeRestart
     
-    @AppStorage("TestAnimates") var animates = false
+    @AppStorage("TestAnimates", store: .app) var animates = false
     
     var wallpaper: WEWallpaper
     var index: Int

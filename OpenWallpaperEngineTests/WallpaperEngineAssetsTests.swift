@@ -9,11 +9,11 @@ final class WallpaperEngineAssetsTests: XCTestCase {
     override func setUpWithError() throws {
         scratch = FileManager.default.temporaryDirectory.appending(path: "owe-assets-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: scratch, withIntermediateDirectories: true)
-        savedDefault = UserDefaults.standard.object(forKey: WallpaperEngineAssets.defaultsKey)
+        savedDefault = UserDefaults.app.object(forKey: WallpaperEngineAssets.defaultsKey)
     }
 
     override func tearDownWithError() throws {
-        UserDefaults.standard.set(savedDefault, forKey: WallpaperEngineAssets.defaultsKey)
+        UserDefaults.app.set(savedDefault, forKey: WallpaperEngineAssets.defaultsKey)
         try? FileManager.default.removeItem(at: scratch) // scratch cleanup
     }
 
@@ -27,7 +27,7 @@ final class WallpaperEngineAssetsTests: XCTestCase {
     func testBundledAssetsAreShipped() throws {
         let bundled = try XCTUnwrap(WallpaperEngineAssets.bundled)
         XCTAssertTrue(FileManager.default.fileExists(atPath: bundled.appending(path: "shaders/genericimage2.frag").path))
-        UserDefaults.standard.removeObject(forKey: WallpaperEngineAssets.defaultsKey)
+        UserDefaults.app.removeObject(forKey: WallpaperEngineAssets.defaultsKey)
         XCTAssertEqual(WallpaperEngineAssets.searchDirectories, [bundled])
         XCTAssertTrue(WallpaperEngineAssets.isUsingBundledAssets)
     }
@@ -35,7 +35,7 @@ final class WallpaperEngineAssetsTests: XCTestCase {
     /// A configured install on a drive that isn't mounted is skipped, and used again once it is.
     func testConfiguredInstallIsReadEachTime() throws {
         let install = scratch.appending(path: "wallpaper_engine")
-        UserDefaults.standard.set(install.path, forKey: WallpaperEngineAssets.defaultsKey)
+        UserDefaults.app.set(install.path, forKey: WallpaperEngineAssets.defaultsKey)
         XCTAssertNil(WallpaperEngineAssets.configured, "not there yet")
         try FileManager.default.createDirectory(at: install.appending(path: "assets"), withIntermediateDirectories: true)
         XCTAssertEqual(WallpaperEngineAssets.configured?.lastPathComponent, "assets", "normalised to its assets folder")

@@ -116,7 +116,7 @@ struct WEReferenceRenderer {
             keys.append(identity.key(family))
             keys.append(family.rawValue + directory.path)
         }
-        let defaults = UserDefaults.standard
+        let defaults = UserDefaults.app
         let before = keys.map { defaults.object(forKey: $0) }
         for key in keys { defaults.removeObject(forKey: key) }
         return {
