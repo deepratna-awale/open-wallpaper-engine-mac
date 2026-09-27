@@ -83,7 +83,8 @@ indirect enum SceneValueSource: Equatable {
             }
         }
 
-        if let raw = dictionary["animation"] {
+        // `"animation": null` and `"script": null` likewise mean none (e.g. 2048761036).
+        if let raw = dictionary["animation"], !(raw is NSNull) {
             guard raw is [String: Any] else {
                 OWELog.error(.scene, "SceneValueSource: 'animation' is not an object")
                 return nil
@@ -91,7 +92,7 @@ indirect enum SceneValueSource: Equatable {
             source = .animation(site: nil, fallback: source)
         }
 
-        if let raw = dictionary["script"] {
+        if let raw = dictionary["script"], !(raw is NSNull) {
             guard let script = raw as? String else {
                 OWELog.error(.scene, "SceneValueSource: 'script' is not a string")
                 return nil

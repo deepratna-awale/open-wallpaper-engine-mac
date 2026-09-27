@@ -58,6 +58,17 @@ final class SceneValueTests: XCTestCase {
         XCTAssertEqual(try value(["user": "combo", "value": 1], MockValueContext(properties: ["combo": "3"])).components, [3])
     }
 
+    /// `"script": null` and `"animation": null` mean no script or timeline (2048761036 writes them
+    /// beside a user binding), as `"user": null` means no binding.
+    func testNullScriptAndAnimationAreUnbound() throws {
+        let json: [String: Any] = ["script": NSNull(), "animation": NSNull(), "user": "size", "value": 0.2]
+        let parsed = try source(json)
+        guard case .user(let name, _, _) = parsed else { return XCTFail("expected a user binding, got \(parsed)") }
+        XCTAssertEqual(name, "size")
+        XCTAssertEqual(try value(json, MockValueContext(properties: ["size": "0.5"])).components, [0.5])
+        XCTAssertEqual(try value(["script": NSNull(), "value": 1]).components, [1])
+    }
+
     func testUserConditionBinding() throws {
         let json: [String: Any] = ["user": ["name": "mode", "condition": "2"], "value": 0.5]
         XCTAssertEqual(try value(json, MockValueContext(properties: ["mode": "2"])).components, [1])
