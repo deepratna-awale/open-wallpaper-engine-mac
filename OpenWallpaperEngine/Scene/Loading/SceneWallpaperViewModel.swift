@@ -1485,6 +1485,10 @@ class SceneWallpaperViewModel: ObservableObject {
             return SpriteSheet(frames: sequence.frames, frameSize: SIMD2(sequence.width, sequence.height),
                                duration: Float(sequence.duration), textureSize: textureSize)
         }
+        // No `.tex-json` (every compiled Workshop texture): the `.tex`'s own `TEXS` frames.
+        if case let .animated(animation) = source, let textureSize = source.sheetPixelSize {
+            return SpriteSheet(texFrames: animation.frames, textureSize: textureSize)
+        }
         return nil
     }
 

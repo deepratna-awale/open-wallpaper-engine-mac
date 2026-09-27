@@ -175,4 +175,18 @@ extension SpriteSheet {
         let rows = max(authoredRows, Int(ceil(Double(frames) / Double(columns))))
         self.init(columns: columns, rows: rows, frames: frames, duration: duration)
     }
+
+    /// The sheet an animated `.tex`'s `TEXS` frames lay out on its one atlas: what WE's runtime
+    /// reads, as the resource compiler bakes a `.tex-json`'s `spritesheetsequences` into `TEXS`
+    /// (only `resourcecompiler64.exe` names that key, never `wallpaper64.exe`), so a Workshop
+    /// texture ships no `.tex-json`. `frames` are in the loaded atlas's pixels, as `textureSize`
+    /// is. The duration is the frames' times; frames without times (`TEXS0002`) take the
+    /// `.tex-json` default of a second. Nil without frames or with several atlases (a GIF).
+    init?(texFrames frames: [TEXAnimationFrame], textureSize: SIMD2<Double>) {
+        guard let first = frames.first, first.width > 0, first.height > 0,
+              frames.allSatisfy({ $0.imageIndex == first.imageIndex }) else { return nil }
+        let time = frames.reduce(Float(0)) { $0 + max($1.duration, 0) }
+        self.init(frames: frames.count, frameSize: SIMD2(Double(first.width), Double(first.height)),
+                  duration: time > 0 ? time : 1, textureSize: textureSize)
+    }
 }

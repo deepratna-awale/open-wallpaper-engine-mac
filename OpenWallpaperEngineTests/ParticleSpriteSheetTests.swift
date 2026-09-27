@@ -4,7 +4,8 @@ import MetalKit
 
 /// A particle texture's sprite-sheet grid, from its `.tex-json` sequence and the texture's pixels,
 /// and a refracting drop of WE's rain sheet (`particle/water/rain_drops_sheet`, 16 frames of 64 on
-/// 256 × 256, RG88 albedo and an RGBA normal map) drawn through the real loader and renderer.
+/// 256 × 256, RG88 albedo and an RGBA normal map) drawn through the real loader and renderer; and a
+/// sheet from a `.tex`'s own `TEXS` frames, with no `.tex-json` (`Scenes/particle-texs-sheet`).
 final class ParticleSpriteSheetTests: XCTestCase {
     // MARK: - The grid
 
@@ -42,6 +43,56 @@ final class ParticleSpriteSheetTests: XCTestCase {
         XCTAssertEqual(system.material?.spriteSheet?.columns, 4, "the material draws the same grid")
     }
 
+    // MARK: - A sheet from the .tex's frames
+
+    /// A compiled `.tex` carries its sheet in `TEXS` (WE's runtime never reads a `.tex-json`):
+    /// the Tanjiro wallpaper's glass shards (3245833232) are 16 frames of 64 in a 1024 × 64 strip.
+    func testTheTexFramesLayOutTheGrid() throws {
+        let strip = (0..<16).map { frame(x: Float($0) * 64, size: 64, duration: 0.0625) }
+        let sheet = try XCTUnwrap(SpriteSheet(texFrames: strip, textureSize: SIMD2(1024, 64)))
+        XCTAssertEqual([sheet.columns, sheet.rows, sheet.frames], [16, 1, 16])
+        XCTAssertEqual(sheet.duration, 1, accuracy: 1e-6, "the frames' times")
+        // `TEXS0002` frames carry no time: the `.tex-json` default of a second.
+        let untimed = (0..<4).map { frame(x: Float($0) * 16, size: 16, duration: 0) }
+        XCTAssertEqual(SpriteSheet(texFrames: untimed, textureSize: SIMD2(64, 16))?.duration, 1)
+        // A GIF's frames on several atlases aren't one sheet.
+        XCTAssertNil(SpriteSheet(texFrames: [frame(x: 0, size: 16, duration: 0.1), frame(x: 0, size: 16, duration: 0.1, image: 1)],
+                                 textureSize: SIMD2(16, 16)))
+        XCTAssertNil(SpriteSheet(texFrames: [], textureSize: SIMD2(16, 16)))
+    }
+
+    /// `Scenes/particle-texs-sheet`: a 64 × 16 strip of four 16-pixel frames, each an opaque white
+    /// square over its middle 8 pixels, with `TEXS` frames and no `.tex-json`.
+    func testASheetWithoutTexJSONComesFromTheTexFrames() throws {
+        let content = try content(.enabled, directory: texsDirectory)
+        let system = try XCTUnwrap(content.particleSystems.first)
+        let sheet = try XCTUnwrap(system.spriteSheet, "the .tex's TEXS frames are the sheet")
+        XCTAssertEqual([sheet.columns, sheet.rows, sheet.frames], [4, 1, 4])
+        XCTAssertEqual(system.material?.spriteSheet?.columns, 4, "the material draws the same grid")
+    }
+
+    /// One particle of that strip (size 256: a 128-unit quad around (128, 128)) draws one frame,
+    /// square, its white square over the middle half: x and y 96…160. Without the sheet the whole
+    /// strip drew on a quad of its 4 : 1 aspect, a dotted line of four squares.
+    func testASheetFromTheTexFramesDrawsOneSquareFrame() throws {
+        let pixels = try render(.enabled, directory: texsDirectory, until: { $0.x > 128 })
+        let lit = pixels.points { $0.x > 128 }
+        XCTAssertFalse(lit.isEmpty, "the shard is drawn")
+        guard !lit.isEmpty else { return }
+        let low = lit.reduce(SIMD2(Int.max, Int.max)) { simd_min($0, $1.point) }
+        let high = lit.reduce(SIMD2(Int.min, Int.min)) { simd_max($0, $1.point) }
+        XCTAssertEqual(Double(low.x), 96, accuracy: 3, "the square's left edge")
+        XCTAssertEqual(Double(high.x), 159, accuracy: 3, "its right edge")
+        XCTAssertEqual(Double(low.y), 96, accuracy: 3, "its top edge, not a thin line's")
+        XCTAssertEqual(Double(high.y), 159, accuracy: 3, "its bottom edge")
+        // One solid square, not four in a row.
+        XCTAssertGreaterThan(Double(lit.count) / Double((high.x - low.x + 1) * (high.y - low.y + 1)), 0.9, "filled")
+    }
+
+    private func frame(x: Float, size: Float, duration: Float, image: Int = 0) -> TEXAnimationFrame {
+        TEXAnimationFrame(imageIndex: image, duration: duration, x: x, y: 0, width: size, widthY: 0, heightX: 0, height: size)
+    }
+
     // MARK: - The drawn drop
 
     /// One drop (frame 0, a 100-unit sprite tinted red) over a 0.6 grey layer. WE draws the
@@ -77,9 +128,11 @@ final class ParticleSpriteSheetTests: XCTestCase {
 
     private static let size = 256
     private let directory = Fixtures.url("Scenes/particle-rain-sheet")
+    private let texsDirectory = Fixtures.url("Scenes/particle-texs-sheet")
 
     override func tearDownWithError() throws {
         Fixtures.removeStoredSettings(for: directory)
+        Fixtures.removeStoredSettings(for: texsDirectory)
     }
 
     private struct Pixels {
@@ -104,7 +157,8 @@ final class ParticleSpriteSheetTests: XCTestCase {
         }
     }
 
-    private func content(_ postProcessing: GSPostProcessingQuality) throws -> SceneMetalContent {
+    private func content(_ postProcessing: GSPostProcessingQuality, directory: URL? = nil) throws -> SceneMetalContent {
+        let directory = directory ?? self.directory
         let project = try JSONDecoder().decode(WEProject.self, from: Data(contentsOf: directory.appending(path: "project.json")))
         let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
         var settings = SceneRenderSettings()
@@ -113,10 +167,12 @@ final class ParticleSpriteSheetTests: XCTestCase {
         return try XCTUnwrap(model.metalContent())
     }
 
-    /// The fixture drawn under `postProcessing` until the drop shows (its pipelines compile off
-    /// the render thread); the last frame's drawable.
-    private func render(_ postProcessing: GSPostProcessingQuality) throws -> Pixels {
-        let content = try content(postProcessing)
+    /// The fixture (the rain sheet's by default) drawn under `postProcessing` until a pixel passes
+    /// `until` (the drop, by default; its pipelines compile off the render thread); the last
+    /// frame's drawable.
+    private func render(_ postProcessing: GSPostProcessingQuality, directory: URL? = nil,
+                        until shown: @escaping (SIMD3<Int>) -> Bool = { $0.x > $0.y + 60 }) throws -> Pixels {
+        let content = try content(postProcessing, directory: directory)
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let view = MTKView(frame: CGRect(x: 0, y: 0, width: Self.size, height: Self.size), device: device)
         view.colorPixelFormat = .bgra8Unorm
@@ -141,7 +197,7 @@ final class ParticleSpriteSheetTests: XCTestCase {
             var bytes = [UInt8](repeating: 0, count: Self.size * Self.size * 4)
             texture.getBytes(&bytes, bytesPerRow: Self.size * 4, from: MTLRegionMake2D(0, 0, Self.size, Self.size), mipmapLevel: 0)
             pixels = Pixels(bytes: bytes)
-        } while (drawn < 3 || pixels.points(where: { $0.x > $0.y + 60 }).isEmpty) && Date() < deadline
+        } while (drawn < 3 || pixels.points(where: shown).isEmpty) && Date() < deadline
         return pixels
     }
 }
