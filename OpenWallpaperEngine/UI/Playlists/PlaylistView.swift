@@ -3,9 +3,28 @@ import SwiftUI
 /// The selected playlist, in the main window's detail column; `PlaylistSidebar` lists them.
 struct PlaylistView: View {
     @ObservedObject var wallpaperViewModel: WallpaperViewModel
+    /// The playlist whose Delete button was clicked, until the confirmation is answered.
+    @State private var playlistPendingDeletion: WallpaperPlaylist?
 
     var body: some View {
         playlistDetail
+            .confirmationDialog(
+                "Delete the playlist \u{201C}\(playlistPendingDeletion?.name ?? "")\u{201D}?",
+                isPresented: Binding(
+                    get: { playlistPendingDeletion != nil },
+                    set: { if !$0 { playlistPendingDeletion = nil } }
+                ),
+                titleVisibility: .visible,
+                presenting: playlistPendingDeletion
+            ) { playlist in
+                // Removes only the playlist; its wallpapers stay installed.
+                Button("Delete", role: .destructive) {
+                    wallpaperViewModel.deletePlaylist(playlist)
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: { _ in
+                Text("Its wallpapers stay in your library.")
+            }
     }
 
     @ViewBuilder private var playlistDetail: some View {
@@ -16,7 +35,7 @@ struct PlaylistView: View {
                         Text(playlist.name).font(.largeTitle.bold())
                         Spacer()
                         Button(role: .destructive) {
-                            wallpaperViewModel.deletePlaylist(playlist)
+                            playlistPendingDeletion = playlist
                         } label: {
                             Label("Delete playlist", systemImage: "trash")
                                 .labelStyle(.iconOnly)
