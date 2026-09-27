@@ -25,11 +25,25 @@ The scripts are `setup.ps1` (copies the generated projects into WE as `mg_*` and
   - The cloth is **not black at any shadow quality**: mean RGB is about (157, 45, 48) for disabled, low, medium and high alike.
   - But no shadow is visible at low, medium or high either; the floor is identical to the disabled capture. So the shadow setting may not affect this scene, and this doesn't yet prove the cloth survives *active* shadows. The RenderDoc part is not done.
 
-## Pending
-These were **not captured: the Windows session locked or blanked the displays while the user was away**, so every capture came back black or showed a stale frame. They will be re-run when the user is back.
-- MG4 flag variants 0x00800 â€¦ 0x10000
-- MG6 ortho depth near/far, and the collision-model depth test on/off
-- MG8 hidden collision sphere
-- MG3 library items (need Chrome to subscribe)
-- MG5 (editor puppet with morphs), user
-- MG7 RenderDoc capture, which needs RenderDoc installed and the user's go-ahead
+## Done in the second session (user away; captured with playback rules temporarily set to "run", then restored)
+**Capture pitfall:** the earlier black and stale captures were **not** a locked screen. There were two causes:
+1. WE's "pause when an app is maximized" rule. Two maximized windows were open on the primary monitor, so WE showed the plain Windows desktop.
+2. The MG4 flagged models leaving WE's renderer stuck (see below).
+
+- **MG4: root-motion flags.** With **any** of the six clip-flag bits set (0x00800 … 0x10000), WE 2.8.0.42 **silently refuses to load the model**. `config.json` switches to the project, but the screen keeps the previous wallpaper even after 20 s, and nothing is logged. Each project differs from the working `0x00000` by exactly one byte of `gt_rootmotion.mdl` (offset 0x710, 00?10 for 0x01000). Loading several flagged models in a row left the renderer black until WE was restarted (`rootmotion_isolation.log` tests each variant after a clean restart). So there is no axis mapping to observe: WE does not accept these flags.
+- **MG6: ortho depth.** The pixel at (960,540), 2 s after load, is **(253,0,0), red, in both `near-first` and `far-first`**. WE's orthographic 2D frame **depth-tests models**, and draw order doesn't matter. Ours (last-drawn) is wrong. Stills: `MG6_ortho_*_t2.png`.
+- **MG6: collisionmodel particles and depth test.** Orange particle density inside the sphere's screen area relative to outside it, over 1.5–5 s:
+
+| Variant | Ratio |
+|---|---|
+| depthtest disabled | 1.55 (particles drawn over the sphere) |
+| enabled | 0.13 (particles behind the sphere are hidden) |
+| shipped preview | 0.28 |
+
+  Grid: `MG6_MG8_colmodel_grid.png`, with shipped, depth on / depth off, and hidden.
+- **MG8: hidden collision model.** With the sphere's `visible` false, the sphere isn't drawn, and the particle density inside its area is **0.00%** (0.04% outside). Particles **still collide with the hidden model**.
+
+## Pending (need the user)
+- MG3 library items 3803167460 / 3803042537: subscribing needs Chrome, which was not connected.
+- MG5: editor puppet with morphs.
+- MG7: RenderDoc capture (needs RenderDoc installed).

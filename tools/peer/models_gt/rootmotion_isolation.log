@@ -1,0 +1,8 @@
+
+0x00000 : at 3s bright=0 redpx=8 | at 5s bright=0 redpx=9 | retro after: bright=109 redpx=146 | wallpaper64 alive=True | log: 
+0x00800 : at 3s bright=109 redpx=144 | at 5s bright=109 redpx=144 | retro after: bright=109 redpx=144 | wallpaper64 alive=True | log: 
+0x01000 : at 3s bright=109 redpx=144 | at 5s bright=109 redpx=144 | retro after: bright=109 redpx=144 | wallpaper64 alive=True | log: 
+0x02000 : at 3s bright=109 redpx=144 | at 5s bright=109 redpx=144 | retro after: bright=109 redpx=144 | wallpaper64 alive=True | log: 
+0x04000 : at 3s bright=109 redpx=144 | at 5s bright=109 redpx=144 | retro after: bright=109 redpx=144 | wallpaper64 alive=True | log: 
+0x08000 : at 3s bright=109 redpx=144 | at 5s bright=109 redpx=144 | retro after: bright=109 redpx=144 | wallpaper64 alive=True | log: 
+0x10000 : at 3s bright=109 redpx=144 | at 5s bright=109 redpx=144 | retro after: bright=109 redpx=144 | wallpaper64 alive=True | log: 
