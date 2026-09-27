@@ -172,7 +172,8 @@ final class ParticleCollisionModelTests: XCTestCase {
             let states = simulator.snapshot(gpu, queue: queue)
             XCTAssertGreaterThan(cpu.particles.count, 50, "\(behavior)")
             let cpuCount = Double(cpu.particles.count)
-            let allowed: Double = max(2, cpuCount * 0.01)
+            let onePercent: Double = cpuCount * 0.01
+            let allowed: Double = onePercent > 2 ? onePercent : 2
             XCTAssertEqual(Double(states.count), cpuCount, accuracy: allowed, "\(behavior): count")
             func mean(_ values: [SIMD4<Float>]) -> SIMD4<Float> {
                 let total: SIMD4<Float> = values.reduce(SIMD4<Float>.zero, +)
