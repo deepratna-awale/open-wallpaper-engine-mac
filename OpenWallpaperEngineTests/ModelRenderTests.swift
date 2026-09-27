@@ -275,7 +275,7 @@ final class ModelRenderTests: XCTestCase {
 
     /// A layer's composite (`_rt_imageLayerComposite_<id>_a`) is another object's image, handed
     /// out by id; alpha-to-coverage blending sets `ALPHATOCOVERAGE` and counts as opaque;
-    /// `_rt_Reflection` waits for M9.
+    /// `_rt_Reflection` is bound only where the variant samples it (`ScenePlanarReflectionTests`).
     func testRenderTargetsAndBlending() throws {
         XCTAssertEqual(ModelMaterialPlanBuilder.compositeLayerID("_rt_imageLayerComposite_12_a"), "12")
         XCTAssertNil(ModelMaterialPlanBuilder.compositeLayerID("_rt_imageLayerComposite_12_b"))
@@ -287,11 +287,9 @@ final class ModelRenderTests: XCTestCase {
         XCTAssertEqual(name, "_rt_imageLayerComposite_12_a")
         XCTAssertEqual(composite.pass.variant?.combos["ALPHATOCOVERAGE"], 1)
         XCTAssertTrue(composite.isOpaque && composite.alphaToCoverage)
-        XCTAssertThrowsError(try materials.build(materialPath: "materials/reflection.json",
-                                                 mesh: ModelMeshCombos(mesh: mesh, bones: 0, morphTargets: false))) { error in
-            guard case ModelMaterialPlanError.unsupported(let reason) = error else { return XCTFail("\(error)") }
-            XCTAssertTrue(reason.contains("_rt_Reflection"), reason)
-        }
+        let unreflecting = try materials.build(materialPath: "materials/reflection.json",
+                                               mesh: ModelMeshCombos(mesh: mesh, bones: 0, morphTargets: false))
+        XCTAssertNil(unreflecting.pass.textures[2], "generic2 without REFLECTION doesn't sample _rt_Reflection")
     }
 
     /// WE's draw list puts opaque meshes (normal, alpha-to-coverage) before translucent ones

@@ -217,6 +217,8 @@ final class EffectGraphRenderer {
         /// Another layer's image after its effects this frame, by object id, for a pass sampling
         /// `_rt_imageLayerComposite_<id>_a` (`SceneEffectPlan.compositeLayerIDs`); nil unbinds it.
         var layerComposite: (String) -> MTLTexture? = { _ in nil }
+        /// `_rt_Reflection` this frame (`ScenePlanarReflection`); nil unbinds it.
+        var planarReflection: MTLTexture? = nil
         let layerColor: SIMD3<Float>
         let layerAlpha: Float
         /// Bump when `input`'s contents change while the texture object stays the same.
@@ -618,6 +620,7 @@ final class EffectGraphRenderer {
             case .previous: texture = previous
             case .fbo(let name):
                 texture = fbos[name] ?? ModelMaterialPlanBuilder.compositeLayerID(name).flatMap(context.layerComposite)
+                    ?? (name == ScenePlanarReflection.name ? context.planarReflection : nil)
                 // An FBO declared with `"uvs": "repeat"` tiles (glitter's tile); others clamp.
                 if repeatingFBOs.contains(name) { sampler = assetSamplers[0] ?? clampSampler }
             case .sceneSnapshot: texture = context.sceneSnapshot

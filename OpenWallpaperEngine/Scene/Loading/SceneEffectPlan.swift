@@ -286,6 +286,9 @@ struct SceneEffectPlanBuilder {
         // in the texture manager under this name (0x1401ea7a3 → 0x1400d3198), where a material's
         // texture lookup finds it (0x14014cf90). Only `_a` is ever registered.
         if ModelMaterialPlanBuilder.compositeLayerID(name) != nil { return .fbo(name) }
+        // The planar reflection (`ScenePlanarReflection`), while the scene has a reflective model;
+        // without one WE's lookup misses, as below.
+        if name == ScenePlanarReflection.name { return .fbo(name) }
         if name.hasPrefix("_rt_") {
             // A name nothing registered misses the texture manager and loads as a file, which
             // fails over to WE's "error" texture (0x14014d222); here the slot stays unbound.

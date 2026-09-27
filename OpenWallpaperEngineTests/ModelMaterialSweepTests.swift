@@ -211,7 +211,8 @@ final class ModelMaterialSweepTests: XCTestCase {
         renderer.draw(object, SceneModelDraw(
             world: matrix_identity_float4x4, camera: camera, frame: frame, values: EffectGraphTests.FixedValues(),
             pixelFormat: .bgra8Unorm, sampleCount: 1, depth: depthStates, mipMappedFrameBuffer: checkerboard,
-            assetTexture: assetTexture, layerComposite: { _ in checkerboard }, shadowAtlas: atlas), encoder: encoder, commandBuffer: buffer)
+            assetTexture: assetTexture, layerComposite: { _ in checkerboard }, shadowAtlas: atlas, planarReflection: checkerboard),
+            encoder: encoder, commandBuffer: buffer)
         encoder.endEncoding()
         buffer.commit()
         buffer.waitUntilCompleted()

@@ -269,9 +269,10 @@ struct ModelMaterialPlanBuilder {
         if Self.compositeLayerID(name) != nil { return .fbo(name) }
         // The frame's shadow atlas (`SceneModelDraw.shadowAtlas`).
         if name == SceneShadowAtlas.name { return .fbo(name) }
+        // The planar reflection (`SceneModelDraw.planarReflection`, `ScenePlanarReflection`).
+        if name == ScenePlanarReflection.name { return .fbo(name) }
         if name.hasPrefix("_rt_") || name.hasPrefix("_alias_") {
-            // `_rt_Reflection` (M9), `_alias_lightCookie` and the scene's own buffers have no
-            // source for a model yet.
+            // `_alias_lightCookie` and the scene's own buffers have no source for a model yet.
             throw ModelMaterialPlanError.unsupported("render target \(name)")
         }
         guard let source = loadTexture(name, materialPath) else {

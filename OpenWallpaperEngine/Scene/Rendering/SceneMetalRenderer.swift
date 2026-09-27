@@ -209,7 +209,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
          "volumetrics": volumetrics?.residentBytes ?? 0,
          "prelit images": imageMaterials?.prelitBytes ?? 0,
          "puppet images": puppets?.allocatedBytes ?? 0,
-         "scene depth": depthBuffer.residentBytes]
+         "scene depth": depthBuffer.residentBytes,
+         "planar reflection": planarReflection?.residentBytes ?? 0]
     }
     /// A drawn layer's effect plans (tests, diagnostics).
     func effectPlans(ofLayer id: String) -> [SceneEffectPlan] {
@@ -251,6 +252,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private(set) var shadowPass: SceneShadowPass?
     /// This frame's `_rt_shadowAtlas` (`drawShadows`).
     private var frameShadowAtlas: MTLTexture?
+    /// Draws `_rt_Reflection` (docs/models-plan.md §2.11), and this frame's (`drawReflection`).
+    private(set) var planarReflection: ScenePlanarReflection?
+    private var frameReflection: MTLTexture?
     /// WE's depth-stencil states and this frame's depth buffer (docs/models-plan.md §2.4): a
     /// perspective scene's pass has one.
     private lazy var depthStates = SceneDepthStates(device: device)
@@ -386,6 +390,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         super.init()
         modelDrawing = SceneModelRenderer(device: device, archive: effectGraph?.pipelineArchive)
         shadowPass = SceneShadowPass(device: device, archive: effectGraph?.pipelineArchive)
+        planarReflection = ScenePlanarReflection(device: device)
         memoryPressure = SceneMemoryPressure { [weak self] level in self?.trimMemory(level) }
     }
 
@@ -462,6 +467,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             transforms = .empty
             spatial = SceneSpatialContent()
             depthBuffer.releaseAll()
+            planarReflection?.release()
             lastPointer = nil
             lastCameraMotion = nil
             lastTextSizes.removeAll()
@@ -508,6 +514,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 self.spatial = content.spatial
                 self.modelDrawing?.setContent(content.spatial.models, content: content)
                 self.shadowPass?.setContent()
+                self.planarReflection?.setContent()
                 for stage in self.frameStages { stage.setContent(content) }
                 self.postProcess.setContent(content)
                 self.particleSystems = preparedParticleSystems
@@ -941,6 +948,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                              shake: motion.shake)
         drawProbe?.record(lighting: effectFrame.lighting)
         frameShadowAtlas = drawShadows(frame: effectFrame, commandBuffer: commandBuffer)
+        frameReflection = drawReflection(frame: effectFrame, scene: sceneTexture, commandBuffer: commandBuffer)
         // Text is rasterised first so its effects run on the finished text, like an image layer's.
         var textFrames: [Int: (frame: RenderTextureFrame, baseSize: SIMD2<Float>)] = [:]
         // Only visible layers get an entry; the draw loop skips the rest.
@@ -1391,6 +1399,31 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                  commandBuffer: commandBuffer)
     }
 
+    /// This frame's `_rt_Reflection` (docs/models-plan.md §2.11): while a model is reflective, the
+    /// visible reflected models drawn through the mirrored camera in the object loop's order (its
+    /// sort keyed on the mirrored forward, as WE sorts inside the mirrored pass), or the clear
+    /// colour with the reflection setting off; nil while no model is reflective.
+    private func drawReflection(frame: BuiltinFrameContext, scene: MTLTexture, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
+        guard let planarReflection, let modelDrawing, let depthStates, planarReflection.isNeeded(spatial.models) else {
+            if planarReflection?.texture != nil { planarReflection?.release() }
+            return nil
+        }
+        var indices = planarReflection.reflectedList(spatial.models).filter { scripts.isVisible(spatial.models[$0].id) }
+        if spatial.drawOrder.reorders {
+            let forward = ScenePlanarReflection.mirrored(frame.camera).forward
+            indices = spatial.drawOrder.ordered(indices.map { drawEntry(.model($0), batches: []) }, forward: forward)
+                .compactMap { if case .model(let index) = $0 { return index } else { return nil } }
+        }
+        let pass = ScenePlanarReflection.Pass(
+            width: scene.width, height: scene.height, pixelFormat: scene.pixelFormat,
+            clearColor: scripts.state.scene.vector3(.clearcolor) ?? clearColor, enabled: renderSettings.reflection,
+            models: indices.map { (spatial.models[$0], world3D(spatial.models[$0].id, in: spatial.transforms)) },
+            frame: frame, values: timelines.values, mipMappedFrameBuffer: mipMappedTarget, shadowAtlas: frameShadowAtlas,
+            assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
+            layerComposite: { [unowned self] id in self.layerComposites[id] })
+        return planarReflection.encode(pass, drawing: modelDrawing, depthStates: depthStates, commandBuffer: commandBuffer)
+    }
+
     /// WE's sound layers each frame: the volumes scripts set, then their timers, in real time. A
     /// gap in drawing (a paused wallpaper) counts as at most `maxSoundStep`: its sounds were paused.
     private func updateSounds() {
@@ -1774,7 +1807,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             values: timelines.values, pixelFormat: pixelFormat, sampleCount: sceneSampleCount, depth: frameDepth,
             mipMappedFrameBuffer: mipMappedTarget,
             assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
-            layerComposite: { [unowned self] id in self.layerComposites[id] }, shadowAtlas: frameShadowAtlas),
+            layerComposite: { [unowned self] id in self.layerComposites[id] }, shadowAtlas: frameShadowAtlas,
+            planarReflection: frameReflection),
             encoder: encoder, commandBuffer: commandBuffer)
         encoder.setRenderPipelineState(renderPipeline)
     }
@@ -1991,6 +2025,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             layerAlpha: draw.opacity)
         context.mipMappedFrameBuffer = mipMappedTarget
         context.layerComposite = { [unowned self] id in self.layerComposites[id] }
+        context.planarReflection = frameReflection
         context.effectTextureProjection = EffectGraphRenderer.effectTextureProjection(quad: draw.quad, sceneSize: sceneSize)
         // WE's layer buffers are frame-buffer class: RGBA16F in HDR.
         context.frameBufferFormat = postProcess.drawsHDR ? .rgba16Float : .rgba8Unorm

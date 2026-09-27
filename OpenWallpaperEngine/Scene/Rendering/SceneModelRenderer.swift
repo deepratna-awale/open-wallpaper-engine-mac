@@ -176,7 +176,8 @@ final class SceneModelRenderer: SceneModelDrawing {
             } else {
                 encoder.setCullMode(mesh.material.raster.cullMode)
             }
-            encoder.setFrontFacing(Self.frontFacing)
+            // The planar reflection's mirror flips every triangle's winding (WE flips its cull mode).
+            encoder.setFrontFacing(draw.mirrored ? .clockwise : Self.frontFacing)
             encoder.setVertexBuffer(buffers.vertices, offset: 0, index: Self.meshBuffer)
             encoder.setVertexBuffer(zeroAttributes, offset: 0, index: EffectGraphRenderer.zeroBuffer)
             for entry in bound {
@@ -349,6 +350,9 @@ final class SceneModelRenderer: SceneModelDrawing {
             case .fbo(SceneShadowAtlas.name):
                 guard let atlas = draw.shadowAtlas else { return nil }
                 bound.append((slot, atlas, shadowSampler, nil))
+            case .fbo(ScenePlanarReflection.name):
+                guard let reflection = draw.planarReflection else { return nil }
+                bound.append((slot, reflection, clampSampler, nil))
             case .fbo(let name):
                 guard let id = ModelMaterialPlanBuilder.compositeLayerID(name), let texture = draw.layerComposite(id) else {
                     return nil

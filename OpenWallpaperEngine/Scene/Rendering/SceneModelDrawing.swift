@@ -48,6 +48,10 @@ struct SceneModelDraw {
     /// `_rt_shadowAtlas` this frame (`SceneShadowAtlas`): the maps `SceneShadowPass` drew, or the
     /// cleared stand-in; nil draws no mesh whose material reads it.
     var shadowAtlas: MTLTexture?
+    /// `_rt_Reflection` this frame (`ScenePlanarReflection`); nil draws no mesh whose material reads it.
+    var planarReflection: MTLTexture?
+    /// Drawn into the planar reflection through the mirrored camera, which flips the winding.
+    var mirrored = false
 
     /// The matrices a model's material takes (`BuiltinPassContext.place`): world, camera view,
     /// and the view-projection in the translated shaders' convention.
