@@ -393,7 +393,7 @@ The peer generated these projects without the editor (`build_extras.py`) and cap
 |---|---|---|
 | No object (the layout alone) | not drawn; the blur composite projects on the same layout were 14.5–18 | 0.26 (the composites 0.25–0.44) |
 | Solid band, blend modes 0, 2, 7, 9, 11, 18, 31 | 22–40 | 0.20–0.27 |
-| Text, plain / outline / blur / drop shadow / defaults only | 7.2–9.4 | 0.5–1.7 |
+| Text, plain / outline / blur / drop shadow / defaults only | 7.2–9.4 | 0.5–1.7; 0.27–1.50 with WE's advances (9.5) |
 | Refraction drops | 20.8 | 4.4 (random drop positions) |
 | Timeline single / mirror | 14.6 / 16.9 | 0.19 / 0.36 |
 
@@ -416,7 +416,12 @@ The peer generated these projects without the editor (`build_extras.py`) and cap
 - **What doesn't place the text.** scene.json's `size` plays no part, and `padding` is only room around the glyphs.
 
 Ours followed a box: the authored size, grown to fit, with the edge named by the alignment on the origin, and the lines inside the padding centred as ascender to descender. `SceneTextLayout` now places the lines as WE does, around the origin, in a box centred on it. Tests: `SceneTextLayoutTests` (the capture's baseline at −143, each vertical and horizontal alignment, the box holding the lines). This supersedes "match WE's in size and place" in we-reference-report R1 for vertical placement.
-- **Still different** (test-risks): WE floors each glyph's advance to whole pixels and shapes with HarfBuzz on hinted FreeType glyphs; ours uses CoreText's fractional advances. WE's effect buffer is the ink bounds plus padding centred on the ink, while ours is centred on the origin, so it is larger for left, right, top or bottom aligned text. `blockalign` (justify) isn't applied.
+- **Advances, the buffer and `blockalign` — fixed (2026-09-27, test-risks EX1–EX3, GP2).**
+  - **Advances.** Each glyph advances by HarfBuzz's advance floored to a whole unit (0x1401b1166: `x_advance >> 6`; offsets likewise). A glyph's box for the line width is FreeType's pixel box (`FT_Glyph_Get_CBox(…, FT_GLYPH_BBOX_PIXELS)`, 0x1401addb0). Measured on "WE Text 123", the glyph centres are within 1.1 units of WE's, against 2.5 with CoreText's fractional advances. The text extras improved: plain 0.54 → 0.27, msdf 0.94 → 0.85, blur 0.94 → 0.84, drop shadow 1.16 → 1.05, outline 1.67 → 1.50, defaults only 1.45 → 1.29.
+  - **The buffer.** It is the lines' bounds (the ink across; the first ascender to the last line's bottom) plus `padding` (at most 512), centred on those bounds (0x140258900, 0x140257d70, 0x140258050). A left-aligned text's buffer starts at its ink less the padding, so a layer sampling it 1:1 (3378346807's `TRANSFORMUV` overlay) sees the glyphs at x = `padding`, as in WE's capture.
+  - **`blockalign`.** A line the wrap broke (flag at 0x1401b1cc6) spreads `maxwidth` less its width over its spaces, tabs and carriage returns, and takes `maxwidth` as its width (0x1401b21ee…0x1401b22d1).
+  - **`systemfont_*`.** WE's table at 0x140484cc0 maps eight names to Windows font files (arial, calibri, cambria.ttc, comic, consola, micross, segoeui, verdana). A name outside it, or a face that fails to load, falls back to `arial.ttf` (0x1401ad549). `SceneFontResolver.weSystemFonts` maps each to its family, or to a macOS stand-in: Cambria → Times New Roman, the closest match to the metrics measured on 3378346807's clock.
+- **Still different:** WE's glyphs are hinted FreeType outlines, ours CoreText's unhinted ones. WE adds the padding only to text with effects or text that is sampled (0x140258954).
 
 **9.6 Particle refraction — match, no change.** Eight static 220 px `rainrefractive` drops. Measured on the gradient against the no-object capture, each drop's left half shows the background from 27–56 px to its right and its right half from 6–55 px to its left, like a lens. The peer's "colour from the right" is the left half. Ours (WE's `genericparticle` with `REFRACT`) does the same: +30…+52 on the left half and −35…−50 on the right. The drops' positions are random in both.
 
