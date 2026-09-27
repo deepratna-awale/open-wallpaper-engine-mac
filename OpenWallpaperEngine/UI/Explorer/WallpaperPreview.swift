@@ -23,6 +23,9 @@ struct WallpaperPreview: SubviewOfContentView {
     @ObservedObject private var musicSync = VideoMusicSyncStore.shared
     @ObservedObject private var favorites = FavoritesStore.shared
     @State var isTagsHovered = false
+    /// Counts the confirmed Resets; `SceneUserPropertiesView` resets on each change.
+    @State private var propertyResets = 0
+    @State private var isConfirmingPropertyReset = false
 
     init(contentViewModel viewModel: ContentViewModel, wallpaperViewModel: WallpaperViewModel) {
         self.viewModel = viewModel
@@ -288,7 +291,8 @@ struct WallpaperPreview: SubviewOfContentView {
                         }
                     }
                     SceneUserPropertiesView(wallpaper: wallpaperViewModel.displayedWallpaper,
-                                            scopes: wallpaperViewModel.editedPropertyScopes(of: wallpaperViewModel.displayedWallpaper))
+                                            scopes: wallpaperViewModel.editedPropertyScopes(of: wallpaperViewModel.displayedWallpaper),
+                                            resetRequest: propertyResets)
                         .id([wallpaperViewModel.displayedWallpaper.wallpaperDirectory.path]
                             + wallpaperViewModel.editedPropertyScopes(of: wallpaperViewModel.displayedWallpaper).map(\.description))
                     VStack(spacing: 3) {
@@ -320,14 +324,27 @@ struct WallpaperPreview: SubviewOfContentView {
                                 Label("Share JSON", systemImage: "arrow.2.squarepath")
                                     .frame(maxWidth: .infinity)
                             }
-                            Button { } label: {
-                                Label("Reset", systemImage: "arrow.triangle.2.circlepath")
-                                    .frame(maxWidth: .infinity)
-                            }
-                            .glassButtonStyle(.prominent)
-                            .tint(.red)
                         }
                         .disabled(true)
+                        // WE's Reset, last in its properties' action rows.
+                        Button {
+                            isConfirmingPropertyReset = true
+                        } label: {
+                            Label("Reset", systemImage: "arrow.triangle.2.circlepath")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .glassButtonStyle(.prominent)
+                        .tint(.red)
+                        .help(PropertyResetConfirmation.help)
+                    }
+                    .alert(PropertyResetConfirmation.title, isPresented: $isConfirmingPropertyReset) {
+                        Button("Reset", role: .destructive) { propertyResets += 1 }
+                        Button("Cancel", role: .cancel) { }
+                    } message: {
+                        let wallpaper = wallpaperViewModel.displayedWallpaper
+                        Text(verbatim: PropertyResetConfirmation.message(
+                            title: wallpaper.project.displayTitle,
+                            scopes: wallpaperViewModel.editedPropertyScopes(of: wallpaper)))
                     }
                 }
                 .blur(radius: wallpaperViewModel.displayedWallpaper.project == .invalid ? 16.0 : 0)

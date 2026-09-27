@@ -1,0 +1,37 @@
+import Foundation
+
+/// What WE's Reset button in a wallpaper's properties (`callbackResetCurrentWallpaperProperties`
+/// in its `ui/dist/scripts/scripts.js`) resets, over the app's property store.
+///
+/// WE copies the wallpaper's `defaultproperties` (project.json's values, with its built-in
+/// playback `rate` at 100) over the selected monitor's properties and applies each one live. WE
+/// has no Scene Inspector: its editor changes the project, not the properties, so a reset never
+/// undoes it. The app keeps the Scene Inspector's edits in the same store, so a reset keeps them,
+/// and the inspector resets them on its own (`sceneInspectorEdits(in:)`).
+enum WallpaperPropertyReset {
+    /// The key prefixes of the Scene Inspector's edits: object JSON, origin, scale and
+    /// visibility (`sceneObjectVisibilityKey`), package-file JSON, and authored effect overrides
+    /// (`sceneAuthoredEffectOverrideKey`, `sceneAuthoredEffectEnabledKey`) with their music sync.
+    static let sceneInspectorPrefixes = ["_owe_scene_object_", "_owe_scene_asset_", "_owe_authored_effect_"]
+
+    static func isSceneInspectorEdit(_ key: String) -> Bool {
+        sceneInspectorPrefixes.contains { key.hasPrefix($0) }
+    }
+
+    /// The Scene Inspector's edits among `stored`.
+    static func sceneInspectorEdits(in stored: [String: String]) -> [String: String] {
+        stored.filter { isSceneInspectorEdit($0.key) }
+    }
+
+    /// `stored` after a reset: every property at `defaults` (each property the Details panel
+    /// shows, at the author's value), anything else the user set dropped, the Scene Inspector's
+    /// edits kept.
+    static func values(resetting stored: [String: String], to defaults: [String: String]) -> [String: String] {
+        sceneInspectorEdits(in: stored).merging(defaults.filter { !isSceneInspectorEdit($0.key) }) { $1 }
+    }
+
+    /// `stored` without the Scene Inspector's edits (its own Reset).
+    static func values(removingSceneInspectorEditsFrom stored: [String: String]) -> [String: String] {
+        stored.filter { !isSceneInspectorEdit($0.key) }
+    }
+}

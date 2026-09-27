@@ -17894,6 +17894,195 @@
         }
       }
     },
+    "Do you want to reset the properties of “%@” back to their defaults?" : {
+      "comment" : "Reset confirmation; the wallpaper's title (Wallpaper Engine's wording)",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هل تريد إعادة تعيين خصائص «%@» إلى قيمها الافتراضية؟"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Möchten Sie die Eigenschaften von „%@“ auf ihre Standardwerte zurücksetzen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Quieres restablecer las propiedades de «%@» a sus valores predeterminados?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voulez-vous réinitialiser les propriétés de « %@ » à leurs valeurs par défaut ?"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "क्या आप “%@” की प्रॉपर्टी को उनके डिफ़ॉल्ट पर रीसेट करना चाहते हैं?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vuoi ripristinare le proprietà di “%@” ai valori predefiniti?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」のプロパティをデフォルトに戻しますか？"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘%@’의 속성을 기본값으로 재설정하시겠습니까?"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Czy chcesz zresetować właściwości „%@” do wartości domyślnych?"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deseja redefinir as propriedades de “%@” para os padrões?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить свойства «%@» до значений по умолчанию?"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” özelliklerini varsayılan değerlerine sıfırlamak istiyor musunuz?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скинути властивості «%@» до стандартних значень?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要将“%@”的属性重置为默认值吗？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要將「%@」的屬性重置為預設值嗎？"
+          }
+        }
+      }
+    },
+    "Do you want to undo every Scene Inspector edit of “%@”? Its properties are kept." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هل تريد التراجع عن كل تعديلات مراقب المشهد على «%@»؟ يتم الاحتفاظ بخصائصها."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Möchten Sie alle Änderungen an „%@“ im Szeneninspektor widerrufen? Die Eigenschaften bleiben erhalten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Quieres deshacer todos los cambios del Inspector de escenas en «%@»? Sus propiedades se conservan."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voulez-vous annuler toutes les modifications de « %@ » faites dans l’Inspecteur de scène ? Ses propriétés sont conservées."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "क्या आप “%@” में सीन इंस्पेक्टर के हर बदलाव को पहले जैसा करना चाहते हैं? इसकी प्रॉपर्टी बनी रहेंगी।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vuoi annullare ogni modifica a “%@” fatta nell’Inspector scena? Le sue proprietà vengono mantenute."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」へのシーンインスペクタでの編集をすべて取り消しますか？プロパティは保持されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘%@’에 대한 장면 인스펙터 편집 내용을 모두 취소하시겠습니까? 속성은 유지됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Czy chcesz cofnąć wszystkie zmiany „%@” wprowadzone w Inspektorze sceny? Jej właściwości zostaną zachowane."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deseja desfazer todas as edições do Inspetor de Cena em “%@”? As propriedades são mantidas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отменить все изменения «%@», сделанные в Инспекторе сцены? Свойства сохранятся."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” için tüm Sahne Denetçisi düzenlemelerini geri almak istiyor musunuz? Özellikleri korunur."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скасувати всі зміни «%@», зроблені в Інспекторі сцени? Властивості збережуться."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要撤销场景检查器对“%@”所做的所有编辑吗？其属性会保留。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要還原場景檢閱器對「%@」所做的所有編輯嗎？其屬性會保留。"
+          }
+        }
+      }
+    },
     "Don't Ask Again" : {
       "localizations" : {
         "ar" : {
@@ -43735,6 +43924,196 @@
         }
       }
     },
+    "Only the selected display is reset." : {
+      "comment" : "Reset confirmation, one display selected",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تتم إعادة تعيين شاشة العرض المحددة فقط."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur das ausgewählte Display wird zurückgesetzt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo se restablece la pantalla seleccionada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seul le moniteur sélectionné est réinitialisé."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "केवल चुना गया डिस्प्ले रीसेट होगा।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Viene ripristinato solo lo schermo selezionato."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選択したディスプレイだけがリセットされます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "선택한 디스플레이만 재설정됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zostanie zresetowany tylko zaznaczony wyświetlacz."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apenas a tela selecionada será redefinida."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбрасывается только выбранный дисплей."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yalnızca seçili ekran sıfırlanır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скидається лише вибраний дисплей."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只有所选显示器会被重置。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只有所選顯示器會重置。"
+          }
+        }
+      }
+    },
+    "Only the selected displays are reset." : {
+      "comment" : "Reset confirmation, several displays selected",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تتم إعادة تعيين شاشات العرض المحددة فقط."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur die ausgewählten Displays werden zurückgesetzt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo se restablecen las pantallas seleccionadas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seuls les moniteurs sélectionnés sont réinitialisés."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "केवल चुने गए डिस्प्ले रीसेट होंगे।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vengono ripristinati solo gli schermi selezionati."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選択したディスプレイだけがリセットされます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "선택한 디스플레이만 재설정됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zostaną zresetowane tylko zaznaczone wyświetlacze."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apenas as telas selecionadas serão redefinidas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбрасываются только выбранные дисплеи."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yalnızca seçili ekranlar sıfırlanır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скидаються лише вибрані дисплеї."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只有所选显示器会被重置。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只有所選顯示器會重置。"
+          }
+        }
+      }
+    },
     "Opacity left behind where the colour is keyed out. 0 makes matched pixels fully transparent." : {
       "comment" : "Scene Inspector tooltip for the colorkey effect's alpha parameter",
       "localizations" : {
@@ -51134,6 +51513,101 @@
         }
       }
     },
+    "Properties are synced across displays, so every display showing it is reset." : {
+      "comment" : "Reset confirmation, when one set of properties serves every display",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الخصائص متزامنة عبر شاشات العرض، لذا تتم إعادة تعيين كل شاشة عرض تعرضها."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Eigenschaften werden über Displays synchronisiert, daher wird jedes Display zurückgesetzt, das es zeigt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las propiedades se sincronizan entre pantallas, así que se restablece en todas las pantallas que lo muestran."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les propriétés sont synchronisées entre les moniteurs : tous les moniteurs qui l’affichent sont réinitialisés."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "प्रॉपर्टी सभी डिस्प्ले पर सिंक हैं, इसलिए इसे दिखाने वाला हर डिस्प्ले रीसेट होगा।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le proprietà sono sincronizzate tra gli schermi, quindi vengono ripristinate su ogni schermo che lo mostra."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "プロパティはディスプレイ間で同期されているため、この壁紙を表示しているすべてのディスプレイがリセットされます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "속성이 디스플레이 간에 동기화되어 있으므로 이 배경화면을 표시하는 모든 디스플레이가 재설정됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Właściwości są synchronizowane między wyświetlaczami, więc zostaną zresetowane na każdym wyświetlaczu, który ją pokazuje."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "As propriedades estão sincronizadas entre as telas, então todas as telas que a mostram serão redefinidas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Свойства синхронизируются между дисплеями, поэтому они будут сброшены на всех дисплеях, где показаны эти обои."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Özellikler ekranlar arasında eşitlendiğinden bunu gösteren her ekran sıfırlanır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Властивості синхронізуються між дисплеями, тому їх буде скинуто на всіх дисплеях, де показано цю шпалеру."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "属性已在显示器之间同步，因此显示它的每个显示器都会被重置。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "屬性已在所有顯示器間同步，因此顯示它的每個顯示器都會重置。"
+          }
+        }
+      }
+    },
     "Pulses a speed-boost distortion." : {
       "comment" : "Scene Inspector tooltip for the nitro effect",
       "localizations" : {
@@ -54950,6 +55424,100 @@
         }
       }
     },
+    "Reset Edits" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة تعيين التعديلات"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Änderungen zurücksetzen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restablecer cambios"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réinitialiser les modifications"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बदलाव रीसेट करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ripristina modifiche"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "編集をリセット"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "편집 내용 재설정"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resetuj zmiany"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redefinir Edições"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить изменения"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Düzenlemeleri Sıfırla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скинути зміни"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置编辑"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置編輯"
+          }
+        }
+      }
+    },
     "Reset Filters" : {
       "localizations" : {
         "ar" : {
@@ -55134,6 +55702,290 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "重置首次啟動"
+          }
+        }
+      }
+    },
+    "Reset Properties" : {
+      "comment" : "Title of the confirmation before a wallpaper's properties are reset to their defaults (Wallpaper Engine's wording)",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة تعيين الخصائص"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eigenschaften zurücksetzen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restablecer propiedades"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réinitialiser les propriétés"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "प्रॉपर्टी रीसेट करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ripristina proprietà"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "プロパティをリセット"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "속성 재설정"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resetuj właściwości"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redefinir Propriedades"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить свойства"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Özellikleri Sıfırla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скинути властивості"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置属性"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置屬性"
+          }
+        }
+      }
+    },
+    "Reset Scene Inspector Edits" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة تعيين تعديلات مراقب المشهد"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Änderungen im Szeneninspektor zurücksetzen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restablecer cambios del Inspector de escenas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réinitialiser les modifications de l’Inspecteur de scène"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सीन इंस्पेक्टर के बदलाव रीसेट करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ripristina modifiche dell’Inspector scena"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シーンインスペクタの編集をリセット"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "장면 인스펙터 편집 내용 재설정"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resetuj zmiany z Inspektora sceny"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redefinir Edições do Inspetor de Cena"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить изменения Инспектора сцены"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sahne Denetçisi Düzenlemelerini Sıfırla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скинути зміни Інспектора сцени"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置场景检查器编辑"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置場景檢閱器編輯"
+          }
+        }
+      }
+    },
+    "Reset this wallpaper's properties to the defaults its author set" : {
+      "comment" : "Help for the Details panel's Reset button",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة تعيين خصائص خلفية الشاشة هذه إلى القيم الافتراضية التي حددها مؤلفها"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Eigenschaften dieses Hintergrundbilds auf die Standardwerte seines Autors zurücksetzen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restablecer las propiedades de este fondo de pantalla a los valores predeterminados de su autor"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réinitialiser les propriétés de ce fond d’écran aux valeurs par défaut choisies par son auteur"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इस वॉलपेपर की प्रॉपर्टी को उसके लेखक के डिफ़ॉल्ट पर रीसेट करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ripristina le proprietà di questo sfondo ai valori predefiniti del suo autore"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この壁紙のプロパティを作者が設定したデフォルトにリセットします"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 배경화면의 속성을 제작자가 설정한 기본값으로 재설정합니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resetuj właściwości tej tapety do wartości domyślnych ustawionych przez autora"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redefinir as propriedades desta imagem de fundo para os padrões definidos pelo autor"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить свойства этих обоев до значений по умолчанию, заданных автором"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu duvar kâğıdının özelliklerini yazarının belirlediği varsayılanlara sıfırla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скинути властивості цієї шпалери до стандартних значень, заданих автором"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将此墙纸的属性重置为作者设定的默认值"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將此背景圖片的屬性重置為作者設定的預設值"
           }
         }
       }
@@ -57591,6 +58443,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "場景檢閱器"
+          }
+        }
+      }
+    },
+    "Scene Inspector edits are kept." : {
+      "comment" : "Reset confirmation: what the reset leaves alone",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يتم الاحتفاظ بتعديلات مراقب المشهد."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Änderungen im Szeneninspektor bleiben erhalten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se conservan los cambios del Inspector de escenas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les modifications de l’Inspecteur de scène sont conservées."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सीन इंस्पेक्टर के बदलाव बने रहेंगे।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le modifiche dell’Inspector scena vengono mantenute."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シーンインスペクタでの変更は保持されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "장면 인스펙터에서 편집한 내용은 유지됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zmiany wprowadzone w Inspektorze sceny zostaną zachowane."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "As edições do Inspetor de Cena são mantidas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Изменения, сделанные в Инспекторе сцены, сохраняются."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sahne Denetçisi düzenlemeleri korunur."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зміни, зроблені в Інспекторі сцени, зберігаються."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "场景检查器中的编辑会保留。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "場景檢閱器中的編輯會保留。"
           }
         }
       }
@@ -71703,6 +72650,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "還原"
+          }
+        }
+      }
+    },
+    "Undo every change made to this wallpaper in the Scene Inspector" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التراجع عن كل تغيير أُجري على خلفية الشاشة هذه في مراقب المشهد"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Änderungen an diesem Hintergrundbild im Szeneninspektor widerrufen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deshacer todos los cambios hechos a este fondo de pantalla en el Inspector de escenas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annuler toutes les modifications apportées à ce fond d’écran dans l’Inspecteur de scène"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सीन इंस्पेक्टर में इस वॉलपेपर में किए गए हर बदलाव को पहले जैसा करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annulla ogni modifica fatta a questo sfondo nell’Inspector scena"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シーンインスペクタでこの壁紙に加えたすべての変更を取り消します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "장면 인스펙터에서 이 배경화면에 적용한 모든 변경 사항을 취소합니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cofnij wszystkie zmiany tej tapety wprowadzone w Inspektorze sceny"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desfazer todas as alterações feitas nesta imagem de fundo no Inspetor de Cena"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отменить все изменения этих обоев, сделанные в Инспекторе сцены"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sahne Denetçisi’nde bu duvar kâğıdında yapılan tüm değişiklikleri geri al"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скасувати всі зміни цієї шпалери, зроблені в Інспекторі сцени"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "撤销在场景检查器中对此墙纸所做的所有更改"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "還原在場景檢閱器中對此背景圖片所做的所有變更"
           }
         }
       }

@@ -36,4 +36,44 @@ struct WallpaperPropertyTargets {
         }
         NotificationCenter.default.post(name: .wallpaperPropertiesDidSave, object: directory.path)
     }
+
+    /// WE's Reset (`WallpaperPropertyReset`): each scope's properties go back to `defaultValues`,
+    /// keeping that scope's Scene Inspector edits. Returns the shown scope's new values.
+    @discardableResult
+    func reset(to defaultValues: [String: String], defaults: UserDefaults = .app,
+               publish: (String, [String: String]) -> Void = Self.publishReplacing) -> [String: String] {
+        rewrite(defaults: defaults, publish: publish) { WallpaperPropertyReset.values(resetting: $0, to: defaultValues) }
+    }
+
+    /// The Scene Inspector's Reset: each scope's inspector edits are dropped, its other
+    /// properties kept. Returns the shown scope's new values.
+    @discardableResult
+    func removeSceneInspectorEdits(defaults: UserDefaults = .app,
+                                   publish: (String, [String: String]) -> Void = Self.publishReplacing) -> [String: String] {
+        rewrite(defaults: defaults, publish: publish, WallpaperPropertyReset.values(removingSceneInspectorEditsFrom:))
+    }
+
+    /// Hands a store's whole set of values to its running wallpaper: keys missing from them are
+    /// dropped there too, and the wallpaper applies the change live or rebuilds what it needs
+    /// (`SceneWallpaperViewModel.impact(of:)`).
+    static func publishReplacing(_ runtimeKey: String, _ values: [String: String]) {
+        WallpaperServices.shared.setUserProperties(values, wallpaper: runtimeKey, replacing: true)
+    }
+
+    /// Replaces every scope's saved values with `transform` of them (a display without its own
+    /// yet starts from the shared ones), saves them as set by the user, so a load doesn't
+    /// re-derive what the transform kept, and publishes them.
+    private func rewrite(defaults: UserDefaults, publish: (String, [String: String]) -> Void,
+                         _ transform: ([String: String]) -> [String: String]) -> [String: String] {
+        var shown: [String: String]?
+        for scope in scopes {
+            let values = transform(identity.stored(.userProperties, scope: scope, defaults: defaults) as? [String: String] ?? [:])
+            defaults.set(values, forKey: identity.key(.userProperties, scope: scope))
+            defaults.set(true, forKey: identity.key(.explicitUserProperties, scope: scope))
+            publish(scope.runtimeKey(directory: directory), values)
+            if shown == nil { shown = values }
+        }
+        NotificationCenter.default.post(name: .wallpaperPropertiesDidSave, object: directory.path)
+        return shown ?? [:]
+    }
 }

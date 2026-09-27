@@ -86,6 +86,22 @@ private final class SceneUserPropertiesModel: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.12, execute: work)
     }
 
+    /// WE's Reset (`WallpaperPropertyReset`): every property shown here back to its default (the
+    /// author's project.json value; the app's own settings at theirs), in every edited store, and
+    /// applied to the running wallpapers at once. The Scene Inspector's edits stay.
+    func resetToDefaults() {
+        pendingSave?.cancel()
+        pendingSave = nil
+        let defaults = Dictionary(properties.map { ($0.id, $0.defaultValue) }) { first, _ in first }
+        let previous = values
+        values = targets.reset(to: defaults)
+        // Web pages take a change key by key (WE's `applyUserProperties`).
+        for (key, value) in values where previous[key] != value {
+            NotificationCenter.default.post(name: .wallpaperUserPropertyChanged, object: wallpaperPath,
+                                            userInfo: ["key": key, "value": value, "stores": targets.runtimeKeys])
+        }
+    }
+
     private func trailingOrder(offset: Int, index: Int) -> Int {
         Int.max - max(0, offset - index)
     }
@@ -260,10 +276,13 @@ struct SceneUserPropertiesView: View {
     @StateObject private var model: SceneUserPropertiesModel
     @ObservedObject private var musicSync = VideoMusicSyncStore.shared
     private let wallpaper: WEWallpaper
+    /// Each change resets the properties to their defaults (the Details panel's Reset).
+    private let resetRequest: Int
 
     /// `scopes`: whose properties it edits (`WallpaperViewModel.editedPropertyScopes`), the first shown.
-    init(wallpaper: WEWallpaper, scopes: [WallpaperPropertyScope] = [.shared]) {
+    init(wallpaper: WEWallpaper, scopes: [WallpaperPropertyScope] = [.shared], resetRequest: Int = 0) {
         self.wallpaper = wallpaper
+        self.resetRequest = resetRequest
         _model = StateObject(wrappedValue: SceneUserPropertiesModel(wallpaper: wallpaper, scopes: scopes))
     }
 
@@ -332,6 +351,7 @@ struct SceneUserPropertiesView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .onChange(of: resetRequest) { _, _ in model.resetToDefaults() }
     }
 
 

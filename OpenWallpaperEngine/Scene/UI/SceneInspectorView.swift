@@ -769,6 +769,14 @@ private final class SceneInspectorModel: ObservableObject {
         return String(data: data, encoding: .utf8) ?? "{}"
     }
 
+    /// Drops every edit made here to the wallpaper, in every store it edits (its Reset Edits);
+    /// the wallpaper's properties stay.
+    func removeEdits() {
+        pendingSave?.cancel()
+        pendingSave = nil
+        targets.removeSceneInspectorEdits()
+    }
+
     private func persist(_ values: [String: String]) {
         targets.publish(values)
         pendingSave?.cancel()
@@ -815,11 +823,16 @@ struct SceneInspectorView: View {
     @State private var searchText = ""
     @State private var didCopyPath = false
     @State private var isMovementPresented = true
+    @State private var isConfirmingReset = false
     @FocusState private var isSearchFocused: Bool
     private let wallpaperDirectory: URL
+    private let wallpaper: WEWallpaper
+    private let scopes: [WallpaperPropertyScope]
 
     init(wallpaper: WEWallpaper, scopes: [WallpaperPropertyScope] = [.shared]) {
         wallpaperDirectory = wallpaper.wallpaperDirectory
+        self.wallpaper = wallpaper
+        self.scopes = scopes
         _model = StateObject(wrappedValue: SceneInspectorModel(wallpaper: wallpaper, scopes: scopes))
     }
 
@@ -900,6 +913,29 @@ struct SceneInspectorView: View {
                         }
                         .help("Show or hide the move, size and align controls")
                     }
+                    if #available(macOS 26, *) {
+                        ToolbarSpacer(.fixed)
+                    }
+                    ToolbarItem(placement: .automatic) {
+                        Button {
+                            isConfirmingReset = true
+                        } label: {
+                            Label("Reset Edits", systemImage: "arrow.triangle.2.circlepath")
+                        }
+                        .help("Undo every change made to this wallpaper in the Scene Inspector")
+                    }
+                }
+                .alert("Reset Scene Inspector Edits", isPresented: $isConfirmingReset) {
+                    Button("Reset", role: .destructive) {
+                        model.removeEdits()
+                        // Rebuilt from the stored values, now without the edits, once this view's
+                        // alert has closed.
+                        let wallpaper = wallpaper, scopes = scopes
+                        DispatchQueue.main.async { AppDelegate.shared.showSceneInspector(for: wallpaper, scopes: scopes) }
+                    }
+                    Button("Cancel", role: .cancel) { }
+                } message: {
+                    Text("Do you want to undo every Scene Inspector edit of “\(wallpaper.project.displayTitle)”? Its properties are kept.")
                 }
         }
         .searchable(text: $searchText, placement: .sidebar, prompt: "Search")
