@@ -329,6 +329,17 @@
         {
           "folder": "default",
           "localTime": "15:34"
+        },
+        {
+          "folder": "shadowsOff_t10",
+          "shadows": "disabled",
+          "volumetrics": "high"
+        },
+        {
+          "folder": "shadowsHigh_t10",
+          "shadows": "high",
+          "volumetrics": "high",
+          "baseline": "shadowsOff_t10"
         }
       ]
     },
@@ -340,6 +351,17 @@
         {
           "folder": "default",
           "localTime": "15:34"
+        },
+        {
+          "folder": "shadowsOff_t10",
+          "shadows": "disabled",
+          "volumetrics": "high"
+        },
+        {
+          "folder": "shadowsHigh_t10",
+          "shadows": "high",
+          "volumetrics": "high",
+          "baseline": "shadowsOff_t10"
         }
       ]
     }

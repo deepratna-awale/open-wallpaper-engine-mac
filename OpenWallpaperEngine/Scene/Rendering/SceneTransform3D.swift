@@ -183,6 +183,12 @@ struct SceneTransformHierarchy3D: Equatable {
 
     init(nodes: [String: Node]) { self.nodes = nodes }
 
+    /// Adds (or replaces) an object's node: one a script created.
+    mutating func insert(_ id: String, node: Node) { nodes[id] = node }
+
+    /// Removes an object's node: one a script destroyed.
+    mutating func remove(_ id: String) { nodes.removeValue(forKey: id) }
+
     /// Every object of `objects`, keyed like the 2D hierarchy (`id`, else its index). The
     /// `attachment` is every object's (`WESceneObject.attachment`).
     init(objects: [WESceneObject], rootOrigin: SIMD3<Float> = .zero) {

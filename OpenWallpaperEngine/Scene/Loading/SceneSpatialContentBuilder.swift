@@ -45,10 +45,6 @@ struct SceneSpatialContentBuilder {
                                                                    pathFile: layer.path.flatMap(cameraLayerPaths)))
             }
         }
-        if !content.models.isEmpty {
-            // Area 6 (docs/models-plan.md): decoded, but nothing draws a model yet.
-            OWELog.info(.scene, "\(wallpaperName): \(content.models.count) model objects aren't drawn yet")
-        }
         return content
     }
 

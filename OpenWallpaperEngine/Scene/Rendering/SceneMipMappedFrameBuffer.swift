@@ -75,6 +75,8 @@ final class SceneMipMappedFrameBuffer: SceneFrameStage {
                 || layer.weEffects.contains { $0.passes.contains { samples($0.textures) } }
         } || content.particleSystems.contains { system in
             system.material?.stages.contains { samples($0.textures) } ?? false
+        } || content.spatial.models.contains { model in
+            model.plan?.meshes.contains { samples($0.material.pass.textures) } ?? false
         }
     }
 

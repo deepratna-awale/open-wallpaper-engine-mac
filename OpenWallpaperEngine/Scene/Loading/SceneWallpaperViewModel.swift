@@ -50,6 +50,8 @@ class SceneWallpaperViewModel: ObservableObject {
     private var renderSettings = SceneRenderSettings()
     /// The engine combos of the content being built, for every material plan built with it.
     private var sceneEngineCombos = SceneEngineCombos()
+    /// The content's model plans by `.mdl` and skin (`buildModels`), for script clones.
+    private var modelPlans: [String: SceneModelPlan] = [:]
     /// The factor the particle budget put on the scene's systems (`ParticleBudget`); systems
     /// scripts create later are thinned by it too.
     private var particleBudgetScale: Float = 1
@@ -520,6 +522,7 @@ class SceneWallpaperViewModel: ObservableObject {
         if scene.general.projection == .orthographicAuto { Self.centreFirstImage(of: &scene, sceneSize: sceneSize) }
         let bloom = bloomSettings(for: scene.general)
         let lighting = SceneLightingSettings(scene.general, in: valueContext)
+        modelPlans.removeAll()
         sceneEngineCombos = SceneEngineCombos(bloom: bloom, lighting: lighting,
                                               orthographic: !scene.general.projection.isPerspective,
                                               settings: renderSettings)
@@ -545,8 +548,9 @@ class SceneWallpaperViewModel: ObservableObject {
             }
         }
         applyParticleBudget(to: &particleSystems, wallpaperDir: wallpaperDir)
-        // A scene of scripts alone (groups whose scripts create layers) runs too.
-        if !layers.isEmpty || !particleSystems.isEmpty || hasScriptSites {
+        // A scene of scripts alone (groups whose scripts create layers) runs too, and so does one
+        // of models alone (the default project arsenal).
+        if !layers.isEmpty || !particleSystems.isEmpty || hasScriptSites || scene.objects.contains(where: { $0.model != nil }) {
             var transforms = authoredTransforms
             for layer in layers where layer.fillsScene {
                 transforms.makeRoot(layer.id, local: SceneLocalTransform(origin: layer.position, scale: layer.scale, angle: layer.rotation))
@@ -563,6 +567,7 @@ class SceneWallpaperViewModel: ObservableObject {
             content.spatial = SceneSpatialContentBuilder(
                 readFile: { self.assetData(named: $0, wallpaperDir: wallpaperDir) },
                 wallpaperName: wallpaperDir.lastPathComponent).build(scene, context: valueContext, sceneSize: sceneSize)
+            content.spatial.models = buildModels(content.spatial.models, wallpaperDir: wallpaperDir)
             content.scripts = scriptContent(wallpaperDir: wallpaperDir, sceneSize: sceneSize)
             content.timelines = loadedDocument.map {
                 SceneTimelineSource(wallpaperID: loadedProjectId ?? Self.localWallpaperID(wallpaperDir),
@@ -737,6 +742,16 @@ class SceneWallpaperViewModel: ObservableObject {
         if resolved.sound != nil {
             return soundBuilder(wallpaperDir: wallpaperDir).sounds(in: [resolved], context: context).first.map { .sound($0) }
         }
+        if let model = resolved.model {
+            // The renderer keys it by the id the script gave it.
+            let object = SceneModelObject(id: "", name: resolved.name ?? "", order: Int.max, authored: model,
+                                          animationLayers: resolved.animationLayers, renderValues: resolved.renderValues)
+            guard let built = buildModels([object], wallpaperDir: wallpaperDir).first, built.plan != nil,
+                  let node = SceneTransformHierarchy3D(objects: [resolved]).nodes.values.first else { return nil }
+            let motion = SceneObjectMotion(object: resolved, sceneSize: sceneSize,
+                                           bindings: SceneLayerBindings(object: resolved, builtWith: context))
+            return .model(built, node: node, motion: motion)
+        }
         return buildLayer(resolved, wallpaperDir: wallpaperDir, sceneSize: sceneSize, context: context).map { .layer($0) }
     }
 
@@ -898,6 +913,33 @@ class SceneWallpaperViewModel: ObservableObject {
             OWELog.error(.scene, "Puppet layer \(object.id ?? -1) draws its image unwarped, rig \(rig): \(error)")
             return nil
         }
+    }
+
+    /// The model objects' `.mdl`s and materials (`SceneModelBuilder`); without a translator none draws.
+    /// Plans are kept by `.mdl` and skin for the content's life, so a script's clones share their
+    /// original's (and its GPU buffers).
+    private func buildModels(_ models: [SceneModelObject], wallpaperDir: URL) -> [SceneModelObject] {
+        guard !models.isEmpty, let translator = Self.effectTranslator else { return models }
+        let known = models.map { object -> SceneModelObject in
+            var object = object
+            object.plan = object.authored.path.flatMap { modelPlans["\($0)|\(object.authored.skin)"] }
+            return object
+        }
+        if known.allSatisfy({ $0.plan != nil }) { return known }
+        let materials = ModelMaterialPlanBuilder(
+            translator: translator,
+            readFile: { [weak self] path in self?.assetData(named: path, wallpaperDir: wallpaperDir) },
+            loadTexture: { [weak self] name, path in self?.loadMetalTexture(named: name, materialDir: path, wallpaperDir: wallpaperDir) },
+            sceneEngineCombos: sceneEngineCombos)
+        let package = pkgParser
+        let built = SceneModelBuilder(materials: materials,
+                                      loadModel: { try MDLModel.load(path: $0, package: package, directory: wallpaperDir) },
+                                      wallpaperName: wallpaperDir.lastPathComponent).build(models)
+        for object in built {
+            guard let plan = object.plan, let path = object.authored.path else { continue }
+            modelPlans["\(path)|\(object.authored.skin)"] = plan
+        }
+        return built
     }
 
     /// The image's own material through WE's shader; nil (logged when it's a failure) keeps the native draw.

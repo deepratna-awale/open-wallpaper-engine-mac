@@ -91,7 +91,9 @@ final class BloomLibrarySweepTests: XCTestCase {
             XCTAssertTrue(record.strength.isFinite && record.threshold.isFinite && all(record.tint, \.isFinite),
                           "\(item.id) frame \(frame): constants \(record)")
             constants = (record.strength, record.threshold)
-            guard Self.checkedFrames.contains(frame) else { continue }
+            // WE's camera fade draws over the bloomed frame while a camera path starts or ends
+            // (a scene of models with paths: the default projects arsenal, fantasticcar…).
+            guard Self.checkedFrames.contains(frame), content.cameraFade?.lastFade == nil else { continue }
             let result = try check(record, item: item, frame: frame)
             worst = max(worst, result.worst)
             bloomed = result.bloomed

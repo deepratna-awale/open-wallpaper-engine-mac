@@ -166,6 +166,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// Layers scripts created (`thisScene.createLayer`), kept across content rebuilds, by id, with
     /// their base `visible`.
     private var scriptLayers: [String: (entry: PreparedLayer, visible: Bool)] = [:]
+    /// Model objects scripts created, by id: the model, its 3D node and its motion.
+    private var scriptModels: [String: ScriptModel] = [:]
+    private typealias ScriptModel = (model: SceneModelObject, node: SceneTransformHierarchy3D.Node, motion: SceneObjectMotion)
     /// Layers scripts destroyed while they were still being built.
     private var destroyedScriptLayers = Set<String>()
     /// `emitParticles` counts waiting for their system's next step, by object id.
@@ -370,6 +373,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         scripts = SceneRendererScripts(services: scriptServices, screenID: screenID)
         sounds = SceneSoundLayers(label: screenID.isEmpty ? "sounds" : "sounds \(screenID)")
         super.init()
+        modelDrawing = SceneModelRenderer(device: device, archive: effectGraph?.pipelineArchive)
         memoryPressure = SceneMemoryPressure { [weak self] level in self?.trimMemory(level) }
     }
 
@@ -435,6 +439,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             scriptParticles.removeAll()
             scriptSounds.removeAll()
             scriptLayers.removeAll()
+            scriptModels.removeAll()
             destroyedScriptLayers.removeAll()
             pendingEmits.removeAll()
             objectIDs = []
@@ -516,7 +521,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                     self.pendingEmits.removeAll()
                     self.scriptParticles.removeAll()
                     self.scriptSounds.removeAll()
+                    self.scriptModels.removeAll()
                 }
+                for (id, created) in self.scriptModels { self.addScriptModel(id, created) }
                 for (id, created) in self.scriptParticles {
                     self.particleSystems += created.systems
                     self.objectMotions[id] = created.motion
@@ -562,8 +569,15 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 let key = String(id)
                 let createdParticles = scriptParticles.removeValue(forKey: key)
                 let createdSound = scriptSounds.removeValue(forKey: id)
-                if scriptLayers.removeValue(forKey: key) == nil, createdParticles == nil, createdSound == nil {
+                let createdModel = scriptModels.removeValue(forKey: key)
+                if scriptLayers.removeValue(forKey: key) == nil, createdParticles == nil, createdSound == nil, createdModel == nil {
                     destroyedScriptLayers.insert(key)
+                }
+                if createdModel != nil {
+                    spatial.models.removeAll { $0.id == key }
+                    spatial.transforms.remove(key)
+                    objectMotions.removeValue(forKey: key)
+                    models?.remove(key)
                 }
                 layers.removeAll { $0.layer.id == key }
                 textRasterScales.removeValue(forKey: key)
@@ -643,6 +657,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 case .sound(let content):
                     self.scriptSounds[content.id] = content
                     self.sounds.add(content)
+                case let .model(model, node, motion):
+                    self.scriptModels[id] = (model, node, motion)
+                    self.addScriptModel(id, (model, node, motion))
                 }
                 self.orderLayers()
             }
@@ -654,6 +671,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         case layer(PreparedLayer)
         case particles([ParticleSystemRuntime], motion: SceneObjectMotion)
         case sound(SceneSoundContent)
+        case model(SceneModelObject, node: SceneTransformHierarchy3D.Node, motion: SceneObjectMotion)
     }
 
     private func prepare(_ created: SceneScriptCreatedObject, id: String) -> PreparedScriptObject? {
@@ -678,7 +696,21 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             return prepared.isEmpty ? nil : .particles(prepared, motion: motion)
         case .sound(let content):
             return .sound(content)
+        case let .model(model, node, motion):
+            var model = model
+            model.id = id
+            return .model(model, node: node, motion: motion)
         }
+    }
+
+    /// A model a script created, drawn from now on like the scene's own (after them, as WE's
+    /// createLayer appends).
+    private func addScriptModel(_ id: String, _ created: ScriptModel) {
+        spatial.models.removeAll { $0.id == id }
+        spatial.models.append(created.model)
+        spatial.transforms.insert(id, node: created.node)
+        objectMotions[id] = created.motion
+        models?.add(created.model)
     }
 
     /// Puts `layers` in draw order (the scene's, or the one scripts set) with each layer's
@@ -898,9 +930,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         var textFrames: [Int: (frame: RenderTextureFrame, baseSize: SIMD2<Float>)] = [:]
         // Only visible layers get an entry; the draw loop skips the rest.
         var draws: [Int: LayerDraw] = [:]
+        layerComposites.removeAll(keepingCapacity: true)
         for (layerIndex, entry) in layers.enumerated() {
-            // Hidden layers keep their transforms (scripts and hit tests read them) but draw nothing.
-            guard scripts.isVisible(entry.layer.id) else { continue }
+            // Hidden layers keep their transforms (scripts and hit tests read them) but draw nothing,
+            // except into the image a model samples (`_rt_imageLayerComposite_<id>_a`).
+            let visible = scripts.isVisible(entry.layer.id)
+            guard visible || models?.compositeLayerIDs.contains(entry.layer.id) == true else { continue }
             if entry.layer.text != nil {
                 // Drawn through a camera, text is as dense on screen as its projection makes it.
                 let onScreen = layerPlacement(entry, size: layerBaseSize(entry), musicSyncLevel: 0, motion: motion,
@@ -915,7 +950,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                  motion: motion)
             draw.placement = layerPlacement(entry, size: textFrames[layerIndex]?.baseSize ?? layerBaseSize(entry),
                                             musicSyncLevel: draw.musicSyncLevel, motion: motion, camera: effectFrame.camera)
-            draws[layerIndex] = draw
+            if visible { draws[layerIndex] = draw }
             // A puppet's mesh draws its image before anything reads it: its effects, its own draw.
             if let puppet = entry.layer.puppet { drawPuppet(puppet, entry, frame: effectFrame, commandBuffer: commandBuffer) }
             // Layers that read the scene run inside the scene pass, once what's beneath them is drawn.
@@ -925,6 +960,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                     ?? (textFrames[layerIndex]?.frame ?? textureFrame(for: entry)).texture
                 dynamicTextures[layerIndex] = runEffects(entry, draw: draw, input: input,
                                                          snapshot: nil, frame: effectFrame, commandBuffer: commandBuffer)
+            }
+            if models?.compositeLayerIDs.contains(entry.layer.id) == true {
+                layerComposites[entry.layer.id] = dynamicTextures[layerIndex]
+                    ?? solidEffectInput(entry.layer, commandBuffer: commandBuffer) ?? textureFrame(for: entry).texture
             }
         }
         // The next script frame reads this frame's text sizes and camera (WE's cursor pass and
@@ -1600,8 +1639,14 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// An object's world matrix this frame (M3's hierarchy): its own and its ancestors' live
     /// transforms, parents first.
     private func world3D(_ id: String, in hierarchy: SceneTransformHierarchy3D) -> simd_float4x4 {
-        hierarchy.world(of: id, local: live3D(id, in: hierarchy), live: { [unowned self] in self.live3D($0, in: hierarchy) })
+        hierarchy.world(of: id, local: live3D(id, in: hierarchy), live: { [unowned self] in self.live3D($0, in: hierarchy) },
+                        attachments: SceneAttachmentProviders(providers: [models?.attachments as SceneAttachmentProviding?, puppetAttachments].compactMap { $0 }))
     }
+
+    /// The model renderer (`SceneModelRenderer`), when that is what draws the models.
+    private var models: SceneModelRenderer? { modelDrawing as? SceneModelRenderer }
+    /// This frame's images of the layers models sample, by layer id.
+    private var layerComposites: [String: MTLTexture] = [:]
 
     /// An object's own 3D transform this frame (`SceneObjectMotion.local3D`: scripts, then
     /// timelines, then authored moved by the user bindings), evaluated once per frame; nil for an
@@ -1658,7 +1703,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             world: world3D(model.id, in: spatial.transforms), camera: frame.camera, frame: frame,
             values: timelines.values, pixelFormat: pixelFormat, sampleCount: sceneSampleCount, depth: frameDepth,
             mipMappedFrameBuffer: mipMappedTarget,
-            assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) }),
+            assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
+            layerComposite: { [unowned self] id in self.layerComposites[id] }),
             encoder: encoder, commandBuffer: commandBuffer)
         encoder.setRenderPipelineState(renderPipeline)
     }

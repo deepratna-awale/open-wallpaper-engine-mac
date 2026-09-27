@@ -10,4 +10,7 @@ enum SceneScriptCreatedObject {
     case particles([SceneMetalParticleSystem], motion: SceneObjectMotion)
     /// A sound layer; it plays at once unless `startsilent`.
     case sound(SceneSoundContent)
+    /// A model object (a clone of an authored one, `getInitialLayerConfig`): its `.mdl` and
+    /// materials, its node in the 3D hierarchy, and how its own transform moves.
+    case model(SceneModelObject, node: SceneTransformHierarchy3D.Node, motion: SceneObjectMotion)
 }
