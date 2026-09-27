@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "OpenWallpaperEngineicon-icon@2x copy 1.png",
+      "filename" : "we.placeholder.png",
       "idiom" : "mac",
       "scale" : "1x"
     },
     {
-      "filename" : "OpenWallpaperEngineicon-icon@2x copy.png",
+      "filename" : "we.placeholder@2x.png",
       "idiom" : "mac",
       "scale" : "2x"
     }

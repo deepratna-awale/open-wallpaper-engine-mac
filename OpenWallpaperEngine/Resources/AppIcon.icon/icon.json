@@ -1,0 +1,71 @@
+{
+  "fill" : {
+    "solid" : "srgb:0.10980,0.10980,0.11765,1.00000"
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "glass" : true,
+          "image-name" : "hole.svg",
+          "name" : "hole"
+        },
+        {
+          "glass" : true,
+          "image-name" : "gear.svg",
+          "name" : "gear"
+        }
+      ],
+      "name" : "gear",
+      "shadow" : {
+        "kind" : "layer-color",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.5
+      }
+    },
+    {
+      "layers" : [
+        {
+          "glass" : true,
+          "image-name" : "screen.svg",
+          "name" : "screen"
+        }
+      ],
+      "name" : "screen",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.2
+      }
+    },
+    {
+      "layers" : [
+        {
+          "glass" : true,
+          "image-name" : "monitor.svg",
+          "name" : "monitor"
+        }
+      ],
+      "name" : "monitor",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.3
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "squares" : [
+      "macOS"
+    ]
+  }
+}
