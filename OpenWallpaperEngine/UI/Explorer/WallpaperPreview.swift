@@ -39,7 +39,7 @@ struct WallpaperPreview: SubviewOfContentView {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Pinned outside the ScrollView so scrolled content cannot ride up under the titlebar.
+            // Pinned outside the ScrollView so it stays put while the details scroll.
             Text("Details")
                 .font(.title3.bold())
                 .frame(maxWidth: .infinity, alignment: .center)
@@ -172,31 +172,35 @@ struct WallpaperPreview: SubviewOfContentView {
                                 }
                         }
                     }
-                    VStack(spacing: 3) {
-                        HStack(spacing: 3) {
+                    GlassGroup(spacing: 6) {
+                        VStack(spacing: 6) {
+                            HStack(spacing: 6) {
+                                Button {
+                                    wallpaperViewModel.applyInspectedWallpaper()
+                                } label: {
+                                    Label("Set Wallpaper", systemImage: "checkmark.circle")
+                                        .frame(maxWidth: .infinity)
+                                }
+                                .glassButtonStyle(.prominent)
+
+                                Button(role: .destructive) {
+                                    viewModel.hoveredWallpaper = wallpaperViewModel.displayedWallpaper
+                                    viewModel.isUnsubscribeConfirming = true
+                                } label: {
+                                    Label("Delete wallpaper", systemImage: "trash")
+                                        .labelStyle(.iconOnly)
+                                }
+                                .glassButtonStyle()
+                                .help("Delete wallpaper")
+                            }
                             Button {
-                                wallpaperViewModel.applyInspectedWallpaper()
+                                AppDelegate.shared.showSceneInspector(for: wallpaperViewModel.displayedWallpaper,
+                                                                      scopes: wallpaperViewModel.editedPropertyScopes(of: wallpaperViewModel.displayedWallpaper))
                             } label: {
-                                Label("Set Wallpaper", systemImage: "checkmark.circle")
+                                Label("Scene Inspector", systemImage: "square.stack.3d.up")
                                     .frame(maxWidth: .infinity)
                             }
-                            .buttonStyle(.borderedProminent)
-
-                            Button(role: .destructive) {
-                                viewModel.hoveredWallpaper = wallpaperViewModel.displayedWallpaper
-                                viewModel.isUnsubscribeConfirming = true
-                            } label: {
-                                Image(systemName: "trash")
-                            }
-                            .buttonStyle(.bordered)
-                            .help("Delete wallpaper")
-                        }
-                        Button {
-                            AppDelegate.shared.showSceneInspector(for: wallpaperViewModel.displayedWallpaper,
-                                                                  scopes: wallpaperViewModel.editedPropertyScopes(of: wallpaperViewModel.displayedWallpaper))
-                        } label: {
-                            Label("Scene Inspector", systemImage: "square.stack.3d.up")
-                                .frame(maxWidth: .infinity)
+                            .glassButtonStyle()
                         }
                     }
                     // MARK: Properties
@@ -309,7 +313,7 @@ struct WallpaperPreview: SubviewOfContentView {
                                 Label("Reset", systemImage: "arrow.triangle.2.circlepath")
                                     .frame(maxWidth: .infinity)
                             }
-                            .buttonStyle(.borderedProminent)
+                            .glassButtonStyle(.prominent)
                             .tint(.red)
                         }
                         .disabled(true)
@@ -324,23 +328,8 @@ struct WallpaperPreview: SubviewOfContentView {
                 .disabled(wallpaperViewModel.displayedWallpaper.project == .invalid ? true : false)
                 .animation(.default, value: wallpaperViewModel.displayedWallpaper.project)
                 .padding([.horizontal, .top])
+                .padding(.bottom)
             }
-
-            HStack {
-                Spacer()
-                Button {
-                    AppDelegate.shared.mainWindowController.close()
-                } label: {
-                    Text("OK").frame(width: 50)
-                }
-                .buttonStyle(.borderedProminent)
-                Button { 
-                    AppDelegate.shared.mainWindowController.close()
-                } label: {
-                    Text("Cancel").frame(width: 50)
-                }
-            }
-            .padding()
         }
     }
 
@@ -439,12 +428,15 @@ struct WallpaperPreview: SubviewOfContentView {
                 ForEach(tags, id: \.self) { tag in
                     Text(tag)
                         .padding(5)
-                        .background {
-                            RoundedRectangle(cornerRadius: 25.0)
-                                .colorInvert()
-                                .foregroundStyle(Color.primary)
-                            RoundedRectangle(cornerRadius: 25.0)
-                                .stroke(Color.secondary, lineWidth: 1.6)
+                        .padding(.horizontal, 2)
+                        .glassBackground(in: Capsule()) { pill in
+                            pill.background {
+                                RoundedRectangle(cornerRadius: 25.0)
+                                    .colorInvert()
+                                    .foregroundStyle(Color.primary)
+                                RoundedRectangle(cornerRadius: 25.0)
+                                    .stroke(Color.secondary, lineWidth: 1.6)
+                            }
                         }
                         .overlay(alignment: .topTrailing) {
                             if hoveredTag == tag {
@@ -522,33 +514,34 @@ private struct MissingWorkshopDependenciesBanner: View {
     var body: some View {
         Group {
             if !missingIds.isEmpty {
-                VStack(alignment: .leading, spacing: 6) {
-                    Label("This wallpaper needs \(missingIds.count) other Workshop item\(missingIds.count == 1 ? "" : "s") to render correctly.",
-                          systemImage: "shippingbox")
-                        .font(.footnote)
-                    ForEach(missingIds, id: \.self) { workshopId in
-                        HStack {
-                            Text(workshopId).font(.footnote).foregroundStyle(.secondary)
-                            Spacer()
-                            statusView(for: workshopId)
-                        }
-                    }
-                    if !steamCmd.isInstalled || !steamCmd.isLoggedIn {
-                        Text("Log in on the Workshop tab to download these.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    } else {
-                        Button("Download All") {
-                            for workshopId in missingIds {
-                                steamCmd.downloadWorkshopItem(workshopId: workshopId, asDependency: true)
+                GroupBox {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Label("This wallpaper needs \(missingIds.count) other Workshop item\(missingIds.count == 1 ? "" : "s") to render correctly.",
+                              systemImage: "shippingbox")
+                            .font(.footnote)
+                        ForEach(missingIds, id: \.self) { workshopId in
+                            HStack {
+                                Text(workshopId).font(.footnote).foregroundStyle(.secondary)
+                                Spacer()
+                                statusView(for: workshopId)
                             }
                         }
-                        .frame(maxWidth: .infinity)
+                        if !steamCmd.isInstalled || !steamCmd.isLoggedIn {
+                            Text("Log in on the Workshop tab to download these.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Button("Download All") {
+                                for workshopId in missingIds {
+                                    steamCmd.downloadWorkshopItem(workshopId: workshopId, asDependency: true)
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
                     }
+                    .padding(4)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .padding(10)
-                .background(Color(nsColor: .controlBackgroundColor))
-                .cornerRadius(8)
             }
         }
         .onAppear { refresh() }
