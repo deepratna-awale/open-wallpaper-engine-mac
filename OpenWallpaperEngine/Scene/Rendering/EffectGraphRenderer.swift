@@ -959,9 +959,34 @@ final class UniformProgram {
     private let scriptTargets: [String: [(member: UniformMember, binding: ShaderConstantResolver.ScriptBinding)]]
     /// Built-ins that only depend on the pass's targets and textures: written when those change.
     private let passBuiltins: [UniformMember]
+    /// Built-ins that follow the placement or the camera (`BuiltinUniforms.Key.followsCamera`):
+    /// written when those change, which a camera path or shake does every frame.
+    private let cameraBuiltins: [(member: UniformMember, key: BuiltinUniforms.Key)]
     /// Built-ins that change every frame (time, pointer, audio).
     private let frameBuiltins: [UniformMember]
     private var passSignature: [Float] = []
+    private var cameraSignature: CameraSignature?
+
+    /// What `cameraBuiltins` are computed from.
+    private struct CameraSignature: Equatable {
+        var modelViewProjection, modelMatrix, viewMatrix, viewProjection, effectTextureProjection: simd_float4x4
+        var altModelMatrix, altViewProjection: simd_float4x4?
+        var eye, viewUp, viewRight, viewForward: SIMD3<Float>
+
+        init(frame: BuiltinFrameContext, pass: BuiltinPassContext) {
+            modelViewProjection = pass.modelViewProjection
+            modelMatrix = pass.modelMatrix
+            viewMatrix = pass.viewMatrix
+            viewProjection = pass.viewProjection
+            effectTextureProjection = pass.effectTextureProjection
+            altModelMatrix = pass.altModelMatrix
+            altViewProjection = pass.altViewProjection
+            eye = frame.eyePosition
+            viewUp = frame.viewUp
+            viewRight = frame.viewRight
+            viewForward = frame.viewForward
+        }
+    }
 
     /// Built-ins whose value changes from frame to frame.
     static let timeVarying: Set<String> = Set(["g_Time", "g_Frametime", "g_Daytime", "g_DayTime", "g_PointerPosition",
@@ -999,7 +1024,13 @@ final class UniformProgram {
             Self.timeVarying.contains(member.name) || member.name.hasPrefix("g_AudioSpectrum")
         }
         frameBuiltins = builtins.filter(varies)
-        passBuiltins = builtins.filter { !varies($0) }
+        let fixed = builtins.filter { !varies($0) }
+        let camera: [(member: UniformMember, key: BuiltinUniforms.Key)] = fixed.compactMap { member in
+            BuiltinUniforms.Key(member.name).flatMap { $0.followsCamera ? (member, $0) : nil }
+        }
+        let cameraNames = Set(camera.map(\.member.name))
+        cameraBuiltins = camera
+        passBuiltins = fixed.filter { !cameraNames.contains($0.name) }
         needsTextureInfo = builtins.contains { $0.name.hasPrefix("g_Texture") }
         isReusable = frameBuiltins.isEmpty
     }
@@ -1063,6 +1094,14 @@ final class UniformProgram {
         if signature != passSignature {
             passSignature = signature
             write(passBuiltins, frame: frame, pass: pass)
+        }
+        guard !cameraBuiltins.isEmpty else { return }
+        let camera = CameraSignature(frame: frame, pass: pass)
+        if camera != cameraSignature {
+            cameraSignature = camera
+            for (member, key) in cameraBuiltins {
+                UniformWriter.write(BuiltinUniforms.value(key, frame: frame, pass: pass), member: member, into: &bytes)
+            }
         }
     }
 

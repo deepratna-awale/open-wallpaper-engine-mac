@@ -101,13 +101,16 @@ final class SceneDepthStates {
         states[raster.depthMode]!
     }
 
-    /// Sets `raster`'s depth-stencil state and cull mode for the draws that follow. Front faces
-    /// are clockwise on screen, as D3D's `FrontCounterClockwise = FALSE` (0x1400990f9): the
-    /// translated stages flip y back after the view-projection flipped it, so what reaches the
-    /// rasteriser is WE's clip space; counter-clockwise when `mirrored`.
-    func apply(_ raster: SceneRasterState, to encoder: MTLRenderCommandEncoder) {
+    /// Sets `raster`'s depth-stencil state and cull mode for the draws that follow. `front` is the
+    /// winding of the draw's front faces in an unmirrored pass (the other one when `mirrored`).
+    /// WE's is D3D's `FrontCounterClockwise = FALSE` (0x1400990f9) for every draw; the translated
+    /// stages write WE's clip position, so a draw whose vertices are WE's (models, particles:
+    /// `SceneModelRenderer.frontFacing`) takes that rule, and the layers' quads, which wind their
+    /// own way, pair it with clockwise (the default).
+    func apply(_ raster: SceneRasterState, to encoder: MTLRenderCommandEncoder, front: MTLWinding = .clockwise) {
         encoder.setDepthStencilState(state(raster))
-        encoder.setFrontFacing(mirrored ? .counterClockwise : .clockwise)
+        let flipped: MTLWinding = front == .clockwise ? .counterClockwise : .clockwise
+        encoder.setFrontFacing(mirrored ? flipped : front)
         encoder.setCullMode(raster.cullMode)
     }
 }

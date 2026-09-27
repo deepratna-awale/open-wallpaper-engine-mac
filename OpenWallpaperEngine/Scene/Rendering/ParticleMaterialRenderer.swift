@@ -279,7 +279,9 @@ final class ParticleMaterialRenderer {
         }
         let stage = prepared.stage
         encoder.setRenderPipelineState(pipeline)
-        context.depth?.apply(plan.raster, to: encoder)
+        // WE's particle vertices (`genericparticle`'s strip, the emulation keeps its winding) face
+        // the camera counter-clockwise in clip space, as a model's front faces do.
+        context.depth?.apply(plan.raster, to: encoder, front: SceneModelRenderer.frontFacing)
         encoder.setVertexBuffer(recordBuffer, offset: 0, index: Self.recordBuffer)
         encoder.setVertexBuffer(zeroAttributes, offset: 0, index: Self.zeroBuffer)
 

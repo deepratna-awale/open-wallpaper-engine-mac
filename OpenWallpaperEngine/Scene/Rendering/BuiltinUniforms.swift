@@ -139,6 +139,20 @@ enum BuiltinUniforms {
         case audio(bands: Int, right: Bool)
         case renderVar(Int)
 
+        /// Whether the value follows the draw's placement or the camera (the pass's matrices, the
+        /// frame's eye and view axes), which can move every frame while the targets stay.
+        var followsCamera: Bool {
+            switch self {
+            case .modelViewProjection, .modelViewProjectionInverse, .modelMatrix, .altModelMatrix, .modelMatrixInverse,
+                 .modelViewMatrix, .modelViewMatrixInverse, .viewMatrix, .viewProjection, .altViewProjection,
+                 .viewProjectionInverse, .effectTextureProjection, .effectTextureProjectionInverse,
+                 .normalModelMatrix, .altNormalModelMatrix, .eyePosition, .viewUp, .viewRight, .viewForward:
+                return true
+            default:
+                return false
+            }
+        }
+
         /// Nil when `name` is not a built-in.
         init?(_ name: String) {
             if let fixed = Self.fixed[name] {
