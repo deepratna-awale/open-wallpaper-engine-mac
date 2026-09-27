@@ -155,9 +155,16 @@ struct ImageMaterialPlanBuilder {
 
     static let blendCompositeMaterial = "materials/util/effectpassthrough_4.json"
 
-    /// `ALPHATOCOVERAGE` = 1 for a pass blending alpha-to-coverage (blend byte 3, 0x140154bc1).
-    static func coverageCombos(blending: String?) -> [String: Int] {
-        blending?.lowercased() == "alphatocoverage" ? ["ALPHATOCOVERAGE": 1] : [:]
+    /// The combos WE's material pass loader sets from the pass's blending, whatever the object:
+    /// `ALPHATOCOVERAGE` = 1 for alpha-to-coverage (blend byte 3, 0x140154bc1) and `ADDITIVE` = 1
+    /// for additive (blend byte 2, 0x140154c5a). Only the lit shaders' fog reads `ADDITIVE`
+    /// (`generic4`, `chroma4`, `fur4`, `foliage4`: the fog fades the alpha too).
+    static func blendingCombos(blending: String?) -> [String: Int] {
+        switch blending?.lowercased() {
+        case "alphatocoverage": ["ALPHATOCOVERAGE": 1]
+        case "additive": ["ADDITIVE": 1]
+        default: [:]
+        }
     }
 
     private func build(materialPath: String, colorBlendMode: Int?, clampUVs: Bool?,
@@ -192,9 +199,9 @@ struct ImageMaterialPlanBuilder {
             if listed[slot] != nil, !name.hasPrefix("_rt_") { headers[slot] = textureHeader(name, materialPath: materialPath) }
         }
         let formats = Self.formatCombos(vertex.samplers + fragment.samplers, headers: headers)
-        // WE's material pass loader sets `ALPHATOCOVERAGE` for a pass blending alpha-to-coverage,
-        // whatever the object (0x140154bc1, as for models).
-        let coverage = Self.coverageCombos(blending: materialPass.blending)
+        // WE's material pass loader sets `ALPHATOCOVERAGE` and `ADDITIVE` from the pass's blending,
+        // whatever the object (0x140154bc1, 0x140154c5a; as for models).
+        let coverage = Self.blendingCombos(blending: materialPass.blending)
         let combos = { (overrides: [[String: Int]]) in
             sceneEngineCombos.applied(to: ShaderVariantTranslator.resolveCombos(
                 vertex: vertex, fragment: fragment, overrides: [materialPass.combos, coverage, extraCombos] + overrides + [formats],

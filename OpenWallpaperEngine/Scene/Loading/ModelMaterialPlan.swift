@@ -122,8 +122,9 @@ struct ModelMaterialPlanBuilder {
             if listed[slot] != nil, !name.hasPrefix("_rt_") { headers[slot] = images.textureHeader(name, materialPath: materialPath) }
         }
         let formats = ImageMaterialPlanBuilder.formatCombos(vertex.samplers + fragment.samplers, headers: headers)
-        // A pass blending alpha-to-coverage gets `ALPHATOCOVERAGE` (0x140154bc1, 0x1401564a4).
-        let coverage = materialPass.blending?.lowercased() == "alphatocoverage" ? ["ALPHATOCOVERAGE": 1] : [:]
+        // A pass blending alpha-to-coverage gets `ALPHATOCOVERAGE` (0x140154bc1, 0x1401564a4), an
+        // additive one `ADDITIVE` (0x140154c5a).
+        let coverage = ImageMaterialPlanBuilder.blendingCombos(blending: materialPass.blending)
         let combos = sceneEngineCombos.applied(to: ShaderVariantTranslator.resolveCombos(
             vertex: vertex, fragment: fragment, overrides: [materialPass.combos, coverage, mesh.combos, Self.appCombos, formats],
             boundTextureSlots: Set(listed.keys),

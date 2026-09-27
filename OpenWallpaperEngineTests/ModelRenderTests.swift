@@ -292,6 +292,19 @@ final class ModelRenderTests: XCTestCase {
         XCTAssertNil(unreflecting.pass.textures[2], "generic2 without REFLECTION doesn't sample _rt_Reflection")
     }
 
+    /// WE's material pass loader sets `ADDITIVE` for a pass blending additively (blend byte 2,
+    /// 0x140154c5a), as it sets `ALPHATOCOVERAGE` for byte 3; the lit shaders' fog reads it
+    /// (test-risks GP5).
+    func testAdditiveBlendingSetsItsCombo() throws {
+        let additive = try materials.build(materialPath: "materials/additive.json",
+                                           mesh: ModelMeshCombos(mesh: Self.cube(), bones: 0, morphTargets: false))
+        XCTAssertEqual(additive.pass.variant?.combos["ADDITIVE"], 1)
+        XCTAssertEqual(ImageMaterialPlanBuilder.blendingCombos(blending: "additive"), ["ADDITIVE": 1])
+        XCTAssertEqual(ImageMaterialPlanBuilder.blendingCombos(blending: "AlphaToCoverage"), ["ALPHATOCOVERAGE": 1])
+        XCTAssertEqual(ImageMaterialPlanBuilder.blendingCombos(blending: "translucent"), [:])
+        XCTAssertEqual(ImageMaterialPlanBuilder.blendingCombos(blending: nil), [:])
+    }
+
     /// WE's draw list puts opaque meshes (normal, alpha-to-coverage) before translucent ones
     /// (0x14021a620), and a model is translucent only when no mesh is opaque (0x140225241).
     func testMeshOrderAndTranslucency() throws {
