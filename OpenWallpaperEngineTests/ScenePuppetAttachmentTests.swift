@@ -47,6 +47,12 @@ final class ScenePuppetAttachmentTests: XCTestCase {
         XCTAssertEqual(world.translation.x, expected.x, accuracy: 1e-3)
         XCTAssertEqual(world.translation.y, expected.y, accuracy: 1e-3)
         XCTAssertEqual(hierarchy.world(of: "2").translation, SIMD2(105, 200), "without attachments: the parent's origin")
+        // The space the renderer draws the child's own transform in carries the attachment too
+        // (the draw used the parents' world alone, so the witcher's sword hung from his origin).
+        let space = hierarchy.attachedParentWorld(of: "2", attachments: { _, _, _ in ScenePuppetAttachments.affine(hand) })
+        let drawn = space * SceneAffineTransform(try XCTUnwrap(hierarchy.nodes["2"]?.local))
+        XCTAssertEqual(drawn.translation.x, expected.x, accuracy: 1e-3)
+        XCTAssertEqual(drawn.translation.y, expected.y, accuracy: 1e-3)
 
         let hierarchy3D = SceneTransformHierarchy3D(objects: [parent, child])
         struct Provider: SceneAttachmentProviding {

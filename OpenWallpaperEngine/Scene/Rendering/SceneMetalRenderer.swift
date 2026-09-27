@@ -2176,8 +2176,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     /// The full transform of a layer's ancestors this frame. Every ancestor uses its live
     /// (scripted, animated) transform, so moving a parent moves its children.
+    /// The space a layer's own transform lives in: its parents', then its attachment on its
+    /// parent's rig (the witcher's sword, 3803167460, hangs from the hand, not the parent's origin).
     private func parentWorld(_ entry: PreparedLayer) -> SceneAffineTransform {
-        transforms.parentWorld(of: entry.layer.id, live: { [self] id in liveLocal(id) }, attachments: puppetAttachments.affine)
+        transforms.attachedParentWorld(of: entry.layer.id, live: { [self] id in liveLocal(id) },
+                                       attachments: puppetAttachments.affine)
     }
 
     /// A particle system's emitter transform this frame: its object's, parents included, moved by

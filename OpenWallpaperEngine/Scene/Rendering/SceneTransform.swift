@@ -222,8 +222,14 @@ struct SceneTransformHierarchy {
     func world(of id: String, local: SceneLocalTransform? = nil,
                live: (String) -> SceneLocalTransform? = { _ in nil }, attachments: Attachments? = nil) -> SceneAffineTransform {
         guard let own = local ?? live(id) ?? nodes[id]?.local else { return .identity }
-        return parentWorld(of: id, live: live, attachments: attachments) * attachment(of: id, attachments)
-            * SceneAffineTransform(own)
+        return attachedParentWorld(of: id, live: live, attachments: attachments) * SceneAffineTransform(own)
+    }
+
+    /// The space `id`'s own transform lives in: its ancestors' world, then its attachment on its
+    /// parent's rig when it has one (`parentWorld · attachment`, 0x1401dd7d0).
+    func attachedParentWorld(of id: String, live: (String) -> SceneLocalTransform? = { _ in nil },
+                             attachments: Attachments? = nil) -> SceneAffineTransform {
+        parentWorld(of: id, live: live, attachments: attachments) * attachment(of: id, attachments)
     }
 
     /// `id`'s attachment on its parent (world = parentWorld · attachment · local), identity when
