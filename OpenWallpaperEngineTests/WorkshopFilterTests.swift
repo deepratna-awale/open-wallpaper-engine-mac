@@ -33,17 +33,55 @@ final class WorkshopFilterTests: XCTestCase {
         XCTAssertTrue(excluded.contains("Ultrawide 3440 x 1440"))
     }
 
+    /// Steam's Web API returns next to nothing for two or more requiredtags with
+    /// match_all_tags=true (Anime + Girls: 4 of 649,855 Anime items), so AND sends one tag and
+    /// checks the others on the results.
+    func testAndedGenresSendOneTagAndCheckTheRest() {
+        var filter = WorkshopFilter()
+        filter.genres = ["Anime", "Abstract", "Girls"]
+        let query = WorkshopQuery(filter)
+        XCTAssertEqual(query.requiredTags, ["Abstract"], "WE's order")
+        XCTAssertTrue(query.matchAllTags)
+        XCTAssertEqual(query.clientRequiredTags, ["Anime", "Girls"])
+    }
+
+    func testNeverSendsSeveralTagsWithMatchAll() {
+        let genreSets: [Set<String>] = [[], ["Anime"], ["Anime", "Girls"], ["Anime", "Girls", "Music"]]
+        let showOnlySets: [Set<WorkshopShowOnly>] = [[], [.approved], [.favourites], [.mobileCompatible],
+                                                     [.approved, .customizable]]
+        for genres in genreSets {
+            for match in [WorkshopTagMatch.all, .any] {
+                for showOnly in showOnlySets {
+                    var filter = WorkshopFilter()
+                    filter.genres = genres
+                    filter.genreMatch = match
+                    filter.showOnly = showOnly
+                    let query = WorkshopQuery(filter)
+                    if query.matchAllTags {
+                        XCTAssertLessThanOrEqual(query.requiredTags.count, 1, "\(genres) \(match) \(showOnly)")
+                    }
+                    let items = WorkshopAPIService.queryItems(text: "", filter: query, sortOrder: .trending,
+                                                              page: 1, perPage: 50)
+                    let required = items.filter { $0.name.hasPrefix("requiredtags[") }.map(\.name)
+                    XCTAssertEqual(required, required.indices.map { "requiredtags[\($0)]" }, "0-based, contiguous")
+                }
+            }
+        }
+    }
+
     func testGenresAreRequiredAllOrAny() {
         var filter = WorkshopFilter()
         filter.genres = ["Anime", "Abstract"]
         var query = WorkshopQuery(filter)
-        XCTAssertEqual(query.requiredTags, ["Abstract", "Anime"], "in WE's order")
+        XCTAssertEqual(query.requiredTags, ["Abstract"])
+        XCTAssertEqual(query.clientRequiredTags, ["Anime"])
         XCTAssertTrue(query.matchAllTags)
 
         filter.genreMatch = .any
         query = WorkshopQuery(filter)
         XCTAssertEqual(query.requiredTags, ["Abstract", "Anime"])
         XCTAssertFalse(query.matchAllTags)
+        XCTAssertEqual(query.clientRequiredTags, [])
     }
 
     func testOneShowOnlyTagJoinsTheRequiredTagsWhenGenresAreAND() {
@@ -51,12 +89,14 @@ final class WorkshopFilterTests: XCTestCase {
         filter.genres = ["Anime", "Girls"]
         filter.showOnly = [.approved]
         let query = WorkshopQuery(filter)
-        XCTAssertEqual(query.requiredTags, ["Anime", "Girls", "Approved"])
+        XCTAssertEqual(query.requiredTags, ["Anime"])
+        XCTAssertEqual(query.clientRequiredTags, ["Girls", "Approved"])
         XCTAssertTrue(query.matchAllTags)
         XCTAssertTrue(query.clientShowOnly.isEmpty)
 
         filter.genres = []
         XCTAssertEqual(WorkshopQuery(filter).requiredTags, ["Approved"])
+        XCTAssertEqual(WorkshopQuery(filter).clientRequiredTags, [])
     }
 
     func testOneShowOnlyTagWithOrGenresIsCheckedOnTheResults() {
@@ -76,7 +116,8 @@ final class WorkshopFilterTests: XCTestCase {
         filter.genreMatch = .any
         filter.showOnly = [.audioResponsive]
         let query = WorkshopQuery(filter)
-        XCTAssertEqual(query.requiredTags, ["Anime", "Audio responsive"])
+        XCTAssertEqual(query.requiredTags, ["Anime"])
+        XCTAssertEqual(query.clientRequiredTags, ["Audio responsive"])
         XCTAssertTrue(query.matchAllTags)
     }
 
@@ -177,6 +218,13 @@ final class WorkshopFilterTests: XCTestCase {
         XCTAssertTrue(query.matches(favourite, isFavorite: isFavorite))
         XCTAssertFalse(query.matches(neither, isFavorite: isFavorite))
         XCTAssertTrue(WorkshopQuery().matches(neither, isFavorite: isFavorite), "nothing to check")
+    }
+
+    func testClientRequiredTagsMustAllBePresent() {
+        let query = WorkshopQuery(requiredTags: ["Anime"], clientRequiredTags: ["Girls", "Music"])
+        let never: (WorkshopItem) -> Bool = { _ in false }
+        XCTAssertTrue(query.matches(item("y", tags: ["Anime", "girls", "Music"]), isFavorite: never))
+        XCTAssertFalse(query.matches(item("n", tags: ["Anime", "Girls"]), isFavorite: never))
     }
 
     func testMobileNeedsTheEULATagAndNoWebOrApplication() {

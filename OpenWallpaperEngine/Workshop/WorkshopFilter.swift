@@ -120,26 +120,35 @@ struct WorkshopFilter: Equatable {
 
 /// A `WorkshopFilter` as one QueryFiles request plus what has to be checked on the results.
 ///
-/// QueryFiles has one `match_all_tags` for all `requiredtags`, so it can't mix AND and OR tags.
 /// The OR groups are sent the way WE's own browser sends them: the unchecked tags of a group
 /// become `excludedtags` (Rating, Type, Resolution are exclusive categories, so "none of the
-/// unchecked" is "any of the checked"). Genres are the `requiredtags`, with `match_all_tags` for
-/// AND. Show Only options aren't exclusive, so they can't be exclusions: a single tag option joins
-/// the required tags when that keeps the same meaning, and anything else (several options, mobile,
-/// favourites, or a tag option next to OR-ed genres) is checked on the results, which
-/// `WorkshopViewModel` pages through so page boundaries stay right.
+/// unchecked" is "any of the checked").
+///
+/// QueryFiles over the Web API doesn't AND tags: with `match_all_tags=true` and two or more
+/// `requiredtags` it returns next to nothing (Anime + Girls: a total of 4, against 649,855 for Anime
+/// alone and 988,033 for either; `taggroups` is ignored). So at most one tag is ever required with
+/// `match_all_tags=true`, and any further AND-ed tags are checked on the results. OR-ed genres go
+/// to Steam as `requiredtags` with `match_all_tags=false`, which works.
+///
+/// Show Only options aren't exclusive, so they can't be exclusions: a single tag option is one
+/// more AND-ed tag when the genres are AND-ed, and anything else (several options, mobile,
+/// favourites, or a tag option next to OR-ed genres) is checked on the results. Results checked
+/// here are paged by `WorkshopViewModel`, which counts pages over what passes.
 struct WorkshopQuery: Equatable {
     var requiredTags: [String] = []
     var matchAllTags = true
     var excludedTags: [String] = []
+    /// Tags every result must also have, checked here because Steam can't AND them.
+    var clientRequiredTags: [String] = []
     /// Show Only options checked on each result (any one passes); empty checks nothing.
     var clientShowOnly: Set<WorkshopShowOnly> = []
 
     init(requiredTags: [String] = [], matchAllTags: Bool = true, excludedTags: [String] = [],
-         clientShowOnly: Set<WorkshopShowOnly> = []) {
+         clientRequiredTags: [String] = [], clientShowOnly: Set<WorkshopShowOnly> = []) {
         self.requiredTags = requiredTags
         self.matchAllTags = matchAllTags
         self.excludedTags = excludedTags
+        self.clientRequiredTags = clientRequiredTags
         self.clientShowOnly = clientShowOnly
     }
 
@@ -155,13 +164,17 @@ struct WorkshopQuery: Equatable {
 
         let genres = WorkshopTags.genres.filter(filter.genres.contains)
         let genresAreAND = filter.genreMatch == .all || genres.count <= 1
-        requiredTags = genres
-        matchAllTags = genresAreAND
+        var andTags: [String] = []
+        if genresAreAND {
+            andTags = genres
+        } else {
+            requiredTags = genres
+            matchAllTags = false
+        }
 
         if filter.showOnly.count == 1, let option = filter.showOnly.first {
             if let tag = option.tag, genresAreAND {
-                requiredTags.append(tag)
-                matchAllTags = true
+                andTags.append(tag)
             } else if option == .mobileCompatible {
                 for type in WorkshopTags.mobileExcludedTypes where !excludedTags.contains(type) {
                     excludedTags.append(type)
@@ -173,14 +186,22 @@ struct WorkshopQuery: Equatable {
         } else {
             clientShowOnly = filter.showOnly
         }
+
+        // One AND-ed tag goes to Steam; the rest are checked on its results.
+        if let first = andTags.first {
+            requiredTags = [first]
+            matchAllTags = true
+            clientRequiredTags = Array(andTags.dropFirst())
+        }
     }
 
     /// Whether `item` passes the options that are checked on the results.
     func matches(_ item: WorkshopItem, isFavorite: (WorkshopItem) -> Bool) -> Bool {
-        guard !clientShowOnly.isEmpty else { return true }
         func has(_ tag: String) -> Bool {
             item.tags.contains { $0.caseInsensitiveCompare(tag) == .orderedSame }
         }
+        guard clientRequiredTags.allSatisfy(has) else { return false }
+        guard !clientShowOnly.isEmpty else { return true }
         return clientShowOnly.contains { option in
             switch option {
             case .favourites:
