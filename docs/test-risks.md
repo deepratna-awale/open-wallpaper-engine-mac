@@ -1812,6 +1812,17 @@ Stage costs at 5280×2970 after the cuts (fastest frame, ms, one run): Hinata ul
 - Memoryless targets: every lighting target is read after the pass that writes it (the volumetrics' depth is converted in a later pass), so none qualifies. The scene targets, the mip buffer, the snapshots, the prelit images and the volumetrics' light buffers are `private` render targets without `shaderWrite` or `pixelFormatView`, which Apple GPUs can compress losslessly; only the volumetrics' small R32F depth copies take `shaderWrite`.
 - `LightingMemoryTests`: switching one renderer between the HDR fixture and an LDR scene ten times returns within 5% of the first HDR visit, and the LDR content holds no float target nor the HDR combine's output.
 
+## GP. Gaps after models M5: what is still open (2026-09-27)
+
+Script model data, blended depth writes, `ALPHATOCOVERAGE` on images and layer composites (models-plan §4.3 "Gaps after M5"). Reference harness output: `/Volumes/980Pro/agentGP-out`.
+
+- **GP1. The cloth of 3734636606 is darker than WE's (Low, models).** Its `M_Cloth` (`generic4`, lit, `alpha` 0.6) draws a dark red where WE's is bright red; the spheres, box and car agree in place. The normals come from the script (`applyData`, recomputed every step), so lighting or the double-sided back sheet is the suspect. Needs a capture with the cloth facing the camera.
+- **GP2. 3378346807's clock is placed and set differently (Medium, text).** It now shows through the overlay's blend, 1:1 at the top left as WE's `TRANSFORMUV` places it, but its glyphs start about 200 px right of WE's and use the fallback font: the text's effect buffer is centred on the origin rather than on the ink (EX2), and `systemfont_cambria` isn't available. The harness's volOff still1 rose 0.6 → 3.0 mean Δ for that reason (still2 unchanged).
+- **GP3. `replaceData` with other shapes (Low, scripting).** The layer keeps the plan it was built with (logged); WE re-creates the model. No library script calls `replaceData`.
+- **GP4. The corpus budget expectation for 3734636606 (Low, tests).** Its physics now runs every frame (about 5 ms CPU p50 here), so `SceneScriptCorpusReplayTests` expects its budget finding; a much faster machine would pass the budget and fail the strict expectation, as 3657770939's could.
+- **GP5. `ADDITIVE` isn't set for additive material passes (Low).** WE's pass loader sets it for blend byte 2 (0x140154c5a); only `generic4`/`chroma4` fog reads it, and fog is off.
+- **GP6. Composite readers that read the scene (Low).** A layer drawn inside the scene pass (`readsScene`) isn't registered as a composite; no library composite source is one.
+
 ## Effect gallery (effects at their defaults)
 
 Status 2026-09-26 (the scene-bloom default the gallery needs landed as audit §9.1). `WEEffectGalleryTests` against WE's effect gallery (docs/we-values-audit.md §8): all 55 scenes match WE's difference and motion within tolerance. What is still open:
