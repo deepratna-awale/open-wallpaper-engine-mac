@@ -180,11 +180,12 @@ final class SceneDepthDrawTests: XCTestCase {
             let cameraMatrix: simd_float4x4 = placement.camera.projection * placement.camera.view
             let clip: SIMD4<Float> = cameraMatrix * (placement.world * point)
             let placed: SIMD4<Float> = placement.modelViewProjection * point
-            XCTAssertEqual(placed, clip)
+            // Products grouped differently round differently in the last bit.
+            XCTAssertLessThan(simd_length(placed - clip), 1e-5)
             // The shaders' view-projection is y-flipped; their vertex stage flips it back.
             let shader: SIMD4<Float> = placement.shaderViewProjection * (placement.world * point)
             let unflipped = SIMD4<Float>(shader.x, -shader.y, shader.z, shader.w)
-            XCTAssertEqual(unflipped, clip)
+            XCTAssertLessThan(simd_length(unflipped - clip), 1e-5)
         }
         // The top-left corner: object (−100 + 10, 50), 1/100 scale, rotated, then projected.
         let point = try XCTUnwrap(placement.pixel(placement.corner(SIMD2(0, 0)), targetSize: Self.targetSize))
