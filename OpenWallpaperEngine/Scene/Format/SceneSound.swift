@@ -4,8 +4,8 @@ import Foundation
 /// constructor (0x140190593, for an object whose `"sound"` is not null). Defaults are WE's for an
 /// absent key. `volume` can be user-, script- or animation-bound like any object field.
 ///
-/// Read but not played back: `spatialization` (3D position with `attenuation` and `mindistance`,
-/// off by default and in every library sound) and `muteineditor` (this app is no editor).
+/// Read but not played back: `muteineditor` (this app is no editor). `spatialization` places the
+/// sound at its object (`SceneSoundSpatialization`).
 struct WESceneSound: Decodable, Equatable {
     /// `playbackmode` (WE's table at 0x1401f7aa5: loop 0, random 1, single 2).
     enum PlaybackMode: String, Decodable, Equatable {
@@ -25,20 +25,32 @@ struct WESceneSound: Decodable, Equatable {
     /// `startsilent`: nothing plays until a script calls `play()`.
     var startSilent = false
     var muteInEditor = false
+    /// `spatialization` (flag bit 2 at +0x310, 0x14019bfa0): the sound plays from its object's
+    /// position relative to the camera, attenuated by `attenuation` and `mindistance`.
     var spatialization = false
+    /// `attenuation` (+0x304) and `mindistance` (+0x308): OpenAL's rolloff factor and reference
+    /// distance for the sound's files (`play()` 0x1401f5858/0x1401f587b). Both default to 1
+    /// (constructor 0x14019062a); either can be user-bound like `volume`.
+    var attenuation: SceneRawValue?
+    var minDistance: SceneRawValue?
 
     enum CodingKeys: String, CodingKey {
-        case sound, playbackmode, volume, mintime, maxtime, startsilent, muteineditor, spatialization
+        case sound, playbackmode, volume, mintime, maxtime, startsilent, muteineditor, spatialization, attenuation
+        case minDistance = "mindistance"
     }
 
     init(files: [String], playbackMode: PlaybackMode = .loop, volume: SceneRawValue? = nil, minTime: Double = 1,
-         maxTime: Double = 5, startSilent: Bool = false) {
+         maxTime: Double = 5, startSilent: Bool = false, spatialization: Bool = false,
+         attenuation: SceneRawValue? = nil, minDistance: SceneRawValue? = nil) {
         self.files = files
         self.playbackMode = playbackMode
         self.volume = volume
         self.minTime = minTime
         self.maxTime = maxTime
         self.startSilent = startSilent
+        self.spatialization = spatialization
+        self.attenuation = attenuation
+        self.minDistance = minDistance
     }
 
     init(from decoder: Decoder) throws {
@@ -62,5 +74,7 @@ struct WESceneSound: Decodable, Equatable {
         startSilent = c.decodeLogged(Bool.self, forKey: .startsilent, userInfo: decoder.userInfo) ?? false
         muteInEditor = c.decodeLogged(Bool.self, forKey: .muteineditor, userInfo: decoder.userInfo) ?? false
         spatialization = c.decodeLogged(Bool.self, forKey: .spatialization, userInfo: decoder.userInfo) ?? false
+        attenuation = c.decodeLogged(SceneRawValue.self, forKey: .attenuation, userInfo: decoder.userInfo)
+        minDistance = c.decodeLogged(SceneRawValue.self, forKey: .minDistance, userInfo: decoder.userInfo)
     }
 }

@@ -25,13 +25,16 @@ struct SceneSoundContentBuilder {
             guard let sound = object.sound, let id = object.id else { return nil }
             let files = sound.files.compactMap(file)
             return SceneSoundContent(id: id, name: object.name ?? "", sound: sound, files: files,
-                                     volume: Self.volume(sound.volume, in: context))
+                                     volume: Self.value(sound.volume, in: context),
+                                     attenuation: Self.value(sound.attenuation, in: context),
+                                     minDistance: Self.value(sound.minDistance, in: context))
         }
     }
 
-    /// `volume`: its user binding's value, else the literal (a script's value comes from the
-    /// runtime), else WE's default 1.
-    static func volume(_ raw: SceneRawValue?, in context: SceneValueContext) -> Float {
+    /// A float of a sound (`volume`, `attenuation`, `mindistance`): its user
+    /// binding's value, else the literal (a script's value comes from the runtime), else WE's
+    /// default 1.
+    static func value(_ raw: SceneRawValue?, in context: SceneValueContext) -> Float {
         guard let raw else { return 1 }
         if let source = raw.userBindingSource { return SceneValueResolver.resolve(source, in: context).float }
         return raw.literalDouble.map(Float.init) ?? 1
@@ -45,7 +48,8 @@ struct SceneSoundContentBuilder {
         do {
             let audio = try AVAudioFile(forReading: url)
             let rate = audio.processingFormat.sampleRate
-            return SceneSoundContent.File(path: path, url: url, duration: rate > 0 ? Double(audio.length) / rate : 0)
+            return SceneSoundContent.File(path: path, url: url, duration: rate > 0 ? Double(audio.length) / rate : 0,
+                                          channels: Int(audio.processingFormat.channelCount))
         } catch {
             OWELog.error(.audio, "Sound '\(path)' can't be decoded: \(error)")
             return nil

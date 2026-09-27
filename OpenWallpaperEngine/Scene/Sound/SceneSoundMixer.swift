@@ -8,6 +8,8 @@ final class SceneSoundMixer {
     let engine = AVAudioEngine()
     private var failed = false
     private let label: String
+    /// Where spatialized voices meet (`attachSpatial`), made with the first of them.
+    private var spatialBus: AVAudioMixerNode?
 
     /// `offline` renders on demand (`AVAudioEngine.renderOffline`) instead of to the output device.
     init(label: String, offline: AVAudioFormat? = nil) {
@@ -34,8 +36,40 @@ final class SceneSoundMixer {
         engine.connect(node, to: engine.mainMixerNode, format: format)
     }
 
-    func detach(_ node: AVAudioPlayerNode) {
+    func detach(_ node: AVAudioNode) {
         engine.detach(node)
+    }
+
+    /// Attaches a voice whose left and right gains are set on their own
+    /// (`SceneSoundSpatialization`): the player feeds a stage mixer, and the stage's input on a
+    /// stereo bus takes the gains as a volume and a balance. That input pans a stereo signal
+    /// linearly (left × min(1, 1 − pan), right × min(1, 1 + pan)), which the main mixer's inputs
+    /// don't do for a mono player.
+    func attachSpatial(_ node: AVAudioPlayerNode, format: AVAudioFormat) -> AVAudioMixerNode? {
+        guard let stereo = AVAudioFormat(standardFormatWithSampleRate: format.sampleRate, channels: 2) else { return nil }
+        let bus: AVAudioMixerNode
+        if let spatialBus {
+            bus = spatialBus
+        } else {
+            bus = AVAudioMixerNode()
+            engine.attach(bus)
+            engine.connect(bus, to: engine.mainMixerNode, format: stereo)
+            spatialBus = bus
+        }
+        let stage = AVAudioMixerNode()
+        engine.attach(node)
+        engine.attach(stage)
+        engine.connect(node, to: stage, format: format)
+        engine.connect(stage, to: bus, format: stereo)
+        return stage
+    }
+
+    /// A stage's left and right gains (`attachSpatial`), as its volume and balance on the bus.
+    static func setGains(_ gains: SIMD2<Float>, of stage: AVAudioMixerNode) {
+        let left = max(gains.x, 0), right = max(gains.y, 0)
+        let level = max(left, right)
+        stage.volume = level
+        stage.pan = level > 0 ? (right - left) / level : 0
     }
 
     /// Starts the engine if it isn't running; false (logged once) when it can't.

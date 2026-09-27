@@ -4,13 +4,16 @@ import AVFoundation
 /// drives): an `AVAudioPlayerNode` per file, attached to the wallpaper's mixer on first use and
 /// streaming the file from disk, as WE streams each file through its own `sf::Music`. A looping
 /// file keeps two passes scheduled, so it wraps without a gap: when one has played, the next is
-/// queued behind the other. Main thread; the players' completion handlers hop back to it (a
-/// player must not be scheduled from inside its own callback).
+/// queued behind the other. A spatialized file plays through a stage of its own, which takes its
+/// left and right gains (`setSpatialGains`). Main thread; the players' completion handlers hop back
+/// to it (a player must not be scheduled from inside its own callback).
 final class SceneSoundVoices: SceneSoundOutput {
     private final class Voice {
         let node = AVAudioPlayerNode()
         var file: AVAudioFile?
         var attached = false
+        /// A spatialized voice's stage (`SceneSoundMixer.attachSpatial`).
+        var stage: AVAudioMixerNode?
     }
 
     private let files: [SceneSoundContent.File]
@@ -22,9 +25,14 @@ final class SceneSoundVoices: SceneSoundOutput {
     /// A voice's loop keeps scheduling only while its generation stands.
     private var generations: [Int]
     private var reported = Set<Int>()
+    /// The files that play spatialized, and their left and right gains (`setSpatialGains`).
+    let spatialFiles: Set<Int>
+    private var spatialGains: [Int: SIMD2<Float>] = [:]
 
-    init(files: [SceneSoundContent.File], mixer: @escaping () -> SceneSoundMixer?, label: String) {
+    init(files: [SceneSoundContent.File], spatialFiles: Set<Int> = [], mixer: @escaping () -> SceneSoundMixer?,
+         label: String) {
         self.files = files
+        self.spatialFiles = spatialFiles
         makeMixer = mixer
         self.label = label
         voices = files.map { _ in Voice() }
@@ -33,7 +41,10 @@ final class SceneSoundVoices: SceneSoundOutput {
 
     deinit {
         for index in voices.indices { stop(file: index) }
-        for voice in voices where voice.attached { mixer?.detach(voice.node) }
+        for voice in voices where voice.attached {
+            mixer?.detach(voice.node)
+            if let stage = voice.stage { mixer?.detach(stage) }
+        }
     }
 
     func start(file index: Int, loop: Bool) {
@@ -73,6 +84,14 @@ final class SceneSoundVoices: SceneSoundOutput {
         voices[index].node.volume = gain
     }
 
+    /// A spatialized file's left and right gains (`SceneSoundSpatialization.gains`), on top of
+    /// its gain. Kept for a voice not yet attached.
+    func setSpatialGains(_ gains: SIMD2<Float>, file index: Int) {
+        guard spatialFiles.contains(index), spatialGains[index] != gains else { return }
+        spatialGains[index] = gains
+        if let stage = voices[index].stage { SceneSoundMixer.setGains(gains, of: stage) }
+    }
+
     /// Whether a voice is playing (tests).
     func isVoicePlaying(_ index: Int) -> Bool {
         voices.indices.contains(index) && voices[index].attached && voices[index].node.isPlaying
@@ -98,7 +117,13 @@ final class SceneSoundVoices: SceneSoundOutput {
         if !voice.attached, let file = voice.file {
             if mixer == nil { mixer = makeMixer() }
             guard let mixer else { return nil }
-            mixer.attach(voice.node, format: file.processingFormat)
+            if spatialFiles.contains(index) {
+                guard let stage = mixer.attachSpatial(voice.node, format: file.processingFormat) else { return nil }
+                SceneSoundMixer.setGains(spatialGains[index] ?? SIMD2(repeating: 1), of: stage)
+                voice.stage = stage
+            } else {
+                mixer.attach(voice.node, format: file.processingFormat)
+            }
             voice.attached = true
         }
         return voice

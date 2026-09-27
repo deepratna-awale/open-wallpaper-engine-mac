@@ -418,6 +418,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         shadowPass = SceneShadowPass(device: device, archive: effectGraph?.pipelineArchive)
         planarReflection = ScenePlanarReflection(device: device)
         memoryPressure = SceneMemoryPressure { [weak self] level in self?.trimMemory(level) }
+        sounds.locate = { [weak self] id in self?.soundWorldPosition(id) }
     }
 
     /// Sets `view` up to show this renderer's frames: on its device, drawn by the view's own timer.
@@ -974,6 +975,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         effectFrame.camera = cameraRig.frameCamera(cameraRigInput(time: sceneTime, motion: motion))
         effectFrame.eyePosition = effectFrame.camera.eye
         effectFrame.viewForward = effectFrame.camera.forward
+        // Spatialized sounds are placed against it from the next update on.
+        sounds.listener = SceneSoundSpatialization.Listener(camera: effectFrame.camera,
+                                                            orthographicSize: isPerspective ? nil : sceneSize)
         effectFrame.lighting = frameLighting(eye: effectFrame.eyePosition, forward: effectFrame.viewForward,
                                              shake: motion.shake)
         drawProbe?.record(lighting: effectFrame.lighting)
@@ -1481,6 +1485,13 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             }
         }
         sounds.update(deltaTime: clock.delta)
+    }
+
+    /// A sound object's world position this frame (its world matrix's translation, parents,
+    /// timelines and scripts included), where a `spatialization` sound plays from.
+    private func soundWorldPosition(_ id: Int) -> SIMD3<Float> {
+        let translation = world3D(String(id), in: spatial.transforms).columns.3
+        return SIMD3(translation.x, translation.y, translation.z)
     }
 
     /// Hands the scripts this frame: the clock, the display and cursor, and every object at this

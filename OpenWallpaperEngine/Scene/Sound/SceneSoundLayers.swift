@@ -11,6 +11,9 @@ import AVFoundation
 /// as WE's main loop steps it. WE's loop keeps running while no wallpaper frame is drawn (it
 /// sleeps 250 ms a turn while paused, 0x140111486), so while no frame comes a timer steps it
 /// instead; at 0 the layers pause, above 0 they resume where they were.
+///
+/// A `spatialization` layer's mono files play from its object (`SceneSoundSpatialization`),
+/// placed when they start and on every update, like WE's.
 final class SceneSoundLayers {
     private struct Layer {
         var content: SceneSoundContent
@@ -33,6 +36,10 @@ final class SceneSoundLayers {
     private var lastFadeTime: CFTimeInterval = 0
     /// When a drawn frame last stepped the fade (`advanceFade`).
     private var lastFrameFade: CFTimeInterval = -.infinity
+    /// The camera spatialized layers are placed against (the last frame's); nil before the first.
+    var listener: SceneSoundSpatialization.Listener?
+    /// A layer's object's world position this frame (its world matrix's translation).
+    var locate: (Int) -> SIMD3<Float>? = { _ in nil }
 
     /// `offline` renders through a manual-rendering engine (tests).
     init(label: String, offline: AVAudioFormat? = nil, random: @escaping () -> Double = { Double.random(in: 0..<1) }) {
@@ -73,12 +80,17 @@ final class SceneSoundLayers {
     /// Adds one layer (a script's `createLayer`, or new content) and loads it.
     func add(_ content: SceneSoundContent) {
         if layers[content.id] != nil { remove(content.id) }
-        let voices = SceneSoundVoices(files: content.files, mixer: { [weak self] in self?.sharedMixer() },
-                                      label: "\(label) '\(content.name)'")
+        // OpenAL Soft places only mono sources; a stereo file of a spatialized sound plays as it is.
+        let spatialFiles = content.sound.spatialization
+            ? Set(content.files.indices.filter { content.files[$0].channels == 1 }) : []
+        let voices = SceneSoundVoices(files: content.files, spatialFiles: spatialFiles,
+                                      mixer: { [weak self] in self?.sharedMixer() }, label: "\(label) '\(content.name)'")
         let playback = SceneSoundPlayback(sound: content.sound, durations: content.files.map(\.duration),
                                           volume: content.volume, sceneGain: gain, output: voices, random: random)
-        layers[content.id] = Layer(content: content, voices: voices, playback: playback)
+        let layer = Layer(content: content, voices: voices, playback: playback)
+        layers[content.id] = layer
         if !order.contains(content.id) { order.append(content.id) }
+        place(layer)
         playback.load()
     }
 
@@ -127,8 +139,23 @@ final class SceneSoundLayers {
     /// WE's per-frame update, `seconds` of real time since the last draw.
     func update(deltaTime seconds: Double) {
         guard !layers.isEmpty else { return }
-        for id in order { layers[id]?.playback.update(deltaTime: seconds) }
+        for id in order {
+            guard let layer = layers[id] else { continue }
+            layer.playback.update(deltaTime: seconds)
+            place(layer)
+        }
         idleIfSilent()
+    }
+
+    /// Places a spatialized layer's files at its object (0x1401f5029): WE sets one position for
+    /// every file of the sound.
+    private func place(_ layer: Layer) {
+        guard !layer.voices.spatialFiles.isEmpty else { return }
+        let world = locate(layer.content.id) ?? .zero
+        let position = SceneSoundSpatialization.position(world: world, listener: listener)
+        let gains = SceneSoundSpatialization.gains(position: position, minDistance: layer.content.minDistance,
+                                                   attenuation: layer.content.attenuation)
+        for file in layer.voices.spatialFiles { layer.voices.setSpatialGains(gains, file: file) }
     }
 
     // MARK: - Wallpaper gain
