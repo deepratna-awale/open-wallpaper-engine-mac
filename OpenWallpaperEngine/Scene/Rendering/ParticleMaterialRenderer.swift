@@ -22,6 +22,8 @@ final class ParticleMaterialRenderer {
     let uniformArena: SceneUniformArena
     /// By `.tex` flags that pick a sampler (`clampUVs`, `noInterpolation`).
     private var samplers: [UInt32: MTLSamplerState] = [:]
+    /// `_rt_shadowAtlas`'s comparison sampler (`SceneShadowAtlas.makeSampler`).
+    private let shadowSampler: MTLSamplerState
 
     /// Pipelines compile off the render thread. Guarded by `pipelineLock`.
     private let compileQueue = DispatchQueue(label: "owe.particle-pipelines", qos: .userInitiated, attributes: .concurrent)
@@ -85,8 +87,9 @@ final class ParticleMaterialRenderer {
 
     init?(device: MTLDevice) {
         self.device = device
-        guard let zero = device.makeBuffer(length: 64) else { return nil }
+        guard let zero = device.makeBuffer(length: 64), let shadow = SceneShadowAtlas.makeSampler(device: device) else { return nil }
         zeroAttributes = zero
+        shadowSampler = shadow
         uniformArena = SceneUniformArena(device: device)
     }
 
@@ -206,6 +209,10 @@ final class ParticleMaterialRenderer {
         var sceneSnapshot: MTLTexture?
         /// `_rt_MipMappedFrameBuffer` (`SceneMipMappedFrameBuffer`), for a system that samples it.
         var mipMappedFrameBuffer: MTLTexture? = nil
+        /// `_rt_shadowAtlas` this frame (`SceneShadowAtlas`: the maps `SceneShadowPass` drew, or the
+        /// cleared stand-in), for a lit particle material under a shadowed light (`genericparticle`'s
+        /// `g_Texture4`).
+        var shadowAtlas: MTLTexture? = nil
         /// The pass's depth buffer, when it has one: the system draws with its material's
         /// `SceneRasterState` (docs/models-plan.md §2.4).
         var depth: SceneDepthStates? = nil
@@ -265,10 +272,15 @@ final class ParticleMaterialRenderer {
                 guard let target = context.mipMappedFrameBuffer else { return }
                 texture = target
                 flags = .clampUVs
+            case .fbo(SceneShadowAtlas.name)?:
+                guard let atlas = context.shadowAtlas else { return }
+                texture = atlas
+                flags = []
             default:
                 continue
             }
-            let sampler = sampler(for: flags)
+            // The atlas takes WE's comparison sampler (`SceneShadowAtlas.makeSampler`).
+            let sampler = texture === context.shadowAtlas ? shadowSampler : sampler(for: flags)
             encoder.setFragmentTexture(texture, index: slot)
             encoder.setFragmentSamplerState(sampler, index: slot)
             encoder.setVertexTexture(texture, index: slot)

@@ -1149,8 +1149,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                         sceneSize: sceneSize, frame: effectFrame,
                         values: timelines.values,
                         assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
-                        sceneSnapshot: snapshot, mipMappedFrameBuffer: mipMappedTarget, depth: frameDepth,
-                        placement: particlePlacement(batch.system, camera: effectFrame.camera)))
+                        sceneSnapshot: snapshot, mipMappedFrameBuffer: mipMappedTarget, shadowAtlas: frameShadowAtlas,
+                        depth: frameDepth, placement: particlePlacement(batch.system, camera: effectFrame.camera)))
                     drew = true
                     continue
                 }

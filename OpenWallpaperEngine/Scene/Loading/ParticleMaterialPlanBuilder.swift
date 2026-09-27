@@ -222,6 +222,8 @@ struct ParticleMaterialPlanBuilder {
     private func textureInput(named name: String, materialPath: String) -> SceneEffectTextureInput? {
         if name == "_rt_FullFrameBuffer" { return .sceneSnapshot }
         if name == SceneMipMappedFrameBuffer.name { return .mipMappedFrameBuffer }
+        // The frame's shadow atlas (`ParticleMaterialRenderer.DrawContext.shadowAtlas`).
+        if name == SceneShadowAtlas.name { return .fbo(name) }
         if name.hasPrefix("_rt_") {
             OWELog.error(.scene, "Unsupported render target \(name) in particle material \(materialPath)")
             return nil
