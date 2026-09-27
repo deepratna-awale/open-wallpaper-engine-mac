@@ -404,6 +404,61 @@ final class SceneScriptObjectModelTests: XCTestCase {
         XCTAssertEqual(f.evaluate("'cameraEye' in thisScene")?.toBool(), false, "camera fields are not scene members")
     }
 
+    /// A scene that leaves its `general` values out shows scripts the engine's defaults: bloom on at
+    /// strength 2 and threshold 0.65 (the constructor's flags 0x26, 0x140186d1f), not 0.
+    func testSceneSettingsDefaultToTheEnginesWhenTheSceneLeavesThemOut() throws {
+        let host = FakeSceneScriptObjectHost(scene: SceneScriptSceneDescription(objects: []))
+        let f = try SceneScriptObjectFixture(host, capacity: .standard)
+        XCTAssertEqual(f.evaluate("thisScene.bloom")?.toBool(), true)
+        XCTAssertEqual(try XCTUnwrap(f.evaluate("thisScene.bloomstrength")?.toDouble()), 2, accuracy: 1e-6)
+        XCTAssertEqual(try XCTUnwrap(f.evaluate("thisScene.bloomthreshold")?.toDouble()), 0.65, accuracy: 1e-6)
+        XCTAssertEqual(try XCTUnwrap(f.evaluate("thisScene.camerashakespeed")?.toDouble()), 3, accuracy: 1e-6)
+    }
+
+    /// Every scene field's script default is what the engine uses for a scene without it.
+    func testSceneFieldDefaultsMatchTheEngines() throws {
+        let json = #"{"camera":{},"general":{},"objects":[]}"#
+        let general = try JSONDecoder().decode(WEScene.self, from: Data(json.utf8)).general
+        let values = EmptyValues()
+        let bloom = SceneBloomSettings(general, in: values)
+        let effects = SceneCameraEffects(general, in: values)
+        let camera = SceneCameraSettings(general, in: values)
+        let lighting = SceneLightingSettings(general, in: values)
+        var expected: [SceneScriptSceneField: [Float]] = [:]
+        expected[.bloom] = [bloom.enabled ? 1 : 0]
+        expected[.bloomstrength] = [bloom.strength]
+        expected[.bloomthreshold] = [bloom.threshold]
+        expected[.clearcolor] = Self.components(general.clearColor(in: values))
+        expected[.ambientcolor] = Self.components(lighting.ambient)
+        expected[.skylightcolor] = Self.components(lighting.skylight)
+        expected[.fov] = [Float(camera.fov)]
+        expected[.nearz] = [Float(camera.nearZ)]
+        expected[.farz] = [Float(camera.farZ)]
+        expected[.camerafade] = [camera.cameraFade ? 1 : 0]
+        expected[.camerashake] = [effects.shake ? 1 : 0]
+        expected[.camerashakespeed] = [effects.shakeSpeed]
+        expected[.camerashakeamplitude] = [effects.shakeAmplitude]
+        expected[.camerashakeroughness] = [effects.shakeRoughness]
+        expected[.cameraparallax] = [effects.parallax ? 1 : 0]
+        expected[.cameraparallaxamount] = [effects.parallaxAmount]
+        expected[.cameraparallaxdelay] = [effects.parallaxDelay]
+        expected[.cameraparallaxmouseinfluence] = [effects.parallaxMouseInfluence]
+        expected[.bloomhdrstrength] = [bloom.hdr.strength]
+        expected[.bloomhdrthreshold] = [bloom.hdr.threshold]
+        expected[.bloomhdrfeather] = [bloom.hdr.feather]
+        expected[.bloomhdrscatter] = [bloom.hdr.scatter]
+        expected[.bloomhdriterations] = [Float(bloom.hdr.iterations)]
+        for (field, value) in expected {
+            XCTAssertEqual(field.defaultValue, value, "\(field.rawValue)")
+        }
+    }
+
+    private struct EmptyValues: SceneValueContext {
+        func userProperty(_ name: String) -> String? { nil }
+    }
+
+    private static func components(_ vector: SIMD3<Float>) -> [Float] { [vector.x, vector.y, vector.z] }
+
     func testStubsAreInertAndLoggedOnce() throws {
         let f = try fixture()
         XCTAssertEqual(f.evaluate("""

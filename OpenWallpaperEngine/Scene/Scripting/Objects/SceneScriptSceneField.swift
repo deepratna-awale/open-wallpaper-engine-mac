@@ -54,18 +54,27 @@ enum SceneScriptSceneField: String, CaseIterable {
         }
     }
 
-    /// The defaults of scene.json's `general` for a value the scene leaves out, and a camera at the
-    /// origin looking down -z.
+    /// The defaults of scene.json's `general` for a value the scene leaves out, the engine's own
+    /// (`SceneGeneralDefaults`, `SceneCameraDefaults`; the constructor's flags 0x26 turn `bloom`
+    /// and `camerafade` on), and a camera at the origin looking down -z.
     var defaultValue: [Float] {
         switch self {
         case .clearcolor, .ambientcolor, .skylightcolor: return [0, 0, 0]
         case .cameraEye: return [0, 0, 1]
         case .cameraCenter: return [0, 0, 0]
         case .cameraUp: return [0, 1, 0]
-        case .cameraZoom, .clearenabled: return [1]
-        case .fov: return [50]
-        case .nearz: return [0.01]
-        case .farz: return [10000]
+        case .cameraZoom, .clearenabled, .bloom, .camerafade: return [1]
+        case .bloomstrength: return [SceneGeneralDefaults.bloomStrength]
+        case .bloomthreshold: return [SceneGeneralDefaults.bloomThreshold]
+        case .fov: return [Float(SceneCameraDefaults.fov)]
+        case .nearz: return [Float(SceneCameraDefaults.nearZ)]
+        case .farz: return [Float(SceneCameraDefaults.farZ)]
+        case .camerashakespeed: return [SceneGeneralDefaults.cameraShakeSpeed]
+        case .camerashakeamplitude: return [SceneGeneralDefaults.cameraShakeAmplitude]
+        case .camerashakeroughness: return [SceneGeneralDefaults.cameraShakeRoughness]
+        case .cameraparallaxamount: return [SceneGeneralDefaults.cameraParallaxAmount]
+        case .cameraparallaxdelay: return [SceneGeneralDefaults.cameraParallaxDelay]
+        case .cameraparallaxmouseinfluence: return [SceneGeneralDefaults.cameraParallaxMouseInfluence]
         case .bloomhdrstrength: return [SceneGeneralDefaults.bloomHDRStrength]
         case .bloomhdrthreshold: return [SceneGeneralDefaults.bloomHDRThreshold]
         case .bloomhdrfeather: return [SceneGeneralDefaults.bloomHDRFeather]
