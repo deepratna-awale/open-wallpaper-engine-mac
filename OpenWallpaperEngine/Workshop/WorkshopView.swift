@@ -47,10 +47,14 @@ private struct SteamCmdNotInstalledView: View {
             HStack {
                 Text("brew install steamcmd")
                     .font(.system(.body, design: .monospaced))
+                    .textSelection(.enabled)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
-                    .background(Color(nsColor: .controlBackgroundColor))
-                    .cornerRadius(6)
+                    .glassBackground(in: RoundedRectangle(cornerRadius: 8)) { snippet in
+                        snippet
+                            .background(Color(nsColor: .controlBackgroundColor))
+                            .cornerRadius(6)
+                    }
 
                 Button {
                     NSPasteboard.general.clearContents()
@@ -58,9 +62,11 @@ private struct SteamCmdNotInstalledView: View {
                     isCopied = true
                     DispatchQueue.main.asyncAfter(deadline: .now() + 2) { isCopied = false }
                 } label: {
-                    Image(systemName: isCopied ? "checkmark" : "doc.on.doc")
+                    Label(isCopied ? "Copied" : "Copy", systemImage: isCopied ? "checkmark" : "doc.on.doc")
+                        .labelStyle(.iconOnly)
                 }
-                .buttonStyle(.bordered)
+                .glassButtonStyle()
+                .help(isCopied ? "Copied" : "Copy the command")
             }
 
             Divider().frame(width: 200)
@@ -79,7 +85,7 @@ private struct SteamCmdNotInstalledView: View {
                     steamCmd.setCustomPath(url.path)
                 }
             }
-            .buttonStyle(.bordered)
+            .glassButtonStyle()
 
             if let error = steamCmd.pathError {
                 Text(error)
@@ -157,14 +163,14 @@ private struct SteamLoginView: View {
                             guardCode: showGuardCode ? guardCode : nil
                         )
                     }
-                    .buttonStyle(.borderedProminent)
+                    .glassButtonStyle(.prominent)
                     .disabled(username.isEmpty || password.isEmpty || steamCmd.isLoggingIn)
 
                     if !username.isEmpty {
                         Button("Use Cached Session") {
                             steamCmd.loginWithCachedSession(username: username)
                         }
-                        .buttonStyle(.bordered)
+                        .glassButtonStyle()
                         .disabled(steamCmd.isLoggingIn)
                     }
                 }
@@ -197,28 +203,94 @@ private struct WorkshopBrowserView: View {
     @ObservedObject var viewModel: WorkshopViewModel
     @ObservedObject var contentViewModel: ContentViewModel
     @State private var hasAPIKey = true
+    /// Measured, so the page size leaves room for the pagination row whatever its style.
+    @State private var footerHeight: CGFloat = 44
+
+    private func updateItemsPerPage(in geometry: GeometryProxy) {
+        let size = CGSize(width: geometry.size.width, height: max(geometry.size.height - footerHeight - 8, 1))
+        Task {
+            await viewModel.updateItemsPerPage(for: size, itemSize: contentViewModel.explorerIconSize - 5)
+        }
+    }
 
     var body: some View {
-        HStack(spacing: 0) {
-            WorkshopFiltersSidebar(viewModel: viewModel)
-                .frame(width: contentViewModel.isFilterReveal ? 225 : 0)
-                .opacity(contentViewModel.isFilterReveal ? 1 : 0)
-
-            workshopContent
-                .padding(.leading, contentViewModel.isFilterReveal ? 10 : 0)
-        }
-        .animation(.spring(), value: contentViewModel.isFilterReveal)
-        .onAppear { hasAPIKey = SteamCredentials.webAPIKey().load() != nil }
-        .confirmationDialog(
-            "Download Selected Wallpapers",
-            isPresented: $viewModel.isBatchDownloadConfirming
-        ) {
-            Button("Download \(viewModel.selectedItemIds.count) Wallpapers") {
-                viewModel.downloadSelectedItems()
+        workshopContent
+            .padding(.horizontal)
+            .padding(.top, 8)
+            .onAppear { hasAPIKey = SteamCredentials.webAPIKey().load() != nil }
+            .searchable(text: $viewModel.searchText, placement: .toolbar, prompt: "Search wallpapers...")
+            .onSubmit(of: .search) {
+                viewModel.currentPage = 1
+                Task { await viewModel.search() }
             }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Download \(viewModel.selectedItemIds.count) selected wallpapers to your library?")
+            .onChange(of: viewModel.searchText) { oldText, newText in
+                // The field's clear button empties it: search again from the first page.
+                guard newText.isEmpty, !oldText.isEmpty else { return }
+                viewModel.currentPage = 1
+                Task { await viewModel.search() }
+            }
+            .toolbar { browserToolbar }
+            .confirmationDialog(
+                "Download Selected Wallpapers",
+                isPresented: $viewModel.isBatchDownloadConfirming
+            ) {
+                Button("Download \(viewModel.selectedItemIds.count) Wallpapers") {
+                    viewModel.downloadSelectedItems()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Download \(viewModel.selectedItemIds.count) selected wallpapers to your library?")
+            }
+    }
+
+    @ToolbarContentBuilder private var browserToolbar: some ToolbarContent {
+        ToolbarItemGroup {
+            if viewModel.authorId != nil {
+                Label("Author Workshop", systemImage: "person.fill")
+                    .labelStyle(.titleAndIcon)
+                    .foregroundStyle(.secondary)
+                Button {
+                    viewModel.clearAuthorFilter()
+                } label: {
+                    Label("Clear author filter", systemImage: "xmark.circle.fill")
+                }
+                .help("Clear author filter")
+            }
+        }
+        ToolbarItemGroup {
+            if !viewModel.selectedItemIds.isEmpty {
+                Button {
+                    if viewModel.selectedItemIds.count > 1 {
+                        viewModel.isBatchDownloadConfirming = true
+                    } else {
+                        viewModel.downloadSelectedItems()
+                    }
+                } label: {
+                    Label("Download Selected (\(viewModel.selectedItemIds.count))", systemImage: "arrow.down.circle")
+                }
+                .labelStyle(.titleAndIcon)
+                .help("Download the selected wallpapers")
+
+                Button {
+                    viewModel.clearSelection()
+                } label: {
+                    Label("Clear selection", systemImage: "xmark")
+                }
+                .help("Clear selection")
+            }
+        }
+        ToolbarItem {
+            Picker("Sort", selection: $viewModel.sortOrder) {
+                ForEach(WorkshopSortOrder.allCases) { order in
+                    Text(order.displayName).tag(order)
+                }
+            }
+            .pickerStyle(.menu)
+            .help("Sort")
+            .onChange(of: viewModel.sortOrder) {
+                viewModel.currentPage = 1
+                Task { await viewModel.search() }
+            }
         }
     }
 
@@ -230,84 +302,6 @@ private struct WorkshopBrowserView: View {
 
     private var workshopContent: some View {
         VStack(spacing: 8) {
-            // Search bar
-            HStack {
-                if viewModel.authorId != nil {
-                    Label("Author Workshop", systemImage: "person.fill")
-                        .foregroundStyle(.secondary)
-                    Button {
-                        viewModel.clearAuthorFilter()
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                    }
-                    .buttonStyle(.plain)
-                    .help("Clear author filter")
-                }
-                Image(systemName: "magnifyingglass")
-                    .foregroundStyle(.secondary)
-                TextField("Search wallpapers...", text: $viewModel.searchText)
-                    .textFieldStyle(.plain)
-                    .onSubmit {
-                        viewModel.currentPage = 1
-                        Task { await viewModel.search() }
-                    }
-                if !viewModel.searchText.isEmpty {
-                    Button {
-                        viewModel.searchText = ""
-                        viewModel.currentPage = 1
-                        Task { await viewModel.search() }
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(.secondary)
-                    }
-                    .buttonStyle(.plain)
-                }
-
-                Picker("Sort", selection: $viewModel.sortOrder) {
-                    ForEach(WorkshopSortOrder.allCases) { order in
-                        Text(order.displayName).tag(order)
-                    }
-                }
-                .frame(width: 160)
-                .onChange(of: viewModel.sortOrder) {
-                    viewModel.currentPage = 1
-                    Task { await viewModel.search() }
-                }
-
-                Button {
-                    contentViewModel.isFilterReveal.toggle()
-                } label: {
-                    Image(systemName: "line.3.horizontal.decrease.circle")
-                }
-                .buttonStyle(.bordered)
-                .help("Show filters")
-
-                if !viewModel.selectedItemIds.isEmpty {
-                    Button {
-                        if viewModel.selectedItemIds.count > 1 {
-                            viewModel.isBatchDownloadConfirming = true
-                        } else {
-                            viewModel.downloadSelectedItems()
-                        }
-                    } label: {
-                        Label("Download Selected (\(viewModel.selectedItemIds.count))", systemImage: "arrow.down.circle")
-                    }
-                    .buttonStyle(.borderedProminent)
-
-                    Button {
-                        viewModel.clearSelection()
-                    } label: {
-                        Image(systemName: "xmark")
-                    }
-                    .buttonStyle(.bordered)
-                    .help("Clear selection")
-                }
-            }
-            .padding(8)
-            .background(Color(nsColor: .controlBackgroundColor))
-            .cornerRadius(8)
-            .padding(.horizontal)
-
             // Results
             if viewModel.isLoading && viewModel.items.isEmpty {
                 Spacer()
@@ -368,31 +362,15 @@ private struct WorkshopBrowserView: View {
 
                         WorkshopPagination(viewModel: viewModel)
                             .padding(.bottom, 8)
+                            .background(GeometryReader { footer in
+                                Color.clear.preference(key: WorkshopFooterHeightKey.self, value: footer.size.height)
+                            })
                     }
-                    .onAppear {
-                        Task {
-                            await viewModel.updateItemsPerPage(
-                                for: CGSize(width: geometry.size.width, height: max(geometry.size.height - 44, 1)),
-                                itemSize: contentViewModel.explorerIconSize - 5
-                            )
-                        }
-                    }
-                    .onChange(of: geometry.size) {
-                        Task {
-                            await viewModel.updateItemsPerPage(
-                                for: CGSize(width: geometry.size.width, height: max(geometry.size.height - 44, 1)),
-                                itemSize: contentViewModel.explorerIconSize - 5
-                            )
-                        }
-                    }
-                    .onChange(of: contentViewModel.explorerIconSize) {
-                        Task {
-                            await viewModel.updateItemsPerPage(
-                                for: CGSize(width: geometry.size.width, height: max(geometry.size.height - 44, 1)),
-                                itemSize: contentViewModel.explorerIconSize - 5
-                            )
-                        }
-                    }
+                    .onPreferenceChange(WorkshopFooterHeightKey.self) { footerHeight = $0 }
+                    .onAppear { updateItemsPerPage(in: geometry) }
+                    .onChange(of: geometry.size) { updateItemsPerPage(in: geometry) }
+                    .onChange(of: contentViewModel.explorerIconSize) { updateItemsPerPage(in: geometry) }
+                    .onChange(of: footerHeight) { updateItemsPerPage(in: geometry) }
                 }
             }
         }
@@ -401,6 +379,13 @@ private struct WorkshopBrowserView: View {
                 await viewModel.search()
             }
         }
+    }
+}
+
+private struct WorkshopFooterHeightKey: PreferenceKey {
+    static let defaultValue: CGFloat = 44
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
     }
 }
 
@@ -420,10 +405,10 @@ private struct WorkshopPagination: View {
             ForEach(pageNumbers, id: \.self) { page in
                 if page == viewModel.currentPage {
                     pageButton(page)
-                        .buttonStyle(.borderedProminent)
+                        .glassButtonStyle(.prominent)
                 } else {
                     pageButton(page)
-                        .buttonStyle(.bordered)
+                        .glassButtonStyle()
                 }
             }
 
@@ -452,32 +437,42 @@ private struct WorkshopPagination: View {
     }
 }
 
-private struct WorkshopFiltersSidebar: View {
+/// The Workshop tab's tag filters, in the main window's sidebar. Every change searches again.
+struct WorkshopFiltersSidebar: View {
     @ObservedObject var viewModel: WorkshopViewModel
+    @State private var expandedSections: Set<String> = ["Rating", "Type", "Resolution", "Genre"]
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                Button {
-                    viewModel.resetFilters()
-                    Task { await viewModel.search() }
-                } label: {
-                    Label("Reset Filters", systemImage: "arrow.triangle.2.circlepath")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-
-                filterSection("Rating", tags: WorkshopViewModel.contentRatingTags)
-                filterSection("Type", tags: WorkshopViewModel.typeTags)
-                filterSection("Resolution", tags: WorkshopViewModel.resolutionTags)
-                filterSection("Genre", tags: WorkshopViewModel.genreTags)
+        List {
+            Button {
+                viewModel.resetFilters()
+                Task { await viewModel.search() }
+            } label: {
+                Label("Reset Filters", systemImage: "arrow.triangle.2.circlepath")
+                    .frame(maxWidth: .infinity)
             }
-            .padding()
+            .glassButtonStyle(.prominent)
+            .listRowSeparator(.hidden)
+
+            filterSection("Rating", tags: WorkshopViewModel.contentRatingTags)
+            filterSection("Type", tags: WorkshopViewModel.typeTags)
+            filterSection("Resolution", tags: WorkshopViewModel.resolutionTags)
+            filterSection("Genre", tags: WorkshopViewModel.genreTags)
         }
+        .listStyle(.sidebar)
     }
 
-    private func filterSection(_ title: LocalizedStringKey, tags: [String]) -> some View {
-        FilterSection(title, alignment: .leading, spacing: 6) {
+    private func isExpanded(_ title: String) -> Binding<Bool> {
+        Binding(
+            get: { expandedSections.contains(title) },
+            set: { expanded in
+                if expanded { expandedSections.insert(title) } else { expandedSections.remove(title) }
+            }
+        )
+    }
+
+    private func filterSection(_ title: String, tags: [String]) -> some View {
+        Section(LocalizedStringKey(title), isExpanded: isExpanded(title)) {
             ForEach(tags, id: \.self) { tag in
                 Toggle(tag, isOn: Binding(
                     get: { viewModel.selectedTags.contains(tag) },
@@ -488,8 +483,8 @@ private struct WorkshopFiltersSidebar: View {
                         }
                     }
                 ))
+                .toggleStyle(.checkbox)
             }
-            .toggleStyle(.checkbox)
         }
     }
 }

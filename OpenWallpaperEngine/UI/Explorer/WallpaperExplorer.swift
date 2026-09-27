@@ -57,16 +57,18 @@ struct WallpaperExplorer: SubviewOfContentView {
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 }
 
-                VStack(spacing: 8) {
-                    InstalledPagination(viewModel: viewModel)
-                        .padding(.vertical, 8)
-                    Button {
-                        isCreatePlaylistPresented = true
-                    } label: {
-                        Label("Create Playlist", systemImage: "rectangle.stack.badge.plus")
+                GlassGroup {
+                    VStack(spacing: 8) {
+                        InstalledPagination(viewModel: viewModel)
+                            .padding(.vertical, 8)
+                        Button {
+                            isCreatePlaylistPresented = true
+                        } label: {
+                            Label("Create Playlist", systemImage: "rectangle.stack.badge.plus")
+                        }
+                        .glassButtonStyle()
+                        .disabled(viewModel.selectedWallpapers.isEmpty)
                     }
-                    .buttonStyle(.bordered)
-                    .disabled(viewModel.selectedWallpapers.isEmpty)
                 }
                 .background(GeometryReader { footer in
                     Color.clear.preference(key: ExplorerFooterHeightKey.self, value: footer.size.height)
@@ -122,11 +124,13 @@ private struct CreatePlaylistSheet: View {
             HStack {
                 Spacer()
                 Button("Cancel", action: onComplete)
+                    .keyboardShortcut(.cancelAction)
                 Button("Save") {
                     guard wallpaperViewModel.createPlaylist(named: name, wallpapers: wallpapers) else { return }
                     onComplete()
                 }
-                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.defaultAction)
+                .glassButtonStyle(.prominent)
                 .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
         }
@@ -149,10 +153,10 @@ private struct InstalledPagination: View {
             ForEach(pageNumbers, id: \.self) { page in
                 if page == viewModel.currentPage {
                     pageButton(page)
-                        .buttonStyle(.borderedProminent)
+                        .glassButtonStyle(.prominent)
                 } else {
                     pageButton(page)
-                        .buttonStyle(.bordered)
+                        .glassButtonStyle()
                 }
             }
 

@@ -59,7 +59,10 @@ class ContentViewModel: ObservableObject, DropDelegate {
     @Published var isStaging = false
     
     @Published var topTabBarSelection: Int = 0
-    @Published var topTabBarHoverSelection: Int = -1
+    /// The Playlists tab's list of playlists, in the main window's sidebar.
+    @Published var isPlaylistSidebarReveal = true
+    /// The Installed tab's Details inspector.
+    @Published var isDetailsReveal = true
     
     @Published var imageScaleIndex: Int = -1
     @Published var isApplicationActive = true
@@ -351,8 +354,9 @@ class ContentViewModel: ObservableObject, DropDelegate {
         autoRefreshWallpapers.filter { selectedWallpapers.contains($0.wallpaperDirectory) }
     }
 
+    /// Animated, so the sidebar slides in and out as it did before it was a split view column.
     func toggleFilter() {
-        isFilterReveal.toggle()
+        withAnimation { isFilterReveal.toggle() }
     }
     
     func alertImportModal(which error: WPImportError) {

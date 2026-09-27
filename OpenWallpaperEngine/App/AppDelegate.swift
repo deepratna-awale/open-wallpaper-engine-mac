@@ -252,7 +252,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     
     @MainActor @objc func toggleFilter() {
-        self.contentViewModel.isFilterReveal.toggle()
+        self.contentViewModel.toggleFilter()
     }
 
     /// Posted at most once per launch by `AudioCapturePermissionGate`, and never after

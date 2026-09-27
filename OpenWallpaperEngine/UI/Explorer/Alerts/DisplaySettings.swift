@@ -18,15 +18,6 @@ struct DisplaySettings: SubviewOfContentView {
 
     var body: some View {
         VStack(spacing: 16) {
-            Button {
-                viewModel.isDisplaySettingsReveal = false
-            } label: {
-                Image(systemName: "chevron.up")
-                    .font(.largeTitle)
-                    .bold()
-            }
-            .buttonStyle(.link)
-
             Text("Display Settings")
                 .font(.largeTitle)
 
@@ -56,60 +47,69 @@ struct DisplaySettings: SubviewOfContentView {
                 let screenId = wallpaperViewModel.selectedScreenId
                 let wp = wallpaperViewModel.wallpaper(for: screenId)
 
-                VStack(spacing: 8) {
-                    HStack {
-                        Text(WallpaperViewModel.screenName(for: screen))
-                            .font(.headline)
-                        Text("\(Int(screen.frame.width))x\(Int(screen.frame.height))")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Toggle("Enabled", isOn: Binding(
-                            get: { wallpaperViewModel.isScreenEnabled(screenId) },
-                            set: { _ in wallpaperViewModel.toggleScreen(screenId) }
-                        ))
-                        .toggleStyle(.switch)
-                        .controlSize(.small)
-                    }
-
-                    if wallpaperViewModel.isScreenEnabled(screenId) {
+                GroupBox {
+                    VStack(spacing: 8) {
                         HStack {
-                            // Preview thumbnail
-                            GifImage(contentsOf: previewURL(for: wp), animates: false)
-                                .resizable()
-                                .aspectRatio(16/9, contentMode: .fit)
-                                .frame(height: 60)
-                                .cornerRadius(4)
-                                .background(Color(nsColor: .controlBackgroundColor))
-
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(wp.project.title.isEmpty ? "No wallpaper" : wp.project.title)
-                                    .font(.callout)
-                                    .fontWeight(.medium)
-                                Text(wp.project.type.isEmpty ? "—" : wp.project.type.capitalized)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
+                            Text(WallpaperViewModel.screenName(for: screen))
+                                .font(.headline)
+                            Text("\(Int(screen.frame.width))x\(Int(screen.frame.height))")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                             Spacer()
-                            Button("Remove") {
-                                wallpaperViewModel.wallpapers.removeValue(forKey: screenId)
-                            }
-                            .buttonStyle(.bordered)
+                            Toggle("Enabled", isOn: Binding(
+                                get: { wallpaperViewModel.isScreenEnabled(screenId) },
+                                set: { _ in wallpaperViewModel.toggleScreen(screenId) }
+                            ))
+                            .toggleStyle(.switch)
                             .controlSize(.small)
-                            .disabled(wp.project == .invalid)
                         }
-                    } else {
-                        Text("Wallpaper display is disabled on this screen.")
-                            .font(.callout)
-                            .foregroundStyle(.tertiary)
+
+                        if wallpaperViewModel.isScreenEnabled(screenId) {
+                            HStack {
+                                // Preview thumbnail
+                                GifImage(contentsOf: previewURL(for: wp), animates: false)
+                                    .resizable()
+                                    .aspectRatio(16/9, contentMode: .fit)
+                                    .frame(height: 60)
+                                    .cornerRadius(4)
+                                    .background(Color(nsColor: .controlBackgroundColor))
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(wp.project.title.isEmpty ? "No wallpaper" : wp.project.title)
+                                        .font(.callout)
+                                        .fontWeight(.medium)
+                                    Text(wp.project.type.isEmpty ? "—" : wp.project.type.capitalized)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                Button("Remove") {
+                                    wallpaperViewModel.wallpapers.removeValue(forKey: screenId)
+                                }
+                                .glassButtonStyle()
+                                .controlSize(.small)
+                                .disabled(wp.project == .invalid)
+                            }
+                        } else {
+                            Text("Wallpaper display is disabled on this screen.")
+                                .font(.callout)
+                                .foregroundStyle(.tertiary)
+                        }
                     }
+                    .padding(8)
                 }
-                .padding()
-                .background(Color(nsColor: .controlBackgroundColor))
-                .cornerRadius(8)
             }
 
             Spacer()
+
+            HStack {
+                Spacer()
+                Button("Done") {
+                    viewModel.isDisplaySettingsReveal = false
+                }
+                .keyboardShortcut(.defaultAction)
+                .glassButtonStyle(.prominent)
+            }
         }
         .padding(.horizontal, 40)
     }

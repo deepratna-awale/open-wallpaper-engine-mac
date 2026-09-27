@@ -20,108 +20,66 @@ struct ContentView: View {
     
     @ObservedObject var wallpaperViewModel: WallpaperViewModel
     
-    @State var isDropTargeted = false
-    @State var isParseFinished = false
-    @State var isFilterReveal = true
-    
-    @State var isDockIconHidden = false
-    
-    @State var project: WEProject!
-    @State var projectUrl: URL!
-    @State var greet: String = "Hello, world!"
     @State private var isRemoteWallpaperSheetPresented = false
-    
+
+    private var tab: Int { viewModel.topTabBarSelection }
+
+    /// Installed, the Workshop browser and Playlists have a sidebar; Downloads doesn't.
+    private var hasSidebar: Bool {
+        switch tab {
+        case 0, 3: return true
+        case 1: return viewModel.steamCmd.isInstalled && viewModel.steamCmd.isLoggedIn
+        default: return false
+        }
+    }
+
+    /// The filter panes share one state, as they did before; the playlist list has its own.
+    private var isSidebarRevealed: Bool {
+        tab == 3 ? viewModel.isPlaylistSidebarReveal : viewModel.isFilterReveal
+    }
+
+    private func setSidebarRevealed(_ revealed: Bool) {
+        if tab == 3 {
+            viewModel.isPlaylistSidebarReveal = revealed
+        } else {
+            viewModel.isFilterReveal = revealed
+        }
+    }
+
+    private var sidebarVisibility: Binding<NavigationSplitViewVisibility> {
+        Binding(
+            get: { hasSidebar && isSidebarRevealed ? .all : .detailOnly },
+            set: { visibility in
+                guard hasSidebar else { return }
+                let revealed = visibility != .detailOnly
+                if revealed != isSidebarRevealed { setSidebarRevealed(revealed) }
+            }
+        )
+    }
+
+    private var isDetailsPresented: Binding<Bool> {
+        Binding(
+            get: { tab == 0 && viewModel.isDetailsReveal },
+            set: { presented in
+                if tab == 0 { viewModel.isDetailsReveal = presented }
+            }
+        )
+    }
+
     var body: some View {
-        ZStack {
-            HSplitView {
-                if viewModel.isStaging {
-                    VStack(spacing: 5) {
-                        TopTabBar(contentViewModel: viewModel)
-                        switch viewModel.topTabBarSelection {
-                        case 0:
-                            ExplorerTopBar(contentViewModel: viewModel)
-                                .environmentObject(globalSettingsViewModel)
-                            HStack(spacing: 0) {
-                                HStack(spacing: 0) {
-                                    // MARK: Filter Results
-                                    FilterResults(viewModel: viewModel)
-                                }
-                                .frame(width: viewModel.isFilterReveal ? 225 : 0)
-                                .opacity(viewModel.isFilterReveal ? 1 : 0)
-                                .animation(.spring(), value: viewModel.isFilterReveal)
-                                
-                                WallpaperExplorer(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel)
-                                .onDrop(of: [.fileURL], delegate: viewModel)
-                                .contextMenu {
-                                    ExplorerGlobalMenu(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel)
-                                }
-                                .padding(.leading, viewModel.isFilterReveal ? 10 : 0)
-                            }
-                            .animation(.default, value: viewModel.isFilterReveal)
-                        case 1:
-                            WorkshopView(contentViewModel: viewModel)
-                        case 2:
-                            DownloadsView(steamCmd: viewModel.steamCmd)
-                        case 3:
-                            PlaylistView(wallpaperViewModel: wallpaperViewModel)
-                        default:
-                            fatalError()
-                        }
-                        if viewModel.topTabBarSelection == 0 {
-                            HStack {
-                                Button {
-                                    AppDelegate.shared.openImportFromFolderPanel()
-                                } label: {
-                                    Label("Open Wallpaper", systemImage: "arrow.up.bin.fill")
-                                        .frame(width: 220)
-                                }
-                                Button {
-                                    AppDelegate.shared.openImportVideoPanel()
-                                } label: {
-                                    Label("Add Video Wallpaper", systemImage: "film.stack")
-                                }
-                                Button {
-                                    isRemoteWallpaperSheetPresented = true
-                                } label: {
-                                    Label("Add Video/Image URL", systemImage: "link")
-                                }
-                                Spacer()
-                            }
+        NavigationSplitView(columnVisibility: sidebarVisibility) {
+            sidebar
+        } detail: {
+            detail
+                .inspector(isPresented: isDetailsPresented) {
+                    Group {
+                        if viewModel.isStaging {
+                            WallpaperPreview(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel)
                         }
                     }
-                    .padding()
-                    if viewModel.topTabBarSelection == 0 {
-                        WallpaperPreview(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel)
-                            .frame(maxWidth: 320)
-                    }
+                    .inspectorColumnWidth(min: 280, ideal: 320, max: 420)
                 }
-            }
-            .opacity(viewModel.isStaging ? 1 : 0)
-            .blur(radius: viewModel.isStaging ? 0 : 2.0)
-            
-            // indicate that this view is initializing
-            if !viewModel.isStaging {
-                HStack(spacing: 20) {
-                    Text("Power Saving Mode, Sleeping...")
-                        .font(.largeTitle)
-                }
-            }
-
-            if viewModel.isDisplaySettingsReveal {
-                Color.black.opacity(0.25)
-                    .ignoresSafeArea()
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        viewModel.isDisplaySettingsReveal = false
-                    }
-
-                DisplaySettings(viewModel: viewModel)
-                    .padding()
-                    .frame(width: 520, height: 450)
-                    .background(Color(nsColor: .windowBackgroundColor))
-                    .cornerRadius(8)
-                    .shadow(radius: 20)
-            }
+                .toolbar { mainToolbar }
         }
         .confirmationDialog("Unsubscribe Confirmation",
                             isPresented: $viewModel.isUnsubscribeConfirming) {
@@ -193,7 +151,126 @@ struct ContentView: View {
             RemoteWallpaperURLSheet(wallpaperViewModel: wallpaperViewModel)
                 .frame(width: 500, height: 180)
         }
+        .sheet(isPresented: $viewModel.isDisplaySettingsReveal) {
+            DisplaySettings(viewModel: viewModel)
+                .padding()
+                .frame(width: 520, height: 450)
+        }
         .frame(minWidth: 1000, minHeight: 640, idealHeight: 800)
+    }
+
+    // MARK: Columns
+
+    /// The main toolbar has its own sidebar button, labelled for the tab, instead of the system one.
+    private var sidebar: some View {
+        ZStack {
+            sidebarContent
+        }
+        .toolbar(removing: .sidebarToggle)
+        .navigationSplitViewColumnWidth(min: tab == 3 ? 220 : 200, ideal: tab == 3 ? 260 : 225, max: 360)
+    }
+
+    @ViewBuilder private var sidebarContent: some View {
+        if viewModel.isStaging {
+            switch tab {
+            case 0:
+                FilterResults(viewModel: viewModel)
+            case 1:
+                WorkshopFiltersSidebar(viewModel: viewModel.workshopVM)
+            case 3:
+                PlaylistSidebar(wallpaperViewModel: wallpaperViewModel)
+            default:
+                Color.clear
+            }
+        }
+    }
+
+    private var detail: some View {
+        ZStack {
+            if viewModel.isStaging {
+                tabContent
+                    .transition(.modifier(active: StagingFade(isStaged: false),
+                                          identity: StagingFade(isStaged: true)))
+            } else {
+                // indicate that this view is initializing
+                Text("Power Saving Mode, Sleeping...")
+                    .font(.largeTitle)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    @ViewBuilder private var tabContent: some View {
+        switch tab {
+        case 0:
+            WallpaperExplorer(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel)
+                .onDrop(of: [.fileURL], delegate: viewModel)
+                .contextMenu {
+                    ExplorerGlobalMenu(contentViewModel: viewModel, wallpaperViewModel: wallpaperViewModel)
+                }
+                .padding()
+                .modifier(ExplorerTopBar(contentViewModel: viewModel,
+                                         onAddURL: { isRemoteWallpaperSheetPresented = true }))
+        case 1:
+            WorkshopView(contentViewModel: viewModel)
+        case 2:
+            DownloadsView(steamCmd: viewModel.steamCmd)
+        case 3:
+            PlaylistView(wallpaperViewModel: wallpaperViewModel)
+        default:
+            EmptyView()
+        }
+    }
+
+    // MARK: Toolbar
+
+    @ToolbarContentBuilder private var mainToolbar: some ToolbarContent {
+        ToolbarItem(placement: .navigation) {
+            if hasSidebar {
+                Button {
+                    withAnimation { setSidebarRevealed(!isSidebarRevealed) }
+                } label: {
+                    Label(tab == 3 ? "Playlists" : "Filter Results", systemImage: "sidebar.left")
+                }
+                .help(tab == 3 ? "Show or hide the playlist list" : "Show or hide the filters")
+            }
+        }
+        ToolbarItem(placement: .principal) {
+            TopTabBar(contentViewModel: viewModel)
+        }
+        ToolbarItemGroup(placement: .primaryAction) {
+            Button {
+                viewModel.isDisplaySettingsReveal = true
+            } label: {
+                Label("Displays", systemImage: "display")
+            }
+            .help("Display Settings")
+            Button {
+                AppDelegate.shared.openSettingsWindow()
+            } label: {
+                Label("Settings", systemImage: "gearshape")
+            }
+            .help("Settings")
+            if tab == 0 {
+                Button {
+                    withAnimation { viewModel.isDetailsReveal.toggle() }
+                } label: {
+                    Label("Details", systemImage: "sidebar.right")
+                }
+                .help("Show or hide the wallpaper details")
+            }
+        }
+    }
+}
+
+/// The content fades in from a slight blur when the window restages it.
+private struct StagingFade: ViewModifier {
+    let isStaged: Bool
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(isStaged ? 1 : 0)
+            .blur(radius: isStaged ? 0 : 2.0)
     }
 }
 
@@ -212,6 +289,7 @@ private struct RemoteWallpaperURLSheet: View {
             HStack {
                 Spacer()
                 Button("Cancel") { dismiss() }
+                    .keyboardShortcut(.cancelAction)
                 Button("Add") {
                     guard let url = URL(string: urlString),
                           ["http", "https"].contains(url.scheme?.lowercased() ?? "") else {
@@ -226,7 +304,8 @@ private struct RemoteWallpaperURLSheet: View {
                     wallpaperViewModel.addRemoteWallpaper(from: url)
                     dismiss()
                 }
-                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.defaultAction)
+                .glassButtonStyle(.prominent)
             }
         }
         .padding(20)

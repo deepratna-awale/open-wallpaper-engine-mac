@@ -7,63 +7,82 @@
 
 import SwiftUI
 
-struct ExplorerTopBar: SubviewOfContentView {
+/// The Installed tab's search and toolbar items, attached to the tab's content so they show in the
+/// window toolbar only while that tab is selected.
+struct ExplorerTopBar: ViewModifier {
     @ObservedObject var viewModel: ContentViewModel
-    
+
     @EnvironmentObject var globalSettingsViewModel: GlobalSettingsViewModel
-    
-    init(contentViewModel viewModel: ContentViewModel) {
+
+    /// Opens the sheet that adds a video or image by URL.
+    let onAddURL: () -> Void
+
+    init(contentViewModel viewModel: ContentViewModel, onAddURL: @escaping () -> Void) {
         self.viewModel = viewModel
+        self.onAddURL = onAddURL
     }
-    
-    var body: some View {
-        HStack {
-            TextField("Search", text: $viewModel.searchText)
-                .textFieldStyle(.roundedBorder)
-                .frame(width: 160)
-            Button {
-                viewModel.isFilterReveal.toggle()
-            } label: {
-                Label("Filter Results", systemImage: "checklist.checked")
-            }
-            .buttonStyle(.borderedProminent)
-            if !viewModel.selectedWallpapers.isEmpty {
-                Button(role: .destructive) {
-                    viewModel.isBatchUnsubscribeConfirming = true
-                } label: {
-                    Label("Delete Selected (\(viewModel.selectedWallpapers.count))", systemImage: "trash")
+
+    func body(content: Content) -> some View {
+        content
+            .searchable(text: $viewModel.searchText, placement: .toolbar, prompt: "Search")
+            .toolbar {
+                ToolbarItem {
+                    Menu {
+                        Button("Open Wallpaper…", systemImage: "arrow.up.bin.fill") {
+                            AppDelegate.shared.openImportFromFolderPanel()
+                        }
+                        Button("Add Video Wallpaper…", systemImage: "film.stack") {
+                            AppDelegate.shared.openImportVideoPanel()
+                        }
+                        Button("Add Video/Image URL…", systemImage: "link", action: onAddURL)
+                    } label: {
+                        Label("Add Wallpaper", systemImage: "plus")
+                    }
+                    .help("Open a wallpaper, or add a video or an image")
                 }
-                .buttonStyle(.bordered)
-            }
-            if globalSettingsViewModel.settings.autoRefresh {
-                Button {
-                    viewModel.refresh()
-                } label: {
-                    Image(systemName: "arrow.triangle.2.circlepath")
+                ToolbarItemGroup {
+                    if !viewModel.selectedWallpapers.isEmpty {
+                        Button(role: .destructive) {
+                            viewModel.isBatchUnsubscribeConfirming = true
+                        } label: {
+                            Label("Delete Selected (\(viewModel.selectedWallpapers.count))", systemImage: "trash")
+                        }
+                        .labelStyle(.titleAndIcon)
+                        .help("Unsubscribe from the selected wallpapers")
+                    }
+                    if globalSettingsViewModel.settings.autoRefresh {
+                        Button {
+                            viewModel.refresh()
+                        } label: {
+                            Label("Refresh", systemImage: "arrow.triangle.2.circlepath")
+                        }
+                        .help("Refresh the wallpaper list")
+                    }
+                }
+                ToolbarItemGroup {
+                    Button {
+                        if viewModel.sortingSequence == .decrease {
+                            viewModel.sortingSequence = .increase
+                        } else {
+                            viewModel.sortingSequence = .decrease
+                        }
+                    } label: {
+                        Label(viewModel.sortingSequence == .increase ? "Ascending" : "Descending",
+                              systemImage: viewModel.sortingSequence == .increase ?
+                              "arrowtriangle.down.fill" : "arrowtriangle.up.fill")
+                    }
+                    .labelStyle(.titleAndIcon)
+                    .help(viewModel.sortingSequence == .increase
+                          ? "Sorted ascending. Click to sort descending."
+                          : "Sorted descending. Click to sort ascending.")
+                    Picker("Sort By", selection: $viewModel.sortingBy) {
+                        ForEach(WEWallpaperSortingMethod.allCases) { method in
+                            Text(method.displayName).tag(method)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .help("Sort By")
                 }
             }
-            Spacer()
-            Text(viewModel.sortingSequence == .increase ? "Ascending" : "Descending")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Button {
-                if viewModel.sortingSequence == .decrease {
-                    viewModel.sortingSequence = .increase
-                } else {
-                    viewModel.sortingSequence = .decrease
-                }
-            } label: {
-                Image(systemName: viewModel.sortingSequence == .increase ?
-                      "arrowtriangle.down.fill" : "arrowtriangle.up.fill")
-            }
-            .buttonStyle(.plain)
-            Picker("Sort By", selection: $viewModel.sortingBy) {
-                ForEach(WEWallpaperSortingMethod.allCases) { method in
-                    Text(method.displayName).tag(method)
-                }
-            }
-            .labelsHidden()
-            .frame(width: 160)
-        }
     }
 }

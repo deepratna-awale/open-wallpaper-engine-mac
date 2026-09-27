@@ -1,44 +1,11 @@
 import SwiftUI
 
+/// The selected playlist, in the main window's detail column; `PlaylistSidebar` lists them.
 struct PlaylistView: View {
     @ObservedObject var wallpaperViewModel: WallpaperViewModel
-    @State private var playlistName = ""
 
     var body: some View {
-        HStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Text("Playlists").font(.title2.bold())
-                    Spacer()
-                    Button { playlistName = "" } label: { Image(systemName: "plus") }
-                        .help("Create playlist")
-                }
-                HStack {
-                    TextField("New playlist", text: $playlistName)
-                    Button {
-                        wallpaperViewModel.createPlaylist(named: playlistName)
-                        playlistName = ""
-                    } label: { Image(systemName: "plus.circle.fill") }
-                    .disabled(playlistName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                }
-                List(wallpaperViewModel.playlists) { playlist in
-                    Button {
-                        wallpaperViewModel.activePlaylistID = playlist.id
-                    } label: {
-                        HStack {
-                            Label(playlist.name, systemImage: playlist.id == wallpaperViewModel.activePlaylistID ? "checkmark" : "rectangle.stack")
-                            Spacer()
-                            Text("\(playlist.items.count)").foregroundStyle(.secondary)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(16)
-            .frame(width: 260)
-            Divider()
-            playlistDetail
-        }
+        playlistDetail
     }
 
     @ViewBuilder private var playlistDetail: some View {
@@ -51,8 +18,10 @@ struct PlaylistView: View {
                         Button(role: .destructive) {
                             wallpaperViewModel.deletePlaylist(playlist)
                         } label: {
-                            Image(systemName: "trash")
+                            Label("Delete playlist", systemImage: "trash")
+                                .labelStyle(.iconOnly)
                         }
+                        .glassButtonStyle()
                         .help("Delete playlist")
                     }
                     VStack(alignment: .leading, spacing: 8) {
@@ -74,10 +43,14 @@ struct PlaylistView: View {
                                 .frame(width: 48, alignment: .trailing)
                         }
                     }
-                    HStack {
-                        Button { wallpaperViewModel.previousPlaylistWallpaper() } label: { Label("Previous", systemImage: "backward.fill") }
-                        Button { wallpaperViewModel.nextPlaylistWallpaper() } label: { Label("Next", systemImage: "forward.fill") }
-                        Text("\(playlist.items.count) wallpapers").foregroundStyle(.secondary)
+                    GlassGroup {
+                        HStack {
+                            Button { wallpaperViewModel.previousPlaylistWallpaper() } label: { Label("Previous", systemImage: "backward.fill") }
+                                .glassButtonStyle()
+                            Button { wallpaperViewModel.nextPlaylistWallpaper() } label: { Label("Next", systemImage: "forward.fill") }
+                                .glassButtonStyle()
+                            Text("\(playlist.items.count) wallpapers").foregroundStyle(.secondary)
+                        }
                     }
                     ForEach(playlist.items) { item in
                         HStack(spacing: 10) {
@@ -92,9 +65,12 @@ struct PlaylistView: View {
                                 .frame(width: 180, alignment: .leading)
                             Button { wallpaperViewModel.movePlaylistItem(itemID: item.id, offset: -1) } label: { Image(systemName: "chevron.up") }
                                 .disabled(playlist.items.first?.id == item.id)
+                                .help("Move up")
                             Button { wallpaperViewModel.movePlaylistItem(itemID: item.id, offset: 1) } label: { Image(systemName: "chevron.down") }
                                 .disabled(playlist.items.last?.id == item.id)
+                                .help("Move down")
                             Button(role: .destructive) { wallpaperViewModel.removeFromPlaylist(itemID: item.id) } label: { Image(systemName: "minus.circle") }
+                                .help("Remove from playlist")
                         }
                         .buttonStyle(.plain)
                         Divider()

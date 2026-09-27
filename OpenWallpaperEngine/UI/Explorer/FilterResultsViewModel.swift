@@ -11,6 +11,8 @@ typealias FilterResultsViewModel = ContentViewModel
 
 protocol FilterResultsModel: OptionSet where Element == Self, RawValue == Int {
     static var allOptions: [String] { get }
+    static var all: Self { get }
+    static var none: Self { get }
 }
 
 struct FRShowOnly: OptionSet {
