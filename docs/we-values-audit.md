@@ -126,7 +126,7 @@ The app's `_owe_effect_enabled_parallax` toggle and `_owe_effect_parallax_amount
 | video music sync (`VideoMusicSyncSettings`) | zoom 0…0.5, pace ±1, tilt ±15°, saturation −1…2 | keep: app-only feature |
 | inspector and sidebar "Music Amount" | ± the slider span | keep: app-only feature |
 | `AudioSpectrum` (was LWE's `maxStep 0.3`, `0.35·log10`, tilt) | LWE's FFT shaping | fixed: WE's pipeline from `wallpaper64.exe` (block DFT and bands `0x1400d02b0`, gain and smoothing `0x140111654`; `Audio/AudioSpectrum*.swift`) |
-| `SceneMetalRenderer` `_owe_speed` | scales the scene clock | keep: app extra; roadmap 8.4 covers the clock problems |
+| `SceneMetalRenderer` `_owe_speed` | scales the scene clock, 0 stops it; the audio smoothing ignored it | WE's playback `rate`: value ÷ 100, at least 0.1 (0x140114d58…0x140114d98), times the frame clamped to 0.0001…0.25 s, clamped again (0x1401114c3…0x14011150f); the scene time is a double with a float copy that goes back to 0 past 432 000 s (0x14017fcca…0x14017fcf6); the audio smoothing steps by the same frame time | fixed (`SceneClock`, roadmap 8.4): the slider starts at 0.1 |
 
 ## 6. Particles — fixed
 

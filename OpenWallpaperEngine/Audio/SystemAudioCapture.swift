@@ -214,8 +214,10 @@ final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate {
     var audioSpectrumSnapshot: AudioSpectrumSnapshot { audioSpectrumAnalyzer.snapshot }
 
     /// Advances the spectrum smoothing by one frame. The renderer calls this exactly once per
-    /// rendered frame and binds the result to every pass of that frame.
-    func advanceAudioSpectrumFrame() -> AudioSpectrumSnapshot { audioSpectrumAnalyzer.advanceFrame() }
+    /// rendered frame, with its scene's playback rate, and binds the result to every pass of that frame.
+    func advanceAudioSpectrumFrame(playbackRate: Double = 1) -> AudioSpectrumSnapshot {
+        audioSpectrumAnalyzer.advanceFrame(playbackRate: playbackRate)
+    }
 
     /// Splits the capture buffer (non-interleaved float32) into its channels for the analyzer.
     private func feedAudioSpectrum(_ sampleBuffer: CMSampleBuffer) {

@@ -87,12 +87,16 @@ final class AudioSpectrumAnalyzer {
     }
 
     /// Advances by one rendered frame, timed by the monotonic clock. Call exactly once per frame.
-    func advanceFrame() -> AudioSpectrumSnapshot {
+    /// WE steps the smoothing by the scene's frame time, which its playback rate scales
+    /// (`SceneClock`, 0x1401114c3): the monotonic step, clamped as WE clamps its frame, times
+    /// `playbackRate`.
+    func advanceFrame(playbackRate: Double = 1) -> AudioSpectrumSnapshot {
         lock.lock()
         defer { lock.unlock() }
         let now = uptime()
         // The first frame has no predecessor; WE's clamp turns 0 into its minimum step.
-        let deltaTime = lastAdvance.map { now - $0 } ?? 0
+        let frame = lastAdvance.map { now - $0 } ?? 0
+        let deltaTime = min(max(frame, SceneClock.minimumFrameDelta), SceneClock.maximumFrameDelta) * playbackRate
         lastAdvance = now
         current = smoothing.advance(raw: latestRaw, deltaTime: deltaTime)
         return current

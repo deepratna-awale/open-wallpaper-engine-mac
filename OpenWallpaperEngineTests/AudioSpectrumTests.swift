@@ -176,4 +176,19 @@ final class AudioSpectrumTests: XCTestCase {
         let second = analyzer.advanceFrame()
         XCTAssertEqual(second.left64[band] - first.left64[band], Float(40.0 / 60), accuracy: 1e-4)
     }
+
+    /// WE smooths by the scene's frame time, which the playback rate scales (0x1401114c3): at rate
+    /// 2 a 1/120 s frame steps as far as a 1/60 s frame at rate 1.
+    func testPlaybackRateScalesTheAnalyzersStep() {
+        var now = 100.0
+        let analyzer = AudioSpectrumAnalyzer(sampleRate: 48_000, uptime: { now })
+        let length = AudioSpectrumBlockTransform.blockLength(sampleRate: 48_000)
+        let tone = sine(bin: 120, length: length, count: length)
+        tone.withUnsafeBufferPointer { analyzer.ingest(left: $0, right: $0) }
+        let band = AudioSpectrumBlockTransform.bandMap()[120]
+        let first = analyzer.advanceFrame(playbackRate: 2)
+        now += 1.0 / 120
+        let second = analyzer.advanceFrame(playbackRate: 2)
+        XCTAssertEqual(second.left64[band] - first.left64[band], Float(40.0 / 60), accuracy: 1e-4)
+    }
 }

@@ -87,5 +87,7 @@ final class WallpaperServices {
 
     /// Advances the spectrum smoothing by one frame. The renderer calls this exactly once per
     /// rendered frame and binds the result to every pass of that frame.
-    func advanceAudioSpectrumFrame() -> AudioSpectrumSnapshot { audioCapture.advanceAudioSpectrumFrame() }
+    func advanceAudioSpectrumFrame(playbackRate: Double = 1) -> AudioSpectrumSnapshot {
+        audioCapture.advanceAudioSpectrumFrame(playbackRate: playbackRate)
+    }
 }

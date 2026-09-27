@@ -36,6 +36,32 @@ final class TimelineRenderTests: XCTestCase {
         }
     }
 
+    /// Roadmap 8.4: at playback rate 2 the scene clock, the timelines and the scripts' `engine.runtime`
+    /// all run twice as fast, together: each frame advances every one of them by the same step, the
+    /// wall step × the rate (`SceneClock`). `g_Time`, particles, camera motion and the audio
+    /// smoothing take the same clock's time and step in the renderer.
+    func testTimelinesAndScriptsRunOnTheSceneClockAtItsRate() throws {
+        let scene = try Scene(services: services())
+        defer { scene.close() }
+        scene.renderer.playbackRate = { 2 }
+        var model = try Self.timeline(of: 1, key: "alpha")
+        _ = try scene.draw(frames: 0)
+        let wallpaper = try XCTUnwrap(scene.renderer.scripts.wallpaper)
+        func runtime() throws -> Double {
+            try XCTUnwrap(wallpaper.thread.sync { wallpaper.scriptRuntime?.context.evaluateScript("engine.runtime")?.toDouble() })
+        }
+        let startTime = scene.renderer.sceneTime, startRuntime = try runtime()
+        XCTAssertEqual(startTime, 0)
+        for (frames, label) in [(15, "t = ½ s"), (15, "t = 1 s"), (22, "t ≈ 1.73 s, on the way back")] {
+            let pixels = try scene.draw(frames: frames)
+            for _ in 0..<frames { model.clock.advance(by: Float(2 * Self.step)) }
+            XCTAssertEqual(Float(pixels.rgb(8, 32).x) / 255, model.value()[0], accuracy: 3 / 255, label)
+        }
+        let elapsed = 52 * 2 * Self.step
+        XCTAssertEqual(scene.renderer.sceneTime - startTime, elapsed, accuracy: 1e-9)
+        XCTAssertEqual(try runtime() - startRuntime, elapsed, accuracy: 1e-9)
+    }
+
     /// A `relative` origin is baked on the authored value; scale and `angles.z` animate (roadmap E7).
     func testOriginScaleAndAnglesAnimate() throws {
         let scene = try Scene(services: services())

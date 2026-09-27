@@ -15,17 +15,76 @@ final class SceneRenderPrimitivesTests: XCTestCase {
         XCTAssertEqual(clock.delta, 0.1, accuracy: 1e-9)
     }
 
+    /// A rate change changes the next step, never the time already run: every frame advances by
+    /// its own wall step × its rate, so the time is continuous across the change (roadmap 8.4).
     func testSpeedChangeDoesNotJump() {
         var clock = SceneClock()
         clock.advance(to: 100, speed: 1)
         clock.advance(to: 110, speed: 1) // clamped: a 10 s stall counts as one max-length frame
         XCTAssertEqual(clock.time, SceneClock.maximumFrameDelta, accuracy: 1e-9)
-        let before = clock.time
-        clock.advance(to: 110.1, speed: 3)
-        XCTAssertEqual(clock.time - before, 0.3, accuracy: 1e-9, "speed scales the step, not the position")
-        XCTAssertEqual(clock.delta, 0.3, accuracy: 1e-9)
-        clock.advance(to: 110.2, speed: 0)
-        XCTAssertEqual(clock.delta, 0)
+        var wall = 110.0
+        var previous = clock.time
+        for (frame, speed) in [1.0, 1, 3, 3, 0.5, 2, 1].enumerated() {
+            wall += 1.0 / 60
+            clock.advance(to: wall, speed: speed)
+            XCTAssertEqual(clock.time - previous, speed / 60, accuracy: 1e-9, "frame \(frame) at \(speed)×")
+            XCTAssertEqual(clock.delta, speed / 60, accuracy: 1e-9)
+            previous = clock.time
+        }
+        // WE's rate is at least 0.1 (0x140114d98): the app's slider can't stop the scene.
+        clock.advance(to: wall + 0.1, speed: 0)
+        XCTAssertEqual(clock.delta, 0.01, accuracy: 1e-9)
+    }
+
+    /// WE clamps the frame to 0.0001…0.25 s before and after the rate (0x140111355, 0x1401114f7).
+    func testFrameStepsAreClampedAsWEClampsThem() {
+        var clock = SceneClock()
+        clock.advance(to: 50, speed: 1)
+        clock.advance(to: 50.2, speed: 2)
+        XCTAssertEqual(clock.delta, SceneClock.maximumFrameDelta, accuracy: 1e-12, "0.2 s × 2 is capped at 0.25")
+        clock.advance(to: 50.2, speed: 1)
+        XCTAssertEqual(clock.delta, SceneClock.minimumFrameDelta, accuracy: 1e-12, "a repeated time still steps")
+        clock.advance(to: 50.21, speed: 0.1)
+        XCTAssertEqual(clock.delta, 0.001, accuracy: 1e-12)
+    }
+
+    /// The clock starts at 0 whatever the uptime (WE's scene time, not the machine's), so 30 days
+    /// of uptime cost no precision: 1/60 s steps land exactly as they would at boot.
+    func testLongUptimeKeepsFramePrecision() {
+        let thirtyDays = 30.0 * 86_400
+        var clock = SceneClock()
+        clock.advance(to: thirtyDays, speed: 1)
+        for frame in 1...600 {
+            clock.advance(to: thirtyDays + Double(frame) / 60, speed: 1)
+        }
+        XCTAssertEqual(clock.time, 10, accuracy: 1e-6)
+        XCTAssertEqual(Float(clock.time), 10, accuracy: 1e-5, "g_Time is exact to the float's precision at 10 s")
+        // The same frames seen through `Float(CACurrentMediaTime())` lose most of their steps.
+        let step = Float(thirtyDays + 1.0 / 60) - Float(thirtyDays)
+        XCTAssertNotEqual(step, Float(1.0 / 60), accuracy: 1e-3)
+    }
+
+    /// WE's scene time goes back to 0 once its float passes five days (0x14017fcde…0x14017fcf6), so
+    /// `g_Time` never loses more than 1/32 s of precision however long a wallpaper runs.
+    func testSceneTimeWrapsAfterFiveDays() {
+        var clock = SceneClock()
+        var wall = 1_000.0
+        clock.advance(to: wall, speed: 1)
+        var wrapped = false
+        var longest = 0.0
+        // Six days of 0.25 s frames.
+        for _ in 0..<(6 * 86_400 * 4) {
+            wall += 0.25
+            let before = clock.time
+            clock.advance(to: wall, speed: 1)
+            if clock.time < before { wrapped = true }
+            longest = max(longest, clock.time)
+        }
+        XCTAssertTrue(wrapped)
+        XCTAssertLessThanOrEqual(Float(longest), SceneClock.wrapTime)
+        XCTAssertGreaterThan(longest, 431_999)
+        let ulp = Float(longest).ulp
+        XCTAssertLessThanOrEqual(ulp, 1.0 / 32)
     }
 
     /// Risk #17: speeds and wall times a frame can see. Time never runs backwards or turns NaN,
@@ -41,9 +100,9 @@ final class SceneRenderPrimitivesTests: XCTestCase {
             XCTAssertGreaterThanOrEqual(clock.time, before, "speed \(speed)")
         }
         let beforeRewind = clock.time
-        clock.advance(to: 5, speed: 1) // the wall clock went backwards
-        XCTAssertEqual(clock.delta, 0)
-        XCTAssertEqual(clock.time, beforeRewind)
+        clock.advance(to: 5, speed: 1) // the wall clock went backwards: WE's shortest step
+        XCTAssertEqual(clock.delta, SceneClock.minimumFrameDelta, accuracy: 1e-12)
+        XCTAssertEqual(clock.time, beforeRewind + SceneClock.minimumFrameDelta, accuracy: 1e-9)
         clock.advance(to: 5 + 3600, speed: 1) // an hour asleep
         XCTAssertEqual(clock.delta, SceneClock.maximumFrameDelta, accuracy: 1e-12)
         clock.advance(to: .nan, speed: 1)

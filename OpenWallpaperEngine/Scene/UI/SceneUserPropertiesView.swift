@@ -140,7 +140,7 @@ private final class SceneUserPropertiesModel: ObservableObject {
                 SceneUserProperty(id: "_owe_saturation", title: String(localized: "Saturation", comment: "Wallpaper setting added by the app"), type: "slider", order: Int.max - 4, defaultValue: "1", options: [], minimum: 0, maximum: 2),
                 SceneUserProperty(id: "_owe_bloom", title: String(localized: "Bloom", comment: "Wallpaper setting added by the app"), type: "slider", order: Int.max - 3, defaultValue: "1", options: [], minimum: 0, maximum: 2),
                 SceneUserProperty(id: "_owe_blur", title: String(localized: "Blur", comment: "Wallpaper setting added by the app"), type: "slider", order: Int.max - 2, defaultValue: "1", options: [], minimum: 0, maximum: 2),
-                SceneUserProperty(id: "_owe_speed", title: String(localized: "Animation Speed", comment: "Wallpaper setting added by the app"), type: "slider", order: Int.max - 1, defaultValue: "1", options: [], minimum: 0, maximum: 2)
+                SceneUserProperty(id: "_owe_speed", title: String(localized: "Animation Speed", comment: "Wallpaper setting added by the app"), type: "slider", order: Int.max - 1, defaultValue: "1", options: [], minimum: SceneClock.minimumRate, maximum: 2)
             ])
             // Mouse parallax (setting keys kept from when it lived with the native effects).
             properties.append(contentsOf: [

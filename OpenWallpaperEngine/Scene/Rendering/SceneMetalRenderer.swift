@@ -135,6 +135,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var clock = SceneClock()
     /// The wall clock `clock` follows (tests step it).
     var wallTime: () -> CFTimeInterval = { CACurrentMediaTime() }
+    /// The playback rate `clock` runs at: the app's Animation Speed, WE's `rate` (tests set it).
+    var playbackRate: () -> Double = { Double(WallpaperServices.shared.userPropertyValue("_owe_speed", fallback: 1)) }
+    /// Scene seconds since the content loaded, rate applied (`g_Time`).
+    var sceneTime: Double { clock.time }
     /// Mixed into the seed of every particle system the next content prepares. 0 replays a
     /// wallpaper's particles the same way each time; another value draws another random outcome
     /// (tests average a system of a few particles over several).
@@ -896,8 +900,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let multisampledScene = sceneMultisample(for: sceneTexture)
         // Draws sample the last frame's copy; this frame's is made after the scene pass.
         mipMappedTarget = mipMappedFrameBuffer?.target(matching: sceneTexture, commandBuffer: commandBuffer)
-        let animationSpeed = WallpaperServices.shared.userPropertyValue("_owe_speed", fallback: 1)
-        clock.advance(to: wallTime(), speed: Double(animationSpeed))
+        let rate = playbackRate()
+        clock.advance(to: wallTime(), speed: rate)
         let sceneTime = clock.time
         let time = Float(sceneTime)
         // What a script frame that overran the last draw's wait left (they run on their own thread, §4.5).
@@ -943,7 +947,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         effectFrame.pointerState = BuiltinFrameContext.pointerState(primaryDown: leftDown)
         effectFrame.screenSize = drawableSize
         effectFrame.textureReductionScale = Float(renderSettings.textureReduction)
-        effectFrame.audio = WallpaperServices.shared.advanceAudioSpectrumFrame()
+        effectFrame.audio = WallpaperServices.shared.advanceAudioSpectrumFrame(playbackRate: SceneClock.rate(rate))
         let motion = cameraMotion(pointer: pointer, time: time, deltaTime: Float(clock.delta))
         effectFrame.parallax = parallaxEnabled ? cameraParallax.shaderPosition(sceneSize: sceneSize) : SIMD2(0.5, 0.5)
         // WE's camera eye and forward (ctx+0x68, ctx+0x160). An orthographic scene's camera stays
