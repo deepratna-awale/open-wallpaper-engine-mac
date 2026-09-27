@@ -13,19 +13,23 @@ import MetalKit
 /// unsigned host such as CI's runs the interpreter, `SceneScriptJIT`). The assertion only guards
 /// against regressions an order of magnitude past it, and only where scripts are JIT-compiled.
 ///
-/// The interpreter's numbers are not the app's: it runs scripts about 15 times slower, and a
-/// script that steps a fixed-timestep simulation per `engine.frametime` (3657770939's rigid-body
-/// solver: 96 steps per scene second, up to 96 per frame) then can't keep up with the wall clock
-/// the renderer feeds it, so every frame runs more steps than the last until the scene clock's
-/// 0.25 s clamp: 24 steps a frame, ~370 ms, against 0.5 ms with the JIT (measured with the replay
-/// harness at a fixed 1/60 s: 22 ms against 1.5 ms per frame). An unsigned run still writes the
-/// table, then skips.
+/// The interpreter's numbers are not the app's: it runs scripts about 15 times slower (3657770939's
+/// rigid-body solver, 96 steps per scene second: 22 ms against 1.5 ms per 1/60 s frame, measured
+/// with the replay harness). An unsigned run still writes the table, then skips. The scene clock
+/// advances 1/60 s per frame (`frameInterval`), so the scripts' work per frame doesn't follow how
+/// long the frame took to draw.
 final class SceneScriptLibraryCostTests: XCTestCase {
     /// Plan §4.6: under half a millisecond of script time per frame.
     static let budgetMilliseconds = 0.5
     static let regressionGuard = 10 * budgetMilliseconds
     /// Ten seconds at 60 fps before measuring.
     static let warmUpFrames = 600
+    /// The scene clock's step per drawn frame. Scripts that step a fixed-timestep simulation per
+    /// `engine.frametime` (3657770939's rigid bodies, 3734636606's cannon-es world) do work in
+    /// proportion to the time between frames, and drawing a model scene with its shadow casters
+    /// takes longer than 1/60 s in a Debug build or on a busy machine. Driving the clock at 60 fps
+    /// makes the table the scripts' cost of a 60 fps frame, whatever the drawing costs.
+    static let frameInterval = 1.0 / 60
 
     func testEveryLibrarySceneRunsItsScriptsUnderBudget() throws {
         let library = LibrarySweepTests.libraryRoot
@@ -41,7 +45,7 @@ final class SceneScriptLibraryCostTests: XCTestCase {
         }
         let services = SceneScriptServices(prelude: SceneScriptPrelude.load(), storage: SceneScriptStorage(directory: storage),
                                            media: SceneScriptReplayMediaSource(), spectrum: { .silent })
-        var report = "wallpaper\tframes\tscript p50 ms\tscript p99 ms\tscript mean ms\trender-thread p50 ms\n"
+        var report = "wallpaper\tframes\tscript p50 ms\tscript p99 ms\tscript mean ms\trender-thread p50 ms\tframe wall p50 ms\n"
         var over: [String] = []
         for id in try FileManager.default.contentsOfDirectory(atPath: library.path).sorted() {
             let directory = library.appending(path: id, directoryHint: .isDirectory)
@@ -57,6 +61,8 @@ final class SceneScriptLibraryCostTests: XCTestCase {
             view.drawableSize = CGSize(width: 480, height: 270)
             let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: services, screenID: "cost"))
             view.isPaused = true
+            var now: CFTimeInterval = 1000
+            renderer.wallTime = { now }
             renderer.setContent(content)
             let deadline = Date().addingTimeInterval(60)
             while !renderer.hasContent, Date() < deadline { RunLoop.main.run(until: Date().addingTimeInterval(0.02)) }
@@ -67,16 +73,26 @@ final class SceneScriptLibraryCostTests: XCTestCase {
             // Warm up, then measure the steady state: JavaScriptCore compiles a script's functions
             // tier by tier as they run (baseline on the script thread, then DFG and FTL), and
             // `update` runs once a frame, so the first seconds carry compile spikes.
-            for _ in 0..<Self.warmUpFrames { step(renderer, view: view, wallpaper: wallpaper) }
+            for _ in 0..<Self.warmUpFrames {
+                now += Self.frameInterval
+                step(renderer, view: view, wallpaper: wallpaper)
+            }
             let measured = wallpaper.frameTiming.frames
             let bridgeStart = renderer.scripts.bridgeMilliseconds.count
-            for _ in 0..<240 { step(renderer, view: view, wallpaper: wallpaper) }
+            var walls: [Double] = []
+            for _ in 0..<240 {
+                now += Self.frameInterval
+                let start = CACurrentMediaTime()
+                step(renderer, view: view, wallpaper: wallpaper)
+                walls.append((CACurrentMediaTime() - start) * 1000)
+            }
             let timing = wallpaper.frameTiming
             let script = Array(timing.recentMilliseconds.suffix(timing.frames - measured))
             let bridge = Array(renderer.scripts.bridgeMilliseconds.dropFirst(bridgeStart))
             let p50 = Self.percentile(script, 0.5)
             let row = [id, String(script.count), Self.format(p50), Self.format(Self.percentile(script, 0.99)),
-                       Self.format(script.reduce(0, +) / Double(max(script.count, 1))), Self.format(Self.percentile(bridge, 0.5))]
+                       Self.format(script.reduce(0, +) / Double(max(script.count, 1))), Self.format(Self.percentile(bridge, 0.5)),
+                       Self.format(Self.percentile(walls, 0.5))]
             report += row.joined(separator: "\t") + "\n"
             if p50 >= Self.regressionGuard { over.append("\(id): \(Self.format(p50)) ms") }
             renderer.releaseContent()

@@ -507,6 +507,17 @@ Per-frame budget assertions go into the harness (§5, WP9) as `measure` tests, w
 
 3657770939 (a 74 KB rigid-body solver over the 243 spheres its spawner creates in `init`, stepped at 96 Hz per `engine.frametime`, up to 96 steps a frame) costs 0.47 ms p50 in `SceneScriptLibraryCostTests` with the JIT and 1.5 ms per 1/60 s frame in the replay harness. A Time Profiler sample of that replay puts 75 % in JIT code and 18 % in JavaScriptCore's runtime (megamorphic keyed access, rope-string keys, `for…in` and `delete` on the script's contact cache) and 0.3 % in our Swift, so the cost is the script's own. Without the JIT (an unsigned test host) it is 22 ms per 1/60 s frame, more than real time allows, so each frame runs more steps than the last until the scene clock's 0.25 s clamp: 24 steps, about 370 ms a frame. The cost test therefore only asserts where scripts are JIT-compiled.
 
+The 0.47 ms was measured on the wall clock while each drawn frame took about 2.6 ms, so a frame ran a quarter of a step. Once models drew through their materials and cast shadows (M5, M6, M8), a Debug frame of 3657770939 took 80 ms, and 3734636606's took 56 ms. Each script frame then ran several steps: 7.8 and 10.6 ms p50, against the 5 ms guard. Both scripts step a fixed-timestep world per `engine.frametime`. 3734636606's world is cannon-es: `targetTps` 60, 8 solver iterations, up to 60 steps a frame. Since `createModelData` (de17995) it runs for real. A `sample` of the script thread puts 75 % (3657770939) and 86 % (3734636606) in JavaScriptCore running the script, and 10–16 % in our mirror's `prepare`/`readBack`. The cost test now advances the scene clock 1/60 s per frame and reports each frame's wall time next to the script time, so the table is the cost of a 60 fps frame. Measured signed, with the JIT, on HEAD `bc86a40`:
+
+| Wallpaper | Debug p50 / p99 ms | `-O` p50 / p99 ms | Replay harness p50 ms |
+|---|---|---|---|
+| 3657770939 | 2.7 / 4.2 | 2.1 / 3.5 | 1.3 |
+| 3734636606 | 3.0 / 4.9 | 2.6 / 3.9 | 4.3 |
+
+`1479c90` measured at the same fixed 1/60 s gives 2.9 ms for 3657770939, so its script did not regress. Both costs are the scripts' own work. The p50 sits within 2× of the 5 ms guard, and 3734636606 reached 5.5 ms on a loaded machine (load average 25).
+
+`UniformWriter` used to copy each float byte by byte, and each shadow caster writes its view matrices through it. That was 42 % of the render thread in a Debug build. Storing each component in one write cut the Debug frame to 38 ms and 34 ms.
+
 ### 4.7 Audio, media and storage sources
 
 - **Audio buffers.** WE fills one buffer that both the shaders' `g_AudioSpectrum16/32/64` (`wallpaper64.exe` `0x1400d9bc4`) and SceneScript (host `0x14018e010`) read, so `AudioSpectrumAnalyzer` computes exactly that (WP5, done): the capture thread's block DFT and 64 bands per channel (`0x1400d02b0`) and the render loop's per-group gain, smoothing and 32/16 pair maxima (`0x140111654`). `average` is (l+r)/2 at 64 bands. Every `registerAudioBuffers` call in the corpus is at module scope, as WE requires.
