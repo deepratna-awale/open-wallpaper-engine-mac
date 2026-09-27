@@ -1832,19 +1832,40 @@ Script model data, blended depth writes, `ALPHATOCOVERAGE` on images and layer c
 Status 2026-09-26 (the scene-bloom default the gallery needs landed as audit §9.1). `WEEffectGalleryTests` against WE's effect gallery (docs/we-values-audit.md §8): all 55 scenes match WE's difference and motion within tolerance. What is still open:
 
 ### FX1. The pointer's y and the effect texture projection have no capture (Medium, effects)
-WE's captures had the cursor off the display, so they show nothing of cursor ripple, x-ray or the fluid simulation's force. `g_PointerPosition` is now y-down in the shaders (WE's shaders flip it "to match texture space Y"; its camera parallax flips its raw cursor the same way, §3) and `g_EffectTextureProjectionMatrix` maps the effect's texture space to the layer's quad in an orthographic scene. Neither is measured: the matrix ignores the camera (zoom, shake, parallax, a perspective scene) and a layer drawn with a perspective transform. **Test:** capture x-ray and cursor ripple with the cursor at known points over a moved, scaled and rotated layer; compare the sprite's centre.
+WE's captures had the cursor off the display, so they show nothing of cursor ripple, x-ray or the fluid simulation's force. `g_PointerPosition` is now y-down in the shaders (WE's shaders flip it "to match texture space Y"; its camera parallax flips its raw cursor the same way, §3) and `g_EffectTextureProjectionMatrix` maps the effect's texture space to the layer's quad in an orthographic scene.
+- **Binary (2026-09-27).** The pointer is `GetCursorPos`, then `ScreenToClient` on the wallpaper's window, then (x, y) / the client size (0x1401115a8…0x14011164b, stored at +0x9c). It is normalised to the window, y-down and not clamped. `g_PointerPositionLast` is the previous frame's pointer (+0xa4 ← +0x9c after the frame, 0x140181615). Ours matches in y and in Last. Ours is normalised to the scene through the display's placement and clamped to 0…1; the two agree whenever the scene fills the display.
+- **Ours now.** `WECursorCaptureTests` (`OWE_CURSOR_REQUEST`) draws x-ray's halo for the cursor at known points. The halo sits under the cursor within about 3 px for a centred layer; a moved, unevenly scaled, 30°-turned layer; `general.zoom` 1.5; and a 4:3 scene cropped on a 16:9 display. With camera parallax on, it stays where the cursor would be on the layer before the parallax shift (the matrix doesn't include the parallax offset).
+- **Capture request.** `/Volumes/980Pro/agentFE-out/cursor-request/` holds the projects, `build_cursor_request.py`, `capture_cursor.ps1` (`SetCursorPos` stills and a logged sweep for cursor ripple and the fluid simulation) and a README. With WE's captures in `cursor_captures/`, the test compares each halo's centre with WE's (4 px).
+- **Open.** Whether WE's pointer follows the window or the scene (the crop project decides), whether its matrix includes parallax (the parallax project), and perspective scenes.
 
-### FX2. Film grain's spread (Low, effects)
-Film grain matches the difference and motion within tolerance (2.2 against WE's 3.3; 0.70 against 0.69), but its per-pixel spread over a flat area is about 0.66 of WE's, and WE's grain also shows over the checkerboard's edges where ours doesn't. The noise texture has no mips in either. Suspects: how `util/noise` is decoded (colour space), or the soft-light blend at strength 2. **Test:** compare the spread of `ApplyBlending(12, …)` over a grey ramp against a WE capture of film grain on a flat grey layer.
+### FX2. Film grain's spread: WE's last pass draws into the scene (Low, effects)
+Film grain's difference is 2.2 against WE's 3.3, and its per-pixel spread over the gradient is 0.66 of WE's (std 7.8 against 11.6).
+- **Cause.** WE draws an effect's last pass straight into the scene, so the grain is evaluated at every screen pixel. We run the whole chain in the layer's 1024² buffer and then resample it to the layer's 870² on screen.
+  - Evidence: WE's still fits the film grain shader evaluated once per screen pixel (correlation 0.84, `frac(g_Time)` = 0.004) far better than the shader evaluated at the 1024² buffer's texels (0.44).
+  - Evidence: WE's grain is uncorrelated between neighbouring pixels (lag-1 0.07). Ours is correlated (0.27), because bilinear resampling at 0.85 averages about two texels per axis. For white noise that gives a spread factor of 0.68 and a lag-1 of 0.17.
+  - Evidence: WE's grain also shows on the checkerboard's edges, where the effect sees the resampled edge pixel. Soft light leaves pure black and white unchanged, so ours shows no grain there.
+  - Ruled out: the noise's decoding (the mean offsets match: −8.2 against −7.7), `g_Time` (ours is exact), and the noise's frequency (both repeat every 87 and 167 px).
+- **Fix (not done).** Draw the chain's last pass into the scene target with the layer's quad and `g_ModelViewProjectionMatrix`, as docs/phase2-plan.md already describes ("the last pass of the last effect draws straight into the scene target") and linux-wallpaperengine does. It changes how every layer with effects is composited (material blending, opacity, puppets, composite readers), so it needs its own change in `SceneMetalRenderer`/`EffectGraphRenderer`. Noisy effects (film grain, VHS, glitter, nitro) and layers drawn far from 1:1 are what differ.
+- **Test.** Film grain is a known gap in `WEEffectGalleryTests` (`knownGap`, motion tolerance 0.1). Measured as WE's clip is measured, our grain's motion is 0.37 against WE's 0.69.
 
 ### FX3. Image materials don't split stage uniforms (Low, image materials)
 A uniform both stages declare differently now has a fragment-stage copy (`<name>_weFragment`). The effect and particle planners resolve it from the fragment's annotation; `ImageMaterialPlan` (the puppets owner's file) still merges by name, so there the copy takes the vertex stage's value, as before. No shipped image or particle shader has such a uniform. **Fix:** use `ShaderUniformDeclaration.merged(vertex:fragment:)` in `ImageMaterialPlan`.
 
-### FX4. Motion is a little lower on some periodic effects (Low, effects)
-Pulse (3.5 against 4.2), shimmer (1.05 against 1.48) and the fluid simulation (0.96 against 0.70) are within tolerance but not close. WE's still time ("about 5 s after load") and its 25 fps are approximations here, and these effects' motion depends on the phase. **Test:** a capture with a known scene time (a timeline or script clock on screen).
+### FX4. Motion on periodic effects — fixed in the harness (2026-09-27)
+Pulse (3.5 against 4.2), shimmer (1.05 against 1.48) and the fluid simulation (0.96 against 0.70) came from how the gallery test sampled its clip, not from the effects.
+- **Clip start.** capture_gallery.ps1 saves the still, then starts ffmpeg, so WE's clip starts after the still. Pulse's brightness over WE's 15 clip frames fits a start 0.3 s after it, modulo 2.09 s. The film grain in WE's still fits `frac(g_Time)` = 0.004, so the still itself is at 5 s. The test drew its clip from the still.
+- **Frame rate.** WE ran the gallery at 25 fps (README). The fluid simulation runs a fixed count of pressure iterations per frame, so at our 30 fps it moved more.
+- **Encoding.** WE's clip is libx264 CRF 28, and summarize.py reads it back through `fps=5,scale=480:270,format=gray`. CRF 28 flattens per-pixel noise between frames. It also gives a static scene WE's 0.01 floor.
+- **Now.** The clip starts at 5.3 s (`WEEffectGallery.clipStart`) and runs 3 s at 25 fps (`WEReferenceRenderer.frameRate`). It is encoded and read back through ffmpeg exactly as summarize.py reads WE's (`WEEffectGallery.clipMotion`).
+  - Pulse 4.07 (WE 4.18), shimmer 1.38 (1.48), fluid simulation 0.71 (0.70), VHS 0.75 (0.78, was 0.98), glitter 1.46 (1.47), nitro 4.96 (5.01).
+  - Every animated effect except film grain (FX2) is within 7 % of WE's, so the motion tolerance is now max(0.15, 15 %), down from max(0.35, 40 %).
 
-### FX5. The gallery takes about 25 minutes (Low, tests)
-`WEReferenceRenderer` steps every scene through 8 s at 30 fps and settles each one; 55 scenes take about 25 minutes, so the test is gated and doesn't run in CI.
+### FX5. The gallery took about 25 minutes — faster (2026-09-27)
+- **Where the time went.** It was not the rendering.
+  - Frame readback swizzled BGRA to RGBA in a Swift loop, about 150 ms a 1080p frame in a Debug build. `TextureUploadTests.read` now uses `vImagePermuteChannels_ARGB8888`.
+  - The still comparison ran `WEReferenceMetrics`' edge alignment, which is ±8 px of correlations the gallery never reads. `compare(…, edges: false)` skips it.
+  - Since the clock change (c875295), a running clock steps at least 0.1 ms a frame, so an animated scene can fail to settle and wait out the 30 s settle limit (shimmer and swing did: 730 frames). Holding the clock while it settles brings that down to 0.6 s (`SceneMetalRenderer.holdsClock`, the clock owner's change).
+- **Now.** About 8 s a scene with the clock held (film grain, fluid simulation, pulse, shimmer and the control in 39 s), where it was about 27 s. The whole gallery takes about 8 minutes, and every effect still gets its own scene. Drawing several effects in one scene would put them in each other's bloom and cursor, so it wasn't done.
 
 ## EX. WE 2.8's generated extras: what is still open (2026-09-26)
 
