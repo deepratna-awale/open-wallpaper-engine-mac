@@ -36,13 +36,14 @@ final class ParticleOverrideTests: XCTestCase {
         configuration.liveOverrides = try boundOverride()
         let runtime = ParticleSystemRuntime(texture: texture, configuration: configuration)
         let defaults = ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero, values: Properties())
-        XCTAssertEqual(defaults.emissionRate, 50, accuracy: 1e-4)
+        // `rate` and `count` both scale the emitter's rate (0x1401c6e6c binds it to the count).
+        XCTAssertEqual(defaults.emissionRate, 25, accuracy: 1e-4)
         XCTAssertEqual(defaults.maximum, 500)
         XCTAssertEqual(defaults.spawnScale, SIMD4(2, 0.5, 3, 2))
         XCTAssertEqual(defaults.colorScale, SIMD3(2, 1, 0.5))
         let changed = ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero, values: Properties(values: [
             "amount": "0.25", "flakesize": "4", "tint": "0 1 0"]))
-        XCTAssertEqual(changed.emissionRate, 25, accuracy: 1e-4)
+        XCTAssertEqual(changed.emissionRate, 6.25, accuracy: 1e-4)
         XCTAssertEqual(changed.maximum, 250)
         XCTAssertEqual(changed.spawnScale.x, 4)
         XCTAssertEqual(changed.colorScale, SIMD3(0, 2, 0))

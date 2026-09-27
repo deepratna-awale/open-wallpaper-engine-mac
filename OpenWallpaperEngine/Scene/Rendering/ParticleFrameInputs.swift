@@ -169,7 +169,9 @@ struct ParticleFrameInputs {
         let emitters = configuration.emitters
         inputs.emitters = emitters.map { emitter in
             var step = ParticleEmitterStep()
-            step.rate = emitter.rate * overrides.rate
+            // The emitter parser binds `rate` and `maxtoemitperperiod` to the `count` override
+            // (0x1401c6e6c…0x1401c6ef6, gated by the system's flag 0x20), besides the `rate` override.
+            step.rate = emitter.rate * overrides.rate * overrides.count
             step.instantaneous = max(emitter.instantaneous, 0)
             step.periodLimit = emitter.timing.periodLimit(countScale: overrides.count)
             step.onePerFrame = emitter.timing.onePerFrame
@@ -216,7 +218,7 @@ struct ParticleFrameInputs {
         inputs.drawLinear = system.drawLinear
         inputs.drawSizeScale = system.drawSizeScale
         inputs.spriteLinear = system.spriteLinear
-        inputs.ropeRateScale = overrides.rate
+        inputs.ropeRateScale = overrides.rate * overrides.count
         inputs.ropeLifetimeScale = inputs.spawnScale.z
         system.ropeFrame = SIMD3(inputs.ropeRateScale, inputs.ropeLifetimeScale, Float(frameRateLimit))
         inputs.placeControlPoints(system, world: world, cursor: cursor, overrides: overrides)
@@ -232,9 +234,9 @@ struct ParticleFrameInputs {
             SceneParticleOverrides($0, in: values, object: configuration.objectID.flatMap { Int($0) })
         } ?? configuration.overrides
         var overrides = (scripted?.applied(to: authored) ?? authored).ignoring(configuration.ignoredOverrides)
-        // The particle budget thins the system as the `count` and `rate` overrides do.
+        // The particle budget thins the system as the `count` override does: its maximum, and
+        // through the count its emitters' rates.
         overrides.count *= configuration.budgetScale
-        overrides.rate *= configuration.budgetScale
         maximum = max(Int((Float(configuration.maximumParticleCount) * overrides.count).rounded()), 0)
         // Negative multipliers would invert the ranges; WE treats them as 0.
         spawnScale = SIMD4(overrides.size, max(overrides.alpha, 0), max(overrides.lifetime, 0), overrides.speed)
