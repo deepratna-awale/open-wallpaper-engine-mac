@@ -59,6 +59,11 @@ final class SceneShadowPass {
     private(set) var batchesEncoded = 0
     private(set) var casterDraws = 0
     private(set) var casterIndices = 0
+    /// Whether a caster draws only into the views that hold it (false draws it into all of its
+    /// batch's views, as a comparison for tests).
+    var cullsViews = true
+    /// The views the casters' draws covered: each draw once per view whose frustum holds it.
+    private(set) var casterInstances = 0
     private(set) var lastMapCount = 0
     /// Frames whose atlas was kept as it stood, as they would have drawn exactly the same.
     private(set) var atlasesReused = 0
@@ -144,12 +149,28 @@ final class SceneShadowPass {
         }
         var recording = Recording(atlas: texture)
         for batch in Self.batches(shadows.maps) {
-            recording.ops.append(.viewports(batch.viewports))
+            batchesEncoded += 1
             let frustums = batch.views.map(SceneModelCulling.Frustum.init)
-            let matrices = Self.flatten(batch.views.map { Self.clipFixup * $0 })
-            for caster in prepared where frustums.contains(where: { $0.contains(caster.sphere) }) {
+            let fixed = batch.views.map { Self.clipFixup * $0 }
+            // A caster draws only into the views whose frustum holds it: the variant's
+            // `gl_ViewportIndex = gl_InstanceID` pairs view i's matrix with viewport i, so the kept
+            // views' viewports and matrices, compacted alike, draw what all six would (the others'
+            // triangles are clipped), and the depth test (GREATER, write) doesn't depend on order.
+            var subsets: [[Int]: [Float]] = [:]
+            for caster in prepared {
+                let holding = frustums.indices.filter { frustums[$0].contains(caster.sphere) }
+                guard !holding.isEmpty else { continue }
+                let kept = cullsViews ? holding : Array(frustums.indices)
+                let matrices: [Float]
+                if let known = subsets[kept] {
+                    matrices = known
+                } else {
+                    matrices = Self.flatten(kept.map { fixed[$0] })
+                    subsets[kept] = matrices
+                }
+                recording.setViewports(kept.map { batch.viewports[$0] })
                 for draw in caster.draws {
-                    recording.add(draw, matrices: matrices, instances: batch.views.count)
+                    recording.add(draw, matrices: matrices, instances: kept.count)
                 }
             }
         }
@@ -306,7 +327,6 @@ final class SceneShadowPass {
                     MTLViewport(originX: Double(rect.x), originY: Double(rect.y), width: Double(rect.z), height: Double(rect.w),
                                 znear: 0, zfar: 1)
                 })
-                batchesEncoded += 1
             case let .draw(draw, uniforms, instances):
                 if let uniforms {
                     recording.uniformBytes.withUnsafeBytes { raw in
@@ -327,6 +347,7 @@ final class SceneShadowPass {
                                               indexBuffer: draw.buffers.indices, indexBufferOffset: 0, instanceCount: instances)
                 casterDraws += 1
                 casterIndices += draw.indexCount
+                casterInstances += instances
             }
         }
     }
@@ -355,8 +376,18 @@ final class SceneShadowPass {
         var uniformBytes: [UInt8] = []
         var hasChangingInput = false
 
+        /// The viewports the last `viewports` operation set.
+        private var current: [SIMD4<Int>]?
+
         init(atlas: MTLTexture) {
             self.atlas = atlas
+        }
+
+        /// Sets the viewports the next draws use, unless they're already set.
+        mutating func setViewports(_ rects: [SIMD4<Int>]) {
+            guard rects != current else { return }
+            current = rects
+            ops.append(.viewports(rects))
         }
 
         /// Records `draw` once per view, `matrices` its views' render matrices.

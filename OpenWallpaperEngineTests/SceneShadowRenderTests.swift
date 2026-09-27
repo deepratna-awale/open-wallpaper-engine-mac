@@ -365,6 +365,56 @@ final class SceneShadowRenderTests: XCTestCase {
         XCTAssertGreaterThan(shadowPass.casterDraws, afterContent)
     }
 
+    /// A point light's caster draws only into the faces that hold it, and the atlas reads the same
+    /// as when it's drawn into all six.
+    func testACasterDrawsOnlyIntoTheFacesThatHoldIt() throws {
+        let budget = WELightConfig(point: 1, pointShadow: 1)
+        let builder = builder(budget, quality: 3)
+        let cube = try plan(ModelRenderTests.cube(), material: "materials/facecolor.json", builder: builder, half: 1)
+        let cubeObject = SceneModelObject(id: "cube", name: "cube", order: 0, authored: WESceneModel(source: .path("cube.mdl")),
+                                          plan: cube)
+        renderer.setContent([cubeObject], content: SceneMetalContent(
+            size: SIMD2(256, 256), layers: [], particleSystems: [],
+            bloom: SceneBloomSettings(enabled: false, strength: 0, threshold: 0.7, tint: SIMD3(repeating: 1))))
+        shadowPass.setContent()
+        XCTAssertTrue(shadowPass.waitUntilReady(cube))
+        let camera = Self.camera
+        let light = SIMD3<Float>(-1, 6, 0.7)
+        var frame = BuiltinFrameContext(time: 1)
+        frame.camera = camera
+        frame.eyePosition = camera.eye
+        frame.viewForward = camera.forward
+        let values = EffectGraphTests.FixedValues()
+        func draw(culling: Bool) throws -> (bytes: [UInt8], instances: Int) {
+            shadowPass.cullsViews = culling
+            shadowPass.setContent()
+            let shadows = SceneLightPacker.lightingV1(
+                [SceneLightPacker.Light(light: Self.light(.point), world: Self.lightWorld(position: light, direction: SIMD3(1, 0, 0)),
+                                        localOrigin: .zero, visible: true, id: "light")],
+                budget: budget, shadows: true, viewForward: camera.forward,
+                shadowContext: SceneLightPacker.ShadowContext(quality: 3, eye: camera.eye, forward: camera.forward,
+                                                              orthographic: false, atlasExtent: shadowPass.atlas.extent)).shadows
+            let before = shadowPass.casterInstances
+            let buffer = try XCTUnwrap(queue.makeCommandBuffer())
+            let atlas = try XCTUnwrap(shadowPass.encode(
+                shadows, casters: [SceneShadowPass.Caster(model: cubeObject, world: simd_float4x4(translation: Self.cubeCentre))],
+                models: renderer, frame: frame, values: values, assetTexture: { [white] _, _ in white }, commandBuffer: buffer))
+            buffer.commit()
+            buffer.waitUntilCompleted()
+            XCTAssertNil(buffer.error)
+            let instances = shadowPass.casterInstances - before
+            return (try Self.depthBytes(atlas, device: device, queue: queue), instances)
+        }
+        // The first frame makes the atlas at its size.
+        _ = try draw(culling: false)
+        let all = try draw(culling: false)
+        let culled = try draw(culling: true)
+        shadowPass.cullsViews = true
+        XCTAssertTrue(all.bytes.contains { $0 != 0 }, "the cube cast into the atlas")
+        XCTAssertEqual(culled.bytes, all.bytes, "the same depth")
+        XCTAssertLessThan(culled.instances, all.instances, "fewer views drawn")
+    }
+
     /// A depth32Float texture's bytes.
     static func depthBytes(_ texture: MTLTexture, device: MTLDevice, queue: MTLCommandQueue) throws -> [UInt8] {
         let rowBytes = texture.width * 4
