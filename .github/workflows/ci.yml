@@ -16,11 +16,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use the oldest supported Xcode
-        # Pinned, not the newest on the image: development uses the newest Xcode, so CI covers the
-        # oldest one the project supports (Xcode 16.4, Swift 6.1). Release builds with it too.
+      - name: Use the supported Xcode
+        # Xcode 26.3 (macOS 26 SDK, which Liquid Glass needs), the oldest the project supports and
+        # the one release builds with. The macos-15 runner means every push also proves the
+        # new-SDK build runs on an older macOS than the SDK's.
         run: |
-          sudo xcode-select -s /Applications/Xcode_16.4.app || { echo "::error::Xcode 16.4 not on the runner"; exit 1; }
+          sudo xcode-select -s /Applications/Xcode_26.3.app || { echo "::error::Xcode 26.3 not on the runner"; exit 1; }
           xcodebuild -version
 
       - name: Install the command line shader tools

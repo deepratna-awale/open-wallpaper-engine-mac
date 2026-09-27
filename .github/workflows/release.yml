@@ -45,9 +45,9 @@ jobs:
         uses: actions/checkout@v7.0.1
 
       - name: Use the supported Xcode
-        # The same Xcode as CI (the oldest the project supports), so a release builds what CI tested.
+        # The same Xcode as CI (26.3, macOS 26 SDK), so a release builds what CI tested.
         run: |
-          sudo xcode-select -s /Applications/Xcode_16.4.app || { echo "::error::Xcode 16.4 not on the runner"; exit 1; }
+          sudo xcode-select -s /Applications/Xcode_26.3.app || { echo "::error::Xcode 26.3 not on the runner"; exit 1; }
           xcodebuild -version
 
       - name: Import signing certificate

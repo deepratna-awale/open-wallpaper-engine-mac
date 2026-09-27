@@ -238,8 +238,8 @@ Without it, video and web wallpapers still work, and scene wallpapers render —
 ## Build from Source
 
 ### Prerequisites
-- macOS >= 13.0
-- Xcode >= 14.4
+- macOS >= 14.0
+- Xcode >= 26.3 (macOS 26 SDK)
 - Xcode Command Line Tools
 
 ### Steps
