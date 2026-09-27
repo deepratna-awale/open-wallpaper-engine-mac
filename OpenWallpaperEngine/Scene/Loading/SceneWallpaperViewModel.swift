@@ -865,7 +865,7 @@ class SceneWallpaperViewModel: ObservableObject {
             }
             return layer
         }
-        guard let textureName = material.passes?.first?.textures?.first,
+        guard let textureName = material.passes?.first?.textures?.first ?? nil,
               let source = loadMetalTexture(named: textureName, materialDir: materialPath, wallpaperDir: wallpaperDir) else {
             return nil
         }
@@ -1539,7 +1539,7 @@ class SceneWallpaperViewModel: ObservableObject {
                                           wallpaperDir: URL) -> SceneMetalParticleSystem? {
         guard let materialPath = particleSystem.material,
               let material: WEMaterial = loadJSON(path: materialPath, wallpaperDir: wallpaperDir),
-              let textureName = material.passes?.first?.textures?.first else { return nil }
+              let textureName = material.passes?.first?.textures?.first ?? nil else { return nil }
         guard let source = loadMetalTexture(named: textureName, materialDir: materialPath, wallpaperDir: wallpaperDir) else {
             OWELog.error(.scene, "\(wallpaperDir.lastPathComponent): particle \(particlePath) (object \(object.id ?? -1)): "
                          + "texture \(textureName) of \(materialPath) not found")

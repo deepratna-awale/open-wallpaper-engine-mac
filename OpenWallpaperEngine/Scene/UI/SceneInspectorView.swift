@@ -143,7 +143,7 @@ private final class SceneInspectorModel: ObservableObject {
                 let passes = material?.passes ?? []
                 return SceneInspectorItem(id: String(object.id ?? index), name: object.name ?? String(localized: "Image \(index + 1)", comment: "Scene Inspector: an image layer without a name"),
                                           kind: "Image", sourcePath: imagePath, materialPath: materialPath,
-                                          texturePaths: passes.flatMap { $0.textures ?? [] },
+                                          texturePaths: passes.flatMap { $0.textures?.compactMap { $0 } ?? [] },
                                           shaderPaths: passes.compactMap(\.shader), rawObject: rawObject,
                                           rawMaterial: materialPath.flatMap(rawJSON), rawParticle: nil,
                                           visible: visible,
@@ -157,7 +157,7 @@ private final class SceneInspectorModel: ObservableObject {
                 let passes = material?.passes ?? []
                 return SceneInspectorItem(id: String(object.id ?? index), name: object.name ?? String(localized: "Particle \(index + 1)", comment: "Scene Inspector: a particle system without a name"),
                                           kind: "Particle", sourcePath: particlePath, materialPath: materialPath,
-                                          texturePaths: passes.flatMap { $0.textures ?? [] },
+                                          texturePaths: passes.flatMap { $0.textures?.compactMap { $0 } ?? [] },
                                           shaderPaths: passes.compactMap(\.shader), rawObject: rawObject,
                                           rawMaterial: materialPath.flatMap(rawJSON), rawParticle: rawJSON(particlePath),
                                           visible: visible,
