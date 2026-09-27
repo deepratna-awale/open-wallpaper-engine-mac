@@ -28,14 +28,15 @@
       ],
       "name" : "gear",
       "shadow" : {
-        "kind" : "layer-color",
+        "kind" : "neutral",
         "opacity" : 0.5
       },
       "translucency" : {
-        "enabled" : true,
+        "enabled" : false,
         "value" : 0.8
       },
-      "specular" : true
+      "specular" : true,
+      "opacity" : 0.8
     },
     {
       "layers" : [
