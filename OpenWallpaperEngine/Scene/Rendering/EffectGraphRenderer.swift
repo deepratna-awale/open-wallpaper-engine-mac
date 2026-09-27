@@ -66,6 +66,9 @@ final class EffectGraphRenderer {
         /// do (`staticPrefix`), kept in `prefixTarget` so the frame starts after them; and what produced it.
         var prefixOutput: (key: StaticChainKey, effects: Int)?
         var prefixTarget: MTLTexture?
+        /// Scratch targets were handed to the spares once the chain's output was kept
+        /// (`releaseScratch`); the next frame that draws the chain takes them back first.
+        var scratchReleased = false
 
         init(width: Int, height: Int) {
             self.width = width
@@ -116,7 +119,8 @@ final class EffectGraphRenderer {
         let order: UInt64
     }
     private var spareTargets: [TargetKey: [Spare]] = [:]
-    private var spareBytes = 0
+    /// Bytes of targets in the spare list (tests and diagnostics).
+    private(set) var spareBytes = 0
     private var spareCounter: UInt64 = 0
     private var lastSpareSweep: TimeInterval = 0
     /// Bytes of spare targets kept; past it the longest idle go first. Only spares are evicted,
@@ -353,8 +357,6 @@ final class EffectGraphRenderer {
             recycleTargets(state)
             allocateTargets(state, effects: effects, width: width, height: height, standIn: standIn)
         }
-        clearNewTargets(state, commandBuffer: commandBuffer)
-
         // The leading effects that don't change over time, when later ones do: their output is kept
         // and the frame starts after them while it stays valid.
         let prefix = Self.staticPrefix(effects, programs: state.programs, hidden: context.hiddenEffects)
@@ -390,6 +392,8 @@ final class EffectGraphRenderer {
             layersReused += 1
             return drawsLastPass ? (nil, state.staticDrawn) : (cached.output, nil)
         }
+        if state.scratchReleased { reacquireScratch(state, effects: effects) }
+        clearNewTargets(state, commandBuffer: commandBuffer)
         var current = input
         var didRender = false
         var reusable = true
@@ -469,6 +473,9 @@ final class EffectGraphRenderer {
             // every frame.
             state.staticOutput = reusable && !readsScene ? (staticKey, current) : nil
             state.staticDrawn = drawn
+            if state.staticOutput != nil {
+                releaseScratch(state, keeping: [drawn.current, drawn.previous] + Array(drawn.fbos.values))
+            }
             return (nil, drawn)
         }
         guard didRender, !drawsLastPass else { return (nil, nil) }
@@ -477,6 +484,7 @@ final class EffectGraphRenderer {
         // per-frame cost).
         state.staticOutput = reusable && !readsScene ? (staticKey, current) : nil
         state.staticDrawn = nil
+        if state.staticOutput != nil { releaseScratch(state, keeping: [current]) }
         return (current, nil)
     }
 
@@ -941,6 +949,7 @@ final class EffectGraphRenderer {
         state.staticOutput = nil
         state.staticDrawn = nil
         state.prefixOutput = nil
+        state.scratchReleased = false
         let standIn = standIn ?? SIMD2(width, height)
         state.standInSize = standIn
         state.standInSizes = [:]
@@ -996,6 +1005,48 @@ final class EffectGraphRenderer {
         }
         if second { state.pingB = made } else { state.pingA = made }
         return made
+    }
+
+    /// Hands the targets a kept chain output no longer needs to the spare list: every ping, FBO and
+    /// prefix target except `keeping` (the output, or what the last pass samples). The chain can't
+    /// carry frames (`reusable`), so every FBO it reads is written earlier in the same frame and a
+    /// target taken back holds nothing the chain depends on.
+    private func releaseScratch(_ state: LayerState, keeping: [MTLTexture]) {
+        let kept = Set(keeping.map(ObjectIdentifier.init))
+        func release(_ texture: MTLTexture?) -> MTLTexture? {
+            guard let texture, !kept.contains(ObjectIdentifier(texture)) else { return texture }
+            state.standInSizes[ObjectIdentifier(texture)] = nil
+            recycle(texture)
+            return nil
+        }
+        state.pingA = release(state.pingA)
+        state.pingB = release(state.pingB)
+        if state.prefixTarget.flatMap(release) == nil {
+            state.prefixTarget = nil
+            state.prefixOutput = nil
+        }
+        state.fbos = state.fbos.map { fbos in fbos.compactMapValues(release) }
+        state.scratchReleased = true
+    }
+
+    /// Takes back the FBOs `releaseScratch` handed out, at the size and format they had, cleared
+    /// to their start colour as new ones are. Ping targets come back on first use (`pingTarget`).
+    private func reacquireScratch(_ state: LayerState, effects: [SceneEffectPlan]) {
+        state.scratchReleased = false
+        let drawnSmaller = state.standInSize != SIMD2(state.width, state.height)
+        for (index, effect) in effects.enumerated() where index < state.fbos.count {
+            for fbo in effect.fbos where state.fbos[index][fbo.name] == nil {
+                let size = Self.fboSize(fbo, width: state.width, height: state.height)
+                let format = Self.pixelFormat(fbo.format, frameBuffer: state.targetFormats.frameBuffer)
+                guard let texture = target(width: size.x, height: size.y, format: format) else { continue }
+                if drawnSmaller {
+                    let standsFor = Self.fboSize(fbo, width: state.standInSize.x, height: state.standInSize.y)
+                    state.standInSizes[ObjectIdentifier(texture)] = SIMD2(Float(standsFor.x), Float(standsFor.y))
+                }
+                state.pendingClears.append((texture, Self.clearColor(fbo.clear)))
+                state.fbos[index][fbo.name] = texture
+            }
+        }
     }
 
     /// Hands a layer's targets to the spare list. Contents don't matter: every pass either

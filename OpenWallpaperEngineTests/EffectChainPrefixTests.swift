@@ -61,4 +61,49 @@ final class EffectChainPrefixTests: XCTestCase {
         XCTAssertEqual(renderer.passesEncoded - encoded, 6)
         XCTAssertEqual(renderer.prefixesReused, 3)
     }
+
+    /// A kept chain's scratch targets (the blur's quarter buffers, the ping target its output isn't
+    /// in) go to the spares until the chain draws again, which takes them back and draws what
+    /// targets it never gave up draw.
+    func testAKeptChainGivesUpItsScratchTargetsAndDrawsTheSameWhenItRedraws() throws {
+        let (renderer, builder, queue, cache) = try D.graph()
+        defer {
+            renderer.pipelineArchive?.flush()
+            try? FileManager.default.removeItem(at: cache)
+        }
+        let tint = try D.plan("effects/tint/effect.json", builder), blur = try D.plan("effects/blur/effect.json", builder)
+        XCTAssertTrue(renderer.waitUntilReady([blur, tint], width: 64, height: 64))
+        let image = try D.texture(queue.device, 64, 64)
+        try D.fill(image, queue: queue)
+        func draw(_ renderer: EffectGraphRenderer, revision: Int) throws -> [UInt8] {
+            let buffer = try XCTUnwrap(queue.makeCommandBuffer())
+            var context = D.context(time: 1)
+            context.scriptRevision = revision
+            let output = try XCTUnwrap(renderer.apply([blur, tint], to: image, layerID: "layer", context: context,
+                                                      commandBuffer: buffer))
+            buffer.commit()
+            buffer.waitUntilCompleted()
+            return try TextureUploadTests.read(output, device: queue.device)
+        }
+        let first = try draw(renderer, revision: 0)
+        let released: Int = renderer.spareBytes
+        XCTAssertGreaterThan(released, 0, "the quarter buffers and a ping target are spare")
+        let allocated: Int = renderer.targetsAllocated
+        let reused: Int = renderer.layersReused
+        XCTAssertEqual(try draw(renderer, revision: 0), first)
+        let reusedAfter: Int = renderer.layersReused
+        XCTAssertEqual(reusedAfter, reused + 1)
+        // A script's change draws the chain again on the targets it gave up.
+        let redrawn = try draw(renderer, revision: 1)
+        let allocatedAfter: Int = renderer.targetsAllocated
+        XCTAssertEqual(allocatedAfter, allocated, "taken back from the spares")
+        XCTAssertEqual(redrawn, first, "pixel for pixel")
+        let (fresh, _, _, freshCache) = try D.graph()
+        defer {
+            fresh.pipelineArchive?.flush()
+            try? FileManager.default.removeItem(at: freshCache)
+        }
+        XCTAssertTrue(fresh.waitUntilReady([blur, tint], width: 64, height: 64))
+        XCTAssertEqual(try draw(fresh, revision: 1), first)
+    }
 }
