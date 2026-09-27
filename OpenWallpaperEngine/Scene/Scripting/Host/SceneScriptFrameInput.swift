@@ -30,6 +30,8 @@ struct SceneScriptFrameInput {
     var animationFrame: UInt64 = 0
     /// Every image layer's `ITextureAnimation` state (its override and the shared clock), by id.
     var textureAnimations: [Int: SceneTextureAnimations.State] = [:]
+    /// Every puppet image's skeleton and animation layers, by id.
+    var rigs: [Int: SceneScriptRigFeedback] = [:]
 }
 
 /// One object as the renderer last drew it, in the object table's units. A value is written into

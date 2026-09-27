@@ -52,6 +52,7 @@ struct SceneScriptRigFeedback: Equatable {
         var rate: Float
         var blend: Float
         var visible: Bool
+        var additive: Bool
     }
 
     var layers: [Layer] = []

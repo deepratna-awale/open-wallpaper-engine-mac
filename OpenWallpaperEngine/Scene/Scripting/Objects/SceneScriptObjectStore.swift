@@ -11,6 +11,8 @@ final class SceneScriptObjectStore {
         var effects = 8192
         var constantFloats = 65536
         var animations = 4096
+        /// Puppet rigs (`SceneScriptRigLayout`).
+        var rigs = 64
 
         static let standard = Capacity()
     }
@@ -67,6 +69,7 @@ final class SceneScriptObjectStore {
         var constants: [PoolRange] = []
         var constantKeys: [ConstantKey] = []
         var animations: [Int] = []
+        var rig: Int?
     }
 
     let table: SceneScriptObjectTable
@@ -77,10 +80,13 @@ final class SceneScriptObjectStore {
     let animations: SceneScriptSlotBuffer
     /// One slot of `SceneScriptSceneField`s; dirty[0] settings, dirty[1] camera.
     let scene: SceneScriptSlotBuffer
+    /// One slot per placed puppet rig (`SceneScriptRigLayout`).
+    let rigs: SceneScriptSlotBuffer
 
     private var objectSlots: SceneScriptIndexAllocator
     private var effectSlots: SceneScriptIndexAllocator
     private var animationSlots: SceneScriptIndexAllocator
+    private var rigSlots: SceneScriptIndexAllocator
     private var constantTop = 0
     private var freeConstants: [Int: [Int]] = [:]
     private var allocations: [Int: Allocation] = [:]
@@ -100,13 +106,16 @@ final class SceneScriptObjectStore {
               let animations = SceneScriptSlotBuffer(stride: AnimationLayout.stride, capacity: capacity.animations,
                                                      in: context),
               let scene = SceneScriptSlotBuffer(stride: SceneScriptSceneField.Layout.stride, capacity: 1,
-                                                dirtyCount: SceneScriptSceneField.Layout.dirtyCount, in: context)
+                                                dirtyCount: SceneScriptSceneField.Layout.dirtyCount, in: context),
+              let rigs = SceneScriptSlotBuffer(stride: SceneScriptRigLayout.stride, capacity: capacity.rigs, in: context)
         else { return nil }
         self.table = table
         self.effects = effects
         self.constants = constants
         self.animations = animations
         self.scene = scene
+        self.rigs = rigs
+        rigSlots = SceneScriptIndexAllocator(capacity: capacity.rigs)
         objectSlots = SceneScriptIndexAllocator(capacity: capacity.objects)
         effectSlots = SceneScriptIndexAllocator(capacity: capacity.effects)
         animationSlots = SceneScriptIndexAllocator(capacity: capacity.animations)
@@ -117,8 +126,11 @@ final class SceneScriptObjectStore {
     /// Every buffer scripts can reach, for `SceneScriptRuntime.watch(_:)`.
     var sharedBuffers: [SceneScriptDetachable] {
         table.sharedBuffers + effects.sharedBuffers + constants.sharedBuffers + animations.sharedBuffers
-            + scene.sharedBuffers
+            + scene.sharedBuffers + rigs.sharedBuffers
     }
+
+    /// The rig buffer slot of a live object, when it is a puppet.
+    func rigSlot(of slot: Int) -> Int? { allocations[slot]?.rig }
 
     func isLive(_ slot: Int) -> Bool { allocations[slot] != nil }
 
@@ -172,6 +184,16 @@ final class SceneScriptObjectStore {
             textureAnimation = record
         }
         let animationRecords = description.animations.compactMap { place($0, reference: reference, into: &allocation) }
+        var rig: Any = NSNull()
+        if let described = description.rig {
+            if let rigSlot = rigSlots.take() {
+                allocation.rig = rigSlot
+                SceneScriptRigLayout.write(described, into: rigs, slot: rigSlot)
+                rig = described.javaScriptRecord(slot: rigSlot)
+            } else {
+                OWELog.error(.script, "The SceneScript rig buffer is full; '\(description.name)' has no bone or animation-layer API")
+            }
+        }
         allocations[slot] = allocation
         var strings: [String: String] = [:]
         for (field, value) in description.strings where field != .name { strings[field.rawValue] = value }
@@ -179,7 +201,7 @@ final class SceneScriptObjectStore {
             "slot": slot, "kind": description.kind.rawValue, "id": description.id, "name": description.name,
             "parentID": description.parentID.map { $0 as Any } ?? NSNull(), "strings": strings,
             "effects": effectRecords, "textureAnimation": textureAnimation, "animations": animationRecords,
-            "config": description.initialConfigurationJSON.map { $0 as Any } ?? NSNull(),
+            "config": description.initialConfigurationJSON.map { $0 as Any } ?? NSNull(), "rig": rig,
         ]
     }
 
@@ -193,6 +215,7 @@ final class SceneScriptObjectStore {
 
     private func release(_ allocation: Allocation) {
         allocation.effects.forEach { effectSlots.give($0) }
+        allocation.rig.map { rigSlots.give($0) }
         allocation.animations.forEach {
             animationSlots.give($0)
             animationReferences[$0] = nil

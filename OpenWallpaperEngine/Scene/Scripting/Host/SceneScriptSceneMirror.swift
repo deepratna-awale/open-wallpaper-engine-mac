@@ -55,6 +55,7 @@ final class SceneScriptSceneMirror: SceneScriptObjectHost {
     private var hitTestable: [SceneScriptCursorLayer.TableEntry] = []
     private var hitTestableValid = false
     private var reported = Set<String>()
+    private let rigs = SceneScriptRigMirror()
 
     private(set) var state = SceneScriptFrameState()
     private(set) var events: [SceneScriptRenderEvent] = []
@@ -133,6 +134,7 @@ final class SceneScriptSceneMirror: SceneScriptObjectHost {
             animationTargetsValid = false
             hitTestableValid = false
             state.objects[object.id] = nil
+            rigs.forget(objectID: object.id)
             events.append(.destroy(id: object.id))
         case .sort(let slot, let index):
             guard let from = order.firstIndex(of: slot) else { return }
@@ -165,6 +167,9 @@ final class SceneScriptSceneMirror: SceneScriptObjectHost {
             // `objects-animations.js` already applied the call to the animation buffer, in call
             // order; `readBack` hands the slot's state to the renderer's set.
             break
+        case .rig(let slot, let command):
+            guard let id = objects[slot]?.id else { return }
+            events.append(.rig(id: id, command))
         }
     }
 
@@ -202,6 +207,9 @@ final class SceneScriptSceneMirror: SceneScriptObjectHost {
             }
         }
         publishAnimations(input)
+        if let store = model?.store, !input.rigs.isEmpty {
+            rigs.publish(input.rigs, into: store.rigs) { [slotsByID] id in slotsByID[id].flatMap(store.rigSlot(of:)) }
+        }
         if let store = model?.store {
             refreshAnimationTargets(store)
             feedAnimatedConstants(input, store: store)

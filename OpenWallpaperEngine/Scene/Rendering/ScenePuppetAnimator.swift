@@ -15,6 +15,8 @@ final class ScenePuppetAnimator {
     private(set) var pose: ScenePuppetPose
     /// What the last `advance` did besides posing.
     private(set) var lastUpdate = SceneAnimationLayerUpdate()
+    /// Layers whose clip ended since scripts were last told (`takeEnded`).
+    private var endedSinceFeedback: [Int] = []
 
     /// An authored layer's bound values: user bindings and `animation` timelines on `rate`,
     /// `blend` and `visible`, re-read every frame until a script sets the field.
@@ -91,7 +93,14 @@ final class ScenePuppetAnimator {
         for (bone, matrix) in pendingLocals where bone < locals.count { locals[bone] = matrix }
         pendingLocals.removeAll()
         lastUpdate = update
+        endedSinceFeedback += update.ended
         recompute()
+    }
+
+    /// The layers whose clip ended since the last call, for scripts' `addEndedCallback`.
+    func takeEnded() -> [Int] {
+        defer { endedSinceFeedback.removeAll() }
+        return endedSinceFeedback
     }
 
     private func resolveBindings(delta: Float, values: SceneValueContext) {
@@ -192,7 +201,7 @@ final class ScenePuppetAnimator {
         stack.layers.map { layer in
             SceneScriptRigFeedback.Layer(key: layer.key, name: layer.name, clip: layer.clip, time: layer.clock.time,
                                          frame: layer.clock.frame, flags: layer.clock.flags, rate: layer.rate,
-                                         blend: layer.blend, visible: layer.visible)
+                                         blend: layer.blend, visible: layer.visible, additive: layer.additive)
         }
     }
 }

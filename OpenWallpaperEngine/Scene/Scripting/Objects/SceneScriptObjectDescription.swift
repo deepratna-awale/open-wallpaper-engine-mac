@@ -49,4 +49,6 @@ struct SceneScriptObjectDescription {
     var animations: [SceneScriptAnimationDescription] = []
     /// The object as authored in scene.json (`getInitialLayerConfig`), as a JSON object.
     var initialConfigurationJSON: String?
+    /// A Puppet Warp image's rig (bones, clips, animation layers, attachments).
+    var rig: SceneScriptRigDescription?
 }

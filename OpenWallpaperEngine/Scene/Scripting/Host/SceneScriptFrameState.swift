@@ -173,4 +173,6 @@ enum SceneScriptRenderEvent {
     /// What a script's `ITextureAnimation` calls left of layer `id`'s override, in the script
     /// frame that saw the set's frame `frame`.
     case textureAnimation(id: Int, SceneTextureAnimationControl, frame: UInt64)
+    /// A script's call on puppet image `id`'s animation layers or bones, in call order.
+    case rig(id: Int, SceneScriptRigCommand)
 }

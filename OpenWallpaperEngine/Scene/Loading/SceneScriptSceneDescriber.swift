@@ -199,6 +199,7 @@ struct SceneScriptSceneDescriber {
         }
         if kind == .image, case .string(let image)? = json["image"] {
             description.textureAnimation = textureAnimation(model: image)
+            description.rig = rig(model: image, animationLayers: json["animationlayers"])
         }
         description.initialConfigurationJSON = Self.jsonText(.object(json))
         return description

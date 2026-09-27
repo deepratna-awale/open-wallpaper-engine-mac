@@ -67,6 +67,8 @@ final class SceneScriptObjectModel: SceneScriptRuntimeExtension {
                           "paused": Flags.paused, "finished": Flags.finished, "backwards": Flags.backwards,
                           "overridden": Flags.overridden],
                          forProperty: "animationLayout")
+        objects.setValue(store.rigs.javaScriptObject(in: context), forProperty: "rigs")
+        objects.setValue(SceneScriptRigLayout.javaScriptObject, forProperty: "rigLayout")
         objects.setValue(initialScene(store), forProperty: "initial")
         installNativeFunctions(on: objects)
         native.setValue(objects, forProperty: "objects")
@@ -242,6 +244,10 @@ final class SceneScriptObjectModel: SceneScriptRuntimeExtension {
             guard let number = numbers.first else { return .emitParticles(slot: target, count: nil) }
             guard let count = SceneScriptNumber.integer(number, clampedTo: 0...Self.maximumEmitCount) else { return nil }
             return .emitParticles(slot: target, count: count)
+        case .rigLayerCreate, .rigLayerDestroy, .rigLayerSet, .rigLayerPlayback, .rigBoneLocal, .rigBoneWorld:
+            guard store.rigSlot(of: target) != nil else { return nil }
+            return SceneScriptRigLayout.decode(command.opcode, numbers: numbers, strings: command.strings)
+                .map { .rig(slot: target, $0) }
         default: return nil
         }
     }

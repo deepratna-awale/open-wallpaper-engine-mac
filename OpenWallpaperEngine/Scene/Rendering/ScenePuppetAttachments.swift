@@ -33,4 +33,11 @@ struct ScenePuppetAttachments: SceneAttachmentProviding {
         SceneAffineTransform(linear: simd_float2x2(SIMD2(m.columns.0.x, m.columns.0.y), SIMD2(m.columns.1.x, m.columns.1.y)),
                              translation: SIMD2(m.columns.3.x, m.columns.3.y))
     }
+
+    /// A 2D world transform as a 4×4 matrix (the object table's `worldMatrix`, z untouched).
+    static func matrix(_ world: SceneAffineTransform) -> simd_float4x4 {
+        let x = world.linear.columns.0, y = world.linear.columns.1
+        return simd_float4x4(columns: (SIMD4(x.x, x.y, 0, 0), SIMD4(y.x, y.y, 0, 0), SIMD4(0, 0, 1, 0),
+                                       SIMD4(world.translation.x, world.translation.y, 0, 1)))
+    }
 }

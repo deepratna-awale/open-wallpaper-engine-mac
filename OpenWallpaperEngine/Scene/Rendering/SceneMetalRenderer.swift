@@ -542,6 +542,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 timelines.restore(site, time: time, flags: flags, rate: rate, seenAt: frame)
             case let .textureAnimation(id, control, frame):
                 timelines.restoreTexture(control, object: id, seenAt: frame)
+            case let .rig(id, command):
+                performRigCommand(command, on: String(id))
             }
         }
         if !removed.isEmpty {
@@ -1294,6 +1296,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 world: transforms.world(of: key, live: { [self] id in liveLocal(id) }, attachments: puppetAttachments.affine),
                 animated: animation?.fields ?? SceneScriptOwnedFields(), playing: sounds.isPlaying(id))
         }
+        for entry in layers where entry.layer.puppet != nil {
+            guard let id = Int(entry.layer.id), let animator = puppetAnimators[entry.layer.id] else { continue }
+            let world = ScenePuppetAttachments.matrix(worldTransform(entry))
+            input.rigs[id] = SceneScriptRigFeedback(layers: animator.layerStates, locals: animator.locals,
+                                                    worlds: animator.worlds.map { world * $0 }, ended: animator.takeEnded())
+        }
         scripts.submit(input)
     }
 
@@ -1655,6 +1663,19 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                        commandBuffer: commandBuffer)
         }
         puppetWarps[entry.layer.id] = warped
+    }
+
+    /// A script's call on a puppet's layers or bones. `setBoneTransform`'s matrix is in the scene;
+    /// the rig keeps it in its model space (0x14020f350 multiplies by the object's inverse world).
+    private func performRigCommand(_ command: SceneScriptRigCommand, on id: String) {
+        guard let index = layers.firstIndex(where: { $0.layer.id == id }),
+              let puppet = layers[index].layer.puppet else { return }
+        let animator = puppetAnimator(id, puppet)
+        if case let .setWorld(bone, matrix) = command {
+            animator.perform(.setWorld(bone: bone, matrix: ScenePuppetAttachments.matrix(worldTransform(layers[index])).inverse * matrix))
+        } else {
+            animator.perform(command)
+        }
     }
 
     /// Bone attachments on puppets, as their animators last posed them.

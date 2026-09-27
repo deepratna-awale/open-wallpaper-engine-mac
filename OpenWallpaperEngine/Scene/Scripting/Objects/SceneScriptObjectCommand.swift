@@ -32,6 +32,8 @@ enum SceneScriptObjectCommand: Equatable {
     /// `emitParticles(count?)`; nil when the script passed no count.
     case emitParticles(slot: Int, count: Int?)
     case animation(SceneScriptAnimationReference, AnimationAction)
+    /// A puppet image's animation-layer or bone call (`SceneScriptRigCommand`).
+    case rig(slot: Int, SceneScriptRigCommand)
 }
 
 /// Which animation a command is for: an animation of the object in `slot` (or of the scene when

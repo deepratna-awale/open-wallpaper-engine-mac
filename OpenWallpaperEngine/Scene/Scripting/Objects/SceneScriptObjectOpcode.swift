@@ -35,6 +35,19 @@ extension SceneScriptCommandRing.Opcode {
     /// target animation slot; numbers [frame].
     static let animationSetFrame = Self(rawValue: 443)
     static let animationJoin = Self(rawValue: 444)
+    /// Puppet rigs (`SceneScriptRigLayout.decode`): target slot; numbers [key, singlePlay,
+    /// additive, blendin, blendout, autosort, blendtime, rate, blend, visible]; strings [clip, name].
+    static let rigLayerCreate = Self(rawValue: 450)
+    /// target slot; numbers [key].
+    static let rigLayerDestroy = Self(rawValue: 451)
+    /// target slot; numbers [key, field (rate 0, blend 1, visible 2), value].
+    static let rigLayerSet = Self(rawValue: 452)
+    /// target slot; numbers [key, action (play 0, pause 1, stop 2, setFrame 3), frame?].
+    static let rigLayerPlayback = Self(rawValue: 453)
+    /// target slot; numbers [bone, 16 floats column-major].
+    static let rigBoneLocal = Self(rawValue: 454)
+    /// target slot; numbers [bone, 16 floats column-major, the world matrix].
+    static let rigBoneWorld = Self(rawValue: 455)
 
     /// Every object-model opcode with its JS name, for `__rt.objects.OP`.
     static let objectModelOpcodes: [String: Self] = [
@@ -45,5 +58,7 @@ extension SceneScriptCommandRing.Opcode {
         "particlesPlay": .particlesPlay, "particlesPause": .particlesPause, "particlesStop": .particlesStop,
         "particlesEmit": .particlesEmit, "animationPlay": .animationPlay, "animationPause": .animationPause,
         "animationStop": .animationStop, "animationSetFrame": .animationSetFrame, "animationJoin": .animationJoin,
+        "rigLayerCreate": .rigLayerCreate, "rigLayerDestroy": .rigLayerDestroy, "rigLayerSet": .rigLayerSet,
+        "rigLayerPlayback": .rigLayerPlayback, "rigBoneLocal": .rigBoneLocal, "rigBoneWorld": .rigBoneWorld,
     ]
 }

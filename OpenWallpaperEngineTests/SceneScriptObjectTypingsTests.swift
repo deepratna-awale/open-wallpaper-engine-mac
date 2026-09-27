@@ -25,6 +25,7 @@ final class SceneScriptObjectTypingsTests: XCTestCase {
         "IEffect": ["effect"],
         "IMaterial": ["material"],
         "ITextureAnimation": ["image.getTextureAnimation()"],
+        "IAnimationLayer": ["image.getAnimationLayer(0)"],
         "IAnimation": ["image.getAnimation('timeline')"],
         "IScene": ["thisScene"],
     ]
@@ -37,7 +38,6 @@ final class SceneScriptObjectTypingsTests: XCTestCase {
     /// out are stubs.
     private static let unreachable: [String: String] = [
         "IVideoTexture": "IImageLayer.getVideoTexture",
-        "IAnimationLayer": "IImageLayer.getAnimationLayer",
         "IModelData": "IScene.createModelData",
     ]
 
@@ -52,10 +52,13 @@ final class SceneScriptObjectTypingsTests: XCTestCase {
             name: "fx", visible: true, materials: [.init(constants: [.init(name: "alpha", value: [1])])])
         let kinds: [SceneScriptObjectDescription.Kind] = [.image, .text, .sound, .particle, .model, .group, .camera]
         let objects = kinds.enumerated().map { index, kind in
-            SceneScriptObjectDescription.make(
+            var object = SceneScriptObjectDescription.make(
                 kind, id: index + 1, name: kind.rawValue, effects: kind == .image ? [effect] : [],
                 animations: kind == .image ? [.init(name: "timeline", fps: 30, frameCount: 30, duration: 1)] : [],
                 textureAnimation: kind == .image ? .init(name: "", fps: 8, frameCount: 8, duration: 1) : nil)
+            // The image is a puppet, so its animation layers (`IAnimationLayer`) are reachable.
+            if kind == .image { object.rig = SceneScriptRigTests.rig }
+            return object
         }
         let f = try SceneScriptObjectFixture(FakeSceneScriptObjectHost(scene: SceneScriptSceneDescription(objects: objects)))
         f.evaluate("""
