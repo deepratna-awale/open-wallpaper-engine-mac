@@ -109,4 +109,16 @@ final class ParticleRendererOptionsTests: XCTestCase {
         XCTAssertEqual(trail["ORIENTATION"], 0)
         XCTAssertEqual(trail["TRAILSCROLLALPHA"], 1)
     }
+
+    /// WE's sprite trail stretches by `clamp(|v|·length, minlength, maxlength)` with the velocity in
+    /// the system's space (`ComputeParticleTrailTangents`); the records hold the scene's velocity,
+    /// the emitter's scale times it, so `length` is divided by that scale. WE's `spritetrail`
+    /// preview (scale 0.10223, speed 400…500, length 0.01) stretches its halos 4…5 times.
+    func testSpriteTrailsStretchByTheirSpeedInTheSystemsSpace() {
+        let lengths = SIMD4<Float>(0.01, 10, 0, 0)
+        let scaled = ParticleMaterialUniforms.trailRenderVar(lengths, drawSizeScale: 0.10223)
+        XCTAssertEqual(450 * 0.10223 * scaled.x, 4.5, accuracy: 1e-3)
+        XCTAssertEqual(SIMD3(scaled.y, scaled.z, scaled.w), SIMD3(10, 0, 0))
+        XCTAssertEqual(ParticleMaterialUniforms.trailRenderVar(lengths, drawSizeScale: 1), lengths)
+    }
 }

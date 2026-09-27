@@ -86,11 +86,21 @@ struct ParticleMaterialUniforms {
         orientationForward = axes.forward
         var renderVars: [Int: SIMD4<Float>] = [:]
         switch plan.format {
-        case .sprite: renderVars[0] = plan.trailLengths
+        case .sprite: renderVars[0] = Self.trailRenderVar(plan.trailLengths, drawSizeScale: system.drawSizeScale)
         case .rope: renderVars[0] = ParticleRecordWriter.ropeRenderVar(system)
         }
         renderVars[1] = Self.spriteSheetRenderVar(plan.spriteSheet, texture: texture0)
         self.renderVars = renderVars
+    }
+
+    /// A sprite trail's `g_RenderVar0` for records in the scene: WE's shader stretches a trail by
+    /// `clamp(|v|·length, minlength, maxlength)` with `v` in the system's space (the vertex's
+    /// `localVelocity`, `common_particles.h`), and its model matrix scales the result. The records
+    /// hold the scene's velocity, the emitter's scale times WE's, and the size already scaled
+    /// (`drawSizeScale`), so `length` is divided by that scale to stretch as WE does.
+    static func trailRenderVar(_ lengths: SIMD4<Float>, drawSizeScale: Float) -> SIMD4<Float> {
+        guard drawSizeScale > 1e-6 else { return lengths }
+        return SIMD4(lengths.x / drawSizeScale, lengths.y, lengths.z, lengths.w)
     }
 
     /// `g_RenderVar1`: `(frame width, frame height, frame count, frame height / width)`, frame
