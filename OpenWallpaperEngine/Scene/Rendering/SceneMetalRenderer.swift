@@ -146,7 +146,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private let contentGenerationLock = NSLock()
     private var contentGeneration = 0
     private var sceneSize = SIMD2<Float>(1920, 1080)
-    private var layers: [PreparedLayer] = []
+    private var layers: [PreparedLayer] = [] {
+        didSet { layerCompositeOrder = nil }
+    }
+    /// Which layers other layers' effects sample, and the order that prepares them first; made
+    /// again whenever `layers` changes.
+    private var layerCompositeOrder: SceneLayerCompositeOrder?
     private var particleInstances: [LayerUniform] = []
     private var particleInstanceStorage: MTLBuffer?
 
@@ -941,11 +946,15 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // Only visible layers get an entry; the draw loop skips the rest.
         var draws: [Int: LayerDraw] = [:]
         layerComposites.removeAll(keepingCapacity: true)
-        for (layerIndex, entry) in layers.enumerated() {
+        let compositeOrder = self.compositeOrder()
+        for layerIndex in compositeOrder.sequence {
+            let entry = layers[layerIndex]
             // Hidden layers keep their transforms (scripts and hit tests read them) but draw nothing,
-            // except into the image a model samples (`_rt_imageLayerComposite_<id>_a`).
+            // except into the image a model or another layer samples (`_rt_imageLayerComposite_<id>_a`).
             let visible = scripts.isVisible(entry.layer.id)
-            guard visible || models?.compositeLayerIDs.contains(entry.layer.id) == true else { continue }
+            let isCompositeSource = compositeOrder.sources.contains(entry.layer.id)
+                || models?.compositeLayerIDs.contains(entry.layer.id) == true
+            guard visible || isCompositeSource else { continue }
             if entry.layer.text != nil {
                 // Drawn through a camera, text is as dense on screen as its projection makes it.
                 let onScreen = layerPlacement(entry, size: layerBaseSize(entry), musicSyncLevel: 0, motion: motion,
@@ -980,9 +989,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 dynamicTextures[layerIndex] = runEffects(entry, draw: draw, input: input,
                                                          snapshot: nil, frame: effectFrame, commandBuffer: commandBuffer)
             }
-            if models?.compositeLayerIDs.contains(entry.layer.id) == true {
+            if isCompositeSource {
                 layerComposites[entry.layer.id] = dynamicTextures[layerIndex]
-                    ?? solidEffectInput(entry.layer, commandBuffer: commandBuffer) ?? textureFrame(for: entry).texture
+                    ?? solidEffectInput(entry.layer, commandBuffer: commandBuffer)
+                    ?? compositeText(entry) ?? textureFrame(for: entry).texture
             }
         }
         // The next script frame reads this frame's text sizes and camera (WE's cursor pass and
@@ -1686,8 +1696,27 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     /// The model renderer (`SceneModelRenderer`), when that is what draws the models.
     private var models: SceneModelRenderer? { modelDrawing as? SceneModelRenderer }
-    /// This frame's images of the layers models sample, by layer id.
+    /// This frame's images of the layers models and other layers sample, by layer id.
     private var layerComposites: [String: MTLTexture] = [:]
+
+    /// `layerCompositeOrder`, made from the layers' effects when `layers` changed.
+    private func compositeOrder() -> SceneLayerCompositeOrder {
+        if let layerCompositeOrder { return layerCompositeOrder }
+        let order = SceneLayerCompositeOrder(layers: layers.map { entry in
+            (entry.layer.id, entry.layer.weEffects.reduce(into: Set<String>()) { $0.formUnion($1.compositeLayerIDs) })
+        })
+        layerCompositeOrder = order
+        return order
+    }
+
+    /// A text layer's composite without effects: its text in its colour, one pixel a scene unit,
+    /// as WE draws it into a buffer of its size (effects would run there, `SceneTextRasterScale`).
+    private func compositeText(_ entry: PreparedLayer) -> MTLTexture? {
+        guard let authored = entry.layer.text else { return nil }
+        let scripted = scripts.text(authored, of: entry.layer.id)
+        return makeTextFrame(scripted.text, value: scripted.value, pointSize: scripted.pointSize, boxSize: layerBaseSize(entry),
+                             pixelsPerUnit: 1, layerID: entry.layer.id, fill: textFill(entry))?.frame.texture
+    }
 
     /// An object's own 3D transform this frame (`SceneObjectMotion.local3D`: scripts, then
     /// timelines, then authored moved by the user bindings), evaluated once per frame; nil for an
@@ -1961,6 +1990,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             layerColor: entry.layer.text?.effects == nil ? SIMD3(draw.color.x, draw.color.y, draw.color.z) : SIMD3(repeating: 1),
             layerAlpha: draw.opacity)
         context.mipMappedFrameBuffer = mipMappedTarget
+        context.layerComposite = { [unowned self] id in self.layerComposites[id] }
         context.effectTextureProjection = EffectGraphRenderer.effectTextureProjection(quad: draw.quad, sceneSize: sceneSize)
         // WE's layer buffers are frame-buffer class: RGBA16F in HDR.
         context.frameBufferFormat = postProcess.drawsHDR ? .rgba16Float : .rgba8Unorm

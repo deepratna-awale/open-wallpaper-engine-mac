@@ -83,6 +83,16 @@ struct SceneEffectPlan {
         }
         return false
     }
+
+    /// The layers whose image a pass samples (`_rt_imageLayerComposite_<id>_a`), by object id.
+    var compositeLayerIDs: Set<String> {
+        Set(passes.flatMap { pass in
+            pass.textures.values.compactMap { input -> String? in
+                if case .fbo(let name) = input { return ModelMaterialPlanBuilder.compositeLayerID(name) }
+                return nil
+            }
+        })
+    }
 }
 
 enum SceneEffectPlanError: Error, CustomStringConvertible {
@@ -272,7 +282,13 @@ struct SceneEffectPlanBuilder {
         if fboNames.contains(name) { return .fbo(name) }
         if name == "_rt_FullFrameBuffer" { return .sceneSnapshot }
         if name == SceneMipMappedFrameBuffer.name { return .mipMappedFrameBuffer }
+        // Another layer's image after its effects: WE registers a layer's first composite buffer
+        // in the texture manager under this name (0x1401ea7a3 → 0x1400d3198), where a material's
+        // texture lookup finds it (0x14014cf90). Only `_a` is ever registered.
+        if ModelMaterialPlanBuilder.compositeLayerID(name) != nil { return .fbo(name) }
         if name.hasPrefix("_rt_") {
+            // A name nothing registered misses the texture manager and loads as a file, which
+            // fails over to WE's "error" texture (0x14014d222); here the slot stays unbound.
             OWELog.error(.scene, "Unsupported render target \(name) in \(materialPath)")
             return nil
         }
