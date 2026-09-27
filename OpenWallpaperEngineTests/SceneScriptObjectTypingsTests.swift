@@ -28,6 +28,7 @@ final class SceneScriptObjectTypingsTests: XCTestCase {
         "IAnimationLayer": ["image.getAnimationLayer(0)"],
         "IAnimation": ["image.getAnimation('timeline')"],
         "IScene": ["thisScene"],
+        "IModelData": ["modelData"],
     ]
 
     /// What `ILayer` extends (the d.ts names `IModel`, meaning `IModelLayer`).
@@ -38,7 +39,6 @@ final class SceneScriptObjectTypingsTests: XCTestCase {
     /// out are stubs.
     private static let unreachable: [String: String] = [
         "IVideoTexture": "IImageLayer.getVideoTexture",
-        "IModelData": "IScene.createModelData",
     ]
 
     private func members() throws -> [String: [String]] {
@@ -67,6 +67,9 @@ final class SceneScriptObjectTypingsTests: XCTestCase {
             var effect = __objects.image.getEffect(0), material = effect.getMaterial(0);
             var image = __objects.image, text = __objects.text, sound = __objects.sound, particle = __objects.particle,
                 model = __objects.model, group = __objects.group, camera = __objects.camera;
+            var modelData = thisScene.createModelData({ shapes: [{ vertexBuffer: new Float32Array(9),
+                vertexFormat: [IModelData.POSITION], material: 'materials/model.json' }] });
+            var __requiresArgument = { createModelData: 'Shapes missing.' };
             function __check(target, member) {
                 if (target === null || target === undefined) return 'no object';
                 if (!(member in target)) return 'missing';
@@ -77,6 +80,8 @@ final class SceneScriptObjectTypingsTests: XCTestCase {
                     var value = target[member];
                     if (typeof value === 'function') value.call(target);
                 } catch (error) {
+                    // A member that needs its argument throws WE's own message without one.
+                    if (__requiresArgument[member] === error.message) return 'ok';
                     return 'throws ' + error;
                 }
                 return stubbed ? 'stub' : 'ok';

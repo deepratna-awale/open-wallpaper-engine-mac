@@ -686,13 +686,17 @@ class SceneWallpaperViewModel: ObservableObject {
     private func scriptContent(wallpaperDir: URL, sceneSize: SIMD2<Float>) -> SceneScriptSceneContent? {
         guard let loadedDocument else { return nil }
         let storeKey = propertyStoreKey
+        let modelData = SceneScriptModelDataStore()
         return SceneScriptSceneContent(
             wallpaperID: loadedProjectId ?? Self.localWallpaperID(wallpaperDir),
             document: loadedDocument.document, documentSignature: loadedDocument.signature,
             project: loadedProject,
             userValues: { WallpaperServices.shared.userProperties(wallpaper: storeKey) },
             file: { [weak self] path in self?.scriptFile(path, wallpaperDir: wallpaperDir) },
-            makeLayer: { [weak self] json in self?.buildScriptLayer(json, wallpaperDir: wallpaperDir, sceneSize: sceneSize) })
+            modelData: modelData,
+            makeLayer: { [weak self] json in
+                self?.buildScriptLayer(json, wallpaperDir: wallpaperDir, sceneSize: sceneSize, modelData: modelData)
+            })
     }
 
     /// A stable id for a wallpaper without a Workshop id: its directory's hash (scripts' ids and
@@ -712,8 +716,8 @@ class SceneWallpaperViewModel: ObservableObject {
 
     /// An object a script created (`thisScene.createLayer`), built like the scene's own: a layer,
     /// a particle system or a sound. Off the main thread, under the scene lock.
-    private func buildScriptLayer(_ json: [String: SceneJSON], wallpaperDir: URL,
-                                  sceneSize: SIMD2<Float>) -> SceneScriptCreatedObject? {
+    private func buildScriptLayer(_ json: [String: SceneJSON], wallpaperDir: URL, sceneSize: SIMD2<Float>,
+                                  modelData: SceneScriptModelDataStore) -> SceneScriptCreatedObject? {
         sceneLock.lock()
         defer { sceneLock.unlock() }
         let object: WESceneObject
@@ -746,7 +750,13 @@ class SceneWallpaperViewModel: ObservableObject {
             // The renderer keys it by the id the script gave it.
             let object = SceneModelObject(id: "", name: resolved.name ?? "", order: Int.max, authored: model,
                                           animationLayers: resolved.animationLayers, renderValues: resolved.renderValues)
-            guard let built = buildModels([object], wallpaperDir: wallpaperDir).first, built.plan != nil,
+            let made: SceneModelObject?
+            if case .loadedID(let token) = model.source {
+                made = buildScriptModel(object, token: token, modelData: modelData, wallpaperDir: wallpaperDir)
+            } else {
+                made = buildModels([object], wallpaperDir: wallpaperDir).first
+            }
+            guard let built = made, built.plan != nil,
                   let node = SceneTransformHierarchy3D(objects: [resolved]).nodes.values.first else { return nil }
             let motion = SceneObjectMotion(object: resolved, sceneSize: sceneSize,
                                            bindings: SceneLayerBindings(object: resolved, builtWith: context))
@@ -939,6 +949,26 @@ class SceneWallpaperViewModel: ObservableObject {
             guard let plan = object.plan, let path = object.authored.path else { continue }
             modelPlans["\(path)|\(object.authored.skin)"] = plan
         }
+        return built
+    }
+
+    /// A model layer showing a script's model data (`thisScene.createModelData`, its token as the
+    /// object's `model`); nil (logged) when the token names no data or no shape can draw.
+    private func buildScriptModel(_ object: SceneModelObject, token: Int, modelData: SceneScriptModelDataStore,
+                                  wallpaperDir: URL) -> SceneModelObject? {
+        guard let translator = Self.effectTranslator else { return nil }
+        guard let data = modelData.snapshot(token)?.data else {
+            OWELog.error(.script, "createLayer: model data \(token) of \(object.name) doesn't exist")
+            return nil
+        }
+        let materials = ModelMaterialPlanBuilder(
+            translator: translator,
+            readFile: { [weak self] path in self?.assetData(named: path, wallpaperDir: wallpaperDir) },
+            loadTexture: { [weak self] name, path in self?.loadMetalTexture(named: name, materialDir: path, wallpaperDir: wallpaperDir) },
+            sceneEngineCombos: sceneEngineCombos)
+        var built = object
+        built.plan = SceneScriptModelPlanBuilder(materials: materials, wallpaperName: wallpaperDir.lastPathComponent)
+            .plan(data, geometry: SceneScriptModelGeometry(store: modelData, token: token), objectName: object.name)
         return built
     }
 

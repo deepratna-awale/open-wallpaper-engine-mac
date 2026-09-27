@@ -98,8 +98,10 @@
                 kind = 'copy';
                 source = configuration._slot;
             } else if (typeof IModelData === 'function' && configuration instanceof IModelData) {
-                objects.unsupported('IScene.createLayer(IModelData)');
-                return null;
+                // "or just pass IModelData as a single argument": a model layer showing it
+                // (objects-modeldata.js), its token as the configuration's `model`.
+                kind = 'configuration';
+                payload = JSON.stringify({ model: configuration.toConfigString() });
             } else if (configuration !== null && typeof configuration === 'object') {
                 // An IAssetHandle names its file through `toConfigString`, like WE's other handles
                 // (IModelData); a configuration object in scene.json form has no such method.
@@ -178,8 +180,6 @@
         }
         objects.defineField(Scene.prototype, field.name, field.offset, field.type, false);
     });
-    objects.stub(Scene.prototype, 'IScene', 'createModelData', function () { return null; });
-    objects.stub(Scene.prototype, 'IScene', 'destroyModelData');
 
     const thisScene = new Scene();
     objects.attach(thisScene, sceneBuffer.values, 0, sceneBuffer.dirty, SETTINGS_DIRTY);

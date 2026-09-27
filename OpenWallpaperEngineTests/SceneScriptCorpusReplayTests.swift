@@ -86,9 +86,10 @@ final class SceneScriptCorpusReplayTests: XCTestCase {
                         reason: "3657770939 runs a rigid-body solver (7c2224f16732) at 96 steps a second over the 243 "
                             + "spheres its spawner creates in init (initSpawnCount): the script's own work, not ours "
                             + "(JIT: ~1.5 ms a frame, 0.3 % of it in our Swift)"),
-        ExpectedFailure(key: "0a3a85274f2b", check: .exception,
-                        reason: "our gap, not WE's: 3734636606 builds its geometry with IScene.createModelData, still "
-                            + "a stub returning null (roadmap WP12)"),
+        ExpectedFailure(key: "3734636606", check: .budget,
+                        reason: "3734636606 steps its physics world (rigid bodies, a car and a 15 × 15 cloth it draws "
+                            + "through IScene.createModelData / applyData) every frame: the script's own work, as "
+                            + "3657770939's"),
     ]
 
     // MARK: - Corpus

@@ -15,7 +15,7 @@ import JavaScriptCore
 ///   (`unsupportedMembers`).
 final class SceneScriptObjectModel: SceneScriptRuntimeExtension {
     let scriptResources = ["objects-values", "objects-animations", "objects-effects", "objects-layers",
-                           "objects-scene"]
+                           "objects-scene", "objects-modeldata"]
 
     /// `emitParticles(count)` never asks for more than this at once (objects-layers.js clamps to
     /// the same); the renderer still caps it to the system's own maximum.
@@ -24,6 +24,9 @@ final class SceneScriptObjectModel: SceneScriptRuntimeExtension {
     private static let maximumIndex = Int(Int32.max)
 
     private weak var host: SceneScriptObjectHost?
+    /// The geometry `thisScene.createModelData` makes (`objects-modeldata.js`), shared with the
+    /// loader and the renderer of this wallpaper instance.
+    let modelData: SceneScriptModelDataStore
     private weak var runtime: SceneScriptRuntime?
     private let capacity: SceneScriptObjectStore.Capacity
     private(set) var store: SceneScriptObjectStore?
@@ -33,9 +36,11 @@ final class SceneScriptObjectModel: SceneScriptRuntimeExtension {
     /// WE members a script used that are stubs here, by `Interface.member`.
     private(set) var unsupportedMembers = Set<String>()
 
-    init(host: SceneScriptObjectHost, capacity: SceneScriptObjectStore.Capacity = .standard) {
+    init(host: SceneScriptObjectHost, capacity: SceneScriptObjectStore.Capacity = .standard,
+         modelData: SceneScriptModelDataStore = SceneScriptModelDataStore()) {
         self.host = host
         self.capacity = capacity
+        self.modelData = modelData
     }
 
     func install(into runtime: SceneScriptRuntime) throws {
@@ -125,6 +130,7 @@ final class SceneScriptObjectModel: SceneScriptRuntimeExtension {
         }
         objects.setValue(create, forProperty: "create")
         objects.setValue(unsupported, forProperty: "unsupported")
+        installModelDataFunctions(on: objects)
     }
 
     /// `thisScene.createLayer`: describes and places the layer now, materializes it on `.create`.

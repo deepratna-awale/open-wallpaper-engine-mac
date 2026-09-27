@@ -215,6 +215,8 @@ struct SceneScriptSceneDescriber {
         if json["sound"] != nil { return .sound }
         if json["light"] != nil { return .light }
         if case .string(let model)? = json["model"], model.hasSuffix(".mdl") { return .model }
+        // A script's model data (`createLayer({model: modelData})` writes its token).
+        if case .number? = json["model"] { return .model }
         if json["image"] != nil { return .image }
         return .group
     }

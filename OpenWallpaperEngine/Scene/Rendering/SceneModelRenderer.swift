@@ -42,6 +42,10 @@ final class SceneModelRenderer: SceneModelDrawing {
     private var animators: [String: ScenePuppetAnimator] = [:]
     /// The frame time each animator last advanced at (one evaluation a frame).
     private var advancedAt: [String: Double] = [:]
+    /// Per plan with changing geometry (`SceneModelPlan.geometry`): the revision its buffers hold
+    /// and each mesh's index count there.
+    private var geometryRevisions: [ObjectIdentifier: UInt64] = [:]
+    private var geometryIndexCounts: [ObjectIdentifier: [Int: Int]] = [:]
 
     struct MeshBuffers {
         let vertices: MTLBuffer
@@ -100,6 +104,8 @@ final class SceneModelRenderer: SceneModelDrawing {
         objects = Dictionary(models.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         compositeLayerIDs = Set(models.flatMap { $0.plan?.compositeLayerIDs ?? [] })
         buffers.removeAll()
+        geometryRevisions.removeAll()
+        geometryIndexCounts.removeAll()
         uniforms.removeAll()
         animators.removeAll()
         advancedAt.removeAll()
@@ -182,7 +188,7 @@ final class SceneModelRenderer: SceneModelDrawing {
             if program.size > 0 {
                 program.bytes.withUnsafeBytes { raw in uniformArena.bind(raw, index: 0, to: encoder, commandBuffer: commandBuffer) }
             }
-            encoder.drawIndexedPrimitives(type: .triangle, indexCount: mesh.indexCount,
+            encoder.drawIndexedPrimitives(type: .triangle, indexCount: indexCount(of: mesh, in: plan),
                                           indexType: mesh.usesUInt32Indices ? .uint32 : .uint16,
                                           indexBuffer: buffers.indices, indexBufferOffset: 0)
             drawsEncoded += 1
@@ -272,6 +278,7 @@ final class SceneModelRenderer: SceneModelDrawing {
 
     func meshBuffers(_ plan: SceneModelPlan) -> [MeshBuffers?] {
         let key = ObjectIdentifier(plan)
+        if let source = plan.geometry { refreshGeometry(plan, from: source) }
         if let existing = buffers[key] { return existing }
         let made = plan.meshes.map { mesh -> MeshBuffers? in
             guard let vertices = mesh.vertexData.withUnsafeBytes({ device.makeBuffer(bytes: $0.baseAddress!, length: $0.count) }),
@@ -281,6 +288,35 @@ final class SceneModelRenderer: SceneModelDrawing {
         }
         buffers[key] = made
         return made
+    }
+
+    /// A script's `applyData` since the last draw: new buffers for the plan's meshes (the frames
+    /// in flight keep the ones they encoded). Geometry that no longer matches the plan's meshes
+    /// (`replaceData` with other shapes) keeps what was drawn, logged once.
+    private func refreshGeometry(_ plan: SceneModelPlan, from source: SceneModelGeometrySource) {
+        let key = ObjectIdentifier(plan)
+        guard let geometry = source.geometry(newerThan: geometryRevisions[key] ?? 0) else { return }
+        geometryRevisions[key] = geometry.revision
+        guard plan.meshes.allSatisfy({ $0.index < geometry.meshes.count }) else {
+            OWELog.error(.scene, "\(plan.path): its model data no longer has the shapes it was planned with; kept as drawn")
+            return
+        }
+        var counts: [Int: Int] = [:]
+        buffers[key] = plan.meshes.map { mesh -> MeshBuffers? in
+            let data = geometry.meshes[mesh.index]
+            counts[mesh.index] = data.indexCount
+            guard !data.vertices.isEmpty, !data.indices.isEmpty,
+                  let vertices = data.vertices.withUnsafeBytes({ device.makeBuffer(bytes: $0.baseAddress!, length: $0.count) }),
+                  let indices = data.indices.withUnsafeBytes({ device.makeBuffer(bytes: $0.baseAddress!, length: $0.count) })
+            else { return nil }
+            return MeshBuffers(vertices: vertices, indices: indices)
+        }
+        geometryIndexCounts[key] = counts
+    }
+
+    /// How many indices of `mesh` draw: its plan's, or what its model data has now.
+    private func indexCount(of mesh: SceneModelPlan.Mesh, in plan: SceneModelPlan) -> Int {
+        geometryIndexCounts[ObjectIdentifier(plan)]?[mesh.index] ?? mesh.indexCount
     }
 
     private func uniforms(for id: String, plan: SceneModelPlan) -> [ModelMaterialUniforms] {

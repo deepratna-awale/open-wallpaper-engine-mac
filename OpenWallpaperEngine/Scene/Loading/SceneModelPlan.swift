@@ -28,15 +28,19 @@ final class SceneModelPlan {
     let skeleton: MDLSkeleton?
     let clips: [MDLAnimation]
     let attachments: [MDLAttachment]
+    /// Where a script-made model's changing geometry comes from (`IModelData.applyData`); nil for
+    /// a `.mdl`, whose meshes' data never change. `Mesh.index` is the shape's index there.
+    let geometry: SceneModelGeometrySource?
 
     init(path: String, meshes: [Mesh], bounds: MDLBounds, skeleton: MDLSkeleton?, clips: [MDLAnimation] = [],
-         attachments: [MDLAttachment] = []) {
+         attachments: [MDLAttachment] = [], geometry: SceneModelGeometrySource? = nil) {
         self.path = path
         self.meshes = Self.drawOrder(meshes)
         self.bounds = bounds
         self.skeleton = skeleton
         self.clips = clips
         self.attachments = attachments
+        self.geometry = geometry
     }
 
     /// WE's translucent flag (0x140225241): every mesh blending normal or alpha-to-coverage clears
@@ -72,4 +76,23 @@ final class SceneModelPlan {
                          + "animation layer \(layer.name ?? "?"); WE makes no layer for it")
         }
     }
+}
+
+/// A model's meshes' vertices and triangle lists at one revision (`SceneModelGeometrySource`).
+struct SceneModelGeometry {
+    struct Mesh {
+        let vertices: Data
+        let indices: Data
+        let indexCount: Int
+    }
+
+    let revision: UInt64
+    let meshes: [Mesh]
+}
+
+/// Geometry that changes after load (a script's `IModelData`, `SceneScriptModelGeometry`); the
+/// renderer asks for it every frame and re-uploads a newer revision.
+protocol SceneModelGeometrySource: AnyObject {
+    /// The geometry now, or nil when it is still at `revision`.
+    func geometry(newerThan revision: UInt64) -> SceneModelGeometry?
 }

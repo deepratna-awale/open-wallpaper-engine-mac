@@ -17,6 +17,9 @@ struct SceneScriptSceneContent {
     var userValues: () -> [String: String]
     /// Reads a file of the wallpaper (package, folder, Workshop dependencies, WE's assets).
     var file: (String) -> Data?
+    /// What `thisScene.createModelData` made, by token: the object model writes it, `makeLayer`
+    /// reads it for a layer whose `model` is a token (pass the store `makeLayer` uses).
+    var modelData = SceneScriptModelDataStore()
     /// Builds an object `createLayer` made (scene.json form), through the loader's builders; nil
     /// when it can't be built. Called off the main thread.
     var makeLayer: ([String: SceneJSON]) -> SceneScriptCreatedObject?

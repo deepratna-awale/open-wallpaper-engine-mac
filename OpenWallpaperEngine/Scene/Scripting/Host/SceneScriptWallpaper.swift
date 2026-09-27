@@ -91,7 +91,7 @@ final class SceneScriptWallpaper {
         let mirror = SceneScriptSceneMirror(document: content.document, describer: describer, wallpaperID: content.wallpaperID)
         let engine = SceneScriptEngineExtension(storage: services.storage)
         let cursor = SceneScriptCursorExtension()
-        let model = SceneScriptObjectModel(host: mirror)
+        let model = SceneScriptObjectModel(host: mirror, modelData: content.modelData)
         let binding = SceneScriptBindingExtension()
         let runtime: SceneScriptRuntime
         do {
