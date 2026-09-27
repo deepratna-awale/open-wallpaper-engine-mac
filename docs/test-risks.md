@@ -623,7 +623,7 @@ Line numbers are at `c955481`.
 - E-2: fixed 320b7ec, verified by `testCompositeIgnoresTheSceneAlpha`.
 - E-3: fixed 320b7ec. The sliders apply on the composite, and legacy heuristics are logged once and not applied. Verified by `testObjectBrightnessAloneIsNotANativeAdjustment`.
 - E-4: fixed 320b7ec, verified by `testScrollingImageWrapsUnlessClamped` and `testTexFlagsAreReadFromTheHeader`.
-- E-5: open. WE's bundled solid layer is `flat`, which has no `BLENDMODE`, so a blend mode on a solid layer is reported (`testBlendModeOnAFlatMaterialIsReported`) but not drawn. Fixing it needs WE ground truth: a capture of a solid layer with `colorBlendMode`, and the material WE's editor saves for it (for example, whether it swaps in genericimage2 + `util/white`).
+- E-5: fixed (2026-09-26). WE composites a layer through `materials/util/effectpassthrough_4.json` with `BLENDMODE` (0x1401ebcba…0x1401ebe55); a solid layer with a blend mode now draws its fill through it (`buildBlendComposite`). Verified against WE 2.8's captures of a band in modes 0, 2, 7, 9, 11, 18 and 31 (we-values-audit §9.3), `testSolidFillCompositesWithItsBlendMode` and `SceneSolidLayerBlendTests`. `testBlendModeOnAFlatMaterialIsReported` still holds for `build` itself.
 - E-6: fixed 320b7ec (state per layer instance), verified by `testStillLayerRewritesNoPlacementUniforms` and `testRemovedClonesFreeTheirUniformState`.
 - E-7: resolved 6bc5732.
 
@@ -1812,3 +1812,15 @@ Stage costs at 5280×2970 after the cuts (fastest frame, ms, one run): Hinata ul
 - Memoryless targets: every lighting target is read after the pass that writes it (the volumetrics' depth is converted in a later pass), so none qualifies. The scene targets, the mip buffer, the snapshots, the prelit images and the volumetrics' light buffers are `private` render targets without `shaderWrite` or `pixelFormatView`, which Apple GPUs can compress losslessly; only the volumetrics' small R32F depth copies take `shaderWrite`.
 - `LightingMemoryTests`: switching one renderer between the HDR fixture and an LDR scene ten times returns within 5% of the first HDR visit, and the LDR content holds no float target nor the HDR combine's output.
 
+## EX. WE 2.8's generated extras: what is still open (2026-09-26)
+
+From the effect gallery's extras (we-values-audit §9). Harness: `WEExtrasComparisonTests` (`OWE_WE_EXTRAS`). Comparison output is in `/Volumes/980Pro/agentEX-out`.
+
+- **EX1. Text glyph metrics (Low).** WE shapes with HarfBuzz on hinted FreeType glyphs and floors each advance to a whole pixel (0x1401b10f2…0x1401b12b9). Ours uses CoreText's unhinted, fractional advances. At 64 pt the ink lands within 0.6 px of WE's; a long line in a small font may drift by up to a pixel per glyph. Test idea: a 40-glyph line at 8 pt against a WE capture.
+- **EX2. Text effect buffer (Medium, effects on text).** WE's buffer is the ink bounds plus `padding`, centred on the ink (0x140258900, 0x140257d70). Ours is centred on the origin, so it is larger for text aligned left, right, top or bottom. Effects that work in UV space (a shine sweep, a gradient mask) would stretch differently. Needs a quad offset from the origin for text layers, and a WE capture of left-aligned text with a UV-space effect.
+- **EX3. `blockalign` (justify) isn't applied (Low).** WE spreads `maxwidth` − W over the spaces (0x1401b21ee). No library text sets it, as far as the corpus shows.
+- **EX4. Multi-line text against WE (Medium).** Only single-line captures exist. The `center` rule −(asc − (n−1)·L)/2 comes from the disassembly. Needs a capture of a three-line text in top, center and bottom.
+- **EX5. `layerimage` emitter missing (Medium, particles).** It emits from a layer's image. Plan: sample the named layer's alpha into an emission CDF at load (the `ParticleEmitterShape` gains a texture kind), pick positions weighted by alpha on the GPU as `sphererandom` picks its sphere, and follow the layer's transform. Needs WE's defaults from its element preview (`assets/scenes/particleelementpreviews/layerimage`) and the parser at 0x1401b8df0.
+- **EX6. `collisionmodel` (Medium, with 3D models).** It is logged and ignored until models are drawn (models-plan).
+- **EX7. SceneScript general defaults (Low, scripting).** `thisScene.bloom`, `bloomstrength` and `bloomthreshold` read 0 for a scene without them, but WE's are on, 2 and 0.65 (`SceneScriptSceneField.defaultValue`, owned by the SceneScript area).
+- **EX8. Bloom default for generated scenes (Low).** A scene without `bloom` now blooms, as WE's does (§9.1). Every scene the editor saves authors it, but a hand-written or Workshop-generated one without it will now glow. Test: the extras' `none` capture matches at 0.26.

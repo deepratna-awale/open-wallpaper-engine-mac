@@ -350,6 +350,49 @@ The recordings' numbers weren't in the brief, so these are listed for comparison
   - SSIM is 0.69 for half and 0.91 for full; the lower half score comes mostly from the figures' bob phase. `texres_half/still2` is a frame without the side figures, so it isn't ranked.
 - Tests: `TextureReductionTests` (both `auto` rules, the flag's both-sides rule, and WE's config values including `quarter`).
 
+## 9. WE 2.8.0.42's generated extras (effect gallery EXTRAS.md, ground truth)
+
+The peer generated these projects without the editor (`build_extras.py`) and captured them in WE 2.8.0.42 on Windows: the gallery's layout (checkerboard and gradient, 1024 px at scale 0.85, over 0.15 grey), a still at about 5 s and a 5 s clip. `WEExtrasComparisonTests` draws each through our loader and renderer at the gallery's settings (post-processing on, MSAA x2) and writes WE | ours | difference pictures and `report.tsv` (run with `OWE_WE_EXTRAS` pointing at a folder with `projects/fxx_*`, their `.tex` restored, and `we/<name>.png`). Mean absolute difference from WE's still (0–255), after the fixes below:
+
+| Project | Before | After |
+|---|---|---|
+| No object (the layout alone) | not drawn; the blur composite projects on the same layout were 14.5–18 | 0.26 (the composites 0.25–0.44) |
+| Solid band, blend modes 0, 2, 7, 9, 11, 18, 31 | 22–40 | 0.20–0.27 |
+| Text, plain / outline / blur / drop shadow / defaults only | 7.2–9.4 | 0.5–1.7 |
+| Refraction drops | 20.8 | 4.4 (random drop positions) |
+| Timeline single / mirror | 14.6 / 16.9 | 0.19 / 0.36 |
+
+**9.1 Bloom is on when the scene leaves `bloom` out — fixed.** Every capture glows: a halo around the checkerboard's red border, bright colours bleeding into the grey. The scene settings constructor starts the flags at 0x26 (0x140186d1f), and `bloom`'s accessor sets and clears bit 2 of that word (property table entry 0x140199825, accessor 0x14019b4e0), so bloom is on unless the scene turns it off. `hdr` is bit 0x400 (0x14019b6f0), which starts clear. Ours read an absent `bloom` as off. The editor writes `bloom` into every scene it saves (all 61 unpacked library scenes author it), so only generated or hand-written scenes change. Test: `WEAuthoredValuesTests.testBloomIsOnWhenTheSceneLeavesItOut`. Three render fixtures that test other things now author `"bloom": false`, as the editor would.
+- Not fixed (SceneScript area): `thisScene.bloom` reads `SceneScriptSceneField.defaultValue`, which is 0 for `bloom`, `bloomstrength` and `bloomthreshold`. For a scene without them, WE's values are on, 2 and 0.65.
+
+**9.2 The solid band is "more cyan" because of bloom, not colour space — fixed with 9.1.** The band's colour 0.2 0.6 1.0 is stored and drawn as authored. WE's LDR bloom (`downsample_quarter_bloom.frag`) takes max(r,g,b) − threshold (1 − 0.65 = 0.35), scales the colour by it, pushes saturation (2·c − luma), and adds 2× that (strength 2): (0, 0.47, 1.03). Added to (0.2, 0.6, 1.0) and clamped, that gives (51, 255, 255), which is WE's pixel exactly. The same arithmetic gives WE's Difference band over grey, (14, 170, 255). The darker results (Multiply 8, 23, 38 and Overlay 15, 46, 76 over grey) stay under the threshold and show the colour unchanged.
+
+**9.3 A solid layer's `colorBlendMode` — fixed** (test-risks E-5). Its `flat` shader has no `BLENDMODE`, so ours logged it and drew the band opaque. WE composites a layer through `materials/util/effectpassthrough_4.json` (genericimage4) with `BLENDMODE` set to the object's mode and `FOG_COMPUTED` 1 (0x1401ebcba…0x1401ebe55; `effectpassthrough.json`, genericimage3, when the renderer reports a level below 3). It maps mode 31 to 0 and adds with the pass's blending. Ours: a solid layer with a blend mode draws its fill through that material (`ImageMaterialPlanBuilder.buildBlendComposite`); for 31, `ApplyBlending`'s A + B·opacity is the same sum. All seven modes now match WE's still within 0.3. Tests: `ImageMaterialRenderTests.testSolidFillCompositesWithItsBlendMode` (Multiply against WE's arithmetic), `SceneSolidLayerBlendTests`.
+
+**9.4 Timelines — match, no change.** The tracked arrow over the 5 s clips (6 fps) against our evaluator (`SceneTimelineChannel`, Bézier x handles scaled by half the segment, bisection, integer frames) with the clip's start fitted: loop 1.8 px mean error, mirror 1.9 px, `loop_bezier` 0.7 px. `loop_bezier` holds near 481…492 for a second, then snaps to 779, in both. `single` holds 780 in both. Our headless frames step exactly as the model does. The loop stills differ from WE's (9 and 43) only because WE's capture started at an unknown time after load (the fit puts it about 1.2 s into a cycle).
+
+**9.5 Text — placement fixed; font effects match.** With the placement fixed, outline 4, blur 1, drop shadow 6 / 1 / "4 4" and the defaults-only case (outline 4, blur 6, shadow 6, "4 4", black) compare at 0.9–1.7 mean abs. Before the fix, aligned by hand, they already looked the same (`/Volumes/980Pro/agentEX-out/text_effects_aligned.png`). The glyph cores sit within 0.6 px of WE's. The placement was about 38 px too high and 5 px too far left. WE's layout (0x1401b0410, placed by 0x140257690…0x1402577c4) is:
+- **Metrics.** The line height, ascender and descender are FreeType's size metrics in whole pixels: ascender rounded up, descender rounded down, height rounded to nearest. For NotoSans at 64 pt these are 286, −79 and 363.
+- **Vertical.** `verticalalign` (bottom 0, center 1, top 2) places the first baseline at:
+  - center: −(asc − (n−1)·L)/2. The block from the first ascender to the last baseline is centred, and the descender is ignored.
+  - top: −asc.
+  - bottom: −desc + (n−1)·L.
+- **Horizontal.** A line's width is its glyphs' ink, joined with the pen's start. Lines align within the widest. The block's span is centred on the origin, or starts (`left`) or ends (`right`) on it.
+- **What doesn't place the text.** scene.json's `size` plays no part, and `padding` is only room around the glyphs.
+
+Ours followed a box: the authored size, grown to fit, with the edge named by the alignment on the origin, and the lines inside the padding centred as ascender to descender. `SceneTextLayout` now places the lines as WE does, around the origin, in a box centred on it. Tests: `SceneTextLayoutTests` (the capture's baseline at −143, each vertical and horizontal alignment, the box holding the lines). This supersedes "match WE's in size and place" in we-reference-report R1 for vertical placement.
+- **Still different** (test-risks): WE floors each glyph's advance to whole pixels and shapes with HarfBuzz on hinted FreeType glyphs; ours uses CoreText's fractional advances. WE's effect buffer is the ink bounds plus padding centred on the ink, while ours is centred on the origin, so it is larger for left, right, top or bottom aligned text. `blockalign` (justify) isn't applied.
+
+**9.6 Particle refraction — match, no change.** Eight static 220 px `rainrefractive` drops. Measured on the gradient against the no-object capture, each drop's left half shows the background from 27–56 px to its right and its right half from 6–55 px to its left, like a lens. The peer's "colour from the right" is the left half. Ours (WE's `genericparticle` with `REFRACT`) does the same: +30…+52 on the left half and −35…−50 on the right. The drops' positions are random in both.
+
+**9.7 Image layer material and light fields — no gap.** genericimage4's combos (LIGHTING 0, REFLECTION 0, FOG 1), textures and material values (roughness 0.7, metallic 0, … reflectivitydistance 4) reach the renderer from the shader's own annotations. Every light field EXTRAS.md lists (`light` lpoint/lspot/ltube/ldirectional, color, intensity, radius, exponent, innercone, outercone, lightsourcesize, castshadow, castvolumetrics, density, volumetricsexponent, usecookie/cookie, cascadedistance0/1/2) is decoded.
+
+**9.8 Particle registry — checked.** The strings in `wallpaper64.exe` list 3 emitters, 16 initializers, 26 operators, 4 renderers and 3 child events. The operator EXTRAS.md calls `vortex_v` is `vortex_v2`.
+- All initializers and operators build, except two that are expected to return nothing: `collisionbox`, whose VM entry does nothing in WE (0x140240279), and `collisionmodel`, which needs 3D models and is logged.
+- The renderers `sprite`, `spritetrail`, `rope` and `ropetrail` and the events `eventfollow`, `eventspawn` and `eventdeath` are handled.
+- Gap: the `layerimage` emitter (particles emitted from a layer's image; only WE's element preview uses it) isn't built. It used to become a `sphererandom` silently and is now logged.
+- Test: `ParticleProgramTests.testEveryRegisteredInitializerAndOperatorBuilds`.
+
 ## Tests
 
 `OpenWallpaperEngineTests/WEAuthoredValuesTests.swift`:
