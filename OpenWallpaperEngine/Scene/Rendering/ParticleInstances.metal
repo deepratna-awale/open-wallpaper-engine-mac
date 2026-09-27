@@ -44,13 +44,14 @@ static void trackSource(thread ParticleInstanceState &instance, ParticleState pa
     instance.source = float4(particle.positionVelocity.zw, particle.life.z, particle.alphaRotation.z);
     instance.sourceColor = float4(particle.color.xyz, particle.alphaRotation.x);
     instance.emission.x = particle.alphaRotation.w;
+    instance.emission.y = particle.depth.y;
 }
 
 /// `ParticleInstance.inheritSource`.
 static void inheritSource(thread ParticleInstanceState &instance, ParticleInstanceState parent) {
     instance.source = parent.source;
     instance.sourceColor = parent.sourceColor;
-    instance.emission.x = parent.emission.x;
+    instance.emission.xy = parent.emission.xy;
 }
 
 /// The parent particle with `serial`, by binary search (particles stay in spawn order); `count`
@@ -278,14 +279,13 @@ kernel void particleLinkPoints(device const ParticleState *parentParticles [[buf
     const uint wanted = start < 8 ? 8 - start : 0;
     const bool perInstance = p.linking.z != 0;
     LinkedPoints points;
-    for (uint i = 0; i < 4; ++i) points.points[i] = float4(0);
+    for (uint i = 0; i < 8; ++i) points.points[i] = float4(0);
     uint count = 0;
     const uint total = parentControl[cCount];
     for (uint index = 0; index < total && count < wanted; ++index) {
         const ParticleState particle = parentParticles[index];
         if (perInstance && uint(particle.trail.z) != slot) continue;
-        if (count % 2 == 0) points.points[count / 2].xy = particle.positionVelocity.xy;
-        else points.points[count / 2].zw = particle.positionVelocity.xy;
+        points.points[count] = float4(particle.positionVelocity.xy, particle.depth.x, 0);
         ++count;
     }
     points.count = uint4(count, 0, 0, 0);

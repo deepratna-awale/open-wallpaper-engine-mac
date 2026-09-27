@@ -173,9 +173,9 @@ struct ParticleEmitterImage: Equatable {
 /// A control point (WE's `controlpoint` array entry, by index; `wallpaper64.exe` updates them each
 /// frame at 0x14022e3e0).
 struct ParticleControlPoint: Equatable {
-    /// `offset` (or the object's `controlpoint<n>` override), y up: in the system's space, or in
-    /// the scene when `worldSpace`.
-    var offset = SIMD2<Float>.zero
+    /// `offset` (or the object's `controlpoint<n>` override), y up, z the depth: in the system's
+    /// space, or in the scene when `worldSpace` (0x14022cdc0 keeps all three).
+    var offset = SIMD3<Float>.zero
     /// Flag 1: sits on the cursor.
     var followsCursor = false
     /// Flag 2 (not for control point 0): `offset` is a scene position.

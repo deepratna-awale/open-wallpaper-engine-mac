@@ -25,8 +25,9 @@ struct ParticleInstance {
     /// sequence for the `mapsequence…` initializers.
     var spawned: UInt32 = 0
     var periodSpawned: UInt32 = 0
-    /// The source particle's values, for `inheritinitialvaluefromevent` and `inheritvaluefromevent`.
-    var sourceVelocity = SIMD2<Float>.zero
+    /// The source particle's values, for `inheritinitialvaluefromevent` and `inheritvaluefromevent`
+    /// (velocity in the scene's plane and along the depth).
+    var sourceVelocity = SIMD3<Float>.zero
     var sourceColor = SIMD4<Float>.zero
     var sourceSize: Float = 0
     var sourceRotation: Float = 0
@@ -44,7 +45,7 @@ struct ParticleInstance {
 
     mutating func track(_ particle: Particle) {
         translation = particle.position
-        sourceVelocity = particle.velocity
+        sourceVelocity = SIMD3(particle.velocity, particle.zVelocity)
         sourceColor = SIMD4(particle.color.x, particle.color.y, particle.color.z, particle.alpha)
         sourceSize = particle.size
         sourceRotation = particle.rotation

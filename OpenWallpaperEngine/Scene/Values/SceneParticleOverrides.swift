@@ -16,6 +16,8 @@ struct SceneParticleOverrides: Equatable {
     var tint = SIMD3<Float>(repeating: 1)
     /// `controlpoint<n>`: where control point n sits, relative to the emitter, as authored.
     var controlPoints: [Int: SIMD3<Float>] = [:]
+    /// `controlpointangle<n>`: control point n's orientation, radians (x, then y, then z).
+    var controlPointAngles: [Int: SIMD3<Float>] = [:]
 
     init() {}
 
@@ -78,6 +80,10 @@ struct SceneParticleOverrides: Equatable {
         for id in 0..<8 {
             guard let field = SceneInstanceOverrideField.controlPoint(id), let value = value(field) else { continue }
             controlPoints[id] = value.vec3
+        }
+        for id in 0..<8 {
+            guard let field = SceneInstanceOverrideField.controlPointAngle(id), let value = value(field) else { continue }
+            controlPointAngles[id] = value.vec3
         }
     }
 }

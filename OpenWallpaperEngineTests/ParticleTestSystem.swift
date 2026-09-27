@@ -130,8 +130,8 @@ struct ParticleTestSystem {
     }
 
     /// A control point at `offset` in the system's space (or on the cursor).
-    static func point(_ offset: SIMD2<Float>, cursor: Bool = false) -> ParticleControlPoint {
-        ParticleControlPoint(offset: offset, followsCursor: cursor)
+    static func point(_ offset: SIMD2<Float>, z: Float = 0, cursor: Bool = false) -> ParticleControlPoint {
+        ParticleControlPoint(offset: SIMD3(offset, z), followsCursor: cursor)
     }
 
     /// This system as a child (`ParticleChildLink`).

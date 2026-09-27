@@ -75,7 +75,7 @@ struct ParticleInstanceState {
     float4 place;       // translation xy, previous translation xy
     float4 source;      // source velocity xy, size, rotation
     float4 sourceColor; // source colour, alpha
-    float4 emission;    // source angular velocity
+    float4 emission;    // source angular velocity, source velocity z
     uint4 state;        // flags (`iActive`…), source serial, live particles, first spawn
     uint4 spawn;        // spawned this step, spawned before it, the spawn its sequence restarts from
 };
@@ -88,9 +88,9 @@ struct ParticleFrame {
     float4 spaceLinear;      // the system's space in the scene: column 0 xy, column 1 xy
     float4 spaceMotion;      // its translation xy, the motion's translation xy
     float4 toSpace;          // the inverse linear part: column 0 xy, column 1 xy
-    float4 emitterLinear;    // `ParticleFrameInputs.emitterLinear`: column 0 xy, column 1 xy
-    float4 controlPoints[4]; // two per vector, in the system's space
-    float4 previousControlPoints[4];
+    float4 controlPoints[8]; // xyz, in the system's space
+    float4 previousControlPoints[8];
+    float3x3 controlPointAxes[8]; // `ParticleFrameInputs.controlPointAxes`
     float4 motionLinear;     // motion column 0 xy, column 1 xy
     float4 motionExtras;     // spawn size scale, spawn turn, has motion, trail and rope record size scale
     uint4 extra;             // control points that stay put in every instance, maximum, collisions, initializers | operators << 16
@@ -110,7 +110,7 @@ struct ProgramOp {
 
 /// `ParticleGPULinkedPoints`: a linked child's control points for one instance.
 struct LinkedPoints {
-    float4 points[4];
+    float4 points[8];        // scene xy, depth
     uint4 count;
 };
 

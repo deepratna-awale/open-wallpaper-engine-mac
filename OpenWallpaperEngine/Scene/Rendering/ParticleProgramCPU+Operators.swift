@@ -8,8 +8,8 @@ extension ParticleProgramCPU {
     /// The boids neighbourhood of a step: every particle's position and velocity in the scene at the
     /// start of the step, and the frame counter WE slices the work by.
     struct Neighbors {
-        var positions: [SIMD2<Float>] = []
-        var velocities: [SIMD2<Float>] = []
+        var positions: [SIMD3<Float>] = []
+        var velocities: [SIMD3<Float>] = []
         var serials: [UInt32] = []
         var frame: UInt32 = 0
     }
@@ -87,20 +87,17 @@ extension ParticleProgramCPU {
     // MARK: - Movement
 
     /// `movement` (0x14023fdc9): v' = v + g·Δt, p += v'·Δt, v = v'·(1 − min(drag·Δt', 1)), Δt' the
-    /// damped step (`ParticleFrameInputs.dragDeltaTime`). Flag 1 gives gravity in the scene rather
-    /// than the system's space (0x14023fde2).
+    /// damped step (`ParticleFrameInputs.dragDeltaTime`), in 3D. Flag 1 gives gravity in the scene
+    /// rather than the system's space (0x14023fde2).
     static func movement(_ record: ParticleProgramOp, _ p: inout ParticleProgramState, _ context: ParticleProgramContext) {
-        var gravity = SIMD2(record.a.x, record.a.y)
-        if record.header.y & 1 != 0, !context.worldSpace { gravity = context.toSpace * gravity }
+        var gravity = SIMD3(record.a.x, record.a.y, record.a.z)
+        if record.header.y & 1 != 0, !context.worldSpace { gravity = turn(context.toSpace, gravity) }
         let dt = context.deltaTime
         let damping = 1 - min(record.a.w * context.dragDeltaTime, 1)
         let velocity = p.velocity + gravity * dt
         p.previous = p.position
         p.position += velocity * dt
         p.velocity = velocity * damping
-        let zVelocity = p.zVelocity + record.a.z * dt
-        p.z += zVelocity * dt
-        p.zVelocity = zVelocity * damping
     }
 
     /// `angularmovement` (0x14023ffc7, blended 0x1402400e7): the same scheme on the spin about z.
@@ -146,7 +143,7 @@ extension ParticleProgramCPU {
     }
 
     /// `oscillateposition` (0x1402404c0): moves the particle along a sine path, by its change over
-    /// the step; y runs 2π·r out of phase with x.
+    /// the step; y runs 2π·r out of phase with x, z with x (0x14024076c).
     static func oscillatePosition(_ record: ParticleProgramOp, _ p: inout ParticleProgramState,
                                   _ context: ParticleProgramContext, blend: Float) {
         let r = context.random
@@ -156,7 +153,7 @@ extension ParticleProgramCPU {
         let shift = 2 * Float.pi * r
         let x = sin(o.frequency * now) - sin(o.frequency * before)
         let y = sin(o.frequency * (now + shift)) - sin(o.frequency * (before + shift))
-        p.position += SIMD2(x * scale * record.a.x, y * scale * record.a.y)
+        p.position += SIMD3(x * scale * record.a.x, y * scale * record.a.y, x * scale * record.a.z)
     }
 
     // MARK: - Control points
@@ -185,14 +182,16 @@ extension ParticleProgramCPU {
     }
 
     /// `maintaindistancetocontrolpoint` (0x14024197a): carries the particle along with the point's
-    /// move and pulls it to `distance` from it, fully or by `variablestrength·Δt`.
+    /// move and pulls it to `distance` from it, fully or by `variablestrength·Δt`. The distance is
+    /// measured in the point's own frame (|o·inverse(orientation)|: |o| for a pure rotation).
     static func maintainDistance(_ record: ParticleProgramOp, _ p: inout ParticleProgramState,
                                  _ context: ParticleProgramContext, blend: Float) {
         let index = record.controlPoint0
         let center = point(context.controlPoints, index)
         let moved = p.position + (center - point(context.previousControlPoints, index))
         let offset = moved - center
-        let length = simd_length(offset)
+        let axes = point(context.controlPointAxes, index)
+        let length = simd_length(abs(axes.determinant) > 1e-12 ? axes.inverse * offset : offset)
         let strength = record.a.y == 0 ? 1 : saturate(record.a.y * context.deltaTime)
         guard length > 0 else { p.position = moved; return }
         p.position = moved + offset * (record.a.x / length - 1) * strength * blend
@@ -231,25 +230,28 @@ extension ParticleProgramCPU {
     // MARK: - Fields
 
     /// `turbulence` (0x14024295a): 3D simplex noise of the position, shifted by time and the
-    /// particle's phase, pushes the velocity (engine time × `timescale`; `phasemin` is never read).
+    /// particle's phase, pushes the velocity (engine time × `timescale`; `phasemin` is never read):
+    /// x samples (X, Y, Z), y (Z, X, Y), z (Y, Z, X).
     static func turbulence(_ record: ParticleProgramOp, _ p: inout ParticleProgramState,
                            _ context: ParticleProgramContext, blend: Float) {
         let r = context.random
         let phase = r * (record.c.y - record.c.x) + context.engineTime * record.b.w
         let scale = record.b.x
-        let point = SIMD3(p.position.x + phase, p.position.y + phase, phase) * scale
+        let point = (p.position + phase) * scale
         let speed = (record.b.y + r * (record.b.z - record.b.y)) * record.e.w * blend
         let push = context.dragDeltaTime * speed
         p.velocity.x += ParticleNoise.simplex3(point.x, point.y, point.z) * record.a.x * push
         p.velocity.y += ParticleNoise.simplex3(point.z, point.x, point.y) * record.a.y * push
+        p.velocity.z += ParticleNoise.simplex3(point.y, point.z, point.x) * record.a.z * push
     }
 
     /// `vortex` (0x1402431be): spins particles about the axis through the control point (plus
-    /// `offset`), speedinner at distanceinner to speedouter at distanceouter.
+    /// `offset`), speedinner at distanceinner to speedouter at distanceouter, in 3D. The axis
+    /// doesn't turn with the control point.
     static func vortex(_ record: ParticleProgramOp, _ p: inout ParticleProgramState, _ context: ParticleProgramContext) {
-        let center = point(context.controlPoints, record.controlPoint0) + SIMD2(record.a.x, record.a.y)
+        let center = point(context.controlPoints, record.controlPoint0) + SIMD3(record.a.x, record.a.y, record.a.z)
         let axis = vortexAxis(record.b)
-        var offset = SIMD3(p.position.x - center.x, p.position.y - center.y, 0)
+        var offset = p.position - center
         if record.header.y & 1 != 0 { offset -= simd_dot(offset, axis) * axis }
         let distance = simd_length(offset)
         guard distance > 0 else { return }
@@ -257,8 +259,7 @@ extension ParticleProgramCPU {
         let span = record.c.y - record.c.x
         let t = saturate((distance - record.c.x) * (span == 0 ? 1 : 1 / span))
         let speed = (record.c.z + t * (record.c.w - record.c.z)) * record.e.w
-        let push = cross(normal, axis) * speed * context.dragDeltaTime
-        p.velocity += SIMD2(push.x, push.y)
+        p.velocity += cross(normal, axis) * speed * context.dragDeltaTime
     }
 
     /// A vortex axis, normalised; z when it is too short (0x1401cd8a2).
@@ -269,21 +270,21 @@ extension ParticleProgramCPU {
 
     /// `vortex_v2` (0x1402433ea): the vortex spin, plus (flag 2) a pull that keeps the particle's
     /// distance to the axis over the step, and (flag 4) a ring of radius `ringradius` that pulls
-    /// particles in from `ringpulldistance`.
+    /// particles in from `ringpulldistance`, in 3D. The axis turns with the control point's
+    /// orientation, not normalised again (0x1402434d0).
     static func vortexV2(_ record: ParticleProgramOp, _ p: inout ParticleProgramState,
                          _ context: ParticleProgramContext, blend: Float) {
         let flags = record.header.y
         let center = point(context.controlPoints, record.controlPoint0)
-        let axis = vortexAxis(record.a)
-        var offset = SIMD3(p.position.x - center.x, p.position.y - center.y, 0)
+        let axis = point(context.controlPointAxes, record.controlPoint0) * vortexAxis(record.a)
+        var offset = p.position - center
         let height = flags & 1 != 0 ? simd_dot(offset, axis) : 0
         offset -= height * axis
         let distance = simd_length(offset)
         guard distance > 0 else { return }
         let normal = offset / distance
         let dt = context.deltaTime
-        let ahead = SIMD3(p.position.x + p.velocity.x * dt - center.x, p.position.y + p.velocity.y * dt - center.y, 0)
-            - height * axis
+        let ahead = p.position + p.velocity * dt - center - height * axis
         let aheadLength = simd_length(ahead)
         let centerForce = flags & 2 != 0 ? record.c.x : 0
         var pull = aheadLength > 0 ? (distance / aheadLength - 1) * centerForce / dt : 0
@@ -299,8 +300,7 @@ extension ParticleProgramCPU {
             t = saturate((distance - record.b.x) * (span == 0 ? 1 : 1 / span))
         }
         let speed = (record.b.z + t * (record.b.w - record.b.z)) * record.e.w
-        let push = (cross(normal, axis) * speed * context.dragDeltaTime + pull * ahead) * blend
-        p.velocity += SIMD2(push.x, push.y)
+        p.velocity += (cross(normal, axis) * speed * context.dragDeltaTime + pull * ahead) * blend
     }
 
     /// `boids` (0x140244121): separation, alignment and cohesion with the neighbours in range.
@@ -314,10 +314,10 @@ extension ParticleProgramCPU {
         let slice = neighbors.frame % slices
         guard (context.serial / 4) % slices == slice else { return }
         let separationThreshold = record.a.x, neighborThreshold = record.a.y
-        var separation = SIMD2<Float>.zero, velocitySum = SIMD2<Float>.zero, positionSum = SIMD2<Float>.zero
+        var separation = SIMD3<Float>.zero, velocitySum = SIMD3<Float>.zero, positionSum = SIMD3<Float>.zero
         var separated: Float = 0, neighbored: Float = 0
         for j in 0..<count where j != index && (neighbors.serials[j] / 4) % slices == slice {
-            let position = context.toSpace * (neighbors.positions[j] - context.space.translation)
+            let position = toSpace(neighbors.positions[j], context)
             let offset = p.position - position
             let distance = simd_length(offset)
             if distance < separationThreshold, distance > 0 {
@@ -325,13 +325,13 @@ extension ParticleProgramCPU {
                 separated += 1
             }
             if distance < neighborThreshold {
-                velocitySum += context.toSpace * neighbors.velocities[j]
+                velocitySum += turn(context.toSpace, neighbors.velocities[j])
                 positionSum += position
                 neighbored += 1
             }
         }
         let weight = Float(slices) * context.dragDeltaTime
-        var change = SIMD2<Float>.zero
+        var change = SIMD3<Float>.zero
         if separated > 0 { change += record.b.x * weight / separated * separation }
         if neighbored > 0 {
             change += record.b.y * weight * (velocitySum / neighbored - p.velocity)
@@ -361,7 +361,7 @@ extension ParticleProgramCPU {
         guard let source = context.source else { return }
         let verbs = ParticleInheritance(rawValue: record.header.y)
         let rgb = SIMD3(source.sourceColor.x, source.sourceColor.y, source.sourceColor.z)
-        let velocity = context.toSpace * source.sourceVelocity
+        let velocity = turn(context.toSpace, source.sourceVelocity)
         if verbs.contains(.setColor) { p.color = rgb }
         if verbs.contains(.multiplyColor) { p.color *= rgb }
         if verbs.contains(.setOpacity) { p.alpha = source.sourceColor.w }
@@ -380,27 +380,30 @@ extension ParticleProgramCPU {
     /// particle.
     static func collide(_ record: ParticleProgramOp, _ p: inout ParticleProgramState, _ context: ParticleProgramContext) -> Bool {
         let first = Int(record.header.z & 0xFFFF), count = Int(record.header.z >> 16)
-        var position = context.space.apply(p.position)
-        var velocity = context.space.linear * p.velocity
-        let previous = context.space.apply(p.previous)
+        var position = context.space.apply(flat(p.position))
+        var velocity = context.space.linear * flat(p.velocity)
+        let previous = context.space.apply(flat(p.previous))
         var dies = false
         let range = min(first, context.collisions.count)..<min(first + count, context.collisions.count)
         if context.collisions[range].first?.kind == .capsule {
             // `collisionmodel`: in 3D, the particle's depth included.
-            var point = SIMD3<Float>(position, p.z), motion = SIMD3<Float>(velocity, p.zVelocity)
+            var point = SIMD3<Float>(position, p.position.z), motion = SIMD3<Float>(velocity, p.velocity.z)
             ParticleCollisionPlacement.resolveCapsules(context.collisions[range], position: &point, velocity: &motion, dies: &dies)
-            p.position = context.toSpace * (SIMD2(point.x, point.y) - context.space.translation)
-            p.velocity = context.toSpace * SIMD2(motion.x, motion.y)
-            p.z = point.z
-            p.zVelocity = motion.z
+            p.position = toSpace(point, context)
+            p.velocity = turn(context.toSpace, motion)
             return dies
         }
         for index in first..<min(first + count, context.collisions.count) {
             context.collisions[index].resolve(position: &position, velocity: &velocity,
                                               angularVelocity: &p.angularVelocity, dies: &dies, previous: previous)
         }
-        p.position = context.toSpace * (position - context.space.translation)
-        p.velocity = context.toSpace * velocity
+        p.position = SIMD3(context.toSpace * (position - context.space.translation), p.position.z)
+        p.velocity = SIMD3(context.toSpace * velocity, p.velocity.z)
         return dies
+    }
+
+    /// A scene point (depth kept) in the system's space.
+    static func toSpace(_ scene: SIMD3<Float>, _ context: ParticleProgramContext) -> SIMD3<Float> {
+        SIMD3(context.toSpace * (flat(scene) - context.space.translation), scene.z)
     }
 }

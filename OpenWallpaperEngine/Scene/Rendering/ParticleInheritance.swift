@@ -56,8 +56,8 @@ struct ParticleInheritance: OptionSet, Hashable {
         if contains(.multiplyColor) { particle.setColor(particle.rgb * rgb) }
         if contains(.setOpacity) { particle.setAlpha(source.sourceColor.w) }
         if contains(.multiplyOpacity) { particle.setAlpha(particle.alpha * source.sourceColor.w) }
-        if contains(.setVelocity) { particle.velocity = source.sourceVelocity }
-        if contains(.addVelocity) { particle.velocity += source.sourceVelocity }
+        if contains(.setVelocity) { particle.setVelocity(source.sourceVelocity) }
+        if contains(.addVelocity) { particle.setVelocity(SIMD3(particle.velocity, particle.zVelocity) + source.sourceVelocity) }
         if contains(.setSize) { particle.setSize(source.sourceSize) }
         if contains(.multiplySize) { particle.setSize(particle.size * source.sourceSize) }
         if contains(.setRotation) { particle.rotation = source.sourceRotation }
@@ -75,7 +75,7 @@ struct ParticleInheritance: OptionSet, Hashable {
         if contains(.multiplyColor) { particle.color = SIMD4(baseRGB * rgb, particle.color.w) }
         if contains(.setOpacity) { particle.alpha = source.sourceColor.w }
         if contains(.multiplyOpacity) { particle.alpha = particle.baseAlpha * source.sourceColor.w }
-        if contains(.setVelocity) { particle.velocity = source.sourceVelocity }
+        if contains(.setVelocity) { particle.setVelocity(source.sourceVelocity) }
         if contains(.setSize) { particle.size = source.sourceSize }
         if contains(.multiplySize) { particle.size = particle.baseSize * source.sourceSize }
         if contains(.setRotation) { particle.rotation = source.sourceRotation }
@@ -85,6 +85,11 @@ struct ParticleInheritance: OptionSet, Hashable {
 
 private extension Particle {
     var rgb: SIMD3<Float> { SIMD3(color.x, color.y, color.z) }
+
+    mutating func setVelocity(_ v: SIMD3<Float>) {
+        velocity = SIMD2(v.x, v.y)
+        zVelocity = v.z
+    }
 
     mutating func setColor(_ rgb: SIMD3<Float>) {
         color = SIMD4(rgb, color.w)

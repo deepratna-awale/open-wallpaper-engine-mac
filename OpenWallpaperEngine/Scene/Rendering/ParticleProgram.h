@@ -22,10 +22,8 @@ constant uint iSequenceAround = 13, iSequenceBetween = 14, iRemapInitialValue = 
 
 /// `ParticleProgramState`.
 struct ProgramState {
-    float2 position, velocity, previous;
+    float3 position, velocity, previous;
     float age, lifetime, size, baseSize, alpha, baseAlpha, rotation, angularVelocity;
-    /// Depth and its velocity (`ParticleProgramState.z`).
-    float z, zVelocity;
     float3 color, baseColor;
 };
 
@@ -35,8 +33,10 @@ struct ProgramContext {
     float dragDeltaTime;
     uint seed, serial;
     float random;
-    float2 points[8], previousPoints[8];
-    float2x2 space, toSpace, emitterLinear;
+    float3 points[8], previousPoints[8];
+    float3x3 axes[8];
+    float3x3 emitterAxes;
+    float2x2 space, toSpace;
     float2 origin;
     bool worldSpace;
     bool hasSource;
@@ -48,7 +48,20 @@ struct ProgramContext {
 
 static float lifeFraction(thread const ProgramState &p) { return p.age / max(p.lifetime, 0.001f); }
 
-static float2 programPoint(thread const float2 *points, uint index) { return points[min(index, 7u)]; }
+static float3 programPoint(thread const float3 *points, uint index) { return points[min(index, 7u)]; }
+
+static float3x3 programAxes(thread const ProgramContext &c, uint index) { return c.axes[min(index, 7u)]; }
+
+/// `ParticleProgramCPU.turn`: a 2D linear map on x and y, z kept.
+static float3 turnXY(float2x2 linear, float3 v) { return float3(linear * v.xy, v.z); }
+
+/// A 3×3 inverse (the caller checks the determinant).
+static float3x3 inverse3(float3x3 m) {
+    const float3 a = m[0], b = m[1], c = m[2];
+    const float3 r0 = cross(b, c), r1 = cross(c, a), r2 = cross(a, b);
+    const float det = dot(a, r0);
+    return transpose(float3x3(r0, r1, r2)) * (1.0f / det);
+}
 
 static float shaped(float r, float exponent) { return exponent == 1 ? r : pow(r, exponent); }
 
@@ -125,8 +138,8 @@ static void sequenceBasis(float3 axis, thread float3 &unit, thread float3 &first
 static float3 remapInput(uint input, ProgramOp record, thread const ProgramState &p, thread ProgramContext &c,
                          bool initializer) {
     const uint pointIndex = min(record.header.z & 0xFFu, 7u);
-    if (initializer && input >= 16 && input <= 18) c.points[pointIndex] = float2(0);
-    const float2 cp0 = c.points[pointIndex];
+    if (initializer && input >= 16 && input <= 18) c.points[pointIndex] = float3(0);
+    const float3 cp0 = c.points[pointIndex];
     switch (input) {
     case 0: return float3(lifeFraction(p));
     case 1: return float3(p.lifetime);
@@ -137,9 +150,9 @@ static float3 remapInput(uint input, ProgramOp record, thread const ProgramState
     case 6: return float3(p.angularVelocity);
     case 7: return float3(length(p.position - cp0));
     case 8: {
-        const float2 a = programPoint(c.points, (record.header.z >> 8) & 0xFFu);
-        const float2 b = programPoint(c.points, (record.header.z >> 24) & 0xFFu);
-        const float2 span = b - a;
+        const float3 a = programPoint(c.points, (record.header.z >> 8) & 0xFFu);
+        const float3 b = programPoint(c.points, (record.header.z >> 24) & 0xFFu);
+        const float3 span = b - a;
         const float spanLength = dot(span, span);
         return float3(spanLength > 0 ? dot(p.position - a, span) / spanLength : 0.0f);
     }
@@ -148,14 +161,14 @@ static float3 remapInput(uint input, ProgramOp record, thread const ProgramState
     case 11: return float3(initializer ? c.systemTime : c.engineTime);
     case 12: return float3(c.systemTime);
     case 13: return initializer ? p.baseColor : p.color;
-    case 14: return float3(p.position, 0);
-    case 15: return float3(p.velocity, 0);
-    case 16: return float3(cp0, 0);
-    case 17: return float3(cp0 - p.position, 0);
+    case 14: return p.position;
+    case 15: return p.velocity;
+    case 16: return cp0;
+    case 17: return cp0 - p.position;
     case 18: {
-        const float2 offset = cp0 - p.position;
+        const float3 offset = cp0 - p.position;
         const float offsetLength = length(offset);
-        return offsetLength > 0 ? float3(offset / offsetLength, 0) : float3(0);
+        return offsetLength > 0 ? offset / offsetLength : float3(0);
     }
     case 19: return float3(c.layerOrigin, 0);
     default: return float3(0);
@@ -236,7 +249,7 @@ static void remap(ProgramOp record, thread ProgramState &p, thread ProgramContex
     if (flags & 2u) mapped = clamp(mapped, float3(0), float3(1));
     const uint operation = code & 0xFu, output = (code >> 9) & 0x1Fu, component = (code >> 18) & 0xFu;
     const uint outputPoint = min((record.header.z >> 8) & 0xFFu, 7u);
-    const float2 center = c.points[outputPoint];
+    const float3 center = c.points[outputPoint];
     switch (output) {
     case 1: p.lifetime = remapApply(operation, p.lifetime, mapped.x, blend); break;
     case 2:
@@ -250,7 +263,7 @@ static void remap(ProgramOp record, thread ProgramState &p, thread ProgramContex
     case 4: {
         const float speed = length(p.velocity);
         const float target = remapApply(operation, speed, mapped.x, blend);
-        p.velocity = speed > 0 ? p.velocity / speed * target : float2(0);
+        p.velocity = speed > 0 ? p.velocity / speed * target : float3(0);
         break;
     }
     case 5: p.rotation = remapApply(operation, p.rotation, mapped.x, blend); break;
@@ -260,35 +273,33 @@ static void remap(ProgramOp record, thread ProgramState &p, thread ProgramContex
         else p.color = remapApplyVector(operation, component, p.color, mapped, blend);
         break;
     case 7: {
-        const float2 offset = p.position - center;
+        const float3 offset = p.position - center;
         const float distance = length(offset);
-        p.position = center + (distance > 0 ? offset / distance : float2(0)) * remapApply(operation, distance, mapped.x, blend);
+        p.position = center + (distance > 0 ? offset / distance : float3(0)) * remapApply(operation, distance, mapped.x, blend);
         break;
     }
     case 8: {
-        const float2 span = programPoint(c.points, (record.header.z >> 24) & 0xFFu) - center;
+        const float3 span = programPoint(c.points, (record.header.z >> 24) & 0xFFu) - center;
         const float spanLength = length(span);
-        const float2 direction = spanLength > 0 ? span / spanLength : float2(0);
-        const float2 offset = p.position - center;
+        const float3 direction = spanLength > 0 ? span / spanLength : float3(0);
+        const float3 offset = p.position - center;
         const float along = dot(offset, direction);
         const float fraction = spanLength > 0 ? along / spanLength : 0.0f;
         p.position = center + (offset - along * direction)
             + direction * (remapApply(operation, fraction, mapped.x, blend) * spanLength);
         break;
     }
-    case 14: p.position = remapApplyVector(operation, component, float3(p.position, 0), mapped, blend).xy; break;
-    case 15: p.velocity = remapApplyVector(operation, component, float3(p.velocity, 0), mapped, blend).xy; break;
-    case 16: c.points[outputPoint] = remapApplyVector(operation, component, float3(center, 0), mapped, blend).xy; break;
-    case 17:
-        p.position = center - remapApplyVector(operation, component, float3(center - p.position, 0), mapped, blend).xy;
-        break;
+    case 14: p.position = remapApplyVector(operation, component, p.position, mapped, blend); break;
+    case 15: p.velocity = remapApplyVector(operation, component, p.velocity, mapped, blend); break;
+    case 16: c.points[outputPoint] = remapApplyVector(operation, component, center, mapped, blend); break;
+    case 17: p.position = center - remapApplyVector(operation, component, center - p.position, mapped, blend); break;
     case 18: {
-        const float2 offset = center - p.position;
+        const float3 offset = center - p.position;
         const float distance = length(offset);
-        const float2 direction = distance > 0 ? offset / distance : float2(0);
-        const float2 turned = remapApplyVector(operation, component, float3(direction, 0), mapped, blend).xy;
+        const float3 direction = distance > 0 ? offset / distance : float3(0);
+        const float3 turned = remapApplyVector(operation, component, direction, mapped, blend);
         const float turnedLength = length(turned);
-        p.position = center - (turnedLength > 0 ? turned / turnedLength : float2(0)) * distance;
+        p.position = center - (turnedLength > 0 ? turned / turnedLength : float3(0)) * distance;
         break;
     }
     default: break;
@@ -302,7 +313,7 @@ static void inheritFromSource(uint verbs, thread ProgramState &p, thread const P
     if (!c.hasSource) return;
     const ParticleInstanceState source = c.source;
     const float3 rgb = source.sourceColor.xyz;
-    const float2 velocity = c.toSpace * source.source.xy;
+    const float3 velocity = turnXY(c.toSpace, float3(source.source.xy, source.emission.y));
     thread float3 &color = initializer ? p.baseColor : p.color;
     thread float &alpha = initializer ? p.baseAlpha : p.alpha;
     thread float &size = initializer ? p.baseSize : p.size;
@@ -332,8 +343,8 @@ static float3 signedVector(float3 v, float3 sign) {
 }
 
 /// `ParticleProgramCPU.emit`.
-static void emitParticle(EmitterParameters e, thread const ProgramContext &c, thread float2 &position,
-                         thread float2 &velocity, thread float &z, thread float &zVelocity) {
+static void emitParticle(EmitterParameters e, thread const ProgramContext &c, thread float3 &position,
+                         thread float3 &velocity) {
     const uint seed = c.seed, serial = c.serial;
     const float3 directions = e.directions.xyz;
     float3 offset;
@@ -356,20 +367,19 @@ static void emitParticle(EmitterParameters e, thread const ProgramContext &c, th
         if (e.flags.y != 0) direction = signedVector(direction, e.sign.xyz);
         offset = (e.minimum.x + vLength * (e.maximum.x - e.minimum.x)) * direction;
     }
-    const float2 turned = c.emitterLinear * offset.xy;
-    position = programPoint(c.points, uint(e.origin.w)) + e.origin.xy + turned;
-    z = e.origin.z + offset.z;
-    float3 heading = float3(turned, offset.z);
+    const uint point = uint(e.origin.w);
+    const float3x3 axes = (c.worldSpace || point != 0) ? c.emitterAxes : float3x3(1);
+    const float3 turned = axes * offset;
+    position = programPoint(c.points, point) + e.origin.xyz + turned;
+    float3 heading = turned;
     if (length_squared(heading) < 0.0001f) {
         const float3 fallback = (float3(unitRandom(seed, serial, sFallbackX), unitRandom(seed, serial, sFallbackY),
                                         unitRandom(seed, serial, sFallbackZ)) * 2 - 1) * directions;
-        heading = float3(c.emitterLinear * fallback.xy, fallback.z);
+        heading = axes * fallback;
     }
     const float headingLength = length(heading);
     const float speed = (e.minimum.w + unitRandom(seed, serial, sEmitterSpeed) * (e.maximum.w - e.minimum.w)) * c.spawnScale.w;
-    const float3 launch = headingLength > 0 ? heading / headingLength * speed : float3(0);
-    velocity = launch.xy;
-    zVelocity = launch.z;
+    velocity = headingLength > 0 ? heading / headingLength * speed : float3(0);
 }
 
 /// `ParticleProgramCPU.runInitializers`.
@@ -422,19 +432,16 @@ static void runInitializers(constant ProgramOp *records, uint count, thread Prog
             const float3 v = float3(record.a.x + (record.b.x - record.a.x) * shaped(unitRandom(seed, serial, initializerStream(index, 0)), exponent),
                                     record.a.y + (record.b.y - record.a.y) * shaped(unitRandom(seed, serial, initializerStream(index, 1)), exponent),
                                     record.a.z + (record.b.z - record.a.z) * shaped(unitRandom(seed, serial, initializerStream(index, 2)), exponent));
-            if (record.header.x == iVelocityRandom) {
-                p.velocity += c.emitterLinear * (v.xy * c.spawnScale.w);
-                p.zVelocity += v.z * c.spawnScale.w;
-            }
+            if (record.header.x == iVelocityRandom) p.velocity += c.emitterAxes * (v * c.spawnScale.w);
             else if (record.header.x == iRotationRandom) p.rotation += v.z;
             else p.angularVelocity += v.z * c.spawnScale.w;
             break;
         }
         case iInheritControlPointVelocity: {
             const uint point = record.header.z & 0xFFu;
-            const float2 moved = programPoint(c.points, point) - programPoint(c.previousPoints, point);
-            const float2 velocity = c.deltaTime > 0 ? moved / c.deltaTime : float2(0);
-            p.velocity += velocity * (record.a.x + unitRandom(seed, serial, initializerStream(index, 0)) * (record.a.y - record.a.x));
+            const float3 moved = programPoint(c.points, point) - programPoint(c.previousPoints, point);
+            const float3 velocity = c.deltaTime > 0 ? moved / c.deltaTime : float3(0);
+            p.velocity += c.emitterAxes * (velocity * (record.a.x + unitRandom(seed, serial, initializerStream(index, 0)) * (record.a.y - record.a.x)));
             break;
         }
         case iTurbulentVelocityRandom: {
@@ -443,59 +450,65 @@ static void runInitializers(constant ProgramOp *records, uint count, thread Prog
             const float angle = simplex1(t) * M_PI_F * record.b.y + record.b.z;
             const float3 direction = rotateAbout(record.c.xyz, record.d.xyz, angle);
             const float speed = record.a.x + unitRandom(seed, serial, initializerStream(index, 1)) * (record.a.y - record.a.x);
-            p.velocity += c.emitterLinear * direction.xy * speed * c.spawnScale.w;
+            p.velocity += c.emitterAxes * direction * speed * c.spawnScale.w;
             break;
         }
         case iPositionOffsetRandom: {
             const float scale = record.c.x, time = record.c.z * c.engineTime;
             const int octaves = clamp(int(record.c.w), 1, 8);
-            float sumX = 0, sumY = 0, amplitude = 1, total = 0, frequency = 1;
+            float sumX = 0, sumY = 0, sumZ = 0, amplitude = 1, total = 0, frequency = 1;
             for (int octave = 0; octave < octaves; ++octave) {
                 sumX += simplex2(p.position.x * scale * frequency, time * frequency) * amplitude;
                 sumY += simplex2(time * frequency, p.position.y * scale * frequency) * amplitude;
+                sumZ += simplex2(p.position.z * scale * frequency, -time * frequency) * amplitude;
                 total += amplitude;
                 amplitude *= 0.5f;
                 frequency *= 2;
             }
-            float3 offset = float3(sumX / total, sumY / total, 0) * record.a.xyz;
+            float3 offset = float3(sumX / total, sumY / total, sumZ / total) * record.a.xyz;
             if (record.header.y & 1u) offset = offset * (1 - abs(record.b.xyz)) + abs(offset) * record.b.xyz;
-            p.position += offset.xy * record.c.y;
+            p.position += offset * record.c.y;
             break;
         }
         case iSequenceAround: {
             const float t = sequencePosition(sequenceIndex(record, c), record.a.x, record.a.w != 0, false);
-            const float2 center = programPoint(c.points, record.header.z & 0xFFu);
+            const uint point = record.header.z & 0xFFu;
+            const float3 center = programPoint(c.points, point);
             float3 axis, first, second;
             sequenceBasis(record.d.xyz, axis, first, second);
-            const float3 offset = float3(p.position - center, 0);
+            const float3x3 turn = programAxes(c, point);
+            axis = turn * axis;
+            first = turn * first;
+            second = turn * second;
+            const float3 offset = p.position - center;
             const float height = dot(offset, axis);
             const float radius = length(offset - height * axis);
             const float angle = 2 * M_PI_F * (record.a.y + t * (record.a.z - record.a.y));
             const float3 outward = sin(angle) * first + cos(angle) * second;
             const float3 tangent = cos(angle) * first - sin(angle) * second;
-            p.position = (float3(center, 0) + height * axis + radius * outward).xy;
+            p.position = center + height * axis + radius * outward;
             const float speedZ = record.b.z + unitRandom(seed, serial, initializerStream(index, 0)) * (record.c.z - record.b.z);
             const float speedX = record.b.x + unitRandom(seed, serial, initializerStream(index, 1)) * (record.c.x - record.b.x);
             const float speedY = record.b.y + unitRandom(seed, serial, initializerStream(index, 2)) * (record.c.y - record.b.y);
-            p.velocity += (tangent * speedX + outward * speedY + axis * speedZ).xy;
+            p.velocity += tangent * speedX + outward * speedY + axis * speedZ;
             break;
         }
         case iSequenceBetween: {
             const uint flags = record.header.y;
             const float t = sequencePosition(sequenceIndex(record, c), record.a.x, record.a.w != 0, true);
-            const float2 a = programPoint(c.points, record.header.z & 0xFFu), b = programPoint(c.points, (record.header.z >> 8) & 0xFFu);
-            const float2 span = b - a;
+            const float3 a = programPoint(c.points, record.header.z & 0xFFu), b = programPoint(c.points, (record.header.z >> 8) & 0xFFu);
+            const float3 span = b - a;
             const float spanLength = max(length(span), FLT_MIN);
-            const float2 direction = span / spanLength;
-            float2 from = p.position;
+            const float3 direction = span / spanLength;
+            float3 from = p.position;
             if (c.worldSpace) from -= a;
             const float along = dot(from, direction);
-            float2 across = from - along * direction;
+            float3 across = from - along * direction;
             const float s = record.a.y + t * (record.a.z - record.a.y);
             const float w = 1 - pow(abs(2 * t - 1), 2.0f);
             if (flags & 1u) across *= w;
-            float2 position = a + direction * (s * spanLength) + across;
-            if (flags & 8u) position += record.c.xy * (w * spanLength * record.b.x);
+            float3 position = a + direction * (s * spanLength) + across;
+            if (flags & 8u) position += record.c.xyz * (w * spanLength * record.b.x);
             p.position = position;
             if (flags & 2u) p.velocity *= w;
             if (flags & 4u) p.baseSize *= (1 - record.b.y) + record.b.y * w;
@@ -552,16 +565,13 @@ static bool runOperator(ProgramOp record, thread ProgramState &p, thread Program
         const uint flags = record.header.y;
         switch (record.header.x) {
         case oMovement: {
-            float2 gravity = record.a.xy;
-            if ((flags & 1u) && !c.worldSpace) gravity = c.toSpace * gravity;
+            float3 gravity = record.a.xyz;
+            if ((flags & 1u) && !c.worldSpace) gravity = turnXY(c.toSpace, gravity);
             const float damping = 1 - min(record.a.w * c.dragDeltaTime, 1.0f);
-            const float2 velocity = p.velocity + gravity * dt;
+            const float3 velocity = p.velocity + gravity * dt;
             p.previous = p.position;
             p.position += velocity * dt;
             p.velocity = velocity * damping;
-            const float zVelocity = p.zVelocity + record.a.z * dt;
-            p.z += zVelocity * dt;
-            p.zVelocity = zVelocity * damping;
             break;
         }
         case oAngularMovement: {
@@ -596,7 +606,7 @@ static bool runOperator(ProgramOp record, thread ProgramState &p, thread Program
             const float shift2 = 2 * M_PI_F * r;
             const float x = sin(o.x * now) - sin(o.x * before);
             const float y = sin(o.x * (now + shift2)) - sin(o.x * (before + shift2));
-            p.position += float2(x * scale * record.a.x, y * scale * record.a.y);
+            p.position += float3(x * scale * record.a.x, y * scale * record.a.y, x * scale * record.a.z);
             break;
         }
         case oOscillateAlpha: {
@@ -610,8 +620,8 @@ static bool runOperator(ProgramOp record, thread ProgramState &p, thread Program
             break;
         }
         case oControlPointAttract: {
-            const float2 center = programPoint(c.points, record.header.z & 0xFFu);
-            const float2 offset = p.position - center;
+            const float3 center = programPoint(c.points, record.header.z & 0xFFu);
+            const float3 offset = p.position - center;
             const float distance = length(offset);
             const float scale = record.b.x, threshold = record.b.y;
             if (distance > FLT_MIN && distance < threshold) {
@@ -620,33 +630,34 @@ static bool runOperator(ProgramOp record, thread ProgramState &p, thread Program
                 p.velocity -= offset / distance * force;
             }
             if (flags & 1u) {
-                const float2 segment = p.position - p.previous;
+                const float3 segment = p.position - p.previous;
                 const float segmentLength = dot(segment, segment);
                 const float t = segmentLength > 0 ? saturateValue(dot(center - p.previous, segment) / segmentLength) : 0.0f;
-                const float2 closest = p.previous + segment * t;
+                const float3 closest = p.previous + segment * t;
                 if (length_squared(center - closest) <= record.b.z * record.b.z) dies = true;
             }
             break;
         }
         case oMaintainDistance: {
             const uint point = record.header.z & 0xFFu;
-            const float2 center = programPoint(c.points, point);
-            const float2 moved = p.position + (center - programPoint(c.previousPoints, point));
-            const float2 offset = moved - center;
-            const float offsetLength = length(offset);
+            const float3 center = programPoint(c.points, point);
+            const float3 moved = p.position + (center - programPoint(c.previousPoints, point));
+            const float3 offset = moved - center;
+            const float3x3 axes = programAxes(c, point);
+            const float offsetLength = length(abs(determinant(axes)) > 1e-12f ? inverse3(axes) * offset : offset);
             const float strength = record.a.y == 0 ? 1.0f : saturateValue(record.a.y * dt);
             p.position = offsetLength > 0 ? moved + offset * (record.a.x / offsetLength - 1) * strength * blend : moved;
             break;
         }
         case oMaintainBetween: {
             const uint first = record.header.z & 0xFFu, second = (record.header.z >> 8) & 0xFFu;
-            const float2 a = programPoint(c.points, first), b = programPoint(c.points, second);
-            const float2 aBefore = programPoint(c.previousPoints, first), bBefore = programPoint(c.previousPoints, second);
-            const float2 span = b - a, spanBefore = bBefore - aBefore;
+            const float3 a = programPoint(c.points, first), b = programPoint(c.points, second);
+            const float3 aBefore = programPoint(c.previousPoints, first), bBefore = programPoint(c.previousPoints, second);
+            const float3 span = b - a, spanBefore = bBefore - aBefore;
             const float limit = 1.42109e-14f;
             if (length_squared(span) > limit && length_squared(spanBefore) > limit) {
                 const float lengthBefore = length(spanBefore);
-                const float2 directionBefore = spanBefore / lengthBefore;
+                const float3 directionBefore = spanBefore / lengthBefore;
                 const float along = dot(p.position - aBefore, directionBefore);
                 const float t = saturateValue(along / lengthBefore);
                 p.position += (a - aBefore + span * t - directionBefore * along) * blend;
@@ -665,17 +676,18 @@ static bool runOperator(ProgramOp record, thread ProgramState &p, thread Program
         case oTurbulence: {
             const float r = c.random;
             const float phase = r * (record.c.y - record.c.x) + c.engineTime * record.b.w;
-            const float3 point = float3(p.position.x + phase, p.position.y + phase, phase) * record.b.x;
+            const float3 point = (p.position + phase) * record.b.x;
             const float speed = (record.b.y + r * (record.b.z - record.b.y)) * record.e.w * blend;
             const float push = c.dragDeltaTime * speed;
             p.velocity.x += simplex3(point.x, point.y, point.z) * record.a.x * push;
             p.velocity.y += simplex3(point.z, point.x, point.y) * record.a.y * push;
+            p.velocity.z += simplex3(point.y, point.z, point.x) * record.a.z * push;
             break;
         }
         case oVortex: {
-            const float2 center = programPoint(c.points, record.header.z & 0xFFu) + record.a.xy;
+            const float3 center = programPoint(c.points, record.header.z & 0xFFu) + record.a.xyz;
             const float3 axis = vortexAxis(record.b.xyz);
-            float3 offset = float3(p.position - center, 0);
+            float3 offset = p.position - center;
             if (flags & 1u) offset -= dot(offset, axis) * axis;
             const float distance = length(offset);
             if (distance > 0) {
@@ -683,20 +695,21 @@ static bool runOperator(ProgramOp record, thread ProgramState &p, thread Program
                 const float span = record.c.y - record.c.x;
                 const float t = saturateValue((distance - record.c.x) * (span == 0 ? 1.0f : 1 / span));
                 const float speed = (record.c.z + t * (record.c.w - record.c.z)) * record.e.w;
-                p.velocity += (cross(normal, axis) * speed * c.dragDeltaTime).xy;
+                p.velocity += cross(normal, axis) * speed * c.dragDeltaTime;
             }
             break;
         }
         case oVortexV2: {
-            const float2 center = programPoint(c.points, record.header.z & 0xFFu);
-            const float3 axis = vortexAxis(record.a.xyz);
-            float3 offset = float3(p.position - center, 0);
+            const uint point = record.header.z & 0xFFu;
+            const float3 center = programPoint(c.points, point);
+            const float3 axis = programAxes(c, point) * vortexAxis(record.a.xyz);
+            float3 offset = p.position - center;
             const float height = (flags & 1u) ? dot(offset, axis) : 0.0f;
             offset -= height * axis;
             const float distance = length(offset);
             if (distance > 0) {
                 const float3 normal = offset / distance;
-                const float3 ahead = float3(p.position + p.velocity * dt - center, 0) - height * axis;
+                const float3 ahead = p.position + p.velocity * dt - center - height * axis;
                 const float aheadLength = length(ahead);
                 const float centerForce = (flags & 2u) ? record.c.x : 0.0f;
                 float pull = aheadLength > 0 ? (distance / aheadLength - 1) * centerForce / dt : 0.0f;
@@ -712,7 +725,7 @@ static bool runOperator(ProgramOp record, thread ProgramState &p, thread Program
                     t = saturateValue((distance - record.b.x) * (span == 0 ? 1.0f : 1 / span));
                 }
                 const float speed = (record.b.z + t * (record.b.w - record.b.z)) * record.e.w;
-                p.velocity += ((cross(normal, axis) * speed * c.dragDeltaTime + pull * ahead) * blend).xy;
+                p.velocity += (cross(normal, axis) * speed * c.dragDeltaTime + pull * ahead) * blend;
             }
             break;
         }
@@ -721,33 +734,33 @@ static bool runOperator(ProgramOp record, thread ProgramState &p, thread Program
             const uint slice = frame % slices;
             if ((c.serial / 4) % slices != slice) break;
             const float separationThreshold = record.a.x, neighborThreshold = record.a.y;
-            float2 separation = float2(0), velocitySum = float2(0), positionSum = float2(0);
+            float3 separation = float3(0), velocitySum = float3(0), positionSum = float3(0);
             float separated = 0, neighbored = 0;
             for (uint j = 0; j < neighborCount; ++j) {
                 if (j == self || (j < aged && alive[j] == 0)) continue;
                 const ParticleState other = neighbors[j];
                 if ((other.identity.x / 4) % slices != slice) continue;
-                const float2 position = c.toSpace * (other.positionVelocity.xy - c.origin);
-                const float2 offset = p.position - position;
+                const float3 position = float3(c.toSpace * (other.positionVelocity.xy - c.origin), other.depth.x);
+                const float3 offset = p.position - position;
                 const float distance = length(offset);
                 if (distance < separationThreshold && distance > 0) {
                     separation += (separationThreshold / distance - 1) * offset;
                     separated += 1;
                 }
                 if (distance < neighborThreshold) {
-                    velocitySum += c.toSpace * other.positionVelocity.zw;
+                    velocitySum += float3(c.toSpace * other.positionVelocity.zw, other.depth.y);
                     positionSum += position;
                     neighbored += 1;
                 }
             }
             const float weight = float(slices) * c.dragDeltaTime;
-            float2 change = float2(0);
+            float3 change = float3(0);
             if (separated > 0) change += record.b.x * weight / separated * separation;
             if (neighbored > 0) {
                 change += record.b.y * weight * (velocitySum / neighbored - p.velocity);
                 change += record.b.z * weight * (positionSum / neighbored - p.position);
             }
-            float2 velocity = p.velocity + change;
+            float3 velocity = p.velocity + change;
             const float maximum = record.a.z;
             if ((flags & 1u) && length_squared(velocity) > max(length_squared(p.velocity), maximum * maximum)) {
                 velocity *= maximum / length(velocity);
@@ -795,9 +808,9 @@ static bool runOperators(constant ProgramOp *records, uint count, thread Program
 /// A slot's control points while a step writes them (`ParticleCPUSimulation+ControlPointWrites`):
 /// the step's, the current group's start, the last step's result and whether there is one.
 struct PointState {
-    float4 points[4];
-    float4 group[4];
-    float4 kept[4];
+    float4 points[8];        // xyz
+    float4 group[8];
+    float4 kept[8];
     uint4 flags;             // kept, lane, -, -
 };
 

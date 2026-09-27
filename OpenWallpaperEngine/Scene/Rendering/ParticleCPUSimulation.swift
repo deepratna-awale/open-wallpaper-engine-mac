@@ -60,10 +60,12 @@ final class ParticleSystemRuntime {
     var startedPeriod = false
     /// The emitter's world transform at the last step (`ParticleFrameInputs.motion`).
     var lastEmitter: SceneAffineTransform?
-    /// The control points in the scene at the last step (a child's flag 4 control points copy them).
-    var lastControlPoints = [SIMD2<Float>](repeating: .zero, count: ParticleControlPoint.count)
+    /// The control points in the scene (and their depth) at the last step, and their orientation
+    /// (a child's flag 4 control points copy them).
+    var lastControlPoints = [SIMD3<Float>](repeating: .zero, count: ParticleControlPoint.count)
+    var lastControlPointAxes = [simd_float3x3](repeating: matrix_identity_float3x3, count: ParticleControlPoint.count)
     /// The control points in the system's space at the last step.
-    var previousControlPoints: [SIMD2<Float>]?
+    var previousControlPoints: [SIMD3<Float>]?
     /// The emitter's scale, rotation and shear the particles are drawn through
     /// (`ParticleFrameInputs.drawLinear`), from the last step.
     var drawLinear = matrix_identity_float2x2
@@ -77,7 +79,7 @@ final class ParticleSystemRuntime {
     var died: UInt32 = 0
     /// Control points a remap wrote over a point the instance override drives: the override then,
     /// and the point in the system's space (`keepWrittenControlPoints`).
-    var writtenOverridePoints: [Int: (override: SIMD2<Float>, point: SIMD2<Float>)] = [:]
+    var writtenOverridePoints: [Int: (override: SIMD3<Float>, point: SIMD3<Float>)] = [:]
     /// The fraction of the day (`remapvalue`'s `timeofday`), and when it was read: the calendar is
     /// asked again once a second at most.
     private var dayFraction: (value: Float, at: CFTimeInterval)?
@@ -90,7 +92,7 @@ final class ParticleSystemRuntime {
     }
 
     /// The offsets the instance override gave the control points last step (`keptPoints`).
-    var lastOverridePoints = [SIMD2<Float>?](repeating: nil, count: ParticleControlPoint.count)
+    var lastOverridePoints = [SIMD3<Float>?](repeating: nil, count: ParticleControlPoint.count)
     /// Each emitter's clock (`ParticleEmitterTiming`), carried fraction and what its rate emitted this
     /// period (`ParticleFrameInputs.periodLimit`) for a system that isn't instanced; the CPU
     /// simulation's counts.
@@ -244,8 +246,8 @@ enum ParticleCPUSimulation {
                 }
             }
         }
-        let neighbors = ParticleProgramCPU.Neighbors(positions: system.particles.map(\.position),
-                                                     velocities: system.particles.map(\.velocity),
+        let neighbors = ParticleProgramCPU.Neighbors(positions: system.particles.map { SIMD3($0.position, $0.z) },
+                                                     velocities: system.particles.map { SIMD3($0.velocity, $0.zVelocity) },
                                                      serials: system.particles.map(\.serial), frame: inputs.frameIndex)
         if configuration.program.operatorsWriteControlPoints {
             advanceOperatorMajor(system, inputs: &inputs, instanceInputs: &instanceInputs, neighbors: neighbors)
@@ -309,11 +311,11 @@ enum ParticleCPUSimulation {
         context.serial = serial
         context.random = ParticleRandom.unit(seed: system.seed, serial: serial, stream: ParticleRandom.Stream.operator.rawValue)
         context.controlPoints = inputs.controlPoints
+        context.controlPointAxes = inputs.controlPointAxes
         context.previousControlPoints = inputs.previousControlPoints
         context.space = inputs.space
         context.toSpace = inputs.toSpace
         context.worldSpace = system.configuration.worldSpace
-        context.emitterLinear = inputs.emitterLinear
         context.collisions = inputs.collisions
         context.source = source
         context.spawnScale = inputs.spawnScale
@@ -337,19 +339,18 @@ enum ParticleCPUSimulation {
         state.baseAlpha = inputs.spawnScale.y
         state.baseColor = inputs.colorScale
         let shape = emitter == 0 ? configuration.emitter : configuration.extraEmitters[emitter - 1].shape
+        context.emitterAxes = ParticleProgramCPU.point(inputs.controlPointAxes, shape.controlPoint)
         if shape.kind == .image {
             let points = shape.imageIndex < configuration.emitterImages.count ? configuration.emitterImages[shape.imageIndex].points : []
             let image = emitter < inputs.emitters.count ? inputs.emitters[emitter].image : .identity
             if let emitted = ParticleProgramCPU.emit(image: points, shape: shape, image: image, context: context) {
-                state.position = emitted.position
+                state.position = ParticleProgramCPU.lift(emitted.position)
                 state.baseColor *= emitted.color
             }
         } else {
             let emitted = ParticleProgramCPU.emit(shape, context: context)
             state.position = emitted.position
             state.velocity = emitted.velocity
-            state.z = emitted.z
-            state.zVelocity = emitted.zVelocity
         }
         ParticleProgramCPU.runInitializers(inputs.initializers, on: &state, in: &context)
         inputs.controlPoints = context.controlPoints
@@ -357,12 +358,14 @@ enum ParticleCPUSimulation {
         let size = state.baseSize * inputs.spawnSizeScale
         let color = SIMD4(state.baseColor, 1)
         return Particle(
-            position: inputs.space.apply(state.position), velocity: inputs.space.linear * state.velocity,
+            position: inputs.space.apply(ParticleProgramCPU.flat(state.position)),
+            velocity: inputs.space.linear * ParticleProgramCPU.flat(state.velocity),
             age: 0, lifetime: state.lifetime, size: size, baseSize: size, alpha: state.baseAlpha, baseAlpha: state.baseAlpha,
             rotation: state.rotation + inputs.spawnTurn, angularVelocity: state.angularVelocity,
             color: color, baseColor: color,
             spriteFrame: ParticleRandom.index(configuration.spriteSheet?.frames ?? 1, seed: system.seed, serial: serial, .spriteFrame),
-            history: [], historyStart: 0, serial: serial, instance: instance, z: state.z, zVelocity: state.zVelocity)
+            history: [], historyStart: 0, serial: serial, instance: instance, z: state.position.z,
+            zVelocity: state.velocity.z)
     }
 
     /// One step of every operator for the particle at `index`.
@@ -386,8 +389,8 @@ enum ParticleCPUSimulation {
     /// `particle` as the program sees it, in the system's space.
     static func programState(_ particle: Particle, inputs: ParticleFrameInputs) -> ParticleProgramState {
         var state = ParticleProgramState()
-        state.position = inputs.toSpace * (particle.position - inputs.space.translation)
-        state.velocity = inputs.toSpace * particle.velocity
+        state.position = SIMD3(inputs.toSpace * (particle.position - inputs.space.translation), particle.z)
+        state.velocity = SIMD3(inputs.toSpace * particle.velocity, particle.zVelocity)
         state.age = particle.age
         state.lifetime = particle.lifetime
         state.baseSize = particle.baseSize
@@ -395,8 +398,6 @@ enum ParticleCPUSimulation {
         state.baseColor = SIMD3(particle.baseColor.x, particle.baseColor.y, particle.baseColor.z)
         state.rotation = particle.rotation
         state.angularVelocity = particle.angularVelocity
-        state.z = particle.z
-        state.zVelocity = particle.zVelocity
         return state
     }
 
@@ -404,16 +405,16 @@ enum ParticleCPUSimulation {
     static func finish(_ particle: inout Particle, state: ParticleProgramState, dies: Bool, system: ParticleSystemRuntime,
                        inputs: ParticleFrameInputs) {
         let configuration = system.configuration
-        particle.position = inputs.space.apply(state.position)
-        particle.velocity = inputs.space.linear * state.velocity
+        particle.position = inputs.space.apply(ParticleProgramCPU.flat(state.position))
+        particle.velocity = inputs.space.linear * ParticleProgramCPU.flat(state.velocity)
         particle.lifetime = state.lifetime
         particle.size = state.size
         particle.alpha = state.alpha
         particle.color = SIMD4(state.color, particle.color.w)
         particle.rotation = state.rotation
         particle.angularVelocity = state.angularVelocity
-        particle.z = state.z
-        particle.zVelocity = state.zVelocity
+        particle.z = state.position.z
+        particle.zVelocity = state.velocity.z
         // A deleted particle dies when it next ages (WE sets its age to its lifetime).
         if dies { particle.age = particle.lifetime }
         // Only the ropetrail renderer reads history, and it wants samples spread over the

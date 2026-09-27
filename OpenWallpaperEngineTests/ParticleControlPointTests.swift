@@ -23,22 +23,22 @@ final class ParticleControlPointTests: XCTestCase {
         system.emitterLinear = simd_float2x2(diagonal: SIMD2(2, 2))
         system.controlPoints[1] = ParticleTestSystem.point(SIMD2(30, -40))
         system.controlPoints[2] = ParticleTestSystem.point(.zero, cursor: true)
-        system.controlPoints[3] = ParticleControlPoint(offset: SIMD2(100, 50), worldSpace: true)
+        system.controlPoints[3] = ParticleControlPoint(offset: SIMD3(100, 50, 0), worldSpace: true)
         var configuration = system.configuration
         configuration.overrides.controlPoints[4] = SIMD3(10, 20, 0)
         let runtime = ParticleSystemRuntime(texture: texture, configuration: configuration, seed: 1)
         let cursor = SIMD2<Float>(700, 200)
         let inputs = ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: cursor)
         XCTAssertEqual(inputs.controlPoints[0], .zero, "control point 0 is the emitter")
-        XCTAssertEqual(inputs.controlPoints[1], SIMD2(30, -40), "an offset in the system's space")
-        XCTAssertEqual(inputs.controlPoints[2], SIMD2(100, -150), "the cursor, taken into the system's space")
-        XCTAssertEqual(inputs.controlPoints[3], SIMD2(-200, -225), "a scene position")
-        XCTAssertEqual(inputs.controlPoints[4], SIMD2(10, 20), "the object's override")
-        XCTAssertEqual(runtime.lastControlPoints[1], SIMD2(560, 420))
+        XCTAssertEqual(inputs.controlPoints[1], SIMD3(30, -40, 0), "an offset in the system's space")
+        XCTAssertEqual(inputs.controlPoints[2], SIMD3(100, -150, 0), "the cursor, taken into the system's space")
+        XCTAssertEqual(inputs.controlPoints[3], SIMD3(-200, -225, 0), "a scene position")
+        XCTAssertEqual(inputs.controlPoints[4], SIMD3(10, 20, 0), "the object's override")
+        XCTAssertEqual(runtime.lastControlPoints[1], SIMD3(560, 420, 0))
         XCTAssertEqual(inputs.absolutePoints, 0b1100)
         let moved = inputs.placed(at: SIMD2(100, 0), previous: SIMD2(100, 0))
-        XCTAssertEqual(moved.controlPoints[2], SIMD2(50, -150), "a cursor point stays put in the scene")
-        XCTAssertEqual(moved.controlPoints[1], SIMD2(30, -40), "an emitter point moves with the instance")
+        XCTAssertEqual(moved.controlPoints[2], SIMD3(50, -150, 0), "a cursor point stays put in the scene")
+        XCTAssertEqual(moved.controlPoints[1], SIMD3(30, -40, 0), "an emitter point moves with the instance")
     }
 
     /// The json's control points by position, with their flags (0x1401d0530).
@@ -52,7 +52,7 @@ final class ParticleControlPointTests: XCTestCase {
         XCTAssertFalse(parsed[0].worldSpace, "control point 0 is never in the scene")
         XCTAssertTrue(parsed[1].followsCursor, "the id is ignored")
         XCTAssertTrue(parsed[2].worldSpace)
-        XCTAssertEqual(parsed[2].offset, SIMD2(1, 2))
+        XCTAssertEqual(parsed[2].offset, SIMD3(1, 2, 3), "z too (0x14022cdc0)")
         XCTAssertEqual(parsed[3].parentControlPoint, 3)
     }
 

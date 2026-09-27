@@ -444,7 +444,8 @@ final class ParticleChildrenTests: XCTestCase {
             for particle in beams.particles where particle.age <= 1 / 60 + 1e-4 {
                 let start = beams.instances[particle.instance].translation
                 let points = ParticleControlPointLink.positions(for: beams, slot: particle.instance)
-                let end = try XCTUnwrap(points.first, "the spawner instance has its particle")
+                    .map { (p: SIMD3<Float>) -> SIMD2<Float> in SIMD2(p.x, p.y) }
+                let end: SIMD2<Float> = try XCTUnwrap(points.first, "the spawner instance has its particle")
                 XCTAssertEqual(points, cpu.runtimes[1].particles.filter { $0.instance == particle.instance }.map(\.position))
                 let t = simd_dot(particle.position - start, end - start) / max(simd_length_squared(end - start), 1e-6)
                 let closest = start + (end - start) * min(max(t, 0), 1)

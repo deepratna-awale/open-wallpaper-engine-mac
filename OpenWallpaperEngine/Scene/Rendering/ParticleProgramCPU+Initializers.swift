@@ -7,9 +7,11 @@ import simd
 /// system's space.
 extension ParticleProgramCPU {
     /// The emitter's placement and launch velocity for spawn `serial` (0x140237c14 sphere,
-    /// 0x14023847f box).
+    /// 0x14023847f box). The emitter sits on its control point; the spawn offset and the fallback
+    /// direction turn with the point's orientation (`emitterAxes`) when the system is `worldspace`
+    /// or the point isn't 0 (0x140237ce3, applied at 0x140237f24 and 0x140238096).
     static func emit(_ emitter: ParticleEmitterShape, context: ParticleProgramContext)
-        -> (position: SIMD2<Float>, velocity: SIMD2<Float>, z: Float, zVelocity: Float) {
+        -> (position: SIMD3<Float>, velocity: SIMD3<Float>) {
         func random(_ stream: ParticleRandom.Stream) -> Float {
             ParticleRandom.unit(seed: context.seed, serial: context.serial, stream: stream.rawValue)
         }
@@ -37,20 +39,21 @@ extension ParticleProgramCPU {
             // Placed from its layer's points (`emit(image:…)`).
             offset = .zero
         }
-        let turned = context.emitterLinear * SIMD2(offset.x, offset.y)
-        let position = point(context.controlPoints, emitter.controlPoint) + SIMD2(emitter.origin.x, emitter.origin.y) + turned
+        let turns = context.worldSpace || emitter.controlPoint != 0
+        let axes = turns ? context.emitterAxes : matrix_identity_float3x3
+        let turned = axes * offset
+        let position = point(context.controlPoints, emitter.controlPoint) + emitter.origin + turned
         // A particle at the centre launches in a random direction (0x140237fc8).
-        var heading = SIMD3(turned.x, turned.y, offset.z)
+        var heading = turned
         if simd_length_squared(heading) < 0.0001 {
             let fallback = (SIMD3(random(.fallbackX), random(.fallbackY), random(.fallbackZ)) * 2 - 1) * emitter.directions
-            let flat = context.emitterLinear * SIMD2(fallback.x, fallback.y)
-            heading = SIMD3(flat.x, flat.y, fallback.z)
+            heading = axes * fallback
         }
         let length = simd_length(heading)
         // The `speed` instance override scales `speedmin` and `speedmax` (bound at 0x1401c6354).
         let speed = (emitter.speed.x + random(.emitterSpeed) * (emitter.speed.y - emitter.speed.x)) * context.spawnScale.w
         let launch = length > 0 ? heading / length * speed : .zero
-        return (position, SIMD2(launch.x, launch.y), emitter.origin.z + offset.z, launch.z)
+        return (position, launch)
     }
 
     /// A `layerimage` emitter's placement for spawn `serial` (0x140238c45): one of `points`
@@ -129,14 +132,13 @@ extension ParticleProgramCPU {
             case .colorList:
                 p.baseColor *= colorList(record, random: random)
             case .velocityRandom:
-                let v = vector(0) * context.spawnScale.w
-                p.velocity += context.emitterLinear * SIMD2(v.x, v.y)
-                p.zVelocity += v.z
+                // 0x14023bbce: through the emitter's control point's orientation, in 3D.
+                p.velocity += context.emitterAxes * (vector(0) * context.spawnScale.w)
             case .inheritControlPointVelocity:
                 let index = record.controlPoint0
                 let moved = point(context.controlPoints, index) - point(context.previousControlPoints, index)
                 let velocity = context.deltaTime > 0 ? moved / context.deltaTime : .zero
-                p.velocity += velocity * (record.a.x + random(0) * (record.a.y - record.a.x))
+                p.velocity += context.emitterAxes * (velocity * (record.a.x + random(0) * (record.a.y - record.a.x)))
             case .turbulentVelocityRandom:
                 p.velocity += turbulentVelocity(record, random: random, context: context) * context.spawnScale.w
             case .rotationRandom:
@@ -173,21 +175,23 @@ extension ParticleProgramCPU {
     }
 
     /// `turbulentvelocityrandom` (0x14023bdbc): `forward` turned about `right` by 1D simplex noise of
-    /// the engine time (plus the particle's phase), at a random speed.
+    /// the engine time (plus the particle's phase), at a random speed, through the emitter's
+    /// control point's orientation.
     static func turbulentVelocity(_ record: ParticleProgramOp, random: (Int) -> Float,
-                                  context: ParticleProgramContext) -> SIMD2<Float> {
+                                  context: ParticleProgramContext) -> SIMD3<Float> {
         let phaseRange = (record.a.w - record.a.z) * record.e.w
         let t = (record.a.z + random(0) * phaseRange + context.engineTime) * record.b.x
         let angle = ParticleNoise.simplex1(t) * Float.pi * record.b.y + record.b.z
         let forward = SIMD3(record.c.x, record.c.y, record.c.z), right = SIMD3(record.d.x, record.d.y, record.d.z)
         let direction = rotate(forward, about: right, by: angle)
         let speed = record.a.x + random(1) * (record.a.y - record.a.x)
-        return context.emitterLinear * SIMD2(direction.x, direction.y) * speed
+        return context.emitterAxes * direction * speed
     }
 
     /// `positionoffsetrandom` (0x14023c09a): fBm of 2D simplex noise of the position and the engine
     /// time moves the particle by up to `distance` along `directions`; `sign` forces the direction.
-    static func positionOffset(_ record: ParticleProgramOp, _ position: SIMD2<Float>, context: ParticleProgramContext) -> SIMD2<Float> {
+    /// z samples (z·scale, −time).
+    static func positionOffset(_ record: ParticleProgramOp, _ position: SIMD3<Float>, context: ParticleProgramContext) -> SIMD3<Float> {
         let scale = record.c.x, time = record.c.z * context.engineTime
         let octaves = min(max(Int(record.c.w), 1), 8)
         func fbm(_ sample: (Float) -> Float) -> Float {
@@ -202,35 +206,37 @@ extension ParticleProgramCPU {
         }
         let x = fbm { ParticleNoise.simplex2(position.x * scale * $0, time * $0) }
         let y = fbm { ParticleNoise.simplex2(time * $0, position.y * scale * $0) }
-        var offset = SIMD3(x, y, 0) * SIMD3(record.a.x, record.a.y, record.a.z)
+        let z = fbm { ParticleNoise.simplex2(position.z * scale * $0, -time * $0) }
+        var offset = SIMD3(x, y, z) * SIMD3(record.a.x, record.a.y, record.a.z)
         if record.header.y & 1 != 0 {
             let sign = SIMD3(record.b.x, record.b.y, record.b.z)
             offset = offset * (1 - simd_abs(sign)) + simd_abs(offset) * sign
         }
-        return position + SIMD2(offset.x, offset.y) * record.c.y
+        return position + offset * record.c.y
     }
 
     /// `mapsequencearoundcontrolpoint` (0x14023c4cf): the particle keeps the emitter's radius and
-    /// height about the axis through the control point; its angle follows the sequence.
+    /// height about the axis through the control point; its angle follows the sequence. The axis
+    /// and its basis turn with the control point's orientation.
     static func sequenceAround(_ record: ParticleProgramOp, _ p: inout ParticleProgramState,
                                context: ParticleProgramContext, random: (Int) -> Float) {
         let t = sequencePosition(index: sequenceIndex(record, context), step: record.a.x, mirror: record.a.w != 0,
                                  between: false)
         let center = point(context.controlPoints, record.controlPoint0)
+        let turn = point(context.controlPointAxes, record.controlPoint0)
         let basis = sequenceBasis(SIMD3(record.d.x, record.d.y, record.d.z))
-        let offset = SIMD3(p.position.x - center.x, p.position.y - center.y, 0)
-        let height = simd_dot(offset, basis.axis)
-        let radius = simd_length(offset - height * basis.axis)
+        let axis = turn * basis.axis, first = turn * basis.first, second = turn * basis.second
+        let offset = p.position - center
+        let height = simd_dot(offset, axis)
+        let radius = simd_length(offset - height * axis)
         let angle = 2 * Float.pi * (record.a.y + t * (record.a.z - record.a.y))
-        let outward = sin(angle) * basis.first + cos(angle) * basis.second
-        let tangent = cos(angle) * basis.first - sin(angle) * basis.second
-        let placed = SIMD3(center.x, center.y, 0) + height * basis.axis + radius * outward
-        p.position = SIMD2(placed.x, placed.y)
+        let outward = sin(angle) * first + cos(angle) * second
+        let tangent = cos(angle) * first - sin(angle) * second
+        p.position = center + height * axis + radius * outward
         let speedZ = record.b.z + random(0) * (record.c.z - record.b.z)
         let speedX = record.b.x + random(1) * (record.c.x - record.b.x)
         let speedY = record.b.y + random(2) * (record.c.y - record.b.y)
-        let push = tangent * speedX + outward * speedY + basis.axis * speedZ
-        p.velocity += SIMD2(push.x, push.y)
+        p.velocity += tangent * speedX + outward * speedY + axis * speedZ
     }
 
     /// `mapsequencebetweencontrolpoints` (0x14023ca93): places the particle along the segment
@@ -253,7 +259,7 @@ extension ParticleProgramCPU {
         let w = 1 - pow(abs(2 * t - 1), 2)
         if flags & 1 != 0 { across *= w }
         var position = a + direction * (s * length) + across
-        if flags & 8 != 0 { position += SIMD2(record.c.x, record.c.y) * (w * length * record.b.x) }
+        if flags & 8 != 0 { position += SIMD3(record.c.x, record.c.y, record.c.z) * (w * length * record.b.x) }
         p.position = position
         if flags & 2 != 0 { p.velocity *= w }
         if flags & 4 != 0 { p.baseSize *= (1 - record.b.y) + record.b.y * w }
@@ -265,7 +271,7 @@ extension ParticleProgramCPU {
         guard let source = context.source else { return }
         let verbs = ParticleInheritance(rawValue: record.header.y)
         let rgb = SIMD3(source.sourceColor.x, source.sourceColor.y, source.sourceColor.z)
-        let velocity = context.toSpace * source.sourceVelocity
+        let velocity = turn(context.toSpace, source.sourceVelocity)
         if verbs.contains(.setColor) { p.baseColor = rgb }
         if verbs.contains(.multiplyColor) { p.baseColor *= rgb }
         if verbs.contains(.setOpacity) { p.baseAlpha = source.sourceColor.w }

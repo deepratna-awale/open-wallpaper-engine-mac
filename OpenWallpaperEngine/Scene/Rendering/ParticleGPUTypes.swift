@@ -48,10 +48,8 @@ struct ParticleGPUInstance {
 /// The parent particles a linked child's control points take (`ParticleControlPointLink`), for one
 /// instance: up to eight positions, oldest first, and how many.
 struct ParticleGPULinkedPoints {
-    var points0: SIMD4<Float>
-    var points1: SIMD4<Float>
-    var points2: SIMD4<Float>
-    var points3: SIMD4<Float>
+    /// Scene xy and depth of each parent particle.
+    var points: ParticleGPUFrame.Points
     /// Positions, -, -, -.
     var count: SIMD4<UInt32>
 }
@@ -97,17 +95,11 @@ struct ParticleGPUFrame {
     var spaceMotion: SIMD4<Float>
     /// The inverse of `space`'s linear part, column 0 xy, column 1 xy.
     var toSpace: SIMD4<Float>
-    /// `ParticleFrameInputs.emitterLinear`, column 0 xy, column 1 xy.
-    var emitterLinear: SIMD4<Float>
-    /// The control points in the system's space, two per vector, and last step's.
-    var controlPoints0: SIMD4<Float>
-    var controlPoints1: SIMD4<Float>
-    var controlPoints2: SIMD4<Float>
-    var controlPoints3: SIMD4<Float>
-    var previousControlPoints0: SIMD4<Float>
-    var previousControlPoints1: SIMD4<Float>
-    var previousControlPoints2: SIMD4<Float>
-    var previousControlPoints3: SIMD4<Float>
+    /// The control points in the system's space (xyz), last step's, and their orientations
+    /// (`ParticleFrameInputs.controlPointAxes`).
+    var controlPoints: Points
+    var previousControlPoints: Points
+    var controlPointAxes: Axes
     /// Motion linear part, column 0 xy, column 1 xy.
     var motionLinear: SIMD4<Float>
     /// Spawn size scale, spawn turn (`ParticleFrameInputs.spawnSizeScale`), has motion, trail and
@@ -131,6 +123,21 @@ struct ParticleGPUFrame {
     static let noRenderVar = UInt32.max
     static let noLimit = UInt32.max
 
+    typealias Points = (SIMD4<Float>, SIMD4<Float>, SIMD4<Float>, SIMD4<Float>,
+                        SIMD4<Float>, SIMD4<Float>, SIMD4<Float>, SIMD4<Float>)
+    typealias Axes = (simd_float3x3, simd_float3x3, simd_float3x3, simd_float3x3,
+                      simd_float3x3, simd_float3x3, simd_float3x3, simd_float3x3)
+
+    static func points(_ values: [SIMD3<Float>]) -> Points {
+        func at(_ i: Int) -> SIMD4<Float> { i < values.count ? SIMD4(values[i], 0) : .zero }
+        return (at(0), at(1), at(2), at(3), at(4), at(5), at(6), at(7))
+    }
+
+    static func axes(_ values: [simd_float3x3]) -> Axes {
+        func at(_ i: Int) -> simd_float3x3 { i < values.count ? values[i] : matrix_identity_float3x3 }
+        return (at(0), at(1), at(2), at(3), at(4), at(5), at(6), at(7))
+    }
+
     init(_ inputs: ParticleFrameInputs, sceneSize: SIMD2<Float>, targetSize: SIMD2<Float>, kind: ParticleGPUDrawKind,
          materialVertexCount: Int, renderVarOffset: Int?) {
         time = SIMD4(inputs.deltaTime, inputs.elapsedTime, inputs.dragDeltaTime, inputs.engineTime)
@@ -142,18 +149,9 @@ struct ParticleGPUFrame {
         let motion = inputs.motion ?? .identity
         spaceMotion = SIMD4(inputs.space.translation.x, inputs.space.translation.y, motion.translation.x, motion.translation.y)
         toSpace = Self.columns(inputs.toSpace)
-        emitterLinear = Self.columns(inputs.emitterLinear)
-        func pair(_ points: [SIMD2<Float>], _ index: Int) -> SIMD4<Float> {
-            SIMD4(points[index * 2].x, points[index * 2].y, points[index * 2 + 1].x, points[index * 2 + 1].y)
-        }
-        controlPoints0 = pair(inputs.controlPoints, 0)
-        controlPoints1 = pair(inputs.controlPoints, 1)
-        controlPoints2 = pair(inputs.controlPoints, 2)
-        controlPoints3 = pair(inputs.controlPoints, 3)
-        previousControlPoints0 = pair(inputs.previousControlPoints, 0)
-        previousControlPoints1 = pair(inputs.previousControlPoints, 1)
-        previousControlPoints2 = pair(inputs.previousControlPoints, 2)
-        previousControlPoints3 = pair(inputs.previousControlPoints, 3)
+        controlPoints = Self.points(inputs.controlPoints)
+        previousControlPoints = Self.points(inputs.previousControlPoints)
+        controlPointAxes = Self.axes(inputs.controlPointAxes)
         motionLinear = Self.columns(motion.linear)
         motionExtras = SIMD4(inputs.spawnSizeScale, inputs.spawnTurn, inputs.motion == nil ? 0 : 1, inputs.drawSizeScale)
         spriteLinear = Self.columns(inputs.spriteLinear)

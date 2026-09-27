@@ -63,7 +63,7 @@ extension ParticleCPUSimulation {
     static func keepWrittenControlPoints(_ system: ParticleSystemRuntime, inputs: ParticleFrameInputs) {
         system.previousControlPoints = inputs.controlPoints
         for index in 0..<ParticleControlPoint.count {
-            system.lastControlPoints[index] = inputs.space.apply(inputs.controlPoints[index])
+            system.lastControlPoints[index] = inputs.sceneControlPoint(index)
             if let driven = inputs.overridePoints[index] {
                 system.writtenOverridePoints[index] = (override: driven, point: inputs.controlPoints[index])
             }

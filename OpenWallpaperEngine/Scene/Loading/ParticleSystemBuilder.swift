@@ -162,7 +162,7 @@ enum ParticleSystemBuilder {
         for (index, point) in authored.enumerated() where index < ParticleControlPoint.count {
             let flags = point.flags ?? 0
             let offset = (point.offset ?? "0 0 0").parseVector3()
-            points[index] = ParticleControlPoint(offset: SIMD2(Float(offset.0), Float(offset.1)),
+            points[index] = ParticleControlPoint(offset: SIMD3(Float(offset.0), Float(offset.1), Float(offset.2)),
                                                  followsCursor: flags & 1 != 0,
                                                  worldSpace: flags & 2 != 0 && index != 0,
                                                  parentControlPoint: flags & 4 != 0 ? point.parentcontrolpoint ?? 0 : nil)

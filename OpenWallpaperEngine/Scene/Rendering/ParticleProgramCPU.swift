@@ -1,13 +1,15 @@
 import simd
 
-/// One particle as the program sees it: in the system's space (`ParticleFrameInputs.space`), y up.
-/// `ParticleProgram.h` works on the same fields.
+/// One particle as the program sees it: in the system's space (`ParticleFrameInputs.space`), y up,
+/// in 3D as WE simulates it (position and velocity x, y, z: `wallpaper64.exe` system+0x2b0…0x2d8).
+/// The system's space reaches the scene through a 2D transform of x and y; z is the depth along
+/// the system's z. `ParticleProgram.h` works on the same fields.
 struct ParticleProgramState {
-    var position = SIMD2<Float>.zero
-    var velocity = SIMD2<Float>.zero
+    var position = SIMD3<Float>.zero
+    var velocity = SIMD3<Float>.zero
     /// Where the particle was before this step's `movement` (quad collisions and
     /// `controlpointattract`'s delete read it).
-    var previous = SIMD2<Float>.zero
+    var previous = SIMD3<Float>.zero
     var age: Float = 0
     var lifetime: Float = 1
     var size: Float = 0
@@ -16,11 +18,6 @@ struct ParticleProgramState {
     var baseAlpha: Float = 1
     var rotation: Float = 0
     var angularVelocity: Float = 0
-    /// Depth along the system's z and its velocity. WE simulates particles in 3D; here only the
-    /// emitter, `velocityrandom` and `movement` move them in depth, which a `perspective` system's
-    /// camera shows (`ParticleFrameInputs.perspective`).
-    var z: Float = 0
-    var zVelocity: Float = 0
     var color = SIMD3<Float>(repeating: 1)
     var baseColor = SIMD3<Float>(repeating: 1)
 
@@ -43,14 +40,17 @@ struct ParticleProgramContext {
     /// WE's per-particle random (`wallpaper64.exe` [system+0x338]): the one value every operator
     /// of the particle reads.
     var random: Float = 0
-    var controlPoints = [SIMD2<Float>](repeating: .zero, count: ParticleControlPoint.count)
-    var previousControlPoints = [SIMD2<Float>](repeating: .zero, count: ParticleControlPoint.count)
+    var controlPoints = [SIMD3<Float>](repeating: .zero, count: ParticleControlPoint.count)
+    var previousControlPoints = [SIMD3<Float>](repeating: .zero, count: ParticleControlPoint.count)
+    /// Each control point's orientation in the system's space (`ParticleFrameInputs.controlPointAxes`).
+    var controlPointAxes = [simd_float3x3](repeating: matrix_identity_float3x3, count: ParticleControlPoint.count)
     /// The system's space to the scene, and back.
     var space = SceneAffineTransform.identity
     var toSpace = matrix_identity_float2x2
     var worldSpace = false
-    /// The emitter's scale and rotation in the system's space (`ParticleFrameInputs.emitterLinear`).
-    var emitterLinear = matrix_identity_float2x2
+    /// The spawning emitter's control point's orientation (WE's `r15` at 0x14023b364): the
+    /// velocity initializers turn their vectors by it.
+    var emitterAxes = matrix_identity_float3x3
     var collisions: [ParticleCollisionPlacement] = []
     /// The event's parent particle, for an instanced system's `inherit…fromevent`.
     var source: ParticleInstance?
@@ -148,9 +148,35 @@ enum ParticleProgramCPU {
         return (unit, first, simd_normalize(simd_cross(unit, first)))
     }
 
-    /// A control point's position, clamped to the eight.
-    static func point(_ points: [SIMD2<Float>], _ index: Int) -> SIMD2<Float> {
+    /// A control point's position (or orientation), clamped to the eight.
+    static func point<T>(_ points: [T], _ index: Int) -> T {
         points[min(max(index, 0), ParticleControlPoint.count - 1)]
+    }
+
+    /// `v` in the scene's plane (x, y) with depth `z`.
+    static func lift(_ v: SIMD2<Float>, _ z: Float = 0) -> SIMD3<Float> { SIMD3(v.x, v.y, z) }
+
+    /// The xy part.
+    static func flat(_ v: SIMD3<Float>) -> SIMD2<Float> { SIMD2(v.x, v.y) }
+
+    /// A 2D linear map as a 3D one that keeps z.
+    static func embed(_ linear: simd_float2x2) -> simd_float3x3 {
+        simd_float3x3(SIMD3(linear.columns.0, 0), SIMD3(linear.columns.1, 0), SIMD3(0, 0, 1))
+    }
+
+    /// `v` through a 2D linear map on x and y, z kept.
+    static func turn(_ linear: simd_float2x2, _ v: SIMD3<Float>) -> SIMD3<Float> {
+        SIMD3(linear * SIMD2(v.x, v.y), v.z)
+    }
+
+    /// WE's control point rotation from `controlpointangle<n>` (radians; 0x14022bf53…0x14022c069),
+    /// as the basis whose columns are WE's rows: `axes * a` is WE's `a·R` (x first, then y, then z).
+    static func controlPointRotation(_ angles: SIMD3<Float>) -> simd_float3x3 {
+        let cx = cos(angles.x), sx = sin(angles.x), cy = cos(angles.y), sy = sin(angles.y)
+        let cz = cos(angles.z), sz = sin(angles.z)
+        return simd_float3x3(SIMD3(cy * cz, cy * sz, -sy),
+                             SIMD3(sx * sy * cz - cx * sz, sx * sy * sz + cx * cz, sx * cy),
+                             SIMD3(cx * sy * cz + sx * sz, cx * sy * sz - sx * cz, cx * cy))
     }
 
     // MARK: - Sequence

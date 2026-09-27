@@ -64,10 +64,18 @@ enum SceneInstanceOverrideField: String, CaseIterable {
     /// Positions of the system's control points 0…7 (`ParticleControlPoint`).
     case controlpoint0, controlpoint1, controlpoint2, controlpoint3
     case controlpoint4, controlpoint5, controlpoint6, controlpoint7
+    /// Orientations of the control points 0…7, radians (`wallpaper64.exe` object+0x778+0x150+12n).
+    case controlpointangle0, controlpointangle1, controlpointangle2, controlpointangle3
+    case controlpointangle4, controlpointangle5, controlpointangle6, controlpointangle7
 
     /// `controlpoint<n>` for control point `id` (0…7).
     static func controlPoint(_ id: Int) -> SceneInstanceOverrideField? {
         SceneInstanceOverrideField(rawValue: "controlpoint\(id)")
+    }
+
+    /// `controlpointangle<n>` for control point `id` (0…7).
+    static func controlPointAngle(_ id: Int) -> SceneInstanceOverrideField? {
+        SceneInstanceOverrideField(rawValue: "controlpointangle\(id)")
     }
 }
 

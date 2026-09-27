@@ -103,7 +103,7 @@
   "name": "leaves_0",
   "coverage": 2.16,
   "motion": 4.4,
-  "knownGap": "PG1: operators act in the plane; WE's turbulentvelocityrandom swings leaves toward the perspective camera"
+  "knownGap": "PG11: the leaves move about half as much as WE's; not the 3D operators (WE's turbulentvelocityrandom stays in the xy plane with its default axes); cause open"
  },
  {
   "name": "leaves_1",
@@ -114,7 +114,7 @@
   "name": "leaves_2",
   "coverage": 1.55,
   "motion": 3.0,
-  "knownGap": "PG1: operators act in the plane; WE's turbulentvelocityrandom swings leaves toward the perspective camera"
+  "knownGap": "PG11: the leaves move about half as much as WE's; not the 3D operators (WE's turbulentvelocityrandom stays in the xy plane with its default axes); cause open"
  },
  {
   "name": "leaves_3",
@@ -213,8 +213,7 @@
  {
   "name": "magic_12",
   "coverage": 5.53,
-  "motion": 2.94,
-  "knownGap": "PG1: control points have no orientation; controlpointangle1 tilts WE's vortex axis"
+  "motion": 2.94
  },
  {
   "name": "magic_2",

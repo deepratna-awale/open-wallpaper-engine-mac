@@ -31,23 +31,27 @@ final class ParticleRemapControlPointTests: XCTestCase {
         return try XCTUnwrap(ParticleInitializerBuilder.make(element, defaults: ParticleDefaults(pixelUnits: true), path: "t"))
     }
 
-    private func run(_ record: ParticleOperator, position: SIMD2<Float>, points: [Int: SIMD2<Float>]) -> (ParticleProgramState, [SIMD2<Float>]) {
+    /// Runs `record` on a particle at `position` in the plane (z 0); returns its position and the
+    /// control points, in the plane.
+    private func run(_ record: ParticleOperator, position: SIMD2<Float>,
+                     points: [Int: SIMD2<Float>]) -> (position: SIMD2<Float>, size: Float, points: [SIMD2<Float>]) {
         var state = ParticleProgramState()
-        state.position = position
+        state.position = SIMD3(position, 0)
         state.lifetime = 1
         var context = ParticleProgramContext()
-        for (index, point) in points { context.controlPoints[index] = point }
+        for (index, point) in points { context.controlPoints[index] = SIMD3(point, 0) }
         _ = ParticleProgramCPU.runOperators([record.record], on: &state, in: &context, index: 0, neighbors: .init())
-        return (state, context.controlPoints)
+        let flat = context.controlPoints.map { (p: SIMD3<Float>) -> SIMD2<Float> in SIMD2(p.x, p.y) }
+        return (SIMD2(state.position.x, state.position.y), state.size, flat)
     }
 
     /// The operator's vector inputs run from the particle to the point.
     func testDeltaAndDirectionInputsPointAtTheControlPoint() throws {
         let delta = try remapOperator(#"{"name":"remapvalue","input":"deltatocontrolpoint","inputcontrolpoint0":1,"inputcomponent":"x","inputrangemin":"-100 -100 -100","inputrangemax":"100 100 100","outputrangemin":0,"outputrangemax":200,"output":"size","operation":"remap"}"#)
-        let moved = run(delta, position: SIMD2(10, 0), points: [1: SIMD2(40, 0)]).0
+        let moved = run(delta, position: SIMD2(10, 0), points: [1: SIMD2(40, 0)])
         XCTAssertEqual(moved.size, 130, accuracy: 1e-3, "point − particle = 30")
         let direction = try remapOperator(#"{"name":"remapvalue","input":"directiontocontrolpoint","inputcontrolpoint0":1,"inputcomponent":"y","inputrangemin":"-1 -1 -1","inputrangemax":"1 1 1","outputrangemin":0,"outputrangemax":2,"output":"size","operation":"remap"}"#)
-        XCTAssertEqual(run(direction, position: SIMD2(0, 10), points: [1: .zero]).0.size, 0, accuracy: 1e-5, "straight down")
+        XCTAssertEqual(run(direction, position: SIMD2(0, 10), points: [1: .zero]).size, 0, accuracy: 1e-5, "straight down")
     }
 
     /// `distancetocontrolpoint`, `positionbetweentwocontrolpoints`, `deltatocontrolpoint` and
@@ -55,28 +59,28 @@ final class ParticleRemapControlPointTests: XCTestCase {
     func testControlPointOutputs() throws {
         let points: [Int: SIMD2<Float>] = [0: SIMD2(0, 0), 1: SIMD2(100, 0)]
         let distance = try remapOperator(#"{"name":"remapvalue","input":"maxlifetime","output":"distancetocontrolpoint","operation":"remap","outputrangemin":0,"outputrangemax":50}"#)
-        XCTAssertEqual(run(distance, position: SIMD2(0, 10), points: points).0.position, SIMD2(0, 50))
+        XCTAssertEqual(run(distance, position: SIMD2(0, 10), points: points).position, SIMD2(0, 50))
         let between = try remapOperator(#"{"name":"remapvalue","input":"maxlifetime","output":"positionbetweentwocontrolpoints","operation":"remap","outputrangemin":0.25,"outputrangemax":0.25}"#)
-        XCTAssertEqual(run(between, position: SIMD2(80, 7), points: points).0.position, SIMD2(25, 7), "along the line, same offset")
+        XCTAssertEqual(run(between, position: SIMD2(80, 7), points: points).position, SIMD2(25, 7), "along the line, same offset")
         let delta = try remapOperator(#"{"name":"remapvalue","input":"maxlifetime","output":"deltatocontrolpoint","operation":"multiply","outputrangemin":"0.5 0.5 0.5","outputrangemax":"0.5 0.5 0.5"}"#)
-        XCTAssertEqual(run(delta, position: SIMD2(20, 40), points: points).0.position, SIMD2(10, 20), "half the way to point 0")
+        XCTAssertEqual(run(delta, position: SIMD2(20, 40), points: points).position, SIMD2(10, 20), "half the way to point 0")
         let direction = try remapOperator(#"{"name":"remapvalue","input":"maxlifetime","output":"directiontocontrolpoint","operation":"remap","outputrangemin":"1 0 0","outputrangemax":"1 0 0"}"#)
-        let turned = run(direction, position: SIMD2(0, 30), points: points).0.position
+        let turned = run(direction, position: SIMD2(0, 30), points: points).position
         XCTAssertLessThan(simd_distance(turned, SIMD2(-30, 0)), 1e-4, "the point now lies along +x at the same distance")
         let point = try remapOperator(#"{"name":"remapvalue","input":"maxlifetime","output":"controlpoint","outputcontrolpoint0":1,"outputcomponent":"y","operation":"add","outputrangemin":5,"outputrangemax":5}"#)
         let written = run(point, position: .zero, points: points)
-        XCTAssertEqual(written.1[1], SIMD2(100, 5), "only y")
+        XCTAssertEqual(written.points[1], SIMD2(100, 5), "only y")
         let reduced = try remapOperator(#"{"name":"remapvalue","input":"maxlifetime","output":"position","outputcomponent":"sum","operation":"remap","outputrangemin":5,"outputrangemax":5}"#)
-        XCTAssertEqual(run(reduced, position: SIMD2(3, 4), points: points).0.position, SIMD2(3, 4), "a reduction writes nothing")
+        XCTAssertEqual(run(reduced, position: SIMD2(3, 4), points: points).position, SIMD2(3, 4), "a reduction writes nothing")
     }
 
     /// The initializer's control point inputs zero the point first, and read zero.
     func testTheInitializersControlPointInputsZeroThePoint() throws {
         let input = try remapInitializer(#"{"name":"remapinitialvalue","input":"deltatocontrolpoint","inputcontrolpoint0":2,"inputcomponent":"x","inputrangemin":"-100 -100 -100","inputrangemax":"100 100 100","outputrangemin":0,"outputrangemax":200,"output":"size","operation":"remap"}"#)
         var state = ParticleProgramState()
-        state.position = SIMD2(30, 0)
+        state.position = SIMD3(30, 0, 0)
         var context = ParticleProgramContext()
-        context.controlPoints[2] = SIMD2(500, 500)
+        context.controlPoints[2] = SIMD3(500, 500, 0)
         ParticleProgramCPU.runInitializers([input.record], on: &state, in: &context)
         XCTAssertEqual(context.controlPoints[2], .zero)
         XCTAssertEqual(state.baseSize, 70, accuracy: 1e-3, "0 − 30")
@@ -97,7 +101,7 @@ final class ParticleRemapControlPointTests: XCTestCase {
             ParticleCPUSimulation.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero))
             XCTAssertEqual(runtime.particles.count, count)
             let written = try XCTUnwrap(runtime.previousControlPoints?[1])
-            XCTAssertEqual(written, SIMD2(10, 10) + SIMD2(1, 2) * Float(groups), "\(count) particles")
+            XCTAssertEqual(written, SIMD3(10, 10, 0) + SIMD3(1, 2, 0) * Float(groups), "\(count) particles")
         }
     }
 

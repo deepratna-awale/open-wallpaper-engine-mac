@@ -97,15 +97,15 @@ extension ParticleProgramCPU {
         case 11: return splat(initializer ? context.systemTime : context.engineTime)
         case 12: return splat(context.systemTime)
         case 13: return initializer ? p.baseColor : p.color
-        case 14: return SIMD3(p.position.x, p.position.y, 0)
-        case 15: return SIMD3(p.velocity.x, p.velocity.y, 0)
-        case 16: return SIMD3(cp0.x, cp0.y, 0)
-        case 17: return SIMD3(cp0.x - p.position.x, cp0.y - p.position.y, 0)
+        case 14: return p.position
+        case 15: return p.velocity
+        case 16: return cp0
+        case 17: return cp0 - p.position
         case 18:
             let offset = cp0 - p.position
             let length = simd_length(offset)
-            return length > 0 ? SIMD3(offset.x / length, offset.y / length, 0) : .zero
-        case 19: return SIMD3(context.layerOrigin.x, context.layerOrigin.y, 0)
+            return length > 0 ? offset / length : .zero
+        case 19: return lift(context.layerOrigin)
         default: return .zero
         }
     }
@@ -209,25 +209,17 @@ extension ParticleProgramCPU {
             p.position = center + across + direction * (apply(fraction, value.x) * length)
         case 13:
             if initializer { p.baseColor = applyVector(p.baseColor) } else { p.color = applyVector(p.color) }
-        case 14:
-            let moved = applyVector(SIMD3(p.position.x, p.position.y, 0))
-            p.position = SIMD2(moved.x, moved.y)
-        case 15:
-            let moved = applyVector(SIMD3(p.velocity.x, p.velocity.y, 0))
-            p.velocity = SIMD2(moved.x, moved.y)
-        case 16:
-            let moved = applyVector(SIMD3(center.x, center.y, 0))
-            context.controlPoints[outputPoint] = SIMD2(moved.x, moved.y)
-        case 17:
-            let delta = applyVector(SIMD3(center.x - p.position.x, center.y - p.position.y, 0))
-            p.position = center - SIMD2(delta.x, delta.y)
+        case 14: p.position = applyVector(p.position)
+        case 15: p.velocity = applyVector(p.velocity)
+        case 16: context.controlPoints[outputPoint] = applyVector(center)
+        case 17: p.position = center - applyVector(center - p.position)
         case 18:
             let offset = center - p.position
             let distance = simd_length(offset)
             let direction = distance > 0 ? offset / distance : .zero
-            let turned = applyVector(SIMD3(direction.x, direction.y, 0))
-            let turnedLength = simd_length(SIMD2(turned.x, turned.y))
-            p.position = center - (turnedLength > 0 ? SIMD2(turned.x, turned.y) / turnedLength : .zero) * distance
+            let turned = applyVector(direction)
+            let turnedLength = simd_length(turned)
+            p.position = center - (turnedLength > 0 ? turned / turnedLength : .zero) * distance
         default: break
         }
     }

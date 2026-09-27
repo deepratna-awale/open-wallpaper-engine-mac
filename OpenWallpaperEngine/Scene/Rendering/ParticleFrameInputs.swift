@@ -91,16 +91,18 @@ struct ParticleFrameInputs {
     /// The system's space in the scene: the emitter's transform, identity for a `worldspace`
     /// system (which simulates in the scene).
     var space = SceneAffineTransform.identity
-    /// The emitter's scale and rotation as the system's space sees them: identity for a system in
-    /// its emitter's space, the emitter's own for a `worldspace` one. Spawn offsets and the
-    /// velocity initializers turn with it (WE's control point matrix, 0x140237c14, 0x14023b364).
-    var emitterLinear = matrix_identity_float2x2
-    /// The control points in the system's space, by index, and where they were last step.
-    var controlPoints = [SIMD2<Float>](repeating: .zero, count: ParticleControlPoint.count)
-    var previousControlPoints = [SIMD2<Float>](repeating: .zero, count: ParticleControlPoint.count)
+    /// The control points in the system's space (x and y as the scene's plane maps them, z the
+    /// depth), by index, and where they were last step.
+    var controlPoints = [SIMD3<Float>](repeating: .zero, count: ParticleControlPoint.count)
+    var previousControlPoints = [SIMD3<Float>](repeating: .zero, count: ParticleControlPoint.count)
+    /// Each control point's orientation in the system's space: rows 0…2 of WE's control point
+    /// matrix as columns (`ParticleProgramCPU.controlPointRotation`), from its `controlpointangle<n>`
+    /// override and, in a `worldspace` system, the emitter's scale and rotation. An emitter's spawn
+    /// offsets and the velocity initializers turn with its point's (0x140237c14, 0x14023b364).
+    var controlPointAxes = [simd_float3x3](repeating: matrix_identity_float3x3, count: ParticleControlPoint.count)
     /// The offsets the object's `controlpoint<n>` overrides give, by index; nil for a point they
     /// don't drive (`ParticleCPUSimulation.keepWrittenControlPoints`).
-    var overridePoints = [SIMD2<Float>?](repeating: nil, count: ParticleControlPoint.count)
+    var overridePoints = [SIMD3<Float>?](repeating: nil, count: ParticleControlPoint.count)
     /// The points an override drives that didn't change since the last step: the GPU keeps what the
     /// last step wrote there (`particleEmitSerial`). Bit n is control point n.
     var keptPoints: UInt32 = 0
@@ -210,7 +212,6 @@ struct ParticleFrameInputs {
         inputs.space = configuration.worldSpace ? .identity : world
         inputs.placeImages(configuration, layerWorld: layerWorld)
         inputs.layerOrigin = world.translation
-        inputs.emitterLinear = configuration.worldSpace ? world.linear : matrix_identity_float2x2
         if configuration.worldSpace {
             let linear = world.linear
             inputs.spawnSizeScale = sqrt(abs(simd_determinant(linear)))
@@ -280,45 +281,56 @@ struct ParticleFrameInputs {
     /// The control points this frame, as `wallpaper64.exe` 0x14022e3e0 updates them: on the
     /// cursor (flag 1), at a scene position (flag 2, control points 1…7), on the parent system's
     /// control point `parentcontrolpoint` (flag 4) or at their offset in the emitter's space. The
-    /// object's `controlpoint<n>` override replaces the offset.
+    /// object's `controlpoint<n>` override replaces the offset (3D) and `controlpointangle<n>` turns
+    /// the point (0x14022bf15); neither moves a point on the cursor or the parent's. Orientation
+    /// (0x14022a070): the point's own; in a `worldspace` system composed with the emitter's scale
+    /// and rotation, except a flag 2 point, which a system in its emitter's space sees through the
+    /// emitter's inverse; the cursor's keeps its own; a parent's is copied.
     private mutating func placeControlPoints(_ system: ParticleSystemRuntime, world: SceneAffineTransform,
                                              cursor: SIMD2<Float>, overrides: SceneParticleOverrides,
                                              modelCapsules: (String) -> [ParticleCapsule]) {
         let configuration = system.configuration
         let toSpace = self.space.inverse ?? .identity
         let emitterToSpace = toSpace * world
+        let model = ParticleProgramCPU.embed(world.linear)
+        let unmodel = abs(model.determinant) > 1e-12 ? model.inverse : matrix_identity_float3x3
+        func inSpace(_ scene: SIMD3<Float>) -> SIMD3<Float> { SIMD3(toSpace.apply(SIMD2(scene.x, scene.y)), scene.z) }
         for index in 0..<ParticleControlPoint.count {
             let point = index < configuration.controlPoints.count ? configuration.controlPoints[index] : ParticleControlPoint()
-            let driven = overrides.controlPoints[index].map { SIMD2($0.x, $0.y) }
+            let driven = overrides.controlPoints[index]
             overridePoints[index] = driven
             if let driven, system.lastOverridePoints[index] == driven { keptPoints |= 1 << UInt32(index) }
             system.lastOverridePoints[index] = driven
+            let turn = overrides.controlPointAngles[index].map(ParticleProgramCPU.controlPointRotation) ?? matrix_identity_float3x3
             // A point the override drives keeps what a remap wrote until the override changes.
             if let driven, let written = system.writtenOverridePoints[index], written.override == driven {
                 controlPoints[index] = written.point
-                system.lastControlPoints[index] = space.apply(written.point)
+                controlPointAxes[index] = turn
+                system.lastControlPoints[index] = sceneControlPoint(index)
+                system.lastControlPointAxes[index] = turn
                 continue
             }
             system.writtenOverridePoints[index] = nil
             let offset = driven ?? point.offset
-            let scene: SIMD2<Float>?
             if point.followsCursor {
-                scene = cursor
+                controlPoints[index] = inSpace(SIMD3(cursor, 0))
+                controlPointAxes[index] = matrix_identity_float3x3
+                absolutePoints |= 1 << UInt32(index)
             } else if point.worldSpace, index != 0 {
-                scene = offset
+                controlPoints[index] = inSpace(offset)
+                controlPointAxes[index] = configuration.worldSpace ? turn : unmodel * turn
+                absolutePoints |= 1 << UInt32(index)
             } else if let parentIndex = point.parentControlPoint, let parent = system.parent,
                       parentIndex >= 0, parentIndex < parent.lastControlPoints.count {
-                scene = parent.lastControlPoints[parentIndex]
-            } else {
-                scene = nil
-            }
-            if let scene {
-                controlPoints[index] = toSpace.apply(scene)
+                controlPoints[index] = inSpace(parent.lastControlPoints[parentIndex])
+                controlPointAxes[index] = parent.lastControlPointAxes[parentIndex]
                 absolutePoints |= 1 << UInt32(index)
             } else {
-                controlPoints[index] = emitterToSpace.apply(offset)
+                controlPoints[index] = SIMD3(emitterToSpace.apply(SIMD2(offset.x, offset.y)), offset.z)
+                controlPointAxes[index] = configuration.worldSpace ? model * turn : turn
             }
-            system.lastControlPoints[index] = space.apply(controlPoints[index])
+            system.lastControlPoints[index] = sceneControlPoint(index)
+            system.lastControlPointAxes[index] = controlPointAxes[index]
         }
         previousControlPoints = system.previousControlPoints ?? controlPoints
         system.previousControlPoints = controlPoints
@@ -331,7 +343,10 @@ struct ParticleFrameInputs {
             if let index = collision.modelIndex {
                 placed = configuration.collisionModels[index].map { collision.placed(capsules: modelCapsules($0)) } ?? []
             } else {
-                placed = collision.placed(in: simulationSpace) { spaceToScene.apply(points[min(max($0, 0), 7)]) }
+                placed = collision.placed(in: simulationSpace) { index in
+                    let point = points[min(max(index, 0), 7)]
+                    return spaceToScene.apply(SIMD2(point.x, point.y))
+                }
             }
             collisions += placed
             collisionCounts.append(placed.count)
@@ -404,11 +419,19 @@ struct ParticleFrameInputs {
         inputs.space.translation += translation
         let toSpace = self.toSpace
         for index in 0..<ParticleControlPoint.count where absolutePoints & (1 << UInt32(index)) != 0 {
-            inputs.controlPoints[index] -= toSpace * translation
-            inputs.previousControlPoints[index] -= toSpace * previous
+            inputs.controlPoints[index] -= SIMD3(toSpace * translation, 0)
+            inputs.previousControlPoints[index] -= SIMD3(toSpace * previous, 0)
         }
         inputs.collisions = collisions.map { $0.moved(by: translation) }
         return inputs
+    }
+}
+
+extension ParticleFrameInputs {
+    /// Control point `index` in the scene (its depth kept).
+    func sceneControlPoint(_ index: Int) -> SIMD3<Float> {
+        let point = controlPoints[index]
+        return SIMD3(space.apply(SIMD2(point.x, point.y)), point.z)
     }
 }
 

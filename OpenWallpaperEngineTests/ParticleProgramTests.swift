@@ -210,13 +210,13 @@ final class ParticleProgramTests: XCTestCase {
     func testMovementAndTheEmitterWorkInDepth() throws {
         let movement = try `operator`(#"{"name": "movement", "gravity": "0 0 -10", "drag": 0.5}"#)
         var particle = state(age: 0)
-        particle.zVelocity = 20
+        particle.velocity.z = 20
         var context = ParticleProgramContext()
         context.deltaTime = 0.5
         context.dragDeltaTime = 0.5
         _ = ParticleProgramCPU.runOperators([movement], on: &particle, context: context, index: 0, neighbors: .init())
-        XCTAssertEqual(particle.z, 7.5, accuracy: 1e-5, "(20 − 10·0.5)·0.5")
-        XCTAssertEqual(particle.zVelocity, 11.25, accuracy: 1e-5, "15·(1 − 0.5·0.5)")
+        XCTAssertEqual(particle.position.z, 7.5, accuracy: 1e-5, "(20 − 10·0.5)·0.5")
+        XCTAssertEqual(particle.velocity.z, 11.25, accuracy: 1e-5, "15·(1 − 0.5·0.5)")
         var shape = ParticleEmitterShape()
         shape.directions = SIMD3(0, 0, 1)
         shape.distanceMinimum = SIMD3(repeating: 100)
@@ -226,9 +226,9 @@ final class ParticleProgramTests: XCTestCase {
             var spawn = ParticleProgramContext()
             spawn.serial = serial
             let emitted = ParticleProgramCPU.emit(shape, context: spawn)
-            XCTAssertEqual(emitted.position, .zero)
-            XCTAssertEqual(abs(emitted.z), 100, accuracy: 1e-3)
-            XCTAssertEqual(emitted.zVelocity, emitted.z > 0 ? 10 : -10, accuracy: 1e-3, "radial, along z")
+            XCTAssertEqual(SIMD2(emitted.position.x, emitted.position.y), .zero)
+            XCTAssertEqual(abs(emitted.position.z), 100, accuracy: 1e-3)
+            XCTAssertEqual(emitted.velocity.z, emitted.position.z > 0 ? 10 : -10, accuracy: 1e-3, "radial, along z")
         }
     }
 

@@ -9,30 +9,30 @@ import simd
 enum ParticleControlPointLink {
     /// The parent particles' positions `system`'s control points take this step (instance `slot` of
     /// an instanced system), oldest first; empty without the link.
-    static func positions(for system: ParticleSystemRuntime, slot: Int) -> [SIMD2<Float>] {
+    static func positions(for system: ParticleSystemRuntime, slot: Int) -> [SIMD3<Float>] {
         guard let link = system.configuration.link, let start = link.controlPointStart,
               let parent = system.parent else { return [] }
         let wanted = max(ParticleControlPoint.count - start, 0)
         let perInstance = link.kind == .static && link.instanced
-        var positions: [SIMD2<Float>] = []
+        var positions: [SIMD3<Float>] = []
         for particle in parent.particles where positions.count < wanted {
             if perInstance, particle.instance != slot { continue }
-            positions.append(particle.position)
+            positions.append(SIMD3(particle.position, particle.z))
         }
         return positions
     }
 }
 
 extension ParticleFrameInputs {
-    /// These inputs with control points `start…` on the scene `positions`: they stay put in every
-    /// instance.
-    func linked(_ positions: [SIMD2<Float>], start: Int) -> ParticleFrameInputs {
+    /// These inputs with control points `start…` on the scene `positions` (and depths): they stay
+    /// put in every instance.
+    func linked(_ positions: [SIMD3<Float>], start: Int) -> ParticleFrameInputs {
         var inputs = self
         let toSpace = self.toSpace
         for (offset, position) in positions.enumerated() {
             let index = start + offset
             guard index >= max(start, 1), index < ParticleControlPoint.count else { continue }
-            inputs.controlPoints[index] = toSpace * (position - space.translation)
+            inputs.controlPoints[index] = SIMD3(toSpace * (SIMD2(position.x, position.y) - space.translation), position.z)
             inputs.absolutePoints |= 1 << UInt32(index)
         }
         return inputs

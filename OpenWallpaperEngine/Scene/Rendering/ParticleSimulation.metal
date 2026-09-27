@@ -103,13 +103,12 @@ static void placeProgramPoints(thread ProgramContext &c, constant ParticleParame
                                float2 translation, float2 previousTranslation, bool linkedPoints, LinkedPoints linked) {
     c.origin = f.spaceMotion.xy + translation;
     for (uint i = 0; i < 8; ++i) {
-        const float4 pair = f.controlPoints[i / 2];
-        const float4 before = f.previousControlPoints[i / 2];
-        c.points[i] = (i % 2 == 0) ? pair.xy : pair.zw;
-        c.previousPoints[i] = (i % 2 == 0) ? before.xy : before.zw;
+        c.points[i] = f.controlPoints[i].xyz;
+        c.previousPoints[i] = f.previousControlPoints[i].xyz;
+        c.axes[i] = f.controlPointAxes[i];
         if (f.extra.x & (1u << i)) {
-            c.points[i] -= c.toSpace * translation;
-            c.previousPoints[i] -= c.toSpace * previousTranslation;
+            c.points[i] -= float3(c.toSpace * translation, 0);
+            c.previousPoints[i] -= float3(c.toSpace * previousTranslation, 0);
         }
     }
     if (!linkedPoints || p.linking.x == 0) return;
@@ -117,9 +116,8 @@ static void placeProgramPoints(thread ProgramContext &c, constant ParticleParame
     for (uint i = 0; i < linked.count.x; ++i) {
         const uint index = start + i;
         if (index < max(start, 1u) || index >= 8) continue;
-        const float4 pair = linked.points[i / 2];
-        const float2 position = (i % 2 == 0) ? pair.xy : pair.zw;
-        c.points[index] = c.toSpace * (position - c.origin);
+        const float4 position = linked.points[i];
+        c.points[index] = float3(c.toSpace * (position.xy - c.origin), position.z);
     }
 }
 
@@ -136,7 +134,7 @@ static ProgramContext programContext(constant ParticleParameters &p, constant Pa
     c.random = unitRandom(p.counts.z, serial, sOperator);
     c.space = float2x2(f.spaceLinear.xy, f.spaceLinear.zw);
     c.toSpace = float2x2(f.toSpace.xy, f.toSpace.zw);
-    c.emitterLinear = float2x2(f.emitterLinear.xy, f.emitterLinear.zw);
+    c.emitterAxes = float3x3(1);
     c.worldSpace = (p.counts.y & kWorldSpace) != 0;
     c.hasSource = false;
     c.source = ParticleInstanceState{};
@@ -150,7 +148,7 @@ static ProgramContext programContext(constant ParticleParameters &p, constant Pa
 /// `ParticleProgramCPU.emit(image:…)`: a `layerimage` emitter's spawn, at one of its points at
 /// random; false without points.
 static bool emitFromImage(EmitterParameters e, EmitterStep step, device const int4 *imagePoints,
-                          thread const ProgramContext &c, thread float2 &position, thread float3 &color) {
+                          thread const ProgramContext &c, thread float3 &position, thread float3 &color) {
     const uint count = e.image.y;
     if (count == 0) return false;
     const uint pick = min(uint(unitRandom(c.seed, c.serial, sSpawnAngle) * float(count)), count - 1);
@@ -161,7 +159,7 @@ static bool emitFromImage(EmitterParameters e, EmitterStep step, device const in
         local += float2(e.minimum.x + unitRandom(c.seed, c.serial, sSpawnHeight) * span.x,
                         e.minimum.y + unitRandom(c.seed, c.serial, sSpawnRadius) * span.y);
     }
-    position = float2x2(step.imageLinear.xy, step.imageLinear.zw) * local + step.imageTranslation.xy;
+    position = float3(float2x2(step.imageLinear.xy, step.imageLinear.zw) * local + step.imageTranslation.xy, 0);
     color = e.image.z != 0 ? float3((point.z >> 16) & 0xff, (point.z >> 8) & 0xff, point.z & 0xff) / 255.0f : float3(1);
     return true;
 }
@@ -181,29 +179,28 @@ static ParticleState spawn(uint serial, constant ParticleParameters &p, constant
     state.angularVelocity = 0;
     state.color = float3(1);
     state.baseColor = f.colorScale.xyz;
-    state.z = 0;
-    state.zVelocity = 0;
+    c.emitterAxes = programAxes(c, uint(emitter.origin.w));
     if (emitter.flags.x == 2) {
-        state.position = float2(0);
-        state.velocity = float2(0);
+        state.position = float3(0);
+        state.velocity = float3(0);
         float3 color;
         if (emitFromImage(emitter, step, imagePoints, c, state.position, color)) state.baseColor *= color;
     } else {
-        emitParticle(emitter, c, state.position, state.velocity, state.z, state.zVelocity);
+        emitParticle(emitter, c, state.position, state.velocity);
     }
     state.previous = state.position;
     runInitializers(program, f.extra.w & 0xFFFFu, state, c);
     const float size = state.baseSize * f.motionExtras.x;
     const uint frames = max(uint(p.spriteSheet.x), 1u);
     ParticleState particle;
-    particle.positionVelocity = float4(c.space * state.position + c.origin, c.space * state.velocity);
+    particle.positionVelocity = float4(c.space * state.position.xy + c.origin, c.space * state.velocity.xy);
     particle.life = float4(0, state.lifetime, size, size);
     particle.alphaRotation = float4(state.baseAlpha, state.baseAlpha, state.rotation + f.motionExtras.y, state.angularVelocity);
     particle.color = float4(state.baseColor, 1);
     particle.baseColor = particle.color;
     particle.trail = float4(0);
     particle.identity = uint4(serial, min(uint(unitRandom(p.counts.z, serial, sSpriteFrame) * float(frames)), frames - 1), 0, 0);
-    particle.depth = float4(state.z, state.zVelocity, 0, 0);
+    particle.depth = float4(state.position.z, state.velocity.z, 0, 0);
     return particle;
 }
 
@@ -331,26 +328,24 @@ static void collideCapsules(constant CollisionPlacement *collisions, uint first,
 static bool programCollide(ProgramOp record, thread ProgramState &p, thread const ProgramContext &c,
                            constant CollisionPlacement *collisions, uint collisionCount, float2 shift) {
     const uint first = record.header.z & 0xFFFFu, count = record.header.z >> 16;
-    float2 position = c.space * p.position + c.origin;
-    float2 velocity = c.space * p.velocity;
-    const float2 previous = c.space * p.previous + c.origin;
+    float2 position = c.space * p.position.xy + c.origin;
+    float2 velocity = c.space * p.velocity.xy;
+    const float2 previous = c.space * p.previous.xy + c.origin;
     bool dies = false;
     const uint start = min(first, collisionCount), end = min(first + count, collisionCount);
     if (start < end && uint(collisions[start].response.w) == 3) {
         // `collisionmodel`: capsules stay where their model is (not carried by `shift`).
-        float3 point = float3(position, p.z), motion = float3(velocity, p.zVelocity);
+        float3 point = float3(position, p.position.z), motion = float3(velocity, p.velocity.z);
         collideCapsules(collisions, start, end, point, motion, dies);
-        p.position = c.toSpace * (point.xy - c.origin);
-        p.velocity = c.toSpace * motion.xy;
-        p.z = point.z;
-        p.zVelocity = motion.z;
+        p.position = float3(c.toSpace * (point.xy - c.origin), point.z);
+        p.velocity = float3(c.toSpace * motion.xy, motion.z);
         return dies;
     }
     for (uint index = first; index < min(first + count, collisionCount); ++index) {
         collide(collisions[index], shift, position, velocity, p.angularVelocity, dies, previous);
     }
-    p.position = c.toSpace * (position - c.origin);
-    p.velocity = c.toSpace * velocity;
+    p.position = float3(c.toSpace * (position - c.origin), p.position.z);
+    p.velocity = float3(c.toSpace * velocity, p.velocity.z);
     return dies;
 }
 
@@ -424,8 +419,8 @@ static ProgramContext simulateContext(ParticleState particle, SimulateStart star
 /// `ParticleCPUSimulation.programState`.
 static ProgramState simulateState(ParticleState particle, thread const ProgramContext &c) {
     ProgramState state;
-    state.position = c.toSpace * (particle.positionVelocity.xy - c.origin);
-    state.velocity = c.toSpace * particle.positionVelocity.zw;
+    state.position = float3(c.toSpace * (particle.positionVelocity.xy - c.origin), particle.depth.x);
+    state.velocity = float3(c.toSpace * particle.positionVelocity.zw, particle.depth.y);
     state.previous = state.position;
     state.age = particle.life.x;
     state.lifetime = particle.life.y;
@@ -437,8 +432,6 @@ static ProgramState simulateState(ParticleState particle, thread const ProgramCo
     state.angularVelocity = particle.alphaRotation.w;
     state.color = particle.color.xyz;
     state.baseColor = particle.baseColor.xyz;
-    state.z = particle.depth.x;
-    state.zVelocity = particle.depth.y;
     return state;
 }
 
@@ -450,12 +443,12 @@ static void endSimulate(uint gid, ParticleState particle, ProgramState state, th
                         device ParticleInstanceState *instances) {
     const uint flags = p.counts.y;
     device float2 *own = history + gid * p.counts.w;
-    const float2 position = c.space * state.position + c.origin;
-    particle.positionVelocity = float4(position, c.space * state.velocity);
+    const float2 position = c.space * state.position.xy + c.origin;
+    particle.positionVelocity = float4(position, c.space * state.velocity.xy);
     particle.life = float4(dies ? state.lifetime : particle.life.x, state.lifetime, state.size, particle.life.w);
     particle.alphaRotation = float4(state.alpha, particle.alphaRotation.y, state.rotation, state.angularVelocity);
     particle.color = float4(state.color, particle.color.w);
-    particle.depth = float4(state.z, state.zVelocity, 0, 0);
+    particle.depth = float4(state.position.z, state.velocity.z, 0, 0);
     if (flags & kHistory) {
         const uint limit = p.counts.w;
         particle.trail.x += f.time.x;
@@ -515,15 +508,12 @@ kernel void particleSimulate(device const ParticleState *particles [[buffer(0)]]
 
 // MARK: - Control point writes
 
-static void loadPoints(thread ProgramContext &c, device const float4 *pairs) {
-    for (uint i = 0; i < 8; ++i) {
-        const float4 pair = pairs[i / 2];
-        c.points[i] = (i % 2 == 0) ? pair.xy : pair.zw;
-    }
+static void loadPoints(thread ProgramContext &c, device const float4 *points) {
+    for (uint i = 0; i < 8; ++i) c.points[i] = points[i].xyz;
 }
 
-static void storePoints(device float4 *pairs, thread const ProgramContext &c) {
-    for (uint i = 0; i < 4; ++i) pairs[i] = float4(c.points[i * 2], c.points[i * 2 + 1]);
+static void storePoints(device float4 *points, thread const ProgramContext &c) {
+    for (uint i = 0; i < 8; ++i) points[i] = float4(c.points[i], 0);
 }
 
 /// The kept points of the last step: the previous points, and the points the object's instance
@@ -532,8 +522,7 @@ static void applyKeptPoints(thread ProgramContext &c, device const PointState &s
     if (state.flags.x == 0) return;
     const uint pinned = f.extra.x >> 8;
     for (uint i = 0; i < 8; ++i) {
-        const float4 pair = state.kept[i / 2];
-        const float2 kept = (i % 2 == 0) ? pair.xy : pair.zw;
+        const float3 kept = state.kept[i].xyz;
         c.previousPoints[i] = kept;
         if (pinned & (1u << i)) c.points[i] = kept;
     }
@@ -656,7 +645,7 @@ kernel void particleSimulateSerial(device const ParticleState *particles [[buffe
                 device PointState &own = points[start.slot];
                 const bool first = own.flags.y % 4 == 0;
                 if (first) {
-                    for (uint i = 0; i < 4; ++i) own.group[i] = own.points[i];
+                    for (uint i = 0; i < 8; ++i) own.group[i] = own.points[i];
                 }
                 loadPoints(c, own.group);
                 ProgramState state = serial[gid].state;
@@ -686,7 +675,7 @@ kernel void particleSimulateSerial(device const ParticleState *particles [[buffe
     // A system without instances keeps its points for the next step
     // (`ParticleCPUSimulation.keepWrittenControlPoints`).
     for (uint slot = 0; slot < slots; ++slot) {
-        for (uint i = 0; i < 4; ++i) points[slot].kept[i] = points[slot].points[i];
+        for (uint i = 0; i < 8; ++i) points[slot].kept[i] = points[slot].points[i];
         points[slot].flags.x = instanced ? 0u : 1u;
     }
 }
