@@ -537,7 +537,7 @@ Particles are random, so the comparison is statistical:
 
 **Ours.** `WEParticleGalleryTests` (gated by `OWE_PARTICLE_GALLERY`) builds the same projects from the WE install. It draws them through the real loader and renderer (`WEReferenceRenderer`: the still at 5.5 s, then 25 frames at 5 fps). The clip's coverage and motion must match WE's (`Tests/Fixtures/WEParticleGallery/expected.json`) within half or 0.3; known gaps are reported, not failed. The per-item table and WE | ours sheets from the last run are in `/Volumes/980Pro/agentPT-out` (`final-table.tsv`, `final-contact-*.png`); they are not in the repo.
 
-**Result.** Before this pass 19 of the 122 items were outside those tolerances. Now 12 are, and each is a known gap with its cause (test-risks PG1–PG7): the leaves 0 and 2 and the vortex orb (3D operators), five light-shaft variants (three of them the `lightshafts` effect), the Thunderbolt's sampling, the `collisionbounds` and `collisionmodel` previews, and the snowstorm's fog. Items whose still differs but whose clip matches (magic_6, colorlist, maintaindistancebetweencontrolpoints, stars_0) were caught at another point of a random or periodic cycle.
+**Result.** Before this pass 19 of the 122 items were outside those tolerances. After it 12 were, each a known gap (test-risks PG1–PG7); the light-shaft effect presets (PG3), the `collisionbounds` preview (PG4) and lightshafts_5 (PG2) have since been fixed or matched (§11.6). Items whose still differs but whose clip matches (magic_6, colorlist, maintaindistancebetweencontrolpoints, stars_0) were caught at another point of a random or periodic cycle.
 
 | Items | Was | Cause | Fix |
 |---|---|---|---|
@@ -595,6 +595,11 @@ Particles are random, so the comparison is statistical:
 - For a system whose texture is a sprite sheet and that isn't "randomframe", WE writes each particle's life value as age / lifetime × `sequencemultiplier` (0x14023703b…0x140237075).
 - `ComputeSpriteFrame` shows the frame at its fraction, so a sequence plays `sequencemultiplier` times over the particle's life, whatever the sheet's `duration`.
 - Ours played it every `duration`. Wildfire's motion is now 4.76 against 4.83 (was 7.50), and fog 1's 0.87 against 0.86 (was 1.41). Test: `ParticleSpriteSheetTests.testASequencePlaysOverTheParticlesLife`.
+
+**11.6 Shapes, the speed override and few-particle presets.**
+- **`shape` objects (0x1401907af).** An image subclass: its load (0x14025fac0) sets its size to (h, h), h the scene's orthographic height (stored at 0x1401875fb), then loads as an image. Before its effects load it writes `DIRECTDRAW` 1 into the combos of each pass (0x14025ff50, called per pass at 0x1401e7ad2), so an effect such as `lightshafts` draws on nothing. lightshafts_0…2 cover 0.92 / 0.32 / 0.59 % against 1.05 / 0.40 / 0.64 (were 6.44 / 2.07 / 3.77, white). Test: `SceneShapeObjectTests`.
+- **The `speed` override** is bound to every emitter's `speedmin` and `speedmax` (0x1401c6354, 0x1401c6a86, 0x1401c6f9c), as well as to `velocityrandom`, `turbulentvelocityrandom` and others. The `collisionbounds` preview (speed 2.9) now matches (coverage 4.96 against 4.36, motion 8.47 against 7.57). Test: `ParticleOverrideTests.testTheSpeedOverrideScalesTheEmittersSpeed`.
+- **Few particles.** An expectation's `seeds` averages the item over that many particle seeds, since a system of two to four particles is one random draw per capture: lightshafts_5 is 4.55 over 4 seeds against 3.88. lightshafts_6 and snow_2 stay open (test-risks PG2, PG5).
 
 ## Tests
 
