@@ -48,6 +48,24 @@ final class SceneRenderPrimitivesTests: XCTestCase {
         XCTAssertEqual(clock.delta, 0.001, accuracy: 1e-12)
     }
 
+    /// A held clock (test harnesses settling at time 0) stands still, steps 0, and runs on from
+    /// the wall time it was held at.
+    func testHeldClockStandsStill() {
+        var clock = SceneClock()
+        clock.hold(at: 10)
+        XCTAssertEqual(clock.time, 0)
+        XCTAssertEqual(clock.delta, 0)
+        clock.hold(at: 10)
+        XCTAssertEqual(clock.time, 0, "no 0.1 ms floor while held")
+        clock.advance(to: 10.5, speed: 1)
+        XCTAssertEqual(clock.delta, SceneClock.maximumFrameDelta, accuracy: 1e-12, "from the held wall time")
+        clock.hold(at: 20)
+        XCTAssertEqual(clock.delta, 0)
+        XCTAssertEqual(clock.time, SceneClock.maximumFrameDelta, accuracy: 1e-12)
+        clock.advance(to: 20 + 1.0 / 30, speed: 1)
+        XCTAssertEqual(clock.delta, 1.0 / 30, accuracy: 1e-9)
+    }
+
     /// The clock starts at 0 whatever the uptime (WE's scene time, not the machine's), so 30 days
     /// of uptime cost no precision: 1/60 s steps land exactly as they would at boot.
     func testLongUptimeKeepsFramePrecision() {

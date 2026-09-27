@@ -135,6 +135,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// Scene time since the content loaded, speed applied; drives animations, `g_Time`,
     /// particles and scripts alike.
     private var clock = SceneClock()
+    /// Test harnesses: while true the scene clock stands still (`SceneClock.hold`). The app never sets it.
+    var holdsClock = false
     /// The frames drawn (`BuiltinFrameContext.serial`).
     private var frameSerial: UInt64 = 0
     /// The wall clock `clock` follows (tests step it).
@@ -920,7 +922,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         mipMappedTarget = mipMappedFrameBuffer?.target(matching: sceneTexture, commandBuffer: commandBuffer)
         clock.paused = pausesPlayback
         let rate = playbackRate?() ?? ScenePlaybackSpeed.speed(ofStore: wallpaperKey)
-        clock.advance(to: wallTime(), speed: rate)
+        if holdsClock { clock.hold(at: wallTime()) } else { clock.advance(to: wallTime(), speed: rate) }
         let sceneTime = clock.time
         if clock.hasStopped { onPlaybackStopped?() }
         let time = Float(sceneTime)

@@ -56,6 +56,15 @@ struct SceneClock {
         if Float(time) > Self.wrapTime { time = 0 }
     }
 
+    /// Stands still for a frame: the time stays, the frame's step is 0, and the next `advance`
+    /// steps from `wallTime`. Only test harnesses hold a clock (to draw until pipelines compile
+    /// at time 0); WE's never stops.
+    mutating func hold(at wallTime: Double) {
+        delta = 0
+        frame = 0
+        if wallTime.isFinite { lastWallTime = wallTime }
+    }
+
     /// The rate a speed runs the clock at: WE's floor of 0.1; a speed that isn't a number runs at 1.
     static func rate(_ speed: Double) -> Double {
         speed.isFinite ? max(speed, minimumRate) : 1

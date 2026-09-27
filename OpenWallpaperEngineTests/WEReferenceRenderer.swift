@@ -66,7 +66,9 @@ struct WEReferenceRenderer {
         XCTAssertTrue(renderer.hasContent, "\(directory.lastPathComponent) never got its content")
         guard let first = shots.first else { return [] }
 
-        // Settle: the clock at zero until the frame stops changing (pipelines compile off the render thread).
+        // Settle: the clock held at zero until the frame stops changing (pipelines compile off the
+        // render thread). A running clock steps at least 0.1 ms a frame (`SceneClock`), so it is held.
+        renderer.holdsClock = true
         var previous: [UInt8]?
         var settled = false
         let settleDeadline = Date().addingTimeInterval(30)
@@ -81,6 +83,7 @@ struct WEReferenceRenderer {
             previous = bytes
         }
         if !settled { print("WE reference: \(directory.lastPathComponent) never settled with the clock stopped") }
+        renderer.holdsClock = false
 
         var images: [WEReferenceImage] = []
         var time = 0.0
