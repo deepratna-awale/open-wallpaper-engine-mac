@@ -1,0 +1,840 @@
+{
+    "Lifetime random":  [
+                            {
+                                "section":  "",
+                                "field":  "Min",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  0
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Max",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  1
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Exponent",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  1
+                            }
+                        ],
+    "Size random":  [
+                        {
+                            "section":  "",
+                            "field":  "Min",
+                            "type":  "number",
+                            "control":  "spinner",
+                            "add_default":  5
+                        },
+                        {
+                            "section":  "",
+                            "field":  "Max",
+                            "type":  "number",
+                            "control":  "spinner",
+                            "add_default":  50
+                        },
+                        {
+                            "section":  "",
+                            "field":  "Exponent",
+                            "type":  "number",
+                            "control":  "spinner",
+                            "add_default":  1
+                        }
+                    ],
+    "Color random":  {
+                         "section":  "?",
+                         "field":  "Exponent",
+                         "type":  "number",
+                         "control":  "spinner",
+                         "add_default":  1
+                     },
+    "HSV color random":  [
+                             {
+                                 "section":  "?",
+                                 "field":  "Hue steps",
+                                 "type":  "number",
+                                 "control":  "slider",
+                                 "slider_min":  1,
+                                 "slider_max":  30,
+                                 "add_default":  6
+                             },
+                             {
+                                 "section":  "?",
+                                 "field":  "Saturation min",
+                                 "type":  "number",
+                                 "control":  "spinner",
+                                 "add_default":  0.5
+                             },
+                             {
+                                 "section":  "?",
+                                 "field":  "Saturation max",
+                                 "type":  "number",
+                                 "control":  "spinner",
+                                 "add_default":  1
+                             },
+                             {
+                                 "section":  "?",
+                                 "field":  "Value min",
+                                 "type":  "number",
+                                 "control":  "spinner",
+                                 "add_default":  0.5
+                             },
+                             {
+                                 "section":  "?",
+                                 "field":  "Value max",
+                                 "type":  "number",
+                                 "control":  "spinner",
+                                 "add_default":  1
+                             }
+                         ],
+    "Color list":  [
+                       {
+                           "section":  "",
+                           "field":  "Colors",
+                           "type":  "number",
+                           "control":  "slider",
+                           "slider_min":  1,
+                           "slider_max":  10,
+                           "add_default":  1
+                       },
+                       {
+                           "section":  "?",
+                           "field":  "Hue noise",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  0
+                       },
+                       {
+                           "section":  "?",
+                           "field":  "Saturation noise",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  0
+                       },
+                       {
+                           "section":  "?",
+                           "field":  "Value noise",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  0
+                       }
+                   ],
+    "Alpha random":  [
+                         {
+                             "section":  "",
+                             "field":  "Min",
+                             "type":  "number",
+                             "control":  "spinner",
+                             "add_default":  0.05000000074505806
+                         },
+                         {
+                             "section":  "",
+                             "field":  "Max",
+                             "type":  "number",
+                             "control":  "spinner",
+                             "add_default":  1
+                         },
+                         {
+                             "section":  "",
+                             "field":  "Exponent",
+                             "type":  "number",
+                             "control":  "spinner",
+                             "add_default":  1
+                         }
+                     ],
+    "Velocity random":  [
+                            {
+                                "section":  "",
+                                "field":  "Speed min.x",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  -32
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Speed min.y",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  -32
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Speed min.z",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  0
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Speed max.x",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  32
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Speed max.y",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  32
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Speed max.z",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  0
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Exponent",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  1
+                            }
+                        ],
+    "Inherit control point velocity":  [
+                                           {
+                                               "section":  "",
+                                               "field":  "Speed min",
+                                               "type":  "number",
+                                               "control":  "spinner",
+                                               "add_default":  0.10000000149011612
+                                           },
+                                           {
+                                               "section":  "",
+                                               "field":  "Speed max",
+                                               "type":  "number",
+                                               "control":  "spinner",
+                                               "add_default":  0.20000000298023224
+                                           },
+                                           {
+                                               "section":  "",
+                                               "field":  "Control point",
+                                               "type":  "number",
+                                               "control":  "spinner",
+                                               "add_default":  0
+                                           }
+                                       ],
+    "Turbulent velocity random":  [
+                                      {
+                                          "section":  "",
+                                          "field":  "Scale",
+                                          "type":  "number",
+                                          "control":  "spinner",
+                                          "add_default":  1
+                                      },
+                                      {
+                                          "section":  "",
+                                          "field":  "Noise speed",
+                                          "type":  "number",
+                                          "control":  "spinner",
+                                          "add_default":  1
+                                      },
+                                      {
+                                          "section":  "",
+                                          "field":  "Offset",
+                                          "type":  "number",
+                                          "control":  "spinner",
+                                          "add_default":  0
+                                      },
+                                      {
+                                          "section":  "",
+                                          "field":  "Speed min",
+                                          "type":  "number",
+                                          "control":  "spinner",
+                                          "add_default":  100
+                                      },
+                                      {
+                                          "section":  "",
+                                          "field":  "Speed max",
+                                          "type":  "number",
+                                          "control":  "spinner",
+                                          "add_default":  250
+                                      },
+                                      {
+                                          "section":  "",
+                                          "field":  "Phase min",
+                                          "type":  "number",
+                                          "control":  "spinner",
+                                          "add_default":  0
+                                      },
+                                      {
+                                          "section":  "",
+                                          "field":  "Phase max",
+                                          "type":  "number",
+                                          "control":  "spinner",
+                                          "add_default":  0.10000000149011612
+                                      },
+                                      {
+                                          "section":  "",
+                                          "field":  "Forward.x",
+                                          "type":  "number",
+                                          "control":  "spinner",
+                                          "add_default":  0
+                                      },
+                                      {
+                                          "section":  "",
+                                          "field":  "Forward.y",
+                                          "type":  "number",
+                                          "control":  "spinner",
+                                          "add_default":  1
+                                      },
+                                      {
+                                          "section":  "",
+                                          "field":  "Forward.z",
+                                          "type":  "number",
+                                          "control":  "spinner",
+                                          "add_default":  0
+                                      },
+                                      {
+                                          "section":  "",
+                                          "field":  "Normal.x",
+                                          "type":  "number",
+                                          "control":  "spinner",
+                                          "add_default":  0
+                                      },
+                                      {
+                                          "section":  "",
+                                          "field":  "Normal.y",
+                                          "type":  "number",
+                                          "control":  "spinner",
+                                          "add_default":  0
+                                      },
+                                      {
+                                          "section":  "",
+                                          "field":  "Normal.z",
+                                          "type":  "number",
+                                          "control":  "spinner",
+                                          "add_default":  1
+                                      },
+                                      {
+                                          "section":  "Audio response",
+                                          "field":  "Mode",
+                                          "type":  "combo",
+                                          "add_default":  "None",
+                                          "options":  [
+                                                          "None",
+                                                          "Left",
+                                                          "Right",
+                                                          "Center"
+                                                      ]
+                                      }
+                                  ],
+    "Rotation random":  [
+                            {
+                                "section":  "",
+                                "field":  "Min.x",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  0
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Min.y",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  0
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Min.z",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  0
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Max.x",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  0
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Max.y",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  0
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Max.z",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  360
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Exponent",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  1
+                            }
+                        ],
+    "Position offset random":  [
+                                   {
+                                       "section":  "",
+                                       "field":  "Directions.x",
+                                       "type":  "number",
+                                       "control":  "spinner",
+                                       "add_default":  1
+                                   },
+                                   {
+                                       "section":  "",
+                                       "field":  "Directions.y",
+                                       "type":  "number",
+                                       "control":  "spinner",
+                                       "add_default":  1
+                                   },
+                                   {
+                                       "section":  "",
+                                       "field":  "Directions.z",
+                                       "type":  "number",
+                                       "control":  "spinner",
+                                       "add_default":  0
+                                   },
+                                   {
+                                       "section":  "",
+                                       "field":  "Sign.x",
+                                       "type":  "number",
+                                       "control":  "spinner",
+                                       "add_default":  0
+                                   },
+                                   {
+                                       "section":  "",
+                                       "field":  "Sign.y",
+                                       "type":  "number",
+                                       "control":  "spinner",
+                                       "add_default":  0
+                                   },
+                                   {
+                                       "section":  "",
+                                       "field":  "Sign.z",
+                                       "type":  "number",
+                                       "control":  "spinner",
+                                       "add_default":  0
+                                   },
+                                   {
+                                       "section":  "",
+                                       "field":  "Distance",
+                                       "type":  "number",
+                                       "control":  "spinner",
+                                       "add_default":  100
+                                   },
+                                   {
+                                       "section":  "",
+                                       "field":  "Octaves",
+                                       "type":  "number",
+                                       "control":  "spinner",
+                                       "add_default":  6
+                                   },
+                                   {
+                                       "section":  "",
+                                       "field":  "Noise scale",
+                                       "type":  "number",
+                                       "control":  "spinner",
+                                       "add_default":  0.0010000000474974513
+                                   },
+                                   {
+                                       "section":  "",
+                                       "field":  "Noise speed",
+                                       "type":  "number",
+                                       "control":  "spinner",
+                                       "add_default":  1
+                                   }
+                               ],
+    "Angular velocity random":  [
+                                    {
+                                        "section":  "",
+                                        "field":  "Speed min.x",
+                                        "type":  "number",
+                                        "control":  "spinner",
+                                        "add_default":  0
+                                    },
+                                    {
+                                        "section":  "",
+                                        "field":  "Speed min.y",
+                                        "type":  "number",
+                                        "control":  "spinner",
+                                        "add_default":  0
+                                    },
+                                    {
+                                        "section":  "",
+                                        "field":  "Speed min.z",
+                                        "type":  "number",
+                                        "control":  "spinner",
+                                        "add_default":  -5
+                                    },
+                                    {
+                                        "section":  "",
+                                        "field":  "Speed max.x",
+                                        "type":  "number",
+                                        "control":  "spinner",
+                                        "add_default":  0
+                                    },
+                                    {
+                                        "section":  "",
+                                        "field":  "Speed max.y",
+                                        "type":  "number",
+                                        "control":  "spinner",
+                                        "add_default":  0
+                                    },
+                                    {
+                                        "section":  "",
+                                        "field":  "Speed max.z",
+                                        "type":  "number",
+                                        "control":  "spinner",
+                                        "add_default":  5
+                                    },
+                                    {
+                                        "section":  "",
+                                        "field":  "Exponent",
+                                        "type":  "number",
+                                        "control":  "spinner",
+                                        "add_default":  1
+                                    }
+                                ],
+    "Position around control point":  [
+                                          {
+                                              "section":  "",
+                                              "field":  "Count",
+                                              "type":  "number",
+                                              "control":  "spinner",
+                                              "add_default":  32
+                                          },
+                                          {
+                                              "section":  "",
+                                              "field":  "Modify count with layer settings",
+                                              "type":  "bool",
+                                              "add_default":  false
+                                          },
+                                          {
+                                              "section":  "",
+                                              "field":  "Restart with periodic emission",
+                                              "type":  "bool",
+                                              "add_default":  false
+                                          },
+                                          {
+                                              "section":  "",
+                                              "field":  "Bounds.Start",
+                                              "type":  "number",
+                                              "control":  "spinner",
+                                              "add_default":  0
+                                          },
+                                          {
+                                              "section":  "",
+                                              "field":  "Bounds.End",
+                                              "type":  "number",
+                                              "control":  "spinner",
+                                              "add_default":  1
+                                          },
+                                          {
+                                              "section":  "",
+                                              "field":  "Axis.x",
+                                              "type":  "number",
+                                              "control":  "spinner",
+                                              "add_default":  0
+                                          },
+                                          {
+                                              "section":  "",
+                                              "field":  "Axis.y",
+                                              "type":  "number",
+                                              "control":  "spinner",
+                                              "add_default":  0
+                                          },
+                                          {
+                                              "section":  "",
+                                              "field":  "Axis.z",
+                                              "type":  "number",
+                                              "control":  "spinner",
+                                              "add_default":  1
+                                          },
+                                          {
+                                              "section":  "",
+                                              "field":  "Speed min.x",
+                                              "type":  "number",
+                                              "control":  "spinner",
+                                              "add_default":  0
+                                          },
+                                          {
+                                              "section":  "",
+                                              "field":  "Speed min.y",
+                                              "type":  "number",
+                                              "control":  "spinner",
+                                              "add_default":  0
+                                          },
+                                          {
+                                              "section":  "",
+                                              "field":  "Speed min.z",
+                                              "type":  "number",
+                                              "control":  "spinner",
+                                              "add_default":  0
+                                          },
+                                          {
+                                              "section":  "",
+                                              "field":  "Speed max.x",
+                                              "type":  "number",
+                                              "control":  "spinner",
+                                              "add_default":  0
+                                          },
+                                          {
+                                              "section":  "",
+                                              "field":  "Speed max.y",
+                                              "type":  "number",
+                                              "control":  "spinner",
+                                              "add_default":  0
+                                          },
+                                          {
+                                              "section":  "",
+                                              "field":  "Speed max.z",
+                                              "type":  "number",
+                                              "control":  "spinner",
+                                              "add_default":  0
+                                          },
+                                          {
+                                              "section":  "",
+                                              "field":  "Orientation",
+                                              "type":  "combo",
+                                              "add_default":  "Repeat",
+                                              "options":  [
+                                                              "Repeat",
+                                                              "Mirror"
+                                                          ]
+                                          },
+                                          {
+                                              "section":  "",
+                                              "field":  "Control point",
+                                              "type":  "number",
+                                              "control":  "spinner",
+                                              "add_default":  0
+                                          }
+                                      ],
+    "Position between control points":  [
+                                            {
+                                                "section":  "",
+                                                "field":  "Count",
+                                                "type":  "number",
+                                                "control":  "spinner",
+                                                "add_default":  32
+                                            },
+                                            {
+                                                "section":  "",
+                                                "field":  "Modify count with layer settings",
+                                                "type":  "bool",
+                                                "add_default":  false
+                                            },
+                                            {
+                                                "section":  "",
+                                                "field":  "Restart with periodic emission",
+                                                "type":  "bool",
+                                                "add_default":  false
+                                            },
+                                            {
+                                                "section":  "",
+                                                "field":  "Bounds.Start",
+                                                "type":  "number",
+                                                "control":  "spinner",
+                                                "add_default":  0
+                                            },
+                                            {
+                                                "section":  "",
+                                                "field":  "Bounds.End",
+                                                "type":  "number",
+                                                "control":  "spinner",
+                                                "add_default":  1
+                                            },
+                                            {
+                                                "section":  "",
+                                                "field":  "Orientation",
+                                                "type":  "combo",
+                                                "add_default":  "Repeat",
+                                                "options":  [
+                                                                "Repeat",
+                                                                "Mirror"
+                                                            ]
+                                            },
+                                            {
+                                                "section":  "",
+                                                "field":  "Control point start",
+                                                "type":  "number",
+                                                "control":  "spinner",
+                                                "add_default":  0
+                                            },
+                                            {
+                                                "section":  "",
+                                                "field":  "Control point end",
+                                                "type":  "number",
+                                                "control":  "spinner",
+                                                "add_default":  1
+                                            },
+                                            {
+                                                "section":  "",
+                                                "field":  "Reduce outer positions",
+                                                "type":  "bool",
+                                                "add_default":  false
+                                            },
+                                            {
+                                                "section":  "",
+                                                "field":  "Reduce outer velocities",
+                                                "type":  "bool",
+                                                "add_default":  false
+                                            },
+                                            {
+                                                "section":  "",
+                                                "field":  "Reduce outer sizes",
+                                                "type":  "bool",
+                                                "add_default":  false
+                                            },
+                                            {
+                                                "section":  "",
+                                                "field":  "Enable arc",
+                                                "type":  "bool",
+                                                "add_default":  false
+                                            }
+                                        ],
+    "Remap initial value":  [
+                                {
+                                    "section":  "",
+                                    "field":  "Input",
+                                    "type":  "combo",
+                                    "add_default":  "Maximum lifetime",
+                                    "options":  [
+                                                    "Maximum lifetime",
+                                                    "Size",
+                                                    "Opacity",
+                                                    "Speed",
+                                                    "Rotation",
+                                                    "Angular speed",
+                                                    "Distance to control point",
+                                                    "Position between two control points",
+                                                    "Runtime",
+                                                    "Time of day",
+                                                    "Particle system time",
+                                                    "Layer time",
+                                                    "Color",
+                                                    "Position",
+                                                    "Velocity",
+                                                    "Control point",
+                                                    "Delta to control point",
+                                                    "Direction to control point",
+                                                    "Layer origin"
+                                                ]
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Clamp input value",
+                                    "type":  "bool",
+                                    "add_default":  false
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Output",
+                                    "type":  "combo",
+                                    "add_default":  "Size",
+                                    "options":  [
+                                                    "Maximum lifetime",
+                                                    "Size",
+                                                    "Opacity",
+                                                    "Speed",
+                                                    "Rotation",
+                                                    "Angular speed",
+                                                    "Distance to control point",
+                                                    "Position between two control points",
+                                                    "Color",
+                                                    "Position",
+                                                    "Velocity",
+                                                    "Control point",
+                                                    "Delta to control point",
+                                                    "Direction to control point"
+                                                ]
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Clamp output value",
+                                    "type":  "bool",
+                                    "add_default":  false
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Operation",
+                                    "type":  "combo",
+                                    "add_default":  "Multiply",
+                                    "options":  [
+                                                    "Assign",
+                                                    "Multiply",
+                                                    "Add",
+                                                    "Subtract"
+                                                ]
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Transform function",
+                                    "type":  "combo",
+                                    "add_default":  "None",
+                                    "options":  [
+                                                    "None",
+                                                    "Sine wave",
+                                                    "Square wave",
+                                                    "Saw wave",
+                                                    "Triangle wave",
+                                                    "Simplex noise",
+                                                    "Organic FBM noise"
+                                                ]
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Input range min",
+                                    "type":  "number",
+                                    "control":  "spinner",
+                                    "add_default":  0
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Input range max",
+                                    "type":  "number",
+                                    "control":  "spinner",
+                                    "add_default":  1
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Output range min",
+                                    "type":  "number",
+                                    "control":  "spinner",
+                                    "add_default":  0
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Output range max",
+                                    "type":  "number",
+                                    "control":  "spinner",
+                                    "add_default":  1
+                                }
+                            ],
+    "Inherit initial value from event":  {
+                                             "section":  "",
+                                             "field":  "Input",
+                                             "type":  "combo",
+                                             "add_default":  "Set color",
+                                             "options":  [
+                                                             "Set color",
+                                                             "Multiply color",
+                                                             "Set opacity",
+                                                             "Multiply opacity",
+                                                             "Set color and opacity",
+                                                             "Multiply color and opacity",
+                                                             "Set velocity",
+                                                             "Add velocity",
+                                                             "Set size",
+                                                             "Multiply size",
+                                                             "Set rotation",
+                                                             "Add rotation",
+                                                             "Set angular velocity",
+                                                             "Add angular velocity"
+                                                         ]
+                                         }
+}

@@ -1,0 +1,398 @@
+{
+    "Sphere random":  [
+                          {
+                              "section":  "",
+                              "field":  "Offset.x",
+                              "type":  "number",
+                              "control":  "spinner",
+                              "add_default":  0
+                          },
+                          {
+                              "section":  "",
+                              "field":  "Offset.y",
+                              "type":  "number",
+                              "control":  "spinner",
+                              "add_default":  0
+                          },
+                          {
+                              "section":  "",
+                              "field":  "Offset.z",
+                              "type":  "number",
+                              "control":  "spinner",
+                              "add_default":  0
+                          },
+                          {
+                              "section":  "",
+                              "field":  "Directions.x",
+                              "type":  "number",
+                              "control":  "spinner",
+                              "add_default":  1
+                          },
+                          {
+                              "section":  "",
+                              "field":  "Directions.y",
+                              "type":  "number",
+                              "control":  "spinner",
+                              "add_default":  1
+                          },
+                          {
+                              "section":  "",
+                              "field":  "Directions.z",
+                              "type":  "number",
+                              "control":  "spinner",
+                              "add_default":  0
+                          },
+                          {
+                              "section":  "",
+                              "field":  "Sign.x",
+                              "type":  "number",
+                              "control":  "spinner",
+                              "add_default":  0
+                          },
+                          {
+                              "section":  "",
+                              "field":  "Sign.y",
+                              "type":  "number",
+                              "control":  "spinner",
+                              "add_default":  0
+                          },
+                          {
+                              "section":  "",
+                              "field":  "Sign.z",
+                              "type":  "number",
+                              "control":  "spinner",
+                              "add_default":  0
+                          },
+                          {
+                              "section":  "",
+                              "field":  "Cone",
+                              "type":  "number",
+                              "control":  "spinner",
+                              "add_default":  0
+                          },
+                          {
+                              "section":  "",
+                              "field":  "Distance min",
+                              "type":  "number",
+                              "control":  "spinner",
+                              "add_default":  0
+                          },
+                          {
+                              "section":  "",
+                              "field":  "Distance max",
+                              "type":  "number",
+                              "control":  "spinner",
+                              "add_default":  256
+                          },
+                          {
+                              "section":  "",
+                              "field":  "Control point",
+                              "type":  "number",
+                              "control":  "spinner",
+                              "add_default":  0
+                          },
+                          {
+                              "section":  "Count",
+                              "field":  "Rate",
+                              "type":  "number",
+                              "control":  "spinner",
+                              "add_default":  10
+                          },
+                          {
+                              "section":  "Count",
+                              "field":  "Limit to one per frame",
+                              "type":  "bool",
+                              "add_default":  false
+                          },
+                          {
+                              "section":  "Count",
+                              "field":  "Duration",
+                              "type":  "number",
+                              "control":  "spinner",
+                              "add_default":  0
+                          },
+                          {
+                              "section":  "Count",
+                              "field":  "Delay",
+                              "type":  "number",
+                              "control":  "spinner",
+                              "add_default":  0
+                          },
+                          {
+                              "section":  "Count",
+                              "field":  "Instantaneous",
+                              "type":  "number",
+                              "control":  "spinner",
+                              "add_default":  0
+                          },
+                          {
+                              "section":  "Count",
+                              "field":  "Random periodic emission",
+                              "type":  "bool",
+                              "add_default":  false
+                          },
+                          {
+                              "section":  "Speed",
+                              "field":  "Speed min",
+                              "type":  "number",
+                              "control":  "spinner",
+                              "add_default":  0
+                          },
+                          {
+                              "section":  "Speed",
+                              "field":  "Speed max",
+                              "type":  "number",
+                              "control":  "spinner",
+                              "add_default":  0
+                          },
+                          {
+                              "section":  "Audio response",
+                              "field":  "Mode",
+                              "type":  "combo",
+                              "add_default":  "None",
+                              "options":  [
+                                              "None",
+                                              "Left",
+                                              "Right",
+                                              "Center"
+                                          ]
+                          }
+                      ],
+    "Box random":  [
+                       {
+                           "section":  "",
+                           "field":  "Offset.x",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  0
+                       },
+                       {
+                           "section":  "",
+                           "field":  "Offset.y",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  0
+                       },
+                       {
+                           "section":  "",
+                           "field":  "Offset.z",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  0
+                       },
+                       {
+                           "section":  "",
+                           "field":  "Directions.x",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  1
+                       },
+                       {
+                           "section":  "",
+                           "field":  "Directions.y",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  1
+                       },
+                       {
+                           "section":  "",
+                           "field":  "Directions.z",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  0
+                       },
+                       {
+                           "section":  "",
+                           "field":  "Distance min.x",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  0
+                       },
+                       {
+                           "section":  "",
+                           "field":  "Distance min.y",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  0
+                       },
+                       {
+                           "section":  "",
+                           "field":  "Distance min.z",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  0
+                       },
+                       {
+                           "section":  "",
+                           "field":  "Distance max.x",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  256
+                       },
+                       {
+                           "section":  "",
+                           "field":  "Distance max.y",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  256
+                       },
+                       {
+                           "section":  "",
+                           "field":  "Distance max.z",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  0
+                       },
+                       {
+                           "section":  "",
+                           "field":  "Control point",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  0
+                       },
+                       {
+                           "section":  "Count",
+                           "field":  "Rate",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  10
+                       },
+                       {
+                           "section":  "Count",
+                           "field":  "Instantaneous",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  0
+                       },
+                       {
+                           "section":  "Count",
+                           "field":  "Duration",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  0
+                       },
+                       {
+                           "section":  "Count",
+                           "field":  "Delay",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  0
+                       },
+                       {
+                           "section":  "Count",
+                           "field":  "Limit to one per frame",
+                           "type":  "bool",
+                           "add_default":  false
+                       },
+                       {
+                           "section":  "Count",
+                           "field":  "Random periodic emission",
+                           "type":  "bool",
+                           "add_default":  false
+                       },
+                       {
+                           "section":  "Speed",
+                           "field":  "Speed min",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  0
+                       },
+                       {
+                           "section":  "Speed",
+                           "field":  "Speed max",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  0
+                       },
+                       {
+                           "section":  "Audio response",
+                           "field":  "Mode",
+                           "type":  "combo",
+                           "add_default":  "None",
+                           "options":  [
+                                           "None",
+                                           "Left",
+                                           "Right",
+                                           "Center"
+                                       ]
+                       }
+                   ],
+    "Layer image":  [
+                        {
+                            "section":  "",
+                            "field":  "Copy layer color",
+                            "type":  "bool",
+                            "add_default":  false
+                        },
+                        {
+                            "section":  "",
+                            "field":  "Update emission bitmap periodically",
+                            "type":  "bool",
+                            "add_default":  false
+                        },
+                        {
+                            "section":  "",
+                            "field":  "Inherit layer motion",
+                            "type":  "bool",
+                            "add_default":  false
+                        },
+                        {
+                            "section":  "",
+                            "field":  "Random offset",
+                            "type":  "bool",
+                            "add_default":  false
+                        },
+                        {
+                            "section":  "Count",
+                            "field":  "Rate",
+                            "type":  "number",
+                            "control":  "spinner",
+                            "add_default":  10
+                        },
+                        {
+                            "section":  "Count",
+                            "field":  "Instantaneous",
+                            "type":  "number",
+                            "control":  "spinner",
+                            "add_default":  0
+                        },
+                        {
+                            "section":  "Count",
+                            "field":  "Duration",
+                            "type":  "number",
+                            "control":  "spinner",
+                            "add_default":  0
+                        },
+                        {
+                            "section":  "Count",
+                            "field":  "Delay",
+                            "type":  "number",
+                            "control":  "spinner",
+                            "add_default":  0
+                        },
+                        {
+                            "section":  "Count",
+                            "field":  "Limit to one per frame",
+                            "type":  "bool",
+                            "add_default":  false
+                        },
+                        {
+                            "section":  "Count",
+                            "field":  "Random periodic emission",
+                            "type":  "bool",
+                            "add_default":  false
+                        },
+                        {
+                            "section":  "Audio response",
+                            "field":  "Mode",
+                            "type":  "combo",
+                            "add_default":  "None",
+                            "options":  [
+                                            "None",
+                                            "Left",
+                                            "Right",
+                                            "Center"
+                                        ]
+                        }
+                    ]
+}

@@ -1,0 +1,1450 @@
+{
+    "Movement":  [
+                     {
+                         "section":  "",
+                         "field":  "Gravity.x",
+                         "type":  "number",
+                         "control":  "spinner",
+                         "add_default":  0
+                     },
+                     {
+                         "section":  "",
+                         "field":  "Gravity.y",
+                         "type":  "number",
+                         "control":  "spinner",
+                         "add_default":  0
+                     },
+                     {
+                         "section":  "",
+                         "field":  "Gravity.z",
+                         "type":  "number",
+                         "control":  "spinner",
+                         "add_default":  0
+                     },
+                     {
+                         "section":  "",
+                         "field":  "Worldspace",
+                         "type":  "bool",
+                         "add_default":  false
+                     },
+                     {
+                         "section":  "",
+                         "field":  "Drag",
+                         "type":  "number",
+                         "control":  "spinner",
+                         "add_default":  0
+                     }
+                 ],
+    "Angular movement":  [
+                             {
+                                 "section":  "",
+                                 "field":  "Force.x",
+                                 "type":  "number",
+                                 "control":  "spinner",
+                                 "add_default":  0
+                             },
+                             {
+                                 "section":  "",
+                                 "field":  "Force.y",
+                                 "type":  "number",
+                                 "control":  "spinner",
+                                 "add_default":  0
+                             },
+                             {
+                                 "section":  "",
+                                 "field":  "Force.z",
+                                 "type":  "number",
+                                 "control":  "spinner",
+                                 "add_default":  0
+                             },
+                             {
+                                 "section":  "",
+                                 "field":  "Drag",
+                                 "type":  "number",
+                                 "control":  "spinner",
+                                 "add_default":  0
+                             },
+                             {
+                                 "section":  "Operator blending",
+                                 "field":  "Blend-in start",
+                                 "type":  "number",
+                                 "control":  "spinner",
+                                 "add_default":  0
+                             },
+                             {
+                                 "section":  "Operator blending",
+                                 "field":  "Blend-in end",
+                                 "type":  "number",
+                                 "control":  "spinner",
+                                 "add_default":  0
+                             },
+                             {
+                                 "section":  "Operator blending",
+                                 "field":  "Blend-out start",
+                                 "type":  "number",
+                                 "control":  "spinner",
+                                 "add_default":  1
+                             },
+                             {
+                                 "section":  "Operator blending",
+                                 "field":  "Blend-out end",
+                                 "type":  "number",
+                                 "control":  "spinner",
+                                 "add_default":  1
+                             }
+                         ],
+    "Alpha fade":  [
+                       {
+                           "section":  "",
+                           "field":  "Fade-in time",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  0.5
+                       },
+                       {
+                           "section":  "",
+                           "field":  "Fade-out time",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  0.5
+                       }
+                   ],
+    "Size change":  [
+                        {
+                            "section":  "",
+                            "field":  "Start value",
+                            "type":  "number",
+                            "control":  "spinner",
+                            "add_default":  1
+                        },
+                        {
+                            "section":  "",
+                            "field":  "End value",
+                            "type":  "number",
+                            "control":  "spinner",
+                            "add_default":  0
+                        },
+                        {
+                            "section":  "",
+                            "field":  "Start time",
+                            "type":  "number",
+                            "control":  "spinner",
+                            "add_default":  0
+                        },
+                        {
+                            "section":  "",
+                            "field":  "End time",
+                            "type":  "number",
+                            "control":  "spinner",
+                            "add_default":  1
+                        }
+                    ],
+    "Color change":  [
+                         {
+                             "section":  "?",
+                             "field":  "Start time",
+                             "type":  "number",
+                             "control":  "spinner",
+                             "add_default":  0
+                         },
+                         {
+                             "section":  "?",
+                             "field":  "End time",
+                             "type":  "number",
+                             "control":  "spinner",
+                             "add_default":  1
+                         }
+                     ],
+    "Alpha change":  [
+                         {
+                             "section":  "",
+                             "field":  "Start value",
+                             "type":  "number",
+                             "control":  "spinner",
+                             "add_default":  1
+                         },
+                         {
+                             "section":  "",
+                             "field":  "End value",
+                             "type":  "number",
+                             "control":  "spinner",
+                             "add_default":  0
+                         },
+                         {
+                             "section":  "",
+                             "field":  "Start time",
+                             "type":  "number",
+                             "control":  "spinner",
+                             "add_default":  0
+                         },
+                         {
+                             "section":  "",
+                             "field":  "End time",
+                             "type":  "number",
+                             "control":  "spinner",
+                             "add_default":  1
+                         }
+                     ],
+    "Oscillate position":  [
+                               {
+                                   "section":  "",
+                                   "field":  "Mask.x",
+                                   "type":  "number",
+                                   "control":  "spinner",
+                                   "add_default":  1
+                               },
+                               {
+                                   "section":  "",
+                                   "field":  "Mask.y",
+                                   "type":  "number",
+                                   "control":  "spinner",
+                                   "add_default":  1
+                               },
+                               {
+                                   "section":  "",
+                                   "field":  "Mask.z",
+                                   "type":  "number",
+                                   "control":  "spinner",
+                                   "add_default":  0
+                               },
+                               {
+                                   "section":  "",
+                                   "field":  "Frequency min",
+                                   "type":  "number",
+                                   "control":  "spinner",
+                                   "add_default":  1
+                               },
+                               {
+                                   "section":  "",
+                                   "field":  "Frequency max",
+                                   "type":  "number",
+                                   "control":  "spinner",
+                                   "add_default":  5
+                               },
+                               {
+                                   "section":  "",
+                                   "field":  "Scale min",
+                                   "type":  "number",
+                                   "control":  "spinner",
+                                   "add_default":  0
+                               },
+                               {
+                                   "section":  "",
+                                   "field":  "Scale max",
+                                   "type":  "number",
+                                   "control":  "spinner",
+                                   "add_default":  10
+                               },
+                               {
+                                   "section":  "",
+                                   "field":  "Phase min",
+                                   "type":  "number",
+                                   "control":  "spinner",
+                                   "add_default":  0
+                               },
+                               {
+                                   "section":  "",
+                                   "field":  "Phase max",
+                                   "type":  "number",
+                                   "control":  "spinner",
+                                   "add_default":  6.28318977355957
+                               },
+                               {
+                                   "section":  "Operator blending",
+                                   "field":  "Blend-in start",
+                                   "type":  "number",
+                                   "control":  "spinner",
+                                   "add_default":  0
+                               },
+                               {
+                                   "section":  "Operator blending",
+                                   "field":  "Blend-in end",
+                                   "type":  "number",
+                                   "control":  "spinner",
+                                   "add_default":  0
+                               },
+                               {
+                                   "section":  "Operator blending",
+                                   "field":  "Blend-out start",
+                                   "type":  "number",
+                                   "control":  "spinner",
+                                   "add_default":  1
+                               },
+                               {
+                                   "section":  "Operator blending",
+                                   "field":  "Blend-out end",
+                                   "type":  "number",
+                                   "control":  "spinner",
+                                   "add_default":  1
+                               }
+                           ],
+    "Oscillate alpha":  [
+                            {
+                                "section":  "",
+                                "field":  "Frequency min",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  1
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Frequency max",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  10
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Scale min",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  0
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Scale max",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  1
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Phase min",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  0
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Phase max",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  6.28318977355957
+                            },
+                            {
+                                "section":  "Operator blending",
+                                "field":  "Blend-in start",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  0
+                            },
+                            {
+                                "section":  "Operator blending",
+                                "field":  "Blend-in end",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  0
+                            },
+                            {
+                                "section":  "Operator blending",
+                                "field":  "Blend-out start",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  1
+                            },
+                            {
+                                "section":  "Operator blending",
+                                "field":  "Blend-out end",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  1
+                            }
+                        ],
+    "Oscillate size":  [
+                           {
+                               "section":  "",
+                               "field":  "Frequency min",
+                               "type":  "number",
+                               "control":  "spinner",
+                               "add_default":  1
+                           },
+                           {
+                               "section":  "",
+                               "field":  "Frequency max",
+                               "type":  "number",
+                               "control":  "spinner",
+                               "add_default":  10
+                           },
+                           {
+                               "section":  "",
+                               "field":  "Scale min",
+                               "type":  "number",
+                               "control":  "spinner",
+                               "add_default":  0.800000011920929
+                           },
+                           {
+                               "section":  "",
+                               "field":  "Scale max",
+                               "type":  "number",
+                               "control":  "spinner",
+                               "add_default":  1.2000000476837158
+                           },
+                           {
+                               "section":  "",
+                               "field":  "Phase min",
+                               "type":  "number",
+                               "control":  "spinner",
+                               "add_default":  0
+                           },
+                           {
+                               "section":  "",
+                               "field":  "Phase max",
+                               "type":  "number",
+                               "control":  "spinner",
+                               "add_default":  6.28318977355957
+                           },
+                           {
+                               "section":  "Operator blending",
+                               "field":  "Blend-in start",
+                               "type":  "number",
+                               "control":  "spinner",
+                               "add_default":  0
+                           },
+                           {
+                               "section":  "Operator blending",
+                               "field":  "Blend-in end",
+                               "type":  "number",
+                               "control":  "spinner",
+                               "add_default":  0
+                           },
+                           {
+                               "section":  "Operator blending",
+                               "field":  "Blend-out start",
+                               "type":  "number",
+                               "control":  "spinner",
+                               "add_default":  1
+                           },
+                           {
+                               "section":  "Operator blending",
+                               "field":  "Blend-out end",
+                               "type":  "number",
+                               "control":  "spinner",
+                               "add_default":  1
+                           }
+                       ],
+    "Control point force":  [
+                                {
+                                    "section":  "",
+                                    "field":  "Offset.x",
+                                    "type":  "number",
+                                    "control":  "spinner",
+                                    "add_default":  0
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Offset.y",
+                                    "type":  "number",
+                                    "control":  "spinner",
+                                    "add_default":  0
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Offset.z",
+                                    "type":  "number",
+                                    "control":  "spinner",
+                                    "add_default":  0
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Scale",
+                                    "type":  "number",
+                                    "control":  "spinner",
+                                    "add_default":  512
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Distance",
+                                    "type":  "number",
+                                    "control":  "spinner",
+                                    "add_default":  512
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Control point",
+                                    "type":  "number",
+                                    "control":  "spinner",
+                                    "add_default":  0
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Reduce velocity near center",
+                                    "type":  "bool",
+                                    "add_default":  false
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Delete particles in center",
+                                    "type":  "bool",
+                                    "add_default":  false
+                                },
+                                {
+                                    "section":  "Operator blending",
+                                    "field":  "Blend-in start",
+                                    "type":  "number",
+                                    "control":  "spinner",
+                                    "add_default":  0
+                                },
+                                {
+                                    "section":  "Operator blending",
+                                    "field":  "Blend-in end",
+                                    "type":  "number",
+                                    "control":  "spinner",
+                                    "add_default":  0
+                                },
+                                {
+                                    "section":  "Operator blending",
+                                    "field":  "Blend-out start",
+                                    "type":  "number",
+                                    "control":  "spinner",
+                                    "add_default":  1
+                                },
+                                {
+                                    "section":  "Operator blending",
+                                    "field":  "Blend-out end",
+                                    "type":  "number",
+                                    "control":  "spinner",
+                                    "add_default":  1
+                                }
+                            ],
+    "Maintain distance to control point":  [
+                                               {
+                                                   "section":  "",
+                                                   "field":  "Control point",
+                                                   "type":  "number",
+                                                   "control":  "spinner",
+                                                   "add_default":  0
+                                               },
+                                               {
+                                                   "section":  "",
+                                                   "field":  "Distance",
+                                                   "type":  "number",
+                                                   "control":  "spinner",
+                                                   "add_default":  200
+                                               },
+                                               {
+                                                   "section":  "",
+                                                   "field":  "Variable strength",
+                                                   "type":  "number",
+                                                   "control":  "spinner",
+                                                   "add_default":  0
+                                               },
+                                               {
+                                                   "section":  "Operator blending",
+                                                   "field":  "Blend-in start",
+                                                   "type":  "number",
+                                                   "control":  "spinner",
+                                                   "add_default":  0
+                                               },
+                                               {
+                                                   "section":  "Operator blending",
+                                                   "field":  "Blend-in end",
+                                                   "type":  "number",
+                                                   "control":  "spinner",
+                                                   "add_default":  0
+                                               },
+                                               {
+                                                   "section":  "Operator blending",
+                                                   "field":  "Blend-out start",
+                                                   "type":  "number",
+                                                   "control":  "spinner",
+                                                   "add_default":  1
+                                               },
+                                               {
+                                                   "section":  "Operator blending",
+                                                   "field":  "Blend-out end",
+                                                   "type":  "number",
+                                                   "control":  "spinner",
+                                                   "add_default":  1
+                                               }
+                                           ],
+    "Maintain distance between control points":  [
+                                                     {
+                                                         "section":  "",
+                                                         "field":  "Control point start",
+                                                         "type":  "number",
+                                                         "control":  "spinner",
+                                                         "add_default":  0
+                                                     },
+                                                     {
+                                                         "section":  "",
+                                                         "field":  "Control point end",
+                                                         "type":  "number",
+                                                         "control":  "spinner",
+                                                         "add_default":  1
+                                                     },
+                                                     {
+                                                         "section":  "Operator blending",
+                                                         "field":  "Blend-in start",
+                                                         "type":  "number",
+                                                         "control":  "spinner",
+                                                         "add_default":  0
+                                                     },
+                                                     {
+                                                         "section":  "Operator blending",
+                                                         "field":  "Blend-in end",
+                                                         "type":  "number",
+                                                         "control":  "spinner",
+                                                         "add_default":  0
+                                                     },
+                                                     {
+                                                         "section":  "Operator blending",
+                                                         "field":  "Blend-out start",
+                                                         "type":  "number",
+                                                         "control":  "spinner",
+                                                         "add_default":  1
+                                                     },
+                                                     {
+                                                         "section":  "Operator blending",
+                                                         "field":  "Blend-out end",
+                                                         "type":  "number",
+                                                         "control":  "spinner",
+                                                         "add_default":  1
+                                                     }
+                                                 ],
+    "Reduce movement near control point":  [
+                                               {
+                                                   "section":  "",
+                                                   "field":  "Control point",
+                                                   "type":  "number",
+                                                   "control":  "spinner",
+                                                   "add_default":  0
+                                               },
+                                               {
+                                                   "section":  "",
+                                                   "field":  "Distance inner",
+                                                   "type":  "number",
+                                                   "control":  "spinner",
+                                                   "add_default":  100
+                                               },
+                                               {
+                                                   "section":  "",
+                                                   "field":  "Distance outer",
+                                                   "type":  "number",
+                                                   "control":  "spinner",
+                                                   "add_default":  350
+                                               },
+                                               {
+                                                   "section":  "",
+                                                   "field":  "Reduction inner",
+                                                   "type":  "number",
+                                                   "control":  "spinner",
+                                                   "add_default":  100
+                                               },
+                                               {
+                                                   "section":  "",
+                                                   "field":  "Reduction outer",
+                                                   "type":  "number",
+                                                   "control":  "spinner",
+                                                   "add_default":  0
+                                               },
+                                               {
+                                                   "section":  "Operator blending",
+                                                   "field":  "Blend-in start",
+                                                   "type":  "number",
+                                                   "control":  "spinner",
+                                                   "add_default":  0
+                                               },
+                                               {
+                                                   "section":  "Operator blending",
+                                                   "field":  "Blend-in end",
+                                                   "type":  "number",
+                                                   "control":  "spinner",
+                                                   "add_default":  0
+                                               },
+                                               {
+                                                   "section":  "Operator blending",
+                                                   "field":  "Blend-out start",
+                                                   "type":  "number",
+                                                   "control":  "spinner",
+                                                   "add_default":  1
+                                               },
+                                               {
+                                                   "section":  "Operator blending",
+                                                   "field":  "Blend-out end",
+                                                   "type":  "number",
+                                                   "control":  "spinner",
+                                                   "add_default":  1
+                                               }
+                                           ],
+    "Turbulence":  [
+                       {
+                           "section":  "",
+                           "field":  "Noise speed",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  20
+                       },
+                       {
+                           "section":  "",
+                           "field":  "Noise scale",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  0.0099999997764825821
+                       },
+                       {
+                           "section":  "",
+                           "field":  "Mask.x",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  1
+                       },
+                       {
+                           "section":  "",
+                           "field":  "Mask.y",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  1
+                       },
+                       {
+                           "section":  "",
+                           "field":  "Mask.z",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  0
+                       },
+                       {
+                           "section":  "",
+                           "field":  "Speed min",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  500
+                       },
+                       {
+                           "section":  "",
+                           "field":  "Speed max",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  1000
+                       },
+                       {
+                           "section":  "",
+                           "field":  "Phase min",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  0
+                       },
+                       {
+                           "section":  "",
+                           "field":  "Phase max",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  0
+                       },
+                       {
+                           "section":  "Operator blending",
+                           "field":  "Blend-in start",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  0
+                       },
+                       {
+                           "section":  "Operator blending",
+                           "field":  "Blend-in end",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  0
+                       },
+                       {
+                           "section":  "Operator blending",
+                           "field":  "Blend-out start",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  1
+                       },
+                       {
+                           "section":  "Operator blending",
+                           "field":  "Blend-out end",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  1
+                       },
+                       {
+                           "section":  "Audio response",
+                           "field":  "Mode",
+                           "type":  "combo",
+                           "add_default":  "None",
+                           "options":  [
+                                           "None",
+                                           "Left",
+                                           "Right",
+                                           "Center"
+                                       ]
+                       }
+                   ],
+    "Vortex":  [
+                   {
+                       "section":  "",
+                       "field":  "Axis.x",
+                       "type":  "number",
+                       "control":  "spinner",
+                       "add_default":  0
+                   },
+                   {
+                       "section":  "",
+                       "field":  "Axis.y",
+                       "type":  "number",
+                       "control":  "spinner",
+                       "add_default":  0
+                   },
+                   {
+                       "section":  "",
+                       "field":  "Axis.z",
+                       "type":  "number",
+                       "control":  "spinner",
+                       "add_default":  1
+                   },
+                   {
+                       "section":  "",
+                       "field":  "Ring shape",
+                       "type":  "bool",
+                       "add_default":  false
+                   },
+                   {
+                       "section":  "",
+                       "field":  "Distance inner",
+                       "type":  "number",
+                       "control":  "spinner",
+                       "add_default":  500
+                   },
+                   {
+                       "section":  "",
+                       "field":  "Distance outer",
+                       "type":  "number",
+                       "control":  "spinner",
+                       "add_default":  650
+                   },
+                   {
+                       "section":  "",
+                       "field":  "Speed inner",
+                       "type":  "number",
+                       "control":  "spinner",
+                       "add_default":  2500
+                   },
+                   {
+                       "section":  "",
+                       "field":  "Speed outer",
+                       "type":  "number",
+                       "control":  "spinner",
+                       "add_default":  0
+                   },
+                   {
+                       "section":  "",
+                       "field":  "Infinite axis",
+                       "type":  "bool",
+                       "add_default":  false
+                   },
+                   {
+                       "section":  "",
+                       "field":  "Control point",
+                       "type":  "number",
+                       "control":  "spinner",
+                       "add_default":  0
+                   },
+                   {
+                       "section":  "",
+                       "field":  "Maintain distance to center",
+                       "type":  "bool",
+                       "add_default":  false
+                   },
+                   {
+                       "section":  "Operator blending",
+                       "field":  "Blend-in start",
+                       "type":  "number",
+                       "control":  "spinner",
+                       "add_default":  0
+                   },
+                   {
+                       "section":  "Operator blending",
+                       "field":  "Blend-in end",
+                       "type":  "number",
+                       "control":  "spinner",
+                       "add_default":  0
+                   },
+                   {
+                       "section":  "Operator blending",
+                       "field":  "Blend-out start",
+                       "type":  "number",
+                       "control":  "spinner",
+                       "add_default":  1
+                   },
+                   {
+                       "section":  "Operator blending",
+                       "field":  "Blend-out end",
+                       "type":  "number",
+                       "control":  "spinner",
+                       "add_default":  1
+                   },
+                   {
+                       "section":  "Audio response",
+                       "field":  "Mode",
+                       "type":  "combo",
+                       "add_default":  "None",
+                       "options":  [
+                                       "None",
+                                       "Left",
+                                       "Right",
+                                       "Center"
+                                   ]
+                   }
+               ],
+    "Boids":  [
+                  {
+                      "section":  "",
+                      "field":  "Neighbor threshold",
+                      "type":  "number",
+                      "control":  "spinner",
+                      "add_default":  50
+                  },
+                  {
+                      "section":  "",
+                      "field":  "Separation threshold",
+                      "type":  "number",
+                      "control":  "spinner",
+                      "add_default":  20
+                  },
+                  {
+                      "section":  "",
+                      "field":  "Separation factor",
+                      "type":  "number",
+                      "control":  "spinner",
+                      "add_default":  15
+                  },
+                  {
+                      "section":  "",
+                      "field":  "Cohesion factor",
+                      "type":  "number",
+                      "control":  "spinner",
+                      "add_default":  2
+                  },
+                  {
+                      "section":  "",
+                      "field":  "Alignment factor",
+                      "type":  "number",
+                      "control":  "spinner",
+                      "add_default":  1
+                  },
+                  {
+                      "section":  "",
+                      "field":  "Clamp speed",
+                      "type":  "bool",
+                      "add_default":  false
+                  },
+                  {
+                      "section":  "",
+                      "field":  "Max speed",
+                      "type":  "number",
+                      "control":  "spinner",
+                      "add_default":  500
+                  }
+              ],
+    "Cap velocity":  [
+                         {
+                             "section":  "",
+                             "field":  "Max speed",
+                             "type":  "number",
+                             "control":  "spinner",
+                             "add_default":  100
+                         },
+                         {
+                             "section":  "Operator blending",
+                             "field":  "Blend-in start",
+                             "type":  "number",
+                             "control":  "spinner",
+                             "add_default":  0
+                         },
+                         {
+                             "section":  "Operator blending",
+                             "field":  "Blend-in end",
+                             "type":  "number",
+                             "control":  "spinner",
+                             "add_default":  0
+                         },
+                         {
+                             "section":  "Operator blending",
+                             "field":  "Blend-out start",
+                             "type":  "number",
+                             "control":  "spinner",
+                             "add_default":  1
+                         },
+                         {
+                             "section":  "Operator blending",
+                             "field":  "Blend-out end",
+                             "type":  "number",
+                             "control":  "spinner",
+                             "add_default":  1
+                         }
+                     ],
+    "Remap value":  [
+                        {
+                            "section":  "",
+                            "field":  "Input",
+                            "type":  "combo",
+                            "add_default":  "Lifetime fraction",
+                            "options":  [
+                                            "Lifetime fraction",
+                                            "Maximum lifetime",
+                                            "Size",
+                                            "Opacity",
+                                            "Speed",
+                                            "Rotation",
+                                            "Angular speed",
+                                            "Distance to control point",
+                                            "Position between two control points",
+                                            "Runtime",
+                                            "Time of day",
+                                            "Particle system time",
+                                            "Layer time",
+                                            "Color",
+                                            "Position",
+                                            "Velocity",
+                                            "Control point",
+                                            "Delta to control point",
+                                            "Direction to control point",
+                                            "Layer origin"
+                                        ]
+                        },
+                        {
+                            "section":  "",
+                            "field":  "Clamp input value",
+                            "type":  "bool",
+                            "add_default":  false
+                        },
+                        {
+                            "section":  "",
+                            "field":  "Output",
+                            "type":  "combo",
+                            "add_default":  "Size",
+                            "options":  [
+                                            "Maximum lifetime",
+                                            "Size",
+                                            "Opacity",
+                                            "Speed",
+                                            "Rotation",
+                                            "Angular speed",
+                                            "Distance to control point",
+                                            "Position between two control points",
+                                            "Color",
+                                            "Position",
+                                            "Velocity",
+                                            "Control point",
+                                            "Delta to control point",
+                                            "Direction to control point"
+                                        ]
+                        },
+                        {
+                            "section":  "",
+                            "field":  "Clamp output value",
+                            "type":  "bool",
+                            "add_default":  false
+                        },
+                        {
+                            "section":  "",
+                            "field":  "Operation",
+                            "type":  "combo",
+                            "add_default":  "Multiply",
+                            "options":  [
+                                            "Assign",
+                                            "Multiply",
+                                            "Add",
+                                            "Subtract"
+                                        ]
+                        },
+                        {
+                            "section":  "",
+                            "field":  "Transform function",
+                            "type":  "combo",
+                            "add_default":  "None",
+                            "options":  [
+                                            "None",
+                                            "Sine wave",
+                                            "Square wave",
+                                            "Saw wave",
+                                            "Triangle wave",
+                                            "Simplex noise",
+                                            "Organic FBM noise"
+                                        ]
+                        },
+                        {
+                            "section":  "",
+                            "field":  "Input range min",
+                            "type":  "number",
+                            "control":  "spinner",
+                            "add_default":  0
+                        },
+                        {
+                            "section":  "",
+                            "field":  "Input range max",
+                            "type":  "number",
+                            "control":  "spinner",
+                            "add_default":  1
+                        },
+                        {
+                            "section":  "",
+                            "field":  "Output range min",
+                            "type":  "number",
+                            "control":  "spinner",
+                            "add_default":  0
+                        },
+                        {
+                            "section":  "",
+                            "field":  "Output range max",
+                            "type":  "number",
+                            "control":  "spinner",
+                            "add_default":  1
+                        },
+                        {
+                            "section":  "Operator blending",
+                            "field":  "Blend-in start",
+                            "type":  "number",
+                            "control":  "spinner",
+                            "add_default":  0
+                        },
+                        {
+                            "section":  "Operator blending",
+                            "field":  "Blend-in end",
+                            "type":  "number",
+                            "control":  "spinner",
+                            "add_default":  0
+                        },
+                        {
+                            "section":  "Operator blending",
+                            "field":  "Blend-out start",
+                            "type":  "number",
+                            "control":  "spinner",
+                            "add_default":  1
+                        },
+                        {
+                            "section":  "Operator blending",
+                            "field":  "Blend-out end",
+                            "type":  "number",
+                            "control":  "spinner",
+                            "add_default":  1
+                        }
+                    ],
+    "Inherit value from event":  [
+                                     {
+                                         "section":  "",
+                                         "field":  "Input",
+                                         "type":  "combo",
+                                         "add_default":  "Set color and opacity",
+                                         "options":  [
+                                                         "Set color",
+                                                         "Multiply color",
+                                                         "Set opacity",
+                                                         "Multiply opacity",
+                                                         "Set color and opacity",
+                                                         "Multiply color and opacity",
+                                                         "Set velocity",
+                                                         "Add velocity",
+                                                         "Set size",
+                                                         "Multiply size",
+                                                         "Set rotation",
+                                                         "Add rotation",
+                                                         "Set angular velocity",
+                                                         "Add angular velocity"
+                                                     ]
+                                     },
+                                     {
+                                         "section":  "Operator blending",
+                                         "field":  "Blend-in start",
+                                         "type":  "number",
+                                         "control":  "spinner",
+                                         "add_default":  0
+                                     },
+                                     {
+                                         "section":  "Operator blending",
+                                         "field":  "Blend-in end",
+                                         "type":  "number",
+                                         "control":  "spinner",
+                                         "add_default":  0
+                                     },
+                                     {
+                                         "section":  "Operator blending",
+                                         "field":  "Blend-out start",
+                                         "type":  "number",
+                                         "control":  "spinner",
+                                         "add_default":  1
+                                     },
+                                     {
+                                         "section":  "Operator blending",
+                                         "field":  "Blend-out end",
+                                         "type":  "number",
+                                         "control":  "spinner",
+                                         "add_default":  1
+                                     }
+                                 ],
+    "Collision plane":  [
+                            {
+                                "section":  "",
+                                "field":  "Plane.x",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  0
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Plane.y",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  1
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Plane.z",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  0
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Distance",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  -150
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Collision behavior",
+                                "type":  "combo",
+                                "add_default":  "Bounce",
+                                "options":  [
+                                                "Bounce",
+                                                "Slide",
+                                                "Stop",
+                                                "Delete"
+                                            ]
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Bounce factor",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  0.5
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Lock to control point",
+                                "type":  "bool",
+                                "add_default":  false
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Stop rotation on collision",
+                                "type":  "bool",
+                                "add_default":  false
+                            }
+                        ],
+    "Collision sphere":  [
+                             {
+                                 "section":  "",
+                                 "field":  "Origin.x",
+                                 "type":  "number",
+                                 "control":  "spinner",
+                                 "add_default":  0
+                             },
+                             {
+                                 "section":  "",
+                                 "field":  "Origin.y",
+                                 "type":  "number",
+                                 "control":  "spinner",
+                                 "add_default":  -200
+                             },
+                             {
+                                 "section":  "",
+                                 "field":  "Origin.z",
+                                 "type":  "number",
+                                 "control":  "spinner",
+                                 "add_default":  0
+                             },
+                             {
+                                 "section":  "",
+                                 "field":  "Radius",
+                                 "type":  "number",
+                                 "control":  "spinner",
+                                 "add_default":  50
+                             },
+                             {
+                                 "section":  "",
+                                 "field":  "Collision behavior",
+                                 "type":  "combo",
+                                 "add_default":  "Bounce",
+                                 "options":  [
+                                                 "Bounce",
+                                                 "Slide",
+                                                 "Stop",
+                                                 "Delete"
+                                             ]
+                             },
+                             {
+                                 "section":  "",
+                                 "field":  "Bounce factor",
+                                 "type":  "number",
+                                 "control":  "spinner",
+                                 "add_default":  0.5
+                             },
+                             {
+                                 "section":  "",
+                                 "field":  "Lock to control point",
+                                 "type":  "bool",
+                                 "add_default":  false
+                             },
+                             {
+                                 "section":  "",
+                                 "field":  "Stop rotation on collision",
+                                 "type":  "bool",
+                                 "add_default":  false
+                             }
+                         ],
+    "Collision bounds":  [
+                             {
+                                 "section":  "",
+                                 "field":  "Collision behavior",
+                                 "type":  "combo",
+                                 "add_default":  "Bounce",
+                                 "options":  [
+                                                 "Bounce",
+                                                 "Slide",
+                                                 "Stop",
+                                                 "Delete"
+                                             ]
+                             },
+                             {
+                                 "section":  "",
+                                 "field":  "Bounce factor",
+                                 "type":  "number",
+                                 "control":  "spinner",
+                                 "add_default":  0.5
+                             }
+                         ],
+    "Collision rectangle":  [
+                                {
+                                    "section":  "",
+                                    "field":  "Origin.x",
+                                    "type":  "number",
+                                    "control":  "spinner",
+                                    "add_default":  0
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Origin.y",
+                                    "type":  "number",
+                                    "control":  "spinner",
+                                    "add_default":  -150
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Origin.z",
+                                    "type":  "number",
+                                    "control":  "spinner",
+                                    "add_default":  0
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Plane.x",
+                                    "type":  "number",
+                                    "control":  "spinner",
+                                    "add_default":  0
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Plane.y",
+                                    "type":  "number",
+                                    "control":  "spinner",
+                                    "add_default":  1
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Plane.z",
+                                    "type":  "number",
+                                    "control":  "spinner",
+                                    "add_default":  0
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Forward.x",
+                                    "type":  "number",
+                                    "control":  "spinner",
+                                    "add_default":  0
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Forward.y",
+                                    "type":  "number",
+                                    "control":  "spinner",
+                                    "add_default":  0
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Forward.z",
+                                    "type":  "number",
+                                    "control":  "spinner",
+                                    "add_default":  1
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Size.Width",
+                                    "type":  "number",
+                                    "control":  "spinner",
+                                    "add_default":  200
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Size.Depth",
+                                    "type":  "number",
+                                    "control":  "spinner",
+                                    "add_default":  200
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Collision behavior",
+                                    "type":  "combo",
+                                    "add_default":  "Bounce",
+                                    "options":  [
+                                                    "Bounce",
+                                                    "Slide",
+                                                    "Stop",
+                                                    "Delete"
+                                                ]
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Bounce factor",
+                                    "type":  "number",
+                                    "control":  "spinner",
+                                    "add_default":  0.5
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Lock to control point",
+                                    "type":  "bool",
+                                    "add_default":  false
+                                },
+                                {
+                                    "section":  "",
+                                    "field":  "Stop rotation on collision",
+                                    "type":  "bool",
+                                    "add_default":  false
+                                }
+                            ],
+    "Collision model":  [
+                            {
+                                "section":  "",
+                                "field":  "Collision behavior",
+                                "type":  "combo",
+                                "add_default":  "Bounce",
+                                "options":  [
+                                                "Bounce",
+                                                "Slide",
+                                                "Stop",
+                                                "Delete"
+                                            ]
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Bounce factor",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  0.5
+                            }
+                        ]
+}

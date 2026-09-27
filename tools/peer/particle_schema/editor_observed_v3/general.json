@@ -1,0 +1,318 @@
+{
+    "Material":  [
+                     {
+                         "section":  "Options",
+                         "field":  "Cutout",
+                         "type":  "bool",
+                         "add_default":  false
+                     },
+                     {
+                         "section":  "Options",
+                         "field":  "Lighting",
+                         "type":  "bool",
+                         "add_default":  false
+                     },
+                     {
+                         "section":  "Options",
+                         "field":  "Refract",
+                         "type":  "bool",
+                         "add_default":  false
+                     },
+                     {
+                         "section":  "Options",
+                         "field":  "Textures",
+                         "type":  "combo",
+                         "add_default":  "? Browse",
+                         "options":  [
+
+                                     ]
+                     },
+                     {
+                         "section":  "Options",
+                         "field":  "Textures",
+                         "type":  "combo",
+                         "add_default":  "?",
+                         "options":  [
+
+                                     ]
+                     },
+                     {
+                         "section":  "Options",
+                         "field":  "Textures",
+                         "type":  "combo",
+                         "add_default":  "?",
+                         "options":  [
+
+                                     ]
+                     },
+                     {
+                         "section":  "Shader",
+                         "field":  "Overbright",
+                         "type":  "number",
+                         "control":  "slider",
+                         "slider_min":  0,
+                         "slider_max":  5,
+                         "add_default":  1
+                     },
+                     {
+                         "section":  "Rendering",
+                         "field":  "Blending",
+                         "type":  "combo",
+                         "add_default":  "Additive",
+                         "options":  [
+                                         "Normal",
+                                         "Translucent",
+                                         "Additive",
+                                         "Alpha to coverage"
+                                     ]
+                     },
+                     {
+                         "section":  "Rendering",
+                         "field":  "Depth test",
+                         "type":  "combo",
+                         "add_default":  "Disabled",
+                         "options":  [
+                                         "Enabled",
+                                         "Disabled"
+                                     ]
+                     },
+                     {
+                         "section":  "Rendering",
+                         "field":  "Depth write",
+                         "type":  "combo",
+                         "add_default":  "Disabled",
+                         "options":  [
+                                         "Enabled",
+                                         "Disabled"
+                                     ]
+                     },
+                     {
+                         "section":  "Rendering",
+                         "field":  "Culling",
+                         "type":  "combo",
+                         "add_default":  "No cull",
+                         "options":  [
+                                         "Normal",
+                                         "No cull"
+                                     ]
+                     }
+                 ],
+    "System":  [
+                   {
+                       "section":  "",
+                       "field":  "Max count",
+                       "type":  "number",
+                       "control":  "spinner",
+                       "add_default":  500
+                   },
+                   {
+                       "section":  "",
+                       "field":  "Start time",
+                       "type":  "number",
+                       "control":  "spinner",
+                       "add_default":  0
+                   },
+                   {
+                       "section":  "",
+                       "field":  "Worldspace",
+                       "type":  "bool",
+                       "add_default":  false
+                   },
+                   {
+                       "section":  "",
+                       "field":  "Perspective rendering",
+                       "type":  "bool",
+                       "add_default":  false
+                   },
+                   {
+                       "section":  "",
+                       "field":  "Disable color overrides",
+                       "type":  "bool",
+                       "add_default":  false
+                   },
+                   {
+                       "section":  "",
+                       "field":  "Disable count overrides",
+                       "type":  "bool",
+                       "add_default":  false
+                   },
+                   {
+                       "section":  "",
+                       "field":  "Disable lifetime overrides",
+                       "type":  "bool",
+                       "add_default":  false
+                   },
+                   {
+                       "section":  "",
+                       "field":  "Disable size overrides",
+                       "type":  "bool",
+                       "add_default":  false
+                   },
+                   {
+                       "section":  "",
+                       "field":  "Disable speed overrides",
+                       "type":  "bool",
+                       "add_default":  false
+                   },
+                   {
+                       "section":  "Sprite sheet",
+                       "field":  "Animation mode",
+                       "type":  "combo",
+                       "add_default":  "Sequence",
+                       "options":  [
+                                       "Sequence",
+                                       "Random frame"
+                                   ]
+                   }
+               ],
+    "Viewport":  [
+                     {
+                         "section":  "",
+                         "field":  "Show Stats",
+                         "type":  "bool",
+                         "add_default":  false
+                     },
+                     {
+                         "section":  "",
+                         "field":  "Show Axis",
+                         "type":  "bool",
+                         "add_default":  false
+                     }
+                 ],
+    "Control point 0 (Origin)":  [
+                                     {
+                                         "section":  "",
+                                         "field":  "Offset.x",
+                                         "type":  "number",
+                                         "control":  "spinner",
+                                         "add_default":  0
+                                     },
+                                     {
+                                         "section":  "",
+                                         "field":  "Offset.y",
+                                         "type":  "number",
+                                         "control":  "spinner",
+                                         "add_default":  0
+                                     },
+                                     {
+                                         "section":  "",
+                                         "field":  "Offset.z",
+                                         "type":  "number",
+                                         "control":  "spinner",
+                                         "add_default":  0
+                                     },
+                                     {
+                                         "section":  "",
+                                         "field":  "Angles.x",
+                                         "type":  "number",
+                                         "control":  "spinner",
+                                         "add_default":  0
+                                     },
+                                     {
+                                         "section":  "",
+                                         "field":  "Angles.y",
+                                         "type":  "number",
+                                         "control":  "spinner",
+                                         "add_default":  0
+                                     },
+                                     {
+                                         "section":  "",
+                                         "field":  "Angles.z",
+                                         "type":  "number",
+                                         "control":  "spinner",
+                                         "add_default":  0
+                                     },
+                                     {
+                                         "section":  "",
+                                         "field":  "Lock to pointer",
+                                         "type":  "bool",
+                                         "add_default":  false
+                                     },
+                                     {
+                                         "section":  "",
+                                         "field":  "Worldspace",
+                                         "type":  "bool",
+                                         "add_default":  false
+                                     },
+                                     {
+                                         "section":  "",
+                                         "field":  "Hide gizmo in editor",
+                                         "type":  "bool",
+                                         "add_default":  false
+                                     },
+                                     {
+                                         "section":  "",
+                                         "field":  "Copy from parent",
+                                         "type":  "bool",
+                                         "add_default":  false
+                                     }
+                                 ],
+    "Control point 1":  [
+                            {
+                                "section":  "",
+                                "field":  "Offset.x",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  0
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Offset.y",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  0
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Offset.z",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  0
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Angles.x",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  0
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Angles.y",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  0
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Angles.z",
+                                "type":  "number",
+                                "control":  "spinner",
+                                "add_default":  0
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Lock to pointer",
+                                "type":  "bool",
+                                "add_default":  false
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Worldspace",
+                                "type":  "bool",
+                                "add_default":  false
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Hide gizmo in editor",
+                                "type":  "bool",
+                                "add_default":  false
+                            },
+                            {
+                                "section":  "",
+                                "field":  "Copy from parent",
+                                "type":  "bool",
+                                "add_default":  false
+                            }
+                        ]
+}

@@ -1,0 +1,169 @@
+{
+    "Sprite":  [
+                   {
+                       "section":  "",
+                       "field":  "Orientation",
+                       "type":  "combo",
+                       "add_default":  "Screen",
+                       "options":  [
+                                       "Screen",
+                                       "Upright",
+                                       "Fixed"
+                                   ]
+                   },
+                   {
+                       "section":  "",
+                       "field":  "Worldspace",
+                       "type":  "bool",
+                       "add_default":  false
+                   }
+               ],
+    "Sprite trail":  [
+                         {
+                             "section":  "",
+                             "field":  "Orientation",
+                             "type":  "combo",
+                             "add_default":  "Screen",
+                             "options":  [
+                                             "Screen",
+                                             "Upright",
+                                             "Fixed"
+                                         ]
+                         },
+                         {
+                             "section":  "",
+                             "field":  "Worldspace",
+                             "type":  "bool",
+                             "add_default":  false
+                         },
+                         {
+                             "section":  "",
+                             "field":  "Length",
+                             "type":  "number",
+                             "control":  "spinner",
+                             "add_default":  0.05000000074505806
+                         },
+                         {
+                             "section":  "",
+                             "field":  "Max length",
+                             "type":  "number",
+                             "control":  "spinner",
+                             "add_default":  10
+                         },
+                         {
+                             "section":  "",
+                             "field":  "Min length",
+                             "type":  "number",
+                             "control":  "spinner",
+                             "add_default":  0
+                         }
+                     ],
+    "Rope":  [
+                 {
+                     "section":  "",
+                     "field":  "Orientation",
+                     "type":  "combo",
+                     "add_default":  "Screen",
+                     "options":  [
+                                     "Screen",
+                                     "Upright",
+                                     "Fixed"
+                                 ]
+                 },
+                 {
+                     "section":  "",
+                     "field":  "Worldspace",
+                     "type":  "bool",
+                     "add_default":  false
+                 },
+                 {
+                     "section":  "",
+                     "field":  "Subdivision",
+                     "type":  "number",
+                     "control":  "slider",
+                     "slider_min":  0,
+                     "slider_max":  16,
+                     "add_default":  4
+                 },
+                 {
+                     "section":  "",
+                     "field":  "UV scale",
+                     "type":  "number",
+                     "control":  "slider",
+                     "slider_min":  0.10000000149011612,
+                     "slider_max":  3,
+                     "add_default":  1
+                 },
+                 {
+                     "section":  "",
+                     "field":  "UV smoothing",
+                     "type":  "bool",
+                     "add_default":  false
+                 },
+                 {
+                     "section":  "",
+                     "field":  "UV scrolling",
+                     "type":  "bool",
+                     "add_default":  false
+                 }
+             ],
+    "Rope trail":  [
+                       {
+                           "section":  "",
+                           "field":  "Orientation",
+                           "type":  "combo",
+                           "add_default":  "Screen",
+                           "options":  [
+                                           "Screen",
+                                           "Upright",
+                                           "Fixed"
+                                       ]
+                       },
+                       {
+                           "section":  "",
+                           "field":  "Worldspace",
+                           "type":  "bool",
+                           "add_default":  false
+                       },
+                       {
+                           "section":  "",
+                           "field":  "Length",
+                           "type":  "number",
+                           "control":  "spinner",
+                           "add_default":  1
+                       },
+                       {
+                           "section":  "",
+                           "field":  "Segments",
+                           "type":  "number",
+                           "control":  "slider",
+                           "slider_min":  2,
+                           "slider_max":  16,
+                           "add_default":  4
+                       },
+                       {
+                           "section":  "",
+                           "field":  "Subdivision",
+                           "type":  "number",
+                           "control":  "slider",
+                           "slider_min":  0,
+                           "slider_max":  16,
+                           "add_default":  1
+                       },
+                       {
+                           "section":  "",
+                           "field":  "UV scale",
+                           "type":  "number",
+                           "control":  "slider",
+                           "slider_min":  0.10000000149011612,
+                           "slider_max":  3,
+                           "add_default":  1
+                       },
+                       {
+                           "section":  "",
+                           "field":  "UV scrolling",
+                           "type":  "bool",
+                           "add_default":  false
+                       }
+                   ]
+}

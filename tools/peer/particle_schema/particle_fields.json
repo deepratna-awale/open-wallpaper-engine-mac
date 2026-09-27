@@ -1,15 +1,15 @@
 {
  "_meta": {
-  "source": "WE 2.8.0.42 particle editor, read via Windows UI Automation from the embedded Chromium page; each component added to an otherwise-empty category of a Basic particle system, its panel read, then removed.",
-  "add_default": "value shown in the panel immediately after ADD (the editor's add-default)",
-  "slider_min/max": "UIA RangeValue of the slider; step is not exposed (SmallChange=0)",
-  "json_fields_seen": "field keys observed for this component id across 410 particle JSONs (particle_fields_observed.json)"
+  "we_version": "2.8.0.42",
+  "method": "UI Automation over the editor's embedded Chromium page. Each add-dialog component was added to a Basic particle system, selected, read, and removed; nothing saved. Panel structure: Group(label) + controls; vectors as label + X/Y/Z (or Width/Depth) boxes; checkboxes are icon glyphs U+F0C8 (off) / U+F14A (on); combos = Button(current) + List(options); a label with no control = section title.",
+  "add_default": "value in the panel right after ADD",
+  "hidden_fields": "fields only shown under a condition (e.g. periodic-emission sub-fields) are absent here"
  },
  "renderer:sprite": {
   "display_name": "Sprite",
   "fields": [
    {
-    "label": "Orientation",
+    "field": "Orientation",
     "type": "combo",
     "add_default": "Screen",
     "options": [
@@ -17,6 +17,11 @@
      "Upright",
      "Fixed"
     ]
+   },
+   {
+    "field": "Worldspace",
+    "type": "bool",
+    "add_default": false
    }
   ],
   "json_fields_seen": [
@@ -29,7 +34,7 @@
   "display_name": "Sprite trail",
   "fields": [
    {
-    "label": "Orientation",
+    "field": "Orientation",
     "type": "combo",
     "add_default": "Screen",
     "options": [
@@ -39,22 +44,27 @@
     ]
    },
    {
-    "label": "Length",
+    "field": "Worldspace",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Length",
     "type": "number",
     "add_default": 0.05000000074505806,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Max length",
+    "field": "Max length",
     "type": "number",
     "add_default": 10,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Min length",
+    "field": "Min length",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -67,7 +77,7 @@
   "display_name": "Rope",
   "fields": [
    {
-    "label": "Orientation",
+    "field": "Orientation",
     "type": "combo",
     "add_default": "Screen",
     "options": [
@@ -77,20 +87,33 @@
     ]
    },
    {
-    "label": "Subdivision",
-    "type": "number",
-    "slider_min": 0,
-    "slider_max": 16,
-    "add_default": 4,
-    "spinner": "typed value box has no range (UIA min=max=0) -> not clamped by the box"
+    "field": "Worldspace",
+    "type": "bool",
+    "add_default": false
    },
    {
-    "label": "UV scale",
+    "field": "Subdivision",
     "type": "number",
-    "slider_min": 0.10000000149011612,
-    "slider_max": 3,
+    "add_default": 4,
+    "slider_min": 0,
+    "slider_max": 16
+   },
+   {
+    "field": "UV scale",
+    "type": "number",
     "add_default": 1,
-    "spinner": "typed value box has no range (UIA min=max=0) -> not clamped by the box"
+    "slider_min": 0.10000000149011612,
+    "slider_max": 3
+   },
+   {
+    "field": "UV smoothing",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "UV scrolling",
+    "type": "bool",
+    "add_default": false
    }
   ],
   "json_fields_seen": [
@@ -105,7 +128,7 @@
   "display_name": "Rope trail",
   "fields": [
    {
-    "label": "Orientation",
+    "field": "Orientation",
     "type": "combo",
     "add_default": "Screen",
     "options": [
@@ -115,34 +138,41 @@
     ]
    },
    {
-    "label": "Length",
-    "type": "number",
-    "add_default": 1,
-    "slider": "none (number box only)"
+    "field": "Worldspace",
+    "type": "bool",
+    "add_default": false
    },
    {
-    "label": "Segments",
+    "field": "Length",
     "type": "number",
-    "slider_min": 2,
-    "slider_max": 16,
+    "add_default": 1,
+    "range": "none (unranged number box; editor does not clamp)"
+   },
+   {
+    "field": "Segments",
+    "type": "number",
     "add_default": 4,
-    "spinner": "typed value box has no range (UIA min=max=0) -> not clamped by the box"
+    "slider_min": 2,
+    "slider_max": 16
    },
    {
-    "label": "Subdivision",
+    "field": "Subdivision",
     "type": "number",
+    "add_default": 1,
     "slider_min": 0,
-    "slider_max": 16,
-    "add_default": 1,
-    "spinner": "typed value box has no range (UIA min=max=0) -> not clamped by the box"
+    "slider_max": 16
    },
    {
-    "label": "UV scale",
+    "field": "UV scale",
     "type": "number",
-    "slider_min": 0.10000000149011612,
-    "slider_max": 3,
     "add_default": 1,
-    "spinner": "typed value box has no range (UIA min=max=0) -> not clamped by the box"
+    "slider_min": 0.10000000149011612,
+    "slider_max": 3
+   },
+   {
+    "field": "UV scrolling",
+    "type": "bool",
+    "add_default": false
    }
   ],
   "json_fields_seen": [
@@ -155,121 +185,140 @@
   "display_name": "Sphere random",
   "fields": [
    {
-    "label": "X",
+    "field": "Offset.x",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Offset.y",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Offset.z",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "X",
+    "field": "Directions.x",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Directions.y",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Directions.z",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "X",
+    "field": "Sign.x",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Sign.y",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Sign.z",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Cone",
+    "field": "Cone",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Distance min",
+    "field": "Distance min",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Distance max",
+    "field": "Distance max",
     "type": "number",
     "add_default": 256,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Control point",
+    "field": "Control point",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Rate",
+    "section": "Count",
+    "field": "Rate",
     "type": "number",
     "add_default": 10,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Duration",
+    "section": "Count",
+    "field": "Limit to one per frame",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "section": "Count",
+    "field": "Duration",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Delay",
+    "section": "Count",
+    "field": "Delay",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Instantaneous",
+    "section": "Count",
+    "field": "Instantaneous",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Speed min",
+    "section": "Count",
+    "field": "Random periodic emission",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "section": "Speed",
+    "field": "Speed min",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Speed max",
+    "section": "Speed",
+    "field": "Speed max",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Mode",
+    "section": "Audio response",
+    "field": "Mode",
     "type": "combo",
     "add_default": "None",
     "options": [
@@ -310,121 +359,140 @@
   "display_name": "Box random",
   "fields": [
    {
-    "label": "X",
+    "field": "Offset.x",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Offset.y",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Offset.z",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "X",
+    "field": "Directions.x",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Directions.y",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Directions.z",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "X",
+    "field": "Distance min.x",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Distance min.y",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Distance min.z",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "X",
+    "field": "Distance max.x",
     "type": "number",
     "add_default": 256,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Distance max.y",
     "type": "number",
     "add_default": 256,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Distance max.z",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Control point",
+    "field": "Control point",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Rate",
+    "section": "Count",
+    "field": "Rate",
     "type": "number",
     "add_default": 10,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Instantaneous",
+    "section": "Count",
+    "field": "Instantaneous",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Duration",
+    "section": "Count",
+    "field": "Duration",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Delay",
+    "section": "Count",
+    "field": "Delay",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Speed min",
+    "section": "Count",
+    "field": "Limit to one per frame",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "section": "Count",
+    "field": "Random periodic emission",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "section": "Speed",
+    "field": "Speed min",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Speed max",
+    "section": "Speed",
+    "field": "Speed max",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Mode",
+    "section": "Audio response",
+    "field": "Mode",
     "type": "combo",
     "add_default": "None",
     "options": [
@@ -455,31 +523,68 @@
   "display_name": "Layer image",
   "fields": [
    {
-    "label": "Rate",
+    "field": "Copy layer color",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Update emission bitmap periodically",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Inherit layer motion",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Random offset",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "section": "Count",
+    "field": "Rate",
     "type": "number",
     "add_default": 10,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Instantaneous",
+    "section": "Count",
+    "field": "Instantaneous",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Duration",
+    "section": "Count",
+    "field": "Duration",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Delay",
+    "section": "Count",
+    "field": "Delay",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Mode",
+    "section": "Count",
+    "field": "Limit to one per frame",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "section": "Count",
+    "field": "Random periodic emission",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "section": "Audio response",
+    "field": "Mode",
     "type": "combo",
     "add_default": "None",
     "options": [
@@ -498,22 +603,22 @@
   "display_name": "Lifetime random",
   "fields": [
    {
-    "label": "Min",
+    "field": "Min",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Max",
+    "field": "Max",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Exponent",
+    "field": "Exponent",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -526,22 +631,22 @@
   "display_name": "Size random",
   "fields": [
    {
-    "label": "Min",
+    "field": "Min",
     "type": "number",
     "add_default": 5,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Max",
+    "field": "Max",
     "type": "number",
     "add_default": 50,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Exponent",
+    "field": "Exponent",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -554,10 +659,11 @@
   "display_name": "Color random",
   "fields": [
    {
-    "label": "Exponent",
+    "section": "?",
+    "field": "Exponent",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -570,36 +676,40 @@
   "display_name": "HSV color random",
   "fields": [
    {
-    "label": "Hue steps",
+    "section": "?",
+    "field": "Hue steps",
     "type": "number",
-    "slider_min": 1,
-    "slider_max": 30,
     "add_default": 6,
-    "spinner": "typed value box has no range (UIA min=max=0) -> not clamped by the box"
+    "slider_min": 1,
+    "slider_max": 30
    },
    {
-    "label": "Saturation min",
+    "section": "?",
+    "field": "Saturation min",
     "type": "number",
     "add_default": 0.5,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Saturation max",
+    "section": "?",
+    "field": "Saturation max",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Value min",
+    "section": "?",
+    "field": "Value min",
     "type": "number",
     "add_default": 0.5,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Value max",
+    "section": "?",
+    "field": "Value max",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -616,29 +726,32 @@
   "display_name": "Color list",
   "fields": [
    {
-    "label": "Colors",
+    "field": "Colors",
     "type": "number",
+    "add_default": 1,
     "slider_min": 1,
-    "slider_max": 10,
-    "add_default": 1
+    "slider_max": 10
    },
    {
-    "label": "Hue noise",
+    "section": "?",
+    "field": "Hue noise",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Saturation noise",
+    "section": "?",
+    "field": "Saturation noise",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Value noise",
+    "section": "?",
+    "field": "Value noise",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -649,22 +762,22 @@
   "display_name": "Alpha random",
   "fields": [
    {
-    "label": "Min",
+    "field": "Min",
     "type": "number",
     "add_default": 0.05000000074505806,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Max",
+    "field": "Max",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Exponent",
+    "field": "Exponent",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -677,46 +790,46 @@
   "display_name": "Velocity random",
   "fields": [
    {
-    "label": "X",
+    "field": "Speed min.x",
     "type": "number",
     "add_default": -32,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Speed min.y",
     "type": "number",
     "add_default": -32,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Speed min.z",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "X",
+    "field": "Speed max.x",
     "type": "number",
     "add_default": 32,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Speed max.y",
     "type": "number",
     "add_default": 32,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Speed max.z",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Exponent",
+    "field": "Exponent",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -729,22 +842,22 @@
   "display_name": "Inherit control point velocity",
   "fields": [
    {
-    "label": "Speed min",
+    "field": "Speed min",
     "type": "number",
     "add_default": 0.10000000149011612,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Speed max",
+    "field": "Speed max",
     "type": "number",
     "add_default": 0.20000000298023224,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Control point",
+    "field": "Control point",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -757,85 +870,86 @@
   "display_name": "Turbulent velocity random",
   "fields": [
    {
-    "label": "Scale",
+    "field": "Scale",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Noise speed",
+    "field": "Noise speed",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Offset",
+    "field": "Offset",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Speed min",
+    "field": "Speed min",
     "type": "number",
     "add_default": 100,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Speed max",
+    "field": "Speed max",
     "type": "number",
     "add_default": 250,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Phase min",
+    "field": "Phase min",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Phase max",
+    "field": "Phase max",
     "type": "number",
     "add_default": 0.10000000149011612,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "X",
+    "field": "Forward.x",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Forward.y",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Forward.z",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "X",
+    "field": "Normal.x",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Normal.y",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Normal.z",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Mode",
+    "section": "Audio response",
+    "field": "Mode",
     "type": "combo",
     "add_default": "None",
     "options": [
@@ -861,46 +975,46 @@
   "display_name": "Rotation random",
   "fields": [
    {
-    "label": "X",
+    "field": "Min.x",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Min.y",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Min.z",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "X",
+    "field": "Max.x",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Max.y",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Max.z",
     "type": "number",
     "add_default": 360,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Exponent",
+    "field": "Exponent",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -913,64 +1027,64 @@
   "display_name": "Position offset random",
   "fields": [
    {
-    "label": "X",
+    "field": "Directions.x",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Directions.y",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Directions.z",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "X",
+    "field": "Sign.x",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Sign.y",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Sign.z",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Distance",
+    "field": "Distance",
     "type": "number",
     "add_default": 100,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Octaves",
+    "field": "Octaves",
     "type": "number",
     "add_default": 6,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Noise scale",
+    "field": "Noise scale",
     "type": "number",
     "add_default": 0.0010000000474974513,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Noise speed",
+    "field": "Noise speed",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -983,46 +1097,46 @@
   "display_name": "Angular velocity random",
   "fields": [
    {
-    "label": "X",
+    "field": "Speed min.x",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Speed min.y",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Speed min.z",
     "type": "number",
     "add_default": -5,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "X",
+    "field": "Speed max.x",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Speed max.y",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Speed max.z",
     "type": "number",
     "add_default": 5,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Exponent",
+    "field": "Exponent",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -1034,79 +1148,89 @@
   "display_name": "Position around control point",
   "fields": [
    {
-    "label": "Count",
+    "field": "Count",
     "type": "number",
     "add_default": 32,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Start",
+    "field": "Modify count with layer settings",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Restart with periodic emission",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Bounds.Start",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "End",
+    "field": "Bounds.End",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "X",
+    "field": "Axis.x",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Axis.y",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Axis.z",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "X",
+    "field": "Speed min.x",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Speed min.y",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Speed min.z",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "X",
+    "field": "Speed max.x",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Speed max.y",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Speed max.z",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Orientation",
+    "field": "Orientation",
     "type": "combo",
     "add_default": "Repeat",
     "options": [
@@ -1115,10 +1239,10 @@
     ]
    },
    {
-    "label": "Control point",
+    "field": "Control point",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -1134,25 +1258,35 @@
   "display_name": "Position between control points",
   "fields": [
    {
-    "label": "Count",
+    "field": "Count",
     "type": "number",
     "add_default": 32,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Start",
+    "field": "Modify count with layer settings",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Restart with periodic emission",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Bounds.Start",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "End",
+    "field": "Bounds.End",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Orientation",
+    "field": "Orientation",
     "type": "combo",
     "add_default": "Repeat",
     "options": [
@@ -1161,16 +1295,36 @@
     ]
    },
    {
-    "label": "Control point start",
+    "field": "Control point start",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Control point end",
+    "field": "Control point end",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
+   },
+   {
+    "field": "Reduce outer positions",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Reduce outer velocities",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Reduce outer sizes",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Enable arc",
+    "type": "bool",
+    "add_default": false
    }
   ],
   "json_fields_seen": [
@@ -1186,7 +1340,7 @@
   "display_name": "Remap initial value",
   "fields": [
    {
-    "label": "Input",
+    "field": "Input",
     "type": "combo",
     "add_default": "Maximum lifetime",
     "options": [
@@ -1212,7 +1366,12 @@
     ]
    },
    {
-    "label": "Output",
+    "field": "Clamp input value",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Output",
     "type": "combo",
     "add_default": "Size",
     "options": [
@@ -1233,7 +1392,12 @@
     ]
    },
    {
-    "label": "Operation",
+    "field": "Clamp output value",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Operation",
     "type": "combo",
     "add_default": "Multiply",
     "options": [
@@ -1244,7 +1408,7 @@
     ]
    },
    {
-    "label": "Transform function",
+    "field": "Transform function",
     "type": "combo",
     "add_default": "None",
     "options": [
@@ -1258,28 +1422,28 @@
     ]
    },
    {
-    "label": "Input range min",
+    "field": "Input range min",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Input range max",
+    "field": "Input range max",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Output range min",
+    "field": "Output range min",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Output range max",
+    "field": "Output range max",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -1296,7 +1460,7 @@
   "display_name": "Inherit initial value from event",
   "fields": [
    {
-    "label": "Input",
+    "field": "Input",
     "type": "combo",
     "add_default": "Set color",
     "options": [
@@ -1323,28 +1487,33 @@
   "display_name": "Movement",
   "fields": [
    {
-    "label": "X",
+    "field": "Gravity.x",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Gravity.y",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Gravity.z",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Drag",
+    "field": "Worldspace",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Drag",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -1357,52 +1526,56 @@
   "display_name": "Angular movement",
   "fields": [
    {
-    "label": "X",
+    "field": "Force.x",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Force.y",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Force.z",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Drag",
+    "field": "Drag",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-in start",
+    "section": "Operator blending",
+    "field": "Blend-in start",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-in end",
+    "section": "Operator blending",
+    "field": "Blend-in end",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-out start",
+    "section": "Operator blending",
+    "field": "Blend-out start",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-out end",
+    "section": "Operator blending",
+    "field": "Blend-out end",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -1414,16 +1587,16 @@
   "display_name": "Alpha fade",
   "fields": [
    {
-    "label": "Fade-in time",
+    "field": "Fade-in time",
     "type": "number",
     "add_default": 0.5,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Fade-out time",
+    "field": "Fade-out time",
     "type": "number",
     "add_default": 0.5,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -1435,28 +1608,28 @@
   "display_name": "Size change",
   "fields": [
    {
-    "label": "Start value",
+    "field": "Start value",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "End value",
+    "field": "End value",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Start time",
+    "field": "Start time",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "End time",
+    "field": "End time",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -1470,16 +1643,18 @@
   "display_name": "Color change",
   "fields": [
    {
-    "label": "Start time",
+    "section": "?",
+    "field": "Start time",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "End time",
+    "section": "?",
+    "field": "End time",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -1493,28 +1668,28 @@
   "display_name": "Alpha change",
   "fields": [
    {
-    "label": "Start value",
+    "field": "Start value",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "End value",
+    "field": "End value",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Start time",
+    "field": "Start time",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "End time",
+    "field": "End time",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -1528,82 +1703,86 @@
   "display_name": "Oscillate position",
   "fields": [
    {
-    "label": "X",
+    "field": "Mask.x",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Mask.y",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Mask.z",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Frequency min",
+    "field": "Frequency min",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Frequency max",
+    "field": "Frequency max",
     "type": "number",
     "add_default": 5,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Scale min",
+    "field": "Scale min",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Scale max",
+    "field": "Scale max",
     "type": "number",
     "add_default": 10,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Phase min",
+    "field": "Phase min",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Phase max",
+    "field": "Phase max",
     "type": "number",
     "add_default": 6.28318977355957,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-in start",
+    "section": "Operator blending",
+    "field": "Blend-in start",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-in end",
+    "section": "Operator blending",
+    "field": "Blend-in end",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-out start",
+    "section": "Operator blending",
+    "field": "Blend-out start",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-out end",
+    "section": "Operator blending",
+    "field": "Blend-out end",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -1622,64 +1801,68 @@
   "display_name": "Oscillate alpha",
   "fields": [
    {
-    "label": "Frequency min",
+    "field": "Frequency min",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Frequency max",
+    "field": "Frequency max",
     "type": "number",
     "add_default": 10,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Scale min",
+    "field": "Scale min",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Scale max",
+    "field": "Scale max",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Phase min",
+    "field": "Phase min",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Phase max",
+    "field": "Phase max",
     "type": "number",
     "add_default": 6.28318977355957,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-in start",
+    "section": "Operator blending",
+    "field": "Blend-in start",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-in end",
+    "section": "Operator blending",
+    "field": "Blend-in end",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-out start",
+    "section": "Operator blending",
+    "field": "Blend-out start",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-out end",
+    "section": "Operator blending",
+    "field": "Blend-out end",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -1697,64 +1880,68 @@
   "display_name": "Oscillate size",
   "fields": [
    {
-    "label": "Frequency min",
+    "field": "Frequency min",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Frequency max",
+    "field": "Frequency max",
     "type": "number",
     "add_default": 10,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Scale min",
+    "field": "Scale min",
     "type": "number",
     "add_default": 0.800000011920929,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Scale max",
+    "field": "Scale max",
     "type": "number",
     "add_default": 1.2000000476837158,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Phase min",
+    "field": "Phase min",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Phase max",
+    "field": "Phase max",
     "type": "number",
     "add_default": 6.28318977355957,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-in start",
+    "section": "Operator blending",
+    "field": "Blend-in start",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-in end",
+    "section": "Operator blending",
+    "field": "Blend-in end",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-out start",
+    "section": "Operator blending",
+    "field": "Blend-out start",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-out end",
+    "section": "Operator blending",
+    "field": "Blend-out end",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -1768,64 +1955,78 @@
   "display_name": "Control point force",
   "fields": [
    {
-    "label": "X",
+    "field": "Offset.x",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Offset.y",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Offset.z",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Scale",
+    "field": "Scale",
     "type": "number",
     "add_default": 512,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Distance",
+    "field": "Distance",
     "type": "number",
     "add_default": 512,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Control point",
+    "field": "Control point",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-in start",
+    "field": "Reduce velocity near center",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Delete particles in center",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "section": "Operator blending",
+    "field": "Blend-in start",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-in end",
+    "section": "Operator blending",
+    "field": "Blend-in end",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-out start",
+    "section": "Operator blending",
+    "field": "Blend-out start",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-out end",
+    "section": "Operator blending",
+    "field": "Blend-out end",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -1841,46 +2042,50 @@
   "display_name": "Maintain distance to control point",
   "fields": [
    {
-    "label": "Control point",
+    "field": "Control point",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Distance",
+    "field": "Distance",
     "type": "number",
     "add_default": 200,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Variable strength",
+    "field": "Variable strength",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-in start",
+    "section": "Operator blending",
+    "field": "Blend-in start",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-in end",
+    "section": "Operator blending",
+    "field": "Blend-in end",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-out start",
+    "section": "Operator blending",
+    "field": "Blend-out start",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-out end",
+    "section": "Operator blending",
+    "field": "Blend-out end",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -1891,40 +2096,44 @@
   "display_name": "Maintain distance between control points",
   "fields": [
    {
-    "label": "Control point start",
+    "field": "Control point start",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Control point end",
+    "field": "Control point end",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-in start",
+    "section": "Operator blending",
+    "field": "Blend-in start",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-in end",
+    "section": "Operator blending",
+    "field": "Blend-in end",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-out start",
+    "section": "Operator blending",
+    "field": "Blend-out start",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-out end",
+    "section": "Operator blending",
+    "field": "Blend-out end",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": []
@@ -1933,58 +2142,62 @@
   "display_name": "Reduce movement near control point",
   "fields": [
    {
-    "label": "Control point",
+    "field": "Control point",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Distance inner",
+    "field": "Distance inner",
     "type": "number",
     "add_default": 100,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Distance outer",
+    "field": "Distance outer",
     "type": "number",
     "add_default": 350,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Reduction inner",
+    "field": "Reduction inner",
     "type": "number",
     "add_default": 100,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Reduction outer",
+    "field": "Reduction outer",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-in start",
+    "section": "Operator blending",
+    "field": "Blend-in start",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-in end",
+    "section": "Operator blending",
+    "field": "Blend-in end",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-out start",
+    "section": "Operator blending",
+    "field": "Blend-out start",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-out end",
+    "section": "Operator blending",
+    "field": "Blend-out end",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -1999,85 +2212,90 @@
   "display_name": "Turbulence",
   "fields": [
    {
-    "label": "Noise speed",
+    "field": "Noise speed",
     "type": "number",
     "add_default": 20,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Noise scale",
+    "field": "Noise scale",
     "type": "number",
     "add_default": 0.009999999776482582,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "X",
+    "field": "Mask.x",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Mask.y",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Mask.z",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Speed min",
+    "field": "Speed min",
     "type": "number",
     "add_default": 500,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Speed max",
+    "field": "Speed max",
     "type": "number",
     "add_default": 1000,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Phase min",
+    "field": "Phase min",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Phase max",
+    "field": "Phase max",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-in start",
+    "section": "Operator blending",
+    "field": "Blend-in start",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-in end",
+    "section": "Operator blending",
+    "field": "Blend-in end",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-out start",
+    "section": "Operator blending",
+    "field": "Blend-out start",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-out end",
+    "section": "Operator blending",
+    "field": "Blend-out end",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Mode",
+    "section": "Audio response",
+    "field": "Mode",
     "type": "combo",
     "add_default": "None",
     "options": [
@@ -2108,79 +2326,99 @@
   "display_name": "Vortex",
   "fields": [
    {
-    "label": "X",
+    "field": "Axis.x",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Axis.y",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Axis.z",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Distance inner",
+    "field": "Ring shape",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Distance inner",
     "type": "number",
     "add_default": 500,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Distance outer",
+    "field": "Distance outer",
     "type": "number",
     "add_default": 650,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Speed inner",
+    "field": "Speed inner",
     "type": "number",
     "add_default": 2500,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Speed outer",
+    "field": "Speed outer",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Control point",
+    "field": "Infinite axis",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Control point",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-in start",
+    "field": "Maintain distance to center",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "section": "Operator blending",
+    "field": "Blend-in start",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-in end",
+    "section": "Operator blending",
+    "field": "Blend-in end",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-out start",
+    "section": "Operator blending",
+    "field": "Blend-out start",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-out end",
+    "section": "Operator blending",
+    "field": "Blend-out end",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Mode",
+    "section": "Audio response",
+    "field": "Mode",
     "type": "combo",
     "add_default": "None",
     "options": [
@@ -2207,40 +2445,45 @@
   "display_name": "Boids",
   "fields": [
    {
-    "label": "Neighbor threshold",
+    "field": "Neighbor threshold",
     "type": "number",
     "add_default": 50,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Separation threshold",
+    "field": "Separation threshold",
     "type": "number",
     "add_default": 20,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Separation factor",
+    "field": "Separation factor",
     "type": "number",
     "add_default": 15,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Cohesion factor",
+    "field": "Cohesion factor",
     "type": "number",
     "add_default": 2,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Alignment factor",
+    "field": "Alignment factor",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Max speed",
+    "field": "Clamp speed",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Max speed",
     "type": "number",
     "add_default": 500,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -2255,34 +2498,38 @@
   "display_name": "Cap velocity",
   "fields": [
    {
-    "label": "Max speed",
+    "field": "Max speed",
     "type": "number",
     "add_default": 100,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-in start",
+    "section": "Operator blending",
+    "field": "Blend-in start",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-in end",
+    "section": "Operator blending",
+    "field": "Blend-in end",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-out start",
+    "section": "Operator blending",
+    "field": "Blend-out start",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-out end",
+    "section": "Operator blending",
+    "field": "Blend-out end",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -2295,7 +2542,7 @@
   "display_name": "Remap value",
   "fields": [
    {
-    "label": "Input",
+    "field": "Input",
     "type": "combo",
     "add_default": "Lifetime fraction",
     "options": [
@@ -2322,7 +2569,12 @@
     ]
    },
    {
-    "label": "Output",
+    "field": "Clamp input value",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Output",
     "type": "combo",
     "add_default": "Size",
     "options": [
@@ -2343,7 +2595,12 @@
     ]
    },
    {
-    "label": "Operation",
+    "field": "Clamp output value",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Operation",
     "type": "combo",
     "add_default": "Multiply",
     "options": [
@@ -2354,7 +2611,7 @@
     ]
    },
    {
-    "label": "Transform function",
+    "field": "Transform function",
     "type": "combo",
     "add_default": "None",
     "options": [
@@ -2368,52 +2625,56 @@
     ]
    },
    {
-    "label": "Input range min",
+    "field": "Input range min",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Input range max",
+    "field": "Input range max",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Output range min",
+    "field": "Output range min",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Output range max",
+    "field": "Output range max",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-in start",
+    "section": "Operator blending",
+    "field": "Blend-in start",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-in end",
+    "section": "Operator blending",
+    "field": "Blend-in end",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-out start",
+    "section": "Operator blending",
+    "field": "Blend-out start",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-out end",
+    "section": "Operator blending",
+    "field": "Blend-out end",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": [
@@ -2436,7 +2697,7 @@
   "display_name": "Inherit value from event",
   "fields": [
    {
-    "label": "Input",
+    "field": "Input",
     "type": "combo",
     "add_default": "Set color and opacity",
     "options": [
@@ -2457,28 +2718,32 @@
     ]
    },
    {
-    "label": "Blend-in start",
+    "section": "Operator blending",
+    "field": "Blend-in start",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-in end",
+    "section": "Operator blending",
+    "field": "Blend-in end",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-out start",
+    "section": "Operator blending",
+    "field": "Blend-out start",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Blend-out end",
+    "section": "Operator blending",
+    "field": "Blend-out end",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": []
@@ -2487,31 +2752,31 @@
   "display_name": "Collision plane",
   "fields": [
    {
-    "label": "X",
+    "field": "Plane.x",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Plane.y",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Plane.z",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Distance",
+    "field": "Distance",
     "type": "number",
     "add_default": -150,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Collision behavior",
+    "field": "Collision behavior",
     "type": "combo",
     "add_default": "Bounce",
     "options": [
@@ -2522,10 +2787,20 @@
     ]
    },
    {
-    "label": "Bounce factor",
+    "field": "Bounce factor",
     "type": "number",
     "add_default": 0.5,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
+   },
+   {
+    "field": "Lock to control point",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Stop rotation on collision",
+    "type": "bool",
+    "add_default": false
    }
   ],
   "json_fields_seen": [
@@ -2537,31 +2812,31 @@
   "display_name": "Collision sphere",
   "fields": [
    {
-    "label": "X",
+    "field": "Origin.x",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Origin.y",
     "type": "number",
     "add_default": -200,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Origin.z",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Radius",
+    "field": "Radius",
     "type": "number",
     "add_default": 50,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Collision behavior",
+    "field": "Collision behavior",
     "type": "combo",
     "add_default": "Bounce",
     "options": [
@@ -2572,10 +2847,20 @@
     ]
    },
    {
-    "label": "Bounce factor",
+    "field": "Bounce factor",
     "type": "number",
     "add_default": 0.5,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
+   },
+   {
+    "field": "Lock to control point",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Stop rotation on collision",
+    "type": "bool",
+    "add_default": false
    }
   ],
   "json_fields_seen": [
@@ -2587,7 +2872,7 @@
   "display_name": "Collision bounds",
   "fields": [
    {
-    "label": "Collision behavior",
+    "field": "Collision behavior",
     "type": "combo",
     "add_default": "Bounce",
     "options": [
@@ -2598,10 +2883,10 @@
     ]
    },
    {
-    "label": "Bounce factor",
+    "field": "Bounce factor",
     "type": "number",
     "add_default": 0.5,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": []
@@ -2610,73 +2895,73 @@
   "display_name": "Collision rectangle",
   "fields": [
    {
-    "label": "X",
+    "field": "Origin.x",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Origin.y",
     "type": "number",
     "add_default": -150,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Origin.z",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "X",
+    "field": "Plane.x",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Plane.y",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Plane.z",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "X",
+    "field": "Forward.x",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Forward.y",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
+    "field": "Forward.z",
     "type": "number",
     "add_default": 1,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Width",
+    "field": "Size.Width",
     "type": "number",
     "add_default": 200,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Depth",
+    "field": "Size.Depth",
     "type": "number",
     "add_default": 200,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Collision behavior",
+    "field": "Collision behavior",
     "type": "combo",
     "add_default": "Bounce",
     "options": [
@@ -2687,10 +2972,20 @@
     ]
    },
    {
-    "label": "Bounce factor",
+    "field": "Bounce factor",
     "type": "number",
     "add_default": 0.5,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
+   },
+   {
+    "field": "Lock to control point",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Stop rotation on collision",
+    "type": "bool",
+    "add_default": false
    }
   ],
   "json_fields_seen": [
@@ -2703,7 +2998,7 @@
   "display_name": "Collision model",
   "fields": [
    {
-    "label": "Collision behavior",
+    "field": "Collision behavior",
     "type": "combo",
     "add_default": "Bounce",
     "options": [
@@ -2714,69 +3009,63 @@
     ]
    },
    {
-    "label": "Bounce factor",
+    "field": "Bounce factor",
     "type": "number",
     "add_default": 0.5,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    }
   ],
   "json_fields_seen": []
  },
- "_panel:System": {
+ "panel:Material": {
   "fields": [
    {
-    "label": "Max count",
+    "section": "Options",
+    "field": "Cutout",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "section": "Options",
+    "field": "Lighting",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "section": "Options",
+    "field": "Refract",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "section": "Options",
+    "field": "Textures",
+    "type": "combo",
+    "add_default": "? Browse"
+   },
+   {
+    "section": "Options",
+    "field": "Textures",
+    "type": "combo",
+    "add_default": "?"
+   },
+   {
+    "section": "Options",
+    "field": "Textures",
+    "type": "combo",
+    "add_default": "?"
+   },
+   {
+    "section": "Shader",
+    "field": "Overbright",
     "type": "number",
-    "add_default": 500,
-    "slider": "none (number box only)"
-   },
-   {
-    "label": "Start time",
-    "type": "number",
-    "add_default": 0,
-    "slider": "none (number box only)"
-   },
-   {
-    "label": "Animation mode",
-    "type": "combo",
-    "add_default": "Sequence",
-    "options": [
-     "Sequence",
-     "Random frame"
-    ]
-   }
-  ]
- },
- "_panel:Material": {
-  "fields": [
-   {
-    "label": "Albedo",
-    "type": "combo",
-    "add_default": "? Browse",
-    "options": []
-   },
-   {
-    "label": "Albedo",
-    "type": "combo",
-    "add_default": "?",
-    "options": []
-   },
-   {
-    "label": "Albedo",
-    "type": "combo",
-    "add_default": "?",
-    "options": []
-   },
-   {
-    "label": "Overbright",
-    "type": "number",
-    "slider_min": 0,
-    "slider_max": 5,
     "add_default": 1,
-    "spinner": "typed value box has no range (UIA min=max=0) -> not clamped by the box"
+    "slider_min": 0,
+    "slider_max": 5
    },
    {
-    "label": "Blending",
+    "section": "Rendering",
+    "field": "Blending",
     "type": "combo",
     "add_default": "Additive",
     "options": [
@@ -2787,7 +3076,8 @@
     ]
    },
    {
-    "label": "Depth test",
+    "section": "Rendering",
+    "field": "Depth test",
     "type": "combo",
     "add_default": "Disabled",
     "options": [
@@ -2796,7 +3086,8 @@
     ]
    },
    {
-    "label": "Depth write",
+    "section": "Rendering",
+    "field": "Depth write",
     "type": "combo",
     "add_default": "Disabled",
     "options": [
@@ -2805,7 +3096,8 @@
     ]
    },
    {
-    "label": "Culling",
+    "section": "Rendering",
+    "field": "Culling",
     "type": "combo",
     "add_default": "No cull",
     "options": [
@@ -2815,46 +3107,198 @@
    }
   ]
  },
- "_panel:Viewport": {
-  "fields": []
- },
- "_panel:Control point 1": {
+ "panel:System": {
   "fields": [
    {
-    "label": "X",
+    "field": "Max count",
     "type": "number",
-    "add_default": 0,
-    "slider": "none (number box only)"
+    "add_default": 500,
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Y",
+    "field": "Start time",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
    },
    {
-    "label": "Z",
-    "type": "number",
-    "add_default": 0,
-    "slider": "none (number box only)"
+    "field": "Worldspace",
+    "type": "bool",
+    "add_default": false
    },
    {
-    "label": "X",
-    "type": "number",
-    "add_default": 0,
-    "slider": "none (number box only)"
+    "field": "Perspective rendering",
+    "type": "bool",
+    "add_default": false
    },
    {
-    "label": "Y",
-    "type": "number",
-    "add_default": 0,
-    "slider": "none (number box only)"
+    "field": "Disable color overrides",
+    "type": "bool",
+    "add_default": false
    },
    {
-    "label": "Z",
+    "field": "Disable count overrides",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Disable lifetime overrides",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Disable size overrides",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Disable speed overrides",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "section": "Sprite sheet",
+    "field": "Animation mode",
+    "type": "combo",
+    "add_default": "Sequence",
+    "options": [
+     "Sequence",
+     "Random frame"
+    ]
+   }
+  ]
+ },
+ "panel:Viewport": {
+  "fields": [
+   {
+    "field": "Show Stats",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Show Axis",
+    "type": "bool",
+    "add_default": false
+   }
+  ]
+ },
+ "panel:Control point 0 (Origin)": {
+  "fields": [
+   {
+    "field": "Offset.x",
     "type": "number",
     "add_default": 0,
-    "slider": "none (number box only)"
+    "range": "none (unranged number box; editor does not clamp)"
+   },
+   {
+    "field": "Offset.y",
+    "type": "number",
+    "add_default": 0,
+    "range": "none (unranged number box; editor does not clamp)"
+   },
+   {
+    "field": "Offset.z",
+    "type": "number",
+    "add_default": 0,
+    "range": "none (unranged number box; editor does not clamp)"
+   },
+   {
+    "field": "Angles.x",
+    "type": "number",
+    "add_default": 0,
+    "range": "none (unranged number box; editor does not clamp)"
+   },
+   {
+    "field": "Angles.y",
+    "type": "number",
+    "add_default": 0,
+    "range": "none (unranged number box; editor does not clamp)"
+   },
+   {
+    "field": "Angles.z",
+    "type": "number",
+    "add_default": 0,
+    "range": "none (unranged number box; editor does not clamp)"
+   },
+   {
+    "field": "Lock to pointer",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Worldspace",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Hide gizmo in editor",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Copy from parent",
+    "type": "bool",
+    "add_default": false
+   }
+  ]
+ },
+ "panel:Control point 1": {
+  "fields": [
+   {
+    "field": "Offset.x",
+    "type": "number",
+    "add_default": 0,
+    "range": "none (unranged number box; editor does not clamp)"
+   },
+   {
+    "field": "Offset.y",
+    "type": "number",
+    "add_default": 0,
+    "range": "none (unranged number box; editor does not clamp)"
+   },
+   {
+    "field": "Offset.z",
+    "type": "number",
+    "add_default": 0,
+    "range": "none (unranged number box; editor does not clamp)"
+   },
+   {
+    "field": "Angles.x",
+    "type": "number",
+    "add_default": 0,
+    "range": "none (unranged number box; editor does not clamp)"
+   },
+   {
+    "field": "Angles.y",
+    "type": "number",
+    "add_default": 0,
+    "range": "none (unranged number box; editor does not clamp)"
+   },
+   {
+    "field": "Angles.z",
+    "type": "number",
+    "add_default": 0,
+    "range": "none (unranged number box; editor does not clamp)"
+   },
+   {
+    "field": "Lock to pointer",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Worldspace",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Hide gizmo in editor",
+    "type": "bool",
+    "add_default": false
+   },
+   {
+    "field": "Copy from parent",
+    "type": "bool",
+    "add_default": false
    }
   ]
  }
