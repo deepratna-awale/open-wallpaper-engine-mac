@@ -11,7 +11,8 @@ import simd
 ///
 /// Runs only when `OWE_PARTICLE_GALLERY` (`TEST_RUNNER_OWE_PARTICLE_GALLERY` through xcodebuild) is
 /// set: `1`, or the gallery folder, which adds WE | ours pictures of the stills. It needs a WE
-/// install as the assets directory (the presets and previews aren't bundled).
+/// install (the presets and previews aren't bundled): `OWE_WE_ASSETS`, the install or its `assets`
+/// folder, which the test sets as the assets directory in the test host's own (isolated) settings.
 /// `OWE_PARTICLE_GALLERY_ONLY` lists names (`fire_1`, `ptce_rope`); the report and pictures go to
 /// `OWE_PARTICLE_GALLERY_OUT`, and `OWE_PARTICLE_GALLERY_FRAMES=1` also writes each clip frame at half size.
 final class WEParticleGalleryTests: XCTestCase {
@@ -26,6 +27,20 @@ final class WEParticleGalleryTests: XCTestCase {
         if let scratch, FileManager.default.fileExists(atPath: scratch.path) {
             try FileManager.default.removeItem(at: scratch)
         }
+        restoreAssets?()
+        restoreAssets = nil
+    }
+
+    private var restoreAssets: (() -> Void)?
+
+    /// Points the assets directory at `OWE_WE_ASSETS` for this test, in the test host's settings
+    /// (`UserDefaults.app`, isolated under XCTest), and puts the old value back after it.
+    private func useWEInstall() {
+        guard let path = ProcessInfo.processInfo.environment["OWE_WE_ASSETS"], !path.isEmpty else { return }
+        let defaults = UserDefaults.app, key = WallpaperEngineAssets.defaultsKey
+        let before = defaults.string(forKey: key)
+        defaults.set(path, forKey: key)
+        restoreAssets = { before.map { defaults.set($0, forKey: key) } ?? defaults.removeObject(forKey: key) }
     }
 
     func testPresetsAndComponentsMatchWEsGallery() throws {
@@ -33,6 +48,7 @@ final class WEParticleGalleryTests: XCTestCase {
         guard let gallery = environment["OWE_PARTICLE_GALLERY"], !gallery.isEmpty else {
             throw XCTSkip("set OWE_PARTICLE_GALLERY to 1 or to the particle gallery folder")
         }
+        useWEInstall()
         let assets = try XCTUnwrap(WallpaperEngineAssets.directory)
         try XCTSkipUnless(FileManager.default.fileExists(atPath: assets.appending(path: "presets").path),
                           "the assets directory isn't a WE install (no presets)")
@@ -123,6 +139,7 @@ final class WEParticleGalleryTests: XCTestCase {
         guard let root = ProcessInfo.processInfo.environment["OWE_PARTICLE_FLAGTESTS"], !root.isEmpty else {
             throw XCTSkip("set OWE_PARTICLE_FLAGTESTS to the flagtests folder")
         }
+        useWEInstall()
         let folder = URL(fileURLWithPath: root, isDirectory: true)
         func run(_ name: String) throws -> [WEReferenceImage] {
             let directory = scratch.appending(path: name)
