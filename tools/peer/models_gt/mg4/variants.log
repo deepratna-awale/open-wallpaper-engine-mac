@@ -1,0 +1,20 @@
+
+bone_none : root bone None
+bone_none      saved rootmotion_box.mdl (9533 bytes, 09:42:46)
+root_all_off : axes posXYZ rotXYZ = 000000
+root_all_off   saved rootmotion_box.mdl (9533 bytes, 09:43:12)
+root_posX : axes posXYZ rotXYZ = 100000
+root_posX      saved rootmotion_box.mdl (9533 bytes, 09:43:34)
+root_posY : axes posXYZ rotXYZ = 010000
+root_posY      saved rootmotion_box.mdl (9533 bytes, 09:43:58)
+root_posZ : axes posXYZ rotXYZ = 001000
+root_posZ      saved rootmotion_box.mdl (9533 bytes, 09:44:21)
+root_rotX : axes posXYZ rotXYZ = 000000
+root_rotX      saved rootmotion_box.mdl (9533 bytes, 09:44:46)
+root_rotY : axes posXYZ rotXYZ = 000010
+root_rotY      saved rootmotion_box.mdl (9533 bytes, 09:45:08)
+root_rotZ : axes posXYZ rotXYZ = 000000
+root_rotZ      saved rootmotion_box.mdl (9533 bytes, 09:45:33)
+root_all_on : axes posXYZ rotXYZ = 111010
+root_all_on    saved rootmotion_box.mdl (9533 bytes, 09:46:04)
+done

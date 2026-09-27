@@ -59,6 +59,6 @@ The scripts are `setup.ps1` (copies the generated projects into WE as `mg_*` and
   - **Cloth pixel output:** pixel history at (1070,410) and (1020,330) gives shaderOut ≈ **(0.621, 0.177, 0.192, a 0.6)**, and the final pixel is (0.620, 0.176, 0.192) after FXAA (event 15548). **The cloth is not black under active high-quality shadows.**
   - The combos are compiled into the variant; see `ps_event15469.txt` for the shadow-sampling code.
 
-## Pending
-- MG4 retry: root-motion flags written by WE's own model importer (editor).
-- MG5: puppet with morphs (editor).
+## MG4 retry and MG5 (fourth session)
+- **MG4:** WE's real root-motion storage and playback behaviour are in [mg4/README.md](mg4/README.md). The clip flags byte is at 0x17D4 (posX 0x08, posY 0x10, posZ 0x20, rotY 0x80; rotX and rotZ can't be enabled) and the root-bone index is at 0x2534. In wallpaper playback there is no cumulative drift.
+- **MG5:** an editor-authored puppet with an MDMP blend shape is in [mg5/README.md](mg5/README.md). Script-set weights had no visible effect, so that part is unresolved.
