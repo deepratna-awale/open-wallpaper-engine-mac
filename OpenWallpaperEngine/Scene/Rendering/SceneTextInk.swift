@@ -24,11 +24,11 @@ enum SceneTextInk {
         var low = SIMD2(width, height), high = SIMD2(-1, -1)
         for row in 0..<height {
             let line = alpha + row * width
-            guard let first = (0..<width).first(where: { line[$0] != 0 }) else { continue }
-            let last = (0..<width).last(where: { line[$0] != 0 }) ?? first
+            guard let firstInk: Int = (0..<width).first(where: { line[$0] != 0 }) else { continue }
+            let lastInk: Int = (0..<width).last(where: { line[$0] != 0 }) ?? firstInk
             // The context's first row is the image's top.
-            low = simd_min(low, SIMD2(first, row))
-            high = simd_max(high, SIMD2(last, row))
+            low = simd_min(low, SIMD2<Int>(firstInk, row))
+            high = simd_max(high, SIMD2<Int>(lastInk, row))
         }
         guard high.x >= 0 else { return nil }
         let size = SIMD2(Float(width), Float(height))
