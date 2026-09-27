@@ -23,10 +23,12 @@ kernel void particleAge(device ParticleState *particles [[buffer(0)]],
                         device ParticleInstanceState *instances [[buffer(5)]],
                         uint gid [[thread_position_in_grid]]) {
     if (gid >= control[cCount]) return;
-    ParticleState particle = particles[gid];
-    particle.life.x += f.time.x;
-    particles[gid] = particle;
-    const bool dies = particle.life.y < particle.life.x;
+    // Only the age changes: load and store its lifetime, not the whole particle.
+    device ParticleState &particle = particles[gid];
+    const float2 life = particle.life.xy;
+    const float age = life.x + f.time.x;
+    particle.life.x = age;
+    const bool dies = life.y < age;
     alive[gid] = dies ? 0 : 1;
     if (!dies) return;
     atomic_fetch_add_explicit((device atomic_uint *)(control + cDead), 1u, memory_order_relaxed);
