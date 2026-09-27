@@ -221,8 +221,11 @@
 				es,
 				fr,
 				it,
+				ja,
+				ko,
 				"pt-BR",
 				"zh-Hans",
+				"zh-Hant",
 			);
 			packageReferences = (
 				EE3000000000000000000003 /* XCLocalSwiftPackageReference "Vendor/ShaderToolchain" */,
