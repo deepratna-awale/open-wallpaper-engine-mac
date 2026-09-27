@@ -121,12 +121,23 @@ def menubar():
 
 
 def set_icon_fill(path):
-    """Sets AppIcon.icon's solid background fill; the rest of icon.json is Icon Composer's."""
+    """Sets AppIcon.icon's solid background fill; the rest of icon.json is Icon Composer's.
+
+    The light look (white background, black frame, white screen) lives in icon.json's
+    fill-specializations and is left alone here."""
     import json
     with open(path) as f:
         icon = json.load(f)
     r, g, b = (int(P["background"][i:i + 2], 16) / 255 for i in (1, 3, 5))
-    icon["fill"] = {"solid": f"srgb:{r:.5f},{g:.5f},{b:.5f},1.00000"}
+    solid = {"solid": f"srgb:{r:.5f},{g:.5f},{b:.5f},1.00000"}
+    # With light/dark fill-specializations (set in Icon Composer), the palette is the dark look.
+    specs = icon.get("fill-specializations")
+    if specs:
+        for s in specs:
+            if s.get("appearance") == "dark":
+                s["value"] = solid
+    else:
+        icon["fill"] = solid
     with open(path, "w") as f:
         f.write(json.dumps(icon, indent=2, separators=(",", " : ")) + "\n")
 

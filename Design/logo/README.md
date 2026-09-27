@@ -44,3 +44,12 @@ ictool OpenWallpaperEngine/Resources/AppIcon.icon --export-image --output-file o
 ```
 
 The renditions are `Default`, `Dark`, `ClearLight`, `ClearDark`, `TintedLight` and `TintedDark`.
+
+## Light and dark looks
+
+macOS 26 picks the look from the system appearance. The light look has a white
+background, a black frame, a white screen and the blue gear. The dark look has a
+graphite background, a light frame and a dark screen, with the same gear. The
+light colours are `fill-specializations` in `AppIcon.icon/icon.json`; the dark
+colours come from the palette in `make_svgs.py`. The macOS 14/15 fallback icon is
+`ictool`'s Default rendering, which is the light look.

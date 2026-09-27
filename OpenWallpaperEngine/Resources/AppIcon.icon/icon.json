@@ -1,14 +1,24 @@
 {
-  "fill" : {
-    "solid" : "srgb:0.10980,0.10980,0.11765,1.00000"
-  },
   "groups" : [
     {
       "layers" : [
         {
           "glass" : true,
           "image-name" : "hole.svg",
-          "name" : "hole"
+          "name" : "hole",
+          "fill-specializations" : [
+            {
+              "value" : {
+                "solid" : "srgb:1.00000,1.00000,1.00000,1.00000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "srgb:0.17255,0.17255,0.18039,1.00000"
+              }
+            }
+          ]
         },
         {
           "glass" : true,
@@ -33,7 +43,20 @@
         {
           "glass" : true,
           "image-name" : "screen.svg",
-          "name" : "screen"
+          "name" : "screen",
+          "fill-specializations" : [
+            {
+              "value" : {
+                "solid" : "srgb:1.00000,1.00000,1.00000,1.00000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "srgb:0.17255,0.17255,0.18039,1.00000"
+              }
+            }
+          ]
         }
       ],
       "name" : "screen",
@@ -51,7 +74,20 @@
         {
           "glass" : true,
           "image-name" : "monitor.svg",
-          "name" : "monitor"
+          "name" : "monitor",
+          "fill-specializations" : [
+            {
+              "value" : {
+                "solid" : "srgb:0.10980,0.10980,0.11765,1.00000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "srgb:0.89804,0.89804,0.91765,1.00000"
+              }
+            }
+          ]
         }
       ],
       "name" : "monitor",
@@ -69,5 +105,18 @@
     "squares" : [
       "macOS"
     ]
-  }
+  },
+  "fill-specializations" : [
+    {
+      "value" : {
+        "solid" : "srgb:1.00000,1.00000,1.00000,1.00000"
+      }
+    },
+    {
+      "appearance" : "dark",
+      "value" : {
+        "solid" : "srgb:0.10980,0.10980,0.11765,1.00000"
+      }
+    }
+  ]
 }
