@@ -35,13 +35,12 @@
         "enabled" : true,
         "value" : 0.8
       },
-      "specular" : true,
-      "blur-material" : 0.5
+      "specular" : true
     },
     {
       "layers" : [
         {
-          "glass" : true,
+          "glass" : false,
           "image-name" : "screen.svg",
           "name" : "screen",
           "fill-specializations" : [
@@ -61,11 +60,11 @@
       ],
       "name" : "screen",
       "shadow" : {
-        "kind" : "neutral",
+        "kind" : "none",
         "opacity" : 0.5
       },
       "translucency" : {
-        "enabled" : true,
+        "enabled" : false,
         "value" : 0.2
       }
     },
