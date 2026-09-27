@@ -49,7 +49,7 @@ final class ScenePlanarReflection {
 
     init(device: MTLDevice) {
         self.device = device
-        depth = SceneDepthBuffer(device: device)
+        depth = SceneDepthBuffer(device: device, transient: true)
         mirroredDepthStates = SceneDepthStates(device: device, mirrored: true)
     }
 

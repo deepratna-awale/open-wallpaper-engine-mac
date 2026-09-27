@@ -101,6 +101,11 @@ final class SceneVolumetrics: SceneFrameStage {
         return settings.volumetrics.level > 0 && !plan.lights.isEmpty
     }
 
+    func readsSceneDepth(settings: SceneRenderSettings) -> Bool {
+        guard let plan else { return false }
+        return Self.runs(plan, settings: settings)
+    }
+
     func encode(_ context: SceneFrameStageContext) {
         lastRecord = nil
         guard let plan, let pipelines, Self.runs(plan, settings: context.settings) else { return }

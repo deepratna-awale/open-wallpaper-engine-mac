@@ -1257,7 +1257,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                     var snapshot: MTLTexture?
                     if particleMaterials?.readsSceneSnapshot(batch.system) == true {
                         // Refraction reads the scene drawn up to this system (`_rt_FullFrameBuffer`).
-                        encoder.endEncoding()
+                        endScenePass(encoder, resumes: true)
                         snapshot = sceneSnapshot(of: sceneTexture, commandBuffer: commandBuffer)
                         guard let resumed = resumeScenePass(on: sceneTexture, commandBuffer: commandBuffer) else { return false }
                         encoder = resumed
@@ -1328,7 +1328,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 // this layer's effects on what's drawn so far (`_rt_FullFrameBuffer`), resume. The
                 // effects read the target itself while the pass is paused; only a material that
                 // reads the scene from inside the resumed pass needs a copy of it.
-                encoder.endEncoding()
+                endScenePass(encoder, resumes: true)
                 var snapshot: MTLTexture? = sceneTexture
                 if entry.layer.imageMaterial?.readsSceneSnapshot == true {
                     // A material or scene input reads the scene under its own quad; an effect anywhere.
@@ -1370,7 +1370,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                         encoder: encoder, commandBuffer: commandBuffer)
         }
         guard drawParticleBatches(before: .max) else { return }
-        encoder.endEncoding()
+        endScenePass(encoder, resumes: false)
 
         var stageContext = SceneFrameStageContext(scene: sceneTexture, commandBuffer: commandBuffer, sceneSize: sceneSize,
                                                   frame: effectFrame, settings: renderSettings)
@@ -2621,6 +2621,21 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         return lit
     }
 
+    /// Ends an encoder of the scene pass, storing only what is read afterwards: the samples and
+    /// depth when the pass `resumes` onto them; else the resolved colour, and the depth only when
+    /// a frame stage reads it (`SceneFrameStage.readsSceneDepth`). Every scene-pass encoder ends
+    /// here, as their attachments' store actions are left `.unknown` until then.
+    private func endScenePass(_ encoder: MTLRenderCommandEncoder, resumes: Bool) {
+        if sceneMultisampleTarget != nil {
+            encoder.setColorStoreAction(resumes ? .storeAndMultisampleResolve : .multisampleResolve, index: 0)
+        }
+        if frameDepth != nil {
+            let read = !resumes && frameStages.contains { $0.readsSceneDepth(settings: renderSettings) }
+            encoder.setDepthStoreAction(depthBuffer.storeAction(resumes: resumes, read: read))
+        }
+        encoder.endEncoding()
+    }
+
     /// Continues the scene pass after a pause (a snapshot of it, or effects run in between).
     private func resumeScenePass(on scene: MTLTexture, commandBuffer: MTLCommandBuffer) -> MTLRenderCommandEncoder? {
         let resume = MTLRenderPassDescriptor()
@@ -2773,12 +2788,13 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// Draws into `multisampled` when there is one, resolving into `scene` whenever the pass
     /// ends (so a pause for a scene-reading layer resolves what's drawn so far, as WE resolves its
     /// multisampled target before reading `_rt_FullFrameBuffer`, 0x1400d3310); else into `scene`.
+    /// The samples are kept only while the pass resumes: `endScenePass` sets the store action.
     static func attachScene(_ scene: MTLTexture, multisampled: MTLTexture?, to pass: MTLRenderPassDescriptor) {
         let attachment = pass.colorAttachments[0]!
         if let multisampled {
             attachment.texture = multisampled
             attachment.resolveTexture = scene
-            attachment.storeAction = .storeAndMultisampleResolve
+            attachment.storeAction = .unknown
         } else {
             attachment.texture = scene
             attachment.storeAction = .store

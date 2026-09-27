@@ -12,9 +12,13 @@ final class SceneDepthBuffer {
     private(set) var texture: MTLTexture?
     /// The multisampled depth the pass draws into with MSAA; nil without.
     private(set) var multisampled: MTLTexture?
+    /// A depth nothing reads once its pass ends (the planar reflection's): never stored, and
+    /// memoryless on Apple GPUs, which keep it in tile memory only.
+    let transient: Bool
 
-    init(device: MTLDevice) {
+    init(device: MTLDevice, transient: Bool = false) {
         self.device = device
+        self.transient = transient
     }
 
     var residentBytes: Int { (texture?.allocatedSize ?? 0) + (multisampled?.allocatedSize ?? 0) }
@@ -42,7 +46,9 @@ final class SceneDepthBuffer {
     }
 
     /// Attaches the depth to `pass`: cleared to WE's far depth when the pass starts, loaded when it
-    /// resumes; stored, and resolved with MSAA.
+    /// resumes. A transient depth is dropped when the pass ends; any other's store action is left
+    /// to the encoder's end (`storeAction(resumes:read:)`), when the frame knows whether anything
+    /// reads it.
     func attach(to pass: MTLRenderPassDescriptor, clear: Bool) {
         let attachment = pass.depthAttachment!
         attachment.loadAction = clear ? .clear : .load
@@ -51,18 +57,31 @@ final class SceneDepthBuffer {
             attachment.texture = multisampled
             attachment.resolveTexture = texture
             attachment.depthResolveFilter = .sample0
-            attachment.storeAction = .storeAndMultisampleResolve
+            attachment.storeAction = .unknown
         } else {
             attachment.texture = texture
-            attachment.storeAction = .store
+            attachment.storeAction = transient ? .dontCare : .unknown
         }
+    }
+
+    /// The store action to end an encoder of the attached pass with: the depth is kept (resolved
+    /// with MSAA) when the pass resumes onto it, and else only resolved, or kept, when something
+    /// reads `texture` afterwards.
+    func storeAction(resumes: Bool, read: Bool) -> MTLStoreAction {
+        if multisampled != nil {
+            return resumes ? .storeAndMultisampleResolve : read ? .multisampleResolve : .dontCare
+        }
+        return resumes || read ? .store : .dontCare
     }
 
     private func make(width: Int, height: Int, sampleCount: Int) -> MTLTexture? {
         let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: SceneDepthStates.format, width: width,
                                                                   height: height, mipmapped: false)
         descriptor.storageMode = .private
-        if sampleCount > 1 {
+        if transient, sampleCount == 1, device.supportsFamily(.apple1) {
+            descriptor.storageMode = .memoryless
+            descriptor.usage = [.renderTarget]
+        } else if sampleCount > 1 {
             descriptor.textureType = .type2DMultisample
             descriptor.sampleCount = sampleCount
             descriptor.usage = [.renderTarget]

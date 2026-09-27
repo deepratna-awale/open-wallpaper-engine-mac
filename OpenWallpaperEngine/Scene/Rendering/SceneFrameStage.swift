@@ -28,6 +28,13 @@ protocol SceneFrameStage: AnyObject {
     func encode(_ context: SceneFrameStageContext)
     /// The content changed (a new scene or a rebuild): drop state that belonged to the old one.
     func setContent(_ content: SceneMetalContent)
+    /// Whether this frame's `encode` may read `SceneFrameStageContext.sceneDepth`, known before
+    /// the scene pass ends so the pass stores its depth only when it does.
+    func readsSceneDepth(settings: SceneRenderSettings) -> Bool
+}
+
+extension SceneFrameStage {
+    func readsSceneDepth(settings: SceneRenderSettings) -> Bool { false }
 }
 
 enum SceneFrameStages {
