@@ -1,13 +1,15 @@
 import Foundation
 import ImageIO
+import UniformTypeIdentifiers
 
 /// The system's now-playing session through the private MediaRemote framework, which is what the
 /// menu bar's Now Playing uses. `MPNowPlayingInfoCenter` only describes the calling app's own
 /// playback, so it can't stand in.
 ///
-/// MediaRemote is resolved at runtime with `dlopen`/`dlsym` (`MediaRemote.load()`); without it the
-/// source reports `enabled == false` and stays silent. Since macOS 15.4 MediaRemote answers only
-/// entitled processes, so the info may simply never arrive: scripts then see "nothing playing".
+/// Before macOS 15.4 MediaRemote is resolved at runtime with `dlopen`/`dlsym` (`MediaRemote`); from
+/// 15.4, where it answers only Apple's processes, the session is streamed from `/usr/bin/perl`
+/// (`NowPlayingAdapter`; `NowPlayingBackend` picks). While neither works, or media integration is
+/// turned off in Settings, the source reports `enabled == false` and stays silent.
 ///
 /// Its registration is process-wide, so the app keeps one source and every runtime subscribes: the
 /// first subscriber registers, the last one's departure unregisters. Notifications trigger a fetch;
@@ -30,12 +32,17 @@ final class MacMediaSessionSource: MediaSessionSource {
     private var active = false
     private var info: [String: Any] = [:]
     private var isPlaying = false
-    private var artwork: (key: Int, colors: ArtworkPalette.Colors?)?
+    private var artwork: Artwork?
+    /// WE's "Media integration support" setting.
+    private var integrationEnabled = true
     private var observers: [NSObjectProtocol] = []
     private var timer: DispatchSourceTimer?
     private var fetchGeneration = 0
 
-    init(framework: NowPlayingFramework? = MediaRemote.load(), now: @escaping () -> Date = Date.init) {
+    /// The decoded artwork: its key (a hash of the data), colours and PNG.
+    typealias Artwork = (key: Int, colors: ArtworkPalette.Colors?, png: Data?)
+
+    init(framework: NowPlayingFramework? = NowPlayingBackend.load(), now: @escaping () -> Date = Date.init) {
         self.framework = framework
         self.now = now
     }
@@ -66,6 +73,16 @@ final class MacMediaSessionSource: MediaSessionSource {
         queue.async { [weak self] in self?.reconcile() }
     }
 
+    /// WE's "Media integration support" (on by default). Off, nothing is read and every subscriber
+    /// gets media integration disabled (`mediaStatusChanged({enabled: false})`), as WE's setting does.
+    func setIntegrationEnabled(_ enabled: Bool) {
+        queue.async { [self] in
+            guard enabled != integrationEnabled else { return }
+            integrationEnabled = enabled
+            reconcile()
+        }
+    }
+
     /// Waits until the work queued so far has run. Tests use it.
     func flush() {
         queue.sync {}
@@ -73,15 +90,17 @@ final class MacMediaSessionSource: MediaSessionSource {
 
     // MARK: - Lifecycle (on `queue`)
 
-    /// Registers while anyone listens and unregisters once nobody does.
+    /// Registers while anyone listens and integration is on, and unregisters otherwise.
     private func reconcile() {
         lock.lock()
-        let wanted = !subscribers.isEmpty
+        let listening = !subscribers.isEmpty
         lock.unlock()
+        let wanted = listening && integrationEnabled
         if wanted && !active {
             activate()
         } else if !wanted && active {
             deactivate()
+            if listening { deliver(MediaSessionState()) }
         }
     }
 
@@ -143,17 +162,21 @@ final class MacMediaSessionSource: MediaSessionSource {
 
     private func publish() {
         let colors = artworkColors()
-        let state = Self.state(from: info, isPlaying: isPlaying, enabled: framework != nil, now: now(),
-                               artwork: colors.map { ($0.key, $0.colors) })
+        let state = Self.state(from: info, isPlaying: isPlaying, enabled: framework?.isAvailable ?? false, now: now(),
+                               artwork: colors)
+        deliver(state)
+        scheduleTimeline(running: active && state.playback == .playing && state.timeline.duration > 0)
+    }
+
+    private func deliver(_ state: MediaSessionState) {
         lock.lock()
         latest = state
         for update in subscribers.values { update(state) }
         lock.unlock()
-        scheduleTimeline(running: active && state.playback == .playing && state.timeline.duration > 0)
     }
 
     /// Decodes the artwork once per image.
-    private func artworkColors() -> (key: Int, colors: ArtworkPalette.Colors?)? {
+    private func artworkColors() -> Artwork? {
         guard let data = info[MediaRemote.Key.artworkData] as? Data, !data.isEmpty else {
             artwork = nil
             return nil
@@ -163,14 +186,32 @@ final class MacMediaSessionSource: MediaSessionSource {
         let key = hasher.finalize()
         if let artwork, artwork.key == key { return artwork }
         var colors: ArtworkPalette.Colors?
+        var png: Data?
         if let source = CGImageSourceCreateWithData(data as CFData, nil),
            let image = CGImageSourceCreateImageAtIndex(source, 0, nil) {
             colors = ArtworkPalette.colors(of: image)
+            png = Self.png(of: image, original: data, type: CGImageSourceGetType(source))
         } else {
             OWELog.error(.script, "Now-playing artwork (\(data.count) bytes) could not be decoded; thumbnail colours are unavailable")
         }
-        artwork = (key, colors)
+        artwork = (key, colors, png)
         return artwork
+    }
+
+    /// The artwork as PNG: the original when it is one, else re-encoded (WE hands web wallpapers PNG).
+    private static func png(of image: CGImage, original: Data, type: CFString?) -> Data? {
+        if let type, type as String == UTType.png.identifier { return original }
+        let output = NSMutableData()
+        guard let destination = CGImageDestinationCreateWithData(output, UTType.png.identifier as CFString, 1, nil) else {
+            OWELog.error(.script, "PNG encoding is unavailable; web wallpapers get no album cover")
+            return nil
+        }
+        CGImageDestinationAddImage(destination, image, nil)
+        guard CGImageDestinationFinalize(destination) else {
+            OWELog.error(.script, "Now-playing artwork (\(image.width)×\(image.height)) could not be encoded as PNG; web wallpapers get no album cover")
+            return nil
+        }
+        return output as Data
     }
 
     private func scheduleTimeline(running: Bool) {
@@ -191,7 +232,7 @@ final class MacMediaSessionSource: MediaSessionSource {
 
     /// The media state for MediaRemote's now-playing dictionary.
     static func state(from info: [String: Any], isPlaying: Bool, enabled: Bool, now: Date,
-                      artwork: (key: Int, colors: ArtworkPalette.Colors?)?) -> MediaSessionState {
+                      artwork: Artwork?) -> MediaSessionState {
         var state = MediaSessionState()
         state.enabled = enabled
         func string(_ key: String) -> String { (info[key] as? String) ?? "" }
@@ -209,7 +250,7 @@ final class MacMediaSessionSource: MediaSessionSource {
             state.playback = .paused
         }
         if let key = artwork?.key, let colors = artwork?.colors {
-            state.thumbnail = .init(artwork: key, colors: colors)
+            state.thumbnail = .init(artwork: key, colors: colors, png: artwork?.png)
         }
         let duration = (info[MediaRemote.Key.duration] as? NSNumber)?.doubleValue ?? 0
         if duration > 0 {
@@ -226,7 +267,7 @@ final class MacMediaSessionSource: MediaSessionSource {
     private static func contentType(_ mediaType: String?) -> String {
         guard let mediaType = mediaType?.lowercased() else { return "" }
         if mediaType.contains("video") { return "video" }
-        if mediaType.contains("music") || mediaType.contains("audio") || mediaType.contains("podcast") { return "audio" }
+        if mediaType.contains("music") || mediaType.contains("audio") || mediaType.contains("podcast") { return "music" }
         return ""
     }
 }

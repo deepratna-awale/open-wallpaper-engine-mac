@@ -154,8 +154,11 @@ struct GeneralPage: SettingsPage {
                 Toggle(isOn: $viewModel.settings.reloadWhenChangingOutputDevice) {
                     Text("Reload when changing output device")
                 }.disabled(true)
+                Toggle("Media integration support", isOn: $viewModel.settings.mediaIntegration)
             } header: {
                 Label("Audio", systemImage: "speaker.3.fill")
+            } footer: {
+                Text("Media integration lets wallpapers read the title, artist and album cover of the music playing now.")
             }
             // MARK: Video
             Section {

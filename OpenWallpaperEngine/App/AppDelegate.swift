@@ -100,6 +100,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var wallpaperViewModel = WallpaperViewModel()
     var globalSettingsViewModel = GlobalSettingsViewModel()
     lazy var safeRestart = SafeRestart()
+    /// The system's now-playing session, one for the process (MediaRemote registers per process):
+    /// SceneScript's `media*` callbacks and web wallpapers' media listeners hear it.
+    lazy var mediaSession = MacMediaSessionSource()
     /// What every scene's SceneScripts share: WE's prelude, `localStorage`, the one media session and
     /// the desktop's left clicks.
     lazy var sceneScriptServices: SceneScriptServices = {
@@ -111,7 +114,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         return SceneScriptServices(
             prelude: SceneScriptPrelude.load(),
             storage: SceneScriptStorage(directory: SceneScriptStorage.defaultDirectory),
-            media: MacMediaSessionSource(),
+            media: mediaSession,
             spectrum: { WallpaperServices.shared.audioSpectrumSnapshot },
             clicks: clicks)
     }()
@@ -120,6 +123,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var workshopDependencyCancellable: AnyCancellable?
     private var audioOutputCancellable: AnyCancellable?
     private var syncPropertiesCancellable: AnyCancellable?
+    private var mediaIntegrationCancellable: AnyCancellable?
     /// Settings › Performance › Playback, per display (`App/Playback`).
     private lazy var displayPlaybackMonitor = makeDisplayPlaybackMonitor()
     
@@ -145,6 +149,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Settings → General: one set of user properties for every display, or each display's own.
         syncPropertiesCancellable = globalSettingsViewModel.$settings.map(\.syncPropertiesAcrossDisplays).removeDuplicates()
             .sink { [weak self] synced in self?.wallpaperViewModel.syncsPropertiesAcrossDisplays = synced }
+        // Settings → General → Media integration support: whether wallpapers hear Now Playing.
+        mediaIntegrationCancellable = globalSettingsViewModel.$settings.map(\.mediaIntegration).removeDuplicates()
+            .sink { [weak self] enabled in self?.mediaSession.setIntegrationEnabled(enabled) }
 
         // Before the wallpaper windows exist, so a wallpaper behind an unclean exit never loads.
         safeRestart.attach(to: wallpaperViewModel)

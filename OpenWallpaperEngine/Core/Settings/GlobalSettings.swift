@@ -221,6 +221,9 @@ struct GlobalSettings: Codable, Equatable {
 
     // MARK: Audio
     var audioOutput = true
+    /// WE's "Media integration support" (`mediaintegration`, on by default): wallpapers hear the
+    /// system's Now Playing session (`MacMediaSessionSource`).
+    var mediaIntegration = true
     var reloadWhenChangingOutputDevice = true // Not putting in use
     
     // MARK: Video
@@ -253,6 +256,7 @@ struct GlobalSettings: Codable, Equatable {
         case reloadWhenChangingOutputDevice, videoFramework, processPiority, pauseOnVRAMExhausted
         case restartAfterCrashing, logLevel, autoRefresh
         case syncPropertiesAcrossDisplays
+        case mediaIntegration
     }
 }
 
@@ -299,5 +303,6 @@ extension GlobalSettings {
         read(.logLevel, &logLevel)
         read(.autoRefresh, &autoRefresh)
         read(.syncPropertiesAcrossDisplays, &syncPropertiesAcrossDisplays)
+        read(.mediaIntegration, &mediaIntegration)
     }
 }

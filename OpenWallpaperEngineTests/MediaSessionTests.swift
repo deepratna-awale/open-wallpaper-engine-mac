@@ -42,7 +42,7 @@ final class MediaSessionTests: XCTestCase {
         XCTAssertTrue(state.enabled)
         XCTAssertEqual(state.playback, .playing, "a positive playback rate is playing")
         XCTAssertEqual(state.properties, .init(title: "Song", artist: "Artist", albumTitle: "Album", genres: "Pop",
-                                               contentType: "audio"))
+                                               contentType: "music"))
         XCTAssertEqual(state.timeline, .init(position: 14, duration: 200), "elapsed + time since the timestamp")
         XCTAssertFalse(state.thumbnail.hasThumbnail)
 

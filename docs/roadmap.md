@@ -79,7 +79,7 @@ Blocked on WE ground truth (captures on Windows): see docs/test-risks.md "needs 
 6. ~~Callbacks: `applyUserProperties` (changed keys only), `media*`, `destroy`, `resizeScreen`.~~ Done (WP4, WP6, WP11).
 7. ~~Layer API: `createLayer` from an asset (image, text, shape, particle system, sound), `destroyLayer`, `sortLayer`, `getLayerIndex`, `localStorage`; sound layers played like WE's (modes, gain, timers, mute and pause, script control)~~ done. Open: sound `spatialization` (no library sound uses it).
 8. WP12: ~~scene, effect and material animations under script control, `animationEvent`~~ done (area 3); animation layers and bones with areas 6 and 7.
-9. Live Now Playing on macOS 15.4+ (MediaRemote answers only entitled processes: the `/usr/bin/perl` adapter or a helper).
+9. ~~Live Now Playing on macOS 15.4+ (MediaRemote answers only entitled processes: the `/usr/bin/perl` adapter or a helper).~~ Done: `nowPlayingAdapter.pl` streams the session from `/usr/bin/perl` through Apple's PerlObjCBridge (nothing compiled or installed), MediaRemote directly before 15.4 (`NowPlayingBackend`); web wallpapers' media listeners too; Settings › General › Audio › Media integration support (WE's `mediaintegration`).
 10. ~~Performance: JIT (the `allow-jit` entitlement), per-frame allocations in the runtime, no frame of latency.~~ Done; see the plan's cost table.
 
 ### 5. Lighting and reflections (mostly not implemented)

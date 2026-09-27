@@ -19,7 +19,8 @@ struct MediaSessionState: Equatable {
         var albumArtist = ""
         /// Separated by commas.
         var genres = ""
-        /// "audio" or "video"; empty when unknown.
+        /// "music", "video" or "image", the strings WE's media helper (`winrtutil64.exe`) makes of
+        /// Windows' playback types (the typings' "audio or video" is loose); empty when unknown.
         var contentType = ""
     }
 
@@ -29,6 +30,8 @@ struct MediaSessionState: Equatable {
         var artwork: Int?
         /// Nil when there is no thumbnail; WE then sends black for every colour.
         var colors: ArtworkPalette.Colors?
+        /// The artwork as PNG, for web wallpapers' `thumbnail` (a PNG data URL in WE).
+        var png: Data?
 
         var hasThumbnail: Bool { colors != nil }
     }

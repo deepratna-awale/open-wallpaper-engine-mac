@@ -18,7 +18,8 @@ struct WebWallpaperView: NSViewRepresentable {
         self.wallpaperViewModel = wallpaperViewModel
         self.screenId = screenId
         self._viewModel = StateObject(wrappedValue: WebWallpaperViewModel(wallpaper: wallpaperViewModel.wallpaper(for: screenId),
-                                                                          propertyScope: wallpaperViewModel.propertyScope(for: screenId)))
+                                                                          propertyScope: wallpaperViewModel.propertyScope(for: screenId),
+                                                                          media: AppDelegate.shared.mediaSession))
     }
 
     func makeNSView(context: Context) -> WKWebView {

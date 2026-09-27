@@ -42,9 +42,18 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     /// Whose user properties the page gets: its display's, or the shared ones while synced.
     let propertyScope: WallpaperPropertyScope
 
-    init(wallpaper: WEWallpaper, propertyScope: WallpaperPropertyScope = .shared) {
+    /// The now-playing session the page's media listeners hear (`WebWallpaperMediaBridge`).
+    private let media: MediaSessionSource?
+    private var mediaSubscription: Int?
+    /// The media state the current page has been sent; nil until its first delivery.
+    private var mediaSent: MediaSessionState?
+    /// Which page a delivery is for; a new page (`pageWillLoad`) invalidates older deliveries.
+    private var mediaPage = 0
+
+    init(wallpaper: WEWallpaper, propertyScope: WallpaperPropertyScope = .shared, media: MediaSessionSource? = nil) {
         self.currentWallpaper = wallpaper
         self.propertyScope = propertyScope
+        self.media = media
         super.init()
         propertyObserver = NotificationCenter.default.addObserver(
             forName: .wallpaperUserPropertyChanged, object: nil, queue: .main
@@ -65,6 +74,7 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
             NSWorkspace.shared.notificationCenter.removeObserver(observer)
         }
         audioTimer?.invalidate()
+        if let mediaSubscription { media?.unsubscribe(mediaSubscription) }
         renderWatchdog?.endHeartbeat(from: ObjectIdentifier(self))
     }
 
@@ -96,6 +106,7 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
 
     /// A new page is loading; it is judged from its first heartbeat on.
     func pageWillLoad() {
+        stopMedia()
         pageHasBeaten = false
         renderWatchdog?.recordHeartbeat(from: ObjectIdentifier(self), expectingMore: false)
     }
@@ -120,6 +131,40 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
                                               injectionTime: .atDocumentStart, forMainFrameOnly: true))
         controller.add(WeakScriptMessageHandler(self), name: WebWallpaperPropertyBridge.audioMessageName)
         controller.add(WeakScriptMessageHandler(self), name: WebWallpaperPropertyBridge.frameMessageName)
+        controller.addUserScript(WKUserScript(source: WebWallpaperMediaBridge.bootstrapScript,
+                                              injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        controller.add(WeakScriptMessageHandler(self), name: WebWallpaperMediaBridge.messageName)
+    }
+
+    // MARK: Media integration
+
+    /// The page registered a media listener: the first one subscribes it to the session.
+    fileprivate func mediaListenerRegistered() {
+        guard mediaSubscription == nil, let media else { return }
+        let page = mediaPage
+        mediaSubscription = media.subscribe { [weak self] state in
+            DispatchQueue.main.async { self?.mediaChanged(state, page: page) }
+        }
+    }
+
+    /// Sends the page what changed: everything that isn't empty the first time, as WE does for a
+    /// newly registered page, then each change.
+    private func mediaChanged(_ state: MediaSessionState, page: Int) {
+        guard page == mediaPage, let webView else { return }
+        let changes = mediaSent.map { state.changes(since: $0) } ?? state.initialChanges
+        mediaSent = state
+        for change in changes {
+            if let script = WebWallpaperMediaBridge.deliveryScript(change) {
+                webView.evaluateJavaScript(script, completionHandler: nil)
+            }
+        }
+    }
+
+    private func stopMedia() {
+        if let mediaSubscription { media?.unsubscribe(mediaSubscription) }
+        mediaSubscription = nil
+        mediaSent = nil
+        mediaPage += 1
     }
 
     private var declaredProperties: [String: WebWallpaperPropertyBridge.Property] {
@@ -252,6 +297,8 @@ private final class WeakScriptMessageHandler: NSObject, WKScriptMessageHandler {
         switch message.name {
         case WebWallpaperPropertyBridge.audioMessageName:
             owner?.audioListenerRegistered()
+        case WebWallpaperMediaBridge.messageName:
+            owner?.mediaListenerRegistered()
         case WebWallpaperPropertyBridge.frameMessageName:
             guard let heartbeat = WebWallpaperPropertyBridge.heartbeat(from: message.body) else {
                 OWELog.debug(.web, "Ignoring a malformed heartbeat message")

@@ -132,8 +132,8 @@ enum WebWallpaperPropertyBridge {
         return values.compactMap { ($0 as? NSNumber)?.doubleValue }.filter { $0.isFinite && $0 > 0 }
     }
 
-    /// Injected at document start: WE's registration functions. Media/other listeners are
-    /// accepted and never called.
+    /// Injected at document start: WE's audio registration and the watchdog's heartbeat. The
+    /// media listeners are `WebWallpaperMediaBridge`'s.
     static let bootstrapScript = """
     (function(){
       if (window.__oweBridge) return; window.__oweBridge = true;
@@ -146,12 +146,6 @@ enum WebWallpaperPropertyBridge {
       window.__oweDeliverAudio = function(values){
         for (var i = 0; i < audio.length; i++) { try { audio[i](values); } catch(e) { console.error(e); } }
       };
-      var noop = function(){};
-      window.wallpaperRegisterMediaStatusListener = noop;
-      window.wallpaperRegisterMediaPropertiesListener = noop;
-      window.wallpaperRegisterMediaThumbnailListener = noop;
-      window.wallpaperRegisterMediaPlaybackListener = noop;
-      window.wallpaperRegisterMediaTimelineListener = noop;
       // Heartbeat for the render watchdog, posted once a second: whether the page is visible and
       // its requestAnimationFrame intervals since the last post. A hidden page gets no frame
       // callbacks, so the gap across a hide is not a frame. A page whose script hangs posts

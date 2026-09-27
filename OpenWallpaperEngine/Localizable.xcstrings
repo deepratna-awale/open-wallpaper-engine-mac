@@ -36945,6 +36945,194 @@
         }
       }
     },
+    "Media integration lets wallpapers read the title, artist and album cover of the music playing now." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يتيح تكامل الوسائط لخلفيات الشاشة قراءة عنوان الموسيقى قيد التشغيل حاليًا وفنانها وغلاف ألبومها."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit der Medienintegration können Hintergrundbilder den Titel, den Künstler und das Albumcover der gerade abgespielten Musik lesen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La integración multimedia permite a los fondos de pantalla leer el título, el artista y la portada del álbum de la música que se está reproduciendo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’intégration des médias permet aux fonds d’écran de lire le titre, l’artiste et la pochette d’album de la musique en cours de lecture."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मीडिया इंटीग्रेशन से वॉलपेपर अभी चल रहे संगीत का शीर्षक, कलाकार और एल्बम कवर पढ़ सकते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’integrazione dei media consente agli sfondi di leggere il titolo, l’artista e la copertina dell’album della musica in riproduzione."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メディア統合により、壁紙で再生中の音楽のタイトル、アーティスト、アルバムカバーを読み取れます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "미디어 통합을 사용하면 배경화면에서 현재 재생 중인 음악의 제목, 아티스트 및 앨범 커버를 읽을 수 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Integracja mediów pozwala tapetom odczytywać tytuł, wykonawcę i okładkę albumu odtwarzanej muzyki."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A integração de mídia permite que as imagens de fundo leiam o título, o artista e a capa do álbum da música em reprodução."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Интеграция медиа позволяет обоям получать название, исполнителя и обложку альбома музыки, которая сейчас играет."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ortam bütünleştirme, duvar kâğıtlarının o anda çalan müziğin başlığını, sanatçısını ve albüm kapağını okumasını sağlar."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Інтеграція медіа дає змогу шпалерам зчитувати назву, виконавця та обкладинку альбому музики, що зараз відтворюється."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "媒体集成允许墙纸读取当前播放音乐的标题、艺人和专辑封面。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "媒體整合可讓背景圖片讀取目前播放音樂的標題、藝人和專輯封面。"
+          }
+        }
+      }
+    },
+    "Media integration support" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "دعم تكامل الوسائط"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unterstützung für Medienintegration"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compatibilidad de integración multimedia"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prise en charge de l’intégration des médias"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मीडिया इंटीग्रेशन सपोर्ट"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supporto per l’integrazione dei media"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メディア統合サポート"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "미디어 통합 지원"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obsługa integracji mediów"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suporte a Integração de Mídia"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поддержка интеграции медиа"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ortam Bütünleştirme Desteği"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Підтримка інтеграції медіа"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "媒体集成支持"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "媒體整合支援"
+          }
+        }
+      }
+    },
     "Medieval" : {
       "comment" : "Workshop genre tag",
       "localizations" : {
