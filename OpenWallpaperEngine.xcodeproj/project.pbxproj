@@ -223,7 +223,11 @@
 				it,
 				ja,
 				ko,
+				pl,
 				"pt-BR",
+				ru,
+				tr,
+				uk,
 				"zh-Hans",
 				"zh-Hant",
 			);
