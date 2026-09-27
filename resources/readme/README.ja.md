@@ -1,113 +1,228 @@
 Open Wallpaper Engine（パッチ版）
 =========
 
-[English](README.md) | [繁體中文](README.zh-TW.md) | **日本語**
+[English](../../README.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [Italiano](README.it.md) | **日本語** | [한국어](README.ko.md) | [简体中文](README.zh-Hans.md) | [繁體中文](README.zh-Hant.md) | [Русский](README.ru.md) | [Polski](README.pl.md) | [Türkçe](README.tr.md) | [Українська](README.uk.md) | [العربية](README.ar.md) | [हिन्दी](README.hi.md)
 
-[![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
+[![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE)
 
-[Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) のパッチフォークです。macOS 向けにシーン壁紙のレンダリングと Web 壁紙の修正を追加しています。
+macOS 向け [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) のパッチ適用フォークです。シーン壁紙のレンダリングと Web 壁紙の修正を追加しています。
 
-> **注意：** 本プロジェクトは Steam の商用版 Wallpaper Engine とは無関係です。Steam Workshop の壁紙アセットを表示できるオープンソースの macOS アプリケーションです。
+> **注意：** 本プロジェクトは Steam の商用版 Wallpaper Engine とは一切関係ありません。Wallpaper Engine の Steam ワークショップにある壁紙アセットを表示できる、オープンソースの macOS アプリです。
 
 ## 関連プロジェクト
 
-- **[Open Wallpaper Engine for Linux](https://github.com/Unayung/simple-linux-wallpaperengine-gui)** — [linux-wallpaperengine](https://github.com/Almamu/linux-wallpaperengine) 向けの PyQt6 GUI。Steam Workshop 統合と UI デザインは本 macOS バージョンから移植されました。
+- **[Open Wallpaper Engine for Linux](https://github.com/Unayung/simple-linux-wallpaperengine-gui)** — [linux-wallpaperengine](https://github.com/Almamu/linux-wallpaperengine) 向けの PyQt6 GUI です。Steam ワークショップとの連携と UI デザインは、この macOS 版から移植されています。
 
 ## クレジット
 
-本プロジェクトは以下の貢献者の成果に基づいています：
+本プロジェクトは、以下の方々の成果の上に構築されています：
 
-- **[MrWindDog](https://github.com/MrWindDog)** — 上流 [wallpaper-engine-mac](https://github.com/MrWindDog/wallpaper-engine-mac) フォークのメンテナー、新機能と UI 改善を追加
-- **[Haren Chen](https://github.com/haren724)** — [open-wallpaper-engine-mac](https://github.com/haren724/open-wallpaper-engine-mac) のオリジナル作者、コアアーキテクチャを構築（SwiftUI、動画壁紙再生、インポートシステム、プレイリスト UI）
+- **[MrWindDog](https://github.com/MrWindDog)** — 上流の [wallpaper-engine-mac](https://github.com/MrWindDog/wallpaper-engine-mac) フォークのメンテナー。新機能と UI の改良を追加
+- **[Haren Chen](https://github.com/haren724)** — [open-wallpaper-engine-mac](https://github.com/haren724/open-wallpaper-engine-mac) のオリジナル作者。アプリのコアアーキテクチャ（SwiftUI、ビデオ壁紙の再生、読み込みシステム、プレイリスト UI）を構築
 - **[1ris_W](https://github.com/Erica-Iris)** — 中国語 i18n 翻訳
-- **[Klaus Zhu](https://github.com/klauszhu1105)** — アプリロゴアイコン
-- **[Chen Chia Yang](https://github.com/Unayung)** — シーン壁紙レンダリング、Web 壁紙修正、Steam Workshop 統合、マルチディスプレイ対応、Zip インポート
+- **[Klaus Zhu](https://github.com/klauszhu1105)** — アプリのロゴアイコン
+- **[Chen Chia Yang](https://github.com/Unayung)** — シーン壁紙のレンダリング、Web 壁紙の修正、Steam ワークショップとの連携、マルチディスプレイ対応、zip の読み込み
+- **[Deepratna Awale](https://github.com/deepratna-awale)** — Metal シーンレンダラーとエフェクトパイプライン、GLSL→MSL シェーダー変換とキャッシュ、SceneScript ランタイム、オーディオレスポンスのレンダリング、ワークショップ／ダウンロードの全面改良、配置とパフォーマンスの設定
 
-[GPL-3.0](LICENSE) ライセンス（オリジナルプロジェクトと同一）。
+オリジナルのプロジェクトと同じく、[GPL-3.0](../../LICENSE) のもとでライセンスされています。
 
-## 0.8.0 の新機能
+## 0.8.1 の対応機能
+
+### 壁紙の再生
+- **シーン壁紙**を Metal でネイティブにレンダリングします。画像レイヤー、トランスフォーム、キーフレームのタイムライン、深度の順序、`scene.json` のカメラ／投影データに対応しています。
+- **ビデオ壁紙**（`.mp4`、`.webm`）は、再生速度、音量、オーディオとビデオの速度の連動、および音楽に同期したズーム／傾き／彩度（オプション）に対応しています。
+- **Web 壁紙**（HTML/WebGL）では、WebGL のテクスチャやアセットが正しく読み込まれるようにローカルファイルへのアクセスを有効にしています。外部の埋め込み（YouTube/Vimeo）にも対応しています。
+- **配置モード** — 画面全体に表示、画面に収まるサイズで表示、中央に配置、引き伸ばして画面全体に表示、ズーム。
+- **マルチディスプレイ** — モニターごとに異なる壁紙、画面ごとの有効／無効、モニター配置の視覚的な表示、新たに接続したディスプレイの自動検出。
+- **マルチデスクトップ（Spaces）** — すべてのデスクトップで途切れずに再生します。`すべてのデスクトップ` への割り当てオプションもあります。
+- **再生ルール** — ほかのアプリがアクティブなときに、実行を継続、消音、一時停止、または停止します。スリープ／スリープ解除やデスクトップの切り替え時にも正しく動作します。
+
+### シーン形式への対応
+- Wallpaper Engine の `PKGV` アーカイブ（scene.json、マテリアル、テクスチャ、シェーダー）用の **PKG パーサー**。
+- `TEXV0005` コンテナ用の **TEX パーサー**：埋め込みの JPEG/PNG と、ミップマップ付きの DXT1/DXT3/DXT5 を Metal のコンピュートシェーダーにより GPU でデコードします。
+- **TEXS スプライトのタイムライン**（0001/0002/0003）。単一アトラスのフレーム矩形と複数画像のシーケンスを含みます。
+- Wallpaper Engine のポリモーフィックなフィールド（単純な値、または `{"script":…,"value":…}`）を扱える、**柔軟な scene.json のデコード**。
+- テクスチャを抽出できない場合の、`preview.jpg/png/gif` への**プレビューフォールバック**。
+
+### エフェクトとシェーダー
+- **約 48 種類のネイティブ Metal エフェクト**：歪み、ぼかし（標準／高精度／放射状／モーション）、ブルーム、ゴッドレイと光条、水の波／波紋／コースティクス／流れ、雲と霧、フィルムグレイン、グリッチ／VHS、色収差、カラーキー、トランスフォーム／スキュー／回転／渦巻き／遠近、反射、屈折、シャイン／きらめき／グリッター、エッジ検出など。
+- **オーディオレスポンスのエフェクト** — パルス、オーディオバー、オーディオに同期した色相シフト、ハイパードライブを、システムオーディオのリアルタイムのスペクトルデータで駆動します。
+- **セマンティックなマテリアルエフェクト** — 明るさ、コントラスト、彩度、露出、ガンマ、色相、ブルームのしきい値、ブルーム、ぼかしを、ネイティブの Metal パスに対応付けます。
+- **GLSL → SPIR-V → MSL の変換**を、アプリにリンクされた glslang と SPIRV-Cross により読み込み時に行います。COMBO の define、include の解決、Metal のバッファスロットの再割り当てに対応しています。
+- **プリコンパイル済みシェーダーのキャッシュ** — 変換済みの `.metal`、コンパイル済みの `.metallib`、および `.reflection.json` のサイドカーを `.open-wallpaper-engine/shaders` 以下にキャッシュします。ハッシュで判定するため変更されたシェーダーだけが再変換され、コンパイルはバックグラウンドで行われるのでレンダリングがブロックされることはありません。
+- Wallpaper Engine の `assets/effects/*/effect.json` マニフェストから読み込む**動的なエフェクトカタログ**。マルチパスのエフェクトと、リフレクションで得た uniform のバインディングに対応しています。
+- **エフェクトのマスク**（レイヤーあたり最大 4 枚のマスクテクスチャ）、加算合成とアルファブレンド、プール方式のレンダーターゲットシステム。
+
+### パーティクル
+- 寿命、サイズ、速度、色、回転、角速度、重力、抵抗、アルファのフェードをランダム化できるスプライトエミッタ。
+- 高度な動作 — 乱流、アトラクタ、渦とボイドの動き、静的なコントロールポイントとカーソルに連動するコントロールポイント、連結されたロープセグメント、アルファ／サイズのフェードを伴うトレイル。
+- `.tex-json` シーケンスによるスプライトシートのフレームアニメーション。
+- 放出レート、抵抗、アルファのフェードのタイミングを制御するスクリプト対応のオペレータ。
+
+### SceneScript ランタイム
+- レイヤーごとに永続するスクリプトコンテキスト。`init()` は 1 回だけ、`update(value)` は毎フレーム呼び出されます。
+- グローバル：`thisScene`、`thisLayer`、`engine`、`input`、`audio(low, high)`、実データの `fft(index)`、`setTimeout`/`setInterval`、および永続的なスクリプトグローバル。
+- `Vec2`/`Vec3`/`Vec4`/`Mat3`/`Mat4` の完全な数学ライブラリに加え、`WEMath`、`WEVector`、`WEColor` ヘルパー。
+- `assets/scripts/jsmodules` と `jsclasses` から読み込まれる Wallpaper Engine ランタイムの JS モジュール。
+- カーソルイベント（`cursorMove`/`Down`/`Up`/`Click`/`Enter`/`Leave`）と `resizeScreen`。
+- スクリプトから、レイヤーのアルファ、原点、サイズ、スケール、角度、明るさ／色、マテリアルの定数、エフェクトのしきい値、パーティクルのレートを制御できます。
+- 重複を除いたスクリプト例外のログ（繰り返し回数付き）。
+
+### オーディオ
+- ScreenCaptureKit によるシステムオーディオのキャプチャ。平滑化した 16 バンドのスペクトル、波形、低音／中音／高音のレベルを供給します。
+- プロパティごとの**音楽同期** — 任意のユーザプロパティを、設定可能な量でオーディオレベルにより変調できます。
+
+### ユーザプロパティとインスペクタ
+- スライダー、チェックボックス、コンボ、テキスト、カラーのプロジェクト設定をシーンのサイドバーに表示します。変更はすぐに反映され、SceneScript から読み取ることもできます。
+- `parallaxDepth` が設定されたレイヤーに対するマウス追従と視差。
+
+### Steam ワークショップ
+- コンテンツの年齢制限、種類、ジャンルタグによるブラウズ、検索、フィルタ。トレンド／新着順／人気順／サブスクライブ数順の並べ替えと、番号付きのページ送りに対応しています。
+- 壁紙の設定、再生、音量のコントロールを備えたプレビューウインドウ。容量に上限のあるキャッシュを使用し、適用したプレビューは再ダウンロードせずにライブラリへ移されます。
+- SteamCMD との連携：自動検出、パスワード／Steam Guard／キャッシュ済みセッションによるログイン、専用の「ダウンロード」タブ、キューに入れられ再試行可能なダウンロード、リアルタイムの進行状況。
+- 複数選択、範囲選択、確認を経て行う一括ダウンロードと一括削除、ダウンロード済み ID の保持、`ダウンロード日` での並べ替え。
+
+### ライブラリと設定
+- フォルダ、`.zip` パッケージ、またはドラッグ＆ドロップからの読み込み。
+- 壁紙の保存場所を設定でき、既存のライブラリを移行できます。
+- ステータスバーの「最近使用した壁紙」メニュー。
+- パフォーマンスの設定 — 品質、アンチエイリアシング、ポストプロセッシング、アプリが非アクティブになったときの再生動作。
+- 診断 — 同梱アセットのパス、内蔵シェーダーコンパイラのライブラリのバージョン、シェーダーキャッシュの統計情報。
+
+<details>
+<summary>0.8.0 までの変更点</summary>
 
 ### マルチディスプレイ対応
-接続された各モニターに異なる壁紙を割り当て、画面ごとに有効/無効を制御できます。
-- **ディスプレイ設定パネル** — 接続されたすべての画面をビジュアルレイアウトで表示、クリックで選択
-- **画面ごとの壁紙** — 各ディスプレイで異なる壁紙を独立して表示
-- **有効/無効トグル** — モニターごとに壁紙のオン/オフを切り替え
-- **自動検出** — 新しいモニターは接続時に自動的に検出・有効化
+接続した各モニターに異なる壁紙を割り当て、画面ごとに有効／無効を切り替えられます。
+- **「ディスプレイ設定」パネル** — 接続されているすべての画面をモニター配置として視覚的に表示し、クリックで選択できます
+- **画面ごとの壁紙** — 各ディスプレイにそれぞれ異なる壁紙を表示できます
+- **有効／無効の切り替え** — モニターごとに壁紙をオン／オフできます
+- **自動検出** — 新しいモニターは接続時に自動的に検出され、有効になります
 
 ### マルチデスクトップ対応
-壁紙がすべての macOS デスクトップ（Spaces）で連続再生されるようになりました。デスクトップ切り替え時も中断しません。
+壁紙がすべての macOS デスクトップ（Spaces）に表示され、途切れずに再生されるようになりました。デスクトップを切り替えても中断しません。
 
-### 最近使った壁紙メニュー
-ステータスバーメニューから壁紙を素早く切り替えられます。最近使用した10件の壁紙にワンクリックでアクセスできます。
+### 「最近使用した壁紙」メニュー
+ステータスバーのメニューから壁紙をすばやく切り替えられます。最近使用した 10 個の壁紙が一覧表示され、ワンクリックで選べます。
 
 ### 再生設定 — 修正済み
-パフォーマンス再生設定（他のアプリがフォーカスされた時の一時停止/ミュート/停止）がすべての壁紙タイプで正しく動作するようになりました。
+パフォーマンスの再生設定（ほかのアプリがアクティブなときの一時停止／消音／停止）が、すべての種類の壁紙で正しく動作するようになりました。
 
-### Steam Workshop ブラウザ
-アプリ内から直接 Steam Workshop の壁紙を閲覧、検索、ダウンロードできます。
-- **検索とフィルター** — 名前で検索、コンテンツレーティング（Everyone/Questionable/Mature）、タイプ（Scene/Video/Web）、ジャンルタグでフィルター
-- **ソートオプション** — トレンド、最新、人気順、サブスクライブ数順
-- **steamcmd 統合** — steamcmd を自動検出（Homebrew またはカスタムパス）、未インストール時はインストール手順を表示
-- **Steam ログイン** — パスワード、Steam Guard、キャッシュセッション認証に対応
-- **ダウンロード進捗表示** — リアルタイムステータス更新（認証中、ダウンロード %、検証、コピー中）
-- **安全なデフォルト** — コンテンツレーティングを「Everyone」に設定し、成人向けコンテンツをフィルタリング
+### Steam ワークショップブラウザ
+アプリを離れることなく、Steam ワークショップの壁紙を直接ブラウズ、検索、ダウンロードできます。
+- **検索とフィルタ** — 名前で検索し、年齢制限（全年齢／疑わしい／成人向け）、種類（シーン／ビデオ／Web）、ジャンルタグでフィルタできます
+- **並べ替えオプション** — トレンド、新着順、人気順、サブスクライブ数順
+- **steamcmd との連携** — steamcmd を自動検出し（Homebrew またはカスタムパス）、見つからない場合はインストール手順を表示します
+- **Steam へのログイン** — パスワード、Steam Guard、キャッシュ済みセッションによる認証に対応しています
+- **進行状況付きのダウンロード** — ダウンロード中の状態（認証中、ダウンロード %、検証中、コピー中）をリアルタイムに表示します
+- **安全なデフォルト設定** — 成人向けコンテンツを除外するため、年齢制限のデフォルトは「全年齢」です
 
-### Zip インポート
-`.zip` ファイルから壁紙パッケージを直接インポート。手動解凍は不要です。ファイル > インポートおよびドラッグ＆ドロップに対応。
+### zip の読み込み
+`.zip` ファイルから壁紙パッケージを直接読み込めます。事前に手動で展開する必要はありません。ファイル > 読み込む、およびドラッグ＆ドロップで使用できます。
 
-### 複数選択と一括解除
-Cmd+クリックで複数の壁紙を選択し、右クリックで一括サブスクライブ解除。
+### 複数選択と一括購読解除
+Cmd キーを押しながらクリックして複数の壁紙を選択し、右クリックで一括して購読解除できます。
 
-### 壁紙ストレージの分離
-壁紙は `~/Documents/OpenWallpaperEngine/` に保存されるようになり、Documents ディレクトリを直接使用しなくなりました。リポジトリをクローンした際の「error」壁紙を防止します。
+### 壁紙の保存場所の分離
+壁紙は Documents ディレクトリ直下ではなく `~/Documents/OpenWallpaperEngine/` に保存されるようになりました。これにより、新しいマシンでリポジトリをクローンしたときに「error」壁紙が表示される問題を防ぎます。
 
-## パッチ内容
+</details>
 
-### Web 壁紙 — グレー/空白レンダリングの修正
-WebGL ベースの壁紙は `WKWebView` がローカルファイルアクセスをブロックしていたため、グレーの矩形として表示されていました。
+<details>
+<summary>上流からのパッチ内容</summary>
 
-**修正：** WKWebView 設定で `allowFileAccessFromFileURLs` と `allowUniversalAccessFromFileURLs` を有効にし、WebGL シェーダーがローカルテクスチャファイルを読み込めるようにしました。
+### Web 壁紙 — グレー／空白で表示される問題を修正
+WebGL ベースの壁紙は、`WKWebView` がテクスチャやアセットのローカルファイルへのアクセスをブロックしていたため、グレーの矩形として表示されていました。
+
+**修正：** WKWebView の構成で `allowFileAccessFromFileURLs` と `allowUniversalAccessFromFileURLs` を有効にし、WebGL シェーダーがローカルのテクスチャファイルを読み込めるようにしました。
 
 ### シーン壁紙 — ゼロから実装
-シーン壁紙（Steam Workshop で最も一般的なタイプ）は完全に未実装で、「Hello, World!」のみ表示されていました。
+シーン壁紙（Steam ワークショップで最も一般的な種類）はまったく実装されておらず、「Hello, World!」と表示されるだけでした。
 
-**新しい実装：**
-- **PKG パーサー** — Wallpaper Engine の PKGV アーカイブ形式を読み取り、scene.json、モデル、マテリアル、テクスチャを抽出
-- **TEX パーサー** — TEXV0005 テクスチャコンテナを読み取り、TEXI/TEXB セクションから埋め込み JPEG/PNG 画像を抽出
-- **Scene JSON デコーダー** — scene.json を解析、ポリモーフィックフィールド（値がプレーンタイプまたは `{"script":..,"value":..}` オブジェクト）を柔軟に処理
-- **SpriteKit レンダラー** — シーン画像レイヤーを SKSpriteNode としてレンダリング、位置、サイズ、アルファ、カラーティント、ブレンドモードを正確に処理
-- **プレビューフォールバック** — テクスチャを抽出できない場合は preview.jpg/png/gif にフォールバック
-- **TEXI 形式検出** — デコードできない DXT 圧縮テクスチャを迅速に識別してスキップ
+**新しい実装の内容：**
+- **PKG パーサー** — Wallpaper Engine の PKGV アーカイブ形式を読み取り、scene.json、モデル、マテリアル、テクスチャを抽出します
+- **TEX パーサー** — TEXV0005 テクスチャコンテナを読み取り、埋め込みの JPEG/PNG 画像データを抽出し、DXT1/DXT3/DXT5 のミップマップを読み取ります
+- **Scene JSON デコーダ** — Wallpaper Engine のポリモーフィックなフィールド（値は単純な型、または `{"script":..,"value":..}` オブジェクト）を扱える柔軟なデコードで scene.json を解析します
+- **Metal レンダラー** — GPU によるテクスチャ合成でシーンの画像レイヤーをレンダリングし、将来のシェーダーエフェクトのための基盤を提供します
+- **GPU による DXT デコード** — シーンの読み込み時に、DXT1（TEXI 7）、DXT3（TEXI 6）、DXT5（TEXI 4）のテクスチャを Metal のコンピュートシェーダーで展開します
+- **スプライトパーティクル** — 一般的な `sphererandom` スプライトエミッタを、寿命、サイズ、速度、アルファ、色、回転、角速度、重力、抵抗、アルファのフェードをランダム化してレンダリングします
+- **高度なパーティクル** — 回転、色のばらつき、乱流、静的なコントロールポイントとカーソルに連動するコントロールポイント、連結されたロープセグメント、トレイル、`.tex-json` スプライトシートのフレームアニメーションに対応します
+- **TEXS アニメーション** — TEXS0001/0002/0003 のタイムラインをデコードします。単一アトラスのフレーム矩形と複数画像のテクスチャシーケンスを含みます
+- **シーンのタイムライン** — オブジェクトのアルファ、原点、スケール、角度のキーフレームを 60 FPS で補間します
+- **SceneScript ランタイム** — 式および `export function update(value)` のプロパティスクリプトを、ScreenCaptureKit によるシステムオーディオに対して評価します。`thisScene` のタイミング、`thisLayer.value`、`engine`、入力カーソル、`audio(low, high)`、実データの `fft(index)`、プロパティの参照、永続的なグローバルにより、画像のトランスフォーム、アルファ、パーティクルの放出レートを制御します。
+- **永続的な SceneScript のライフサイクル** — レイヤーごとのスクリプトコンテキストを再利用し、`init()` を 1 回だけ呼び出し、共有された `dt`、フレーム、マウス、ボタン、修飾キー、カーソル、オーディオ、FFT、プロパティ、レイヤーの状態とともに、フレームごとに `update()` を呼び出します。
+- **スクリプト対応のパーティクルオペレータ** — パーティクルの放出レート、移動の抵抗、アルファのフェードのタイミングを制御するスクリプトに対応し、数値／文字列のパーティクルフィールドを柔軟に扱います。
+- **マウス追従と視差** — `parallaxDepth` メタデータが設定されたレイヤーに、カーソルに対する相対的な移動と、オプションで遠近のスケーリングを適用します。カーソルに連動するパーティクルも同じシーン空間のカーソルを使用します。
+- **スクリプト対応の見た目のプロパティ** — スクリプトによるオブジェクトの明るさ／RGB カラー、マテリアルエフェクトの定数、スカラー／ベクトルのトランスフォーム、エフェクトのしきい値の上書きに対応します。
+- **ユーザプロパティ** — 仕様に記載されたスライダー、チェックボックス、コンボ、テキスト、カラーのプロジェクト設定をシーンのサイドバーに表示し、数値とブール値を SceneScript から利用できるようにします
+- **組み込みのシーンエフェクト** — 作成者が設定した `pulse`、`shake`、`iris`、`waterwaves` のエフェクトグラフのエントリを Metal レンダラーで実行します
+- **セマンティックなマテリアルエフェクト** — 明るさ、コントラスト、彩度、露出、ガンマ、色相、ブルームのしきい値、ブルーム、ぼかしに関する一般的なマテリアル定数とスクリプトを、ネイティブの Metal エフェクトに対応付けます
+- **GLSL シェーダーの変換** — パッケージに含まれる Wallpaper Engine の GLSL シェーダーを、アプリにリンクされた glslang と SPIRV-Cross により読み込み時に SPIR-V と MSL に変換します。変換したバリアントは `~/Library/Caches/com.winddog.wallpaper-engine/shader-variants` 以下にキャッシュされます
+- **プレビューフォールバック** — テクスチャを抽出できない場合は preview.jpg/png/gif にフォールバックします
 
-### インポート — フォルダインポートの修正
-インポートパネルが個別の壁紙フォルダと複数の壁紙を含む親ディレクトリの両方を正しく処理するようになりました。
+### 読み込み — フォルダの読み込みを修正
+読み込みパネルが、個々の壁紙フォルダと、複数の壁紙を含む親ディレクトリの両方を正しく処理するようになりました。
+
+</details>
 
 ## 現在の制限事項
 
-- **DXT テクスチャ** — DXT1/DXT5 圧縮テクスチャ（TEXI 形式 4/7/8）を使用する壁紙はレンダリングできません。ソフトウェアデコンプレッサーまたは Metal ベースのレンダリングが必要な GPU ネイティブ圧縮形式です。プレビュー画像にフォールバックします。
-- **パーティクルエフェクト** — シーンパーティクルシステム（雨、雪、スパークル）は解析されますが、視覚的な問題を避けるためレンダリングで無効化されています。
-- **オーディオリアクティブスクリプト** — Wallpaper Engine の JavaScript ベースのオーディオ視覚化スクリプトは実行されません。スクリプト付きプロパティは静的な `value` にフォールバックします。
-- **シェーダーエフェクト** — カスタム GLSL シェーダー（ブルーム、ブラー、カラー補正）は適用されません。
-- **カメラパララックス** — マウス追従カメラ移動は未実装です。
-- **アニメーションシーン** — スプライトアニメーションとタイムラインベースのオブジェクトアニメーションはサポートされていません。
-- **一部の JPEG サムネイル** — 少数の TEXB 形式 1 ファイルに macOS がデコードできない非標準 JPEG データが含まれています。
+- **アプリケーション壁紙** — `type: "application"` の壁紙には対応しておらず、実行されません。
+- **3D モデルとリギング** — ボーンのトランスフォーム、ブレンドシェイプ、アタッチメント、パペットワープのリグ（`.mdl`）はスタブであり、該当するレイヤーは平面のアトラスとしてレンダリングされます。
+- **マテリアルのスクリプト関数** — `getMaterial()`、`getMaterialCount()`、`setMaterialProperty()`、`executeMaterialFunction()` はスタブで、何もしないか空の値を返します。
+- **カスタム GLSL シェーダーのバインディング** — 変換した MSL は読み込み時にキャッシュされますが、Wallpaper Engine 固有の属性、テクスチャチェーン、または未対応の include に依存するシェーダーは、実行時の Metal パイプラインにバインドされません。一般的なブルーム、ぼかし、色補正、トランスフォームのパラメータは、ネイティブの Metal への対応付けにフォールバックします。
+- **Metal のバッファ上限** — Metal の 31 個のバッファスロットを超えて必要とするシェーダーは変換できず、現在のパイプラインのリビジョンでは恒久的に非対応として記録されます。
+- **HLSL シェーダー** — GLSL ソースとともに同梱されている Direct3D 専用のシェーダーは、すべてスキップされます。
+- **エフェクトスキーマの対応範囲** — 不明なカスタム uniform 名や任意のエフェクトパラメータのスキーマには、引き続き対応していません。
+- **SceneScript の互換性** — 独自のイベント名、入力コールバック、ライフサイクルのエッジケース、正確なタイミングのセマンティクスのすべてが再現されているわけではありません。
+- **パーティクルオペレータの対応範囲** — 一般的なスクリプト対応のレート、抵抗、アルファのフェードのオペレータは動作しますが、一般的でないオペレータのスクリプト、カスタムのパーティクルモジュール、任意のオペレータのスキーマへの対応は部分的です。
+- **外部アセットの復元** — 一部のワークショップのパッケージは、ダウンロードしたパッケージに含まれない共有の TEX アセットを参照しており、オリジナルの Wallpaper Engine のインストールが必要です。
+- **一部の JPEG サムネール** — 少数の TEXB 形式 1 のファイルには、macOS でデコードできない非標準の JPEG データが含まれています。
+- **パフォーマンス設定の適用範囲** — 品質、アンチエイリアシング、ポストプロセッシングのオプションはシーン壁紙向けに設計されており、ビデオ壁紙と Web 壁紙への効果は限定的です。
+- **オーディオ機能には許可が必要** — 画面収録の許可がない場合、オーディオビジュアライザとオーディオに反応する SceneScript は無音を受け取ります。
 
-## サポートされている壁紙タイプ
+## 対応している壁紙の種類
 
-| タイプ | ステータス |
-|--------|------------|
-| 動画 (.mp4, .webm) | 動作中（オリジナル） |
-| Web (HTML/WebGL) | 動作中（パッチ済み） |
-| シーン（静的画像） | 動作中（新機能） |
-| シーン（パーティクル） | 部分対応（無効化） |
-| シーン（DXT テクスチャ） | プレビューフォールバック |
-| アプリケーション | 未サポート |
+| 種類 | 状態 |
+|------|--------|
+| ビデオ（.mp4、.webm） | 動作 |
+| Web（HTML/WebGL） | 動作 |
+| シーン — 画像レイヤーとタイムライン | 動作（Metal） |
+| シーン — DXT1/DXT3/DXT5 テクスチャ | 動作（Metal による GPU デコード） |
+| シーン — TEXS スプライト／アルファのタイムライン | 動作 |
+| シーン — スプライトパーティクル | 動作 |
+| シーン — 高度なパーティクル | 一部対応（スクリプトによるレート／抵抗／フェードに対応） |
+| シーン — ネイティブ Metal エフェクト | 動作（約 48 種類のエフェクト） |
+| シーン — 変換されたワークショップの GLSL エフェクト | 一部対応（「制限事項」を参照） |
+| シーン — SceneScript | 一部対応（「制限事項」を参照） |
+| シーン — 3D モデル／リギング／パペットワープ | 非対応 |
+| アプリケーション | 非対応 |
+
+## 必要条件
+
+### 必須
+- **macOS 13.0 以降**（Ventura）。ScreenCaptureKit によるオーディオキャプチャと Metal によるシーンのレンダリングは、いずれもこれに依存しています。
+
+### オプション — 特定の機能に必要
+
+| 機能 | 必要条件 | インストール |
+|---------|-------------|---------|
+| Steam ワークショップのブラウズ／ダウンロード | `steamcmd` | `brew install steamcmd` |
+| オーディオビジュアライザとオーディオに反応する SceneScript | 画面収録の許可 | 設定 → アクセス権 |
+
+#### シェーダー
+
+Wallpaper Engine のエフェクトは GLSL で提供されています。これらは、壁紙で初めて使用されるときに、アプリに組み込まれた glslang と SPIRV-Cross（`Vendor/ShaderToolchain`）によって Metal に変換され（GLSL → SPIR-V → MSL）、その後ディスクにキャッシュされます。追加でインストールするものはありません。変換中にアプリが応答しなくなったシェーダーや、アプリが 2 回クラッシュしたシェーダーは以降の起動時にスキップされ、それ以外のシェーダーは引き続き変換されます。
+
+#### Wallpaper Engine のアセット
+
+壁紙が参照する共有のエフェクト、マテリアル、シェーダー、SceneScript ランタイムはアプリに同梱されています（`Vendor/we-assets`。`Scripts/vendor-we-assets.sh` により Wallpaper Engine のインストールから更新されます）。設定する必要はありません。
 
 ## ソースからビルド
 
 ### 前提条件
-- macOS >= 13.0
-- Xcode >= 14.4
+- macOS >= 14.0
+- Xcode >= 26.3（macOS 26 SDK）
 - Xcode Command Line Tools
 
 ### 手順
@@ -117,39 +232,33 @@ cd wallpaper-engine-mac
 open "OpenWallpaperEngine.xcodeproj"
 ```
 
-Xcode で署名証明書を自分のものに変更するか「Sign to Run Locally」を選択し、`Cmd + R` でビルド・実行します。
+Xcode で署名証明書を自分のものに変更するか「Sign to Run Locally」を選択し、`Cmd + R` を押してビルドおよび実行します。
 
 ## 使い方
 
-### Steam Workshop から閲覧・ダウンロード
+### Steam ワークショップからブラウズ／ダウンロードする
 
-1. steamcmd をインストール（`brew install steamcmd`）するか、既存のバイナリを指定
-2. **Workshop** タブに切り替え、Steam アカウントでログイン（Wallpaper Engine の所有が必要）
-3. プロンプトが表示されたら [Steam Web API キー](https://steamcommunity.com/dev/apikey) を入力
-4. 検索、フィルターし、**Download** をクリックして壁紙をダウンロード
+1. steamcmd をインストールする（`brew install steamcmd`）か、既存のバイナリをアプリで指定します
+2. **ワークショップ**タブに切り替え、Steam アカウントでログインします（Wallpaper Engine を所有している必要があります）
+3. 求められたら、または *設定 → 一般* で [Steam Web API キー](https://steamcommunity.com/dev/apikey)を入力します。キーは Steam で確認されたうえでキーチェーンに保管されます。Steam のパスワードが保存されることはありません（steamcmd は独自のキャッシュ済みセッションを再利用します）
+4. 検索やフィルタを行い、任意の壁紙で **ダウンロード** をクリックします
 
-### ローカルファイルからインポート
+### ローカルファイルから読み込む
 
-- **フォルダ：** ファイル > フォルダからインポート — `project.json` を含む壁紙フォルダを選択
-- **Zip：** ファイル > インポート またはドラッグ＆ドロップで `.zip` ファイルを読み込み
-- **手動：** 壁紙フォルダを `~/Documents/OpenWallpaperEngine/` に直接コピー
+- **フォルダ：** ファイル > 読み込む > フォルダから壁紙を読み込む — `project.json` を含む壁紙フォルダを選択します
+- **zip：** ファイル > 読み込む、または壁紙パッケージを含む `.zip` ファイルをドラッグ＆ドロップします
+- **手動：** 壁紙フォルダを `~/Documents/OpenWallpaperEngine/` に直接コピーします
 
-## 変更ファイル（上流との差分）
+## プロジェクトの構成
 
-**変更：**
-- `WebWallpaperView.swift` — WKWebView ファイルアクセス設定
-- `WallpaperView.swift` — シーン壁紙ディスパッチ
-- `SceneWallpaperView.swift` — SpriteKit NSViewRepresentable に書き換え
-- `ImportPanels.swift` — フォルダインポートロジック修正
-
-**追加：**
-- `Services/SceneParsers/PKGParser.swift` — PKGV アーカイブパーサー
-- `Services/SceneParsers/TEXParser.swift` — TEXV テクスチャパーサー
-- `Services/SceneParsers/SceneModels.swift` — Scene JSON データモデル
-- `Scene/Loading/SceneWallpaperViewModel.swift` — シーン読み込み（Metal レンダラー用）
-- `Workshop/SteamCmdService.swift` — steamcmd 検出、ログイン、Workshop ダウンロード
-- `Workshop/WorkshopAPIService.swift` — Steam Web API クライアント
-- `Workshop/WorkshopViewModel.swift` — Workshop ブラウザ状態管理
-- `Library/WallpaperDirectory.swift` — 集中壁紙ストレージパス
-- `Library/Import/ZipImporter.swift` — Zip ファイル解凍とインポート
-- `ContentView/Components/WorkshopView.swift` — Workshop ブラウザ UI
+- `OpenWallpaperEngine/Services/SceneParsers/` — PKG、TEX/TEXS、scene.json のパーサーとモデル
+- `OpenWallpaperEngine/Services/SceneEffects/` — 動的なエフェクトカタログと、作成者が設定したエフェクトパラメータの範囲
+- `OpenWallpaperEngine/Scene/Shaders/` — GLSL → SPIR-V → MSL の変換（`ShaderVariant.swift`、`InProcessShaderCompiler.swift`）、キャッシュ、パイプラインアーカイブ
+- `Vendor/ShaderToolchain/` — glslang と SPIRV-Cross のソース。ローカルパッケージとしてアプリに組み込まれます
+- `OpenWallpaperEngine/Scene/Scripting/AudioReactiveScriptEngine.swift` — SceneScript ランタイムとオーディオ／FFT のバインディング
+- `OpenWallpaperEngine/Audio/AudioLevelTap.swift` — ScreenCaptureKit によるシステムオーディオのキャプチャ
+- `OpenWallpaperEngine/Scene/Rendering/SceneMetalRenderer.swift`、`SceneShaders.metal` — Metal シーンレンダラーとシェーダーライブラリ
+- `OpenWallpaperEngine/Workshop/SteamCmdService.swift`、`WorkshopAPIService.swift`、`WorkshopViewModel.swift` — Steam ワークショップのブラウズとダウンロード
+- `OpenWallpaperEngine/Library/WallpaperDirectory.swift`、`ZipImporter.swift`、`WallpaperPackageConverter.swift` — ライブラリの保存、読み込み、パッケージの変換
+- `Scripts/vendor-we-assets.sh` — 変換済みのエフェクトシェーダーとマニフェストを `we-assets/` に取り込みます
+- `Scripts/scene-api-coverage.py` — インストール済みの壁紙が使用している SceneScript API と、実装済みの API を比較して報告します

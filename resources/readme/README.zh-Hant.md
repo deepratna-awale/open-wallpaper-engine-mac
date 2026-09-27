@@ -1,113 +1,228 @@
 Open Wallpaper Engine（修補版）
 =========
 
-[English](README.md) | **繁體中文** | [日本語](README.ja.md)
+[English](../../README.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [Italiano](README.it.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [简体中文](README.zh-Hans.md) | **繁體中文** | [Русский](README.ru.md) | [Polski](README.pl.md) | [Türkçe](README.tr.md) | [Українська](README.uk.md) | [العربية](README.ar.md) | [हिन्दी](README.hi.md)
 
-[![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
+[![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE)
 
-基於 [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) 的修補分支，為 macOS 加入場景桌布渲染與網頁桌布修復。
+這是 [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) 針對 macOS 的修補分支，加入了場景背景圖片渲染，並修正了網頁背景圖片的問題。
 
-> **注意：** 本專案與 Steam 上的商業版 Wallpaper Engine 無關。這是一個開源的 macOS 應用程式，可顯示來自 Wallpaper Engine Steam 創意工坊的桌布素材。
+> **注意：** 本專案與 Steam 上的商業軟體 Wallpaper Engine 無關。這是一款開源的 macOS App，可顯示來自 Wallpaper Engine Steam 工作坊的背景圖片素材。
 
 ## 相關專案
 
-- **[Open Wallpaper Engine for Linux](https://github.com/Unayung/simple-linux-wallpaperengine-gui)** — 基於 [linux-wallpaperengine](https://github.com/Almamu/linux-wallpaperengine) 的 PyQt6 圖形介面，Steam 工作坊整合與 UI 設計移植自本 macOS 版本。
+- **[Open Wallpaper Engine for Linux](https://github.com/Unayung/simple-linux-wallpaperengine-gui)** — 適用於 [linux-wallpaperengine](https://github.com/Almamu/linux-wallpaperengine) 的 PyQt6 圖形介面，其 Steam 工作坊整合與 UI 設計移植自本 macOS 版本。
 
 ## 致謝
 
 本專案建立於以下貢獻者的成果之上：
 
-- **[MrWindDog](https://github.com/MrWindDog)** — 上游 [wallpaper-engine-mac](https://github.com/MrWindDog/wallpaper-engine-mac) 分支的維護者，新增功能與 UI 優化
-- **[Haren Chen](https://github.com/haren724)** — [open-wallpaper-engine-mac](https://github.com/haren724/open-wallpaper-engine-mac) 原作者，建構核心架構（SwiftUI、影片桌布播放、匯入系統、播放清單 UI）
+- **[MrWindDog](https://github.com/MrWindDog)** — 上游 [wallpaper-engine-mac](https://github.com/MrWindDog/wallpaper-engine-mac) 分支的維護者，新增了功能並改善了 UI
+- **[Haren Chen](https://github.com/haren724)** — [open-wallpaper-engine-mac](https://github.com/haren724/open-wallpaper-engine-mac) 的原作者，建構了 App 的核心架構（SwiftUI、影片背景圖片播放、輸入系統、播放列表 UI）
 - **[1ris_W](https://github.com/Erica-Iris)** — 中文 i18n 翻譯
-- **[Klaus Zhu](https://github.com/klauszhu1105)** — 應用程式圖示
-- **[Chen Chia Yang](https://github.com/Unayung)** — 場景桌布渲染、網頁桌布修復、Steam 創意工坊整合、多螢幕支援、Zip 匯入
+- **[Klaus Zhu](https://github.com/klauszhu1105)** — App 標誌圖像
+- **[Chen Chia Yang](https://github.com/Unayung)** — 場景背景圖片渲染、網頁背景圖片修正、Steam 工作坊整合、多顯示器支援、zip 輸入
+- **[Deepratna Awale](https://github.com/deepratna-awale)** — Metal 場景渲染器與效果管線、GLSL→MSL 著色器轉換與快取、SceneScript 執行環境、音訊回應式渲染、工作坊／下載功能全面翻新、擺放與效能設定
 
-採用 [GPL-3.0](LICENSE) 授權，與原始專案相同。
+與原始專案相同，本專案採用 [GPL-3.0](../../LICENSE) 授權。
 
-## 0.8.0 新功能
+## 0.8.1 支援的功能
 
-### 多螢幕支援
-為每個連接的螢幕指定不同的桌布，並可個別啟用或停用。
-- **顯示器設定面板** — 以視覺化佈局顯示所有連接的螢幕，點擊選取
-- **個別螢幕桌布** — 每個螢幕可獨立顯示不同的桌布
-- **啟用/停用切換** — 可針對每個螢幕開啟或關閉桌布
-- **自動偵測** — 新連接的螢幕會自動偵測並啟用
+### 背景圖片播放
+- **場景背景圖片**以 Metal 原生渲染，支援影像圖層、變形、關鍵影格時間軸、深度排序，以及 `scene.json` 中的相機／投影資料。
+- **影片背景圖片**（`.mp4`、`.webm`）支援播放速率、音量、音訊與影片速度連動，以及可選的隨音樂同步縮放／傾斜／飽和度。
+- **網頁背景圖片**（HTML/WebGL）已啟用本機檔案存取，讓 WebGL 紋理與素材能正確載入，並支援外部嵌入內容（YouTube/Vimeo）。
+- **擺放模式** — 填滿螢幕、符合螢幕大小、置中、擴展至填滿螢幕、縮放。
+- **多顯示器** — 每台顯示器使用不同的背景圖片、依螢幕啟用／停用、視覺化的顯示器配置，以及自動偵測新連接的顯示器。
+- **多桌面（Spaces）** — 在所有桌面上連續播放，並提供 `所有桌面` 指定選項。
+- **播放規則** — 其他 App 為使用中時可持續執行、靜音、暫停或停止；在睡眠／喚醒與切換桌面時皆能正確運作。
+
+### 場景格式支援
+- **PKG 解析器**，用於 Wallpaper Engine `PKGV` 封存檔（scene.json、材質、紋理、著色器）。
+- **TEX 解析器**，用於 `TEXV0005` 容器：內嵌的 JPEG/PNG，以及含 mipmap 的 DXT1/DXT3/DXT5，後者透過 Metal 運算著色器在 GPU 上解碼。
+- **TEXS 精靈時間軸**（0001/0002/0003），包含單一圖集的影格矩形與多影像序列。
+- **彈性的 scene.json 解碼**，可處理 Wallpaper Engine 的多型欄位（一般值或 `{"script":…,"value":…}`）。
+- 無法擷取紋理時**改用預覽圖** `preview.jpg/png/gif`。
+
+### 效果與著色器
+- **約 48 種原生 Metal 效果**，涵蓋扭曲、模糊（標準／精確／放射狀／動態）、光暈、耶穌光與光束、水波／漣漪／焦散／流動、雲與霧、底片顆粒、故障／VHS、色差、色鍵、變形／傾斜／旋轉／漩渦／透視、反射、折射、光澤／微光／亮粉、邊緣偵測等。
+- **音訊回應式效果** — 脈衝、音訊長條、隨音訊同步的色相偏移，以及由即時系統音訊頻譜資料驅動的超空間跳躍效果。
+- **語意材質效果** — 將亮度、對比、飽和度、曝光、Gamma、色相、光暈臨界值、光暈與模糊對應至原生 Metal 渲染階段。
+- **GLSL → SPIR-V → MSL 轉換**在載入時由連結至 App 的 glslang 與 SPIRV-Cross 執行，支援 COMBO 巨集定義、include 解析，以及 Metal 緩衝區槽位重新編號。
+- **預先編譯的著色器快取** — 轉換後的 `.metal`、編譯後的 `.metallib` 以及 `.reflection.json` 附屬檔案會快取於 `.open-wallpaper-engine/shaders` 下；以雜湊值判斷，只有變更過的著色器才會重新轉換，且在背景編譯，因此絕不會阻塞渲染。
+- **動態效果目錄**，讀取自 Wallpaper Engine 的 `assets/effects/*/effect.json` 清單，包含多階段效果以及透過反射取得的 uniform 繫結。
+- **效果遮罩**（每個圖層最多 4 張遮罩紋理）、加法混合與 Alpha 混合，以及集區化的渲染目標系統。
+
+### 粒子
+- 精靈發射器，可隨機設定壽命、大小、速度、顏色、旋轉、角速度、重力、阻力與 Alpha 淡化。
+- 進階行為 — 亂流、吸引子、渦流與 boid 群體運動、靜態控制點與跟隨游標的控制點、相連的繩索區段，以及帶有 Alpha／大小淡化的拖尾。
+- 透過 `.tex-json` 序列製作精靈圖表影格動畫。
+- 用於發射速率、阻力與 Alpha 淡化時機的腳本化運算子。
+
+### SceneScript 執行環境
+- 每個圖層持續保留的腳本環境，`init()` 只呼叫一次，`update(value)` 則每個影格呼叫。
+- 全域物件：`thisScene`、`thisLayer`、`engine`、`input`、`audio(low, high)`、使用真實資料的 `fft(index)`、`setTimeout`/`setInterval`，以及持續保留的腳本全域變數。
+- 完整的 `Vec2`/`Vec3`/`Vec4`/`Mat3`/`Mat4` 數學函式庫，以及 `WEMath`、`WEVector` 與 `WEColor` 輔助工具。
+- 從 `assets/scripts/jsmodules` 與 `jsclasses` 載入的 Wallpaper Engine 執行環境 JS 模組。
+- 游標事件（`cursorMove`/`Down`/`Up`/`Click`/`Enter`/`Leave`）與 `resizeScreen`。
+- 腳本可控制圖層的 Alpha、原點、大小、縮放、角度、亮度／顏色、材質常數、效果臨界值與粒子速率。
+- 去除重複的腳本例外記錄，並附上重複次數。
+
+### 音訊
+- 透過 ScreenCaptureKit 擷取系統音訊，提供平滑處理的 16 頻段頻譜、波形，以及低音／中音／高音電平。
+- 依屬性設定的**音樂同步** — 任何使用者屬性都可依音訊電平調變，調變幅度可自行設定。
+
+### 使用者屬性與檢閱器
+- 滑桿、核取方塊、組合方塊、文字與顏色等專案設定會顯示在場景側邊欄中，即時套用，且可從 SceneScript 讀取。
+- 對設有 `parallaxDepth` 的圖層提供滑鼠追蹤與視差。
+
+### Steam 工作坊
+- 可依內容分級、類型與風格標籤瀏覽、搜尋與篩選，支援熱門／最新／最受歡迎／最多訂閱排序，以及附頁碼的分頁。
+- 預覽視窗提供設為背景圖片、播放與音量控制，並使用有容量上限的快取；已套用的預覽會直接移入資料庫，無需重新下載。
+- SteamCMD 整合：自動偵測、密碼／Steam Guard／快取工作階段登入、專用的「下載項目」標籤頁、可排入佇列並可重試的下載，以及即時進度。
+- 多重選取、範圍選取、經確認後才執行的批次下載與刪除、保留已下載的 ID，以及依 `下載日期` 排序。
+
+### 資料庫與設定
+- 可從檔案夾、`.zip` 套件或透過拖放輸入。
+- 可設定背景圖片儲存位置，並可遷移現有的資料庫。
+- 狀態列中的「最近使用的背景圖片」選單。
+- 效能設定 — 品質、消除鋸齒、後處理，以及失去焦點時的播放行為。
+- 診斷 — 隨附素材的路徑、內建著色器編譯器的函式庫版本，以及著色器快取統計資料。
+
+<details>
+<summary>0.8.0 及更早版本</summary>
+
+### 多顯示器支援
+可為每台已連接的顯示器指定不同的背景圖片，並可依螢幕個別啟用或停用。
+- **「顯示器設定」面板** — 以視覺化配置顯示所有已連接的螢幕，按一下即可選取
+- **個別螢幕背景圖片** — 每台顯示器可獨立顯示不同的背景圖片
+- **啟用／停用切換** — 可依顯示器開啟或關閉背景圖片
+- **自動偵測** — 連接新顯示器時會自動偵測並啟用
 
 ### 多桌面支援
-桌布現在可在所有 macOS 桌面（空間）上顯示並持續播放，切換桌面時不會中斷。
+背景圖片現在會顯示於所有 macOS 桌面（Spaces）並連續播放，切換桌面時不會中斷。
 
-### 最近使用的桌布選單
-可從狀態列選單快速切換桌布。最近使用的 10 個桌布可一鍵存取。
+### 「最近使用的背景圖片」選單
+可從狀態列選單快速切換背景圖片。最近使用的 10 張背景圖片會列於其中，按一下即可切換。
 
-### 播放設定 — 已修復
-效能播放設定（切換應用程式時暫停/靜音/停止）現在對所有桌布類型均可正常運作。
+### 播放設定 — 已修正
+效能播放設定（其他 App 為使用中時暫停／靜音／停止）現在對所有類型的背景圖片皆能正常運作。
 
-### Steam 創意工坊瀏覽器
-直接在應用程式內瀏覽、搜尋及下載 Steam 創意工坊的桌布。
-- **搜尋與篩選** — 依名稱搜尋，依內容分級（Everyone/Questionable/Mature）、類型（Scene/Video/Web）及風格標籤篩選
-- **排序選項** — 熱門趨勢、最新發布、最受歡迎、最多訂閱
-- **steamcmd 整合** — 自動偵測 steamcmd（Homebrew 或自訂路徑），未安裝時提供安裝指引
-- **Steam 登入** — 支援密碼、Steam Guard 及快取 Session 驗證
-- **下載進度顯示** — 即時狀態更新（驗證中、下載百分比、驗證、複製中）
-- **安全預設** — 內容分級預設為「Everyone」，過濾成人內容
+### Steam 工作坊瀏覽器
+無需離開 App，即可直接瀏覽、搜尋及下載 Steam 工作坊中的背景圖片。
+- **搜尋與篩選** — 依名稱搜尋，並依內容分級（全年齡／爭議性／成人）、類型（場景／影片／網頁）及風格標籤篩選
+- **排序選項** — 熱門、最新、最受歡迎、最多訂閱
+- **steamcmd 整合** — 自動偵測 steamcmd（Homebrew 或自訂路徑），找不到時會提供安裝說明
+- **Steam 登入** — 支援密碼、Steam Guard 及快取工作階段驗證
+- **顯示下載進度** — 下載期間即時更新狀態（驗證身分中、下載百分比、檢查中、拷貝中）
+- **安全的預設值** — 內容分級預設為「全年齡」，以過濾成人內容
 
-### Zip 匯入
-直接匯入 `.zip` 桌布套件，無需手動解壓縮。支援 檔案 > 匯入 及拖放操作。
+### zip 輸入
+可直接從 `.zip` 檔案輸入背景圖片套件，無需先手動解壓縮。支援透過「檔案」>「輸入」及拖放操作使用。
 
-### 多選與批次取消訂閱
-Cmd+點擊選取多個桌布，右鍵選擇批次取消訂閱。
+### 多重選取與批次取消訂閱
+按住 Cmd 鍵並按一下以選取多張背景圖片，接著按一下右鍵即可批次取消訂閱。
 
-### 桌布儲存隔離
-桌布現在儲存在 `~/Documents/OpenWallpaperEngine/`，不再使用原始 Documents 目錄，避免克隆專案時出現「error」桌布。
+### 背景圖片儲存隔離
+背景圖片現在儲存於 `~/Documents/OpenWallpaperEngine/`，而非直接存放於「文件」目錄下，可避免在新電腦上複製儲存庫時出現「error」背景圖片。
 
-## 修補內容
+</details>
 
-### 網頁桌布 — 修復灰色/空白渲染
-基於 WebGL 的桌布因 `WKWebView` 阻擋本地檔案存取而顯示為灰色方塊。
+<details>
+<summary>相對於上游的修補內容</summary>
 
-**修復：** 在 WKWebView 設定中啟用 `allowFileAccessFromFileURLs` 和 `allowUniversalAccessFromFileURLs`，允許 WebGL 著色器載入本地紋理檔案。
+### 網頁背景圖片 — 修正灰色／空白渲染
+以 WebGL 為基礎的背景圖片會渲染成灰色矩形，原因是 `WKWebView` 封鎖了對紋理與素材的本機檔案存取。
 
-### 場景桌布 — 從零開始實作
-場景桌布（Steam 創意工坊最常見的類型）原本完全未實作——僅顯示「Hello, World!」。
+**修正：** 在 WKWebView 設定中啟用 `allowFileAccessFromFileURLs` 與 `allowUniversalAccessFromFileURLs`，讓 WebGL 著色器能載入本機紋理檔案。
 
-**新實作包括：**
-- **PKG 解析器** — 讀取 Wallpaper Engine 的 PKGV 封存格式，提取 scene.json、模型、材質和紋理
-- **TEX 解析器** — 讀取 TEXV0005 紋理容器，從 TEXI/TEXB 區段提取嵌入的 JPEG/PNG 圖片
-- **Scene JSON 解碼器** — 解析 scene.json，靈活處理多態欄位（值可為純類型或 `{"script":..,"value":..}` 物件）
-- **SpriteKit 渲染器** — 將場景圖層渲染為 SKSpriteNode，正確處理定位、尺寸、透明度、色彩調整和混合模式
-- **預覽回退** — 無法提取紋理時回退至 preview.jpg/png/gif
-- **TEXI 格式偵測** — 快速識別並跳過無法解碼的 DXT 壓縮紋理
+### 場景背景圖片 — 從零開始實作
+場景背景圖片（Steam 工作坊中最常見的類型）先前完全沒有實作，只會顯示「Hello, World!」。
 
-### 匯入 — 修復資料夾匯入
-匯入面板現在可正確處理單一桌布資料夾和包含多個桌布的父目錄。
+**新實作包含：**
+- **PKG 解析器** — 讀取 Wallpaper Engine 的 PKGV 封存格式，擷取 scene.json、模型、材質與紋理
+- **TEX 解析器** — 讀取 TEXV0005 紋理容器，擷取內嵌的 JPEG/PNG 影像資料，並讀取 DXT1/DXT3/DXT5 mipmap
+- **Scene JSON 解碼器** — 以彈性的解碼方式解析 scene.json，可處理 Wallpaper Engine 的多型欄位（值可以是一般型別，也可以是 `{"script":..,"value":..}` 物件）
+- **Metal 渲染器** — 透過 GPU 紋理合成渲染場景影像圖層，並為日後的著色器效果奠定基礎
+- **GPU DXT 解碼** — 在場景載入時透過 Metal 運算著色器展開 DXT1（TEXI 7）、DXT3（TEXI 6）與 DXT5（TEXI 4）紋理
+- **精靈粒子** — 渲染常見的 `sphererandom` 精靈發射器，可隨機設定壽命、大小、速度、Alpha、顏色、旋轉、角速度、重力、阻力與 Alpha 淡化
+- **進階粒子** — 支援旋轉、顏色變化、亂流、靜態控制點與跟隨游標的控制點、相連的繩索區段、拖尾，以及 `.tex-json` 精靈圖表影格動畫
+- **TEXS 動畫** — 解碼 TEXS0001/0002/0003 時間軸，包含單一圖集的影格矩形與多影像紋理序列
+- **場景時間軸** — 以 60 FPS 對物件的 Alpha、原點、縮放與角度關鍵影格進行內插
+- **SceneScript 執行環境** — 依據 ScreenCaptureKit 系統音訊，對運算式與 `export function update(value)` 屬性腳本求值。`thisScene` 計時、`thisLayer.value`、`engine`、輸入游標、`audio(low, high)`、使用真實資料的 `fft(index)`、屬性查詢與持續保留的全域變數，共同驅動影像變形、Alpha 與粒子發射速率。
+- **持續保留的 SceneScript 生命週期** — 重複使用每個圖層的腳本環境，只呼叫一次 `init()`，並在各影格呼叫 `update()`，同時共用 `dt`、影格、滑鼠、按鈕、輔助鍵、游標、音訊、FFT、屬性與圖層狀態。
+- **腳本化粒子運算子** — 支援用於粒子發射速率、移動阻力與 Alpha 淡化時機的腳本，並能彈性處理數值／字串型別的粒子欄位。
+- **滑鼠追蹤與視差** — 對含有 `parallaxDepth` 詮釋資料的圖層套用相對於游標的平移與可選的透視縮放；跟隨游標的粒子使用同一個場景空間游標。
+- **腳本化視覺屬性** — 支援以腳本設定物件亮度／RGB 顏色、材質效果常數、純量／向量變形，以及覆寫效果臨界值。
+- **使用者屬性** — 在場景側邊欄中顯示文件所述的滑桿、核取方塊、組合方塊、文字與顏色專案設定，並讓數值與布林值可供 SceneScript 使用
+- **內建場景效果** — 在 Metal 渲染器中執行作者設定的 `pulse`、`shake`、`iris` 與 `waterwaves` 效果圖項目
+- **語意材質效果** — 將亮度、對比、飽和度、曝光、Gamma、色相、光暈臨界值、光暈與模糊的常見材質常數與腳本，對應至原生 Metal 效果
+- **GLSL 著色器轉換** — 在載入時透過連結至 App 的 glslang 與 SPIRV-Cross，將封裝的 Wallpaper Engine GLSL 著色器轉換為 SPIR-V 與 MSL；轉換後的變體會快取於 `~/Library/Caches/com.winddog.wallpaper-engine/shader-variants` 下
+- **改用預覽圖** — 無法擷取紋理時改用 preview.jpg/png/gif
 
-## 目前限制
+### 輸入 — 修正檔案夾輸入
+輸入面板現在能正確處理單一背景圖片檔案夾，以及包含多張背景圖片的上層目錄。
 
-- **DXT 紋理** — 使用 DXT1/DXT5 壓縮紋理（TEXI 格式 4/7/8）的桌布無法渲染。這些是需要軟體解壓縮器或 Metal 渲染的 GPU 原生壓縮格式。此類桌布會回退至預覽圖。
-- **粒子效果** — 場景粒子系統（雨、雪、閃光）已解析但在渲染中停用，以避免視覺問題。
-- **音訊互動腳本** — Wallpaper Engine 基於 JavaScript 的音訊視覺化腳本不會執行。帶腳本的屬性回退至靜態 `value`。
-- **著色器效果** — 自定義 GLSL 著色器（泛光、模糊、色彩校正）未套用。
-- **相機視差** — 滑鼠追蹤相機移動未實作。
-- **動畫場景** — 精靈動畫和基於時間軸的物件動畫不支援。
-- **部分 JPEG 縮圖** — 少數 TEXB 格式 1 檔案包含 macOS 無法解碼的非標準 JPEG 資料。
+</details>
 
-## 支援的桌布類型
+## 目前的限制
+
+- **應用程式背景圖片** — 不支援 `type: "application"` 背景圖片，此類背景圖片將無法執行。
+- **3D 模型與骨架綁定** — 骨骼變形、混合形狀、附件與人偶彎曲綁定（`.mdl`）目前僅為虛設實作；受影響的圖層會渲染為平面圖集。
+- **材質腳本函式** — `getMaterial()`、`getMaterialCount()`、`setMaterialProperty()` 與 `executeMaterialFunction()` 僅為虛設實作，不執行任何動作或傳回空值。
+- **自訂 GLSL 著色器繫結** — 轉換後的 MSL 會在輸入時快取，但依賴 Wallpaper Engine 專屬屬性、紋理鏈或不支援之 include 的著色器，不會繫結至執行階段的 Metal 管線。常見的光暈、模糊、色彩校正與變形參數會改用原生 Metal 對應。
+- **Metal 緩衝區上限** — 需要超過 Metal 31 個緩衝區槽位的著色器無法轉換，並會在目前的管線修訂版本中永久標示為不支援。
+- **HLSL 著色器** — 與 GLSL 原始碼一同提供、僅適用於 Direct3D 的著色器會完全略過。
+- **效果結構描述的涵蓋範圍** — 未知的自訂 uniform 名稱與任意效果參數結構描述仍不支援。
+- **SceneScript 一致性** — 並未完整重現所有專有事件名稱、輸入回呼、生命週期的邊界情況或精確的計時語意。
+- **粒子運算子的涵蓋範圍** — 常見的腳本化速率、阻力與 Alpha 淡化運算子可正常運作；不常見的運算子腳本、自訂粒子模組與任意運算子結構描述僅部分支援。
+- **外部素材復原** — 部分工作坊套件參照了下載套件中不存在的共用 TEX 素材，需要原版 Wallpaper Engine 的安裝檔案。
+- **部分 JPEG 縮覽圖** — 少數 TEXB 格式 1 檔案含有 macOS 無法解碼的非標準 JPEG 資料。
+- **效能設定的適用範圍** — 品質、消除鋸齒與後處理選項是為場景背景圖片而設計，對影片與網頁背景圖片的效果有限。
+- **音訊功能需要權限** — 若未授予「螢幕錄製」權限，音訊視覺化與音訊回應式 SceneScript 只會收到無聲訊號。
+
+## 支援的背景圖片類型
 
 | 類型 | 狀態 |
-|------|------|
-| 影片 (.mp4, .webm) | 正常運作（原始） |
-| 網頁 (HTML/WebGL) | 正常運作（已修補） |
-| 場景（靜態圖片） | 正常運作（新功能） |
-| 場景（粒子） | 部分支援（已停用） |
-| 場景（DXT 紋理） | 預覽回退 |
+|------|--------|
+| 影片（.mp4、.webm） | 可運作 |
+| 網頁（HTML/WebGL） | 可運作 |
+| 場景 — 影像圖層與時間軸 | 可運作（Metal） |
+| 場景 — DXT1/DXT3/DXT5 紋理 | 可運作（Metal GPU 解碼） |
+| 場景 — TEXS 精靈／Alpha 時間軸 | 可運作 |
+| 場景 — 精靈粒子 | 可運作 |
+| 場景 — 進階粒子 | 部分支援（支援腳本化速率／阻力／淡化） |
+| 場景 — 原生 Metal 效果 | 可運作（約 48 種效果） |
+| 場景 — 轉換後的工作坊 GLSL 效果 | 部分支援（請參閱「目前的限制」） |
+| 場景 — SceneScript | 部分支援（請參閱「目前的限制」） |
+| 場景 — 3D 模型／骨架綁定／人偶彎曲 | 不支援 |
 | 應用程式 | 不支援 |
+
+## 系統需求
+
+### 必要
+- **macOS 13.0 或以上版本**（Ventura）。ScreenCaptureKit 音訊擷取與 Metal 場景渲染皆仰賴此版本。
+
+### 選用 — 特定功能所需
+
+| 功能 | 需求 | 安裝 |
+|---------|-------------|---------|
+| 瀏覽／下載 Steam 工作坊內容 | `steamcmd` | `brew install steamcmd` |
+| 音訊視覺化與音訊回應式 SceneScript | 「螢幕錄製」權限 | 設定 → 權限 |
+
+#### 著色器
+
+Wallpaper Engine 以 GLSL 形式提供其效果。當背景圖片首次使用這些效果時，會由內建於 App 的 glslang 與 SPIRV-Cross（`Vendor/ShaderToolchain`）轉換為 Metal（GLSL → SPIR-V → MSL），接著快取到磁碟上。無需安裝任何項目。若某個著色器在轉換時造成 App 停止回應，或兩度導致 App 當機，之後啟動時便會略過它，其他著色器仍會照常轉換。
+
+#### Wallpaper Engine 素材
+
+背景圖片所參照的共用效果、材質、著色器與 SceneScript 執行環境皆隨附於 App 中（`Vendor/we-assets`，透過 `Scripts/vendor-we-assets.sh` 從 Wallpaper Engine 安裝中更新）。無需進行任何設定。
 
 ## 從原始碼建置
 
 ### 前置需求
-- macOS >= 13.0
-- Xcode >= 14.4
+- macOS >= 14.0
+- Xcode >= 26.3（macOS 26 SDK）
 - Xcode Command Line Tools
 
 ### 步驟
@@ -117,39 +232,33 @@ cd wallpaper-engine-mac
 open "OpenWallpaperEngine.xcodeproj"
 ```
 
-在 Xcode 中，將簽署憑證更改為您自己的或選擇「Sign to Run Locally」，然後按 `Cmd + R` 建置並執行。
+在 Xcode 中，將簽署憑證更改為你自己的憑證，或選擇「Sign to Run Locally」，然後按下 `Cmd + R` 建置並執行。
 
 ## 使用方式
 
-### 從 Steam 創意工坊瀏覽與下載
+### 從 Steam 工作坊瀏覽與下載
 
-1. 安裝 steamcmd（`brew install steamcmd`）或指向現有的二進位檔
-2. 切換到 **Workshop** 分頁，使用 Steam 帳號登入（必須擁有 Wallpaper Engine）
-3. 出現提示時輸入 [Steam Web API 金鑰](https://steamcommunity.com/dev/apikey)
-4. 搜尋、篩選，然後點擊 **Download** 下載桌布
+1. 安裝 steamcmd（`brew install steamcmd`），或在 App 中指定現有的二進位檔
+2. 切換到 **工作坊** 標籤頁，並使用 Steam 帳號登入（必須擁有 Wallpaper Engine）
+3. 出現提示時，或在 *設定 → 一般* 中輸入 [Steam Web API 密鑰](https://steamcommunity.com/dev/apikey)。密鑰會經過 Steam 驗證並保存在你的鑰匙圈中；你的 Steam 密碼絕不會被儲存（steamcmd 會重複使用其自身的快取工作階段）
+4. 搜尋、篩選，然後在任一背景圖片上按一下 **下載**
 
-### 從本地檔案匯入
+### 從本機檔案輸入
 
-- **資料夾：** 檔案 > 從資料夾匯入——選擇包含 `project.json` 的桌布資料夾
-- **Zip：** 檔案 > 匯入 或拖放包含桌布套件的 `.zip` 檔案
-- **手動：** 直接將桌布資料夾複製到 `~/Documents/OpenWallpaperEngine/`
+- **檔案夾：** 檔案 > 輸入 > 從檔案夾輸入背景圖片 — 選擇包含 `project.json` 的背景圖片檔案夾
+- **zip：** 檔案 > 輸入，或拖放包含背景圖片套件的 `.zip` 檔案
+- **手動：** 將背景圖片檔案夾直接拷貝至 `~/Documents/OpenWallpaperEngine/`
 
-## 變更的檔案（相對上游）
+## 專案結構
 
-**修改：**
-- `WebWallpaperView.swift` — WKWebView 檔案存取設定
-- `WallpaperView.swift` — 場景桌布分派
-- `SceneWallpaperView.swift` — 改寫為 SpriteKit NSViewRepresentable
-- `ImportPanels.swift` — 資料夾匯入邏輯修復
-
-**新增：**
-- `Services/SceneParsers/PKGParser.swift` — PKGV 封存解析器
-- `Services/SceneParsers/TEXParser.swift` — TEXV 紋理解析器
-- `Services/SceneParsers/SceneModels.swift` — Scene JSON 資料模型
-- `Scene/Loading/SceneWallpaperViewModel.swift` — 場景載入（供 Metal 渲染器使用）
-- `Workshop/SteamCmdService.swift` — steamcmd 偵測、登入與創意工坊下載
-- `Workshop/WorkshopAPIService.swift` — Steam Web API 客戶端
-- `Workshop/WorkshopViewModel.swift` — 創意工坊瀏覽器狀態管理
-- `Library/WallpaperDirectory.swift` — 集中式桌布儲存路徑
-- `Library/Import/ZipImporter.swift` — Zip 檔案解壓與匯入
-- `ContentView/Components/WorkshopView.swift` — 創意工坊瀏覽器 UI
+- `OpenWallpaperEngine/Services/SceneParsers/` — PKG、TEX/TEXS 與 scene.json 的解析器與模型
+- `OpenWallpaperEngine/Services/SceneEffects/` — 動態效果目錄，以及作者設定的效果參數範圍
+- `OpenWallpaperEngine/Scene/Shaders/` — GLSL → SPIR-V → MSL 轉換（`ShaderVariant.swift`、`InProcessShaderCompiler.swift`）、快取與管線封存
+- `Vendor/ShaderToolchain/` — glslang 與 SPIRV-Cross 原始碼，以本機套件形式建置到 App 中
+- `OpenWallpaperEngine/Scene/Scripting/AudioReactiveScriptEngine.swift` — SceneScript 執行環境與音訊／FFT 繫結
+- `OpenWallpaperEngine/Audio/AudioLevelTap.swift` — ScreenCaptureKit 系統音訊擷取
+- `OpenWallpaperEngine/Scene/Rendering/SceneMetalRenderer.swift`、`SceneShaders.metal` — Metal 場景渲染器與著色器函式庫
+- `OpenWallpaperEngine/Workshop/SteamCmdService.swift`、`WorkshopAPIService.swift`、`WorkshopViewModel.swift` — Steam 工作坊瀏覽與下載
+- `OpenWallpaperEngine/Library/WallpaperDirectory.swift`、`ZipImporter.swift`、`WallpaperPackageConverter.swift` — 資料庫儲存、輸入與套件轉換
+- `Scripts/vendor-we-assets.sh` — 將轉換後的效果著色器與清單納入 `we-assets/`
+- `Scripts/scene-api-coverage.py` — 報告已安裝的背景圖片使用了哪些 SceneScript API，並與已實作的 API 進行比較

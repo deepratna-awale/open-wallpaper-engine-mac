@@ -1,7 +1,7 @@
 Open Wallpaper Engine (Patched)
 =========
 
-**English** | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md)
+**English** | [Deutsch](resources/readme/README.de.md) | [Français](resources/readme/README.fr.md) | [Español](resources/readme/README.es.md) | [Português (Brasil)](resources/readme/README.pt-BR.md) | [Italiano](resources/readme/README.it.md) | [日本語](resources/readme/README.ja.md) | [한국어](resources/readme/README.ko.md) | [简体中文](resources/readme/README.zh-Hans.md) | [繁體中文](resources/readme/README.zh-Hant.md) | [Русский](resources/readme/README.ru.md) | [Polski](resources/readme/README.pl.md) | [Türkçe](resources/readme/README.tr.md) | [Українська](resources/readme/README.uk.md) | [العربية](resources/readme/README.ar.md) | [हिन्दी](resources/readme/README.hi.md)
 
 [![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
 
@@ -245,7 +245,7 @@ In Xcode, change the signing certificate to your own or select "Sign to Run Loca
 
 ### Import from Local Files
 
-- **Folder:** File > Import from Folder — select wallpaper folders containing `project.json`
+- **Folder:** File > Import > Wallpaper from Folder — select wallpaper folders containing `project.json`
 - **Zip:** File > Import or drag-and-drop a `.zip` file containing wallpaper packages
 - **Manual:** Copy wallpaper folders directly into `~/Documents/OpenWallpaperEngine/`
 
