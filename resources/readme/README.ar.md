@@ -22,9 +22,9 @@ Open Wallpaper Engine (نسخة مُعدَّلة)
 - **[MrWindDog](https://github.com/MrWindDog)** — مشرف النسخة الأصلية [wallpaper-engine-mac](https://github.com/MrWindDog/wallpaper-engine-mac)، وقد أضاف ميزات جديدة وتحسينات على الواجهة
 - **[Haren Chen](https://github.com/haren724)** — المُنشئ الأصلي لـ [open-wallpaper-engine-mac](https://github.com/haren724/open-wallpaper-engine-mac)، وقد بنى البنية الأساسية للتطبيق (SwiftUI، وتشغيل خلفيات الفيديو، ونظام الاستيراد، وواجهة قائمة التشغيل)
 - **[1ris_W](https://github.com/Erica-Iris)** — الترجمة الصينية
-- **[Klaus Zhu](https://github.com/klauszhu1105)** — أيقونات شعار التطبيق
+- **[Klaus Zhu](https://github.com/klauszhu1105)** — تصميم الشعار الأصلي
 - **[Chen Chia Yang](https://github.com/Unayung)** — عرض خلفيات المشهد، وإصلاحات خلفيات الويب، والتكامل مع ورشة Steam، ودعم شاشات العرض المتعددة، والاستيراد من ملفات zip
-- **[Deepratna Awale](https://github.com/deepratna-awale)** — عارض المشاهد المبني على Metal ومسار التأثيرات، وترجمة المظللات من GLSL إلى MSL وتخزينها المؤقت، وبيئة تشغيل SceneScript، والعرض المستجيب للصوت، وإعادة تصميم الورشة والتنزيلات، وإعدادات الموضع والأداء
+- **[Deepratna Awale](https://github.com/deepratna-awale)** — عارض المشاهد المبني على Metal ومسار التأثيرات، وترجمة المظللات من GLSL إلى MSL وتخزينها المؤقت، وبيئة تشغيل SceneScript، والعرض المستجيب للصوت، وإعادة تصميم الورشة والتنزيلات، وإعدادات الموضع والأداء، وإعادة تصميم الشعار
 
 مرخَّص بموجب [GPL-3.0](../../LICENSE)، مثل المشروع الأصلي.
 

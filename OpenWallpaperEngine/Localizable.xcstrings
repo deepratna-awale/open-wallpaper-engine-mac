@@ -6192,100 +6192,6 @@
         }
       }
     },
-    "App logo icons" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "أيقونات شعار التطبيق"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "App-Logo und Symbole"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Iconos del logotipo de la app"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Icônes du logo de l’app"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ऐप लोगो आइकॉन"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Icone del logo dell’app"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "アプリのロゴアイコン"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "앱 로고 아이콘"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ikony logo aplikacji"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ícones do logotipo do app"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Значки логотипа приложения"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uygulama logosu simgeleri"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Значки логотипа програми"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "应用标志图标"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "App 標誌圖像"
-          }
-        }
-      }
-    },
     "Appearance" : {
       "localizations" : {
         "ar" : {
@@ -37793,96 +37699,96 @@
         }
       }
     },
-    "Metal effects, music sync, remote media" : {
+    "Metal effects, music sync, remote media, logo redesign" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "تأثيرات Metal، ومزامنة الموسيقى، والوسائط البعيدة"
+            "value" : "تأثيرات Metal، ومزامنة الموسيقى، والوسائط البعيدة، وإعادة تصميم الشعار"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Metal-Effekte, Musiksynchronisierung, Online-Medien"
+            "value" : "Metal-Effekte, Musiksynchronisierung, Online-Medien, Logo-Neugestaltung"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Efectos de Metal, sincronización con la música, contenido remoto"
+            "value" : "Efectos de Metal, sincronización con la música, contenido remoto, rediseño del logotipo"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Effets Metal, synchronisation musicale, médias distants"
+            "value" : "Effets Metal, synchronisation musicale, médias distants, refonte du logo"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Metal इफ़ेक्ट, म्यूज़िक सिंक, रिमोट मीडिया"
+            "value" : "Metal इफ़ेक्ट, म्यूज़िक सिंक, रिमोट मीडिया, लोगो रीडिज़ाइन"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Effetti Metal, sincronizzazione musicale, contenuti remoti"
+            "value" : "Effetti Metal, sincronizzazione musicale, contenuti remoti, riprogettazione del logo"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Metalエフェクト、音楽同期、リモートメディア"
+            "value" : "Metalエフェクト、音楽同期、リモートメディア、ロゴのリデザイン"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Metal 효과, 음악 동기화, 원격 미디어"
+            "value" : "Metal 효과, 음악 동기화, 원격 미디어, 로고 리디자인"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Efekty Metal, synchronizacja z muzyką, zdalne multimedia"
+            "value" : "Efekty Metal, synchronizacja z muzyką, zdalne multimedia, przeprojektowanie logo"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Efeitos Metal, sincronização com música, mídia remota"
+            "value" : "Efeitos Metal, sincronização com música, mídia remota, redesenho do logotipo"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Эффекты Metal, синхронизация с музыкой, удалённые медиафайлы"
+            "value" : "Эффекты Metal, синхронизация с музыкой, удалённые медиафайлы, редизайн логотипа"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Metal efektleri, müzik eşitleme, uzak ortam"
+            "value" : "Metal efektleri, müzik eşitleme, uzak ortam, logo yeniden tasarımı"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ефекти Metal, синхронізація з музикою, віддалені медіа"
+            "value" : "Ефекти Metal, синхронізація з музикою, віддалені медіа, редизайн логотипа"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Metal 效果、音乐同步、远程媒体"
+            "value" : "Metal 效果、音乐同步、远程媒体、标志重新设计"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Metal 效果、音樂同步、遠端媒體"
+            "value" : "Metal 效果、音樂同步、遠端媒體、標誌重新設計"
           }
         }
       }
@@ -45993,6 +45899,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "原始作者"
+          }
+        }
+      }
+    },
+    "Original logo design" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تصميم الشعار الأصلي"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ursprüngliches Logodesign"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diseño original del logotipo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conception du logo d’origine"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मूल लोगो डिज़ाइन"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Design originale del logo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オリジナルのロゴデザイン"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "원래 로고 디자인"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oryginalny projekt logo"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Design original do logotipo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оригинальный дизайн логотипа"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Özgün logo tasarımı"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оригінальний дизайн логотипа"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "原始标志设计"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "原始標誌設計"
           }
         }
       }

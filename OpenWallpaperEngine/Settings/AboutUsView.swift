@@ -43,9 +43,9 @@ struct AboutUsView: View {
                     creditRow("Haren Chen", handle: "haren724", role: "Original creator")
                     creditRow("MrWindDog", handle: "MrWindDog", role: "Upstream maintainer")
                     creditRow("Chen Chia Yang", handle: "Unayung", role: "Scene rendering, Workshop, multi-display")
-                    creditRow("Deepratna Awale", handle: "deepratna-awale", role: "Metal effects, music sync, remote media")
+                    creditRow("Deepratna Awale", handle: "deepratna-awale", role: "Metal effects, music sync, remote media, logo redesign")
                     creditRow("1ris_W", handle: "Erica-Iris", role: "Chinese i18n")
-                    creditRow("Klaus Zhu", handle: "klauszhu1105", role: "App logo icons")
+                    creditRow("Klaus Zhu", handle: "klauszhu1105", role: "Original logo design")
                 }
                 .font(.caption)
             }

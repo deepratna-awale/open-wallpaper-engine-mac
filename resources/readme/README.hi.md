@@ -20,9 +20,9 @@ macOS के लिए [Open Wallpaper Engine](https://github.com/MrWindDog/wall
 - **[MrWindDog](https://github.com/MrWindDog)** — अपस्ट्रीम [wallpaper-engine-mac](https://github.com/MrWindDog/wallpaper-engine-mac) fork के मेंटेनर, जिन्होंने नए फ़ीचर और UI सुधार जोड़े
 - **[Haren Chen](https://github.com/haren724)** — [open-wallpaper-engine-mac](https://github.com/haren724/open-wallpaper-engine-mac) के मूल निर्माता, जिन्होंने ऐप का मुख्य आर्किटेक्चर बनाया (SwiftUI, वीडियो वॉलपेपर प्लेबैक, इंपोर्ट सिस्टम, प्लेलिस्ट UI)
 - **[1ris_W](https://github.com/Erica-Iris)** — चीनी अनुवाद
-- **[Klaus Zhu](https://github.com/klauszhu1105)** — ऐप लोगो आइकन
+- **[Klaus Zhu](https://github.com/klauszhu1105)** — मूल लोगो डिज़ाइन
 - **[Chen Chia Yang](https://github.com/Unayung)** — सीन वॉलपेपर रेंडरिंग, वेब वॉलपेपर के सुधार, Steam Workshop इंटीग्रेशन, एक से ज़्यादा डिस्प्ले का सपोर्ट, zip इंपोर्ट
-- **[Deepratna Awale](https://github.com/deepratna-awale)** — Metal सीन रेंडरर और इफ़ेक्ट पाइपलाइन, GLSL→MSL शेडर ट्रांसलेशन और कैशिंग, SceneScript रनटाइम, ऑडियो पर प्रतिक्रिया देने वाली रेंडरिंग, Workshop/डाउनलोड का नया रूप, प्लेसमेंट और परफ़ॉर्मेंस सेटिंग
+- **[Deepratna Awale](https://github.com/deepratna-awale)** — Metal सीन रेंडरर और इफ़ेक्ट पाइपलाइन, GLSL→MSL शेडर ट्रांसलेशन और कैशिंग, SceneScript रनटाइम, ऑडियो पर प्रतिक्रिया देने वाली रेंडरिंग, Workshop/डाउनलोड का नया रूप, प्लेसमेंट और परफ़ॉर्मेंस सेटिंग, लोगो रीडिज़ाइन
 
 मूल प्रोजेक्ट की तरह, [GPL-3.0](../../LICENSE) के तहत लाइसेंस प्राप्त.
 

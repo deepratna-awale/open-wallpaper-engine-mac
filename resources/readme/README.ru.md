@@ -20,9 +20,9 @@ Open Wallpaper Engine (с исправлениями)
 - **[MrWindDog](https://github.com/MrWindDog)** — сопровождающий вышестоящего форка [wallpaper-engine-mac](https://github.com/MrWindDog/wallpaper-engine-mac), добавил новые функции и улучшения интерфейса
 - **[Haren Chen](https://github.com/haren724)** — автор оригинального [open-wallpaper-engine-mac](https://github.com/haren724/open-wallpaper-engine-mac), создал базовую архитектуру приложения (SwiftUI, воспроизведение видеообоев, система импорта, интерфейс плейлистов)
 - **[1ris_W](https://github.com/Erica-Iris)** — перевод на китайский язык
-- **[Klaus Zhu](https://github.com/klauszhu1105)** — значки с логотипом приложения
+- **[Klaus Zhu](https://github.com/klauszhu1105)** — оригинальный дизайн логотипа
 - **[Chen Chia Yang](https://github.com/Unayung)** — рендеринг обоев типа «Сцена», исправления веб-обоев, интеграция Мастерской Steam, поддержка нескольких дисплеев, импорт zip-архивов
-- **[Deepratna Awale](https://github.com/deepratna-awale)** — рендерер сцен на Metal и конвейер эффектов, трансляция шейдеров GLSL→MSL и их кэширование, среда выполнения SceneScript, рендеринг, реагирующий на звук, переработка Мастерской и загрузок, настройки размещения и производительности
+- **[Deepratna Awale](https://github.com/deepratna-awale)** — рендерер сцен на Metal и конвейер эффектов, трансляция шейдеров GLSL→MSL и их кэширование, среда выполнения SceneScript, рендеринг, реагирующий на звук, переработка Мастерской и загрузок, настройки размещения и производительности, редизайн логотипа
 
 Распространяется по лицензии [GPL-3.0](../../LICENSE), как и исходный проект.
 

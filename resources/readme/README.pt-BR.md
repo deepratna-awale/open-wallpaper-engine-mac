@@ -20,9 +20,9 @@ Este projeto foi construído sobre o trabalho de:
 - **[MrWindDog](https://github.com/MrWindDog)** — Mantenedor do fork upstream [wallpaper-engine-mac](https://github.com/MrWindDog/wallpaper-engine-mac); adicionou novos recursos e refinamentos de interface
 - **[Haren Chen](https://github.com/haren724)** — Criador original do [open-wallpaper-engine-mac](https://github.com/haren724/open-wallpaper-engine-mac); construiu a arquitetura central do app (SwiftUI, reprodução de imagens de fundo de vídeo, sistema de importação, interface de playlist)
 - **[1ris_W](https://github.com/Erica-Iris)** — Tradução para o chinês
-- **[Klaus Zhu](https://github.com/klauszhu1105)** — Ícones do logotipo do app
+- **[Klaus Zhu](https://github.com/klauszhu1105)** — Design original do logotipo
 - **[Chen Chia Yang](https://github.com/Unayung)** — Renderização de imagens de fundo de cena, correções para imagens de fundo web, integração à Oficina Steam, suporte a várias telas, importação de zip
-- **[Deepratna Awale](https://github.com/deepratna-awale)** — Renderizador de cenas em Metal e pipeline de efeitos, tradução e cache de shaders GLSL→MSL, runtime do SceneScript, renderização sensível a áudio, reformulação da Oficina e dos Downloads, ajustes de posicionamento e de desempenho
+- **[Deepratna Awale](https://github.com/deepratna-awale)** — Renderizador de cenas em Metal e pipeline de efeitos, tradução e cache de shaders GLSL→MSL, runtime do SceneScript, renderização sensível a áudio, reformulação da Oficina e dos Downloads, ajustes de posicionamento e de desempenho, redesenho do logotipo
 
 Licenciado sob a [GPL-3.0](../../LICENSE), assim como o projeto original.
 
