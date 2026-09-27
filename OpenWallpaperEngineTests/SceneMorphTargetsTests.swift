@@ -143,14 +143,28 @@ final class SceneMorphTargetsTests: XCTestCase {
 
     /// A strip of `count` vertices (position, normal, uv: 0xb) at x = 0, 1, 2… and its triangles.
     static func strip(count: Int) -> (format: MDLVertexFormat, vertices: [Float], indices: [UInt16]) {
-        let vertices = (0..<count).flatMap { i -> [Float] in [Float(i), Float(i % 2), 0, 0, 0, 1, 0, 0] }
-        let indices = (0..<(count - 2)).flatMap { i -> [UInt16] in [UInt16(i), UInt16(i + 1), UInt16(i + 2)] }
+        var vertices: [Float] = []
+        for i in 0..<count {
+            let x: Float = Float(i)
+            let y: Float = Float(i % 2)
+            vertices.append(contentsOf: [x, y, 0, 0, 0, 1, 0, 0] as [Float])
+        }
+        var indices: [UInt16] = []
+        for i in 0..<(count - 2) {
+            let first: UInt16 = UInt16(i)
+            indices.append(first)
+            indices.append(first + 1)
+            indices.append(first + 2)
+        }
         return (MDLVertexFormat(rawValue: 0xb), vertices, indices)
     }
 
     /// Target `t`'s delta for vertex `v`: distinct, exact in half precision.
     static func delta(_ t: Int, _ v: Int) -> SIMD3<Float> {
-        SIMD3(Float(t + 1) * 0.25, Float(v) * 0.125 - 1, Float(t * 7 + v) / 16)
+        let x: Float = Float(t + 1) * 0.25
+        let y: Float = Float(v) * 0.125 - 1
+        let z: Float = Float(t * 7 + v) / 16
+        return SIMD3<Float>(x, y, z)
     }
 
     static func targets(_ count: Int, vertices: Int, normals: Bool = false) -> [Target] {
