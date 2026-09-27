@@ -2,8 +2,9 @@ import simd
 
 /// A particle object's `instanceoverride`, resolved against the current user properties.
 ///
-/// Scalars multiply the particle file's values (`rate` the emission rate, `count` the particle
-/// budget, `size`/`alpha`/`lifetime` their initial ranges, `speed` the initial velocity).
+/// Scalars multiply the particle file's values (`count` the emitters' rates and the particle
+/// budget, `size`/`alpha`/`lifetime` their initial ranges, `speed` the initial velocities; the
+/// operator fields WE also binds, and `rate`, are in `ParticleOverrideBindings`).
 /// `colorn` (0–1) or `color` (0–255) tints the initial colour, and `brightness` scales it.
 struct SceneParticleOverrides: Equatable {
     var rate: Float = 1

@@ -92,6 +92,64 @@ final class ParticleOverrideTests: XCTestCase {
         XCTAssertEqual(try XCTUnwrap(inputs.initializers.last).b.x, 2.5)
     }
 
+    /// Besides the emitters' and velocity initializers' speeds, WE's parser binds the `speed`
+    /// override to `movement` gravity (0x1401cb52f), `angularmovement` force (0x1401cb85e),
+    /// `oscillateposition` frequency (0x1401cc416), `controlpointattract` scale (0x1401ccd7b),
+    /// `turbulence` speed (0x1401cd872), `vortex`/`vortex_v2` speeds (0x1401cdddc, 0x1401ce39b),
+    /// `inheritcontrolpointvelocity` (0x1401c870f) and `mapsequencearoundcontrolpoint` speeds
+    /// (0x1401ca151); and the `size` override to `sizechange` (0x1401cbb48). The system's flags
+    /// 0x10 and 0x80 switch those off.
+    func testTheSpeedAndSizeOverridesScaleTheFieldsWEBinds() throws {
+        let one = SIMD4<Float>(1, 2, 3, 4)
+        var system = ParticleTestSystem()
+        system.operators = [ParticleOperatorKind.movement, .angularMovement, .oscillatePosition, .controlPointAttract,
+                            .turbulence, .vortex, .vortexV2, .sizeChange, .oscillateSize]
+            .map { ParticleOperator($0, a: one, b: one, c: one, d: one) }
+        system.initializers = [ParticleInitializerKind.inheritControlPointVelocity, .mapSequenceAroundControlPoint, .velocityRandom]
+            .map { ParticleInitializer($0, a: one, b: one, c: one, d: one) }
+        var configuration = system.configuration
+        configuration.overrides.speed = 2
+        configuration.overrides.size = 3
+        func records(ignoring parts: SceneParticleOverrides.Parts) -> ParticleFrameInputs {
+            var configuration = configuration
+            configuration.ignoredOverrides = parts
+            let runtime = ParticleSystemRuntime(texture: texture, configuration: configuration)
+            return ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero, values: Properties())
+        }
+        let inputs = records(ignoring: [])
+        func op(_ kind: ParticleOperatorKind) throws -> ParticleProgramOp {
+            try XCTUnwrap(inputs.operators.last { $0.header.x == kind.rawValue })
+        }
+        func initializer(_ kind: ParticleInitializerKind) throws -> ParticleProgramOp {
+            try XCTUnwrap(inputs.initializers.last { $0.header.x == kind.rawValue })
+        }
+        XCTAssertEqual(try op(.movement).a, SIMD4<Float>(2, 4, 6, 4), "gravity, not drag")
+        XCTAssertEqual(try op(.angularMovement).a, SIMD4<Float>(2, 4, 6, 4), "force, not drag")
+        XCTAssertEqual(try op(.oscillatePosition).b, SIMD4<Float>(2, 4, 3, 4), "frequency, not phase")
+        XCTAssertEqual(try op(.oscillatePosition).c, one, "nor scale")
+        XCTAssertEqual(try op(.controlPointAttract).b, SIMD4<Float>(2, 2, 3, 4), "scale, not the thresholds")
+        XCTAssertEqual(try op(.turbulence).b, SIMD4<Float>(1, 4, 6, 4), "speed, not scale or timescale")
+        XCTAssertEqual(try op(.vortex).c, SIMD4<Float>(1, 2, 6, 8), "speeds, not distances")
+        XCTAssertEqual(try op(.vortexV2).b, SIMD4<Float>(1, 2, 6, 8))
+        XCTAssertEqual(try op(.sizeChange).a, SIMD4<Float>(3, 6, 3, 4), "start and end values, not the times")
+        XCTAssertEqual(try op(.oscillateSize).b, one, "oscillatesize isn't bound")
+        XCTAssertEqual(try initializer(.inheritControlPointVelocity).a, SIMD4<Float>(2, 4, 3, 4))
+        XCTAssertEqual(try initializer(.mapSequenceAroundControlPoint).b, SIMD4<Float>(2, 4, 6, 4))
+        XCTAssertEqual(try initializer(.mapSequenceAroundControlPoint).c, SIMD4<Float>(2, 4, 6, 4))
+        XCTAssertEqual(try initializer(.velocityRandom).a, one, "scaled at spawn (spawnScale.w) instead")
+        XCTAssertEqual(inputs.spawnScale.w, 2)
+
+        // The test system's own movement and initializers come first; the ones above are last.
+        let ignored = records(ignoring: [.speed, .size])
+        let operators = Array(ignored.operators.suffix(system.operators.count))
+        let initializers = Array(ignored.initializers.suffix(system.initializers.count))
+        XCTAssertEqual(operators.map(\.a), system.operators.map(\.record.a))
+        XCTAssertEqual(operators.map(\.b), system.operators.map(\.record.b))
+        XCTAssertEqual(operators.map(\.c), system.operators.map(\.record.c))
+        XCTAssertEqual(initializers.map(\.a), system.initializers.map(\.record.a))
+        XCTAssertEqual(initializers.map(\.b), system.initializers.map(\.record.b))
+    }
+
     /// WE's particle parser binds every emitter's `speedmin` and `speedmax` to the `speed`
     /// override (0x1401c6354, 0x1401c6a86, 0x1401c6f9c; not with the system's flag 0x10), so the
     /// `collisionbounds` preview's `speed` 2.9 launches its particles 2.9 × as fast.

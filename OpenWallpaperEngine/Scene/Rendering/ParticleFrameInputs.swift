@@ -229,7 +229,7 @@ struct ParticleFrameInputs {
         inputs.ropeLifetimeScale = inputs.spawnScale.z
         system.ropeFrame = SIMD3(inputs.ropeRateScale, inputs.ropeLifetimeScale, Float(frameRateLimit))
         inputs.placeControlPoints(system, world: world, cursor: cursor, overrides: overrides, modelCapsules: modelCapsules)
-        inputs.encodeProgram(system, audio: audio, countScale: overrides.count, rateScale: overrides.rate)
+        inputs.encodeProgram(system, audio: audio, overrides: overrides)
         return inputs
     }
 
@@ -375,11 +375,12 @@ struct ParticleFrameInputs {
         }
     }
 
-    /// This step's records: each with its audio response, the turbulence operators' `timescale`
-    /// times the `rate` override (the parser's only binding to it, 0x1401c8bc5, 0x1401cd7ba) and, for the `mapsequence…`
-    /// initializers, the `count` override applied to their step.
+    /// This step's records: each with its audio response, the instance overrides WE's parser binds
+    /// into them (`ParticleOverrideBindings`) and, for the `mapsequence…` initializers, the `count`
+    /// override applied to their step.
     private mutating func encodeProgram(_ system: ParticleSystemRuntime, audio: AudioSpectrumSnapshot,
-                                        countScale: Float, rateScale: Float = 1) {
+                                        overrides: SceneParticleOverrides) {
+        let countScale = overrides.count
         let program = system.configuration.program
         var collision: UInt32 = 0
         var collisionOperator = 0
@@ -394,20 +395,18 @@ struct ParticleFrameInputs {
                 record.header.z = collision | (UInt32(count) << 16)
                 collision += UInt32(count)
             }
-            if element.kind == .turbulence { record.b.w *= rateScale }
-            return record
+            return ParticleOverrideBindings.bind(record, operator: element.kind, overrides: overrides)
         }
         initializers = program.initializers.map { element in
             var record = element.record
             if let response = element.audio { record.e.w = response.response(audio) }
-            if element.kind == .turbulentVelocityRandom { record.b.x *= rateScale }
             if let count = element.sequenceCount {
                 let scaled = (record.header.y & ParticleProgramCPU.sequenceFollowsCountFlag(element.kind)) != 0
                     ? count * countScale : count
                 let between = element.kind == .mapSequenceBetweenControlPoints
                 record.a.x = 1 / max(between ? scaled - 1 : scaled, 0.0001)
             }
-            return record
+            return ParticleOverrideBindings.bind(record, initializer: element.kind, overrides: overrides)
         }
     }
 

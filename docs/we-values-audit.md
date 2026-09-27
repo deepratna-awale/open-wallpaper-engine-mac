@@ -568,11 +568,14 @@ Particles are random, so the comparison is statistical:
 - **The key table (0x14024d980)** puts each `instanceoverride` key at an offset: alpha 0xc8, size 0xcc, count 0xd0, speed 0xd4, lifetime 0xd8, rate 0xdc, brightness 0xe0, colorn 0xe4. The particle parser binds fields to those offsets:
   - every emitter's `rate` and `maxtoemitperperiod` to **count** (0x1401c6e6c…0x1401c6ef6, skipped with the system's flag 0x20);
   - its speeds to speed; `lifetimerandom` to lifetime; `sizerandom` to size;
+  - **speed** also to `velocityrandom`, `angularvelocityrandom`, `inheritcontrolpointvelocity` and `turbulentvelocityrandom` (0x1401c855f, 0x1401c98ff, 0x1401c870f, 0x1401c8c73), `mapsequencearoundcontrolpoint`'s speeds (0x1401ca151), and the operators `movement` gravity, `angularmovement` force, `oscillateposition` frequency, `controlpointattract` scale, `turbulence` speed and `vortex`/`vortex_v2` speeds (0x1401cb52f, 0x1401cb85e, 0x1401cc416, 0x1401ccd7b, 0x1401cd872, 0x1401cdddc, 0x1401ce39b). Not `oscillatealpha`, `oscillatesize` or `boids`;
+  - **size** also to `sizechange`'s start and end values (0x1401cbb48, skipped with flag 0x80);
+  - each binding rewrites its field every frame as authored × override (the interpreter at 0x1401d17c0), so a range's minimum and maximum both scale;
   - `turbulentvelocityrandom`'s and `turbulence`'s `timescale` to **rate** (0x1401c8bc5, 0x1401cd7ba). Nothing else reads `rate`.
 - The runtime applies alpha, brightness and colorn to the base values (0x1401d15fe…0x1401d16aa).
-- Ours scaled the rate by `rate`, and not by `count`. Now `count` scales the emitters' rate, the rope's expected points and the budget's estimate, and `rate` scales the two timescales.
+- Ours scaled the rate by `rate`, and not by `count`. Now `count` scales the emitters' rate, the rope's expected points and the budget's estimate, and `rate` scales the two timescales. The speed override reached only the emitters and the three velocity initializers, and size only `sizerandom`; `ParticleOverrideBindings` now binds the rest.
 - **Child `flags` bit 2** is tested in one place (0x14022f7b7). When a periodic emitter of the parent starts a period (0x14022f790), each child with the bit restarts (0x14022f6c0): its time goes to 0, and each emitter's delay, duration, burst, carry and period count reset, as do its sequences. `ParticleChildLink.restartsWithParentPeriod` does that. Bit 1 is the control-point link (`controlpointstartindex` at +0x68).
-- Tests: `ParticleOverrideTests.testTheRateOverrideScalesTurbulenceNotEmission`, `testBoundOverridesResolveEveryFrame`, `ParticleEmitterTimingTests.testALinkFlag2ChildRestartsWithItsParentsPeriods`, `ParticleBudgetTests`.
+- Tests: `ParticleOverrideTests.testTheRateOverrideScalesTurbulenceNotEmission`, `testTheSpeedAndSizeOverridesScaleTheFieldsWEBinds`, `testBoundOverridesResolveEveryFrame`, `ParticleEmitterTimingTests.testALinkFlag2ChildRestartsWithItsParentsPeriods`, `ParticleBudgetTests`.
 
 **11.4 Depth and `perspective` systems.**
 - WE simulates particles in 3D. A system with flag 4 draws through the temporary camera of a perspective layer even in an orthographic scene (0x140236761 → 0x1401e5b60). That camera's vertical fov is `perspectiveoverridefov` (95), with near 5 and far max(15000, d + 1000), at d = (h/2) / tan(fov/2) above the centre. It keeps `g_EyePosition`.
