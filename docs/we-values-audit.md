@@ -150,6 +150,8 @@ Particle systems now compile their initializers and operators into records the w
 | `starttime` | not read | pre-simulated in 0.05 s steps (0.2 s from 500 particles; 0x14022f2e0) | fixed |
 | system `flags` 8…0x80 | not read | switch off the colour, speed, count, lifetime and size overrides | fixed |
 | a second emitter | ignored (logged) | WE runs every emitter record in order, each with its own rate, carry, burst, clock and per-period count, counting what the earlier ones spawned (0x1402378a0) | fixed (CPU, GPU, instances) |
+| `layerimage` | logged, emitted as a sphere | points from the layer's image reduced to a quarter, a random one per spawn, through the layer's transform; flags 0x10000 (the texel's colour), `offsetmin`/`offsetmax` "−5 −5 0"/"5 5 0" (2D) with flag 0x80000 (§11.2) | fixed |
+| depth (z) | dropped | `directions` z spreads the spawn in depth and the launch follows it; `velocityrandom` z and `movement`'s gravity z and drag move it (§11.4) | fixed (emitters, `velocityrandom`, `movement`) |
 
 **Initializers:** lifetime is set; size, colour and alpha multiply WE's base values (lifetime 1, size 0.5, the instance colour and alpha; 0x14023b340); velocity, rotation and spin add. Two of a kind both apply.
 
@@ -212,9 +214,9 @@ Particle systems now compile their initializers and operators into records the w
 
 **Units:** the particles simulate in their system's space (WE's model matrix, 0x14023761b…0x14023767a): velocities, gravity, forces and every distance scale and turn with the object. A `worldspace` system simulates in the scene; its spawn offsets and velocity initializers turn with the emitter (the control point matrix).
 
-**Children, audio, collision:** children `maxcount` 10, `probability` 1, type static (kept); audio `audioprocessingbounds` "0.8 1.0", `exponent` 2, frequency 0…1 (kept); collision defaults 2D / 3D: plane at −150 / 0, sphere at "0 −200 0" / origin with radius 50 / 1, quad "0 −150 0" / origin of 200 × 200 / 1 × 1, bounce 0.5, push-out × 1.05 (kept, now cited).
+**Children, audio, collision:** children `maxcount` 10, `probability` 1, type static (kept); link `flags` 1 makes the child's control points the parent's particles, 2 restarts the child each time a periodic emitter of the parent starts a period (0x14022f790 → 0x14022f6c0; §11.3); audio `audioprocessingbounds` "0.8 1.0", `exponent` 2, frequency 0…1 (kept); collision defaults 2D / 3D: plane at −150 / 0, sphere at "0 −200 0" / origin with radius 50 / 1, quad "0 −150 0" / origin of 200 × 200 / 1 × 1, bounce 0.5, push-out × 1.05 (kept, now cited).
 
-**Instance overrides:** unchanged (1 by default, no clamps: WE has none either); the system's flags switch parts off.
+**Instance overrides:** 1 by default, no clamps (WE has none either); the system's flags switch parts off. `count` scales every emitter's rate and `maxtoemitperperiod` as well as the maximum, and `rate` scales only the turbulence operators' `timescale` (the parser's bindings; §11.3).
 
 **Camera:** particle systems now move with camera parallax and shake as every WE object does (their emitter's transform takes the layer's offset).
 
@@ -423,7 +425,7 @@ Ours followed a box: the authored size, grown to fit, with the edge named by the
 **9.8 Particle registry — checked.** The strings in `wallpaper64.exe` list 3 emitters, 16 initializers, 26 operators, 4 renderers and 3 child events. The operator EXTRAS.md calls `vortex_v` is `vortex_v2`.
 - All initializers and operators build, except two that are expected to return nothing: `collisionbox`, whose VM entry does nothing in WE (0x140240279), and `collisionmodel`, which needs 3D models and is logged.
 - The renderers `sprite`, `spritetrail`, `rope` and `ropetrail` and the events `eventfollow`, `eventspawn` and `eventdeath` are handled.
-- Gap: the `layerimage` emitter (particles emitted from a layer's image; only WE's element preview uses it) isn't built. It used to become a `sphererandom` silently and is now logged.
+- The `layerimage` emitter (particles emitted from a layer's image; only WE's element preview uses it) is built (§11.2).
 - Test: `ParticleProgramTests.testEveryRegisteredInitializerAndOperatorBuilds`.
 
 ## 10. WE 2.8.0.42's particle editor schema (ground truth, data only)
@@ -504,7 +506,7 @@ The control point's 0x10 is editor-only, which confirms §6: the runtime never t
 
 So the fillers are the engine's defaults written out, and our runtime values stay. The only editor values that differ are these:
 - **The new-system template.** `particles/example.json` (§7.4) is what the editor writes into a new system, e.g. `maxcount` 500 and `rate` 20.
-- **layerimage `flags` 0x10000 (copy layer colour).** We don't build `layerimage` (§9.8).
+- **layerimage `flags` 0x10000 (copy layer colour).** The runtime's filler writes it too (0x1401b9930), so it is also our default (§11.2).
 - **`uvscale` is written as the int 1.**
 - **controlpointattract offset.** The panel edits `origin`, while the filler writes `offset` "0 0 0". The VM reads neither (0x140241554).
 
@@ -514,8 +516,71 @@ So the fillers are the engine's defaults written out, and our runtime values sta
 - The system panel shows the parsed system's values (e.g. `sequencemultiplier` at object +0x3bc), so an absent field shows the runtime default.
 
 **Open:**
-- **Our child `flags` bit 2.** It means "keeps its own colours" in `ParticleFamilyBuilder` (no VA cited). The editor calls bit 2 "Restart with periodic emission" (0x1401c44d1). This needs a render check. It's listed with the few remaining UIA spot checks (checkbox states, colour and hue pickers, and the legacy `vortex` and child panels) in `/Volumes/980Pro/agentPS-out/unresolved.md`.
+- **Our child `flags` bit 2 — fixed.** It meant "keeps its own colours" in `ParticleFamilyBuilder`. WE restarts the child with its parent's periods, and the instance colour reaches it either way (§11.1, §11.3).
 - **Our inspector** shows particle JSON raw, so there is nothing to range yet. A particle property editor should take its types, ranges, steps and conditions from this file.
+
+## 11. Particles against WE's particle gallery (ground truth)
+
+**Ground truth.** WE 2.8.0.42 on Windows drew two sets at 1920 × 1080, each as a still about 6 s after opening and a 5 s clip (the peer's `tools/peer/particle_gallery`, README):
+- every built-in preset variant: 20 presets, 74 variants of `assets/presets/*/preset.json`, built as they are at the screen's centre over generated backgrounds;
+- every particle component preview: `assets/scenes/particleelementpreviews`, 48 scenes.
+
+Particles are random, so the comparison is statistical:
+- the clip's coverage: pixels whose largest channel differs from the background (or, for a preview, from the frame's most common colour) by more than 40, at 5 fps and half size;
+- its motion (summarize.py);
+- the covered pixels' centroid, spread, mean colour and luma histogram.
+
+**Ours.** `WEParticleGalleryTests` (gated by `OWE_PARTICLE_GALLERY`) builds the same projects from the WE install. It draws them through the real loader and renderer (`WEReferenceRenderer`: the still at 5.5 s, then 25 frames at 5 fps). The clip's coverage and motion must match WE's (`Tests/Fixtures/WEParticleGallery/expected.json`) within half or 0.3; known gaps are reported, not failed. The per-item table and WE | ours sheets from the last run are in `/Volumes/980Pro/agentPT-out` (`final-table.tsv`, `final-contact-*.png`); they are not in the repo.
+
+**Result.** Before this pass 19 of the 122 items were outside those tolerances. Now 12 are, and each is a known gap with its cause (test-risks PG1–PG7): the leaves 0 and 2 and the vortex orb (3D operators), five light-shaft variants (three of them the `lightshafts` effect), the Thunderbolt's sampling, the `collisionbounds` and `collisionmodel` previews, and the snowstorm's fog. Items whose still differs but whose clip matches (magic_6, colorlist, maintaindistancebetweencontrolpoints, stars_0) were caught at another point of a random or periodic cycle.
+
+| Items | Was | Cause | Fix |
+|---|---|---|---|
+| layerimage preview | a sphere of white halos (coverage 14.6 % against 34.8 %) | the emitter wasn't built | §11.2 |
+| spritetrail preview | short ovals (coverage 0.46 % against 4.8 %, motion 0.82 against 4.62) | the trail's stretch took the scene's speed, the emitter's scale (0.102) times WE's | `g_RenderVar0.x` ÷ the emitter's scale |
+| hsvcolorrandom, remapinitialvalue previews (`count` 2) | half WE's particles (27.7 % against 42.8 %) | `count` didn't scale the emitters' rate | §11.3 |
+| maintaindistancetocontrolpoint, reducemovementnearcontrolpoint previews (`rate` 2.33) | twice WE's (5.0 % against 2.4 %; motion 4.41 against 2.29) | the `rate` override scaled emission; WE binds it to turbulence's `timescale` only | §11.3 |
+| wildfire, fog 1 (sprite sheets) | flickered about 2.5 × too fast (motion 7.50 against 4.83) | a sequence played every sheet `duration` | §11.5 |
+| star field, refractive and perspective rain, leaves, ash, perspective snow (flag 4) | flat (the star field 0.12 % against 0.61 %, motion 0.03 against 1.42) | particles had no depth, and flag 4 was ignored in 2D scenes | §11.4 |
+
+**11.1 WE's flag tests (the peer's `particle_schema/flagtests`).**
+- **Child `flags` 2.** A static child with flags 0 and one with flags 2, both under a layer's `colorn` "1 0 0", are red in WE (133,12,14 and 134,12,14). Ours skipped the tint for flag 2. The flag restarts the child with its parent's periods (§11.3).
+- **`remapvalue` `flags`.** Against the same particles without the remap, the clip's light (lifetimefraction 0…0.5 → size × 0…1) is 0.64 with flags 1, 0.65 with flags 2 and 1.33 with flags 0. Ours draws 0.64 / 0.65 / 1.33 within 0.15. So bit 1 clamps the input and bit 2 the output, as the VM tests them (0x140244996, 0x1402450be, 0x140245791).
+- The parser reads an absent `flags` as 0 (0x1401ce803; the filler 0x1401bfbb0 writes none), so an absent `flags` clamps nothing. WE's `absent` capture draws like flags 1. It is most likely the previous project captured again (test-risks PG8).
+- Tests: `WEParticleGalleryTests.testFlagTestsMatchWE` (`OWE_PARTICLE_FLAGTESTS`), `ParticleOverrideTests.testAChildWithLinkFlag2TakesTheTint`, `ParticleProgramTests.testRemapValueFlagsClampTheInputAndTheOutput`.
+
+**11.2 `layerimage`.**
+- **Points (0x1401d3ae0).** The layer's image (its texture's own size w × h) is drawn through `materials/util/downsample_quarter.json` with `WRITEALPHA` (and `OPACITYMASK` when the layer has a mask) into a target a quarter its size, at least 2 × 2. An image larger than 3840 × 2160 is first fitted into that, keeping its aspect.
+- The target is read back. Every texel whose alpha is at least 127 becomes a point with its colour. It sits at `trunc(s·(i + ½) − ⌊w/2⌋)` from the image's centre, the same down, with s = w ÷ the target's width. The spawn negates the row.
+- **Binding.** The particle object's `dependencies` entry `{"type": "emitterimage", "index": n, "id": …}` names the layer of the system's n-th `layerimage` emitter (0x14022b1d9, 0x1401c6fbf).
+- **Spawn (0x140238c45).** One of the points at random. With flag 0x80000 it moves by a random offset between `offsetmin` and `offsetmax`. It is placed through the layer's world matrix and the inverse of the system's, and starts at rest.
+- With flag 0x10000 the point's colour multiplies the base colour (0x140239765). Without points nothing spawns.
+- **Defaults (0x1401b9930).** Flags 0x10000; `offsetmin` "−5 −5 0" and `offsetmax` "5 5 0" in 2D, "0 0 0" in 3D; `speedmin` / `speedmax` 0.1 / 0.2, which only drive a puppet-warped layer's points.
+- **Ours.** `ParticleEmitterImagePoints` draws the same downsample on the GPU once when the content loads, reads it back and builds the points. Both simulations pick among them (`ParticleProgramCPU.emit(image:…)`, `emitFromImage`). The layer's transform is live every frame.
+- The preview matches WE's capture: coverage 33.8 % against 34.8 %, motion 3.68 against 3.55. The dots, their grid, colours and place agree. Flags 0x20000 and 0x40000 are logged (PG9).
+
+**11.3 Instance overrides and children.**
+- **The key table (0x14024d980)** puts each `instanceoverride` key at an offset: alpha 0xc8, size 0xcc, count 0xd0, speed 0xd4, lifetime 0xd8, rate 0xdc, brightness 0xe0, colorn 0xe4. The particle parser binds fields to those offsets:
+  - every emitter's `rate` and `maxtoemitperperiod` to **count** (0x1401c6e6c…0x1401c6ef6, skipped with the system's flag 0x20);
+  - its speeds to speed; `lifetimerandom` to lifetime; `sizerandom` to size;
+  - `turbulentvelocityrandom`'s and `turbulence`'s `timescale` to **rate** (0x1401c8bc5, 0x1401cd7ba). Nothing else reads `rate`.
+- The runtime applies alpha, brightness and colorn to the base values (0x1401d15fe…0x1401d16aa).
+- Ours scaled the rate by `rate`, and not by `count`. Now `count` scales the emitters' rate, the rope's expected points and the budget's estimate, and `rate` scales the two timescales.
+- **Child `flags` bit 2** is tested in one place (0x14022f7b7). When a periodic emitter of the parent starts a period (0x14022f790), each child with the bit restarts (0x14022f6c0): its time goes to 0, and each emitter's delay, duration, burst, carry and period count reset, as do its sequences. `ParticleChildLink.restartsWithParentPeriod` does that. Bit 1 is the control-point link (`controlpointstartindex` at +0x68).
+- Tests: `ParticleOverrideTests.testTheRateOverrideScalesTurbulenceNotEmission`, `testBoundOverridesResolveEveryFrame`, `ParticleEmitterTimingTests.testALinkFlag2ChildRestartsWithItsParentsPeriods`, `ParticleBudgetTests`.
+
+**11.4 Depth and `perspective` systems.**
+- WE simulates particles in 3D. A system with flag 4 draws through the temporary camera of a perspective layer even in an orthographic scene (0x140236761 → 0x1401e5b60). That camera's vertical fov is `perspectiveoverridefov` (95), with near 5 and far max(15000, d + 1000), at d = (h/2) / tan(fov/2) above the centre. It keeps `g_EyePosition`.
+- Ours was 2D: the z of `directions`, `velocityrandom` and gravity did nothing, and flag 4 was ignored in a 2D scene.
+- Particles now carry depth and its velocity in both simulations. The sphere and box emitters spread along z and launch along the 3D offset, `velocityrandom` adds its z, and `movement` moves by it with gravity's z and the drag. The records carry it to WE's shaders.
+- A flag-4 system of an orthographic scene draws through `SceneLayerPlacement.perspectiveLayerCamera`. The orthographic view got a depth range so depth doesn't clip.
+- The star field now shows WE's streaks toward the viewer (clip coverage 0.69 % against 0.61 %, motion 1.59 against 1.42), and the refractive rain's motion matches (1.32 against 1.35, was 2.70).
+- The other operators are still planar (PG1). Tests: `ParticleProgramTests.testMovementAndTheEmitterWorkInDepth`, `ParticleSimulationParityTests.testDepth`.
+
+**11.5 Sprite-sheet playback.**
+- For a system whose texture is a sprite sheet and that isn't "randomframe", WE writes each particle's life value as age / lifetime × `sequencemultiplier` (0x14023703b…0x140237075).
+- `ComputeSpriteFrame` shows the frame at its fraction, so a sequence plays `sequencemultiplier` times over the particle's life, whatever the sheet's `duration`.
+- Ours played it every `duration`. Wildfire's motion is now 4.76 against 4.83 (was 7.50), and fog 1's 0.87 against 0.86 (was 1.41). Test: `ParticleSpriteSheetTests.testASequencePlaysOverTheParticlesLife`.
 
 ## Tests
 
