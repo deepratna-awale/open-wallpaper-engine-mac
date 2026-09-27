@@ -77,18 +77,23 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button {
-                    viewModel.save()
-                    AppDelegate.shared.settingsWindow.close()
-                } label: {
-                    Text("OK").frame(width: 50)
-                }
-                .buttonStyle(.borderedProminent)
-                Button {
-                    /*here should be a call of viewModel.reset() but I move it to the delegate */
-                    AppDelegate.shared.settingsWindow.close()
-                } label: {
-                    Text("Cancel").frame(width: 50)
+                GlassGroup {
+                    HStack {
+                        Button {
+                            viewModel.save()
+                            AppDelegate.shared.settingsWindow.close()
+                        } label: {
+                            Text("OK").frame(width: 50)
+                        }
+                        .glassButtonStyle(.prominent)
+                        Button {
+                            /*here should be a call of viewModel.reset() but I move it to the delegate */
+                            AppDelegate.shared.settingsWindow.close()
+                        } label: {
+                            Text("Cancel").frame(width: 50)
+                        }
+                        .glassButtonStyle()
+                    }
                 }
             }
             .padding(20)

@@ -58,83 +58,49 @@ struct PerformancePage: SettingsPage {
                     } label: {
                         Text("Edit").frame(width: 100)
                     }
-                    .buttonStyle(.borderedProminent)
+                    .glassButtonStyle(.prominent)
                     .disabled(true)
                 }
             } header: {
                 Label("Playback", systemImage: "play.fill")
             }
             Section {
-                HStack(spacing: 1) {
-                    Button {
-                        viewModel.setQuality(.low)
-                    } label: {
-                        Text("Low").frame(maxWidth: .infinity)
+                // Each button applies a preset to the settings below; none of them stays selected.
+                LabeledContent("Preset") {
+                    ControlGroup {
+                        Button("Low") { viewModel.setQuality(.low) }
+                        Button("Medium") { viewModel.setQuality(.medium) }
+                        Button("High") { viewModel.setQuality(.high) }
+                        Button("Ultra") { viewModel.setQuality(.ultra) }
                     }
-                    Divider()
-                    Button {
-                        viewModel.setQuality(.medium)
-                    } label: {
-                        Text("Medium").frame(maxWidth: .infinity)
-                    }
-                    Divider()
-                    Button {
-                        viewModel.setQuality(.high)
-                    } label: {
-                        Text("High").frame(maxWidth: .infinity)
-                    }
-                    Divider()
-                    Button {
-                        viewModel.setQuality(.ultra)
-                    } label: {
-                        Text("Ultra").frame(maxWidth: .infinity)
-                    }
+                    .fixedSize()
                 }
-                .padding(6)
-                .background(Color(nsColor: NSColor.unemphasizedSelectedContentBackgroundColor))
-                .buttonStyle(.borderless)
-                .clipShape(RoundedRectangle(cornerRadius: 5.0))
-                Picker("Anti-aliasing", selection: $viewModel.settings.antiAliasing) {
+                .help("Apply a quality preset to the settings below")
+                Picker(selection: $viewModel.settings.antiAliasing) {
                     Text("None").tag(GSAntiAliasingQuality.none)
                     Text("MSAA x2").tag(GSAntiAliasingQuality.msaa_x2)
                     Text("MSAA x4").tag(GSAntiAliasingQuality.msaa_x4)
                     Text("MSAA x8").tag(GSAntiAliasingQuality.msaa_x8)
+                } label: {
+                    warningLabel("Anti-aliasing",
+                                 warning: viewModel.settings.antiAliasing == .msaa_x8 ? .red : nil,
+                                 help: "×8 MSAA is only recommended for powerful high-end desktop graphics cards.")
                 }
-                .overlay {
-                    HStack {
-                        Spacer(); Spacer()
-                        if viewModel.settings.antiAliasing == .msaa_x8 {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundStyle(.red)
-                                .help("×8 MSAA is only recommended for powerful high-end desktop graphics cards.")
-                        }
-                        Spacer()
-                    }
-                    
-                }
-                Picker("Post-Processing", selection: $viewModel.settings.postProcessing) {
+                Picker(selection: $viewModel.settings.postProcessing) {
                     Text("Disabled").tag(GSPostProcessingQuality.disabled)
                     Text("Enabled").tag(GSPostProcessingQuality.enabled)
                     Text("Ultra").tag(GSPostProcessingQuality.ultra)
                     if displayHDR {
                         Text("Ultra (Display HDR)").tag(GSPostProcessingQuality.displayhdr)
                     }
+                } label: {
+                    warningLabel("Post-Processing",
+                                 warning: viewModel.settings.postProcessing.allowsHDR ? .yellow : nil,
+                                 help: "Ultra mode adds HDR bloom to supported wallpapers and is only recommended for powerful high-end desktop graphics cards.")
                 }
                 .onAppear {
                     let kept = DisplayHDRSupport.coerced(viewModel.settings.postProcessing, available: displayHDR)
                     if kept != viewModel.settings.postProcessing { viewModel.settings.postProcessing = kept }
-                }
-                .overlay {
-                    HStack {
-                        Spacer(); Spacer()
-                        if viewModel.settings.postProcessing.allowsHDR {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundStyle(.yellow)
-                                .help("Ultra mode adds HDR bloom to supported wallpapers and is only recommended for powerful high-end desktop graphics cards.")
-                        }
-                        Spacer()
-                    }
-                    
                 }
                 Picker("Texture Resolution", selection: $viewModel.settings.textureResolution) {
                     Text("High Quality").tag(GSTextureResolutionQuality.highQuality)
@@ -161,27 +127,15 @@ struct PerformancePage: SettingsPage {
                 }
                 .help("Light shafts from wallpapers' volumetric lights. Higher qualities march more samples at a finer resolution; low and medium blur a coarser buffer.")
                 HStack {
-                    Text("FPS")
+                    warningLabel("FPS",
+                                 warning: viewModel.settings.fps > 60 ? .red : viewModel.settings.fps > 30 ? .yellow : nil,
+                                 help: viewModel.settings.fps > 60
+                                    ? "High FPS may slow down your PC! We're serious, this is too much 🔥."
+                                    : "High FPS may slow down your PC!")
                     Spacer()
                     NumericSliderInput(value: $viewModel.settings.fps, range: 10...120,
                                        defaultValue: 30, step: 1, fractionDigits: 0,
                                        sliderWidth: 150, fieldWidth: 44)
-                }
-                .overlay {
-                    HStack {
-                        Spacer(); Spacer()
-                        if viewModel.settings.fps > 60 {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .foregroundStyle(.red)
-                                    .help("High FPS may slow down your PC! We're serious, this is too much 🔥.")
-                        } else if viewModel.settings.fps > 30 {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .foregroundStyle(.yellow)
-                                    .help("High FPS may slow down your PC!")
-                        }
-                        Spacer()
-                    }
-                    
                 }
                 Picker("Particle Budget", selection: $viewModel.settings.particleBudget) {
                     Text("Low (10,000)").tag(GSParticleBudget.low)
@@ -203,5 +157,18 @@ struct PerformancePage: SettingsPage {
             }
         }
         .formStyle(.grouped)
+    }
+
+    /// A setting's title, followed by a warning triangle (with `help`) when `warning` is set.
+    private func warningLabel(_ title: LocalizedStringKey, warning: Color?, help: String) -> some View {
+        HStack(spacing: 6) {
+            Text(title)
+            if let warning {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundStyle(warning)
+                    .help(help)
+                    .accessibilityLabel(help)
+            }
+        }
     }
 }

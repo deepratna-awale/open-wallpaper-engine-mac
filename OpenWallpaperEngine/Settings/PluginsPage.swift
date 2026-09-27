@@ -33,8 +33,11 @@ struct PluginsPage: SettingsPage {
                                 .aspectRatio(contentMode: .fit)
                                 .frame(maxWidth: 100, maxHeight: 100)
                                 .padding(4)
-                                .background(Material.thin)
-                                .clipShape(RoundedRectangle(cornerRadius: 16.0))
+                                .glassBackground(in: RoundedRectangle(cornerRadius: 16.0)) { tile in
+                                    tile
+                                        .background(Material.thin)
+                                        .clipShape(RoundedRectangle(cornerRadius: 16.0))
+                                }
                             VStack(alignment: .leading, spacing: 10) {
                                 Text("This plugin enables animation of GIF thumbnail images in wallpaper explorer")
                                 Spacer()

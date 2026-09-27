@@ -217,7 +217,7 @@ struct GeneralPage: SettingsPage {
                         Text("Reset").frame(width: 100)
                     }
                     .tint(Color.red)
-                    .buttonStyle(.borderedProminent)
+                    .glassButtonStyle(.prominent)
                 }
             } header: {
                 Label("Reset", systemImage: "exclamationmark.triangle.fill")
