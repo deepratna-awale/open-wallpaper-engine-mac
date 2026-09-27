@@ -137,7 +137,7 @@ Implicit engine use (not a file reference) is counted by scene features:
 `#require LightingV1` is not a file. It is expanded by `LightingV1Require.swift`, which ports the reference's generated source. See §7 R9.
 
 **Tests for the headers:**
-- `InProcessShaderCompilerTests` (byte-identical MSL over every bundled shader);
+- `ShaderVariantCacheTests.testTranslatedOutputMatchesItsRevision` (golden hash of every bundled effect pair's MSL);
 - `ShaderVariantTests` (every effect pair, ≥ 68);
 - `GLSLReservedWordsTests`;
 - `WEImageBlendModesTests` (reads `common_blending.h`);
@@ -245,7 +245,7 @@ Tests:
 ### 1.9 Code that resolves the tree
 
 These are the touch points for §5 and P0/P1:
-- **`Core/WallpaperEngineAssets.swift`:** `bundled` (resource `we-assets`, valid if it has `effects/`), `configured` (defaults `WallpaperEngineAssetsDirectory`), `searchDirectories` = [configured, bundled], `locate`.
+- **`Core/WallpaperEngineAssets.swift`:** `bundled` (resource `we-assets`, valid if it has `effects/`), `testInstall` (`OWE_WE_ASSETS`, under XCTest only), `searchDirectories` = [testInstall, bundled], `locate`. The user-configured folder (`configured`, defaults `WallpaperEngineAssetsDirectory`) was removed on 2026-09-27 at the user's request.
 - **`SceneWallpaperViewModel.assetData`:** zcompat, then the wallpaper's pkg, folder and Workshop items, then `sharedAssetData`. `sharedAssetData` adds the `.tex` suffix, remaps `materials/presets/…`, and prefixes `materials/`.
 - **`ShaderSourceLoader`:** stages are `<name>.<stage>`, then `shaders/<name>.<stage>`; includes are `shaders/<inc>`, then `<inc>`. `GeometryShaderEmulation.sources` does the same for `.geom`.
 - **Engine chains:**
@@ -739,8 +739,8 @@ The particle textures are artwork, and their shapes set coverage in the particle
 |---|---|
 | `Vendor/we-assets/` (folder reference) | `SharedAssets/` at the repo root (folder reference, bundled as `Contents/Resources/shared-assets`). It is not under `Vendor/` because it isn't vendored. |
 | `WallpaperEngineAssets` | `SharedAssets` (`bundled`, `external`, `searchDirectories`, `locate`) |
-| `WallpaperEngineAssets.configured` / defaults key `WallpaperEngineAssetsDirectory` | `SharedAssets.external` / typed setting `externalAssetsDirectory`, key `ExternalAssetsDirectory`, with a one-time migration that reads the old key. The migration is compatibility code that names the old key once, in a comment. |
-| `.wallpaperEngineAssetsDirectoryDidChange`, `setWallpaperEngineAssetsDirectory`, `chooseWallpaperEngineAssetsDirectory`, `GlobalSettings.wallpaperEngineAssetsDirectory` / settings case `wallpaperEngineAssetsDirectory` | `…externalAssetsDirectory…` |
+| `WallpaperEngineAssets.configured` / defaults key `WallpaperEngineAssetsDirectory` | Removed (2026-09-27, at the user's request; see D2). Nothing to rename or migrate; tests use `testInstall` (`OWE_WE_ASSETS`). |
+| `.wallpaperEngineAssetsDirectoryDidChange`, `setWallpaperEngineAssetsDirectory`, `chooseWallpaperEngineAssetsDirectory`, `GlobalSettings.wallpaperEngineAssetsDirectory` / settings case `wallpaperEngineAssetsDirectory` | Removed (2026-09-27, see D2). |
 | `SceneFontResolver.Source.weAssets` | `.bundled` (plus `.system`, `.fallback`, `.userChoice`) |
 | `WallpaperEngineLabels` | Out of scope: it reads an installed product's locale file (compatibility). Rename to `InstalledEditorLabels` only if the coordinator wants it (D6). |
 | `Scripts/vendor-we-assets.sh`, `Scripts/we-assets-attribution.txt` | Deleted (P17). Replaced by `Scripts/assets/*` generators and `Scripts/fonts/fetch.sh`, which downloads the upstream releases and verifies SHA-256. |
@@ -759,7 +759,7 @@ The particle textures are artwork, and their shapes set coverage in the particle
 | `GeneralPage.swift:270` (open panel) | "Choose Wallpaper Engine assets folder" | "Choose an assets folder" |
 | `GeneralPage.swift:162-163` | "…keeps each display's properties, as Wallpaper Engine does…" | drop the clause |
 | `GeneralPage.swift:185-186` | "Metal draws video … the way Wallpaper Engine does. Experimental." | "Metal draws video … with effects and scene features. Experimental." |
-| `Settings/DiagnosticsPage.swift:18` | "Built-in" / "Wallpaper Engine install" | "Built-in" / "External folder" |
+| `Settings/DiagnosticsPage.swift:18` | "Built-in" / "Wallpaper Engine install" | Removed with the setting (2026-09-27). |
 | `DiagnosticsPage.swift:56` | "WE shaders are translated per combination…" | "Wallpaper shaders are translated per combination…" (and a line for native programs) |
 | `UI/FirstLaunchView.swift:124` | "…with a familiar layout if you already know Wallpaper Engine." | "…with a familiar layout." |
 | Catalog-only keys, unused in code | "Clear Wallpaper Engine Assets Location", "Select the assets folder from a Wallpaper Engine installation…", "Similar UI Layout to Wallpaper Engine on Steam", "You can easily import video type wallpapers from steam workshop of Wallpaper Engine…" | Delete the stale keys |
@@ -936,7 +936,7 @@ Per-layer, not a setting: the **text font override** (§4.1.4).
 | # | Decision | Recommendation |
 |---|---|---|
 | **D1** | Fonts without redistribution rights: Alcubierre, Atami, Cursed Timer, Lazer 84, Summer 85, Kust, OpenSticks, Spin Cycle 3D | Ask the authors of Alcubierre and Atami (the only two the library uses); ship the others only with permission; class fallback meanwhile |
-| **D2** | Keep the external assets folder setting (renamed) as a fallback for files we lack, e.g. particle art not yet redrawn and the particle gallery's `presets`? | Yes. Native programs always win over it for engine shaders. It is also what `WorkshopAssetResolver` uses to find a Steam Workshop folder. |
+| **D2** | Keep the external assets folder setting (renamed) as a fallback for files we lack, e.g. particle art not yet redrawn and the particle gallery's `presets`? | Yes. Native programs always win over it for engine shaders. It is also what `WorkshopAssetResolver` uses to find a Steam Workshop folder. **Superseded 2026-09-27:** the user had the setting removed; the app uses only its bundled assets, so what isn't bundled has no fallback, the Steam Workshop folder root went with it, and the particle gallery reads `presets` through the test-only `OWE_WE_ASSETS`. The steps that assume an external folder (§5 item 4, P1b's migration, R1's fallback) no longer apply. |
 | **D3** | Native substitution for local effect copies, by fingerprint (§3.3) | Yes. Without it, native effects only help the gallery and new projects. |
 | **D4** | Creative LUT looks will change (app colour-filter feature, not wallpaper content) | Accept; our grades keep the names |
 | **D5** | Parity goldens from translated reference renders, kept after P17 | Keep: they are our renders of test patterns |

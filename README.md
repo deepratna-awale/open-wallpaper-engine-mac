@@ -87,7 +87,7 @@ Licensed under [GPL-3.0](LICENSE), same as the original project.
 - Configurable wallpaper storage location with migration of an existing library.
 - Recent wallpapers menu in the status bar.
 - Performance settings — quality, anti-aliasing, post-processing, and focus-loss playback behaviour.
-- Diagnostics — resolved shader toolchain paths, shader cache statistics, and a cache invalidation action.
+- Diagnostics — the bundled assets path, the built-in shader compiler's library versions, and shader cache statistics.
 
 <details>
 <summary>Previously in 0.8.0</summary>
@@ -208,32 +208,15 @@ The import panel now correctly handles both individual wallpaper folders and par
 | Feature | Requirement | Install |
 |---------|-------------|---------|
 | Browsing / downloading from Steam Workshop | `steamcmd` | `brew install steamcmd` |
-| Scene effect library | A Wallpaper Engine `assets/` folder | See below |
 | Audio visualizers & audio-reactive SceneScript | Screen Recording permission | Settings → Permissions |
 
-#### Shader toolchain
+#### Shaders
 
-Wallpaper Engine ships its effects as GLSL. They are translated to Metal (GLSL → SPIR-V → MSL) by glslang and SPIRV-Cross, which are built into the app (`Vendor/ShaderToolchain`), the first time a wallpaper uses them, then cached on disk. Nothing needs to be installed.
+Wallpaper Engine ships its effects as GLSL. They are translated to Metal (GLSL → SPIR-V → MSL) by glslang and SPIRV-Cross, which are built into the app (`Vendor/ShaderToolchain`), the first time a wallpaper uses them, then cached on disk. Nothing needs to be installed. A shader whose translation hung the app, or crashed it twice, is skipped on later launches, and every other shader still translates.
 
-`brew install glslang spirv-cross` is optional: those executables are only used as a fallback after the built-in compiler crashed twice.
+#### Wallpaper Engine assets
 
-#### Wallpaper Engine assets folder
-
-Scene effects are defined by the effect manifests, materials, and shaders that ship with the Windows build of Wallpaper Engine. They are not redistributed here — point the app at an existing install via **Settings → General → Wallpaper Engine Assets Directory**.
-
-Select the `wallpaper_engine` folder (or its `assets` subfolder), typically:
-
-```
-…/Steam/steamapps/common/wallpaper_engine
-```
-
-This works with a Steam install running under CrossOver, Parallels, Whisky, or a copy taken from a Windows machine. On success the launch log reports the catalog:
-
-```
-[ShaderTranslator] Effect catalog: 45 definitions, 81 complete passes, 1 missing shader pairs
-```
-
-Without it, video and web wallpapers still work, and scene wallpapers render — but object effects are unavailable.
+The shared effects, materials, shaders and SceneScript runtime that wallpapers reference ship inside the app (`Vendor/we-assets`, refreshed from a Wallpaper Engine install with `Scripts/vendor-we-assets.sh`). There is nothing to configure.
 
 ## Build from Source
 

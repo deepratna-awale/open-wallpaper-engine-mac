@@ -7,9 +7,8 @@ Read [`docs/architecture.md`](docs/architecture.md) first. It explains the modul
 - Open `OpenWallpaperEngine.xcodeproj`, scheme **OpenWallpaperEngine**, macOS 14+ (Xcode 26.3 or newer; CI and release use 26.3).
 - **Debug builds sign with *Apple Development*.** macOS ties the Screen Recording grant (needed for audio-reactive features) to the signature, and ad-hoc signing loses it on every rebuild.
   - If you aren't on the project's team, set your own team in *Signing & Capabilities* and don't commit that change.
-- **Shader toolchain:** WE shaders are translated in process by the glslang and SPIRV-Cross libraries linked into the app. You don't need to install anything.
-  - `brew install glslang spirv-cross` is only for the fallback compiler (`ProcessShaderCompiler`). The app switches to it after an in-process compile crashed, and runs the Homebrew executables as subprocesses.
-- **WE assets:** point *Settings → General → Wallpaper Engine Assets Directory* at a Wallpaper Engine install. Otherwise the app uses the bundled copy.
+- **Shaders:** WE shaders are translated in process by the glslang and SPIRV-Cross libraries linked into the app (`Vendor/ShaderToolchain`). You don't need to install anything.
+- **WE assets:** the app always uses its bundled copy (`Vendor/we-assets`).
 
 ## Where code goes
 
@@ -49,7 +48,7 @@ There is **one type per file** unless the types are tiny and private to it. A fi
 - **Where tests go:** the `OpenWallpaperEngineTests` target (unit tests hosted in the app, which starts without its delegate under XCTest). Fixtures live in `Tests/Fixtures/`, outside the target, and are read with `Fixtures.url(_:)`.
 - **Every fix or feature comes with a test.** Format and value tests decode fixtures. Rendering checks go in `RenderCheckTests`.
 - **Known gaps** are asserted with `XCTExpectFailure("<snapshot id>: …")`. It's strict, so fixing a gap makes its test fail until you delete the expectation.
-- **Tests never touch the user's state.** The test host is the app, so under XCTest `AppStorageLocation` switches to the defaults suite `com.winddog.wallpaper-engine.isolated.tests`, `Open Wallpaper Engine (isolated tests)` under Application Support and Caches, and isolated keychain services. `AppStorageIsolationTests` guards this. To run the asset-dependent tests against a WE install, set it once in that suite: `defaults write com.winddog.wallpaper-engine.isolated.tests WallpaperEngineAssetsDirectory <path>`.
+- **Tests never touch the user's state.** The test host is the app, so under XCTest `AppStorageLocation` switches to the defaults suite `com.winddog.wallpaper-engine.isolated.tests`, `Open Wallpaper Engine (isolated tests)` under Application Support and Caches, and isolated keychain services. `AppStorageIsolationTests` guards this. To run the asset-dependent tests against a WE install instead of the bundled copy, set `OWE_WE_ASSETS=<install or its assets folder>` (`TEST_RUNNER_OWE_WE_ASSETS` through `xcodebuild`); only the test host reads it (`WallpaperEngineAssets.testInstall`).
 - **Launch development copies isolated.** Every build shares the bundle id, so an agent or script that launches a copy of the app (screenshots, smoke runs) must set `OWE_ISOLATED_STATE=<tag>` in its environment or pass `-OWEIsolatedState <tag>`, e.g. `OWE_ISOLATED_STATE=shots "<build>/Open Wallpaper Engine.app/Contents/MacOS/Open Wallpaper Engine" -CustomWallpapersDirectory <library>`. Launch arguments (`-Key value`) still override defaults in the isolated suite. Never launch a dev copy against the real domain: it overwrites the user's playlists, per-screen wallpapers and safe-restart sentinel.
 - **Before pushing,** run `xcodebuild test -project OpenWallpaperEngine.xcodeproj -scheme OpenWallpaperEngine`. CI (`.github/workflows/ci.yml`) runs the same command on every push and PR.
 

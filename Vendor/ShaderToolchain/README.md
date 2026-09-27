@@ -14,9 +14,9 @@ reflection backends. `glslang/glslang/build_info.h` is generated from upstream's
 `build_info.h.tmpl` with the version above. The licenses are `glslang/LICENSE.txt` and
 `SPIRV-Cross/LICENSE`.
 
-`Sources/ShaderToolchain` is our C shim. It reproduces exactly what the app used to run as
-processes (`glslangValidator -E`, `glslangValidator -G`, `spirv-cross --msl … / --reflect`);
-`InProcessShaderCompilerTests` checks the output is byte-identical over the bundled shaders.
+`Sources/ShaderToolchain` is our C shim. It reproduces what the app used to run as processes
+(`glslangValidator -E`, `glslangValidator -G`, `spirv-cross --msl … / --reflect`). The golden
+corpus test (`ShaderVariantCacheTests.testTranslatedOutputMatchesItsRevision`) guards its output.
 
 ## Refreshing
 

@@ -69,3 +69,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Removed hover-triggered Workshop preview downloads.
 - Removed the bottom download queue panel in favor of the Downloads tab.
+- Removed the external glslang/spirv-cross command-line fallback compiler and its Diagnostics rows. A shader whose in-process translation hung the app, or crashed it twice, is now skipped on later launches while every other shader keeps translating.
+- Removed the Wallpaper Engine assets folder setting: the app always uses its bundled assets. A previously saved folder is ignored (and left in place).
