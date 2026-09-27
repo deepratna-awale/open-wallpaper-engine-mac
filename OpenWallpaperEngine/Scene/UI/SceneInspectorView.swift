@@ -864,10 +864,18 @@ struct SceneInspectorView: View {
                         .inspectorColumnWidth(min: 260, ideal: Self.sidebarWidth, max: 400)
                 }
                 .toolbar {
-                    ToolbarItem(placement: .primaryAction) {
+                    // Two separate items at the trailing end: on macOS 26 a fixed spacer keeps them
+                    // from sharing one glass capsule.
+                    if #available(macOS 26, *) {
+                        ToolbarSpacer(.flexible)
+                    }
+                    ToolbarItem(placement: .automatic) {
                         pathControl
                     }
-                    ToolbarItem(placement: .primaryAction) {
+                    if #available(macOS 26, *) {
+                        ToolbarSpacer(.fixed)
+                    }
+                    ToolbarItem(placement: .automatic) {
                         Button {
                             withAnimation { isMovementPresented.toggle() }
                         } label: {
