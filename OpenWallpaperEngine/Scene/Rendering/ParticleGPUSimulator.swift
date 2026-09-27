@@ -27,6 +27,7 @@ final class ParticleGPUSimulator {
     private let age, begin, emit, simulate, scanBlocks, scanBlockSums, compact, finish: MTLComputePipelineState
     private let emitSerial, simulateSerial: MTLComputePipelineState
     private let eventMark, eventScatter, instanceStep, linkPoints: MTLComputePipelineState
+    private let boidsMark, boidsScatter: MTLComputePipelineState
     private let writers: [ParticleGPUDrawKind: MTLComputePipelineState]
 
     init(device: MTLDevice) throws {
@@ -52,6 +53,8 @@ final class ParticleGPUSimulator {
         eventScatter = try pipeline("particleEventScatter")
         instanceStep = try pipeline("particleInstanceStep")
         linkPoints = try pipeline("particleLinkPoints")
+        boidsMark = try pipeline("particleBoidsMark")
+        boidsScatter = try pipeline("particleBoidsScatter")
         let sprites = try pipeline("particleWriteFallbackSprites")
         writers = [
             .sprite: try pipeline("particleWriteSprites"),
@@ -128,7 +131,8 @@ final class ParticleGPUSimulator {
 
     /// The dispatches of a system's step, in order; each reads what the ones before it wrote.
     private enum Stage: CaseIterable {
-        case linkPoints, age, eventMark, eventScanBlocks, eventScanSums, eventScatter, begin, emit, simulate
+        case linkPoints, age, eventMark, eventScanBlocks, eventScanSums, eventScatter, begin, emit
+        case boidsMark, boidsScanBlocks, boidsScanSums, boidsScatter, simulate
         case scanBlocks, scanSums, compact, trailScanBlocks, trailScanSums, finish, write
     }
 
@@ -150,6 +154,8 @@ final class ParticleGPUSimulator {
         let trails: Bool
         /// Spawns and steps in one thread (`ParticleGPUSystem.writesControlPoints`).
         let serialPoints: MTLBuffer?
+        /// The boids slice's list, for a parallel step with a boids operator.
+        let boidsMembers: MTLBuffer?
 
         init?(_ request: Request, gpu: ParticleGPUSystem, sceneSize: SIMD2<Float>, targetSize: SIMD2<Float>) {
             let configuration = request.system.configuration
@@ -189,6 +195,8 @@ final class ParticleGPUSimulator {
             self.steps = steps
             trails = request.kind == .ropeTrail || request.kind == .fallbackRopeTrail
             serialPoints = gpu.writesControlPoints ? gpu.pointStates : nil
+            let boids = request.inputs.operators.contains { $0.header.x == ParticleOperatorKind.boids.rawValue }
+            boidsMembers = boids && serialPoints == nil ? gpu.boidsMembers() : nil
         }
     }
 
@@ -310,6 +318,35 @@ final class ParticleGPUSimulator {
             } else {
                 perParticle()
             }
+        case .boidsMark, .boidsScanBlocks, .boidsScanSums, .boidsScatter:
+            guard let members = plan.boidsMembers else { return false }
+            switch stage {
+            case .boidsMark:
+                encoder.setComputePipelineState(boidsMark)
+                encoder.setBuffer(plan.particles, offset: 0, index: 0)
+                encoder.setBuffer(plan.alive, offset: 0, index: 1)
+                encoder.setBuffer(control, offset: 0, index: 2)
+                encoder.setBytes(&plan.frame, length: frameLength, index: 3)
+                encoder.setBuffer(plan.offsets, offset: 0, index: 4)
+                perParticle()
+            case .boidsScanBlocks:
+                // In place: each thread reads its own flag before writing its offset.
+                scanBlocks(plan.offsets, count: ParticleGPUSystem.Control.total, offsets: plan.offsets, blockSums: plan.blockSums,
+                           control: control, encoder: encoder)
+            case .boidsScanSums:
+                scanSums(count: ParticleGPUSystem.Control.total, into: ParticleGPUSystem.Control.boidsTotal,
+                         blockSums: plan.blockSums, control: control, totals: control, encoder: encoder)
+            default:
+                encoder.setComputePipelineState(boidsScatter)
+                encoder.setBuffer(plan.particles, offset: 0, index: 0)
+                encoder.setBuffer(plan.alive, offset: 0, index: 1)
+                encoder.setBuffer(control, offset: 0, index: 2)
+                encoder.setBytes(&plan.frame, length: frameLength, index: 3)
+                encoder.setBuffer(plan.offsets, offset: 0, index: 4)
+                encoder.setBuffer(plan.blockSums, offset: 0, index: 5)
+                encoder.setBuffer(members, offset: 0, index: 6)
+                perParticle()
+            }
         case .simulate:
             encoder.setComputePipelineState(plan.serialPoints == nil ? simulate : simulateSerial)
             encoder.setBuffer(plan.particles, offset: 0, index: 0)
@@ -338,6 +375,9 @@ final class ParticleGPUSimulator {
                 encoder.setBuffer(serialStates, offset: 0, index: 12)
                 encoder.dispatchThreads(single, threadsPerThreadgroup: single)
             } else {
+                var listsBoids: UInt32 = plan.boidsMembers == nil ? 0 : 1
+                encoder.setBuffer(plan.boidsMembers ?? control, offset: 0, index: 11)
+                encoder.setBytes(&listsBoids, length: 4, index: 12)
                 perParticle()
             }
         case .scanBlocks:

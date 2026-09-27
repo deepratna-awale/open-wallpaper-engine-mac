@@ -560,12 +560,28 @@ static void beginRun(thread ProgramState &p) {
     p.previous = p.position;
 }
 
+/// A boids slice member (`particleBoidsScatter`): its particle's position, velocity and depth, and
+/// its index in the step's particles.
+struct BoidsMember {
+    float4 positionVelocity;
+    float2 depth;            // position, velocity
+    uint index;
+    uint pad;
+};
+
+/// The step's boids slice, in particle order (`particleBoidsMark`); `count` is ~0u without a list,
+/// and boids then scan every particle.
+struct BoidsList {
+    device const BoidsMember *members;
+    uint count;
+};
+
 /// `ParticleProgramCPU.runOperator`: one record. `neighbors` are the step's particles (scene space)
 /// for boids; true when it deletes the particle.
 static bool runOperator(ProgramOp record, thread ProgramState &p, thread ProgramContext &c,
                         constant CollisionPlacement *collisions, uint collisionCount, float2 shift,
                         device const ParticleState *neighbors, uint neighborCount, uint self, uint liveCount,
-                        uint frame, device const uint *alive, uint aged) {
+                        uint frame, device const uint *alive, uint aged, BoidsList boids) {
     bool dies = false;
     const float dt = c.deltaTime;
     {
@@ -749,11 +765,25 @@ static bool runOperator(ProgramOp record, thread ProgramState &p, thread Program
             const float separationThreshold = record.a.x, neighborThreshold = record.a.y;
             float3 separation = float3(0), velocitySum = float3(0), positionSum = float3(0);
             float separated = 0, neighbored = 0;
-            for (uint j = 0; j < neighborCount; ++j) {
-                if (j == self || (j < aged && alive[j] == 0)) continue;
-                const ParticleState other = neighbors[j];
-                if ((other.identity.x / 4) % slices != slice) continue;
-                const float3 position = float3(c.toSpace * (other.positionVelocity.xy - c.origin), other.depth.x);
+            // The slice's members in particle order: from the list, or found by scanning them all.
+            const bool listed = boids.count != ~0u;
+            const uint candidates = listed ? boids.count : neighborCount;
+            for (uint k = 0; k < candidates; ++k) {
+                float4 positionVelocity;
+                float2 depth;
+                if (listed) {
+                    const BoidsMember member = boids.members[k];
+                    if (member.index == self) continue;
+                    positionVelocity = member.positionVelocity;
+                    depth = member.depth;
+                } else {
+                    if (k == self || (k < aged && alive[k] == 0)) continue;
+                    const ParticleState other = neighbors[k];
+                    if ((other.identity.x / 4) % slices != slice) continue;
+                    positionVelocity = other.positionVelocity;
+                    depth = other.depth.xy;
+                }
+                const float3 position = float3(c.toSpace * (positionVelocity.xy - c.origin), depth.x);
                 const float3 offset = p.position - position;
                 const float distance = length(offset);
                 if (distance < separationThreshold && distance > 0) {
@@ -761,7 +791,7 @@ static bool runOperator(ProgramOp record, thread ProgramState &p, thread Program
                     separated += 1;
                 }
                 if (distance < neighborThreshold) {
-                    velocitySum += float3(c.toSpace * other.positionVelocity.zw, other.depth.y);
+                    velocitySum += float3(c.toSpace * positionVelocity.zw, depth.y);
                     positionSum += position;
                     neighbored += 1;
                 }
@@ -804,12 +834,12 @@ static bool runOperator(ProgramOp record, thread ProgramState &p, thread Program
 static bool runOperators(constant ProgramOp *records, uint count, thread ProgramState &p, thread ProgramContext &c,
                          constant CollisionPlacement *collisions, uint collisionCount, float2 shift,
                          device const ParticleState *neighbors, uint neighborCount, uint self, uint liveCount,
-                         uint frame, device const uint *alive, uint aged) {
+                         uint frame, device const uint *alive, uint aged, BoidsList boids) {
     beginRun(p);
     bool dies = false;
     for (uint index = 0; index < count; ++index) {
         dies = runOperator(records[index], p, c, collisions, collisionCount, shift, neighbors, neighborCount, self,
-                           liveCount, frame, alive, aged) || dies;
+                           liveCount, frame, alive, aged, boids) || dies;
     }
     return dies;
 }

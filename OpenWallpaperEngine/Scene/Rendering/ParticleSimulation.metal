@@ -13,6 +13,9 @@
 
 // MARK: - Step
 
+/// Particles the boids slice was counted into (`particleBoidsScatter`).
+constant uint cBoidsTotal = 5;
+
 /// `ParticleCPUSimulation.age`: every particle ages by the step; one past its lifetime dies. An
 /// instanced system's instances lose their dead.
 kernel void particleAge(device ParticleState *particles [[buffer(0)]],
@@ -498,6 +501,8 @@ kernel void particleSimulate(device const ParticleState *particles [[buffer(0)]]
                              constant CollisionPlacement *collisions [[buffer(8)]],
                              device const LinkedPoints *linked [[buffer(9)]],
                              constant ProgramOp *program [[buffer(10)]],
+                             device const BoidsMember *boidsMembers [[buffer(11)]],
+                             constant uint &listsBoids [[buffer(12)]],
                              uint gid [[thread_position_in_grid]]) {
     const uint total = control[cTotal];
     if (gid >= total) return;
@@ -510,12 +515,56 @@ kernel void particleSimulate(device const ParticleState *particles [[buffer(0)]]
     }
     ProgramContext c = simulateContext(particle, start, p, f, linked);
     ProgramState state = simulateState(particle, c);
+    // The boids slice, when `particleBoidsScatter` listed it this step.
+    const BoidsList boids = {boidsMembers, listsBoids != 0 ? control[cBoidsTotal] : ~0u};
     bool dies = false;
     for (uint substep = 0; substep < max(f.emission.x, 1u); ++substep) {
         dies = runOperators(program + (f.extra.w & 0xFFFFu), f.extra.w >> 16, state, c, collisions, f.extra.z, start.shift,
-                            particles, total, gid, control[cLive], f.indices.x, alive, aged) || dies;
+                            particles, total, gid, control[cLive], f.indices.x, alive, aged, boids) || dies;
     }
     endSimulate(gid, particle, state, c, dies, start, stepped, alive, history, p, f, instances);
+}
+
+// MARK: - Boids
+
+/// Whether particle `gid` (below `control[cTotal]`) is in this step's boids slice, as the boids
+/// operator decides it: alive after aging, and its serial's group of four in the frame's slice.
+static bool inBoidsSlice(uint gid, device const ParticleState *particles, device const uint *alive,
+                         device const uint *control, constant ParticleFrame &f) {
+    if (gid < control[cCount] && alive[gid] == 0) return false;
+    const uint slices = control[cLive] / 200 + 1;
+    return (particles[gid].identity.x / 4) % slices == f.indices.x % slices;
+}
+
+/// Flags the boids slice's members into `flags`, which `particleScanBlocks` then numbers in place.
+kernel void particleBoidsMark(device const ParticleState *particles [[buffer(0)]],
+                              device const uint *alive [[buffer(1)]],
+                              device const uint *control [[buffer(2)]],
+                              constant ParticleFrame &f [[buffer(3)]],
+                              device uint *flags [[buffer(4)]],
+                              uint gid [[thread_position_in_grid]]) {
+    if (gid >= control[cTotal]) return;
+    flags[gid] = inBoidsSlice(gid, particles, alive, control, f) ? 1 : 0;
+}
+
+/// Lists the boids slice's members in particle order, so each member's boids read the slice
+/// (about 200 particles) instead of every particle.
+kernel void particleBoidsScatter(device const ParticleState *particles [[buffer(0)]],
+                                 device const uint *alive [[buffer(1)]],
+                                 device const uint *control [[buffer(2)]],
+                                 constant ParticleFrame &f [[buffer(3)]],
+                                 device const uint *offsets [[buffer(4)]],
+                                 device const uint *blockSums [[buffer(5)]],
+                                 device BoidsMember *members [[buffer(6)]],
+                                 uint gid [[thread_position_in_grid]]) {
+    if (gid >= control[cTotal] || !inBoidsSlice(gid, particles, alive, control, f)) return;
+    const ParticleState particle = particles[gid];
+    BoidsMember member;
+    member.positionVelocity = particle.positionVelocity;
+    member.depth = particle.depth.xy;
+    member.index = gid;
+    member.pad = 0;
+    members[offsets[gid] + blockSums[gid / kGroup]] = member;
 }
 
 // MARK: - Control point writes
@@ -662,7 +711,7 @@ kernel void particleSimulateSerial(device const ParticleState *particles [[buffe
                 loadPoints(c, own.group);
                 ProgramState state = serial[gid].state;
                 if (runOperator(operators[k], state, c, collisions, f.extra.z, start.shift, particles, total, gid,
-                                control[cLive], f.indices.x, alive, aged)) {
+                                control[cLive], f.indices.x, alive, aged, BoidsList{nullptr, ~0u})) {
                     serial[gid].dies = 1;
                 }
                 serial[gid].state = state;

@@ -6,7 +6,7 @@ import Metal
 final class ParticleGPUSystem {
     /// Word indices into `control` (`ParticleSimulation.metal`'s `c…` constants).
     enum Control {
-        static let count = 0, emitted = 1, total = 2, serial = 3, died = 4, trailTotal = 6
+        static let count = 0, emitted = 1, total = 2, serial = 3, died = 4, boidsTotal = 5, trailTotal = 6
         static let dispatchOffset = 8 * 4
         /// `MTLDrawPrimitivesIndirectArguments` for the material draw and the built-in draw.
         static let materialDrawOffset = 12 * 4
@@ -55,6 +55,10 @@ final class ParticleGPUSystem {
     private(set) var eventBlockSums: MTLBuffer?
     private(set) var events: MTLBuffer?
     private var eventCapacity = 0
+    /// The boids slice's members (`BoidsMember` in `ParticleProgram.h`), for a program with boids;
+    /// sized with the particles.
+    private var boidsMemberBuffer: MTLBuffer?
+    static let boidsMemberStride = 32
 
     private let device: MTLDevice
     private(set) var capacity = 0
@@ -233,6 +237,15 @@ final class ParticleGPUSystem {
         capacity = newCapacity
         records = nil
         return true
+    }
+
+    /// The boids slice's list, large enough for the current capacity; nil when it can't be allocated.
+    func boidsMembers() -> MTLBuffer? {
+        let bytes = (capacity + 255) / 256 * 256 * Self.boidsMemberStride
+        if let boidsMemberBuffer, boidsMemberBuffer.length >= bytes { return boidsMemberBuffer }
+        boidsMemberBuffer = device.makeBuffer(length: max(bytes, 16), options: .storageModePrivate)
+        boidsMemberBuffer?.label = "Particle boids slice"
+        return boidsMemberBuffer
     }
 
     /// Sizes the event scratch for a parent holding up to `parentCapacity` particles. False when
