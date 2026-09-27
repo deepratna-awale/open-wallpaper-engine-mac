@@ -1,70 +1,43 @@
 import Foundation
+import CryptoKit
 import ShaderToolchain
 
-/// glslang and SPIRV-Cross linked into the app (`Vendor/ShaderToolchain`). Produces the same
-/// output as `ProcessShaderCompiler` with the same library versions, without spawning a process
-/// per step. Calls are serialized inside the library (glslang's global state is not thread-safe).
+/// glslang and SPIRV-Cross linked into the app (`Vendor/ShaderToolchain`). Calls are serialized
+/// inside the library (glslang's global state is not thread-safe).
 ///
 /// Every call runs on the compiler's `ShaderCompileThread`, under a watchdog. A call that overruns
-/// it fails (its variant is logged as failed), is recorded with the crash guard, and leaves the
-/// library's lock held by a thread that can't be stopped: every later call this session goes to
-/// `fallback` (the process compiler), or fails at once without one.
+/// it fails (its variant is logged as failed), its shader is quarantined with the crash guard, and
+/// the library's lock stays held by a thread that can't be stopped: every later call this session
+/// fails at once. The next launch compiles again, skipping the quarantined shader.
 struct InProcessShaderCompiler: ShaderCompiler {
-    /// Marks compiles in flight, so a crash inside the library is noticed on the next launch.
+    /// Marks compiles in flight, so a crash inside the library is pinned on its shader on the next
+    /// launch, and skips the shaders that crashed or hung before.
     let crashGuard: InProcessCompileCrashGuard?
-    private let session: Session
+    private let thread: ShaderCompileThread
 
-    /// - Parameter fallback: makes the compiler used after a call hung; resolved on first need.
-    init(crashGuard: InProcessCompileCrashGuard? = nil, timeout: TimeInterval = ShaderCompileThread.defaultTimeout,
-         fallback: (() throws -> ShaderCompiler)? = nil) {
+    init(crashGuard: InProcessCompileCrashGuard? = nil, timeout: TimeInterval = ShaderCompileThread.defaultTimeout) {
         self.crashGuard = crashGuard
-        session = Session(thread: ShaderCompileThread(timeout: timeout), makeFallback: fallback)
+        thread = ShaderCompileThread(timeout: timeout)
     }
 
     static var libraryFingerprint: String { String(cString: owe_shader_toolchain_fingerprint()) }
 
-    /// The fallback's once a call hung, so what it translates is cached under its own key.
-    var cacheFingerprint: String {
-        if session.thread.isStuck, let fallback = session.fallback() { return fallback.cacheFingerprint }
-        return "in-process|\(Self.libraryFingerprint)"
-    }
+    var cacheFingerprint: String { "in-process|\(Self.libraryFingerprint)" }
 
-    /// Whether a call overran the watchdog this session (later calls don't use the libraries).
-    var isStuck: Bool { session.thread.isStuck }
+    /// Whether a call overran the watchdog this session (later calls fail at once).
+    var isStuck: Bool { thread.isStuck }
 
-    /// The compile thread and the compiler that replaces it once it is stuck.
-    ///
-    /// Thread-safe: `lock` owns `resolved`.
-    private final class Session {
-        let thread: ShaderCompileThread
-        private let makeFallback: (() throws -> ShaderCompiler)?
-        private let lock = NSLock()
-        private var resolved: ShaderCompiler??
-
-        init(thread: ShaderCompileThread, makeFallback: (() throws -> ShaderCompiler)?) {
-            self.thread = thread
-            self.makeFallback = makeFallback
-        }
-
-        func fallback() -> ShaderCompiler? {
-            lock.lock()
-            defer { lock.unlock() }
-            if let resolved { return resolved }
-            var made: ShaderCompiler?
-            if let makeFallback {
-                do {
-                    made = try makeFallback()
-                } catch {
-                    OWELog.error(.shader, "No fallback shader compiler after an in-process hang: \(error)")
-                }
-            }
-            resolved = .some(made)
-            return made
-        }
+    /// Identifies one library call's shader: the step, the stage and the whole input, which holds
+    /// the variant's combos as defines.
+    static func shaderKey(step: String, stage: ShaderStage, source: String) -> String {
+        var hasher = SHA256()
+        hasher.update(data: Data("\(step)\u{0}\(stage.rawValue)\u{0}".utf8))
+        hasher.update(data: Data(source.utf8))
+        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
 
     func preprocess(_ source: String, stage: ShaderStage) throws -> String {
-        try dispatch(step: "preprocess", fallback: { try $0.preprocess(source, stage: stage) }) {
+        try dispatch(step: "preprocess", key: Self.shaderKey(step: "preprocess", stage: stage, source: source)) {
             var output: UnsafeMutablePointer<CChar>?
             var log: UnsafeMutablePointer<CChar>?
             defer { owe_shader_free(output); owe_shader_free(log) }
@@ -76,7 +49,7 @@ struct InProcessShaderCompiler: ShaderCompiler {
     }
 
     func compileToMSL(_ source: String, stage: ShaderStage) throws -> (msl: String, reflection: Data) {
-        try dispatch(step: "glslang", fallback: { try $0.compileToMSL(source, stage: stage) }) {
+        try dispatch(step: "glslang", key: Self.shaderKey(step: "compile", stage: stage, source: source)) {
             var msl: UnsafeMutablePointer<CChar>?
             var reflection: UnsafeMutablePointer<CChar>?
             var log: UnsafeMutablePointer<CChar>?
@@ -91,33 +64,29 @@ struct InProcessShaderCompiler: ShaderCompiler {
         }
     }
 
-    /// Runs `body` (a library call) on the compile thread, or `fallback` once the thread is stuck.
-    func dispatch<T>(step: String, fallback: (ShaderCompiler) throws -> T,
-                     _ body: @escaping () throws -> T) throws -> T {
-        if session.thread.isStuck { return try routeAway(step: step, fallback) }
-        crashGuard?.begin()
-        defer { crashGuard?.end() }
+    /// Runs `body` (a library call on the shader `key`) on the compile thread, unless that shader
+    /// is quarantined or the thread is stuck.
+    func dispatch<T>(step: String, key: String, _ body: @escaping () throws -> T) throws -> T {
+        if let crashGuard, crashGuard.isQuarantined(key) { throw ShaderCompilerError.quarantined(step: step) }
+        let crashGuard = crashGuard
         do {
-            return try session.thread.run(body)
+            return try thread.run {
+                crashGuard?.begin(key)
+                defer { crashGuard?.end() }
+                return try body()
+            }
         } catch ShaderCompileThread.Failure.timedOut(let seconds) {
             OWELog.error(.shader, "In-process shader \(step) hung for \(Int(seconds.rounded())) s; "
-                         + "the rest of this session compiles with the fallback compiler")
-            crashGuard?.recordHang(fingerprint: Self.libraryFingerprint)
+                         + "shaders can't compile again until the app restarts")
+            crashGuard?.recordHang(key)
             throw ShaderCompilerError.failed(step: step, output: "timed out after \(Int(seconds.rounded())) s")
         } catch ShaderCompileThread.Failure.stuck {
-            return try routeAway(step: step, fallback)
+            throw ShaderCompilerError.failed(step: step, output: "\(ShaderCompileThread.Failure.stuck); "
+                                             + "shaders compile again after the app restarts")
         }
     }
 
-    private func routeAway<T>(step: String, _ fallback: (ShaderCompiler) throws -> T) throws -> T {
-        guard let compiler = session.fallback() else {
-            throw ShaderCompilerError.failed(step: step, output: "\(ShaderCompileThread.Failure.stuck), "
-                                             + "and glslang/spirv-cross are not installed")
-        }
-        return try fallback(compiler)
-    }
-
-    /// The error lines of an info log, like `ProcessShaderCompiler` reports them.
+    /// The error lines of an info log.
     private static func errors(_ log: UnsafeMutablePointer<CChar>?) -> String {
         let text = log.map { String(cString: $0) } ?? ""
         let lines = text.split(separator: "\n").filter { $0.contains("ERROR") || $0.contains("error") }.prefix(8)

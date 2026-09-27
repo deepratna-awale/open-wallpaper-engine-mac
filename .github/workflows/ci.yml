@@ -24,11 +24,6 @@ jobs:
           sudo xcode-select -s /Applications/Xcode_26.3.app || { echo "::error::Xcode 26.3 not on the runner"; exit 1; }
           xcodebuild -version
 
-      - name: Install the command line shader tools
-        # Only for the tests that compare the linked compiler with glslangValidator/spirv-cross;
-        # the app itself compiles shaders in-process and needs nothing from Homebrew.
-        run: brew install glslang spirv-cross
-
       - name: Build and test
         run: |
           set -o pipefail

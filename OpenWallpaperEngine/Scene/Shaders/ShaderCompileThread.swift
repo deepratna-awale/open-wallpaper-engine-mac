@@ -6,7 +6,7 @@ import Foundation
 /// (a preprocessor loop on a malformed WE shader) would stall its caller forever while holding
 /// the library's global lock. A caller waits at most `timeout` of the job's own run time; after
 /// that the thread is abandoned for the rest of the session (`isStuck`): jobs queued behind it
-/// fail at once and new ones are refused, so the owner can send them to another compiler.
+/// fail at once and new ones are refused, so their callers fail fast instead of waiting behind it.
 ///
 /// Thread-safe: `State.condition` owns every field of `State`.
 final class ShaderCompileThread {

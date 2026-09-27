@@ -391,8 +391,8 @@ final class ImageMaterialRenderer {
                                        SIMD4(quad.center.x, quad.center.y, 0, 1)))
     }
 
-    /// Scene units to clip space. The translated vertex stage flips y (GL rows, see
-    /// `ProcessShaderCompiler`), and the scene target keeps the scene's top in its first row, so the
+    /// Scene units to clip space. The translated vertex stage flips y (GL rows, see `flip_vert_y`
+    /// in `Vendor/ShaderToolchain`'s shim), and the scene target keeps the scene's top in its first row, so the
     /// scene's top maps to GL clip y = −1.
     static func viewProjection(sceneSize: SIMD2<Float>) -> simd_float4x4 {
         PassMatrices.ortho(left: 0, right: max(sceneSize.x, 1), bottom: max(sceneSize.y, 1), top: 0)

@@ -1,7 +1,7 @@
 import XCTest
 @testable import OpenWallpaperEngine
 
-/// The linked glslang/SPIRV-Cross (`InProcessShaderCompiler`) against the command line tools.
+/// The linked glslang/SPIRV-Cross (`InProcessShaderCompiler`), its watchdog and its crash quarantine.
 final class InProcessShaderCompilerTests: XCTestCase {
     private struct Job {
         let vertex: ShaderSource
@@ -40,26 +40,6 @@ final class InProcessShaderCompilerTests: XCTestCase {
         case failed
     }
 
-    /// Times the compiler steps alone (the translator's own Swift work is excluded).
-    private final class TimedCompiler: ShaderCompiler {
-        let base: ShaderCompiler
-        private(set) var seconds: TimeInterval = 0
-        private let lock = NSLock()
-        init(_ base: ShaderCompiler) { self.base = base }
-        var cacheFingerprint: String { base.cacheFingerprint }
-        private func timed<T>(_ body: () throws -> T) rethrows -> T {
-            let start = Date()
-            defer { lock.withLock { seconds += Date().timeIntervalSince(start) } }
-            return try body()
-        }
-        func preprocess(_ source: String, stage: ShaderStage) throws -> String {
-            try timed { try base.preprocess(source, stage: stage) }
-        }
-        func compileToMSL(_ source: String, stage: ShaderStage) throws -> (msl: String, reflection: Data) {
-            try timed { try base.compileToMSL(source, stage: stage) }
-        }
-    }
-
     private static func translate(_ job: Job, with compiler: ShaderCompiler) -> Outcome {
         // No disk cache: every call translates. Pairs expected to fail leave no dump.
         let translator = ShaderVariantTranslator(compiler: compiler, cacheDirectory: nil, failureDirectory: nil)
@@ -78,52 +58,12 @@ final class InProcessShaderCompilerTests: XCTestCase {
         XCTAssertFalse(fingerprint.contains("/Users") || fingerprint.contains("/opt"), "machine-specific: \(fingerprint)")
     }
 
-    func testCacheKeyDiffersBetweenBackends() throws {
-        try XCTSkipIf(SceneShaderTranslator.toolchain == nil, "glslang/spirv-cross not installed")
-        let source = ShaderSource(stage: .vertex, path: "x", text: "void main() {}", combos: [], uniforms: [])
-        let process = try ProcessShaderCompiler()
-        XCTAssertTrue(process.cacheFingerprint.hasPrefix("process|"))
-        XCTAssertFalse(process.cacheFingerprint.contains("/"), "machine-specific: \(process.cacheFingerprint)")
-        XCTAssertNotEqual(
-            ShaderVariantTranslator.cacheKey(vertex: source, fragment: source, combos: [:],
-                                             toolchain: InProcessShaderCompiler().cacheFingerprint),
-            ShaderVariantTranslator.cacheKey(vertex: source, fragment: source, combos: [:],
-                                             toolchain: process.cacheFingerprint))
-    }
-
     func testCompileErrorIsReportedNotFatal() {
         XCTAssertThrowsError(try InProcessShaderCompiler().compileToMSL("#version 150\nvoid main() { nope(); }",
                                                                         stage: .fragment)) { error in
             XCTAssertTrue("\(error)".contains("glslang"), "\(error)")
         }
         XCTAssertThrowsError(try InProcessShaderCompiler().preprocess("#if\n", stage: .vertex))
-    }
-
-    /// Byte-identical to the command line tools over the whole bundled corpus, and logs the cold
-    /// translate time of both.
-    func testMatchesProcessCompilerOverBundledCorpus() throws {
-        try XCTSkipIf(SceneShaderTranslator.toolchain == nil, "glslang/spirv-cross not installed")
-        let jobs = try Self.corpus()
-        XCTAssertGreaterThan(jobs.count, 100)
-        let process = TimedCompiler(try ProcessShaderCompiler())
-        let inProcess = TimedCompiler(InProcessShaderCompiler())
-
-        var start = Date()
-        let expected = jobs.map { Self.translate($0, with: process) }
-        let processSeconds = Date().timeIntervalSince(start)
-        start = Date()
-        let actual = jobs.map { Self.translate($0, with: inProcess) }
-        let inProcessSeconds = Date().timeIntervalSince(start)
-
-        var mismatches: [String] = []
-        for (index, job) in jobs.enumerated() where expected[index] != actual[index] {
-            mismatches.append(job.label)
-        }
-        XCTAssertEqual(mismatches, [], "in-process output differs from glslangValidator/spirv-cross")
-        let translated = expected.filter { $0 != .failed }.count
-        print(String(format: "shader corpus: %d variants (%d translated); cold translate total process %.2f s, "
-                     + "in-process %.2f s; compiler steps alone process %.2f s, in-process %.2f s",
-                     jobs.count, translated, processSeconds, inProcessSeconds, process.seconds, inProcess.seconds))
     }
 
     /// glslang is not thread-safe; the library serializes calls, so parallel output equals serial.
@@ -145,7 +85,7 @@ final class InProcessShaderCompilerTests: XCTestCase {
         }
     }
 
-    // MARK: - Crash guard
+    // MARK: - Crash quarantine
 
     private func guardDirectory() throws -> URL {
         let directory = FileManager.default.temporaryDirectory.appending(path: "owe-guard-\(UUID().uuidString)")
@@ -153,50 +93,96 @@ final class InProcessShaderCompilerTests: XCTestCase {
         return directory
     }
 
-    func testCrashGuardDisablesAfterRepeatedDeathsMidCompile() throws {
-        let directory = try guardDirectory()
-        // A pid that can't be running: begin() without end() is what a crash mid-compile leaves.
-        InProcessCompileCrashGuard(directory: directory, pid: Int32.max).begin()
-        XCTAssertTrue(InProcessCompileCrashGuard(directory: directory).allowsInProcess(fingerprint: "libs-1"),
-                      "one death (a force quit looks the same) is not enough")
-        XCTAssertTrue(InProcessCompileCrashGuard(directory: directory).allowsInProcess(fingerprint: "libs-1"),
-                      "a launch without a death doesn't count")
-        InProcessCompileCrashGuard(directory: directory, pid: Int32.max).begin()
-        let guardNow = InProcessCompileCrashGuard(directory: directory)
-        XCTAssertFalse(guardNow.allowsInProcess(fingerprint: "libs-1"))
-        XCTAssertFalse(guardNow.allowsInProcess(fingerprint: "libs-1"), "stays disabled for the same libraries")
-        XCTAssertTrue(guardNow.allowsInProcess(fingerprint: "libs-2"), "new libraries get another try")
+    /// A guard for the next launch: it picks up what dead processes left behind.
+    private func launch(_ directory: URL, fingerprint: String = "libs-1") -> InProcessCompileCrashGuard {
+        let crashGuard = InProcessCompileCrashGuard(directory: directory, fingerprint: fingerprint)
+        crashGuard.collectDeaths()
+        return crashGuard
     }
 
-    func testCrashGuardReadsTheOldDisabledFormat() throws {
+    /// What a crash while compiling `key` leaves: a marker of a process that is gone.
+    private func dieCompiling(_ key: String, in directory: URL) {
+        InProcessCompileCrashGuard(directory: directory, fingerprint: "libs-1", pid: Int32.max).begin(key)
+    }
+
+    func testShaderThatKilledTheAppTwiceIsQuarantined() throws {
+        let directory = try guardDirectory()
+        dieCompiling("shader-a", in: directory)
+        XCTAssertFalse(launch(directory).isQuarantined("shader-a"), "one death (a force quit looks the same) is not enough")
+        XCTAssertFalse(launch(directory).isQuarantined("shader-a"), "a launch without a death doesn't count")
+        dieCompiling("shader-a", in: directory)
+        let next = launch(directory)
+        XCTAssertTrue(next.isQuarantined("shader-a"))
+        XCTAssertFalse(next.isQuarantined("shader-b"), "every other shader keeps compiling")
+        XCTAssertTrue(launch(directory).isQuarantined("shader-a"), "stays quarantined for the same libraries")
+        XCTAssertFalse(launch(directory, fingerprint: "libs-2").isQuarantined("shader-a"), "new libraries get another try")
+    }
+
+    func testDeathsCountPerShader() throws {
+        let directory = try guardDirectory()
+        dieCompiling("shader-a", in: directory)
+        _ = launch(directory)
+        dieCompiling("shader-b", in: directory)
+        let next = launch(directory)
+        XCTAssertFalse(next.isQuarantined("shader-a"))
+        XCTAssertFalse(next.isQuarantined("shader-b"))
+    }
+
+    /// A marker without a shader (an older build's) is logged and pins nothing.
+    func testDeathWithoutAShaderQuarantinesNothing() throws {
         let directory = try guardDirectory()
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        try Data("libs-1".utf8).write(to: directory.appending(path: "disabled"))
-        XCTAssertFalse(InProcessCompileCrashGuard(directory: directory).allowsInProcess(fingerprint: "libs-1"))
+        for _ in 0..<InProcessCompileCrashGuard.quarantineThreshold {
+            try Data().write(to: directory.appending(path: "pending-\(Int32.max)"))
+            _ = launch(directory)
+        }
+        XCTAssertFalse(launch(directory).isQuarantined(""))
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: directory.path), [])
     }
 
     func testCrashGuardIgnoresLiveProcessesAndCleansUp() throws {
         let directory = try guardDirectory()
-        let live = InProcessCompileCrashGuard(directory: directory)
-        live.begin()
-        live.begin()
-        XCTAssertTrue(InProcessCompileCrashGuard(directory: directory).allowsInProcess(fingerprint: "x"))
+        let live = InProcessCompileCrashGuard(directory: directory, fingerprint: "libs-1")
+        live.begin("shader-a")
+        XCTAssertEqual(try String(contentsOf: directory.appending(path: "pending-\(getpid())"), encoding: .utf8), "shader-a",
+                       "the marker names the shader in flight")
+        for _ in 0..<InProcessCompileCrashGuard.quarantineThreshold { _ = launch(directory) }
+        XCTAssertFalse(launch(directory).isQuarantined("shader-a"), "this process is alive")
         live.end()
-        live.end()
-        let left = try FileManager.default.contentsOfDirectory(atPath: directory.path)
-        XCTAssertEqual(left, [])
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: directory.path), [])
+    }
+
+    /// The key covers the variant: the same shader with other combos (defines) is another shader.
+    func testShaderKeyCoversStepStageAndVariant() {
+        let base = "#define BLUR 1\nvoid main() {}"
+        let key = InProcessShaderCompiler.shaderKey(step: "compile", stage: .fragment, source: base)
+        XCTAssertEqual(key, InProcessShaderCompiler.shaderKey(step: "compile", stage: .fragment, source: base))
+        XCTAssertNotEqual(key, InProcessShaderCompiler.shaderKey(step: "compile", stage: .fragment,
+                                                                 source: "#define BLUR 2\nvoid main() {}"))
+        XCTAssertNotEqual(key, InProcessShaderCompiler.shaderKey(step: "compile", stage: .vertex, source: base))
+        XCTAssertNotEqual(key, InProcessShaderCompiler.shaderKey(step: "preprocess", stage: .fragment, source: base))
+    }
+
+    /// A quarantined shader fails with a reason, through the translator too; the others compile.
+    func testQuarantinedShaderIsSkippedAndOthersCompile() throws {
+        let directory = try guardDirectory()
+        let skipped = "#version 450\nlayout(location = 0) out vec4 color;\nvoid main() { color = vec4(1.0); }\n"
+        let other = "#version 450\nlayout(location = 0) out vec4 color;\nvoid main() { color = vec4(0.5); }\n"
+        InProcessCompileCrashGuard(directory: directory, fingerprint: InProcessShaderCompiler.libraryFingerprint)
+            .recordHang(InProcessShaderCompiler.shaderKey(step: "compile", stage: .fragment, source: skipped))
+        let crashGuard = InProcessCompileCrashGuard(directory: directory, fingerprint: InProcessShaderCompiler.libraryFingerprint)
+        crashGuard.collectDeaths()
+        let compiler = InProcessShaderCompiler(crashGuard: crashGuard)
+        XCTAssertThrowsError(try compiler.compileToMSL(skipped, stage: .fragment)) { error in
+            guard case ShaderCompilerError.quarantined = error else { return XCTFail("\(error)") }
+            XCTAssertTrue("\(error)".contains("quarantined"), "\(error)")
+        }
+        XCTAssertFalse(try compiler.compileToMSL(other, stage: .fragment).msl.isEmpty)
+        XCTAssertFalse(try compiler.preprocess(skipped, stage: .fragment).isEmpty, "only the step that failed is skipped")
+        XCTAssertFalse(compiler.isStuck)
     }
 
     // MARK: - Watchdog
-
-    /// Stands in for the process compiler.
-    private struct StubCompiler: ShaderCompiler {
-        var cacheFingerprint: String { "stub" }
-        func preprocess(_ source: String, stage: ShaderStage) throws -> String { "stub:" + source }
-        func compileToMSL(_ source: String, stage: ShaderStage) throws -> (msl: String, reflection: Data) {
-            ("stub", Data("{}".utf8))
-        }
-    }
 
     /// A job that never returns until the test ends (a thread can't be killed).
     private func hang() -> () -> String {
@@ -251,36 +237,27 @@ final class InProcessShaderCompilerTests: XCTestCase {
         XCTAssertFalse(thread.isStuck)
     }
 
-    func testHungCompileFailsItsVariantAndHandsOverToTheFallback() throws {
+    /// A hang fails its variant, quarantines its shader for the next launch, and fails every later
+    /// call this session at once (the libraries' lock is held by the hung thread).
+    func testHungCompileQuarantinesItsShaderAndFailsFast() throws {
         let directory = try guardDirectory()
-        let crashGuard = InProcessCompileCrashGuard(directory: directory)
-        let compiler = InProcessShaderCompiler(crashGuard: crashGuard, timeout: 0.2, fallback: { StubCompiler() })
-        XCTAssertTrue(compiler.cacheFingerprint.hasPrefix("in-process|"))
-        XCTAssertThrowsError(try compiler.dispatch(step: "preprocess", fallback: { _ in "fallback" }, hang())) { error in
+        let libraries = InProcessShaderCompiler.libraryFingerprint
+        let crashGuard = InProcessCompileCrashGuard(directory: directory, fingerprint: libraries)
+        let compiler = InProcessShaderCompiler(crashGuard: crashGuard, timeout: 0.2)
+        XCTAssertThrowsError(try compiler.dispatch(step: "preprocess", key: "hung-shader", hang())) { error in
             XCTAssertTrue("\(error)".contains("timed out"), "\(error)")
         }
         XCTAssertTrue(compiler.isStuck)
-        XCTAssertEqual(try compiler.preprocess("x", stage: .vertex), "stub:x", "routed away from the held glslang lock")
-        XCTAssertEqual(compiler.cacheFingerprint, "stub", "fallback output is cached under the fallback's key")
-        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: directory.path), ["disabled"],
-                       "the hang is recorded and no compile marker is left behind")
-
-        let libraries = InProcessShaderCompiler.libraryFingerprint
-        XCTAssertTrue(InProcessCompileCrashGuard(directory: directory).allowsInProcess(fingerprint: libraries),
-                      "one hang is not enough")
-        InProcessCompileCrashGuard(directory: directory).recordHang(fingerprint: libraries)
-        XCTAssertFalse(InProcessCompileCrashGuard(directory: directory).allowsInProcess(fingerprint: libraries),
-                       "a hang that recurs turns in-process compiling off on the next launch")
-    }
-
-    func testHungCompileWithoutFallbackFailsFast() throws {
-        let compiler = InProcessShaderCompiler(timeout: 0.2)
-        XCTAssertThrowsError(try compiler.dispatch(step: "glslang", fallback: { _ in "fallback" }, hang()))
+        XCTAssertTrue(crashGuard.isQuarantined("hung-shader"), "a hang is certain; once is enough")
         let start = Date()
         XCTAssertThrowsError(try compiler.preprocess("void main() {}", stage: .vertex)) { error in
             XCTAssertTrue("\(error)".contains("stuck"), "\(error)")
         }
         XCTAssertLessThan(Date().timeIntervalSince(start), 1)
+
+        let next = InProcessCompileCrashGuard(directory: directory, fingerprint: libraries)
+        next.collectDeaths()
+        XCTAssertTrue(next.isQuarantined("hung-shader"), "skipped on the next launch")
+        XCTAssertFalse(next.isQuarantined("other-shader"))
     }
 }
-

@@ -58,8 +58,8 @@ final class ShaderVariantTranslator {
     let cacheDirectory: URL?
     /// `<cacheDirectory>/<generation>`: every variant this revision and compiler can produce.
     let generationDirectory: URL?
-    /// The compiler's backend, versions and options (`ShaderCompiler.cacheFingerprint`) at creation;
-    /// names `generationDirectory`. Cache keys read the compiler's current one.
+    /// The compiler's backend, versions and options (`ShaderCompiler.cacheFingerprint`); names
+    /// `generationDirectory` and keys every variant.
     let toolchainFingerprint: String
     /// Where the source a compiler step rejected is written, one file per shader and stage: the
     /// compiler's line numbers refer to it, not to the WE file. nil writes nothing.
@@ -171,8 +171,7 @@ final class ShaderVariantTranslator {
     }
 
     func variant(vertex: ShaderSource, fragment: ShaderSource, combos: [String: Int]) throws -> TranslatedShaderVariant {
-        // Read per call: the in-process compiler hands over to the process compiler after a hang.
-        let toolchain = compiler.cacheFingerprint
+        let toolchain = toolchainFingerprint
         // Combos the shaders never name can't change the translation (the engine's `SCENE_ORTHO`
         // and `HDR` reach every material): one variant serves all their values.
         let combos = Self.effectiveCombos(vertex: vertex, fragment: fragment, combos: combos)
@@ -185,8 +184,7 @@ final class ShaderVariantTranslator {
             return cached
         }
         let translated = try translate(vertex: vertex, fragment: fragment, combos: combos)
-        // A hand-over mid-translation made it with both compilers: it belongs under neither key.
-        if compiler.cacheFingerprint == toolchain { store(key, translated, persist: true) }
+        store(key, translated, persist: true)
         return translated
     }
 

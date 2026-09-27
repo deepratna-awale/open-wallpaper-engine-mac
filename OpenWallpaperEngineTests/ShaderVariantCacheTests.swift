@@ -2,8 +2,8 @@ import XCTest
 import CryptoKit
 @testable import OpenWallpaperEngine
 
-/// The shader variant disk cache and the choice of compiler: what survives an upgrade, a
-/// read-only or full disk, and a machine with or without Homebrew's glslang/spirv-cross.
+/// The shader variant disk cache and the app's compiler: what survives an upgrade, a read-only or
+/// full disk, and a shader that crashed the compiler.
 final class ShaderVariantCacheTests: XCTestCase {
     private func temporaryDirectory(_ name: String) -> URL {
         let url = FileManager.default.temporaryDirectory.appending(path: "owe-\(name)-\(UUID().uuidString)",
@@ -205,27 +205,25 @@ final class ShaderVariantCacheTests: XCTestCase {
 
     private func stateDirectory() -> URL { temporaryDirectory("compiler-state") }
 
-    /// The linked libraries are used whether or not Homebrew's tools are installed.
-    func testFactoryPrefersTheLinkedCompiler() throws {
-        let compiler = try ShaderCompilerFactory.makeDefault(stateDirectory: stateDirectory())
-        XCTAssertTrue(compiler is InProcessShaderCompiler, "\(type(of: compiler))")
+    /// The app compiles with the linked libraries, guarded by the crash quarantine.
+    func testFactoryMakesTheGuardedLinkedCompiler() throws {
+        let compiler = try XCTUnwrap(ShaderCompilerFactory.makeDefault(stateDirectory: stateDirectory()) as? InProcessShaderCompiler)
         XCTAssertTrue(compiler.cacheFingerprint.hasPrefix("in-process|"))
+        XCTAssertNotNil(compiler.crashGuard)
     }
 
-    /// After repeated deaths mid-compile the installed tools take over; without them the linked
-    /// libraries stay, since they are the only compiler there is.
-    func testFactoryFallsBackOnlyAfterRepeatedCrashes() throws {
+    /// After repeated deaths compiling one shader, the next launch skips that shader and keeps
+    /// compiling in-process.
+    func testFactoryQuarantinesAShaderThatKilledTheAppRepeatedly() throws {
         let directory = stateDirectory()
-        for _ in 0..<InProcessCompileCrashGuard.disableThreshold {
-            InProcessCompileCrashGuard(directory: directory, pid: Int32.max).begin()
-            _ = InProcessCompileCrashGuard(directory: directory).allowsInProcess(fingerprint: InProcessShaderCompiler.libraryFingerprint)
+        let libraries = InProcessShaderCompiler.libraryFingerprint
+        for _ in 0..<InProcessCompileCrashGuard.quarantineThreshold {
+            InProcessCompileCrashGuard(directory: directory, fingerprint: libraries, pid: Int32.max).begin("crasher")
+            _ = ShaderCompilerFactory.makeDefault(stateDirectory: directory)
         }
-        let compiler = try ShaderCompilerFactory.makeDefault(stateDirectory: directory)
-        if SceneShaderTranslator.toolchain != nil {
-            XCTAssertTrue(compiler is ProcessShaderCompiler, "\(type(of: compiler))")
-        } else {
-            XCTAssertTrue(compiler is InProcessShaderCompiler, "\(type(of: compiler))")
-        }
+        let compiler = try XCTUnwrap(ShaderCompilerFactory.makeDefault(stateDirectory: directory) as? InProcessShaderCompiler)
+        XCTAssertEqual(compiler.crashGuard?.isQuarantined("crasher"), true)
+        XCTAssertEqual(compiler.crashGuard?.isQuarantined("another"), false)
     }
 
     /// The source a compiler step rejected lands in the failure directory (CLAUDE.md's
