@@ -58447,97 +58447,97 @@
         }
       }
     },
-    "Scene Inspector edits are kept." : {
-      "comment" : "Reset confirmation: what the reset leaves alone",
+    "Scene Inspector edits are reset too." : {
+      "comment" : "Reset confirmation: the Scene Inspector's edits go as well",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يتم الاحتفاظ بتعديلات مراقب المشهد."
+            "value" : "تتم إعادة تعيين تعديلات مراقب المشهد أيضًا."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Änderungen im Szeneninspektor bleiben erhalten."
+            "value" : "Änderungen im Szeneninspektor werden ebenfalls zurückgesetzt."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Se conservan los cambios del Inspector de escenas."
+            "value" : "También se restablecen los cambios del Inspector de escenas."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Les modifications de l’Inspecteur de scène sont conservées."
+            "value" : "Les modifications de l’Inspecteur de scène sont aussi réinitialisées."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "सीन इंस्पेक्टर के बदलाव बने रहेंगे।"
+            "value" : "सीन इंस्पेक्टर के बदलाव भी रीसेट होंगे।"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Le modifiche dell’Inspector scena vengono mantenute."
+            "value" : "Vengono ripristinate anche le modifiche dell’Inspector scena."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "シーンインスペクタでの変更は保持されます。"
+            "value" : "シーンインスペクタでの変更もリセットされます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "장면 인스펙터에서 편집한 내용은 유지됩니다."
+            "value" : "장면 인스펙터에서 편집한 내용도 재설정됩니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zmiany wprowadzone w Inspektorze sceny zostaną zachowane."
+            "value" : "Zmiany wprowadzone w Inspektorze sceny również zostaną zresetowane."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "As edições do Inspetor de Cena são mantidas."
+            "value" : "As edições do Inspetor de Cena também são redefinidas."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Изменения, сделанные в Инспекторе сцены, сохраняются."
+            "value" : "Изменения, сделанные в Инспекторе сцены, тоже сбрасываются."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sahne Denetçisi düzenlemeleri korunur."
+            "value" : "Sahne Denetçisi düzenlemeleri de sıfırlanır."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Зміни, зроблені в Інспекторі сцени, зберігаються."
+            "value" : "Зміни, зроблені в Інспекторі сцени, теж скидаються."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "场景检查器中的编辑会保留。"
+            "value" : "场景检查器中的编辑也会被重置。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "場景檢閱器中的編輯會保留。"
+            "value" : "場景檢閱器中的編輯也會重置。"
           }
         }
       }

@@ -2,7 +2,7 @@ import XCTest
 @testable import OpenWallpaperEngine
 
 /// The Details panel's Reset (WE's `callbackResetCurrentWallpaperProperties`): each property back
-/// to project.json's value in the edited stores, applied live; Scene Inspector edits kept.
+/// to project.json's value in the edited stores, with the Scene Inspector's edits, applied live.
 final class WallpaperPropertyResetTests: XCTestCase {
     private var defaults: UserDefaults!
     private var suite: String!
@@ -87,24 +87,41 @@ final class WallpaperPropertyResetTests: XCTestCase {
         let expected: [String: String] = [
             "rain": "true", "speed": "0.25", "mode": "b", "firstmode": "x", "schemecolor": "0.1 0.2 0.3",
             "caption": "Hello", "picture": "", "folder": "", "_owe_speed": "1", "_owe_hue": "0",
-        ].merging(Self.inspectorEdits) { $1 }
-        XCTAssertEqual(shown, expected, "bool, slider, combo (authored and first option), colour, text, file and directory reset; music sync dropped")
+        ]
+        XCTAssertEqual(shown, expected, "bool, slider, combo (authored and first option), colour, text, file and directory reset; music sync and inspector edits dropped")
         XCTAssertEqual(stored(targets, .shared), expected)
-        XCTAssertTrue(defaults.bool(forKey: targets.identity.key(.explicitUserProperties, scope: .shared)),
-                      "kept as the user's, so a load doesn't drop the inspector edits it keeps")
+        XCTAssertTrue(defaults.bool(forKey: targets.identity.key(.explicitUserProperties, scope: .shared)))
         XCTAssertEqual(published, [directory.path: expected], "the running wallpaper gets the whole set at once")
     }
 
-    func testTheSceneInspectorsEditsAreKeptAndResetOnTheirOwn() throws {
+    func testTheInspectorsOwnResetClearsOnlyItsEdits() throws {
         let targets = WallpaperPropertyTargets(wallpaper: try wallpaper(), scopes: [.shared])
         save(Self.userValues.merging(Self.inspectorEdits) { $1 }, targets, .shared)
 
-        targets.reset(to: try authorDefaults(), defaults: defaults) { _, _ in }
-        XCTAssertEqual(stored(targets, .shared).map(WallpaperPropertyReset.sceneInspectorEdits), Self.inspectorEdits)
-
         let afterInspectorReset = targets.removeSceneInspectorEdits(defaults: defaults) { _, _ in }
         XCTAssertTrue(WallpaperPropertyReset.sceneInspectorEdits(in: afterInspectorReset).isEmpty)
-        XCTAssertEqual(afterInspectorReset["mode"], "b", "the inspector's Reset keeps the properties")
+        XCTAssertEqual(afterInspectorReset, Self.userValues, "the inspector's Reset keeps the properties")
+    }
+
+    /// The running store loses the inspector's keys, and those changes rebuild what they baked in:
+    /// object and package JSON reload the scene, visibility and effect overrides rebuild content.
+    func testDroppedInspectorEditsRebuildTheRunningScene() throws {
+        let targets = WallpaperPropertyTargets(wallpaper: try wallpaper(), scopes: [.shared])
+        let before = try authorDefaults().merging(Self.inspectorEdits) { $1 }
+        save(before, targets, .shared)
+        var running = SceneUserPropertyStores()
+        running.set(before, for: directory.path, replacing: true)
+
+        targets.reset(to: try authorDefaults(), defaults: defaults) { key, values in
+            let changed = running.set(values, for: key, replacing: true)
+            XCTAssertEqual(Set(changed), Set(Self.inspectorEdits.keys), "only the inspector's keys changed")
+            XCTAssertEqual(SceneChangeImpact.aggregate(changed), .reloadScene)
+        }
+        XCTAssertTrue(WallpaperPropertyReset.sceneInspectorEdits(in: running.entry(for: directory.path).strings).isEmpty)
+
+        let visibilityOnly = [sceneObjectVisibilityKey(objectID: 12), sceneAuthoredEffectEnabledKey(objectID: 12, effectIndex: 0)]
+        XCTAssertEqual(SceneChangeImpact.aggregate(visibilityOnly), .rebuildContent,
+                       "visibility and effect edits rebuild content without reloading the package")
     }
 
     func testClassifiesTheInspectorsKeysOnly() {
@@ -154,13 +171,25 @@ final class WallpaperPropertyResetTests: XCTestCase {
                                    WallpaperPropertyScope.display("C").runtimeKey(directory: directory)])
     }
 
-    func testADisplayStartingFromTheSharedStoreKeepsItsInspectorEdits() throws {
-        let targets = WallpaperPropertyTargets(wallpaper: try wallpaper(), scopes: [.display("A")])
-        save(Self.userValues.merging(Self.inspectorEdits) { $1 }, targets, .shared)
+    func testInspectorEditsAreClearedInTheResetScopesOnly() throws {
+        let wallpaper = try wallpaper()
+        let edited = Self.userValues.merging(Self.inspectorEdits) { $1 }
+        let one = WallpaperPropertyTargets(wallpaper: wallpaper, scopes: [.display("A")])
+        save(edited, one, .shared)
+        save(edited, one, .display("B"))
 
-        targets.reset(to: try authorDefaults(), defaults: defaults) { _, _ in }
+        one.reset(to: try authorDefaults(), defaults: defaults) { _, _ in }
 
-        XCTAssertEqual(stored(targets, .display("A")).map(WallpaperPropertyReset.sceneInspectorEdits), Self.inspectorEdits)
+        XCTAssertEqual(stored(one, .display("A")).map(WallpaperPropertyReset.sceneInspectorEdits), [:])
+        XCTAssertEqual(stored(one, .display("B")).map(WallpaperPropertyReset.sceneInspectorEdits), Self.inspectorEdits,
+                       "an unselected display keeps its inspector edits")
+        XCTAssertEqual(stored(one, .shared).map(WallpaperPropertyReset.sceneInspectorEdits), Self.inspectorEdits)
+
+        let synced = WallpaperPropertyTargets(wallpaper: wallpaper, scopes: [.shared])
+        synced.reset(to: try authorDefaults(), defaults: defaults) { _, _ in }
+        XCTAssertEqual(stored(synced, .shared).map(WallpaperPropertyReset.sceneInspectorEdits), [:],
+                       "synced: the store every display runs loses them")
+        XCTAssertEqual(stored(synced, .display("B")).map(WallpaperPropertyReset.sceneInspectorEdits), Self.inspectorEdits)
     }
 
     func testTheResetNeverWritesTheAppsStore() throws {

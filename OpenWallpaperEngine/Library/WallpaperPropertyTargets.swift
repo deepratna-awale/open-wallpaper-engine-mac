@@ -38,7 +38,7 @@ struct WallpaperPropertyTargets {
     }
 
     /// WE's Reset (`WallpaperPropertyReset`): each scope's properties go back to `defaultValues`,
-    /// keeping that scope's Scene Inspector edits. Returns the shown scope's new values.
+    /// and its Scene Inspector edits are dropped. Returns the shown scope's new values.
     @discardableResult
     func reset(to defaultValues: [String: String], defaults: UserDefaults = .app,
                publish: (String, [String: String]) -> Void = Self.publishReplacing) -> [String: String] {

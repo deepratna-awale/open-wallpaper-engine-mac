@@ -5,9 +5,9 @@ import Foundation
 ///
 /// WE copies the wallpaper's `defaultproperties` (project.json's values, with its built-in
 /// playback `rate` at 100) over the selected monitor's properties and applies each one live. WE
-/// has no Scene Inspector: its editor changes the project, not the properties, so a reset never
-/// undoes it. The app keeps the Scene Inspector's edits in the same store, so a reset keeps them,
-/// and the inspector resets them on its own (`sceneInspectorEdits(in:)`).
+/// has no Scene Inspector. The app keeps the Scene Inspector's edits in the same store, and its
+/// Reset clears them too, so the wallpaper is as its author made it; the inspector's own Reset
+/// clears only them (`values(removingSceneInspectorEditsFrom:)`).
 enum WallpaperPropertyReset {
     /// The key prefixes of the Scene Inspector's edits: object JSON, origin, scale and
     /// visibility (`sceneObjectVisibilityKey`), package-file JSON, and authored effect overrides
@@ -24,10 +24,10 @@ enum WallpaperPropertyReset {
     }
 
     /// `stored` after a reset: every property at `defaults` (each property the Details panel
-    /// shows, at the author's value), anything else the user set dropped, the Scene Inspector's
-    /// edits kept.
+    /// shows, at the author's value); everything else the user set, the Scene Inspector's edits
+    /// included, dropped.
     static func values(resetting stored: [String: String], to defaults: [String: String]) -> [String: String] {
-        sceneInspectorEdits(in: stored).merging(defaults.filter { !isSceneInspectorEdit($0.key) }) { $1 }
+        defaults.filter { !isSceneInspectorEdit($0.key) }
     }
 
     /// `stored` without the Scene Inspector's edits (its own Reset).
