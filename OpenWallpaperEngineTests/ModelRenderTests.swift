@@ -268,6 +268,34 @@ final class ModelRenderTests: XCTestCase {
             .contains(SceneModelCulling.Sphere(.unbounded, world: matrix_identity_float4x4)), "a model without bounds")
     }
 
+    /// MT5: a triangle list indexing past its vertices (a script's model data may) draws from a
+    /// vertex buffer padded with zeros up to its largest index, as D3D11 reads zeros there.
+    func testIndicesPastTheVerticesReadZeros() throws {
+        let cube = try plan()
+        let source = cube.meshes[0]
+        var indices = [UInt16](repeating: 0, count: source.indexCount)
+        _ = indices.withUnsafeMutableBytes { source.indexData.copyBytes(to: $0) }
+        indices += [0, 1000, 2]
+        let mesh = SceneModelPlan.Mesh(index: 0, material: source.material, format: source.format, vertexData: source.vertexData,
+                                       indexData: indices.withUnsafeBytes { Data($0) }, usesUInt32Indices: false,
+                                       indexCount: indices.count)
+        let padded = SceneModelPlan(path: "past.mdl", meshes: [mesh], bounds: cube.bounds, skeleton: nil)
+        let buffers = try XCTUnwrap(renderer.meshBuffers(padded)[0])
+        XCTAssertEqual(buffers.vertices.length, 1001 * source.format.stride)
+        let tail = UnsafeRawBufferPointer(start: buffers.vertices.contents() + source.vertexData.count,
+                                          count: buffers.vertices.length - source.vertexData.count)
+        XCTAssertTrue(tail.allSatisfy { $0 == 0 }, "the padding is zeros")
+        XCTAssertTrue(UnsafeRawBufferPointer(start: buffers.vertices.contents(), count: source.vertexData.count)
+            .elementsEqual(source.vertexData), "the vertices are as they were")
+        // In range: the buffer is the vertices as they are.
+        XCTAssertEqual(try XCTUnwrap(renderer.meshBuffers(cube)[0]).vertices.length, source.vertexData.count)
+        // Only the indices drawn count, and 32-bit ones read as such.
+        let wide: [UInt32] = [3, 70_000, 9]
+        XCTAssertEqual(SceneModelRenderer.largestIndex(wide.withUnsafeBytes { Data($0) }, uint32: true, count: 3), 70_000)
+        XCTAssertEqual(SceneModelRenderer.largestIndex(wide.withUnsafeBytes { Data($0) }, uint32: true, count: 1), 3)
+        XCTAssertNil(SceneModelRenderer.largestIndex(Data(), uint32: false, count: 4))
+    }
+
     // MARK: - Planning
 
     /// WE's model combos (0x140224c70) over `generic4`: `SKINNING` from the mesh's blend indices,

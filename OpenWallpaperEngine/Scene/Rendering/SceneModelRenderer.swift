@@ -49,6 +49,9 @@ final class SceneModelRenderer: SceneModelDrawing {
     /// and each mesh's index count there.
     private var geometryRevisions: [ObjectIdentifier: UInt64] = [:]
     private var geometryIndexCounts: [ObjectIdentifier: [Int: Int]] = [:]
+    /// Per plan and mesh: the triangle list its buffers were last made with and its largest index
+    /// (`applyData` often changes only the vertices).
+    private var largestIndices: [ObjectIdentifier: [Int: (indices: Data, count: Int, largest: Int?)]] = [:]
     /// The plans a script's `replaceData` put in place of the content's, by the content's plan.
     private var replacedPlans: [ObjectIdentifier: SceneModelPlan] = [:]
 
@@ -117,6 +120,7 @@ final class SceneModelRenderer: SceneModelDrawing {
         buffers.removeAll()
         geometryRevisions.removeAll()
         geometryIndexCounts.removeAll()
+        largestIndices.removeAll()
         replacedPlans.removeAll()
         uniforms.removeAll()
         animators.removeAll()
@@ -310,10 +314,7 @@ final class SceneModelRenderer: SceneModelDrawing {
         if let source = plan.geometry { refreshGeometry(plan, from: source) }
         if let existing = buffers[key] { return existing }
         let made = plan.meshes.map { mesh -> MeshBuffers? in
-            guard let vertices = mesh.vertexData.withUnsafeBytes({ device.makeBuffer(bytes: $0.baseAddress!, length: $0.count) }),
-                  let indices = mesh.indexData.withUnsafeBytes({ device.makeBuffer(bytes: $0.baseAddress!, length: $0.count) })
-            else { return nil }
-            return MeshBuffers(vertices: vertices, indices: indices)
+            makeBuffers(mesh, of: plan, vertices: mesh.vertexData, indices: mesh.indexData, indexCount: mesh.indexCount)
         }
         buffers[key] = made
         return made
@@ -334,13 +335,51 @@ final class SceneModelRenderer: SceneModelDrawing {
         buffers[key] = plan.meshes.map { mesh -> MeshBuffers? in
             let data = geometry.meshes[mesh.index]
             counts[mesh.index] = data.indexCount
-            guard !data.vertices.isEmpty, !data.indices.isEmpty,
-                  let vertices = data.vertices.withUnsafeBytes({ device.makeBuffer(bytes: $0.baseAddress!, length: $0.count) }),
-                  let indices = data.indices.withUnsafeBytes({ device.makeBuffer(bytes: $0.baseAddress!, length: $0.count) })
-            else { return nil }
-            return MeshBuffers(vertices: vertices, indices: indices)
+            guard !data.vertices.isEmpty, !data.indices.isEmpty else { return nil }
+            return makeBuffers(mesh, of: plan, vertices: data.vertices, indices: data.indices, indexCount: data.indexCount)
         }
         geometryIndexCounts[key] = counts
+    }
+
+    /// A mesh's buffers. A script's model data may index past its vertices (`createModelData`
+    /// takes any index, `applyData` may shrink the vertices under them), and Metal doesn't define
+    /// such a fetch; D3D11, WE's API, reads zeros there, so the vertices are padded with zeros up
+    /// to the largest index drawn.
+    private func makeBuffers(_ mesh: SceneModelPlan.Mesh, of plan: SceneModelPlan, vertices: Data, indices: Data,
+                             indexCount: Int) -> MeshBuffers? {
+        guard !vertices.isEmpty, !indices.isEmpty else { return nil }
+        let key = ObjectIdentifier(plan)
+        let largest: Int?
+        if let known = largestIndices[key]?[mesh.index], known.count == indexCount, known.indices == indices {
+            largest = known.largest
+        } else {
+            largest = Self.largestIndex(indices, uint32: mesh.usesUInt32Indices, count: indexCount)
+            largestIndices[key, default: [:]][mesh.index] = (indices, indexCount, largest)
+        }
+        let stride = mesh.format.stride
+        let needed = stride > 0 ? (largest.map { ($0 + 1) * stride } ?? 0) : 0
+        var padded = vertices
+        if needed > padded.count { padded.append(Data(count: needed - padded.count)) }
+        guard let vertexBuffer = padded.withUnsafeBytes({ device.makeBuffer(bytes: $0.baseAddress!, length: $0.count) }),
+              let indexBuffer = indices.withUnsafeBytes({ device.makeBuffer(bytes: $0.baseAddress!, length: $0.count) })
+        else { return nil }
+        return MeshBuffers(vertices: vertexBuffer, indices: indexBuffer)
+    }
+
+    /// The largest of the first `count` indices (fewer when the list is shorter); nil without any.
+    static func largestIndex(_ indices: Data, uint32: Bool, count: Int) -> Int? {
+        indices.withUnsafeBytes { raw -> Int? in
+            let size = uint32 ? 4 : 2
+            let available = min(count, raw.count / size)
+            guard available > 0 else { return nil }
+            var largest = 0
+            for index in 0..<available {
+                let value = uint32 ? Int(UInt32(littleEndian: raw.loadUnaligned(fromByteOffset: index * 4, as: UInt32.self)))
+                    : Int(UInt16(littleEndian: raw.loadUnaligned(fromByteOffset: index * 2, as: UInt16.self)))
+                largest = max(largest, value)
+            }
+            return largest
+        }
     }
 
     /// How many indices of `mesh` draw: its plan's, or what its model data has now.
