@@ -63,12 +63,18 @@ final class SceneRegionTransformTests: XCTestCase {
                 }
             }
         }
-        let offset = SIMD2<Double>(1.2 * 40, 0.9 * -25)
-        let turn = 0.4
-        let centre = SIMD2<Double>(190 + offset.x * cos(turn) - offset.y * sin(turn),
-                                   120 + offset.x * sin(turn) + offset.y * cos(turn))
-        XCTAssertEqual(Double(magenta.count), 120 * 80 * 1.2 * 0.9, accuracy: 120 * 80 * 0.04, "the 2D layer's area")
-        let drawn = magenta.sum / Double(max(magenta.count, 1))
+        let offset = SIMD2<Double>(48, -22.5)
+        let turn: Double = 0.4
+        let cosTurn: Double = cos(turn)
+        let sinTurn: Double = sin(turn)
+        let centreX: Double = 190 + offset.x * cosTurn - offset.y * sinTurn
+        let centreY: Double = 120 + offset.x * sinTurn + offset.y * cosTurn
+        let centre = SIMD2<Double>(centreX, centreY)
+        let expectedArea: Double = 120 * 80 * 1.2 * 0.9
+        let areaTolerance: Double = 120 * 80 * 0.04
+        XCTAssertEqual(Double(magenta.count), expectedArea, accuracy: areaTolerance, "the 2D layer's area")
+        let magentaCount: Double = Double(max(magenta.count, 1))
+        let drawn: SIMD2<Double> = magenta.sum / magentaCount
         XCTAssertEqual(drawn.x, centre.x, accuracy: 0.75, "the 2D layer's centre")
         XCTAssertEqual(drawn.y, 272 - centre.y, accuracy: 0.75, "the 2D layer's centre (rows from the top)")
         XCTAssertGreaterThan(cyan.count, 3000, "the layer drawn through the perspective camera")
