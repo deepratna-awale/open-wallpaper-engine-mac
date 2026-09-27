@@ -82,12 +82,13 @@ final class WallpaperServices {
         return audioCapture.audioLevel
     }
 
-    /// The latest smoothed WE spectra, without advancing the smoothing.
+    /// The latest frame a scene's spectrum clock advanced to, without advancing anything
+    /// (SceneScript's `registerAudioBuffers`).
     var audioSpectrumSnapshot: AudioSpectrumSnapshot { audioCapture.audioSpectrumSnapshot }
 
-    /// Advances the spectrum smoothing by one frame. The renderer calls this exactly once per
-    /// rendered frame and binds the result to every pass of that frame.
-    func advanceAudioSpectrumFrame(playbackRate: Double = 1) -> AudioSpectrumSnapshot {
-        audioCapture.advanceAudioSpectrumFrame(playbackRate: playbackRate)
+    /// A consumer's own WE spectrum smoothing: each scene renderer and each web page steps one
+    /// by its own frames. `publishes`: its frames become `audioSpectrumSnapshot` (scenes).
+    func makeAudioSpectrumClock(publishes: Bool) -> AudioSpectrumClock {
+        audioCapture.makeAudioSpectrumClock(publishes: publishes)
     }
 }

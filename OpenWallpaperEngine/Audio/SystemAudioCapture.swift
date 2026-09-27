@@ -152,14 +152,12 @@ final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate {
             return false
         }
         let filter = SCContentFilter(display: display, excludingApplications: [], exceptingWindows: [])
-        let configuration = SCStreamConfiguration()
-        configuration.capturesAudio = true
-        configuration.excludesCurrentProcessAudio = false
-        configuration.sampleRate = 48_000
-        configuration.channelCount = 2
-        let stream = SCStream(filter: filter, configuration: configuration, delegate: self)
+        let stream = SCStream(filter: filter, configuration: Self.streamConfiguration(), delegate: self)
         do {
             try stream.addStreamOutput(self, type: .audio, sampleHandlerQueue: .global(qos: .userInteractive))
+            // Takes the video frames (one 2×2 frame a second) and drops them at once; without a
+            // screen output ScreenCaptureKit logs every frame it has nowhere to send.
+            try stream.addStreamOutput(self, type: .screen, sampleHandlerQueue: .global(qos: .utility))
             try await stream.startCapture()
         } catch {
             OWELog.error(.audio, "Failed to start ScreenCaptureKit audio capture: \(error.localizedDescription)")
@@ -168,6 +166,22 @@ final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate {
         setCurrentStream(stream)
         OWELog.info(.audio, "ScreenCaptureKit audio capture started.")
         return true
+    }
+
+    /// ScreenCaptureKit has no audio-only stream, so the video side is made as cheap as it gets:
+    /// a 2×2 frame at most once a second, without the cursor. The default captures the whole
+    /// display at its refresh rate, and an animated wallpaper dirties it every frame.
+    static func streamConfiguration() -> SCStreamConfiguration {
+        let configuration = SCStreamConfiguration()
+        configuration.capturesAudio = true
+        configuration.excludesCurrentProcessAudio = false
+        configuration.sampleRate = 48_000
+        configuration.channelCount = 2
+        configuration.width = 2
+        configuration.height = 2
+        configuration.minimumFrameInterval = CMTime(value: 1, timescale: 1)
+        configuration.showsCursor = false
+        return configuration
     }
 
     private func setCurrentStream(_ stream: SCStream) {
@@ -210,13 +224,12 @@ final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate {
     /// WE's `g_AudioSpectrum*` source. Fed on the audio thread; the analyzer owns its own lock.
     private let audioSpectrumAnalyzer = AudioSpectrumAnalyzer()
 
-    /// The latest smoothed WE spectra, without advancing the smoothing.
+    /// The latest frame a scene's spectrum clock advanced to, without advancing anything.
     var audioSpectrumSnapshot: AudioSpectrumSnapshot { audioSpectrumAnalyzer.snapshot }
 
-    /// Advances the spectrum smoothing by one frame. The renderer calls this exactly once per
-    /// rendered frame, with its scene's playback rate, and binds the result to every pass of that frame.
-    func advanceAudioSpectrumFrame(playbackRate: Double = 1) -> AudioSpectrumSnapshot {
-        audioSpectrumAnalyzer.advanceFrame(playbackRate: playbackRate)
+    /// A consumer's own spectrum smoothing over this capture (`AudioSpectrumClock`).
+    func makeAudioSpectrumClock(publishes: Bool) -> AudioSpectrumClock {
+        audioSpectrumAnalyzer.makeClock(publishes: publishes)
     }
 
     /// Splits the capture buffer (non-interleaved float32) into its channels for the analyzer.

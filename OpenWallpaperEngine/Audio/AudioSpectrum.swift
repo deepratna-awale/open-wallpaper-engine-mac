@@ -41,20 +41,19 @@ struct AudioSpectrumSnapshot: Equatable {
 }
 
 /// WE's audio spectrum from stereo PCM: `AudioSpectrumBlockTransform` on the audio thread turns
-/// blocks of samples into raw band values, and `AudioSpectrumSmoothing` turns the latest block into
-/// each rendered frame's arrays. Both follow `wallpaper64.exe` (see their docs).
+/// blocks of samples into raw band values (`AudioSpectrumFeed`), and each consumer's
+/// `AudioSpectrumClock` turns the latest block into its frames' arrays with
+/// `AudioSpectrumSmoothing`. Both follow `wallpaper64.exe` (see their docs).
 ///
-/// Threading: `ingest` runs on the audio thread and owns `transform`; `advanceFrame` runs on the
-/// render thread. `lock` owns `latestRaw`, `smoothing`, `current` and `lastAdvance`.
+/// Threading: `ingest` runs on the audio thread and owns `transform`; the feed and the clocks own
+/// their own locks.
 final class AudioSpectrumAnalyzer {
     static let rawCount = 2 * AudioSpectrumBlockTransform.bandCount
 
-    private let lock = NSLock()
-    private var latestRaw = [Float](repeating: 0, count: AudioSpectrumAnalyzer.rawCount)
-    private var smoothing = AudioSpectrumSmoothing()
-    private var current = AudioSpectrumSnapshot.silent
-    private var lastAdvance: TimeInterval?
+    private let feed = AudioSpectrumFeed()
     private let uptime: () -> TimeInterval
+    /// The analyzer's own publishing clock, for `advanceFrame`.
+    private let frames: AudioSpectrumClock
 
     // Audio-thread only.
     private let transform: AudioSpectrumBlockTransform?
@@ -65,6 +64,7 @@ final class AudioSpectrumAnalyzer {
         transform = AudioSpectrumBlockTransform(sampleRate: sampleRate)
         transform?.inputVolume = inputVolume
         self.uptime = uptime
+        frames = AudioSpectrumClock(feed: feed, publishes: true, uptime: uptime)
         if transform == nil {
             OWELog.error(.audio, "Audio spectrum DFT setup failed for \(sampleRate) Hz; the spectrum stays silent")
         }
@@ -73,48 +73,31 @@ final class AudioSpectrumAnalyzer {
     /// Adds one buffer of non-interleaved float samples. Pass the same buffer twice for mono.
     func ingest(left: UnsafeBufferPointer<Float>, right: UnsafeBufferPointer<Float>) {
         guard let raw = transform?.append(left: left, right: right) else { return }
-        lock.lock()
-        latestRaw = raw
-        lock.unlock()
+        feed.setLatestRaw(raw)
     }
 
-    /// Capture stopped: WE's processor hands out zeros while it isn't running, which silences the
-    /// next frame.
+    /// Capture stopped: WE's processor hands out zeros while it isn't running, which silences
+    /// every consumer's next frame.
     func reset() {
-        lock.lock()
-        latestRaw = [Float](repeating: 0, count: Self.rawCount)
-        lock.unlock()
+        feed.setLatestRaw([Float](repeating: 0, count: Self.rawCount))
     }
 
-    /// Advances by one rendered frame, timed by the monotonic clock. Call exactly once per frame.
-    /// WE steps the smoothing by the scene's frame time, which its playback rate scales
-    /// (`SceneClock`, 0x1401114c3): the monotonic step, clamped as WE clamps its frame, times
-    /// `playbackRate`.
+    /// A new consumer with its own smoothing, fed by this analyzer. `publishes`: its frames are what
+    /// `snapshot` returns (scenes, whose SceneScripts read it).
+    func makeClock(publishes: Bool) -> AudioSpectrumClock {
+        AudioSpectrumClock(feed: feed, publishes: publishes, uptime: uptime)
+    }
+
+    /// Advances the analyzer's own clock by one frame (`AudioSpectrumClock.advanceFrame(playbackRate:)`).
     func advanceFrame(playbackRate: Double = 1) -> AudioSpectrumSnapshot {
-        lock.lock()
-        defer { lock.unlock() }
-        let now = uptime()
-        // The first frame has no predecessor; WE's clamp turns 0 into its minimum step.
-        let frame = lastAdvance.map { now - $0 } ?? 0
-        let deltaTime = min(max(frame, SceneClock.minimumFrameDelta), SceneClock.maximumFrameDelta) * playbackRate
-        lastAdvance = now
-        current = smoothing.advance(raw: latestRaw, deltaTime: deltaTime)
-        return current
+        frames.advanceFrame(playbackRate: playbackRate)
     }
 
-    /// Advances by one frame of `deltaTime` seconds.
+    /// Advances the analyzer's own clock by one frame of `deltaTime` seconds.
     func advanceFrame(deltaTime: Double) -> AudioSpectrumSnapshot {
-        lock.lock()
-        defer { lock.unlock() }
-        lastAdvance = uptime()
-        current = smoothing.advance(raw: latestRaw, deltaTime: deltaTime)
-        return current
+        frames.advanceFrame(deltaTime: deltaTime)
     }
 
-    /// The latest frame's arrays, without advancing.
-    var snapshot: AudioSpectrumSnapshot {
-        lock.lock()
-        defer { lock.unlock() }
-        return current
-    }
+    /// The latest frame any publishing clock advanced to, without advancing.
+    var snapshot: AudioSpectrumSnapshot { feed.publishedFrame }
 }

@@ -6,7 +6,7 @@ import Foundation
 /// the one buffer that both the shaders (`0x1400d9bc4`) and SceneScript (`0x14018e010`) read:
 ///
 /// 1. rate = clamp(frame time, 0.0001, 0.25), the frame time scaled by the wallpaper's playback
-///    rate (`AudioSpectrumAnalyzer.advanceFrame(playbackRate:)`).
+///    rate (`AudioSpectrumClock.advanceFrame(playbackRate:)`).
 /// 2. Peaks: the raw values in 16 groups of 8 (left bands 0–7, 8–15, …, then right), each group's
 ///    maximum raised to at least a third of the overall maximum. Silent unless the overall maximum
 ///    is at least 0.0001.

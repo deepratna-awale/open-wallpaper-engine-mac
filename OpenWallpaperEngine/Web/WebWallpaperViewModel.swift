@@ -37,6 +37,9 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     private var pageHasBeaten = false
     private var visibilityObservers: [NSObjectProtocol] = []
     private var audioTimer: Timer?
+    /// The page's own smoothing of the captured spectrum, stepped by `audioTimer`, so the page
+    /// hears audio whether or not a scene is running next to it.
+    private var audioClock: AudioSpectrumClock?
     private var propertyObserver: NSObjectProtocol?
 
     /// Whose user properties the page gets: its display's, or the shared ones while synced.
@@ -200,9 +203,12 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
 
     fileprivate func audioListenerRegistered() {
         guard audioTimer == nil else { return }
+        let clock = audioClock ?? WallpaperServices.shared.makeAudioSpectrumClock(publishes: false)
+        audioClock = clock
+        // WE delivers 64 left and 64 right values to web listeners 30 times a second.
         let timer = Timer(timeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
             guard let self, !self.isPaused, let webView = self.webView else { return }
-            let snapshot = WallpaperServices.shared.audioSpectrumSnapshot
+            let snapshot = clock.advanceFrame()
             let samples = WebWallpaperPropertyBridge.audioArray(left: snapshot.left64, right: snapshot.right64)
             webView.evaluateJavaScript(WebWallpaperPropertyBridge.audioDeliveryScript(samples), completionHandler: nil)
         }

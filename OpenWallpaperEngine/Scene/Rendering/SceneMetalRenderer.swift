@@ -146,6 +146,17 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// The playback rate `clock` runs at, when set (tests); otherwise the Animation Speed of this
     /// instance's own property store (`ScenePlaybackSpeed`), WE's `rate`.
     var playbackRate: (() -> Double)?
+    /// Advances the audio spectrum by one frame at a playback rate: this renderer's own smoothing
+    /// of the app's capture, made on the first frame (tests feed their own). Each renderer steps
+    /// its own, so several scenes don't step one another's and a web page's never depends on them.
+    var audioSpectrumFrame: (Double) -> AudioSpectrumSnapshot = {
+        var clock: AudioSpectrumClock?
+        return { (playbackRate: Double) -> AudioSpectrumSnapshot in
+            let current: AudioSpectrumClock = clock ?? WallpaperServices.shared.makeAudioSpectrumClock(publishes: true)
+            clock = current
+            return current.advanceFrame(playbackRate: playbackRate)
+        }
+    }()
     /// The wallpaper is paused (the app's pause, or every display it shows on): the clock eases to
     /// a stop as WE's does (`SceneClock.paused`), and `onPlaybackStopped` fires on each frame drawn
     /// once it stood still, so the displays can stop drawing.
@@ -156,11 +167,6 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// A script's fog on/off switch was reported (`frameLighting`).
     private var loggedFogToggle = false
 
-    /// Advances the audio spectrum by one frame at a playback rate: the app's capture (tests feed
-    /// their own).
-    var audioSpectrumFrame: (Double) -> AudioSpectrumSnapshot = {
-        WallpaperServices.shared.advanceAudioSpectrumFrame(playbackRate: $0)
-    }
     /// Scene seconds since the content loaded, rate applied (`g_Time`).
     var sceneTime: Double { clock.time }
     /// Mixed into the seed of every particle system the next content prepares. 0 replays a

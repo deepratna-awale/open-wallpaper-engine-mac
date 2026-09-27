@@ -26,8 +26,8 @@ final class SceneScriptAudioBuffersExtension: SceneScriptRuntimeExtension {
     private let count = SceneScriptAudioBuffersExtension.resolutions.reduce(0, +) * SceneScriptAudioBuffersExtension.channelCount
     private let storage: UnsafeMutablePointer<Float>
 
-    /// `spectrum` returns the current frame's arrays; the renderer advances the analyzer once per
-    /// frame (`SystemAudioCapture.advanceAudioSpectrumFrame`) and this only reads.
+    /// `spectrum` returns the current frame's arrays; the renderer advances its own spectrum clock
+    /// once per frame (`AudioSpectrumClock`) and this only reads.
     init(spectrum: @escaping () -> AudioSpectrumSnapshot) {
         self.spectrum = spectrum
         storage = UnsafeMutablePointer<Float>.allocate(capacity: count)
