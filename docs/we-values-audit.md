@@ -151,7 +151,7 @@ Particle systems now compile their initializers and operators into records the w
 | system `flags` 8…0x80 | not read | switch off the colour, speed, count, lifetime and size overrides | fixed |
 | a second emitter | ignored (logged) | WE runs every emitter record in order, each with its own rate, carry, burst, clock and per-period count, counting what the earlier ones spawned (0x1402378a0) | fixed (CPU, GPU, instances) |
 | `layerimage` | logged, emitted as a sphere | points from the layer's image reduced to a quarter, a random one per spawn, through the layer's transform; flags 0x10000 (the texel's colour), `offsetmin`/`offsetmax` "−5 −5 0"/"5 5 0" (2D) with flag 0x80000 (§11.2) | fixed |
-| depth (z) | dropped | `directions` z spreads the spawn in depth and the launch follows it; `velocityrandom` z and `movement`'s gravity z and drag move it (§11.4) | fixed (emitters, `velocityrandom`, `movement`) |
+| depth (z) | dropped | `directions` z spreads the spawn in depth and the launch follows it; every operator and initializer works in 3D, control points carry z and their `controlpointangle<n>` orientation (§11.4, §11.6) | fixed |
 
 **Initializers:** lifetime is set; size, colour and alpha multiply WE's base values (lifetime 1, size 0.5, the instance colour and alpha; 0x14023b340); velocity, rotation and spin add. Two of a kind both apply.
 
@@ -580,7 +580,16 @@ Particles are random, so the comparison is statistical:
 - Particles now carry depth and its velocity in both simulations. The sphere and box emitters spread along z and launch along the 3D offset, `velocityrandom` adds its z, and `movement` moves by it with gravity's z and the drag. The records carry it to WE's shaders.
 - A flag-4 system of an orthographic scene draws through `SceneLayerPlacement.perspectiveLayerCamera`. The orthographic view got a depth range so depth doesn't clip.
 - The star field now shows WE's streaks toward the viewer (clip coverage 0.69 % against 0.61 %, motion 1.59 against 1.42), and the refractive rain's motion matches (1.32 against 1.35, was 2.70).
-- The other operators are still planar (PG1). Tests: `ParticleProgramTests.testMovementAndTheEmitterWorkInDepth`, `ParticleSimulationParityTests.testDepth`.
+- The other operators were still planar (PG1). Tests: `ParticleProgramTests.testMovementAndTheEmitterWorkInDepth`, `ParticleSimulationParityTests.testDepth`.
+
+**11.6 The program in 3D and control point orientation (PG1).**
+- WE's VM keeps position, velocity and the previous position as x, y, z (system+0x2b0…0x2f0), and every operator and initializer works in 3D. Control points are 4×4 matrices: base = the `offset` (z included) and, from the object's `controlpointangle<n>` override, rows 0…2 = R(x, y, z) (x first, then y, then z; 0x14022bf53); a `worldspace` system composes them with the model, a flag 2 point of a system in its emitter's space with the inverse (0x14022a070). Flag 16 does nothing at run time.
+- Readers of the orientation: the emitter (its offset turns when the system is `worldspace` or its point isn't 0, 0x140237ce3), `velocityrandom`, `turbulentvelocityrandom` and `inheritcontrolpointvelocity` (the emitter's point, 0x14023b364), `mapsequencearoundcontrolpoint` (its axis and basis), `vortex_v2` (its axis, not normalised again, 0x1402434d0) and `maintaindistancetocontrolpoint` (the distance through the inverse). Plain `vortex` doesn't turn its axis.
+- Ours is now the same on both simulations: `ParticleProgramState` holds 3D position and velocity, the control points are 3D with their orientation (`ParticleFrameInputs.controlPointAxes`), `turbulence` pushes z by N(Y, Z, X), `oscillateposition` moves z with x's phase, `positionoffsetrandom` samples (z·scale, −time), the remaps read and write 3D vectors, boids and the inheritance take z.
+- The vortex orb (magic_12) now matches: coverage 5.22 % against WE's 5.53 % (was 0.59 %), motion 3.03 against 2.94 (was 0.05). DNA (abstract_0) spins in depth (motion 0.23 against 0.21, was 0.17).
+- The leaves (0 and 2) are unchanged: with its default `forward` "0 1 0" and `right` "0 0 1", WE's `turbulentvelocityrandom` stays in the xy plane, so their gap isn't the 3D operators (PG11).
+- Not done: rotation and angular velocity stay about z only (WE's are vec3, which only a renderer reading x and y would show); a flag 4 point that doesn't copy its parent's matrix (WE converts it between the systems' spaces, [?]) copies it here; an instanced child's instances don't follow their source particle's depth.
+- Tests: `ParticleProgram3DTests` (the rotation, the override and its composition, each 3D formula by hand, the GPU against the CPU in three 3D systems).
 
 **11.5 Sprite-sheet playback.**
 - For a system whose texture is a sprite sheet and that isn't "randomframe", WE writes each particle's life value as age / lifetime × `sequencemultiplier` (0x14023703b…0x140237075).
