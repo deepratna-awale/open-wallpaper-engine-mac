@@ -4,13 +4,15 @@ import simd
 @testable import OpenWallpaperEngine
 
 /// Every Puppet Warp layer of the library (docs/models-plan.md §2.13: 32 layers in 7 scenes),
-/// loaded by the real loader and drawn by the real renderer in the bind pose:
+/// loaded by the real loader and drawn by the real renderer, posed by its animation layers
+/// (docs/models-plan.md §4.3 M6, P2):
 ///
 /// - none falls back to its unwarped image: each has its mesh plan, with WE's combos
 ///   (`SKINNING`, the exact `BONECOUNT`);
 /// - each drawn image reproduces what its rig assembles from the source texture: a CPU
-///   rasterisation of the bind-pose mesh (nearest texel, straight-alpha "over" in index order) is
-///   the oracle, compared over a grid of pixel centres (coverage mask, alpha, colour). For the rigs
+///   rasterisation of the mesh skinned with the pose it was drawn in (nearest texel, straight-alpha
+///   "over" in index order) is the oracle; every rig also plays 5 s without a NaN or infinity, and
+///   each rig in its bind pose is checked the same way, compared over a grid of pixel centres (coverage mask, alpha, colour). For the rigs
 ///   laid over their own picture, the oracle is the source image itself where the mesh covers it,
 ///   and the mesh covers the picture; the witcher's (3803167460) rearranges an atlas.
 ///
@@ -29,7 +31,7 @@ final class ScenePuppetLibraryTests: XCTestCase {
         }
     }
 
-    func testEveryLibraryPuppetDrawsItsBindPose() throws {
+    func testEveryLibraryPuppetDrawsItsPose() throws {
         let roots = LightingLibraryDecodeTests.roots.filter { FileManager.default.fileExists(atPath: $0.path) }
         try XCTSkipIf(roots.count < LightingLibraryDecodeTests.roots.count, "wallpaper library not present")
         let items = try Self.puppetScenes(in: roots)
@@ -39,9 +41,9 @@ final class ScenePuppetLibraryTests: XCTestCase {
         }
         XCTAssertGreaterThanOrEqual(items.reduce(0) { $0 + $1.layers.count }, 32, "the survey's 32 puppet layers")
         let output = ProcessInfo.processInfo.environment["OWE_PUPPET_OUT"].map { URL(fileURLWithPath: $0, isDirectory: true) }
-        var report = "scene\tlayer\tbones\tvertices\ttexture\tIoU\talpha MAE\tcolour MAE\tpicture covered\tunwarped\n"
+        var report = "scene\tlayer\tbones\tvertices\ttexture\tIoU\talpha MAE\tcolour MAE\tpicture covered\tunwarped\tposed\n"
         for item in items { report += try sweep(item, output: output) }
-        print("Library puppets in the bind pose:\n\(report)")
+        print("Library puppets, posed (and their bind pose against the picture):\n\(report)")
     }
 
     // MARK: - One scene
@@ -63,6 +65,14 @@ final class ScenePuppetLibraryTests: XCTestCase {
             let variant = try XCTUnwrap(plan.material.pass.variant)
             XCTAssertEqual(variant.combos["SKINNING"], 1, "\(item.id) \(id)")
             XCTAssertEqual(variant.combos["BONECOUNT"], plan.skeleton.bones.count, "\(item.id) \(id): the exact bone count")
+            let animator = plan.makeAnimator()
+            XCTAssertEqual(animator.stack.layers.count, plan.animationLayers.count, "\(item.id) \(id): every layer names a clip")
+            for _ in 0..<60 { animator.advance(delta: 1.0 / 12, values: EmptySceneValues()) }
+            XCTAssertTrue(animator.pose.bones.allSatisfy { bone in
+                [bone.columns.0, bone.columns.1, bone.columns.2, bone.columns.3].allSatisfy { column in
+                    (0..<4).allSatisfy { column[$0].isFinite }
+                }
+            }, "\(item.id) \(id): a finite pose")
             plans[id] = plan
             // Hidden puppets (a user property's variant) are drawn too, for the check.
             content.visibility[id] = true
@@ -103,23 +113,28 @@ final class ScenePuppetLibraryTests: XCTestCase {
             let image = try ScenePuppetTestSupport.rgba8(drawn.image, device: device)
             let size = SIMD2(drawn.image.width, drawn.image.height)
             XCTAssertEqual(size, SIMD2(drawn.source.width, drawn.source.height), "\(item.id) \(id): the source's layout")
-            let result = Self.compare(plan, source: source, image: image, size: size)
+            let pose = try XCTUnwrap(renderer.puppetPose(ofLayer: id), "\(item.id) \(id)")
+            let result = Self.compare(plan, source: source, image: image, size: size, pose: pose)
+            // The oracle in the bind pose against the picture: a rig laid over its picture covers it.
+            let bind = Self.compare(plan, source: source, image: source, size: size, pose: .bind(boneCount: plan.boneCount))
             let label = "\(item.id) layer \(id)"
+            if bind.unwarped {
+                XCTAssertGreaterThanOrEqual(bind.iou, 0.97, "\(label): the rig covers its picture")
+                XCTAssertLessThanOrEqual(bind.colourError, 2, "\(label): the rig reproduces its picture")
+            }
             XCTAssertGreaterThanOrEqual(result.iou, 0.99, "\(label): coverage")
             XCTAssertLessThanOrEqual(result.alphaError, 3, "\(label): alpha")
             XCTAssertLessThanOrEqual(result.colourError, result.unwarped ? 2 : 6, "\(label): colour")
-            if result.unwarped {
-                XCTAssertGreaterThanOrEqual(result.pictureCovered, 0.97, "\(label): the rig covers its picture")
-            }
+            let posed = pose != .bind(boneCount: plan.boneCount)
             lines += [item.id, id, String(plan.boneCount), String(plan.vertexData.count / plan.format.stride),
                       "\(size.x)×\(size.y)", String(format: "%.4f", result.iou), String(format: "%.2f", result.alphaError),
-                      String(format: "%.2f", result.colourError), String(format: "%.4f", result.pictureCovered),
-                      result.unwarped ? "yes" : "no"].joined(separator: "\t") + "\n"
+                      String(format: "%.2f", result.colourError), String(format: "%.4f", bind.iou),
+                      bind.unwarped ? "yes" : "no", posed ? "yes" : "no"].joined(separator: "\t") + "\n"
             if let output {
                 let folder = output.appending(path: item.id, directoryHint: .isDirectory)
                 try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
                 try Self.png(source, size: size).write(to: folder.appending(path: "\(id)-source.png"))
-                try Self.png(image, size: size).write(to: folder.appending(path: "\(id)-bindpose.png"))
+                try Self.png(image, size: size).write(to: folder.appending(path: "\(id)-posed.png"))
             }
         }
         return lines
@@ -140,10 +155,11 @@ final class ScenePuppetLibraryTests: XCTestCase {
         var unwarped: Bool
     }
 
-    /// The bind-pose mesh rasterised on the CPU at pixel centres (every `step`th row and column):
-    /// the source texel nearest each centre's texture coordinate, triangles composited "over" in
-    /// index order; compared with the drawn image there.
-    static func compare(_ plan: ScenePuppetPlan, source: [UInt8], image: [UInt8], size: SIMD2<Int>) -> Comparison {
+    /// The mesh skinned with `pose` (`p′ = Σ wᵢ · bone[iᵢ] · p`) rasterised on the CPU at pixel
+    /// centres (every `step`th row and column): the source texel nearest each centre's texture
+    /// coordinate, triangles composited "over" in index order; compared with the drawn image there.
+    static func compare(_ plan: ScenePuppetPlan, source: [UInt8], image: [UInt8], size: SIMD2<Int>,
+                        pose: ScenePuppetPose) -> Comparison {
         let content = SIMD2(Float(plan.contentPixels.x), Float(plan.contentPixels.y))
         let texture = SIMD2(Float(size.x), Float(size.y))
         let mesh = MDLMesh(materials: [], flags: plan.usesUInt32Indices ? 1 : 0, format: plan.format,
@@ -152,9 +168,16 @@ final class ScenePuppetLibraryTests: XCTestCase {
         let components = mesh.format.contains(.position) ? 3 : 4
         let uvs = mesh.floatValues(.texCoord)!
         let count = mesh.vertexCount
+        let bones = mesh.unsignedValues(.blendIndices) ?? [UInt32](repeating: 0, count: count * 4)
+        let weights = mesh.floatValues(.blendWeights) ?? (0..<count * 4).map { $0 % 4 == 0 ? 1 : 0 }
         // Vertices in target pixels, y down; texture coordinates in texels.
         let pixel = (0..<count).map { index -> SIMD2<Float> in
-            let p = SIMD2(positions[index * components], positions[index * components + 1])
+            let bind = SIMD4(positions[index * components], positions[index * components + 1], positions[index * components + 2], 1)
+            var skinned = SIMD4<Float>.zero
+            for k in 0..<4 where weights[index * 4 + k] != 0 && Int(bones[index * 4 + k]) < pose.bones.count {
+                skinned += weights[index * 4 + k] * (pose.bones[Int(bones[index * 4 + k])] * bind)
+            }
+            let p = SIMD2(skinned.x, skinned.y)
             return SIMD2((p.x / plan.imageSize.x + 0.5) * content.x, (0.5 - p.y / plan.imageSize.y) * content.y)
         }
         let texel = (0..<count).map { SIMD2(uvs[$0 * 2], uvs[$0 * 2 + 1]) * texture }

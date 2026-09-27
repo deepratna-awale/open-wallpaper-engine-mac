@@ -180,6 +180,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
               let source = layers.first(where: { $0.layer.id == id })?.frames.first?.texture else { return nil }
         return (source, image)
     }
+    /// A puppet layer's pose as its image was last drawn (tests, diagnostics).
+    func puppetPose(ofLayer id: String) -> ScenePuppetPose? { puppetAnimators[id]?.pose }
     /// Effect passes encoded so far, for tests.
     var effectPassesEncoded: Int { effectGraph?.passesEncoded ?? 0 }
     /// The last frame's scene target, before the post-process (tests, diagnostics).
