@@ -350,6 +350,17 @@ The recordings' numbers weren't in the brief, so these are listed for comparison
   - SSIM is 0.69 for half and 0.91 for full; the lower half score comes mostly from the figures' bob phase. `texres_half/still2` is a frame without the side figures, so it isn't ranked.
 - Tests: `TextureReductionTests` (both `auto` rules, the flag's both-sides rule, and WE's config values including `quarter`).
 
+**7.14 Light count and lit images — confirmed, no change** (lighting-plan §2.2, "Light count"). What the user saw in the editor: a 2D scene "allows 15 lights"; 256 point lights "all work" in a 3D scene; an image was lit only after Cast shadow. What the binaries say:
+
+| Question | WE | Ours |
+|---|---|---|
+| Lights per scene | No limit. Adding a 16th light shows "Total light limit of 15 has been reached. The wallpaper will only display the closest lights" and adds it anyway (`wallpaperui.exe` 0x1400a37c6). 2D and 3D are the same. | no limit |
+| Lights that light a surface | At most 15 per type (point, spot, tube, directional). This is the `lightconfig` word, which the editor writes as min(count, 15) (0x14041cd30), with at most 3 shadow maps and 1 cookie. Each frame the first ones in sort order are used: shadowed and cookie lights first, then the closest along the view (`wallpaper64.exe` 0x140190c80). | same (`WELightConfig`, `SceneLightPacker`) |
+| Does `castshadow` choose lights? | No. It only sorts the light first and, with shadows on, gives it a shadow slot. | same |
+| What lights an image | Its material's `LIGHTING` combo, the layer's Lighting option ("Only affects images with lighting enabled or 3D models"). | same (`SceneEngineCombos.lightingCombos`) |
+
+So the 256-light test can't have lit more than 15 points at once, and the Cast shadow observation is an editor artefact or the test setup (lighting-plan §5 item 8 lists what to capture). Tests: `SceneLightPackerTests.testTwoHundredFiftySixPointLightsKeepTheFifteenClosest`, `testCastShadowSortsButDoesNotSelect`.
+
 ## 9. WE 2.8.0.42's generated extras (effect gallery EXTRAS.md, ground truth)
 
 The peer generated these projects without the editor (`build_extras.py`) and captured them in WE 2.8.0.42 on Windows: the gallery's layout (checkerboard and gradient, 1024 px at scale 0.85, over 0.15 grey), a still at about 5 s and a 5 s clip. `WEExtrasComparisonTests` draws each through our loader and renderer at the gallery's settings (post-processing on, MSAA x2) and writes WE | ours | difference pictures and `report.tsv` (run with `OWE_WE_EXTRAS` pointing at a folder with `projects/fxx_*`, their `.tex` restored, and `we/<name>.png`). Mean absolute difference from WE's still (0–255), after the fixes below:

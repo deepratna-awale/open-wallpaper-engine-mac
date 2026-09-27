@@ -185,6 +185,56 @@ final class SceneLightPackerTests: XCTestCase {
         XCTAssertEqual([colors[0], colors[4]], [2, 1])
     }
 
+    // MARK: - How many lights, and which (docs/lighting-plan.md §2.2, "Light count")
+
+    /// 256 point lights (the user's 3D test in WE's editor: intensity 5, radius 5, exponent 2, no
+    /// shadow). The editor writes `lightconfig.point` = min(count, 15) (wallpaperui.exe
+    /// 0x14041cd30), so the shaders get 15 point slots, and the packer keeps the 15 first in sort
+    /// order: those nearest the eye along the view (WE's "only display the closest lights").
+    /// Nothing else is dropped, in a 2D or a 3D scene.
+    func testTwoHundredFiftySixPointLightsKeepTheFifteenClosest() {
+        // Scattered depths; the view looks down −z, so the largest z is the closest.
+        let depths = (0..<256).map { Float(($0 * 97) % 256) }
+        let lights = depths.map { entry(light(.point, intensity: 5, radius: 5, exponent: 2), at: SIMD3(0, 0, $0)) }
+        let arrays = pack(lights, WELightConfig(point: 15))
+        let colors = arrays["g_LPoint_Color"]!, origins = arrays["g_LPoint_Origin"]!
+        XCTAssertEqual(colors.count, 15 * 4)
+        XCTAssertEqual(colors, [Float]((0..<15).flatMap { _ in [5, 5, 5, 5] }), "every slot holds a light")
+        XCTAssertEqual((0..<15).map { origins[4 * $0 + 2] }, (241...255).reversed().map(Float.init))
+
+        // The frame path doesn't cap them either: all 256 are placed, 15 packed.
+        var content = SceneLightingContent()
+        content.settings.lightConfig = WELightConfig(point: 15)
+        content.lights = depths.enumerated().map { index, z in
+            SceneLightObject(id: "\(index)", authored: WESceneLight(kind: .point),
+                             light: light(.point, intensity: 5, radius: 5), depth: SceneLightDepth(originZ: z))
+        }
+        let locals = Dictionary(uniqueKeysWithValues: content.lights.map {
+            ($0.id, SceneLocalTransform(origin: .zero, scale: SIMD2(repeating: 1), angle: 0))
+        })
+        let frame = SceneFrameLighting.frame(content, input: frameInput(locals: locals))
+        XCTAssertEqual(frame.objects.count, 256)
+        XCTAssertEqual((0..<15).map { frame.arrays["g_LPoint_Origin"]![4 * $0 + 2] }, (241...255).reversed().map(Float.init))
+    }
+
+    /// `castshadow` doesn't decide whether a light lights a surface: a light without it packs, and
+    /// every `LIGHTING` material reads every packed light. It only sorts: a shadowed light goes
+    /// before its type's plain ones (the comparator 0x14019f490 reads `flags & 3` whether or not
+    /// the user's shadows are on), so with a full budget it wins over a closer plain light.
+    func testCastShadowSortsButDoesNotSelect() {
+        let plainNear = entry(light(.point, intensity: 1), at: SIMD3(0, 0, 9))
+        let shadowedFar = entry(light(.point, intensity: 2, shadow: true), at: SIMD3(0, 0, 1))
+        let both = pack([plainNear, shadowedFar], WELightConfig(point: 2), shadows: false)["g_LPoint_Color"]!
+        XCTAssertEqual([both[0], both[4]], [2, 1], "both lights pack; the shadowed one sorts first")
+        let plainOnly = pack([plainNear], WELightConfig(point: 1))["g_LPoint_Color"]!
+        XCTAssertEqual(plainOnly, [1, 1, 1, 1], "a light without castshadow lights")
+        for shadows in [false, true] {
+            let one = pack([plainNear, shadowedFar], WELightConfig(point: 1, pointShadow: shadows ? 1 : 0),
+                           shadows: shadows)["g_LPoint_Color"]!
+            XCTAssertEqual(one[0], 2, "a budget of one keeps the shadowed light (shadows \(shadows))")
+        }
+    }
+
     // MARK: - Frame lighting
 
     private func frameInput(locals: [String: SceneLocalTransform], parents: [String: SceneAffineTransform] = [:],
