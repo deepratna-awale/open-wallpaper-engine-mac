@@ -106,7 +106,9 @@ final class SceneTransform3DLibraryTests: XCTestCase {
     /// for random angles; and the layer's authored angles (radians) look from its origin at the
     /// scene's middle.
     func testCameraSyncScriptsForwardIsMinusRow2() throws {
-        let scene = try XCTUnwrap(try scenes().first { $0.key == "3734636606" }, "3734636606 not in the library")
+        // `scenes()` throws XCTSkip without the library; inside XCTUnwrap that would be a failure.
+        let found = try scenes().first { $0.key == "3734636606" }
+        guard let scene = found else { throw XCTSkip("3734636606 not in the library") }
         let root = try JSONSerialization.jsonObject(with: scene.data) as? [String: Any] ?? [:]
         let objects = root["objects"] as? [[String: Any]] ?? []
         let layer = try XCTUnwrap(objects.first { $0["camera"] is String }, "no camera layer")
