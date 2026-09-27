@@ -109,6 +109,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private lazy var puppets = ScenePuppetRenderer(device: device, archive: effectGraph?.pipelineArchive)
     /// Puppet layers' images this frame, by layer id: what `textureFrame(for:)` hands out for them.
     private var puppetAlbedos: [String: MTLTexture] = [:]
+    /// Puppet layers' skeletons in motion, by layer id (`ScenePuppetAnimator`).
+    private var puppetAnimators: [String: ScenePuppetAnimator] = [:]
+    /// A puppet without effects: its material's other textures laid out like its posed mesh, by
+    /// layer id and texture key (`ScenePuppetRenderer.warp`).
+    private var puppetWarps: [String: [String: MTLTexture]] = [:]
     /// Asset textures used by effect passes, materialised once per content.
     private var effectAssetTextures: [String: MTLTexture] = [:]
     /// Animated asset textures' sprite frames, by the same key.
@@ -378,6 +383,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         imageMaterials?.releaseAll()
         puppets?.releaseAll()
         puppetAlbedos.removeAll()
+        puppetAnimators.removeAll()
+        puppetWarps.removeAll()
         contentGenerationLock.lock()
         contentGeneration &+= 1
         let generation = contentGeneration
@@ -651,6 +658,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             imageMaterials?.releaseLayer(id)
             puppets?.releaseLayer(id)
             puppetAlbedos.removeValue(forKey: id)
+            puppetAnimators.removeValue(forKey: id)
+            puppetWarps.removeValue(forKey: id)
         }
     }
 
@@ -1116,7 +1125,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                    uvOrigin: textureFrame.uvOrigin, uvAxisX: textureFrame.uvAxisX, uvAxisY: textureFrame.uvAxisY,
                    sceneSnapshot: layerSnapshot, mipMappedFrameBuffer: mipMappedTarget, frame: effectFrame,
                    values: timelines.values,
-                   assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
+                   assetTexture: { [unowned self] key, source in
+                       self.puppetWarps[entry.layer.id]?[key] ?? self.effectAssetTexture(key: key, source: source)
+                   },
                    assetSprite: { [unowned self] key, source in self.effectAssetSprite(key: key, source: source) },
                    ignoredAdjustments: !ImageMaterialRenderer.nativeAdjustmentsAreIdentity(uniform, brightness: draw.brightness)),
                    pixelFormat: sceneTexture.pixelFormat, sampleCount: sceneSampleCount, encoder: encoder,
@@ -1583,16 +1594,38 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         return draw.quad.extent * renderPixelsPerUnit / shown
     }
 
-    /// Draws a puppet layer's mesh into its image (`puppetAlbedos`) in the bind pose: every bone the
-    /// identity until skinning poses them (docs/models-plan.md §4.3 M6, P2).
+    /// Draws a puppet layer's mesh into its image (`puppetAlbedos`), posed by its animation layers
+    /// this frame (docs/models-plan.md §4.3 M6, P2). Called only while the layer is visible, which
+    /// is when WE evaluates its layers.
     private func drawPuppet(_ puppet: ScenePuppetPlan, _ entry: PreparedLayer, frame: BuiltinFrameContext,
                             commandBuffer: MTLCommandBuffer) {
         guard let puppets, let source = entry.frames.first?.texture else { return }
+        let animator = puppetAnimator(entry.layer.id, puppet)
+        animator.advance(delta: Float(frame.frameTime), values: timelines.values)
         puppetAlbedos[entry.layer.id] = puppets.albedo(puppet, ScenePuppetRenderer.Draw(
-            layerID: entry.layer.id, source: source, pose: .bind(boneCount: puppet.boneCount), frame: frame,
+            layerID: entry.layer.id, source: source, pose: animator.pose, frame: frame,
             values: timelines.values,
             assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) }),
             commandBuffer: commandBuffer)
+        // Without effects WE draws the mesh in the scene through the layer's material, sampling
+        // every texture at the mesh's coordinates: the quad draws with them laid out likewise.
+        guard entry.layer.weEffects.isEmpty, let pass = entry.layer.imageMaterial?.pass else { return }
+        var warped: [String: MTLTexture] = [:]
+        for case let .asset(key, assetSource) in pass.textures.values {
+            guard let texture = effectAssetTexture(key: key, source: assetSource) else { continue }
+            warped[key] = puppets.warp(puppet, layerID: entry.layer.id, key: key, texture: texture,
+                                       contentSize: assetSource.contentSize, pose: animator.pose,
+                                       commandBuffer: commandBuffer)
+        }
+        puppetWarps[entry.layer.id] = warped
+    }
+
+    /// The layer's animator, made on first use.
+    private func puppetAnimator(_ id: String, _ puppet: ScenePuppetPlan) -> ScenePuppetAnimator {
+        if let animator = puppetAnimators[id] { return animator }
+        let animator = puppet.makeAnimator()
+        puppetAnimators[id] = animator
+        return animator
     }
 
     /// A lit or reflective layer's image as its effects start from it: lit by its material's

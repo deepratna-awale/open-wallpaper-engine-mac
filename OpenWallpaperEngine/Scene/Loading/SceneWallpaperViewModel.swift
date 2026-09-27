@@ -869,7 +869,8 @@ class SceneWallpaperViewModel: ObservableObject {
         do {
             let model = try MDLModel.load(path: rig, package: pkgParser, directory: wallpaperDir)
             return try ScenePuppetPlan.make(model: model, rigPath: rig, materialPath: materialPath, source: source,
-                                            imageSize: imageSize, builder: builder)
+                                            imageSize: imageSize, animationLayers: object.animationLayers,
+                                            builder: builder)
         } catch {
             OWELog.error(.scene, "Puppet layer \(object.id ?? -1) draws its image unwarped, rig \(rig): \(error)")
             return nil
