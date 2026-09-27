@@ -1167,14 +1167,15 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                                                        depthFormat: sceneDepthFormat) {
                     let kind = ParticleGPUDrawKind.material(simulated.format, rendererName: rendererName)
                     for step in prewarm {
-                        particleRequests.append(.init(system: system, inputs: step, kind: kind, materialVertexCount: simulated.vertexCount))
+                        particleRequests.append(.init(system: system, inputs: step, kind: kind, materialVertexCount: simulated.vertexCount,
+                                                      writesRecords: false))
                     }
                     particleRequests.append(.init(system: system, inputs: inputs, kind: kind,
                                                   materialVertexCount: simulated.vertexCount, renderVar: simulated.renderVar))
                     particleBatches.append((system, base, 0, true, true))
                 } else {
                     let kind = ParticleGPUDrawKind.fallback(rendererName: rendererName)
-                    for step in prewarm { particleRequests.append(.init(system: system, inputs: step, kind: kind)) }
+                    for step in prewarm { particleRequests.append(.init(system: system, inputs: step, kind: kind, writesRecords: false)) }
                     particleRequests.append(.init(system: system, inputs: inputs, kind: kind))
                     particleBatches.append((system, base, 0, false, true))
                 }

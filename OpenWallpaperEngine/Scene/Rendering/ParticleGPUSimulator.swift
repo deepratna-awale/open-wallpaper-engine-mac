@@ -16,6 +16,9 @@ final class ParticleGPUSimulator {
         /// A rope material's uniform block: the step writes `g_RenderVar0` (the point count) at
         /// this byte offset.
         var renderVar: (buffer: MTLBuffer, offset: Int)?
+        /// False for a step nothing draws (a pre-simulation step before the frame's own): it skips
+        /// the draw arguments, the trail scan and the records, which the drawn step rewrites.
+        var writesRecords = true
     }
 
     static let threadgroupSize = 256
@@ -198,6 +201,12 @@ final class ParticleGPUSimulator {
         func perParticle() {
             encoder.dispatchThreadgroups(indirectBuffer: control, indirectBufferOffset: ParticleGPUSystem.Control.dispatchOffset,
                                          threadsPerThreadgroup: group)
+        }
+        switch stage {
+        case .trailScanBlocks, .trailScanSums, .finish, .write:
+            guard plan.request.writesRecords else { return false }
+        default:
+            break
         }
         switch stage {
         case .linkPoints:
