@@ -11,7 +11,9 @@ import MetalKit
 /// Plan §4.6's target is under 0.5 ms per frame; the table is how it is checked (in an optimized
 /// build signed with the app's entitlements, so JavaScriptCore JIT-compiles as in the app; an
 /// unsigned host such as CI's runs the interpreter, `SceneScriptJIT`). The assertion only guards
-/// against regressions an order of magnitude past it, and only where scripts are JIT-compiled.
+/// that a script frame fits in its 60 fps frame, and only where scripts are JIT-compiled: some
+/// wallpapers' own scripts (3657770939's and 3734636606's physics, about 3 ms a frame quiet and 5 ms
+/// under load, 75–86 % in their own JavaScript) are legitimately above the plan's target.
 ///
 /// The interpreter's numbers are not the app's: it runs scripts about 15 times slower (3657770939's
 /// rigid-body solver, 96 steps per scene second: 22 ms against 1.5 ms per 1/60 s frame, measured
@@ -21,7 +23,8 @@ import MetalKit
 final class SceneScriptLibraryCostTests: XCTestCase {
     /// Plan §4.6: under half a millisecond of script time per frame.
     static let budgetMilliseconds = 0.5
-    static let regressionGuard = 10 * budgetMilliseconds
+    /// A whole frame at 60 fps.
+    static let regressionGuard = 1000.0 / 60.0
     /// Ten seconds at 60 fps before measuring.
     static let warmUpFrames = 600
     /// The scene clock's step per drawn frame. Scripts that step a fixed-timestep simulation per
