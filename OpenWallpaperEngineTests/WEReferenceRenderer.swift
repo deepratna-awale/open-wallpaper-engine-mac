@@ -28,6 +28,8 @@ struct WEReferenceRenderer {
     let storage: URL
     /// The capture's wall-clock time at the first shot (`WEReferenceLocalTime`), if known.
     var localTime: String?
+    /// The particles' random outcome (`SceneMetalRenderer.particleSeed`); 0 is the replayable one.
+    var particleSeed: UInt32 = 0
 
     /// The frames at `shots` (in time order), placed on the screen as WE places a scene (cover).
     func render(_ shots: [Shot]) throws -> [WEReferenceImage] {
@@ -55,6 +57,7 @@ struct WEReferenceRenderer {
         renderer.setPlacement(.fill)
         renderer.renderSettings = settings
         renderer.scripts.frameWait = 5
+        renderer.particleSeed = particleSeed
         var now: CFTimeInterval = 1000
         renderer.wallTime = { now }
         renderer.setContent(content)

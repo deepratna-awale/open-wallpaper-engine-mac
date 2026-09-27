@@ -181,13 +181,14 @@
   "name": "lightshafts_5",
   "coverage": 3.88,
   "motion": 0.18,
-  "knownGap": "PG2: light-shaft particles draw brighter and larger than WE's"
+  "seeds": 4
  },
  {
   "name": "lightshafts_6",
   "coverage": 0.41,
   "motion": 0.32,
-  "knownGap": "PG2: light-shaft particles draw brighter and larger than WE's"
+  "seeds": 4,
+  "knownGap": "PG2: WE's capture shows one light-shaft fan at a time, ours two or three"
  },
  {
   "name": "magic_0",

@@ -53,23 +53,36 @@ final class WEParticleGalleryTests: XCTestCase {
         for item in items {
             let directory = try item.make()
             defer { try? FileManager.default.removeItem(at: directory) } // Scratch space; the scratch folder goes at the end anyway.
-            let frames = try render(directory)
-            // The clip's mean coverage at half size, as the gallery's clip (5 fps, 960 × 540) is
-            // measured; one still of random particles is too noisy to compare.
-            let halves = frames.dropFirst().map { WEParticleGallery.scaled($0, width: $0.width / 2, height: $0.height / 2) }
-            let coverages: [Double]
-            if let background = item.background {
-                if backgrounds[background] == nil {
-                    let full = try WEReferenceImage.load(WEParticleGallery.fixtures.appending(path: "\(background).png"))
-                    backgrounds[background] = WEParticleGallery.subsampled(full)
+            let seeds = max(expectations[item.name]?.seeds ?? 1, 1)
+            var frames: [WEReferenceImage] = []
+            var coverages: [Double] = [], motions: [Double] = []
+            for seed in 0..<seeds {
+                let drawn = try render(directory, particleSeed: UInt32(seed))
+                if seed == 0 { frames = drawn }
+                // The clip's mean coverage at half size, as the gallery's clip (5 fps, 960 × 540) is
+                // measured; one still of random particles is too noisy to compare.
+                let halves = drawn.dropFirst().map { WEParticleGallery.scaled($0, width: $0.width / 2, height: $0.height / 2) }
+                let clip: [Double]
+                if let background = item.background {
+                    if backgrounds[background] == nil {
+                        let full = try WEReferenceImage.load(WEParticleGallery.fixtures.appending(path: "\(background).png"))
+                        backgrounds[background] = WEParticleGallery.subsampled(full)
+                    }
+                    let half = try XCTUnwrap(backgrounds[background])
+                    clip = halves.map { WEParticleGallery.coverage($0, background: half, height: 515) }
+                } else {
+                    clip = halves.map { WEParticleGallery.coverageAgainstMode($0, height: 515) }
                 }
-                let half = try XCTUnwrap(backgrounds[background])
-                coverages = halves.map { WEParticleGallery.coverage($0, background: half, height: 515) }
-            } else {
-                coverages = halves.map { WEParticleGallery.coverageAgainstMode($0, height: 515) }
+                coverages.append(clip.reduce(0, +) / Double(max(clip.count, 1)))
+                motions.append(WEParticleGallery.motion(Array(drawn.dropFirst())))
             }
-            let coverage = coverages.reduce(0, +) / Double(max(coverages.count, 1))
-            let motion = WEParticleGallery.motion(Array(frames.dropFirst()))
+            if seeds > 1 {
+                print(String(format: "%@ per seed: coverage %@, motion %@", item.name,
+                             coverages.map { String(format: "%.2f", $0) }.joined(separator: " "),
+                             motions.map { String(format: "%.2f", $0) }.joined(separator: " ")))
+            }
+            let coverage = coverages.reduce(0, +) / Double(seeds)
+            let motion = motions.reduce(0, +) / Double(seeds)
             try frames[0].write(to: output.appending(path: "\(item.name)-ours.png"))
             if writeFrames {
                 let folder = output.appending(path: "frames/\(item.name)", directoryHint: .isDirectory)
@@ -169,7 +182,7 @@ final class WEParticleGalleryTests: XCTestCase {
     }
 
     /// The still, then the clip's frames at 5 fps.
-    private func render(_ directory: URL) throws -> [WEReferenceImage] {
+    private func render(_ directory: URL, particleSeed: UInt32 = 0) throws -> [WEReferenceImage] {
         let data = try Data(contentsOf: directory.appending(path: "project.json"))
         let project = try decodeTolerant(WEProject.self, from: data)
         var settings = SceneRenderSettings()
@@ -180,8 +193,9 @@ final class WEParticleGalleryTests: XCTestCase {
         settings.sceneDetail = .full
         settings.renderResolution = .native
         settings.antiAliasing = .msaa_x2
-        let renderer = WEReferenceRenderer(directory: directory, project: project, settings: settings,
+        var renderer = WEReferenceRenderer(directory: directory, project: project, settings: settings,
                                            storage: scratch.appending(path: "storage-\(directory.lastPathComponent)"))
+        renderer.particleSeed = particleSeed
         let shots = (0...WEParticleGallery.motionFrames).map {
             WEReferenceRenderer.Shot(time: WEParticleGallery.stillTime + Double(max($0 - 1, 0)) * WEParticleGallery.motionStep,
                                      cursor: WEParticleGallery.cursor)

@@ -135,6 +135,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var clock = SceneClock()
     /// The wall clock `clock` follows (tests step it).
     var wallTime: () -> CFTimeInterval = { CACurrentMediaTime() }
+    /// Mixed into the seed of every particle system the next content prepares. 0 replays a
+    /// wallpaper's particles the same way each time; another value draws another random outcome
+    /// (tests average a system of a few particles over several).
+    var particleSeed: UInt32 = 0
     /// The wallpaper instance's timelines and texture clocks (docs/timeline-plan.md §2), advanced
     /// once per frame by `clock`'s delta, before the scripts run.
     let timelines = SceneRendererAnimations()
@@ -499,7 +503,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 guard let texture = self.makeTextureFrames(from: system.source)?.first?.texture else { return nil }
                 let fallback = system.fallbackSource.flatMap { self.makeTextureFrames(from: $0)?.first?.texture }
                 // Seeded by position in the scene, so a wallpaper's particles replay the same way.
-                return ParticleSystemRuntime(texture: texture, configuration: system, seed: ParticleRandom.pcg(UInt32(index)),
+                let seed = UInt32(index) &+ self.particleSeed &* 0x9E37_79B9
+                return ParticleSystemRuntime(texture: texture, configuration: system, seed: ParticleRandom.pcg(seed),
                                              fallbackTexture: fallback)
             }
             ParticleSystemRuntime.linkFamilies(runtimes)

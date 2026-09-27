@@ -49,6 +49,9 @@ enum WEParticleGallery {
         var motionTolerance: Double?
         /// A known gap: its test-risks id and cause.
         var knownGap: String?
+        /// A system of a few particles is one random draw per capture (WE's too): its clip's
+        /// metrics are the mean over this many particle seeds (`WEReferenceRenderer.particleSeed`).
+        var seeds: Int?
 
         var allowedCoverage: Double { coverageTolerance ?? max(0.3, coverage * 0.5) }
         var allowedMotion: Double { motionTolerance ?? max(0.3, motion * 0.5) }
