@@ -119,9 +119,9 @@ extension MDLReader {
                 guard positions.count == 6 * vertices else {
                     throw MDLError.malformed("morph positions of \(positions.count) bytes for \(vertices) vertices")
                 }
-                var target = MDLMorphTargets.Target(id: id, name: name, positions: halves(positions))
-                if mesh.flags & 0x400 != 0 { target.normals = halves(try morphBlob(&r, 6 * vertices, "morph normals")) }
-                if mesh.flags & 0x800 != 0 { target.tangents = halves(try morphBlob(&r, 6 * vertices, "morph tangents")) }
+                var target = MDLMorphTargets.Target(id: id, name: name, positions: snorms(positions))
+                if mesh.flags & 0x400 != 0 { target.normals = snorms(try morphBlob(&r, 6 * vertices, "morph normals")) }
+                if mesh.flags & 0x800 != 0 { target.tangents = snorms(try morphBlob(&r, 6 * vertices, "morph tangents")) }
                 if mesh.flags & 0x1000 != 0 { target.extra = Data(try morphBlob(&r, 2 * vertices, "morph extra")) }
                 if mesh.flags & 0x2000 != 0 {
                     let modifier = MDLMorphTargets.Target.Modifier(bone: try r.u32(), mode: try r.u32(),
@@ -142,10 +142,11 @@ extension MDLReader {
         return blob
     }
 
-    private static func halves(_ bytes: ArraySlice<UInt8>) -> [Float] {
+    /// The blob's 16-bit signed normalised values (`MDLMorphTargets.positions`).
+    private static func snorms(_ bytes: ArraySlice<UInt8>) -> [Float] {
         bytes.withUnsafeBytes { raw in
             (0..<(raw.count / 2)).map {
-                MDLMorphTargets.float(halfBits: raw.loadUnaligned(fromByteOffset: 2 * $0, as: UInt16.self).littleEndian)
+                MDLMorphTargets.float(snormBits: raw.loadUnaligned(fromByteOffset: 2 * $0, as: UInt16.self).littleEndian)
             }
         }
     }

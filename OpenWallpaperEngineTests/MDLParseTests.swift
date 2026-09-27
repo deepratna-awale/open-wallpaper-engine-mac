@@ -211,7 +211,10 @@ final class MDLParseTests: XCTestCase {
         XCTAssertEqual(full.referencePose?.count, 3)
         let morphs = try XCTUnwrap(full.morphTargets?.first)
         XCTAssertEqual(morphs.targets.map(\.name), ["shape0", "shape1"])
-        XCTAssertEqual(morphs.targets[1].positions.prefix(3), [-1, -0.5, 0])
+        // The fixture's writer stored the halves of −1, −0.5 and 0 (0xBC00, 0xB800, 0); WE reads
+        // the bits as signed normalised values.
+        let expected: [Float] = [0xBC00, 0xB800, 0].map { MDLMorphTargets.float(snormBits: $0) }
+        XCTAssertEqual(Array(morphs.targets[1].positions.prefix(3)), expected)
         XCTAssertEqual(morphs.targets[0].modifier, .init(bone: 1, mode: 2, startDistance: 0.5, endDistance: 4))
         XCTAssertEqual(full.meshes[0].groups?.first?.id, 0x1122_3344_5566_7788)
 
@@ -232,13 +235,13 @@ final class MDLParseTests: XCTestCase {
         XCTAssertEqual(MDLReader.version(ofTag: ArraySlice(Array("MDLS12x".utf8))), 12)
     }
 
-    func testHalfFloats() {
-        XCTAssertEqual(MDLMorphTargets.float(halfBits: 0x3c00), 1)
-        XCTAssertEqual(MDLMorphTargets.float(halfBits: 0xc000), -2)
-        XCTAssertEqual(MDLMorphTargets.float(halfBits: 0x0001), 5.9604645e-8)
-        XCTAssertEqual(MDLMorphTargets.float(halfBits: 0x7bff), 65504)
-        XCTAssertEqual(MDLMorphTargets.float(halfBits: 0x7c00), .infinity)
-        XCTAssert(MDLMorphTargets.float(halfBits: 0x7e00).isNaN)
+    /// `MDMP` deltas are 16-bit signed normalised values (WE's RGBA16 SNORM morph textures).
+    func testSnormDeltas() {
+        XCTAssertEqual(MDLMorphTargets.float(snormBits: 0x7fff), 1)
+        XCTAssertEqual(MDLMorphTargets.float(snormBits: 0x8001), -1)
+        XCTAssertEqual(MDLMorphTargets.float(snormBits: 0x8000), -1)
+        XCTAssertEqual(MDLMorphTargets.float(snormBits: 0), 0)
+        XCTAssertEqual(MDLMorphTargets.float(snormBits: 0x4000), 16384.0 / 32767, accuracy: 1e-7)
     }
 
     // MARK: - Loading

@@ -35,9 +35,10 @@ final class SceneMorphTargetsTests: XCTestCase {
             bytes += inner.bytes
         }
 
-        static func halves(_ values: [Float]) -> [UInt8] {
+        /// 16-bit signed normalised values, as `MDMP` stores its deltas.
+        static func snorms(_ values: [Float]) -> [UInt8] {
             values.flatMap { value -> [UInt8] in
-                let bits = SceneMorphTexture.halfBits(value)
+                let bits = MDLMorphTargets.snormBits(value)
                 return [UInt8(bits & 0xff), UInt8(bits >> 8)]
             }
         }
@@ -124,10 +125,10 @@ final class SceneMorphTargetsTests: XCTestCase {
             for (index, target) in targets.enumerated() {
                 s.u64(UInt64(500 + index))
                 s.cstr(target.name)
-                s.blob(Writer.halves(target.positions))
-                if flags & 0x400 != 0 { s.blob(Writer.halves(target.normals ?? Array(repeating: 0, count: 3 * morphVertices))) }
+                s.blob(Writer.snorms(target.positions))
+                if flags & 0x400 != 0 { s.blob(Writer.snorms(target.normals ?? Array(repeating: 0, count: 3 * morphVertices))) }
                 if flags & 0x800 != 0 { s.blob(Array(repeating: 0, count: 6 * morphVertices)) }
-                if flags & 0x1000 != 0 { s.blob(Writer.halves(target.alpha ?? Array(repeating: 1, count: morphVertices))) }
+                if flags & 0x1000 != 0 { s.blob(Writer.snorms(target.alpha ?? Array(repeating: 1, count: morphVertices))) }
                 if flags & 0x2000 != 0 {
                     let modifier = target.modifier ?? .init(bone: 0, mode: 0, startDistance: 0, endDistance: 0)
                     s.u32(modifier.bone)
@@ -159,12 +160,20 @@ final class SceneMorphTargetsTests: XCTestCase {
         return (MDLVertexFormat(rawValue: 0xb), vertices, indices)
     }
 
-    /// Target `t`'s delta for vertex `v`: distinct, exact in half precision.
+    /// `x` on the 16-bit signed normalised grid, which the `MDMP` values and the texture hold exactly.
+    static func grid(_ x: Float) -> Float { MDLMorphTargets.float(snormBits: MDLMorphTargets.snormBits(x)) }
+
+    /// Target `t`'s delta for vertex `v` (normalised, within ±1): distinct, exact on the grid.
     static func delta(_ t: Int, _ v: Int) -> SIMD3<Float> {
-        let x: Float = Float(t + 1) * 0.25
-        let y: Float = Float(v) * 0.125 - 1
-        let z: Float = Float(t * 7 + v) / 16
+        let x: Float = grid(Float(t + 1) * 0.0625)
+        let y: Float = grid(Float(v) * 0.0625 - 0.5)
+        let z: Float = grid(Float(t * 7 + v) / 128)
         return SIMD3<Float>(x, y, z)
+    }
+
+    /// Target `t`'s normal delta for vertex `v`.
+    static func normalDelta(_ t: Int, _ v: Int) -> SIMD3<Float> {
+        SIMD3<Float>(grid(Float(v) / 8), grid(-Float(t) / 4), grid(0.5))
     }
 
     static func targets(_ count: Int, vertices: Int, normals: Bool = false) -> [Target] {
@@ -172,7 +181,10 @@ final class SceneMorphTargetsTests: XCTestCase {
             Target(name: "shape\(t)", positions: (0..<vertices).flatMap { v -> [Float] in
                 let d = delta(t, v)
                 return [d.x, d.y, d.z]
-            }, normals: normals ? (0..<vertices).flatMap { v -> [Float] in [Float(v) / 8, -Float(t) / 4, 0.5] } : nil)
+            }, normals: normals ? (0..<vertices).flatMap { v -> [Float] in
+                let n = normalDelta(t, v)
+                return [n.x, n.y, n.z]
+            } : nil)
         }
     }
 
@@ -193,13 +205,14 @@ final class SceneMorphTargetsTests: XCTestCase {
         XCTAssertEqual(morphs.targets[0].extra?.count, 10)
     }
 
-    func testHalfBitsRoundTrip() {
-        for bits in stride(from: 0, through: 0xffff, by: 1) where bits & 0x7c00 != 0x7c00 {
-            let value = MDLMorphTargets.float(halfBits: UInt16(bits))
-            XCTAssertEqual(SceneMorphTexture.halfBits(value), UInt16(bits), "half 0x\(String(bits, radix: 16))")
+    func testSnormBitsRoundTrip() {
+        for bits in stride(from: 0, through: 0xffff, by: 1) where bits != 0x8000 {
+            let value = MDLMorphTargets.float(snormBits: UInt16(bits))
+            XCTAssertEqual(MDLMorphTargets.snormBits(value), UInt16(bits), "snorm 0x\(String(bits, radix: 16))")
         }
-        XCTAssertEqual(SceneMorphTexture.halfBits(1.0 + 1.0 / 4096), 0x3c00, "ties to even")
-        XCTAssertEqual(SceneMorphTexture.halfBits(70000), 0x7c00)
+        XCTAssertEqual(MDLMorphTargets.float(snormBits: 0x8000), -1, "−32768 reads as −1")
+        XCTAssertEqual(MDLMorphTargets.snormBits(2), 0x7fff)
+        XCTAssertEqual(MDLMorphTargets.snormBits(-2), 0x8001)
     }
 
     // MARK: - Packing against the shaders' index maths
@@ -209,7 +222,7 @@ final class SceneMorphTargetsTests: XCTestCase {
         let x = index % packed.side, y = index / packed.side
         guard y < packed.side else { return .zero }
         let at = 4 * (y * packed.side + x)
-        return SIMD4((0..<4).map { MDLMorphTargets.float(halfBits: packed.halves[at + $0]) })
+        return SIMD4((0..<4).map { MDLMorphTargets.float(snormBits: packed.values[at + $0]) })
     }
 
     /// `generic4.vert`'s lookup (`base/model_vertex_v1.h`) of vertex `vertex` of the target at
@@ -244,15 +257,15 @@ final class SceneMorphTargetsTests: XCTestCase {
             let mesh = model.meshes[0]
             let morphs = try XCTUnwrap(model.morphTargets?.first)
             let packed = try XCTUnwrap(SceneMorphTexture.model(morphs, meshFlags: mesh.flags, vertexCount: mesh.vertexCount))
-            let halves = 5 * 7 * (normals ? 6 : 3)
-            XCTAssertEqual(packed.side, SceneMorphTexture.side(texels: (halves + 3) / 4))
+            let values = 5 * 7 * (normals ? 6 : 3)
+            XCTAssertEqual(packed.side, SceneMorphTexture.side(texels: (values + 3) / 4))
             XCTAssertEqual(packed.side, normals ? 8 : 6, "square: 27 or 53 texels")
             for t in 0..<5 {
                 for v in 0..<7 {
                     let found = Self.shaderLookup(packed, vertex: v, offset: t * mesh.vertexCount, normals: normals)
                     XCTAssertEqual(found.position, Self.delta(t, v), "normals \(normals): target \(t) vertex \(v)")
                     if normals {
-                        XCTAssertEqual(found.normal, SIMD3(Float(v) / 8, -Float(t) / 4, 0.5), "target \(t) vertex \(v) normal")
+                        XCTAssertEqual(found.normal, Self.normalDelta(t, v), "target \(t) vertex \(v) normal")
                     }
                 }
             }
@@ -270,7 +283,7 @@ final class SceneMorphTargetsTests: XCTestCase {
         let packed = try XCTUnwrap(SceneMorphTexture.model(try XCTUnwrap(model.morphTargets?.first), meshFlags: 0x800,
                                                            vertexCount: 4))
         XCTAssertEqual(packed.side, SceneMorphTexture.side(texels: (3 * 16 + 3) / 4))
-        XCTAssertTrue(packed.halves.allSatisfy { $0 == 0 })
+        XCTAssertTrue(packed.values.allSatisfy { $0 == 0 })
     }
 
     func testPuppetPackingMatchesTheShaderIndexMaths() throws {
@@ -284,17 +297,17 @@ final class SceneMorphTargetsTests: XCTestCase {
         let morphs = try XCTUnwrap(model.morphTargets?.first)
         let packed = SceneMorphTexture.puppet(morphs, meshFlags: 0x1000)
         XCTAssertEqual(packed.side, SceneMorphTexture.side(texels: 3 * vertices + 1))
-        XCTAssertEqual(Array(packed.halves[0..<4]), [0, 0, 0, 0x7fff], "texel 0")
+        XCTAssertEqual(Array(packed.values[0..<4]), [0, 0, 0, 0x7fff], "texel 0: no delta, alpha 1")
         for t in 0..<3 {
             for j in 0..<vertices {
                 let found = Self.texel(packed, (j + 1) + t * vertices)
                 XCTAssertEqual(SIMD3(found.x, found.y, found.z), Self.delta(t, j), "target \(t) morph vertex \(j + 1)")
-                XCTAssertEqual(found.w, Float(j + t) / 16)
+                XCTAssertEqual(found.w, Self.grid(Float(j + t) / 16))
             }
         }
         // Without flag 0x1000 WE fills nothing past texel 0.
         let unfilled = SceneMorphTexture.puppet(morphs, meshFlags: 0)
-        XCTAssertTrue(unfilled.halves.dropFirst(4).allSatisfy { $0 == 0 })
+        XCTAssertTrue(unfilled.values.dropFirst(4).allSatisfy { $0 == 0 })
     }
 
     // MARK: - Weights and the active targets
@@ -493,6 +506,38 @@ final class SceneMorphTargetsTests: XCTestCase {
             }
             XCTAssertLessThan(simd_distance(gpu[i], expected), 1e-3, "vertex \(i): \(gpu[i]) vs \(expected)")
         }
+    }
+
+    // MARK: - WE's editor (docs/test-risks.md MG5)
+
+    /// The WE 2.8 editor's puppet with one blend shape ("Shape 31", id 31, script access), which
+    /// moves the editor's vertex 196 (its ids count from 1: mesh vertex 195, at (15, 252.95)) by
+    /// +126.168 in x: its `MDMP` holds the deltas normalised by the mesh's weight (126.47, the
+    /// largest delta's length) as 16-bit signed normalised values, one per morph vertex (62,
+    /// found by `a_PositionVec4.w` from 1, with a 16-bit alpha each, flag 0x1000).
+    func testTheEditorsBlendShapeReadsAsWEsSnormTexture() throws {
+        let model = try MDLModel(contentsOf: Fixtures.url("Models/mg5-puppet-blendshape.mdl"))
+        let mesh = try XCTUnwrap(model.meshes.first)
+        XCTAssertEqual(mesh.flags & 0x1000, 0x1000)
+        let morphs = try XCTUnwrap(model.morphTargets?.first)
+        XCTAssertEqual(morphs.targets.map(\.name), ["Shape 31"])
+        XCTAssertEqual(morphs.targets.map(\.id), [31])
+        XCTAssertEqual(morphs.vertexCount, 62)
+        let scale = try XCTUnwrap(morphs.weight)
+        XCTAssertEqual(scale, 126.47, accuracy: 0.01)
+        XCTAssertEqual(morphs.targets[0].extra?.count, 124)
+        // The vertex's morph vertex (`a_PositionVec4.w`, the position's fourth float).
+        let stride = mesh.format.stride
+        let w: Float = mesh.vertexData.withUnsafeBytes { $0.loadUnaligned(fromByteOffset: 195 * stride + 12, as: Float.self) }
+        XCTAssertEqual(w, 58)
+        let packed = SceneMorphTexture.puppet(morphs, meshFlags: mesh.flags)
+        let texel = Self.texel(packed, Int(w))
+        let moved = SIMD3<Float>(texel.x, texel.y, texel.z) * scale
+        XCTAssertEqual(moved.x, 126.168, accuracy: 0.01, "the editor's offset")
+        XCTAssertEqual(moved.y, 0, accuracy: 0.01)
+        // Every delta lies within its weight: none is past ±1 as the normalised values it is.
+        let largest: Float = morphs.targets[0].positions.map(abs).max() ?? 0
+        XCTAssertLessThanOrEqual(largest, 1)
     }
 
     // MARK: - Scripts

@@ -5,21 +5,23 @@ import simd
 /// vertex stage reads the targets' deltas from, the weights animation layers and scripts give the
 /// targets, and the uniforms that pick at most 11 of them for a draw.
 ///
-/// The texture is RGBA16F and square, because the shaders take a texel's row as
-/// `index / Resolution.y` and its column as `index % Resolution.x`. Two layouts:
+/// The texture is RGBA16 SNORM (WE's format 0x13 → DXGI 13, R16G16B16A16_SNORM, for both
+/// "morph" and "morph_<n>"; 0x1400d2a4d) and square, because the shaders take a texel's row as
+/// `index / Resolution.y` and its column as `index % Resolution.x`. The `MDMP` values go in as
+/// the file holds them, normalised: the shaders scale them by `g_MorphWeights[0]`. Two layouts:
 /// - **Models** (`generic4`, `shadowcaster`…; the mesh upload 0x1401d7760, texture "morph"): the
-///   half floats of every target one after another, target `k`'s vertex `v` at half `3·(k·V + v)`
-///   (positions only) or `6·(k·V + v)` (a position and a normal, mesh flag 0x400), four halves a
-///   texel. `V` is the mesh's vertex count. The shader finds a vertex by `gl_VertexID + offset`.
+///   values of every target one after another, target `k`'s vertex `v` at value `3·(k·V + v)`
+///   (positions only) or `6·(k·V + v)` (a position and a normal, mesh flag 0x400), four a texel. `V` is the mesh's vertex count. The shader finds a vertex by `gl_VertexID + offset`.
 /// - **Puppets** (`genericimage2/3/4`; the puppet load 0x1401fbf44…0x1401fc0f3, texture
 ///   "morph_<n>"): one texel per morph vertex and target, (Δx, Δy, Δz, alpha), target `k`'s morph
-///   vertex `j` at texel `1 + k·V + j` with `V` the `MDMP` vertex count; texel 0 is (0, 0, 0, NaN).
+///   vertex `j` at texel `1 + k·V + j` with `V` the `MDMP` vertex count; texel 0 is (0, 0, 0, 1)
+///   (0x7fff, 0x1401fc044).
 ///   The shader finds it by `a_PositionVec4.w + offset`, so `w` counts morph vertices from 1.
 enum SceneMorphTexture {
-    /// A packed texture: `side × side` texels of four IEEE halves each.
+    /// A packed texture: `side × side` texels of four 16-bit signed normalised values each.
     struct Packed: Equatable {
         var side: Int
-        var halves: [UInt16]
+        var values: [UInt16]
     }
 
     /// WE's side for `texels` texels: `floor(sqrtf(n))`, one more when its square is short.
@@ -41,94 +43,68 @@ enum SceneMorphTexture {
         let count = morphs.targets.count * vertexCount
         var elements = meshFlags & 0x400 != 0 ? 2 * count : count
         if meshFlags & 0x800 != 0 { elements += count }
-        let halvesUsed = 3 * elements
-        let texels = halvesUsed / 4 + (halvesUsed % 4 != 0 ? 1 : 0)
+        let valuesUsed = 3 * elements
+        let texels = valuesUsed / 4 + (valuesUsed % 4 != 0 ? 1 : 0)
         let side = side(texels: texels)
-        var halves = [UInt16](repeating: 0, count: side * side * 4)
-        guard meshFlags & 0x800 == 0 else { return Packed(side: side, halves: halves) }
-        let normals = meshFlags & 0x400 != 0
-        let perVertex = normals ? 6 : 3
+        var values = [UInt16](repeating: 0, count: side * side * 4)
+        guard meshFlags & 0x800 == 0 else { return Packed(side: side, values: values) }
+        let hasNormals = meshFlags & 0x400 != 0
+        let perVertex = hasNormals ? 6 : 3
         for (k, target) in morphs.targets.enumerated() {
             let base = k * vertexCount * perVertex
             for vertex in 0..<vertexCount {
                 for axis in 0..<3 {
                     let at = 3 * vertex + axis
                     if at < target.positions.count {
-                        halves[base + perVertex * vertex + axis] = halfBits(target.positions[at])
+                        values[base + perVertex * vertex + axis] = MDLMorphTargets.snormBits(target.positions[at])
                     }
-                    if normals, let values = target.normals, at < values.count {
-                        halves[base + perVertex * vertex + 3 + axis] = halfBits(values[at])
+                    if hasNormals, let normals = target.normals, at < normals.count {
+                        values[base + perVertex * vertex + 3 + axis] = MDLMorphTargets.snormBits(normals[at])
                     }
                 }
             }
         }
-        return Packed(side: side, halves: halves)
+        return Packed(side: side, values: values)
     }
 
     /// A puppet's texture from its first mesh's targets (the only mesh WE reads). Only a mesh with
-    /// flag 0x1000 (a half per morph vertex: the alpha) is filled; otherwise every delta is 0, as
+    /// flag 0x1000 (a value per morph vertex: the alpha) is filled; otherwise every delta is 0, as
     /// WE's loop leaves it.
     static func puppet(_ morphs: MDLMorphTargets, meshFlags: UInt32) -> Packed {
         let vertices = Int(morphs.vertexCount ?? 0)
         let texels = morphs.targets.count * vertices + 1
         let side = side(texels: texels)
-        var halves = [UInt16](repeating: 0, count: side * side * 4)
-        halves[3] = 0x7fff
-        guard meshFlags & 0x1000 != 0 else { return Packed(side: side, halves: halves) }
+        var values = [UInt16](repeating: 0, count: side * side * 4)
+        values[3] = 0x7fff
+        guard meshFlags & 0x1000 != 0 else { return Packed(side: side, values: values) }
         for (k, target) in morphs.targets.enumerated() {
             let alpha = target.extra.map { [UInt8]($0) } ?? []
             for vertex in 0..<vertices {
                 let texel = 4 * (1 + k * vertices + vertex)
                 for axis in 0..<3 where 3 * vertex + axis < target.positions.count {
-                    halves[texel + axis] = halfBits(target.positions[3 * vertex + axis])
+                    values[texel + axis] = MDLMorphTargets.snormBits(target.positions[3 * vertex + axis])
                 }
                 if 2 * vertex + 1 < alpha.count {
-                    halves[texel + 3] = UInt16(alpha[2 * vertex]) | UInt16(alpha[2 * vertex + 1]) << 8
+                    values[texel + 3] = UInt16(alpha[2 * vertex]) | UInt16(alpha[2 * vertex + 1]) << 8
                 }
             }
         }
-        return Packed(side: side, halves: halves)
+        return Packed(side: side, values: values)
     }
 
     /// The texture, sampled at texel centres by the vertex stage (nearest or linear read the same).
     static func makeTexture(_ packed: Packed, device: MTLDevice, label: String) -> MTLTexture? {
         guard packed.side > 0 else { return nil }
-        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba16Float, width: packed.side,
+        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba16Snorm, width: packed.side,
                                                                   height: packed.side, mipmapped: false)
         descriptor.usage = .shaderRead
         guard let texture = device.makeTexture(descriptor: descriptor) else { return nil }
         texture.label = label
-        packed.halves.withUnsafeBytes { raw in
+        packed.values.withUnsafeBytes { raw in
             texture.replace(region: MTLRegionMake2D(0, 0, packed.side, packed.side), mipmapLevel: 0,
                             withBytes: raw.baseAddress!, bytesPerRow: packed.side * 8)
         }
         return texture
-    }
-
-    /// `value` as IEEE half bits, rounded to nearest even: exact for the `.mdl`'s halves, which
-    /// `MDLMorphTargets.float(halfBits:)` read.
-    static func halfBits(_ value: Float) -> UInt16 {
-        let bits = value.bitPattern
-        let sign = UInt16((bits >> 16) & 0x8000)
-        let exponent = Int((bits >> 23) & 0xff)
-        let mantissa = bits & 0x7f_ffff
-        if exponent == 0xff { return sign | 0x7c00 | (mantissa != 0 ? UInt16(0x200 | (mantissa >> 13)) : 0) }
-        let unbiased = exponent - 127
-        if unbiased > 15 { return sign | 0x7c00 }
-        if unbiased >= -14 {
-            var half = UInt32(unbiased + 15) << 10 | mantissa >> 13
-            let rest = mantissa & 0x1fff
-            if rest > 0x1000 || (rest == 0x1000 && half & 1 != 0) { half += 1 }
-            return sign | UInt16(half)
-        }
-        // Subnormal halves: value = m · 2^-24.
-        guard unbiased >= -25 else { return sign }
-        let full = mantissa | 0x80_0000
-        let shift = UInt32(-unbiased - 1)
-        var half = full >> shift
-        let rest = full & ((1 << shift) - 1), midway = UInt32(1) << (shift - 1)
-        if rest > midway || (rest == midway && half & 1 != 0) { half += 1 }
-        return sign | UInt16(half)
     }
 }
 
