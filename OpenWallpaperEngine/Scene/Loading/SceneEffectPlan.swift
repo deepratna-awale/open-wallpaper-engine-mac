@@ -87,15 +87,25 @@ struct SceneEffectPlanBuilder {
     let loadTexture: (_ name: String, _ materialPath: String) -> SceneMetalTextureSource?
     /// The combos WE's engine lays over every material of the scene (`SceneEngineCombos`).
     var sceneEngineCombos = SceneEngineCombos()
+    /// Reads a file of the wallpaper itself (its folder or package, or a Workshop item it
+    /// references), without the WE assets; nil reads through `readFile`. WE resolves an effect's
+    /// `materials/…` and `shaders/…` at the project root, then the assets root, and never inside
+    /// `assets/effects/<name>/`: a project without its copy of a built-in effect's material logs
+    /// "Failed opening" and drops the effect (docs/we-values-audit.md §8). So an effect's own
+    /// folder is searched only when the wallpaper has the effect (a Workshop effect's item keeps
+    /// its materials there), and only in the wallpaper's files.
+    var readWallpaperFile: ((String) -> Data?)? = nil
 
     /// `overrides` returns the user's edit for a WE material key (inspector), as a WE value string.
     /// `owner` is the layer's id and the effect's index in its `effects`: an animated constant of
     /// scene.json pass `p` is the timeline of `SceneAnimationSite(.material(object, effect, p), key)`.
     func build(_ effect: WEObjectEffect, owner: (object: Int, effect: Int)? = nil,
                overrides: (String) -> SceneEffectOverride? = { _ in nil }) throws -> SceneEffectPlan {
-        // An effect's materials, shaders and textures live under its own folder
-        // (`effects/tint/materials/...`), like a small asset root of its own.
-        let effectDirectory = (effect.file as NSString).deletingLastPathComponent
+        // A Workshop effect's item keeps its materials, shaders and textures under the effect's
+        // folder (`effects/<name>/materials/...`), like a small asset root of its own; a built-in
+        // effect's copy in the WE assets isn't one (`readWallpaperFile`).
+        let ownsEffect = readWallpaperFile.map { $0(effect.file) != nil } ?? true
+        let effectDirectory = ownsEffect ? (effect.file as NSString).deletingLastPathComponent : ""
         let scoped = Scoped(builder: self, directory: effectDirectory)
         let document: EffectDocument = try decode(effect.file)
         let instancePasses = effect.passes ?? []
@@ -176,7 +186,7 @@ struct SceneEffectPlanBuilder {
         inputs = inputs.filter { sampled.contains($0.key) }
         for sampler in samplers {
             guard let slot = sampler.textureSlot, sampled.contains(slot), inputs[slot] == nil, slot != 0,
-                  let name = sampler.defaultTexture,
+                  let name = sampler.defaultTexture, !name.isEmpty,
                   let input = textureInput(named: name, materialPath: materialPath, fboNames: fboNames,
                                            effectDirectory: effectDirectory) else { continue }
             inputs[slot] = input
@@ -312,6 +322,10 @@ struct SceneEffectPlanBuilder {
 
     fileprivate func decode<T: Decodable>(_ path: String) throws -> T {
         guard let data = readFile(path) else { throw SceneEffectPlanError.missing(path) }
+        return try decode(data, path: path)
+    }
+
+    fileprivate func decode<T: Decodable>(_ data: Data, path: String) throws -> T {
         do {
             return try decodeTolerant(T.self, from: data)
         } catch {
@@ -320,30 +334,33 @@ struct SceneEffectPlanBuilder {
     }
 }
 
-/// Lookups for one effect: its own folder first, then the wallpaper/asset roots.
+/// Lookups for one effect: its own folder in the wallpaper first (when it has one), then the
+/// wallpaper/asset roots.
 private struct Scoped {
     let builder: SceneEffectPlanBuilder
     let directory: String
 
-    func candidates(_ path: String) -> [String] {
-        directory.isEmpty ? [path] : ["\(directory)/\(path)", path]
+    /// The file and the path it was found at.
+    func read(_ path: String) -> (data: Data, path: String)? {
+        if !directory.isEmpty {
+            let own = "\(directory)/\(path)"
+            if let data = (builder.readWallpaperFile ?? builder.readFile)(own) { return (data, own) }
+        }
+        return builder.readFile(path).map { ($0, path) }
     }
 
     func decode<T: Decodable>(_ path: String) throws -> (T, String) {
-        for candidate in candidates(path) where builder.readFile(candidate) != nil {
-            return (try builder.decode(candidate), candidate)
-        }
-        throw SceneEffectPlanError.missing(path)
+        guard let found = read(path) else { throw SceneEffectPlanError.missing(path) }
+        return (try builder.decode(found.data, path: found.path), found.path)
     }
 
     func buildPass(_ pass: EffectPass, materialPass: MaterialPass, materialPath: String,
                    instance: WEObjectEffectPass?, fbos: [EffectFBO], overrides: (String) -> SceneEffectOverride?,
                    animationSite: ((String) -> SceneAnimationSite)?) throws -> SceneEffectPassPlan? {
-        let read = builder.readFile
-        let scopes = candidates
+        let scoped = self
         return try builder.buildPass(pass, materialPass: materialPass, materialPath: materialPath,
                                      instance: instance, fbos: fbos, overrides: overrides, animationSite: animationSite,
-                                     shaderReader: { path in scopes(path).lazy.compactMap(read).first },
+                                     shaderReader: { path in scoped.read(path)?.data },
                                      effectDirectory: directory)
     }
 }

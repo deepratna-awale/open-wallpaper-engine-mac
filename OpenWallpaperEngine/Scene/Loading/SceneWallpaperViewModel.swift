@@ -1211,7 +1211,8 @@ class SceneWallpaperViewModel: ObservableObject {
             loadTexture: { [weak self] name, materialPath in
                 self?.loadMetalTexture(named: name, materialDir: materialPath, wallpaperDir: wallpaperDir)
             },
-            sceneEngineCombos: sceneEngineCombos)
+            sceneEngineCombos: sceneEngineCombos,
+            readWallpaperFile: { [weak self] path in self?.wallpaperData(named: path, wallpaperDir: wallpaperDir) })
         var plans: [SceneEffectPlan] = []
         var handled = Set<Int>()
         let storeKey = propertyStoreKey
@@ -1511,13 +1512,17 @@ class SceneWallpaperViewModel: ObservableObject {
             assetDataCache[path] = fixed
             return fixed
         }
-        // A missing loose file is an ordinary miss: the next source is tried.
-        let data = pkgParser?.extractFile(named: path)
-            ?? (try? Data(contentsOf: wallpaperDir.appending(path: path)))
-            ?? workshopAssets.data(for: path)
-            ?? sharedAssetData(named: path)
+        let data = wallpaperData(named: path, wallpaperDir: wallpaperDir) ?? sharedAssetData(named: path)
         if let data { assetDataCache[path] = data }
         return data
+    }
+
+    /// A file of the wallpaper itself: its package, its folder, or a Workshop item it references.
+    private func wallpaperData(named path: String, wallpaperDir: URL) -> Data? {
+        // A missing loose file is an ordinary miss: the next source is tried.
+        pkgParser?.extractFile(named: path)
+            ?? (try? Data(contentsOf: wallpaperDir.appending(path: path)))
+            ?? workshopAssets.data(for: path)
     }
 
     /// The project's Workshop id: `workshopid` in project.json, else a numeric folder name
@@ -1582,11 +1587,14 @@ class SceneWallpaperViewModel: ObservableObject {
             }
         }
 
-        // Try common image formats directly
+        // Try common image formats directly, where the .tex was looked for (WE ships some effect
+        // textures as a PNG with a .tex-json, e.g. `materials/effects/refractnormal.png`).
         for ext in ["png", "jpg", "jpeg", "gif"] {
-            let imgPath = materialDirPath.isEmpty ? "\(name).\(ext)" : "\(materialDirPath)/\(name).\(ext)"
-            if let imgData = assetData(named: imgPath, wallpaperDir: wallpaperDir) {
-                if let image = NSImage(data: imgData) { return image }
+            for texPath in texPaths {
+                let imgPath = (texPath as NSString).deletingPathExtension + ".\(ext)"
+                if let imgData = assetData(named: imgPath, wallpaperDir: wallpaperDir), let image = NSImage(data: imgData) {
+                    return image
+                }
             }
         }
 
