@@ -157,4 +157,69 @@ final class RenderCheckTests: XCTestCase {
         XCTAssertEqual(Int(try centre(.enabled)), 255, accuracy: 1, "post-processing enabled: brightness 1")
         XCTAssertEqual(Int(try centre(.ultra)), 128, accuracy: 2, "ultra: brightness 0.5")
     }
+
+    /// 3802900973's audio bars: a Workshop effect nested under another item's folder
+    /// (`effects/workshop/<id>/workshop/<id>/…`) on a passthrough composition layer that a user
+    /// property shows. With the property off the layer is hidden; with it on, the bars follow
+    /// the frame's `g_AudioSpectrum*` over the scene under the layer, and silence draws none.
+    func testAudioBarsOnAComposeLayerFollowTheirPropertyAndTheSpectrum() throws {
+        let size = SIMD2(128, 64)
+        let directory = Fixtures.url("Scenes/audio-bars")
+        let projectData = try Fixtures.data("Scenes/audio-bars/project.json")
+        let project = try JSONDecoder().decode(WEProject.self, from: projectData)
+        defer { Fixtures.removeStoredSettings(for: directory) }
+        let hidden = try XCTUnwrap(SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
+        XCTAssertEqual(hidden.visibility["2"], false, "the property's default hides the bars")
+
+        let identity = WallpaperSettingsIdentity(directory: directory, projectData: projectData)
+        UserDefaults.app.set(["bars": "true"], forKey: identity.key(.userProperties))
+        UserDefaults.app.set(true, forKey: identity.key(.explicitUserProperties))
+        let content = try XCTUnwrap(SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
+        XCTAssertEqual(content.visibility["2"], true, "the property shows the bars")
+        let bars = try XCTUnwrap(content.layers.first { $0.id == "2" })
+        XCTAssertTrue(bars.sceneInput, "a passthrough composition layer draws over the scene under it")
+        XCTAssertEqual(bars.weEffects.map(\.file), ["effects/workshop/1/workshop/2/bars/effect.json"])
+
+        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
+        let view = MTKView(frame: CGRect(x: 0, y: 0, width: size.x, height: size.y), device: device)
+        view.colorPixelFormat = .bgra8Unorm
+        view.framebufferOnly = false
+        view.autoResizeDrawable = false
+        view.drawableSize = CGSize(width: size.x, height: size.y)
+        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: nil, screenID: "audio-bars"))
+        defer { renderer.releaseContent() }
+        view.isPaused = true
+        renderer.setPlacement(.stretch)
+        // Band b of both channels at b/15: bar b fills the bottom b/15 of its column.
+        let ramp: [Float] = (0..<64).map { Float(min($0 / 4, 15)) / 15 }
+        var spectrum = AudioSpectrumSmoothing.snapshot(ramp + ramp)
+        renderer.audioSpectrumFrame = { _ in spectrum }
+        renderer.setContent(content)
+        var bytes = [UInt8](repeating: 0, count: size.x * size.y * 4)
+        func rgb(_ x: Int, _ y: Int) -> SIMD3<UInt8> {
+            let i = (y * size.x + x) * 4
+            return SIMD3(bytes[i + 2], bytes[i + 1], bytes[i])
+        }
+        func draw(until done: () -> Bool) {
+            let deadline = Date().addingTimeInterval(60)
+            repeat {
+                RunLoop.main.run(until: Date().addingTimeInterval(0.01))
+                renderer.draw(in: view)
+                renderer.lastCommandBuffer?.waitUntilCompleted()
+                view.currentDrawable?.texture.getBytes(&bytes, bytesPerRow: size.x * 4,
+                                                       from: MTLRegionMake2D(0, 0, size.x, size.y), mipmapLevel: 0)
+            } while !done() && Date() < deadline
+        }
+        // Band 15 is the last 8 columns, band 1 columns 8–15.
+        draw { rgb(size.x - 4, size.y - 2) == SIMD3(255, 0, 0) }
+        XCTAssertEqual(rgb(size.x - 4, size.y - 2), SIMD3(255, 0, 0), "the loudest band's bar")
+        XCTAssertEqual(rgb(size.x - 4, 2), SIMD3(255, 0, 0), "a full band reaches the top")
+        XCTAssertEqual(rgb(12, size.y - 2), SIMD3(255, 0, 0), "band 1 is 1/15 tall")
+        XCTAssertEqual(rgb(12, size.y / 2), SIMD3(0, 0, 255), "above band 1's bar: the scene under the layer")
+        XCTAssertEqual(rgb(4, size.y - 2), SIMD3(0, 0, 255), "band 0 is silent")
+
+        spectrum = .silent
+        draw { rgb(size.x - 4, size.y - 2) == SIMD3(0, 0, 255) }
+        XCTAssertEqual(rgb(size.x - 4, size.y - 2), SIMD3(0, 0, 255), "silence draws no bars")
+    }
 }

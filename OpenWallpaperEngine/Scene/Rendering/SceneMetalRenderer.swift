@@ -139,6 +139,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     var wallTime: () -> CFTimeInterval = { CACurrentMediaTime() }
     /// The playback rate `clock` runs at: the app's Animation Speed, WE's `rate` (tests set it).
     var playbackRate: () -> Double = { Double(WallpaperServices.shared.userPropertyValue("_owe_speed", fallback: 1)) }
+    /// Advances the audio spectrum by one frame at a playback rate: the app's capture (tests feed
+    /// their own).
+    var audioSpectrumFrame: (Double) -> AudioSpectrumSnapshot = {
+        WallpaperServices.shared.advanceAudioSpectrumFrame(playbackRate: $0)
+    }
     /// Scene seconds since the content loaded, rate applied (`g_Time`).
     var sceneTime: Double { clock.time }
     /// Mixed into the seed of every particle system the next content prepares. 0 replays a
@@ -949,7 +954,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         effectFrame.pointerState = BuiltinFrameContext.pointerState(primaryDown: leftDown)
         effectFrame.screenSize = drawableSize
         effectFrame.textureReductionScale = Float(renderSettings.textureReduction)
-        effectFrame.audio = WallpaperServices.shared.advanceAudioSpectrumFrame(playbackRate: SceneClock.rate(rate))
+        effectFrame.audio = audioSpectrumFrame(SceneClock.rate(rate))
         let motion = cameraMotion(pointer: pointer, time: time, deltaTime: Float(clock.delta))
         effectFrame.parallax = parallaxEnabled ? cameraParallax.shaderPosition(sceneSize: sceneSize) : SIMD2(0.5, 0.5)
         // WE's camera eye and forward (ctx+0x68, ctx+0x160). An orthographic scene's camera stays
