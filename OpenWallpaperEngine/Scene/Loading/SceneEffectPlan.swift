@@ -62,6 +62,27 @@ struct SceneEffectPlan {
     /// scene.json `visible` (authored or user-bound). A hidden effect is built but skipped, so a
     /// script can show it (`thisObject.visible = true`).
     var visible = true
+
+    /// The effect reads what an earlier frame left in its buffers: a pass samples, or a copy
+    /// reads, an FBO before this frame writes it (motion blur's accumulation), or passes swap
+    /// buffers (a simulation's ping-pong). Its output changes from frame to frame even when its
+    /// input and constants don't, so it's never kept.
+    var carriesFrames: Bool {
+        var written = Set<String>()
+        for pass in passes {
+            switch pass.command {
+            case .swap:
+                return true
+            case .copy(let source, let target):
+                if source != "previous", !written.contains(source) { return true }
+                written.insert(target)
+            case .render:
+                for case .fbo(let name) in pass.textures.values where !written.contains(name) { return true }
+                if let target = pass.target { written.insert(target) }
+            }
+        }
+        return false
+    }
 }
 
 enum SceneEffectPlanError: Error, CustomStringConvertible {

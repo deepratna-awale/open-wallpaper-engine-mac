@@ -245,6 +245,9 @@ final class EffectGraphRenderer {
         /// `g_RenderVar0…4` the engine sets on a pass, by the pass's `materialIndex`: an engine
         /// chain's (one effect, `SceneHDRChain`).
         var passRenderVars: [Int: [Int: SIMD4<Float>]] = [:]
+        /// `g_EffectTextureProjectionMatrix`: where the layer's image lies on the screen
+        /// (`effectTextureProjection(quad:sceneSize:)`); identity for a chain that isn't a layer's.
+        var effectTextureProjection = matrix_identity_float4x4
 
         /// The input's on-screen size in pixels when the scene's detail matches the display
         /// (`SceneEffectDetail`); nil draws the chain at the input's size, as WE does. A smaller
@@ -356,6 +359,7 @@ final class EffectGraphRenderer {
             }
             let previous = current
             var fbos = state.fbos[effectIndex]
+            if effect.carriesFrames { reusable = false }
             for (passIndex, pass) in effect.passes.enumerated() {
                 switch pass.command {
                 case .copy(let source, let destination):
@@ -365,12 +369,10 @@ final class EffectGraphRenderer {
                     blit.copy(from: from, to: to)
                     blit.endEncoding()
                 case .swap(let first, let second):
+                    // A swapped pair carries this frame's buffers into the next (`carriesFrames`).
                     let a = fbos[first]
                     fbos[first] = fbos[second]
                     fbos[second] = a
-                    // A swapped pair carries this frame's buffers into the next (a simulation's
-                    // ping-pong): the chain's output changes every frame.
-                    reusable = false
                 case .render:
                     guard let variant = pass.variant, let program = state.programs[effectIndex][passIndex],
                           let format = state.formats[effectIndex][passIndex],
@@ -391,6 +393,7 @@ final class EffectGraphRenderer {
                            standIn: StandIn(input: input, inputSize: standIn, targets: state.standInSizes,
                                             label: passTimer == nil ? "" : Self.passLabel(layerID, effect: effect, pass: passIndex)),
                            scriptWrites: context.constantWrites[effect.effectIndex] ?? [],
+                           repeatingFBOs: Set(effect.fbos.filter { $0.uvs == "repeat" }.map(\.name)),
                            commandBuffer: commandBuffer)
                     didRender = true
                     if pass.target == nil { current = output }
@@ -418,8 +421,7 @@ final class EffectGraphRenderer {
     /// static (its output is kept whole) or its first visible effect varies.
     static func staticPrefix(_ effects: [SceneEffectPlan], programs: [[UniformProgram?]], hidden: Set<Int>) -> Int {
         func isStatic(_ index: Int) -> Bool {
-            zip(effects[index].passes, programs[index]).allSatisfy { pass, program in
-                if case .swap = pass.command { return false }
+            !effects[index].carriesFrames && zip(effects[index].passes, programs[index]).allSatisfy { pass, program in
                 guard case .render = pass.command else { return true }
                 return (program?.isReusable ?? true) && !pass.readsSceneSnapshot && !pass.readsMipMappedFrameBuffer
             }
@@ -585,7 +587,7 @@ final class EffectGraphRenderer {
                         variant: TranslatedShaderVariant, output: MTLTexture,
                         current: MTLTexture, previous: MTLTexture, fbos: [String: MTLTexture],
                         context: Context, standIn: StandIn, scriptWrites: [SceneScriptConstantWrite],
-                        commandBuffer: MTLCommandBuffer) {
+                        repeatingFBOs: Set<String> = [], commandBuffer: MTLCommandBuffer) {
         let descriptor = MTLRenderPassDescriptor()
         descriptor.colorAttachments[0].texture = output
         // Blended passes composite over what's already there; others overwrite every pixel.
@@ -611,7 +613,10 @@ final class EffectGraphRenderer {
             switch input {
             case .current: texture = current
             case .previous: texture = previous
-            case .fbo(let name): texture = fbos[name]
+            case .fbo(let name):
+                texture = fbos[name]
+                // An FBO declared with `"uvs": "repeat"` tiles (glitter's tile); others clamp.
+                if repeatingFBOs.contains(name) { sampler = assetSamplers[0] ?? clampSampler }
             case .sceneSnapshot: texture = context.sceneSnapshot
             case .mipMappedFrameBuffer: texture = context.mipMappedFrameBuffer
             case .asset(let key, let source):
@@ -646,6 +651,7 @@ final class EffectGraphRenderer {
             passContext.color = context.layerColor
             passContext.alpha = context.layerAlpha
             passContext.renderVars = context.passRenderVars[pass.materialIndex] ?? [:]
+            passContext.effectTextureProjection = context.effectTextureProjection
             program.update(frame: context.frame, pass: passContext, values: context.values)
             program.write(scriptWrites.filter { $0.reaches(material: pass.materialIndex) })
             if let record = context.recordAnimated { program.recordAnimated(record) }
@@ -654,6 +660,19 @@ final class EffectGraphRenderer {
             }
         }
         encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
+    }
+
+    /// `g_EffectTextureProjectionMatrix` of a layer drawn as `quad` in an orthographic scene of
+    /// `sceneSize`: from the effect's texture space (x right, y up, −1…1 across the layer's image)
+    /// to the screen's (−1…1, y up). Cursor effects take the pointer through its inverse into the
+    /// layer's image (x-ray's sprite, cursor ripple's and the fluid simulation's force), and depth
+    /// parallax turns the parallax direction by it, so they follow a moved, scaled or rotated layer.
+    static func effectTextureProjection(quad: SceneQuadGeometry, sceneSize: SIMD2<Float>) -> simd_float4x4 {
+        let size = simd_max(sceneSize, SIMD2(1, 1))
+        let axisX = quad.axisX / size, axisY = quad.axisY / size
+        let centre = quad.center / size * 2 - 1
+        return simd_float4x4(columns: (SIMD4(axisX.x, axisX.y, 0, 0), SIMD4(axisY.x, axisY.y, 0, 0),
+                                       SIMD4(0, 0, 1, 0), SIMD4(centre.x, centre.y, 0, 1)))
     }
 
     /// Position and texcoord come from the quad; any other attribute a shader reads is zero.
@@ -816,6 +835,10 @@ final class EffectGraphRenderer {
 
     /// `scale` divides the layer size; `fit` bounds the larger side.
     static func fboSize(_ fbo: EffectFBO, width: Int, height: Int) -> SIMD2<Int> {
+        // A fixed `width`/`height` (glitter's 256² tile) doesn't follow the layer.
+        if let fixedWidth = fbo.width, let fixedHeight = fbo.height, fixedWidth > 0, fixedHeight > 0 {
+            return SIMD2(fixedWidth, fixedHeight)
+        }
         var w = Double(width) / Double(max(fbo.scale, 1))
         var h = Double(height) / Double(max(fbo.scale, 1))
         if let fit = fbo.fit, fit > 0 {

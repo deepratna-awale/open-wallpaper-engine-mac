@@ -1591,6 +1591,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             layerColor: entry.layer.text?.effects == nil ? SIMD3(draw.color.x, draw.color.y, draw.color.z) : SIMD3(repeating: 1),
             layerAlpha: draw.opacity)
         context.mipMappedFrameBuffer = mipMappedTarget
+        context.effectTextureProjection = EffectGraphRenderer.effectTextureProjection(quad: draw.quad, sceneSize: sceneSize)
         // WE's layer buffers are frame-buffer class: RGBA16F in HDR.
         context.frameBufferFormat = postProcess.drawsHDR ? .rgba16Float : .rgba8Unorm
         context.assetContentSize = { _, source in source.contentSize }

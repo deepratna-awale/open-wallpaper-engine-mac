@@ -84,7 +84,7 @@ struct BuiltinPassContext {
     /// docs/lighting-plan.md §2.3). nil: `modelMatrix` and `viewProjection`.
     var altModelMatrix: simd_float4x4? = nil
     var altViewProjection: simd_float4x4? = nil
-    /// Identity in LWE.
+    /// `EffectGraphRenderer.effectTextureProjection(quad:sceneSize:)` for a layer's effects.
     var effectTextureProjection: simd_float4x4 = matrix_identity_float4x4
     var textures: [Int: BuiltinTextureInfo] = [:]
     var color: SIMD3<Float> = SIMD3(repeating: 1)
@@ -148,8 +148,11 @@ enum BuiltinUniforms {
         case "g_Time": return [Float(frame.time)]
         case "g_Daytime", "g_DayTime": return [frame.daytime]
         case "g_Frametime": return [Float(frame.frameTime)]
-        case "g_PointerPosition": return flat(frame.pointer)
-        case "g_PointerPositionLast": return flat(frame.pointerLast)
+        // WE's pointer is y-down, as the Windows cursor: its shaders flip it "to match texture
+        // space Y" (cursor ripple, x-ray, fluid simulation), as its camera parallax does (§3 of
+        // docs/we-values-audit.md). Ours is y-up.
+        case "g_PointerPosition": return [frame.pointer.x, 1 - frame.pointer.y]
+        case "g_PointerPositionLast": return [frame.pointerLast.x, 1 - frame.pointerLast.y]
         case "g_PointerState": return flat(frame.pointerState)
         case "g_ParallaxPosition": return flat(frame.parallax)
         case "g_TexelSize": return flat(1 / size)

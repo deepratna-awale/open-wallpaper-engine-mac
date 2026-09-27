@@ -44,8 +44,9 @@ final class BuiltinUniformTests: XCTestCase {
         frame.pointerState = BuiltinFrameContext.pointerState(primaryDown: true)
         frame.parallax = SIMD2(0.4, 0.6)
         frame.screenSize = SIMD2(1920, 1080)
-        XCTAssertEqual(value("g_PointerPosition"), [0.25, 0.75])
-        XCTAssertEqual(value("g_PointerPositionLast"), [0.2, 0.7])
+        // WE's shaders get the pointer y-down.
+        XCTAssertEqual(value("g_PointerPosition"), [0.25, 0.25])
+        XCTAssertEqual(value("g_PointerPositionLast")[1], 0.3, accuracy: 1e-6)
         XCTAssertEqual(value("g_PointerState"), [1, 0, 1, 0])
         XCTAssertEqual(value("g_ParallaxPosition"), [0.4, 0.6])
         XCTAssertEqual(value("g_Screen"), [1920, 1080, 1920 / Float(1080)])

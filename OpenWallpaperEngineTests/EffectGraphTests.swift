@@ -160,6 +160,90 @@ final class EffectGraphTests: XCTestCase {
         XCTAssertEqual(renderer.failedPipelineCount, 0)
     }
 
+    /// Motion blur accumulates into a unique buffer it reads before writing: each frame mixes the
+    /// image into what earlier frames left (rate 0.8), so a still image shows through fully after
+    /// a few frames, as in WE's effect gallery (no visible change at its defaults). The chain has no
+    /// time input, but its output must not be kept after the first frame (`carriesFrames`).
+    func testMotionBlurAccumulatesAcrossFrames() throws {
+        let plan = try builder.build(try effect(#"{"file":"effects/motionblur/effect.json"}"#))
+        XCTAssertTrue(plan.carriesFrames)
+        XCTAssertFalse(try builder.build(try effect(#"{"file":"effects/tint/effect.json"}"#)).carriesFrames)
+        let queue = try XCTUnwrap(device.makeCommandQueue())
+        let input = try checkerboard()
+        let context = EffectGraphRenderer.Context(frame: BuiltinFrameContext(time: 1.5), values: FixedValues(),
+                                                  assetTexture: { _, _ in nil }, sceneSnapshot: nil,
+                                                  layerColor: SIMD3(1, 1, 1), layerAlpha: 1)
+        XCTAssertTrue(renderer.waitUntilReady([plan], width: input.width, height: input.height))
+        var outputs: [[UInt8]] = []
+        for _ in 0..<8 {
+            let buffer = try XCTUnwrap(queue.makeCommandBuffer())
+            let output = try XCTUnwrap(renderer.apply([plan], to: input, layerID: "blur", context: context, commandBuffer: buffer))
+            buffer.commit()
+            buffer.waitUntilCompleted()
+            outputs.append(try read(output, queue: queue))
+        }
+        let pixels = try read(input, queue: queue)
+        XCTAssertGreaterThan(difference(pixels, outputs[0]), 10, "the first frame is 0.8 of the image")
+        XCTAssertLessThan(difference(pixels, outputs[7]), 1, "after eight frames the image shows through")
+    }
+
+    /// Glitter draws its sparkles into a fixed 256² tile (`"width"`, `"height"`) that repeats
+    /// (`"uvs": "repeat"`): each tile texel covers a few screen pixels, WE's 3-4 px sparkles.
+    func testFixedSizeFBOsDontFollowTheLayer() throws {
+        let plan = try builder.build(try effect(#"{"file":"effects/glitter/effect.json"}"#))
+        let tile = try XCTUnwrap(plan.fbos.first { $0.name == "_rt_GlitterTiles" })
+        XCTAssertEqual(tile.uvs, "repeat")
+        XCTAssertEqual(EffectGraphRenderer.fboSize(tile, width: 1024, height: 1024), SIMD2(256, 256))
+        let blur = try builder.build(try effect(#"{"file":"effects/blur/effect.json"}"#))
+        let quarter = try XCTUnwrap(blur.fbos.first)
+        XCTAssertEqual(EffectGraphRenderer.fboSize(quarter, width: 1024, height: 1024), SIMD2(1024 / quarter.scale, 1024 / quarter.scale))
+    }
+
+    /// X-ray draws its sprite under the pointer: the pointer (y-down in WE's shaders) goes through
+    /// `g_EffectTextureProjectionMatrixInverse` into the layer's image, so it lands where the
+    /// cursor is over the layer, wherever the layer is on the screen.
+    func testXRaySpriteFollowsThePointerOverTheLayer() throws {
+        let plan = try builder.build(try effect(#"{"file":"effects/xray/effect.json"}"#))
+        let queue = try XCTUnwrap(device.makeCommandQueue())
+        let input = try checkerboard()
+        let loader = MTKTextureLoader(device: device)
+        XCTAssertTrue(renderer.waitUntilReady([plan], width: input.width, height: input.height))
+        let scene = SIMD2<Float>(1000, 500)
+        // The layer fills the left half of the scene; y up.
+        let quad = SceneQuadGeometry(center: SIMD2(250, 250), axisX: SIMD2(500, 0), axisY: SIMD2(0, 500))
+        /// The quadrant of the image (column, row from the top) the sprite brightens most.
+        func brightest(pointer: SIMD2<Float>) throws -> SIMD2<Int> {
+            var frame = BuiltinFrameContext(time: 1.5)
+            frame.pointer = pointer
+            frame.pointerLast = pointer
+            var context = EffectGraphRenderer.Context(
+                frame: frame, values: FixedValues(),
+                assetTexture: { _, source in
+                    guard case .image(let image) = source, let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
+                    return try? loader.newTexture(cgImage: cg, options: [.SRGB: false])
+                },
+                sceneSnapshot: nil, layerColor: SIMD3(1, 1, 1), layerAlpha: 1)
+            context.effectTextureProjection = EffectGraphRenderer.effectTextureProjection(quad: quad, sceneSize: scene)
+            let buffer = try XCTUnwrap(queue.makeCommandBuffer())
+            let output = try XCTUnwrap(renderer.apply([plan], to: input, layerID: "xray", context: context, commandBuffer: buffer))
+            buffer.commit()
+            buffer.waitUntilCompleted()
+            let before = try read(input, queue: queue), after = try read(output, queue: queue)
+            var gain = [Double](repeating: 0, count: 4)
+            for y in 0..<input.height {
+                for x in 0..<input.width {
+                    let i = (y * input.width + x) * 4
+                    gain[(y * 2 / input.height) * 2 + x * 2 / input.width] += Double(after[i]) - Double(before[i])
+                }
+            }
+            let best = gain.indices.max { gain[$0] < gain[$1] }!
+            return SIMD2(best % 2, best / 2)
+        }
+        // Pointer (y up) over the layer's upper right, then its lower left.
+        XCTAssertEqual(try brightest(pointer: SIMD2(0.375, 0.75)), SIMD2(1, 0))
+        XCTAssertEqual(try brightest(pointer: SIMD2(0.125, 0.25)), SIMD2(0, 1))
+    }
+
     func testFourPassBlurWithQuarterBuffersSoftensEdges() throws {
         let result = try run(#"{"file":"effects/blur/effect.json","passes":[{},{},{},{}]}"#)
         XCTAssertGreaterThan(difference(result.input, result.output), 0.5)
