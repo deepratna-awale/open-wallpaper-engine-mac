@@ -40,7 +40,16 @@ enum ShaderPairRewriter {
     private static let varyingPattern = try! NSRegularExpression(
         pattern: #"(?m)^[ \t]*((?:flat|smooth|noperspective)\s+)?(in|out)\s+"# + precision + #"(\w+)\s+(\w+)\s*(?:\[\s*(\d+)\s*\])?\s*;[ \t]*$"#)
 
-    static func rewrite(vertex: String, fragment: String) -> Result {
+    /// `stageLocal` names uniforms both stages declare differently
+    /// (`ShaderUniformDeclaration.stageLocalNames`): the fragment stage's is renamed with
+    /// `ShaderUniformDeclaration.fragmentSuffix`, so each stage reads a member of its own.
+    static func rewrite(vertex: String, fragment: String, stageLocal: Set<String> = []) -> Result {
+        var fragment = fragment
+        for name in stageLocal.sorted() {
+            let pattern = NSRegularExpression.shader(#"(?<![\w.])"# + NSRegularExpression.escapedPattern(for: name) + #"(?!\w)"#)
+            fragment = pattern.stringByReplacingMatches(in: fragment, range: NSRange(fragment.startIndex..., in: fragment),
+                                                        withTemplate: name + ShaderUniformDeclaration.fragmentSuffix)
+        }
         // Uniforms: union of both stages, vertex first, so the block is identical in each.
         var members: [(name: String, type: String, arrayCount: Int?)] = []
         for text in [vertex, fragment] {

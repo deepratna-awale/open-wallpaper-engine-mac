@@ -918,9 +918,13 @@ final class UniformProgram {
         var dynamic: [(UniformMember, ShaderConstantResolver.DynamicConstant)] = []
         var builtins: [UniformMember] = []
         for member in (layout?.members.values).map(Array.init) ?? [] {
-            if let constant = dynamicByName[member.name] {
+            // A stage's own copy of a uniform (`ShaderUniformDeclaration.stageLocalNames`) takes
+            // the shared value when its planner didn't resolve it apart.
+            let shared = member.name.hasSuffix(ShaderUniformDeclaration.fragmentSuffix)
+                ? String(member.name.dropLast(ShaderUniformDeclaration.fragmentSuffix.count)) : member.name
+            if let constant = dynamicByName[member.name] ?? dynamicByName[shared] {
                 dynamic.append((member, constant))
-            } else if let value = constants.staticValues[member.name] {
+            } else if let value = constants.staticValues[member.name] ?? constants.staticValues[shared] {
                 UniformWriter.write(value.components, member: member, into: &bytes)
             } else if BuiltinUniforms.isBuiltin(member.name) {
                 builtins.append(member)

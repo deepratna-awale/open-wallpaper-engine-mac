@@ -213,9 +213,7 @@ struct SceneEffectPlanBuilder {
             inputs[slot] = input
         }
         if inputs[0] == nil { inputs[0] = .current }
-        let uniforms = (vertex.uniforms + fragment.uniforms).filter { !$0.isSampler }.reduce(into: [ShaderUniformDeclaration]()) { result, uniform in
-            if !result.contains(where: { $0.name == uniform.name }) { result.append(uniform) }
-        }
+        let uniforms = ShaderUniformDeclaration.merged(vertex: vertex.uniforms, fragment: fragment.uniforms)
         let constants = ShaderConstantResolver.resolve(
             uniforms: uniforms.map { .init(name: $0.name, glslType: $0.type, arrayCount: $0.arrayCount ?? 1, annotation: $0.annotation) },
             material: materialPass.constantSources(uniforms: uniforms),

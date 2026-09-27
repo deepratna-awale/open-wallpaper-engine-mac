@@ -40,6 +40,45 @@ struct ShaderUniformDeclaration {
     }
 }
 
+extension ShaderUniformDeclaration {
+    /// Appended to a fragment-stage uniform that is split from the vertex stage's (`stageLocalNames`).
+    static let fragmentSuffix = "_weFragment"
+
+    /// Uniforms both stages declare differently: another type, material key or default. WE's
+    /// stages have constant buffers of their own, so each reads its own declaration's value;
+    /// foliage sway's `g_Speed` is `speed` (default 1) in the vertex stage and `speeduv`
+    /// (default 5) in the fragment stage. Ours share one block, so the fragment stage's copy is
+    /// renamed (`fragmentSuffix`) by `ShaderPairRewriter`.
+    static func stageLocalNames(vertex: [ShaderUniformDeclaration], fragment: [ShaderUniformDeclaration]) -> Set<String> {
+        var names = Set<String>()
+        for uniform in fragment where !uniform.isSampler {
+            guard let other = vertex.first(where: { $0.name == uniform.name && !$0.isSampler }) else { continue }
+            let differs = other.type != uniform.type || other.arrayCount != uniform.arrayCount
+                || other.materialKey != uniform.materialKey
+                || other.annotation["default"].map { "\($0)" } != uniform.annotation["default"].map { "\($0)" }
+            if differs { names.insert(uniform.name) }
+        }
+        return names
+    }
+
+    /// Both stages' uniforms (samplers left out), the first declaration of a name winning, with
+    /// the fragment stage's copy of a split name (`stageLocalNames`) as `<name>_weFragment`.
+    static func merged(vertex: [ShaderUniformDeclaration], fragment: [ShaderUniformDeclaration]) -> [ShaderUniformDeclaration] {
+        let split = stageLocalNames(vertex: vertex, fragment: fragment)
+        var result: [ShaderUniformDeclaration] = []
+        for uniform in vertex where !uniform.isSampler && !result.contains(where: { $0.name == uniform.name }) {
+            result.append(uniform)
+        }
+        for uniform in fragment where !uniform.isSampler {
+            let name = split.contains(uniform.name) ? uniform.name + fragmentSuffix : uniform.name
+            guard !result.contains(where: { $0.name == name }) else { continue }
+            result.append(ShaderUniformDeclaration(type: uniform.type, name: name, arrayCount: uniform.arrayCount,
+                                                   annotation: uniform.annotation))
+        }
+        return result
+    }
+}
+
 /// One WE shader stage with its includes inlined and its declarations parsed.
 struct ShaderSource {
     let stage: ShaderStage

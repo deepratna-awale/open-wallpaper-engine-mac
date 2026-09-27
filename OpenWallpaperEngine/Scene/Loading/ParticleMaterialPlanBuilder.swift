@@ -208,10 +208,7 @@ struct ParticleMaterialPlanBuilder {
                   let input = textureInput(named: name, materialPath: materialPath) else { continue }
             inputs[slot] = input
         }
-        let uniforms = (declarations.uniforms + fragment.uniforms).filter { !$0.isSampler }
-            .reduce(into: [ShaderUniformDeclaration]()) { result, uniform in
-                if !result.contains(where: { $0.name == uniform.name }) { result.append(uniform) }
-            }
+        let uniforms = ShaderUniformDeclaration.merged(vertex: declarations.uniforms, fragment: fragment.uniforms)
         let constants = ShaderConstantResolver.resolve(
             uniforms: uniforms.map { .init(name: $0.name, glslType: $0.type, arrayCount: $0.arrayCount ?? 1, annotation: $0.annotation) },
             material: pass.constantSources(uniforms: uniforms), instance: [:])
