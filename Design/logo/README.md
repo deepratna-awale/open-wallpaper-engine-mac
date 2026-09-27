@@ -53,3 +53,7 @@ graphite background, a light frame and a dark screen, with the same gear. The
 light colours are `fill-specializations` in `AppIcon.icon/icon.json`; the dark
 colours come from the palette in `make_svgs.py`. The macOS 14/15 fallback icon is
 `ictool`'s Default rendering, which is the light look.
+
+Tinted and Clear use Apple's standard mono glass: in the `tinted` appearance every
+layer's fill is `automatic`, every layer is glass, and the groups use the default
+translucency (0.5), neutral shadow and full opacity. The system supplies the colour.

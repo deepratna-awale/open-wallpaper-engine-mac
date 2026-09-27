@@ -3,7 +3,6 @@
     {
       "layers" : [
         {
-          "glass" : true,
           "image-name" : "hole.svg",
           "name" : "hole",
           "fill-specializations" : [
@@ -17,31 +16,87 @@
               "value" : {
                 "solid" : "srgb:0.17255,0.17255,0.18039,1.00000"
               }
+            },
+            {
+              "appearance" : "tinted",
+              "value" : "automatic"
+            }
+          ],
+          "glass-specializations" : [
+            {
+              "value" : true
+            },
+            {
+              "appearance" : "tinted",
+              "value" : true
             }
           ]
         },
         {
-          "glass" : true,
           "image-name" : "gear.svg",
-          "name" : "gear"
+          "name" : "gear",
+          "fill-specializations" : [
+            {
+              "appearance" : "tinted",
+              "value" : "automatic"
+            }
+          ],
+          "glass-specializations" : [
+            {
+              "value" : true
+            },
+            {
+              "appearance" : "tinted",
+              "value" : true
+            }
+          ]
         }
       ],
       "name" : "gear",
-      "shadow" : {
-        "kind" : "neutral",
-        "opacity" : 0.5
-      },
-      "translucency" : {
-        "enabled" : false,
-        "value" : 0.8
-      },
       "specular" : true,
-      "opacity" : 0.8
+      "translucency-specializations" : [
+        {
+          "value" : {
+            "enabled" : false,
+            "value" : 0.8
+          }
+        },
+        {
+          "appearance" : "tinted",
+          "value" : {
+            "enabled" : true,
+            "value" : 0.5
+          }
+        }
+      ],
+      "shadow-specializations" : [
+        {
+          "value" : {
+            "kind" : "neutral",
+            "opacity" : 0.5
+          }
+        },
+        {
+          "appearance" : "tinted",
+          "value" : {
+            "kind" : "neutral",
+            "opacity" : 0.5
+          }
+        }
+      ],
+      "opacity-specializations" : [
+        {
+          "value" : 0.8
+        },
+        {
+          "appearance" : "tinted",
+          "value" : 1
+        }
+      ]
     },
     {
       "layers" : [
         {
-          "glass" : false,
           "image-name" : "screen.svg",
           "name" : "screen",
           "fill-specializations" : [
@@ -55,24 +110,58 @@
               "value" : {
                 "solid" : "srgb:0.17255,0.17255,0.18039,1.00000"
               }
+            },
+            {
+              "appearance" : "tinted",
+              "value" : "automatic"
+            }
+          ],
+          "glass-specializations" : [
+            {
+              "value" : false
+            },
+            {
+              "appearance" : "tinted",
+              "value" : true
             }
           ]
         }
       ],
       "name" : "screen",
-      "shadow" : {
-        "kind" : "none",
-        "opacity" : 0.5
-      },
-      "translucency" : {
-        "enabled" : false,
-        "value" : 0.2
-      }
+      "translucency-specializations" : [
+        {
+          "value" : {
+            "enabled" : false,
+            "value" : 0.2
+          }
+        },
+        {
+          "appearance" : "tinted",
+          "value" : {
+            "enabled" : true,
+            "value" : 0.5
+          }
+        }
+      ],
+      "shadow-specializations" : [
+        {
+          "value" : {
+            "kind" : "none",
+            "opacity" : 0.5
+          }
+        },
+        {
+          "appearance" : "tinted",
+          "value" : {
+            "kind" : "neutral",
+            "opacity" : 0.5
+          }
+        }
+      ]
     },
     {
       "layers" : [
         {
-          "glass" : true,
           "image-name" : "monitor.svg",
           "name" : "monitor",
           "fill-specializations" : [
@@ -86,19 +175,54 @@
               "value" : {
                 "solid" : "srgb:0.89804,0.89804,0.91765,1.00000"
               }
+            },
+            {
+              "appearance" : "tinted",
+              "value" : "automatic"
+            }
+          ],
+          "glass-specializations" : [
+            {
+              "value" : true
+            },
+            {
+              "appearance" : "tinted",
+              "value" : true
             }
           ]
         }
       ],
       "name" : "monitor",
-      "shadow" : {
-        "kind" : "neutral",
-        "opacity" : 0.5
-      },
-      "translucency" : {
-        "enabled" : true,
-        "value" : 0.3
-      }
+      "translucency-specializations" : [
+        {
+          "value" : {
+            "enabled" : true,
+            "value" : 0.3
+          }
+        },
+        {
+          "appearance" : "tinted",
+          "value" : {
+            "enabled" : true,
+            "value" : 0.5
+          }
+        }
+      ],
+      "shadow-specializations" : [
+        {
+          "value" : {
+            "kind" : "neutral",
+            "opacity" : 0.5
+          }
+        },
+        {
+          "appearance" : "tinted",
+          "value" : {
+            "kind" : "neutral",
+            "opacity" : 0.5
+          }
+        }
+      ]
     }
   ],
   "supported-platforms" : {
