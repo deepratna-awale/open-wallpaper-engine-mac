@@ -94,3 +94,8 @@ The font is the bundled `NotoSans-Regular.ttf`, copied into the project.
 - **Result:** on the gradient, each drop shows colours from slightly to its **right** (+x); the red area shows yellow inside the drops, and the green area shows cyan. So the refraction samples the background shifted toward +x at the default amount.
 - On the checkerboard, the drops show thin black-and-white stripes, which isn't conclusive.
 
+
+## User-verified in the editor: lights (2026-09-26)
+- **Light limits:** a **2D scene allows 15 lights**. In a **3D scene**, LightEmUp was grown by editing scene.json from 74 to 79, 105, 155 and then 256 point lights; the editor opened every step, and all 256 lights appear to work when enabled. So 256 is not a hard cap. The upper limit, if any, is unknown. Backups are `scene.backup-{74,79,105,155}lights.json` in the user's project.
+- **Adding a light:** Add Asset ? **Light**, *then* choose the type (Point, Spot, Tube, Directional) on the light itself. There are not four separate add entries.
+- **A light does not affect an image layer by default.** Adding one changed nothing on the image. It only lit the image once **Cast shadow** was turned on for the light. **Cast volumetrics** only adds the visible volumetric beam or fog, not surface lighting.
