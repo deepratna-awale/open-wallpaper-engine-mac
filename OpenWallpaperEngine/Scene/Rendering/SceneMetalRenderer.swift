@@ -980,11 +980,14 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             draw.placement = layerPlacement(entry, size: textFrames[layerIndex]?.baseSize ?? layerBaseSize(entry),
                                             musicSyncLevel: draw.musicSyncLevel, motion: motion, camera: effectFrame.camera)
             draw.placement?.offset += textCenter
-            if visible { draws[layerIndex] = draw }
+            // A hidden layer that runs in the scene pass still makes the image its readers sample.
+            let runsInScene = entry.layer.readsScene || compositeOrder.inScene.contains(entry.layer.id)
+            if visible || runsInScene { draws[layerIndex] = draw }
             // A puppet's mesh draws its image before anything reads it: its effects, its own draw.
             if let puppet = entry.layer.puppet { drawPuppet(puppet, entry, frame: effectFrame, commandBuffer: commandBuffer) }
-            // Layers that read the scene run inside the scene pass, once what's beneath them is drawn.
-            if entry.layer.readsScene { continue }
+            // Layers that read the scene run inside the scene pass, once what's beneath them is drawn,
+            // and so do the layers that sample them (`SceneLayerCompositeOrder.inScene`).
+            if runsInScene { continue }
             if !entry.layer.weEffects.isEmpty {
                 let input = solidEffectInput(entry.layer, commandBuffer: commandBuffer)
                     ?? (textFrames[layerIndex]?.frame ?? textureFrame(for: entry)).texture
@@ -1200,7 +1203,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             // Hidden layers (script `visible = false`) draw nothing, their raw texture included.
             guard let draw = draws[layerIndex] else { continue }
             var layerSnapshot: MTLTexture?
-            if entry.layer.readsScene {
+            if entry.layer.readsScene || compositeOrder.inScene.contains(entry.layer.id) {
                 // Metal can't sample the attachment it's drawing into: pause the scene pass, run
                 // this layer's effects on what's drawn so far (`_rt_FullFrameBuffer`), resume. The
                 // effects read the target itself while the pass is paused; only a material that
@@ -1226,6 +1229,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 }
                 guard let resumed = resumeScenePass(on: sceneTexture, commandBuffer: commandBuffer) else { return }
                 encoder = resumed
+                // Its composite is what readers drawn after it sample (`_rt_imageLayerComposite_<id>_a`).
+                if compositeOrder.sources.contains(entry.layer.id) || models?.compositeLayerIDs.contains(entry.layer.id) == true {
+                    layerComposites[entry.layer.id] = dynamicTextures[layerIndex] ?? input
+                }
+                if !scripts.isVisible(entry.layer.id) { continue }
                 // Until its effects are ready the layer has nothing of its own to draw.
                 if entry.layer.sceneInput, dynamicTextures[layerIndex] == nil { continue }
             }
@@ -1733,7 +1741,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         if let layerCompositeOrder { return layerCompositeOrder }
         let order = SceneLayerCompositeOrder(layers: layers.map { entry in
             (entry.layer.id, entry.layer.weEffects.reduce(into: Set<String>()) { $0.formUnion($1.compositeLayerIDs) })
-        })
+        }, readingScene: Set(layers.filter(\.layer.readsScene).map(\.layer.id)))
         layerCompositeOrder = order
         return order
     }

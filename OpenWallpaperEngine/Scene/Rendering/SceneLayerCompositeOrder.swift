@@ -14,14 +14,31 @@ struct SceneLayerCompositeOrder {
     /// Indices into the layer list: scene order, with every sampled layer moved before the first
     /// layer that reads it. A layer reading itself, or a cycle, reads nothing prepared this frame.
     let sequence: [Int]
+    /// The layers that must run their effects inside the scene pass, in draw order, for their
+    /// composites to be what WE's are: a sampled layer that reads the scene (`readingScene`) makes
+    /// its image only once what lies beneath it is drawn, and a layer sampling it, directly or
+    /// through another, then runs at its own place in the scene too. WE renders every object in
+    /// scene order, its effects included, and registers its composite as it goes (0x1401ea7a3), so
+    /// a reader drawn after the source sees this frame's image [I: a reader drawn before it sees
+    /// the one its buffer kept from the last frame; here it sees none].
+    let inScene: Set<String>
 
-    /// `layers` in draw order, each with the ids its effects sample.
-    init(layers: [(id: String, samples: Set<String>)]) {
+    /// `layers` in draw order, each with the ids its effects sample; `readingScene` are the ids of
+    /// the layers that read the scene drawn beneath them.
+    init(layers: [(id: String, samples: Set<String>)], readingScene: Set<String> = []) {
         var index: [String: Int] = [:]
         for (position, layer) in layers.enumerated() where index[layer.id] == nil { index[layer.id] = position }
         var sources = Set<String>()
         for layer in layers { sources.formUnion(layer.samples.filter { index[$0] != nil && $0 != layer.id }) }
         self.sources = sources
+        var inScene = sources.intersection(readingScene)
+        var grew = !inScene.isEmpty
+        while grew {
+            let readers = layers.filter { !inScene.contains($0.id) && !$0.samples.isDisjoint(with: inScene) }.map(\.id)
+            inScene.formUnion(readers)
+            grew = !readers.isEmpty
+        }
+        self.inScene = inScene
         guard !sources.isEmpty else {
             sequence = Array(layers.indices)
             return

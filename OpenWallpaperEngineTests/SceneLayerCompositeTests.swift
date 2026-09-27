@@ -35,6 +35,18 @@ final class SceneLayerCompositeTests: XCTestCase {
         XCTAssertEqual(cycle.sources, ["a", "b"], "a layer reading itself isn't a source")
     }
 
+    /// GP6: a sampled layer that reads the scene makes its image inside the scene pass, and every
+    /// layer sampling it (directly or through another) runs there after it, as WE renders objects
+    /// in order and registers each composite as it goes (0x1401ea7a3).
+    func testLayersSamplingALayerThatReadsTheSceneRunInTheScenePass() {
+        let order = SceneLayerCompositeOrder(layers: [("bg", []), ("refract", []), ("reader", ["refract"]),
+                                                      ("second", ["reader"]), ("plain", ["bg"])],
+                                             readingScene: ["refract", "plain"])
+        XCTAssertEqual(order.inScene, ["refract", "reader", "second"])
+        XCTAssertTrue(SceneLayerCompositeOrder(layers: [("a", ["b"]), ("b", [])], readingScene: ["a"]).inScene.isEmpty,
+                      "a reader that reads the scene samples a source made before the pass")
+    }
+
     // MARK: - Effect plans
 
     private func builder(cache: URL) -> SceneEffectPlanBuilder {
