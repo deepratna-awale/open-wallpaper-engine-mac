@@ -176,16 +176,26 @@ final class SceneDepthDrawTests: XCTestCase {
                                             camera: Self.camera())
         for uv in ImageMaterialRenderer.corners {
             let corner = placement.corner(uv)
-            let clip = placement.camera.projection * placement.camera.view * placement.world * SIMD4(corner, 1)
-            XCTAssertEqual(placement.modelViewProjection * SIMD4(corner, 1), clip)
+            let point: SIMD4<Float> = SIMD4<Float>(corner, 1)
+            let cameraMatrix: simd_float4x4 = placement.camera.projection * placement.camera.view
+            let clip: SIMD4<Float> = cameraMatrix * (placement.world * point)
+            let placed: SIMD4<Float> = placement.modelViewProjection * point
+            XCTAssertEqual(placed, clip)
             // The shaders' view-projection is y-flipped; their vertex stage flips it back.
-            let shader = placement.shaderViewProjection * placement.world * SIMD4(corner, 1)
-            XCTAssertEqual(SIMD4(shader.x, -shader.y, shader.z, shader.w), clip)
+            let shader: SIMD4<Float> = placement.shaderViewProjection * (placement.world * point)
+            let unflipped = SIMD4<Float>(shader.x, -shader.y, shader.z, shader.w)
+            XCTAssertEqual(unflipped, clip)
         }
         // The top-left corner: object (−100 + 10, 50), 1/100 scale, rotated, then projected.
         let point = try XCTUnwrap(placement.pixel(placement.corner(SIMD2(0, 0)), targetSize: Self.targetSize))
-        let clip = Self.camera().viewProjection * Self.world(local) * SIMD4(-0.9 * 100, 50, 0, 1)
-        let expected = SIMD2((clip.x / clip.w * 0.5 + 0.5) * 256, (0.5 - clip.y / clip.w * 0.5) * 128)
+        let objectPoint = SIMD4<Float>(-90, 50, 0, 1)
+        let viewProjection: simd_float4x4 = Self.camera().viewProjection
+        let clip: SIMD4<Float> = viewProjection * (Self.world(local) * objectPoint)
+        let ndcX: Float = clip.x / clip.w
+        let ndcY: Float = clip.y / clip.w
+        let expectedX: Float = (ndcX * 0.5 + 0.5) * 256
+        let expectedY: Float = (0.5 - ndcY * 0.5) * 128
+        let expected = SIMD2<Float>(expectedX, expectedY)
         XCTAssertEqual(point.x, expected.x, accuracy: 1e-3)
         XCTAssertEqual(point.y, expected.y, accuracy: 1e-3)
     }
