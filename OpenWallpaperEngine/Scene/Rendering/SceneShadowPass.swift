@@ -47,6 +47,8 @@ final class SceneShadowPass {
     private var pending = Set<String>()
     private var failed = Set<String>()
 
+    /// The frame's built-ins and the caster materials' bound constants, shared by the frame's draws.
+    private let frameValues = SceneModelFrameValues()
     /// Per object, each mesh's shadow-variant uniforms. Render thread only.
     private var uniforms: [String: [ModelMaterialUniforms?]] = [:]
 
@@ -135,11 +137,15 @@ final class SceneShadowPass {
         encoder.setDepthBias(0, slopeScale: Self.slopeScaledDepthBias, clamp: 0)
         encoder.setCullMode(.none)
         encoder.setFrontFacing(SceneModelRenderer.frontFacing)
-        let posed = casters.compactMap { caster -> (Caster, SceneModelPlan, [Float]?)? in
+        // Each caster is posed and its meshes' draws prepared once a frame; a batch only culls it
+        // against its views and writes their matrices.
+        let prepared = casters.compactMap { caster -> PreparedCaster? in
             // A script's `replaceData` re-plans its model (`SceneModelRenderer.currentPlan`).
             guard let plan = caster.model.plan.map({ models.currentPlan($0, objectID: caster.model.id) }), !plan.isTranslucent,
                   plan.meshes.contains(where: { $0.material.shadowCaster != nil }) else { return nil }
-            return (caster, plan, models.advance(caster.model, plan: plan, frame: frame, values: values))
+            let bones = models.advance(caster.model, plan: plan, frame: frame, values: values)
+            return prepare(caster, plan: plan, bones: bones, models: models, frame: frame, values: values,
+                           assetTexture: assetTexture)
         }
         for batch in Self.batches(shadows.maps) {
             encoder.setViewports(batch.viewports.map { rect in
@@ -147,16 +153,28 @@ final class SceneShadowPass {
                             znear: 0, zfar: 1)
             })
             batchesEncoded += 1
-            let matrices = batch.views.map { Self.clipFixup * $0 }
-            for (caster, plan, bones) in posed where batch.views.contains(where: {
-                SceneModelRenderer.isInsideFrustum(plan.bounds, world: caster.world, viewProjection: $0)
-            }) {
-                drawCaster(caster, plan: plan, bones: bones, matrices: matrices, models: models, frame: frame, values: values,
-                           assetTexture: assetTexture, encoder: encoder, commandBuffer: commandBuffer)
+            let frustums = batch.views.map(SceneModelCulling.Frustum.init)
+            let matrices = Self.flatten(batch.views.map { Self.clipFixup * $0 })
+            for caster in prepared where frustums.contains(where: { $0.contains(caster.sphere) }) {
+                for draw in caster.draws {
+                    encode(draw, matrices: matrices, instances: batch.views.count, encoder: encoder, commandBuffer: commandBuffer)
+                }
             }
         }
         encoder.endEncoding()
         return texture
+    }
+
+    /// Matrices as the uniform writer takes them: each one's columns in order.
+    static func flatten(_ matrices: [simd_float4x4]) -> [Float] {
+        var components: [Float] = []
+        components.reserveCapacity(matrices.count * 16)
+        for matrix in matrices {
+            for column in [matrix.columns.0, matrix.columns.1, matrix.columns.2, matrix.columns.3] {
+                components.append(contentsOf: [column.x, column.y, column.z, column.w])
+            }
+        }
+        return components
     }
 
     /// The translated vertex stages negate y and write z as (z + w) / 2 (`fixup_clipspace`,
@@ -200,26 +218,42 @@ final class SceneShadowPass {
 
     // MARK: - Casters
 
-    private func drawCaster(_ caster: Caster, plan: SceneModelPlan, bones: [Float]?, matrices: [simd_float4x4],
-                            models: SceneModelRenderer, frame: BuiltinFrameContext, values: SceneValueContext,
-                            assetTexture: (String, SceneMetalTextureSource) -> MTLTexture?,
-                            encoder: MTLRenderCommandEncoder, commandBuffer: MTLCommandBuffer) {
+    /// A caster this frame: its bounding sphere and its meshes' draws.
+    private struct PreparedCaster {
+        let sphere: SceneModelCulling.Sphere
+        let draws: [MeshDraw]
+    }
+
+    /// One opaque mesh's draw: its pipeline, textures and uniforms (all but the views' matrices).
+    private struct MeshDraw {
+        let pipeline: MTLRenderPipelineState
+        let buffers: SceneModelRenderer.MeshBuffers
+        let textures: [BoundTexture]
+        let uniforms: ModelMaterialUniforms?
+        let indexCount: Int
+        let indexType: MTLIndexType
+    }
+
+    /// The caster's meshes that draw this frame, their uniforms written but for the views.
+    private func prepare(_ caster: Caster, plan: SceneModelPlan, bones: [Float]?, models: SceneModelRenderer,
+                         frame: BuiltinFrameContext, values: SceneValueContext,
+                         assetTexture: (String, SceneMetalTextureSource) -> MTLTexture?) -> PreparedCaster {
         let buffers = models.meshBuffers(plan)
         let meshUniforms = uniforms(for: caster.model.id, plan: plan)
         let placement = SceneLayerPlacement(world: caster.world, size: SIMD2(1, 1), camera: frame.camera)
-        let flatMatrices = matrices.flatMap { [$0.columns.0, $0.columns.1, $0.columns.2, $0.columns.3] }
-            .flatMap { [$0.x, $0.y, $0.z, $0.w] }
+        var draws: [MeshDraw] = []
         for (index, mesh) in plan.meshes.enumerated() where mesh.material.isOpaque {
             guard let material = mesh.material.shadowCaster, let variant = material.pass.variant,
                   let meshBuffers = buffers[index], let pipeline = pipeline(for: mesh, material: material, variant: variant),
                   let bound = textures(of: material, assetTexture: assetTexture,
                                        morph: models.morphTextures.texture(plan, mesh: mesh.index)) else { continue }
-            if let program = meshUniforms[index], program.size > 0 {
+            var program: ModelMaterialUniforms?
+            if let uniforms = meshUniforms[index], uniforms.size > 0 {
                 let key = ModelMaterialUniforms.PassKey(
                     world: caster.world, view: frame.camera.view, viewProjection: placement.shaderViewProjection,
                     eye: frame.eyePosition, screen: frame.screenSize, target: frame.screenSize,
                     textures: bound.map { SIMD4(Float($0.texture.width), Float($0.texture.height), 0, 0) })
-                program.update(key: key, frame: frame, values: values) {
+                uniforms.update(key: key, frame: frame, values: values, shared: (frameValues, material)) {
                     var pass = BuiltinPassContext(targetSize: frame.screenSize)
                     pass.place(placement)
                     for entry in bound {
@@ -227,32 +261,41 @@ final class SceneShadowPass {
                     }
                     return pass
                 }
-                program.write(flatMatrices, member: "g_ViewportViewProjectionMatrices")
-                if let bones { program.writeBones(bones) }
+                if let bones { uniforms.writeBones(bones) }
                 // The caster's `MORPHING` is the source material's; its morph texture and uniforms too.
                 if mesh.material.meshCombos.morphing {
-                    program.writeMorphs(models.morphUniforms(caster.model.id, plan: plan, mesh: mesh))
+                    uniforms.writeMorphs(models.morphUniforms(caster.model.id, plan: plan, mesh: mesh))
                 }
-                program.bytes.withUnsafeBytes { raw in uniformArena.bind(raw, index: 0, to: encoder, commandBuffer: commandBuffer) }
-            }
-            encoder.setRenderPipelineState(pipeline)
-            encoder.setVertexBuffer(meshBuffers.vertices, offset: 0, index: SceneModelRenderer.meshBuffer)
-            encoder.setVertexBuffer(zeroAttributes, offset: 0, index: EffectGraphRenderer.zeroBuffer)
-            for entry in bound {
-                encoder.setFragmentTexture(entry.texture, index: entry.slot)
-                encoder.setFragmentSamplerState(entry.sampler, index: entry.slot)
-                encoder.setVertexTexture(entry.texture, index: entry.slot)
-                encoder.setVertexSamplerState(entry.sampler, index: entry.slot)
+                program = uniforms
             }
             // A script's `applyData` may have shortened the triangle list since the plan was made.
-            let indexCount = models.indexCount(of: mesh, in: plan)
-            encoder.drawIndexedPrimitives(type: .triangle, indexCount: indexCount,
-                                          indexType: mesh.usesUInt32Indices ? .uint32 : .uint16,
-                                          indexBuffer: meshBuffers.indices, indexBufferOffset: 0,
-                                          instanceCount: matrices.count)
-            casterDraws += 1
-            casterIndices += indexCount
+            draws.append(MeshDraw(pipeline: pipeline, buffers: meshBuffers, textures: bound, uniforms: program,
+                                  indexCount: models.indexCount(of: mesh, in: plan),
+                                  indexType: mesh.usesUInt32Indices ? .uint32 : .uint16))
         }
+        return PreparedCaster(sphere: SceneModelCulling.Sphere(plan.bounds, world: caster.world), draws: draws)
+    }
+
+    /// Draws a mesh once per view of the batch, `matrices` its views' render matrices.
+    private func encode(_ draw: MeshDraw, matrices: [Float], instances: Int, encoder: MTLRenderCommandEncoder,
+                        commandBuffer: MTLCommandBuffer) {
+        if let program = draw.uniforms {
+            program.write(matrices, member: "g_ViewportViewProjectionMatrices")
+            program.bytes.withUnsafeBytes { raw in uniformArena.bind(raw, index: 0, to: encoder, commandBuffer: commandBuffer) }
+        }
+        encoder.setRenderPipelineState(draw.pipeline)
+        encoder.setVertexBuffer(draw.buffers.vertices, offset: 0, index: SceneModelRenderer.meshBuffer)
+        encoder.setVertexBuffer(zeroAttributes, offset: 0, index: EffectGraphRenderer.zeroBuffer)
+        for entry in draw.textures {
+            encoder.setFragmentTexture(entry.texture, index: entry.slot)
+            encoder.setFragmentSamplerState(entry.sampler, index: entry.slot)
+            encoder.setVertexTexture(entry.texture, index: entry.slot)
+            encoder.setVertexSamplerState(entry.sampler, index: entry.slot)
+        }
+        encoder.drawIndexedPrimitives(type: .triangle, indexCount: draw.indexCount, indexType: draw.indexType,
+                                      indexBuffer: draw.buffers.indices, indexBufferOffset: 0, instanceCount: instances)
+        casterDraws += 1
+        casterIndices += draw.indexCount
     }
 
     private func uniforms(for id: String, plan: SceneModelPlan) -> [ModelMaterialUniforms?] {

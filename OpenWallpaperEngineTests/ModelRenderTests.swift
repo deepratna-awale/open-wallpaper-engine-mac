@@ -248,6 +248,26 @@ final class ModelRenderTests: XCTestCase {
         XCTAssertNil(renderer.meshDraws["away"])
     }
 
+    /// The shadow pass's split cull test (a caster's sphere once, each view's planes once) keeps
+    /// what the one-pair test keeps.
+    func testSplitCullingMatchesTheOnePairTest() {
+        let box = MDLBounds(min: SIMD3(-1, -2, -0.5), max: SIMD3(1, 2, 0.5))
+        let cameras = [Self.camera(eye: SIMD3(0, 0, 6)), Self.camera(eye: SIMD3(7, 3, -2), center: SIMD3(1, 0, 0))]
+        for camera in cameras {
+            let frustum = SceneModelCulling.Frustum(camera.viewProjection)
+            for x in stride(from: Float(-12), through: 12, by: 1.5) {
+                for z in stride(from: Float(-40), through: 12, by: 2.5) {
+                    let world = SceneWorldMatrix.local(SceneLocalTransform3D(origin: SIMD3(x, 0.5, z), scale: SIMD3(1, 1, 1),
+                                                                             angles: SIMD3(0.3, 0.7, 0)))
+                    XCTAssertEqual(frustum.contains(SceneModelCulling.Sphere(box, world: world)),
+                                   SceneModelRenderer.isInsideFrustum(box, world: world, viewProjection: camera.viewProjection))
+                }
+            }
+        }
+        XCTAssertTrue(SceneModelCulling.Frustum(cameras[0].viewProjection)
+            .contains(SceneModelCulling.Sphere(.unbounded, world: matrix_identity_float4x4)), "a model without bounds")
+    }
+
     // MARK: - Planning
 
     /// WE's model combos (0x140224c70) over `generic4`: `SKINNING` from the mesh's blend indices,

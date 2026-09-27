@@ -41,8 +41,10 @@ final class SceneModelRenderer: SceneModelDrawing {
     private var uniforms: [String: [ModelMaterialUniforms]] = [:]
     /// Per object with bones: its skeleton in motion (the same animator puppets use).
     private var animators: [String: ScenePuppetAnimator] = [:]
-    /// The frame time each animator last advanced at (one evaluation a frame).
+    /// The frame time each animator last advanced at (one evaluation a frame), and its pose's
+    /// `g_Bones` components then, which the shadow, reflection and scene passes all write.
     private var advancedAt: [String: Double] = [:]
+    private var boneComponents: [String: [Float]] = [:]
     /// Per plan with changing geometry (`SceneModelPlan.geometry`): the revision its buffers hold
     /// and each mesh's index count there.
     private var geometryRevisions: [ObjectIdentifier: UInt64] = [:]
@@ -57,6 +59,11 @@ final class SceneModelRenderer: SceneModelDrawing {
 
     /// The layers whose image the content's models sample (`SceneModelDraw.layerComposite`).
     private(set) var compositeLayerIDs = Set<String>()
+
+    /// The frame's built-ins and materials' bound constants, shared by the frame's draws.
+    private let frameValues = SceneModelFrameValues()
+    /// The last camera's planes: every model of a pass is culled against the same camera.
+    private var lastFrustum: (viewProjection: simd_float4x4, frustum: SceneModelCulling.Frustum)?
 
     /// Meshes drawn and models culled, for tests and diagnostics.
     private(set) var drawsEncoded = 0
@@ -114,6 +121,7 @@ final class SceneModelRenderer: SceneModelDrawing {
         uniforms.removeAll()
         animators.removeAll()
         advancedAt.removeAll()
+        boneComponents.removeAll()
         meshDraws.removeAll()
         culledModels.removeAll()
         morphTextures.removeAll()
@@ -124,6 +132,7 @@ final class SceneModelRenderer: SceneModelDrawing {
         objects[model.id] = model
         uniforms.removeValue(forKey: model.id)
         animators.removeValue(forKey: model.id)
+        boneComponents.removeValue(forKey: model.id)
         compositeLayerIDs.formUnion(model.plan?.compositeLayerIDs ?? [])
     }
 
@@ -133,6 +142,7 @@ final class SceneModelRenderer: SceneModelDrawing {
         uniforms.removeValue(forKey: id)
         animators.removeValue(forKey: id)
         advancedAt.removeValue(forKey: id)
+        boneComponents.removeValue(forKey: id)
     }
 
     func isTranslucent(_ model: SceneModelObject) -> Bool {
@@ -145,7 +155,7 @@ final class SceneModelRenderer: SceneModelDrawing {
         let plan = currentPlan(authored, objectID: model.id)
         // WE poses a visible model every frame, culled or not (0x14021c480).
         let bones = advance(model, plan: plan, frame: draw.frame, values: draw.values)
-        guard Self.isInsideFrustum(plan.bounds, world: draw.world, viewProjection: draw.camera.viewProjection) else {
+        guard frustum(draw.camera.viewProjection).contains(SceneModelCulling.Sphere(plan.bounds, world: draw.world)) else {
             modelsCulled += 1
             culledModels.insert(model.id)
             return
@@ -168,7 +178,7 @@ final class SceneModelRenderer: SceneModelDrawing {
                     eye: draw.frame.eyePosition, screen: draw.frame.screenSize, target: draw.frame.screenSize,
                     textures: bound.map { SIMD4(Float($0.texture.width), Float($0.texture.height),
                                                 $0.contentSize?.x ?? 0, $0.contentSize?.y ?? 0) })
-                program.update(key: key, frame: draw.frame, values: draw.values) {
+                program.update(key: key, frame: draw.frame, values: draw.values, shared: (frameValues, mesh.material)) {
                     var pass = BuiltinPassContext(targetSize: draw.frame.screenSize)
                     pass.place(placement)
                     for entry in bound {
@@ -235,8 +245,12 @@ final class SceneModelRenderer: SceneModelDrawing {
         if advancedAt[model.id] != frame.time {
             advancedAt[model.id] = frame.time
             animator.advance(delta: Float(frame.frameTime), values: values)
+            boneComponents[model.id] = animator.pose.boneComponents
         }
-        return animator.pose.boneComponents
+        if let components = boneComponents[model.id] { return components }
+        let components = animator.pose.boneComponents
+        boneComponents[model.id] = components
+        return components
     }
 
     /// The model objects with a posed skeleton (script feedback).
@@ -263,25 +277,19 @@ final class SceneModelRenderer: SceneModelDrawing {
 
     // MARK: - Culling
 
-    /// WE's cull test (0x1402222f2…0x1401e5a10): the box's min and max corners through the world
-    /// matrix, the sphere through them (centre their midpoint, radius half their distance), kept
-    /// unless it lies wholly outside one of the frustum's six planes (WE's clip space: x, y in
-    /// ±w, z in 0…w).
+    /// WE's cull test (0x1402222f2…0x1401e5a10, `SceneModelCulling`): the box's min and max corners
+    /// through the world matrix, the sphere through them (centre their midpoint, radius half their
+    /// distance), kept unless it lies wholly outside one of the frustum's six planes (WE's clip
+    /// space: x, y in ±w, z in 0…w).
+    private func frustum(_ viewProjection: simd_float4x4) -> SceneModelCulling.Frustum {
+        if let lastFrustum, lastFrustum.viewProjection == viewProjection { return lastFrustum.frustum }
+        let frustum = SceneModelCulling.Frustum(viewProjection)
+        lastFrustum = (viewProjection, frustum)
+        return frustum
+    }
+
     static func isInsideFrustum(_ bounds: MDLBounds, world: simd_float4x4, viewProjection: simd_float4x4) -> Bool {
-        let low = world * SIMD4(bounds.min, 1), high = world * SIMD4(bounds.max, 1)
-        let centre = (low + high) / 2
-        let radius = simd_length(SIMD3(high.x - low.x, high.y - low.y, high.z - low.z)) / 2
-        guard radius.isFinite else { return true }
-        let m = viewProjection
-        func row(_ i: Int) -> SIMD4<Float> { SIMD4(m.columns.0[i], m.columns.1[i], m.columns.2[i], m.columns.3[i]) }
-        let x = row(0), y = row(1), z = row(2), w = row(3)
-        for plane in [w + x, w - x, w + y, w - y, z, w - z] {
-            let length = simd_length(SIMD3(plane.x, plane.y, plane.z))
-            guard length > 0 else { continue }
-            let distance = simd_dot(plane, SIMD4(centre.x, centre.y, centre.z, 1)) / length
-            if distance < -radius { return false }
-        }
-        return true
+        SceneModelCulling.Frustum(viewProjection).contains(SceneModelCulling.Sphere(bounds, world: world))
     }
 
     // MARK: - Resources

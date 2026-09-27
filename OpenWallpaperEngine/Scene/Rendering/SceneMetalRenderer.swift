@@ -135,6 +135,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// Scene time since the content loaded, speed applied; drives animations, `g_Time`,
     /// particles and scripts alike.
     private var clock = SceneClock()
+    /// The frames drawn (`BuiltinFrameContext.serial`).
+    private var frameSerial: UInt64 = 0
     /// The wall clock `clock` follows (tests step it).
     var wallTime: () -> CFTimeInterval = { CACurrentMediaTime() }
     /// The playback rate `clock` runs at, when set (tests); otherwise the Animation Speed of this
@@ -957,6 +959,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         var dynamicTextures: [Int: MTLTexture] = [:]
         // Advanced once per frame: every advance smooths the spectrum one step further.
         var effectFrame = BuiltinFrameContext()
+        frameSerial &+= 1
+        effectFrame.serial = frameSerial
         effectFrame.time = sceneTime
         effectFrame.frameTime = clock.delta
         effectFrame.daytime = BuiltinFrameContext.daytime(at: Date())
@@ -1907,15 +1911,18 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// authored after it. `customsortorder` and `transparentsorting` then sort the whole list
     /// (`SceneDrawOrderMode.ordered`), and each object's position becomes its key.
     private func drawSequence(batches: [ParticleSystemRuntime], forward: SIMD3<Float>) -> DrawSequence {
-        var items: [(item: SceneDrawItem, barrier: Int)] = layers.indices.map { (.layer($0), layers[$0].particleBarrier) }
+        // Each model goes before the first layer authored after it, models before one layer in scene order.
+        let layerOrders = layers.map(\.layer.order)
+        var modelsBefore = [[Int]](repeating: [], count: layers.count + 1)
         if modelDrawing != nil {
             for (index, model) in spatial.models.enumerated() {
-                let at = items.firstIndex { entry in
-                    if case .layer(let layer) = entry.item { return layers[layer].layer.order > model.order }
-                    return false
-                } ?? items.count
-                items.insert((.model(index), model.order), at: at)
+                modelsBefore[layerOrders.firstIndex { $0 > model.order } ?? layers.count].append(index)
             }
+        }
+        var items: [(item: SceneDrawItem, barrier: Int)] = []
+        for position in 0...layers.count {
+            items += modelsBefore[position].map { (item: SceneDrawItem.model($0), barrier: spatial.models[$0].order) }
+            if position < layers.count { items.append((.layer(position), layers[position].particleBarrier)) }
         }
         let keys = batches.map(\.configuration.order)
         guard spatial.drawOrder.reorders else {

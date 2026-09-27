@@ -183,6 +183,67 @@ final class BuiltinUniformTests: XCTestCase {
         }
     }
 
+    /// A name resolves to a key exactly when it is a built-in, and the key reads what the name does.
+    func testKeysResolveTheBuiltins() {
+        frame.time = 3.25
+        frame.lighting.ambient = SIMD3(0.1, 0.2, 0.3)
+        pass.modelMatrix = simd_float4x4(translation: SIMD3(1, 2, 3)) * simd_float4x4(scale: SIMD3(2, 3, 4))
+        pass.textures[2] = BuiltinTextureInfo(allocatedSize: SIMD2(64, 32), contentSize: SIMD2(60, 30))
+        let names = ["g_Time", "g_DayTime", "g_Daytime", "g_Frametime", "g_PointerPosition", "g_PointerPositionLast",
+                     "g_PointerState", "g_ParallaxPosition", "g_TexelSize", "g_TexelSizeHalf", "g_Screen",
+                     "g_ModelViewProjectionMatrix", "g_EffectModelViewProjectionMatrixInverse", "g_ModelMatrix",
+                     "g_EffectModelMatrix", "g_AltModelMatrix", "g_AltNormalModelMatrix", "g_ModelMatrixInverse",
+                     "g_ModelViewMatrix", "g_ModelViewMatrixInverse", "g_ViewMatrix", "g_ViewProjectionMatrix",
+                     "g_ViewProjectionMatrixInverse", "g_AltViewProjectionMatrix", "g_EffectTextureProjectionMatrix",
+                     "g_EffectTextureProjectionMatrixInverse", "g_NormalModelMatrix", "g_Color4", "g_Color", "g_Alpha",
+                     "g_UserAlpha", "g_Brightness", "g_EyePosition", "g_ViewUp", "g_ViewRight", "g_ViewForward",
+                     "g_TextureReductionScale", "g_FogDistanceColor", "g_FogDistanceParams", "g_FogHeightColor",
+                     "g_FogHeightParams", "g_Texture2Resolution", "g_Texture0Rotation", "g_AudioSpectrum16Left",
+                     "g_RenderVar1"] + Array(SceneFrameLighting.uniformNames)
+        for name in names {
+            XCTAssertTrue(BuiltinUniforms.isBuiltin(name), name)
+            let key = BuiltinUniforms.Key(name)
+            XCTAssertNotNil(key, name)
+            if let key {
+                XCTAssertEqual(BuiltinUniforms.value(key, frame: frame, pass: pass, arrayCount: 4),
+                               BuiltinUniforms.value(named: name, frame: frame, pass: pass, arrayCount: 4), name)
+            }
+        }
+        for name in ["g_Texture0", "g_Speed", "u_Time", "g_RenderVar9"] { XCTAssertNil(BuiltinUniforms.Key(name), name) }
+        XCTAssertEqual(BuiltinUniforms.Key("g_DayTime"), BuiltinUniforms.Key("g_Daytime"))
+        XCTAssertEqual(value("g_NormalModelMatrix"), [1, 0, 0, 0, 1, 0, 0, 0, 1], "each axis normalised")
+        XCTAssertEqual(value("g_ModelMatrix"), [2, 0, 0, 0, 0, 3, 0, 0, 0, 0, 4, 0, 1, 2, 3, 1])
+    }
+
+    /// The model draws of a frame share its built-ins and each material's bound constants
+    /// (`SceneModelFrameValues`), resolved on the frame's first draw; a context outside a frame
+    /// shares nothing.
+    func testModelFrameValuesAreResolvedOnceAFrame() {
+        let shared = SceneModelFrameValues()
+        let material = NSObject(), other = NSObject()
+        var resolved = 0
+        func constant(_ owner: AnyObject, _ value: Float) -> [Float] {
+            shared.constant(of: owner, uniform: "g_Speed", frame: frame) { resolved += 1; return [value] }
+        }
+        frame.serial = 1
+        frame.time = 1
+        XCTAssertEqual(shared.builtin(.time, arrayCount: nil, frame: frame), [1])
+        XCTAssertEqual(constant(material, 5), [5])
+        frame.time = 2
+        XCTAssertEqual(shared.builtin(.time, arrayCount: nil, frame: frame), [1], "the frame's first value")
+        XCTAssertEqual(constant(material, 6), [5])
+        XCTAssertEqual(constant(other, 7), [7], "another material's own")
+        XCTAssertEqual(resolved, 2)
+        frame.serial = 2
+        XCTAssertEqual(shared.builtin(.time, arrayCount: nil, frame: frame), [2], "a new frame")
+        XCTAssertEqual(constant(material, 6), [6])
+        frame.serial = 0
+        frame.time = 3
+        XCTAssertEqual(shared.builtin(.time, arrayCount: nil, frame: frame), [3], "outside a frame")
+        XCTAssertEqual(constant(material, 8), [8])
+        XCTAssertEqual(constant(material, 9), [9])
+    }
+
     private func matrix(_ values: [Float]) -> simd_float4x4 {
         simd_float4x4(columns: (SIMD4(values[0...3]), SIMD4(values[4...7]),
                                 SIMD4(values[8...11]), SIMD4(values[12...15])))

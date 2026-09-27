@@ -3,6 +3,9 @@ import simd
 
 /// Per-frame inputs to WE's built-in uniforms (plan §2). Computed once per rendered frame.
 struct BuiltinFrameContext {
+    /// The frame's number, counted by its renderer from 1: what a draw may cache for the rest of
+    /// the frame is keyed on it. 0 is a context made outside a frame, which nothing caches.
+    var serial: UInt64 = 0
     /// Seconds since the scene started, no wrap.
     ///
     /// `g_Time` is this value as a 32-bit float, like WE's ("time the program has been running in
@@ -30,7 +33,7 @@ struct BuiltinFrameContext {
     var viewRight: SIMD3<Float> = SIMD3(1, 0, 0)
     var viewForward: SIMD3<Float> = SIMD3(0, 0, -1)
     /// This frame's scene camera (`SceneFrameCamera`); `eyePosition` and `viewForward` are its.
-    var camera = SceneFrameCamera()
+    var camera: SceneFrameCamera = SceneFrameCamera()
     var audio: AudioSpectrumSnapshot = .silent
     /// `g_TextureReductionScale`: WE's texture reduction, 1 or 2 (`TextureReduction`).
     var textureReductionScale: Float = 1
@@ -118,100 +121,159 @@ enum BuiltinUniforms {
             || audioUniform(name) != nil || renderVarIndex(name) != nil
     }
 
+    /// A built-in uniform, resolved from its name once (`Key(_:)`), so a draw reads its value by
+    /// case instead of matching the name again.
+    enum Key: Hashable {
+        case time, daytime, frametime, pointerPosition, pointerPositionLast, pointerState, parallaxPosition
+        case texelSize, texelSizeHalf, screen
+        case modelViewProjection, modelViewProjectionInverse, modelMatrix, altModelMatrix, modelMatrixInverse
+        case modelViewMatrix, modelViewMatrixInverse, viewMatrix, viewProjection, altViewProjection
+        case viewProjectionInverse, effectTextureProjection, effectTextureProjectionInverse
+        case normalModelMatrix, altNormalModelMatrix
+        case color4, color, alpha, userAlpha, brightness
+        case lightAmbientColor, lightSkylightColor, eyePosition, viewUp, viewRight, viewForward
+        case textureReductionScale, fogDistanceColor, fogDistanceParams, fogHeightColor, fogHeightParams
+        /// A `LightingV1` array (`SceneFrameLighting.uniformComponents`) and its components per element.
+        case lighting(name: String, perElement: Int)
+        case texture(slot: Int, suffix: String)
+        case audio(bands: Int, right: Bool)
+        case renderVar(Int)
+
+        /// Nil when `name` is not a built-in.
+        init?(_ name: String) {
+            if let fixed = Self.fixed[name] {
+                self = fixed
+            } else if let perElement = SceneFrameLighting.uniformComponents[name] {
+                self = .lighting(name: name, perElement: perElement)
+            } else if let (slot, suffix) = BuiltinUniforms.textureUniform(name) {
+                self = .texture(slot: slot, suffix: suffix)
+            } else if let (bands, right) = BuiltinUniforms.audioUniform(name) {
+                self = .audio(bands: bands, right: right)
+            } else if let index = BuiltinUniforms.renderVarIndex(name) {
+                self = .renderVar(index)
+            } else {
+                return nil
+            }
+        }
+
+        private static let fixed: [String: Key] = [
+            "g_Time": .time, "g_Daytime": .daytime, "g_DayTime": .daytime, "g_Frametime": .frametime,
+            "g_PointerPosition": .pointerPosition, "g_PointerPositionLast": .pointerPositionLast,
+            "g_PointerState": .pointerState, "g_ParallaxPosition": .parallaxPosition,
+            "g_TexelSize": .texelSize, "g_TexelSizeHalf": .texelSizeHalf, "g_Screen": .screen,
+            "g_ModelViewProjectionMatrix": .modelViewProjection, "g_EffectModelViewProjectionMatrix": .modelViewProjection,
+            "g_ModelViewProjectionMatrixInverse": .modelViewProjectionInverse,
+            "g_EffectModelViewProjectionMatrixInverse": .modelViewProjectionInverse,
+            "g_ModelMatrix": .modelMatrix, "g_EffectModelMatrix": .modelMatrix, "g_AltModelMatrix": .altModelMatrix,
+            "g_ModelMatrixInverse": .modelMatrixInverse, "g_ModelViewMatrix": .modelViewMatrix,
+            "g_ModelViewMatrixInverse": .modelViewMatrixInverse, "g_ViewMatrix": .viewMatrix,
+            "g_ViewProjectionMatrix": .viewProjection, "g_AltViewProjectionMatrix": .altViewProjection,
+            "g_ViewProjectionMatrixInverse": .viewProjectionInverse,
+            "g_EffectTextureProjectionMatrix": .effectTextureProjection,
+            "g_EffectTextureProjectionMatrixInverse": .effectTextureProjectionInverse,
+            "g_NormalModelMatrix": .normalModelMatrix, "g_AltNormalModelMatrix": .altNormalModelMatrix,
+            "g_Color4": .color4, "g_Color": .color, "g_Alpha": .alpha, "g_UserAlpha": .userAlpha,
+            "g_Brightness": .brightness, "g_LightAmbientColor": .lightAmbientColor,
+            "g_LightSkylightColor": .lightSkylightColor, "g_EyePosition": .eyePosition, "g_ViewUp": .viewUp,
+            "g_ViewRight": .viewRight, "g_ViewForward": .viewForward, "g_TextureReductionScale": .textureReductionScale,
+            "g_FogDistanceColor": .fogDistanceColor, "g_FogDistanceParams": .fogDistanceParams,
+            "g_FogHeightColor": .fogHeightColor, "g_FogHeightParams": .fogHeightParams,
+        ]
+    }
+
     /// The value of built-in `name`, or nil when `name` is not a built-in. `arrayCount` limits
     /// (or zero-pads) array uniforms such as the audio spectra to the shader's declared length.
     static func value(named name: String, frame: BuiltinFrameContext, pass: BuiltinPassContext,
                       arrayCount: Int? = nil) -> [Float]? {
-        if let fixed = fixedValue(name, frame: frame, pass: pass) { return fixed }
-        if let perElement = SceneFrameLighting.uniformComponents[name] {
+        Key(name).map { value($0, frame: frame, pass: pass, arrayCount: arrayCount) }
+    }
+
+    /// The value of a resolved built-in (`value(named:…)`).
+    static func value(_ key: Key, frame: BuiltinFrameContext, pass: BuiltinPassContext, arrayCount: Int? = nil) -> [Float] {
+        let size = pass.targetSize
+        switch key {
+        case .time: return [Float(frame.time)]
+        case .daytime: return [frame.daytime]
+        case .frametime: return [Float(frame.frameTime)]
+        // WE's pointer is y-down, as the Windows cursor: its shaders flip it "to match texture
+        // space Y" (cursor ripple, x-ray, fluid simulation), as its camera parallax does (§3 of
+        // docs/we-values-audit.md). Ours is y-up.
+        case .pointerPosition: return [frame.pointer.x, 1 - frame.pointer.y]
+        case .pointerPositionLast: return [frame.pointerLast.x, 1 - frame.pointerLast.y]
+        case .pointerState: return flat(frame.pointerState)
+        case .parallaxPosition: return flat(frame.parallax)
+        case .texelSize: return flat(1 / size)
+        case .texelSizeHalf: return flat(0.5 / size)
+        case .screen:
+            let screen = frame.screenSize
+            return [screen.x, screen.y, screen.x / screen.y]
+        case .modelViewProjection: return flat(pass.modelViewProjection)
+        case .modelViewProjectionInverse: return flat(pass.modelViewProjection.inverse)
+        case .modelMatrix: return flat(pass.modelMatrix)
+        case .altModelMatrix: return flat(pass.altModelMatrix ?? pass.modelMatrix)
+        case .modelMatrixInverse: return flat(pass.modelMatrix.inverse)
+        case .modelViewMatrix: return flat(pass.viewMatrix * pass.modelMatrix)
+        case .modelViewMatrixInverse: return flat((pass.viewMatrix * pass.modelMatrix).inverse)
+        case .viewMatrix: return flat(pass.viewMatrix)
+        case .viewProjection: return flat(pass.viewProjection)
+        case .altViewProjection: return flat(pass.altViewProjection ?? pass.viewProjection)
+        case .viewProjectionInverse: return flat(pass.viewProjection.inverse)
+        case .effectTextureProjection: return flat(pass.effectTextureProjection)
+        case .effectTextureProjectionInverse: return flat(pass.effectTextureProjection.inverse)
+        case .normalModelMatrix: return normalMatrix(pass.modelMatrix)
+        case .altNormalModelMatrix: return normalMatrix(pass.altModelMatrix ?? pass.modelMatrix)
+        case .color4: return [pass.color.x, pass.color.y, pass.color.z, pass.alpha]
+        case .color: return flat(pass.color)
+        case .alpha: return [pass.alpha]
+        case .userAlpha: return [pass.userAlpha]
+        case .brightness: return [pass.brightness]
+        case .lightAmbientColor: return flat(frame.lighting.ambient)
+        case .lightSkylightColor: return flat(frame.lighting.skylight)
+        case .eyePosition: return flat(frame.eyePosition)
+        case .viewUp: return flat(frame.viewUp)
+        case .viewRight: return flat(frame.viewRight)
+        case .viewForward: return flat(frame.viewForward)
+        case .textureReductionScale: return [frame.textureReductionScale]
+        case .fogDistanceColor: return flat(frame.lighting.fog.distanceColor)
+        case .fogDistanceParams: return flat(frame.lighting.fog.distanceParams)
+        case .fogHeightColor: return flat(frame.lighting.fog.heightColor)
+        case .fogHeightParams: return flat(frame.lighting.fog.heightParams)
+        case .lighting(let name, let perElement):
             // Zero-padded or cut to the shader's array, whose length is the budget's too.
-            let values = frame.lighting.arrays[name] ?? []
-            let count = (arrayCount ?? 1) * perElement
-            return Array((values + [Float](repeating: 0, count: max(0, count - values.count))).prefix(count))
-        }
-        if let (slot, suffix) = textureUniform(name) { return textureValue(suffix, info: pass.textures[slot]) }
-        if let (bands, right) = audioUniform(name) {
+            return fitted(frame.lighting.arrays[name] ?? [], count: (arrayCount ?? 1) * perElement)
+        case .texture(let slot, let suffix): return textureValue(suffix, info: pass.textures[slot])
+        case .audio(let bands, let right):
             let values = frame.audio.values(bands: bands, right: right) ?? []
             guard let arrayCount else { return values }
-            return Array((values + [Float](repeating: 0, count: max(0, arrayCount - values.count)))
-                .prefix(arrayCount))
+            return fitted(values, count: arrayCount)
+        case .renderVar(let index): return flat(pass.renderVars[index] ?? .zero)
         }
-        if let index = renderVarIndex(name) { return flat(pass.renderVars[index] ?? .zero) }
-        return nil
     }
 
     // MARK: - Private
 
-    private static func fixedValue(_ name: String, frame: BuiltinFrameContext,
-                                   pass: BuiltinPassContext) -> [Float]? {
-        let size = pass.targetSize
-        switch name {
-        case "g_Time": return [Float(frame.time)]
-        case "g_Daytime", "g_DayTime": return [frame.daytime]
-        case "g_Frametime": return [Float(frame.frameTime)]
-        // WE's pointer is y-down, as the Windows cursor: its shaders flip it "to match texture
-        // space Y" (cursor ripple, x-ray, fluid simulation), as its camera parallax does (§3 of
-        // docs/we-values-audit.md). Ours is y-up.
-        case "g_PointerPosition": return [frame.pointer.x, 1 - frame.pointer.y]
-        case "g_PointerPositionLast": return [frame.pointerLast.x, 1 - frame.pointerLast.y]
-        case "g_PointerState": return flat(frame.pointerState)
-        case "g_ParallaxPosition": return flat(frame.parallax)
-        case "g_TexelSize": return flat(1 / size)
-        case "g_TexelSizeHalf": return flat(0.5 / size)
-        case "g_Screen":
-            let screen = frame.screenSize
-            return [screen.x, screen.y, screen.x / screen.y]
-        case "g_ModelViewProjectionMatrix", "g_EffectModelViewProjectionMatrix":
-            return flat(pass.modelViewProjection)
-        case "g_ModelViewProjectionMatrixInverse", "g_EffectModelViewProjectionMatrixInverse":
-            return flat(pass.modelViewProjection.inverse)
-        case "g_ModelMatrix", "g_EffectModelMatrix": return flat(pass.modelMatrix)
-        case "g_AltModelMatrix": return flat(pass.altModelMatrix ?? pass.modelMatrix)
-        case "g_ModelMatrixInverse": return flat(pass.modelMatrix.inverse)
-        case "g_ModelViewMatrix": return flat(pass.viewMatrix * pass.modelMatrix)
-        case "g_ModelViewMatrixInverse": return flat((pass.viewMatrix * pass.modelMatrix).inverse)
-        case "g_ViewMatrix": return flat(pass.viewMatrix)
-        case "g_ViewProjectionMatrix": return flat(pass.viewProjection)
-        case "g_AltViewProjectionMatrix": return flat(pass.altViewProjection ?? pass.viewProjection)
-        case "g_ViewProjectionMatrixInverse": return flat(pass.viewProjection.inverse)
-        case "g_EffectTextureProjectionMatrix": return flat(pass.effectTextureProjection)
-        case "g_EffectTextureProjectionMatrixInverse": return flat(pass.effectTextureProjection.inverse)
-        case "g_NormalModelMatrix": return normalMatrix(pass.modelMatrix)
-        case "g_AltNormalModelMatrix": return normalMatrix(pass.altModelMatrix ?? pass.modelMatrix)
-        case "g_Color4": return [pass.color.x, pass.color.y, pass.color.z, pass.alpha]
-        case "g_Color": return flat(pass.color)
-        case "g_Alpha": return [pass.alpha]
-        case "g_UserAlpha": return [pass.userAlpha]
-        case "g_Brightness": return [pass.brightness]
-        case "g_LightAmbientColor": return flat(frame.lighting.ambient)
-        case "g_LightSkylightColor": return flat(frame.lighting.skylight)
-        case "g_EyePosition": return flat(frame.eyePosition)
-        case "g_ViewUp": return flat(frame.viewUp)
-        case "g_ViewRight": return flat(frame.viewRight)
-        case "g_ViewForward": return flat(frame.viewForward)
-        case "g_TextureReductionScale": return [frame.textureReductionScale]
-        case "g_FogDistanceColor": return flat(frame.lighting.fog.distanceColor)
-        case "g_FogDistanceParams": return flat(frame.lighting.fog.distanceParams)
-        case "g_FogHeightColor": return flat(frame.lighting.fog.heightColor)
-        case "g_FogHeightParams": return flat(frame.lighting.fog.heightParams)
-        default: return nil
-        }
+    /// `values` zero-padded or cut to `count`.
+    private static func fitted(_ values: [Float], count: Int) -> [Float] {
+        if values.count == count { return values }
+        if values.count > count { return Array(values.prefix(count)) }
+        return values + [Float](repeating: 0, count: count - values.count)
     }
 
     /// WE's normal matrix (0x1400d8840, and 0x1400d8aab for the alt one): the model's upper 3×3
     /// with each axis normalised, not the inverse transpose. A zero axis stays zero.
     private static func normalMatrix(_ m: simd_float4x4) -> [Float] {
-        [m.columns.0.xyz, m.columns.1.xyz, m.columns.2.xyz].flatMap { axis -> [Float] in
+        func unit(_ axis: SIMD3<Float>) -> SIMD3<Float> {
             let length = simd_length(axis)
-            let unit = length > 0 ? axis / length : axis
-            return [unit.x, unit.y, unit.z]
+            return length > 0 ? axis / length : axis
         }
+        let x = unit(m.columns.0.xyz), y = unit(m.columns.1.xyz), z = unit(m.columns.2.xyz)
+        return [x.x, x.y, x.z, y.x, y.y, y.z, z.x, z.y, z.z]
     }
 
     private static let textureSuffixes = ["Resolution", "Rotation", "Translation", "MipMapInfo", "Texel"]
 
     /// `g_Texture{N}{Suffix}` → (N, Suffix).
-    private static func textureUniform(_ name: String) -> (Int, String)? {
+    fileprivate static func textureUniform(_ name: String) -> (Int, String)? {
         guard name.hasPrefix("g_Texture") else { return nil }
         let rest = name.dropFirst("g_Texture".count)
         let digits = rest.prefix { $0.isASCII && $0.isNumber }
@@ -240,7 +302,7 @@ enum BuiltinUniforms {
     }
 
     /// `g_AudioSpectrum{16,32,64}{Left,Right}` → (bands, isRight).
-    private static func audioUniform(_ name: String) -> (Int, Bool)? {
+    fileprivate static func audioUniform(_ name: String) -> (Int, Bool)? {
         let prefix = "g_AudioSpectrum"
         guard name.hasPrefix(prefix) else { return nil }
         let rest = name.dropFirst(prefix.count)
@@ -251,7 +313,7 @@ enum BuiltinUniforms {
         return nil
     }
 
-    private static func renderVarIndex(_ name: String) -> Int? {
+    fileprivate static func renderVarIndex(_ name: String) -> Int? {
         guard name.hasPrefix("g_RenderVar"), let index = Int(name.dropFirst("g_RenderVar".count)),
               (0...4).contains(index) else { return nil }
         return index
@@ -261,7 +323,8 @@ enum BuiltinUniforms {
     private static func flat(_ v: SIMD3<Float>) -> [Float] { [v.x, v.y, v.z] }
     private static func flat(_ v: SIMD4<Float>) -> [Float] { [v.x, v.y, v.z, v.w] }
     private static func flat(_ m: simd_float4x4) -> [Float] {
-        [m.columns.0, m.columns.1, m.columns.2, m.columns.3].flatMap(flat)
+        let (a, b, c, d) = m.columns
+        return [a.x, a.y, a.z, a.w, b.x, b.y, b.z, b.w, c.x, c.y, c.z, c.w, d.x, d.y, d.z, d.w]
     }
 }
 

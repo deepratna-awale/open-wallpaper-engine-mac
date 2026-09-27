@@ -20,7 +20,8 @@ import simd
 ///
 /// Roots: the Workshop folder, OpenWallpaperStorage and WE's default projects, or `OWE_LIBRARY`
 /// (paths separated by ':'); skipped when none is present (CI). `OWE_MODEL_LIBRARY_ONLY` lists
-/// folder names or Workshop ids; `OWE_MODEL_LIBRARY_OUT` names a file for the table.
+/// folder names or Workshop ids; `OWE_MODEL_LIBRARY_OUT` names a file for the table;
+/// `OWE_MODEL_LIBRARY_FRAMES` a folder for each variant's last frame and shadow atlas, raw.
 final class ModelLibraryRenderTests: XCTestCase {
     private var storage: URL!
 
@@ -155,6 +156,9 @@ final class ModelLibraryRenderTests: XCTestCase {
            let bad = try ModelSceneHarness.nonFiniteCount(atlas, device: harness.device) {
             XCTAssertEqual(bad, 0, "\(label): the shadow atlas has \(bad) values that aren't finite")
         }
+        if let folder = ProcessInfo.processInfo.environment["OWE_MODEL_LIBRARY_FRAMES"] {
+            try saveFrames(harness, to: URL(fileURLWithPath: folder), name: "\(item.name)-\(variant.name)")
+        }
         let reflected = harness.renderer.planarReflection?.drawnModels.count ?? 0
         if !variant.reflection { XCTAssertEqual(reflected, 0, "\(label): nothing is reflected with the setting off") }
         if variant.shadows == .disabled {
@@ -169,6 +173,29 @@ final class ModelLibraryRenderTests: XCTestCase {
                       harness.renderer.shadowPass?.lastMapCount ?? 0, reflected,
                       perFrame(harness.renderer.puppetMeshDraws - puppetDraws), timing.cpuMedian, timing.gpuMedian,
                       timing.gpuMax, target, settled ? "yes" : "no")
+    }
+
+    /// The last frame's bytes and the shadow atlas's (`OWE_MODEL_LIBRARY_FRAMES`), raw, so two
+    /// builds' frames can be compared byte for byte (an optimisation must draw the same).
+    private func saveFrames(_ harness: ModelSceneHarness, to folder: URL, name: String) throws {
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        if let frame = harness.renderer.sharedFrame {
+            try Data(try TextureUploadTests.read(frame, device: harness.device)).write(to: folder.appending(path: "\(name).frame"))
+        }
+        if let atlas = harness.renderer.shadowPass?.atlas.texture, atlas.pixelFormat == .depth32Float {
+            let queue = try XCTUnwrap(harness.device.makeCommandQueue())
+            let rowBytes = atlas.width * 4
+            let buffer = try XCTUnwrap(harness.device.makeBuffer(length: rowBytes * atlas.height, options: .storageModeShared))
+            let commands = try XCTUnwrap(queue.makeCommandBuffer())
+            let blit = try XCTUnwrap(commands.makeBlitCommandEncoder())
+            blit.copy(from: atlas, sourceSlice: 0, sourceLevel: 0, sourceOrigin: MTLOrigin(x: 0, y: 0, z: 0),
+                      sourceSize: MTLSize(width: atlas.width, height: atlas.height, depth: 1), to: buffer,
+                      destinationOffset: 0, destinationBytesPerRow: rowBytes, destinationBytesPerImage: rowBytes * atlas.height)
+            blit.endEncoding()
+            commands.commit()
+            commands.waitUntilCompleted()
+            try Data(bytes: buffer.contents(), count: buffer.length).write(to: folder.appending(path: "\(name).atlas"))
+        }
     }
 
     // MARK: - The library

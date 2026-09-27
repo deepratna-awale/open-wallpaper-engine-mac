@@ -1087,6 +1087,11 @@ enum UniformWriter {
         // view matrices through here, and per-byte copies made it most of a model scene's frame.
         let rows = columns.flatMap { member.matrixStride > 0 ? perElement / $0 : nil }
         let count = min(member.count * perElement, components.count)
+        if !isInteger, member.offset >= 0 {
+            copyRuns(components, count: count, member: member, perElement: perElement, run: rows ?? perElement,
+                     into: &bytes)
+            return
+        }
         components.withUnsafeBufferPointer { values in
             bytes.withUnsafeMutableBytes { raw in
                 var index = 0
@@ -1100,6 +1105,27 @@ enum UniformWriter {
                         raw.storeBytes(of: isInteger ? integerBits(value) : value.bitPattern, toByteOffset: offset, as: UInt32.self)
                     }
                     index += 1
+                }
+            }
+        }
+    }
+
+    /// Floats as they stand, one copy per contiguous run: an element's components, or a matrix
+    /// column's `run` rows (the model shaders' bones and view matrices are hundreds of floats a
+    /// draw). The same bytes as a store per component, a run cut where the buffer ends.
+    private static func copyRuns(_ components: [Float], count: Int, member: UniformMember, perElement: Int, run: Int,
+                                 into bytes: inout [UInt8]) {
+        components.withUnsafeBufferPointer { values in
+            bytes.withUnsafeMutableBytes { raw in
+                guard let source = values.baseAddress, let target = raw.baseAddress else { return }
+                var index = 0
+                while index < count {
+                    let element = index / perElement, component = index % perElement
+                    let offset = member.offset + element * member.arrayStride + (component / run) * member.matrixStride
+                    let length = min(run, count - index)
+                    let fits = min(length, max(0, (raw.count - offset) / 4))
+                    if fits > 0 { (target + offset).copyMemory(from: source + index, byteCount: fits * 4) }
+                    index += length
                 }
             }
         }

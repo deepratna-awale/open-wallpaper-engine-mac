@@ -25,12 +25,16 @@ final class ModelMaterialUniforms {
     private(set) var bytes: [UInt8]
     let size: Int
     private let dynamic: [(member: UniformMember, constant: ShaderConstantResolver.DynamicConstant)]
-    private let frameBuiltins: [UniformMember]
-    private let passBuiltins: [UniformMember]
+    /// The built-ins, resolved once: those that change every frame (which read nothing of the
+    /// pass) and those that change with the placement.
+    private let frameBuiltins: [(member: UniformMember, key: BuiltinUniforms.Key)]
+    private let passBuiltins: [(member: UniformMember, key: BuiltinUniforms.Key)]
     private let bones: UniformMember?
     private let layout: UniformLayout?
     private var lastKey: PassKey?
     private var lastBones: [Float]?
+    /// The first bone of `g_Bones` from which every bone holds the identity.
+    private var identityFrom = 0
 
     init(layout: UniformLayout?, constants: ShaderConstantResolver.ResolvedConstants) {
         size = layout?.size ?? 0
@@ -38,41 +42,52 @@ final class ModelMaterialUniforms {
         bytes = [UInt8](repeating: 0, count: size)
         let dynamicByName = Dictionary(constants.dynamic.map { ($0.uniform, $0) }, uniquingKeysWith: { a, _ in a })
         var dynamic: [(UniformMember, ShaderConstantResolver.DynamicConstant)] = []
-        var builtins: [UniformMember] = []
+        var builtins: [(member: UniformMember, key: BuiltinUniforms.Key)] = []
         for member in (layout?.members.values).map(Array.init) ?? [] {
             if let constant = dynamicByName[member.name] {
                 dynamic.append((member, constant))
             } else if let value = constants.staticValues[member.name] {
                 UniformWriter.write(value.components, member: member, into: &bytes)
-            } else if BuiltinUniforms.isBuiltin(member.name) {
-                builtins.append(member)
+            } else if BuiltinUniforms.isBuiltin(member.name), let key = BuiltinUniforms.Key(member.name) {
+                builtins.append((member, key))
             }
         }
         self.dynamic = dynamic
         let varies = { (member: UniformMember) in
             UniformProgram.timeVarying.contains(member.name) || member.name.hasPrefix("g_AudioSpectrum")
         }
-        frameBuiltins = builtins.filter(varies)
-        passBuiltins = builtins.filter { !varies($0) }
+        frameBuiltins = builtins.filter { varies($0.member) }
+        passBuiltins = builtins.filter { !varies($0.member) }
         bones = layout?.members["g_Bones"]
         // The bind pose until the first pose arrives: every bone the identity.
         if let bones { UniformWriter.write(Self.identityBones(count: bones.count), member: bones, into: &bytes) }
     }
 
     /// Writes this draw's values. `pass` builds the pass context; it runs only when needed.
-    func update(key: PassKey, frame: BuiltinFrameContext, values: SceneValueContext, pass: () -> BuiltinPassContext) {
+    /// `shared` resolves the frame's built-ins and the bound constants of `material` (whose
+    /// constants these are) once a frame for every draw of it.
+    func update(key: PassKey, frame: BuiltinFrameContext, values: SceneValueContext,
+                shared: (values: SceneModelFrameValues, material: AnyObject)? = nil, pass: () -> BuiltinPassContext) {
         for (member, constant) in dynamic {
-            let value = ShaderConstantResolver.shape(SceneValueResolver.resolve(constant.source, in: values),
-                                                     count: constant.count, isInt: constant.isInt)
-            UniformWriter.write(value.components, member: member, into: &bytes)
+            let resolve: () -> [Float] = {
+                ShaderConstantResolver.shape(SceneValueResolver.resolve(constant.source, in: values),
+                                             count: constant.count, isInt: constant.isInt).components
+            }
+            let components = shared.map { $0.values.constant(of: $0.material, uniform: constant.uniform, frame: frame,
+                                                             resolve: resolve) } ?? resolve()
+            UniformWriter.write(components, member: member, into: &bytes)
         }
-        let placementChanged = key != lastKey
-        guard !frameBuiltins.isEmpty || placementChanged else { return }
-        let context = pass()
-        write(frameBuiltins, frame: frame, pass: context)
-        if placementChanged {
+        // The frame's built-ins read nothing of the pass, which is made only when the placement changed.
+        for (member, builtin) in frameBuiltins {
+            let arrayCount = member.count > 1 ? member.count : nil
+            let components = shared?.values.builtin(builtin, arrayCount: arrayCount, frame: frame)
+                ?? BuiltinUniforms.value(builtin, frame: frame, pass: BuiltinPassContext(targetSize: key.target),
+                                         arrayCount: arrayCount)
+            UniformWriter.write(components, member: member, into: &bytes)
+        }
+        if key != lastKey {
             lastKey = key
-            write(passBuiltins, frame: frame, pass: context)
+            write(passBuiltins, frame: frame, pass: pass())
         }
     }
 
@@ -82,10 +97,17 @@ final class ModelMaterialUniforms {
     func writeBones(_ components: [Float]) {
         guard let bones, components != lastBones else { return }
         lastBones = components
-        let count = components.count / 12
-        let padded = count >= bones.count ? Array(components.prefix(bones.count * 12))
-            : components + Self.identityBones(count: bones.count - count)
-        UniformWriter.write(padded, member: bones, into: &bytes)
+        // The writer stops at the shader's `BONECOUNT`. The bones after the pose's are identities
+        // from the bind pose on, unless a larger pose wrote them since.
+        UniformWriter.write(components, member: bones, into: &bytes)
+        let count = min(components.count / 12, bones.count)
+        if count < identityFrom {
+            let tail = UniformMember(name: bones.name, type: bones.type, offset: bones.offset + count * bones.arrayStride,
+                                     count: identityFrom - count, arrayStride: bones.arrayStride,
+                                     matrixStride: bones.matrixStride)
+            UniformWriter.write(Self.identityBones(count: tail.count), member: tail, into: &bytes)
+        }
+        identityFrom = count
     }
 
     var hasBones: Bool { bones != nil }
@@ -105,10 +127,10 @@ final class ModelMaterialUniforms {
         return true
     }
 
-    private func write(_ members: [UniformMember], frame: BuiltinFrameContext, pass: BuiltinPassContext) {
-        for member in members {
-            guard let components = BuiltinUniforms.value(named: member.name, frame: frame, pass: pass,
-                                                         arrayCount: member.count > 1 ? member.count : nil) else { continue }
+    private func write(_ members: [(member: UniformMember, key: BuiltinUniforms.Key)], frame: BuiltinFrameContext,
+                       pass: BuiltinPassContext) {
+        for (member, key) in members {
+            let components = BuiltinUniforms.value(key, frame: frame, pass: pass, arrayCount: member.count > 1 ? member.count : nil)
             UniformWriter.write(components, member: member, into: &bytes)
         }
     }
