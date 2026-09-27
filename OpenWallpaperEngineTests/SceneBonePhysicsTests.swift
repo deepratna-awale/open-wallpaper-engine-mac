@@ -21,7 +21,8 @@ final class SceneBonePhysicsTests: XCTestCase {
             """#))
         XCTAssertEqual(physics.flags, [.rigid, .rotation, .limitAngles])
         XCTAssertTrue(physics.isSimulated)
-        XCTAssertEqual(physics.rotationInertia, 1 - 19.700001 / 100, accuracy: 1e-6)
+        let inertia: Float = 1 - 0.19700001
+        XCTAssertEqual(physics.rotationInertia, inertia, accuracy: 1e-6)
         XCTAssertEqual(physics.translationInertia, 0.7, accuracy: 1e-6)
         XCTAssertEqual(physics.rotationFriction, 10)
         XCTAssertEqual(physics.translationFriction, 10, "a physics bone keeps tf as authored")
@@ -147,10 +148,13 @@ final class SceneBonePhysicsTests: XCTestCase {
         let falling = try Self.animator(#"{"re":true,"t":true,"ti":100,"tf":30,"ge":true,"gd":"0 -1 0","m":2,"tp":"100 0 0"}"#)
         Self.advance(falling)
         Self.advance(falling)
-        XCTAssertEqual(Double(falling.worlds[1].columns.3.y), -2000.0 / 60 / 60, accuracy: 1e-4)
+        let firstFall: Double = -2000.0 / 3600.0
+        XCTAssertEqual(Double(falling.worlds[1].columns.3.y), firstFall, accuracy: 1e-4)
         Self.advance(falling)
         // The velocity halves every frame (30/60), then gravity adds 2000/60 again.
-        XCTAssertEqual(Double(falling.worlds[1].columns.3.y), -(2000.0 / 60 + 1000.0 / 60 + 2000.0 / 60) / 60, accuracy: 1e-4)
+        let secondFallSpeed: Double = 5000.0 / 60.0
+        let secondFall: Double = -secondFallSpeed / 60.0
+        XCTAssertEqual(Double(falling.worlds[1].columns.3.y), secondFall, accuracy: 1e-4)
         XCTAssertEqual(falling.worlds[1].columns.3.x, 100, accuracy: 1e-4)
 
         let pushed = try Self.animator(#"{"re":true,"t":true,"ti":100,"tf":6,"tp":"100 0 0"}"#)
@@ -159,8 +163,11 @@ final class SceneBonePhysicsTests: XCTestCase {
         Self.advance(pushed)
         XCTAssertEqual(pushed.worlds[1].columns.3.x, 101, accuracy: 1e-4)
         Self.advance(pushed)
-        XCTAssertEqual(pushed.worlds[1].columns.3.x, 101 + 0.9, accuracy: 1e-4)
-        XCTAssertEqual(pushed.physics?.states[1].velocity.x ?? 0, 60 * 0.9 * 0.9, accuracy: 1e-3)
+        let pushedTwice: Float = 101.9
+        XCTAssertEqual(pushed.worlds[1].columns.3.x, pushedTwice, accuracy: 1e-4)
+        let dampedVelocity: Float = 60 * 0.81
+        let pushedVelocity: Float = pushed.physics?.states[1].velocity.x ?? 0
+        XCTAssertEqual(pushedVelocity, dampedVelocity, accuracy: 1e-3)
     }
 
     /// `tm` caps the offset at `tm` times the object's mean scale.
@@ -246,7 +253,8 @@ final class SceneBonePhysicsTests: XCTestCase {
         let a = simd_normalize(SIMD3<Float>(1, 2, 0.5)), b = simd_normalize(SIMD3<Float>(-0.3, 1, 2))
         XCTAssertLessThan(simd_length(SceneBonePhysicsMath.alignment(from: a, to: b).act(a) - b), 1e-5)
         XCTAssertLessThan(simd_length(SceneBonePhysicsMath.alignment(from: a, to: -a).act(a) + a), 1e-5)
-        XCTAssertEqual(SceneBonePhysicsMath.wrap(4), 4 - 2 * .pi, accuracy: 1e-5)
+        let wrapped: Float = 4 - 2 * Float.pi
+        XCTAssertEqual(SceneBonePhysicsMath.wrap(4), wrapped, accuracy: 1e-5)
         XCTAssertEqual(SceneBonePhysicsMath.wrap(-4), 2 * .pi - 4, accuracy: 1e-5)
     }
 
