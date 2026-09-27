@@ -107,11 +107,14 @@ final class ModelSceneHarness {
         return (cpu * 1000, gpu)
     }
 
-    /// Draws with the clock stopped until the pipelines have compiled and the frame stops
-    /// changing (at most `seconds` of wall time); returns whether it settled.
+    /// Draws with the clock held until the pipelines have compiled and the frame stops changing
+    /// (at most `seconds` of wall time); returns whether it settled. The scene clock can't stand
+    /// quite still: like WE's, it advances at least 0.1 ms a frame (`SceneClock`), so "stopped
+    /// changing" is a mean difference below a fifth of a level between frames 8 apart, twice.
     @discardableResult
     func settle(seconds: Double = 20) throws -> Bool {
         var previous: [UInt8]?
+        var still = 0
         let deadline = Date().addingTimeInterval(seconds)
         var count = 0
         while Date() < deadline {
@@ -120,10 +123,27 @@ final class ModelSceneHarness {
             count += 1
             guard count % 8 == 0, let texture = renderer.sharedFrame else { continue }
             let bytes = try TextureUploadTests.read(texture, device: device)
-            if count >= 24, bytes == previous { return true }
+            if let previous, count >= 24, Self.meanDifference(bytes, previous) < 0.2 {
+                still += 1
+                if still == 2 { return true }
+            } else {
+                still = 0
+            }
             previous = bytes
         }
         return false
+    }
+
+    /// The mean absolute difference of two frames' bytes (levels of 255).
+    static func meanDifference(_ a: [UInt8], _ b: [UInt8]) -> Double {
+        guard a.count == b.count, !a.isEmpty else { return .infinity }
+        var total = 0
+        a.withUnsafeBufferPointer { x in
+            b.withUnsafeBufferPointer { y in
+                for index in 0..<x.count { total += abs(Int(x[index]) - Int(y[index])) }
+            }
+        }
+        return Double(total) / Double(a.count)
     }
 
     /// `frames` frames at 1/30 s each, timed.
