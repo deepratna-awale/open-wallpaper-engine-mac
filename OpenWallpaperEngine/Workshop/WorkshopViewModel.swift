@@ -10,7 +10,7 @@ class WorkshopViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var currentPage = 1
-    @Published var selectedTags: [String] = ["Everyone"]
+    @Published private(set) var filter = WorkshopFilter()
     @Published private(set) var hasNextPage = false
     @Published var selectedItemIds = Set<String>()
     @Published var isBatchDownloadConfirming = false
@@ -22,26 +22,17 @@ class WorkshopViewModel: ObservableObject {
     private let api = WorkshopAPIService()
     private var cancellable: AnyCancellable?
     private var downloadedIndexCancellable: AnyCancellable?
+    private var favoritesCancellable: AnyCancellable?
     private var cachedPages: [Int: [WorkshopItem]] = [:]
+    /// QueryFiles result pages for the current search, so later pages and client-side filtering
+    /// don't request the same source pages again.
+    private var cachedSourcePages: [Int: [WorkshopItem]] = [:]
     private var cachedSearchKey = ""
     private var selectionAnchorId: String?
 
-    static let contentRatingTags = ["Everyone", "Questionable", "Mature"]
-
-    static let typeTags = ["Scene", "Video", "Web", "Application"]
-
-    static let genreTags = [
-        "Abstract", "Animal", "Anime", "Cartoon", "CGI",
-        "Cyberpunk", "Fantasy", "Game", "Girls", "Guys",
-        "Landscape", "Medieval", "Memes", "MMD", "Music",
-        "Nature", "Pixel Art", "Relaxing", "Retro", "Sci-Fi",
-        "Sports", "Technology", "Television", "Vehicle",
-    ]
-
-    static let resolutionTags = [
-        "1920 x 1080", "2560 x 1440", "3840 x 2160",
-        "3440 x 1440", "1440 x 2560",
-    ]
+    /// How many QueryFiles pages one displayed page may read when results are filtered here
+    /// (Show Only options Steam can't express): 2,000 items.
+    static let maxSourcePages = 40
 
     init(steamCmd: SteamCmdService) {
         self.steamCmd = steamCmd
@@ -53,6 +44,13 @@ class WorkshopViewModel: ObservableObject {
             DispatchQueue.main.async {
                 self?.cachedPages.removeAll()
                 self?.objectWillChange.send()
+            }
+        }
+        // "My Favourites" is checked on the results, so its pages go stale when favourites change.
+        self.favoritesCancellable = FavoritesStore.shared.objectWillChange.sink { [weak self] _ in
+            DispatchQueue.main.async {
+                guard let self, self.filter.showOnly.contains(.favourites) else { return }
+                self.cachedPages.removeAll()
             }
         }
     }
@@ -71,10 +69,11 @@ class WorkshopViewModel: ObservableObject {
             isLoading = false
             return
         }
-        let searchKey = "\(searchText)|\(sortOrder.rawValue)|\(selectedTags.sorted().joined(separator: ","))"
+        let searchKey = "\(searchText)|\(sortOrder.rawValue)|\(filter.cacheKey)|\(itemsPerPage)"
 
         if cachedSearchKey != searchKey {
             cachedPages.removeAll()
+            cachedSourcePages.removeAll()
             cachedSearchKey = searchKey
         }
 
@@ -179,18 +178,18 @@ class WorkshopViewModel: ObservableObject {
         steamCmd.previewProgress.contains(item.id)
     }
 
-    func toggleTag(_ tag: String) {
-        if selectedTags.contains(tag) {
-            selectedTags.removeAll { $0 == tag }
-        } else {
-            selectedTags.append(tag)
-        }
+    /// Changes the filter and searches again from the first page.
+    func updateFilter(_ change: (inout WorkshopFilter) -> Void) {
+        var updated = filter
+        change(&updated)
+        guard updated != filter else { return }
+        filter = updated
         currentPage = 1
+        Task { @MainActor in await search() }
     }
 
     func resetFilters() {
-        selectedTags = ["Everyone"]
-        currentPage = 1
+        updateFilter { $0 = WorkshopFilter() }
     }
 
     @MainActor
@@ -250,24 +249,22 @@ class WorkshopViewModel: ObservableObject {
         return results
     }
 
+    /// Displayed page `displayedPage`: QueryFiles pages are read in order and what passes the
+    /// client-side Show Only check is counted, so a displayed page starts where the previous one
+    /// ended whatever was filtered out.
     @MainActor
     private func displayedPageItems(for displayedPage: Int) async throws -> [WorkshopItem] {
         let sourcePageSize = 50
+        let query = WorkshopQuery(filter)
         var sourcePage = 1
         var skippedItems = (displayedPage - 1) * itemsPerPage
         var visibleItems: [WorkshopItem] = []
 
-        while visibleItems.count < itemsPerPage {
-            let sourceItems = try await api.searchItems(
-                query: searchText,
-                tags: selectedTags,
-                sortOrder: sortOrder,
-                page: sourcePage,
-                perPage: sourcePageSize
-            )
+        while visibleItems.count < itemsPerPage, sourcePage <= Self.maxSourcePages {
+            let sourceItems = try await sourceItems(page: sourcePage, pageSize: sourcePageSize, query: query)
             guard !sourceItems.isEmpty else { break }
 
-            for item in sourceItems {
+            for item in sourceItems where query.matches(item, isFavorite: isFavorite) {
                 if skippedItems > 0 {
                     skippedItems -= 1
                 } else {
@@ -283,6 +280,15 @@ class WorkshopViewModel: ObservableObject {
         }
 
         return visibleItems
+    }
+
+    @MainActor
+    private func sourceItems(page: Int, pageSize: Int, query: WorkshopQuery) async throws -> [WorkshopItem] {
+        if let cached = cachedSourcePages[page] { return cached }
+        let items = try await api.searchItems(query: searchText, filter: query, sortOrder: sortOrder,
+                                              page: page, perPage: pageSize)
+        cachedSourcePages[page] = items
+        return items
     }
 
     @MainActor

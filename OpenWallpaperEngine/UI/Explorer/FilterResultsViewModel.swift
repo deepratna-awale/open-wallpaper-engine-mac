@@ -78,12 +78,15 @@ struct FRAgeRating: FilterResultsModel {
 struct FRWidescreenResolution: FilterResultsModel {
     let rawValue: Int
     
+    /// WE's tags (`WEResolutionTags`), in bit order; 1366 x 768 came last so stored bits keep
+    /// their meaning.
     static let allOptions = [
-        "StandardDefinition",
-        "1280x720",
-        "1920x1080-FullHD",
-        "2560x1440",
-        "3840x2160-4K"
+        "Standard Definition",
+        "1280 x 720",
+        "1920 x 1080",
+        "2560 x 1440",
+        "3840 x 2160",
+        "1366 x 768"
     ]
     
     static let standardDefinition   = Self.init(rawValue: 1 << 0)
@@ -91,8 +94,9 @@ struct FRWidescreenResolution: FilterResultsModel {
     static let resolution1920x1080  = Self.init(rawValue: 1 << 2)
     static let resolution2560x1440  = Self.init(rawValue: 1 << 3)
     static let resolution3840x2160  = Self.init(rawValue: 1 << 4)
+    static let resolution1366x768   = Self.init(rawValue: 1 << 5)
     
-    static let all: Self            = [.standardDefinition, resolution1280x720, resolution1920x1080, .resolution2560x1440, .resolution3840x2160]
+    static let all: Self            = [.standardDefinition, resolution1280x720, resolution1920x1080, .resolution2560x1440, .resolution3840x2160, .resolution1366x768]
     static let none: Self           = []
 }
 
@@ -101,9 +105,9 @@ struct FRUltraWidescreenResolution: FilterResultsModel {
     
     
     static let allOptions: [String] = [
-        "Ultrawide Standard",
-        "2560x1080",
-        "3440x1440",
+        "Ultrawide Standard Definition",
+        "Ultrawide 2560 x 1080",
+        "Ultrawide 3440 x 1440",
     ]
     
     static let ultrawideStandard    = FRUltraWidescreenResolution(rawValue: 1 << 0)
@@ -118,10 +122,10 @@ struct FRDualscreenResolution: FilterResultsModel {
     let rawValue: Int
     
     static let allOptions: [String] = [
-        "Dual Standard",
-        "3840x1080",
-        "5120x1440",
-        "7680x2160"
+        "Dual Standard Definition",
+        "Dual 3840 x 1080",
+        "Dual 5120 x 1440",
+        "Dual 7680 x 2160"
     ]
     
     static let dualStandard         = Self.init(rawValue: 1 << 0)
@@ -137,11 +141,11 @@ struct FRTriplescreenResolution: FilterResultsModel {
     let rawValue: Int
     
     static let allOptions: [String] = [
-            "Triple Standard",
-            "4096x768",
-            "5760x1080",
-            "7680x1440",
-            "11520x2160"
+            "Triple Standard Definition",
+            "Triple 4096 x 768",
+            "Triple 5760 x 1080",
+            "Triple 7680 x 1440",
+            "Triple 11520 x 2160"
         ]
     
     static let tripleStandard        = FRTriplescreenResolution(rawValue: 1 << 0)
@@ -158,11 +162,11 @@ struct FRPortraitScreenResolution: FilterResultsModel {
     let rawValue: Int
     
     static let allOptions = [
-        "PotraitStandard",
-        "720x1280",
-        "1080x1920",
-        "1440x2560",
-        "2160x3840"
+        "Portrait Standard Definition",
+        "Portrait 720 x 1280",
+        "Portrait 1080 x 1920",
+        "Portrait 1440 x 2560",
+        "Portrait 2160 x 3840"
     ]
     
     static let portraitStandard     = Self.init(rawValue: 1 << 0)
@@ -179,8 +183,8 @@ struct FRMiscResolution: FilterResultsModel {
     let rawValue: Int
     
     static let allOptions = [
-        "OtherResolution",
-        "DynamicResolution"
+        "Other resolution",
+        "Dynamic resolution"
     ]
     
     static let otherResolution     = Self.init(rawValue: 1 << 0)

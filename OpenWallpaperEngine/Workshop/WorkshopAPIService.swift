@@ -12,6 +12,9 @@ struct WorkshopItem: Identifiable, Codable {
     let description: String?
     let votesUp: Int
     let votesDown: Int
+    /// The item's key/value tags (QueryFiles `kvtags`), e.g. the Workshop EULA version that
+    /// allows the mobile app. Nil for items stored before these were read.
+    var kvTags: [String: String]? = nil
 
     var previewImageURL: URL? {
         guard let urlString = previewURL else { return nil }
@@ -152,49 +155,56 @@ class WorkshopAPIService {
     }
 
     /// Browse and search need a Steam Web API key (IPublishedFileService/QueryFiles).
-    /// GetPublishedFileDetails doesn't.
+    /// GetPublishedFileDetails doesn't. `filter` gives the tags; what it leaves to the results
+    /// (`WorkshopQuery.clientShowOnly`) is the caller's to check.
     func searchItems(
         query: String = "",
-        tags: [String] = [],
+        filter: WorkshopQuery = WorkshopQuery(),
         sortOrder: WorkshopSortOrder = .trending,
         page: Int = 1,
         perPage: Int = 20
     ) async throws -> [WorkshopItem] {
         guard let key = apiKey.load() else { throw WorkshopAPIError.noAPIKey }
         var components = URLComponents(url: Self.queryFilesURL, resolvingAgainstBaseURL: false)!
-
-        let hasSearchText = !query.isEmpty
-        var queryItems: [URLQueryItem] = [
-            URLQueryItem(name: "query_type", value: "\(sortOrder.queryTypeForSearch(hasText: hasSearchText))"),
-            URLQueryItem(name: "page", value: "\(page)"),
-            URLQueryItem(name: "numperpage", value: "\(perPage)"),
-            URLQueryItem(name: "appid", value: "\(Self.wallpaperEngineAppId)"),
-            URLQueryItem(name: "match_all_tags", value: "false"),
-            URLQueryItem(name: "return_tags", value: "true"),
-            URLQueryItem(name: "return_previews", value: "true"),
-            URLQueryItem(name: "return_metadata", value: "true"),
-            URLQueryItem(name: "return_short_description", value: "true"),
-            URLQueryItem(name: "return_details", value: "true"),
-        ]
-
-        if !query.isEmpty {
-            queryItems.append(URLQueryItem(name: "search_text", value: query))
-        }
-
-        for (index, tag) in tags.enumerated() {
-            queryItems.append(URLQueryItem(name: "requiredtags[\(index)]", value: tag))
-        }
-
-        components.queryItems = queryItems
-
+        components.queryItems = Self.queryItems(text: query, filter: filter, sortOrder: sortOrder,
+                                                page: page, perPage: perPage)
         guard let url = components.url else {
             throw WorkshopAPIError.invalidURL
         }
 
         let data = try await sendKeyed(url, key: key)
-        let items = try parseQueryResponse(data)
+        let items = try Self.parseItems(from: data)
         items.forEach { WorkshopMetadataStore.shared.save($0) }
         return items
+    }
+
+    /// QueryFiles' parameters for a search: `requiredtags[n]` with `match_all_tags`, and
+    /// `excludedtags[n]`, as `WorkshopQuery` plans them.
+    static func queryItems(text: String, filter: WorkshopQuery, sortOrder: WorkshopSortOrder,
+                           page: Int, perPage: Int) -> [URLQueryItem] {
+        var queryItems: [URLQueryItem] = [
+            URLQueryItem(name: "query_type", value: "\(sortOrder.queryTypeForSearch(hasText: !text.isEmpty))"),
+            URLQueryItem(name: "page", value: "\(page)"),
+            URLQueryItem(name: "numperpage", value: "\(perPage)"),
+            URLQueryItem(name: "appid", value: "\(wallpaperEngineAppId)"),
+            URLQueryItem(name: "match_all_tags", value: filter.matchAllTags ? "true" : "false"),
+            URLQueryItem(name: "return_tags", value: "true"),
+            URLQueryItem(name: "return_kv_tags", value: "true"),
+            URLQueryItem(name: "return_previews", value: "true"),
+            URLQueryItem(name: "return_metadata", value: "true"),
+            URLQueryItem(name: "return_short_description", value: "true"),
+            URLQueryItem(name: "return_details", value: "true"),
+        ]
+        if !text.isEmpty {
+            queryItems.append(URLQueryItem(name: "search_text", value: text))
+        }
+        for (index, tag) in filter.requiredTags.enumerated() {
+            queryItems.append(URLQueryItem(name: "requiredtags[\(index)]", value: tag))
+        }
+        for (index, tag) in filter.excludedTags.enumerated() {
+            queryItems.append(URLQueryItem(name: "excludedtags[\(index)]", value: tag))
+        }
+        return queryItems
     }
 
     /// Get details for specific workshop items by their IDs.
@@ -219,7 +229,7 @@ class WorkshopAPIService {
         let (data, httpResponse) = try await send(request)
         guard httpResponse.statusCode == 200 else { throw WorkshopAPIError.requestFailed }
 
-        let items = try parseFileDetailsResponse(data)
+        let items = try Self.parseItems(from: data)
         items.forEach { WorkshopMetadataStore.shared.save($0) }
         return items
     }
@@ -327,7 +337,8 @@ class WorkshopAPIService {
 
     // MARK: - Response Parsing
 
-    private func parseQueryResponse(_ data: Data) throws -> [WorkshopItem] {
+    /// The items in a QueryFiles or GetPublishedFileDetails response.
+    static func parseItems(from data: Data) throws -> [WorkshopItem] {
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
               let response = json["response"] as? [String: Any],
               let files = response["publishedfiledetails"] as? [[String: Any]]
@@ -338,18 +349,7 @@ class WorkshopAPIService {
         return files.compactMap { parseFileDict($0) }
     }
 
-    private func parseFileDetailsResponse(_ data: Data) throws -> [WorkshopItem] {
-        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let response = json["response"] as? [String: Any],
-              let files = response["publishedfiledetails"] as? [[String: Any]]
-        else {
-            return []
-        }
-
-        return files.compactMap { parseFileDict($0) }
-    }
-
-    private func parseFileDict(_ dict: [String: Any]) -> WorkshopItem? {
+    private static func parseFileDict(_ dict: [String: Any]) -> WorkshopItem? {
         guard let publishedFileId = dict["publishedfileid"] as? String,
               let title = dict["title"] as? String
         else { return nil }
@@ -375,11 +375,23 @@ class WorkshopAPIService {
             creatorId: creatorId,
             description: description,
             votesUp: votesUp,
-            votesDown: votesDown
+            votesDown: votesDown,
+            kvTags: parseKVTags(from: dict["kvtags"])
         )
     }
 
-    private func parseTags(from value: Any?) -> [String] {
+    /// `kvtags` as `[{"key": …, "value": …}]`; nil when the response has none.
+    private static func parseKVTags(from value: Any?) -> [String: String]? {
+        guard let pairs = value as? [[String: Any]] else { return nil }
+        var tags: [String: String] = [:]
+        for pair in pairs {
+            guard let key = pair["key"] as? String, let value = pair["value"] as? String else { continue }
+            tags[key] = value
+        }
+        return tags
+    }
+
+    private static func parseTags(from value: Any?) -> [String] {
         let rawTags: [String]
         if let tagObjects = value as? [[String: Any]] {
             rawTags = tagObjects.compactMap { $0["tag"] as? String }

@@ -26,36 +26,16 @@ struct FilterResults: View {
             .listRowSeparator(.hidden)
 
             Section("Show Only:", isExpanded: isExpanded("Show Only")) {
-                ForEach(Array(zip(FRShowOnly.allOptions.indices, FRShowOnly.allOptions)), id: \.0) { (i, option) in
-                    let (option, image) = option
-                    let color: Color = {
-                        if i == 0 {
-                            return Color.green
-                        } else if i == 1 {
-                            return Color.pink
-                        } else if i == 2 {
-                            return Color.orange
+                ShowOnlyFilterRows(
+                    isOn: { viewModel.showOnly.contains(FRShowOnly(rawValue: 1 << $0)) },
+                    set: { index, isOn in
+                        if isOn {
+                            viewModel.showOnly.insert(FRShowOnly(rawValue: 1 << index))
                         } else {
-                            return Color.accentColor
-                        }
-                    }()
-                    Toggle(isOn: Binding<Bool>(get: {
-                        viewModel.showOnly.contains(FRShowOnly(rawValue: 1 << i))
-                    }, set: {
-                        if $0 {
-                            viewModel.showOnly.insert(FRShowOnly(rawValue: 1 << i))
-                        } else {
-                            viewModel.showOnly.remove(FRShowOnly(rawValue: 1 << i))
+                            viewModel.showOnly.remove(FRShowOnly(rawValue: 1 << index))
                         }
                         OWELog.debug(.ui, "Filter viewModel.showOnly = \(String(describing: viewModel.showOnly))")
-                    })) {
-                        HStack(spacing: 2) {
-                            Image(systemName: image)
-                                .foregroundStyle(color)
-                            Text(option)
-                        }
-                    }
-                }
+                    })
             }
             Section("Type", isExpanded: isExpanded("Type")) {
                 toggles(\.type, name: "type")
@@ -66,12 +46,7 @@ struct FilterResults: View {
             // Resolution, Source and Tags aren't matched against wallpapers yet.
             Group {
                 Section("Resolution", isExpanded: isExpanded("Resolution")) {
-                    resolutionGroup("Widescreen", \.widescreenResolution, name: "widescreenResolution")
-                    resolutionGroup("Ultra Widescreen", \.ultraWidescreenResolution, name: "ultraWidescreenResolution")
-                    resolutionGroup("Dual Monitor", \.dualscreenResolution, name: "dualscreenResolution")
-                    resolutionGroup("Triple Monitor", \.triplescreenResolution, name: "triplescreenResolution")
-                    resolutionGroup("Potrait Monitor / Phone", \.potraitscreenResolution, name: "potraitscreenResolution")
-                    toggles(\.miscResolution, name: "miscResolution")
+                    ResolutionFilterRows(isOn: resolutionIsOn, set: setResolution)
                 }
                 Section("Source", isExpanded: isExpanded("Source")) {
                     toggles(\.source, name: "source")
@@ -131,17 +106,35 @@ struct FilterResults: View {
         .buttonStyle(.link)
     }
 
-    @ViewBuilder
-    private func resolutionGroup<Option: FilterResultsModel>(
-        _ title: LocalizedStringKey,
-        _ keyPath: ReferenceWritableKeyPath<FilterResultsViewModel, Option>, name: String
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Text(title)
-                .bold()
-            allNoneButtons(keyPath)
+    private func resolutionIsOn(_ tag: String) -> Bool {
+        bit(\.widescreenResolution, tag) ?? bit(\.ultraWidescreenResolution, tag)
+            ?? bit(\.dualscreenResolution, tag) ?? bit(\.triplescreenResolution, tag)
+            ?? bit(\.potraitscreenResolution, tag) ?? bit(\.miscResolution, tag) ?? false
+    }
+
+    private func setResolution(_ tag: String, _ isOn: Bool) {
+        _ = setBit(\.widescreenResolution, tag, isOn) || setBit(\.ultraWidescreenResolution, tag, isOn)
+            || setBit(\.dualscreenResolution, tag, isOn) || setBit(\.triplescreenResolution, tag, isOn)
+            || setBit(\.potraitscreenResolution, tag, isOn) || setBit(\.miscResolution, tag, isOn)
+    }
+
+    /// The stored bit of a resolution tag in the filter group that has it; nil in other groups.
+    private func bit<Option: FilterResultsModel>(
+        _ keyPath: ReferenceWritableKeyPath<FilterResultsViewModel, Option>, _ tag: String
+    ) -> Bool? {
+        guard let index = Option.allOptions.firstIndex(of: tag) else { return nil }
+        return viewModel[keyPath: keyPath].contains(Option(rawValue: 1 << index))
+    }
+
+    private func setBit<Option: FilterResultsModel>(
+        _ keyPath: ReferenceWritableKeyPath<FilterResultsViewModel, Option>, _ tag: String, _ isOn: Bool
+    ) -> Bool {
+        guard let index = Option.allOptions.firstIndex(of: tag) else { return false }
+        if isOn {
+            viewModel[keyPath: keyPath].insert(Option(rawValue: 1 << index))
+        } else {
+            viewModel[keyPath: keyPath].remove(Option(rawValue: 1 << index))
         }
-        .padding(.top, 5)
-        toggles(keyPath, name: name)
+        return true
     }
 }

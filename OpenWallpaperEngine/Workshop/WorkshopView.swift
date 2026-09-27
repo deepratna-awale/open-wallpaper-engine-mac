@@ -436,16 +436,17 @@ private struct WorkshopPagination: View {
     }
 }
 
-/// The Workshop tab's tag filters, in the main window's sidebar. Every change searches again.
+/// The Workshop tab's filters, in the main window's sidebar. Every change searches again.
+/// Within Show Only, Rating, Type and Resolution any checked option matches (OR); genres match
+/// all or any, as the toggle beside them says; the sections narrow the results together.
 struct WorkshopFiltersSidebar: View {
     @ObservedObject var viewModel: WorkshopViewModel
-    @State private var expandedSections: Set<String> = ["Rating", "Type", "Resolution", "Genre"]
+    @State private var expandedSections: Set<String> = ["Show Only", "Rating", "Type", "Resolution", "Genre"]
 
     var body: some View {
         List {
             Button {
                 viewModel.resetFilters()
-                Task { await viewModel.search() }
             } label: {
                 Label("Reset Filters", systemImage: "arrow.triangle.2.circlepath")
                     .frame(maxWidth: .infinity)
@@ -453,12 +454,55 @@ struct WorkshopFiltersSidebar: View {
             .glassButtonStyle(.prominent)
             .listRowSeparator(.hidden)
 
-            filterSection("Rating", tags: WorkshopViewModel.contentRatingTags)
-            filterSection("Type", tags: WorkshopViewModel.typeTags)
-            filterSection("Resolution", tags: WorkshopViewModel.resolutionTags)
-            filterSection("Genre", tags: WorkshopViewModel.genreTags)
+            Section("Show Only:", isExpanded: isExpanded("Show Only")) {
+                ShowOnlyFilterRows(
+                    isOn: { index in
+                        WorkshopShowOnly(rawValue: index).map(viewModel.filter.showOnly.contains) ?? false
+                    },
+                    set: { index, isOn in
+                        guard let option = WorkshopShowOnly(rawValue: index) else { return }
+                        viewModel.updateFilter { filter in
+                            if isOn { filter.showOnly.insert(option) } else { filter.showOnly.remove(option) }
+                        }
+                    })
+            }
+            tagSection("Rating", tags: WorkshopTags.ratings, \.ratings)
+            tagSection("Type", tags: WorkshopTags.types, \.types)
+            Section("Resolution", isExpanded: isExpanded("Resolution")) {
+                ResolutionFilterRows(
+                    isOn: { viewModel.filter.resolutions.contains($0) },
+                    set: { tag, isOn in
+                        viewModel.updateFilter { filter in
+                            if isOn { filter.resolutions.insert(tag) } else { filter.resolutions.remove(tag) }
+                        }
+                    })
+            }
+            Section(isExpanded: isExpanded("Genre")) {
+                ForEach(WorkshopTags.genres, id: \.self) { tag in
+                    toggle(WorkshopTags.genreLabel(tag), tag: tag, \.genres)
+                }
+            } header: {
+                HStack {
+                    Text("Genre")
+                    Spacer()
+                    genreMatchToggle
+                }
+            }
         }
         .listStyle(.sidebar)
+    }
+
+    /// States the current genre mode and switches it.
+    private var genreMatchToggle: some View {
+        let matchesAll = viewModel.filter.genreMatch == .all
+        return Button(matchesAll ? "Match all (AND)" : "Match any (OR)") {
+            viewModel.updateFilter { $0.genreMatch = matchesAll ? .any : .all }
+        }
+        .buttonStyle(.link)
+        .font(.caption)
+        .help(matchesAll
+              ? "Showing wallpapers with every checked genre. Click to show wallpapers with any of them."
+              : "Showing wallpapers with any checked genre. Click to show only wallpapers with all of them.")
     }
 
     private func isExpanded(_ title: String) -> Binding<Bool> {
@@ -470,21 +514,26 @@ struct WorkshopFiltersSidebar: View {
         )
     }
 
-    private func filterSection(_ title: String, tags: [String]) -> some View {
+    private func tagSection(_ title: String, tags: [String],
+                            _ keyPath: WritableKeyPath<WorkshopFilter, Set<String>>) -> some View {
         Section(LocalizedStringKey(title), isExpanded: isExpanded(title)) {
             ForEach(tags, id: \.self) { tag in
-                Toggle(tag, isOn: Binding(
-                    get: { viewModel.selectedTags.contains(tag) },
-                    set: { isSelected in
-                        if isSelected != viewModel.selectedTags.contains(tag) {
-                            viewModel.toggleTag(tag)
-                            Task { await viewModel.search() }
-                        }
-                    }
-                ))
-                .toggleStyle(.checkbox)
+                toggle(tag, tag: tag, keyPath)
             }
         }
+    }
+
+    private func toggle(_ label: String, tag: String,
+                        _ keyPath: WritableKeyPath<WorkshopFilter, Set<String>>) -> some View {
+        Toggle(label, isOn: Binding(
+            get: { viewModel.filter[keyPath: keyPath].contains(tag) },
+            set: { isOn in
+                viewModel.updateFilter { filter in
+                    if isOn { filter[keyPath: keyPath].insert(tag) } else { filter[keyPath: keyPath].remove(tag) }
+                }
+            }
+        ))
+        .toggleStyle(.checkbox)
     }
 }
 
@@ -512,15 +561,24 @@ private struct WorkshopItemCard: View {
             .aspectRatio(1, contentMode: .fit)
             .clipped()
 
-            Text(item.title)
-                .lineLimit(2)
-                .frame(maxWidth: .infinity, minHeight: 30, maxHeight: 30)
-                .padding(4)
-                .background(Color(white: 0, opacity: 0.65))
-                .font(.footnote)
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.white)
+            VStack(spacing: 2) {
+                Text(item.title)
+                    .lineLimit(2)
+                    .font(.footnote)
+                if !shownTags.isEmpty {
+                    Text(shownTags.joined(separator: " · "))
+                        .lineLimit(1)
+                        .font(.caption2)
+                        .foregroundStyle(.white.opacity(0.75))
+                }
+            }
+            .frame(maxWidth: .infinity, minHeight: 30)
+            .padding(4)
+            .background(Color(white: 0, opacity: 0.65))
+            .multilineTextAlignment(.center)
+            .foregroundStyle(.white)
         }
+        .help(item.tags.isEmpty ? item.title : "\(item.title)\n\(item.tags.joined(separator: ", "))")
         .overlay(alignment: .topTrailing) {
             downloadControl
                 .padding(6)
@@ -592,6 +650,11 @@ private struct WorkshopItemCard: View {
             }
         }
             }
+    }
+
+    /// The item's tags, without "Wallpaper", which every wallpaper has.
+    private var shownTags: [String] {
+        item.tags.filter { $0.caseInsensitiveCompare("Wallpaper") != .orderedSame }
     }
 
     private var placeholder: some View {
