@@ -168,8 +168,11 @@ struct SceneMorphWeights: Equatable {
     ///   clamped to 0…1 on models (puppets don't clamp); a value at or above epsilon turns it on;
     /// - additive: a value below epsilon does nothing; otherwise `a = value · weight` turns the
     ///   target on and the weight becomes `x + a` clamped between `x` and `a`.
+    ///
+    /// A value or layer weight that isn't finite (a broken clip, a script's NaN blend) is dropped,
+    /// as `setFromScript` drops one, where WE would store it and draw the mesh's vertices at NaN.
     mutating func apply(track value: Float, to index: Int, layerWeight: Float, additive: Bool, clampsBlend: Bool) {
-        guard index >= 0, index < weights.count else { return }
+        guard index >= 0, index < weights.count, value.isFinite, layerWeight.isFinite else { return }
         let significant = !(abs(value - 0) < Self.epsilon)
         if !additive, layerWeight == 1 {
             setActive(index, significant)
@@ -190,8 +193,9 @@ struct SceneMorphWeights: Equatable {
     /// `setBlendShapeWeight` (0x1402105c0): the weight, and the target on unless it is below
     /// epsilon. WE builds the bit as a 32-bit `1 << index` sign-extended to 64 bits, so index 31
     /// sets bits 31…63 and higher indices wrap; reproduced.
+    /// A weight that isn't finite is dropped (the script API drops it too; WE would store it).
     mutating func setFromScript(_ index: Int, _ value: Float) {
-        guard index >= 0, index < weights.count else { return }
+        guard index >= 0, index < weights.count, value.isFinite else { return }
         weights[index] = value
         let bit = UInt64(bitPattern: Int64(Int32(truncatingIfNeeded: UInt32(1) << UInt32(index & 31))))
         mask = abs(value - 0) < Self.epsilon ? mask & ~bit : mask | bit
