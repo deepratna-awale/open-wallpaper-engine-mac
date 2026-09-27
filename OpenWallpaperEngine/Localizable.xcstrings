@@ -1476,9 +1476,6 @@
         }
       }
     },
-    "%lldx%lld" : {
-      "shouldTranslate" : false
-    },
     "1920 x 1080 – Full HD" : {
       "comment" : "Resolution filter",
       "localizations" : {

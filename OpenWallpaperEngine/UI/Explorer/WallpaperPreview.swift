@@ -239,7 +239,7 @@ struct WallpaperPreview: SubviewOfContentView {
                                 }
                                 .labelsHidden()
                                 .pickerStyle(.menu)
-                                .frame(width: 120)
+                                .fixedSize()
                             }
                             switch wallpaperViewModel.displayedWallpaper.project.type.lowercased() {
                             case "video", "remote-video":

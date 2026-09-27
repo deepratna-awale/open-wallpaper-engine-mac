@@ -60,7 +60,8 @@ struct PlaylistView: View {
                             ), in: PlaylistDurationFormat.range)
                             Text(PlaylistDurationFormat.label(playlist.duration))
                                 .font(.caption.monospacedDigit())
-                                .frame(width: 64, alignment: .trailing)
+                                .frame(minWidth: 64, alignment: .trailing)
+                                .fixedSize()
                         }
                     }
                     GlassGroup {

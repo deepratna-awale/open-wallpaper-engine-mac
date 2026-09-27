@@ -197,7 +197,7 @@ struct GeneralPage: SettingsPage {
                     Button {
                         viewModel.settings = GlobalSettings()
                     } label: {
-                        Text("Reset").frame(width: 100)
+                        Text("Reset").frame(minWidth: 100)
                     }
                     .tint(Color.red)
                     .glassButtonStyle(.prominent)

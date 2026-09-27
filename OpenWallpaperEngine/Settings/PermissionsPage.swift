@@ -18,18 +18,10 @@ struct PermissionsPage: SettingsPage {
                     isGranted: hasScreenRecordingPermission,
                     description: "Needed for audio visualizers and audio-reactive SceneScript. macOS exposes system audio capture through Screen Recording permission."
                 )
-                HStack {
-                    Button("Grant Access") {
-                        PermissionHelper.grantScreenRecordingAccess()
-                        refresh()
-                    }
-                    .disabled(hasScreenRecordingPermission)
-                    Button("Open Privacy Settings") {
-                        PermissionHelper.openScreenRecordingSettings()
-                    }
-                    Button("Recheck") {
-                        refresh()
-                    }
+                // Side by side when they fit; stacked when longer languages would truncate them.
+                ViewThatFits(in: .horizontal) {
+                    HStack { permissionButtons }
+                    VStack(alignment: .leading) { permissionButtons }
                 }
             } header: {
                 Label("Audio Visualizers", systemImage: "waveform")
@@ -40,6 +32,20 @@ struct PermissionsPage: SettingsPage {
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
         .onAppear(perform: refresh)
+    }
+
+    @ViewBuilder private var permissionButtons: some View {
+        Button("Grant Access") {
+            PermissionHelper.grantScreenRecordingAccess()
+            refresh()
+        }
+        .disabled(hasScreenRecordingPermission)
+        Button("Open Privacy Settings") {
+            PermissionHelper.openScreenRecordingSettings()
+        }
+        Button("Recheck") {
+            refresh()
+        }
     }
 
     /// Never prompts: only re-reads the grant and starts capture if it was newly granted.

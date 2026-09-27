@@ -570,7 +570,7 @@ private struct WorkshopItemCard: View {
                     .lineLimit(2)
                     .font(.footnote)
                 if !shownTags.isEmpty {
-                    Text(shownTags.joined(separator: " · "))
+                    Text(verbatim: shownTags.map { "\u{2068}\($0)\u{2069}" }.joined(separator: " · "))
                         .lineLimit(1)
                         .font(.caption2)
                         .foregroundStyle(.white.opacity(0.75))

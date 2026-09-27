@@ -28,6 +28,9 @@ struct ExplorerItem: SubviewOfContentView {
         tags.map { String(localized: LocalizedLabels.filterOption($0)) }
     }
 
+    /// A tag in a first-strong isolate, so "2560 x 1440" keeps its order inside right-to-left text.
+    private static func isolated(_ label: String) -> String { "\u{2068}\(label)\u{2069}" }
+
     /// The title, and all the tags under it.
     private var tooltip: String {
         tagLabels.isEmpty ? wallpaper.project.title
@@ -51,7 +54,7 @@ struct ExplorerItem: SubviewOfContentView {
                     .lineLimit(2)
                     .font(.footnote)
                 if !tags.isEmpty {
-                    Text(verbatim: tagLabels.joined(separator: " · "))
+                    Text(verbatim: tagLabels.map(Self.isolated).joined(separator: " · "))
                         .lineLimit(1)
                         .font(.caption2)
                         .opacity(0.75)

@@ -56,7 +56,7 @@ struct PerformancePage: SettingsPage {
                     Button {
                         
                     } label: {
-                        Text("Edit").frame(width: 100)
+                        Text("Edit").frame(minWidth: 100)
                     }
                     .glassButtonStyle(.prominent)
                     .disabled(true)

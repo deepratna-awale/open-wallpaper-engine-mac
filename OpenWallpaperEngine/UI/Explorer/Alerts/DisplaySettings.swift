@@ -52,7 +52,7 @@ struct DisplaySettings: SubviewOfContentView {
                         HStack {
                             Text(WallpaperViewModel.screenName(for: screen))
                                 .font(.headline)
-                            Text("\(Int(screen.frame.width))x\(Int(screen.frame.height))")
+                            Text(verbatim: "\(Int(screen.frame.width))×\(Int(screen.frame.height))")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                             Spacer()

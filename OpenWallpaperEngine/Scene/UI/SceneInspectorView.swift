@@ -1222,6 +1222,8 @@ struct SceneInspectorView: View {
                     Color.clear.frame(width: 48, height: 40)
                 }
             }
+            // The arrows point at screen directions, so the pad doesn't mirror in right-to-left languages.
+            .environment(\.layoutDirection, .leftToRight)
             .disabled(item == nil)
             .opacity(item == nil ? 0.4 : 1)
             Text(item == nil ? "Select an object to move it." : "Arrow keys work when this panel is focused. Shift moves faster, Control moves slower.")
@@ -1340,6 +1342,8 @@ struct SceneInspectorView: View {
                         model.alignObject(item, horizontal: .right)
                     }
                 }
+                // Left, centre, right on screen, in every language.
+                .environment(\.layoutDirection, .leftToRight)
             }
             VStack(alignment: .leading, spacing: 6) {
                 Text("Vertical")
