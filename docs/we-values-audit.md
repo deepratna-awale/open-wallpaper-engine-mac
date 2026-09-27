@@ -428,7 +428,7 @@ Ours followed a box: the authored size, grown to fit, with the edge named by the
 
 ## 10. WE 2.8.0.42's particle editor schema (ground truth, data only)
 
-`docs/we-particle-editor-schema.json` holds the particle editor's property panels. For every renderer, emitter, initializer and operator, the `children[]` and `controlpoint[]` entries, and the system panel (52 panels, 429 fields), it gives:
+`docs/we-particle-editor-schema.json` holds the particle editor's property panels. For every renderer, emitter, initializer and operator, the `children[]` and `controlpoint[]` entries, and the system panel, and the particle layer's instance sliders (53 panels, 435 fields), it gives:
 - label (WE's `ui_editor_properties_*` key and its English text)
 - type, slider range, step, whether typed values are clamped
 - the value the editor writes when the component is added (2D, and 3D when it differs: 45 fields)
@@ -463,6 +463,14 @@ How it was read:
 The material panel's overbright is 0–5 (UIA).
 
 **Flag bits** (checkboxes on `flags`):
+
+**The particle layer's instance sliders** (UIA; `instanceoverride`), all 1 by default, each with a free number box: Opacity (`alpha`) 0.01–1, Playback rate (`rate`) 0.01–5, Speed 0–5, Size 0.01–5, Count 0.01–2, Lifetime 0.01–2; a Color picker (`colorn`) follows. The runtime clamps none of them (§6).
+
+**Editor spot checks** (UIA on the Windows session, `particle_schema/README.md` and `editor_observed_v3/legacy_panels.json`), now in the schema:
+- **Remap components.** "Input component" (All/X/Y/Z/Sum/Average/Max/Min) shows only when Input is a vector; "Output component" (All/X/Y/Z) only when Output is a vector. Input = Position with Output = Size shows neither, so the list without All that the panel code builds for a scalar output (0x1401b93d0 mode 0) never appeared. Both remaps.
+- **`remapinitialvalue`'s Input list** has no "Lifetime fraction" (the operator's starts with it), as the schema had.
+- **A child's Max count (10) and Probability (1)** stay visible with Type = Static; the panel's condition (`pList[1].value!=='static'`) doesn't hide them.
+- **`collisionbox`** has no display name in the editor (it shows the raw key `ui_editor_particle_element_operator_collisionbox`), so it is deprecated: marked `deprecated` in the schema. Its VM entry does nothing (§9.8).
 
 | Where | Bits |
 |---|---|

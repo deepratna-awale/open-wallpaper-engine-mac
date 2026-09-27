@@ -2860,7 +2860,7 @@
     "source": {
      "panel": "0x1401bf686",
      "add_default": "0x140153df0 via 0x140abac30 (value table: remap values, operations 0x140abacd0, event verbs 0x140abacf0, transforms 0x140abad60, components 0x140abada0)",
-     "editor_observed": "match (label, order, add_default, options)"
+     "editor_observed": "match: the Input list has no 'Lifetime fraction' (the operator's has it first)"
     }
    },
    "flags&0x1": {
@@ -3090,38 +3090,8 @@
     "type": "combo",
     "clamp": false,
     "add_default": "all",
-    "condition": "!checkRemapValueIsScalar('input') (options: without 'all' when the output is scalar, with it when the output is a vector)",
+    "condition": "!checkRemapValueIsScalar('input') (panel code); editor-observed: shown only when Input is a vector, and Input=Position with Output=Size shows neither component combo, so a scalar Output hides it as well [I]",
     "options": [
-     {
-      "label": "X",
-      "value": "x"
-     },
-     {
-      "label": "Y",
-      "value": "y"
-     },
-     {
-      "label": "Z",
-      "value": "z"
-     },
-     {
-      "label": "Sum",
-      "value": "sum"
-     },
-     {
-      "label": "Average",
-      "value": "average"
-     },
-     {
-      "label": "Max",
-      "value": "max"
-     },
-     {
-      "label": "Min",
-      "value": "min"
-     }
-    ],
-    "options_vector_output": [
      {
       "label": "All",
       "value": "all"
@@ -3157,7 +3127,8 @@
     ],
     "source": {
      "panel": "0x1401bffda / 0x1401c0032 (0x1401b93d0 modes 0/1)",
-     "add_default": "0x140153df0"
+     "add_default": "0x140153df0",
+     "editor_observed": "editor spot check (UIA, remap_probe.ps1: Input/Output = Position/Position, Position/Size, Velocity/Color, Color/Opacity): options All/X/Y/Z/Sum/Average/Max/Min, only with a vector Input; the scalar-output list (without All) the panel code builds at 0x1401b93d0 mode 0 was never shown"
     }
    },
    "inputrangemin": {
@@ -3245,7 +3216,8 @@
     ],
     "source": {
      "panel": "0x1401c0350 (0x1401b93d0 mode 2)",
-     "add_default": "0x140153df0"
+     "add_default": "0x140153df0",
+     "editor_observed": "editor spot check (UIA, remap_probe.ps1: Input/Output = Position/Position, Position/Size, Velocity/Color, Color/Opacity): options All/X/Y/Z, only with a vector Output"
     }
    },
    "outputrangemin": {
@@ -5909,38 +5881,8 @@
     "type": "combo",
     "clamp": false,
     "add_default": "all",
-    "condition": "!checkRemapValueIsScalar('input') (options: without 'all' when the output is scalar, with it when the output is a vector)",
+    "condition": "!checkRemapValueIsScalar('input') (panel code); editor-observed: shown only when Input is a vector, and Input=Position with Output=Size shows neither component combo, so a scalar Output hides it as well [I]",
     "options": [
-     {
-      "label": "X",
-      "value": "x"
-     },
-     {
-      "label": "Y",
-      "value": "y"
-     },
-     {
-      "label": "Z",
-      "value": "z"
-     },
-     {
-      "label": "Sum",
-      "value": "sum"
-     },
-     {
-      "label": "Average",
-      "value": "average"
-     },
-     {
-      "label": "Max",
-      "value": "max"
-     },
-     {
-      "label": "Min",
-      "value": "min"
-     }
-    ],
-    "options_vector_output": [
      {
       "label": "All",
       "value": "all"
@@ -5976,7 +5918,8 @@
     ],
     "source": {
      "panel": "0x1401c2f07 / 0x1401c2f5f (0x1401b93d0 modes 0/1)",
-     "add_default": "0x140157b30"
+     "add_default": "0x140157b30",
+     "editor_observed": "editor spot check (UIA, remap_probe.ps1: Input/Output = Position/Position, Position/Size, Velocity/Color, Color/Opacity): options All/X/Y/Z/Sum/Average/Max/Min, only with a vector Input; the scalar-output list (without All) the panel code builds at 0x1401b93d0 mode 0 was never shown"
     }
    },
    "inputrangemin": {
@@ -6064,7 +6007,8 @@
     ],
     "source": {
      "panel": "0x1401c3289 (0x1401b93d0 mode 2)",
-     "add_default": "0x140157b30"
+     "add_default": "0x140157b30",
+     "editor_observed": "editor spot check (UIA, remap_probe.ps1: Input/Output = Position/Position, Position/Size, Velocity/Color, Color/Opacity): options All/X/Y/Z, only with a vector Output"
     }
    },
    "outputrangemin": {
@@ -6524,7 +6468,7 @@
   }
  },
  "operator:collisionbox": {
-  "display_name": "Collision box",
+  "display_name": "(none: the editor shows the raw key ui_editor_particle_element_operator_collisionbox)",
   "panel": "0x1401c3801",
   "filler": "0x140158870 (empty) + 0x1401580e0",
   "fields": {
@@ -6570,7 +6514,9 @@
      "add_default": "0x1401580e0"
     }
    }
-  }
+  },
+  "deprecated": true,
+  "note": "No display name in the editor's locale, so it is deprecated (not offered in the add dialog); its VM entry does nothing (wallpaper64.exe 0x140240279, docs/we-values-audit.md \u00a79.8). Editor-observed on a legacy project: Bounce, factor 0.5."
  },
  "operator:collisionbounds": {
   "display_name": "Collision bounds",
@@ -6929,11 +6875,12 @@
     "step": "any",
     "clamp": false,
     "add_default": 10,
-    "condition": "pList[1].value!=='static'",
+    "condition": "none observed: the editor shows it with Type=Static too (legacy_panels.json 'Child (static)'); the panel's pList[1].value!=='static' doesn't hide it",
     "integer": true,
     "source": {
      "panel": "0x1401c43a9",
-     "add_default": "0x140159b70 (0x140159e73)"
+     "add_default": "0x140159b70 (0x140159e73)",
+     "editor_observed": "match (label, add_default); visible with Type=Static"
     }
    },
    "probability": {
@@ -6943,10 +6890,11 @@
     "step": "any",
     "clamp": false,
     "add_default": 1,
-    "condition": "pList[1].value!=='static'",
+    "condition": "none observed: the editor shows it with Type=Static too (legacy_panels.json 'Child (static)'); the panel's pList[1].value!=='static' doesn't hide it",
     "source": {
      "panel": "0x1401c440c",
-     "add_default": "0x140159b70"
+     "add_default": "0x140159b70",
+     "editor_observed": "match (label, add_default); visible with Type=Static"
     }
    },
    "flags&0x1": {
@@ -7266,6 +7214,86 @@
     "source": {
      "panel": "0x1401b707f",
      "add_default": "the panel shows the parsed system value (object +0x3bc, 0x1401b7051): absent = the runtime default 1"
+    }
+   }
+  }
+ },
+ "instanceoverride": {
+  "display_name": "Particle Instance (the particle layer's panel; scene.json object instanceoverride)",
+  "panel": "editor-observed (UIA, legacy_panels.json 'Particle Instance (layer) sliders')",
+  "filler": "none: an absent key is 1",
+  "note": "Sliders with a free number box, like the component sliders; a Color picker (colorn) and the 'Collision model' drop slot follow. The runtime clamps none of them (docs/we-values-audit.md \u00a76).",
+  "fields": {
+   "alpha": {
+    "label": "Opacity",
+    "type": "slider",
+    "min": 0.01,
+    "max": 1,
+    "clamp": false,
+    "add_default": 1,
+    "source": {
+     "panel": "layer panel 'Particle Instance'",
+     "add_default": "editor-observed (legacy_panels.json)"
+    }
+   },
+   "rate": {
+    "label": "Playback rate",
+    "type": "slider",
+    "min": 0.01,
+    "max": 5,
+    "clamp": false,
+    "add_default": 1,
+    "source": {
+     "panel": "layer panel 'Particle Instance'",
+     "add_default": "editor-observed (legacy_panels.json)"
+    }
+   },
+   "speed": {
+    "label": "Speed",
+    "type": "slider",
+    "min": 0,
+    "max": 5,
+    "clamp": false,
+    "add_default": 1,
+    "source": {
+     "panel": "layer panel 'Particle Instance'",
+     "add_default": "editor-observed (legacy_panels.json)"
+    }
+   },
+   "size": {
+    "label": "Size",
+    "type": "slider",
+    "min": 0.01,
+    "max": 5,
+    "clamp": false,
+    "add_default": 1,
+    "source": {
+     "panel": "layer panel 'Particle Instance'",
+     "add_default": "editor-observed (legacy_panels.json)"
+    }
+   },
+   "count": {
+    "label": "Count",
+    "type": "slider",
+    "min": 0.01,
+    "max": 2,
+    "clamp": false,
+    "add_default": 1,
+    "source": {
+     "panel": "layer panel 'Particle Instance'",
+     "add_default": "editor-observed (legacy_panels.json)"
+    }
+   },
+   "lifetime": {
+    "label": "Lifetime",
+    "type": "slider",
+    "min": 0.01,
+    "max": 2,
+    "clamp": false,
+    "add_default": 1,
+    "source": {
+     "panel": "layer panel 'Particle Instance'",
+     "add_default": "editor-observed (legacy_panels.json)"
     }
    }
   }
