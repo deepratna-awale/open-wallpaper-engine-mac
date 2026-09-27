@@ -1,0 +1,5387 @@
+﻿{
+	"paths" : 
+	[
+		{
+			"center" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -1.40661
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.57026
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.86166
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.24342
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -2.42854
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -1.801
+					}
+				]
+			},
+			"eye" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -1.47644
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.26796
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.21138
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.20842
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 2.55874
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 3.14998
+					}
+				]
+			},
+			"fov" : 
+			[
+				{
+					"back" : 
+					{
+						"enabled" : true,
+						"x" : -1,
+						"y" : 0
+					},
+					"frame" : 0,
+					"front" : 
+					{
+						"enabled" : true,
+						"x" : 1,
+						"y" : 0
+					},
+					"lockangle" : true,
+					"locklength" : true,
+					"value" : 50
+				},
+				{
+					"back" : 
+					{
+						"enabled" : true,
+						"x" : -1,
+						"y" : 0
+					},
+					"frame" : 132,
+					"front" : 
+					{
+						"enabled" : true,
+						"x" : 1,
+						"y" : 0
+					},
+					"lockangle" : true,
+					"locklength" : true,
+					"value" : 50
+				}
+			],
+			"id" : 208,
+			"name" : "Left to Right",
+			"options" : 
+			{
+				"cameramode" : "fly",
+				"events" : null,
+				"fps" : 30.0,
+				"length" : 132,
+				"mode" : "single",
+				"wraploop" : false
+			},
+			"up" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				]
+			},
+			"visible" : true,
+			"zoom" : null
+		},
+		{
+			"center" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 2.52819
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.15808
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.53576
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.1465
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -2.42871
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -1.81321
+					}
+				]
+			},
+			"eye" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.55427
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -1.35736
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.67574
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.0415
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 2.16304
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 2.95047
+					}
+				]
+			},
+			"fov" : 
+			[
+				{
+					"back" : 
+					{
+						"enabled" : true,
+						"x" : -1,
+						"y" : 0
+					},
+					"frame" : 0,
+					"front" : 
+					{
+						"enabled" : true,
+						"x" : 1,
+						"y" : 0
+					},
+					"lockangle" : true,
+					"locklength" : true,
+					"value" : 50
+				},
+				{
+					"back" : 
+					{
+						"enabled" : true,
+						"x" : -1,
+						"y" : 0
+					},
+					"frame" : 132,
+					"front" : 
+					{
+						"enabled" : true,
+						"x" : 1,
+						"y" : 0
+					},
+					"lockangle" : true,
+					"locklength" : true,
+					"value" : 50
+				}
+			],
+			"id" : 209,
+			"name" : "Right to Left",
+			"options" : 
+			{
+				"cameramode" : "fly",
+				"events" : null,
+				"fps" : 30.0,
+				"length" : 132,
+				"mode" : "single",
+				"wraploop" : false
+			},
+			"up" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				]
+			},
+			"visible" : true,
+			"zoom" : null
+		},
+		{
+			"center" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.4
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.4
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -1
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -1
+					}
+				]
+			},
+			"eye" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.4
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.4
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 4
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 4
+					}
+				]
+			},
+			"fov" : 
+			[
+				{
+					"back" : 
+					{
+						"enabled" : true,
+						"x" : -1,
+						"y" : 0
+					},
+					"frame" : 0,
+					"front" : 
+					{
+						"enabled" : true,
+						"x" : 1,
+						"y" : 0
+					},
+					"lockangle" : true,
+					"locklength" : true,
+					"value" : 50
+				},
+				{
+					"back" : 
+					{
+						"enabled" : true,
+						"x" : -1,
+						"y" : 0
+					},
+					"frame" : 132,
+					"front" : 
+					{
+						"enabled" : true,
+						"x" : 1,
+						"y" : 0
+					},
+					"lockangle" : true,
+					"locklength" : true,
+					"value" : 91.580002
+				}
+			],
+			"id" : 210,
+			"name" : "Center Out",
+			"options" : 
+			{
+				"cameramode" : "fly",
+				"events" : null,
+				"fps" : 30.0,
+				"length" : 132,
+				"mode" : "single",
+				"wraploop" : false
+			},
+			"up" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				]
+			},
+			"visible" : true,
+			"zoom" : null
+		},
+		{
+			"center" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.4
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.4
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -1
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -0.44459
+					}
+				]
+			},
+			"eye" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.4
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.4
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 4
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 4.55541
+					}
+				]
+			},
+			"fov" : 
+			[
+				{
+					"back" : 
+					{
+						"enabled" : true,
+						"x" : -1,
+						"y" : 0
+					},
+					"frame" : 0,
+					"front" : 
+					{
+						"enabled" : true,
+						"x" : 1,
+						"y" : 0
+					},
+					"lockangle" : true,
+					"locklength" : true,
+					"value" : 93.220001
+				},
+				{
+					"back" : 
+					{
+						"enabled" : true,
+						"x" : -1,
+						"y" : 0
+					},
+					"frame" : 132,
+					"front" : 
+					{
+						"enabled" : true,
+						"x" : 1,
+						"y" : 0
+					},
+					"lockangle" : true,
+					"locklength" : true,
+					"value" : 36.040001
+				}
+			],
+			"id" : 211,
+			"name" : "Center In",
+			"options" : 
+			{
+				"cameramode" : "fly",
+				"events" : null,
+				"fps" : 30.0,
+				"length" : 132,
+				"mode" : "single",
+				"wraploop" : false
+			},
+			"up" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				]
+			},
+			"visible" : true,
+			"zoom" : null
+		},
+		{
+			"center" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.4
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.4
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				]
+			},
+			"eye" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.4
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.4
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 4
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 4
+					}
+				]
+			},
+			"fov" : 
+			[
+				{
+					"back" : 
+					{
+						"enabled" : true,
+						"x" : -1,
+						"y" : 0
+					},
+					"frame" : 0,
+					"front" : 
+					{
+						"enabled" : true,
+						"x" : 1,
+						"y" : 0
+					},
+					"lockangle" : true,
+					"locklength" : true,
+					"value" : 50
+				},
+				{
+					"back" : 
+					{
+						"enabled" : true,
+						"x" : -1,
+						"y" : 0
+					},
+					"frame" : 132,
+					"front" : 
+					{
+						"enabled" : true,
+						"x" : 1,
+						"y" : 0
+					},
+					"lockangle" : true,
+					"locklength" : true,
+					"value" : 50
+				}
+			],
+			"id" : 212,
+			"name" : "Rotate 1",
+			"options" : 
+			{
+				"cameramode" : "fly",
+				"events" : null,
+				"fps" : 30.0,
+				"length" : 132,
+				"mode" : "single",
+				"wraploop" : false
+			},
+			"up" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.25708
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -0.2377
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.96639
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.97134
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				]
+			},
+			"visible" : true,
+			"zoom" : null
+		},
+		{
+			"center" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.0277
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -0.72838
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.18493
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.15689
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -1.72329
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -1.72103
+					}
+				]
+			},
+			"eye" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -1.99857
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.77548
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.94003
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.94695
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 2.24933
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 2.60178
+					}
+				]
+			},
+			"fov" : 
+			[
+				{
+					"back" : 
+					{
+						"enabled" : true,
+						"x" : -1,
+						"y" : 0
+					},
+					"frame" : 0,
+					"front" : 
+					{
+						"enabled" : true,
+						"x" : 1,
+						"y" : 0
+					},
+					"lockangle" : true,
+					"locklength" : true,
+					"value" : 50
+				},
+				{
+					"back" : 
+					{
+						"enabled" : true,
+						"x" : -1,
+						"y" : 0
+					},
+					"frame" : 132,
+					"front" : 
+					{
+						"enabled" : true,
+						"x" : 1,
+						"y" : 0
+					},
+					"lockangle" : true,
+					"locklength" : true,
+					"value" : 50
+				}
+			],
+			"id" : 213,
+			"name" : "Rotate 2",
+			"options" : 
+			{
+				"cameramode" : "fly",
+				"events" : null,
+				"fps" : 30.0,
+				"length" : 132,
+				"mode" : "single",
+				"wraploop" : false
+			},
+			"up" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.16628
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -0.27303
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.97808
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.94932
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.12532
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.15568
+					}
+				]
+			},
+			"visible" : true,
+			"zoom" : null
+		},
+		{
+			"center" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -0.03816
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -0.05576
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.41741
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.66969
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -0.83916
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -1.12027
+					}
+				]
+			},
+			"eye" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -0.03816
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -0.01812
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 2.92169
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.83559
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 4.39011
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 4.25663
+					}
+				]
+			},
+			"fov" : 
+			[
+				{
+					"back" : 
+					{
+						"enabled" : true,
+						"x" : -1,
+						"y" : 0
+					},
+					"frame" : 0,
+					"front" : 
+					{
+						"enabled" : true,
+						"x" : 1,
+						"y" : 0
+					},
+					"lockangle" : true,
+					"locklength" : true,
+					"value" : 50
+				},
+				{
+					"back" : 
+					{
+						"enabled" : true,
+						"x" : -1,
+						"y" : 0
+					},
+					"frame" : 132,
+					"front" : 
+					{
+						"enabled" : true,
+						"x" : 1,
+						"y" : 0
+					},
+					"lockangle" : true,
+					"locklength" : true,
+					"value" : 40.939999
+				}
+			],
+			"id" : 352,
+			"name" : "Overhead",
+			"options" : 
+			{
+				"cameramode" : "fly",
+				"events" : null,
+				"fps" : 30.0,
+				"length" : 132,
+				"mode" : "single",
+				"wraploop" : false
+			},
+			"up" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				]
+			},
+			"visible" : true,
+			"zoom" : null
+		},
+		{
+			"center" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : -0.0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 4.42858
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -4.42858
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : -0.0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.4
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.4
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : -0.0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -1
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -1
+					}
+				]
+			},
+			"eye" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : -0.0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 4.42858
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -4.42858
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : -0.0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.4
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.4
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : -0.0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 4
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 4
+					}
+				]
+			},
+			"fov" : 
+			[
+				{
+					"back" : 
+					{
+						"enabled" : true,
+						"x" : -1,
+						"y" : 0
+					},
+					"frame" : -0.0,
+					"front" : 
+					{
+						"enabled" : true,
+						"x" : 1,
+						"y" : 0
+					},
+					"lockangle" : true,
+					"locklength" : true,
+					"value" : 50
+				},
+				{
+					"back" : 
+					{
+						"enabled" : true,
+						"x" : -1,
+						"y" : 0
+					},
+					"frame" : 132,
+					"front" : 
+					{
+						"enabled" : true,
+						"x" : 1,
+						"y" : 0
+					},
+					"lockangle" : true,
+					"locklength" : true,
+					"value" : 50
+				}
+			],
+			"id" : 353,
+			"name" : "Full Scroll",
+			"options" : 
+			{
+				"cameramode" : "fly",
+				"events" : null,
+				"fps" : 30.0,
+				"length" : 132,
+				"mode" : "single",
+				"wraploop" : false
+			},
+			"up" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : -0.0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : -0.0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : -0.0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				]
+			},
+			"visible" : true,
+			"zoom" : null
+		},
+		{
+			"center" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.14941
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.14941
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.44099
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.44099
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -0.53392
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -0.53392
+					}
+				]
+			},
+			"eye" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -2.5655
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -2.5655
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.40599
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.40599
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 3.66466
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 3.66466
+					}
+				]
+			},
+			"fov" : 
+			[
+				{
+					"back" : 
+					{
+						"enabled" : true,
+						"x" : -1,
+						"y" : 0
+					},
+					"frame" : 0,
+					"front" : 
+					{
+						"enabled" : true,
+						"x" : 1,
+						"y" : 0
+					},
+					"lockangle" : true,
+					"locklength" : true,
+					"value" : 20.52
+				},
+				{
+					"back" : 
+					{
+						"enabled" : true,
+						"x" : -1,
+						"y" : 0
+					},
+					"frame" : 132,
+					"front" : 
+					{
+						"enabled" : true,
+						"x" : 1,
+						"y" : 0
+					},
+					"lockangle" : true,
+					"locklength" : true,
+					"value" : 29.5
+				}
+			],
+			"id" : 361,
+			"name" : "Sunny Focus",
+			"options" : 
+			{
+				"cameramode" : "fly",
+				"events" : null,
+				"fps" : 30.0,
+				"length" : 132,
+				"mode" : "single",
+				"wraploop" : false
+			},
+			"up" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -0.22384
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.96377
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -0.14504
+					}
+				]
+			},
+			"visible" : true,
+			"zoom" : null
+		},
+		{
+			"center" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.91537
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.91537
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.42586
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.42586
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.8833
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.8833
+					}
+				]
+			},
+			"eye" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 3.71682
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 3.71682
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.28588
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.28588
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 5.02243
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 5.02243
+					}
+				]
+			},
+			"fov" : 
+			[
+				{
+					"back" : 
+					{
+						"enabled" : true,
+						"x" : -1,
+						"y" : 0
+					},
+					"frame" : 0,
+					"front" : 
+					{
+						"enabled" : true,
+						"x" : 1,
+						"y" : 0
+					},
+					"lockangle" : true,
+					"locklength" : true,
+					"value" : 18.07
+				},
+				{
+					"back" : 
+					{
+						"enabled" : true,
+						"x" : -1,
+						"y" : 0
+					},
+					"frame" : 132,
+					"front" : 
+					{
+						"enabled" : true,
+						"x" : 1,
+						"y" : 0
+					},
+					"lockangle" : true,
+					"locklength" : true,
+					"value" : 23.790001
+				}
+			],
+			"id" : 362,
+			"name" : "PJ Focus",
+			"options" : 
+			{
+				"cameramode" : "fly",
+				"events" : null,
+				"fps" : 30.0,
+				"length" : 132,
+				"mode" : "single",
+				"wraploop" : false
+			},
+			"up" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.00828
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -0.2612
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.99995
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.94928
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -0.0056
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.17508
+					}
+				]
+			},
+			"visible" : true,
+			"zoom" : null
+		},
+		{
+			"center" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.05275
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.78944
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.14112
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.44567
+					}
+				]
+			},
+			"eye" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.94776
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 2.45247
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 5.1399
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 5.40141
+					}
+				]
+			},
+			"fov" : 
+			[
+				{
+					"back" : 
+					{
+						"enabled" : true,
+						"x" : -1,
+						"y" : 0
+					},
+					"frame" : 0,
+					"front" : 
+					{
+						"enabled" : true,
+						"x" : 1,
+						"y" : 0
+					},
+					"lockangle" : true,
+					"locklength" : true,
+					"value" : 25.42
+				},
+				{
+					"back" : 
+					{
+						"enabled" : true,
+						"x" : -1,
+						"y" : 0
+					},
+					"frame" : 132,
+					"front" : 
+					{
+						"enabled" : true,
+						"x" : 1,
+						"y" : 0
+					},
+					"lockangle" : true,
+					"locklength" : true,
+					"value" : 37.669998
+				}
+			],
+			"id" : 363,
+			"name" : "Boxy Focus",
+			"options" : 
+			{
+				"cameramode" : "fly",
+				"events" : null,
+				"fps" : 30.0,
+				"length" : 132,
+				"mode" : "single",
+				"wraploop" : false
+			},
+			"up" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				]
+			},
+			"visible" : true,
+			"zoom" : null
+		},
+		{
+			"center" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.4
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.4
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.23836
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.23836
+					}
+				]
+			},
+			"eye" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.4
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.4
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 5.23836
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 5.23836
+					}
+				]
+			},
+			"fov" : 
+			[
+				{
+					"back" : 
+					{
+						"enabled" : true,
+						"x" : -1,
+						"y" : 0
+					},
+					"frame" : 0,
+					"front" : 
+					{
+						"enabled" : true,
+						"x" : 1,
+						"y" : 0
+					},
+					"lockangle" : true,
+					"locklength" : true,
+					"value" : 63.810001
+				},
+				{
+					"back" : 
+					{
+						"enabled" : true,
+						"x" : -1,
+						"y" : 0
+					},
+					"frame" : 132,
+					"front" : 
+					{
+						"enabled" : true,
+						"x" : 1,
+						"y" : 0
+					},
+					"lockangle" : true,
+					"locklength" : true,
+					"value" : 78.510002
+				}
+			],
+			"id" : 364,
+			"name" : "Twist",
+			"options" : 
+			{
+				"cameramode" : "fly",
+				"events" : null,
+				"fps" : 30.0,
+				"length" : 132,
+				"mode" : "single",
+				"wraploop" : false
+			},
+			"up" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.66687
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -0.66687
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.74517
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0.74517
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				]
+			},
+			"visible" : true,
+			"zoom" : null
+		},
+		{
+			"center" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.4
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.4
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -1
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : -1
+					}
+				]
+			},
+			"eye" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.4
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1.4
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 4
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 4
+					}
+				]
+			},
+			"fov" : 
+			[
+				{
+					"back" : 
+					{
+						"enabled" : true,
+						"x" : -1,
+						"y" : 0
+					},
+					"frame" : 0,
+					"front" : 
+					{
+						"enabled" : true,
+						"x" : 1,
+						"y" : 0
+					},
+					"lockangle" : true,
+					"locklength" : true,
+					"value" : 50
+				},
+				{
+					"back" : 
+					{
+						"enabled" : true,
+						"x" : -1,
+						"y" : 0
+					},
+					"frame" : 132,
+					"front" : 
+					{
+						"enabled" : true,
+						"x" : 1,
+						"y" : 0
+					},
+					"lockangle" : true,
+					"locklength" : true,
+					"value" : 50
+				}
+			],
+			"id" : 365,
+			"name" : "Still",
+			"options" : 
+			{
+				"cameramode" : "fly",
+				"events" : null,
+				"fps" : 30.0,
+				"length" : 132,
+				"mode" : "single",
+				"wraploop" : false
+			},
+			"up" : 
+			{
+				"c0" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				],
+				"c1" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 1
+					}
+				],
+				"c2" : 
+				[
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 0,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					},
+					{
+						"back" : 
+						{
+							"enabled" : true,
+							"x" : -1,
+							"y" : 0
+						},
+						"frame" : 132,
+						"front" : 
+						{
+							"enabled" : true,
+							"x" : 1,
+							"y" : 0
+						},
+						"lockangle" : true,
+						"locklength" : true,
+						"value" : 0
+					}
+				]
+			},
+			"visible" : true,
+			"zoom" : null
+		}
+	]
+}

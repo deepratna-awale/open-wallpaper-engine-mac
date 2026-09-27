@@ -1,0 +1,297 @@
+{
+ "run1": [
+  {
+   "start_s": 4.43,
+   "end_s": 8.5,
+   "path_or_cluster": "INTRO (door zoom-in; not matched to any path) [c8]",
+   "confidence": "high"
+  },
+  {
+   "start_s": 8.5,
+   "end_s": 13.03,
+   "path_or_cluster": "Center In [c9]",
+   "confidence": "high"
+  },
+  {
+   "start_s": 13.03,
+   "end_s": 17.33,
+   "path_or_cluster": "Rotate 1 [c7]",
+   "confidence": "medium"
+  },
+  {
+   "start_s": 17.33,
+   "end_s": 21.77,
+   "path_or_cluster": "Still [c10]",
+   "confidence": "high"
+  },
+  {
+   "start_s": 21.77,
+   "end_s": 26.2,
+   "path_or_cluster": "Left to Right [c2]",
+   "confidence": "low"
+  },
+  {
+   "start_s": 26.2,
+   "end_s": 30.9,
+   "path_or_cluster": "Rotate 1 [c7]",
+   "confidence": "medium"
+  },
+  {
+   "start_s": 30.9,
+   "end_s": 35.3,
+   "path_or_cluster": "Center Out [c11]",
+   "confidence": "high"
+  },
+  {
+   "start_s": 35.3,
+   "end_s": 39.53,
+   "path_or_cluster": "Center In [c9]",
+   "confidence": "high"
+  },
+  {
+   "start_s": 39.53,
+   "end_s": 43.9,
+   "path_or_cluster": "Full Scroll [c5]",
+   "confidence": "medium"
+  },
+  {
+   "start_s": 43.9,
+   "end_s": 48.33,
+   "path_or_cluster": "Sunny Focus (or PJ Focus) [c14]",
+   "confidence": "low"
+  },
+  {
+   "start_s": 48.33,
+   "end_s": 52.8,
+   "path_or_cluster": "Right to Left [c4]",
+   "confidence": "low"
+  },
+  {
+   "start_s": 52.8,
+   "end_s": 57.33,
+   "path_or_cluster": "Rotate 2 [c1]",
+   "confidence": "low"
+  },
+  {
+   "start_s": 57.33,
+   "end_s": 61.7,
+   "path_or_cluster": "Sunny Focus (or PJ Focus) [c14]",
+   "confidence": "low"
+  },
+  {
+   "start_s": 61.7,
+   "end_s": 66.13,
+   "path_or_cluster": "Rotate 2 [c1]",
+   "confidence": "low"
+  },
+  {
+   "start_s": 66.13,
+   "end_s": 70.5,
+   "path_or_cluster": "Twist [c12]",
+   "confidence": "high"
+  },
+  {
+   "start_s": 70.5,
+   "end_s": 71.03,
+   "path_or_cluster": "unknown (truncated <1 s) [?]",
+   "confidence": "none"
+  }
+ ],
+ "run2": [
+  {
+   "start_s": 1.7,
+   "end_s": 5.6,
+   "path_or_cluster": "INTRO (door zoom-in; not matched to any path) [c8]",
+   "confidence": "high"
+  },
+  {
+   "start_s": 5.6,
+   "end_s": 10.0,
+   "path_or_cluster": "Right to Left [c4]",
+   "confidence": "low"
+  },
+  {
+   "start_s": 10.0,
+   "end_s": 14.43,
+   "path_or_cluster": "Overhead [c6]",
+   "confidence": "medium"
+  },
+  {
+   "start_s": 14.43,
+   "end_s": 18.87,
+   "path_or_cluster": "PJ Focus (or Sunny Focus) [c13]",
+   "confidence": "low"
+  },
+  {
+   "start_s": 18.87,
+   "end_s": 23.23,
+   "path_or_cluster": "Sunny Focus (or PJ Focus) [c14]",
+   "confidence": "low"
+  },
+  {
+   "start_s": 23.23,
+   "end_s": 27.9,
+   "path_or_cluster": "Rotate 1 [c7]",
+   "confidence": "medium"
+  },
+  {
+   "start_s": 27.9,
+   "end_s": 32.13,
+   "path_or_cluster": "Full Scroll [c5]",
+   "confidence": "medium"
+  },
+  {
+   "start_s": 32.13,
+   "end_s": 36.5,
+   "path_or_cluster": "Still [c10]",
+   "confidence": "high"
+  },
+  {
+   "start_s": 36.5,
+   "end_s": 40.97,
+   "path_or_cluster": "Center In [c9]",
+   "confidence": "high"
+  },
+  {
+   "start_s": 40.97,
+   "end_s": 45.43,
+   "path_or_cluster": "Overhead [c6]",
+   "confidence": "medium"
+  },
+  {
+   "start_s": 45.43,
+   "end_s": 49.9,
+   "path_or_cluster": "Full Scroll [c5]",
+   "confidence": "medium"
+  },
+  {
+   "start_s": 49.9,
+   "end_s": 54.2,
+   "path_or_cluster": "PJ Focus (or Sunny Focus) [c13]",
+   "confidence": "low"
+  },
+  {
+   "start_s": 54.2,
+   "end_s": 58.67,
+   "path_or_cluster": "Center In [c9]",
+   "confidence": "high"
+  },
+  {
+   "start_s": 58.67,
+   "end_s": 63.33,
+   "path_or_cluster": "Sunny Focus (or PJ Focus) [c14]",
+   "confidence": "low"
+  },
+  {
+   "start_s": 63.33,
+   "end_s": 67.47,
+   "path_or_cluster": "Boxy Focus [c3]",
+   "confidence": "medium"
+  },
+  {
+   "start_s": 67.47,
+   "end_s": 71.57,
+   "path_or_cluster": "Center Out [c11]",
+   "confidence": "high"
+  }
+ ],
+ "run3": [
+  {
+   "start_s": 1.4,
+   "end_s": 5.53,
+   "path_or_cluster": "INTRO (door zoom-in; not matched to any path) [c8]",
+   "confidence": "high"
+  },
+  {
+   "start_s": 5.53,
+   "end_s": 9.9,
+   "path_or_cluster": "Overhead [c6]",
+   "confidence": "medium"
+  },
+  {
+   "start_s": 9.9,
+   "end_s": 14.4,
+   "path_or_cluster": "Full Scroll [c5]",
+   "confidence": "medium"
+  },
+  {
+   "start_s": 14.4,
+   "end_s": 18.77,
+   "path_or_cluster": "Right to Left [c4]",
+   "confidence": "low"
+  },
+  {
+   "start_s": 18.77,
+   "end_s": 23.17,
+   "path_or_cluster": "Sunny Focus (or PJ Focus) [c14]",
+   "confidence": "low"
+  },
+  {
+   "start_s": 23.17,
+   "end_s": 27.67,
+   "path_or_cluster": "PJ Focus (or Sunny Focus) [c13]",
+   "confidence": "low"
+  },
+  {
+   "start_s": 27.67,
+   "end_s": 32.07,
+   "path_or_cluster": "Rotate 1 [c7]",
+   "confidence": "medium"
+  },
+  {
+   "start_s": 32.07,
+   "end_s": 36.47,
+   "path_or_cluster": "Center Out [c11]",
+   "confidence": "high"
+  },
+  {
+   "start_s": 36.47,
+   "end_s": 40.9,
+   "path_or_cluster": "Sunny Focus (or PJ Focus) [c14]",
+   "confidence": "low"
+  },
+  {
+   "start_s": 40.9,
+   "end_s": 45.33,
+   "path_or_cluster": "Center In [c9]",
+   "confidence": "high"
+  },
+  {
+   "start_s": 45.33,
+   "end_s": 49.77,
+   "path_or_cluster": "PJ Focus (or Sunny Focus) [c13]",
+   "confidence": "low"
+  },
+  {
+   "start_s": 49.77,
+   "end_s": 54.17,
+   "path_or_cluster": "Boxy Focus [c3]",
+   "confidence": "medium"
+  },
+  {
+   "start_s": 54.17,
+   "end_s": 58.57,
+   "path_or_cluster": "Left to Right [c2]",
+   "confidence": "low"
+  },
+  {
+   "start_s": 58.57,
+   "end_s": 63.0,
+   "path_or_cluster": "Rotate 2 [c1]",
+   "confidence": "low"
+  },
+  {
+   "start_s": 63.0,
+   "end_s": 67.43,
+   "path_or_cluster": "Boxy Focus [c3]",
+   "confidence": "medium"
+  },
+  {
+   "start_s": 67.43,
+   "end_s": 71.0,
+   "path_or_cluster": "Overhead [c6]",
+   "confidence": "low (truncated, NN 2.09@40.97)"
+  }
+ ],
+ "_notes": "Cuts detected via mean abs frame diff peaks (160x86). run1 cut at 35.3 s inferred (+4.4 s): Center Out end (fov 91.6) ~= Center In start (fov 93.2) so the cut is nearly invisible. Clusters c1..c14 from average-linkage on frames at +0.5/+2.2/+3.8 s. Segment 0 of each run is an intro (door) sequence identical in all runs."
+}

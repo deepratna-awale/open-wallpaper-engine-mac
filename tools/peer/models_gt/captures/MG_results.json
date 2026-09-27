@@ -1,0 +1,154 @@
+{
+ "invalid_captures": {
+  "files": [
+   "MG4_gt-rootmotion-0x00800.mp4",
+   "MG4_gt-rootmotion-0x01000.mp4",
+   "MG4_gt-rootmotion-0x02000.mp4",
+   "MG4_gt-rootmotion-0x04000.mp4",
+   "MG4_gt-rootmotion-0x08000.mp4",
+   "MG4_gt-rootmotion-0x10000.mp4",
+   "MG6_colmodel_depthoff.mp4",
+   "MG6_colmodel_depthon.mp4",
+   "MG6_colmodel_shipped.mp4",
+   "MG6_gt-ortho-depth-far-first.mp4",
+   "MG6_gt-ortho-depth-near-first.mp4",
+   "MG8_colmodel_spherehidden.mp4"
+  ],
+  "reason": "every frame identical to the retro wallpaper (max mean abs diff vs frame0 <=0.22/255); WE never showed the project"
+ },
+ "load_frame_index_30fps": {
+  "MG2_solar_workshop": 43,
+  "MG2_solar_localcopy_shipped": 46,
+  "MG2_solar_localcopy_nosort": 53,
+  "MG3_gt-additive-full": 28,
+  "MG3_gt-additive-half": 25,
+  "MG4_gt-rootmotion-0x00000": 22,
+  "MG7_disabled": 42,
+  "MG7_low": 41,
+  "MG7_medium": 35,
+  "MG7_high": 42
+ },
+ "MG2": {
+  "camera_moves": false,
+  "saturn_centre_px": {
+   "t10": [
+    1140,
+    774
+   ],
+   "t20": [
+    626,
+    711
+   ]
+  },
+  "ws_vs_localshipped_mean_absdiff": 0.43,
+  "shipped_vs_nosort_mean_absdiff": 0.33,
+  "conclusion": "no visible difference in overlap order between shipped (sorting on) and nosort; orbit lines are faint and appear hidden behind Saturn body/ring in all variants; workshop and local copy equivalent (differences = planet phase only)",
+  "confidence": "low"
+ },
+ "MG3": {
+  "full_arm_angle_deg": 168.8,
+  "half_arm_angle_deg": -175.3,
+  "ours_full_deg": -151.4,
+  "ours_half_deg": -151.7,
+  "predicted_deg": {
+   "-x": 171.5,
+   "+z": -157.5,
+   "base*additive@0.5": -176.4
+  },
+  "conclusion": "WE = base*additive (arm along -x); half = 45deg about z applied before x-rot; ours wrong (+z) in both"
+ },
+ "MG4_0x00000": {
+  "t_s": [
+   0.5,
+   1,
+   2,
+   3,
+   4
+  ],
+  "centre": [
+   [
+    1017,
+    612
+   ],
+   [
+    972,
+    675
+   ],
+   [
+    972,
+    675
+   ],
+   [
+    971,
+    675
+   ],
+   [
+    971,
+    675
+   ]
+  ],
+  "axis_deg": [
+   37.8,
+   8.5,
+   9.6,
+   9.1,
+   8.8
+  ],
+  "loops_every_1s": true,
+  "ours_centre": [
+   [
+    1002,
+    632
+   ],
+   [
+    960,
+    692
+   ],
+   [
+    960,
+    692
+   ],
+   [
+    960,
+    692
+   ],
+   [
+    960,
+    692
+   ]
+  ],
+  "ours_axis_deg": [
+   29.4,
+   179.9,
+   179.9,
+   179.9,
+   179.9
+  ]
+ },
+ "MG7": {
+  "cloth_mean_rgb": {
+   "disabled": [
+    157.0,
+    44.8,
+    47.9
+   ],
+   "low": [
+    157.1,
+    44.7,
+    47.9
+   ],
+   "medium": [
+    157.1,
+    44.8,
+    47.9
+   ],
+   "high": [
+    157.0,
+    44.7,
+    47.9
+   ]
+  },
+  "black": false,
+  "caveat": "no shadow visible anywhere in low/medium/high (static ground/box pixels identical to disabled); shadow setting may not have taken effect"
+ }
+}
