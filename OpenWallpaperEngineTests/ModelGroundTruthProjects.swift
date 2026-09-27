@@ -1,0 +1,149 @@
+import XCTest
+import simd
+@testable import OpenWallpaperEngine
+
+/// Writes the generated WE projects the Windows WE session captures for the models' open points
+/// (docs/test-risks.md "Needs WE ground truth (models)": MG4 root motion, MG3 additive layers,
+/// MG6 depth in an orthographic frame with models), each with our frames at the capture times as
+/// the prediction to compare with. Only runs when `OWE_GROUND_TRUTH_OUT` names the output folder:
+/// `<out>/<project>/` is the project (copy it into WE's `projects/myprojects`), `<out>/ours/` our
+/// 1920×1080 frames.
+final class ModelGroundTruthProjects: XCTestCase {
+    private static let times: [Double] = [0.5, 1, 2, 3, 4]
+
+    private static func material(_ color: String) -> Data {
+        Data(#"{"passes":[{"shader":"generic4","combos":{"LIGHTING":0,"FOG":0},"constantshadervalues":{"color":"\#(color)"},"textures":["util/white"]}]}"#.utf8)
+    }
+
+    private static let colors = ["red": "1 0 0", "green": "0 1 0", "blue": "0 0 1", "white": "1 1 1"]
+
+    private static var materials: [String: Data] {
+        Dictionary(uniqueKeysWithValues: colors.map { ("materials/gt_\($0.key).json", material($0.value)) })
+    }
+
+    func testWriteTheGroundTruthProjects() throws {
+        guard let path = ProcessInfo.processInfo.environment["OWE_GROUND_TRUTH_OUT"], !path.isEmpty else {
+            throw XCTSkip("set OWE_GROUND_TRUTH_OUT to write the ground-truth projects")
+        }
+        let out = URL(fileURLWithPath: path, isDirectory: true)
+        let ours = out.appending(path: "ours", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: ours, withIntermediateDirectories: true)
+        let storage = FileManager.default.temporaryDirectory.appending(path: "owe-ground-truth-\(UUID().uuidString)")
+        defer {
+            if FileManager.default.fileExists(atPath: storage.path) {
+                do { try FileManager.default.removeItem(at: storage) } catch { XCTFail("\(storage.path): \(error)") }
+            }
+        }
+        var projects: [ModelFixtureWallpaper] = []
+        projects += try orthographicDepth(out)
+        projects += try rootMotion(out)
+        projects += try additive(out)
+        for project in projects {
+            let harness = try ModelSceneHarness(directory: project.directory, settings: SceneRenderSettings(),
+                                                size: SIMD2(1920, 1080), storage: storage)
+            defer { harness.close() }
+            try harness.settle(seconds: 10)
+            var time = 0.0
+            for shot in Self.times {
+                while time + 1.0 / 60 < shot {
+                    harness.frame()
+                    time += 1.0 / 30
+                }
+                let bytes = try TextureUploadTests.read(try XCTUnwrap(harness.renderer.sharedFrame), device: harness.device)
+                let name = "\(project.directory.lastPathComponent)-t\(shot).png"
+                try WEReferenceImage(width: 1920, height: 1080, pixels: bytes).write(to: ours.appending(path: name))
+            }
+            XCTAssertEqual(harness.gpuErrors, [], project.directory.lastPathComponent)
+        }
+    }
+
+    // MARK: - MG6: depth in an orthographic frame with models
+
+    /// Two cubes overlapping on screen at different depths, in both draw orders: if WE's
+    /// orthographic frame has depth when models are present, the nearer (red) cube covers the
+    /// overlap in both; without depth, the one drawn last does.
+    private func orthographicDepth(_ out: URL) throws -> [ModelFixtureWallpaper] {
+        let cube = FixtureMDL.cube(material: "materials/gt_red.json", uv: true)
+        func mdl(_ color: String) -> Data {
+            FixtureMDL(format: FixtureMDL.positionNormal | FixtureMDL.uv, materialsPerMesh: 1, meshes: [FixtureMDL.Mesh(
+                materials: ["materials/gt_\(color).json"], vertices: cube.vertices, indices: cube.indices)]).data
+        }
+        var files = Self.materials
+        files["models/gt_red_cube.mdl"] = mdl("red")
+        files["models/gt_green_cube.mdl"] = mdl("green")
+        let near = #"{"id":1,"name":"near red","model":"models/gt_red_cube.mdl","origin":"900 540 -500","scale":"150 150 150"}"#
+        let far = #"{"id":2,"name":"far green","model":"models/gt_green_cube.mdl","origin":"1020 540 -1500","scale":"150 150 150"}"#
+        let general = #""clearcolor":"0 0 0","orthogonalprojection":{"width":1920,"height":1080}"#
+        return [
+            try ModelFixtureWallpaper(in: out, name: "gt-ortho-depth-near-first", objects: [near, far], general: general,
+                                      eye: "960 540 0", center: "960 540 -1", files: files),
+            try ModelFixtureWallpaper(in: out, name: "gt-ortho-depth-far-first", objects: [far, near], general: general,
+                                      eye: "960 540 0", center: "960 540 -1", files: files),
+        ]
+    }
+
+    // MARK: - MG4: root motion
+
+    /// A box on one bone whose looping 1 s clip moves the bone by (1, 2, 3)·t and turns it by
+    /// (0.3, 0.6, 0.9)·t rad, with one of the clip flags 0x800…0x10000 set (or none): with root
+    /// motion, WE carries the motion over into the object, so the box drifts instead of looping.
+    private func rootMotion(_ out: URL) throws -> [ModelFixtureWallpaper] {
+        let box = FixtureMDL.cube(material: "materials/gt_red.json", bone: 0, size: SIMD3(1, 0.5, 0.25), uv: true)
+        let frames: UInt32 = 30
+        let track: [MDLBonePose] = (0...Int(frames)).map { frame in
+            let t = Float(frame) / Float(frames)
+            return MDLBonePose(position: SIMD3<Float>(1, 2, 3) * t, euler: SIMD3<Float>(0.3, 0.6, 0.9) * t, scale: SIMD3(repeating: 1))
+        }
+        var projects: [ModelFixtureWallpaper] = []
+        for flag in [0, 0x800, 0x1000, 0x2000, 0x4000, 0x8000, 0x10000] as [UInt32] {
+            var mdl = FixtureMDL(format: FixtureMDL.skinned | FixtureMDL.uv, materialsPerMesh: 1, meshes: [FixtureMDL.Mesh(
+                materials: ["materials/gt_red.json"], vertices: box.vertices, indices: box.indices)], bones: 1)
+            mdl.clips = [FixtureMDL.Clip(id: 1, name: "drift", frames: frames, flags: flag, tracks: [track])]
+            var files = Self.materials
+            files["models/gt_rootmotion.mdl"] = mdl.data
+            let object = #"{"id":1,"name":"box","model":"models/gt_rootmotion.mdl","origin":"0 0 0","#
+                + #""animationlayers":[{"animation":1,"id":1,"name":"drift","rate":1,"blend":1,"visible":true}]}"#
+            projects.append(try ModelFixtureWallpaper(in: out, name: String(format: "gt-rootmotion-0x%05x", flag), objects: [object],
+                                                      eye: "0 3 15", center: "0 2 0", files: files))
+        }
+        return projects
+    }
+
+    // MARK: - MG3: additive layers
+
+    /// A red arm (bone 1, along +y) on a white base (bone 0): a replacing layer turns the arm
+    /// 90° about x (+y → +z), an additive layer 90° about z (+y → −x). Composed as
+    /// `additive · base` the arm points along +z; as `base · additive` along −x. The second
+    /// project weighs the additive layer 0.5.
+    private func additive(_ out: URL) throws -> [ModelFixtureWallpaper] {
+        let base = FixtureMDL.cube(material: "materials/gt_white.json", bone: 0, size: SIMD3(repeating: 0.6), uv: true)
+        let arm = FixtureMDL.cube(material: "materials/gt_red.json", centre: SIMD3(0, 1.5, 0), bone: 1,
+                                  size: SIMD3(0.3, 3, 0.3), uv: true)
+        let frames: UInt32 = 30
+        func constant(_ euler: SIMD3<Float>) -> [MDLBonePose] {
+            Array(repeating: MDLBonePose(position: .zero, euler: euler, scale: SIMD3(repeating: 1)), count: Int(frames) + 1)
+        }
+        let still = constant(.zero)
+        var mdl = FixtureMDL(format: FixtureMDL.skinned | FixtureMDL.uv, materialsPerMesh: 1, meshes: [
+            FixtureMDL.Mesh(materials: ["materials/gt_white.json"], vertices: base.vertices, indices: base.indices),
+            FixtureMDL.Mesh(materials: ["materials/gt_red.json"], vertices: arm.vertices, indices: arm.indices),
+        ], bones: 2)
+        mdl.clips = [
+            FixtureMDL.Clip(id: 1, name: "base about x", frames: frames, tracks: [still, constant(SIMD3<Float>(Float.pi / 2, 0, 0))]),
+            FixtureMDL.Clip(id: 2, name: "additive about z", frames: frames, tracks: [still, constant(SIMD3<Float>(0, 0, Float.pi / 2))]),
+        ]
+        var files = Self.materials
+        files["models/gt_additive.mdl"] = mdl.data
+        func object(additiveBlend: Double) -> String {
+            #"{"id":1,"name":"rig","model":"models/gt_additive.mdl","origin":"0 0 0","animationlayers":["#
+                + #"{"animation":1,"id":1,"name":"base","rate":1,"blend":1,"visible":true},"#
+                + #"{"animation":2,"id":2,"name":"additive","rate":1,"blend":\#(additiveBlend),"visible":true,"additive":true}]}"#
+        }
+        return [
+            try ModelFixtureWallpaper(in: out, name: "gt-additive-full", objects: [object(additiveBlend: 1)],
+                                      eye: "6 4 10", center: "0 1 0", files: files),
+            try ModelFixtureWallpaper(in: out, name: "gt-additive-half", objects: [object(additiveBlend: 0.5)],
+                                      eye: "6 4 10", center: "0 1 0", files: files),
+        ]
+    }
+}
