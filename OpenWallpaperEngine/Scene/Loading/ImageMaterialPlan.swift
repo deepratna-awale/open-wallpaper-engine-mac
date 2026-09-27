@@ -140,8 +140,21 @@ struct ImageMaterialPlanBuilder {
         try build(materialPath: materialPath, colorBlendMode: nil, clampUVs: true, listsItsImage: false, prelit: false)
     }
 
+    /// The material WE composites a layer's own image with when its material can't blend
+    /// (0x1401ebe37…0x1401ebe55): `effectpassthrough_4.json` (genericimage4) with `BLENDMODE` =
+    /// `colorBlendMode` and `FOG_COMPUTED`. WE turns mode 31 into 0 and adds with the pass's
+    /// blending; `ApplyBlending`'s 31 (A + B·opacity) is the same sum. For a solid layer, whose
+    /// `flat` shader has no `BLENDMODE`: `g_Texture0` is the layer's filled image.
+    func buildBlendComposite(colorBlendMode: Int) throws -> ImageMaterialPlan? {
+        try build(materialPath: Self.blendCompositeMaterial, colorBlendMode: colorBlendMode, clampUVs: true,
+                  listsItsImage: false, prelit: false, extraCombos: ["FOG_COMPUTED": 1])
+    }
+
+    static let blendCompositeMaterial = "materials/util/effectpassthrough_4.json"
+
     private func build(materialPath: String, colorBlendMode: Int?, clampUVs: Bool?,
-                       listsItsImage: Bool, prelit: Bool, puppet: ImagePuppetCombos? = nil) throws -> ImageMaterialPlan? {
+                       listsItsImage: Bool, prelit: Bool, puppet: ImagePuppetCombos? = nil,
+                       extraCombos: [String: Int] = [:]) throws -> ImageMaterialPlan? {
         guard let data = readFile(materialPath) else { throw ImageMaterialPlanError.missing(materialPath) }
         let material: MaterialDocument
         do {
@@ -173,7 +186,7 @@ struct ImageMaterialPlanBuilder {
         let formats = Self.formatCombos(vertex.samplers + fragment.samplers, headers: headers)
         let combos = { (overrides: [[String: Int]]) in
             sceneEngineCombos.applied(to: ShaderVariantTranslator.resolveCombos(
-                vertex: vertex, fragment: fragment, overrides: [materialPass.combos] + overrides + [formats],
+                vertex: vertex, fragment: fragment, overrides: [materialPass.combos, extraCombos] + overrides + [formats],
                 boundTextureSlots: Set(listed.keys).union([0]),
                 textureFlags: headers.compactMapValues { TEXImageFormat.texiWord(1, in: $0) }))
         }

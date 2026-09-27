@@ -167,6 +167,26 @@ final class ImageMaterialRenderTests: XCTestCase {
         XCTAssertEqual(center.blue, Self.background.z * 64 / 255, accuracy: 3 / 255)
     }
 
+    /// A solid layer's `flat` has no `BLENDMODE`; WE composites its fill through
+    /// `effectpassthrough_4` with the object's blend mode. WE's capture of a 0.2 0.6 1.0 band in
+    /// Multiply over its 0.15 grey is (8, 23, 38) = 0.15 × the fill (effect gallery EXTRAS.md item 3).
+    func testSolidFillCompositesWithItsBlendMode() throws {
+        let plan = try XCTUnwrap(try builder.buildBlendComposite(colorBlendMode: 2))
+        XCTAssertEqual(plan.pass.variant?.combos["BLENDMODE"], 2)
+        XCTAssertEqual(plan.pass.variant?.combos["FOG_COMPUTED"], 1)
+        guard case .current? = plan.pass.textures[0] else { return XCTFail("slot 0 is not the layer's fill") }
+        let fill = try Self.solidTexture(device: device, color: [51, 153, 255, 255])
+        let snapshot = try Self.solidTexture(device: device, color: Self.background.bytes)
+        let pixels = try render { encoder, format in
+            XCTAssertTrue(self.drawMaterial(plan, Layer(rotation: 0), texture: fill, snapshot: snapshot,
+                                            encoder: encoder, format: format))
+        }
+        let center = Self.pixel(pixels, x: 100, y: 64)
+        XCTAssertEqual(center.red, Self.background.x * 0.2, accuracy: 3 / 255)
+        XCTAssertEqual(center.green, Self.background.y * 0.6, accuracy: 3 / 255)
+        XCTAssertEqual(center.blue, Self.background.z, accuracy: 3 / 255)
+    }
+
     /// The blend reads the scene pixel under each fragment, not its vertical mirror.
     func testBlendModeReadsTheScenePixelBeneath() throws {
         let plan = try XCTUnwrap(try builder.build(materialPath: "materials/image4.json", colorBlendMode: 2))

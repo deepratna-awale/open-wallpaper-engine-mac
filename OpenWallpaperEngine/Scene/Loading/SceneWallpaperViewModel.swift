@@ -819,7 +819,12 @@ class SceneWallpaperViewModel: ObservableObject {
         }
         if model.solidlayer == true {
             var layer = buildSolidLayer(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize)
-            layer.imageMaterial = buildImageMaterial(materialPath, object: object, wallpaperDir: wallpaperDir)
+            // `flat` has no `BLENDMODE`: a blend mode composites the fill through WE's material for it.
+            if let mode = object.colorBlendMode, mode != 0 {
+                layer.imageMaterial = buildBlendComposite(mode, object: object, wallpaperDir: wallpaperDir)
+            } else {
+                layer.imageMaterial = buildImageMaterial(materialPath, object: object, wallpaperDir: wallpaperDir)
+            }
             return layer
         }
         guard let textureName = material.passes?.first?.textures?.first,
@@ -910,6 +915,23 @@ class SceneWallpaperViewModel: ObservableObject {
                                      clampUVs: object.clampuvs, prelit: prelit)
         } catch {
             OWELog.error(.scene, "Image layer \(object.id ?? -1) draws natively, material \(materialPath): \(error)")
+            return nil
+        }
+    }
+
+    /// A layer's own image composited with its `colorBlendMode` through WE's composite material
+    /// (`ImageMaterialPlanBuilder.buildBlendComposite`); nil (logged) keeps the native draw.
+    private func buildBlendComposite(_ mode: Int, object: WESceneObject, wallpaperDir: URL) -> ImageMaterialPlan? {
+        guard let translator = Self.effectTranslator else { return nil }
+        let builder = ImageMaterialPlanBuilder(
+            translator: translator,
+            readFile: { [weak self] path in self?.assetData(named: path, wallpaperDir: wallpaperDir) },
+            loadTexture: { [weak self] name, path in self?.loadMetalTexture(named: name, materialDir: path, wallpaperDir: wallpaperDir) },
+            sceneEngineCombos: sceneEngineCombos)
+        do {
+            return try builder.buildBlendComposite(colorBlendMode: mode)
+        } catch {
+            OWELog.error(.scene, "Layer \(object.id ?? -1) draws without its blend mode \(mode): \(error)")
             return nil
         }
     }
