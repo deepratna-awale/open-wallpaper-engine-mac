@@ -59,6 +59,13 @@ private struct DownloadRow: View {
     }
 
     var body: some View {
+        GroupBox {
+            row
+                .padding(4)
+        }
+    }
+
+    private var row: some View {
         VStack(spacing: 10) {
             HStack(alignment: .top, spacing: 12) {
                 AsyncImage(url: item?.previewURL) { phase in
@@ -105,9 +112,10 @@ private struct DownloadRow: View {
                             fileSize: item?.fileSize ?? 0
                         )
                     } label: {
-                        Image(systemName: "arrow.clockwise")
+                        Label("Retry download", systemImage: "arrow.clockwise")
+                            .labelStyle(.iconOnly)
                     }
-                    .buttonStyle(.bordered)
+                    .glassButtonStyle()
                     .help(failureMessage)
                 }
             }
@@ -136,9 +144,6 @@ private struct DownloadRow: View {
                     .foregroundStyle(.tertiary)
             }
         }
-        .padding(12)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .cornerRadius(8)
     }
 
     private var statusText: String {
