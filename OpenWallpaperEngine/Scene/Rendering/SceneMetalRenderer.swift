@@ -126,6 +126,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var puppetWarps: [String: [String: MTLTexture]] = [:]
     /// Asset textures used by effect passes, materialised once per content.
     private var effectAssetTextures: [String: MTLTexture] = [:]
+    /// Each decoded image's upload, by the image: layers, clones, particle systems and effect
+    /// assets that load the same image (the loader hands them one `NSImage`) share one texture.
+    /// Holds the image so its identifier isn't reused; cleared with the content.
+    private var uploadedImages: [ObjectIdentifier: (image: NSImage, frames: [RenderTextureFrame])] = [:]
+    private let uploadedImagesLock = NSLock()
     /// Animated asset textures' sprite frames, by the same key.
     private var effectAssetFrames: [String: [RenderTextureFrame]] = [:]
     /// Textureless layers' effect inputs (`solidEffectInput`), by layer id; once per content.
@@ -472,6 +477,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             effectAssetTextures.removeAll()
             effectAssetFrames.removeAll()
             solidEffectInputs.removeAll()
+            clearUploadedImages()
         }
         OWELog.info(.scene, "Memory pressure (\(level)): freed \((before - renderTargetPool.residentBytes) >> 20) MB of pooled targets")
     }
@@ -483,6 +489,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     func setContent(_ content: SceneMetalContent?) {
         effectAssetTextures.removeAll()
+        clearUploadedImages()
         effectAssetFrames.removeAll()
         solidEffectInputs.removeAll()
         mediaTextures = nil
@@ -2973,7 +2980,28 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         return nil
     }
 
+    private func clearUploadedImages() {
+        uploadedImagesLock.lock()
+        uploadedImages.removeAll()
+        uploadedImagesLock.unlock()
+    }
+
     private func makeTextureFrames(from source: SceneMetalTextureSource) -> [RenderTextureFrame]? {
+        guard case let .image(image) = source else { return uploadTextureFrames(from: source) }
+        let key = ObjectIdentifier(image)
+        uploadedImagesLock.lock()
+        let cached = uploadedImages[key]?.frames
+        uploadedImagesLock.unlock()
+        if let cached { return cached }
+        guard let frames = uploadTextureFrames(from: source) else { return nil }
+        uploadedImagesLock.lock()
+        defer { uploadedImagesLock.unlock() }
+        if let raced = uploadedImages[key]?.frames { return raced }
+        uploadedImages[key] = (image, frames)
+        return frames
+    }
+
+    private func uploadTextureFrames(from source: SceneMetalTextureSource) -> [RenderTextureFrame]? {
         switch source {
         case let .image(image):
             if let raw = TEXRawImageRep.of(image) {
