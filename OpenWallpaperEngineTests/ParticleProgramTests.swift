@@ -190,6 +190,23 @@ final class ParticleProgramTests: XCTestCase {
         XCTAssertEqual(hues.count, 6, "six hues, 60° apart")
     }
 
+    /// `remapvalue`'s `flags` (VM 0x140244996…0x1402457a3): bit 1 clamps the normalised input, bit 2
+    /// the output. The parser reads an absent `flags` as 0 (0x1401ce803; its filler 0x1401bfbb0 writes
+    /// none), so it clamps nothing. WE 2.8.0.42's flagtests (lifetimefraction 0…0.5 → size × 0…1)
+    /// agree: flags 1 and 2 hold the size once half the life has passed (clip luminance 0.64 and
+    /// 0.65 of the same particles without the remap), flags 0 keeps growing to twice it (1.33).
+    func testRemapValueFlagsClampTheInputAndTheOutput() throws {
+        for (flags, factor) in [("", 1.5), (#", "flags": 0"#, 1.5), (#", "flags": 1"#, 1), (#", "flags": 2"#, 1)] as [(String, Float)] {
+            let remap = try `operator`(#"{"name": "remapvalue", "input": "lifetimefraction", "output": "size", "#
+                                       + #""operation": "multiply", "inputrangemin": 0, "inputrangemax": 0.5, "#
+                                       + #""outputrangemin": 0, "outputrangemax": 1"# + flags + "}")
+            var particle = state(age: 0.75)
+            _ = ParticleProgramCPU.runOperators([remap], on: &particle, context: ParticleProgramContext(), index: 0,
+                                                neighbors: .init())
+            XCTAssertEqual(particle.size, 10 * factor, accuracy: 1e-4, "flags\(flags)")
+        }
+    }
+
     func testRemapInitialValueDefaultMultipliesSizeByLifetime() throws {
         let remap = try initializer(#"{"name":"remapinitialvalue"}"#)
         var particle = state(age: 0, lifetime: 0.25)
