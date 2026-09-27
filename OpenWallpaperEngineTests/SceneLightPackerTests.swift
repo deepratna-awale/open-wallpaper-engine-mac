@@ -200,7 +200,9 @@ final class SceneLightPackerTests: XCTestCase {
         let colors = arrays["g_LPoint_Color"]!, origins = arrays["g_LPoint_Origin"]!
         XCTAssertEqual(colors.count, 15 * 4)
         XCTAssertEqual(colors, [Float]((0..<15).flatMap { _ in [5, 5, 5, 5] }), "every slot holds a light")
-        XCTAssertEqual((0..<15).map { origins[4 * $0 + 2] }, (241...255).reversed().map(Float.init))
+        let closest: [Float] = (241...255).reversed().map { Float($0) }
+        let packedDepths: [Float] = (0..<15).map { (slot: Int) -> Float in origins[4 * slot + 2] }
+        XCTAssertEqual(packedDepths, closest)
 
         // The frame path doesn't cap them either: all 256 are placed, 15 packed.
         var content = SceneLightingContent()
@@ -214,7 +216,9 @@ final class SceneLightPackerTests: XCTestCase {
         })
         let frame = SceneFrameLighting.frame(content, input: frameInput(locals: locals))
         XCTAssertEqual(frame.objects.count, 256)
-        XCTAssertEqual((0..<15).map { frame.arrays["g_LPoint_Origin"]![4 * $0 + 2] }, (241...255).reversed().map(Float.init))
+        let frameOrigins: [Float] = frame.arrays["g_LPoint_Origin"]!
+        let frameDepths: [Float] = (0..<15).map { (slot: Int) -> Float in frameOrigins[4 * slot + 2] }
+        XCTAssertEqual(frameDepths, closest)
     }
 
     /// `castshadow` doesn't decide whether a light lights a surface: a light without it packs, and

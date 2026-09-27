@@ -137,8 +137,10 @@ final class ScenePuppetReferenceTests: XCTestCase {
     }
 
     static func motion(_ frames: [[Float]]) -> [Double] {
-        zip(frames, frames.dropFirst()).map { a, b in
-            Double(zip(a, b).reduce(Float(0)) { $0 + abs($1.0 - $1.1) }) / Double(a.count)
+        zip(frames, frames.dropFirst()).map { (a: [Float], b: [Float]) -> Double in
+            var sum: Float = 0
+            for (x, y) in zip(a, b) { sum += abs(x - y) }
+            return Double(sum) / Double(a.count)
         }
     }
 
