@@ -29,6 +29,37 @@ final class ParticleProgramTests: XCTestCase {
                                                           sceneSize: SIMD2(100, 100), path: "t")).record
     }
 
+    // MARK: - Registry
+
+    /// Every initializer and operator name in `wallpaper64.exe`'s particle registry (its strings;
+    /// effect gallery EXTRAS.md item 6, with `vortex_v2` in full) builds, except `collisionbox`,
+    /// whose VM entry does nothing in WE, and `collisionmodel`, which needs 3D models. Of the
+    /// emitters, `layerimage` isn't built (docs/test-risks.md).
+    func testEveryRegisteredInitializerAndOperatorBuilds() throws {
+        let initializers = ["colorrandom", "hsvcolorrandom", "colorlist", "sizerandom", "alpharandom", "velocityrandom",
+                            "lifetimerandom", "rotationrandom", "angularvelocityrandom", "positionoffsetrandom",
+                            "turbulentvelocityrandom", "inheritcontrolpointvelocity", "mapsequencearoundcontrolpoint",
+                            "mapsequencebetweencontrolpoints", "remapinitialvalue", "inheritinitialvaluefromevent"]
+        for name in initializers {
+            XCTAssertNoThrow(try initializer(#"{"name":"\#(name)"}"#), name)
+        }
+        let operators = ["movement", "angularmovement", "alphafade", "alphachange", "sizechange", "colorchange",
+                         "oscillateposition", "oscillatealpha", "oscillatesize", "turbulence", "vortex", "vortex_v2",
+                         "boids", "controlpointattract", "maintaindistancetocontrolpoint",
+                         "maintaindistancebetweencontrolpoints", "reducemovementnearcontrolpoint", "capvelocity",
+                         "remapvalue", "inheritvaluefromevent", "collisionsphere", "collisionbounds",
+                         "collisionquad", "collisionplane"]
+        for name in operators {
+            XCTAssertNoThrow(try `operator`(#"{"name":"\#(name)"}"#), name)
+        }
+        for name in ["collisionbox", "collisionmodel"] {
+            let element: WEParticleOperator = try decode(#"{"name":"\#(name)"}"#)
+            XCTAssertNil(ParticleOperatorBuilder.make(element, defaults: ParticleDefaults(pixelUnits: true),
+                                                      sceneSize: SIMD2(100, 100), path: "t"), name)
+        }
+        XCTAssertEqual(ParticleSystemBuilder.supportedEmitters, ["sphererandom", "boxrandom"])
+    }
+
     // MARK: - Defaults
 
     func testInitializerDefaultsAreWEs() throws {

@@ -16,6 +16,10 @@ enum ParticleSystemBuilder {
         let renderer = particleSystem.renderer?.first
         let emitter = particleSystem.emitter?.first
         let defaults = ParticleDefaults(pixelUnits: pixelUnits)
+        for name in (particleSystem.emitter ?? []).compactMap(\.name) where !Self.supportedEmitters.contains(name.lowercased()) {
+            // WE's registry also has `layerimage` (emits from a layer's image), which isn't built.
+            OWELog.error(.scene, "Particle system \(particlePath): emitter \(name) isn't supported; it emits as sphererandom")
+        }
         // Emitter rate: 10 a second (0x1401b8e59).
         let rate = Float(emitter?.rate ?? 10)
         let rendererName = renderer?.name ?? "sprite"
@@ -74,6 +78,9 @@ enum ParticleSystemBuilder {
             })
         return system
     }
+
+    /// The emitters built (`wallpaper64.exe`'s registry also has `layerimage`).
+    static let supportedEmitters: Set<String> = ["sphererandom", "boxrandom"]
 
     /// The emitter's shape (sphere defaults 0x1401b9100, box 0x1401b9520; shared fields 0x1401b8df0).
     static func emitterShape(_ emitter: WEParticleEmitter, defaults: ParticleDefaults) -> ParticleEmitterShape {
