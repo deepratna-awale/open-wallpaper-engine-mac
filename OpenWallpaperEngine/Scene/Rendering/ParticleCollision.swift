@@ -1,7 +1,8 @@
 import simd
 
-/// A collision operator (`collisionplane`, `collisionsphere`, `collisionquad`, `collisionbounds`),
-/// as authored in the emitter's space. Only a particle's centre collides, as in WE.
+/// A collision operator (`collisionplane`, `collisionsphere`, `collisionquad`, `collisionbounds`,
+/// `collisionmodel`), as authored in the emitter's space. Only a particle's centre collides, as in
+/// WE.
 struct ParticleCollision: Equatable {
     enum Shape: Equatable {
         /// Particles stay where `dot(normal, p) >= distance`.
@@ -12,6 +13,9 @@ struct ParticleCollision: Equatable {
         case quad(origin: SIMD3<Float>, normal: SIMD3<Float>, forward: SIMD3<Float>, size: SIMD2<Float>)
         /// The scene's rectangle, `size` wide.
         case bounds(size: SIMD2<Float>)
+        /// The capsules of the object the system's `collisionmodel` dependency with this index links
+        /// (`ParticleCapsule`, docs/models-plan.md §2.12), in 3D.
+        case model(index: Int)
     }
 
     /// `collisionbehavior`: bounce unless "slide", "stop" or "delete".
@@ -38,11 +42,14 @@ struct ParticleCollision: Equatable {
     let stopsRotation: Bool
 
     /// The operator `element`, nil for one that isn't a collision WE resolves at runtime
-    /// (`collisionbox` does nothing; `collisionmodel` needs a model). Defaults (`wallpaper64.exe`
-    /// 0x1401c00a0 and the shapes' fillers 0x1401c0540 / 0x1401c0740 / 0x1401c0870): plane "0 1 0"
-    /// at −150 (2D) / 0, sphere at "0 −200 0" / 0 of radius 50 / 1, quad at "0 −150 0" / 0 of size
-    /// "200 200" / "1 1", bounce factor 0.5, behaviour bounce.
-    init?(_ element: WEParticleOperator, sceneSize: SIMD2<Float>, defaults: ParticleDefaults = ParticleDefaults(pixelUnits: true)) {
+    /// (`collisionbox` does nothing). Defaults (`wallpaper64.exe` 0x1401c00a0 and the shapes'
+    /// fillers 0x1401c0540 / 0x1401c0740 / 0x1401c0870): plane "0 1 0" at −150 (2D) / 0, sphere at
+    /// "0 −200 0" / 0 of radius 50 / 1, quad at "0 −150 0" / 0 of size "200 200" / "1 1", bounce
+    /// factor 0.5, behaviour bounce. `collisionmodel` (0x1401cfd98) reads only `collisionbehavior`
+    /// and `bouncefactor` (0x1401c03f0); `modelIndex` is its ordinal among the system's
+    /// `collisionmodel` operators, which its `dependencies` link names (0x1401d91b0).
+    init?(_ element: WEParticleOperator, sceneSize: SIMD2<Float>, defaults: ParticleDefaults = ParticleDefaults(pixelUnits: true),
+          modelIndex: Int = 0) {
         func vector(_ value: WEFlexValue?, _ fallback: SIMD3<Float>) -> SIMD3<Float> {
             guard let value else { return fallback }
             let v = value.vectorValue
@@ -60,11 +67,18 @@ struct ParticleCollision: Equatable {
                           forward: vector(element.forward, SIMD3(0, 0, 1)), size: SIMD2(Float(size.0), Float(size.1)))
         case "collisionbounds":
             shape = .bounds(size: sceneSize)
+        case "collisionmodel":
+            shape = .model(index: modelIndex)
         default:
             return nil
         }
         behavior = Behavior(element.collisionbehavior)
         bounceFactor = Float(element.bouncefactor ?? 0.5)
+        if case .model = shape {
+            controlPoint = nil
+            stopsRotation = false
+            return
+        }
         let flags = element.flags ?? 0
         controlPoint = (flags & 1) != 0 ? min(max(element.controlpoint ?? 0, 0), 7) : nil
         stopsRotation = (flags & 2) != 0
@@ -79,16 +93,44 @@ struct ParticleCollision: Equatable {
         self.stopsRotation = stopsRotation
     }
 
-    /// The placements `placed(in:controlPoint:)` makes: four planes for the scene's bounds.
-    var placementCount: Int {
-        if case .bounds = shape { return 4 }
-        return 1
+    /// The objects a particle object's `collisionmodel` dependencies link, by their `index` (WE
+    /// parses them at 0x14022b1f3 and binds them at 0x14022cfa0). The operator collides only
+    /// with a model or a puppet image; an index nothing names collides with nothing.
+    static func linkedModels(_ dependencies: [WEObjectDependency]) -> [Int: String] {
+        var models: [Int: String] = [:]
+        for case let .link(id, type, index) in dependencies where type?.lowercased() == "collisionmodel" {
+            models[max(index ?? 0, 0)] = String(id)
+        }
+        return models
+    }
+
+    /// The `collisionmodel` dependency index, nil for the other shapes.
+    var modelIndex: Int? {
+        if case .model(let index) = shape { return index }
+        return nil
+    }
+
+    /// The response every placement of this operator carries: −(1 + bounce factor), the
+    /// behaviour and whether a hit stops the rotation.
+    private var response: SIMD4<Float> {
+        SIMD4(-(1 + bounceFactor), Float(behavior.rawValue), stopsRotation ? 1 : 0, 0)
+    }
+
+    /// A `collisionmodel`'s capsules as placements (`ParticleCollisionPlacement.Kind.capsule`), in
+    /// the space the particles are drawn from (the scene's plane and depth). They stay where
+    /// their model is, so an instance of an instanced system doesn't carry them.
+    func placed(capsules: [ParticleCapsule]) -> [ParticleCollisionPlacement] {
+        capsules.map { capsule in
+            ParticleCollisionPlacement(kind: .capsule, shape: SIMD4(capsule.start, capsule.length),
+                                       axis: SIMD4(capsule.direction, capsule.radius), extra: SIMD4(0, 0, 1, 0),
+                                       response: response)
+        }
     }
 
     /// The shape in scene space this frame. `controlPoint` gives a control point's position.
     func placed(in space: SceneParticleEmitterSpace, controlPoint position: (Int) -> SIMD2<Float>) -> [ParticleCollisionPlacement] {
         let scale = sqrt(abs(simd_determinant(space.world.linear)))
-        let response = SIMD4<Float>(-(1 + bounceFactor), Float(behavior.rawValue), stopsRotation ? 1 : 0, 0)
+        let response = self.response
         func direction(_ v: SIMD3<Float>) -> SIMD2<Float>? {
             let turned = space.rotation * SIMD2(v.x, v.y)
             return simd_length(turned) > 1e-6 ? simd_normalize(turned) : nil
@@ -121,6 +163,9 @@ struct ParticleCollision: Equatable {
                 ParticleCollisionPlacement(kind: .plane, shape: SIMD4($0.x, $0.y, $0.z, 0),
                                            extra: SIMD4(0, 0, 1, 0), response: response)
             }
+        case .model:
+            // Placed from the linked object's capsules (`placed(capsules:)`).
+            return []
         }
     }
 }
@@ -128,11 +173,13 @@ struct ParticleCollision: Equatable {
 /// A collision shape in scene space for one step (`ParticleCollision.placed`); the GPU reads the
 /// same layout (`ParticleShared.h`).
 struct ParticleCollisionPlacement: Equatable {
-    enum Kind: UInt32 { case plane = 0, sphere, quad }
+    enum Kind: UInt32 { case plane = 0, sphere, quad, capsule }
 
     /// Plane: normal xy, distance. Sphere: centre xy, radius. Quad: centre xy, normal xy.
+    /// Capsule: start xyz (depth the particles' z), segment length.
     var shape: SIMD4<Float>
-    /// Quad: right axis xy, half size along it, half size along `extra`.
+    /// Quad: right axis xy, half size along it, half size along `extra`. Capsule: unit direction
+    /// xyz, radius.
     var axis = SIMD4<Float>.zero
     /// Quad: second axis xy. z: 1 when the shape is fixed in the scene (bounds), so an instance
     /// of an instanced system doesn't carry it (`moved(by:)`).
@@ -156,11 +203,50 @@ struct ParticleCollisionPlacement: Equatable {
         var moved = self
         switch kind {
         case .plane: moved.shape.z += simd_dot(SIMD2(shape.x, shape.y), translation)
-        case .sphere, .quad:
+        case .sphere, .quad, .capsule:
             moved.shape.x += translation.x
             moved.shape.y += translation.y
         }
         return moved
+    }
+
+    /// A `collisionmodel`'s capsules against a particle (0x1402508c0 bounce, 0x140250e00 slide,
+    /// 0x140251320 stop, 0x1402517d0 delete). Every capsule tests the particle where it was when
+    /// the operator started, as a point: the closest point of the segment, then a hit when it is
+    /// nearer than the radius; the last capsule hit gives the normal (away from the segment) and
+    /// the depth. A hit pushes the particle out to the surface and bounces (v += n·(n·v)·−(1 +
+    /// bouncefactor)), slides (the normal part removed) or stops; "delete" only kills it. The
+    /// placements share their response. Depth is the particle's z, velocity z its `zVelocity`.
+    static func resolveCapsules(_ capsules: ArraySlice<ParticleCollisionPlacement>, position: inout SIMD3<Float>,
+                                velocity: inout SIMD3<Float>, dies: inout Bool) {
+        guard let first = capsules.first else { return }
+        let point = position
+        var hit: (normal: SIMD3<Float>, depth: Float)?
+        for capsule in capsules {
+            let start = SIMD3<Float>(capsule.shape.x, capsule.shape.y, capsule.shape.z)
+            let direction = SIMD3<Float>(capsule.axis.x, capsule.axis.y, capsule.axis.z)
+            let along = min(max(simd_dot(point - start, direction), 0), capsule.shape.w)
+            let offset: SIMD3<Float> = point - (start + direction * along)
+            let squared = simd_length_squared(offset)
+            guard squared < capsule.axis.w * capsule.axis.w else { continue }
+            // WE's rsqrt of 0 would give NaN; a particle on the axis leaves along +y.
+            let distance = squared.squareRoot()
+            hit = (distance > 1e-6 ? offset / distance : SIMD3<Float>(0, 1, 0), distance - capsule.axis.w)
+        }
+        guard let hit else { return }
+        switch ParticleCollision.Behavior(rawValue: UInt32(first.response.y)) ?? .bounce {
+        case .bounce:
+            position -= hit.normal * hit.depth
+            velocity += hit.normal * (simd_dot(hit.normal, velocity) * first.response.x)
+        case .slide:
+            position -= hit.normal * hit.depth
+            velocity -= hit.normal * simd_dot(hit.normal, velocity)
+        case .stop:
+            position -= hit.normal * hit.depth
+            velocity = .zero
+        case .delete:
+            dies = true
+        }
     }
 
     /// Resolves a particle that moved from `previous` to `position` against this shape.
@@ -181,6 +267,9 @@ struct ParticleCollisionPlacement: Equatable {
             guard distance < shape.z else { return }
             normal = distance > 1e-6 ? offset / distance : SIMD2(0, 1)
             position = center + normal * shape.z
+        case .capsule:
+            // Resolved together (`resolveCapsules`).
+            return
         case .quad:
             let center = SIMD2(shape.x, shape.y), n = SIMD2(shape.z, shape.w)
             let depth = simd_dot(n, position - center)

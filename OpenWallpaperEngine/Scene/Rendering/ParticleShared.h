@@ -63,8 +63,9 @@ struct EmitterState {
 
 /// A collision shape in scene space (`ParticleCollisionPlacement`).
 struct CollisionPlacement {
-    float4 shape;    // plane: normal xy, distance; sphere: centre xy, radius; quad: centre xy, normal xy
-    float4 axis;     // quad: right xy, half size along it, half size along `extra`
+    float4 shape;    // plane: normal xy, distance; sphere: centre xy, radius; quad: centre xy, normal xy;
+                     // capsule: start xyz, length
+    float4 axis;     // quad: right xy, half size along it, half size along `extra`; capsule: direction xyz, radius
     float4 extra;    // quad: second axis xy; z: fixed in the scene
     float4 response; // bounce coefficient, behaviour, stops rotation, kind
 };

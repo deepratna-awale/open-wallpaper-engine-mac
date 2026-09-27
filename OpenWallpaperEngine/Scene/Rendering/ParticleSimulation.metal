@@ -296,6 +296,38 @@ static void collide(CollisionPlacement collision, float2 shift, thread float2 &p
     if (collision.response.z > 0.5) angularVelocity = 0;
 }
 
+/// `ParticleCollisionPlacement.resolveCapsules`: a `collisionmodel`'s capsules, in 3D (the
+/// particle's depth is z), the last one hit giving the normal and depth.
+static void collideCapsules(constant CollisionPlacement *collisions, uint first, uint end, thread float3 &position,
+                            thread float3 &velocity, thread bool &dies) {
+    const float3 point = position;
+    bool hit = false;
+    float3 normal = float3(0);
+    float depth = 0;
+    for (uint index = first; index < end; ++index) {
+        const CollisionPlacement capsule = collisions[index];
+        const float along = min(max(dot(point - capsule.shape.xyz, capsule.axis.xyz), 0.0f), capsule.shape.w);
+        const float3 offset = point - (capsule.shape.xyz + capsule.axis.xyz * along);
+        const float squared = dot(offset, offset);
+        if (!(squared < capsule.axis.w * capsule.axis.w)) continue;
+        const float distance = sqrt(squared);
+        normal = distance > 1e-6f ? offset / distance : float3(0, 1, 0);
+        depth = distance - capsule.axis.w;
+        hit = true;
+    }
+    if (!hit) return;
+    const float4 response = collisions[first].response;
+    const uint behavior = uint(response.y);
+    if (behavior == 3) {
+        dies = true;
+        return;
+    }
+    position -= normal * depth;
+    if (behavior == 0) velocity += normal * (dot(normal, velocity) * response.x);
+    else if (behavior == 1) velocity -= normal * dot(normal, velocity);
+    else velocity = float3(0);
+}
+
 static bool programCollide(ProgramOp record, thread ProgramState &p, thread const ProgramContext &c,
                            constant CollisionPlacement *collisions, uint collisionCount, float2 shift) {
     const uint first = record.header.z & 0xFFFFu, count = record.header.z >> 16;
@@ -303,6 +335,17 @@ static bool programCollide(ProgramOp record, thread ProgramState &p, thread cons
     float2 velocity = c.space * p.velocity;
     const float2 previous = c.space * p.previous + c.origin;
     bool dies = false;
+    const uint start = min(first, collisionCount), end = min(first + count, collisionCount);
+    if (start < end && uint(collisions[start].response.w) == 3) {
+        // `collisionmodel`: capsules stay where their model is (not carried by `shift`).
+        float3 point = float3(position, p.z), motion = float3(velocity, p.zVelocity);
+        collideCapsules(collisions, start, end, point, motion, dies);
+        p.position = c.toSpace * (point.xy - c.origin);
+        p.velocity = c.toSpace * motion.xy;
+        p.z = point.z;
+        p.zVelocity = motion.z;
+        return dies;
+    }
     for (uint index = first; index < min(first + count, collisionCount); ++index) {
         collide(collisions[index], shift, position, velocity, p.angularVelocity, dies, previous);
     }

@@ -4,8 +4,9 @@ import simd
 /// each one's filler function in `wallpaper64.exe` is cited. Record layouts are documented on
 /// `ParticleProgramCPU`'s handlers.
 enum ParticleOperatorBuilder {
+    /// `modelIndex` is how many `collisionmodel` operators came before this one.
     static func make(_ element: WEParticleOperator, defaults d: ParticleDefaults, sceneSize: SIMD2<Float>,
-                     path: String) -> ParticleOperator? {
+                     path: String, modelIndex: Int = 0) -> ParticleOperator? {
         let flags = UInt32(truncatingIfNeeded: max(element.flags ?? 0, 0))
         func cp(_ value: Int?, _ fallback: Int = 0) -> UInt32 { UInt32(min(max(value ?? fallback, 0), 7)) }
         func f(_ value: Double?, _ fallback: Float) -> Float { value.map(Float.init) ?? fallback }
@@ -129,16 +130,16 @@ enum ParticleOperatorBuilder {
                 return nil
             }
             return ParticleOperator(.inheritValueFromEvent, flags: verbs.rawValue, blend: blend)
-        case "collisionplane", "collisionsphere", "collisionquad", "collisionbounds":
-            guard let collision = ParticleCollision(element, sceneSize: sceneSize, defaults: d) else { return nil }
+        case "collisionplane", "collisionsphere", "collisionquad", "collisionbounds", "collisionmodel":
+            // `collisionmodel` collides with the capsules of the object the system's `dependencies`
+            // link to it (`SceneMetalParticleSystem.collisionModels`).
+            guard let collision = ParticleCollision(element, sceneSize: sceneSize, defaults: d,
+                                                    modelIndex: modelIndex) else { return nil }
             var op = ParticleOperator(.collision)
             op.collision = collision
             return op
         case "collisionbox":
             // Its VM entry does nothing (0x140240279).
-            return nil
-        case "collisionmodel":
-            OWELog.error(.scene, "Particle system \(path): collisionmodel needs 3D models, not supported; ignored")
             return nil
         default:
             OWELog.error(.scene, "Particle system \(path): unknown operator \(element.name ?? "(none)"); ignored")

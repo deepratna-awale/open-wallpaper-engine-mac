@@ -308,7 +308,7 @@
   "name": "ptce_collisionmodel",
   "coverage": 37.77,
   "motion": 2.26,
-  "knownGap": "PG6: collisionmodel needs 3D models (EX6)"
+  "knownGap": "PG6: the particles collide with the sphere, but WE depth-tests them against it in this orthographic scene, where ours has no depth buffer"
  },
  {
   "name": "ptce_collisionplane",

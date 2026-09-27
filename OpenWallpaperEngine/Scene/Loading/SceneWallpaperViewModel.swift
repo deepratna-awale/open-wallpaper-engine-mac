@@ -1481,7 +1481,10 @@ class SceneWallpaperViewModel: ObservableObject {
                                     overrides: SceneParticleOverrides(object.instanceoverride, in: userValueContext))
         // Only the root is the object; its children follow it through their links.
         for index in family.indices.dropFirst() { family[index].objectID = nil }
-        if !family.isEmpty { family[0].emitterImages = ParticleEmitterImage.bound(object.dependencies ?? []) }
+        if !family.isEmpty {
+            family[0].emitterImages = ParticleEmitterImage.bound(object.dependencies ?? [])
+            family[0].collisionModels = ParticleCollision.linkedModels(object.dependencies ?? [])
+        }
         return family
     }
 

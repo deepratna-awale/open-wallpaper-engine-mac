@@ -33,7 +33,7 @@ final class ParticleProgramTests: XCTestCase {
 
     /// Every initializer and operator name in `wallpaper64.exe`'s particle registry (its strings;
     /// effect gallery EXTRAS.md item 6, with `vortex_v2` in full) builds, except `collisionbox`,
-    /// whose VM entry does nothing in WE, and `collisionmodel`, which needs 3D models.
+    /// whose VM entry does nothing in WE.
     func testEveryRegisteredInitializerAndOperatorBuilds() throws {
         let initializers = ["colorrandom", "hsvcolorrandom", "colorlist", "sizerandom", "alpharandom", "velocityrandom",
                             "lifetimerandom", "rotationrandom", "angularvelocityrandom", "positionoffsetrandom",
@@ -47,15 +47,13 @@ final class ParticleProgramTests: XCTestCase {
                          "boids", "controlpointattract", "maintaindistancetocontrolpoint",
                          "maintaindistancebetweencontrolpoints", "reducemovementnearcontrolpoint", "capvelocity",
                          "remapvalue", "inheritvaluefromevent", "collisionsphere", "collisionbounds",
-                         "collisionquad", "collisionplane"]
+                         "collisionquad", "collisionplane", "collisionmodel"]
         for name in operators {
             XCTAssertNoThrow(try `operator`(#"{"name":"\#(name)"}"#), name)
         }
-        for name in ["collisionbox", "collisionmodel"] {
-            let element: WEParticleOperator = try decode(#"{"name":"\#(name)"}"#)
-            XCTAssertNil(ParticleOperatorBuilder.make(element, defaults: ParticleDefaults(pixelUnits: true),
-                                                      sceneSize: SIMD2(100, 100), path: "t"), name)
-        }
+        let box: WEParticleOperator = try decode(#"{"name":"collisionbox"}"#)
+        XCTAssertNil(ParticleOperatorBuilder.make(box, defaults: ParticleDefaults(pixelUnits: true),
+                                                  sceneSize: SIMD2(100, 100), path: "t"), "collisionbox")
         XCTAssertEqual(ParticleSystemBuilder.supportedEmitters, ["sphererandom", "boxrandom", "layerimage"])
     }
 

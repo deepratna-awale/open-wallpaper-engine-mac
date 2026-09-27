@@ -41,6 +41,8 @@ struct ParticleFrameInputs {
     var colorScale = SIMD3<Float>(repeating: 1)
     /// Collision shapes in the scene this step (`ParticleOperatorKind.collision` records index them).
     var collisions: [ParticleCollisionPlacement] = []
+    /// How many of `collisions` each collision operator placed, in program order.
+    var collisionCounts: [Int] = []
     /// The system emits nothing and shows nothing this frame: every particle is removed.
     var clears = false
 
@@ -142,12 +144,15 @@ struct ParticleFrameInputs {
 
     /// Advances `system`'s clock and evaluates this step's inputs. `emitter` is the emitter's
     /// world transform this frame; nil keeps the authored one. `scripted` is what the wallpaper's
-    /// scripts wrote into the system's `instanceoverride`.
+    /// scripts wrote into the system's `instanceoverride`. `modelCapsules` gives the capsules of
+    /// an object a `collisionmodel` operator links, in the scene's plane and depth
+    /// (`ParticleCapsule`).
     static func advance(_ system: ParticleSystemRuntime, deltaTime: Float, cursor: SIMD2<Float>,
                         emitter: SceneAffineTransform? = nil, values: SceneValueContext? = nil,
                         scripted: SceneScriptInstanceOverrides? = nil, audio: AudioSpectrumSnapshot = .silent, frameTime: Float? = nil,
                         frameRateLimit: Int = 0,
-                        layerWorld: (String) -> SceneAffineTransform? = { _ in nil }) -> ParticleFrameInputs {
+                        layerWorld: (String) -> SceneAffineTransform? = { _ in nil },
+                        modelCapsules: (String) -> [ParticleCapsule] = { _ in [] }) -> ParticleFrameInputs {
         let configuration = system.configuration
         restartWithParent(system)
         system.elapsedTime += deltaTime
@@ -222,7 +227,7 @@ struct ParticleFrameInputs {
         inputs.ropeRateScale = overrides.count
         inputs.ropeLifetimeScale = inputs.spawnScale.z
         system.ropeFrame = SIMD3(inputs.ropeRateScale, inputs.ropeLifetimeScale, Float(frameRateLimit))
-        inputs.placeControlPoints(system, world: world, cursor: cursor, overrides: overrides)
+        inputs.placeControlPoints(system, world: world, cursor: cursor, overrides: overrides, modelCapsules: modelCapsules)
         inputs.encodeProgram(system, audio: audio, countScale: overrides.count, rateScale: overrides.rate)
         return inputs
     }
@@ -277,7 +282,8 @@ struct ParticleFrameInputs {
     /// control point `parentcontrolpoint` (flag 4) or at their offset in the emitter's space. The
     /// object's `controlpoint<n>` override replaces the offset.
     private mutating func placeControlPoints(_ system: ParticleSystemRuntime, world: SceneAffineTransform,
-                                             cursor: SIMD2<Float>, overrides: SceneParticleOverrides) {
+                                             cursor: SIMD2<Float>, overrides: SceneParticleOverrides,
+                                             modelCapsules: (String) -> [ParticleCapsule]) {
         let configuration = system.configuration
         let toSpace = self.space.inverse ?? .identity
         let emitterToSpace = toSpace * world
@@ -320,8 +326,15 @@ struct ParticleFrameInputs {
         let simulationSpace = SceneParticleEmitterSpace(world: space)
         let points = controlPoints
         let spaceToScene = space
-        collisions = configuration.program.operators.compactMap(\.collision).flatMap { collision in
-            collision.placed(in: simulationSpace) { spaceToScene.apply(points[min(max($0, 0), 7)]) }
+        for collision in configuration.program.operators.compactMap(\.collision) {
+            let placed: [ParticleCollisionPlacement]
+            if let index = collision.modelIndex {
+                placed = configuration.collisionModels[index].map { collision.placed(capsules: modelCapsules($0)) } ?? []
+            } else {
+                placed = collision.placed(in: simulationSpace) { spaceToScene.apply(points[min(max($0, 0), 7)]) }
+            }
+            collisions += placed
+            collisionCounts.append(placed.count)
         }
     }
 
@@ -354,11 +367,15 @@ struct ParticleFrameInputs {
                                         countScale: Float, rateScale: Float = 1) {
         let program = system.configuration.program
         var collision: UInt32 = 0
+        var collisionOperator = 0
         operators = program.operators.map { element in
             var record = element.record
             if let response = element.audio { record.e.w = response.response(audio) }
             if element.kind == .collision {
-                let count = element.collision?.placementCount ?? 0
+                // What `placeControlPoints` placed for it (a model's capsules vary by frame).
+                let count = element.collision != nil && collisionOperator < collisionCounts.count
+                    ? collisionCounts[collisionOperator] : 0
+                if element.collision != nil { collisionOperator += 1 }
                 record.header.z = collision | (UInt32(count) << 16)
                 collision += UInt32(count)
             }

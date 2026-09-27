@@ -81,9 +81,16 @@ enum ParticleSystemBuilder {
         system.controlPoints = controlPoints(particleSystem.controlpoint ?? [])
         system.ropeUV = ParticleRopeUV(renderer, rate: ropeRate(particleSystem.emitter ?? []),
                                        lifetime: ropeLifetime(particleSystem.initializer ?? []))
+        // A `collisionmodel` operator's dependency index is its place in the same list of linked
+        // slots the `layerimage` emitters were numbered in, parsed before the operators
+        // (system+0x1b0: 0x1401c6fba, 0x1401cfdf0).
+        var modelIndex = imageIndex
         system.program = ParticleProgram(
-            operators: (particleSystem.operator ?? []).compactMap {
-                ParticleOperatorBuilder.make($0, defaults: defaults, sceneSize: sceneSize, path: particlePath)
+            operators: (particleSystem.operator ?? []).compactMap { element in
+                let op = ParticleOperatorBuilder.make(element, defaults: defaults, sceneSize: sceneSize, path: particlePath,
+                                                      modelIndex: modelIndex)
+                if op?.collision?.modelIndex != nil { modelIndex += 1 }
+                return op
             },
             initializers: (particleSystem.initializer ?? []).compactMap {
                 ParticleInitializerBuilder.make($0, defaults: defaults, path: particlePath)

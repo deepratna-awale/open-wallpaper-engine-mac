@@ -384,6 +384,17 @@ extension ParticleProgramCPU {
         var velocity = context.space.linear * p.velocity
         let previous = context.space.apply(p.previous)
         var dies = false
+        let range = min(first, context.collisions.count)..<min(first + count, context.collisions.count)
+        if context.collisions[range].first?.kind == .capsule {
+            // `collisionmodel`: in 3D, the particle's depth included.
+            var point = SIMD3<Float>(position, p.z), motion = SIMD3<Float>(velocity, p.zVelocity)
+            ParticleCollisionPlacement.resolveCapsules(context.collisions[range], position: &point, velocity: &motion, dies: &dies)
+            p.position = context.toSpace * (SIMD2(point.x, point.y) - context.space.translation)
+            p.velocity = context.toSpace * SIMD2(motion.x, motion.y)
+            p.z = point.z
+            p.zVelocity = motion.z
+            return dies
+        }
         for index in first..<min(first + count, context.collisions.count) {
             context.collisions[index].resolve(position: &position, velocity: &velocity,
                                               angularVelocity: &p.angularVelocity, dies: &dies, previous: previous)

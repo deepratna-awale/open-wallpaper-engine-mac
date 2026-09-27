@@ -92,6 +92,9 @@ struct SceneMetalParticleSystem {
     /// The layers the `layerimage` emitters emit from, by the emitter's ordinal among them (the
     /// object's `emitterimage` dependencies); the renderer samples each layer's image into its points.
     var emitterImages: [ParticleEmitterImage] = []
+    /// The objects the `collisionmodel` operators collide with, by the operator's dependency
+    /// index (`ParticleCollision.Shape.model`, the object's `collisionmodel` dependencies).
+    var collisionModels: [Int: String] = [:]
 
     /// Runs as instances (`ParticleChildLink`).
     var isInstanced: Bool { link?.instanced == true }

@@ -269,6 +269,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var frameDepth: SceneDepthStates? { sceneDepthFormat == .invalid ? nil : depthStates }
     /// Each object's own 3D transform this frame (`live3D`), evaluated once.
     private var frameLocals3D: [String: SceneLocalTransform3D] = [:]
+    /// `collisionmodel` targets already reported as not collidable (`particleCapsules`).
+    private var reportedCollisionTargets = Set<String>()
     /// The user's quality settings (post-processing, reflection, shadows, volumetrics); the view sets them.
     var renderSettings = SceneRenderSettings()
     private var sceneRenderTarget: MTLTexture?
@@ -1036,11 +1038,13 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             // WE's engine frame time and frame-rate limit steer drag and the operators' half steps
             // (`ParticleFrameInputs.dragDeltaTime`, `substeps`); the pre-simulation runs in this frame.
             let layerWorld = { [self] (id: String) in emitterImageLayerWorld(id, motion: motion) }
+            let modelCapsules = { [self] (id: String) in particleCapsules(id, for: system) }
             let prewarm = ParticlePrewarm.steps(system).map {
                 ParticleFrameInputs.advance(system, deltaTime: $0, cursor: cursor, emitter: emitter, values: timelines.values,
                                             scripted: scripted,
                                             audio: effectFrame.audio, frameTime: Float(clock.delta),
-                                            frameRateLimit: destination.frameRateLimit, layerWorld: layerWorld)
+                                            frameRateLimit: destination.frameRateLimit, layerWorld: layerWorld,
+                                            modelCapsules: modelCapsules)
             }
             // A script's `pause()` holds the system as it is; `stop()` clears it until `play()`.
             let paused = script?.playback == .pause
@@ -1048,7 +1052,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                                      emitter: emitter, values: timelines.values, scripted: scripted,
                                                      audio: effectFrame.audio,
                                                      frameTime: Float(clock.delta), frameRateLimit: destination.frameRateLimit,
-                                                     layerWorld: layerWorld)
+                                                     layerWorld: layerWorld, modelCapsules: modelCapsules)
             Self.applyScriptPlayback(script?.playback, emitting: objectID.flatMap { pendingEmits.removeValue(forKey: $0) },
                                      to: &inputs)
             if particleSimulator != nil {
@@ -1790,14 +1794,38 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             temporary.eye = SIMD3(sceneSize.x / 2, sceneSize.y / 2, ParticleMaterialUniforms.eyeDistance)
             return ParticleMaterialUniforms.Placement(camera: temporary)
         }
-        guard let id = particleObjectID(system) else { return ParticleMaterialUniforms.Placement(camera: camera) }
+        return ParticleMaterialUniforms.Placement(camera: camera, model: particleSpaceModel(system))
+    }
+
+    /// The matrix from the space a system's particles are simulated in (the scene plane its
+    /// object's 2D transform places them in, and their depth) to where its 3D world matrix puts
+    /// them: identity in an orthographic scene, or when the two agree.
+    private func particleSpaceModel(_ system: ParticleSystemRuntime) -> simd_float4x4 {
+        guard isPerspective, let id = particleObjectID(system) else { return matrix_identity_float4x4 }
         let planar = transforms.world(of: id, live: { [self] id in liveLocal(id) }, attachments: puppetAttachments.affine)
         let x = planar.linear.columns.0, y = planar.linear.columns.1, t = planar.translation
         let embedded = simd_float4x4(columns: (SIMD4<Float>(x.x, x.y, 0, 0), SIMD4<Float>(y.x, y.y, 0, 0),
                                                SIMD4<Float>(0, 0, 1, 0), SIMD4<Float>(t.x, t.y, 0, 1)))
-        guard abs(simd_determinant(planar.linear)) > 1e-12 else { return ParticleMaterialUniforms.Placement(camera: camera) }
-        return ParticleMaterialUniforms.Placement(camera: camera,
-                                                  model: world3D(id, in: spatial.transforms) * embedded.inverse)
+        guard abs(simd_determinant(planar.linear)) > 1e-12 else { return matrix_identity_float4x4 }
+        return world3D(id, in: spatial.transforms) * embedded.inverse
+    }
+
+    /// The capsules a `collisionmodel` operator of `system` collides with (docs/models-plan.md
+    /// §2.12): model object `id`'s bones as last posed (its bind pose before its first frame) or
+    /// its box, through its world matrix, in the space the system's particles are simulated in.
+    /// WE also takes a puppet image; that isn't supported here (logged once).
+    private func particleCapsules(_ id: String, for system: ParticleSystemRuntime) -> [ParticleCapsule] {
+        guard let plan = spatial.models.first(where: { $0.id == id })?.plan else {
+            if reportedCollisionTargets.insert(id).inserted {
+                OWELog.error(.scene, "Particle collisionmodel: object \(id) isn't a drawable model; its particles don't collide with it")
+            }
+            return []
+        }
+        let space = particleSpaceModel(system)
+        let toParticles = abs(space.determinant) > 1e-12 ? space.inverse : matrix_identity_float4x4
+        return ParticleCapsule.capsules(boneVectors: plan.skeleton?.boneVectors,
+                                        boneWorlds: models?.animator(for: id)?.worlds ?? [], bounds: plan.bounds,
+                                        world: toParticles * world3D(id, in: spatial.transforms))
     }
 
     /// Draws model object `index` (`SceneSpatialContent.models`) through `modelDrawing` at its
