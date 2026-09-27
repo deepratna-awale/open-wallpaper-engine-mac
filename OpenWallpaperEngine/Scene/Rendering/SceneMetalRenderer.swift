@@ -1932,7 +1932,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             ?? NSFont.systemFont(ofSize: pixelSize)
         if bold { font = NSFontManager.shared.convert(font, toHaveTrait: .boldFontMask) }
         if italic { font = NSFontManager.shared.convert(font, toHaveTrait: .italicFontMask) }
-        let layout = SceneTextLayout(text: value, font: font, authoredSize: boxSize, padding: text.padding,
+        let layout = SceneTextLayout(text: value, font: font, padding: text.padding,
                                      horizontalAlignment: text.horizontalAlignment, verticalAlignment: text.verticalAlignment,
                                      maxWidth: text.maxWidth, maxRows: text.maxRows, useEllipsis: text.useEllipsis)
         // A white coverage mask, as WE's `font` shader samples its glyphs: colour (authored and

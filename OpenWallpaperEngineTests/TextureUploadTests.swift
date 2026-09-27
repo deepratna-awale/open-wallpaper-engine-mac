@@ -102,7 +102,7 @@ final class TextureUploadTests: XCTestCase {
     /// (WE's font shader draws `g_Color4` at the glyph's coverage).
     func testTextEdgesKeepTheTextColour() throws {
         let font = NSFont.systemFont(ofSize: 40)
-        let layout = SceneTextLayout(text: "Ol", font: font, authoredSize: SIMD2(0, 0), padding: SIMD2(4, 4),
+        let layout = SceneTextLayout(text: "Ol", font: font, padding: SIMD2(4, 4),
                                      horizontalAlignment: nil, verticalAlignment: nil, maxWidth: nil, maxRows: nil,
                                      useEllipsis: false)
         let color = NSColor(srgbRed: 1, green: 0.5, blue: 0, alpha: 1)
@@ -120,7 +120,7 @@ final class TextureUploadTests: XCTestCase {
     /// its alpha, and colour glyphs (which a mask would lose) give none.
     func testWhiteTextGivesItsCoverage() throws {
         let font = NSFont.systemFont(ofSize: 40)
-        let layout = SceneTextLayout(text: "Ol", font: font, authoredSize: SIMD2(0, 0), padding: SIMD2(4, 4),
+        let layout = SceneTextLayout(text: "Ol", font: font, padding: SIMD2(4, 4),
                                      horizontalAlignment: nil, verticalAlignment: nil, maxWidth: nil, maxRows: nil,
                                      useEllipsis: false)
         let raster = try XCTUnwrap(layout.rasterize(font: font, color: NSColor(srgbRed: 1, green: 1, blue: 1, alpha: 1),
@@ -131,7 +131,7 @@ final class TextureUploadTests: XCTestCase {
         XCTAssertTrue(coverage.contains { $0 > 0 && $0 < 255 }, "antialiased edges keep partial coverage")
         for index in coverage.indices { XCTAssertEqual(Int(coverage[index]), Int(straight[index * 4 + 3]), accuracy: 1) }
 
-        let emoji = SceneTextLayout(text: "\u{1F600}", font: font, authoredSize: SIMD2(0, 0), padding: SIMD2(4, 4),
+        let emoji = SceneTextLayout(text: "\u{1F600}", font: font, padding: SIMD2(4, 4),
                                     horizontalAlignment: nil, verticalAlignment: nil, maxWidth: nil, maxRows: nil,
                                     useEllipsis: false)
         let colourful = try XCTUnwrap(emoji.rasterize(font: font, color: NSColor(srgbRed: 1, green: 1, blue: 1, alpha: 1),

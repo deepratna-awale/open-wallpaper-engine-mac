@@ -1019,7 +1019,8 @@ class SceneWallpaperViewModel: ObservableObject {
                                perspective: object.perspective ?? false,
                                rotation: Float(object.angles?.parseVector3().2 ?? 0),
                                effects: .identity)
-        layer.alignment = SceneAlignment.text(horizontal: object.horizontalalign, vertical: object.verticalalign)
+        // No alignment: the text block is centred on the origin, and the lines sit in it by
+        // `horizontalalign` and `verticalalign` as WE places them (`SceneTextLayout.baselineOrigins`).
         // WE runs a text object's effects on its rasterised text; the renderer rasterises before effects run.
         layer.weEffects = buildEffectPlans(object.effects ?? [], objectID: object.id ?? -1, wallpaperDir: wallpaperDir).plans
         // Drawn through WE's `font` material, which reads its texture as coverage: effects' output

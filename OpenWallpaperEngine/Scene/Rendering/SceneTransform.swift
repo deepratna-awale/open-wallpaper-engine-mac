@@ -103,15 +103,6 @@ enum SceneAlignment {
         if alignment.contains("top") { offset.y = -size.y / 2 } else if alignment.contains("bottom") { offset.y = size.y / 2 }
         return offset
     }
-
-    /// A text object's `horizontalalign`/`verticalalign` as one alignment: which edge of the
-    /// text block sits on the origin.
-    static func text(horizontal: String?, vertical: String?) -> String {
-        let vertical = ["top", "bottom"].contains(vertical?.lowercased() ?? "") ? vertical!.lowercased() : ""
-        let horizontal = ["left", "right"].contains(horizontal?.lowercased() ?? "") ? horizontal!.lowercased() : ""
-        let combined = vertical + horizontal
-        return combined.isEmpty ? "center" : combined
-    }
 }
 
 /// A layer's quad in scene space: its centre and the full-extent vectors along its local x and

@@ -1,4 +1,5 @@
 import XCTest
+import AppKit
 @testable import OpenWallpaperEngine
 
 /// A text object's fields that scene.json leaves out take `wallpaper64.exe`'s constructor values
@@ -22,7 +23,12 @@ final class WETextDefaultsTests: XCTestCase {
         XCTAssertEqual(bare.maxRows, 1)
         XCTAssertNil(bare.horizontalAlignment)
         XCTAssertNil(bare.verticalAlignment)
-        XCTAssertEqual(SceneAlignment.text(horizontal: nil, vertical: nil), WETextDefaults.alignment)
+        let font = NSFont.systemFont(ofSize: 40)
+        func origins(_ alignment: String?) -> [CGPoint] {
+            SceneTextLayout(text: "Ab\nc", font: font, padding: SIMD2(32, 32), horizontalAlignment: alignment,
+                            verticalAlignment: alignment, maxWidth: nil, maxRows: nil, useEllipsis: false).baselineOrigins()
+        }
+        XCTAssertEqual(origins(nil), origins(WETextDefaults.alignment))
     }
 
     /// Authored fields win.

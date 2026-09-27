@@ -7,44 +7,42 @@ import simd
 ///   `pointsize` points at 300 dpi and lays the glyphs out one atlas pixel per scene unit;
 /// - text wraps only when `limitwidth` is set (at `maxwidth`), and `limitrows` keeps the first
 ///   `maxrows` lines, ending in an ellipsis when `limituseellipsis` is set;
-/// - nothing is ever shrunk to fit, and nothing is clipped: the block grows to its content;
-/// - `padding` is geometry around the glyphs, and a stub `size` (no room inside the padding,
-///   e.g. "2 2") means the block is sized to its content.
+/// - nothing is ever shrunk to fit, and nothing is clipped;
+/// - the lines sit around the object's origin by `horizontalalign` and `verticalalign` alone
+///   (`baselineOrigins`); scene.json's `size` plays no part, and `padding` is room around the
+///   glyphs (`wallpaper64.exe`'s layout 0x1401b0410 and its placement 0x140257690…0x1402577c4).
 struct SceneTextLayout {
     struct Line: Equatable {
         let text: String
+        /// WE's line width: the glyphs' ink joined with the pen's start, `min(0, xMin)` to
+        /// `max(0, xMax)` (0x1401b215d).
         let width: CGFloat
+        /// That span's left end from the pen's start (≤ 0).
+        let minX: CGFloat
     }
 
-    /// The text block (the quad), in unscaled scene units.
+    /// The text block (the quad), in unscaled scene units, centred on the object's origin: room
+    /// for every line on both sides of the origin plus `padding`.
     let boxSize: SIMD2<Float>
     let lines: [Line]
+    /// `size->metrics.height`, `ascender` and `descender` (0x1401b0bf0, 0x14025769a), whole pixels
+    /// as FreeType rounds them: the height to nearest, the ascender up, the descender down.
     let lineHeight: CGFloat
     let ascent: CGFloat
+    let descent: CGFloat
     let padding: SIMD2<Float>
     let horizontalAlignment: String?
     let verticalAlignment: String?
 
-    /// Width and height of the laid-out glyphs, without padding.
-    var contentSize: CGSize {
-        CGSize(width: lines.map(\.width).max() ?? 0, height: lineHeight * CGFloat(lines.count))
-    }
-
     /// WE's `FT_Set_Char_Size(face, 0, pointsize × 64, 300, 300)`: the em in scene units.
     static func pixelSize(pointSize: CGFloat) -> CGFloat { pointSize * 300 / 72 }
 
-    /// A `size` with no room inside its padding is a placeholder the editor writes before the
-    /// text has content; WE sizes such blocks from the text.
-    static func isStub(size: SIMD2<Float>, padding: SIMD2<Float>) -> Bool {
-        size.x - padding.x * 2 <= 2 || size.y - padding.y * 2 <= 2
-    }
-
-    init(text: String, font: NSFont, authoredSize: SIMD2<Float>, padding: SIMD2<Float>,
-         horizontalAlignment: String?, verticalAlignment: String?,
+    init(text: String, font: NSFont, padding: SIMD2<Float>, horizontalAlignment: String?, verticalAlignment: String?,
          maxWidth: Float?, maxRows: Int?, useEllipsis: Bool) {
         let attributes: [NSAttributedString.Key: Any] = [.font: font]
         ascent = ceil(font.ascender)
-        lineHeight = ceil(font.ascender - font.descender + font.leading)
+        descent = floor(font.descender)
+        lineHeight = (font.ascender - font.descender + font.leading).rounded()
         self.padding = padding
         self.horizontalAlignment = horizontalAlignment
         self.verticalAlignment = verticalAlignment
@@ -63,36 +61,48 @@ struct SceneTextLayout {
                 lines.append(Self.withEllipsis(last, attributes: attributes, width: maxWidth.map { CGFloat($0) }))
             }
         }
-        self.lines = lines.map { Line(text: $0, width: Self.width(of: $0, attributes: attributes)) }
-
-        let content = CGSize(width: self.lines.map(\.width).max() ?? 0, height: lineHeight * CGFloat(self.lines.count))
-        let fitted = SIMD2(Float(ceil(content.width)) + padding.x * 2, Float(content.height) + padding.y * 2)
-        // WE draws glyph quads, which nothing clips: a block whose text outgrows the size the
-        // editor saved (a script's longer string, a user's font) grows around it.
-        boxSize = Self.isStub(size: authoredSize, padding: padding) ? fitted : simd_max(authoredSize, fitted)
+        let laidOut = lines.map { Self.line($0, attributes: attributes) }
+        self.lines = laidOut
+        let origins = Self.origins(laidOut, ascent: ascent, descent: descent, lineHeight: lineHeight,
+                                   horizontal: horizontalAlignment, vertical: verticalAlignment)
+        boxSize = Self.box(around: origins, lines: laidOut, ascent: ascent, descent: descent, lineHeight: lineHeight,
+                           padding: padding)
     }
 
-    /// Where each line's baseline starts, in box coordinates (y-up, origin at the box's
-    /// bottom-left). Lines are aligned inside the padding by `horizontalalign`, and the block by
-    /// `verticalalign`.
+    /// Where each line's baseline starts, from the object's origin (y-up), as WE places them:
+    /// - vertically (0x140257690…0x1402577c4): `center` puts the block from the first line's ascender to the
+    ///   last line's baseline around the origin, `top` the first line's ascender on it, `bottom` the
+    ///   last line's descender; lines follow each other by the line height;
+    /// - horizontally (0x1401b2990, 0x140257690): lines are aligned within the widest, and the
+    ///   block's span is centred on the origin, or starts (`left`) or ends (`right`) on it.
     func baselineOrigins() -> [CGPoint] {
-        let box = CGSize(width: CGFloat(boxSize.x), height: CGFloat(boxSize.y))
-        let pad = CGSize(width: CGFloat(padding.x), height: CGFloat(padding.y))
-        let blockHeight = contentSize.height
-        let top: CGFloat
+        Self.origins(lines, ascent: ascent, descent: descent, lineHeight: lineHeight,
+                     horizontal: horizontalAlignment, vertical: verticalAlignment)
+    }
+
+    private static func origins(_ lines: [Line], ascent: CGFloat, descent: CGFloat, lineHeight: CGFloat,
+                                horizontal horizontalAlignment: String?, vertical verticalAlignment: String?) -> [CGPoint] {
+        let count = CGFloat(lines.count)
+        let first: CGFloat
         switch verticalAlignment?.lowercased() {
-        case "top": top = box.height - pad.height
-        case "bottom": top = pad.height + blockHeight
-        default: top = (box.height + blockHeight) / 2
+        case "top": first = -ascent
+        case "bottom": first = -descent + (count - 1) * lineHeight
+        default: first = -(ascent - (count - 1) * lineHeight) / 2
         }
+        let blockMin = lines.map(\.minX).min() ?? 0
+        let blockMax = lines.map { $0.minX + $0.width }.max() ?? 0
+        let blockWidth = blockMax - blockMin
+        let widest = lines.map(\.width).max() ?? 0
+        let horizontal = horizontalAlignment?.lowercased()
+        let shift: CGFloat = horizontal == "left" ? blockWidth / 2 : horizontal == "right" ? -blockWidth / 2 : 0
         return lines.enumerated().map { index, line in
-            let x: CGFloat
-            switch horizontalAlignment?.lowercased() {
-            case "left": x = pad.width
-            case "right": x = box.width - pad.width - line.width
-            default: x = (box.width - line.width) / 2
+            let offset: CGFloat
+            switch horizontal {
+            case "left": offset = 0
+            case "right": offset = widest - line.width
+            default: offset = (widest - line.width) / 2
             }
-            return CGPoint(x: x, y: top - CGFloat(index) * lineHeight - ascent)
+            return CGPoint(x: shift - blockWidth / 2 - line.minX + offset, y: first - CGFloat(index) * lineHeight)
         }
     }
 
@@ -108,6 +118,8 @@ struct SceneTextLayout {
         context.setShouldSmoothFonts(false)
         context.scaleBy(x: CGFloat(width) / CGFloat(max(boxSize.x, 0.0001)),
                         y: CGFloat(height) / CGFloat(max(boxSize.y, 0.0001)))
+        // The box is centred on the origin.
+        context.translateBy(x: CGFloat(boxSize.x) / 2, y: CGFloat(boxSize.y) / 2)
         let attributes: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: color]
         for (line, origin) in zip(lines, baselineOrigins()) {
             let ctLine = CTLineCreateWithAttributedString(NSAttributedString(string: line.text, attributes: attributes))
@@ -115,6 +127,30 @@ struct SceneTextLayout {
             CTLineDraw(ctLine, context)
         }
         return context.makeImage()
+    }
+
+    /// A line's text with WE's width: its glyphs' ink bounds joined with the pen's start.
+    private static func line(_ text: String, attributes: [NSAttributedString.Key: Any]) -> Line {
+        let ctLine = CTLineCreateWithAttributedString(NSAttributedString(string: text, attributes: attributes))
+        let ink = CTLineGetBoundsWithOptions(ctLine, .useGlyphPathBounds)
+        let minX = ink.isNull || ink.isEmpty ? 0 : min(0, ink.minX)
+        let maxX = ink.isNull || ink.isEmpty ? 0 : max(0, ink.maxX)
+        return Line(text: text, width: maxX - minX, minX: minX)
+    }
+
+    /// The box centred on the origin that holds every line (ascender to descender) with `padding`
+    /// around it.
+    private static func box(around origins: [CGPoint], lines: [Line], ascent: CGFloat, descent: CGFloat,
+                            lineHeight: CGFloat, padding: SIMD2<Float>) -> SIMD2<Float> {
+        var half = CGSize.zero
+        for (origin, line) in zip(origins, lines) {
+            half.width = max(half.width, abs(origin.x + line.minX), abs(origin.x + line.minX + line.width))
+            // WE's line spans the ascender to the next line's ascender (0x9c/0x94); the descender
+            // can reach below that.
+            let bottom = min(origin.y + descent, origin.y + ascent - lineHeight)
+            half.height = max(half.height, abs(origin.y + ascent), abs(bottom))
+        }
+        return SIMD2(Float(ceil(half.width)) * 2 + padding.x * 2, Float(ceil(half.height)) * 2 + padding.y * 2)
     }
 
     // MARK: - Line breaking
