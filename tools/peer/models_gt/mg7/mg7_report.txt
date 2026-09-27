@@ -1,0 +1,304 @@
+started
+reusing capture K:\DeepWorkspace\wem-images2\tools\peer\models_gt\mg7\cloth_frame22470.rdc
+capture: K:\DeepWorkspace\wem-images2\tools\peer\models_gt\mg7\cloth_frame22470.rdc
+replay status <Result: 'Success'>
+actions 986 draws 978
+depth targets: [('2D Depth Target 236', 1536, 512, 'R32_TYPELESS', 'draws=483', 'events 22..5817'), ('2D Depth Target 55', 1920, 1080, 'D32', 'draws=488', 'events 5841..15643')]
+render targets: [('Swapchain Image 35', 1920, 1080, 'R8G8B8A8_UNORM'), ('2D Render Target 218', 128, 128, 'R8G8B8A8_UNORM'), ('2D Render Target 215', 128, 128, 'R8G8B8A8_UNORM'), ('2D Render Target 194', 1920, 1080, 'R8G8B8A8_UNORM'), ('2D Render Target 191', 1920, 1080, 'R8G8B8A8_UNORM'), ('2D Render Target 62', 480, 270, 'R8G8B8A8_UNORM'), ('2D Render Target 65', 240, 135, 'R8G8B8A8_UNORM'), ('2D Render Target 68', 240, 135, 'R8G8B8A8_UNORM')]
+RT Swapchain Image 35 (1920x1080) pixel (1070,410): 8 passing modifications
+   event 5864 prim 10 -> post (0.188 0.188 0.192 1.000) shaderOut (0.189 0.188 0.193 1.000)
+   event 6094 prim 6 -> post (0.616 0.510 0.231 1.000) shaderOut (0.615 0.511 0.230 1.000)
+   event 15469 prim 210 -> post (0.620 0.176 0.192 1.000) shaderOut (0.621 0.177 0.192 0.600)
+   event 15529 prim 1 -> post (0.620 0.176 0.192 1.000) shaderOut (1.000 1.000 1.000 0.000)
+   event 15585 prim 0 -> post (0.616 0.176 0.192 1.000) shaderOut (0.614 0.175 0.191 1.000)
+   event 15643 prim 0 -> post (0.616 0.176 0.192 1.000) shaderOut (0.616 0.176 0.192 1.000)
+RT Swapchain Image 35 (1920x1080) pixel (1020,330): 7 passing modifications
+   event 5864 prim 9 -> post (0.020 0.039 0.059 1.000) shaderOut (0.019 0.040 0.058 1.000)
+   event 5864 prim 10 -> post (0.216 0.212 0.220 1.000) shaderOut (0.215 0.212 0.218 1.000)
+   event 6094 prim 6 -> post (0.333 0.275 0.125 1.000) shaderOut (0.332 0.275 0.124 1.000)
+   event 15469 prim 30 -> post (0.624 0.180 0.192 1.000) shaderOut (0.625 0.178 0.193 0.600)
+   event 15585 prim 0 -> post (0.624 0.180 0.192 1.000) shaderOut (0.622 0.180 0.192 1.000)
+   event 15643 prim 0 -> post (0.624 0.180 0.192 1.000) shaderOut (0.624 0.180 0.192 1.000)
+RT Swapchain Image 35 (1920x1080) pixel (1120,500): 6 passing modifications
+   event 5822 prim 0 -> post (1.000 0.000 1.000 1.000) shaderOut (0.000 0.000 0.000 0.000)
+   event 5864 prim 9 -> post (0.020 0.039 0.059 1.000) shaderOut (0.019 0.040 0.058 1.000)
+   event 5864 prim 10 -> post (0.016 0.035 0.051 1.000) shaderOut (0.017 0.036 0.053 1.000)
+   event 6094 prim 6 -> post (0.333 0.275 0.125 1.000) shaderOut (0.332 0.275 0.124 1.000)
+   event 15585 prim 1 -> post (0.329 0.271 0.122 1.000) shaderOut (0.328 0.270 0.123 1.000)
+   event 15643 prim 0 -> post (0.341 0.310 0.133 1.000) shaderOut (0.341 0.309 0.134 1.000)
+RT 2D Render Target 194 (1920x1080) pixel (1070,410): 1 passing modifications
+   event 15548 prim 0 -> post (0.620 0.176 0.192 1.000) shaderOut (0.620 0.176 0.192 1.000)
+RT 2D Render Target 194 (1920x1080) pixel (1020,330): 1 passing modifications
+   event 15548 prim 0 -> post (0.624 0.180 0.192 1.000) shaderOut (0.624 0.180 0.192 1.000)
+RT 2D Render Target 194 (1920x1080) pixel (1120,500): 1 passing modifications
+   event 15548 prim 1 -> post (0.333 0.275 0.125 1.000) shaderOut (0.333 0.275 0.125 1.000)
+RT 2D Render Target 191 (1920x1080) pixel (1070,410): 2 passing modifications
+   event 15530 prim 0 -> post (0.620 0.176 0.192 1.000) shaderOut (0.000 0.000 0.000 0.000)
+   event 15566 prim 0 -> post (0.620 0.176 0.192 1.000) shaderOut (0.620 0.176 0.192 1.000)
+RT 2D Render Target 191 (1920x1080) pixel (1020,330): 1 passing modifications
+   event 15530 prim 0 -> post (0.624 0.180 0.192 1.000) shaderOut (0.000 0.000 0.000 0.000)
+RT 2D Render Target 191 (1920x1080) pixel (1120,500): 2 passing modifications
+   event 15530 prim 0 -> post (0.333 0.275 0.125 1.000) shaderOut (0.000 0.000 0.000 0.000)
+   event 15566 prim 1 -> post (0.333 0.275 0.125 1.000) shaderOut (0.333 0.275 0.125 1.000)
+RT 2D Render Target 62 (480x270) pixel (267,102): 1 passing modifications
+   event 15603 prim 0 -> post (0.000 0.000 0.000 0.000) shaderOut (0.000 0.000 0.000 1.000)
+RT 2D Render Target 62 (480x270) pixel (255,82): 1 passing modifications
+   event 15603 prim 0 -> post (0.000 0.000 0.000 0.000) shaderOut (0.000 0.000 0.000 1.000)
+RT 2D Render Target 62 (480x270) pixel (280,125): 1 passing modifications
+   event 15603 prim 0 -> post (0.000 0.000 0.000 0.000) shaderOut (0.000 0.000 0.000 1.000)
+
+=== event 5822 ID3D11DeviceContext::ClearRenderTargetView()
+ ShaderStage.Vertex shader Vertex Shader 244 entry=main
+    cb0 g_ModelMatrix = [-1.0, 0.0, 0.0, 0.0, 0.0, 1.0, -0.0, 0.0, -0.0, -0.0, -1.0, 0.0, 0.0, 5.7, -2.08, 1.0]
+    cb0 g_ViewportViewProjectionMatrices.g_ViewportViewProjectionMatrices[0] = [0.0295, 0.1035, 0.0026, 0.0, 0.0437, -0.0698, 0.0039, 0.0, 0.1131, 0.0, -0.0022, 0.0, 0.0429, -0.0078, 0.458, 1.0]
+    cb0 g_ViewportViewProjectionMatrices.g_ViewportViewProjectionMatrices[1] = [0.0098, 0.0345, 0.0026, 0.0, 0.0146, -0.0233, 0.0039, 0.0, 0.0377, 0.0, -0.0022, 0.0, -0.1404, 0.1482, 0.4973, 1.0]
+    cb0 g_ViewportViewProjectionMatrices.g_ViewportViewProjectionMatrices[2] = [0.0024, 0.0084, 0.0017, 0.0, 0.0036, -0.0057, 0.0026, 0.0, 0.0092, 0.0, -0.0014, 0.0, -0.2106, 0.2067, 0.6168, 1.0]
+    cb0 g_ViewportViewProjectionMatrices.g_ViewportViewProjectionMatrices[3] = [0.0295, 0.1035, 0.0026, 0.0, 0.0437, -0.0698, 0.0039, 0.0, 0.1131, 0.0, -0.0022, 0.0, 0.0429, -0.0078, 0.458, 1.0]
+    cb0 g_ViewportViewProjectionMatrices.g_ViewportViewProjectionMatrices[4] = [0.0295, 0.1035, 0.0026, 0.0, 0.0437, -0.0698, 0.0039, 0.0, 0.1131, 0.0, -0.0022, 0.0, 0.0429, -0.0078, 0.458, 1.0]
+    cb0 g_ViewportViewProjectionMatrices.g_ViewportViewProjectionMatrices[5] = [0.0295, 0.1035, 0.0026, 0.0, 0.0437, -0.0698, 0.0039, 0.0, 0.1131, 0.0, -0.0022, 0.0, 0.0429, -0.0078, 0.458, 1.0]
+ ShaderStage.Pixel shader Pixel Shader 245 entry=main
+    PS disassembly saved: ps_event5822.txt (107 chars)
+
+=== event 5864 ID3D11DeviceContext::DrawIndexed()
+ ShaderStage.Vertex shader Vertex Shader 120 entry=main
+    cb0 g_ModelMatrix = [12800.0, 0.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 12800.0, 0.0, 0.0, -1.0, 0.0, 1.0]
+    cb0 g_NormalModelMatrix = [0.9984, 0.0, 0.0, 0.0, 0.9983, 0.0, 0.0, 0.0, 0.9984]
+    cb0 g_ViewProjectionMatrix = [-0.474, -0.4213, 0.0, -0.6124, 0.0, 1.0321, 0.0, -0.5, -0.474, 0.4214, -0.0, 0.6124, -0.0, -1.3257, 0.01, 12.0732]
+    cb0 g_EyePosition = [7.0, 7.0, -7.0]
+    cb0 g_LightAmbientColor = [0.1255, 0.2588, 0.3804]
+    cb0 g_LightSkylightColor = [0.1255, 0.2588, 0.3804]
+ ShaderStage.Pixel shader Pixel Shader 121 entry=main
+    cb0 g_RimAmount = [0.0]
+    cb0 g_RimExponent = [0.0]
+    cb0 g_Brightness = [512.0]
+    cb0 g_TintColor = [0.1529, 0.1529, 0.1529]
+    cb0 g_TintAlpha = [1.0]
+    cb0 g_Roughness = [0.075]
+    cb0 g_Metallic = [0.075]
+    cb0 g_EmissiveColor = [1024.0, 0.0, 512.0]
+    cb0 g_EmissiveBrightness = [512.0]
+    cb1 g_ViewProjectionMatrix = [0.0, 7.617959493212901e+31, 0.0, 0.0, 7.679205125945562e+31, 0.0, 7.271873597402481e+22, 0.0, 1.8753861997331358e+28, 160.188, 0.0, 0.0, 0.0, 3.0986321984615987e+32, 0.0, 0.0]
+    cb1 g_Texture6Texel = [0.0007, 0.002, 1536.0, 512.0]
+    cb2 g_LDirectional_Color = [6.0, 5.2941, 4.8941, 1.0]
+    cb2 g_LDirectional_Direction = [0.5068, 0.7514, -0.4226]
+    cb2 g_LFeature_ShadowProjection.g_LFeature_ShadowProjection[0] = [0.0295, 0.1035, 0.0026, 0.0, 0.0437, -0.0698, 0.0039, 0.0, 0.1131, 0.0, -0.0022, 0.0, 0.0429, -0.0078, 0.4585, 1.0]
+    cb2 g_LFeature_ShadowProjection.g_LFeature_ShadowProjection[1] = [0.0098, 0.0345, 0.0026, 0.0, 0.0146, -0.0233, 0.0039, 0.0, 0.0377, 0.0, -0.0022, 0.0, -0.1404, 0.1482, 0.4978, 1.0]
+    cb2 g_LFeature_ShadowProjection.g_LFeature_ShadowProjection[2] = [0.0024, 0.0084, 0.0017, 0.0, 0.0036, -0.0057, 0.0026, 0.0, 0.0092, 0.0, -0.0014, 0.0, -0.2106, 0.2067, 0.6173, 1.0]
+    cb2 g_LFeature_ShadowProjectionTransform.g_LFeature_ShadowProjectionTransform[0] = [0.0, 0.0, 0.3333, 1.0]
+    cb2 g_LFeature_ShadowProjectionTransform.g_LFeature_ShadowProjectionTransform[1] = [0.3333, 0.0, 0.3333, 1.0]
+    cb2 g_LFeature_ShadowProjectionTransform.g_LFeature_ShadowProjectionTransform[2] = [0.6667, 0.0, 0.3333, 1.0]
+    SRV slot 0: 2D Texture 128 256x256 BC3_UNORM
+    SRV slot 1: 2D Texture 132 256x256 R8G8_UNORM
+    SRV slot 2: 2D Depth Target 236 1536x512 R32_TYPELESS
+    PS disassembly saved: ps_event5864.txt (8827 chars)
+
+=== event 6094 ID3D11DeviceContext::DrawIndexed()
+ ShaderStage.Vertex shader Vertex Shader 82 entry=main
+    cb0 g_ModelMatrix = [-4.0, 0.0, -0.0, 0.0, 0.0, 6.0, 0.0, 0.0, 0.0, 0.0, -4.0, 0.0, 0.0, 3.0, 0.0, 1.0]
+    cb0 g_NormalModelMatrix = [-0.9983, 0.0, -0.0, 0.0, 0.9989, 0.0, 0.0, 0.0, -0.9983]
+    cb0 g_ViewProjectionMatrix = [-0.474, -0.4213, 0.0, -0.6124, 0.0, 1.0321, 0.0, -0.5, -0.474, 0.4214, -0.0, 0.6124, -0.0, -1.3257, 0.01, 12.0732]
+    cb0 g_EyePosition = [7.0, 7.0, -7.0]
+    cb0 g_LightAmbientColor = [0.1255, 0.2588, 0.3804]
+    cb0 g_LightSkylightColor = [0.1255, 0.2588, 0.3804]
+ ShaderStage.Pixel shader Pixel Shader 83 entry=main
+    cb0 g_RimAmount = [0.0]
+    cb0 g_RimExponent = [0.0]
+    cb0 g_Brightness = [0.0]
+    cb0 g_TintColor = [0.7176, 0.5608, 0.2275]
+    cb0 g_TintAlpha = [1.0]
+    cb0 g_Roughness = [0.75]
+    cb0 g_Metallic = [0.05]
+    cb0 g_EmissiveColor = [0.0, 0.0, 0.0]
+    cb0 g_EmissiveBrightness = [0.0]
+    cb1 g_ViewProjectionMatrix = [0.0, 7.617959493212901e+31, 0.0, 0.0, 7.679205125945562e+31, 0.0, 7.271873597402481e+22, 0.0, 1.8753861997331358e+28, 160.188, 0.0, 0.0, 0.0, 3.0986321984615987e+32, 0.0, 0.0]
+    cb1 g_Texture6Texel = [0.0007, 0.002, 1536.0, 512.0]
+    cb2 g_LDirectional_Color = [6.0, 5.2941, 4.8941, 1.0]
+    cb2 g_LDirectional_Direction = [0.5068, 0.7514, -0.4226]
+    cb2 g_LFeature_ShadowProjection.g_LFeature_ShadowProjection[0] = [0.0295, 0.1035, 0.0026, 0.0, 0.0437, -0.0698, 0.0039, 0.0, 0.1131, 0.0, -0.0022, 0.0, 0.0429, -0.0078, 0.4585, 1.0]
+    cb2 g_LFeature_ShadowProjection.g_LFeature_ShadowProjection[1] = [0.0098, 0.0345, 0.0026, 0.0, 0.0146, -0.0233, 0.0039, 0.0, 0.0377, 0.0, -0.0022, 0.0, -0.1404, 0.1482, 0.4978, 1.0]
+    cb2 g_LFeature_ShadowProjection.g_LFeature_ShadowProjection[2] = [0.0024, 0.0084, 0.0017, 0.0, 0.0036, -0.0057, 0.0026, 0.0, 0.0092, 0.0, -0.0014, 0.0, -0.2106, 0.2067, 0.6173, 1.0]
+    cb2 g_LFeature_ShadowProjectionTransform.g_LFeature_ShadowProjectionTransform[0] = [0.0, 0.0, 0.3333, 1.0]
+    cb2 g_LFeature_ShadowProjectionTransform.g_LFeature_ShadowProjectionTransform[1] = [0.3333, 0.0, 0.3333, 1.0]
+    cb2 g_LFeature_ShadowProjectionTransform.g_LFeature_ShadowProjectionTransform[2] = [0.6667, 0.0, 0.3333, 1.0]
+    SRV slot 0: 2D Texture 167 256x256 BC1_UNORM
+    SRV slot 1: 2D Depth Target 236 1536x512 R32_TYPELESS
+    PS disassembly saved: ps_event6094.txt (8017 chars)
+
+=== event 15469 ID3D11DeviceContext::DrawIndexed()
+ ShaderStage.Vertex shader Vertex Shader 82 entry=main
+    cb0 g_ModelMatrix = [-1.0, 0.0, 0.0, 0.0, 0.0, 1.0, -0.0, 0.0, -0.0, -0.0, -1.0, 0.0, 0.0, 5.7, -2.08, 1.0]
+    cb0 g_NormalModelMatrix = [-0.9983, 0.0, 0.0, 0.0, 0.9983, -0.0, -0.0, -0.0, -0.9983]
+    cb0 g_ViewProjectionMatrix = [-0.474, -0.4213, 0.0, -0.6124, 0.0, 1.0321, 0.0, -0.5, -0.474, 0.4214, -0.0, 0.6124, -0.0, -1.3257, 0.01, 12.0732]
+    cb0 g_EyePosition = [7.0, 7.0, -7.0]
+    cb0 g_LightAmbientColor = [0.1255, 0.2588, 0.3804]
+    cb0 g_LightSkylightColor = [0.1255, 0.2588, 0.3804]
+ ShaderStage.Pixel shader Pixel Shader 83 entry=main
+    cb0 g_RimAmount = [-0.0001]
+    cb0 g_RimExponent = [0.0]
+    cb0 g_Brightness = [-0.0001]
+    cb0 g_TintColor = [0.7843, 0.1961, 0.1961]
+    cb0 g_TintAlpha = [0.6]
+    cb0 g_Roughness = [0.7]
+    cb0 g_Metallic = [0.1]
+    cb0 g_EmissiveColor = [0.0, 0.0, -33800192.0]
+    cb0 g_EmissiveBrightness = [0.0]
+    cb1 g_ViewProjectionMatrix = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    cb1 g_Texture6Texel = [0.0007, 0.002, 1536.0, 512.0]
+    cb2 g_LDirectional_Color = [6.0, 5.2941, 4.8941, 1.0]
+    cb2 g_LDirectional_Direction = [0.5068, 0.7514, -0.4226]
+    cb2 g_LFeature_ShadowProjection.g_LFeature_ShadowProjection[0] = [0.0295, 0.1035, 0.0026, 0.0, 0.0437, -0.0698, 0.0039, 0.0, 0.1131, 0.0, -0.0022, 0.0, 0.0429, -0.0078, 0.4585, 1.0]
+    cb2 g_LFeature_ShadowProjection.g_LFeature_ShadowProjection[1] = [0.0098, 0.0345, 0.0026, 0.0, 0.0146, -0.0233, 0.0039, 0.0, 0.0377, 0.0, -0.0022, 0.0, -0.1404, 0.1482, 0.4978, 1.0]
+    cb2 g_LFeature_ShadowProjection.g_LFeature_ShadowProjection[2] = [0.0024, 0.0084, 0.0017, 0.0, 0.0036, -0.0057, 0.0026, 0.0, 0.0092, 0.0, -0.0014, 0.0, -0.2106, 0.2067, 0.6173, 1.0]
+    cb2 g_LFeature_ShadowProjectionTransform.g_LFeature_ShadowProjectionTransform[0] = [0.0, 0.0, 0.3333, 1.0]
+    cb2 g_LFeature_ShadowProjectionTransform.g_LFeature_ShadowProjectionTransform[1] = [0.3333, 0.0, 0.3333, 1.0]
+    cb2 g_LFeature_ShadowProjectionTransform.g_LFeature_ShadowProjectionTransform[2] = [0.6667, 0.0, 0.3333, 1.0]
+    SRV slot 0: 2D Texture 85 32x32 R8G8B8A8_UNORM
+    SRV slot 1: 2D Depth Target 236 1536x512 R32_TYPELESS
+    PS disassembly saved: ps_event15469.txt (8017 chars)
+
+=== event 15529 ID3D11DeviceContext::DrawIndexed()
+ ShaderStage.Vertex shader Vertex Shader 99 entry=main
+    cb0 g_ModelViewProjectionMatrix = [1.422, 1.2641, -0.0, 1.8371, 0.0, 3.0963, 0.0, -1.5, 0.474, -0.4214, 0.0, -0.6124, 0.9859, 2.1326, 0.01, 8.6995]
+ ShaderStage.Pixel shader Pixel Shader 100 entry=main
+    cb0 g_Alpha = [0.0]
+    cb0 g_Color = [1.0, 1.0, 1.0]
+    PS disassembly saved: ps_event15529.txt (228 chars)
+
+=== event 15530 ID3D11DeviceContext::ResolveSubresource()
+ ShaderStage.Vertex shader Vertex Shader 99 entry=main
+    cb0 g_ModelViewProjectionMatrix = [1.422, 1.2641, -0.0, 1.8371, 0.0, 3.0963, 0.0, -1.5, 0.474, -0.4214, 0.0, -0.6124, 0.9859, 2.1326, 0.01, 8.6995]
+ ShaderStage.Pixel shader Pixel Shader 100 entry=main
+    cb0 g_Alpha = [0.0]
+    cb0 g_Color = [1.0, 1.0, 1.0]
+    PS disassembly saved: ps_event15530.txt (228 chars)
+
+=== event 15548 ID3D11DeviceContext::DrawIndexed()
+ ShaderStage.Vertex shader Vertex Shader 183 entry=main
+    cb0 g_ModelViewProjectionMatrix = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0005, 0.0, 0.0, 0.0, 0.5, 1.0]
+    cb0 g_Texture0Resolution = [1920.0, 1080.0, 1920.0, 1080.0]
+ ShaderStage.Pixel shader Pixel Shader 184 entry=main
+    cb0 u_spanMax = [4.0]
+    cb0 u_reduceMul = [0.125]
+    cb0 u_reduceMin = [0.0312]
+    cb0 u_threshold = [0.2]
+    cb0 u_edgeMapAlpha = [0.0]
+    cb0 u_alpha = [1.0]
+    SRV slot 0: 2D Render Target 191 1920x1080 R8G8B8A8_UNORM
+    PS disassembly saved: ps_event15548.txt (5631 chars)
+
+=== event 15566 ID3D11DeviceContext::DrawIndexed()
+ ShaderStage.Vertex shader Vertex Shader 185 entry=main
+    cb0 u_angle = [0.0]
+    cb0 u_rotation = [0.0]
+    cb0 u_scale = [1.0]
+    cb0 u_center = [0.0, 0.0]
+    cb0 u_ratio = [-378.999]
+    cb0 u_feather = [0.5]
+    cb0 u_Color1 = [0.0, 0.0, 0.0]
+    cb0 u_Color2 = [1.0, 1.0, 1.0]
+    cb0 u_Color3 = [0.0, nan, 0.0]
+    cb0 u_Color4 = [0.0, nan, 0.0]
+    cb0 u_Color5 = [0.0, 0.0, -378.999]
+    cb0 u_Color6 = [0.0, 0.0, 0.0]
+    cb0 u_scale1 = [0.0]
+    cb0 u_scale2 = [0.0]
+    cb0 u_scale3 = [0.0]
+    cb0 u_scale4 = [-378.999]
+    cb0 u_scale5 = [0.0]
+    cb0 u_scale6 = [0.0]
+    cb0 u_offset1 = [0.0]
+    cb0 u_offset2 = [0.0]
+    cb0 u_offset3 = [0.0]
+    cb0 u_offset4 = [0.0]
+    cb0 u_offset5 = [0.0]
+    cb0 u_offset6 = [-378.999]
+    cb0 u_feather1 = [0.0]
+    cb0 u_feather2 = [0.0]
+    cb0 u_feather3 = [0.0]
+    cb0 u_feather4 = [0.0]
+    cb0 u_feather5 = [0.0]
+    cb0 u_feather6 = [0.0]
+    cb0 g_Point0 = [0.0, 0.0]
+    cb0 g_Point1 = [0.0, nan]
+    cb0 g_Point2 = [0.0, 0.0]
+    cb0 g_Point3 = [0.0, 0.0]
+    cb0 u_gamma = [2.2]
+    cb1 g_ModelViewProjectionMatrix = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0005, 0.0, 0.0, 0.0, 0.5, 1.0]
+    cb1 g_Texture0Resolution = [0.0, 0.0, 0.0, 0.0]
+ ShaderStage.Pixel shader Pixel Shader 186 entry=main
+    cb0 u_alpha = [0.5]
+    cb0 u_offset = [-0.25]
+    cb0 u_scale = [1.0]
+    cb0 u_sides = [0.0]
+    cb0 u_angle = [0.0]
+    cb0 u_depthFade = [0.0]
+    cb0 u_gamma = [2.2]
+    SRV slot 0: 2D Render Target 194 1920x1080 R8G8B8A8_UNORM
+    PS disassembly saved: ps_event15566.txt (1837 chars)
+
+=== event 15585 ID3D11DeviceContext::DrawIndexed()
+ ShaderStage.Vertex shader Vertex Shader 185 entry=main
+    cb0 u_angle = [3.1416]
+    cb0 u_rotation = [0.0]
+    cb0 u_scale = [1.0]
+    cb0 u_center = [0.0, 0.0]
+    cb0 u_ratio = [0.0]
+    cb0 u_feather = [0.5]
+    cb0 u_Color1 = [0.0, 0.0, 0.0]
+    cb0 u_Color2 = [1.0, 1.0, 1.0]
+    cb0 u_Color3 = [0.0, 0.0, 0.0]
+    cb0 u_Color4 = [0.0, 0.0, 0.0]
+    cb0 u_Color5 = [0.0, 0.0, 0.0]
+    cb0 u_Color6 = [0.0, 0.0, 0.0]
+    cb0 u_scale1 = [0.0]
+    cb0 u_scale2 = [0.0]
+    cb0 u_scale3 = [0.0]
+    cb0 u_scale4 = [0.0]
+    cb0 u_scale5 = [0.0]
+    cb0 u_scale6 = [0.0]
+    cb0 u_offset1 = [0.0]
+    cb0 u_offset2 = [0.0]
+    cb0 u_offset3 = [0.0]
+    cb0 u_offset4 = [0.0]
+    cb0 u_offset5 = [0.0]
+    cb0 u_offset6 = [0.0]
+    cb0 u_feather1 = [0.0]
+    cb0 u_feather2 = [0.0]
+    cb0 u_feather3 = [0.0]
+    cb0 u_feather4 = [0.0]
+    cb0 u_feather5 = [0.0]
+    cb0 u_feather6 = [0.0]
+    cb0 g_Point0 = [0.0, 0.0]
+    cb0 g_Point1 = [0.0, 0.0]
+    cb0 g_Point2 = [0.0, 0.0]
+    cb0 g_Point3 = [0.0, 0.0]
+    cb0 u_gamma = [2.2]
+    cb1 g_ModelViewProjectionMatrix = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.5, 1.0]
+    cb1 g_Texture0Resolution = [0.0, 0.0, 0.0, 0.0]
+ ShaderStage.Pixel shader Pixel Shader 186 entry=main
+    cb0 u_alpha = [0.5]
+    cb0 u_offset = [-0.25]
+    cb0 u_scale = [1.0]
+    cb0 u_sides = [0.0]
+    cb0 u_angle = [0.0]
+    cb0 u_depthFade = [0.0]
+    cb0 u_gamma = [2.2]
+    SRV slot 0: 2D Render Target 191 1920x1080 R8G8B8A8_UNORM
+    PS disassembly saved: ps_event15585.txt (1837 chars)
+
+=== event 15603 ID3D11DeviceContext::Draw()
+ ShaderStage.Vertex shader Vertex Shader 230 entry=main
+    cb0 g_TexelSize = [0.0005, 0.0009]
+ ShaderStage.Pixel shader Pixel Shader 231 entry=main
+    cb0 g_BloomStrength = [2.0]
+    cb0 g_BloomThreshold = [0.65]
+    cb0 g_BloomTint = [1.0, 1.0, 1.0]
+    SRV slot 0: 2D Render Target 58 1920x1080 R8G8B8A8_UNORM
+    PS disassembly saved: ps_event15603.txt (1493 chars)
+
+=== event 15643 ID3D11DeviceContext::Draw()
+ ShaderStage.Vertex shader Vertex Shader 228 entry=main
+ ShaderStage.Pixel shader Pixel Shader 229 entry=main
+    SRV slot 0: 2D Render Target 58 1920x1080 R8G8B8A8_UNORM
+    SRV slot 1: 2D Render Target 68 240x135 R8G8B8A8_UNORM
+    PS disassembly saved: ps_event15643.txt (739 chars)

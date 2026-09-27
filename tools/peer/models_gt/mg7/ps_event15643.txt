@@ -1,0 +1,16 @@
+Shader hash 0dac5b2d-74caac85-cde2bee1-085e6fe0
+
+ps_5_0
+      dcl_globalFlags refactoringAllowed
+      dcl_sampler g_Texture0SamplerState (s0), mode_default
+      dcl_sampler g_Texture1SamplerState (s1), mode_default
+      dcl_resource_texture2d (float,float,float,float) g_Texture0 (t0)
+      dcl_resource_texture2d (float,float,float,float) g_Texture1 (t1)
+      dcl_input_ps linear v0.xy
+      dcl_output o0.xyzw
+      dcl_temps 2
+   0: sample_indexable(texture2d)(float,float,float,float) r0.xyz, v0.xyxx, g_Texture0.xyzw, g_Texture0SamplerState
+   1: sample_indexable(texture2d)(float,float,float,float) r1.xyz, v0.xyxx, g_Texture1.xyzw, g_Texture1SamplerState
+   2: add o0.xyz, r0.xyzx, r1.xyzx
+   3: mov o0.w, l(1.000000)
+   4: ret

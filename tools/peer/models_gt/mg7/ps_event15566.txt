@@ -1,0 +1,50 @@
+Shader hash 9bee5975-94ec6896-0b1e066d-1629d538
+
+ps_5_0
+      dcl_globalFlags refactoringAllowed
+      dcl_constantbuffer cb0[2] (g_bufStatic), immediateIndexed
+      dcl_sampler g_Texture0SamplerState (s0), mode_default
+      dcl_resource_texture2d (float,float,float,float) g_Texture0 (t0)
+      dcl_input_ps linear v0.xy
+      dcl_input_ps linear v1.x
+      dcl_input_ps linear v3.xyz
+      dcl_input_ps linear v4.xyz
+      dcl_input_ps linear v5.xyz
+      dcl_input_ps linear v6.xyz
+      dcl_output o0.xyzw
+      dcl_temps 4
+      dcl_indexRange v3.xyz 2
+      dcl_indexRange v5.xyz 2
+   0: sample_indexable(texture2d)(float,float,float,float) r0.xyzw, v0.xyxx, g_Texture0.xyzw, g_Texture0SamplerState
+   1: add_sat r1.x, v1.x, -u_offset.x
+   2: mov r1.yzw, l(0, 0, 0, 0)
+   3: mov r2.xy, l(0, 0, 0, 0)
+   4: loop
+   5:   ige r2.z, r2.y, l(2)
+   6:   breakc_nz r2.z
+   7:   itof r2.z, r2.y
+   8:   add r2.z, r1.x, -r2.z
+   9:   add r2.z, r2.z, v[r2.y + 5].x
+  10:   max r2.w, l(0.000001), v[r2.y + 5].z
+  11:   mad r2.w, r2.w, l(0.500000), l(0.500000)
+  12:   div r2.z, abs(r2.z), v[r2.y + 5].y
+  13:   mad r3.x, r2.w, l(-2.000000), l(1.000000)
+  14:   add r2.z, -r2.w, r2.z
+  15:   div r2.w, l(1.000000, 1.000000, 1.000000, 1.000000), r3.x
+  16:   mul_sat r2.z, r2.w, r2.z
+  17:   mad r2.w, r2.z, l(-2.000000), l(3.000000)
+  18:   mul r2.z, r2.z, r2.z
+  19:   mul r3.x, r2.z, r2.w
+  20:   mad r1.yzw, v[r2.y + 3].xxyz, r3.xxxx, r1.yyzw
+  21:   mad r2.x, r2.w, r2.z, r2.x
+  22:   iadd r2.y, r2.y, l(1)
+  23: endloop
+  24: div r1.xyz, r1.yzwy, r2.xxxx
+  25: div r1.w, l(1.000000, 1.000000, 1.000000, 1.000000), u_gamma.x
+  26: log r1.xyz, r1.xyzx
+  27: mul r1.xyz, r1.xyzx, r1.wwww
+  28: exp r1.xyz, r1.xyzx
+  29: mad r1.xyz, r0.xyzx, r1.xyzx, -r0.xyzx
+  30: mad o0.xyz, u_alpha.xxxx, r1.xyzx, r0.xyzx
+  31: mov o0.w, r0.w
+  32: ret

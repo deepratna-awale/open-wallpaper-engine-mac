@@ -1,0 +1,30 @@
+Shader hash 7167ef35-b58219ed-e96e9fc3-eb55d699
+
+ps_5_0
+      dcl_globalFlags refactoringAllowed
+      dcl_constantbuffer cb0[2] (g_bufStatic), immediateIndexed
+      dcl_sampler g_Texture0SamplerState (s0), mode_default
+      dcl_resource_texture2d (float,float,float,float) g_Texture0 (t0)
+      dcl_input_ps linear v0.xyzw
+      dcl_input_ps linear v1.xyzw
+      dcl_output o0.xyzw
+      dcl_temps 2
+   0: sample_indexable(texture2d)(float,float,float,float) r0.xyz, v0.xyxx, g_Texture0.xyzw, g_Texture0SamplerState
+   1: sample_indexable(texture2d)(float,float,float,float) r1.xyz, v0.zwzz, g_Texture0.xyzw, g_Texture0SamplerState
+   2: add r0.xyz, r0.xyzx, r1.xyzx
+   3: sample_indexable(texture2d)(float,float,float,float) r1.xyz, v1.xyxx, g_Texture0.xyzw, g_Texture0SamplerState
+   4: add r0.xyz, r0.xyzx, r1.xyzx
+   5: sample_indexable(texture2d)(float,float,float,float) r1.xyz, v1.zwzz, g_Texture0.xyzw, g_Texture0SamplerState
+   6: add r0.xyz, r0.xyzx, r1.xyzx
+   7: mul r0.xyz, r0.xyzx, l(0.250000, 0.250000, 0.250000, 0.000000)
+   8: max r0.w, r0.y, r0.x
+   9: max r0.w, r0.z, r0.w
+  10: add_sat r0.w, r0.w, -g_BloomThreshold.x
+  11: mul r0.xyz, r0.wwww, r0.xyzx
+  12: dp3 r0.w, l(0.298900, 0.587000, 0.114000, 0.000000), r0.xyzx
+  13: mad r0.xyz, r0.xyzx, l(2.000000, 2.000000, 2.000000, 0.000000), -r0.wwww
+  14: mul r0.xyz, r0.xyzx, g_BloomStrength.xxxx
+  15: mul r0.xyz, r0.xyzx, g_BloomTint.xyzx
+  16: max o0.xyz, r0.xyzx, l(0, 0, 0, 0)
+  17: mov o0.w, l(1.000000)
+  18: ret

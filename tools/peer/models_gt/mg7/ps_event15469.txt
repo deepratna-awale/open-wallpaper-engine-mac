@@ -1,0 +1,159 @@
+Shader hash e0a896cb-43d83dae-41674334-e3fcc2eb
+
+ps_5_0
+      dcl_globalFlags refactoringAllowed
+      dcl_constantbuffer cb0[3] (g_bufStatic), immediateIndexed
+      dcl_constantbuffer cb1[5] (g_bufDynamic), immediateIndexed
+      dcl_constantbuffer cb3[17] (g_bufLights), immediateIndexed
+      dcl_sampler g_Texture0SamplerState (s0), mode_default
+      dcl_sampler g_Texture6SamplerComparisonState (s6), mode_comparison
+      dcl_resource_texture2d (float,float,float,float) g_Texture0 (t0)
+      dcl_resource_texture2d (float,float,float,float) g_Texture6 (t6)
+      dcl_input_ps linear v0.xyz
+      dcl_input_ps linear v1.xy
+      dcl_input_ps linear v2.xyz
+      dcl_input_ps linear v3.xyz
+      dcl_input_ps linear v4.xyz
+      dcl_output o0.xyzw
+      dcl_temps 6
+   0: mov r0.xyz, v4.xyzx
+   1: mov r0.w, l(1.000000)
+   2: dp4 r1.x, r0.xyzw, g_LFeature_ShadowProjection[1][3].xyzw
+   3: dp4 r1.y, r0.xyzw, g_LFeature_ShadowProjection[1][4].xyzw
+   4: dp4 r1.z, r0.xyzw, g_LFeature_ShadowProjection[1][5].xyzw
+   5: dp4 r1.w, r0.xyzw, g_LFeature_ShadowProjection[1][6].xyzw
+   6: div r1.xyz, r1.xyzx, r1.wwww
+   7: mad r2.xyz, r1.xyzx, l(0.500000, -0.500000, 1.000000, 0.000000), l(0.500000, 0.500000, 0.000000, 0.000000)
+   8: dp4 r3.x, r0.xyzw, g_LFeature_ShadowProjection[0][0].xyzw
+   9: dp4 r3.y, r0.xyzw, g_LFeature_ShadowProjection[0][1].xyzw
+  10: dp4 r3.z, r0.xyzw, g_LFeature_ShadowProjection[0][2].xyzw
+  11: dp4 r1.w, r0.xyzw, g_LFeature_ShadowProjection[0][3].xyzw
+  12: div r3.xyz, r3.xyzx, r1.wwww
+  13: mad r4.xyz, r3.xyzx, l(0.500000, -0.500000, 1.000000, 0.000000), l(0.500000, 0.500000, 0.000000, 0.000000)
+  14: add r2.xyz, r2.xyzx, -r4.xyzx
+  15: ge r3.xy, abs(r3.xyxx), l(0.990000, 0.990000, 0.000000, 0.000000)
+  16: ge r1.w, l(0.010000), r3.z
+  17: and r5.z, r1.w, l(1.000000)
+  18: and r5.xy, r3.xyxx, l(1.000000, 1.000000, 0.000000, 0.000000)
+  19: dp3 r1.w, l(1.000000, 1.000000, 1.000000, 0.000000), r5.xyzx
+  20: ge r1.w, r1.w, l(1.000000)
+  21: and r1.w, r1.w, l(1.000000)
+  22: mad r2.xyz, r1.wwww, r2.xyzx, r4.xyzx
+  23: dp4 r3.x, r0.xyzw, g_LFeature_ShadowProjection[2][7].xyzw
+  24: dp4 r3.y, r0.xyzw, g_LFeature_ShadowProjection[2][8].xyzw
+  25: dp4 r3.z, r0.xyzw, g_LFeature_ShadowProjection[2][9].xyzw
+  26: dp4 r0.x, r0.xyzw, g_LFeature_ShadowProjection[2][10].xyzw
+  27: div r0.xyz, r3.xyzx, r0.xxxx
+  28: mad r3.xyz, r0.xyzx, l(0.500000, -0.500000, 1.000000, 0.000000), l(0.500000, 0.500000, 0.000000, 0.000000)
+  29: add r3.xyz, -r2.xyzx, r3.xyzx
+  30: ge r1.xy, abs(r1.xyxx), l(0.990000, 0.990000, 0.000000, 0.000000)
+  31: ge r0.w, l(0.010000), r1.z
+  32: and r4.z, r0.w, l(1.000000)
+  33: and r4.xy, r1.xyxx, l(1.000000, 1.000000, 0.000000, 0.000000)
+  34: dp3 r0.w, l(1.000000, 1.000000, 1.000000, 0.000000), r4.xyzx
+  35: ge r0.w, r0.w, l(1.000000)
+  36: and r0.w, r0.w, l(1.000000)
+  37: mad r1.xyz, r0.wwww, r3.xyzx, r2.xyzx
+  38: add r2.xyzw, -g_LFeature_ShadowProjectionTransform[0].xyzw, g_LFeature_ShadowProjectionTransform[1].xyzw
+  39: mad r2.xyzw, r1.wwww, r2.xyzw, g_LFeature_ShadowProjectionTransform[0].xyzw
+  40: add r3.xyzw, -r2.xyzw, g_LFeature_ShadowProjectionTransform[2].xyzw
+  41: mad r2.xyzw, r0.wwww, r3.xyzw, r2.xyzw
+  42: mad r1.xy, r1.xyxx, r2.zwzz, r2.xyxx
+  43: mad r2.xy, -g_Texture6Texel.xyxx, l(0.816160, 0.816160, 0.000000, 0.000000), r1.xyxx
+  44: sample_c_lz(texture2d)(float,float,float,float) r0.w, r2.xyxx, g_Texture6.xxxx, g_Texture6SamplerComparisonState, r1.z
+  45: mul r2.xyw, g_Texture6Texel.xyxy, l(0.816160, 0.816160, 0.000000, -1.023230)
+  46: mov r2.z, l(0)
+  47: add r2.xyzw, r1.xyxy, r2.zwxy
+  48: sample_c_lz(texture2d)(float,float,float,float) r1.w, r2.xyxx, g_Texture6.xxxx, g_Texture6SamplerComparisonState, r1.z
+  49: sample_c_lz(texture2d)(float,float,float,float) r2.x, r2.zwzz, g_Texture6.xxxx, g_Texture6SamplerComparisonState, r1.z
+  50: add r0.w, r0.w, r1.w
+  51: mad r2.yz, g_Texture6Texel.xxyx, l(0.000000, 0.816160, -0.816160, 0.000000), r1.xxyx
+  52: sample_c_lz(texture2d)(float,float,float,float) r1.w, r2.yzyy, g_Texture6.xxxx, g_Texture6SamplerComparisonState, r1.z
+  53: add r0.w, r0.w, r1.w
+  54: mul r2.z, g_Texture6Texel.x, l(-1.023230)
+  55: mov r2.w, l(0)
+  56: add r2.yz, r1.xxyx, r2.zzwz
+  57: sample_c_lz(texture2d)(float,float,float,float) r1.w, r2.yzyy, g_Texture6.xxxx, g_Texture6SamplerComparisonState, r1.z
+  58: add r0.w, r0.w, r1.w
+  59: sample_c_lz(texture2d)(float,float,float,float) r1.w, r1.xyxx, g_Texture6.xxxx, g_Texture6SamplerComparisonState, r1.z
+  60: add r0.w, r0.w, r1.w
+  61: mul r3.xzw, g_Texture6Texel.xxxy, l(1.023230, 0.000000, -0.816160, 0.816160)
+  62: mov r3.y, l(0)
+  63: add r3.xyzw, r1.xyxy, r3.xyzw
+  64: sample_c_lz(texture2d)(float,float,float,float) r1.w, r3.xyxx, g_Texture6.xxxx, g_Texture6SamplerComparisonState, r1.z
+  65: sample_c_lz(texture2d)(float,float,float,float) r2.y, r3.zwzz, g_Texture6.xxxx, g_Texture6SamplerComparisonState, r1.z
+  66: add r0.w, r0.w, r1.w
+  67: add r0.w, r2.y, r0.w
+  68: mov r3.x, l(0)
+  69: mul r3.y, g_Texture6Texel.y, l(1.023230)
+  70: add r1.xy, r1.xyxx, r3.xyxx
+  71: sample_c_lz(texture2d)(float,float,float,float) r1.x, r1.xyxx, g_Texture6.xxxx, g_Texture6SamplerComparisonState, r1.z
+  72: add r0.w, r0.w, r1.x
+  73: add r0.w, r2.x, r0.w
+  74: mul r0.w, r0.w, l(0.111111)
+  75: ge r0.xy, abs(r0.xyxx), l(0.990000, 0.990000, 0.000000, 0.000000)
+  76: ge r0.z, l(0.010000), r0.z
+  77: and r1.xyz, r0.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+  78: dp3 r0.x, l(1.000000, 1.000000, 1.000000, 0.000000), r1.xyzx
+  79: ge r0.x, r0.x, l(1.000000)
+  80: and r0.x, r0.x, l(1.000000)
+  81: max r0.x, r0.w, r0.x
+  82: dp3 r0.y, v0.xyzx, v0.xyzx
+  83: sqrt r0.y, r0.y
+  84: div r0.yzw, v0.xxyz, r0.yyyy
+  85: add r1.xyz, r0.yzwy, g_LDirectional_Direction.xyzx
+  86: dp3 r1.w, r1.xyzx, r1.xyzx
+  87: rsq r1.w, r1.w
+  88: mul r1.xyz, r1.wwww, r1.xyzx
+  89: dp3 r1.w, v3.xyzx, v3.xyzx
+  90: rsq r1.w, r1.w
+  91: mul r2.xyz, r1.wwww, v3.xyzx
+  92: dp3 r1.w, r2.xyzx, r1.xyzx
+  93: dp3 r1.x, r1.xyzx, r0.yzwy
+  94: dp3 r0.y, r2.xyzx, r0.yzwy
+  95: dp3 r0.z, r2.xyzx, g_LDirectional_Direction.xyzx
+  96: max r1.x, r1.x, l(0)
+  97: add r1.x, -r1.x, l(1.000000)
+  98: max r1.xy, r1.xwxx, l(0.001000, 0.000000, 0.000000, 0.000000)
+  99: mul r1.z, g_Roughness.x, g_Roughness.x
+ 100: mad r1.w, r1.z, r1.z, l(-1.000000)
+ 101: mul r1.yz, r1.yyzy, r1.yyzy
+ 102: mad r1.y, r1.y, r1.w, l(1.000000)
+ 103: mul r1.y, r1.y, r1.y
+ 104: mul r1.y, r1.y, l(3.141593)
+ 105: div r1.y, r1.z, r1.y
+ 106: mul r1.y, r0.x, r1.y
+ 107: mul r0.x, r0.x, r0.z
+ 108: max r0.xyzw, r0.xyzy, l(0.000000, 0.001000, 0.001000, 0.000000)
+ 109: add r1.z, g_Roughness.x, l(1.000000)
+ 110: mul r1.z, r1.z, r1.z
+ 111: mul r1.w, r1.z, l(0.125000)
+ 112: mad r1.z, -r1.z, l(0.125000), l(1.000000)
+ 113: mad r2.x, r0.z, r1.z, r1.w
+ 114: div r0.z, r0.z, r2.x
+ 115: mad r1.z, r0.y, r1.z, r1.w
+ 116: div r0.y, r0.y, r1.z
+ 117: mul r0.yw, r0.zzzw, r0.yyyx
+ 118: mul r0.w, r0.w, l(4.000000)
+ 119: max r0.w, r0.w, l(0.001000)
+ 120: mul r0.z, r1.x, r1.x
+ 121: mul r0.z, r0.z, r0.z
+ 122: mul r0.yz, r0.yyzy, r1.yyxy
+ 123: sample_indexable(texture2d)(float,float,float,float) r1.xyzw, v1.xyxx, g_Texture0.xyzw, g_Texture0SamplerState
+ 124: mad r2.xyz, r1.xyzx, g_TintColor.xyzx, l(-0.040000, -0.040000, -0.040000, 0.000000)
+ 125: mad r2.xyz, g_Metallic.xxxx, r2.xyzx, l(0.040000, 0.040000, 0.040000, 0.000000)
+ 126: add r3.xyz, -r2.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+ 127: mad r2.xyz, r3.xyzx, r0.zzzz, r2.xyzx
+ 128: mul r3.xyz, r0.yyyy, r2.xyzx
+ 129: add r2.xyz, -r2.xyzx, l(1.000000, 1.000000, 1.000000, 0.000000)
+ 130: div r0.yzw, r3.xxyz, r0.wwww
+ 131: add r2.w, -g_Metallic.x, l(1.000000)
+ 132: mul r2.xyz, r2.xyzx, r2.wwww
+ 133: mul r1.xyz, r1.xyzx, g_TintColor.xyzx
+ 134: mul o0.w, r1.w, g_TintAlpha.x
+ 135: mul r2.xyz, r1.xyzx, r2.xyzx
+ 136: mad r0.yzw, r2.xxyz, l(0.000000, 0.318310, 0.318310, 0.318310), r0.yyzw
+ 137: mul r0.yzw, r0.yyzw, g_LDirectional_Color.xxyz
+ 138: mul r0.xyz, r0.xxxx, r0.yzwy
+ 139: mad o0.xyz, v2.xyzx, r1.xyzx, r0.xyzx
+ 140: ret
