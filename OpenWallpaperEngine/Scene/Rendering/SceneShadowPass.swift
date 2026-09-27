@@ -16,6 +16,8 @@ import simd
 /// - The state is WE's biased raster state: slope-scaled depth bias −4, no constant bias or clamp,
 ///   and, by WE's quirk (the biased back-cull state was made with culling off), no culling;
 ///   `shadowcaster.json`'s depth test and write, reversed (GREATER).
+/// - A frame whose commands are exactly the last drawn frame's keeps the atlas as it stands
+///   (`Recording`): drawing them again would write the same depth.
 ///
 /// Call on the render thread, apart from the pipeline compiles.
 final class SceneShadowPass {
@@ -58,6 +60,8 @@ final class SceneShadowPass {
     private(set) var casterDraws = 0
     private(set) var casterIndices = 0
     private(set) var lastMapCount = 0
+    /// Frames whose atlas was kept as it stood, as they would have drawn exactly the same.
+    private(set) var atlasesReused = 0
 
     init?(device: MTLDevice, archive: EffectPipelineArchive?) {
         self.device = device
@@ -93,11 +97,13 @@ final class SceneShadowPass {
     /// A new content: its objects' uniforms go.
     func setContent() {
         uniforms.removeAll()
+        lastDrawn = nil
     }
 
     /// A model a script destroyed.
     func remove(_ id: String) {
         uniforms.removeValue(forKey: id)
+        lastDrawn = nil
     }
 
     /// Whether a model object casts: its `castshadow`, true unless authored (the model factory
@@ -126,6 +132,32 @@ final class SceneShadowPass {
         lastMapCount = shadows.maps.count
         guard !shadows.maps.isEmpty else { return atlas.bound(commandBuffer: commandBuffer) }
         guard let texture = atlas.texture(extent: shadows.extent) else { return atlas.bound(commandBuffer: commandBuffer) }
+        // Each caster is posed and its meshes' draws prepared once a frame; a batch only culls it
+        // against its views and writes their matrices.
+        let prepared = casters.compactMap { caster -> PreparedCaster? in
+            // A script's `replaceData` re-plans its model (`SceneModelRenderer.currentPlan`).
+            guard let plan = caster.model.plan.map({ models.currentPlan($0, objectID: caster.model.id) }), !plan.isTranslucent,
+                  plan.meshes.contains(where: { $0.material.shadowCaster != nil }) else { return nil }
+            let bones = models.advance(caster.model, plan: plan, frame: frame, values: values)
+            return prepare(caster, plan: plan, bones: bones, models: models, frame: frame, values: values,
+                           assetTexture: assetTexture)
+        }
+        var recording = Recording(atlas: texture)
+        for batch in Self.batches(shadows.maps) {
+            recording.ops.append(.viewports(batch.viewports))
+            let frustums = batch.views.map(SceneModelCulling.Frustum.init)
+            let matrices = Self.flatten(batch.views.map { Self.clipFixup * $0 })
+            for caster in prepared where frustums.contains(where: { $0.contains(caster.sphere) }) {
+                for draw in caster.draws {
+                    recording.add(draw, matrices: matrices, instances: batch.views.count)
+                }
+            }
+        }
+        // The atlas already holds exactly these maps: last frame drew the same commands into it.
+        if let last = lastDrawn, last.recording.matches(recording), lastDrawStands(last.generation) {
+            atlasesReused += 1
+            return texture
+        }
         let pass = MTLRenderPassDescriptor()
         pass.depthAttachment.texture = texture
         pass.depthAttachment.loadAction = .clear
@@ -137,31 +169,9 @@ final class SceneShadowPass {
         encoder.setDepthBias(0, slopeScale: Self.slopeScaledDepthBias, clamp: 0)
         encoder.setCullMode(.none)
         encoder.setFrontFacing(SceneModelRenderer.frontFacing)
-        // Each caster is posed and its meshes' draws prepared once a frame; a batch only culls it
-        // against its views and writes their matrices.
-        let prepared = casters.compactMap { caster -> PreparedCaster? in
-            // A script's `replaceData` re-plans its model (`SceneModelRenderer.currentPlan`).
-            guard let plan = caster.model.plan.map({ models.currentPlan($0, objectID: caster.model.id) }), !plan.isTranslucent,
-                  plan.meshes.contains(where: { $0.material.shadowCaster != nil }) else { return nil }
-            let bones = models.advance(caster.model, plan: plan, frame: frame, values: values)
-            return prepare(caster, plan: plan, bones: bones, models: models, frame: frame, values: values,
-                           assetTexture: assetTexture)
-        }
-        for batch in Self.batches(shadows.maps) {
-            encoder.setViewports(batch.viewports.map { rect in
-                MTLViewport(originX: Double(rect.x), originY: Double(rect.y), width: Double(rect.z), height: Double(rect.w),
-                            znear: 0, zfar: 1)
-            })
-            batchesEncoded += 1
-            let frustums = batch.views.map(SceneModelCulling.Frustum.init)
-            let matrices = Self.flatten(batch.views.map { Self.clipFixup * $0 })
-            for caster in prepared where frustums.contains(where: { $0.contains(caster.sphere) }) {
-                for draw in caster.draws {
-                    encode(draw, matrices: matrices, instances: batch.views.count, encoder: encoder, commandBuffer: commandBuffer)
-                }
-            }
-        }
+        encode(recording, encoder: encoder, commandBuffer: commandBuffer)
         encoder.endEncoding()
+        remember(recording, drawnBy: commandBuffer)
         return texture
     }
 
@@ -232,6 +242,16 @@ final class SceneShadowPass {
         let uniforms: ModelMaterialUniforms?
         let indexCount: Int
         let indexType: MTLIndexType
+        /// A texture's contents may change while it stays the same object.
+        let hasChangingTexture: Bool
+
+        /// The same objects and counts (the uniforms are compared as bytes).
+        func drawsSame(as other: MeshDraw) -> Bool {
+            pipeline === other.pipeline && buffers.vertices === other.buffers.vertices
+                && buffers.indices === other.buffers.indices && indexCount == other.indexCount && indexType == other.indexType
+                && textures.count == other.textures.count
+                && zip(textures, other.textures).allSatisfy { $0.slot == $1.slot && $0.texture === $1.texture && $0.sampler === $1.sampler }
+        }
     }
 
     /// The caster's meshes that draw this frame, their uniforms written but for the views.
@@ -271,31 +291,136 @@ final class SceneShadowPass {
             // A script's `applyData` may have shortened the triangle list since the plan was made.
             draws.append(MeshDraw(pipeline: pipeline, buffers: meshBuffers, textures: bound, uniforms: program,
                                   indexCount: models.indexCount(of: mesh, in: plan),
-                                  indexType: mesh.usesUInt32Indices ? .uint32 : .uint16))
+                                  indexType: mesh.usesUInt32Indices ? .uint32 : .uint16,
+                                  hasChangingTexture: bound.contains { $0.changes }))
         }
         return PreparedCaster(sphere: SceneModelCulling.Sphere(plan.bounds, world: caster.world), draws: draws)
     }
 
-    /// Draws a mesh once per view of the batch, `matrices` its views' render matrices.
-    private func encode(_ draw: MeshDraw, matrices: [Float], instances: Int, encoder: MTLRenderCommandEncoder,
-                        commandBuffer: MTLCommandBuffer) {
-        if let program = draw.uniforms {
-            program.write(matrices, member: "g_ViewportViewProjectionMatrices")
-            program.bytes.withUnsafeBytes { raw in uniformArena.bind(raw, index: 0, to: encoder, commandBuffer: commandBuffer) }
+    /// Encodes a frame's recorded commands.
+    private func encode(_ recording: Recording, encoder: MTLRenderCommandEncoder, commandBuffer: MTLCommandBuffer) {
+        for operation in recording.ops {
+            switch operation {
+            case .viewports(let rects):
+                encoder.setViewports(rects.map { rect in
+                    MTLViewport(originX: Double(rect.x), originY: Double(rect.y), width: Double(rect.z), height: Double(rect.w),
+                                znear: 0, zfar: 1)
+                })
+                batchesEncoded += 1
+            case let .draw(draw, uniforms, instances):
+                if let uniforms {
+                    recording.uniformBytes.withUnsafeBytes { raw in
+                        uniformArena.bind(UnsafeRawBufferPointer(rebasing: raw[uniforms]), index: 0, to: encoder,
+                                          commandBuffer: commandBuffer)
+                    }
+                }
+                encoder.setRenderPipelineState(draw.pipeline)
+                encoder.setVertexBuffer(draw.buffers.vertices, offset: 0, index: SceneModelRenderer.meshBuffer)
+                encoder.setVertexBuffer(zeroAttributes, offset: 0, index: EffectGraphRenderer.zeroBuffer)
+                for entry in draw.textures {
+                    encoder.setFragmentTexture(entry.texture, index: entry.slot)
+                    encoder.setFragmentSamplerState(entry.sampler, index: entry.slot)
+                    encoder.setVertexTexture(entry.texture, index: entry.slot)
+                    encoder.setVertexSamplerState(entry.sampler, index: entry.slot)
+                }
+                encoder.drawIndexedPrimitives(type: .triangle, indexCount: draw.indexCount, indexType: draw.indexType,
+                                              indexBuffer: draw.buffers.indices, indexBufferOffset: 0, instanceCount: instances)
+                casterDraws += 1
+                casterIndices += draw.indexCount
+            }
         }
-        encoder.setRenderPipelineState(draw.pipeline)
-        encoder.setVertexBuffer(draw.buffers.vertices, offset: 0, index: SceneModelRenderer.meshBuffer)
-        encoder.setVertexBuffer(zeroAttributes, offset: 0, index: EffectGraphRenderer.zeroBuffer)
-        for entry in draw.textures {
-            encoder.setFragmentTexture(entry.texture, index: entry.slot)
-            encoder.setFragmentSamplerState(entry.sampler, index: entry.slot)
-            encoder.setVertexTexture(entry.texture, index: entry.slot)
-            encoder.setVertexSamplerState(entry.sampler, index: entry.slot)
+    }
+
+    // MARK: - Reusing the atlas
+
+    /// A frame's shadow commands, recorded before they are encoded, so a frame that would draw
+    /// exactly what the atlas already holds draws nothing.
+    ///
+    /// Two recordings match when they draw the same: the same atlas texture, viewports and
+    /// draws, each with the same pipeline, buffers, textures and samplers (the same objects, held
+    /// here so none is freed and its address reused) and the same uniform bytes, which carry
+    /// everything else a draw reads (the views' matrices, the world, the bones, the morph weights,
+    /// the time and every other built-in and bound constant the variant declares). A texture whose
+    /// contents can change while it stays the same object (a video frame, a render target) makes
+    /// the recording one that never matches.
+    private struct Recording {
+        enum Operation {
+            case viewports([SIMD4<Int>])
+            case draw(MeshDraw, uniforms: Range<Int>?, instances: Int)
         }
-        encoder.drawIndexedPrimitives(type: .triangle, indexCount: draw.indexCount, indexType: draw.indexType,
-                                      indexBuffer: draw.buffers.indices, indexBufferOffset: 0, instanceCount: instances)
-        casterDraws += 1
-        casterIndices += draw.indexCount
+
+        let atlas: MTLTexture
+        var ops: [Operation] = []
+        /// Every draw's uniform block, as bound.
+        var uniformBytes: [UInt8] = []
+        var hasChangingInput = false
+
+        init(atlas: MTLTexture) {
+            self.atlas = atlas
+        }
+
+        /// Records `draw` once per view, `matrices` its views' render matrices.
+        mutating func add(_ draw: MeshDraw, matrices: [Float], instances: Int) {
+            var range: Range<Int>?
+            if let program = draw.uniforms {
+                program.write(matrices, member: "g_ViewportViewProjectionMatrices")
+                let start = uniformBytes.count
+                uniformBytes.append(contentsOf: program.bytes)
+                range = start..<uniformBytes.count
+            }
+            hasChangingInput = hasChangingInput || draw.hasChangingTexture
+            ops.append(.draw(draw, uniforms: range, instances: instances))
+        }
+
+        func matches(_ other: Recording) -> Bool {
+            let a = self, b = other
+            guard !a.hasChangingInput, !b.hasChangingInput, a.atlas === b.atlas, a.ops.count == b.ops.count,
+                  a.uniformBytes == b.uniformBytes else { return false }
+            for (x, y) in zip(a.ops, b.ops) {
+                switch (x, y) {
+                case let (.viewports(p), .viewports(q)):
+                    guard p == q else { return false }
+                case let (.draw(p, pu, pi), .draw(q, qu, qi)):
+                    guard pu == qu, pi == qi, p.drawsSame(as: q) else { return false }
+                default:
+                    return false
+                }
+            }
+            return true
+        }
+    }
+
+    /// The last recording encoded, its number and the command buffer that drew it.
+    private var lastDrawn: (recording: Recording, generation: Int)?
+    private var generation = 0
+    private weak var lastDrawBuffer: MTLCommandBuffer?
+    /// Owns `finished`, which the command buffers' completion handlers write.
+    private let finishLock = NSLock()
+    /// The last recording whose command buffer finished, and whether it drew (no GPU error).
+    private var finished: (generation: Int, drew: Bool)?
+
+    private func remember(_ recording: Recording, drawnBy commandBuffer: MTLCommandBuffer) {
+        generation += 1
+        let number = generation
+        lastDrawn = recording.hasChangingInput ? nil : (recording, number)
+        lastDrawBuffer = commandBuffer
+        commandBuffer.addCompletedHandler { [weak self] buffer in
+            guard let self else { return }
+            let drew = buffer.status == .completed
+            self.finishLock.withLock { self.finished = (number, drew) }
+        }
+    }
+
+    /// Whether the atlas holds what recording `number` drew: its command buffer was committed and
+    /// hasn't failed. A buffer that was never committed (a frame given up) drew nothing.
+    private func lastDrawStands(_ number: Int) -> Bool {
+        if let buffer = lastDrawBuffer {
+            switch buffer.status {
+            case .committed, .scheduled, .completed: return true
+            default: return false
+            }
+        }
+        return finishLock.withLock { finished.map { $0.generation == number && $0.drew } ?? false }
     }
 
     private func uniforms(for id: String, plan: SceneModelPlan) -> [ModelMaterialUniforms?] {
@@ -307,7 +432,7 @@ final class SceneShadowPass {
         return made
     }
 
-    private typealias BoundTexture = (slot: Int, texture: MTLTexture, sampler: MTLSamplerState)
+    private typealias BoundTexture = (slot: Int, texture: MTLTexture, sampler: MTLSamplerState, changes: Bool)
 
     /// The shadow variant's textures: the material's by slot, the mesh's morph texture (or the
     /// empty one) for the engine's; nil when one isn't there this frame.
@@ -319,14 +444,22 @@ final class SceneShadowPass {
             switch material.pass.textures[slot] {
             case .asset(let key, let source)?:
                 guard let texture = assetTexture(key, source) else { return nil }
-                bound.append((slot, texture, sampler))
+                bound.append((slot, texture, sampler, Self.contentsMayChange(texture, source: source)))
             case nil:
-                bound.append((slot, morph ?? emptyMorphTexture, clampSampler))
+                bound.append((slot, morph ?? emptyMorphTexture, clampSampler, false))
             default:
                 return nil
             }
         }
         return bound
+    }
+
+    /// Whether a texture's contents can change while it stays the same object: a video's frames,
+    /// or a texture something draws, writes or shares through an IOSurface. Uploaded images and
+    /// animation frames are written once.
+    static func contentsMayChange(_ texture: MTLTexture, source: SceneMetalTextureSource) -> Bool {
+        if case .video = source { return true }
+        return !texture.usage.isDisjoint(with: [.renderTarget, .shaderWrite]) || texture.iosurface != nil
     }
 
     // MARK: - Pipelines

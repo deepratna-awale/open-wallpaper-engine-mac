@@ -294,6 +294,92 @@ final class SceneShadowRenderTests: XCTestCase {
         XCTAssertLessThan(shadowed(face), shadowed(whole), "a face casts less than the cube")
     }
 
+    /// A frame that would draw exactly what the atlas holds keeps it (`SceneShadowPass.Recording`):
+    /// the second of two identical frames encodes nothing and the atlas reads the same as one
+    /// drawn afresh; a moved caster, a moved light, or a frame whose command buffer was never
+    /// committed draws again.
+    func testAnUnchangedFrameKeepsTheAtlas() throws {
+        let budget = WELightConfig(point: 1, pointShadow: 1)
+        let builder = builder(budget, quality: 3)
+        let cube = try plan(ModelRenderTests.cube(), material: "materials/facecolor.json", builder: builder, half: 1)
+        let cubeObject = SceneModelObject(id: "cube", name: "cube", order: 0, authored: WESceneModel(source: .path("cube.mdl")),
+                                          plan: cube)
+        renderer.setContent([cubeObject], content: SceneMetalContent(
+            size: SIMD2(256, 256), layers: [], particleSystems: [],
+            bloom: SceneBloomSettings(enabled: false, strength: 0, threshold: 0.7, tint: SIMD3(repeating: 1))))
+        shadowPass.setContent()
+        XCTAssertTrue(shadowPass.waitUntilReady(cube))
+        let camera = Self.camera
+        func shadows(_ position: SIMD3<Float>) -> SceneShadowFrame {
+            SceneLightPacker.lightingV1(
+                [SceneLightPacker.Light(light: Self.light(.point), world: Self.lightWorld(position: position, direction: SIMD3(1, 0, 0)),
+                                        localOrigin: .zero, visible: true, id: "light")],
+                budget: budget, shadows: true, viewForward: camera.forward,
+                shadowContext: SceneLightPacker.ShadowContext(quality: 3, eye: camera.eye, forward: camera.forward,
+                                                              orthographic: false, atlasExtent: shadowPass.atlas.extent)).shadows
+        }
+        var frame = BuiltinFrameContext(time: 1)
+        frame.camera = camera
+        frame.eyePosition = camera.eye
+        frame.viewForward = camera.forward
+        let values = EffectGraphTests.FixedValues()
+        func draw(_ maps: SceneShadowFrame, at centre: SIMD3<Float>, commit: Bool = true) throws -> [UInt8] {
+            let buffer = try XCTUnwrap(queue.makeCommandBuffer())
+            let atlas = try XCTUnwrap(shadowPass.encode(
+                maps, casters: [SceneShadowPass.Caster(model: cubeObject, world: simd_float4x4(translation: centre))],
+                models: renderer, frame: frame, values: values, assetTexture: { [white] _, _ in white }, commandBuffer: buffer))
+            guard commit else { return [] }
+            buffer.commit()
+            buffer.waitUntilCompleted()
+            XCTAssertNil(buffer.error)
+            return try Self.depthBytes(atlas, device: device, queue: queue)
+        }
+        let light = SIMD3<Float>(-1, 6, 0.7)
+        // The first frame makes the atlas, which the next frames' layout sees.
+        _ = try draw(shadows(light), at: Self.cubeCentre)
+        let first = try draw(shadows(light + SIMD3(0, 0.25, 0)), at: Self.cubeCentre)
+        let drawn = shadowPass.casterDraws, reused = shadowPass.atlasesReused
+        let second = try draw(shadows(light + SIMD3(0, 0.25, 0)), at: Self.cubeCentre)
+        XCTAssertEqual(shadowPass.casterDraws, drawn, "the unchanged frame draws nothing")
+        XCTAssertEqual(shadowPass.atlasesReused, reused + 1)
+        XCTAssertEqual(second, first)
+        XCTAssertTrue(first.contains { $0 != 0 }, "the cube cast into the atlas")
+
+        _ = try draw(shadows(light), at: Self.cubeCentre + SIMD3(0.5, 0, 0))
+        XCTAssertGreaterThan(shadowPass.casterDraws, drawn, "a moved caster draws")
+        let afterCaster = shadowPass.casterDraws
+        _ = try draw(shadows(light + SIMD3(0, 0.5, 0)), at: Self.cubeCentre + SIMD3(0.5, 0, 0))
+        XCTAssertGreaterThan(shadowPass.casterDraws, afterCaster, "a moved light draws")
+
+        // A frame given up before its commit drew nothing; the next frame draws again.
+        _ = try draw(shadows(light + SIMD3(0, 0.25, 0)), at: Self.cubeCentre, commit: false)
+        let abandoned = shadowPass.casterDraws
+        let redrawn = try draw(shadows(light + SIMD3(0, 0.25, 0)), at: Self.cubeCentre)
+        XCTAssertGreaterThan(shadowPass.casterDraws, abandoned, "the uncommitted frame's commands are drawn again")
+        XCTAssertEqual(redrawn, first, "drawn afresh, the same depth")
+
+        // A new content draws again.
+        shadowPass.setContent()
+        let afterContent = shadowPass.casterDraws
+        _ = try draw(shadows(light), at: Self.cubeCentre)
+        XCTAssertGreaterThan(shadowPass.casterDraws, afterContent)
+    }
+
+    /// A depth32Float texture's bytes.
+    static func depthBytes(_ texture: MTLTexture, device: MTLDevice, queue: MTLCommandQueue) throws -> [UInt8] {
+        let rowBytes = texture.width * 4
+        let buffer = try XCTUnwrap(device.makeBuffer(length: rowBytes * texture.height, options: .storageModeShared))
+        let commands = try XCTUnwrap(queue.makeCommandBuffer())
+        let blit = try XCTUnwrap(commands.makeBlitCommandEncoder())
+        blit.copy(from: texture, sourceSlice: 0, sourceLevel: 0, sourceOrigin: MTLOrigin(x: 0, y: 0, z: 0),
+                  sourceSize: MTLSize(width: texture.width, height: texture.height, depth: 1), to: buffer,
+                  destinationOffset: 0, destinationBytesPerRow: rowBytes, destinationBytesPerImage: rowBytes * texture.height)
+        blit.endEncoding()
+        commands.commit()
+        commands.waitUntilCompleted()
+        return [UInt8](UnsafeRawBufferPointer(start: buffer.contents(), count: buffer.length))
+    }
+
     /// Without casters the atlas is cleared and every lookup reads lit; a frame without maps binds
     /// the cleared stand-in.
     func testTheClearedAtlasReadsLit() throws {
