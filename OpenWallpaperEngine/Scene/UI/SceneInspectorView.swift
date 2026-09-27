@@ -778,7 +778,7 @@ extension AppDelegate {
     /// `scopes`: whose properties its edits change (`WallpaperViewModel.editedPropertyScopes`).
     func showSceneInspector(for wallpaper: WEWallpaper, scopes: [WallpaperPropertyScope] = [.shared]) {
         if let sceneInspectorWindow {
-            sceneInspectorWindow.contentView = NSHostingView(rootView: SceneInspectorView(wallpaper: wallpaper, scopes: scopes))
+            sceneInspectorWindow.contentView = Self.sceneInspectorContent(wallpaper, scopes)
             sceneInspectorWindow.makeKeyAndOrderFront(nil)
             return
         }
@@ -790,10 +790,18 @@ extension AppDelegate {
         )
         window.title = "Scene Inspector"
         window.isReleasedWhenClosed = false
-        window.contentView = NSHostingView(rootView: SceneInspectorView(wallpaper: wallpaper, scopes: scopes))
+        window.contentView = Self.sceneInspectorContent(wallpaper, scopes)
         window.center()
         window.makeKeyAndOrderFront(nil)
         sceneInspectorWindow = window
+    }
+
+    /// The window can't shrink below the view's minimum size: a smaller window laid the columns
+    /// out at their minimum and centred them, pushing their tops under the toolbar.
+    private static func sceneInspectorContent(_ wallpaper: WEWallpaper, _ scopes: [WallpaperPropertyScope]) -> NSView {
+        let view = NSHostingView(rootView: SceneInspectorView(wallpaper: wallpaper, scopes: scopes))
+        view.sizingOptions = [.minSize]
+        return view
     }
 }
 
