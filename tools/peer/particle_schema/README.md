@@ -48,3 +48,21 @@ Two ways to close these:
   - the step size;
   - labels of vector fields, beyond X/Y/Z order;
   - the older `vortex` operator. The dialog only offers "Vortex" (v2).
+
+## Spot checks for the audit session (B/C)
+- **Colour pickers** (class `sp-replacer`) expose no value, so their colours were read from the on-screen swatch pixels (`swatches.ps1`):
+  - colorrandom: min 0 0 0, max 255 255 255;
+  - colorchange: start 1 1 1, end 0 0 0;
+  - hsvcolorrandom: hue min and max swatches are both pure red, consistent with hue 0 and 1.
+- **Remap component combos** (`remap_probe.ps1`):
+  - **Input component**, All/X/Y/Z/Sum/Average/Max/Min, appears only when **Input** is a vector (Position, Velocity).
+  - **Output component**, All/X/Y/Z, appears only when **Output** is a vector (Position, Color).
+  - Input=Position with Output=Size shows **neither**.
+  - **Clamp output value** is a checkbox, default OFF. Clamp input value is ON.
+  - Remap *initial* value has no "Lifetime fraction" input.
+- **Legacy panels** come from a generated project (`schema_legacy_panels`) opened in the editor, recorded in `editor_observed_v3/legacy_panels.json`:
+  - **Vortex (legacy):** Offset 0 0 0, Axis 0 0 1, distance inner/outer 500/650, speed 2500/0, **Infinite axis** OFF, control point 0, audio mode None.
+  - **collisionbox:** the editor has no display name for it (it shows the raw key `ui_editor_particle_element_operator_collisionbox`), so it looks deprecated. Bounce, factor 0.5.
+  - **Collision bounds and Collision model:** Bounce, factor 0.5. The model to collide with is chosen on the layer: the "Particle Instance" panel has a "Collision model" drop slot.
+  - **Child (static):** Type Static/Event follow/Event spawn/Event death; Offset, Angles, Scale; **Max count 10 and Probability 1 are visible even with Type=Static**; "Set control points to particle positions" OFF, "Restart with periodic emission" OFF, "Control point start index" 0.
+  - **Particle Instance (layer) sliders:** Opacity 0.01–1, Playback rate 0.01–5, Speed 0–5, Size 0.01–5, Count 0.01–2, Lifetime 0.01–2 (all default 1), plus a Color picker.

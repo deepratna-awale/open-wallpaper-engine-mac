@@ -1,0 +1,302 @@
+{
+    "Vortex (legacy vortex)":  [
+                                   {
+                                       "section":  "",
+                                       "field":  "Offset.x",
+                                       "type":  "number",
+                                       "control":  "spinner",
+                                       "add_default":  0
+                                   },
+                                   {
+                                       "section":  "",
+                                       "field":  "Offset.y",
+                                       "type":  "number",
+                                       "control":  "spinner",
+                                       "add_default":  0
+                                   },
+                                   {
+                                       "section":  "",
+                                       "field":  "Offset.z",
+                                       "type":  "number",
+                                       "control":  "spinner",
+                                       "add_default":  0
+                                   },
+                                   {
+                                       "section":  "",
+                                       "field":  "Axis.x",
+                                       "type":  "number",
+                                       "control":  "spinner",
+                                       "add_default":  0
+                                   },
+                                   {
+                                       "section":  "",
+                                       "field":  "Axis.y",
+                                       "type":  "number",
+                                       "control":  "spinner",
+                                       "add_default":  0
+                                   },
+                                   {
+                                       "section":  "",
+                                       "field":  "Axis.z",
+                                       "type":  "number",
+                                       "control":  "spinner",
+                                       "add_default":  1
+                                   },
+                                   {
+                                       "section":  "",
+                                       "field":  "Distance inner",
+                                       "type":  "number",
+                                       "control":  "spinner",
+                                       "add_default":  500
+                                   },
+                                   {
+                                       "section":  "",
+                                       "field":  "Distance outer",
+                                       "type":  "number",
+                                       "control":  "spinner",
+                                       "add_default":  650
+                                   },
+                                   {
+                                       "section":  "",
+                                       "field":  "Speed inner",
+                                       "type":  "number",
+                                       "control":  "spinner",
+                                       "add_default":  2500
+                                   },
+                                   {
+                                       "section":  "",
+                                       "field":  "Speed outer",
+                                       "type":  "number",
+                                       "control":  "spinner",
+                                       "add_default":  0
+                                   },
+                                   {
+                                       "section":  "",
+                                       "field":  "Infinite axis",
+                                       "type":  "bool",
+                                       "add_default":  false
+                                   },
+                                   {
+                                       "section":  "",
+                                       "field":  "Control point",
+                                       "type":  "number",
+                                       "control":  "spinner",
+                                       "add_default":  0
+                                   },
+                                   {
+                                       "section":  "Audio response",
+                                       "field":  "Mode",
+                                       "type":  "combo",
+                                       "add_default":  "None",
+                                       "options":  [
+                                                       "None",
+                                                       "Left",
+                                                       "Right",
+                                                       "Center"
+                                                   ]
+                                   }
+                               ],
+    "collisionbox (editor shows raw key ui_editor_particle_element_operator_collisionbox)":  [
+                                                                                                 {
+                                                                                                     "field":  "Collision behavior",
+                                                                                                     "add_default":  "Bounce",
+                                                                                                     "options":  [
+                                                                                                                     "Bounce",
+                                                                                                                     "Slide",
+                                                                                                                     "Stop",
+                                                                                                                     "Delete"
+                                                                                                                 ],
+                                                                                                     "type":  "combo"
+                                                                                                 },
+                                                                                                 {
+                                                                                                     "field":  "Bounce factor",
+                                                                                                     "add_default":  0.5,
+                                                                                                     "type":  "number"
+                                                                                                 }
+                                                                                             ],
+    "Collision bounds":  [
+                             {
+                                 "field":  "Collision behavior",
+                                 "add_default":  "Bounce",
+                                 "options":  [
+                                                 "Bounce",
+                                                 "Slide",
+                                                 "Stop",
+                                                 "Delete"
+                                             ],
+                                 "type":  "combo"
+                             },
+                             {
+                                 "field":  "Bounce factor",
+                                 "add_default":  0.5,
+                                 "type":  "number"
+                             }
+                         ],
+    "Collision model":  [
+                            {
+                                "field":  "Collision behavior",
+                                "add_default":  "Bounce",
+                                "options":  [
+                                                "Bounce",
+                                                "Slide",
+                                                "Stop",
+                                                "Delete"
+                                            ],
+                                "type":  "combo"
+                            },
+                            {
+                                "field":  "Bounce factor",
+                                "add_default":  0.5,
+                                "type":  "number"
+                            },
+                            {
+                                "note":  "the model to collide with is set on the LAYER: Particle Instance panel has a \"Collision model\" drop slot (\"Drag \u0026 drop compatible layer here\")"
+                            }
+                        ],
+    "Child (static)":  [
+                           {
+                               "section":  "",
+                               "field":  "Type",
+                               "type":  "combo",
+                               "add_default":  "Static",
+                               "options":  [
+                                               "Static",
+                                               "Event follow",
+                                               "Event spawn",
+                                               "Event death"
+                                           ]
+                           },
+                           {
+                               "section":  "",
+                               "field":  "Offset.x",
+                               "type":  "number",
+                               "control":  "spinner",
+                               "add_default":  0
+                           },
+                           {
+                               "section":  "",
+                               "field":  "Offset.y",
+                               "type":  "number",
+                               "control":  "spinner",
+                               "add_default":  0
+                           },
+                           {
+                               "section":  "",
+                               "field":  "Offset.z",
+                               "type":  "number",
+                               "control":  "spinner",
+                               "add_default":  0
+                           },
+                           {
+                               "section":  "",
+                               "field":  "Angles.x",
+                               "type":  "number",
+                               "control":  "spinner",
+                               "add_default":  0
+                           },
+                           {
+                               "section":  "",
+                               "field":  "Angles.y",
+                               "type":  "number",
+                               "control":  "spinner",
+                               "add_default":  0
+                           },
+                           {
+                               "section":  "",
+                               "field":  "Angles.z",
+                               "type":  "number",
+                               "control":  "spinner",
+                               "add_default":  0
+                           },
+                           {
+                               "section":  "",
+                               "field":  "Scale.x",
+                               "type":  "number",
+                               "control":  "spinner",
+                               "add_default":  1
+                           },
+                           {
+                               "section":  "",
+                               "field":  "Scale.y",
+                               "type":  "number",
+                               "control":  "spinner",
+                               "add_default":  1
+                           },
+                           {
+                               "section":  "",
+                               "field":  "Scale.z",
+                               "type":  "number",
+                               "control":  "spinner",
+                               "add_default":  1
+                           },
+                           {
+                               "section":  "",
+                               "field":  "Max count",
+                               "type":  "number",
+                               "control":  "spinner",
+                               "add_default":  10
+                           },
+                           {
+                               "section":  "",
+                               "field":  "Probability",
+                               "type":  "number",
+                               "control":  "spinner",
+                               "add_default":  1
+                           },
+                           {
+                               "section":  "",
+                               "field":  "Set control points to particle positions",
+                               "type":  "bool",
+                               "add_default":  false
+                           },
+                           {
+                               "section":  "",
+                               "field":  "Restart with periodic emission",
+                               "type":  "bool",
+                               "add_default":  false
+                           },
+                           {
+                               "section":  "",
+                               "field":  "Control point start index",
+                               "type":  "number",
+                               "control":  "spinner",
+                               "add_default":  0
+                           }
+                       ],
+    "Particle Instance (layer) sliders":  [
+                                              {
+                                                  "field":  "Opacity",
+                                                  "slider":  "0.01-1",
+                                                  "default":  1
+                                              },
+                                              {
+                                                  "field":  "Playback rate",
+                                                  "slider":  "0.01-5",
+                                                  "default":  1
+                                              },
+                                              {
+                                                  "field":  "Speed",
+                                                  "slider":  "0-5",
+                                                  "default":  1
+                                              },
+                                              {
+                                                  "field":  "Size",
+                                                  "slider":  "0.01-5",
+                                                  "default":  1
+                                              },
+                                              {
+                                                  "field":  "Count",
+                                                  "slider":  "0.01-2",
+                                                  "default":  1
+                                              },
+                                              {
+                                                  "field":  "Lifetime",
+                                                  "slider":  "0.01-2",
+                                                  "default":  1
+                                              },
+                                              {
+                                                  "field":  "Color",
+                                                  "type":  "colour picker"
+                                              }
+                                          ]
+}
