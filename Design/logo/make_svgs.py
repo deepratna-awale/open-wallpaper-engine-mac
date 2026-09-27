@@ -15,7 +15,7 @@ SVG = os.path.join(HERE, "svg")
 # shadows and the dark/clear/tinted looks, so the art itself carries no depth.
 # `background` is the solid fill in AppIcon.icon/icon.json; the rest are layers.
 PALETTES = {
-    "a": dict(background="#1C1C1E", body="#E5E5EA", screen="#2C2C2E", gear="#FF9F0A", hole="#2C2C2E"),
+    "a": dict(background="#1C1C1E", body="#E5E5EA", screen="#2C2C2E", gear="#1462C4", hole="#2C2C2E"),
     "b": dict(background="#0B6E66", body="#FFFFFF", screen="#08564F", gear="#FFFFFF", hole="#08564F"),
     "c": dict(background="#18181B", body="#F4F4F5", screen="#F4F4F5", gear="#FF5A4E", hole="#F4F4F5"),
 }
