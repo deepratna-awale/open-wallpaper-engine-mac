@@ -566,6 +566,9 @@ class SceneWallpaperViewModel: ObservableObject {
             }
             content.sounds = soundBuilder(wallpaperDir: wallpaperDir).sounds(in: scene.objects, context: valueContext)
             content.lighting = SceneLightingContent(settings: lighting, lights: Self.lights(in: scene.objects, context: valueContext))
+            content.lighting.cookies = SceneLightCookie.load(content.lighting.lights) { name, materialPath in
+                loadMetalTexture(named: name, materialDir: materialPath, wallpaperDir: wallpaperDir)
+            }
             content.volumetrics = volumetricsPlan(content.lighting.lights, wallpaperDir: wallpaperDir)
             content.engineCombos = sceneEngineCombos
             // An HDR content blooms through the HDR chain only (its `combine_srgb` when bloom is off).

@@ -192,7 +192,7 @@ No particle material turns on lighting. 17 passes in 9 scenes set `LIGHTING` and
   | directional | `LDirectional_Color` = (c·I, 1), `LDirectional_Direction` = (−row0, 0), pointing toward the light |
   | shadow features | `LFeature_ShadowProjection` (mat4) and `…Transform` (atlas rect: xy offset, zw scale) × F, where F = SSC + SC + SS + 3·DS; `LFeature_ShadowPointProjection` and `…Transform` × PS |
 
-  4. `_alias_lightCookie` is set to the **last** cookie spot's texture, so there is one cookie per scene.
+  4. `_alias_lightCookie` is set to the **last** cookie spot's texture, so there is one cookie per scene. Precisely (0x140192ee5…0x140192f0b, 0x14019359b…0x1401935d8): each visible spot the walk packs within the spot budget, if it has `usecookie`, makes its cookie texture (+0x330) the candidate; after the walk the alias is set to the candidate when it changed, so it is empty when no cookie spot is packed. Here: `SceneLightPacker.cookieLight`, `SceneLightCookie` (each cookie light's texture, keyed as the volumetrics key it), `SceneFrameLighting.cookie`; model materials bind it as `g_Texture7` (a zero texel when empty, as D3D reads an empty slot).
 - **Light count, and which lights light a surface** (2026-09-26; the editor is `bin/wallpaperui.exe`, and its addresses are marked `ui:`). This checks two things the user saw in WE's editor: a 2D scene "allows 15 lights", 256 point lights "all work" in a 3D scene, and an image was lit only once a light's **Cast shadow** was on.
   - **The editor writes `lightconfig`** on save (`ui:0x14041bf85`, the `general` writer) from `ui:0x14041cd30`. It walks every light in the scene, hidden ones included, and counts each type (type byte +0x380, flags +0x384: bit 0 `castshadow`, bit 1 `usecookie`; legacy `point` is skipped).
     - Each base count stops at **15**.
@@ -408,7 +408,7 @@ Code references are to `OpenWallpaperEngine/Scene/…`.
 | Shadows (`_rt_shadowAtlas`, casters) | 2.7 | ❌ | 0 (no `castshadow` true) |
 | Volumetrics | 2.8 | ✅ D1: WE's util passes as a frame stage (`Rendering/SceneVolumetrics.swift`); shadow casters read their map (D2) | Hinata (2D), Moon and the test set (3D) |
 | Distance and height fog | 2.9 | ✅ `SceneFogSettings`, `FOG_DIST`/`FOG_HEIGHT`, `g_Fog*` | 3378346807 |
-| Light cookie (`_alias_lightCookie`) | one per scene (2.2) | 🟡 the key is `cookie` (default `cookie/flashlight1`, 2.8), decoded by D1; the volumetrics bind each light's own; the alias for lit materials is A3's | Hinata |
+| Light cookie (`_alias_lightCookie`) | one per scene (2.2) | ✅ for models (gaps pass): the last packed cookie spot's texture per frame (`SceneLightCookie`); the volumetrics bind each light's own; image layers still reject `_alias_` names (no library user) | 3233200129 |
 | Fog (`FOG_*`, `g_Fog*`) | per general fog | ❌ (must stay off) | 0 |
 | Depth buffer, perspective models | area 6 | ❌ | Moon, default projects |
 

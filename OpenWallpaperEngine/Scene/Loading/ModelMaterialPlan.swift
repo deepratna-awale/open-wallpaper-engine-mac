@@ -269,8 +269,10 @@ struct ModelMaterialPlanBuilder {
         if name == SceneShadowAtlas.name { return .fbo(name) }
         // The planar reflection (`SceneModelDraw.planarReflection`, `ScenePlanarReflection`).
         if name == ScenePlanarReflection.name { return .fbo(name) }
+        // The scene's light cookie this frame (`SceneModelDraw.frame.lighting.cookie`).
+        if name == SceneLightCookie.name { return .fbo(name) }
         if name.hasPrefix("_rt_") || name.hasPrefix("_alias_") {
-            // `_alias_lightCookie` and the scene's own buffers have no source for a model yet.
+            // The scene's other buffers have no source for a model yet.
             throw ModelMaterialPlanError.unsupported("render target \(name)")
         }
         guard let source = loadTexture(name, materialPath) else {

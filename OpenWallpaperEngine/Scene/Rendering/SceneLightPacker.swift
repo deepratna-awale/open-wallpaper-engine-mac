@@ -61,6 +61,20 @@ enum SceneLightPacker {
         return (buffer.arrays, buffer.shadowFrame)
     }
 
+    /// The light whose cookie is `_alias_lightCookie` this frame (`SceneLightCookie`): the last
+    /// visible spot with `usecookie` that the packer walks within the spot budget, in its sort
+    /// order (0x140192ee5…0x140192f0b, then 0x1401935a2); nil when it packs none.
+    static func cookieLight(_ lights: [Light], budget: WELightConfig, viewForward: SIMD3<Float>) -> String? {
+        var spots = budget.spot
+        var cookie: String?
+        for entry in sorted(lights, viewForward: viewForward) where entry.visible && entry.light.kind == .spot {
+            guard spots > 0 else { break }
+            spots -= 1
+            if entry.light.useCookie { cookie = entry.id }
+        }
+        return cookie
+    }
+
     /// WE's order: by type, then by shadow and cookie flags descending (shadow and cookie,
     /// cookie, shadow, none), then by `dot(local origin, view forward)` ascending. WE's
     /// `std::sort` leaves ties in no set order; here they keep scene order.

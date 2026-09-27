@@ -52,6 +52,8 @@ struct SceneLightDepth: Equatable {
 struct SceneLightingContent {
     var settings = SceneLightingSettings()
     var lights: [SceneLightObject] = []
+    /// Each `usecookie` light's cookie texture, by light object id (`SceneLightCookie.load`).
+    var cookies: [String: SceneLightCookie] = [:]
 }
 
 /// What the renderer hands the lighting each frame, after scripts and timelines ran.
@@ -108,6 +110,8 @@ struct SceneFrameLighting: Equatable {
     var shadows = SceneShadowFrame()
     /// The scene's fog, behind `g_FogDistance*` and `g_FogHeight*` (`SceneFogSettings`).
     var fog = SceneFogSettings()
+    /// `_alias_lightCookie` this frame (`SceneLightCookie`); nil when no cookie spot is packed.
+    var cookie: SceneLightCookie?
 
     static func frame(_ content: SceneLightingContent, input: SceneFrameLightingInput) -> SceneFrameLighting {
         var lighting = SceneFrameLighting(ambient: input.sceneColor(.ambientcolor) ?? content.settings.ambient,
@@ -139,6 +143,8 @@ struct SceneFrameLighting: Equatable {
                                                      viewForward: input.viewForward, shadowContext: context)
             lighting.arrays.merge(packed.arrays) { _, new in new }
             lighting.shadows = packed.shadows
+            lighting.cookie = SceneLightPacker.cookieLight(lights, budget: budget, viewForward: input.viewForward)
+                .flatMap { content.cookies[$0] }
         }
         return lighting
     }

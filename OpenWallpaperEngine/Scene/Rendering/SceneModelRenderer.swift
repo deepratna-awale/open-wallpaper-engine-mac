@@ -373,6 +373,14 @@ final class SceneModelRenderer: SceneModelDrawing {
             case .fbo(ScenePlanarReflection.name):
                 guard let reflection = draw.planarReflection else { return nil }
                 bound.append((slot, reflection, clampSampler, nil))
+            case .fbo(SceneLightCookie.name):
+                // The last packed cookie spot's texture. Without one WE's alias is empty, which
+                // D3D reads as zeros: the zero texel stands in.
+                if let cookie = draw.frame.lighting.cookie, let texture = draw.assetTexture(cookie.key, cookie.source) {
+                    bound.append((slot, texture, clampSampler, cookie.source.contentSize))
+                } else {
+                    bound.append((slot, emptyMorphTexture, clampSampler, nil))
+                }
             case .fbo(let name):
                 guard let id = ModelMaterialPlanBuilder.compositeLayerID(name), let texture = draw.layerComposite(id) else {
                     return nil
