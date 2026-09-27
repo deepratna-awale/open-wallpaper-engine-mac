@@ -5,25 +5,44 @@ import simd
 /// Lays out a WE text object the way Wallpaper Engine does, in scene units:
 /// - the glyph size (em) is `pointsize × 300/72` scene units: WE sets its FreeType face to
 ///   `pointsize` points at 300 dpi and lays the glyphs out one atlas pixel per scene unit;
+/// - each glyph's advance is floored to a whole unit and its box is the glyph's pixel box (the
+///   layout loop 0x1401b10f2…0x1401b12b9: HarfBuzz's 26.6 `x_advance >> 6`, and
+///   `FT_Glyph_Get_CBox(…, FT_GLYPH_BBOX_PIXELS)` at 0x1401addb0);
 /// - text wraps only when `limitwidth` is set (at `maxwidth`), and `limitrows` keeps the first
-///   `maxrows` lines, ending in an ellipsis when `limituseellipsis` is set;
+///   `maxrows` lines, ending in an ellipsis when `limituseellipsis` is set; with `blockalign`, a
+///   line the wrap broke is justified to `maxwidth` (0x1401b21ee);
 /// - nothing is ever shrunk to fit, and nothing is clipped;
 /// - the lines sit around the object's origin by `horizontalalign` and `verticalalign` alone
 ///   (`baselineOrigins`); scene.json's `size` plays no part, and `padding` is room around the
-///   glyphs (`wallpaper64.exe`'s layout 0x1401b0410 and its placement 0x140257690…0x1402577c4).
+///   glyphs (`wallpaper64.exe`'s layout 0x1401b0410 and its placement 0x140257690…0x1402577c4);
+/// - the block (WE's buffer, where effects run) is the lines' bounds plus `padding`, centred on
+///   those bounds, not on the origin (0x140258900 sizes it, 0x140257d70 draws the glyphs into it,
+///   0x140258050 places it): `boxCenter` is where its centre lies from the origin.
 struct SceneTextLayout {
+    /// A glyph as WE places it: its font (CoreText's cascade may pick another for a character the
+    /// face lacks), its pen position from the line's start (whole units) and its character.
+    struct Glyph: Equatable {
+        let font: CTFont
+        let glyph: CGGlyph
+        let position: CGPoint
+        let isWhitespace: Bool
+    }
+
     struct Line: Equatable {
         let text: String
-        /// WE's line width: the glyphs' ink joined with the pen's start, `min(0, xMin)` to
-        /// `max(0, xMax)` (0x1401b215d).
+        /// WE's line width: the glyphs' boxes joined with the pen's start, `min(0, xMin)` to
+        /// `max(0, xMax)` (0x1401b215d); `maxwidth` for a justified line.
         let width: CGFloat
         /// That span's left end from the pen's start (≤ 0).
         let minX: CGFloat
+        let glyphs: [Glyph]
     }
 
-    /// The text block (the quad), in unscaled scene units, centred on the object's origin: room
-    /// for every line on both sides of the origin plus `padding`.
+    /// The text block (the quad), in unscaled scene units: the lines' bounds plus `padding` on
+    /// each side.
     let boxSize: SIMD2<Float>
+    /// The block's centre from the object's origin (y-up), unscaled: the lines' bounds' centre.
+    let boxCenter: SIMD2<Float>
     let lines: [Line]
     /// `size->metrics.height`, `ascender` and `descender` (0x1401b0bf0, 0x14025769a), whole pixels
     /// as FreeType rounds them: the height to nearest, the ascender up, the descender down.
@@ -36,37 +55,44 @@ struct SceneTextLayout {
 
     /// WE's `FT_Set_Char_Size(face, 0, pointsize × 64, 300, 300)`: the em in scene units.
     static func pixelSize(pointSize: CGFloat) -> CGFloat { pointSize * 300 / 72 }
+    /// The largest padding WE keeps on each side (0x140258986: `minss` with 512).
+    static let maxPadding: Float = 512
 
     init(text: String, font: NSFont, padding: SIMD2<Float>, horizontalAlignment: String?, verticalAlignment: String?,
-         maxWidth: Float?, maxRows: Int?, useEllipsis: Bool) {
+         maxWidth: Float?, maxRows: Int?, useEllipsis: Bool, blockAlign: Bool = false) {
         let attributes: [NSAttributedString.Key: Any] = [.font: font]
         ascent = ceil(font.ascender)
         descent = floor(font.descender)
         lineHeight = (font.ascender - font.descender + font.leading).rounded()
-        self.padding = padding
+        self.padding = simd_min(padding, SIMD2(repeating: Self.maxPadding))
         self.horizontalAlignment = horizontalAlignment
         self.verticalAlignment = verticalAlignment
 
-        var lines: [String] = []
+        // Each line with whether the wrap broke it (WE's line flag +0x20, set at 0x1401b1cc6).
+        var lines: [(text: String, wrapped: Bool)] = []
         for paragraph in text.components(separatedBy: .newlines) {
             if let maxWidth, maxWidth > 0 {
-                lines += Self.wrap(paragraph, attributes: attributes, width: CGFloat(maxWidth))
+                let wrapped = Self.wrap(paragraph, attributes: attributes, width: CGFloat(maxWidth))
+                lines += wrapped.enumerated().map { ($1, $0 < wrapped.count - 1) }
             } else {
-                lines.append(paragraph)
+                lines.append((paragraph, false))
             }
         }
         if let maxRows, maxRows > 0, lines.count > maxRows {
             lines = Array(lines.prefix(maxRows))
             if useEllipsis, let last = lines.popLast() {
-                lines.append(Self.withEllipsis(last, attributes: attributes, width: maxWidth.map { CGFloat($0) }))
+                lines.append((Self.withEllipsis(last.text, attributes: attributes, width: maxWidth.map { CGFloat($0) }),
+                              false))
             }
         }
-        let laidOut = lines.map { Self.line($0, attributes: attributes) }
+        let justifyWidth = blockAlign ? maxWidth.flatMap { $0 > 0 ? CGFloat($0) : nil } : nil
+        let laidOut = lines.map { Self.line($0.text, attributes: attributes, justifiedTo: $0.wrapped ? justifyWidth : nil) }
         self.lines = laidOut
         let origins = Self.origins(laidOut, ascent: ascent, descent: descent, lineHeight: lineHeight,
                                    horizontal: horizontalAlignment, vertical: verticalAlignment)
-        boxSize = Self.box(around: origins, lines: laidOut, ascent: ascent, descent: descent, lineHeight: lineHeight,
-                           padding: padding)
+        let bounds = Self.bounds(around: origins, lines: laidOut, ascent: ascent, descent: descent, lineHeight: lineHeight)
+        boxSize = SIMD2(Float(bounds.width), Float(bounds.height)) + self.padding * 2
+        boxCenter = SIMD2(Float(bounds.midX), Float(bounds.midY))
     }
 
     /// Where each line's baseline starts, from the object's origin (y-up), as WE places them:
@@ -107,7 +133,8 @@ struct SceneTextLayout {
     }
 
     /// Draws the block into a new bitmap at `pixelsPerUnit` device pixels per scene unit, so
-    /// the glyphs are rasterised at the size they are shown at instead of being upscaled.
+    /// the glyphs are rasterised at the size they are shown at instead of being upscaled. Each
+    /// glyph is drawn at its whole-unit pen position, as WE's glyph quads are.
     func rasterize(font: NSFont, color: NSColor, pixelsPerUnit: CGFloat) -> CGImage? {
         let width = max(1, Int(ceil(CGFloat(boxSize.x) * pixelsPerUnit)))
         let height = max(1, Int(ceil(CGFloat(boxSize.y) * pixelsPerUnit)))
@@ -118,39 +145,111 @@ struct SceneTextLayout {
         context.setShouldSmoothFonts(false)
         context.scaleBy(x: CGFloat(width) / CGFloat(max(boxSize.x, 0.0001)),
                         y: CGFloat(height) / CGFloat(max(boxSize.y, 0.0001)))
-        // The box is centred on the origin.
-        context.translateBy(x: CGFloat(boxSize.x) / 2, y: CGFloat(boxSize.y) / 2)
-        let attributes: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: color]
+        // The origin sits where the block's centre is offset from it (WE's 0x140257e43…0x140257f3f
+        // translates the glyphs by the padding less the bounds' low corner).
+        context.translateBy(x: CGFloat(boxSize.x / 2 - boxCenter.x), y: CGFloat(boxSize.y / 2 - boxCenter.y))
+        context.setFillColor(color.cgColor)
         for (line, origin) in zip(lines, baselineOrigins()) {
-            let ctLine = CTLineCreateWithAttributedString(NSAttributedString(string: line.text, attributes: attributes))
-            context.textPosition = origin
-            CTLineDraw(ctLine, context)
+            var index = 0
+            while index < line.glyphs.count {
+                // Glyphs of one font draw together.
+                let runFont = line.glyphs[index].font
+                var end = index
+                while end < line.glyphs.count, CFEqual(line.glyphs[end].font, runFont) { end += 1 }
+                let run = line.glyphs[index..<end]
+                let glyphs = run.map(\.glyph)
+                let positions = run.map { CGPoint(x: origin.x + $0.position.x, y: origin.y + $0.position.y) }
+                CTFontDrawGlyphs(runFont, glyphs, positions, glyphs.count, context)
+                index = end
+            }
         }
         return context.makeImage()
     }
 
-    /// A line's text with WE's width: its glyphs' ink bounds joined with the pen's start.
-    private static func line(_ text: String, attributes: [NSAttributedString.Key: Any]) -> Line {
+    /// A line's glyphs placed as WE places them, with WE's width: pen positions advance by each
+    /// glyph's advance floored to a whole unit (HarfBuzz's offsets floored the same way), and the
+    /// width is the glyphs' pixel boxes (left edge floored, right edge rounded up) joined with the
+    /// pen's start. `justifiedTo` (`blockalign` on a line the wrap broke) spreads what the line
+    /// lacks of that width over its spaces, tabs and carriage returns, and the width becomes it.
+    private static func line(_ text: String, attributes: [NSAttributedString.Key: Any],
+                             justifiedTo justifyWidth: CGFloat?) -> Line {
         let ctLine = CTLineCreateWithAttributedString(NSAttributedString(string: text, attributes: attributes))
-        let ink = CTLineGetBoundsWithOptions(ctLine, .useGlyphPathBounds)
-        let minX = ink.isNull || ink.isEmpty ? 0 : min(0, ink.minX)
-        let maxX = ink.isNull || ink.isEmpty ? 0 : max(0, ink.maxX)
-        return Line(text: text, width: maxX - minX, minX: minX)
+        let utf16 = Array(text.utf16)
+        var placed: [(font: CTFont, glyph: CGGlyph, offset: CGPoint, advance: CGFloat, box: CGRect, isWhitespace: Bool)] = []
+        let requested = attributes[.font] as? NSFont ?? NSFont.systemFont(ofSize: 12)
+        for run in CTLineGetGlyphRuns(ctLine) as? [CTRun] ?? [] {
+            let count = CTRunGetGlyphCount(run)
+            guard count > 0 else { continue }
+            // CoreText names the font each run is set in (the cascade's for characters the
+            // requested face lacks).
+            let runFont = (CTRunGetAttributes(run) as? [NSAttributedString.Key: Any])?[.font] as? NSFont
+            let font = (runFont ?? requested) as CTFont
+            let range = CFRange(location: 0, length: count)
+            var glyphs = [CGGlyph](repeating: 0, count: count)
+            var positions = [CGPoint](repeating: .zero, count: count)
+            var advances = [CGSize](repeating: .zero, count: count)
+            var indices = [CFIndex](repeating: 0, count: count)
+            var boxes = [CGRect](repeating: .zero, count: count)
+            CTRunGetGlyphs(run, range, &glyphs)
+            CTRunGetPositions(run, range, &positions)
+            CTRunGetAdvances(run, range, &advances)
+            CTRunGetStringIndices(run, range, &indices)
+            CTFontGetBoundingRectsForGlyphs(font, .horizontal, glyphs, &boxes, count)
+            var pen = positions[0].x
+            for index in 0..<count {
+                let character = indices[index] < utf16.count ? utf16[indices[index]] : 0
+                // HarfBuzz's offset is where the glyph sits from its pen position.
+                let offset = CGPoint(x: positions[index].x - pen, y: positions[index].y)
+                placed.append((font, glyphs[index], offset, advances[index].width, boxes[index],
+                               [9, 13, 32].contains(character)))
+                pen += advances[index].width
+            }
+        }
+        var pen: CGFloat = 0
+        var minX: CGFloat = 0, maxX: CGFloat = 0
+        for glyph in placed {
+            let x = pen + floor(glyph.offset.x)
+            // FreeType's pixel box of an empty outline is (0, 0, 0, 0), at the pen.
+            let box = glyph.box.isNull || glyph.box.isEmpty ? CGRect.zero : glyph.box
+            minX = min(minX, x + floor(box.minX))
+            maxX = max(maxX, x + ceil(box.maxX))
+            pen += floor(glyph.advance)
+        }
+        var extra: CGFloat = 0
+        var width = maxX - minX
+        if let justifyWidth {
+            let gaps = utf16.filter { [9, 13, 32].contains($0) }.count
+            if gaps > 0 {
+                extra = (justifyWidth - width) / CGFloat(gaps)
+                width = justifyWidth
+            }
+        }
+        pen = 0
+        var glyphs: [Glyph] = []
+        for glyph in placed {
+            glyphs.append(Glyph(font: glyph.font, glyph: glyph.glyph,
+                                position: CGPoint(x: pen + floor(glyph.offset.x), y: floor(glyph.offset.y)),
+                                isWhitespace: glyph.isWhitespace))
+            pen += floor(glyph.advance) + (glyph.isWhitespace ? extra : 0)
+        }
+        return Line(text: text, width: width, minX: minX, glyphs: glyphs)
     }
 
-    /// The box centred on the origin that holds every line (ascender to descender) with `padding`
-    /// around it.
-    private static func box(around origins: [CGPoint], lines: [Line], ascent: CGFloat, descent: CGFloat,
-                            lineHeight: CGFloat, padding: SIMD2<Float>) -> SIMD2<Float> {
-        var half = CGSize.zero
+    /// The lines' bounds from the object's origin (y-up): the ink spans across, and from the first
+    /// line's ascender down to the last line's descender, or to where the next line's ascender
+    /// would start if that is lower (0x9c/0x94 of the layout).
+    private static func bounds(around origins: [CGPoint], lines: [Line], ascent: CGFloat, descent: CGFloat,
+                               lineHeight: CGFloat) -> CGRect {
+        guard !lines.isEmpty else { return .zero }
+        var low = CGPoint(x: CGFloat.infinity, y: CGFloat.infinity)
+        var high = CGPoint(x: -CGFloat.infinity, y: -CGFloat.infinity)
         for (origin, line) in zip(origins, lines) {
-            half.width = max(half.width, abs(origin.x + line.minX), abs(origin.x + line.minX + line.width))
-            // WE's line spans the ascender to the next line's ascender (0x9c/0x94); the descender
-            // can reach below that.
-            let bottom = min(origin.y + descent, origin.y + ascent - lineHeight)
-            half.height = max(half.height, abs(origin.y + ascent), abs(bottom))
+            low.x = min(low.x, origin.x + line.minX)
+            high.x = max(high.x, origin.x + line.minX + line.width)
+            low.y = min(low.y, origin.y + descent, origin.y + ascent - lineHeight)
+            high.y = max(high.y, origin.y + ascent)
         }
-        return SIMD2(Float(ceil(half.width)) * 2 + padding.x * 2, Float(ceil(half.height)) * 2 + padding.y * 2)
+        return CGRect(x: low.x, y: low.y, width: high.x - low.x, height: high.y - low.y)
     }
 
     // MARK: - Line breaking

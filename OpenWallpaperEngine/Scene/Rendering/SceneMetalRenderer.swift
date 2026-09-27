@@ -55,8 +55,8 @@ private struct RenderTextureFrame {
     let uvAxisY: SIMD2<Float>
     /// Text only: the glyphs' coverage, which WE's `font` material samples; nil for colour glyphs.
     var coverage: MTLTexture? = nil
-    /// Text only: the box the glyphs cover, u0, v0, u1, v1 (`SceneTextInk`).
-    var ink: SIMD4<Float>? = nil
+    /// Text only: the block's centre from the object's origin, unscaled (`SceneTextLayout.boxCenter`).
+    var textCenter = SIMD2<Float>.zero
 }
 
 final class SceneMetalRenderer: NSObject, MTKViewDelegate {
@@ -973,19 +973,13 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 textFrames[layerIndex] = layerTextFrame(entry, boxSize: layerBaseSize(entry),
                                                         pixelsPerUnit: pixelsPerUnit)
             }
+            // Text's block is centred on its lines, not on the origin (`SceneTextLayout.boxCenter`).
+            let textCenter = textFrames[layerIndex]?.frame.textCenter ?? .zero
             var draw = layerDraw(entry, baseSize: textFrames[layerIndex]?.baseSize ?? layerBaseSize(entry),
-                                 motion: motion)
+                                 motion: motion, contentOffset: textCenter)
             draw.placement = layerPlacement(entry, size: textFrames[layerIndex]?.baseSize ?? layerBaseSize(entry),
                                             musicSyncLevel: draw.musicSyncLevel, motion: motion, camera: effectFrame.camera)
-            // Text through a camera covers its glyphs only, as WE's glyph quads do (`SceneTextInk`);
-            // effects may draw beyond them.
-            if let placement = draw.placement, entry.layer.weEffects.isEmpty, let text = textFrames[layerIndex],
-               let ink = text.frame.ink {
-                draw.placement = SceneTextInk.crop(placement, to: ink)
-                textFrames[layerIndex]?.frame = RenderTextureFrame(
-                    texture: text.frame.texture, duration: text.frame.duration, uvOrigin: SIMD2(ink.x, ink.y),
-                    uvAxisX: SIMD2(ink.z - ink.x, 0), uvAxisY: SIMD2(0, ink.w - ink.y), coverage: text.frame.coverage, ink: ink)
-            }
+            draw.placement?.offset += textCenter
             if visible { draws[layerIndex] = draw }
             // A puppet's mesh draws its image before anything reads it: its effects, its own draw.
             if let puppet = entry.layer.puppet { drawPuppet(puppet, entry, frame: effectFrame, commandBuffer: commandBuffer) }
@@ -1239,9 +1233,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                        opacity: draw.opacity, drawableSize: drawableSize, placement: .stretch)
             setQuadAxes(&uniform, quad: draw.quad)
             // Text is rasterised white; its user colour tints it when drawn, like its authored one.
-            // Text with font effects has its colours in its raster (`textFill`).
+            // Text with font effects or layer effects has its colours in its raster (`textFill`).
             let textTint = entry.layer.text == nil ? SIMD3<Float>(repeating: 1) : self.textTint(layerID: entry.layer.id)
-            uniform.color = entry.layer.text?.effects == nil ? draw.color * SIMD4(textTint, 1)
+            uniform.color = entry.layer.text?.effects == nil && entry.layer.weEffects.isEmpty ? draw.color * SIMD4(textTint, 1)
                 : SIMD4(1, 1, 1, draw.color.w)
             let materialEffects = entry.layer.effects
             uniform.effects = SIMD4<Float>(materialEffects.brightness * draw.brightness, materialEffects.contrast,
@@ -1606,7 +1600,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// A visible layer's opacity, colour and placed quad this frame: what scripts wrote, then the
     /// timeline, then authored (moved by user bindings).
     private func layerDraw(_ entry: PreparedLayer, baseSize: SIMD2<Float>,
-                           motion: CameraMotion) -> LayerDraw {
+                           motion: CameraMotion, contentOffset: SIMD2<Float> = .zero) -> LayerDraw {
         let base = baseValues(entry)
         let script = scripts.object(entry.layer.id)
         var opacity = script?.scalar(.alpha) ?? baseOpacity(entry, base: base)
@@ -1624,6 +1618,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // WE draws a layer where its transform and the camera put it; an oversized layer (sized
         // to hide its edges while it moves) isn't pinned inside the scene.
         let center = quad.center + parallaxOffset - motion.shake
+            + quad.axisX * (contentOffset.x / max(baseSize.x, .leastNormalMagnitude))
+            + quad.axisY * (contentOffset.y / max(baseSize.y, .leastNormalMagnitude))
         let animation = timelines.object(entry.layer.id)
         let rgb = script?.vector3(.color) ?? animation?.color
         let color = rgb.map { SIMD4<Float>($0.x, $0.y, $0.z, base.color.w) } ?? base.color
@@ -1654,7 +1650,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let scripted = scripts.text(authored, of: entry.layer.id)
         return makeTextFrame(scripted.text, value: scripted.value, pointSize: scripted.pointSize, boxSize: boxSize,
                              pixelsPerUnit: pixelsPerUnit, layerID: entry.layer.id,
-                             fill: authored.effects == nil ? SIMD3(repeating: 1) : textFill(entry))
+                             fill: authored.effects == nil && entry.layer.weEffects.isEmpty ? nil : textFill(entry))
             ?? (textureFrame(for: entry), boxSize)
     }
 
@@ -2375,10 +2371,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     }
 
     /// `layerID` keys the user's text settings and the text cache. `pointSize` is a script's
-    /// `pointsize`, which wins over the app's size setting.
+    /// `pointsize`, which wins over the app's size setting. `fill` nil rasterises white coverage,
+    /// coloured when drawn; a colour rasterises the text in it, as WE's `font` pass draws it into
+    /// the buffer its effects run on and other layers sample (3378346807's cyan clock).
     private func makeTextFrame(_ text: SceneMetalText, value: String, pointSize: Float?, boxSize: SIMD2<Float>,
                                pixelsPerUnit: Float, layerID: String,
-                               fill: SIMD3<Float>) -> (frame: RenderTextureFrame, baseSize: SIMD2<Float>)? {
+                               fill: SIMD3<Float>?) -> (frame: RenderTextureFrame, baseSize: SIMD2<Float>)? {
         let stateKey = layerID
         let fontName = WallpaperServices.shared.userPropertyString("_owe_text_\(layerID)_font") ?? ""
         let sizeValue = pointSize
@@ -2390,7 +2388,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         textRasterScales[stateKey] = rasterScale
         let cacheKey = "\(stateKey)|\(value)|\(boxSize.x)|\(boxSize.y)|\(fontName)|\(sizeValue)|\(bold)|\(italic)|\(rasterScale)"
             + "|\(text.horizontalAlignment ?? "")|\(text.verticalAlignment ?? "")"
-            + (text.effects == nil ? "" : "|\(fill)")
+            + (fill.map { "|\($0)" } ?? "")
         if let cached = textFrameCache.value(for: cacheKey) { return cached }
 
         let requestedFont = fontName.isEmpty ? (text.font ?? "System") : fontName
@@ -2402,14 +2400,18 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         if italic { font = NSFontManager.shared.convert(font, toHaveTrait: .italicFontMask) }
         let layout = SceneTextLayout(text: value, font: font, padding: text.padding,
                                      horizontalAlignment: text.horizontalAlignment, verticalAlignment: text.verticalAlignment,
-                                     maxWidth: text.maxWidth, maxRows: text.maxRows, useEllipsis: text.useEllipsis)
+                                     maxWidth: text.maxWidth, maxRows: text.maxRows, useEllipsis: text.useEllipsis,
+                                     blockAlign: text.blockAlign)
         // A white coverage mask, as WE's `font` shader samples its glyphs: colour (authored and
-        // the user's), alpha and brightness are applied when the quad is drawn.
-        let color = NSColor(srgbRed: 1, green: 1, blue: 1, alpha: 1)
+        // the user's), alpha and brightness are applied when the quad is drawn. Font effects colour
+        // a white raster themselves (`effectText`).
+        let white = NSColor(srgbRed: 1, green: 1, blue: 1, alpha: 1)
+        let color = text.effects != nil ? white
+            : fill.map { NSColor(srgbRed: CGFloat($0.x), green: CGFloat($0.y), blue: CGFloat($0.z), alpha: 1) } ?? white
         let pixels = SceneTextRasterScale.clamped(rasterScale, boxSize: layout.boxSize)
         guard let image = layout.rasterize(font: font, color: color, pixelsPerUnit: CGFloat(pixels)),
               let texture = text.effects.map({ effectText(image, effects: $0, pointSize: sizeValue, pixelsPerUnit: pixels,
-                                                          fill: fill) })
+                                                          fill: fill ?? SIMD3(repeating: 1)) })
                 ?? (try? SceneTextureUpload.texture(from: image, loader: textureLoader, device: device)) else {
             OWELog.error(.scene, "Text layer \(layerID): could not rasterise \(layout.boxSize) at \(pixels) px/unit")
             return nil
@@ -2424,7 +2426,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         }
         let entry = (RenderTextureFrame(texture: texture, duration: .greatestFiniteMagnitude,
                                         uvOrigin: .zero, uvAxisX: SIMD2(1, 0), uvAxisY: SIMD2(0, 1), coverage: coverage,
-                                        ink: text.effects == nil ? SceneTextInk.bounds(of: image) : nil),
+                                        textCenter: layout.boxCenter),
                      layout.boxSize)
         // Strings change every second for clocks; the LRU keeps the live ones and drops the rest.
         textFrameCache.insert(entry, for: cacheKey)

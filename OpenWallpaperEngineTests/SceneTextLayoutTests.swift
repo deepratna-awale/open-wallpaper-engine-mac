@@ -82,16 +82,93 @@ final class SceneTextLayoutTests: XCTestCase {
         XCTAssertEqual(spans[0].0 + spans[0].1, 0, accuracy: 0.001, "a shorter line is centred within it")
     }
 
-    /// The block is centred on the origin and holds every line with `padding` around it.
-    func testBoxHoldsTheLinesWithPadding() {
-        for (h, v) in [("left", "top"), ("right", "bottom"), ("center", "center")] {
+    /// EX2: the block (WE's buffer, where effects run) is the lines' bounds plus `padding` on each
+    /// side, centred on those bounds (0x140258900, 0x140257d70, 0x140258050): across, the ink
+    /// spans; up and down, the first ascender and the last line's bottom.
+    func testTheBlockIsTheLinesBoundsWithPadding() {
+        for (h, v) in [("left", "top"), ("right", "bottom"), ("center", "center"), ("left", "center")] {
             let text = layout("Hello\nworld", padding: SIMD2(10, 20), horizontal: h, vertical: v)
-            let half = CGSize(width: CGFloat(text.boxSize.x) / 2, height: CGFloat(text.boxSize.y) / 2)
-            for (line, origin) in zip(text.lines, text.baselineOrigins()) {
-                XCTAssertGreaterThanOrEqual(origin.x + line.minX, -half.width + 10, "\(h) \(v)")
-                XCTAssertLessThanOrEqual(origin.x + line.minX + line.width, half.width - 10, "\(h) \(v)")
-                XCTAssertLessThanOrEqual(origin.y + text.ascent, half.height - 20, "\(h) \(v)")
-                XCTAssertGreaterThanOrEqual(origin.y + text.descent, -half.height + 20, "\(h) \(v)")
+            let origins = text.baselineOrigins()
+            let left = zip(text.lines, origins).map { $1.x + $0.minX }.min()!
+            let right = zip(text.lines, origins).map { $1.x + $0.minX + $0.width }.max()!
+            let top = origins[0].y + text.ascent
+            let last = origins[origins.count - 1].y
+            let bottom = min(last + text.descent, last + text.ascent - text.lineHeight)
+            let low = text.boxCenter - text.boxSize / 2, high = text.boxCenter + text.boxSize / 2
+            XCTAssertEqual(low.x, Float(left) - 10, accuracy: 0.001, "\(h) \(v)")
+            XCTAssertEqual(high.x, Float(right) + 10, accuracy: 0.001, "\(h) \(v)")
+            XCTAssertEqual(high.y, Float(top) + 20, accuracy: 0.001, "\(h) \(v)")
+            XCTAssertEqual(low.y, Float(bottom) - 20, accuracy: 0.001, "\(h) \(v)")
+        }
+        XCTAssertEqual(layout("x", padding: SIMD2(600, 0)).padding.x, 512, "WE keeps at most 512 (0x140258986)")
+    }
+
+    /// GP2: 3378346807's clock (left, center, `padding` 22, 8 pt) is sampled 1:1 from the screen's
+    /// top left (`TRANSFORMUV`). WE's capture has the first glyph's pen at x 22 and the first
+    /// baseline at y 54 (Cambria's 32-unit ascender under 22 of padding): the buffer starts at the
+    /// ink less the padding, not at the origin less half a centred box, which put the clock
+    /// about 200 units right.
+    func testALeftAlignedClockStartsAtItsPadding() throws {
+        let serif = try XCTUnwrap(NSFont(name: "Times New Roman", size: SceneTextLayout.pixelSize(pointSize: 8)))
+        let clock = layout("PM 03:23:55\nSep. 26, 2026\nSaturday", font: serif, padding: SIMD2(22, 22), horizontal: "left")
+        let origins = clock.baselineOrigins()
+        let corner = SIMD2(clock.boxCenter.x - clock.boxSize.x / 2, clock.boxCenter.y + clock.boxSize.y / 2)
+        for (line, origin) in zip(clock.lines, origins) {
+            XCTAssertEqual(Float(origin.x + line.minX) - corner.x, 22, accuracy: 0.001, line.text)
+        }
+        XCTAssertEqual(corner.y - Float(origins[0].y), 22 + Float(clock.ascent), accuracy: 0.001)
+    }
+
+    /// EX1: WE floors each glyph's advance to a whole unit (0x1401b1166: `x_advance >> 6`). In WE's
+    /// capture of "WE Text 123" (NotoSans-Regular 64 pt, centred on x 960; effect gallery extras,
+    /// `text_plain_nomsdf.png`, `zoom_text.png`) the glyphs W E x t 1 2 3 span these columns
+    /// (W 221…459, E 490…595, x 962…1089, t 1101…1185, 1 1287…1355, 2 1427…1550, 3 1578…1701; T and
+    /// e touch). Their centres are compared, which a threshold's bias on the edges leaves alone.
+    /// CoreText's fractional advances drift right along the line, to 2.5 units at the 3; the
+    /// floored ones stay within about a unit.
+    func testGlyphsAdvanceByWholeUnitsAsInWEsCapture() throws {
+        let url = ShaderVariantTests.weAssets.appending(path: "fonts/NotoSans-Regular.ttf")
+        let descriptors = try XCTUnwrap(CTFontManagerCreateFontDescriptorsFromURL(url as CFURL) as? [CTFontDescriptor])
+        let noto = CTFontCreateWithFontDescriptor(try XCTUnwrap(descriptors.first),
+                                                  SceneTextLayout.pixelSize(pointSize: 64), nil) as NSFont
+        let text = layout("WE Text 123", font: noto)
+        let line = try XCTUnwrap(text.lines.first)
+        let origin = try XCTUnwrap(text.baselineOrigins().first)
+        XCTAssertTrue(line.glyphs.allSatisfy { $0.position.x == $0.position.x.rounded() }, "whole-unit pen positions")
+        let centres = line.glyphs.map { glyph -> CGFloat in
+            var box = CGRect.zero
+            var index = glyph.glyph
+            CTFontGetBoundingRectsForGlyphs(glyph.font, .horizontal, &index, &box, 1)
+            return 960 + origin.x + glyph.position.x + box.midX
+        }
+        XCTAssertEqual(centres.count, 11)
+        let we: [Int: CGFloat] = [0: 340, 1: 542.5, 5: 1025.5, 6: 1143, 8: 1321, 9: 1488.5, 10: 1639.5]
+        let errors = we.map { abs(centres[$0.key] - $0.value) }
+        XCTAssertLessThanOrEqual(errors.max() ?? .infinity, 1.25, "\(centres)")
+        XCTAssertLessThanOrEqual(errors.reduce(0, +) / CGFloat(errors.count), 0.8, "\(centres)")
+    }
+
+    /// EX3: `blockalign` spreads what a line the wrap broke lacks of `maxwidth` over its spaces,
+    /// tabs and carriage returns, and its width becomes `maxwidth` (0x1401b21ee…0x1401b22d1); the
+    /// paragraph's last line keeps its own.
+    func testBlockAlignJustifiesWrappedLines() throws {
+        let words = "Justified text spreads the gap over its spaces"
+        let plain = layout(words, maxWidth: 900)
+        let justified = SceneTextLayout(text: words, font: font(pointSize: 32), padding: SIMD2(0, 0),
+                                        horizontalAlignment: "left", verticalAlignment: "top",
+                                        maxWidth: 900, maxRows: nil, useEllipsis: false, blockAlign: true)
+        XCTAssertGreaterThan(justified.lines.count, 1)
+        XCTAssertEqual(justified.lines.map(\.text), plain.lines.map(\.text))
+        for (index, line) in justified.lines.enumerated() {
+            let natural = plain.lines[index]
+            if index < justified.lines.count - 1 {
+                XCTAssertEqual(line.width, 900, accuracy: 0.001, line.text)
+                let gaps = CGFloat(line.text.filter { $0 == " " }.count)
+                let extra = (900 - natural.width) / gaps
+                let last = try XCTUnwrap(line.glyphs.last), plainLast = try XCTUnwrap(natural.glyphs.last)
+                XCTAssertEqual(last.position.x - plainLast.position.x, extra * gaps, accuracy: 0.01, line.text)
+            } else {
+                XCTAssertEqual(line.width, natural.width, "the last line isn't justified")
             }
         }
     }
