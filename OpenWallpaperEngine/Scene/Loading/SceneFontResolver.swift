@@ -25,27 +25,37 @@ struct SceneFontResolver {
 
     static let systemFontPrefix = "systemfont_"
 
-    /// Windows system fonts that macOS doesn't ship, mapped to the closest installed family.
-    /// Fonts macOS does ship (Arial, Verdana, Tahoma, Georgia, Times New Roman, Courier New…)
-    /// resolve by name and need no entry here.
-    static let windowsSystemFontAliases: [String: String] = [
-        "segoeui": "Helvetica Neue",           // Segoe UI: humanist sans UI face
-        "segoeuilight": "Helvetica Neue",
-        "segoeuisemibold": "Helvetica Neue",
-        "segoeuisymbol": "Apple Symbols",
-        "segoeuiemoji": "Apple Color Emoji",
-        "calibri": "Helvetica Neue",           // Calibri: sans; Carlito isn't installed on macOS
-        "cambria": "Georgia",                  // Cambria: transitional serif
-        "consolas": "Menlo",                   // Consolas: monospace
-        "candara": "Optima",
-        "corbel": "Gill Sans",
-        "constantia": "Palatino",
-        "lucidaconsole": "Menlo",
-        "msgothic": "Hiragino Sans",
-        "msyahei": "PingFang SC",
-        "microsoftyahei": "PingFang SC",
-        "simsun": "Songti SC",
-        "malgungothic": "Apple SD Gothic Neo",
+    /// WE's `systemfont_*` names: `wallpaper64.exe`'s table at 0x140484cc0 (editor name, scene
+    /// name, file) holds these eight, and the text object loads `<Windows fonts folder>\<file>`
+    /// (0x1401b05b6); any other name isn't in the table, and a face that fails to load falls back to
+    /// `arial.ttf` (0x1401ad549). Each maps to the family its file holds and, where macOS doesn't
+    /// ship that family, the installed family used in its place (an installed copy, from Office
+    /// say, wins):
+    ///
+    /// | Name | File | Family | macOS stand-in |
+    /// |---|---|---|---|
+    /// | arial | arial.ttf | Arial | (ships) |
+    /// | calibri | calibri.ttf | Calibri | Helvetica Neue [I: no capture to measure] |
+    /// | cambria | cambria.ttc | Cambria | Times New Roman: measured against WE's capture of 3378346807 |
+    /// | comicsans | comic.ttf | Comic Sans MS | (ships) |
+    /// | consolas | consola.ttf | Consolas | Menlo (monospace) [I] |
+    /// | sansserif | micross.ttf | Microsoft Sans Serif | (ships) |
+    /// | segoe | segoeui.ttf | Segoe UI | Helvetica Neue [I] |
+    /// | verdana | verdana.ttf | Verdana | (ships) |
+    ///
+    /// Cambria: WE's clock in 3378346807 (8 pt, three lines) measures a 32-unit ascender, a 39-unit
+    /// line, a 23-unit cap height and line widths of 170, 179 and 120 units. Of the installed serifs,
+    /// Times New Roman comes closest over all of these (30, 38, 22, and 168, 176, 115 with WE's
+    /// floored advances); Georgia, the old stand-in, is 186, 195 and 129 wide.
+    static let weSystemFonts: [String: (family: String, standIn: String?)] = [
+        "arial": ("Arial", nil),
+        "calibri": ("Calibri", "Helvetica Neue"),
+        "cambria": ("Cambria", "Times New Roman"),
+        "comicsans": ("Comic Sans MS", nil),
+        "consolas": ("Consolas", "Menlo"),
+        "sansserif": ("Microsoft Sans Serif", nil),
+        "segoe": ("Segoe UI", "Helvetica Neue"),
+        "verdana": ("Verdana", nil),
     ]
 
     /// Looks the path up in the wallpaper's own package or folder.
@@ -78,12 +88,14 @@ struct SceneFontResolver {
         return nil
     }
 
-    /// `arial` → `Arial`, `timesnewroman` → `Times New Roman`, `segoeui` → alias.
+    /// A `systemfont_*` name's family as WE resolves it (`weSystemFonts`): the file's family if it
+    /// is installed, else its stand-in; a name outside WE's table is Arial, as WE's fallback is.
     func systemFont(for name: String) -> String? {
-        let key = Self.key(name)
         let families = availableFamilies()
-        if let family = families.first(where: { Self.key($0) == key }) { return family }
-        if let alias = Self.windowsSystemFontAliases[key], families.contains(alias) { return alias }
+        let entry = Self.weSystemFonts[Self.key(name)] ?? Self.weSystemFonts["arial"]!
+        for candidate in [entry.family, entry.standIn].compactMap({ $0 }) {
+            if let family = families.first(where: { Self.key($0) == Self.key(candidate) }) { return family }
+        }
         return nil
     }
 

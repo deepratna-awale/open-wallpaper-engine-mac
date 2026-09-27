@@ -13,6 +13,14 @@ enum SceneFontRegistry {
         lock.unlock()
     }
 
+    /// An installed font under the names a scene gives it (`systemfont_cambria` → Times New Roman,
+    /// `SceneFontResolver.weSystemFonts`), so a user's per-layer font seeded with that name finds it.
+    static func register(postScriptName: String, names: [String]) {
+        lock.lock()
+        for name in names where !name.isEmpty { fonts[name] = postScriptName }
+        lock.unlock()
+    }
+
     static func font(named name: String, size: CGFloat) -> NSFont? {
         lock.lock()
         let fontName = fonts[name]

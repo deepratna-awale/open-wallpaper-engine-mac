@@ -1158,6 +1158,10 @@ class SceneWallpaperViewModel: ObservableObject {
         switch resolver.resolve(path) {
         case .system(let family)?:
             registeredFontNames[path] = family
+            // The per-layer font setting is seeded with the scene's name (`systemfont_*`).
+            if let installed = NSFontManager.shared.font(withFamily: family, traits: [], weight: 5, size: 12) {
+                SceneFontRegistry.register(postScriptName: installed.fontName, names: [path])
+            }
             return family
         case .data(let bytes, _)?:
             data = bytes
