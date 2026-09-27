@@ -22,8 +22,9 @@ struct ExplorerItem: SubviewOfContentView {
         ZStack(alignment: .bottom) {
             GifImage(contentsOf: { (url: URL) in
                 if let selectedProject = try? JSONDecoder()
-                    .decode(WEProject.self, from: Data(contentsOf: url.appending(path: "project.json"))) {
-                    return url.appending(path: selectedProject.preview)
+                    .decode(WEProject.self, from: Data(contentsOf: url.appending(path: "project.json"))),
+                   let preview = selectedProject.previewURL(in: url) {
+                    return preview
                 }
                 return Bundle.main.url(forResource: "WallpaperNotFound", withExtension: "mp4")!
             }(wallpaper.wallpaperDirectory), animates: animates && viewModel.isApplicationActive)

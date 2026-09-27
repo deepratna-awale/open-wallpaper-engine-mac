@@ -118,8 +118,8 @@ struct DisplaySettings: SubviewOfContentView {
         if let project = try? JSONDecoder().decode(
             WEProject.self,
             from: Data(contentsOf: wallpaper.wallpaperDirectory.appending(path: "project.json"))
-        ) {
-            return wallpaper.wallpaperDirectory.appending(path: project.preview)
+        ), let preview = project.previewURL(in: wallpaper.wallpaperDirectory) {
+            return preview
         }
         return Bundle.main.url(forResource: "WallpaperNotFound", withExtension: "mp4")!
     }

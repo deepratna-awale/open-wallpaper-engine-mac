@@ -82,7 +82,9 @@ struct WEProject: Codable, Equatable, Hashable {
     var description: String?
     var file: String
     var general: WEProjectGeneral?
-    var preview: String
+    /// The preview image, relative to the wallpaper's folder. WE loads a project without one (the
+    /// effect gallery's generated projects have none), so it's optional.
+    var preview: String?
     var tags: [String]?
     var title: String
     var visibility: String?
@@ -92,9 +94,14 @@ struct WEProject: Codable, Equatable, Hashable {
     var version: Int?
     
     static let invalid = Self(file: "",
-                              preview: "",
                               title: "Error",
                               type: "video")
+
+    /// The preview image in `directory`; nil when the project names none.
+    func previewURL(in directory: URL) -> URL? {
+        guard let preview, !preview.isEmpty else { return nil }
+        return directory.appending(path: preview)
+    }
     
     var inferredContentRating: String? {
         let ratings = ["everyone", "questionable", "mature"]

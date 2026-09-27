@@ -52,7 +52,6 @@ final class WEEffectGalleryTests: XCTestCase {
                 let source = captures.appending(path: "projects/\(expectation.effect.replacingOccurrences(of: "user_", with: "user_effecttest-"))")
                 directory = scratch.appending(path: source.lastPathComponent)
                 try FileManager.default.copyItem(at: source, to: directory)
-                try WEEffectGallery.addPreview(to: directory)
             } else {
                 directory = try WEEffectGallery.makeProject(effect: expectation.effectFolder, passes: expectation.passes,
                                                             name: expectation.effect, assets: assets, in: scratch)

@@ -107,15 +107,15 @@ enum WEEffectGallery {
                         "orthogonalprojection": ["width": 1920, "height": 1080]],
             "objects": objects]
         try json(scene).write(to: directory.appending(path: "scene.json"))
-        // The gallery's project.json has no `preview`; our `WEProject` requires one (docs/test-risks.md).
+        // Like the gallery's own, the project.json has no `preview`; WE loads it anyway.
         let project: [String: Any] = ["file": "scene.json", "title": directory.lastPathComponent, "type": "scene",
-                                      "preview": "preview.jpg",
                                       "general": ["properties": [String: Any]()]]
         try json(project).write(to: directory.appending(path: "project.json"))
         return directory
     }
 
-    /// Adds the `preview` our `WEProject` requires to a gallery project.json that has none.
+    /// Adds a `preview` to a gallery project.json that has none. Not needed since `WEProject.preview`
+    /// became optional; kept only until the particle gallery drops its calls.
     static func addPreview(to directory: URL) throws {
         let url = directory.appending(path: "project.json")
         var project = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])

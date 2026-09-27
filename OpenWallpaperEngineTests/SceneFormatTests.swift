@@ -69,4 +69,17 @@ final class SceneFormatTests: XCTestCase {
         let properties = try XCTUnwrap((raw["general"] as? [String: Any])?["properties"] as? [String: Any])
         XCTAssertEqual(Set(properties.keys), ["showtitle", "tintamount"])
     }
+
+    /// WE loads a project.json without `preview` (the effect gallery's generated projects); it has
+    /// no preview image then, and the explorer shows its placeholder.
+    func testProjectWithoutPreviewLoads() throws {
+        let json = #"{"file":"scene.json","title":"fxgal_none","type":"scene","general":{"properties":{}}}"#
+        let project = try JSONDecoder().decode(WEProject.self, from: Data(json.utf8))
+        XCTAssertNil(project.preview)
+        let folder = URL(filePath: "/wallpapers/fxgal_none", directoryHint: .isDirectory)
+        XCTAssertNil(project.previewURL(in: folder))
+        var named = project
+        named.preview = "preview.gif"
+        XCTAssertEqual(named.previewURL(in: folder)?.path, "/wallpapers/fxgal_none/preview.gif")
+    }
 }
