@@ -88,19 +88,7 @@ enum WEEffectGallery {
                                 return [entry]
                             } ?? []])
         }
-        if let effect {
-            let source = assets.appending(path: "effects/\(effect)", directoryHint: .isDirectory)
-            let target = directory.appending(path: "effects/\(effect)", directoryHint: .isDirectory)
-            try fm.createDirectory(at: target, withIntermediateDirectories: true)
-            try fm.copyItem(at: source.appending(path: "effect.json"), to: target.appending(path: "effect.json"))
-            for sub in try fm.contentsOfDirectory(atPath: source.path) where sub != "preview" {
-                var isDirectory: ObjCBool = false
-                guard fm.fileExists(atPath: source.appending(path: sub).path, isDirectory: &isDirectory),
-                      isDirectory.boolValue else { continue }
-                try merge(source.appending(path: sub, directoryHint: .isDirectory),
-                          into: directory.appending(path: sub, directoryHint: .isDirectory))
-            }
-        }
+        if let effect { try copyEffect(effect, assets: assets, into: directory) }
         let scene: [String: Any] = [
             "camera": ["center": "0 0 -1", "eye": "0 0 0", "up": "0 1 0"],
             "general": ["clearcolor": "0.15 0.15 0.15", "ambientcolor": "0.3 0.3 0.3", "skylightcolor": "0.3 0.3 0.3",
@@ -122,6 +110,23 @@ enum WEEffectGallery {
         guard project["preview"] == nil else { return }
         project["preview"] = "preview.jpg"
         try json(project).write(to: url)
+    }
+
+    /// Copies `assets/effects/<effect>` into the project as WE's editor does: `effect.json` into
+    /// `effects/<effect>/`, its `materials/`, `shaders/`… merged into the project's own.
+    static func copyEffect(_ effect: String, assets: URL, into directory: URL) throws {
+        let fm = FileManager.default
+        let source = assets.appending(path: "effects/\(effect)", directoryHint: .isDirectory)
+        let target = directory.appending(path: "effects/\(effect)", directoryHint: .isDirectory)
+        try fm.createDirectory(at: target, withIntermediateDirectories: true)
+        try fm.copyItem(at: source.appending(path: "effect.json"), to: target.appending(path: "effect.json"))
+        for sub in try fm.contentsOfDirectory(atPath: source.path) where sub != "preview" {
+            var isDirectory: ObjCBool = false
+            guard fm.fileExists(atPath: source.appending(path: sub).path, isDirectory: &isDirectory),
+                  isDirectory.boolValue else { continue }
+            try merge(source.appending(path: sub, directoryHint: .isDirectory),
+                      into: directory.appending(path: sub, directoryHint: .isDirectory))
+        }
     }
 
     private static func merge(_ source: URL, into target: URL) throws {
