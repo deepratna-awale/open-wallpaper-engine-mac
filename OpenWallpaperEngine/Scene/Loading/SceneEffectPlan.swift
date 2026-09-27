@@ -323,6 +323,10 @@ struct SceneEffectPlanBuilder {
     /// script. A plain edit is a static literal, so an edited chain can still be reused frame to
     /// frame (an edit rebuilds the scene content). A music-synced edit is bound to its user property instead, so it's resolved every
     /// frame and modulated by the audio level like any other synced numeric value.
+    ///
+    /// A value bound to a wallpaper user property keeps its binding, and an edit of it is ignored:
+    /// WE's editor shows no value control for it (`ui/dist/scripts/scripts.js`, the property row's
+    /// `ng-if="!property.linkUser||property.type==='texture'"`), so the user property alone sets it.
     static func applyingOverrides(_ overrides: (String) -> SceneEffectOverride?, to instance: [String: SceneValueSource],
                                   uniforms: [ShaderUniformDeclaration]) -> [String: SceneValueSource] {
         var result = instance
@@ -330,6 +334,7 @@ struct SceneEffectPlanBuilder {
             guard let key = uniform.materialKey, let override = overrides(key),
                   let value = ShaderValue(string: override.value) else { continue }
             let authored = result.first { $0.key.caseInsensitiveCompare(key) == .orderedSame }?.value
+            if authored?.boundUserProperty != nil { continue }
             result = result.filter { $0.key.caseInsensitiveCompare(key) != .orderedSame }
             let edited: SceneValueSource = override.isMusicSynced
                 ? .user(name: override.property, condition: nil, fallback: .literal(value))

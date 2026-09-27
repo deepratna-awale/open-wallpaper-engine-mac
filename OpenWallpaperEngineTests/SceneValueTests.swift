@@ -114,13 +114,43 @@ final class SceneValueTests: XCTestCase {
         }
 
         // The app's inspector edit is a user value: it replaces the literal, under the timeline.
+        let alpha = [ShaderUniformDeclaration(type: "float", name: "g_Alpha", arrayCount: nil, annotation: ["material": "alpha"])]
+        let animated = try source(["value": 0.3, "animation": [
+            "c0": [["frame": 0, "value": 0], ["frame": 30, "value": 1]], "options": ["fps": 30, "length": 60]
+        ]]).bindingAnimation(to: site)
         let edited = SceneEffectPlanBuilder.applyingOverrides(
-            { _ in SceneEffectOverride(property: "edit", value: "0.9") }, to: ["Alpha": bound],
-            uniforms: [ShaderUniformDeclaration(type: "float", name: "g_Alpha", arrayCount: nil, annotation: ["material": "alpha"])])
+            { _ in SceneEffectOverride(property: "edit", value: "0.9") }, to: ["Alpha": animated], uniforms: alpha)
         guard case .animation(site, .literal(let value)) = try XCTUnwrap(edited["alpha"]) else {
             return XCTFail("\(edited)")
         }
         XCTAssertEqual(value.components, [0.9])
+
+        // A value bound to a user property keeps it: WE's editor shows no value control for it.
+        let userBound = SceneEffectPlanBuilder.applyingOverrides(
+            { _ in SceneEffectOverride(property: "edit", value: "0.9", isMusicSynced: true) }, to: ["Alpha": bound],
+            uniforms: alpha)
+        XCTAssertEqual(userBound["Alpha"], bound, "the binding and its timeline are kept, the edit ignored")
+    }
+
+    /// Every way an effect parameter's value is bound keeps its binding under an inspector edit
+    /// (roadmap 8.11): a timeline, a script, and a user property (whose edit WE's editor doesn't offer).
+    func testInspectorEditsKeepBindings() throws {
+        let uniform = [ShaderUniformDeclaration(type: "float", name: "g_Speed", arrayCount: nil, annotation: ["material": "speed"])]
+        let edit: (String) -> SceneEffectOverride? = { _ in SceneEffectOverride(property: "edit", value: "2") }
+        let scripted = try source(["value": 1, "script": "export function update(v) { return v * 2; }"])
+        guard case .script(_, _, .literal(let base)) = try XCTUnwrap(
+            SceneEffectPlanBuilder.applyingOverrides(edit, to: ["speed": scripted], uniforms: uniform)["speed"]) else {
+            return XCTFail("the script stays over the edited value")
+        }
+        XCTAssertEqual(base.components, [2])
+        let user = try source(["value": 1, "user": "speed"])
+        XCTAssertEqual(user.boundUserProperty, "speed")
+        XCTAssertEqual(SceneEffectPlanBuilder.applyingOverrides(edit, to: ["speed": user], uniforms: uniform)["speed"], user)
+        let scriptOverUser = try source(["value": 1, "user": "speed", "script": "export function update(v) { return v; }"])
+        XCTAssertEqual(scriptOverUser.boundUserProperty, "speed")
+        XCTAssertEqual(SceneEffectPlanBuilder.applyingOverrides(edit, to: ["speed": scriptOverUser], uniforms: uniform)["speed"],
+                       scriptOverUser)
+        XCTAssertNil(try source(["value": 1]).boundUserProperty)
     }
 
     // MARK: Constants

@@ -263,11 +263,15 @@ private final class SceneInspectorModel: ObservableObject {
             let authored = effect.passes?.first?.constants ?? [:]
             var controls: [SceneInspectorEffectControl] = []
             for parameter in parameters {
-                let authoredValue = authored.first { $0.key.caseInsensitiveCompare(parameter.materialKey) == .orderedSame }?
-                    .value.valueSource.flatMap { source -> [Double]? in
-                        if case .literal(let value) = source { return value.components.map(Double.init) }
-                        return nil
-                    }
+                let authoredSource = authored.first { $0.key.caseInsensitiveCompare(parameter.materialKey) == .orderedSame }?
+                    .value.valueSource
+                // WE's editor shows no value control for a parameter bound to a user property: the
+                // user property sets it (`SceneEffectPlanBuilder.applyingOverrides`).
+                if authoredSource?.boundUserProperty != nil { continue }
+                let authoredValue = authoredSource.flatMap { source -> [Double]? in
+                    if case .literal(let value) = source { return value.components.map(Double.init) }
+                    return nil
+                }
                 let baseValues = authoredValue ?? parameter.defaultValue
                 let overrideKey = sceneAuthoredEffectOverrideKey(objectID: objectID, effectIndex: effectIndex,
                                                                   parameter: parameter.materialKey)

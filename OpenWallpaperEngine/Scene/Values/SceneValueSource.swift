@@ -135,6 +135,15 @@ indirect enum SceneValueSource: Equatable {
         }
     }
 
+    /// The user property this value is bound to, under any script or timeline; nil when unbound.
+    var boundUserProperty: String? {
+        switch self {
+        case .literal: return nil
+        case .user(let name, _, _): return name
+        case .script(_, _, let fallback), .animation(_, let fallback): return fallback.boundUserProperty
+        }
+    }
+
     /// This source with its static and user-bound part replaced by `base`, keeping a script and a
     /// timeline over it; `base` itself when there is neither.
     func replacingBase(with base: SceneValueSource) -> SceneValueSource {
