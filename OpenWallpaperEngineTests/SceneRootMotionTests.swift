@@ -191,7 +191,9 @@ final class SceneRootMotionTests: XCTestCase {
             guard steps.contains(step) else { continue }
             let worlds = stack.skeleton.worlds(locals: pose.map(\.matrix))
             let palette = stack.skeleton.palette(worlds: worlds)
-            let placed = objectWorld(stack.rootMotion) * palette[2] * SIMD4(centre, 1)
+            let objectMatrix: simd_float4x4 = objectWorld(stack.rootMotion)
+            let bonePoint: SIMD4<Float> = palette[2] * SIMD4<Float>(centre, 1)
+            let placed: SIMD4<Float> = objectMatrix * bonePoint
             path.append(screen(SIMD3(placed.x, placed.y, placed.z)))
         }
         return path
