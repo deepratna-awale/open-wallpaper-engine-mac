@@ -1,0 +1,32 @@
+{
+    "operator:Movement":  [
+                              {
+                                  "label":  "X",
+                                  "control":  "Spinner",
+                                  "min":  0,
+                                  "max":  0,
+                                  "value":  0
+                              },
+                              {
+                                  "label":  "Y",
+                                  "control":  "Spinner",
+                                  "min":  0,
+                                  "max":  0,
+                                  "value":  0
+                              },
+                              {
+                                  "label":  "Z",
+                                  "control":  "Spinner",
+                                  "min":  0,
+                                  "max":  0,
+                                  "value":  0
+                              },
+                              {
+                                  "label":  "Drag",
+                                  "control":  "Spinner",
+                                  "min":  0,
+                                  "max":  0,
+                                  "value":  0
+                              }
+                          ]
+}

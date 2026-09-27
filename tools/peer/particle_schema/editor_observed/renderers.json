@@ -1,0 +1,146 @@
+{
+    "Sprite":  {
+                   "label":  "Orientation",
+                   "control":  "Combo",
+                   "value":  "Screen",
+                   "options":  [
+                                   "Screen",
+                                   "Upright",
+                                   "Fixed"
+                               ]
+               },
+    "Sprite trail":  [
+                         {
+                             "label":  "Orientation",
+                             "control":  "Combo",
+                             "value":  "Screen",
+                             "options":  [
+                                             "Screen",
+                                             "Upright",
+                                             "Fixed"
+                                         ]
+                         },
+                         {
+                             "label":  "Length",
+                             "control":  "Spinner",
+                             "min":  0,
+                             "max":  0,
+                             "value":  0.05000000074505806
+                         },
+                         {
+                             "label":  "Max length",
+                             "control":  "Spinner",
+                             "min":  0,
+                             "max":  0,
+                             "value":  10
+                         },
+                         {
+                             "label":  "Min length",
+                             "control":  "Spinner",
+                             "min":  0,
+                             "max":  0,
+                             "value":  0
+                         }
+                     ],
+    "Rope":  [
+                 {
+                     "label":  "Orientation",
+                     "control":  "Combo",
+                     "value":  "Screen",
+                     "options":  [
+                                     "Screen",
+                                     "Upright",
+                                     "Fixed"
+                                 ]
+                 },
+                 {
+                     "label":  "Subdivision",
+                     "control":  "Slider",
+                     "min":  0,
+                     "max":  16,
+                     "value":  4
+                 },
+                 {
+                     "label":  "Subdivision",
+                     "control":  "Spinner",
+                     "min":  0,
+                     "max":  0,
+                     "value":  4
+                 },
+                 {
+                     "label":  "UV scale",
+                     "control":  "Slider",
+                     "min":  0.10000000149011612,
+                     "max":  3,
+                     "value":  1
+                 },
+                 {
+                     "label":  "UV scale",
+                     "control":  "Spinner",
+                     "min":  0,
+                     "max":  0,
+                     "value":  1
+                 }
+             ],
+    "Rope trail":  [
+                       {
+                           "label":  "Orientation",
+                           "control":  "Combo",
+                           "value":  "Screen",
+                           "options":  [
+                                           "Screen",
+                                           "Upright",
+                                           "Fixed"
+                                       ]
+                       },
+                       {
+                           "label":  "Length",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  1
+                       },
+                       {
+                           "label":  "Segments",
+                           "control":  "Slider",
+                           "min":  2,
+                           "max":  16,
+                           "value":  4
+                       },
+                       {
+                           "label":  "Segments",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  4
+                       },
+                       {
+                           "label":  "Subdivision",
+                           "control":  "Slider",
+                           "min":  0,
+                           "max":  16,
+                           "value":  1
+                       },
+                       {
+                           "label":  "Subdivision",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  1
+                       },
+                       {
+                           "label":  "UV scale",
+                           "control":  "Slider",
+                           "min":  0.10000000149011612,
+                           "max":  3,
+                           "value":  1
+                       },
+                       {
+                           "label":  "UV scale",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  1
+                       }
+                   ]
+}

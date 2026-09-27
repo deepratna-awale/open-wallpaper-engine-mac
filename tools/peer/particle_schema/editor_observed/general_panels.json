@@ -1,0 +1,152 @@
+{
+    "System":  [
+                   {
+                       "label":  "Max count",
+                       "control":  "Spinner",
+                       "min":  0,
+                       "max":  0,
+                       "value":  500
+                   },
+                   {
+                       "label":  "Start time",
+                       "control":  "Spinner",
+                       "min":  0,
+                       "max":  0,
+                       "value":  0
+                   },
+                   {
+                       "label":  "Animation mode",
+                       "control":  "Combo",
+                       "value":  "Sequence",
+                       "options":  [
+                                       "Sequence",
+                                       "Random frame"
+                                   ]
+                   }
+               ],
+    "Material":  [
+                     {
+                         "label":  "Albedo",
+                         "control":  "Combo",
+                         "value":  "? Browse",
+                         "options":  [
+
+                                     ]
+                     },
+                     {
+                         "label":  "Albedo",
+                         "control":  "Combo",
+                         "value":  "?",
+                         "options":  [
+
+                                     ]
+                     },
+                     {
+                         "label":  "Albedo",
+                         "control":  "Combo",
+                         "value":  "?",
+                         "options":  [
+
+                                     ]
+                     },
+                     {
+                         "label":  "Overbright",
+                         "control":  "Slider",
+                         "min":  0,
+                         "max":  5,
+                         "value":  1
+                     },
+                     {
+                         "label":  "Overbright",
+                         "control":  "Spinner",
+                         "min":  0,
+                         "max":  0,
+                         "value":  1
+                     },
+                     {
+                         "label":  "Blending",
+                         "control":  "Combo",
+                         "value":  "Additive",
+                         "options":  [
+                                         "Normal",
+                                         "Translucent",
+                                         "Additive",
+                                         "Alpha to coverage"
+                                     ]
+                     },
+                     {
+                         "label":  "Depth test",
+                         "control":  "Combo",
+                         "value":  "Disabled",
+                         "options":  [
+                                         "Enabled",
+                                         "Disabled"
+                                     ]
+                     },
+                     {
+                         "label":  "Depth write",
+                         "control":  "Combo",
+                         "value":  "Disabled",
+                         "options":  [
+                                         "Enabled",
+                                         "Disabled"
+                                     ]
+                     },
+                     {
+                         "label":  "Culling",
+                         "control":  "Combo",
+                         "value":  "No cull",
+                         "options":  [
+                                         "Normal",
+                                         "No cull"
+                                     ]
+                     }
+                 ],
+    "Viewport":  {
+
+                 },
+    "Control point 1":  [
+                            {
+                                "label":  "X",
+                                "control":  "Spinner",
+                                "min":  0,
+                                "max":  0,
+                                "value":  0
+                            },
+                            {
+                                "label":  "Y",
+                                "control":  "Spinner",
+                                "min":  0,
+                                "max":  0,
+                                "value":  0
+                            },
+                            {
+                                "label":  "Z",
+                                "control":  "Spinner",
+                                "min":  0,
+                                "max":  0,
+                                "value":  0
+                            },
+                            {
+                                "label":  "X",
+                                "control":  "Spinner",
+                                "min":  0,
+                                "max":  0,
+                                "value":  0
+                            },
+                            {
+                                "label":  "Y",
+                                "control":  "Spinner",
+                                "min":  0,
+                                "max":  0,
+                                "value":  0
+                            },
+                            {
+                                "label":  "Z",
+                                "control":  "Spinner",
+                                "min":  0,
+                                "max":  0,
+                                "value":  0
+                            }
+                        ]
+}

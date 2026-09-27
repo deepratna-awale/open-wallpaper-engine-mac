@@ -1,0 +1,2861 @@
+{
+ "_meta": {
+  "source": "WE 2.8.0.42 particle editor, read via Windows UI Automation from the embedded Chromium page; each component added to an otherwise-empty category of a Basic particle system, its panel read, then removed.",
+  "add_default": "value shown in the panel immediately after ADD (the editor's add-default)",
+  "slider_min/max": "UIA RangeValue of the slider; step is not exposed (SmallChange=0)",
+  "json_fields_seen": "field keys observed for this component id across 410 particle JSONs (particle_fields_observed.json)"
+ },
+ "renderer:sprite": {
+  "display_name": "Sprite",
+  "fields": [
+   {
+    "label": "Orientation",
+    "type": "combo",
+    "add_default": "Screen",
+    "options": [
+     "Screen",
+     "Upright",
+     "Fixed"
+    ]
+   }
+  ],
+  "json_fields_seen": [
+   "axis",
+   "flags",
+   "orientation"
+  ]
+ },
+ "renderer:spritetrail": {
+  "display_name": "Sprite trail",
+  "fields": [
+   {
+    "label": "Orientation",
+    "type": "combo",
+    "add_default": "Screen",
+    "options": [
+     "Screen",
+     "Upright",
+     "Fixed"
+    ]
+   },
+   {
+    "label": "Length",
+    "type": "number",
+    "add_default": 0.05000000074505806,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Max length",
+    "type": "number",
+    "add_default": 10,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Min length",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "length",
+   "maxlength",
+   "minlength"
+  ]
+ },
+ "renderer:rope": {
+  "display_name": "Rope",
+  "fields": [
+   {
+    "label": "Orientation",
+    "type": "combo",
+    "add_default": "Screen",
+    "options": [
+     "Screen",
+     "Upright",
+     "Fixed"
+    ]
+   },
+   {
+    "label": "Subdivision",
+    "type": "number",
+    "slider_min": 0,
+    "slider_max": 16,
+    "add_default": 4,
+    "spinner": "typed value box has no range (UIA min=max=0) -> not clamped by the box"
+   },
+   {
+    "label": "UV scale",
+    "type": "number",
+    "slider_min": 0.10000000149011612,
+    "slider_max": 3,
+    "add_default": 1,
+    "spinner": "typed value box has no range (UIA min=max=0) -> not clamped by the box"
+   }
+  ],
+  "json_fields_seen": [
+   "flags",
+   "subdivision",
+   "uvscale",
+   "uvscrolling",
+   "uvsmoothing"
+  ]
+ },
+ "renderer:ropetrail": {
+  "display_name": "Rope trail",
+  "fields": [
+   {
+    "label": "Orientation",
+    "type": "combo",
+    "add_default": "Screen",
+    "options": [
+     "Screen",
+     "Upright",
+     "Fixed"
+    ]
+   },
+   {
+    "label": "Length",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Segments",
+    "type": "number",
+    "slider_min": 2,
+    "slider_max": 16,
+    "add_default": 4,
+    "spinner": "typed value box has no range (UIA min=max=0) -> not clamped by the box"
+   },
+   {
+    "label": "Subdivision",
+    "type": "number",
+    "slider_min": 0,
+    "slider_max": 16,
+    "add_default": 1,
+    "spinner": "typed value box has no range (UIA min=max=0) -> not clamped by the box"
+   },
+   {
+    "label": "UV scale",
+    "type": "number",
+    "slider_min": 0.10000000149011612,
+    "slider_max": 3,
+    "add_default": 1,
+    "spinner": "typed value box has no range (UIA min=max=0) -> not clamped by the box"
+   }
+  ],
+  "json_fields_seen": [
+   "fadealpha",
+   "length",
+   "segments"
+  ]
+ },
+ "emitter:sphererandom": {
+  "display_name": "Sphere random",
+  "fields": [
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Cone",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Distance min",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Distance max",
+    "type": "number",
+    "add_default": 256,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Control point",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Rate",
+    "type": "number",
+    "add_default": 10,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Duration",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Delay",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Instantaneous",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Speed min",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Speed max",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Mode",
+    "type": "combo",
+    "add_default": "None",
+    "options": [
+     "None",
+     "Left",
+     "Right",
+     "Center"
+    ]
+   }
+  ],
+  "json_fields_seen": [
+   "audioprocessingbounds",
+   "audioprocessingfrequencyend",
+   "audioprocessingfrequencystart",
+   "audioprocessingmode",
+   "cone",
+   "controlpoint",
+   "delay",
+   "directions",
+   "distancemax",
+   "distancemin",
+   "duration",
+   "flags",
+   "instantaneous",
+   "maxperiodicdelay",
+   "maxperiodicduration",
+   "maxtoemitperperiod",
+   "minperiodicdelay",
+   "minperiodicduration",
+   "origin",
+   "rate",
+   "sign",
+   "speedmax",
+   "speedmin"
+  ]
+ },
+ "emitter:boxrandom": {
+  "display_name": "Box random",
+  "fields": [
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 256,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 256,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Control point",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Rate",
+    "type": "number",
+    "add_default": 10,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Instantaneous",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Duration",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Delay",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Speed min",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Speed max",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Mode",
+    "type": "combo",
+    "add_default": "None",
+    "options": [
+     "None",
+     "Left",
+     "Right",
+     "Center"
+    ]
+   }
+  ],
+  "json_fields_seen": [
+   "audioprocessingbounds",
+   "audioprocessingexponent",
+   "audioprocessingfrequencyend",
+   "audioprocessingfrequencystart",
+   "audioprocessingmode",
+   "directions",
+   "distancemax",
+   "distancemin",
+   "duration",
+   "flags",
+   "instantaneous",
+   "origin",
+   "rate"
+  ]
+ },
+ "emitter:layerimage": {
+  "display_name": "Layer image",
+  "fields": [
+   {
+    "label": "Rate",
+    "type": "number",
+    "add_default": 10,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Instantaneous",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Duration",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Delay",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Mode",
+    "type": "combo",
+    "add_default": "None",
+    "options": [
+     "None",
+     "Left",
+     "Right",
+     "Center"
+    ]
+   }
+  ],
+  "json_fields_seen": [
+   "rate"
+  ]
+ },
+ "initializer:lifetimerandom": {
+  "display_name": "Lifetime random",
+  "fields": [
+   {
+    "label": "Min",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Max",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Exponent",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "exponent",
+   "max",
+   "min"
+  ]
+ },
+ "initializer:sizerandom": {
+  "display_name": "Size random",
+  "fields": [
+   {
+    "label": "Min",
+    "type": "number",
+    "add_default": 5,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Max",
+    "type": "number",
+    "add_default": 50,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Exponent",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "exponent",
+   "max",
+   "min"
+  ]
+ },
+ "initializer:colorrandom": {
+  "display_name": "Color random",
+  "fields": [
+   {
+    "label": "Exponent",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "exponent",
+   "max",
+   "min"
+  ]
+ },
+ "initializer:hsvcolorrandom": {
+  "display_name": "HSV color random",
+  "fields": [
+   {
+    "label": "Hue steps",
+    "type": "number",
+    "slider_min": 1,
+    "slider_max": 30,
+    "add_default": 6,
+    "spinner": "typed value box has no range (UIA min=max=0) -> not clamped by the box"
+   },
+   {
+    "label": "Saturation min",
+    "type": "number",
+    "add_default": 0.5,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Saturation max",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Value min",
+    "type": "number",
+    "add_default": 0.5,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Value max",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "huemax",
+   "huemin",
+   "huesteps",
+   "saturationmax",
+   "saturationmin",
+   "valuemax",
+   "valuemin"
+  ]
+ },
+ "initializer:colorlist": {
+  "display_name": "Color list",
+  "fields": [
+   {
+    "label": "Colors",
+    "type": "number",
+    "slider_min": 1,
+    "slider_max": 10,
+    "add_default": 1
+   },
+   {
+    "label": "Hue noise",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Saturation noise",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Value noise",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "colors"
+  ]
+ },
+ "initializer:alpharandom": {
+  "display_name": "Alpha random",
+  "fields": [
+   {
+    "label": "Min",
+    "type": "number",
+    "add_default": 0.05000000074505806,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Max",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Exponent",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "exponent",
+   "max",
+   "min"
+  ]
+ },
+ "initializer:velocityrandom": {
+  "display_name": "Velocity random",
+  "fields": [
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": -32,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": -32,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 32,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 32,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Exponent",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "exponent",
+   "max",
+   "min"
+  ]
+ },
+ "initializer:inheritcontrolpointvelocity": {
+  "display_name": "Inherit control point velocity",
+  "fields": [
+   {
+    "label": "Speed min",
+    "type": "number",
+    "add_default": 0.10000000149011612,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Speed max",
+    "type": "number",
+    "add_default": 0.20000000298023224,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Control point",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "controlpoint",
+   "max",
+   "min"
+  ]
+ },
+ "initializer:turbulentvelocityrandom": {
+  "display_name": "Turbulent velocity random",
+  "fields": [
+   {
+    "label": "Scale",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Noise speed",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Offset",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Speed min",
+    "type": "number",
+    "add_default": 100,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Speed max",
+    "type": "number",
+    "add_default": 250,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Phase min",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Phase max",
+    "type": "number",
+    "add_default": 0.10000000149011612,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Mode",
+    "type": "combo",
+    "add_default": "None",
+    "options": [
+     "None",
+     "Left",
+     "Right",
+     "Center"
+    ]
+   }
+  ],
+  "json_fields_seen": [
+   "audioprocessingbounds",
+   "audioprocessingmode",
+   "offset",
+   "phasemax",
+   "scale",
+   "speedmax",
+   "speedmin",
+   "timescale"
+  ]
+ },
+ "initializer:rotationrandom": {
+  "display_name": "Rotation random",
+  "fields": [
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 360,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Exponent",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "exponent",
+   "max",
+   "min"
+  ]
+ },
+ "initializer:positionoffsetrandom": {
+  "display_name": "Position offset random",
+  "fields": [
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Distance",
+    "type": "number",
+    "add_default": 100,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Octaves",
+    "type": "number",
+    "add_default": 6,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Noise scale",
+    "type": "number",
+    "add_default": 0.0010000000474974513,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Noise speed",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "distance",
+   "scale",
+   "timescale"
+  ]
+ },
+ "initializer:angularvelocityrandom": {
+  "display_name": "Angular velocity random",
+  "fields": [
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": -5,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 5,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Exponent",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "max",
+   "min"
+  ]
+ },
+ "initializer:mapsequencearoundcontrolpoint": {
+  "display_name": "Position around control point",
+  "fields": [
+   {
+    "label": "Count",
+    "type": "number",
+    "add_default": 32,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Start",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "End",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Orientation",
+    "type": "combo",
+    "add_default": "Repeat",
+    "options": [
+     "Repeat",
+     "Mirror"
+    ]
+   },
+   {
+    "label": "Control point",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "axis",
+   "bounds",
+   "count",
+   "limitbehavior",
+   "speedmax",
+   "speedmin"
+  ]
+ },
+ "initializer:mapsequencebetweencontrolpoints": {
+  "display_name": "Position between control points",
+  "fields": [
+   {
+    "label": "Count",
+    "type": "number",
+    "add_default": 32,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Start",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "End",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Orientation",
+    "type": "combo",
+    "add_default": "Repeat",
+    "options": [
+     "Repeat",
+     "Mirror"
+    ]
+   },
+   {
+    "label": "Control point start",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Control point end",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "arcamount",
+   "controlpointend",
+   "controlpointstart",
+   "count",
+   "flags",
+   "limitbehavior"
+  ]
+ },
+ "initializer:remapinitialvalue": {
+  "display_name": "Remap initial value",
+  "fields": [
+   {
+    "label": "Input",
+    "type": "combo",
+    "add_default": "Maximum lifetime",
+    "options": [
+     "Maximum lifetime",
+     "Size",
+     "Opacity",
+     "Speed",
+     "Rotation",
+     "Angular speed",
+     "Distance to control point",
+     "Position between two control points",
+     "Runtime",
+     "Time of day",
+     "Particle system time",
+     "Layer time",
+     "Color",
+     "Position",
+     "Velocity",
+     "Control point",
+     "Delta to control point",
+     "Direction to control point",
+     "Layer origin"
+    ]
+   },
+   {
+    "label": "Output",
+    "type": "combo",
+    "add_default": "Size",
+    "options": [
+     "Maximum lifetime",
+     "Size",
+     "Opacity",
+     "Speed",
+     "Rotation",
+     "Angular speed",
+     "Distance to control point",
+     "Position between two control points",
+     "Color",
+     "Position",
+     "Velocity",
+     "Control point",
+     "Delta to control point",
+     "Direction to control point"
+    ]
+   },
+   {
+    "label": "Operation",
+    "type": "combo",
+    "add_default": "Multiply",
+    "options": [
+     "Assign",
+     "Multiply",
+     "Add",
+     "Subtract"
+    ]
+   },
+   {
+    "label": "Transform function",
+    "type": "combo",
+    "add_default": "None",
+    "options": [
+     "None",
+     "Sine wave",
+     "Square wave",
+     "Saw wave",
+     "Triangle wave",
+     "Simplex noise",
+     "Organic FBM noise"
+    ]
+   },
+   {
+    "label": "Input range min",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Input range max",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Output range min",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Output range max",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "input",
+   "inputcontrolpoint0",
+   "inputrangemax",
+   "operation",
+   "output",
+   "outputrangemax",
+   "outputrangemin"
+  ]
+ },
+ "initializer:inheritinitialvaluefromevent": {
+  "display_name": "Inherit initial value from event",
+  "fields": [
+   {
+    "label": "Input",
+    "type": "combo",
+    "add_default": "Set color",
+    "options": [
+     "Set color",
+     "Multiply color",
+     "Set opacity",
+     "Multiply opacity",
+     "Set color and opacity",
+     "Multiply color and opacity",
+     "Set velocity",
+     "Add velocity",
+     "Set size",
+     "Multiply size",
+     "Set rotation",
+     "Add rotation",
+     "Set angular velocity",
+     "Add angular velocity"
+    ]
+   }
+  ],
+  "json_fields_seen": []
+ },
+ "operator:movement": {
+  "display_name": "Movement",
+  "fields": [
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Drag",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "drag",
+   "flags",
+   "gravity"
+  ]
+ },
+ "operator:angularmovement": {
+  "display_name": "Angular movement",
+  "fields": [
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Drag",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-in start",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-in end",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-out start",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-out end",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "drag",
+   "force"
+  ]
+ },
+ "operator:alphafade": {
+  "display_name": "Alpha fade",
+  "fields": [
+   {
+    "label": "Fade-in time",
+    "type": "number",
+    "add_default": 0.5,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Fade-out time",
+    "type": "number",
+    "add_default": 0.5,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "fadeintime",
+   "fadeouttime"
+  ]
+ },
+ "operator:sizechange": {
+  "display_name": "Size change",
+  "fields": [
+   {
+    "label": "Start value",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "End value",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Start time",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "End time",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "endtime",
+   "endvalue",
+   "starttime",
+   "startvalue"
+  ]
+ },
+ "operator:colorchange": {
+  "display_name": "Color change",
+  "fields": [
+   {
+    "label": "Start time",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "End time",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "endtime",
+   "endvalue",
+   "starttime",
+   "startvalue"
+  ]
+ },
+ "operator:alphachange": {
+  "display_name": "Alpha change",
+  "fields": [
+   {
+    "label": "Start value",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "End value",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Start time",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "End time",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "endtime",
+   "endvalue",
+   "starttime",
+   "startvalue"
+  ]
+ },
+ "operator:oscillateposition": {
+  "display_name": "Oscillate position",
+  "fields": [
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Frequency min",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Frequency max",
+    "type": "number",
+    "add_default": 5,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Scale min",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Scale max",
+    "type": "number",
+    "add_default": 10,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Phase min",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Phase max",
+    "type": "number",
+    "add_default": 6.28318977355957,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-in start",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-in end",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-out start",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-out end",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "blendinend",
+   "blendinstart",
+   "frequencymax",
+   "frequencymin",
+   "mask",
+   "phasemax",
+   "phasemin",
+   "scalemax",
+   "scalemin"
+  ]
+ },
+ "operator:oscillatealpha": {
+  "display_name": "Oscillate alpha",
+  "fields": [
+   {
+    "label": "Frequency min",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Frequency max",
+    "type": "number",
+    "add_default": 10,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Scale min",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Scale max",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Phase min",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Phase max",
+    "type": "number",
+    "add_default": 6.28318977355957,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-in start",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-in end",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-out start",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-out end",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "blendinend",
+   "blendinstart",
+   "frequencymax",
+   "frequencymin",
+   "phasemax",
+   "phasemin",
+   "scalemax",
+   "scalemin"
+  ]
+ },
+ "operator:oscillatesize": {
+  "display_name": "Oscillate size",
+  "fields": [
+   {
+    "label": "Frequency min",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Frequency max",
+    "type": "number",
+    "add_default": 10,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Scale min",
+    "type": "number",
+    "add_default": 0.800000011920929,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Scale max",
+    "type": "number",
+    "add_default": 1.2000000476837158,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Phase min",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Phase max",
+    "type": "number",
+    "add_default": 6.28318977355957,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-in start",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-in end",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-out start",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-out end",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "frequencymax",
+   "frequencymin",
+   "scalemax",
+   "scalemin"
+  ]
+ },
+ "operator:controlpointattract": {
+  "display_name": "Control point force",
+  "fields": [
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Scale",
+    "type": "number",
+    "add_default": 512,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Distance",
+    "type": "number",
+    "add_default": 512,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Control point",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-in start",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-in end",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-out start",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-out end",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "blendinstart",
+   "controlpoint",
+   "flags",
+   "origin",
+   "scale",
+   "threshold"
+  ]
+ },
+ "operator:maintaindistancetocontrolpoint": {
+  "display_name": "Maintain distance to control point",
+  "fields": [
+   {
+    "label": "Control point",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Distance",
+    "type": "number",
+    "add_default": 200,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Variable strength",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-in start",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-in end",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-out start",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-out end",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "variablestrength"
+  ]
+ },
+ "operator:maintaindistancebetweencontrolpoints": {
+  "display_name": "Maintain distance between control points",
+  "fields": [
+   {
+    "label": "Control point start",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Control point end",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-in start",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-in end",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-out start",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-out end",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": []
+ },
+ "operator:reducemovementnearcontrolpoint": {
+  "display_name": "Reduce movement near control point",
+  "fields": [
+   {
+    "label": "Control point",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Distance inner",
+    "type": "number",
+    "add_default": 100,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Distance outer",
+    "type": "number",
+    "add_default": 350,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Reduction inner",
+    "type": "number",
+    "add_default": 100,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Reduction outer",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-in start",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-in end",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-out start",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-out end",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "controlpoint",
+   "distanceinner",
+   "distanceouter",
+   "reductioninner",
+   "reductionouter"
+  ]
+ },
+ "operator:turbulence": {
+  "display_name": "Turbulence",
+  "fields": [
+   {
+    "label": "Noise speed",
+    "type": "number",
+    "add_default": 20,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Noise scale",
+    "type": "number",
+    "add_default": 0.009999999776482582,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Speed min",
+    "type": "number",
+    "add_default": 500,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Speed max",
+    "type": "number",
+    "add_default": 1000,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Phase min",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Phase max",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-in start",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-in end",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-out start",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-out end",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Mode",
+    "type": "combo",
+    "add_default": "None",
+    "options": [
+     "None",
+     "Left",
+     "Right",
+     "Center"
+    ]
+   }
+  ],
+  "json_fields_seen": [
+   "audioprocessingfrequencyend",
+   "audioprocessingmode",
+   "blendinend",
+   "blendinstart",
+   "blendoutend",
+   "blendoutstart",
+   "mask",
+   "phasemax",
+   "phasemin",
+   "scale",
+   "speedmax",
+   "speedmin",
+   "timescale"
+  ]
+ },
+ "operator:vortex_v2": {
+  "display_name": "Vortex",
+  "fields": [
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Distance inner",
+    "type": "number",
+    "add_default": 500,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Distance outer",
+    "type": "number",
+    "add_default": 650,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Speed inner",
+    "type": "number",
+    "add_default": 2500,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Speed outer",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Control point",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-in start",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-in end",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-out start",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-out end",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Mode",
+    "type": "combo",
+    "add_default": "None",
+    "options": [
+     "None",
+     "Left",
+     "Right",
+     "Center"
+    ]
+   }
+  ],
+  "json_fields_seen": [
+   "controlpoint",
+   "distanceinner",
+   "distanceouter",
+   "flags",
+   "ringpulldistance",
+   "ringradius",
+   "ringwidth",
+   "speedinner",
+   "speedouter"
+  ]
+ },
+ "operator:boids": {
+  "display_name": "Boids",
+  "fields": [
+   {
+    "label": "Neighbor threshold",
+    "type": "number",
+    "add_default": 50,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Separation threshold",
+    "type": "number",
+    "add_default": 20,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Separation factor",
+    "type": "number",
+    "add_default": 15,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Cohesion factor",
+    "type": "number",
+    "add_default": 2,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Alignment factor",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Max speed",
+    "type": "number",
+    "add_default": 500,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "alignmentfactor",
+   "cohesionfactor",
+   "flags",
+   "neighborthreshold",
+   "separationfactor"
+  ]
+ },
+ "operator:capvelocity": {
+  "display_name": "Cap velocity",
+  "fields": [
+   {
+    "label": "Max speed",
+    "type": "number",
+    "add_default": 100,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-in start",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-in end",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-out start",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-out end",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "blendinend",
+   "blendinstart",
+   "maxspeed"
+  ]
+ },
+ "operator:remapvalue": {
+  "display_name": "Remap value",
+  "fields": [
+   {
+    "label": "Input",
+    "type": "combo",
+    "add_default": "Lifetime fraction",
+    "options": [
+     "Lifetime fraction",
+     "Maximum lifetime",
+     "Size",
+     "Opacity",
+     "Speed",
+     "Rotation",
+     "Angular speed",
+     "Distance to control point",
+     "Position between two control points",
+     "Runtime",
+     "Time of day",
+     "Particle system time",
+     "Layer time",
+     "Color",
+     "Position",
+     "Velocity",
+     "Control point",
+     "Delta to control point",
+     "Direction to control point",
+     "Layer origin"
+    ]
+   },
+   {
+    "label": "Output",
+    "type": "combo",
+    "add_default": "Size",
+    "options": [
+     "Maximum lifetime",
+     "Size",
+     "Opacity",
+     "Speed",
+     "Rotation",
+     "Angular speed",
+     "Distance to control point",
+     "Position between two control points",
+     "Color",
+     "Position",
+     "Velocity",
+     "Control point",
+     "Delta to control point",
+     "Direction to control point"
+    ]
+   },
+   {
+    "label": "Operation",
+    "type": "combo",
+    "add_default": "Multiply",
+    "options": [
+     "Assign",
+     "Multiply",
+     "Add",
+     "Subtract"
+    ]
+   },
+   {
+    "label": "Transform function",
+    "type": "combo",
+    "add_default": "None",
+    "options": [
+     "None",
+     "Sine wave",
+     "Square wave",
+     "Saw wave",
+     "Triangle wave",
+     "Simplex noise",
+     "Organic FBM noise"
+    ]
+   },
+   {
+    "label": "Input range min",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Input range max",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Output range min",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Output range max",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-in start",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-in end",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-out start",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-out end",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "blendinend",
+   "blendinstart",
+   "flags",
+   "input",
+   "inputcontrolpoint0",
+   "inputrangemax",
+   "inputrangemin",
+   "operation",
+   "output",
+   "outputrangemax",
+   "outputrangemin",
+   "transformfunction",
+   "transforminputscale"
+  ]
+ },
+ "operator:inheritvaluefromevent": {
+  "display_name": "Inherit value from event",
+  "fields": [
+   {
+    "label": "Input",
+    "type": "combo",
+    "add_default": "Set color and opacity",
+    "options": [
+     "Set color",
+     "Multiply color",
+     "Set opacity",
+     "Multiply opacity",
+     "Set color and opacity",
+     "Multiply color and opacity",
+     "Set velocity",
+     "Add velocity",
+     "Set size",
+     "Multiply size",
+     "Set rotation",
+     "Add rotation",
+     "Set angular velocity",
+     "Add angular velocity"
+    ]
+   },
+   {
+    "label": "Blend-in start",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-in end",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-out start",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Blend-out end",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": []
+ },
+ "operator:collisionplane": {
+  "display_name": "Collision plane",
+  "fields": [
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Distance",
+    "type": "number",
+    "add_default": -150,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Collision behavior",
+    "type": "combo",
+    "add_default": "Bounce",
+    "options": [
+     "Bounce",
+     "Slide",
+     "Stop",
+     "Delete"
+    ]
+   },
+   {
+    "label": "Bounce factor",
+    "type": "number",
+    "add_default": 0.5,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "bouncefactor",
+   "distance"
+  ]
+ },
+ "operator:collisionsphere": {
+  "display_name": "Collision sphere",
+  "fields": [
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": -200,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Radius",
+    "type": "number",
+    "add_default": 50,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Collision behavior",
+    "type": "combo",
+    "add_default": "Bounce",
+    "options": [
+     "Bounce",
+     "Slide",
+     "Stop",
+     "Delete"
+    ]
+   },
+   {
+    "label": "Bounce factor",
+    "type": "number",
+    "add_default": 0.5,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "collisionbehavior",
+   "origin"
+  ]
+ },
+ "operator:collisionbounds": {
+  "display_name": "Collision bounds",
+  "fields": [
+   {
+    "label": "Collision behavior",
+    "type": "combo",
+    "add_default": "Bounce",
+    "options": [
+     "Bounce",
+     "Slide",
+     "Stop",
+     "Delete"
+    ]
+   },
+   {
+    "label": "Bounce factor",
+    "type": "number",
+    "add_default": 0.5,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": []
+ },
+ "operator:collisionquad": {
+  "display_name": "Collision rectangle",
+  "fields": [
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": -150,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 1,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Width",
+    "type": "number",
+    "add_default": 200,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Depth",
+    "type": "number",
+    "add_default": 200,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Collision behavior",
+    "type": "combo",
+    "add_default": "Bounce",
+    "options": [
+     "Bounce",
+     "Slide",
+     "Stop",
+     "Delete"
+    ]
+   },
+   {
+    "label": "Bounce factor",
+    "type": "number",
+    "add_default": 0.5,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": [
+   "collisionbehavior",
+   "origin",
+   "size"
+  ]
+ },
+ "operator:collisionmodel": {
+  "display_name": "Collision model",
+  "fields": [
+   {
+    "label": "Collision behavior",
+    "type": "combo",
+    "add_default": "Bounce",
+    "options": [
+     "Bounce",
+     "Slide",
+     "Stop",
+     "Delete"
+    ]
+   },
+   {
+    "label": "Bounce factor",
+    "type": "number",
+    "add_default": 0.5,
+    "slider": "none (number box only)"
+   }
+  ],
+  "json_fields_seen": []
+ },
+ "_panel:System": {
+  "fields": [
+   {
+    "label": "Max count",
+    "type": "number",
+    "add_default": 500,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Start time",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Animation mode",
+    "type": "combo",
+    "add_default": "Sequence",
+    "options": [
+     "Sequence",
+     "Random frame"
+    ]
+   }
+  ]
+ },
+ "_panel:Material": {
+  "fields": [
+   {
+    "label": "Albedo",
+    "type": "combo",
+    "add_default": "? Browse",
+    "options": []
+   },
+   {
+    "label": "Albedo",
+    "type": "combo",
+    "add_default": "?",
+    "options": []
+   },
+   {
+    "label": "Albedo",
+    "type": "combo",
+    "add_default": "?",
+    "options": []
+   },
+   {
+    "label": "Overbright",
+    "type": "number",
+    "slider_min": 0,
+    "slider_max": 5,
+    "add_default": 1,
+    "spinner": "typed value box has no range (UIA min=max=0) -> not clamped by the box"
+   },
+   {
+    "label": "Blending",
+    "type": "combo",
+    "add_default": "Additive",
+    "options": [
+     "Normal",
+     "Translucent",
+     "Additive",
+     "Alpha to coverage"
+    ]
+   },
+   {
+    "label": "Depth test",
+    "type": "combo",
+    "add_default": "Disabled",
+    "options": [
+     "Enabled",
+     "Disabled"
+    ]
+   },
+   {
+    "label": "Depth write",
+    "type": "combo",
+    "add_default": "Disabled",
+    "options": [
+     "Enabled",
+     "Disabled"
+    ]
+   },
+   {
+    "label": "Culling",
+    "type": "combo",
+    "add_default": "No cull",
+    "options": [
+     "Normal",
+     "No cull"
+    ]
+   }
+  ]
+ },
+ "_panel:Viewport": {
+  "fields": []
+ },
+ "_panel:Control point 1": {
+  "fields": [
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "X",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Y",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   },
+   {
+    "label": "Z",
+    "type": "number",
+    "add_default": 0,
+    "slider": "none (number box only)"
+   }
+  ]
+ }
+}

@@ -1,0 +1,1348 @@
+{
+    "Movement":  [
+                     {
+                         "label":  "X",
+                         "control":  "Spinner",
+                         "min":  0,
+                         "max":  0,
+                         "value":  0
+                     },
+                     {
+                         "label":  "Y",
+                         "control":  "Spinner",
+                         "min":  0,
+                         "max":  0,
+                         "value":  0
+                     },
+                     {
+                         "label":  "Z",
+                         "control":  "Spinner",
+                         "min":  0,
+                         "max":  0,
+                         "value":  0
+                     },
+                     {
+                         "label":  "Drag",
+                         "control":  "Spinner",
+                         "min":  0,
+                         "max":  0,
+                         "value":  0
+                     }
+                 ],
+    "Angular movement":  [
+                             {
+                                 "label":  "X",
+                                 "control":  "Spinner",
+                                 "min":  0,
+                                 "max":  0,
+                                 "value":  0
+                             },
+                             {
+                                 "label":  "Y",
+                                 "control":  "Spinner",
+                                 "min":  0,
+                                 "max":  0,
+                                 "value":  0
+                             },
+                             {
+                                 "label":  "Z",
+                                 "control":  "Spinner",
+                                 "min":  0,
+                                 "max":  0,
+                                 "value":  0
+                             },
+                             {
+                                 "label":  "Drag",
+                                 "control":  "Spinner",
+                                 "min":  0,
+                                 "max":  0,
+                                 "value":  0
+                             },
+                             {
+                                 "label":  "Blend-in start",
+                                 "control":  "Spinner",
+                                 "min":  0,
+                                 "max":  0,
+                                 "value":  0
+                             },
+                             {
+                                 "label":  "Blend-in end",
+                                 "control":  "Spinner",
+                                 "min":  0,
+                                 "max":  0,
+                                 "value":  0
+                             },
+                             {
+                                 "label":  "Blend-out start",
+                                 "control":  "Spinner",
+                                 "min":  0,
+                                 "max":  0,
+                                 "value":  1
+                             },
+                             {
+                                 "label":  "Blend-out end",
+                                 "control":  "Spinner",
+                                 "min":  0,
+                                 "max":  0,
+                                 "value":  1
+                             }
+                         ],
+    "Alpha fade":  [
+                       {
+                           "label":  "Fade-in time",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  0.5
+                       },
+                       {
+                           "label":  "Fade-out time",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  0.5
+                       }
+                   ],
+    "Size change":  [
+                        {
+                            "label":  "Start value",
+                            "control":  "Spinner",
+                            "min":  0,
+                            "max":  0,
+                            "value":  1
+                        },
+                        {
+                            "label":  "End value",
+                            "control":  "Spinner",
+                            "min":  0,
+                            "max":  0,
+                            "value":  0
+                        },
+                        {
+                            "label":  "Start time",
+                            "control":  "Spinner",
+                            "min":  0,
+                            "max":  0,
+                            "value":  0
+                        },
+                        {
+                            "label":  "End time",
+                            "control":  "Spinner",
+                            "min":  0,
+                            "max":  0,
+                            "value":  1
+                        }
+                    ],
+    "Color change":  [
+                         {
+                             "label":  "Start time",
+                             "control":  "Spinner",
+                             "min":  0,
+                             "max":  0,
+                             "value":  0
+                         },
+                         {
+                             "label":  "End time",
+                             "control":  "Spinner",
+                             "min":  0,
+                             "max":  0,
+                             "value":  1
+                         }
+                     ],
+    "Alpha change":  [
+                         {
+                             "label":  "Start value",
+                             "control":  "Spinner",
+                             "min":  0,
+                             "max":  0,
+                             "value":  1
+                         },
+                         {
+                             "label":  "End value",
+                             "control":  "Spinner",
+                             "min":  0,
+                             "max":  0,
+                             "value":  0
+                         },
+                         {
+                             "label":  "Start time",
+                             "control":  "Spinner",
+                             "min":  0,
+                             "max":  0,
+                             "value":  0
+                         },
+                         {
+                             "label":  "End time",
+                             "control":  "Spinner",
+                             "min":  0,
+                             "max":  0,
+                             "value":  1
+                         }
+                     ],
+    "Oscillate position":  [
+                               {
+                                   "label":  "X",
+                                   "control":  "Spinner",
+                                   "min":  0,
+                                   "max":  0,
+                                   "value":  1
+                               },
+                               {
+                                   "label":  "Y",
+                                   "control":  "Spinner",
+                                   "min":  0,
+                                   "max":  0,
+                                   "value":  1
+                               },
+                               {
+                                   "label":  "Z",
+                                   "control":  "Spinner",
+                                   "min":  0,
+                                   "max":  0,
+                                   "value":  0
+                               },
+                               {
+                                   "label":  "Frequency min",
+                                   "control":  "Spinner",
+                                   "min":  0,
+                                   "max":  0,
+                                   "value":  1
+                               },
+                               {
+                                   "label":  "Frequency max",
+                                   "control":  "Spinner",
+                                   "min":  0,
+                                   "max":  0,
+                                   "value":  5
+                               },
+                               {
+                                   "label":  "Scale min",
+                                   "control":  "Spinner",
+                                   "min":  0,
+                                   "max":  0,
+                                   "value":  0
+                               },
+                               {
+                                   "label":  "Scale max",
+                                   "control":  "Spinner",
+                                   "min":  0,
+                                   "max":  0,
+                                   "value":  10
+                               },
+                               {
+                                   "label":  "Phase min",
+                                   "control":  "Spinner",
+                                   "min":  0,
+                                   "max":  0,
+                                   "value":  0
+                               },
+                               {
+                                   "label":  "Phase max",
+                                   "control":  "Spinner",
+                                   "min":  0,
+                                   "max":  0,
+                                   "value":  6.28318977355957
+                               },
+                               {
+                                   "label":  "Blend-in start",
+                                   "control":  "Spinner",
+                                   "min":  0,
+                                   "max":  0,
+                                   "value":  0
+                               },
+                               {
+                                   "label":  "Blend-in end",
+                                   "control":  "Spinner",
+                                   "min":  0,
+                                   "max":  0,
+                                   "value":  0
+                               },
+                               {
+                                   "label":  "Blend-out start",
+                                   "control":  "Spinner",
+                                   "min":  0,
+                                   "max":  0,
+                                   "value":  1
+                               },
+                               {
+                                   "label":  "Blend-out end",
+                                   "control":  "Spinner",
+                                   "min":  0,
+                                   "max":  0,
+                                   "value":  1
+                               }
+                           ],
+    "Oscillate alpha":  [
+                            {
+                                "label":  "Frequency min",
+                                "control":  "Spinner",
+                                "min":  0,
+                                "max":  0,
+                                "value":  1
+                            },
+                            {
+                                "label":  "Frequency max",
+                                "control":  "Spinner",
+                                "min":  0,
+                                "max":  0,
+                                "value":  10
+                            },
+                            {
+                                "label":  "Scale min",
+                                "control":  "Spinner",
+                                "min":  0,
+                                "max":  0,
+                                "value":  0
+                            },
+                            {
+                                "label":  "Scale max",
+                                "control":  "Spinner",
+                                "min":  0,
+                                "max":  0,
+                                "value":  1
+                            },
+                            {
+                                "label":  "Phase min",
+                                "control":  "Spinner",
+                                "min":  0,
+                                "max":  0,
+                                "value":  0
+                            },
+                            {
+                                "label":  "Phase max",
+                                "control":  "Spinner",
+                                "min":  0,
+                                "max":  0,
+                                "value":  6.28318977355957
+                            },
+                            {
+                                "label":  "Blend-in start",
+                                "control":  "Spinner",
+                                "min":  0,
+                                "max":  0,
+                                "value":  0
+                            },
+                            {
+                                "label":  "Blend-in end",
+                                "control":  "Spinner",
+                                "min":  0,
+                                "max":  0,
+                                "value":  0
+                            },
+                            {
+                                "label":  "Blend-out start",
+                                "control":  "Spinner",
+                                "min":  0,
+                                "max":  0,
+                                "value":  1
+                            },
+                            {
+                                "label":  "Blend-out end",
+                                "control":  "Spinner",
+                                "min":  0,
+                                "max":  0,
+                                "value":  1
+                            }
+                        ],
+    "Oscillate size":  [
+                           {
+                               "label":  "Frequency min",
+                               "control":  "Spinner",
+                               "min":  0,
+                               "max":  0,
+                               "value":  1
+                           },
+                           {
+                               "label":  "Frequency max",
+                               "control":  "Spinner",
+                               "min":  0,
+                               "max":  0,
+                               "value":  10
+                           },
+                           {
+                               "label":  "Scale min",
+                               "control":  "Spinner",
+                               "min":  0,
+                               "max":  0,
+                               "value":  0.800000011920929
+                           },
+                           {
+                               "label":  "Scale max",
+                               "control":  "Spinner",
+                               "min":  0,
+                               "max":  0,
+                               "value":  1.2000000476837158
+                           },
+                           {
+                               "label":  "Phase min",
+                               "control":  "Spinner",
+                               "min":  0,
+                               "max":  0,
+                               "value":  0
+                           },
+                           {
+                               "label":  "Phase max",
+                               "control":  "Spinner",
+                               "min":  0,
+                               "max":  0,
+                               "value":  6.28318977355957
+                           },
+                           {
+                               "label":  "Blend-in start",
+                               "control":  "Spinner",
+                               "min":  0,
+                               "max":  0,
+                               "value":  0
+                           },
+                           {
+                               "label":  "Blend-in end",
+                               "control":  "Spinner",
+                               "min":  0,
+                               "max":  0,
+                               "value":  0
+                           },
+                           {
+                               "label":  "Blend-out start",
+                               "control":  "Spinner",
+                               "min":  0,
+                               "max":  0,
+                               "value":  1
+                           },
+                           {
+                               "label":  "Blend-out end",
+                               "control":  "Spinner",
+                               "min":  0,
+                               "max":  0,
+                               "value":  1
+                           }
+                       ],
+    "Control point force":  [
+                                {
+                                    "label":  "X",
+                                    "control":  "Spinner",
+                                    "min":  0,
+                                    "max":  0,
+                                    "value":  0
+                                },
+                                {
+                                    "label":  "Y",
+                                    "control":  "Spinner",
+                                    "min":  0,
+                                    "max":  0,
+                                    "value":  0
+                                },
+                                {
+                                    "label":  "Z",
+                                    "control":  "Spinner",
+                                    "min":  0,
+                                    "max":  0,
+                                    "value":  0
+                                },
+                                {
+                                    "label":  "Scale",
+                                    "control":  "Spinner",
+                                    "min":  0,
+                                    "max":  0,
+                                    "value":  512
+                                },
+                                {
+                                    "label":  "Distance",
+                                    "control":  "Spinner",
+                                    "min":  0,
+                                    "max":  0,
+                                    "value":  512
+                                },
+                                {
+                                    "label":  "Control point",
+                                    "control":  "Spinner",
+                                    "min":  0,
+                                    "max":  0,
+                                    "value":  0
+                                },
+                                {
+                                    "label":  "Blend-in start",
+                                    "control":  "Spinner",
+                                    "min":  0,
+                                    "max":  0,
+                                    "value":  0
+                                },
+                                {
+                                    "label":  "Blend-in end",
+                                    "control":  "Spinner",
+                                    "min":  0,
+                                    "max":  0,
+                                    "value":  0
+                                },
+                                {
+                                    "label":  "Blend-out start",
+                                    "control":  "Spinner",
+                                    "min":  0,
+                                    "max":  0,
+                                    "value":  1
+                                },
+                                {
+                                    "label":  "Blend-out end",
+                                    "control":  "Spinner",
+                                    "min":  0,
+                                    "max":  0,
+                                    "value":  1
+                                }
+                            ],
+    "Maintain distance to control point":  [
+                                               {
+                                                   "label":  "Control point",
+                                                   "control":  "Spinner",
+                                                   "min":  0,
+                                                   "max":  0,
+                                                   "value":  0
+                                               },
+                                               {
+                                                   "label":  "Distance",
+                                                   "control":  "Spinner",
+                                                   "min":  0,
+                                                   "max":  0,
+                                                   "value":  200
+                                               },
+                                               {
+                                                   "label":  "Variable strength",
+                                                   "control":  "Spinner",
+                                                   "min":  0,
+                                                   "max":  0,
+                                                   "value":  0
+                                               },
+                                               {
+                                                   "label":  "Blend-in start",
+                                                   "control":  "Spinner",
+                                                   "min":  0,
+                                                   "max":  0,
+                                                   "value":  0
+                                               },
+                                               {
+                                                   "label":  "Blend-in end",
+                                                   "control":  "Spinner",
+                                                   "min":  0,
+                                                   "max":  0,
+                                                   "value":  0
+                                               },
+                                               {
+                                                   "label":  "Blend-out start",
+                                                   "control":  "Spinner",
+                                                   "min":  0,
+                                                   "max":  0,
+                                                   "value":  1
+                                               },
+                                               {
+                                                   "label":  "Blend-out end",
+                                                   "control":  "Spinner",
+                                                   "min":  0,
+                                                   "max":  0,
+                                                   "value":  1
+                                               }
+                                           ],
+    "Maintain distance between control points":  [
+                                                     {
+                                                         "label":  "Control point start",
+                                                         "control":  "Spinner",
+                                                         "min":  0,
+                                                         "max":  0,
+                                                         "value":  0
+                                                     },
+                                                     {
+                                                         "label":  "Control point end",
+                                                         "control":  "Spinner",
+                                                         "min":  0,
+                                                         "max":  0,
+                                                         "value":  1
+                                                     },
+                                                     {
+                                                         "label":  "Blend-in start",
+                                                         "control":  "Spinner",
+                                                         "min":  0,
+                                                         "max":  0,
+                                                         "value":  0
+                                                     },
+                                                     {
+                                                         "label":  "Blend-in end",
+                                                         "control":  "Spinner",
+                                                         "min":  0,
+                                                         "max":  0,
+                                                         "value":  0
+                                                     },
+                                                     {
+                                                         "label":  "Blend-out start",
+                                                         "control":  "Spinner",
+                                                         "min":  0,
+                                                         "max":  0,
+                                                         "value":  1
+                                                     },
+                                                     {
+                                                         "label":  "Blend-out end",
+                                                         "control":  "Spinner",
+                                                         "min":  0,
+                                                         "max":  0,
+                                                         "value":  1
+                                                     }
+                                                 ],
+    "Reduce movement near control point":  [
+                                               {
+                                                   "label":  "Control point",
+                                                   "control":  "Spinner",
+                                                   "min":  0,
+                                                   "max":  0,
+                                                   "value":  0
+                                               },
+                                               {
+                                                   "label":  "Distance inner",
+                                                   "control":  "Spinner",
+                                                   "min":  0,
+                                                   "max":  0,
+                                                   "value":  100
+                                               },
+                                               {
+                                                   "label":  "Distance outer",
+                                                   "control":  "Spinner",
+                                                   "min":  0,
+                                                   "max":  0,
+                                                   "value":  350
+                                               },
+                                               {
+                                                   "label":  "Reduction inner",
+                                                   "control":  "Spinner",
+                                                   "min":  0,
+                                                   "max":  0,
+                                                   "value":  100
+                                               },
+                                               {
+                                                   "label":  "Reduction outer",
+                                                   "control":  "Spinner",
+                                                   "min":  0,
+                                                   "max":  0,
+                                                   "value":  0
+                                               },
+                                               {
+                                                   "label":  "Blend-in start",
+                                                   "control":  "Spinner",
+                                                   "min":  0,
+                                                   "max":  0,
+                                                   "value":  0
+                                               },
+                                               {
+                                                   "label":  "Blend-in end",
+                                                   "control":  "Spinner",
+                                                   "min":  0,
+                                                   "max":  0,
+                                                   "value":  0
+                                               },
+                                               {
+                                                   "label":  "Blend-out start",
+                                                   "control":  "Spinner",
+                                                   "min":  0,
+                                                   "max":  0,
+                                                   "value":  1
+                                               },
+                                               {
+                                                   "label":  "Blend-out end",
+                                                   "control":  "Spinner",
+                                                   "min":  0,
+                                                   "max":  0,
+                                                   "value":  1
+                                               }
+                                           ],
+    "Turbulence":  [
+                       {
+                           "label":  "Noise speed",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  20
+                       },
+                       {
+                           "label":  "Noise scale",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  0.0099999997764825821
+                       },
+                       {
+                           "label":  "X",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  1
+                       },
+                       {
+                           "label":  "Y",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  1
+                       },
+                       {
+                           "label":  "Z",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  0
+                       },
+                       {
+                           "label":  "Speed min",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  500
+                       },
+                       {
+                           "label":  "Speed max",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  1000
+                       },
+                       {
+                           "label":  "Phase min",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  0
+                       },
+                       {
+                           "label":  "Phase max",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  0
+                       },
+                       {
+                           "label":  "Blend-in start",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  0
+                       },
+                       {
+                           "label":  "Blend-in end",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  0
+                       },
+                       {
+                           "label":  "Blend-out start",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  1
+                       },
+                       {
+                           "label":  "Blend-out end",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  1
+                       },
+                       {
+                           "label":  "Mode",
+                           "control":  "Combo",
+                           "value":  "None",
+                           "options":  [
+                                           "None",
+                                           "Left",
+                                           "Right",
+                                           "Center"
+                                       ]
+                       }
+                   ],
+    "Vortex":  [
+                   {
+                       "label":  "X",
+                       "control":  "Spinner",
+                       "min":  0,
+                       "max":  0,
+                       "value":  0
+                   },
+                   {
+                       "label":  "Y",
+                       "control":  "Spinner",
+                       "min":  0,
+                       "max":  0,
+                       "value":  0
+                   },
+                   {
+                       "label":  "Z",
+                       "control":  "Spinner",
+                       "min":  0,
+                       "max":  0,
+                       "value":  1
+                   },
+                   {
+                       "label":  "Distance inner",
+                       "control":  "Spinner",
+                       "min":  0,
+                       "max":  0,
+                       "value":  500
+                   },
+                   {
+                       "label":  "Distance outer",
+                       "control":  "Spinner",
+                       "min":  0,
+                       "max":  0,
+                       "value":  650
+                   },
+                   {
+                       "label":  "Speed inner",
+                       "control":  "Spinner",
+                       "min":  0,
+                       "max":  0,
+                       "value":  2500
+                   },
+                   {
+                       "label":  "Speed outer",
+                       "control":  "Spinner",
+                       "min":  0,
+                       "max":  0,
+                       "value":  0
+                   },
+                   {
+                       "label":  "Control point",
+                       "control":  "Spinner",
+                       "min":  0,
+                       "max":  0,
+                       "value":  0
+                   },
+                   {
+                       "label":  "Blend-in start",
+                       "control":  "Spinner",
+                       "min":  0,
+                       "max":  0,
+                       "value":  0
+                   },
+                   {
+                       "label":  "Blend-in end",
+                       "control":  "Spinner",
+                       "min":  0,
+                       "max":  0,
+                       "value":  0
+                   },
+                   {
+                       "label":  "Blend-out start",
+                       "control":  "Spinner",
+                       "min":  0,
+                       "max":  0,
+                       "value":  1
+                   },
+                   {
+                       "label":  "Blend-out end",
+                       "control":  "Spinner",
+                       "min":  0,
+                       "max":  0,
+                       "value":  1
+                   },
+                   {
+                       "label":  "Mode",
+                       "control":  "Combo",
+                       "value":  "None",
+                       "options":  [
+                                       "None",
+                                       "Left",
+                                       "Right",
+                                       "Center"
+                                   ]
+                   }
+               ],
+    "Boids":  [
+                  {
+                      "label":  "Neighbor threshold",
+                      "control":  "Spinner",
+                      "min":  0,
+                      "max":  0,
+                      "value":  50
+                  },
+                  {
+                      "label":  "Separation threshold",
+                      "control":  "Spinner",
+                      "min":  0,
+                      "max":  0,
+                      "value":  20
+                  },
+                  {
+                      "label":  "Separation factor",
+                      "control":  "Spinner",
+                      "min":  0,
+                      "max":  0,
+                      "value":  15
+                  },
+                  {
+                      "label":  "Cohesion factor",
+                      "control":  "Spinner",
+                      "min":  0,
+                      "max":  0,
+                      "value":  2
+                  },
+                  {
+                      "label":  "Alignment factor",
+                      "control":  "Spinner",
+                      "min":  0,
+                      "max":  0,
+                      "value":  1
+                  },
+                  {
+                      "label":  "Max speed",
+                      "control":  "Spinner",
+                      "min":  0,
+                      "max":  0,
+                      "value":  500
+                  }
+              ],
+    "Cap velocity":  [
+                         {
+                             "label":  "Max speed",
+                             "control":  "Spinner",
+                             "min":  0,
+                             "max":  0,
+                             "value":  100
+                         },
+                         {
+                             "label":  "Blend-in start",
+                             "control":  "Spinner",
+                             "min":  0,
+                             "max":  0,
+                             "value":  0
+                         },
+                         {
+                             "label":  "Blend-in end",
+                             "control":  "Spinner",
+                             "min":  0,
+                             "max":  0,
+                             "value":  0
+                         },
+                         {
+                             "label":  "Blend-out start",
+                             "control":  "Spinner",
+                             "min":  0,
+                             "max":  0,
+                             "value":  1
+                         },
+                         {
+                             "label":  "Blend-out end",
+                             "control":  "Spinner",
+                             "min":  0,
+                             "max":  0,
+                             "value":  1
+                         }
+                     ],
+    "Remap value":  [
+                        {
+                            "label":  "Input",
+                            "control":  "Combo",
+                            "value":  "Lifetime fraction",
+                            "options":  [
+                                            "Lifetime fraction",
+                                            "Maximum lifetime",
+                                            "Size",
+                                            "Opacity",
+                                            "Speed",
+                                            "Rotation",
+                                            "Angular speed",
+                                            "Distance to control point",
+                                            "Position between two control points",
+                                            "Runtime",
+                                            "Time of day",
+                                            "Particle system time",
+                                            "Layer time",
+                                            "Color",
+                                            "Position",
+                                            "Velocity",
+                                            "Control point",
+                                            "Delta to control point",
+                                            "Direction to control point",
+                                            "Layer origin"
+                                        ]
+                        },
+                        {
+                            "label":  "Output",
+                            "control":  "Combo",
+                            "value":  "Size",
+                            "options":  [
+                                            "Maximum lifetime",
+                                            "Size",
+                                            "Opacity",
+                                            "Speed",
+                                            "Rotation",
+                                            "Angular speed",
+                                            "Distance to control point",
+                                            "Position between two control points",
+                                            "Color",
+                                            "Position",
+                                            "Velocity",
+                                            "Control point",
+                                            "Delta to control point",
+                                            "Direction to control point"
+                                        ]
+                        },
+                        {
+                            "label":  "Operation",
+                            "control":  "Combo",
+                            "value":  "Multiply",
+                            "options":  [
+                                            "Assign",
+                                            "Multiply",
+                                            "Add",
+                                            "Subtract"
+                                        ]
+                        },
+                        {
+                            "label":  "Transform function",
+                            "control":  "Combo",
+                            "value":  "None",
+                            "options":  [
+                                            "None",
+                                            "Sine wave",
+                                            "Square wave",
+                                            "Saw wave",
+                                            "Triangle wave",
+                                            "Simplex noise",
+                                            "Organic FBM noise"
+                                        ]
+                        },
+                        {
+                            "label":  "Input range min",
+                            "control":  "Spinner",
+                            "min":  0,
+                            "max":  0,
+                            "value":  0
+                        },
+                        {
+                            "label":  "Input range max",
+                            "control":  "Spinner",
+                            "min":  0,
+                            "max":  0,
+                            "value":  1
+                        },
+                        {
+                            "label":  "Output range min",
+                            "control":  "Spinner",
+                            "min":  0,
+                            "max":  0,
+                            "value":  0
+                        },
+                        {
+                            "label":  "Output range max",
+                            "control":  "Spinner",
+                            "min":  0,
+                            "max":  0,
+                            "value":  1
+                        },
+                        {
+                            "label":  "Blend-in start",
+                            "control":  "Spinner",
+                            "min":  0,
+                            "max":  0,
+                            "value":  0
+                        },
+                        {
+                            "label":  "Blend-in end",
+                            "control":  "Spinner",
+                            "min":  0,
+                            "max":  0,
+                            "value":  0
+                        },
+                        {
+                            "label":  "Blend-out start",
+                            "control":  "Spinner",
+                            "min":  0,
+                            "max":  0,
+                            "value":  1
+                        },
+                        {
+                            "label":  "Blend-out end",
+                            "control":  "Spinner",
+                            "min":  0,
+                            "max":  0,
+                            "value":  1
+                        }
+                    ],
+    "Inherit value from event":  [
+                                     {
+                                         "label":  "Input",
+                                         "control":  "Combo",
+                                         "value":  "Set color and opacity",
+                                         "options":  [
+                                                         "Set color",
+                                                         "Multiply color",
+                                                         "Set opacity",
+                                                         "Multiply opacity",
+                                                         "Set color and opacity",
+                                                         "Multiply color and opacity",
+                                                         "Set velocity",
+                                                         "Add velocity",
+                                                         "Set size",
+                                                         "Multiply size",
+                                                         "Set rotation",
+                                                         "Add rotation",
+                                                         "Set angular velocity",
+                                                         "Add angular velocity"
+                                                     ]
+                                     },
+                                     {
+                                         "label":  "Blend-in start",
+                                         "control":  "Spinner",
+                                         "min":  0,
+                                         "max":  0,
+                                         "value":  0
+                                     },
+                                     {
+                                         "label":  "Blend-in end",
+                                         "control":  "Spinner",
+                                         "min":  0,
+                                         "max":  0,
+                                         "value":  0
+                                     },
+                                     {
+                                         "label":  "Blend-out start",
+                                         "control":  "Spinner",
+                                         "min":  0,
+                                         "max":  0,
+                                         "value":  1
+                                     },
+                                     {
+                                         "label":  "Blend-out end",
+                                         "control":  "Spinner",
+                                         "min":  0,
+                                         "max":  0,
+                                         "value":  1
+                                     }
+                                 ],
+    "Collision plane":  [
+                            {
+                                "label":  "X",
+                                "control":  "Spinner",
+                                "min":  0,
+                                "max":  0,
+                                "value":  0
+                            },
+                            {
+                                "label":  "Y",
+                                "control":  "Spinner",
+                                "min":  0,
+                                "max":  0,
+                                "value":  1
+                            },
+                            {
+                                "label":  "Z",
+                                "control":  "Spinner",
+                                "min":  0,
+                                "max":  0,
+                                "value":  0
+                            },
+                            {
+                                "label":  "Distance",
+                                "control":  "Spinner",
+                                "min":  0,
+                                "max":  0,
+                                "value":  -150
+                            },
+                            {
+                                "label":  "Collision behavior",
+                                "control":  "Combo",
+                                "value":  "Bounce",
+                                "options":  [
+                                                "Bounce",
+                                                "Slide",
+                                                "Stop",
+                                                "Delete"
+                                            ]
+                            },
+                            {
+                                "label":  "Bounce factor",
+                                "control":  "Spinner",
+                                "min":  0,
+                                "max":  0,
+                                "value":  0.5
+                            }
+                        ],
+    "Collision sphere":  [
+                             {
+                                 "label":  "X",
+                                 "control":  "Spinner",
+                                 "min":  0,
+                                 "max":  0,
+                                 "value":  0
+                             },
+                             {
+                                 "label":  "Y",
+                                 "control":  "Spinner",
+                                 "min":  0,
+                                 "max":  0,
+                                 "value":  -200
+                             },
+                             {
+                                 "label":  "Z",
+                                 "control":  "Spinner",
+                                 "min":  0,
+                                 "max":  0,
+                                 "value":  0
+                             },
+                             {
+                                 "label":  "Radius",
+                                 "control":  "Spinner",
+                                 "min":  0,
+                                 "max":  0,
+                                 "value":  50
+                             },
+                             {
+                                 "label":  "Collision behavior",
+                                 "control":  "Combo",
+                                 "value":  "Bounce",
+                                 "options":  [
+                                                 "Bounce",
+                                                 "Slide",
+                                                 "Stop",
+                                                 "Delete"
+                                             ]
+                             },
+                             {
+                                 "label":  "Bounce factor",
+                                 "control":  "Spinner",
+                                 "min":  0,
+                                 "max":  0,
+                                 "value":  0.5
+                             }
+                         ],
+    "Collision bounds":  [
+                             {
+                                 "label":  "Collision behavior",
+                                 "control":  "Combo",
+                                 "value":  "Bounce",
+                                 "options":  [
+                                                 "Bounce",
+                                                 "Slide",
+                                                 "Stop",
+                                                 "Delete"
+                                             ]
+                             },
+                             {
+                                 "label":  "Bounce factor",
+                                 "control":  "Spinner",
+                                 "min":  0,
+                                 "max":  0,
+                                 "value":  0.5
+                             }
+                         ],
+    "Collision rectangle":  [
+                                {
+                                    "label":  "X",
+                                    "control":  "Spinner",
+                                    "min":  0,
+                                    "max":  0,
+                                    "value":  0
+                                },
+                                {
+                                    "label":  "Y",
+                                    "control":  "Spinner",
+                                    "min":  0,
+                                    "max":  0,
+                                    "value":  -150
+                                },
+                                {
+                                    "label":  "Z",
+                                    "control":  "Spinner",
+                                    "min":  0,
+                                    "max":  0,
+                                    "value":  0
+                                },
+                                {
+                                    "label":  "X",
+                                    "control":  "Spinner",
+                                    "min":  0,
+                                    "max":  0,
+                                    "value":  0
+                                },
+                                {
+                                    "label":  "Y",
+                                    "control":  "Spinner",
+                                    "min":  0,
+                                    "max":  0,
+                                    "value":  1
+                                },
+                                {
+                                    "label":  "Z",
+                                    "control":  "Spinner",
+                                    "min":  0,
+                                    "max":  0,
+                                    "value":  0
+                                },
+                                {
+                                    "label":  "X",
+                                    "control":  "Spinner",
+                                    "min":  0,
+                                    "max":  0,
+                                    "value":  0
+                                },
+                                {
+                                    "label":  "Y",
+                                    "control":  "Spinner",
+                                    "min":  0,
+                                    "max":  0,
+                                    "value":  0
+                                },
+                                {
+                                    "label":  "Z",
+                                    "control":  "Spinner",
+                                    "min":  0,
+                                    "max":  0,
+                                    "value":  1
+                                },
+                                {
+                                    "label":  "Width",
+                                    "control":  "Spinner",
+                                    "min":  0,
+                                    "max":  0,
+                                    "value":  200
+                                },
+                                {
+                                    "label":  "Depth",
+                                    "control":  "Spinner",
+                                    "min":  0,
+                                    "max":  0,
+                                    "value":  200
+                                },
+                                {
+                                    "label":  "Collision behavior",
+                                    "control":  "Combo",
+                                    "value":  "Bounce",
+                                    "options":  [
+                                                    "Bounce",
+                                                    "Slide",
+                                                    "Stop",
+                                                    "Delete"
+                                                ]
+                                },
+                                {
+                                    "label":  "Bounce factor",
+                                    "control":  "Spinner",
+                                    "min":  0,
+                                    "max":  0,
+                                    "value":  0.5
+                                }
+                            ],
+    "Collision model":  [
+                            {
+                                "label":  "Collision behavior",
+                                "control":  "Combo",
+                                "value":  "Bounce",
+                                "options":  [
+                                                "Bounce",
+                                                "Slide",
+                                                "Stop",
+                                                "Delete"
+                                            ]
+                            },
+                            {
+                                "label":  "Bounce factor",
+                                "control":  "Spinner",
+                                "min":  0,
+                                "max":  0,
+                                "value":  0.5
+                            }
+                        ]
+}

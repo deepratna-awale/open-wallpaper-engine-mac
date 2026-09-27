@@ -1,0 +1,335 @@
+{
+    "Sphere random":  [
+                          {
+                              "label":  "X",
+                              "control":  "Spinner",
+                              "min":  0,
+                              "max":  0,
+                              "value":  0
+                          },
+                          {
+                              "label":  "Y",
+                              "control":  "Spinner",
+                              "min":  0,
+                              "max":  0,
+                              "value":  0
+                          },
+                          {
+                              "label":  "Z",
+                              "control":  "Spinner",
+                              "min":  0,
+                              "max":  0,
+                              "value":  0
+                          },
+                          {
+                              "label":  "X",
+                              "control":  "Spinner",
+                              "min":  0,
+                              "max":  0,
+                              "value":  1
+                          },
+                          {
+                              "label":  "Y",
+                              "control":  "Spinner",
+                              "min":  0,
+                              "max":  0,
+                              "value":  1
+                          },
+                          {
+                              "label":  "Z",
+                              "control":  "Spinner",
+                              "min":  0,
+                              "max":  0,
+                              "value":  0
+                          },
+                          {
+                              "label":  "X",
+                              "control":  "Spinner",
+                              "min":  0,
+                              "max":  0,
+                              "value":  0
+                          },
+                          {
+                              "label":  "Y",
+                              "control":  "Spinner",
+                              "min":  0,
+                              "max":  0,
+                              "value":  0
+                          },
+                          {
+                              "label":  "Z",
+                              "control":  "Spinner",
+                              "min":  0,
+                              "max":  0,
+                              "value":  0
+                          },
+                          {
+                              "label":  "Cone",
+                              "control":  "Spinner",
+                              "min":  0,
+                              "max":  0,
+                              "value":  0
+                          },
+                          {
+                              "label":  "Distance min",
+                              "control":  "Spinner",
+                              "min":  0,
+                              "max":  0,
+                              "value":  0
+                          },
+                          {
+                              "label":  "Distance max",
+                              "control":  "Spinner",
+                              "min":  0,
+                              "max":  0,
+                              "value":  256
+                          },
+                          {
+                              "label":  "Control point",
+                              "control":  "Spinner",
+                              "min":  0,
+                              "max":  0,
+                              "value":  0
+                          },
+                          {
+                              "label":  "Rate",
+                              "control":  "Spinner",
+                              "min":  0,
+                              "max":  0,
+                              "value":  10
+                          },
+                          {
+                              "label":  "Duration",
+                              "control":  "Spinner",
+                              "min":  0,
+                              "max":  0,
+                              "value":  0
+                          },
+                          {
+                              "label":  "Delay",
+                              "control":  "Spinner",
+                              "min":  0,
+                              "max":  0,
+                              "value":  0
+                          },
+                          {
+                              "label":  "Instantaneous",
+                              "control":  "Spinner",
+                              "min":  0,
+                              "max":  0,
+                              "value":  0
+                          },
+                          {
+                              "label":  "Speed min",
+                              "control":  "Spinner",
+                              "min":  0,
+                              "max":  0,
+                              "value":  0
+                          },
+                          {
+                              "label":  "Speed max",
+                              "control":  "Spinner",
+                              "min":  0,
+                              "max":  0,
+                              "value":  0
+                          },
+                          {
+                              "label":  "Mode",
+                              "control":  "Combo",
+                              "value":  "None",
+                              "options":  [
+                                              "None",
+                                              "Left",
+                                              "Right",
+                                              "Center"
+                                          ]
+                          }
+                      ],
+    "Box random":  [
+                       {
+                           "label":  "X",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  0
+                       },
+                       {
+                           "label":  "Y",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  0
+                       },
+                       {
+                           "label":  "Z",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  0
+                       },
+                       {
+                           "label":  "X",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  1
+                       },
+                       {
+                           "label":  "Y",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  1
+                       },
+                       {
+                           "label":  "Z",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  0
+                       },
+                       {
+                           "label":  "X",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  0
+                       },
+                       {
+                           "label":  "Y",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  0
+                       },
+                       {
+                           "label":  "Z",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  0
+                       },
+                       {
+                           "label":  "X",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  256
+                       },
+                       {
+                           "label":  "Y",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  256
+                       },
+                       {
+                           "label":  "Z",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  0
+                       },
+                       {
+                           "label":  "Control point",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  0
+                       },
+                       {
+                           "label":  "Rate",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  10
+                       },
+                       {
+                           "label":  "Instantaneous",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  0
+                       },
+                       {
+                           "label":  "Duration",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  0
+                       },
+                       {
+                           "label":  "Delay",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  0
+                       },
+                       {
+                           "label":  "Speed min",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  0
+                       },
+                       {
+                           "label":  "Speed max",
+                           "control":  "Spinner",
+                           "min":  0,
+                           "max":  0,
+                           "value":  0
+                       },
+                       {
+                           "label":  "Mode",
+                           "control":  "Combo",
+                           "value":  "None",
+                           "options":  [
+                                           "None",
+                                           "Left",
+                                           "Right",
+                                           "Center"
+                                       ]
+                       }
+                   ],
+    "Layer image":  [
+                        {
+                            "label":  "Rate",
+                            "control":  "Spinner",
+                            "min":  0,
+                            "max":  0,
+                            "value":  10
+                        },
+                        {
+                            "label":  "Instantaneous",
+                            "control":  "Spinner",
+                            "min":  0,
+                            "max":  0,
+                            "value":  0
+                        },
+                        {
+                            "label":  "Duration",
+                            "control":  "Spinner",
+                            "min":  0,
+                            "max":  0,
+                            "value":  0
+                        },
+                        {
+                            "label":  "Delay",
+                            "control":  "Spinner",
+                            "min":  0,
+                            "max":  0,
+                            "value":  0
+                        },
+                        {
+                            "label":  "Mode",
+                            "control":  "Combo",
+                            "value":  "None",
+                            "options":  [
+                                            "None",
+                                            "Left",
+                                            "Right",
+                                            "Center"
+                                        ]
+                        }
+                    ]
+}
