@@ -332,6 +332,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private(set) var sharedFrame: MTLTexture?
     /// The last `present(in:)`'s command buffer (tests and benchmarks).
     private(set) var lastPresentCommandBuffer: MTLCommandBuffer?
+    /// A screen's EDR headroom (tests set their own); a view without a window has none.
+    var displayHeadroom: (NSScreen?) -> SceneDisplayHeadroom = { SceneDisplayHeadroom(screen: $0) }
+    /// How the last frame reached the display (`SceneDisplayOutput`).
+    private(set) var displayOutput = SceneDisplayOutput.standard
+    /// The headroom of each view a shared frame was presented on since the last one was drawn.
+    private var sharedHeadrooms: [ObjectIdentifier: SceneDisplayHeadroom] = [:]
     /// Destroyed script layers' ids, freed once the frame that last drew them completes.
     private var deferredReleases = SceneDeferredReleases()
     /// Where the cursor was last seen on this display, in display pixels from the top-left.
@@ -817,14 +823,20 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// Shows the latest shared frame (`renderShared`) on `view`, at its size and the user's
     /// placement: one pass per display.
     func present(in view: MTKView) {
-        guard let frame = sharedFrame, let descriptor = view.currentRenderPassDescriptor,
+        let headroom = displayHeadroom(view.window?.screen)
+        sharedHeadrooms[ObjectIdentifier(view)] = headroom
+        guard let frame = sharedFrame else { return }
+        // The view shows the frame in its own format: EDR when the frame was drawn for it.
+        let extended = frame.pixelFormat == SceneDisplayOutput.extendedPixelFormat && pixelFormat != frame.pixelFormat
+        (extended ? SceneDisplayOutput.extendedRange(headroom: headroom.current) : .standard).apply(to: view, standard: pixelFormat)
+        guard let descriptor = view.currentRenderPassDescriptor,
               let drawable = view.currentDrawable, let commandBuffer = commandQueue.makeCommandBuffer(),
               let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor) else { return }
         let size = SIMD2<Float>(Float(drawable.texture.width), Float(drawable.texture.height))
         let pixelsPerPoint = view.bounds.width > 0 ? size.x / Float(view.bounds.width) : 1
         var uniform = layerUniform(position: sceneSize / 2, size: sceneSize, opacity: 1, drawableSize: size,
                                    placement: placement, pixelsPerPoint: pixelsPerPoint)
-        encoder.setRenderPipelineState(copyPipeline)
+        encoder.setRenderPipelineState(extended ? layerPipelines.pipelines(for: frame.pixelFormat).copy : copyPipeline)
         encoder.setVertexBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
         encoder.setFragmentTexture(frame, index: 0)
         encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
@@ -857,10 +869,32 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         }
     }
 
-    /// The pass onto a shared scene's finished frame, the size of `scene`.
+    /// How this frame reaches the display (`SceneDisplayOutput`): EDR while the content draws in
+    /// HDR under "displayhdr" and the screen has headroom, the view set up for it; a shared frame
+    /// takes the least headroom of the views it was shown on since the last one.
+    private func selectDisplayOutput(_ output: FrameOutput) {
+        let headroom: SceneDisplayHeadroom
+        switch output {
+        case .view(let view):
+            headroom = displayHeadroom(view.window?.screen)
+        case .shared:
+            let shown = Array(sharedHeadrooms.values)
+            sharedHeadrooms.removeAll(keepingCapacity: true)
+            headroom = shown.isEmpty ? SceneDisplayHeadroom()
+                : SceneDisplayHeadroom(potential: shown.map(\.potential).min() ?? 1, current: shown.map(\.current).min() ?? 1)
+        }
+        displayOutput = SceneDisplayOutput.select(postProcessing: renderSettings.postProcessing, drawsHDR: postProcess.drawsHDR,
+                                                  headroom: headroom)
+        if case .view(let view) = output { displayOutput.apply(to: view, standard: pixelFormat) }
+    }
+
+    /// The pass onto a shared scene's finished frame, the size of `scene`, in this frame's output
+    /// format (`displayOutput`).
     private func sharedFramePass(matching scene: MTLTexture) -> MTLRenderPassDescriptor? {
-        if sharedFrameTarget?.width != scene.width || sharedFrameTarget?.height != scene.height {
-            let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: pixelFormat, width: scene.width,
+        let format = displayOutput.pixelFormat(standard: pixelFormat)
+        if sharedFrameTarget?.width != scene.width || sharedFrameTarget?.height != scene.height
+            || sharedFrameTarget?.pixelFormat != format {
+            let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: format, width: scene.width,
                                                                       height: scene.height, mipmapped: false)
             descriptor.usage = [.renderTarget, .shaderRead]
             descriptor.storageMode = .private
@@ -894,6 +928,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             }
         }
 
+        selectDisplayOutput(output)
         guard let destination = frameDestination(output) else { return }
         let viewports = destination.viewports
         drawablePixelsPerPoint = viewports[0].pixelsPerPoint
@@ -1309,7 +1344,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                     placement: destination.placement),
             bloom: liveBloom(), extras: appExtras(), settings: renderSettings,
             colorCorrection: colorCorrection(),
-            effects: effectGraph, builtins: effectFrame, values: timelines.values, fullDetailScale: fullDetailScale))
+            effects: effectGraph, builtins: effectFrame, values: timelines.values, fullDetailScale: fullDetailScale,
+            display: displayOutput))
 
         if let drawable = destination.drawable {
             commandBuffer.present(drawable)

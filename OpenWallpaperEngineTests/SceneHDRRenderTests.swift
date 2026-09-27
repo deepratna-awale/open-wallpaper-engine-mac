@@ -166,6 +166,12 @@ final class SceneHDRRenderTests: XCTestCase {
             renderer.lastCommandBuffer?.waitUntilCompleted()
             if renderer.hasContent { drawn += 1 }
         } while (drawn < 3 || (postProcessing != .disabled && !ran())) && Date() < deadline
+        // `currentDrawable` hands out the view's drawables in turn: draw until each holds a settled
+        // frame, or the one read below can be an early frame's.
+        for _ in 0..<4 {
+            renderer.draw(in: view)
+            renderer.lastCommandBuffer?.waitUntilCompleted()
+        }
         var bytes = [UInt8](repeating: 0, count: Self.size.x * Self.size.y * 4)
         view.currentDrawable?.texture.getBytes(&bytes, bytesPerRow: Self.size.x * 4,
                                                from: MTLRegionMake2D(0, 0, Self.size.x, Self.size.y), mipmapLevel: 0)

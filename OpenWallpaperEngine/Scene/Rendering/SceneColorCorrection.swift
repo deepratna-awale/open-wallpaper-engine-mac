@@ -123,11 +123,12 @@ final class SceneColorCorrection {
                 SceneScriptConstantWrite(material: 0, name: "lutparams", value: [settings.filterAmount])]
     }
 
-    /// Encodes the pass on `frame` and returns the corrected frame; nil when the settings are
-    /// identity (WE makes no pass), or the pass or its filter isn't ready (the frame shows as it is).
+    /// Encodes the pass on `frame` and returns the corrected frame, a `format` texture; nil when the
+    /// settings are identity (WE makes no pass), or the pass or its filter isn't ready (the frame
+    /// shows as it is).
     func encode(on frame: MTLTexture, settings: SceneColorCorrectionSettings, effects: EffectGraphRenderer,
                 builtins: BuiltinFrameContext, values: SceneValueContext, frameIndex: UInt64,
-                commandBuffer: MTLCommandBuffer) -> MTLTexture? {
+                format: MTLPixelFormat = .rgba8Unorm, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
         guard !settings.isIdentity, let plan = plan(for: settings) else { return nil }
         var lut: MTLTexture?
         if settings.appliesFilter {
@@ -138,6 +139,7 @@ final class SceneColorCorrection {
             frame: builtins, values: values, assetTexture: { _, _ in lut },
             sceneSnapshot: frame, layerColor: SIMD3(repeating: 1), layerAlpha: 1)
         context.inputVersion = frameIndex
+        context.frameBufferFormat = format
         context.constantWrites = [plan.effectIndex: Self.constants(settings)]
         return effects.apply([plan], to: frame, layerID: Self.stateID, context: context, commandBuffer: commandBuffer)
     }

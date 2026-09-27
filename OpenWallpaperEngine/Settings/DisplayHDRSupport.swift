@@ -4,8 +4,8 @@ import AppKit
 /// when a display can show HDR (`runtime.displayhdrsupport`), and turn a saved "displayhdr" into
 /// "ultra" when none can. Here a display can when it has extended dynamic range headroom.
 ///
-/// The app has no HDR output yet (docs/lighting-plan.md §4.3 B2): "displayhdr" draws as "ultra",
-/// as WE does without an HDR swap chain.
+/// With it, a scene drawn in HDR reaches the display as EDR (`SceneDisplayOutput`); on a display
+/// without headroom it draws as "ultra", as WE does without an HDR monitor.
 enum DisplayHDRSupport {
     /// A display's potential EDR headroom above SDR white.
     static func isAvailable(headrooms: [CGFloat] = NSScreen.screens.map(\.maximumPotentialExtendedDynamicRangeColorComponentValue)) -> Bool {

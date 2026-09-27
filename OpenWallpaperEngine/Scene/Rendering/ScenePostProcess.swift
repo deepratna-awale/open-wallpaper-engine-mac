@@ -54,6 +54,9 @@ final class ScenePostProcess {
         /// display smaller than the scene): the bloom steps in texels of that size and runs its
         /// levels, so it spans the same part of the frame as at full detail.
         var fullDetailScale: Float = 1
+        /// How the frame reaches the display: display HDR's EDR output combines with WE's display
+        /// HDR combine and keeps linear values above 1 up to the drawable (`SceneDisplayOutput`).
+        var display = SceneDisplayOutput.standard
 
         /// The size the bloom's texel steps and HDR levels are counted in.
         var bloomReferenceSize: SIMD2<Float> {
@@ -88,7 +91,11 @@ final class ScenePostProcess {
     /// The last frame's colour correction: what went in and what came out; nil when it didn't run.
     private(set) var lastColorCorrection: (frame: MTLTexture, corrected: MTLTexture)?
 
-    private let compositePipeline: MTLRenderPipelineState
+    /// The composite's pipelines by drawable format: the renderer's, and the EDR one made on
+    /// first use (`compositeDescriptor`).
+    private var compositePipelines: [MTLPixelFormat: MTLRenderPipelineState] = [:]
+    private let compositeDescriptor: MTLRenderPipelineDescriptor
+    private let device: MTLDevice
     /// The content's LDR bloom chain; nil without a shader toolchain.
     private var bloomChain: SceneBloomChain?
     /// The content's HDR chain, when it draws in HDR (`SceneMetalContent.hdrChain`).
@@ -115,9 +122,11 @@ final class ScenePostProcess {
     /// `layerDescriptor` is the scene's layer pipeline, whose functions and output format the
     /// composite shares. Nil when a pipeline can't be made.
     init?(device: MTLDevice, layerDescriptor: MTLRenderPipelineDescriptor) {
+        self.device = device
+        compositeDescriptor = SceneComposite.pipelineDescriptor(basedOn: layerDescriptor)
         do {
-            compositePipeline = try device.makeRenderPipelineState(
-                descriptor: SceneComposite.pipelineDescriptor(basedOn: layerDescriptor))
+            compositePipelines[compositeDescriptor.colorAttachments[0].pixelFormat] =
+                try device.makeRenderPipelineState(descriptor: compositeDescriptor)
         } catch {
             OWELog.error(.scene, "The scene composite pipeline can't be made: \(error)")
             return nil
@@ -219,7 +228,7 @@ final class ScenePostProcess {
                                                 strengthScale: max(frame.extras.bloom, 0))
         guard let combined = hdrChain.encode(on: frame.scene, levels: levels, constants: constants, effects: effects,
                                              builtins: frame.builtins, values: frame.values, frameIndex: bloomFrames,
-                                             referenceSize: frame.bloomReferenceSize,
+                                             referenceSize: frame.bloomReferenceSize, displayHDR: frame.display.renderVar,
                                              commandBuffer: frame.commandBuffer) else { return nil }
         lastHDR = HDRRecord(frame: frame.scene, combined: combined, levels: levels, constants: constants)
         if encodedView?.output != ObjectIdentifier(combined) {
@@ -242,9 +251,12 @@ final class ScenePostProcess {
         }
         holdsColorCorrection = true
         correctedFrames &+= 1
+        // The EDR frame keeps its values above 1 through it.
         guard let corrected = colorCorrection.encode(on: combined, settings: frame.colorCorrection, effects: effects,
                                                      builtins: frame.builtins, values: frame.values,
                                                      frameIndex: correctedFrames,
+                                                     format: frame.display.isExtended ? SceneDisplayOutput.extendedPixelFormat
+                                                         : .rgba8Unorm,
                                                      commandBuffer: frame.commandBuffer) else { return nil }
         lastColorCorrection = (combined, corrected)
         return corrected
@@ -252,20 +264,38 @@ final class ScenePostProcess {
 
     /// Step 8: `finished` on the drawable at the user's placement, with the app's adjustments.
     private func composite(_ finished: MTLTexture, _ frame: Frame) {
-        guard let encoder = frame.commandBuffer.makeRenderCommandEncoder(descriptor: frame.output) else {
+        guard let pipeline = compositePipeline(for: frame.output.colorAttachments[0].texture?.pixelFormat
+                                                    ?? compositeDescriptor.colorAttachments[0].pixelFormat),
+              let encoder = frame.commandBuffer.makeRenderCommandEncoder(descriptor: frame.output) else {
             if !reportedEncodeFailure {
                 OWELog.error(.scene, "The scene composite pass can't be encoded; the drawable keeps its last frame")
                 reportedEncodeFailure = true
             }
             return
         }
-        encoder.setRenderPipelineState(compositePipeline)
+        encoder.setRenderPipelineState(pipeline)
         var uniform = Self.compositeUniform(frame.placement, extras: frame.extras)
         encoder.setVertexBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
         encoder.setFragmentBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
         encoder.setFragmentTexture(finished, index: 0)
         encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
         encoder.endEncoding()
+    }
+
+    /// The composite's pipeline drawing into `format`; nil (the composite is skipped, logged) when it
+    /// can't be made.
+    private func compositePipeline(for format: MTLPixelFormat) -> MTLRenderPipelineState? {
+        if let pipeline = compositePipelines[format] { return pipeline }
+        let descriptor = compositeDescriptor.copy() as! MTLRenderPipelineDescriptor
+        descriptor.colorAttachments[0].pixelFormat = format
+        do {
+            let pipeline = try device.makeRenderPipelineState(descriptor: descriptor)
+            compositePipelines[format] = pipeline
+            return pipeline
+        } catch {
+            OWELog.error(.scene, "The scene composite pipeline for \(format) can't be made: \(error)")
+            return nil
+        }
     }
 
     /// The composite's uniform: `placement` with the app's adjustments.

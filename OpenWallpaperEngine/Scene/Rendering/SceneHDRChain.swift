@@ -13,7 +13,7 @@ import Metal
 /// | D0 | `hdr_downsample_bloom` | the frame → `_rt_2FrameBuffer` | (1/w, 1/h, −1/w, −1/h) |
 /// | D*i*, *i* = 1…n−1 | `hdr_downsample` | RT*i*−1 → RT*i* | D0's × 2^*i* |
 /// | U*k*, *k* = n−1…1 | `hdr_upsample`, `hdr_upsample_cubic` for *k* ≥ n−2 | RT*k* → RT*k*−1, additive | D0's × 2^*k* |
-/// | combine | `combine_hdr_upsample` | `_rt_FullFrameBuffer` + RT0 → the frame | (RV.x, RV.y, the last pass's zw) |
+/// | combine | `combine_hdr_upsample`, `combine_dhdr_upsample` with display HDR | `_rt_FullFrameBuffer` + RT0 → the frame | (RV.x, RV.y, the last pass's zw) |
 ///
 /// RT*i* is `_rt_<2^(i+1)>FrameBuffer`, RGBA16F at 1/2^(i+1). WE's constants go to D0
 /// (`bloomstrength` normalised by the scatter, `blend`, `bloomtint`) and both upsample materials
@@ -22,8 +22,10 @@ import Metal
 /// Both combines write linear values; WE shows them through its swap chain's sRGB view, so the
 /// output here is an sRGB target that the composite reads as the encoded bytes (`encodedView`).
 /// RV is the device's `g_RenderVar0.xy`: (SDR white, HDR headroom) / 80 nits on a display in
-/// HDR, (1, 0) otherwise (`0x14012b5d9`). The app has no HDR output yet ("displayhdr" draws as
-/// "ultra", WE's own fallback without an HDR swap chain), so RV is (1, 0).
+/// HDR, (1, 0) otherwise (`0x14012b5d9`). With display HDR (`SceneDisplayOutput.extendedRange`)
+/// the combine is `combine_dhdr_upsample` and the output an RGBA16F target of linear values that
+/// the EDR drawable shows as they are, with RV = (1, headroom − 1) (`SceneDisplayOutput.renderVar`);
+/// otherwise RV is (1, 0).
 struct SceneHDRChain {
     /// Every pass of the chain at 8 levels, both upsample variants and both combines; `plan(levels:)`
     /// picks a frame's passes from it.
@@ -36,6 +38,8 @@ struct SceneHDRChain {
     static let maxLevels = 8
     /// The format the combines write: linear values, encoded to sRGB as WE's swap chain view does.
     static let outputFormat = MTLPixelFormat.rgba8Unorm_srgb
+    /// The format they write with display HDR: linear values above 1 kept for the EDR drawable.
+    static let displayHDROutputFormat = SceneDisplayOutput.extendedPixelFormat
 
     /// Material (pass) indices in `effectDocument`.
     enum Pass {
@@ -48,6 +52,8 @@ struct SceneHDRChain {
         static func upsampleCubic(_ level: Int) -> Int { 14 + level }
         static let combine = 22
         static let combineSRGB = 23
+        /// `combine_dhdr_upsample` (`DISPLAYHDR` 1), display HDR's combine (0x14017fb49).
+        static let combineDisplayHDR = 24
     }
 
     /// `_rt_<2^(i+1)>FrameBuffer`, level *i*'s target.
@@ -75,6 +81,7 @@ struct SceneHDRChain {
         }
         passes.append(pass("combine_hdr_upsample", bloom: target(0)))
         passes.append(pass("combine_srgb"))
+        passes.append(pass("combine_dhdr_upsample", bloom: target(0)))
         let fbos = (0..<maxLevels).map {
             #"{"name": "\#(target($0))", "scale": \#(2 << $0), "format": "rgba16161616f"}"#
         }
@@ -101,8 +108,8 @@ struct SceneHDRChain {
             sceneEngineCombos: builder.sceneEngineCombos)
         let effect = try JSONDecoder().decode(WEObjectEffect.self, from: Data(#"{"file": "\#(effectFile)"}"#.utf8))
         let plan = try engine.build(effect)
-        guard plan.passes.count == Pass.combineSRGB + 1 else {
-            throw BuildError.incomplete("\(plan.passes.count) of \(Pass.combineSRGB + 1) passes planned")
+        guard plan.passes.count == Pass.combineDisplayHDR + 1 else {
+            throw BuildError.incomplete("\(plan.passes.count) of \(Pass.combineDisplayHDR + 1) passes planned")
         }
         for pass in plan.passes where pass.variant == nil {
             throw BuildError.incomplete("pass \(pass.materialIndex) has no shader")
@@ -149,12 +156,12 @@ struct SceneHDRChain {
         }
     }
 
-    /// The device's `g_RenderVar0.xy` for the combine (see the type's comment).
+    /// The device's `g_RenderVar0.xy` for the combine without display HDR (see the type's comment).
     static let deviceRenderVar = SIMD2<Float>(1, 0)
 
     /// `g_RenderVar0` of each pass of `levels` levels on a `size` frame, by material index
-    /// (`0x140183610`, `0x140180b26`).
-    static func renderVars(levels: Int, size: SIMD2<Float>) -> [Int: SIMD4<Float>] {
+    /// (`0x140183610`, `0x140180b26`); `displayHDR` is display HDR's RV, whose combine then takes it.
+    static func renderVars(levels: Int, size: SIMD2<Float>, displayHDR: SIMD2<Float>? = nil) -> [Int: SIMD4<Float>] {
         let base = SIMD4<Float>(1 / size.x, 1 / size.y, -1 / size.x, -1 / size.y)
         var vars: [Int: SIMD4<Float>] = [Pass.downsampleBloom: base]
         for level in 1..<max(levels, 1) {
@@ -166,13 +173,15 @@ struct SceneHDRChain {
             vars[Pass.upsample(level)] = last
             vars[Pass.upsampleCubic(level)] = last
         }
-        vars[Pass.combine] = SIMD4(deviceRenderVar.x, deviceRenderVar.y, last.z, last.w)
+        let device = displayHDR ?? deviceRenderVar
+        vars[displayHDR == nil ? Pass.combine : Pass.combineDisplayHDR] = SIMD4(device.x, device.y, last.z, last.w)
         return vars
     }
 
     /// The plan for a frame: `levels` levels of bloom, or `combine_srgb` alone when `levels` is nil
-    /// (a HDR frame without bloom).
-    func plan(levels: Int?) -> SceneEffectPlan {
+    /// (a HDR frame without bloom, with display HDR too: 0x140180b9c). `displayHDR` combines with
+    /// `combine_dhdr_upsample`.
+    func plan(levels: Int?, displayHDR: Bool = false) -> SceneEffectPlan {
         guard let levels else {
             return SceneEffectPlan(file: full.file, fbos: [], passes: full.passes.filter { $0.materialIndex == Pass.combineSRGB })
         }
@@ -180,7 +189,7 @@ struct SceneHDRChain {
         var indices = [Pass.downsampleBloom] + (1..<n).map(Pass.downsample)
         // Bicubic for the two coarsest upsamples (`0x14018381b`).
         indices += stride(from: n - 1, through: 1, by: -1).map { $0 >= n - 2 ? Pass.upsampleCubic($0) : Pass.upsample($0) }
-        indices.append(Pass.combine)
+        indices.append(displayHDR ? Pass.combineDisplayHDR : Pass.combine)
         let byIndex = Dictionary(full.passes.map { ($0.materialIndex, $0) }, uniquingKeysWith: { a, _ in a })
         let names = Set((0..<n).map(Self.target))
         return SceneEffectPlan(file: full.file, fbos: full.fbos.filter { names.contains($0.name) },
@@ -208,13 +217,15 @@ struct SceneHDRChain {
 
     /// Encodes the chain on `frame` (`_rt_FullFrameBuffer`, RGBA16F) with `constants` for
     /// `levels` levels, or `combine_srgb` alone when `levels` is nil; returns the combined frame,
-    /// an sRGB texture of its size, or nil while a pass's pipeline is still compiling or one failed.
+    /// an sRGB texture of its size (RGBA16F with `displayHDR`, display HDR's RV), or nil while a
+    /// pass's pipeline is still compiling or one failed.
     /// `referenceSize` is the frame's size at full detail (`ScenePostProcess.Frame.bloomReferenceSize`;
     /// the frame's own when nil), whose texels the passes step in.
     func encode(on frame: MTLTexture, levels: Int?, constants: Constants,
                 effects: EffectGraphRenderer, builtins: BuiltinFrameContext, values: SceneValueContext,
-                frameIndex: UInt64, referenceSize: SIMD2<Float>? = nil, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
-        let plan = plan(levels: levels)
+                frameIndex: UInt64, referenceSize: SIMD2<Float>? = nil, displayHDR: SIMD2<Float>? = nil,
+                commandBuffer: MTLCommandBuffer) -> MTLTexture? {
+        let plan = plan(levels: levels, displayHDR: displayHDR != nil)
         let size = referenceSize ?? SIMD2(Float(frame.width), Float(frame.height))
         var context = EffectGraphRenderer.Context(
             frame: builtins, values: values,
@@ -224,8 +235,8 @@ struct SceneHDRChain {
         context.inputVersion = frameIndex
         context.texelSizeReference = size
         context.frameBufferFormat = .rgba16Float
-        context.outputFormat = Self.outputFormat
-        context.passRenderVars = Self.renderVars(levels: levels ?? 1, size: size).mapValues { [0: $0] }
+        context.outputFormat = displayHDR == nil ? Self.outputFormat : Self.displayHDROutputFormat
+        context.passRenderVars = Self.renderVars(levels: levels ?? 1, size: size, displayHDR: displayHDR).mapValues { [0: $0] }
         context.constantWrites = [plan.effectIndex: Self.constantWrites(constants)]
         return effects.apply([plan], to: frame, layerID: Self.stateID, context: context, commandBuffer: commandBuffer)
     }
