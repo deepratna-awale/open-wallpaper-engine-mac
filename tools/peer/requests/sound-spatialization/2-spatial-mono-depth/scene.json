@@ -1,0 +1,33 @@
+{
+	"camera": {
+		"center": "0.000 0.000 -1.000",
+		"eye": "0.000 0.000 0.000",
+		"up": "0.000 1.000 0.000"
+	},
+	"general": {
+		"clearcolor": "0 0 0",
+		"orthogonalprojection": {
+			"width": 1920,
+			"height": 1080
+		}
+	},
+	"objects": [
+		{
+			"id": 1,
+			"name": "Tone",
+			"sound": [
+				"sounds/tone_mono.wav"
+			],
+			"playbackmode": "loop",
+			"volume": 1,
+			"origin": {
+				"script": "'use strict';\n\n// One depth a second: z = 750, 600, \u2026, -750, then again.\nexport function update(value) {\n\tconst step = Math.floor(engine.runtime) % 11;\n\tvalue.x = 960;\n\tvalue.y = 540;\n\tvalue.z = 750 - step * 150;\n\treturn value;\n}\n",
+				"value": "960 540 0"
+			},
+			"spatialization": true,
+			"mindistance": 0.5,
+			"attenuation": 2
+		}
+	],
+	"version": 1
+}
