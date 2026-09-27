@@ -10,8 +10,8 @@ import simd
 /// - none falls back to its unwarped image: each has its mesh plan, with WE's combos
 ///   (`SKINNING`, the exact `BONECOUNT`);
 /// - each drawn image reproduces what its rig assembles from the source texture: a CPU
-///   rasterisation of the mesh skinned with the pose it was drawn in (nearest texel, straight-alpha
-///   "over" in index order) is the oracle; every rig also plays 5 s without a NaN or infinity, and
+///   rasterisation of the mesh skinned with the pose it was drawn in (sampled bilinearly as the
+///   mesh pass samples, straight-alpha "over" in index order) is the oracle; every rig also plays 5 s without a NaN or infinity, and
 ///   each rig in its bind pose is checked the same way, compared over a grid of pixel centres (coverage mask, alpha, colour). For the rigs
 ///   laid over their own picture, the oracle is the source image itself where the mesh covers it,
 ///   and the mesh covers the picture; the witcher's (3803167460) rearranges an atlas.
@@ -122,9 +122,9 @@ final class ScenePuppetLibraryTests: XCTestCase {
                 XCTAssertGreaterThanOrEqual(bind.iou, 0.97, "\(label): the rig covers its picture")
                 XCTAssertLessThanOrEqual(bind.colourError, 2, "\(label): the rig reproduces its picture")
             }
-            XCTAssertGreaterThanOrEqual(result.iou, 0.99, "\(label): coverage")
-            XCTAssertLessThanOrEqual(result.alphaError, 3, "\(label): alpha")
-            XCTAssertLessThanOrEqual(result.colourError, result.unwarped ? 2 : 6, "\(label): colour")
+            XCTAssertGreaterThanOrEqual(result.iou, 0.999, "\(label): coverage")
+            XCTAssertLessThanOrEqual(result.alphaError, 0.5, "\(label): alpha")
+            XCTAssertLessThanOrEqual(result.colourError, 1, "\(label): colour")
             let posed = pose != .bind(boneCount: plan.boneCount)
             lines += [item.id, id, String(plan.boneCount), String(plan.vertexData.count / plan.format.stride),
                       "\(size.x)×\(size.y)", String(format: "%.4f", result.iou), String(format: "%.2f", result.alphaError),
@@ -156,8 +156,8 @@ final class ScenePuppetLibraryTests: XCTestCase {
     }
 
     /// The mesh skinned with `pose` (`p′ = Σ wᵢ · bone[iᵢ] · p`) rasterised on the CPU at pixel
-    /// centres (every `step`th row and column): the source texel nearest each centre's texture
-    /// coordinate, triangles composited "over" in index order; compared with the drawn image there.
+    /// centres (every `step`th row and column): the source sampled bilinearly at each centre's
+    /// texture coordinate, triangles composited "over" in index order; compared with the drawn image there.
     static func compare(_ plan: ScenePuppetPlan, source: [UInt8], image: [UInt8], size: SIMD2<Int>,
                         pose: ScenePuppetPose) -> Comparison {
         let content = SIMD2(Float(plan.contentPixels.x), Float(plan.contentPixels.y))
@@ -183,6 +183,24 @@ final class ScenePuppetLibraryTests: XCTestCase {
         let texel = (0..<count).map { SIMD2(uvs[$0 * 2], uvs[$0 * 2 + 1]) * texture }
         let unwarped = zip(pixel, texel).allSatisfy { simd_length($0 - $1) < 0.05 }
 
+        // The mesh pass samples its image bilinearly (clamped or repeated as the material says), as
+        // WE's linear sampler does; a nearest texel moves an alpha edge by up to half a texel once
+        // the pose moves the mesh off the texel grid.
+        let clamped = plan.material.clampedSlots.contains(0)
+        func texelAt(_ x: Int, _ y: Int) -> SIMD4<Float> {
+            let tx = clamped ? min(max(x, 0), size.x - 1) : ((x % size.x) + size.x) % size.x
+            let ty = clamped ? min(max(y, 0), size.y - 1) : ((y % size.y) + size.y) % size.y
+            let offset = (ty * size.x + tx) * 4
+            return SIMD4(Float(source[offset]), Float(source[offset + 1]), Float(source[offset + 2]), Float(source[offset + 3])) / 255
+        }
+        func bilinear(_ uv: SIMD2<Float>) -> SIMD4<Float> {
+            let p = uv - 0.5, base = p.rounded(.down), f = p - base
+            let x = Int(base.x), y = Int(base.y)
+            let top = texelAt(x, y) * (1 - f.x) + texelAt(x + 1, y) * f.x
+            let bottom = texelAt(x, y + 1) * (1 - f.x) + texelAt(x + 1, y + 1) * f.x
+            return top * (1 - f.y) + bottom * f.y
+        }
+
         let step = max(1, Int((Double(plan.contentPixels.x * plan.contentPixels.y) / 400_000).squareRoot().rounded(.up)))
         let columns = (plan.contentPixels.x + step - 1) / step, rows = (plan.contentPixels.y + step - 1) / step
         var expected = [SIMD4<Float>](repeating: .zero, count: columns * rows) // premultiplied
@@ -207,11 +225,7 @@ final class ScenePuppetLibraryTests: XCTestCase {
                     let wc = 1 - wa - wb
                     guard wa >= 0, wb >= 0, wc >= 0 else { continue }
                     let uv = texel[a] * wa + texel[b] * wb + texel[c] * wc
-                    let tx = min(max(Int(uv.x.rounded(.down)), 0), size.x - 1)
-                    let ty = min(max(Int(uv.y.rounded(.down)), 0), size.y - 1)
-                    let offset = (ty * size.x + tx) * 4
-                    let colour = SIMD4(Float(source[offset]), Float(source[offset + 1]), Float(source[offset + 2]),
-                                       Float(source[offset + 3])) / 255
+                    let colour = bilinear(uv)
                     let premultiplied = SIMD4(colour.x * colour.w, colour.y * colour.w, colour.z * colour.w, colour.w)
                     let slot = row * columns + column
                     expected[slot] = premultiplied + expected[slot] * (1 - colour.w)
