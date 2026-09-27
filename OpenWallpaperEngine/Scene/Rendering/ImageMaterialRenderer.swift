@@ -36,8 +36,10 @@ final class ImageMaterialRenderer {
     /// when the layer's plan changes. Render thread only.
     private var programs: [String: Program] = [:]
 
-    /// The bytes of the layers' prelit images (diagnostics, test-risks LR10).
-    var prelitBytes: Int { programs.values.reduce(0) { $0 + ($1.prelit?.allocatedSize ?? 0) } }
+    /// The bytes of the layers' prelit and base images (diagnostics, test-risks LR10).
+    var prelitBytes: Int {
+        programs.values.reduce(0) { $0 + ($1.prelit?.allocatedSize ?? 0) + ($1.base?.allocatedSize ?? 0) }
+    }
 
     private final class Program {
         let plan: ImageMaterialPlan
@@ -45,6 +47,13 @@ final class ImageMaterialRenderer {
         /// The prelighting pass's uniforms and its target (`prelight`).
         let prelightUniforms: ImageMaterialUniforms?
         var prelit: MTLTexture?
+        /// The base pass (`base`): the material without blending, its uniforms, its target, and what
+        /// its target holds (the input, its version and the uniform bytes it was drawn with).
+        let basePass: SceneEffectPassPlan
+        let baseUniforms: ImageMaterialUniforms
+        var base: MTLTexture?
+        var baseDrawn: (input: ObjectIdentifier, inputVersion: UInt64, bytes: [UInt8])?
+        var baseVersion: UInt64 = 0
         /// Ignored native adjustments have been logged for this layer.
         var reportedIgnoredAdjustments = false
 
@@ -52,6 +61,9 @@ final class ImageMaterialRenderer {
             self.plan = plan
             uniforms = ImageMaterialUniforms(layout: plan.pass.variant?.uniforms, constants: plan.pass.constants,
                                              liveFactors: plan.liveFactors)
+            basePass = plan.pass.blended("disabled")
+            baseUniforms = ImageMaterialUniforms(layout: plan.pass.variant?.uniforms, constants: plan.pass.constants,
+                                                 liveFactors: plan.liveFactors)
             prelightUniforms = plan.prelighting.map {
                 ImageMaterialUniforms(layout: $0.variant?.uniforms, constants: $0.constants, liveFactors: plan.liveFactors)
             }
@@ -237,25 +249,78 @@ final class ImageMaterialRenderer {
     /// effects and the bloom.
     func prelight(_ plan: ImageMaterialPlan, _ draw: Draw, format: MTLPixelFormat = .rgba8Unorm,
                   commandBuffer: MTLCommandBuffer) -> MTLTexture? {
-        guard let pass = plan.prelighting,
+        guard let pass = plan.prelighting, let uniforms = program(for: plan, layerID: draw.layerID).prelightUniforms,
               let pipeline = pipeline(for: pass, material: plan.materialPath, pixelFormat: format) else { return nil }
+        let program = program(for: plan, layerID: draw.layerID)
+        program.prelit = Self.target(program.prelit, like: draw.texture, format: format, device: device)
+        guard let target = program.prelit,
+              drawIntoTexture(pass, plan: plan, draw, uniforms: uniforms, lit: true, pipeline: pipeline, target: target,
+                              commandBuffer: commandBuffer) else { return nil }
+        prelitDraws += 1
+        return target
+    }
+
+    /// WE's base pass for a layer whose effects draw their last pass into the scene (the object's
+    /// draw into its first effect buffer, vtable +0xe8 = 0x140207b50, before the effects,
+    /// 0x1401e98d6): the layer's own material, without blending, draws `draw.texture` texel for
+    /// texel into a texture of its size with the layer's colour, alpha and brightness
+    /// (0x140207bd2…0x140207c2a set them as `g_Color4`), which the effects then start from; the
+    /// last pass takes them into the scene with the material's blending. The texture is drawn again
+    /// only when its input, `inputVersion` or the material's uniforms change, so a chain that doesn't
+    /// change keeps its output (`EffectGraphRenderer.StaticChainKey`); `version` counts the draws.
+    /// nil while the pipeline compiles or an input is missing. Encodes its own render pass.
+    func base(_ plan: ImageMaterialPlan, _ draw: Draw, inputVersion: UInt64, format: MTLPixelFormat = .rgba8Unorm,
+              commandBuffer: MTLCommandBuffer) -> (texture: MTLTexture, version: UInt64)? {
+        let program = program(for: plan, layerID: draw.layerID)
+        guard let pipeline = pipeline(for: program.basePass, material: plan.materialPath, pixelFormat: format) else { return nil }
+        let replaced = Self.target(program.base, like: draw.texture, format: format, device: device)
+        if replaced !== program.base { program.baseDrawn = nil }
+        program.base = replaced
+        guard let target = program.base,
+              drawIntoTexture(program.basePass, plan: plan, draw, uniforms: program.baseUniforms, lit: false,
+                              pipeline: pipeline, target: target, commandBuffer: commandBuffer, skipUnchanged: {
+                                  let drawn = (ObjectIdentifier(draw.texture), inputVersion, program.baseUniforms.bytes)
+                                  if let last = program.baseDrawn, last.input == drawn.0, last.inputVersion == drawn.1,
+                                     last.bytes == drawn.2 { return true }
+                                  program.baseDrawn = drawn
+                                  program.baseVersion &+= 1
+                                  return false
+                              }) else { return nil }
+        return (target, program.baseVersion)
+    }
+
+    /// Whether `plan`'s base pass (`base`) can draw into a `format` texture now; starts its compile.
+    func baseIsReady(_ plan: ImageMaterialPlan, layerID: String, format: MTLPixelFormat) -> Bool {
+        pipeline(for: program(for: plan, layerID: layerID).basePass, material: plan.materialPath, pixelFormat: format) != nil
+    }
+
+    /// `current` when it is a render target like `texture` in `format`, else a new one.
+    private static func target(_ current: MTLTexture?, like texture: MTLTexture, format: MTLPixelFormat,
+                               device: MTLDevice) -> MTLTexture? {
+        if let current, current.width == texture.width, current.height == texture.height, current.pixelFormat == format {
+            return current
+        }
+        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: format, width: texture.width,
+                                                                  height: texture.height, mipmapped: false)
+        descriptor.usage = [.renderTarget, .shaderRead]
+        descriptor.storageMode = .private
+        return device.makeTexture(descriptor: descriptor)
+    }
+
+    /// Draws `pass` over the whole of `target`, texel for texel from `draw.texture`: the image (its
+    /// content, inside a padded texture) is the layer's quad in model space, `extent` wide and tall,
+    /// centred, y up. `lit` passes (prelighting) are white and see the layer's place in the scene
+    /// through the `g_Alt*` matrices; the others carry the layer's colour, alpha and brightness.
+    /// `skipUnchanged`, called once the uniforms are written, keeps the target as it is when true.
+    /// False when an input is missing.
+    private func drawIntoTexture(_ pass: SceneEffectPassPlan, plan: ImageMaterialPlan, _ draw: Draw,
+                                 uniforms: ImageMaterialUniforms, lit: Bool, pipeline: MTLRenderPipelineState,
+                                 target: MTLTexture, commandBuffer: MTLCommandBuffer,
+                                 skipUnchanged: () -> Bool = { false }) -> Bool {
         let extent = draw.placement?.size ?? draw.quad.extent
         guard extent.x > 0, extent.y > 0, extent.x.isFinite, extent.y.isFinite,
-              let textureInfo = textures(of: pass, plan: plan, draw) else { return nil }
-        let program = program(for: plan, layerID: draw.layerID)
-        let width = draw.texture.width, height = draw.texture.height
-        if program.prelit?.width != width || program.prelit?.height != height || program.prelit?.pixelFormat != format {
-            let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: format, width: width,
-                                                                      height: height, mipmapped: false)
-            descriptor.usage = [.renderTarget, .shaderRead]
-            descriptor.storageMode = .private
-            program.prelit = device.makeTexture(descriptor: descriptor)
-        }
-        guard let target = program.prelit else { return nil }
-
-        // The image (its content, inside a padded texture) is the layer's quad in model space:
-        // `extent` wide and tall, centred, y up. Every texel of the texture is drawn.
-        let size = SIMD2(Float(width), Float(height))
+              let textureInfo = textures(of: pass, plan: plan, draw) else { return false }
+        let size = SIMD2(Float(target.width), Float(target.height))
         let content = (draw.contentSize ?? size) / size
         var positions = Self.corners.flatMap { uv -> [Float] in
             [(uv.x / content.x - 0.5) * extent.x, (0.5 - uv.y / content.y) * extent.y, 0]
@@ -265,12 +330,15 @@ final class ImageMaterialRenderer {
                                                   SIMD4(0, -2 * content.y / extent.y, 0, 0),
                                                   SIMD4(0, 0, 1, 0),
                                                   SIMD4(content.x - 1, content.y - 1, 0, 1)))
-        if let uniforms = program.prelightUniforms, uniforms.size > 0 {
+        if uniforms.size > 0 {
             // Where the layer lies: its quad's centre and axes, or through a 3D camera its world
             // matrix moved to the quad's centre.
             let alt = draw.placement?.centredWorld ?? Self.modelMatrix(draw.quad)
+            let color = lit ? SIMD3<Float>(repeating: 1) : draw.color
+            let alpha: Float = lit ? 1 : draw.alpha
+            let brightness: Float = lit ? 1 : draw.brightness
             let key = ImageMaterialUniforms.PassKey(
-                model: alt, viewProjection: intoTexture, color: SIMD3(repeating: 1), alpha: 1, brightness: 1,
+                model: alt, viewProjection: intoTexture, color: color, alpha: alpha, brightness: brightness,
                 spriteRotation: SIMD4(1, 0, 0, 1), spriteTranslation: .zero, screen: draw.frame.screenSize,
                 textures: textureInfo.map { SIMD4(Float($0.texture.width), Float($0.texture.height),
                                                   $0.contentSize?.x ?? 0, $0.contentSize?.y ?? 0) },
@@ -285,6 +353,10 @@ final class ImageMaterialRenderer {
                 context.altModelMatrix = alt
                 context.altViewProjection = draw.placement?.shaderViewProjection
                     ?? Self.viewProjection(sceneSize: draw.sceneSize)
+                context.color = color
+                context.alpha = alpha
+                context.userAlpha = alpha
+                context.brightness = brightness
                 for entry in textureInfo {
                     var info = EffectGraphRenderer.textureInfo(for: entry.texture, contentSize: entry.contentSize)
                     if let sprite = entry.sprite, entry.slot != 0 {
@@ -296,13 +368,14 @@ final class ImageMaterialRenderer {
                 return context
             }
         }
+        if skipUnchanged() { return true }
 
         let renderPass = MTLRenderPassDescriptor()
         renderPass.colorAttachments[0].texture = target
         renderPass.colorAttachments[0].loadAction = .clear
         renderPass.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 0)
         renderPass.colorAttachments[0].storeAction = .store
-        guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPass) else { return nil }
+        guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPass) else { return false }
         encoder.setRenderPipelineState(pipeline)
         var texCoords = Self.corners
         encoder.setVertexBytes(&positions, length: MemoryLayout<Float>.stride * positions.count,
@@ -316,15 +389,14 @@ final class ImageMaterialRenderer {
             encoder.setVertexTexture(entry.texture, index: entry.slot)
             encoder.setVertexSamplerState(entry.sampler, index: entry.slot)
         }
-        if let uniforms = program.prelightUniforms, uniforms.size > 0 {
+        if uniforms.size > 0 {
             uniforms.bytes.withUnsafeBytes { raw in
                 uniformArena.bind(raw, index: 0, to: encoder, commandBuffer: commandBuffer)
             }
         }
         encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
         encoder.endEncoding()
-        prelitDraws += 1
-        return target
+        return true
     }
 
     private typealias BoundTexture = (slot: Int, texture: MTLTexture, sampler: MTLSamplerState, contentSize: SIMD2<Float>?,
@@ -520,5 +592,16 @@ final class ImageMaterialRenderer {
                 if let result { self.pipelines[key] = result } else { self.failed.insert(key) }
             }
         }
+    }
+}
+
+private extension SceneEffectPassPlan {
+    /// The same pass drawn with `blending`.
+    func blended(_ blending: String) -> SceneEffectPassPlan {
+        var pass = SceneEffectPassPlan(command: command, variantKey: variantKey, variant: variant, blending: blending,
+                                       target: target, textures: textures, constants: constants)
+        pass.textureFlags = textureFlags
+        pass.materialIndex = materialIndex
+        return pass
     }
 }

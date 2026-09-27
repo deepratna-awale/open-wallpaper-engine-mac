@@ -68,9 +68,7 @@
   "effect": "filmgrain",
   "diff": 3.31,
   "motion": 0.69,
-  "diffTolerance": 0.5,
-  "motionTolerance": 0.1,
-  "knownGap": "FX2: WE's last pass draws into the scene, so the grain is sampled once per screen pixel; ours runs in the layer's 1024² buffer and is resampled to 870², which averages it (spread 0.66 of WE's)"
+  "diffTolerance": 0.5
  },
  {
   "effect": "fire",

@@ -58,8 +58,10 @@ final class EffectGraphRenderer {
         /// The size the chain's buffers stand for (the input's, or `Context.inputStandInSize`).
         var standInSize = SIMD2<Int>(0, 0)
         var programs: [[UniformProgram?]] = []
-        /// Last output of a chain that doesn't change over time, and what produced it.
+        /// Last output of a chain that doesn't change over time, and what produced it. When the chain
+        /// draws its last pass into the scene, the output is that pass's input, and `staticDrawn` the pass.
         var staticOutput: (key: StaticChainKey, output: MTLTexture)?
+        var staticDrawn: DrawnLastPass?
         /// The output of the chain's leading effects when they don't change over time but later ones
         /// do (`staticPrefix`), kept in `prefixTarget` so the frame starts after them; and what produced it.
         var prefixOutput: (key: StaticChainKey, effects: Int)?
@@ -298,6 +300,22 @@ final class EffectGraphRenderer {
     /// including while the chain's pipelines are still compiling (the layer then draws plain).
     func apply(_ effects: [SceneEffectPlan], to image: MTLTexture, layerID: String,
                context: Context, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
+        run(effects, to: image, layerID: layerID, context: context, drawsLastPass: false, commandBuffer: commandBuffer).output
+    }
+
+    /// Runs `effects` on `input` up to their last pass, which the caller draws into the scene with
+    /// `encode(_:into:scene:context:commandBuffer:)`, as WE draws a layer's last effect pass
+    /// (docs/phase2-plan.md §2; `lastScenePass`). nil when nothing can be drawn: the chain has no
+    /// such pass, or its pipelines are still compiling.
+    func applyDrawingLastPass(_ effects: [SceneEffectPlan], to image: MTLTexture, layerID: String,
+                              context: Context, commandBuffer: MTLCommandBuffer) -> DrawnLastPass? {
+        run(effects, to: image, layerID: layerID, context: context, drawsLastPass: true, commandBuffer: commandBuffer).drawn
+    }
+
+    private func run(_ effects: [SceneEffectPlan], to image: MTLTexture, layerID: String, context: Context,
+                     drawsLastPass: Bool, commandBuffer: MTLCommandBuffer) -> (output: MTLTexture?, drawn: DrawnLastPass?) {
+        let last = drawsLastPass ? Self.lastScenePass(effects, hidden: context.hiddenEffects) : nil
+        if drawsLastPass, last == nil { return (nil, nil) }
         sweepIdleSpares()
         var input = image
         var standIn = context.inputStandInSize ?? SIMD2(image.width, image.height)
@@ -324,7 +342,7 @@ final class EffectGraphRenderer {
             layers[layerID] = state
         }
         if !state.ready {
-            guard let formats = readyFormats(effects, targetFormats: targetFormats) else { return nil }
+            guard let formats = readyFormats(effects, targetFormats: targetFormats) else { return (nil, nil) }
             state.formats = formats
             state.programs = effects.map { effect in
                 effect.passes.map { pass in pass.variant.map { UniformProgram(layout: $0.uniforms, constants: pass.constants) } }
@@ -367,9 +385,10 @@ final class EffectGraphRenderer {
         // change every frame.
         let readsScene = context.sceneSnapshot != nil
             || effects.contains { $0.passes.contains(where: \.readsMipMappedFrameBuffer) }
-        if !readsScene, let cached = state.staticOutput, cached.key.matches(staticKey) {
+        if !readsScene, let cached = state.staticOutput, cached.key.matches(staticKey),
+           (state.staticDrawn != nil) == drawsLastPass {
             layersReused += 1
-            return cached.output
+            return drawsLastPass ? (nil, state.staticDrawn) : (cached.output, nil)
         }
         var current = input
         var didRender = false
@@ -383,7 +402,8 @@ final class EffectGraphRenderer {
             prefixesReused += 1
         }
         var keepsPrefix = prefixKey != nil && firstEffect == 0 && !readsScene
-        for (effectIndex, effect) in effects.enumerated() where effectIndex >= firstEffect && !context.hiddenEffects.contains(effectIndex) {
+        var drawn: DrawnLastPass?
+        chain: for (effectIndex, effect) in effects.enumerated() where effectIndex >= firstEffect && !context.hiddenEffects.contains(effectIndex) {
             if keepsPrefix, effectIndex >= prefix, let prefixKey {
                 keepsPrefix = false
                 keepPrefix(current, of: state, input: input, key: prefixKey, effects: prefix, commandBuffer: commandBuffer)
@@ -408,6 +428,18 @@ final class EffectGraphRenderer {
                     guard let variant = pass.variant, let program = state.programs[effectIndex][passIndex],
                           let format = state.formats[effectIndex][passIndex],
                           let pipeline = readyPipeline(pass, format: format) else { continue }
+                    let standInSizes = StandIn(input: input, inputSize: standIn, targets: state.standInSizes,
+                                               label: passTimer == nil ? "" : Self.passLabel(layerID, effect: effect, pass: passIndex))
+                    if let last, last == (effectIndex, passIndex) {
+                        // Drawn into the scene by the caller, from what the chain holds now.
+                        drawn = DrawnLastPass(pass: pass, variant: variant, program: program, current: current,
+                                              previous: previous, fbos: fbos, standIn: standInSizes,
+                                              targetSize: SIMD2(Float(state.standInSize.x), Float(state.standInSize.y)),
+                                              scriptWrites: context.constantWrites[effect.effectIndex] ?? [],
+                                              repeatingFBOs: Set(effect.fbos.filter { $0.uvs == "repeat" }.map(\.name)))
+                        state.fbos[effectIndex] = fbos
+                        break chain
+                    }
                     let output: MTLTexture
                     if let name = pass.target {
                         guard let fbo = fbos[name] else { continue }
@@ -421,8 +453,7 @@ final class EffectGraphRenderer {
                     reusable = reusable && program.isReusable && !pass.readsSceneSnapshot && !pass.readsMipMappedFrameBuffer
                     encode(pass, pipeline: pipeline, program: program, variant: variant, output: output,
                            current: current, previous: previous, fbos: fbos, context: context,
-                           standIn: StandIn(input: input, inputSize: standIn, targets: state.standInSizes,
-                                            label: passTimer == nil ? "" : Self.passLabel(layerID, effect: effect, pass: passIndex)),
+                           standIn: standInSizes,
                            scriptWrites: context.constantWrites[effect.effectIndex] ?? [],
                            repeatingFBOs: Set(effect.fbos.filter { $0.uvs == "repeat" }.map(\.name)),
                            commandBuffer: commandBuffer)
@@ -433,12 +464,139 @@ final class EffectGraphRenderer {
             // Swaps last: the next frame starts from the buffers this one left.
             state.fbos[effectIndex] = fbos
         }
-        guard didRender else { return nil }
+        if let drawn {
+            // The passes before the last are kept as a static chain's output is; the last is drawn
+            // every frame.
+            state.staticOutput = reusable && !readsScene ? (staticKey, current) : nil
+            state.staticDrawn = drawn
+            return (nil, drawn)
+        }
+        guard didRender, !drawsLastPass else { return (nil, nil) }
         // A chain with no time, audio or pointer input produces the same image every frame while
         // its input and live-bound values stay; skip it until they change (bandwidth is the main
         // per-frame cost).
         state.staticOutput = reusable && !readsScene ? (staticKey, current) : nil
-        return current
+        state.staticDrawn = nil
+        return (current, nil)
+    }
+
+    /// The pass WE draws into the scene: the last visible effect's last pass, when it renders into
+    /// the layer's buffers. WE's object draw (0x1401e8aa0) runs the passes into the layer's buffers
+    /// until one is left of those that render into them (+0x320 counts them, 0x1401e952b; the loop
+    /// stops at 0x1401e9ae7), then draws the rest of that effect (0x1401ea140) with its last one
+    /// (the effect's +0x144, 0x1401ec22b) through the layer's quad and matrices into the scene
+    /// (0x1401ec2b2, 0x1401ec5f8…0x1401ec674). nil when the chain doesn't end with such a pass.
+    static func lastScenePass(_ effects: [SceneEffectPlan], hidden: Set<Int>) -> (effect: Int, pass: Int)? {
+        guard let effect = effects.indices.last(where: { !hidden.contains($0) }),
+              let index = effects[effect].passes.indices.last else { return nil }
+        let pass = effects[effect].passes[index]
+        guard case .render = pass.command, pass.target == nil, pass.variant != nil else { return nil }
+        return (effect, index)
+    }
+
+    /// Where a chain's last pass draws: the layer's quad in the scene, and the scene pass it draws into.
+    struct ScenePlacement {
+        /// The quad's corners in model space, as a triangle strip (x, y, z each), and their texture
+        /// coordinates in the chain's buffers.
+        var positions: [Float]
+        var texCoords: [SIMD2<Float>]
+        /// `g_ModelMatrix`, `g_ViewMatrix` and `g_ViewProjectionMatrix` (the pass's
+        /// `g_ModelViewProjectionMatrix` is their product): the layer's, as its material has them.
+        var model: simd_float4x4
+        var view = matrix_identity_float4x4
+        var viewProjection: simd_float4x4
+        /// The layer material's blending (WE copies the material's blend and depth state into the
+        /// last pass: vtable +0x108 = 0x140209160).
+        var blending: String
+        /// The scene pass's colour format, samples and depth format (`.invalid` without depth).
+        var pixelFormat: MTLPixelFormat
+        var sampleCount = 1
+        var depthFormat = MTLPixelFormat.invalid
+    }
+
+    /// A chain's last pass, run up to it (`applyDrawingLastPass`): what it samples, kept until it
+    /// is drawn into the scene.
+    final class DrawnLastPass {
+        fileprivate let pass: SceneEffectPassPlan
+        fileprivate let variant: TranslatedShaderVariant
+        fileprivate let program: UniformProgram
+        fileprivate let current: MTLTexture
+        fileprivate let previous: MTLTexture
+        fileprivate let fbos: [String: MTLTexture]
+        fileprivate let standIn: StandIn
+        /// The size of the chain's buffers (or what they stand for): the built-ins' target size.
+        fileprivate let targetSize: SIMD2<Float>
+        fileprivate let scriptWrites: [SceneScriptConstantWrite]
+        fileprivate let repeatingFBOs: Set<String>
+        /// The last effect's input (`previous`).
+        var input: MTLTexture { previous }
+
+        fileprivate init(pass: SceneEffectPassPlan, variant: TranslatedShaderVariant, program: UniformProgram,
+                         current: MTLTexture, previous: MTLTexture, fbos: [String: MTLTexture], standIn: StandIn,
+                         targetSize: SIMD2<Float>, scriptWrites: [SceneScriptConstantWrite], repeatingFBOs: Set<String>) {
+            self.pass = pass
+            self.variant = variant
+            self.program = program
+            self.current = current
+            self.previous = previous
+            self.fbos = fbos
+            self.standIn = standIn
+            self.targetSize = targetSize
+            self.scriptWrites = scriptWrites
+            self.repeatingFBOs = repeatingFBOs
+        }
+    }
+
+    /// Whether `effects`' last pass (`lastScenePass`) can draw into `scene` now; starts its compile.
+    func scenePassIsReady(_ effects: [SceneEffectPlan], hidden: Set<Int>, scene: ScenePlacement) -> Bool {
+        guard let last = Self.lastScenePass(effects, hidden: hidden) else { return false }
+        return scenePipeline(effects[last.effect].passes[last.pass], scene: scene) != nil
+    }
+
+    private static func scenePipelineKey(_ pass: SceneEffectPassPlan, scene: ScenePlacement) -> String {
+        "\(pass.variantKey)|\(scene.pixelFormat.rawValue)|\(scene.blending)|scene|x\(scene.sampleCount)|d\(scene.depthFormat.rawValue)"
+    }
+
+    /// The last pass's pipeline into the scene, or nil while it compiles (the compile starts here)
+    /// or after it failed.
+    private func scenePipeline(_ pass: SceneEffectPassPlan, scene: ScenePlacement) -> MTLRenderPipelineState? {
+        guard let variant = pass.variant else { return nil }
+        let key = Self.scenePipelineKey(pass, scene: scene)
+        let state: (pipeline: MTLRenderPipelineState?, start: Bool) = pipelineLock.withLock {
+            if let pipeline = pipelines[key] {
+                usedPipelines.insert(key)
+                return (pipeline, false)
+            }
+            if failedPipelines.contains(key) { return (nil, false) }
+            return (nil, pendingPipelines.insert(key).inserted)
+        }
+        if state.start {
+            compile(pass, variant: variant, format: scene.pixelFormat, key: key, blending: scene.blending,
+                    sampleCount: scene.sampleCount, depthFormat: scene.depthFormat)
+        }
+        return state.pipeline
+    }
+
+    /// Draws a chain's last pass (`applyDrawingLastPass`) through `scene` into `encoder`'s pass, the
+    /// scene's. False when its pipeline isn't ready. Leaves the encoder's pipeline state changed.
+    @discardableResult
+    func encode(_ drawn: DrawnLastPass, into encoder: MTLRenderCommandEncoder, scene: ScenePlacement,
+                context: Context, commandBuffer: MTLCommandBuffer) -> Bool {
+        guard let pipeline = scenePipeline(drawn.pass, scene: scene), scene.positions.count == 12,
+              scene.texCoords.count == 4 else { return false }
+        passesEncoded += 1
+        encoder.setRenderPipelineState(pipeline)
+        var positions = scene.positions
+        var texCoords = scene.texCoords
+        encoder.setVertexBytes(&positions, length: MemoryLayout<Float>.stride * positions.count, index: Self.positionBuffer)
+        encoder.setVertexBytes(&texCoords, length: MemoryLayout<SIMD2<Float>>.stride * texCoords.count,
+                               index: Self.texCoordBuffer)
+        encoder.setVertexBuffer(zeroAttributes, offset: 0, index: Self.zeroBuffer)
+        draw(drawn.pass, program: drawn.program, variant: drawn.variant, current: drawn.current, previous: drawn.previous,
+             fbos: drawn.fbos, context: context, standIn: drawn.standIn, scriptWrites: drawn.scriptWrites,
+             repeatingFBOs: drawn.repeatingFBOs, targetSize: context.texelSizeReference ?? drawn.targetSize,
+             scene: scene, encoder: encoder, commandBuffer: commandBuffer)
+        return true
     }
 
     /// "layer effect pass", for `passTimer`.
@@ -526,11 +684,13 @@ final class EffectGraphRenderer {
         "\(pass.variantKey)|\(format.rawValue)|\(pass.blending)"
     }
 
-    /// Compiles a pipeline claimed in `pendingPipelines` by the caller.
-    private func compile(_ pass: SceneEffectPassPlan, variant: TranslatedShaderVariant, format: MTLPixelFormat, key: String) {
+    /// Compiles a pipeline claimed in `pendingPipelines` by the caller: `pass` into `format`, with
+    /// its own blending or `blending`, `sampleCount` samples and a `depthFormat` depth attachment.
+    private func compile(_ pass: SceneEffectPassPlan, variant: TranslatedShaderVariant, format: MTLPixelFormat, key: String,
+                         blending: String? = nil, sampleCount: Int = 1, depthFormat: MTLPixelFormat = .invalid) {
         pipelineLock.withLock { pipelineCompiles += 1 }
         let device = self.device
-        let blending = pass.blending
+        let blending = blending ?? pass.blending
         let archive = pipelineArchive
         compileQueue.async { [weak self] in
             let result: MTLRenderPipelineState?
@@ -545,6 +705,8 @@ final class EffectGraphRenderer {
                 descriptor.vertexFunction = vertex
                 descriptor.fragmentFunction = fragment
                 descriptor.colorAttachments[0].pixelFormat = format
+                descriptor.rasterSampleCount = sampleCount
+                descriptor.depthAttachmentPixelFormat = depthFormat
                 if let blend = Self.blendMode(blending) {
                     let attachment = descriptor.colorAttachments[0]!
                     attachment.isBlendingEnabled = true
@@ -600,7 +762,7 @@ final class EffectGraphRenderer {
     // MARK: - Passes
 
     /// The sizes a chain's textures stand for (`Context.inputStandInSize`).
-    private struct StandIn {
+    fileprivate struct StandIn {
         let input: MTLTexture
         let inputSize: SIMD2<Int>
         let targets: [ObjectIdentifier: SIMD2<Float>]
@@ -633,7 +795,21 @@ final class EffectGraphRenderer {
         encoder.setVertexBuffer(quadPositions, offset: 0, index: Self.positionBuffer)
         encoder.setVertexBuffer(quadTexCoords, offset: 0, index: Self.texCoordBuffer)
         encoder.setVertexBuffer(zeroAttributes, offset: 0, index: Self.zeroBuffer)
+        let targetSize = context.texelSizeReference ?? standIn.size(of: output)
+            ?? SIMD2<Float>(Float(output.width), Float(output.height))
+        draw(pass, program: program, variant: variant, current: current, previous: previous, fbos: fbos, context: context,
+             standIn: standIn, scriptWrites: scriptWrites, repeatingFBOs: repeatingFBOs, targetSize: targetSize,
+             scene: nil, encoder: encoder, commandBuffer: commandBuffer)
+    }
 
+    /// Binds `pass`'s textures and uniforms and draws its quad into `encoder`'s pass. `targetSize` is
+    /// what the built-ins take for the pass's target (`g_TexelSize`); `scene` places the quad in the
+    /// scene (the chain's last pass, `encode(_:into:scene:context:commandBuffer:)`), nil fills the target.
+    private func draw(_ pass: SceneEffectPassPlan, program: UniformProgram, variant: TranslatedShaderVariant,
+                      current: MTLTexture, previous: MTLTexture, fbos: [String: MTLTexture], context: Context,
+                      standIn: StandIn, scriptWrites: [SceneScriptConstantWrite], repeatingFBOs: Set<String>,
+                      targetSize: SIMD2<Float>, scene: ScenePlacement?, encoder: MTLRenderCommandEncoder,
+                      commandBuffer: MTLCommandBuffer) {
         var textureInfo: [Int: BuiltinTextureInfo] = [:]
         for slot in variant.textureSlots {
             guard let input = pass.textures[slot] else { continue }
@@ -676,9 +852,13 @@ final class EffectGraphRenderer {
         }
 
         if program.size > 0 {
-            var passContext = BuiltinPassContext(
-                targetSize: context.texelSizeReference ?? standIn.size(of: output)
-                    ?? SIMD2<Float>(Float(output.width), Float(output.height)))
+            var passContext = BuiltinPassContext(targetSize: targetSize)
+            if let scene {
+                passContext.modelMatrix = scene.model
+                passContext.viewMatrix = scene.view
+                passContext.viewProjection = scene.viewProjection
+                passContext.modelViewProjection = scene.viewProjection * scene.model
+            }
             passContext.textures = textureInfo
             passContext.color = context.layerColor
             passContext.alpha = context.layerAlpha
@@ -759,6 +939,7 @@ final class EffectGraphRenderer {
         state.width = width
         state.height = height
         state.staticOutput = nil
+        state.staticDrawn = nil
         state.prefixOutput = nil
         let standIn = standIn ?? SIMD2(width, height)
         state.standInSize = standIn
@@ -826,6 +1007,7 @@ final class EffectGraphRenderer {
         state.prefixTarget = nil
         state.fbos = []
         state.staticOutput = nil
+        state.staticDrawn = nil
         state.prefixOutput = nil
         owned.forEach(recycle)
     }

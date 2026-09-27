@@ -994,6 +994,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         }
         updateSounds()
         var dynamicTextures: [Int: MTLTexture] = [:]
+        // Layers whose effects' last pass draws into the scene (`runEffectsDrawingLastPass`).
+        var drawnLastPasses: [Int: EffectGraphRenderer.DrawnLastPass] = [:]
         // Advanced once per frame: every advance smooths the spectrum one step further.
         var effectFrame = BuiltinFrameContext()
         frameSerial &+= 1
@@ -1065,8 +1067,13 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             if !entry.layer.weEffects.isEmpty {
                 let input = solidEffectInput(entry.layer, commandBuffer: commandBuffer)
                     ?? (textFrames[layerIndex]?.frame ?? textureFrame(for: entry)).texture
-                dynamicTextures[layerIndex] = runEffects(entry, draw: draw, input: input,
-                                                         snapshot: nil, frame: effectFrame, commandBuffer: commandBuffer)
+                drawnLastPasses[layerIndex] = visible ? runEffectsDrawingLastPass(
+                    entry, draw: draw, input: input, compositeSource: isCompositeSource, sceneFormat: sceneTexture.pixelFormat,
+                    frame: effectFrame, commandBuffer: commandBuffer) : nil
+                if drawnLastPasses[layerIndex] == nil {
+                    dynamicTextures[layerIndex] = runEffects(entry, draw: draw, input: input,
+                                                             snapshot: nil, frame: effectFrame, commandBuffer: commandBuffer)
+                }
             }
             if isCompositeSource {
                 layerComposites[entry.layer.id] = dynamicTextures[layerIndex]
@@ -1327,7 +1334,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 snapshotTracker.sceneDrawn(in: drawn)
             }
             encodeLayer(entry, draw, image: textFrames[layerIndex]?.frame ?? textureFrame(for: entry),
-                        effectOutput: dynamicTextures[layerIndex], snapshot: layerSnapshot, frame: effectFrame,
+                        effectOutput: dynamicTextures[layerIndex], drawnLastPass: drawnLastPasses[layerIndex],
+                        snapshot: layerSnapshot, frame: effectFrame,
                         target: LayerTarget(size: drawableSize, pixelFormat: sceneTexture.pixelFormat,
                                             sampleCount: sceneSampleCount, depth: frameDepth, pipelines: scenePassPipelines),
                         encoder: encoder, commandBuffer: commandBuffer)
@@ -1457,8 +1465,20 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// for a text layer), `effectOutput` what its effects made this frame, `snapshot` the scene
     /// under it for a material that reads it. Leaves `target.pipelines.normal` set.
     private func encodeLayer(_ entry: PreparedLayer, _ draw: LayerDraw, image textureFrame: RenderTextureFrame,
-                             effectOutput: MTLTexture?, snapshot layerSnapshot: MTLTexture?, frame: BuiltinFrameContext,
+                             effectOutput: MTLTexture?, drawnLastPass: EffectGraphRenderer.DrawnLastPass? = nil,
+                             snapshot layerSnapshot: MTLTexture?, frame: BuiltinFrameContext,
                              target: LayerTarget, encoder: MTLRenderCommandEncoder, commandBuffer: MTLCommandBuffer) {
+        // The effects' last pass draws the layer: through its quad, with its material's blending and
+        // depth state (`runEffectsDrawingLastPass`).
+        if let drawnLastPass, let effectGraph, let plan = entry.layer.imageMaterial {
+            target.depth?.apply(layerRaster(entry), to: encoder)
+            let placement = lastPassPlacement(plan, draw: draw, image: textureFrame, sceneFormat: target.pixelFormat)
+            let context = effectContext(entry, draw: draw, input: drawnLastPass.input, snapshot: nil, frame: frame)
+            let drew = effectGraph.encode(drawnLastPass, into: encoder, scene: placement, context: context,
+                                          commandBuffer: commandBuffer)
+            encoder.setRenderPipelineState(target.pipelines.normal)
+            if drew { return }
+        }
         var uniform = layerUniform(position: draw.quad.center, size: draw.quad.extent,
                                    opacity: draw.opacity, drawableSize: target.size, placement: .stretch)
         setQuadAxes(&uniform, quad: draw.quad)
@@ -2283,6 +2303,114 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private func runEffects(_ entry: PreparedLayer, draw: LayerDraw, input: MTLTexture, snapshot: MTLTexture?,
                             frame: BuiltinFrameContext, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
         guard let effectGraph, !entry.layer.weEffects.isEmpty else { return nil }
+        var context = effectContext(entry, draw: draw, input: input, snapshot: snapshot, frame: frame)
+        let lit = prelit(entry, draw: draw, input: input, snapshot: snapshot, frame: frame, commandBuffer: commandBuffer)
+        if lit != nil {
+            // The prelit image is redrawn into the same texture every frame (its lights, the
+            // reflection it samples): a new version, so no kept chain output outlives it.
+            prelitVersion &+= 1
+            context.inputVersion = prelitVersion
+        }
+        return effectGraph.apply(entry.layer.weEffects, to: lit ?? input,
+                                 layerID: entry.layer.id, context: context, commandBuffer: commandBuffer)
+    }
+
+    /// Runs a layer's effects up to their last pass, which `encodeLayer` then draws into the scene
+    /// through the layer's quad and material blending, as WE draws a layer's last effect pass
+    /// (`EffectGraphRenderer.lastScenePass`): the shader runs once per pixel of the screen, not of
+    /// the layer's buffer (docs/test-risks.md FX2). The chain starts from WE's base pass, the layer's
+    /// material drawn into its buffer with the layer's colour, alpha and brightness
+    /// (`ImageMaterialRenderer.base`), which the last pass then carries into the scene. nil where
+    /// the effects composite through a buffer (`lastPassDrawsIntoScene`), or while a pipeline compiles.
+    private func runEffectsDrawingLastPass(_ entry: PreparedLayer, draw: LayerDraw, input: MTLTexture, compositeSource: Bool,
+                                           sceneFormat: MTLPixelFormat, frame: BuiltinFrameContext,
+                                           commandBuffer: MTLCommandBuffer) -> EffectGraphRenderer.DrawnLastPass? {
+        guard let effectGraph, let imageMaterials, let plan = lastPassDrawsIntoScene(entry, compositeSource: compositeSource)
+        else { return nil }
+        var context = effectContext(entry, draw: draw, input: input, snapshot: nil, frame: frame)
+        let format = context.frameBufferFormat
+        let target = lastPassPlacement(plan, draw: draw, image: nil, sceneFormat: sceneFormat)
+        guard effectGraph.scenePassIsReady(entry.layer.weEffects, hidden: context.hiddenEffects, scene: target),
+              imageMaterials.baseIsReady(plan, layerID: entry.layer.id, format: format),
+              let base = imageMaterials.base(plan, materialDraw(entry, draw, texture: input, frame: frame),
+                                             inputVersion: context.inputVersion, format: format,
+                                             commandBuffer: commandBuffer) else { return nil }
+        context.inputVersion = base.version
+        return effectGraph.applyDrawingLastPass(entry.layer.weEffects, to: base.texture, layerID: entry.layer.id,
+                                                context: context, commandBuffer: commandBuffer)
+    }
+
+    /// The layer's material when its effects' last pass draws into the scene (WE's rule for the
+    /// last pass, below); nil when they composite through a buffer. WE sets an object's flag 0x10,
+    /// which runs every pass into its buffers and draws them with a composite material
+    /// (0x1401e9513, 0x1401ea06d…0x1401ea0c9), when:
+    /// - its `colorBlendMode` is other than 0 and 31 (0x1401e6f74…0x1401e6fa2);
+    /// - the scene has distance or height fog (scene flags 0x800000/0x1000000 from `general`'s
+    ///   `fogdistance`/`fogheight`, 0x140186561…0x1401865ad; tested at 0x1401e6f96);
+    /// - another object samples its image (`_rt_imageLayerComposite_<id>`: 0x1401881b0, 0x1401d3c1e);
+    /// - it is lit with effects: its prelighting pass fills the buffer (0x140209b70…0x140209b79);
+    /// - it is text (0x14020b1fa…0x14020b20d).
+    /// Ours also composites through a buffer where it draws the layer another way: without the
+    /// layer's material pass (text, scene regions, solid fills, a material that draws no image),
+    /// with a `BLENDMODE` (31, which WE adds with), for effects that read the scene (WE copies the
+    /// scene before the last pass, 0x1401ea0dd…0x1401ea114) and while a planar reflection draws
+    /// the layers' images.
+    private func lastPassDrawsIntoScene(_ entry: PreparedLayer, compositeSource: Bool) -> ImageMaterialPlan? {
+        let layer = entry.layer
+        guard let plan = layer.imageMaterial, plan.prelighting == nil, layer.text == nil, !layer.sceneInput,
+              layer.solidFill == nil, !layer.readsScene, !compositeSource,
+              (plan.pass.variant?.combos["BLENDMODE"] ?? 0) == 0,
+              !plan.pass.readsSceneSnapshot, !plan.pass.readsMipMappedFrameBuffer,
+              plan.pass.blending.lowercased() != "alphatocoverage",
+              !lighting.settings.fog.distance, !lighting.settings.fog.height,
+              planarReflection?.isNeeded(spatial.models) != true else { return nil }
+        return plan
+    }
+
+    /// Where a layer's last effect pass draws: its quad, as its material draws it (`encodeLayer`),
+    /// sampling the chain's buffers where `image` shows its picture (its sprite frame, or the
+    /// content of a padded texture); nil `image` gives the pass only its target (`scenePassIsReady`).
+    private func lastPassPlacement(_ plan: ImageMaterialPlan, draw: LayerDraw, image: RenderTextureFrame?,
+                                   sceneFormat: MTLPixelFormat) -> EffectGraphRenderer.ScenePlacement {
+        let extent = draw.placement?.size ?? draw.quad.extent
+        let positions = draw.placement?.quadPositions ?? ImageMaterialRenderer.quadPositions(extent: extent)
+        let texCoords = ImageMaterialRenderer.corners.map { corner -> SIMD2<Float> in
+            guard let image else { return corner }
+            return image.uvOrigin + corner.x * image.uvAxisX + corner.y * image.uvAxisY
+        }
+        let viewProjection: simd_float4x4
+        if let placement = draw.placement {
+            viewProjection = placement.shaderViewProjection
+        } else if frameDepth != nil, !isPerspective {
+            viewProjection = PassMatrices.shaderViewProjection(SceneCamera.orthographic(size: sceneSize))
+        } else {
+            viewProjection = ImageMaterialRenderer.viewProjection(sceneSize: sceneSize)
+        }
+        return EffectGraphRenderer.ScenePlacement(
+            positions: positions, texCoords: texCoords,
+            model: draw.placement?.world ?? ImageMaterialRenderer.modelMatrix(draw.quad),
+            view: draw.placement?.camera.view ?? matrix_identity_float4x4, viewProjection: viewProjection,
+            blending: plan.pass.blending, pixelFormat: sceneFormat, sampleCount: sceneSampleCount,
+            depthFormat: frameDepth == nil ? .invalid : SceneDepthStates.format)
+    }
+
+    /// A layer's material draw of `texture` this frame (`ImageMaterialRenderer.Draw`), as `encodeLayer` makes it.
+    private func materialDraw(_ entry: PreparedLayer, _ draw: LayerDraw, texture: MTLTexture,
+                              frame: BuiltinFrameContext) -> ImageMaterialRenderer.Draw {
+        ImageMaterialRenderer.Draw(
+            layerID: entry.layer.id, quad: draw.quad, sceneSize: sceneSize,
+            color: SIMD3(draw.color.x, draw.color.y, draw.color.z), alpha: draw.opacity, brightness: draw.brightness,
+            texture: texture, contentSize: entry.layer.source.contentSize, uvOrigin: .zero,
+            uvAxisX: SIMD2(1, 0), uvAxisY: SIMD2(0, 1), sceneSnapshot: nil, mipMappedFrameBuffer: mipMappedTarget,
+            shadowAtlas: frameShadowAtlas, frame: frame, values: timelines.values,
+            assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
+            assetSprite: { [unowned self] key, source in self.effectAssetSprite(key: key, source: source) },
+            placement: draw.placement)
+    }
+
+    /// What a layer's effect chain reads this frame besides its input.
+    private func effectContext(_ entry: PreparedLayer, draw: LayerDraw, input: MTLTexture, snapshot: MTLTexture?,
+                               frame: BuiltinFrameContext) -> EffectGraphRenderer.Context {
         var context = EffectGraphRenderer.Context(
             frame: frame,
             values: timelines.values,
@@ -2317,15 +2445,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 context.inputStandInSize = SIMD2(Int(standIn.x), Int(standIn.y))
             }
         }
-        let lit = prelit(entry, draw: draw, input: input, snapshot: snapshot, frame: frame, commandBuffer: commandBuffer)
-        if lit != nil {
-            // The prelit image is redrawn into the same texture every frame (its lights, the
-            // reflection it samples): a new version, so no kept chain output outlives it.
-            prelitVersion &+= 1
-            context.inputVersion = prelitVersion
-        }
-        return effectGraph.apply(entry.layer.weEffects, to: lit ?? input,
-                                 layerID: entry.layer.id, context: context, commandBuffer: commandBuffer)
+        return context
     }
 
     /// The on-screen size, in scene-target pixels, of the whole image a layer's effects run on
