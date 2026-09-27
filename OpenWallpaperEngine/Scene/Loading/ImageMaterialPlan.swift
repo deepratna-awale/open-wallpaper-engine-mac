@@ -28,6 +28,9 @@ final class ImageMaterialPlan {
     /// The first pass's `cullmode` as authored (nil: WE's default, back faces culled). Only a
     /// puppet's mesh has faces to cull; a layer's quad is drawn whole.
     let cullmode: String?
+    /// The first pass's `depthtest`, `depthwrite` and `cullmode` (docs/models-plan.md §2.4): what
+    /// the layer's quad draws with where the scene pass has depth.
+    var raster = SceneRasterState.engineDefault
 
     init(materialPath: String, pass: SceneEffectPassPlan, prelighting: SceneEffectPassPlan? = nil, usesSpriteSheetUniforms: Bool,
          liveFactors: [String: Float], clampedSlots: Set<Int> = [0], cullmode: String? = nil) {
@@ -260,9 +263,12 @@ struct ImageMaterialPlanBuilder {
             default: break
             }
         }
-        return ImageMaterialPlan(materialPath: materialPath, pass: layerPass, prelighting: prelighting,
-                                 usesSpriteSheetUniforms: (layerPass.variant?.combos["SPRITESHEET"] ?? 0) != 0,
-                                 liveFactors: liveFactors, clampedSlots: clampedSlots, cullmode: materialPass.cullmode)
+        let plan = ImageMaterialPlan(materialPath: materialPath, pass: layerPass, prelighting: prelighting,
+                                     usesSpriteSheetUniforms: (layerPass.variant?.combos["SPRITESHEET"] ?? 0) != 0,
+                                     liveFactors: liveFactors, clampedSlots: clampedSlots, cullmode: materialPass.cullmode)
+        plan.raster = SceneRasterState(depthtest: materialPass.depthtest, depthwrite: materialPass.depthwrite,
+                                       cullmode: materialPass.cullmode)
+        return plan
     }
 
     /// The `.tex` ClampUVs flag (TEXI flags bit 2) of texture `name`, looked up like the texture

@@ -16,4 +16,41 @@ struct SceneSpatialContent: Equatable {
     /// Every object's authored 3D transform, parent and bone attachment, with WE's defaults
     /// (`SceneTransformHierarchy3D`): the model matrices of a perspective scene.
     var transforms = SceneTransformHierarchy3D.empty
+    /// An orthographic scene with `perspective` objects: the same hierarchy with a root without
+    /// `origin` centred, as the 2D path places it (M3's `rootOrigin`), which those objects are
+    /// drawn with through their temporary camera. Nil otherwise.
+    var perspectiveTransforms: SceneTransformHierarchy3D?
+    /// `sortorder`, `castshadow`, `reflected` and `depthtest` of every object that authors one, by
+    /// object id (`WESceneObject.renderValues`).
+    var renderValues: [String: [SceneObjectRenderField: SceneRawValue]] = [:]
+
+    /// An object's `sortorder` (`customsortorder`'s key; WE reads it as an int, 0 unset).
+    func sortOrder(of id: String) -> Int {
+        guard let value = renderValues[id]?[.sortorder].flatMap(Self.literal) else { return 0 }
+        switch value {
+        case .number(let number): return number.isFinite ? Int(number) : 0
+        case .string(let text): return Int(text) ?? Int(Double(text) ?? 0)
+        case .bool(let flag): return flag ? 1 : 0
+        case .object: return 0
+        }
+    }
+
+    /// A text object's `depthtest` (WE's enum: "disabled" is off, anything else on); nil when not
+    /// authored.
+    func depthTest(of id: String) -> Bool? {
+        guard let value = renderValues[id]?[.depthtest].flatMap(Self.literal) else { return nil }
+        switch value {
+        case .string(let text): return text.lowercased() != "disabled"
+        case .bool(let flag): return flag
+        case .number(let number): return number == 0
+        case .object: return nil
+        }
+    }
+
+    /// A value's literal: a bound value's fallback (the content is rebuilt when a user property
+    /// changes, with the bindings resolved).
+    private static func literal(_ value: SceneRawValue) -> SceneRawValue? {
+        if case .object(let object) = value { return object.value.flatMap(literal) }
+        return value
+    }
 }

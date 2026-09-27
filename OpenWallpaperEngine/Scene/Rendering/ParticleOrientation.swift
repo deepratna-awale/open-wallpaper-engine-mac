@@ -56,20 +56,23 @@ struct ParticleOrientation: Equatable {
     /// `g_OrientationRight`, `g_OrientationUp` and `g_OrientationForward` as the shaders here read
     /// them: WE's axes in the system's space, through `linear`, the object's scale and rotation the
     /// particles are drawn with (`ParticleSystemRuntime.drawLinear`). The default (screen, object
-    /// space) gives `linear`'s own columns and z.
-    func axes(linear: simd_float2x2) -> (right: SIMD3<Float>, up: SIMD3<Float>, forward: SIMD3<Float>) {
+    /// space) gives `linear`'s own columns and z. `cameraForward` and `cameraUp` are the frame
+    /// camera's (`SceneFrameCamera`) in the space the particles are simulated in: the 2D camera's
+    /// by default, a perspective camera's in 3D (`ParticleMaterialUniforms.Placement`).
+    func axes(linear: simd_float2x2, cameraForward: SIMD3<Float> = ParticleOrientation.cameraForward,
+              cameraUp: SIMD3<Float> = ParticleOrientation.cameraUp) -> (right: SIMD3<Float>, up: SIMD3<Float>, forward: SIMD3<Float>) {
         let model = simd_float3x3(SIMD3(linear.columns.0, 0), SIMD3(linear.columns.1, 0), SIMD3(0, 0, 1))
         func turned(_ v: SIMD3<Float>) -> SIMD3<Float> { objectSpace ? model * v : v }
         var up: SIMD3<Float>, forward: SIMD3<Float>, right: SIMD3<Float>
         switch mode {
         case .screen:
-            forward = -Self.cameraForward
-            up = objectSpace ? model * SIMD3(0, 1, 0) : Self.cameraUp
+            forward = -cameraForward
+            up = objectSpace ? model * SIMD3(0, 1, 0) : cameraUp
             up -= simd_dot(up, forward) * forward
             right = simd_cross(up, forward)
         case .upright:
             up = turned(axis)
-            right = simd_cross(Self.cameraForward, up)
+            right = simd_cross(cameraForward, up)
             forward = simd_cross(right, up)
         case .fixed:
             forward = turned(axis)

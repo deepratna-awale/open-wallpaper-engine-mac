@@ -240,6 +240,17 @@
           "volumetrics": "high",
           "baseline": "shadowsOff_volOff",
           "localTime": "15:22"
+        },
+        {
+          "folder": "shadowsOff_t10",
+          "shadows": "disabled",
+          "volumetrics": "high"
+        },
+        {
+          "folder": "shadowsHigh_t10",
+          "shadows": "high",
+          "volumetrics": "high",
+          "baseline": "shadowsOff_t10"
         }
       ]
     },
@@ -259,6 +270,17 @@
           "shadows": "high",
           "volumetrics": "high",
           "localTime": "15:23:24"
+        },
+        {
+          "folder": "shadowsOff_t10",
+          "shadows": "disabled",
+          "volumetrics": "high"
+        },
+        {
+          "folder": "shadowsHigh_t10",
+          "shadows": "high",
+          "volumetrics": "high",
+          "baseline": "shadowsOff_t10"
         }
       ]
     },
@@ -285,6 +307,17 @@
           "volumetrics": "high",
           "baseline": "shadowsOff_volOff",
           "localTime": "15:24:26"
+        },
+        {
+          "folder": "shadowsOff_t10",
+          "shadows": "disabled",
+          "volumetrics": "high"
+        },
+        {
+          "folder": "shadowsHigh_t10",
+          "shadows": "high",
+          "volumetrics": "high",
+          "baseline": "shadowsOff_t10"
         }
       ]
     },

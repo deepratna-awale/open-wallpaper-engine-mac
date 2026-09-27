@@ -122,17 +122,26 @@ final class ImageMaterialRenderer {
         /// The renderer's own adjustments (legacy material heuristics) are not neutral for this
         /// layer; the material's shader draws it without them. Logged once per layer.
         var ignoredAdjustments = false
+        /// The layer drawn through a 3D camera (a perspective scene's, or a `perspective`
+        /// layer's): its quad is `size` in object units through the object's world matrix and the
+        /// camera (docs/models-plan.md §2.4) instead of `quad`.
+        var placement: SceneLayerPlacement? = nil
+        /// The depth and cull state the quad draws with where the pass has depth (`draw`'s
+        /// `depth`): the material's first pass (`ImageMaterialPlan.raster`), or a text object's.
+        var raster: SceneRasterState? = nil
     }
 
     /// Encodes the layer into `encoder` (a pass of `commandBuffer` on a `pixelFormat` target of
-    /// `sampleCount` samples). False when the layer must be drawn another way this frame: the
-    /// pipeline is compiling or failed, or an input is missing. Leaves the encoder's pipeline state changed.
+    /// `sampleCount` samples, with `depth`'s depth buffer when it has one). False when the layer
+    /// must be drawn another way this frame: the pipeline is compiling or failed, or an input is
+    /// missing. Leaves the encoder's pipeline state (and with `depth`, its depth and cull state) changed.
     func draw(_ plan: ImageMaterialPlan, _ draw: Draw, pixelFormat: MTLPixelFormat, sampleCount: Int = 1,
-              encoder: MTLRenderCommandEncoder, commandBuffer: MTLCommandBuffer) -> Bool {
+              depth: SceneDepthStates? = nil, encoder: MTLRenderCommandEncoder, commandBuffer: MTLCommandBuffer) -> Bool {
+        let depthFormat = depth == nil ? MTLPixelFormat.invalid : SceneDepthStates.format
         guard plan.pass.variant != nil,
               let pipeline = pipeline(for: plan.pass, material: plan.materialPath, pixelFormat: pixelFormat,
-                                      sampleCount: sampleCount) else { return false }
-        let extent = draw.quad.extent
+                                      sampleCount: sampleCount, depthFormat: depthFormat) else { return false }
+        let extent = draw.placement?.size ?? draw.quad.extent
         // A zero-area quad covers no pixels; nothing to draw, and nothing for a fallback to draw either.
         guard extent.x > 0, extent.y > 0, extent.x.isFinite, extent.y.isFinite else { return true }
         guard let textureInfo = textures(of: plan.pass, plan: plan, draw) else { return false }
@@ -144,8 +153,8 @@ final class ImageMaterialRenderer {
         }
         let uniforms = program.uniforms
         if uniforms.size > 0 {
-            let model = Self.modelMatrix(draw.quad)
-            let viewProjection = Self.viewProjection(sceneSize: draw.sceneSize)
+            let model = draw.placement?.world ?? Self.modelMatrix(draw.quad)
+            let viewProjection = draw.placement?.shaderViewProjection ?? Self.viewProjection(sceneSize: draw.sceneSize)
             let rotation = SIMD4<Float>(draw.uvAxisX.x, draw.uvAxisX.y, draw.uvAxisY.x, draw.uvAxisY.y)
             let key = ImageMaterialUniforms.PassKey(
                 model: model, viewProjection: viewProjection, color: draw.color, alpha: draw.alpha,
@@ -159,6 +168,7 @@ final class ImageMaterialRenderer {
                 pass.modelMatrix = model
                 pass.viewProjection = viewProjection
                 pass.modelViewProjection = viewProjection * model
+                if let placement = draw.placement { pass.place(placement) }
                 pass.color = draw.color
                 pass.alpha = draw.alpha
                 pass.userAlpha = draw.alpha
@@ -179,7 +189,8 @@ final class ImageMaterialRenderer {
         }
 
         encoder.setRenderPipelineState(pipeline)
-        var positions = Self.quadPositions(extent: extent)
+        depth?.apply(draw.raster ?? plan.raster, to: encoder)
+        var positions = draw.placement?.quadPositions ?? Self.quadPositions(extent: extent)
         var texCoords = plan.usesSpriteSheetUniforms
             ? Self.corners
             : Self.corners.map { draw.uvOrigin + $0.x * draw.uvAxisX + $0.y * draw.uvAxisY }
@@ -221,7 +232,7 @@ final class ImageMaterialRenderer {
                   commandBuffer: MTLCommandBuffer) -> MTLTexture? {
         guard let pass = plan.prelighting,
               let pipeline = pipeline(for: pass, material: plan.materialPath, pixelFormat: format) else { return nil }
-        let extent = draw.quad.extent
+        let extent = draw.placement?.size ?? draw.quad.extent
         guard extent.x > 0, extent.y > 0, extent.x.isFinite, extent.y.isFinite,
               let textureInfo = textures(of: pass, plan: plan, draw) else { return nil }
         let program = program(for: plan, layerID: draw.layerID)
@@ -248,7 +259,9 @@ final class ImageMaterialRenderer {
                                                   SIMD4(0, 0, 1, 0),
                                                   SIMD4(content.x - 1, content.y - 1, 0, 1)))
         if let uniforms = program.prelightUniforms, uniforms.size > 0 {
-            let alt = Self.modelMatrix(draw.quad)
+            // Where the layer lies: its quad's centre and axes, or through a 3D camera its world
+            // matrix moved to the quad's centre.
+            let alt = draw.placement?.centredWorld ?? Self.modelMatrix(draw.quad)
             let key = ImageMaterialUniforms.PassKey(
                 model: alt, viewProjection: intoTexture, color: SIMD3(repeating: 1), alpha: 1, brightness: 1,
                 spriteRotation: SIMD4(1, 0, 0, 1), spriteTranslation: .zero, screen: draw.frame.screenSize,
@@ -263,7 +276,8 @@ final class ImageMaterialRenderer {
                 context.modelViewProjection = intoTexture
                 context.modelMatrix = view.inverse * intoTexture
                 context.altModelMatrix = alt
-                context.altViewProjection = Self.viewProjection(sceneSize: draw.sceneSize)
+                context.altViewProjection = draw.placement?.shaderViewProjection
+                    ?? Self.viewProjection(sceneSize: draw.sceneSize)
                 for entry in textureInfo {
                     var info = EffectGraphRenderer.textureInfo(for: entry.texture, contentSize: entry.contentSize)
                     if let sprite = entry.sprite, entry.slot != 0 {
@@ -401,15 +415,18 @@ final class ImageMaterialRenderer {
 
     // MARK: - Pipelines
 
-    /// A multisampled pipeline's key carries its sample count; a single-sampled one's is unchanged.
-    static func pipelineKey(_ pass: SceneEffectPassPlan, pixelFormat: MTLPixelFormat, sampleCount: Int = 1) -> String {
+    /// A multisampled pipeline's key carries its sample count, and one for a pass with depth its
+    /// depth format; a single-sampled one without depth's is unchanged.
+    static func pipelineKey(_ pass: SceneEffectPassPlan, pixelFormat: MTLPixelFormat, sampleCount: Int = 1,
+                            depthFormat: MTLPixelFormat = .invalid) -> String {
         "image|\(pass.variantKey)|\(pixelFormat.rawValue)|\(pass.blending.lowercased())" + (sampleCount > 1 ? "|x\(sampleCount)" : "")
+            + (depthFormat == .invalid ? "" : "|d\(depthFormat.rawValue)")
     }
 
     /// The ready pipeline, or nil while it compiles (the compile is started here) or after it failed.
     private func pipeline(for pass: SceneEffectPassPlan, material: String, pixelFormat: MTLPixelFormat,
-                          sampleCount: Int = 1) -> MTLRenderPipelineState? {
-        let key = Self.pipelineKey(pass, pixelFormat: pixelFormat, sampleCount: sampleCount)
+                          sampleCount: Int = 1, depthFormat: MTLPixelFormat = .invalid) -> MTLRenderPipelineState? {
+        let key = Self.pipelineKey(pass, pixelFormat: pixelFormat, sampleCount: sampleCount, depthFormat: depthFormat)
         let state: (pipeline: MTLRenderPipelineState?, busy: Bool) = pipelineLock.withLock {
             if pipelines[key] != nil { usedPipelines.insert(key) }
             return (pipelines[key], pending.contains(key) || failed.contains(key))
@@ -417,7 +434,7 @@ final class ImageMaterialRenderer {
         if let pipeline = state.pipeline { return pipeline }
         if !state.busy, let variant = pass.variant {
             compile(variant, blending: pass.blending, material: material, pixelFormat: pixelFormat,
-                    sampleCount: sampleCount, key: key)
+                    sampleCount: sampleCount, depthFormat: depthFormat, key: key)
         }
         return nil
     }
@@ -425,12 +442,15 @@ final class ImageMaterialRenderer {
     /// Blocks until the plan's pipelines (its prelighting pass's too, into `prelitFormat`) compiled
     /// or failed (tests, prewarming). True when they are ready.
     func waitUntilReady(_ plan: ImageMaterialPlan, pixelFormat: MTLPixelFormat, sampleCount: Int = 1,
-                        prelitFormat: MTLPixelFormat = .rgba8Unorm, timeout: TimeInterval = 60) -> Bool {
+                        depthFormat: MTLPixelFormat = .invalid, prelitFormat: MTLPixelFormat = .rgba8Unorm,
+                        timeout: TimeInterval = 60) -> Bool {
         let deadline = Date().addingTimeInterval(timeout)
-        let passes = [(plan.pass, pixelFormat, sampleCount)] + (plan.prelighting.map { [($0, prelitFormat, 1)] } ?? [])
-        for (pass, format, samples) in passes {
-            let key = Self.pipelineKey(pass, pixelFormat: format, sampleCount: samples)
-            while pipeline(for: pass, material: plan.materialPath, pixelFormat: format, sampleCount: samples) == nil {
+        let passes = [(plan.pass, pixelFormat, sampleCount, depthFormat)]
+            + (plan.prelighting.map { [($0, prelitFormat, 1, MTLPixelFormat.invalid)] } ?? [])
+        for (pass, format, samples, depth) in passes {
+            let key = Self.pipelineKey(pass, pixelFormat: format, sampleCount: samples, depthFormat: depth)
+            while pipeline(for: pass, material: plan.materialPath, pixelFormat: format, sampleCount: samples,
+                           depthFormat: depth) == nil {
                 if pipelineLock.withLock({ failed.contains(key) }) || Date() > deadline { return false }
                 Thread.sleep(forTimeInterval: 0.005)
             }
@@ -439,7 +459,7 @@ final class ImageMaterialRenderer {
     }
 
     private func compile(_ variant: TranslatedShaderVariant, blending: String, material: String, pixelFormat: MTLPixelFormat,
-                         sampleCount: Int, key: String) {
+                         sampleCount: Int, depthFormat: MTLPixelFormat, key: String) {
         pipelineLock.withLock { _ = pending.insert(key) }
         let device = self.device
         let archive = self.archive
@@ -457,6 +477,7 @@ final class ImageMaterialRenderer {
                 descriptor.fragmentFunction = fragment
                 descriptor.colorAttachments[0].pixelFormat = pixelFormat
                 descriptor.rasterSampleCount = sampleCount
+                descriptor.depthAttachmentPixelFormat = depthFormat
                 if let blend = EffectGraphRenderer.blendMode(blending) {
                     let attachment = descriptor.colorAttachments[0]!
                     attachment.isBlendingEnabled = true

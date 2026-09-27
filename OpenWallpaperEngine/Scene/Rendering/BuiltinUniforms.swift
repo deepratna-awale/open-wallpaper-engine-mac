@@ -262,11 +262,11 @@ enum BuiltinUniforms {
 
 /// The matrices each pass position uses (LWE; plan §2 "Matrices by pass position").
 ///
-/// Clip space: spirv-cross is invoked without `--fixup-clipspace`, so translated WE vertex
-/// shaders write `gl_Position` unchanged and Metal reads z in 0...1 instead of GL's −1...1.
-/// Effect quads sit at z = 0, which both conventions keep visible, so no remap is needed for
-/// 2D passes. The GL-convention ortho below maps near/far to −1...1; content outside z ∈ [0, 1]
-/// after the multiply is clipped by Metal. 3D camera matrices (`SceneCamera`) are already Metal-style.
+/// Clip space: the translator runs SPIRV-Cross with `fixup_clipspace` and `flip_vert_y`, so a
+/// translated vertex stage writes y negated and z as (z + w) / 2. Effect quads sit at z = 0,
+/// which stays visible, so no remap is needed for 2D passes, and the matrices below carry the y
+/// flip. 3D camera matrices (`SceneCamera`) are WE's, reversed-Z with z in 0...w; their depth is
+/// stored through the same (z + w) / 2 (`SceneDepthStates`).
 enum PassMatrices {
     /// OpenGL `glm::ortho(left, right, bottom, top, near, far)`.
     static func ortho(left: Float, right: Float, bottom: Float, top: Float,
@@ -291,6 +291,29 @@ enum PassMatrices {
     /// Final pass: the layer quad in scene space. `model` includes parent transforms and parallax.
     static func final(viewProjection: simd_float4x4, model: simd_float4x4) -> simd_float4x4 {
         viewProjection * model
+    }
+
+    /// A camera's view-projection as the translated shaders take it (`SceneFrameCamera`, which is
+    /// WE's): y negated, since their vertex stage negates it again (`--flip-vert-y`), so what they
+    /// write is WE's clip position. The 2D passes' matrices above carry the same flip.
+    static func shaderViewProjection(_ viewProjection: simd_float4x4) -> simd_float4x4 {
+        flipY * viewProjection
+    }
+
+    static let flipY = simd_float4x4(diagonal: SIMD4(1, -1, 1, 1))
+}
+
+extension BuiltinPassContext {
+    /// The matrices of a draw through a 3D camera (docs/models-plan.md §2.4): `g_ModelMatrix` is
+    /// the object's world matrix, `g_ViewMatrix` the camera's view, `g_ViewProjectionMatrix` its
+    /// view-projection and `g_ModelViewProjectionMatrix` their product, in the translated shaders'
+    /// convention (`PassMatrices.shaderViewProjection`). `g_EyePosition` stays the frame's
+    /// (`BuiltinFrameContext.camera`): a perspective layer's temporary camera doesn't move it.
+    mutating func place(_ placement: SceneLayerPlacement) {
+        modelMatrix = placement.world
+        viewMatrix = placement.camera.view
+        viewProjection = placement.shaderViewProjection
+        modelViewProjection = viewProjection * modelMatrix
     }
 }
 

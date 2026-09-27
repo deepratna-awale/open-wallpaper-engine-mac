@@ -28,6 +28,9 @@ private struct LayerDraw {
     /// World-space quad, parallax and camera shake included.
     let quad: SceneQuadGeometry
     let musicSyncLevel: Double
+    /// The layer drawn through a 3D camera (a perspective scene's, or a `perspective` layer's in an
+    /// orthographic scene, docs/models-plan.md §2.4); nil draws `quad` in the scene's plane.
+    var placement: SceneLayerPlacement? = nil
 }
 
 /// Frame-wide camera motion applied to every layer.
@@ -63,10 +66,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private let layerPipelines: SceneLayerPipelines
     private var renderPipeline: MTLRenderPipelineState { scenePassPipelines.normal }
     private var additiveRenderPipeline: MTLRenderPipelineState { scenePassPipelines.additive }
-    /// The layer pipelines for the scene target's format and this frame's sample count.
+    /// The layer pipelines for the scene target's format, this frame's sample count and depth.
     private var scenePassPipelines: SceneLayerPipelines.Pipelines {
         guard let format = sceneRenderTarget?.pixelFormat else { return layerPipelines.pipelines(for: nil) }
-        return layerPipelines.pipelines(for: format, sampleCount: sceneSampleCount) ?? layerPipelines.pipelines(for: format)
+        return layerPipelines.pipelines(for: format, sampleCount: sceneSampleCount, depthFormat: sceneDepthFormat)
+            ?? layerPipelines.pipelines(for: format)
     }
     /// An unblended copy in the drawables' format: a shared frame onto a display (`present(in:)`).
     private let copyPipeline: MTLRenderPipelineState
@@ -194,7 +198,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
          "target pool (snapshots, regions)": renderTargetPool.residentBytes,
          "volumetrics": volumetrics?.residentBytes ?? 0,
          "prelit images": imageMaterials?.prelitBytes ?? 0,
-         "puppet images": puppets?.allocatedBytes ?? 0]
+         "puppet images": puppets?.allocatedBytes ?? 0,
+         "scene depth": depthBuffer.residentBytes]
     }
     /// A drawn layer's effect plans (tests, diagnostics).
     func effectPlans(ofLayer id: String) -> [SceneEffectPlan] {
@@ -227,6 +232,25 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var cameraRig: any SceneCameraRig = SceneOrthographicCameraRig()
     /// Every object's authored 3D transform (`SceneSpatialContent.transforms`), for the rig's live values.
     private var cameraTransforms = SceneTransformHierarchy3D.empty
+    /// The content's 3D side (`SceneSpatialContent`): projection, draw order, the 3D hierarchies,
+    /// model objects and the objects' `sortorder`/`depthtest`.
+    private var spatial = SceneSpatialContent()
+    /// Draws model objects at their place in the object loop (docs/models-plan.md M5); nil draws none.
+    var modelDrawing: (any SceneModelDrawing)?
+    /// WE's depth-stencil states and this frame's depth buffer (docs/models-plan.md §2.4): a
+    /// perspective scene's pass has one.
+    private lazy var depthStates = SceneDepthStates(device: device)
+    private lazy var depthBuffer = SceneDepthBuffer(device: device)
+    /// The content is a perspective scene (`SceneCameraEffects.orthographic`, from `general`'s
+    /// projection): its objects draw through the frame camera. A content made without a scene
+    /// document (a preview, tests) is orthographic.
+    private var isPerspective: Bool { !camera.orthographic }
+    /// This frame's depth attachment format (`.invalid`: the pass has none).
+    private var sceneDepthFormat = MTLPixelFormat.invalid
+    /// The depth states for this frame's draws; nil when the pass has no depth.
+    private var frameDepth: SceneDepthStates? { sceneDepthFormat == .invalid ? nil : depthStates }
+    /// Each object's own 3D transform this frame (`live3D`), evaluated once.
+    private var frameLocals3D: [String: SceneLocalTransform3D] = [:]
     /// The user's quality settings (post-processing, reflection, shadows, volumetrics); the view sets them.
     var renderSettings = SceneRenderSettings()
     private var sceneRenderTarget: MTLTexture?
@@ -297,6 +321,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
               let library = device.makeDefaultLibrary(),
               let vertex = library.makeFunction(name: "sceneVertex"),
               let fragment = library.makeFunction(name: "sceneFragment"),
+              let placedVertex = library.makeFunction(name: "sceneVertex3D"),
               let copyFragment = library.makeFunction(name: "sceneCopyFragment"),
               let decode = library.makeFunction(name: "decodeDXT"),
               let decodePipeline = try? device.makeComputePipelineState(function: decode) else {
@@ -308,7 +333,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         do {
             // The drawable's format, and the HDR scene target's (docs/lighting-plan.md §2.6).
             layerPipelines = try SceneLayerPipelines(device: device, vertex: vertex, fragment: fragment,
-                                                     copyFragment: copyFragment, formats: [pixelFormat, .rgba16Float])
+                                                     copyFragment: copyFragment, placedVertex: placedVertex,
+                                                     formats: [pixelFormat, .rgba16Float])
         } catch {
             OWELog.error(.scene, "The scene pipelines can't be made: \(error)")
             return nil
@@ -417,6 +443,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             textRasterScales.removeAll()
             clock = SceneClock()
             transforms = .empty
+            spatial = SceneSpatialContent()
+            depthBuffer.releaseAll()
             lastPointer = nil
             lastCameraMotion = nil
             lastTextSizes.removeAll()
@@ -450,6 +478,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 self.lighting = content.lighting
                 self.cameraRig = SceneCameraRigs.make(for: content)
                 self.cameraTransforms = content.spatial.transforms
+                self.spatial = content.spatial
+                self.modelDrawing?.setContent(content.spatial.models, content: content)
                 for stage in self.frameStages { stage.setContent(content) }
                 self.postProcess.setContent(content)
                 self.particleSystems = preparedParticleSystems
@@ -862,15 +892,19 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             // Hidden layers keep their transforms (scripts and hit tests read them) but draw nothing.
             guard scripts.isVisible(entry.layer.id) else { continue }
             if entry.layer.text != nil {
-                let world = worldTransform(entry)
-                let onScreen = max(world.axisScale.x, world.axisScale.y) * renderPixelsPerUnit
+                // Drawn through a camera, text is as dense on screen as its projection makes it.
+                let onScreen = layerPlacement(entry, size: layerBaseSize(entry), musicSyncLevel: 0, motion: motion,
+                                              camera: effectFrame.camera)?.pixelsPerUnit(targetSize: drawableSize)
+                    ?? { let world = worldTransform(entry); return max(world.axisScale.x, world.axisScale.y) * renderPixelsPerUnit }()
                 let pixelsPerUnit = SceneTextRasterScale.layer(onScreen: onScreen,
                                                                hasEffects: !entry.layer.weEffects.isEmpty)
                 textFrames[layerIndex] = layerTextFrame(entry, boxSize: layerBaseSize(entry),
                                                         pixelsPerUnit: pixelsPerUnit)
             }
-            let draw = layerDraw(entry, baseSize: textFrames[layerIndex]?.baseSize ?? layerBaseSize(entry),
+            var draw = layerDraw(entry, baseSize: textFrames[layerIndex]?.baseSize ?? layerBaseSize(entry),
                                  motion: motion)
+            draw.placement = layerPlacement(entry, size: textFrames[layerIndex]?.baseSize ?? layerBaseSize(entry),
+                                            musicSyncLevel: draw.musicSyncLevel, motion: motion, camera: effectFrame.camera)
             draws[layerIndex] = draw
             // A puppet's mesh draws its image before anything reads it: its effects, its own draw.
             if let puppet = entry.layer.puppet { drawPuppet(puppet, entry, frame: effectFrame, commandBuffer: commandBuffer) }
@@ -896,6 +930,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         sceneRenderPass.colorAttachments[0].loadAction = .clear
         sceneRenderPass.colorAttachments[0].clearColor = MTLClearColor(red: Double(clear.x), green: Double(clear.y),
                                                                        blue: Double(clear.z), alpha: 1)
+        attachSceneDepth(to: sceneRenderPass, scene: sceneTexture)
         // One instanced draw per system rather than one per particle (or per rope segment, which
         // multiplies out to thousands on trail renderers).
         particleInstances.removeAll(keepingCapacity: true)
@@ -935,7 +970,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 // The GPU steps the system and writes whichever records it is drawn from.
                 let rendererName = system.configuration.rendererName
                 if let simulated = particleMaterials?.prepareSimulated(system, pixelFormat: sceneTexture.pixelFormat,
-                                                                       sampleCount: sceneSampleCount) {
+                                                                       sampleCount: sceneSampleCount,
+                                                                       depthFormat: sceneDepthFormat) {
                     let kind = ParticleGPUDrawKind.material(simulated.format, rendererName: rendererName)
                     for step in prewarm {
                         particleRequests.append(.init(system: system, inputs: step, kind: kind, materialVertexCount: simulated.vertexCount))
@@ -954,6 +990,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             for step in prewarm { ParticleCPUSimulation.step(system, inputs: step) }
             ParticleCPUSimulation.step(system, inputs: inputs)
             if particleMaterials?.prepare(system, pixelFormat: sceneTexture.pixelFormat, sampleCount: sceneSampleCount,
+                                          depthFormat: sceneDepthFormat,
                                           opacity: { [unowned self] in self.particleOpacity($0, in: system) }) == true {
                 particleBatches.append((system, base, 0, true, false))
                 continue
@@ -999,13 +1036,16 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 particleBuffer.contents().copyMemory(from: source.baseAddress!, byteCount: source.count)
             }
         }
+        // WE's object loop (docs/models-plan.md §2.4): the layers and models in draw order, each
+        // after the particle systems whose key is below its barrier.
+        let sequence = drawSequence(batches: particleBatches.map(\.system), forward: effectFrame.camera.forward)
+        particleBatches = sequence.batchOrder.map { particleBatches[$0] }
         var nextParticleBatch = 0
-        /// One instanced draw per system, for every system authored before `order`. False when the
+        /// One instanced draw per system, for every system whose key is below `order`. False when the
         /// scene pass couldn't resume after a snapshot.
         func drawParticleBatches(before order: Int) -> Bool {
             var drew = false
-            while nextParticleBatch < particleBatches.count,
-                  particleBatches[nextParticleBatch].system.configuration.order < order {
+            while nextParticleBatch < particleBatches.count, sequence.batchKeys[nextParticleBatch] < order {
                 let batch = particleBatches[nextParticleBatch]
                 nextParticleBatch += 1
                 if batch.material {
@@ -1021,11 +1061,14 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                         sceneSize: sceneSize, frame: effectFrame,
                         values: timelines.values,
                         assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
-                        sceneSnapshot: snapshot, mipMappedFrameBuffer: mipMappedTarget))
+                        sceneSnapshot: snapshot, mipMappedFrameBuffer: mipMappedTarget, depth: frameDepth,
+                        placement: particlePlacement(batch.system, camera: effectFrame.camera)))
                     drew = true
                     continue
                 }
                 let pipeline = batch.system.configuration.blending == "additive" ? additiveRenderPipeline : renderPipeline
+                // The built-in draw has no material: nothing to test against [I].
+                frameDepth?.apply(.disabled, to: encoder)
                 if batch.simulated {
                     // The built-in quads the GPU step wrote, counted by its indirect arguments.
                     guard let gpu = batch.system.gpu, gpu.isReady, let records = gpu.records,
@@ -1058,11 +1101,20 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             reflection: renderSettings.reflection)
         snapshotTracker.reset()
         let targetSize = SIMD2(sceneTexture.width, sceneTexture.height)
-        for (layerIndex, entry) in layers.enumerated() {
+        for (item, barrier) in sequence.items {
             let batchesBefore = nextParticleBatch
-            guard drawParticleBatches(before: entry.particleBarrier) else { return }
+            guard drawParticleBatches(before: barrier) else { return }
             // Particles cover no rect we track: the snapshot no longer matches anywhere.
             if nextParticleBatch != batchesBefore { snapshotTracker.sceneDrawn(in: nil) }
+            guard case .layer(let layerIndex) = item else {
+                if case .model(let index) = item {
+                    drawModel(index, frame: effectFrame, pixelFormat: sceneTexture.pixelFormat, encoder: encoder,
+                              commandBuffer: commandBuffer)
+                    snapshotTracker.sceneDrawn(in: nil)
+                }
+                continue
+            }
+            let entry = layers[layerIndex]
             // Hidden layers (script `visible = false`) draw nothing, their raw texture included.
             guard let draw = draws[layerIndex] else { continue }
             var layerSnapshot: MTLTexture?
@@ -1075,15 +1127,16 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 var snapshot: MTLTexture? = sceneTexture
                 if entry.layer.imageMaterial?.readsSceneSnapshot == true {
                     // A material or scene input reads the scene under its own quad; an effect anywhere.
-                    let needed = entry.layer.effectsReadScene ? nil
+                    let needed = entry.layer.effectsReadScene || draw.placement != nil ? nil
                         : SceneSnapshotTracker.pixelRect(of: draw.quad, sceneSize: sceneSize, targetSize: targetSize)
                             ?? SceneSnapshotTracker.Rect.empty
                     snapshot = sceneSnapshot(of: sceneTexture, commandBuffer: commandBuffer, needing: needed)
                     layerSnapshot = snapshot
                 }
+                // Drawn through a camera, a scene-input layer's image is the whole scene so far [I].
                 let input = entry.layer.sceneInput
-                    ? snapshot.flatMap { sceneRegion(of: $0, under: draw.quad, reducedFor: entry.layer,
-                                                     commandBuffer: commandBuffer) }
+                    ? snapshot.flatMap { draw.placement != nil ? $0 : sceneRegion(of: $0, under: draw.quad, reducedFor: entry.layer,
+                                                                                  commandBuffer: commandBuffer) }
                     : solidEffectInput(entry.layer, commandBuffer: commandBuffer)
                         ?? (textFrames[layerIndex]?.frame ?? textureFrame(for: entry)).texture
                 dynamicTextures[layerIndex] = input.flatMap {
@@ -1117,8 +1170,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             uniform.uvOrigin = textureFrame.uvOrigin
             uniform.uvAxisX = textureFrame.uvAxisX
             uniform.uvAxisY = textureFrame.uvAxisY
-            // Drawn below, natively or through its material.
-            if let drawn = SceneSnapshotTracker.pixelRect(of: draw.quad, sceneSize: sceneSize, targetSize: targetSize) {
+            // Drawn below, natively or through its material; through a camera, anywhere.
+            if draw.placement != nil {
+                snapshotTracker.sceneDrawn(in: nil)
+            } else if let drawn = SceneSnapshotTracker.pixelRect(of: draw.quad, sceneSize: sceneSize, targetSize: targetSize) {
                 snapshotTracker.sceneDrawn(in: drawn)
             }
             // A text layer's `font` material reads the glyphs' coverage; colour glyphs have none.
@@ -1138,16 +1193,23 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                        self.puppetWarps[entry.layer.id]?[key] ?? self.effectAssetTexture(key: key, source: source)
                    },
                    assetSprite: { [unowned self] key, source in self.effectAssetSprite(key: key, source: source) },
-                   ignoredAdjustments: !ImageMaterialRenderer.nativeAdjustmentsAreIdentity(uniform, brightness: draw.brightness)),
-                   pixelFormat: sceneTexture.pixelFormat, sampleCount: sceneSampleCount, encoder: encoder,
+                   ignoredAdjustments: !ImageMaterialRenderer.nativeAdjustmentsAreIdentity(uniform, brightness: draw.brightness),
+                   placement: draw.placement, raster: layerRaster(entry)),
+                   pixelFormat: sceneTexture.pixelFormat, sampleCount: sceneSampleCount, depth: frameDepth, encoder: encoder,
                    commandBuffer: commandBuffer) {
                 encoder.setRenderPipelineState(renderPipeline)
                 continue
+            }
+            frameDepth?.apply(layerRaster(entry), to: encoder)
+            if var placed = draw.placement?.native, let pipeline = scenePassPipelines.placedNormal {
+                encoder.setRenderPipelineState(pipeline)
+                encoder.setVertexBytes(&placed, length: MemoryLayout<LayerPlacement3D>.stride, index: 1)
             }
             encoder.setVertexBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
             encoder.setFragmentBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
             encoder.setFragmentTexture(dynamicTextures[layerIndex] ?? textureFrame.texture, index: 0)
             encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
+            if draw.placement != nil { encoder.setRenderPipelineState(renderPipeline) }
         }
         guard drawParticleBatches(before: .max) else { return }
         encoder.endEncoding()
@@ -1155,6 +1217,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         var stageContext = SceneFrameStageContext(scene: sceneTexture, commandBuffer: commandBuffer, sceneSize: sceneSize,
                                                   frame: effectFrame, settings: renderSettings)
         stageContext.assetTexture = { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) }
+        stageContext.sceneDepth = frameDepth == nil ? nil : depthBuffer.texture
         for stage in frameStages { stage.encode(stageContext) }
         // The scene-resolution target goes onto the real drawable, placement applied exactly once.
         postProcess.encode(ScenePostProcess.Frame(
@@ -1469,10 +1532,202 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         return color * textTint(layerID: entry.layer.id)
     }
 
+    // MARK: - Depth, draw order and 3D placement (docs/models-plan.md §2.4)
+
+    /// Gives a perspective scene's pass WE's depth buffer (`SceneDepthBuffer`), cleared to the far
+    /// depth, and sets `sceneDepthFormat` for this frame's pipelines. An orthographic scene's pass
+    /// has none: every object there lies at z = 0.
+    private func attachSceneDepth(to pass: MTLRenderPassDescriptor, scene: MTLTexture) {
+        sceneDepthFormat = .invalid
+        guard isPerspective, depthStates != nil,
+              layerPipelines.pipelines(for: scene.pixelFormat, sampleCount: sceneSampleCount,
+                                       depthFormat: SceneDepthStates.format) != nil,
+              depthBuffer.prepare(width: scene.width, height: scene.height, sampleCount: sceneSampleCount) else {
+            if depthBuffer.texture != nil { depthBuffer.releaseAll() }
+            return
+        }
+        sceneDepthFormat = SceneDepthStates.format
+        depthBuffer.attach(to: pass, clear: true)
+    }
+
+    /// Where a layer's quad lands through a 3D camera this frame: every layer of a perspective
+    /// scene but a fullscreen one (WE draws those in screen space: `passthrough` without
+    /// `TRANSFORM`), and a `perspective` layer of an orthographic scene through its temporary
+    /// camera (0x1401e5b60), moved by the parallax and shake the 2D path moves it by (the camera
+    /// keeps the view's offset). Nil for the rest, which draw in the scene's plane.
+    private func layerPlacement(_ entry: PreparedLayer, size: SIMD2<Float>, musicSyncLevel: Double, motion: CameraMotion,
+                                camera: SceneFrameCamera) -> SceneLayerPlacement? {
+        guard !entry.layer.fillsScene else { return nil }
+        let offset = SceneAlignment.centerOffset(entry.layer.alignment, size: size)
+        if isPerspective {
+            let world = layerWorld3D(entry, in: spatial.transforms, musicSyncLevel: musicSyncLevel)
+            return SceneLayerPlacement(world: world, size: size, offset: offset, camera: camera)
+        }
+        guard entry.layer.perspective, let hierarchy = spatial.perspectiveTransforms else { return nil }
+        var world = layerWorld3D(entry, in: hierarchy, musicSyncLevel: musicSyncLevel)
+        let shift = parallaxOffset(entry, local: evaluatedLocal(entry), motion: motion) - motion.shake
+        world.columns.3 += SIMD4(shift.x, shift.y, 0, 0)
+        return SceneLayerPlacement(world: world, size: size, offset: offset,
+                                   camera: SceneLayerPlacement.perspectiveLayerCamera(sceneSize: sceneSize,
+                                                                                      fov: Float(spatial.camera.sceneFov)))
+    }
+
+    /// A layer's world matrix with its music sync (a video's zoom and tilt, applied to its own
+    /// scale and `angles.z` as the 2D path applies them).
+    private func layerWorld3D(_ entry: PreparedLayer, in hierarchy: SceneTransformHierarchy3D,
+                              musicSyncLevel: Double) -> simd_float4x4 {
+        let id = entry.layer.id
+        guard let sync = entry.layer.musicSync else { return world3D(id, in: hierarchy) }
+        var own = live3D(id, in: hierarchy) ?? hierarchy.nodes[id]?.local ?? .identity
+        let zoom = 1 + sync.zoomAmount * Float(musicSyncLevel)
+        own.scale *= SIMD3(zoom, zoom, 1)
+        own.angles.z += sync.tiltAmount * Float(musicSyncLevel) * .pi / 180
+        return hierarchy.world(of: id, local: own, live: { [unowned self] in self.live3D($0, in: hierarchy) })
+    }
+
+    /// An object's world matrix this frame (M3's hierarchy): its own and its ancestors' live
+    /// transforms, parents first.
+    private func world3D(_ id: String, in hierarchy: SceneTransformHierarchy3D) -> simd_float4x4 {
+        hierarchy.world(of: id, local: live3D(id, in: hierarchy), live: { [unowned self] in self.live3D($0, in: hierarchy) })
+    }
+
+    /// An object's own 3D transform this frame (`SceneObjectMotion.local3D`: scripts, then
+    /// timelines, then authored moved by the user bindings), evaluated once per frame; nil for an
+    /// object without a motion, whose authored node stands. An object a script created has no
+    /// authored node: its 2D transform stands in.
+    private func live3D(_ id: String, in hierarchy: SceneTransformHierarchy3D) -> SceneLocalTransform3D? {
+        if let cached = frameLocals3D[id] { return cached }
+        guard let motion = layerIndexByStateId[id].map({ layers[$0].motion }) ?? objectMotions[id] else { return nil }
+        let authored = hierarchy.nodes[id]?.local ?? SceneLocalTransform3D(objectLocal(motion, id: id))
+        let local = motion.local3D(authored: authored, animation: timelines.object(id), script: scripts.object(id))
+        frameLocals3D[id] = local
+        return local
+    }
+
+    /// The depth and cull state a layer draws with where the pass has depth: a text object's (its
+    /// `depthtest`, `SceneRasterState.text`), else its material's first pass; a layer without a
+    /// material (composition and shape layers) neither tests nor writes.
+    private func layerRaster(_ entry: PreparedLayer) -> SceneRasterState {
+        if entry.layer.text != nil { return .text(depthTest: spatial.depthTest(of: entry.layer.id) ?? false) }
+        return entry.layer.imageMaterial?.raster ?? .disabled
+    }
+
+    /// A particle system drawn through a perspective scene's camera (docs/models-plan.md §2.12):
+    /// the camera, and the matrix from the scene plane the system is simulated in (its object's 2D
+    /// transform) to where its 3D world matrix puts it. Nil in an orthographic scene.
+    private func particlePlacement(_ system: ParticleSystemRuntime,
+                                   camera: SceneFrameCamera) -> ParticleMaterialUniforms.Placement? {
+        guard isPerspective else { return nil }
+        guard let id = particleObjectID(system) else { return ParticleMaterialUniforms.Placement(camera: camera) }
+        let planar = transforms.world(of: id, live: { [self] id in liveLocal(id) }, attachments: puppetAttachments.affine)
+        let x = planar.linear.columns.0, y = planar.linear.columns.1, t = planar.translation
+        let embedded = simd_float4x4(columns: (SIMD4<Float>(x.x, x.y, 0, 0), SIMD4<Float>(y.x, y.y, 0, 0),
+                                               SIMD4<Float>(0, 0, 1, 0), SIMD4<Float>(t.x, t.y, 0, 1)))
+        guard abs(simd_determinant(planar.linear)) > 1e-12 else { return ParticleMaterialUniforms.Placement(camera: camera) }
+        return ParticleMaterialUniforms.Placement(camera: camera,
+                                                  model: world3D(id, in: spatial.transforms) * embedded.inverse)
+    }
+
+    /// Draws model object `index` (`SceneSpatialContent.models`) through `modelDrawing` at its
+    /// place in the object loop, unless it is hidden.
+    private func drawModel(_ index: Int, frame: BuiltinFrameContext, pixelFormat: MTLPixelFormat,
+                           encoder: MTLRenderCommandEncoder, commandBuffer: MTLCommandBuffer) {
+        guard let modelDrawing, spatial.models.indices.contains(index) else { return }
+        let model = spatial.models[index]
+        guard scripts.isVisible(model.id) else { return }
+        modelDrawing.draw(model, SceneModelDraw(
+            world: world3D(model.id, in: spatial.transforms), camera: frame.camera, frame: frame,
+            values: timelines.values, pixelFormat: pixelFormat, sampleCount: sceneSampleCount, depth: frameDepth,
+            mipMappedFrameBuffer: mipMappedTarget,
+            assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) }),
+            encoder: encoder, commandBuffer: commandBuffer)
+        encoder.setRenderPipelineState(renderPipeline)
+    }
+
+    /// This frame's object loop: the layers and models in draw order, each with the barrier below
+    /// which the particle systems are drawn before it, and the order and keys of the systems.
+    private struct DrawSequence {
+        var items: [(item: SceneDrawItem, barrier: Int)] = []
+        /// `batches`' indices in draw order, and each one's key.
+        var batchOrder: [Int] = []
+        var batchKeys: [Int] = []
+    }
+
+    /// WE's object loop (0x14018aac0): scene order (or the order scripts set) keeps each layer's
+    /// particle barrier and each system's scene index; a model goes before the first layer
+    /// authored after it. `customsortorder` and `transparentsorting` then sort the whole list
+    /// (`SceneDrawOrderMode.ordered`), and each object's position becomes its key.
+    private func drawSequence(batches: [ParticleSystemRuntime], forward: SIMD3<Float>) -> DrawSequence {
+        var items: [(item: SceneDrawItem, barrier: Int)] = layers.indices.map { (.layer($0), layers[$0].particleBarrier) }
+        if modelDrawing != nil {
+            for (index, model) in spatial.models.enumerated() {
+                let at = items.firstIndex { entry in
+                    if case .layer(let layer) = entry.item { return layers[layer].layer.order > model.order }
+                    return false
+                } ?? items.count
+                items.insert((.model(index), model.order), at: at)
+            }
+        }
+        let keys = batches.map(\.configuration.order)
+        guard spatial.drawOrder.reorders else {
+            return DrawSequence(items: items, batchOrder: Array(batches.indices), batchKeys: keys)
+        }
+        var list: [SceneDrawItem] = []
+        var next = 0
+        for (item, barrier) in items {
+            while next < batches.count, keys[next] < barrier {
+                list.append(.particles(next))
+                next += 1
+            }
+            list.append(item)
+        }
+        list += (next..<batches.count).map { SceneDrawItem.particles($0) }
+        let ordered = spatial.drawOrder.ordered(list.map { drawEntry($0, batches: batches) }, forward: forward)
+        var sequence = DrawSequence()
+        for (position, item) in ordered.enumerated() {
+            if case .particles(let batch) = item {
+                sequence.batchOrder.append(batch)
+                sequence.batchKeys.append(position)
+            } else {
+                sequence.items.append((item, position))
+            }
+        }
+        return sequence
+    }
+
+    /// An object as the draw-order modes see it (`SceneDrawEntry`).
+    private func drawEntry(_ item: SceneDrawItem, batches: [ParticleSystemRuntime]) -> SceneDrawEntry {
+        var entry = SceneDrawEntry(item: item)
+        let id: String?
+        switch item {
+        case .layer(let index):
+            let layer = layers[index].layer
+            id = layer.id
+            entry.translucent = layer.text != nil || SceneDrawEntry.imageIsTranslucent(
+                blending: layer.imageMaterial?.pass.blending, passthrough: layer.sceneInput, solidLayer: layer.solidFill != nil)
+            entry.drawsLast = layer.fillsScene
+        case .particles(let index):
+            id = particleObjectID(batches[index])
+            entry.translucent = true
+        case .model(let index):
+            let model = spatial.models[index]
+            id = model.id
+            entry.translucent = modelDrawing?.isTranslucent(model) ?? false
+        }
+        guard let id else { return entry }
+        entry.sortOrder = spatial.sortOrder(of: id)
+        // Only a perspective scene sorts by origin; its objects live in `spatial.transforms`.
+        if spatial.drawOrder.splitsTranslucent {
+            entry.origin = live3D(id, in: spatial.transforms)?.origin ?? spatial.transforms.nodes[id]?.local.origin ?? .zero
+        }
+        return entry
+    }
+
     // MARK: - Transforms
 
     private func beginTransformFrame() {
         frameLocals.removeAll(keepingCapacity: true)
+        frameLocals3D.removeAll(keepingCapacity: true)
         layerIndexByStateId.removeAll(keepingCapacity: true)
         for (index, entry) in layers.enumerated() { layerIndexByStateId[entry.layer.id] = index }
     }
@@ -1637,6 +1892,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         if case .video = layer.source { return nil }
         let shown = SIMD2(simd_length(frame.uvAxisX), simd_length(frame.uvAxisY))
         guard shown.x > 0, shown.y > 0 else { return nil }
+        // Through a camera, the quad is as large as its projection.
+        if let placement = draw.placement {
+            guard let density = placement.pixelsPerUnit(targetSize: SIMD2<Float>(sceneRenderTargetSize)) else { return nil }
+            return placement.size * density / shown
+        }
         return draw.quad.extent * renderPixelsPerUnit / shown
     }
 
@@ -1719,6 +1979,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let resume = MTLRenderPassDescriptor()
         Self.attachScene(scene, multisampled: sceneMultisampleTarget, to: resume)
         resume.colorAttachments[0].loadAction = .load
+        if frameDepth != nil { depthBuffer.attach(to: resume, clear: false) }
         let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: resume)
         encoder?.setRenderPipelineState(renderPipeline)
         return encoder

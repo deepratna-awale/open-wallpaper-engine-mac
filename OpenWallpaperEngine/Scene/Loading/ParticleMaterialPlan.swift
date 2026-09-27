@@ -44,4 +44,7 @@ struct ParticleMaterialPlan {
     /// Each texture slot's `.tex` flags, which pick its sampler (clamp or repeat, bilinear or
     /// nearest). A slot without an entry samples as WE's default: repeat, bilinear.
     var textureFlags: [Int: TEXFlags] = [:]
+    /// The pass's `depthtest`, `depthwrite` and `cullmode` (docs/models-plan.md §2.4; the halo:
+    /// test on, write off), which the system draws with where the scene pass has depth.
+    var raster = SceneRasterState.engineDefault
 }

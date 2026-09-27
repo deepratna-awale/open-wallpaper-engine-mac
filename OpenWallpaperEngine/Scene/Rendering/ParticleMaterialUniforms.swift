@@ -19,6 +19,39 @@ struct ParticleMaterialUniforms {
     /// `g_OrientationForward`: the renderer's (`ParticleOrientation`); (0, 0, 1) facing the camera.
     let orientationForward: SIMD3<Float>
 
+    /// `g_ViewUp`, `g_ViewRight` and `g_ViewForward` in the system's space (`frame(from:)`).
+    let viewUp: SIMD3<Float>
+    let viewRight: SIMD3<Float>
+    let viewForward: SIMD3<Float>
+
+    /// A system drawn through a 3D camera (docs/models-plan.md §2.12): a perspective scene's
+    /// camera, or the temporary one of a `perspective` system in an orthographic scene. WE draws a
+    /// system's vertices through its model matrix and the camera; here the particles are simulated
+    /// in the scene's plane, placed by the object's 2D transform, so `model` carries them from
+    /// there to where the object's 3D world matrix puts them (identity when the two agree).
+    struct Placement: Equatable {
+        var camera: SceneFrameCamera
+        var model = matrix_identity_float4x4
+
+        /// A camera direction in the particles' own space, normalised.
+        func direction(_ vector: SIMD3<Float>) -> SIMD3<Float> {
+            let linear = simd_float3x3(SIMD3(model.columns.0.x, model.columns.0.y, model.columns.0.z),
+                                       SIMD3(model.columns.1.x, model.columns.1.y, model.columns.1.z),
+                                       SIMD3(model.columns.2.x, model.columns.2.y, model.columns.2.z))
+            guard abs(linear.determinant) > 1e-12 else { return vector }
+            let local = linear.inverse * vector
+            let length = simd_length(local)
+            return length > 1e-12 ? local / length : vector
+        }
+
+        /// The camera's eye in the particles' own space (`g_EyePosition`, which trails face).
+        var eye: SIMD3<Float> {
+            guard abs(model.determinant) > 1e-12 else { return camera.eye }
+            let local = model.inverse * SIMD4(camera.eye, 1)
+            return SIMD3(local.x, local.y, local.z) / local.w
+        }
+    }
+
     /// The scene camera's axes, as WE binds them to particles.
     static let orientationRight = SIMD3<Float>(1, 0, 0)
     /// How far in front of the scene the eye sits. The view is orthographic, so view rays are
@@ -27,11 +60,27 @@ struct ParticleMaterialUniforms {
     static let eyeDistance: Float = 100_000
 
     init(plan: ParticleMaterialPlan, system: ParticleSystemRuntime, sceneSize: SIMD2<Float>,
-         texture0: BuiltinTextureInfo?) {
+         texture0: BuiltinTextureInfo?, placement: Placement? = nil) {
         let size = simd_max(sceneSize, SIMD2(1, 1))
-        modelViewProjection = PassMatrices.ortho(left: 0, right: size.x, bottom: size.y, top: 0)
-        eyePosition = SIMD3(size.x / 2, size.y / 2, Self.eyeDistance)
-        let axes = system.configuration.orientation.axes(linear: system.drawLinear)
+        let axes: (right: SIMD3<Float>, up: SIMD3<Float>, forward: SIMD3<Float>)
+        if let placement {
+            let camera = placement.camera
+            modelViewProjection = PassMatrices.shaderViewProjection(camera.viewProjection) * placement.model
+            eyePosition = placement.eye
+            let forward = placement.direction(camera.forward), up = placement.direction(camera.up)
+            axes = system.configuration.orientation.axes(linear: system.drawLinear, cameraForward: forward, cameraUp: up)
+            // The view-projection flips y as the 2D one does (see `viewUp2D`).
+            viewUp = -up
+            viewRight = placement.direction(simd_cross(camera.forward, camera.up))
+            viewForward = forward
+        } else {
+            modelViewProjection = PassMatrices.ortho(left: 0, right: size.x, bottom: size.y, top: 0)
+            eyePosition = SIMD3(size.x / 2, size.y / 2, Self.eyeDistance)
+            axes = system.configuration.orientation.axes(linear: system.drawLinear)
+            viewUp = Self.viewUp2D
+            viewRight = Self.orientationRight
+            viewForward = SIMD3(0, 0, -1)
+        }
         orientationRight = axes.right
         orientationUp = axes.up
         orientationForward = axes.forward
@@ -63,15 +112,15 @@ struct ParticleMaterialUniforms {
     /// it back), so that is scene −y. Screen coordinates derived from the clip position
     /// (`v_ScreenCoord`) then run top-down like Metal's texture rows, and the refraction offsets
     /// that `ComputeScreenRefractionTangents` builds from this axis follow them.
-    static let viewUp = SIMD3<Float>(0, -1, 0)
+    static let viewUp2D = SIMD3<Float>(0, -1, 0)
 
     /// The frame's built-ins with this system's view.
     func frame(from frame: BuiltinFrameContext) -> BuiltinFrameContext {
         var result = frame
         result.eyePosition = eyePosition
-        result.viewUp = Self.viewUp
-        result.viewRight = Self.orientationRight
-        result.viewForward = SIMD3(0, 0, -1)
+        result.viewUp = viewUp
+        result.viewRight = viewRight
+        result.viewForward = viewForward
         return result
     }
 

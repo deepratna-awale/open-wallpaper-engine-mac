@@ -9,11 +9,18 @@ struct SceneSpatialContentBuilder {
     /// For log lines.
     var wallpaperName: String
 
-    func build(_ scene: WEScene, context: SceneValueContext) -> SceneSpatialContent {
+    /// `sceneSize` is the scene's size in scene units, which an orthographic scene's `perspective`
+    /// objects are placed in (`perspectiveTransforms`).
+    func build(_ scene: WEScene, context: SceneValueContext, sceneSize: SIMD2<Float>? = nil) -> SceneSpatialContent {
         var content = SceneSpatialContent()
         content.camera = SceneCameraSettings(scene.general, in: context)
         content.drawOrder = SceneDrawOrderMode(content.camera)
         content.transforms = SceneTransformHierarchy3D(objects: scene.objects)
+        if !content.camera.projection.isPerspective, let sceneSize,
+           scene.objects.contains(where: { $0.perspective == true }) {
+            content.perspectiveTransforms = SceneTransformHierarchy3D(objects: scene.objects,
+                                                                       rootOrigin: SIMD3(sceneSize / 2, 0))
+        }
         if let eye = scene.camera.eye { content.staticEye = Self.vector(eye) }
         if let center = scene.camera.center { content.staticCenter = Self.vector(center) }
         if let up = scene.camera.up { content.staticUp = Self.vector(up) }
@@ -28,6 +35,7 @@ struct SceneSpatialContentBuilder {
         for (index, object) in scene.objects.enumerated() {
             let id = String(object.id ?? -1)
             let name = object.name ?? "#\(index)"
+            if !object.renderValues.isEmpty { content.renderValues[id] = object.renderValues }
             if let model = object.model {
                 content.models.append(SceneModelObject(id: id, name: name, order: index, authored: model,
                                                        animationLayers: object.animationLayers,

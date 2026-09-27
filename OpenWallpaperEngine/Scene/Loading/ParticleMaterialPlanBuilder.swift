@@ -79,6 +79,7 @@ struct ParticleMaterialPlanBuilder {
         for (slot, header) in headers {
             if let flags = TEXFlags(texData: header) { plan.textureFlags[slot] = flags }
         }
+        plan.raster = SceneRasterState(depthtest: pass.depthtest, depthwrite: pass.depthwrite, cullmode: pass.cullmode)
         return plan
     }
 

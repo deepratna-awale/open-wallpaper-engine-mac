@@ -138,6 +138,34 @@ vertex VertexOut sceneVertex(uint vertexID [[vertex_id]], uint instanceID [[inst
     return out;
 }
 
+/// A layer quad drawn through a 3D camera (`SceneLayerPlacement`, `LayerPlacement3D` in Swift).
+struct LayerPlacement3D {
+    float4x4 modelViewProjection;
+    float2 size;
+    float2 offset;
+};
+
+/// `sceneVertex` for a layer drawn through a 3D camera: the corner in object units (`size` about
+/// `offset`, y up) through WE's `modelViewProjection`, whose clip space Metal shares; the depth is
+/// stored as the translated shaders store theirs, (z + w) / 2 (`SceneDepthStates`).
+vertex VertexOut sceneVertex3D(uint vertexID [[vertex_id]], uint instanceID [[instance_id]],
+                               constant LayerUniform *layers [[buffer(0)]],
+                               constant LayerPlacement3D &placement [[buffer(1)]]) {
+    const LayerUniform layer = layers[instanceID];
+    constexpr float2 corners[] = { float2(0, 0), float2(1, 0), float2(0, 1), float2(1, 1) };
+    const float2 corner = corners[vertexID];
+    const float2 local = float2((corner.x - 0.5) * placement.size.x, (0.5 - corner.y) * placement.size.y)
+        + placement.offset;
+    float4 clip = placement.modelViewProjection * float4(local, 0, 1);
+    clip.z = (clip.z + clip.w) * 0.5;
+    VertexOut out;
+    out.position = clip;
+    out.textureCoordinate = layer.uvOrigin + corner.x * layer.uvAxisX + corner.y * layer.uvAxisY;
+    out.sceneCoordinate = float2(clip.x / clip.w * 0.5 + 0.5, 0.5 - clip.y / clip.w * 0.5);
+    out.instance = instanceID;
+    return out;
+}
+
 /// Plain resample through the vertex stage's UVs, for copying the scene under a layer's quad.
 fragment float4 sceneCopyFragment(VertexOut input [[stage_in]], texture2d<float> texture [[texture(0)]]) {
     constexpr sampler linearSampler(filter::linear, address::clamp_to_edge);

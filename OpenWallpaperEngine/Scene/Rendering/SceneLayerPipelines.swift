@@ -3,35 +3,49 @@ import Metal
 /// The pipelines the scene pass draws with natively (a layer's quad blended normally or
 /// additively, and an unblended region copy), in each format the scene target can have: the
 /// drawable's in LDR, RGBA16F in HDR (docs/lighting-plan.md §2.6). With WE's MSAA setting the
-/// scene pass draws multisampled; its pipelines for a sample count above 1 are made when first
-/// asked for.
+/// scene pass draws multisampled, and a perspective scene's pass has a depth buffer
+/// (`SceneDepthStates`, docs/models-plan.md §2.4); the pipelines for a sample count above 1 or a
+/// depth format are made when first asked for.
 final class SceneLayerPipelines {
     struct Pipelines {
         let normal: MTLRenderPipelineState
         let additive: MTLRenderPipelineState
         let copy: MTLRenderPipelineState
+        /// A layer quad drawn through a 3D camera (`sceneVertex3D`, `SceneLayerPlacement`); nil
+        /// without that vertex function.
+        let placedNormal: MTLRenderPipelineState?
+        let placedAdditive: MTLRenderPipelineState?
     }
 
-    private struct Multisampled: Hashable {
+    private struct Variant: Hashable {
         var format: MTLPixelFormat
         var sampleCount: Int
+        var depthFormat: MTLPixelFormat
+    }
+
+    private struct Functions {
+        let vertex: MTLFunction
+        let fragment: MTLFunction
+        let copy: MTLFunction
+        let placedVertex: MTLFunction?
     }
 
     private let byFormat: [MTLPixelFormat: Pipelines]
     private let fallback: Pipelines
     private let device: MTLDevice
-    private let functions: (vertex: MTLFunction, fragment: MTLFunction, copy: MTLFunction)
+    private let functions: Functions
     /// Made on first use, by the render thread only; nil for one that failed (logged once).
-    private var multisampled: [Multisampled: Pipelines?] = [:]
+    private var variants: [Variant: Pipelines?] = [:]
 
     /// The pipelines for each of `formats`, the first of which `pipelines(for:)` falls back to.
-    /// Throws when one can't be made.
+    /// `placedVertex` is `sceneVertex3D`. Throws when one can't be made.
     init(device: MTLDevice, vertex: MTLFunction, fragment: MTLFunction, copyFragment: MTLFunction,
-         formats: [MTLPixelFormat]) throws {
+         placedVertex: MTLFunction? = nil, formats: [MTLPixelFormat]) throws {
+        let functions = Functions(vertex: vertex, fragment: fragment, copy: copyFragment, placedVertex: placedVertex)
         var byFormat: [MTLPixelFormat: Pipelines] = [:]
         for format in formats where byFormat[format] == nil {
-            byFormat[format] = try Self.make(device: device, vertex: vertex, fragment: fragment,
-                                             copyFragment: copyFragment, format: format)
+            byFormat[format] = try Self.make(device: device, functions: functions,
+                                             variant: Variant(format: format, sampleCount: 1, depthFormat: .invalid))
         }
         guard let first = formats.first, let fallback = byFormat[first] else {
             throw ShaderCompilerError.failed(step: "metal", output: "no scene target format")
@@ -39,28 +53,30 @@ final class SceneLayerPipelines {
         self.byFormat = byFormat
         self.fallback = fallback
         self.device = device
-        functions = (vertex, fragment, copyFragment)
+        self.functions = functions
     }
 
-    /// The pipelines drawing into a target of `format`.
+    /// The pipelines drawing into a single-sampled target of `format` without depth.
     func pipelines(for format: MTLPixelFormat?) -> Pipelines {
         format.flatMap { byFormat[$0] } ?? fallback
     }
 
-    /// The pipelines drawing into a `sampleCount`-sample target of `format`; nil when they can't
-    /// be made (the caller draws single-sampled). Call on the render thread.
-    func pipelines(for format: MTLPixelFormat, sampleCount: Int) -> Pipelines? {
-        guard sampleCount > 1 else { return pipelines(for: format) }
-        let key = Multisampled(format: format, sampleCount: sampleCount)
-        if let known = multisampled[key] { return known }
+    /// The pipelines drawing into a `sampleCount`-sample target of `format` with a `depthFormat`
+    /// depth attachment (`.invalid`: none); nil when they can't be made (the caller draws
+    /// single-sampled). Call on the render thread.
+    func pipelines(for format: MTLPixelFormat, sampleCount: Int,
+                   depthFormat: MTLPixelFormat = .invalid) -> Pipelines? {
+        guard sampleCount > 1 || depthFormat != .invalid else { return pipelines(for: format) }
+        let key = Variant(format: format, sampleCount: max(sampleCount, 1), depthFormat: depthFormat)
+        if let known = variants[key] { return known }
         do {
-            let made = try Self.make(device: device, vertex: functions.vertex, fragment: functions.fragment,
-                                     copyFragment: functions.copy, format: format, sampleCount: sampleCount)
-            multisampled[key] = made
+            let made = try Self.make(device: device, functions: functions, variant: key)
+            variants[key] = made
             return made
         } catch {
-            OWELog.error(.scene, "The scene's \(sampleCount)× MSAA pipelines can't be made; it draws without MSAA: \(error)")
-            multisampled[key] = .some(nil)
+            let what = sampleCount > 1 ? "\(sampleCount)× MSAA" : "depth"
+            OWELog.error(.scene, "The scene's \(what) pipelines can't be made; it draws without: \(error)")
+            variants[key] = .some(nil)
             return nil
         }
     }
@@ -82,23 +98,29 @@ final class SceneLayerPipelines {
         return descriptor
     }
 
-    private static func make(device: MTLDevice, vertex: MTLFunction, fragment: MTLFunction,
-                             copyFragment: MTLFunction, format: MTLPixelFormat, sampleCount: Int = 1) throws -> Pipelines {
-        let descriptor = layerDescriptor(vertex: vertex, fragment: fragment, format: format)
-        descriptor.rasterSampleCount = sampleCount
-        let normal = try device.makeRenderPipelineState(descriptor: descriptor)
-        let additiveDescriptor = descriptor.copy() as! MTLRenderPipelineDescriptor
-        additiveDescriptor.colorAttachments[0].sourceRGBBlendFactor = .sourceAlpha
-        additiveDescriptor.colorAttachments[0].sourceAlphaBlendFactor = .one
-        additiveDescriptor.colorAttachments[0].destinationRGBBlendFactor = .one
-        additiveDescriptor.colorAttachments[0].destinationAlphaBlendFactor = .one
-        let additive = try device.makeRenderPipelineState(descriptor: additiveDescriptor)
+    private static func make(device: MTLDevice, functions: Functions, variant: Variant) throws -> Pipelines {
+        func blended(_ vertex: MTLFunction, additive: Bool) throws -> MTLRenderPipelineState {
+            let descriptor = layerDescriptor(vertex: vertex, fragment: functions.fragment, format: variant.format)
+            descriptor.rasterSampleCount = variant.sampleCount
+            descriptor.depthAttachmentPixelFormat = variant.depthFormat
+            if additive {
+                descriptor.colorAttachments[0].sourceRGBBlendFactor = .sourceAlpha
+                descriptor.colorAttachments[0].sourceAlphaBlendFactor = .one
+                descriptor.colorAttachments[0].destinationRGBBlendFactor = .one
+                descriptor.colorAttachments[0].destinationAlphaBlendFactor = .one
+            }
+            return try device.makeRenderPipelineState(descriptor: descriptor)
+        }
         let copyDescriptor = MTLRenderPipelineDescriptor()
-        copyDescriptor.vertexFunction = vertex
-        copyDescriptor.fragmentFunction = copyFragment
-        copyDescriptor.colorAttachments[0].pixelFormat = format
-        copyDescriptor.rasterSampleCount = sampleCount
-        let copy = try device.makeRenderPipelineState(descriptor: copyDescriptor)
-        return Pipelines(normal: normal, additive: additive, copy: copy)
+        copyDescriptor.vertexFunction = functions.vertex
+        copyDescriptor.fragmentFunction = functions.copy
+        copyDescriptor.colorAttachments[0].pixelFormat = variant.format
+        copyDescriptor.rasterSampleCount = variant.sampleCount
+        copyDescriptor.depthAttachmentPixelFormat = variant.depthFormat
+        return Pipelines(normal: try blended(functions.vertex, additive: false),
+                         additive: try blended(functions.vertex, additive: true),
+                         copy: try device.makeRenderPipelineState(descriptor: copyDescriptor),
+                         placedNormal: try functions.placedVertex.map { try blended($0, additive: false) },
+                         placedAdditive: try functions.placedVertex.map { try blended($0, additive: true) })
     }
 }
