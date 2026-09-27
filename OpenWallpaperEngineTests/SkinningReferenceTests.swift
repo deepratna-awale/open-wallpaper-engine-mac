@@ -39,11 +39,16 @@ final class SkinningReferenceTests: XCTestCase {
         // A 12-bone grid, every bone turned, moved and scaled.
         let bones = 12
         let mesh = Self.grid(bones: bones)
+        var gridBones: [MDLBone] = []
+        for index in 0..<bones {
+            let parent: UInt32 = index == 0 ? 0xFFFF_FFFF : UInt32(index - 1)
+            let offset = SIMD3<Float>(Float(index) * 10, 0, 0)
+            gridBones.append(MDLBone(name: "b\(index)", flags: 1, parent: parent,
+                                     matrix: ScenePuppetTests.translation(offset), properties: ""))
+        }
+        let gridSkeleton = MDLSkeleton(version: 1, bones: gridBones)
         let grid = MDLModel(tag: "MDLV0013", version: 13, legacyFormat: mesh.format.rawValue, materialsPerMesh: 1,
-                            meshes: [mesh], skeleton: MDLSkeleton(version: 1, bones: (0..<bones).map {
-                                MDLBone(name: "b\($0)", flags: 1, parent: $0 == 0 ? 0xFFFF_FFFF : UInt32($0 - 1),
-                                        matrix: ScenePuppetTests.translation(SIMD3(Float($0) * 10, 0, 0)), properties: "")
-                            }), end: 0, trailingByteCount: 0)
+                            meshes: [mesh], skeleton: gridSkeleton, end: 0, trailingByteCount: 0)
         var generator = SystemRandomNumberGenerator()
         let palette = (0..<bones).map { _ -> simd_double4x4 in
             let transform = SceneBoneTransform(
@@ -154,9 +159,13 @@ final class SkinningReferenceTests: XCTestCase {
 
     /// A strip of quads, quad k on bone k, laid along x.
     static func grid(bones: Int) -> MDLMesh {
-        ScenePuppetTests.mesh(quads: (0..<bones).map { k in
-            (SIMD4(Float(k) * 20 - 100, 30, Float(k) * 20 - 80, -30), SIMD4(0, 0, 1, 1))
-        }, bones: (0..<bones).map(UInt32.init))
+        var quads: [(position: SIMD4<Float>, uv: SIMD4<Float>)] = []
+        for k in 0..<bones {
+            let left = Float(k) * 20 - 100
+            quads.append((position: SIMD4<Float>(left, 30, left + 20, -30), uv: SIMD4<Float>(0, 0, 1, 1)))
+        }
+        let boneIndices: [UInt32] = (0..<bones).map { UInt32($0) }
+        return ScenePuppetTests.mesh(quads: quads, bones: boneIndices)
     }
 
     // MARK: - GPU
