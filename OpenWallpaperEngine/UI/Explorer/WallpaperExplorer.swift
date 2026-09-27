@@ -29,12 +29,13 @@ struct WallpaperExplorer: SubviewOfContentView {
         GeometryReader { geometry in
             VStack(spacing: 8) {
                 if viewModel.displayedWallpapers.isEmpty {
-                    Spacer()
+                    // GeometryReader places its content top-leading, so the message takes the
+                    // whole area to sit in its centre.
                     Text("No wallpapers found for your search.")
                         .font(.title)
                         .foregroundStyle(Color.secondary)
                         .multilineTextAlignment(.center)
-                    Spacer()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     LazyVGrid(columns: [
                         GridItem(
