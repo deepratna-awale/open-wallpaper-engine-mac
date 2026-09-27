@@ -658,7 +658,9 @@
     },
     "Descending" : {},
     "Description…" : {},
-    "Desktop (1 pixel per point)" : {},
+    "Desktop (1 pixel per point)" : {
+      "comment" : "Render resolution: one pixel per screen point, as a non-Retina display draws; not the macOS Desktop"
+    },
     "Details" : {},
     "Developer" : {
       "localizations" : {
@@ -1047,26 +1049,8 @@
       }
     },
     "High (50,000)" : {},
-    "High FPS may slow down your PC!" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "高 FPS 可能会降低电脑的运行速度！"
-          }
-        }
-      }
-    },
-    "High FPS may slow down your PC! We're serious, this is too much 🔥." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "高 FPS 可能会降低电脑的运行速度！这可不是开玩笑，您设置的 FPS 太高了🔥."
-          }
-        }
-      }
-    },
+    "High FPS may slow down your Mac!" : {},
+    "High FPS may slow down your Mac! We're serious, this is too much 🔥." : {},
     "High Performance" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1782,7 +1766,6 @@
     "Other Resolution" : {
       "comment" : "Resolution filter"
     },
-    "Our Text" : {},
     "Overall amount of tape degradation." : {
       "comment" : "Scene Inspector tooltip for the vhs effect's strength parameter"
     },
@@ -2622,6 +2605,7 @@
     "Text %lld" : {
       "comment" : "A text layer without a name"
     },
+    "Text Layers" : {},
     "Texture Resolution" : {
       "localizations" : {
         "zh-Hans" : {

@@ -115,7 +115,7 @@ struct PerformancePage: SettingsPage {
                 .help("Match Display draws no more detail than the display shows: a scene larger than the display is drawn at the display's size, and each layer's effects at the size the layer appears on screen. Full draws every effect at its texture's full size, as Wallpaper Engine does.")
                 Picker("Render Resolution", selection: $viewModel.settings.renderResolution) {
                     Text("Native").tag(GSRenderResolution.native)
-                    Text("Desktop (1 pixel per point)").tag(GSRenderResolution.desktop)
+                    Text("Desktop (1 pixel per point)", comment: "Render resolution: one pixel per screen point, as a non-Retina display draws; not the macOS Desktop").tag(GSRenderResolution.desktop)
                 }
                 .help("Native draws at the display's full pixel count. Desktop draws one pixel per point (half the width and height on a Retina display) and scales the frame up, for a quarter of the work.")
                 Picker("Volumetrics", selection: $viewModel.settings.volumetrics) {
@@ -130,8 +130,8 @@ struct PerformancePage: SettingsPage {
                     warningLabel("FPS",
                                  warning: viewModel.settings.fps > 60 ? .red : viewModel.settings.fps > 30 ? .yellow : nil,
                                  help: viewModel.settings.fps > 60
-                                    ? "High FPS may slow down your PC! We're serious, this is too much 🔥."
-                                    : "High FPS may slow down your PC!")
+                                    ? "High FPS may slow down your Mac! We're serious, this is too much 🔥."
+                                    : "High FPS may slow down your Mac!")
                     Spacer()
                     NumericSliderInput(value: $viewModel.settings.fps, range: 10...120,
                                        defaultValue: 30, step: 1, fractionDigits: 0,

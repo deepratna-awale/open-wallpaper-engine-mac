@@ -304,7 +304,7 @@ struct SceneUserPropertiesView: View {
                             }
                         }
                         if !model.textObjects.isEmpty {
-                            DisclosureGroup("Our Text") {
+                            DisclosureGroup("Text Layers") {
                                 VStack(alignment: .leading, spacing: 12) {
                                     ForEach(model.textObjects, id: \.id) { textObject in
                                         DisclosureGroup {
