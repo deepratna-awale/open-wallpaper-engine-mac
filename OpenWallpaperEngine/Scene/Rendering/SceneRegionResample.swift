@@ -19,7 +19,13 @@ enum SceneRegionResample {
     /// scales them with the quad, rather than at the scaled size. nil when it covers no pixel
     /// (zero, NaN or infinite extent).
     static func targetSize(_ quad: SceneQuadGeometry, layerSize: SIMD2<Float>? = nil, pixelsPerUnit: Float) -> SIMD2<Int>? {
-        var extent = quad.extent
+        targetSize(extent: quad.extent, layerSize: layerSize, pixelsPerUnit: pixelsPerUnit)
+    }
+
+    /// `targetSize` for a quad `extent` scene units large (a quad drawn through a 3D camera: its
+    /// size in object units, `SceneRegionProjection`).
+    static func targetSize(extent: SIMD2<Float>, layerSize: SIMD2<Float>? = nil, pixelsPerUnit: Float) -> SIMD2<Int>? {
+        var extent = extent
         if let layerSize, layerSize.x > 0, layerSize.y > 0 { extent = simd_min(extent, layerSize) }
         let pixels = (extent * pixelsPerUnit).rounded(.up)
         guard pixels.x.isFinite, pixels.y.isFinite, pixels.x >= 1, pixels.y >= 1 else { return nil }

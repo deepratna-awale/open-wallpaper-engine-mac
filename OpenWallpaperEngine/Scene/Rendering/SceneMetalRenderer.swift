@@ -130,6 +130,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var effectAssetFrames: [String: [RenderTextureFrame]] = [:]
     /// Textureless layers' effect inputs (`solidEffectInput`), by layer id; once per content.
     private var solidEffectInputs: [String: MTLTexture] = [:]
+    /// Scene-input layers drawn through a 3D camera get the scene under them through this.
+    private lazy var regionProjection = SceneRegionProjection(device: device)
     /// Scene time since the content loaded, speed applied; drives animations, `g_Time`,
     /// particles and scripts alike.
     private var clock = SceneClock()
@@ -1231,10 +1233,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                     snapshot = sceneSnapshot(of: sceneTexture, commandBuffer: commandBuffer, needing: needed)
                     layerSnapshot = snapshot
                 }
-                // Drawn through a camera, a scene-input layer's image is the whole scene so far [I].
                 let input = entry.layer.sceneInput
-                    ? snapshot.flatMap { draw.placement != nil ? $0 : sceneRegion(of: $0, under: draw.quad, reducedFor: entry.layer,
-                                                                                  commandBuffer: commandBuffer) }
+                    ? snapshot.flatMap { sceneRegion(of: $0, under: draw.quad, placement: draw.placement, reducedFor: entry.layer,
+                                                     commandBuffer: commandBuffer) }
                     : solidEffectInput(entry.layer, commandBuffer: commandBuffer)
                         ?? (textFrames[layerIndex]?.frame ?? textureFrame(for: entry)).texture
                 dynamicTextures[layerIndex] = input.flatMap {
@@ -2244,10 +2245,20 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// The scene under a scene-input layer, as that layer's base image (`SceneRegionResample`).
     /// A quad that is exactly the scene (composition and fullscreen layers) uses the snapshot as is.
     /// Under WE's texture reduction a composition layer's buffers are its size over the reduction;
-    /// a fullscreen layer's aren't (`TextureReduction`).
-    private func sceneRegion(of snapshot: MTLTexture, under quad: SceneQuadGeometry, reducedFor layer: SceneMetalLayer,
-                             commandBuffer: MTLCommandBuffer) -> MTLTexture? {
+    /// a fullscreen layer's aren't (`TextureReduction`). Drawn through a 3D camera (`placement`), it
+    /// is the scene under the projected quad (`SceneRegionProjection`).
+    private func sceneRegion(of snapshot: MTLTexture, under quad: SceneQuadGeometry, placement: SceneLayerPlacement?,
+                             reducedFor layer: SceneMetalLayer, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
         let reduction = layer.fillsScene ? 1 : Float(renderSettings.textureReduction)
+        if let placement {
+            guard let projection = regionProjection,
+                  let size = SceneRegionResample.targetSize(extent: placement.size, layerSize: layer.size,
+                                                            pixelsPerUnit: renderPixelsPerUnit / reduction),
+                  let region = renderTargetPool.texture(width: size.x, height: size.y, pixelFormat: snapshot.pixelFormat,
+                                                        avoiding: snapshot),
+                  projection.draw(snapshot, under: placement, into: region, commandBuffer: commandBuffer) else { return nil }
+            return region
+        }
         if reduction == 1, SceneRegionResample.coversWholeScene(quad, sceneSize: sceneSize) { return snapshot }
         guard let size = SceneRegionResample.targetSize(quad, layerSize: layer.size, pixelsPerUnit: renderPixelsPerUnit / reduction),
               let region = renderTargetPool.texture(width: size.x, height: size.y,
