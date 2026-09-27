@@ -42,9 +42,8 @@ final class SceneSoundMixer {
 
     /// Attaches a voice whose left and right gains are set on their own
     /// (`SceneSoundSpatialization`): the player feeds a stage mixer, and the stage's input on a
-    /// stereo bus takes the gains as a volume and a balance. That input pans a stereo signal
-    /// linearly (left × min(1, 1 − pan), right × min(1, 1 + pan)), which the main mixer's inputs
-    /// don't do for a mono player.
+    /// stereo bus takes the gains as a volume and a balance. That input pans the (stereo) player's
+    /// signal linearly: left × min(1, 1 − pan), right × min(1, 1 + pan).
     func attachSpatial(_ node: AVAudioPlayerNode, format: AVAudioFormat) -> AVAudioMixerNode? {
         guard let stereo = AVAudioFormat(standardFormatWithSampleRate: format.sampleRate, channels: 2) else { return nil }
         let bus: AVAudioMixerNode

@@ -66,7 +66,7 @@ final class SceneSoundLayersTests: XCTestCase {
         layers.setTargetGain(1)
         layers.setContent([content(try tone("tone.wav"))])
         XCTAssertEqual(layers.isPlaying(7), true)
-        XCTAssertGreaterThan(try render(layers, seconds: 0.05), 0.3, "a full-scale mono sine is 0.5 RMS per channel")
+        XCTAssertGreaterThan(try render(layers, seconds: 0.05), 0.3, "a full-scale mono sine is 0.42 RMS per channel (0.71 × OpenAL's mono level)")
         // The second pass is queued from the start (offline rendering never reports a pass as
         // played, so the third one isn't queued here).
         XCTAssertGreaterThan(try render(layers, seconds: 0.1), 0.3, "past its end the next pass plays without a gap")
@@ -77,8 +77,9 @@ final class SceneSoundLayersTests: XCTestCase {
         layers.setTargetGain(1)
         layers.setContent([content(try tone("tone.wav"), volume: 0.5)])
         let quiet = try render(layers, seconds: 0.05)
-        // The mono tone reaches each stereo channel 3 dB down: RMS 0.71 × 0.71 at full gain.
-        XCTAssertEqual(quiet, 0.5 * 0.25, accuracy: 0.02, "volume 0.5 is a gain of 0.25")
+        // The mono tone reaches each stereo channel at OpenAL's mono level: RMS 0.71 × 0.596 at full gain.
+        XCTAssertEqual(quiet, 0.7071 * SceneSoundSpatialization.monoLevel * 0.25, accuracy: 0.01,
+                       "volume 0.5 is a gain of 0.25")
 
         layers.setTargetGain(0)
         layers.stepFade(1.0 / 60)

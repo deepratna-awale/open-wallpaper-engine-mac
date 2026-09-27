@@ -25,9 +25,16 @@ import simd
 ///   (`ScaleAzimuthFront`, ×1.5 up to 90°), elevation `ev` = asin(y). Left and right are
 ///   0.5 ∓ 0.5·sin az·cos ev + 0.0956623·cos az·cos ev. A source at the listener plays centred.
 ///
-/// The gains are relative to the file's unspatialized level (OpenAL plays a plain mono source
-/// centred, 0.595662 a channel), so a sound in front within `mindistance` plays as it would
-/// without spatialization. [I: HRTF, which OpenAL Soft picks for headphones, is not modelled.]
+/// The gains are per channel against a stereo file's level: OpenAL plays a plain mono source
+/// centred, `monoLevel` (0.595662) a channel, which WE's capture confirms (a stereo tone is
+/// 1.6789× the same tone in mono). [I: HRTF, which OpenAL Soft picks for headphones, is not
+/// modelled.]
+///
+/// WE's capture on speakers (2.8.0.42) matches the centre, the distance attenuation (to 4
+/// decimals) and the stereo passthrough; toward the scene's edges its pan is up to 0.018 stronger
+/// than this model. The panning code in mediaextensions64.dll is 1.21.1's as modelled here (the
+/// pair-wise branch at 0x180192ecb, `CalcAngleCoeffs` 0x180190340, the decoder at 0x1802cd148),
+/// so the difference lies outside it; see docs/scenescript-plan.md.
 enum SceneSoundSpatialization {
     /// The camera a frame draws with, as the sound update reads it from the render context.
     struct Listener: Equatable {
@@ -61,8 +68,9 @@ enum SceneSoundSpatialization {
     /// Where a sound sits before there is a camera (0x1401f53d6).
     static let unplaced = SIMD3<Float>(0, 0, 100_000)
 
-    /// A plain mono source's level in each channel: panned to the front centre.
-    static let centreLevel: Float = 0.5 + firstOrderX
+    /// A plain mono source's level in each channel against a stereo source's: panned to the front
+    /// centre.
+    static let monoLevel: Float = 0.5 + firstOrderX
 
     /// The stereo decoder's X (front) weight, 0.0552306 × √3 (`StereoConfig` in panning.cpp).
     private static let firstOrderX: Float = 0.0552305643 * 1.732050808
@@ -81,8 +89,8 @@ enum SceneSoundSpatialization {
         return position
     }
 
-    /// The left and right gains of a mono source at `position`, relative to its unspatialized
-    /// level: OpenAL Soft 1.21.1's distance attenuation and stereo panning.
+    /// The left and right gains of a mono source at `position`: OpenAL Soft 1.21.1's distance
+    /// attenuation and stereo panning.
     static func gains(position: SIMD3<Float>, minDistance: Float, attenuation: Float) -> SIMD2<Float> {
         // `alSourcef` refuses a negative (or NaN) value, which leaves SFML's default of 1.
         let reference: Float = minDistance >= 0 ? minDistance : 1
@@ -106,9 +114,9 @@ enum SceneSoundSpatialization {
             let front = cos(azimuth) * cos(elevation) * firstOrderX
             panned = SIMD2(0.5 - 0.5 * side + front, 0.5 + 0.5 * side + front)
         } else {
-            panned = SIMD2(repeating: centreLevel)
+            panned = SIMD2(repeating: monoLevel)
         }
-        return panned * (gain / centreLevel)
+        return panned * gain
     }
 
     /// `ScaleAzimuthFront(azimuth, 1.5)`: a source in front is pushed toward the side speakers.

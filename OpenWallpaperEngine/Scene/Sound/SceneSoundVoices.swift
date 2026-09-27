@@ -5,8 +5,12 @@ import AVFoundation
 /// streaming the file from disk, as WE streams each file through its own `sf::Music`. A looping
 /// file keeps two passes scheduled, so it wraps without a gap: when one has played, the next is
 /// queued behind the other. A spatialized file plays through a stage of its own, which takes its
-/// left and right gains (`setSpatialGains`). Main thread; the players' completion handlers hop back
-/// to it (a player must not be scheduled from inside its own callback).
+/// left and right gains (`setSpatialGains`). A mono file plays at OpenAL's level for a mono source,
+/// `SceneSoundSpatialization.monoLevel` of a stereo file's in each channel (WE's capture: 1/1.6789):
+/// its player outputs stereo, which copies the file to both channels at any sample rate (a mono
+/// input to AVAudioMixerNode comes out at 0.707 or 1 by the mixer's rate). Main thread; the
+/// players' completion handlers hop back to it (a player must not be scheduled from inside its own
+/// callback).
 final class SceneSoundVoices: SceneSoundOutput {
     private final class Voice {
         let node = AVAudioPlayerNode()
@@ -14,6 +18,8 @@ final class SceneSoundVoices: SceneSoundOutput {
         var attached = false
         /// A spatialized voice's stage (`SceneSoundMixer.attachSpatial`).
         var stage: AVAudioMixerNode?
+        /// The gain `SceneSoundPlayback` set (`setGain`).
+        var gain: Float = 1
     }
 
     private let files: [SceneSoundContent.File]
@@ -81,7 +87,17 @@ final class SceneSoundVoices: SceneSoundOutput {
 
     func setGain(_ gain: Float, file index: Int) {
         guard voices.indices.contains(index) else { return }
-        voices[index].node.volume = gain
+        voices[index].gain = gain
+        applyGain(index)
+    }
+
+    /// The player's volume: the gain, at the mono level for a mono file that isn't spatialized (a
+    /// spatialized one takes it in its stage's gains). Before the file is open its channels
+    /// aren't known; `prepared` applies it again.
+    private func applyGain(_ index: Int) {
+        let voice = voices[index]
+        let mono = voice.file?.processingFormat.channelCount == 1 && !spatialFiles.contains(index)
+        voice.node.volume = voice.gain * (mono ? SceneSoundSpatialization.monoLevel : 1)
     }
 
     /// A spatialized file's left and right gains (`SceneSoundSpatialization.gains`), on top of
@@ -117,14 +133,23 @@ final class SceneSoundVoices: SceneSoundOutput {
         if !voice.attached, let file = voice.file {
             if mixer == nil { mixer = makeMixer() }
             guard let mixer else { return nil }
+            var format = file.processingFormat
+            if format.channelCount == 1 {
+                guard let stereo = AVAudioFormat(standardFormatWithSampleRate: format.sampleRate, channels: 2) else {
+                    return nil
+                }
+                format = stereo
+            }
             if spatialFiles.contains(index) {
-                guard let stage = mixer.attachSpatial(voice.node, format: file.processingFormat) else { return nil }
-                SceneSoundMixer.setGains(spatialGains[index] ?? SIMD2(repeating: 1), of: stage)
+                guard let stage = mixer.attachSpatial(voice.node, format: format) else { return nil }
+                SceneSoundMixer.setGains(spatialGains[index] ?? SIMD2(repeating: SceneSoundSpatialization.monoLevel),
+                                         of: stage)
                 voice.stage = stage
             } else {
-                mixer.attach(voice.node, format: file.processingFormat)
+                mixer.attach(voice.node, format: format)
             }
             voice.attached = true
+            applyGain(index)
         }
         return voice
     }

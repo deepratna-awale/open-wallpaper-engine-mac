@@ -6,8 +6,10 @@ import simd
 /// `spatialization` sound layers (`SceneSoundSpatialization`): wallpaper64.exe's placement in the
 /// camera's frame (0x1401f5029…0x1401f53ff) through OpenAL Soft 1.21.1's inverse-distance-clamped
 /// attenuation and stereo pair-wise panning, against values worked out by hand from those
-/// formulas; the decoding and WE's defaults; a moving object through AVAudioEngine; and no change
-/// for a sound without spatialization or a stereo file.
+/// formulas and against WE 2.8.0.42's capture on speakers (we-test-wp-images 9bd33fb,
+/// tools/peer/requests/sound-spatialization/response: levels per channel relative to a plain mono
+/// tone); the decoding and WE's defaults; a moving object through AVAudioEngine; no change for a
+/// sound without spatialization or a stereo file; and a mono file's level against a stereo one's.
 final class SceneSoundSpatializationTests: XCTestCase {
     /// A 1920×1080 orthographic scene's camera: eye (960, 540, 2000) looking down −z, y up.
     private let orthographic = SceneSoundSpatialization.Listener(
@@ -18,15 +20,54 @@ final class SceneSoundSpatializationTests: XCTestCase {
         eye: .zero, right: SIMD3(1, 0, 0), up: SIMD3(0, 1, 0), forward: SIMD3(0, 0, -1), orthographicSize: nil)
 
     private func assertGains(_ gains: SIMD2<Float>, _ left: Float, _ right: Float, _ message: String,
-                             file: StaticString = #filePath, line: UInt = #line) {
-        XCTAssertEqual(gains.x, left, accuracy: 1e-4, "left: \(message)", file: file, line: line)
-        XCTAssertEqual(gains.y, right, accuracy: 1e-4, "right: \(message)", file: file, line: line)
+                             accuracy: Float = 1e-4, file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertEqual(gains.x, left, accuracy: accuracy, "left: \(message)", file: file, line: line)
+        XCTAssertEqual(gains.y, right, accuracy: accuracy, "right: \(message)", file: file, line: line)
     }
 
+    /// The gains relative to a plain mono source, as the capture reports them.
     private func gains(_ world: SIMD3<Float>, _ listener: SceneSoundSpatialization.Listener?,
                        minDistance: Float = 1, attenuation: Float = 1) -> SIMD2<Float> {
         SceneSoundSpatialization.gains(position: SceneSoundSpatialization.position(world: world, listener: listener),
                                        minDistance: minDistance, attenuation: attenuation)
+            / SceneSoundSpatialization.monoLevel
+    }
+
+    /// WE's capture, project 1: a mono tone at x = 0, 192, …, 1920 (y 540, z 0), left and right.
+    private let capturedPan: [SIMD2<Float>] = [
+        SIMD2(1.0760, 0.3172), SIMD2(1.0053, 0.3761), SIMD2(0.9288, 0.4426), SIMD2(0.8476, 0.5162),
+        SIMD2(0.7636, 0.5956), SIMD2(0.6788, 0.6788), SIMD2(0.5956, 0.7636), SIMD2(0.5162, 0.8476),
+        SIMD2(0.4426, 0.9288), SIMD2(0.3761, 1.0053), SIMD2(0.3172, 1.0760),
+    ]
+
+    /// Project 2: centred, z = 750, 600, …, −750, `mindistance` 0.5, `attenuation` 2 (L = R).
+    private let capturedDepth: [Float] = [1.0000, 0.6788, 0.6788, 0.4848, 0.3085, 0.2262, 0.1785, 0.1475, 0.1256,
+                                          0.1094, 0.0969]
+
+    func testMatchesWEsCapturedDepth() {
+        for (step, level) in capturedDepth.enumerated() {
+            let world = SIMD3<Float>(960, 540, 750 - Float(step) * 150)
+            assertGains(gains(world, orthographic, minDistance: 0.5, attenuation: 2), level, level, "step \(step)",
+                        accuracy: 2e-4)
+        }
+    }
+
+    /// The captured pan has the model's sign, centre and shape, within 0.02.
+    func testFollowsWEsCapturedPan() {
+        for (step, level) in capturedPan.enumerated() {
+            assertGains(gains(SIMD3(Float(step) * 192, 540, 0), orthographic), level.x, level.y, "step \(step)",
+                        accuracy: 0.02)
+        }
+    }
+
+    /// Toward the edges WE pans up to 0.018 harder than OpenAL Soft 1.21.1's formulas give for these
+    /// positions; the dll's panning path is that code (see `SceneSoundSpatialization`).
+    func testMatchesWEsCapturedPanClosely() {
+        XCTExpectFailure("sound-spatialization capture: WE's edge pan is stronger than OpenAL Soft's pair-wise law for the modelled positions")
+        for (step, level) in capturedPan.enumerated() {
+            assertGains(gains(SIMD3(Float(step) * 192, 540, 0), orthographic), level.x, level.y, "step \(step)",
+                        accuracy: 0.002)
+        }
     }
 
     // MARK: - Decoding
@@ -127,15 +168,15 @@ final class SceneSoundSpatializationTests: XCTestCase {
     }
 
     /// A one-second full-scale 440 Hz tone with `channels` channels.
-    private func tone(_ name: String, channels: AVAudioChannelCount) throws -> URL {
+    private func tone(_ name: String, channels: AVAudioChannelCount, rate: Double = 48_000) throws -> URL {
         let url = directory.appending(path: name)
-        let fileFormat = try XCTUnwrap(AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: channels))
-        let frames = AVAudioFrameCount(48_000)
+        let fileFormat = try XCTUnwrap(AVAudioFormat(standardFormatWithSampleRate: rate, channels: channels))
+        let frames = AVAudioFrameCount(rate)
         let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: fileFormat, frameCapacity: frames))
         buffer.frameLength = frames
         for channel in 0..<Int(channels) {
             for index in 0..<Int(frames) {
-                buffer.floatChannelData![channel][index] = Float(sin(2 * Double.pi * 440 * Double(index) / 48_000))
+                buffer.floatChannelData![channel][index] = Float(sin(2 * Double.pi * 440 * Double(index) / rate))
             }
         }
         let file = try AVAudioFile(forWriting: url, settings: fileFormat.settings)
@@ -143,9 +184,9 @@ final class SceneSoundSpatializationTests: XCTestCase {
         return url
     }
 
-    private func layers(spatialization: Bool, channels: AVAudioChannelCount,
+    private func layers(spatialization: Bool, channels: AVAudioChannelCount, rate: Double = 48_000,
                         at world: @escaping () -> SIMD3<Float>) throws -> SceneSoundLayers {
-        let url = try tone("tone\(channels).wav", channels: channels)
+        let url = try tone("tone\(channels)-\(Int(rate)).wav", channels: channels, rate: rate)
         let layers = SceneSoundLayers(label: "test", offline: format)
         layers.listener = orthographic
         layers.locate = { _ in world() }
@@ -208,6 +249,18 @@ final class SceneSoundSpatializationTests: XCTestCase {
         let stereo = try render(spatialStereo)
         XCTAssertEqual(stereo.x, plainStereo.x, accuracy: 1e-5)
         XCTAssertEqual(stereo.y, plainStereo.y, accuracy: 1e-5)
+    }
+
+    /// WE plays a stereo tone at 1.6789× the same tone in mono in each channel (project 3 against
+    /// project 4): OpenAL's centred mono source, 0.595662 a channel. Ours does at any file rate
+    /// (AVAudioMixerNode alone upmixes mono at 0.707 or 1 depending on its rate).
+    func testAMonoFilePlaysAtOpenALsMonoLevel() throws {
+        for rate in [44_100.0, 48_000.0] {
+            let mono = try render(try layers(spatialization: false, channels: 1, rate: rate, at: { .zero }))
+            let stereo = try render(try layers(spatialization: false, channels: 2, rate: rate, at: { .zero }))
+            XCTAssertEqual(stereo.x / mono.x, 1.6789, accuracy: 0.002, "left at \(rate) Hz")
+            XCTAssertEqual(stereo.y / mono.y, 1.6789, accuracy: 0.002, "right at \(rate) Hz")
+        }
     }
 }
 
