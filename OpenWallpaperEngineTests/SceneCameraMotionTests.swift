@@ -75,6 +75,59 @@ final class SceneCameraMotionTests: XCTestCase {
         assertEqual(long.position, SIMD2(1440, 270))
     }
 
+    /// The delay filter's step response: a first-order lag with gain k = min(1, (1 − delay/3)·10·dt)
+    /// a frame, so after n frames the position has covered 1 − (1 − k)ⁿ of the step. WE's default
+    /// delay 0.1 at 60 fps (k = 0.161111) covers 63 % by frame 6 and 99 % by frame 27.
+    func testParallaxDelayStepResponse() {
+        var parallax = SceneCameraParallax(sceneSize: size)
+        let k: Float = (1 - 0.1 / 3) * 10 / 60
+        var covered: [Float] = []
+        for _ in 0..<30 {
+            parallax.update(cursor: SIMD2(1, 0.5), eye: .zero, sceneSize: size, influence: 1, delay: 0.1, deltaTime: 1 / 60)
+            covered.append((parallax.position.x - 960) / 960)
+            XCTAssertEqual(parallax.position.y, 540, accuracy: 1e-3, "a step in x only")
+        }
+        for (index, value) in covered.enumerated() {
+            let expected = 1 - pow(1 - k, Float(index + 1))
+            XCTAssertEqual(value, expected, accuracy: 1e-4, "frame \(index + 1)")
+        }
+        XCTAssertLessThan(covered[4], 1 - 1 / Float(M_E))
+        XCTAssertGreaterThan(covered[5], 1 - 1 / Float(M_E))
+        XCTAssertLessThan(covered[25], 0.99)
+        XCTAssertGreaterThan(covered[26], 0.99)
+        XCTAssertTrue(zip(covered, covered.dropFirst()).allSatisfy { $0 < $1 }, "monotonic, never overshooting")
+
+        // The frame time is the scene's (rate applied): at twice the rate the lag halves in frames.
+        var fast = SceneCameraParallax(sceneSize: size)
+        fast.update(cursor: SIMD2(1, 0.5), eye: .zero, sceneSize: size, influence: 1, delay: 0.1, deltaTime: 2 / 60)
+        XCTAssertEqual((fast.position.x - 960) / 960, 2 * k, accuracy: 1e-5)
+    }
+
+    /// A scene that authors none of the fields gets WE's constructor defaults (0x140186f84…
+    /// 0x140186fbb): shake speed 3, amplitude 0.5, roughness 1; parallax amount 0.5, delay 0.1,
+    /// mouse influence 0.5; both off.
+    func testUnauthoredCameraFieldsTakeWEsDefaults() throws {
+        struct NoProperties: SceneValueContext {
+            func userProperty(_ name: String) -> String? { nil }
+        }
+        let general = try decodeTolerant(WESceneGeneral.self, from: Data("{}".utf8))
+        let camera = SceneCameraEffects(general, in: NoProperties())
+        XCTAssertFalse(camera.shake)
+        XCTAssertFalse(camera.parallax)
+        XCTAssertEqual(camera.shakeSpeed, 3)
+        XCTAssertEqual(camera.shakeAmplitude, 0.5)
+        XCTAssertEqual(camera.shakeRoughness, 1)
+        XCTAssertEqual(camera.parallaxAmount, 0.5)
+        XCTAssertEqual(camera.parallaxDelay, 0.1, accuracy: 1e-7)
+        XCTAssertEqual(camera.parallaxMouseInfluence, 0.5)
+
+        // At those defaults the shake at t = 0 is (1, 0, 0) · 0.5 · 0.1 · 0.1 · 1080 = 5.4 units in x.
+        let start = SceneCameraShake.cameraOffset(time: 0, speed: camera.shakeSpeed, amplitude: camera.shakeAmplitude,
+                                                  roughness: camera.shakeRoughness, orthographicHeight: 1080)
+        XCTAssertEqual(start.x, 5.4, accuracy: 1e-4)
+        XCTAssertEqual(start.y, 0, accuracy: 1e-6)
+    }
+
     /// Objects move by amount · (root.origin − position) · root.parallaxDepth.
     func testParallaxOffsetUsesTheRootOriginAndDepth() {
         var parallax = SceneCameraParallax(sceneSize: size)
