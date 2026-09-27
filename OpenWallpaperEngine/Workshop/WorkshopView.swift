@@ -45,7 +45,7 @@ private struct SteamCmdNotInstalledView: View {
                 .foregroundStyle(.secondary)
 
             HStack {
-                Text("brew install steamcmd")
+                Text(verbatim: "brew install steamcmd")
                     .font(.system(.body, design: .monospaced))
                     .textSelection(.enabled)
                     .padding(.horizontal, 12)
@@ -79,7 +79,7 @@ private struct SteamCmdNotInstalledView: View {
                 panel.canChooseFiles = true
                 panel.canChooseDirectories = false
                 panel.allowsMultipleSelection = false
-                panel.message = "Select the steamcmd executable"
+                panel.message = String(localized: "Select the steamcmd executable", comment: "Open panel message; steamcmd is a program name")
                 if panel.runModal() == .OK, let url = panel.url {
                     steamCmd.setCustomPath(url.path)
                 }
@@ -146,7 +146,7 @@ private struct SteamLoginView: View {
                         .foregroundStyle(.red)
                         .font(.caption)
 
-                    if error.contains("Steam Guard") && !showGuardCode {
+                    if error == SteamCmdService.guardCodeRequiredError && !showGuardCode {
                         Button("Enter Steam Guard Code") {
                             showGuardCode = true
                         }
@@ -399,6 +399,7 @@ private struct WorkshopPagination: View {
             } label: {
                 Image(systemName: "chevron.left")
             }
+            .accessibilityLabel(Text("Previous Page"))
             .disabled(viewModel.currentPage == 1 || viewModel.isLoading)
 
             ForEach(pageNumbers, id: \.self) { page in
@@ -417,6 +418,7 @@ private struct WorkshopPagination: View {
             } label: {
                 Image(systemName: "chevron.right")
             }
+            .accessibilityLabel(Text("Next Page"))
             .disabled(!viewModel.hasNextPage || viewModel.isLoading)
         }
     }
@@ -466,8 +468,8 @@ struct WorkshopFiltersSidebar: View {
                         }
                     })
             }
-            tagSection("Rating", tags: WorkshopTags.ratings, \.ratings)
-            tagSection("Type", tags: WorkshopTags.types, \.types)
+            tagSection("Rating", id: "Rating", tags: WorkshopTags.ratings, \.ratings)
+            tagSection("Type", id: "Type", tags: WorkshopTags.types, \.types)
             Section("Resolution", isExpanded: isExpanded("Resolution")) {
                 ResolutionFilterRows(
                     isOn: { viewModel.filter.resolutions.contains($0) },
@@ -479,7 +481,7 @@ struct WorkshopFiltersSidebar: View {
             }
             Section(isExpanded: isExpanded("Genre")) {
                 ForEach(WorkshopTags.genres, id: \.self) { tag in
-                    toggle(WorkshopTags.genreLabel(tag), tag: tag, \.genres)
+                    toggle(tag: tag, \.genres)
                 }
             } header: {
                 HStack {
@@ -514,25 +516,27 @@ struct WorkshopFiltersSidebar: View {
         )
     }
 
-    private func tagSection(_ title: String, tags: [String],
+    private func tagSection(_ title: LocalizedStringKey, id: String, tags: [String],
                             _ keyPath: WritableKeyPath<WorkshopFilter, Set<String>>) -> some View {
-        Section(LocalizedStringKey(title), isExpanded: isExpanded(title)) {
+        Section(title, isExpanded: isExpanded(id)) {
             ForEach(tags, id: \.self) { tag in
-                toggle(tag, tag: tag, keyPath)
+                toggle(tag: tag, keyPath)
             }
         }
     }
 
-    private func toggle(_ label: String, tag: String,
+    private func toggle(tag: String,
                         _ keyPath: WritableKeyPath<WorkshopFilter, Set<String>>) -> some View {
-        Toggle(label, isOn: Binding(
+        Toggle(isOn: Binding(
             get: { viewModel.filter[keyPath: keyPath].contains(tag) },
             set: { isOn in
                 viewModel.updateFilter { filter in
                     if isOn { filter[keyPath: keyPath].insert(tag) } else { filter[keyPath: keyPath].remove(tag) }
                 }
             }
-        ))
+        )) {
+            Text(LocalizedLabels.filterOption(tag))
+        }
         .toggleStyle(.checkbox)
     }
 }
@@ -578,7 +582,7 @@ private struct WorkshopItemCard: View {
             .multilineTextAlignment(.center)
             .foregroundStyle(.white)
         }
-        .help(item.tags.isEmpty ? item.title : "\(item.title)\n\(item.tags.joined(separator: ", "))")
+        .help(shownTags.isEmpty ? item.title : "\(item.title)\n\(shownTags.formatted(.list(type: .and, width: .narrow)))")
         .overlay(alignment: .topTrailing) {
             downloadControl
                 .padding(6)
@@ -652,9 +656,10 @@ private struct WorkshopItemCard: View {
             }
     }
 
-    /// The item's tags, without "Wallpaper", which every wallpaper has.
+    /// The item's tags, without "Wallpaper", which every wallpaper has, in the UI's language.
     private var shownTags: [String] {
         item.tags.filter { $0.caseInsensitiveCompare("Wallpaper") != .orderedSame }
+            .map { String(localized: LocalizedLabels.filterOption($0)) }
     }
 
     private var placeholder: some View {

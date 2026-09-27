@@ -128,12 +128,12 @@ enum WorkshopSortOrder: Int, CaseIterable, Identifiable {
 
     var id: Int { rawValue }
 
-    var displayName: String {
+    var displayName: LocalizedStringResource {
         switch self {
-        case .trending: return "Trending"
-        case .mostRecent: return "Most Recent"
-        case .mostPopular: return "Most Popular"
-        case .mostSubscribed: return "Most Subscribed"
+        case .trending: return LocalizedStringResource("Trending", comment: "Workshop sort order")
+        case .mostRecent: return LocalizedStringResource("Most Recent", comment: "Workshop sort order")
+        case .mostPopular: return LocalizedStringResource("Most Popular", comment: "Workshop sort order: highest rated")
+        case .mostSubscribed: return LocalizedStringResource("Most Subscribed", comment: "Workshop sort order")
         }
     }
 
@@ -429,11 +429,11 @@ enum WorkshopAPIError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidURL: return "Invalid API URL"
-        case .requestFailed: return "API request failed — check your network connection"
-        case .noAPIKey: return "Steam Web API key required.\nGet a free key at steamcommunity.com/dev/apikey\nthen enter it below."
-        case .invalidAPIKey: return "Invalid API key.\nGet a valid key at steamcommunity.com/dev/apikey"
-        case .httpError(let code): return "Steam API returned HTTP \(code)"
+        case .invalidURL: return String(localized: "Invalid API URL")
+        case .requestFailed: return String(localized: "API request failed — check your network connection")
+        case .noAPIKey: return String(localized: "Steam Web API key required.\nGet a free key at steamcommunity.com/dev/apikey\nthen enter it below.")
+        case .invalidAPIKey: return String(localized: "Invalid API key.\nGet a valid key at steamcommunity.com/dev/apikey")
+        case .httpError(let code): return String(localized: "Steam API returned HTTP \(code)", comment: "%lld is an HTTP status code")
         }
     }
 }

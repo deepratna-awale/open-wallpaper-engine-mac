@@ -1,206 +1,121 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "_approved" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Approved"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "广受好评"
-          }
-        }
-      }
-    },
-    "_audioResponsive" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Audio Responsive"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "音频响应"
-          }
-        }
-      }
-    },
-    "_customizable" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Customizable"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "可自定义的"
-          }
-        }
-      }
-    },
-    "_mobileCompatible" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mobile Compatible"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "与移动设备兼容"
-          }
-        }
-      }
-    },
-    "_myFavourites" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "My Favourites"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "我的收藏"
-          }
-        }
-      }
-    },
-    "—" : {
-
-    },
-    "!!! Notice that this may affects performance !!!" : {
-
-    },
-    "@%@" : {
-
-    },
-    "@haren724" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "@haren724"
-          }
-        }
-      }
-    },
-    "@winddog" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "@winddog"
-          }
-        }
-      }
+    "" : {
+      "shouldTranslate" : false
     },
     "%@" : {
-
+      "shouldTranslate" : false
     },
-    "%lld" : {
-
+    "%@ %@" : {
+      "shouldTranslate" : false
     },
-    "%lld%%" : {
-
-    },
-    "%lldx%lld" : {
+    "%@ (%@)" : {
+      "comment" : "Recent Wallpapers menu item: a wallpaper's title and type",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "%1$lldx%2$lld"
+            "value" : "%1$@ (%2$@)"
           }
         }
       }
     },
-    "×8 MSAA is only recommended for powerful high-end desktop graphics cards." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "建议仅将 x8 MSAA 用于功能强大的高端台式机显卡。"
-          }
-        }
-      }
+    "%@ isn't connected. Workshop downloads fail until you connect it or choose another folder." : {},
+    "%@ of originals can be removed" : {
+      "comment" : "%@ is a file size, e.g. 1.2 GB"
     },
-    "10 per page" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "10 个/页"
-          }
-        }
-      }
+    "%@ was stopped because Open Wallpaper Engine didn't quit cleanly last time." : {},
+    "%@ was stopped because it made Open Wallpaper Engine unresponsive." : {},
+    "%lld" : {
+      "shouldTranslate" : false
     },
-    "25 per page" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "25 个/页"
-          }
-        }
-      }
-    },
-    "50 per page" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "50 个/页"
-          }
-        }
-      }
-    },
-    "2048x2048 MacBook Pro 14''" : {
-      "extractionState" : "stale",
+    "%lld more" : {
+      "comment" : "Ends a list of wallpaper titles: and 2 more",
       "localizations" : {
         "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "2048 x 2048 MacBook Pro 14\""
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "2048 x 2048 MacBook Pro 14\""
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld more"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld more"
+                }
+              }
+            }
           }
         }
       }
     },
-    "A Steam Web API key is required to browse." : {
-
+    "%lld wallpapers" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld wallpaper"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld wallpapers"
+                }
+              }
+            }
+          }
+        }
+      }
     },
+    "%lld wallpapers will be added" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld wallpaper will be added"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld wallpapers will be added"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lldx%lld" : {
+      "shouldTranslate" : false
+    },
+    "1920 x 1080 – Full HD" : {
+      "comment" : "Resolution filter"
+    },
+    "3840 x 2160 – 4K" : {
+      "comment" : "Resolution filter"
+    },
+    "A Steam Web API key is required to browse." : {},
+    "A higher quality, more expensive blur. Prefer it for large radii where the fast blur shows banding." : {
+      "comment" : "Scene Inspector tooltip for the blurprecise effect"
+    },
+    "A live wallpaper engine for macOS" : {},
+    "A placeholder that does nothing. Authors use it to reserve a slot in the effect stack." : {
+      "comment" : "Scene Inspector tooltip for the empty effect"
+    },
+    "API request failed — check your network connection" : {},
     "About" : {
-      "extractionState" : "manual",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -220,6 +135,24 @@
         }
       }
     },
+    "Abstract" : {
+      "comment" : "Workshop genre tag"
+    },
+    "Add" : {},
+    "Add Video Wallpaper…" : {},
+    "Add Video or Image URLs" : {},
+    "Add Video/Image URL" : {},
+    "Add Video/Image URL…" : {},
+    "Add Wallpaper" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "添加新的壁纸"
+          }
+        }
+      }
+    },
     "Add to Favorites" : {
       "localizations" : {
         "zh-Hans" : {
@@ -231,7 +164,6 @@
       }
     },
     "Add to Playlist" : {
-      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -241,16 +173,26 @@
         }
       }
     },
-    "Add Wallpaper" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "添加新的壁纸"
-          }
-        }
-      }
+    "Adds a rising flame distortion." : {
+      "comment" : "Scene Inspector tooltip for the fire effect"
+    },
+    "Adds depth-aware fog that thickens toward the bottom of the scene." : {
+      "comment" : "Scene Inspector tooltip for the volumetricfog effect"
+    },
+    "Adds directional beams of light across the layer." : {
+      "comment" : "Scene Inspector tooltip for the lightshafts effect"
+    },
+    "Adds expanding ripples across the surface." : {
+      "comment" : "Scene Inspector tooltip for the waterripple effect"
+    },
+    "Adds moving film grain. Keep the amount low or it swamps darker scenes." : {
+      "comment" : "Scene Inspector tooltip for the filmgrain effect"
+    },
+    "Adds scaling with depth so near parts grow as they shift, rather than just sliding." : {
+      "comment" : "Scene Inspector tooltip for the depthparallax effect's perspective parameter"
+    },
+    "Adds tape distortion, colour bleed and scanlines." : {
+      "comment" : "Scene Inspector tooltip for the vhs effect"
     },
     "Adjust Menu Bar Color" : {
       "localizations" : {
@@ -262,6 +204,11 @@
         }
       }
     },
+    "Adjust volume, playback speed, placement and any property the wallpaper's author exposed, right from the details sidebar." : {},
+    "Adjusts %@." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter; %@ is its name"
+    },
+    "Adjusts this parameter." : {},
     "Advanced" : {
       "localizations" : {
         "zh-Hans" : {
@@ -282,6 +229,13 @@
         }
       }
     },
+    "Align Bottom" : {},
+    "Align Center" : {},
+    "Align Element" : {},
+    "Align Left" : {},
+    "Align Middle" : {},
+    "Align Right" : {},
+    "Align Top" : {},
     "All" : {
       "localizations" : {
         "zh-Hans" : {
@@ -292,11 +246,20 @@
         }
       }
     },
-    "All Desktops" : {
-
+    "All Desktops" : {},
+    "Allow access in System Settings > Privacy & Security." : {},
+    "Allowed" : {},
+    "Always a Menu Bar Away" : {},
+    "Amount" : {},
+    "Animal" : {
+      "comment" : "Workshop genre tag"
     },
-    "Animates" : {
-
+    "Animates" : {},
+    "Animation Speed" : {
+      "comment" : "Wallpaper setting added by the app"
+    },
+    "Anime" : {
+      "comment" : "Workshop genre tag"
     },
     "Anti-aliasing" : {
       "localizations" : {
@@ -308,6 +271,7 @@
         }
       }
     },
+    "App logo icons" : {},
     "Appearance" : {
       "localizations" : {
         "zh-Hans" : {
@@ -319,14 +283,10 @@
       }
     },
     "Apple AVKit" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : ""
-          }
-        }
-      }
+      "shouldTranslate" : false
+    },
+    "Application" : {
+      "comment" : "Wallpaper type: a program (not supported on macOS)"
     },
     "Application Rules" : {
       "localizations" : {
@@ -338,6 +298,11 @@
         }
       }
     },
+    "Applies the %@ effect to this layer." : {
+      "comment" : "Scene Inspector tooltip for an effect without a description; %@ is its file name"
+    },
+    "Apply Anyway" : {},
+    "Apply a quality preset to the settings below" : {},
     "Apply to all Wallpapers" : {
       "localizations" : {
         "zh-Hans" : {
@@ -348,9 +313,13 @@
         }
       }
     },
-    "Ascending" : {
-
+    "Apply “%@”?" : {},
+    "Approved" : {
+      "comment" : "Filter: Workshop items the Wallpaper Engine team approved"
     },
+    "Arrow keys work when this panel is focused. Shift moves faster, Control moves slower." : {},
+    "Ascending" : {},
+    "Assets" : {},
     "Assign Hotkey" : {
       "localizations" : {
         "zh-Hans" : {
@@ -361,6 +330,7 @@
         }
       }
     },
+    "Assign a different wallpaper to each screen, or mirror one across all of them." : {},
     "Audio" : {
       "localizations" : {
         "zh-Hans" : {
@@ -381,15 +351,18 @@
         }
       }
     },
-    "Audio Speed" : {
-
+    "Audio Responsive" : {
+      "comment" : "Filter and Workshop tag: wallpapers that react to sound"
     },
-    "Authenticating with Steam..." : {
-
+    "Audio Speed" : {},
+    "Audio Visualizers" : {},
+    "Audio Visualizers Need Permission" : {},
+    "Audio capture starts on its own once the permission is granted; no restart is needed." : {},
+    "Authenticating with Steam..." : {},
+    "Authenticating…" : {
+      "comment" : "Download status: logging in to Steam"
     },
-    "Author Workshop" : {
-
-    },
+    "Author Workshop" : {},
     "Auto" : {
       "localizations" : {
         "zh-Hans" : {
@@ -420,6 +393,7 @@
         }
       }
     },
+    "Back" : {},
     "Basic Setup" : {
       "localizations" : {
         "zh-Hans" : {
@@ -430,9 +404,7 @@
         }
       }
     },
-    "Batch Unsubscribe Confirmation" : {
-
-    },
+    "Batch Unsubscribe Confirmation" : {},
     "Below Normal" : {
       "localizations" : {
         "zh-Hans" : {
@@ -443,8 +415,37 @@
         }
       }
     },
-    "brew install steamcmd" : {
-
+    "Bends the image as if seen through rippled glass." : {
+      "comment" : "Scene Inspector tooltip for the refraction effect"
+    },
+    "Blend Mode" : {},
+    "Bloom" : {
+      "comment" : "Wallpaper setting added by the app"
+    },
+    "Blue component of the bar colour." : {
+      "comment" : "Scene Inspector tooltip for the audiobars effect's blue parameter"
+    },
+    "Blur" : {
+      "comment" : "Wallpaper setting added by the app"
+    },
+    "Blurs outward from a centre point, giving a zoom or speed streak look." : {
+      "comment" : "Scene Inspector tooltip for the blurradial effect"
+    },
+    "Bold" : {
+      "comment" : "Wallpaper setting added by the app"
+    },
+    "Bottom" : {},
+    "Brightness of the halo around each bar." : {
+      "comment" : "Scene Inspector tooltip for the audiobars effect's glow parameter"
+    },
+    "Brightness of the light rays." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like ray_intensity"
+    },
+    "Brightness of the shafts of light." : {
+      "comment" : "Scene Inspector tooltip for the godrays effect's rayintensity parameter"
+    },
+    "Brightness of the shafts." : {
+      "comment" : "Scene Inspector tooltip for the lightshafts effect's colorwintensity parameter"
     },
     "Browse All By" : {
       "localizations" : {
@@ -476,10 +477,29 @@
         }
       }
     },
-    "Browse..." : {
-
+    "Browse, search and subscribe to Workshop items without leaving the app, then set them as your wallpaper in one click." : {},
+    "Browse..." : {},
+    "Built-in compiler" : {},
+    "Bulges the image outward from a centre point like a fisheye lens." : {
+      "comment" : "Scene Inspector tooltip for the fisheye effect"
+    },
+    "CGI" : {
+      "comment" : "Workshop genre tag: computer-generated imagery"
+    },
+    "Cached session expired. Please log in with password." : {},
+    "Can't create the Wallpaper Storage folder %@: %@" : {
+      "comment" : "The first %@ is a folder path, the second the system's reason",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Can't create the Wallpaper Storage folder %1$@: %2$@"
+          }
+        }
+      }
     },
     "Cancel" : {
+      "comment" : "TEST COMMENT",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -489,17 +509,18 @@
         }
       }
     },
-    "Change Wallpaper" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "更换"
-          }
-        }
-      }
+    "Cartoon" : {
+      "comment" : "Workshop genre tag"
     },
+    "Casts light shafts from a bright source through the scene." : {
+      "comment" : "Scene Inspector tooltip for the godrays effect"
+    },
+    "Center" : {
+      "comment" : "Wallpaper placement: centred at its own size"
+    },
+    "Change when video ends" : {},
+    "Check & Save" : {},
+    "Check the selected folders and try again." : {},
     "Chinese Simplified" : {
       "localizations" : {
         "zh-Hans" : {
@@ -510,35 +531,15 @@
         }
       }
     },
-    "Choose a folder for downloaded and imported wallpapers. You can move the current library to the new location." : {
-
-    },
-    "Choose Display" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "选择显示器"
-          }
-        }
-      }
-    },
-    "Choose..." : {
-
-    },
-    "Clear author filter" : {
-
-    },
-    "Clear selection" : {
-
-    },
-    "Click a display to select it. Hold Shift while clicking to select multiple desktops." : {
-
-    },
-    "Close Scene Inspector" : {
-
-    },
+    "Chinese i18n" : {},
+    "Choose Wallpaper Storage Folder" : {},
+    "Choose what happens on battery, when another app goes fullscreen, or when your displays sleep — from lowering the frame rate to pausing entirely." : {},
+    "Choose..." : {},
+    "Choose…" : {},
+    "Clear" : {},
+    "Clear author filter" : {},
+    "Clear selection" : {},
+    "Click a display to select it. Hold Shift while clicking to select multiple desktops." : {},
     "Close Window" : {
       "localizations" : {
         "zh-Hans" : {
@@ -549,33 +550,23 @@
         }
       }
     },
-    "Come out soon..." : {
-
+    "Color" : {
+      "comment" : "Wallpaper setting added by the app"
     },
-    "Comment" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "评论"
-          }
-        }
-      }
+    "Colour richness. 0 is greyscale, 1 is unchanged." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like saturation"
     },
-    "Configure" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "设置"
-          }
-        }
-      }
+    "Colour used by this effect." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like color"
     },
-    "Contributors" : {
-
+    "Coming soon…" : {},
+    "Committing…" : {
+      "comment" : "Download status: steamcmd writes the finished files"
     },
+    "Contributors" : {},
+    "Control 1 px" : {},
+    "Converted Wallpapers" : {},
+    "Copied" : {},
     "Copy" : {
       "localizations" : {
         "zh-Hans" : {
@@ -586,15 +577,20 @@
         }
       }
     },
-    "Currently, these settings below are designed for scene wallpapers \nand may not work as expect " : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "目前以下设置并不会生效，因为它们是为场景类壁纸而设计的。目前还不支持场景壁纸"
-          }
-        }
-      }
+    "Copy Path" : {},
+    "Copy the command" : {},
+    "Copy wallpaper folder path\n%@" : {},
+    "Couldn't remove the key: %@" : {
+      "comment" : "%@ is the system's reason"
+    },
+    "Create Playlist" : {},
+    "Create a Playlist" : {},
+    "Create a playlist first" : {},
+    "Create a playlist to manage wallpaper rotation." : {},
+    "Create playlist" : {},
+    "Custom shortcuts are not supported yet." : {},
+    "Customizable" : {
+      "comment" : "Filter and Workshop tag: wallpapers with user-adjustable properties"
     },
     "Cut" : {
       "localizations" : {
@@ -606,6 +602,9 @@
         }
       }
     },
+    "Cyberpunk" : {
+      "comment" : "Workshop genre tag"
+    },
     "Dark" : {
       "localizations" : {
         "zh-Hans" : {
@@ -615,6 +614,9 @@
           }
         }
       }
+    },
+    "Date Downloaded" : {
+      "comment" : "Sort wallpapers by when they were added"
     },
     "Debug" : {
       "localizations" : {
@@ -626,9 +628,9 @@
         }
       }
     },
-    "Decoding textures..." : {
-
-    },
+    "Decoding textures..." : {},
+    "Default 10 px" : {},
+    "Delete" : {},
     "Delete All" : {
       "localizations" : {
         "zh-Hans" : {
@@ -639,9 +641,7 @@
         }
       }
     },
-    "Delete All %lld Immediately" : {
-
-    },
+    "Delete All %lld Immediately" : {},
     "Delete Immediately" : {
       "localizations" : {
         "zh-Hans" : {
@@ -652,18 +652,23 @@
         }
       }
     },
-    "Delete Selected (%lld)" : {
-
+    "Delete Selected (%lld)" : {},
+    "Delete playlist" : {},
+    "Delete the playlist “%@”?" : {},
+    "Delete wallpaper" : {},
+    "Density of dropouts and noise specks." : {
+      "comment" : "Scene Inspector tooltip for the vhs effect's artifacts parameter"
     },
-    "Delete wallpaper" : {
-
+    "Depth where the fog reaches full density. Keep it above Fog Near or the gradient inverts." : {
+      "comment" : "Scene Inspector tooltip for the volumetricfog effect's far parameter"
     },
-    "Descending" : {
-
+    "Depth where the fog starts. Nothing closer than this is fogged." : {
+      "comment" : "Scene Inspector tooltip for the volumetricfog effect's near parameter"
     },
-    "Description..." : {
-
-    },
+    "Descending" : {},
+    "Description…" : {},
+    "Desktop (1 pixel per point)" : {},
+    "Details" : {},
     "Developer" : {
       "localizations" : {
         "zh-Hans" : {
@@ -673,6 +678,13 @@
           }
         }
       }
+    },
+    "Diagnostics" : {},
+    "Direction the effect travels, in degrees." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like direction"
+    },
+    "Direction the waves travel, in degrees." : {
+      "comment" : "Scene Inspector tooltip for the waterwaves effect's direction parameter"
     },
     "Disabled" : {
       "localizations" : {
@@ -684,17 +696,8 @@
         }
       }
     },
-    "Discover" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "发现"
-          }
-        }
-      }
-    },
+    "Dismiss" : {},
+    "Display Settings" : {},
     "Display asleep" : {
       "localizations" : {
         "zh-Hans" : {
@@ -704,9 +707,6 @@
           }
         }
       }
-    },
-    "Display Settings" : {
-
     },
     "Displays" : {
       "localizations" : {
@@ -718,6 +718,10 @@
         }
       }
     },
+    "Distorts the layer with rolling waves." : {
+      "comment" : "Scene Inspector tooltip for the waterwaves effect"
+    },
+    "Don't Ask Again" : {},
     "Don't ask again for this wallpaper" : {
       "localizations" : {
         "zh-Hans" : {
@@ -728,31 +732,101 @@
         }
       }
     },
-    "Download" : {
-
+    "Done" : {},
+    "Download" : {},
+    "Download %lld Wallpapers" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Download %lld Wallpaper"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Download %lld Wallpapers"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     "Download %lld selected wallpapers to your library?" : {
-
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Download %lld selected wallpaper to your library?"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Download %lld selected wallpapers to your library?"
+                }
+              }
+            }
+          }
+        }
+      }
     },
-    "Download %lld Wallpapers" : {
-
+    "Download All" : {},
+    "Download Selected (%lld)" : {},
+    "Download Selected Wallpapers" : {},
+    "Download complete, importing…" : {
+      "comment" : "Download status"
     },
-    "Download All" : {
-
-    },
-    "Download Selected (%lld)" : {
-
-    },
-    "Download Selected Wallpapers" : {
-
-    },
+    "Download the selected wallpapers" : {},
     "Downloaded" : {
-
+      "comment" : "Download status"
     },
-    "Downloads" : {
-
+    "Downloading" : {},
+    "Downloading…" : {
+      "comment" : "Download status"
+    },
+    "Downloading… %@" : {
+      "comment" : "Download status; %@ is a percentage"
+    },
+    "Downloads" : {},
+    "Downloads: %lld" : {},
+    "Downloads: %lld failed" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Downloads: %lld failed"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Downloads: %lld failed"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Draws bars that rise and fall with the audio you are hearing. Needs Screen & System Audio Recording permission." : {
+      "comment" : "Scene Inspector tooltip for the audiobars effect"
+    },
+    "Drifts a cloud texture across the layer." : {
+      "comment" : "Scene Inspector tooltip for the cloudmotion effect"
     },
     "Dual Monitor" : {
+      "comment" : "Resolution filter group: wallpapers spanning two displays",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -761,6 +835,9 @@
           }
         }
       }
+    },
+    "Dynamic Resolution" : {
+      "comment" : "Resolution filter: wallpapers that adapt to any resolution"
     },
     "Edit" : {
       "localizations" : {
@@ -772,6 +849,7 @@
         }
       }
     },
+    "Edit X and Y together" : {},
     "Edited" : {
       "localizations" : {
         "zh-Hans" : {
@@ -782,9 +860,10 @@
         }
       }
     },
-    "Effects" : {
-
+    "Effect Stack" : {
+      "comment" : "Scene Inspector: the effects applied to a video"
     },
+    "Effects" : {},
     "Enabled" : {
       "localizations" : {
         "zh-Hans" : {
@@ -815,9 +894,8 @@
         }
       }
     },
-    "Enter Steam Guard Code" : {
-
-    },
+    "Enter Steam Guard Code" : {},
+    "Enter a valid HTTP or HTTPS image/video URL." : {},
     "Errors Only" : {
       "localizations" : {
         "zh-Hans" : {
@@ -828,16 +906,31 @@
         }
       }
     },
-    "Favorite" : {
-      "extractionState" : "stale",
+    "Every Wallpaper Type" : {},
+    "Everyone" : {
+      "comment" : "Age rating: suitable for everyone"
+    },
+    "FPS" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "喜欢"
+            "value" : "帧率"
           }
         }
       }
+    },
+    "Fades the layer in or out." : {
+      "comment" : "Scene Inspector tooltip for the opacity effect"
+    },
+    "Fades the layer into a gradient, usually to darken edges or tint one side." : {
+      "comment" : "Scene Inspector tooltip for the blendgradient effect"
+    },
+    "Failed to run steamcmd: %@" : {
+      "comment" : "steamcmd is a program name; %@ is the system's reason"
+    },
+    "Fantasy" : {
+      "comment" : "Workshop genre tag"
     },
     "File" : {
       "localizations" : {
@@ -850,7 +943,7 @@
       }
     },
     "File Size" : {
-      "extractionState" : "stale",
+      "comment" : "Sort wallpapers by size on disk",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -859,6 +952,10 @@
           }
         }
       }
+    },
+    "File not found at selected path." : {},
+    "Fill" : {
+      "comment" : "Wallpaper placement: scale to cover the screen, cropping"
     },
     "Filter Results" : {
       "localizations" : {
@@ -870,8 +967,10 @@
         }
       }
     },
-    "Find wallpapers by name, tag, or browse trending content." : {
-
+    "Find wallpapers by name, tag, or browse trending content." : {},
+    "Finish" : {},
+    "Fit" : {
+      "comment" : "Wallpaper placement: scale to fit inside the screen"
     },
     "Follow System" : {
       "localizations" : {
@@ -883,29 +982,18 @@
         }
       }
     },
-    "FPS" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "帧率"
-          }
-        }
-      }
+    "Font" : {
+      "comment" : "Wallpaper setting added by the app"
     },
-    "Fully take over" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "完全托管"
-          }
-        }
-      }
+    "Font Size" : {
+      "comment" : "Wallpaper setting added by the app"
+    },
+    "Full (Wallpaper Engine)" : {},
+    "Full Effect Stack" : {},
+    "Game" : {
+      "comment" : "Workshop genre tag: video games"
     },
     "General" : {
-      "extractionState" : "manual",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -915,33 +1003,26 @@
         }
       }
     },
-    "Genre" : {
-
+    "Genre" : {},
+    "Get a free key at" : {},
+    "Girls" : {
+      "comment" : "Workshop genre tag"
     },
-    "Get a free key at" : {
-
+    "Grant Access" : {},
+    "Green component of the bar colour." : {
+      "comment" : "Scene Inspector tooltip for the audiobars effect's green parameter"
     },
-    "Group" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "组"
-          }
-        }
-      }
+    "Guys" : {
+      "comment" : "Workshop genre tag"
     },
-    "Hello, World!" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "打个胶先"
-          }
-        }
-      }
+    "Height of the torn band. Small values give a thin tracking line, large values disturb most of the frame." : {
+      "comment" : "Scene Inspector tooltip for the vhs effect's distortionwidth parameter"
+    },
+    "Height of the waves — how far pixels are displaced." : {
+      "comment" : "Scene Inspector tooltip for the waterwaves effect's strength parameter"
+    },
+    "Height the bars keep in silence, so they do not vanish between beats." : {
+      "comment" : "Scene Inspector tooltip for the audiobars effect's minimum parameter"
     },
     "Help" : {
       "localizations" : {
@@ -963,9 +1044,6 @@
         }
       }
     },
-    "Hide Downloaded" : {
-
-    },
     "Hide Others" : {
       "localizations" : {
         "zh-Hans" : {
@@ -976,6 +1054,7 @@
         }
       }
     },
+    "Hide object" : {},
     "High" : {
       "localizations" : {
         "zh-Hans" : {
@@ -986,6 +1065,7 @@
         }
       }
     },
+    "High (50,000)" : {},
     "High FPS may slow down your PC!" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1026,6 +1106,184 @@
         }
       }
     },
+    "Highest audio frequency band that drives this. Lower it to ignore hiss and cymbals." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like frequencymax"
+    },
+    "Highest frequency band that drives the shift. Lower it to ignore cymbals and hiss." : {
+      "comment" : "Scene Inspector tooltip for the hueshift effect's frequencymax parameter"
+    },
+    "Highest frequency band that drives the warp." : {
+      "comment" : "Scene Inspector tooltip for the hyperdrive effect's frequencymax parameter"
+    },
+    "Horizontal" : {},
+    "Horizontal scroll speed. Negative scrolls left, 0 stops. Only looks seamless on tiling textures." : {
+      "comment" : "Scene Inspector tooltip for the scroll effect's speedx parameter"
+    },
+    "Horizontal speed. Negative values move the other way, 0 stops." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like speedx"
+    },
+    "How bright a pixel must be before it casts rays. Lower it to catch more of the image, raise it to keep rays on highlights only." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like ray_threshold"
+    },
+    "How bright a pixel must be before it glows." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like bloomthreshold"
+    },
+    "How bright a pixel must be to emit rays. Lower it if nothing glows; raise it if the whole image smears." : {
+      "comment" : "Scene Inspector tooltip for the godrays effect's raythreshold parameter"
+    },
+    "How close a pixel must be to the key colour to be removed. Raise it until the background is gone, then stop — going further eats the subject." : {
+      "comment" : "Scene Inspector tooltip for the colorkey effect's tolerance parameter"
+    },
+    "How closely a pixel must match before it is affected. Raise it until the whole target area is covered, then stop." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like tolerance"
+    },
+    "How far colour bleeds sideways, like worn tape." : {
+      "comment" : "Scene Inspector tooltip for the vhs effect's chromatic parameter"
+    },
+    "How far the bars react to volume. Raise it for quiet music, lower it if the bars keep hitting the ceiling." : {
+      "comment" : "Scene Inspector tooltip for the audiobars effect's strength parameter"
+    },
+    "How far the blur reaches on each axis." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like blur_scale"
+    },
+    "How far the hue rotates at full volume." : {
+      "comment" : "Scene Inspector tooltip for the hueshift effect's audioamount parameter"
+    },
+    "How far the image shifts horizontally with the pointer. Needs a depth map; without one nothing moves." : {
+      "comment" : "Scene Inspector tooltip for the depthparallax effect's depthx parameter"
+    },
+    "How far the image shifts vertically with the pointer." : {
+      "comment" : "Scene Inspector tooltip for the depthparallax effect's depthy parameter"
+    },
+    "How far the image stretches into streaks." : {
+      "comment" : "Scene Inspector tooltip for the hyperdrive effect's strength parameter"
+    },
+    "How far the layer moves each shake, in pixels." : {
+      "comment" : "Scene Inspector tooltip for the shake effect's strength parameter"
+    },
+    "How far the layer slides against the pointer. Give background layers more than foreground ones to sell the depth." : {
+      "comment" : "Scene Inspector tooltip for the parallax effect's amount parameter"
+    },
+    "How far the leaves bend." : {
+      "comment" : "Scene Inspector tooltip for the foliagesway effect's strength parameter"
+    },
+    "How far the rays reach from their source." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like ray_length"
+    },
+    "How far the red and blue channels separate. Keep it small — past a few pixels it stops reading as a lens and starts looking broken." : {
+      "comment" : "Scene Inspector tooltip for the chromaticaberration effect's strength parameter"
+    },
+    "How far the shafts reach from their source." : {
+      "comment" : "Scene Inspector tooltip for the godrays effect's raylength parameter"
+    },
+    "How far the surface is displaced by each ripple." : {
+      "comment" : "Scene Inspector tooltip for the waterripple effect's ripplestrength parameter"
+    },
+    "How far the tracking glitch tears the image sideways." : {
+      "comment" : "Scene Inspector tooltip for the vhs effect's distortionstrength parameter"
+    },
+    "How fast the fog moves across the scene." : {
+      "comment" : "Scene Inspector tooltip for the volumetricfog effect's drift parameter"
+    },
+    "How fast the ripples spread." : {
+      "comment" : "Scene Inspector tooltip for the waterripple effect's animationspeed parameter"
+    },
+    "How fast the shafts drift." : {
+      "comment" : "Scene Inspector tooltip for the lightshafts effect's rayspeed parameter"
+    },
+    "How fast the streaks travel outward." : {
+      "comment" : "Scene Inspector tooltip for the hyperdrive effect's speed parameter"
+    },
+    "How fast the sway travels through the foliage." : {
+      "comment" : "Scene Inspector tooltip for the foliagesway effect's speeduv parameter"
+    },
+    "How fast the waves travel." : {
+      "comment" : "Scene Inspector tooltip for the waterwaves effect's speed parameter"
+    },
+    "How gradually the distortion ramps in and out. Low values snap, high values glide." : {
+      "comment" : "Scene Inspector tooltip for the nitro effect's smoothness parameter"
+    },
+    "How gradually the effect blends at its boundary." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like smoothness"
+    },
+    "How hard the lens bends the image. Negative values pinch inward instead of bulging out." : {
+      "comment" : "Scene Inspector tooltip for the fisheye effect's scale parameter"
+    },
+    "How many bars are drawn across the layer." : {
+      "comment" : "Scene Inspector tooltip for the audiobars effect's bars parameter"
+    },
+    "How many times the texture tiles horizontally." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like repeatx"
+    },
+    "How many times the texture tiles vertically." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like repeaty"
+    },
+    "How much bar movement is averaged over time. High values glide, 0 reacts instantly and jitters." : {
+      "comment" : "Scene Inspector tooltip for the audiobars effect's smoothing parameter"
+    },
+    "How much of the area the effect fills." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like density"
+    },
+    "How much of the layer the lens covers. Small values bulge only the centre." : {
+      "comment" : "Scene Inspector tooltip for the fisheye effect's size parameter"
+    },
+    "How much the warp reacts to volume." : {
+      "comment" : "Scene Inspector tooltip for the hyperdrive effect's audioamount parameter"
+    },
+    "How often the pattern repeats over time." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like frequency"
+    },
+    "How often the tracking glitch rolls through." : {
+      "comment" : "Scene Inspector tooltip for the vhs effect's distortionspeed parameter"
+    },
+    "How quickly each shake settles. High values give a short sharp jolt, low values keep it wobbling." : {
+      "comment" : "Scene Inspector tooltip for the shake effect's friction parameter"
+    },
+    "How quickly the effect animates. 0 freezes it." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like speed"
+    },
+    "How quickly the effect fades away from the centre." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like centerfalloff"
+    },
+    "How quickly the motion settles. High values stop it sharply, low values let it keep moving." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like friction"
+    },
+    "How quickly the split fades toward the centre. High values keep the centre sharp and push the fringing to the edges, like a real lens." : {
+      "comment" : "Scene Inspector tooltip for the chromaticaberration effect's centerfalloff parameter"
+    },
+    "How rapidly it shakes." : {
+      "comment" : "Scene Inspector tooltip for the shake effect's speed parameter"
+    },
+    "How strongly audio drives this parameter." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like audioamount"
+    },
+    "How strongly noise distorts the result. Small values keep it organic; large values look grainy." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like noise_amount"
+    },
+    "How strongly the effect is applied." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like intensity\nScene Inspector tooltip for an effect parameter named like strength"
+    },
+    "How strongly the effect is applied. 0 disables it." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like amount"
+    },
+    "How strongly the tint colour is mixed in. 0 leaves the layer untouched, 1 replaces it with the colour." : {
+      "comment" : "Scene Inspector tooltip for the tint effect's alpha parameter"
+    },
+    "How the wallpaper is fitted to the screen when its aspect ratio differs." : {
+      "comment" : "Details panel tooltip"
+    },
+    "How thick the fog is. Small changes read strongly — start low." : {
+      "comment" : "Scene Inspector tooltip for the volumetricfog effect's density parameter"
+    },
+    "How wide the shafts spread." : {
+      "comment" : "Scene Inspector tooltip for the lightshafts effect's rayradius parameter"
+    },
+    "Hue" : {
+      "comment" : "Wallpaper setting added by the app"
+    },
+    "Hue rotation applied even without audio." : {
+      "comment" : "Scene Inspector tooltip for the hueshift effect's intensity parameter"
+    },
     "Icon Size" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1035,6 +1293,15 @@
           }
         }
       }
+    },
+    "Image" : {
+      "comment" : "Scene Inspector: the kind of a scene object\nWallpaper type: an image added by URL"
+    },
+    "Image %lld" : {
+      "comment" : "Scene Inspector: an image layer without a name"
+    },
+    "Image Wallpaper" : {
+      "comment" : "Title of an image wallpaper added by URL"
     },
     "Import" : {
       "localizations" : {
@@ -1046,16 +1313,7 @@
         }
       }
     },
-    "Import Wallpapers from Steam Workshop" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "从 Steam 创意工坊中导入壁纸"
-          }
-        }
-      }
-    },
+    "Inspect every layer, texture and effect in a wallpaper, tweak parameters live, and nudge or align objects." : {},
     "Installed" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1066,8 +1324,17 @@
         }
       }
     },
-    "Internal" : {
-
+    "Internal" : {},
+    "Invalid API URL" : {},
+    "Invalid API key.\nGet a valid key at steamcommunity.com/dev/apikey" : {},
+    "Invalid username or password" : {},
+    "It has now done this twice in a row and is flagged in the library." : {},
+    "Italic" : {
+      "comment" : "Wallpaper setting added by the app"
+    },
+    "Its wallpapers stay in your library." : {},
+    "Jitters the layer. Masked so only part of the image moves." : {
+      "comment" : "Scene Inspector tooltip for the shake effect"
     },
     "Keep Running" : {
       "localizations" : {
@@ -1078,6 +1345,17 @@
           }
         }
       }
+    },
+    "Keep the audio speed matched to the video speed." : {
+      "comment" : "Details panel tooltip"
+    },
+    "Keeps only the outlines in the image." : {
+      "comment" : "Scene Inspector tooltip for the edgedetection effect"
+    },
+    "Key set" : {},
+    "Kind to Your Battery" : {},
+    "Landscape" : {
+      "comment" : "Workshop genre tag: scenery"
     },
     "Language" : {
       "localizations" : {
@@ -1109,17 +1387,12 @@
         }
       }
     },
-    "Last Updated" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "最近添加"
-          }
-        }
-      }
+    "Later" : {},
+    "Layer Details" : {},
+    "Leans the layer to one side." : {
+      "comment" : "Scene Inspector tooltip for the skew effect"
     },
+    "Left" : {},
     "Light" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1130,12 +1403,9 @@
         }
       }
     },
-    "Link audio speed" : {
-
-    },
-    "Linked" : {
-
-    },
+    "Light shafts from wallpapers' volumetric lights. Higher qualities march more samples at a finer resolution; low and medium blur a coarser buffer." : {},
+    "Limits this effect to the white areas of the mask. Black areas are left untouched." : {},
+    "Linked" : {},
     "Load" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1146,29 +1416,7 @@
         }
       }
     },
-    "Load Profile" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "加载配置"
-          }
-        }
-      }
-    },
-    "Log In" : {
-
-    },
-    "Log in on the Workshop tab to download these." : {
-
-    },
-    "Log in to download" : {
-
-    },
-    "Log in with your Steam account to browse and download wallpapers.\nYou must own Wallpaper Engine on Steam." : {
-
-    },
+    "Log In" : {},
     "Log Level" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1178,6 +1426,16 @@
           }
         }
       }
+    },
+    "Log in on the Workshop tab to download these." : {},
+    "Log in to download" : {},
+    "Log in with your Steam account to browse and download wallpapers.\nYou must own Wallpaper Engine on Steam." : {},
+    "Login failed. Check credentials and try again." : {},
+    "Loudness of the wallpaper's own soundtrack." : {
+      "comment" : "Details panel tooltip"
+    },
+    "Loudness of the wallpaper's own soundtrack. Set it to 0 to keep the wallpaper silent." : {
+      "comment" : "Details panel tooltip"
     },
     "Low" : {
       "localizations" : {
@@ -1189,26 +1447,34 @@
         }
       }
     },
-    "macOS" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "macOS"
-          }
-        }
-      }
+    "Low (10,000)" : {},
+    "Lowest audio frequency band that drives this. Raise it to ignore bass." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like frequencymin"
     },
-    "Made with ❤️ by" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "作者"
-          }
-        }
-      }
+    "Lowest frequency band that drives the shift. Raise it to ignore bass." : {
+      "comment" : "Scene Inspector tooltip for the hueshift effect's frequencymin parameter"
+    },
+    "Lowest frequency band that drives the warp. Raise it to ignore bass." : {
+      "comment" : "Scene Inspector tooltip for the hyperdrive effect's frequencymin parameter"
+    },
+    "MMD (Miku-Miku Dance)" : {
+      "comment" : "Workshop genre tag; MikuMikuDance is a 3D animation program"
+    },
+    "MSAA x2" : {
+      "shouldTranslate" : false
+    },
+    "MSAA x4" : {
+      "shouldTranslate" : false
+    },
+    "MSAA x8" : {
+      "shouldTranslate" : false
+    },
+    "Make It Yours" : {},
+    "Makes colours richer on loud passages. %@" : {
+      "comment" : "%@ is the music sync explanation"
+    },
+    "Makes one colour transparent, like a green screen. Raise Tolerance until the colour disappears, then raise Fuzziness to soften the edge." : {
+      "comment" : "Scene Inspector tooltip for the colorkey effect"
     },
     "Manage Blocklist" : {
       "localizations" : {
@@ -1220,8 +1486,18 @@
         }
       }
     },
-    "Material" : {
-
+    "Mask" : {},
+    "Match Display" : {},
+    "Match Display draws no more detail than the display shows: a scene larger than the display is drawn at the display's size, and each layer's effects at the size the layer appears on screen. Full draws every effect at its texture's full size, as Wallpaper Engine does." : {},
+    "Match all (AND)" : {},
+    "Match any (OR)" : {},
+    "Material" : {},
+    "Material Properties" : {},
+    "Mature" : {
+      "comment" : "Age rating: adults only"
+    },
+    "Medieval" : {
+      "comment" : "Workshop genre tag"
     },
     "Medium" : {
       "localizations" : {
@@ -1233,6 +1509,7 @@
         }
       }
     },
+    "Medium (25,000)" : {},
     "Medium Icons" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1243,29 +1520,52 @@
         }
       }
     },
-    "Mobile" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "手机应用"
-          }
-        }
-      }
+    "Memes" : {
+      "comment" : "Workshop genre tag"
     },
-    "Move All %lld to Trash" : {
-
+    "Metal (effects apply to video)" : {},
+    "Metal draws video through the scene renderer so effects and music sync apply to it, the way Wallpaper Engine does. Experimental." : {},
+    "Metal effects, music sync, remote media" : {},
+    "Middle" : {},
+    "Midtone brightness curve. 1 leaves the layer unchanged." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like gamma"
     },
-    "Move Current Wallpapers" : {
-
+    "Mirrors the layer below itself, as if on water or glass." : {
+      "comment" : "Scene Inspector tooltip for the reflection effect"
     },
-    "Move Current Wallpapers?" : {
-
+    "Mixes a second image into the layer using a Photoshop-style blend mode." : {
+      "comment" : "Scene Inspector tooltip for the blend effect"
     },
-    "Move existing wallpapers to the selected folder, or leave them in the current location and use the new folder from now on?" : {
-
+    "Mobile Compatible" : {
+      "comment" : "Filter: wallpapers that also run in the Wallpaper Engine mobile app"
     },
+    "Most Popular" : {
+      "comment" : "Workshop sort order: highest rated"
+    },
+    "Most Recent" : {
+      "comment" : "Workshop sort order"
+    },
+    "Most Subscribed" : {
+      "comment" : "Workshop sort order"
+    },
+    "Mouse Parallax" : {
+      "comment" : "Wallpaper setting added by the app"
+    },
+    "Move" : {},
+    "Move & Align" : {},
+    "Move All %lld to Trash" : {},
+    "Move Current Wallpapers" : {},
+    "Move Current Wallpapers?" : {},
+    "Move Down" : {},
+    "Move Element" : {},
+    "Move Left" : {},
+    "Move Right" : {},
+    "Move Up" : {},
+    "Move down" : {},
+    "Move down. Shift = 50 px, Control = 1 px, default = 10 px" : {},
+    "Move existing wallpapers to the selected folder, or leave them in the current location and use the new folder from now on?" : {},
+    "Move left. Shift = 50 px, Control = 1 px, default = 10 px" : {},
+    "Move right. Shift = 50 px, Control = 1 px, default = 10 px" : {},
     "Move to Trash" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1276,35 +1576,23 @@
         }
       }
     },
-    "MSAA x2" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MSAA x2"
-          }
-        }
-      }
+    "Move up" : {},
+    "Move up. Shift = 50 px, Control = 1 px, default = 10 px" : {},
+    "Moves the layer against the pointer so it appears to sit at a different depth." : {
+      "comment" : "Scene Inspector tooltip for the parallax effect"
     },
-    "MSAA x4" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MSAA x4"
-          }
-        }
-      }
+    "Moving into Wallpaper Storage…" : {
+      "comment" : "Download status; Wallpaper Storage is the name of the library folder setting"
     },
-    "MSAA x8" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MSAA x8"
-          }
-        }
-      }
+    "Multiplies the layer by a colour." : {
+      "comment" : "Scene Inspector tooltip for the tint effect"
+    },
+    "Music" : {
+      "comment" : "Workshop genre tag"
+    },
+    "Music Amount" : {},
+    "Music sync follows the wallpaper's own soundtrack while you can hear it. Mute the wallpaper and it follows whatever else is playing on your Mac instead." : {
+      "comment" : "Details panel tooltip for the music sync controls"
     },
     "Mute" : {
       "localizations" : {
@@ -1316,8 +1604,14 @@
         }
       }
     },
+    "My Favourites" : {
+      "comment" : "Filter: wallpapers the user marked as favourite"
+    },
+    "My Wallpapers" : {
+      "comment" : "Filter: wallpapers the user made or imported"
+    },
     "Name" : {
-      "extractionState" : "stale",
+      "comment" : "Sort wallpapers by name",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1327,6 +1621,13 @@
         }
       }
     },
+    "Native" : {},
+    "Native draws at the display's full pixel count. Desktop draws one pixel per point (half the width and height on a Retina display) and scales the frame up, for a quarter of the work." : {},
+    "Nature" : {
+      "comment" : "Workshop genre tag"
+    },
+    "Needed for audio visualizers and audio-reactive SceneScript. macOS exposes system audio capture through Screen Recording permission." : {},
+    "Needed to browse and search the Workshop. It is stored in your keychain and checked with Steam before saving. Without it, author names come from public Steam profiles." : {},
     "Never show this again until next update" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1347,12 +1648,10 @@
         }
       }
     },
-    "No Downloads" : {
-
-    },
-    "No recent wallpapers" : {
-
-    },
+    "New playlist" : {},
+    "Next" : {},
+    "Next Page" : {},
+    "No Downloads" : {},
     "No Tags" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1363,20 +1662,13 @@
         }
       }
     },
-    "No wallpapers found for your search." : {
-
-    },
-    "No wallpapers found for your search.\nExpand or reset the categories in the filter sidebar or try another search term." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "没有找到任何壁纸。 请尝试通过侧栏的选择器来扩大或重置搜索范围，或者尝试换一个词来搜索。"
-          }
-        }
-      }
-    },
+    "No Wallpapers Inside" : {},
+    "No assets available" : {},
+    "No mask" : {},
+    "No originals ready to remove" : {},
+    "No recent wallpapers" : {},
+    "No wallpaper" : {},
+    "No wallpapers found for your search." : {},
     "None" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1407,16 +1699,23 @@
         }
       }
     },
-    "Only enabled when app is running" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "仅在应用程序运行时启用"
-          }
-        }
-      }
+    "Object %lld" : {
+      "comment" : "Scene Inspector: a scene object without a name"
+    },
+    "Object Properties" : {},
+    "Off, a wallpaper shown on several displays keeps each display's properties, as Wallpaper Engine does. On, one set of properties applies to every display." : {},
+    "Official" : {
+      "comment" : "Filter: wallpapers made by the Wallpaper Engine team"
+    },
+    "Offsets the start of the animation, useful for de-syncing two copies of an effect." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like phase"
+    },
+    "Offsets, scales or rotates the layer." : {
+      "comment" : "Scene Inspector tooltip for the transform effect"
+    },
+    "One Wallpaper Per Display" : {},
+    "Opacity left behind where the colour is keyed out. 0 makes matched pixels fully transparent." : {
+      "comment" : "Scene Inspector tooltip for the colorkey effect's alpha parameter"
     },
     "Open All in Finder" : {
       "localizations" : {
@@ -1428,6 +1727,16 @@
         }
       }
     },
+    "Open Permissions Page" : {},
+    "Open Privacy Settings" : {},
+    "Open Wallpaper Engine didn't quit cleanly twice in a row while this wallpaper was showing" : {},
+    "Open Wallpaper Engine doesn't have permission to access the selected folders." : {},
+    "Open Wallpaper Engine has no control over this file. Make sure it comes from a reliable source before proceeding." : {},
+    "Open Wallpaper Engine needs Screen & System Audio Recording permission to read system audio for audio bars and other audio-reactive wallpapers. Audio capture starts on its own once the permission is granted." : {
+      "comment" : "Screen & System Audio Recording is the name of the macOS privacy setting"
+    },
+    "Open Wallpaper…" : {},
+    "Open a wallpaper, or add a video or an image" : {},
     "Open in Finder" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1448,48 +1757,16 @@
         }
       }
     },
-    "Open Wallpaper" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "打开壁纸文件"
-          }
-        }
-      }
+    "Opening an Unknown Application" : {},
+    "Opening an Unknown Wallpaper" : {},
+    "Opening an Unknown Web Page" : {},
+    "Opens or closes a circular mask over the layer." : {
+      "comment" : "Scene Inspector tooltip for the iris effect"
     },
-    "Open Wallpaper Engine" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Wallpaper Engine"
-          }
-        }
-      }
-    },
-    "Open Wallpaper Engine has no control over this file, you must ensure that it comes from a rellable source before proceeding." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Wallpaper Engine没有能力控制此壁纸所有可能存在的恶意行为，在继续打开该壁纸之前你必须确认你的壁纸是从可信任的来源下载的"
-          }
-        }
-      }
-    },
-    "Opening Unkown %@" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "打开未知 %@"
-          }
-        }
-      }
-    },
-    "Or locate an existing steamcmd binary:" : {
-
+    "Or locate an existing steamcmd binary:" : {},
+    "Original creator" : {},
+    "Other" : {
+      "comment" : "Resolution filter group for the remaining resolutions\nScene Inspector: the kind of a scene object that is neither an image nor particles"
     },
     "Other Application Focused:" : {
       "localizations" : {
@@ -1521,9 +1798,30 @@
         }
       }
     },
-    "Password" : {
-
+    "Other Resolution" : {
+      "comment" : "Resolution filter"
     },
+    "Our Text" : {},
+    "Overall amount of tape degradation." : {
+      "comment" : "Scene Inspector tooltip for the vhs effect's strength parameter"
+    },
+    "Overall lightness. 1 leaves the layer unchanged." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like brightness"
+    },
+    "Overlays procedural clouds." : {
+      "comment" : "Scene Inspector tooltip for the clouds effect"
+    },
+    "Parallax Amount" : {
+      "comment" : "Wallpaper setting added by the app"
+    },
+    "Particle %lld" : {
+      "comment" : "Scene Inspector: a particle system without a name"
+    },
+    "Particle Budget" : {},
+    "Particle System" : {
+      "comment" : "Scene Inspector: the kind of a scene object"
+    },
+    "Password" : {},
     "Paste" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1534,6 +1832,8 @@
         }
       }
     },
+    "Paste a link to any video or image. Images are turned into a scene, so the effect stack applies to them as well." : {},
+    "Path" : {},
     "Pause" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1554,8 +1854,8 @@
         }
       }
     },
+    "Pause, mute or switch wallpapers from the menu bar at any time. Open Settings to fine-tune the rest." : {},
     "Performance" : {
-      "extractionState" : "manual",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1565,11 +1865,18 @@
         }
       }
     },
-    "Placement: %@" : {
-
+    "Performance You Set" : {},
+    "Permission Denied" : {},
+    "Permissions" : {},
+    "Pick the frame rate, anti-aliasing and texture quality that suit your Mac, and check the Diagnostics page to see the impact." : {},
+    "Pixel Art" : {
+      "comment" : "Workshop genre tag"
     },
-    "Play" : {
-
+    "Placement" : {},
+    "Play" : {},
+    "Play scene, video, web and image wallpapers, with a familiar layout if you already know Wallpaper Engine." : {},
+    "Play the soundtrack that ships with this wallpaper." : {
+      "comment" : "Details panel tooltip"
     },
     "Playback" : {
       "localizations" : {
@@ -1581,28 +1888,16 @@
         }
       }
     },
-    "Playback Rate" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "回放速率"
-          }
-        }
-      }
+    "Playback speed of the soundtrack. Link it to the video speed to keep them in step." : {
+      "comment" : "Details panel tooltip"
     },
-    "Playlist" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "播放列表"
-          }
-        }
-      }
+    "Playback speed of the video. 1 is normal; 0 pauses it." : {
+      "comment" : "Details panel tooltip"
     },
+    "Playlist name" : {},
+    "Playlists" : {},
+    "Playlists and Favourites" : {},
+    "Playlists, favourites and your own media" : {},
     "Please be aware of malware." : {
       "localizations" : {
         "zh-Hans" : {
@@ -1625,6 +1920,24 @@
     },
     "Please wait %lld seconds." : {
       "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Please wait %lld second."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Please wait %lld seconds."
+                }
+              }
+            }
+          }
+        },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1634,7 +1947,6 @@
       }
     },
     "Plugins" : {
-      "extractionState" : "manual",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1644,22 +1956,18 @@
         }
       }
     },
+    "Point the effect radiates from, as a fraction of the layer (0.5, 0.5 is the middle)." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like center"
+    },
+    "Portrait Monitor / Phone" : {
+      "comment" : "Resolution filter group: portrait displays and phones"
+    },
     "Post-Processing" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "后处理"
-          }
-        }
-      }
-    },
-    "Potrait Monitor / Phone" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "纵向显示器/手机"
           }
         }
       }
@@ -1674,9 +1982,13 @@
         }
       }
     },
-    "Preparing preview" : {
-
-    },
+    "Powered by a Metal renderer" : {},
+    "Preparing preview" : {},
+    "Preset" : {},
+    "Preview download failed." : {},
+    "Preview exceeds the 250 MB cache limit." : {},
+    "Previous" : {},
+    "Previous Page" : {},
     "Proceed" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1687,15 +1999,9 @@
         }
       }
     },
-    "Process Piority" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "进程优先级"
-          }
-        }
-      }
+    "Process Priority" : {},
+    "Projects rippling underwater light patterns." : {
+      "comment" : "Scene Inspector tooltip for the watercaustics effect"
     },
     "Properties" : {
       "localizations" : {
@@ -1707,16 +2013,11 @@
         }
       }
     },
-    "Protect against crashes" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "防崩溃"
-          }
-        }
-      }
+    "Pulses a speed-boost distortion." : {
+      "comment" : "Scene Inspector tooltip for the nitro effect"
+    },
+    "Pushes the image along as if it were flowing water." : {
+      "comment" : "Scene Inspector tooltip for the waterflow effect"
     },
     "Quality" : {
       "localizations" : {
@@ -1728,6 +2029,12 @@
         }
       }
     },
+    "Questionable" : {
+      "comment" : "Age rating between Everyone and Mature (partial nudity, mild violence)"
+    },
+    "Queued" : {
+      "comment" : "Download status: waiting for other downloads"
+    },
     "Quit" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1738,7 +2045,11 @@
         }
       }
     },
+    "Radius of the spinning disc, as a fraction of the layer." : {
+      "comment" : "Scene Inspector tooltip for the spin effect's size parameter"
+    },
     "Rating" : {
+      "comment" : "Sort wallpapers by age rating",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1748,12 +2059,8 @@
         }
       }
     },
-    "Rating unavailable" : {
-
-    },
-    "Re-detect" : {
-
-    },
+    "Re-detect" : {},
+    "Reading media…" : {},
     "Recent Wallpapers" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1763,6 +2070,11 @@
           }
         }
       }
+    },
+    "Recheck" : {},
+    "Reclaim Now" : {},
+    "Red component of the bar colour." : {
+      "comment" : "Scene Inspector tooltip for the audiobars effect's red parameter"
     },
     "Redo" : {
       "localizations" : {
@@ -1794,6 +2106,8 @@
         }
       }
     },
+    "Refresh" : {},
+    "Refresh the wallpaper list" : {},
     "Related Wallpapers" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1803,6 +2117,9 @@
           }
         }
       }
+    },
+    "Relaxing" : {
+      "comment" : "Workshop genre tag"
     },
     "Reload when changing output device" : {
       "localizations" : {
@@ -1814,20 +2131,38 @@
         }
       }
     },
-    "Remove" : {
-
+    "Remote Video" : {
+      "comment" : "Title of a video wallpaper added by URL"
     },
-    "Remove Wallpaper" : {
-      "extractionState" : "stale",
+    "Remove" : {},
+    "Remove from Favorites" : {},
+    "Remove from playlist" : {},
+    "Remove original packages after conversion" : {},
+    "Removed %lld original packages." : {
       "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "移除壁纸"
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Removed %lld original package."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Removed %lld original packages."
+                }
+              }
+            }
           }
         }
       }
     },
+    "Render Resolution" : {},
+    "Repeat" : {},
+    "Replace…" : {},
     "Report" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1848,6 +2183,10 @@
         }
       }
     },
+    "Requesting download…" : {
+      "comment" : "Download status"
+    },
+    "Required" : {},
     "Reset" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1898,6 +2237,7 @@
         }
       }
     },
+    "Reset to 1x" : {},
     "Resolution" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1918,16 +2258,39 @@
         }
       }
     },
-    "Safe start after hibernation" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "从休眠后唤醒时使用安全模式"
-          }
-        }
-      }
+    "Resume" : {},
+    "Retro" : {
+      "comment" : "Workshop genre tag"
+    },
+    "Retry" : {},
+    "Retry download" : {},
+    "Reveals a second image through a moving window." : {
+      "comment" : "Scene Inspector tooltip for the xray effect"
+    },
+    "Right" : {},
+    "Rocks the layer back and forth around its base." : {
+      "comment" : "Scene Inspector tooltip for the swing effect"
+    },
+    "Rocks the picture with the beat, in degrees. %@" : {
+      "comment" : "%@ is the music sync explanation"
+    },
+    "Rotate automatically" : {},
+    "Rotate through a playlist on a timer or when a video ends, and keep the wallpapers you love a click away." : {},
+    "Rotates a circular region of the layer." : {
+      "comment" : "Scene Inspector tooltip for the spin effect"
+    },
+    "Rotates every colour around the colour wheel." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like hue\nScene Inspector tooltip for the hueshift effect"
+    },
+    "Rotation applied by the effect, in degrees." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like angle"
+    },
+    "Runs Quietly in the Background" : {},
+    "Runs a soft highlight across the layer." : {
+      "comment" : "Scene Inspector tooltip for the shimmer effect"
+    },
+    "Saturation" : {
+      "comment" : "Wallpaper setting added by the app"
     },
     "Save" : {
       "localizations" : {
@@ -1939,39 +2302,32 @@
         }
       }
     },
-    "Save & Search" : {
-
+    "Scales the layer in time with the audio." : {
+      "comment" : "Scene Inspector tooltip for the pulse effect"
     },
-    "Save Profile" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "保存配置"
-          }
-        }
-      }
+    "Scales the picture with the beat. %@" : {
+      "comment" : "%@ is the music sync explanation"
     },
-    "Scene Inspector" : {
-
+    "Scatters sparkles across the layer." : {
+      "comment" : "Scene Inspector tooltip for the glitter effect"
     },
-    "Scene Objects" : {
-
+    "Scene" : {
+      "comment" : "Wallpaper type: a Wallpaper Engine scene"
     },
-    "Scene Unavailable" : {
-
+    "Scene Detail" : {},
+    "Scene Inspector" : {},
+    "Scene Music" : {},
+    "Scene Music Volume" : {},
+    "Scene Objects" : {},
+    "Scene Unavailable" : {},
+    "Scene effects are toggled under User Scene Settings." : {},
+    "Scene rendering, Workshop, multi-display" : {},
+    "Scene wallpapers render through Metal with their authored effects. Videos render the same way, so blur, bloom, tint and the rest apply to them too." : {},
+    "Scenes, Effects and Music" : {},
+    "Sci-Fi" : {
+      "comment" : "Workshop genre tag: science fiction"
     },
-    "Scheme Color" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "风格颜色"
-          }
-        }
-      }
-    },
+    "Screen & System Audio Recording" : {},
     "Search" : {
       "localizations" : {
         "zh-Hans" : {
@@ -1982,18 +2338,10 @@
         }
       }
     },
-    "Search the Steam Workshop" : {
-
-    },
-    "Search wallpapers..." : {
-
-    },
-    "Searching Workshop..." : {
-
-    },
-    "Select a Scene Object" : {
-
-    },
+    "Search the Steam Workshop" : {},
+    "Search wallpapers..." : {},
+    "Searching Workshop..." : {},
+    "Section" : {},
     "Select All" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2004,15 +2352,21 @@
         }
       }
     },
-    "Select item" : {
-
+    "Select a Scene Object" : {},
+    "Select an object to move it." : {},
+    "Select an object to resize it." : {},
+    "Select item" : {},
+    "Select the steamcmd executable" : {
+      "comment" : "Open panel message; steamcmd is a program name"
     },
-    "Select wallpaper" : {
-
+    "Select wallpaper" : {},
+    "Sends ripples out from the pointer as it moves." : {
+      "comment" : "Scene Inspector tooltip for the cursorripple effect"
     },
-    "Set Wallpaper" : {
-
+    "Separation between lights and darks. 1 leaves the layer unchanged." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like contrast"
     },
+    "Set Wallpaper" : {},
     "Settings" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2033,6 +2387,22 @@
         }
       }
     },
+    "Shader Cache" : {},
+    "Shader Compiler" : {},
+    "Shaders" : {},
+    "Shaders are translated from GLSL to Metal by the compiler built into the app, once, and cached." : {},
+    "Shapes the audio response. Above 1 reacts mainly to peaks." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like audioexponent"
+    },
+    "Shapes the response curve. Above 1 emphasises peaks and ignores small values." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like exponent"
+    },
+    "Shapes the response curve. Above 1 ignores quiet passages and reacts mainly to peaks." : {
+      "comment" : "Scene Inspector tooltip for the hueshift effect's audioexponent parameter"
+    },
+    "Shapes the response curve. Above 1 reacts mainly to peaks." : {
+      "comment" : "Scene Inspector tooltip for the hyperdrive effect's audioexponent parameter"
+    },
     "Share JSON" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2043,6 +2413,17 @@
         }
       }
     },
+    "Sharpens local detail without changing overall brightness. High values look crunchy." : {
+      "comment" : "Scene Inspector tooltip for the localcontrast effect"
+    },
+    "Sharpness of the wave crests. 1 is a smooth sine; higher values give peaked, choppier water." : {
+      "comment" : "Scene Inspector tooltip for the waterwaves effect's exponent parameter"
+    },
+    "Shift 50 px" : {},
+    "Shifts parts of the image by a depth map so it looks three-dimensional as the pointer moves." : {
+      "comment" : "Scene Inspector tooltip for the depthparallax effect"
+    },
+    "Shortcut" : {},
     "Show Filter Results" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2052,9 +2433,6 @@
           }
         }
       }
-    },
-    "Show filters" : {
-
     },
     "Show Only:" : {
       "localizations" : {
@@ -2076,15 +2454,38 @@
         }
       }
     },
-    "Similar UI Layout to Wallpaper Engine on Steam" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "和 Steam 上的 Wallpaper Engine 具有相似的 UI 布局"
-          }
-        }
-      }
+    "Show object" : {},
+    "Show or hide the filters" : {},
+    "Show or hide the move, size and align controls" : {},
+    "Show or hide the playlist list" : {},
+    "Show or hide the wallpaper details" : {},
+    "Showing wallpapers with any checked genre. Click to show only wallpapers with all of them." : {},
+    "Showing wallpapers with every checked genre. Click to show wallpapers with any of them." : {},
+    "Shuffle" : {},
+    "Simulated camera exposure. Positive brightens, negative darkens." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like exposure"
+    },
+    "Size" : {},
+    "Size of the affected area." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like size"
+    },
+    "Size of the affected region." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like radius"
+    },
+    "Size of the noise pattern. Lower is coarser and blotchier, higher is finer." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like noise_scale"
+    },
+    "Size of the pattern relative to the layer." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like scale"
+    },
+    "Size of the ripples. Low values give broad swells, high values fine ridges." : {
+      "comment" : "Scene Inspector tooltip for the waterripple effect's scale parameter"
+    },
+    "Size of the sway pattern. Low values move the whole layer together, high values ripple through it." : {
+      "comment" : "Scene Inspector tooltip for the foliagesway effect's scale parameter"
+    },
+    "Slides the texture continuously, useful for tiling backgrounds." : {
+      "comment" : "Scene Inspector tooltip for the scroll effect"
     },
     "Small Icons" : {
       "localizations" : {
@@ -2096,12 +2497,28 @@
         }
       }
     },
-    "Sort" : {
-
+    "Smears the image along its direction of motion." : {
+      "comment" : "Scene Inspector tooltip for the motionblur effect"
     },
-    "Sort By" : {
-
+    "Softens the boundary of the affected region." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like feather"
     },
+    "Softens the layer. This is the cheap blur; use Blur Precise when you need a cleaner result." : {
+      "comment" : "Scene Inspector tooltip for the blur effect"
+    },
+    "Softness of the cut-out edge. Raise it if the keyed edge looks jagged; too high and the subject goes semi-transparent." : {
+      "comment" : "Scene Inspector tooltip for the colorkey effect's fuzziness parameter"
+    },
+    "Softness of the disc edge. Very small values leave a visible hard circle." : {
+      "comment" : "Scene Inspector tooltip for the spin effect's feather parameter"
+    },
+    "Softness of the edge where the effect stops. Raise it to avoid a hard cut." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like fuzziness"
+    },
+    "Sort" : {},
+    "Sort By" : {},
+    "Sorted ascending. Click to sort descending." : {},
+    "Sorted descending. Click to sort ascending." : {},
     "Source" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2112,16 +2529,20 @@
         }
       }
     },
-    "Split" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "分隔"
-          }
-        }
-      }
+    "Spacing between bars, as a fraction of their width." : {
+      "comment" : "Scene Inspector tooltip for the audiobars effect's gap parameter"
+    },
+    "Speeds the video up and down with the beat. Negative values slow it on loud passages. %@" : {
+      "comment" : "%@ is the music sync explanation"
+    },
+    "Splits red and blue channels apart, imitating a cheap camera lens. Subtle values read best." : {
+      "comment" : "Scene Inspector tooltip for the chromaticaberration effect"
+    },
+    "Sports" : {
+      "comment" : "Workshop genre tag"
+    },
+    "Standard Definition" : {
+      "comment" : "Resolution filter: resolutions below HD"
     },
     "Start with macOS" : {
       "localizations" : {
@@ -2133,27 +2554,23 @@
         }
       }
     },
-    "Steam Guard Code" : {
-
+    "Starting steamcmd…" : {
+      "comment" : "Download status; steamcmd is a program name"
     },
-    "Steam Login" : {
-
+    "Steam API returned HTTP %lld" : {
+      "comment" : "%lld is an HTTP status code"
     },
-    "Steam Username" : {
-
+    "Steam Guard Code" : {},
+    "Steam Guard code required" : {
+      "comment" : "Login error; Steam Guard is Steam's two-factor authentication"
     },
-    "Steam Web API Key" : {
-
-    },
-    "Steam Workshop requires steamcmd to download wallpapers.\nInstall it with Homebrew:" : {
-
-    },
-    "steamcmd Not Found" : {
-
-    },
-    "steamcommunity.com/dev/apikey" : {
-
-    },
+    "Steam Login" : {},
+    "Steam Username" : {},
+    "Steam Web API Key" : {},
+    "Steam Web API key required.\nGet a free key at steamcommunity.com/dev/apikey\nthen enter it below." : {},
+    "Steam Workshop Built In" : {},
+    "Steam Workshop requires steamcmd to download wallpapers.\nInstall it with Homebrew:" : {},
+    "Step" : {},
     "Stop (free memory)" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2164,26 +2581,20 @@
         }
       }
     },
-    "Subscription Date" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "订阅时间"
-          }
-        }
-      }
+    "Strength of the blend. 0 leaves the layer untouched, 1 applies it fully." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like multiply"
     },
-    "Super High Performance" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "高性能"
-          }
-        }
-      }
+    "Strength of the glow around bright areas." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like bloom"
+    },
+    "Strength of the speed-boost distortion." : {
+      "comment" : "Scene Inspector tooltip for the nitro effect's multiply parameter"
+    },
+    "Stretch" : {
+      "comment" : "Wallpaper placement: stretch to the screen's shape"
+    },
+    "Stretches the image into streaks for a warp-speed look." : {
+      "comment" : "Scene Inspector tooltip for the hyperdrive effect"
     },
     "Support & FAQ" : {
       "localizations" : {
@@ -2195,6 +2606,22 @@
         }
       }
     },
+    "Sways the layer as if leaves were moving in wind." : {
+      "comment" : "Scene Inspector tooltip for the foliagesway effect"
+    },
+    "Sweeps a bright band across the layer. The mask controls which parts can catch the light." : {
+      "comment" : "Scene Inspector tooltip for the shine effect"
+    },
+    "Swirls the image around a centre point." : {
+      "comment" : "Scene Inspector tooltip for the twirl effect"
+    },
+    "Sync Pace" : {},
+    "Sync Saturation" : {},
+    "Sync Tilt" : {},
+    "Sync Video to Music" : {},
+    "Sync Zoom" : {},
+    "Sync properties across displays" : {},
+    "Sync to Music" : {},
     "Tags" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2205,8 +2632,14 @@
         }
       }
     },
-    "Text" : {
-
+    "Technology" : {
+      "comment" : "Workshop genre tag"
+    },
+    "Television" : {
+      "comment" : "Workshop genre tag: TV series"
+    },
+    "Text %lld" : {
+      "comment" : "A text layer without a name"
     },
     "Texture Resolution" : {
       "localizations" : {
@@ -2218,9 +2651,26 @@
         }
       }
     },
-    "Texture Unavailable" : {
-
+    "Texture Unavailable" : {},
+    "Textures" : {},
+    "The URL must end in a supported image or video extension." : {},
+    "The Wallpaper Storage folder %@ is on %@, which isn't connected. Connect it, or choose another folder in Settings → General." : {
+      "comment" : "The first %@ is a folder path, the second a disk name",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The Wallpaper Storage folder %1$@ is on %2$@, which isn't connected. Connect it, or choose another folder in Settings → General."
+          }
+        }
+      }
     },
+    "The cut-off where the effect starts to apply. Lower catches more of the image, higher restricts it to the strongest pixels." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like threshold"
+    },
+    "The most particles one wallpaper may hold. A wallpaper made with more draws every particle system thinner, keeping its look." : {},
+    "The scripts of “%@” were stopped because one of them ran for too long. The wallpaper keeps showing, without its scripted animations." : {},
+    "The selected folders don't contain any wallpapers." : {},
     "Theme" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2231,35 +2681,36 @@
         }
       }
     },
-    "Third-party" : {
-
-    },
-    "This plugin enables animation of GIF thumbnail images in wallpaper explorer" : {
-
-    },
-    "This wallpaper needs %lld other Workshop item%@ to render correctly." : {
+    "These settings are designed for scene wallpapers and may not work as expected for other types." : {},
+    "These settings take effect without saving." : {},
+    "Third-party" : {},
+    "This may affect performance." : {},
+    "This plugin animates the GIF thumbnails in the wallpaper explorer." : {},
+    "This wallpaper needs %lld other Workshop items to render correctly." : {
       "localizations" : {
         "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "This wallpaper needs %1$lld other Workshop item%2$@ to render correctly."
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "This wallpaper needs %lld other Workshop item to render correctly."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "This wallpaper needs %lld other Workshop items to render correctly."
+                }
+              }
+            }
           }
         }
       }
     },
-    "Those all settings above don't have to be saved for taking effect." : {
-
-    },
-    "Titles per page" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "每页壁纸数量"
-          }
-        }
-      }
+    "This wallpaper was showing when Open Wallpaper Engine crashed, hung or was force-quit twice in a row. It may do so again." : {},
+    "Tilts the layer in 3D space." : {
+      "comment" : "Scene Inspector tooltip for the perspective effect"
     },
     "Toggle Desktop Wallpaper Window (Debug)" : {
       "localizations" : {
@@ -2271,7 +2722,25 @@
         }
       }
     },
+    "Top" : {},
+    "Translated variants" : {},
+    "Transparency" : {
+      "comment" : "Wallpaper setting added by the app"
+    },
+    "Transparency of the bars." : {
+      "comment" : "Scene Inspector tooltip for the audiobars effect's opacity parameter"
+    },
+    "Transparency of the layer. 0 hides it completely, 1 is fully solid." : {
+      "comment" : "Scene Inspector tooltip for the opacity effect's alpha parameter"
+    },
+    "Transparency. 0 is invisible, 1 is solid." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like alpha\nScene Inspector tooltip for an effect parameter named like opacity"
+    },
+    "Trending" : {
+      "comment" : "Workshop sort order"
+    },
     "Triple Monitor" : {
+      "comment" : "Resolution filter group: wallpapers spanning three displays",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2281,6 +2750,7 @@
         }
       }
     },
+    "Tune Every Property" : {},
     "Type" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2301,6 +2771,18 @@
         }
       }
     },
+    "Ultra (Display HDR)" : {},
+    "Ultra Widescreen" : {
+      "comment" : "Resolution filter group: 21:9 displays",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "带鱼屏"
+          }
+        }
+      }
+    },
     "Ultra mode adds HDR bloom to supported wallpapers and is only recommended for powerful high-end desktop graphics cards." : {
       "localizations" : {
         "zh-Hans" : {
@@ -2311,16 +2793,7 @@
         }
       }
     },
-    "Ultra Widescreen" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "带鱼屏"
-          }
-        }
-      }
-    },
+    "Unable to read the scene definition." : {},
     "Undo" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2331,23 +2804,12 @@
         }
       }
     },
-    "Unknown Author" : {
-
+    "Unknown Author" : {},
+    "Unknown Error" : {},
+    "Unknown Size" : {
+      "comment" : "Details panel: the wallpaper's size on disk can't be read"
     },
-    "Unkown Author" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "佚名"
-          }
-        }
-      }
-    },
-    "Unlink audio speed" : {
-
-    },
+    "Unlimited" : {},
     "Unmute" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2357,6 +2819,9 @@
           }
         }
       }
+    },
+    "Unspecified Genre" : {
+      "comment" : "Workshop genre tag for items without a genre"
     },
     "Unsubscribe" : {
       "localizations" : {
@@ -2368,12 +2833,35 @@
         }
       }
     },
-    "Unsubscribe %lld wallpapers: %@%@" : {
+    "Unsubscribe %lld wallpapers: %@" : {
+      "comment" : "%@ lists the wallpaper titles",
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Unsubscribe %1$lld wallpapers: %2$@%3$@"
+            "state" : "translated",
+            "value" : "Unsubscribe %#@wallpapers@: %2$@"
+          },
+          "substitutions" : {
+            "wallpapers" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg wallpaper"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg wallpapers"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -2388,17 +2876,23 @@
         }
       }
     },
-    "Unsubscribe Selected (%lld)" : {
-
+    "Unsubscribe Selected (%lld)" : {},
+    "Unsubscribe from the selected wallpapers" : {},
+    "Untitled" : {
+      "comment" : "Shown for a wallpaper that has no title"
     },
-    "Use Cached Session" : {
-
+    "Upstream maintainer" : {},
+    "Use Cached Session" : {},
+    "Use Default Location" : {},
+    "Use Empty Folder" : {},
+    "Use This Version" : {},
+    "User Adjustments" : {},
+    "User Scene Settings" : {},
+    "Validating…" : {
+      "comment" : "Download status: steamcmd checks the downloaded files"
     },
-    "Use Default Location" : {
-
-    },
-    "Use Empty Folder" : {
-
+    "Vehicle" : {
+      "comment" : "Workshop genre tag"
     },
     "Verbose" : {
       "localizations" : {
@@ -2410,17 +2904,19 @@
         }
       }
     },
-    "version: %@" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "版本号： %@"
-          }
-        }
-      }
+    "Version %@" : {
+      "comment" : "Scene Inspector: one of a layer's alternative versions"
+    },
+    "Versions" : {},
+    "Vertical" : {},
+    "Vertical scroll speed. Negative scrolls up, 0 stops." : {
+      "comment" : "Scene Inspector tooltip for the scroll effect's speedy parameter"
+    },
+    "Vertical speed. Negative values move the other way, 0 stops." : {
+      "comment" : "Scene Inspector tooltip for an effect parameter named like speedy"
     },
     "Video" : {
+      "comment" : "Wallpaper type: a video file",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2440,9 +2936,7 @@
         }
       }
     },
-    "Video Speed" : {
-
-    },
+    "Video Speed" : {},
     "View" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2453,9 +2947,8 @@
         }
       }
     },
-    "View this author's Workshop items" : {
-
-    },
+    "View this author's Workshop items" : {},
+    "Visible" : {},
     "Volume" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2466,20 +2959,8 @@
         }
       }
     },
-    "Wallpaper display is disabled on this screen." : {
-
-    },
-    "Wallpaper Editor" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "壁纸编辑器"
-          }
-        }
-      }
-    },
+    "Volumetrics" : {},
+    "WE shaders are translated per combination of options the first time a scene uses them, then reused." : {},
     "Wallpaper Engine for Mac" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2490,6 +2971,7 @@
         }
       }
     },
+    "Wallpaper Engine's setting: High Performance loads textures at half their size and runs effects at half size too; Automatic does so for a scene with more than 3.9 times the display's pixels (a 4K scene on a 1080p display), and for a 3D scene on a display smaller than 1080p." : {},
     "Wallpaper Explorer" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2500,30 +2982,8 @@
         }
       }
     },
-    "Wallpaper from Folder" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "单个壁纸"
-          }
-        }
-      }
-    },
-    "Wallpaper Per Display" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "每台显示器壁纸"
-          }
-        }
-      }
-    },
-    "Wallpaper Storage" : {
-
-    },
+    "Wallpaper Settings" : {},
+    "Wallpaper Storage" : {},
     "Wallpaper Title" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2534,6 +2994,19 @@
         }
       }
     },
+    "Wallpaper display is disabled on this screen." : {},
+    "Wallpaper duration" : {},
+    "Wallpaper from Folder" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "单个壁纸"
+          }
+        }
+      }
+    },
+    "Wallpapers are unpacked into plain files when imported. The original package is kept until the wallpaper has rendered from those files, reported no conversion warnings, and no other wallpaper depends on it." : {},
     "Wallpapers in Folders" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2544,47 +3017,15 @@
         }
       }
     },
-    "We brings you a smoother app animation experience. Powered by the lightweight, modern SwiftUI Framework." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "通过轻量、现代化的 SwiftUI 框架，带来更加顺滑的动画体验"
-          }
-        }
-      }
+    "Wavelength. Low values give many small ripples, high values give a few broad swells." : {
+      "comment" : "Scene Inspector tooltip for the waterwaves effect's scale parameter"
     },
-    "We Take Care of Your Laptop's Battery Life" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "我们关心你的电池寿命"
-          }
-        }
-      }
+    "Web" : {
+      "comment" : "Wallpaper type: a web page"
     },
-    "What's New in Open Wallpaper Engine" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Wallpaper Engine 里的新东西"
-          }
-        }
-      }
-    },
-    "When it comes to without pluging to the power adapter, we reduced the power consumption as much as possible, without just stoping the playback." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "当拔下充电器时，我们尽可能的减少壁纸的能源消耗，但并不停止播放。"
-          }
-        }
-      }
-    },
+    "Welcome to Open Wallpaper Engine" : {},
     "Widescreen" : {
+      "comment" : "Resolution filter group: 16:9 displays",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2615,6 +3056,7 @@
       }
     },
     "Workshop" : {
+      "comment" : "Filter: wallpapers from the Steam Workshop",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -2624,45 +3066,20 @@
         }
       }
     },
-    "Workshop downloads and failed retries appear here." : {
-
+    "Workshop downloads and failed retries appear here." : {},
+    "Workshop downloads, their dependencies and imported wallpapers go into this folder. You can move the current library to the new location." : {},
+    "Workshop item %@" : {
+      "comment" : "Download title before the item's name is known; %@ is its Workshop ID"
     },
-    "XL Icons" : {
-
+    "X %lld  Y %lld" : {
+      "shouldTranslate" : false
     },
-    "You are about to open an external %@ as a wallpaper:" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "你正在打开一个外部%@壁纸"
-          }
-        }
-      }
-    },
-    "You can easily import video type wallpapers from steam workshop of Wallpaper Engine and modify some properties as well, like playback rate, volume, etc." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "你可以轻松的从 Wallpaper Engine 的创意工坊中导入视频类型的壁纸，同时设定一些属性，例如播放速率，音量等。"
-          }
-        }
-      }
-    },
-    "You may feel familar when using this dynamic desktop wallpaper tool since it almost has the same layout to its ancesstor." : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "你在使用时也许会感到非常熟悉，因为它和它的原型的 UI 布局几乎完全一致。"
-          }
-        }
-      }
-    },
-    "You'll also need a Steam Web API key to browse the Workshop." : {
-
-    },
+    "XL Icons" : {},
+    "You are about to open an external application as a wallpaper:" : {},
+    "You are about to open an external file of an unknown type as a wallpaper:" : {},
+    "You are about to open an external web page as a wallpaper:" : {},
+    "You stay in control of resources" : {},
+    "You'll also need a Steam Web API key to browse the Workshop." : {},
     "Your Presets" : {
       "localizations" : {
         "zh-Hans" : {
@@ -2673,9 +3090,43 @@
         }
       }
     },
-    "􀄪 You can toggle this to have a preview" : {
-
-    }
+    "Zoom" : {
+      "comment" : "Wallpaper placement: enlarge to fill the screen"
+    },
+    "Zoom, pace, tilt and saturation can pulse with audio. A wallpaper with its own soundtrack follows that; when it is silent, it follows whatever else is playing." : {},
+    "https://example.com/wallpaper.mp4" : {
+      "shouldTranslate" : false
+    },
+    "macOS" : {
+      "shouldTranslate" : false
+    },
+    "steamcmd Not Found" : {},
+    "steamcmd can't accept a double quote or line break in the %@ command." : {
+      "comment" : "Login error; steamcmd is a program name, %@ one of its commands"
+    },
+    "steamcmd exited with code %d." : {
+      "comment" : "Download error; steamcmd is a program name"
+    },
+    "steamcmd finished without downloading item %@." : {
+      "comment" : "Download error; steamcmd is a program name, %@ a Workshop ID"
+    },
+    "steamcmd finished without downloading the item." : {
+      "comment" : "Download error; steamcmd is a program name"
+    },
+    "steamcommunity.com/dev/apikey" : {
+      "shouldTranslate" : false
+    },
+    "×8 MSAA is only recommended for powerful high-end desktop graphics cards." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "建议仅将 x8 MSAA 用于功能强大的高端台式机显卡。"
+          }
+        }
+      }
+    },
+    "􀄪 Toggle it to see a preview." : {}
   },
   "version" : "1.0"
 }

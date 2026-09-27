@@ -14,17 +14,17 @@ struct WPImportError: LocalizedError {
     var helpAnchor: String?
     var recoverySuggestion: String?
     
-    static let permissionDenied         = WPImportError(errorDescription: "Permission Denied",
-                                                failureReason: "This app doesn't have the permission to access to the folder(s) you selected",
+    static let permissionDenied         = WPImportError(errorDescription: String(localized: "Permission Denied"),
+                                                failureReason: String(localized: "Open Wallpaper Engine doesn't have permission to access the selected folders."),
                                                 helpAnchor: "File Permission",
-                                                recoverySuggestion: "Try enable it in 'System Settings' - 'Privacy & Security'")
+                                                recoverySuggestion: String(localized: "Allow access in System Settings > Privacy & Security."))
     
-    static let doesNotContainWallpaper  = WPImportError(errorDescription: "No Wallpaper(s) Inside",
-                                                       failureReason: "Maybe you selected the wrong folder which doesn't contain any wallpapers",
+    static let doesNotContainWallpaper  = WPImportError(errorDescription: String(localized: "No Wallpapers Inside"),
+                                                       failureReason: String(localized: "The selected folders don't contain any wallpapers."),
                                                        helpAnchor: "Contents in Folder(s)",
-                                                       recoverySuggestion: "Check the folder(s) you selected and try again")
+                                                       recoverySuggestion: String(localized: "Check the selected folders and try again."))
     
-    static let unkown                   = WPImportError(errorDescription: "Unkown Error",
+    static let unkown                   = WPImportError(errorDescription: String(localized: "Unknown Error"),
                                                         failureReason: "",
                                                         helpAnchor: "",
                                                         recoverySuggestion: "")

@@ -13,7 +13,8 @@ struct SteamCmdScript {
         var errorDescription: String? {
             switch self {
             case .unquotableArgument(let command):
-                return "steamcmd can't accept a double quote or line break in the \(command) command."
+                return String(localized: "steamcmd can't accept a double quote or line break in the \(command) command.",
+                              comment: "Login error; steamcmd is a program name, %@ one of its commands")
             }
         }
     }

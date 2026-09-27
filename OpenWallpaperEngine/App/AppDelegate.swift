@@ -271,16 +271,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// "Don't Ask Again".
     @objc func audioCapturePermissionMissing() {
         let alert = NSAlert()
-        alert.messageText = "Audio Visualizers Need Permission"
-        alert.informativeText = """
+        alert.messageText = String(localized: "Audio Visualizers Need Permission")
+        alert.informativeText = String(localized: """
         Open Wallpaper Engine needs Screen & System Audio Recording permission to read system audio \
         for audio bars and other audio-reactive wallpapers. Audio capture starts on its own once \
         the permission is granted.
-        """
-        alert.addButton(withTitle: "Grant Access")
-        alert.addButton(withTitle: "Open Permissions Page")
-        alert.addButton(withTitle: "Later")
-        alert.addButton(withTitle: "Don't Ask Again")
+        """, comment: "Screen & System Audio Recording is the name of the macOS privacy setting")
+        alert.addButton(withTitle: String(localized: "Grant Access"))
+        alert.addButton(withTitle: String(localized: "Open Permissions Page"))
+        alert.addButton(withTitle: String(localized: "Later"))
+        alert.addButton(withTitle: String(localized: "Don't Ask Again"))
         switch alert.runModal() {
         case .alertFirstButtonReturn:
             PermissionHelper.grantScreenRecordingAccess()
@@ -300,7 +300,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             contentRect: NSRect(x: 0, y: 0, width: 480, height: 300),
             styleMask: [.titled, .closable, .resizable, .fullSizeContentView],
             backing: .buffered, defer: false)
-        self.settingsWindow.title = "Settings"
+        self.settingsWindow.title = String(localized: "Settings")
         self.settingsWindow.isReleasedWhenClosed = false
         self.settingsWindow.toolbarStyle = .preference
         

@@ -67,7 +67,7 @@ final class SteamWebAPIKeyViewModel: ObservableObject {
             try store.remove()
             errorMessage = nil
         } catch {
-            errorMessage = "Couldn't remove the key: \(error)"
+            errorMessage = String(localized: "Couldn't remove the key: \(error.localizedDescription)", comment: "%@ is the system's reason")
         }
         reload()
     }

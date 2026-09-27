@@ -97,8 +97,13 @@ enum WEWallpaperSortingMethod: String, CaseIterable, Identifiable {
 //    case subDate = "Subscription Date"
 //    case lastUpdated = "Last Updated"
 
-    var displayName: String {
-        self == .dateAdded ? "Date Downloaded" : rawValue
+    var displayName: LocalizedStringResource {
+        switch self {
+        case .name: return LocalizedStringResource("Name", comment: "Sort wallpapers by name")
+        case .rating: return LocalizedStringResource("Rating", comment: "Sort wallpapers by age rating")
+        case .fileSize: return LocalizedStringResource("File Size", comment: "Sort wallpapers by size on disk")
+        case .dateAdded: return LocalizedStringResource("Date Downloaded", comment: "Sort wallpapers by when they were added")
+        }
     }
 }
 

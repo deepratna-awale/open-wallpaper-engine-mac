@@ -75,10 +75,10 @@ struct DisplaySettings: SubviewOfContentView {
                                     .background(Color(nsColor: .controlBackgroundColor))
 
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text(wp.project.title.isEmpty ? "No wallpaper" : wp.project.title)
+                                    Text(wp.project.title.isEmpty ? String(localized: "No wallpaper") : wp.project.title)
                                         .font(.callout)
                                         .fontWeight(.medium)
-                                    Text(wp.project.type.isEmpty ? "—" : wp.project.type.capitalized)
+                                    Text(verbatim: wp.project.type.isEmpty ? "—" : LocalizedLabels.wallpaperType(wp.project.type))
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                 }
@@ -207,7 +207,7 @@ private struct MonitorRectangle: View {
                             .fontWeight(.medium)
                     }
                     if isEnabled {
-                        Text(wallpaperTitle.isEmpty ? "No wallpaper" : wallpaperTitle)
+                        Text(wallpaperTitle.isEmpty ? String(localized: "No wallpaper") : wallpaperTitle)
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)

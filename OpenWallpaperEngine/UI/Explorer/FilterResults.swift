@@ -78,7 +78,7 @@ struct FilterResults: View {
         _ keyPath: ReferenceWritableKeyPath<FilterResultsViewModel, Option>, name: String
     ) -> some View {
         ForEach(Array(zip(Option.allOptions.indices, Option.allOptions)), id: \.0) { (i, option) in
-            Toggle(option, isOn: Binding<Bool>(get: {
+            Toggle(isOn: Binding<Bool>(get: {
                 viewModel[keyPath: keyPath].contains(Option(rawValue: 1 << i))
             }, set: {
                 if $0 {
@@ -87,7 +87,9 @@ struct FilterResults: View {
                     viewModel[keyPath: keyPath].remove(Option(rawValue: 1 << i))
                 }
                 OWELog.debug(.ui, "Filter viewModel.\(name) = \(String(describing: viewModel[keyPath: keyPath]))")
-            }))
+            })) {
+                Text(LocalizedLabels.filterOption(option))
+            }
         }
     }
 

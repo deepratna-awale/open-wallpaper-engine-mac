@@ -26,12 +26,12 @@ struct AboutUsView: View {
                 Image(nsImage: NSImage(named: "AppIcon")!)
                 Divider().frame(maxHeight: 100)
                 VStack(alignment: .leading) {
-                    Text("Open Wallpaper Engine").bold().font(.title)
+                    Text(verbatim: "Open Wallpaper Engine").bold().font(.title)
                     Text("Wallpaper Engine for Mac").font(.footnote)
                 }
             }
             VStack(spacing: 12) {
-                Text("version: \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as! String)")
+                Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as! String)")
 
                 Divider().frame(width: 200)
 
@@ -55,11 +55,11 @@ struct AboutUsView: View {
 }
 
 extension AboutUsView {
-    private func creditRow(_ name: String, handle: String, role: String) -> some View {
+    private func creditRow(_ name: String, handle: String, role: LocalizedStringKey) -> some View {
         HStack(spacing: 4) {
-            Link("@\(handle)", destination: URL(string: "https://github.com/\(handle)")!)
+            Link(String("@\(handle)"), destination: URL(string: "https://github.com/\(handle)")!)
                 .frame(width: 120, alignment: .leading)
-            Text("—")
+            Text(verbatim: "—")
                 .foregroundStyle(.tertiary)
             Text(role)
                 .foregroundStyle(.secondary)

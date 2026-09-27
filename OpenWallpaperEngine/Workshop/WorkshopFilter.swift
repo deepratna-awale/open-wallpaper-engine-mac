@@ -1,7 +1,7 @@
 import Foundation
 
 /// Wallpaper Engine's Workshop tags, spelled as WE's browser sends them (wallpaperui.exe and
-/// `ui/dist/scripts/scripts.js`; the labels come from `locale/ui_en-us.json`).
+/// `ui/dist/scripts/scripts.js`). The UI shows them through `LocalizedLabels.filterOption`.
 enum WorkshopTags {
     static let ratings = ["Everyone", "Questionable", "Mature"]
     static let types = ["Scene", "Video", "Web", "Application"]
@@ -20,18 +20,10 @@ enum WorkshopTags {
     static let mobileKVKey = "app_workshop_eula_version"
     static let mobileKVValue = "3"
     static let mobileExcludedTypes = ["Application", "Web"]
-
-    /// The label WE shows for a genre tag.
-    static func genreLabel(_ tag: String) -> String {
-        switch tag {
-        case "MMD": return "MMD (Miku-Miku Dance)"
-        case "Unspecified": return "Unspecified genre"
-        default: return tag
-        }
-    }
 }
 
-/// WE's resolution tags in its filter's groups; shared by the Installed and Workshop filters.
+/// WE's resolution tags in its filter's groups; shared by the Installed and Workshop filters. The
+/// UI shows the titles and tags through `LocalizedLabels.filterOption`.
 enum WEResolutionTags {
     struct Group: Identifiable {
         let title: String
@@ -55,24 +47,6 @@ enum WEResolutionTags {
     ]
 
     static let all: [String] = groups.flatMap(\.tags)
-
-    /// WE's English label for a resolution tag (`ui_workshop_tags_*`).
-    static func label(_ tag: String) -> String {
-        switch tag {
-        case "Standard Definition": return "Standard definition"
-        case "1920 x 1080": return "1920 x 1080 - Full HD"
-        case "3840 x 2160": return "3840 x 2160 - 4K"
-        case "Ultrawide Standard Definition": return "Ultrawide standard"
-        case "Dual Standard Definition": return "Dual standard"
-        case "Triple Standard Definition": return "Triple standard"
-        case "Portrait Standard Definition": return "Portrait standard"
-        default:
-            for prefix in ["Ultrawide ", "Dual ", "Triple ", "Portrait "] where tag.hasPrefix(prefix) {
-                return String(tag.dropFirst(prefix.count))
-            }
-            return tag
-        }
-    }
 }
 
 /// The Workshop tab's "Show only" options, in the Installed tab's order (`FRShowOnly.allOptions`).

@@ -48,7 +48,8 @@ struct PermissionsPage: SettingsPage {
         WallpaperServices.shared.recheckCapturePermission()
     }
 
-    private func permissionRow(title: String, status: String, isGranted: Bool, description: String) -> some View {
+    private func permissionRow(title: LocalizedStringKey, status: LocalizedStringKey, isGranted: Bool,
+                               description: LocalizedStringKey) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Label(title, systemImage: isGranted ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")

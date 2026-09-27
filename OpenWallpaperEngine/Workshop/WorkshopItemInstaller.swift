@@ -27,7 +27,8 @@ enum WorkshopItemInstaller {
         var errorDescription: String? {
             switch self {
             case .notDownloaded(let workshopId):
-                return "steamcmd finished without downloading item \(workshopId)."
+                return String(localized: "steamcmd finished without downloading item \(workshopId).",
+                              comment: "Download error; steamcmd is a program name, %@ a Workshop ID")
             }
         }
     }

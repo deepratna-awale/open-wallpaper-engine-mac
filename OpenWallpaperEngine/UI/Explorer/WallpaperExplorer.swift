@@ -120,7 +120,7 @@ private struct CreatePlaylistSheet: View {
             Text("\(wallpapers.count) wallpapers will be added")
                 .foregroundStyle(.secondary)
             List(wallpapers) { wallpaper in
-                Text(wallpaper.project.title.isEmpty ? "Untitled" : wallpaper.project.title)
+                Text(verbatim: wallpaper.project.displayTitle)
             }
             HStack {
                 Spacer()
@@ -149,6 +149,7 @@ private struct InstalledPagination: View {
             } label: {
                 Image(systemName: "chevron.left")
             }
+            .accessibilityLabel(Text("Previous Page"))
             .disabled(viewModel.currentPage == 1)
 
             ForEach(pageNumbers, id: \.self) { page in
@@ -166,6 +167,7 @@ private struct InstalledPagination: View {
             } label: {
                 Image(systemName: "chevron.right")
             }
+            .accessibilityLabel(Text("Next Page"))
             .disabled(!viewModel.hasNextWallpaperPage)
         }
     }

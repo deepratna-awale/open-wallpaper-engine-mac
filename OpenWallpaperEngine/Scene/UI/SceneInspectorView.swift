@@ -119,7 +119,7 @@ private final class SceneInspectorModel: ObservableObject {
             if SceneWallpaperViewModel.isVideoType(wallpaper.project.type) {
                 buildVideoLayers(for: wallpaper)
             } else {
-                errorMessage = "Unable to read the scene definition."
+                errorMessage = String(localized: "Unable to read the scene definition.")
             }
             return
         }
@@ -141,7 +141,7 @@ private final class SceneInspectorModel: ObservableObject {
                 let materialPath = model?.material
                 let material: WEMaterial? = materialPath.flatMap { data($0) }.flatMap { try? JSONDecoder().decode(WEMaterial.self, from: $0) }
                 let passes = material?.passes ?? []
-                return SceneInspectorItem(id: String(object.id ?? index), name: object.name ?? "Image \(index + 1)",
+                return SceneInspectorItem(id: String(object.id ?? index), name: object.name ?? String(localized: "Image \(index + 1)", comment: "Scene Inspector: an image layer without a name"),
                                           kind: "Image", sourcePath: imagePath, materialPath: materialPath,
                                           texturePaths: passes.flatMap { $0.textures ?? [] },
                                           shaderPaths: passes.compactMap(\.shader), rawObject: rawObject,
@@ -155,7 +155,7 @@ private final class SceneInspectorModel: ObservableObject {
                 let materialPath = particle?.material
                 let material: WEMaterial? = materialPath.flatMap { data($0) }.flatMap { try? JSONDecoder().decode(WEMaterial.self, from: $0) }
                 let passes = material?.passes ?? []
-                return SceneInspectorItem(id: String(object.id ?? index), name: object.name ?? "Particle \(index + 1)",
+                return SceneInspectorItem(id: String(object.id ?? index), name: object.name ?? String(localized: "Particle \(index + 1)", comment: "Scene Inspector: a particle system without a name"),
                                           kind: "Particle", sourcePath: particlePath, materialPath: materialPath,
                                           texturePaths: passes.flatMap { $0.textures ?? [] },
                                           shaderPaths: passes.compactMap(\.shader), rawObject: rawObject,
@@ -163,7 +163,7 @@ private final class SceneInspectorModel: ObservableObject {
                                           visible: visible,
                                           isVersion: false, versionName: nil, versionValue: nil, effects: effects)
             }
-            return SceneInspectorItem(id: String(object.id ?? index), name: object.name ?? "Object \(index + 1)",
+            return SceneInspectorItem(id: String(object.id ?? index), name: object.name ?? String(localized: "Object \(index + 1)", comment: "Scene Inspector: a scene object without a name"),
                                       kind: "Other", sourcePath: "", materialPath: nil, texturePaths: [], shaderPaths: [],
                                       rawObject: rawObject, rawMaterial: nil, rawParticle: nil,
                                       visible: visible,
@@ -176,7 +176,7 @@ private final class SceneInspectorModel: ObservableObject {
     private static func versionName(from name: String?) -> String? {
         guard let name, let range = name.range(of: #"_(\d+)$"#, options: .regularExpression) else { return nil }
         let number = name[range].dropFirst()
-        return "Version \(number)"
+        return String(localized: "Version \(String(number))", comment: "Scene Inspector: one of a layer's alternative versions")
     }
 
     /// Wallpaper Engine renders a video through its `scenes/videoplayer` scene, and the Metal path
@@ -189,17 +189,17 @@ private final class SceneInspectorModel: ObservableObject {
         let enabledSync = syncKeys.filter { VideoMusicSyncSettings.bool(wallpaper, "\($0)Enabled") }
 
         items = [
-            SceneInspectorItem(id: "video", name: "Video", kind: "Video", sourcePath: file,
+            SceneInspectorItem(id: "video", name: String(localized: "Video"), kind: "Video", sourcePath: file,
                                materialPath: nil, texturePaths: [], shaderPaths: [],
-                               rawObject: prettyJSON(["file": file, "status": "Reading media…"]),
+                               rawObject: prettyJSON(["file": file, "status": String(localized: "Reading media…")]),
                                rawMaterial: nil, rawParticle: nil, visible: true,
                                isVersion: false, versionName: nil, versionValue: nil,
                                effects: [], isSynthetic: true),
-            SceneInspectorItem(id: "effects", name: "Effects", kind: "Effect Stack", sourcePath: "",
+            SceneInspectorItem(id: "effects", name: String(localized: "Effects"), kind: "Effect Stack", sourcePath: "",
                                materialPath: nil, texturePaths: [], shaderPaths: [],
                                rawObject: prettyJSON([
                                    "musicSync": enabledSync.isEmpty ? "none" : enabledSync.joined(separator: ", "),
-                                   "note": "Scene effects are toggled under User Scene Settings."
+                                   "note": String(localized: "Scene effects are toggled under User Scene Settings.")
                                ]),
                                rawMaterial: nil, rawParticle: nil, visible: true,
                                isVersion: false, versionName: nil, versionValue: nil,
@@ -231,7 +231,7 @@ private final class SceneInspectorModel: ObservableObject {
                 if let duration, duration.isFinite {
                     audioSummary["duration"] = String(format: "%.2f s", duration)
                 }
-                let audio = SceneInspectorItem(id: "audio", name: "Audio", kind: "Audio", sourcePath: file,
+                let audio = SceneInspectorItem(id: "audio", name: String(localized: "Audio"), kind: "Audio", sourcePath: file,
                                                materialPath: nil, texturePaths: [], shaderPaths: [],
                                                rawObject: prettyJSON(audioSummary),
                                                rawMaterial: nil, rawParticle: nil, visible: true,
@@ -670,7 +670,7 @@ private final class SceneInspectorModel: ObservableObject {
         let labels = WallpaperEngineLabels.load()
         return SceneInspectorEffectCombo(
             id: "colorBlendMode", effectID: "", combo: "BLENDMODE",
-            title: labels.translation("ui_editor_properties_blend_mode") ?? "Blend mode",
+            title: labels.translation("ui_editor_properties_blend_mode") ?? String(localized: "Blend Mode"),
             options: SceneEffectParameters.blendModeOptions.map { option in
                 (labels.translation(option.label) ?? option.english ?? option.label, option.value,
                  option.group.map { labels.translation($0) ?? Self.groupTitle($0) })
@@ -788,7 +788,7 @@ extension AppDelegate {
             backing: .buffered,
             defer: false
         )
-        window.title = "Scene Inspector"
+        window.title = String(localized: "Scene Inspector")
         window.isReleasedWhenClosed = false
         window.contentView = Self.sceneInspectorContent(wallpaper, scopes)
         window.center()
@@ -853,6 +853,18 @@ struct SceneInspectorView: View {
 
     /// Both side columns (the object list and the movement controls) start at one width.
     private static let sidebarWidth: CGFloat = 300
+
+    /// The name shown for an item's kind; `kind` itself stays English, as the code matches on it.
+    private static func kindLabel(_ kind: String) -> String {
+        switch kind {
+        case "Image": return String(localized: "Image", comment: "Scene Inspector: the kind of a scene object")
+        case "Particle": return String(localized: "Particle System", comment: "Scene Inspector: the kind of a scene object")
+        case "Video": return String(localized: "Video")
+        case "Audio": return String(localized: "Audio")
+        case "Effect Stack": return String(localized: "Effect Stack", comment: "Scene Inspector: the effects applied to a video")
+        default: return String(localized: "Other", comment: "Scene Inspector: the kind of a scene object that is neither an image nor particles")
+        }
+    }
 
     private var inspectorSplitView: some View {
         NavigationSplitView {
@@ -932,7 +944,7 @@ struct SceneInspectorView: View {
                     HStack(spacing: 8) {
                         Label(item.name, systemImage: item.kind == "Particle" ? "sparkles" : "photo")
                         Spacer(minLength: 4)
-                        Toggle("", isOn: Binding(
+                        Toggle("Visible", isOn: Binding(
                             get: { item.visible },
                             set: { model.setObjectVisible($0, item: item) }
                         ))
@@ -982,7 +994,7 @@ struct SceneInspectorView: View {
     private func selectedItemDetail(_ item: SceneInspectorItem) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                LabeledContent("Type", value: item.kind)
+                LabeledContent("Type", value: Self.kindLabel(item.kind))
                 if item.isVersion {
                     Button {
                         model.useVersion(item)
@@ -998,10 +1010,10 @@ struct SceneInspectorView: View {
                 effectList(for: item)
                 editableObjectBlock(for: item)
                 if let particle = item.rawParticle {
-                    editableAssetBlock(title: "Particle System", text: particle, path: item.sourcePath)
+                    editableAssetBlock(title: "Particle System", isParticle: true, text: particle, path: item.sourcePath)
                 }
                 if let material = item.rawMaterial, let materialPath = item.materialPath {
-                    editableAssetBlock(title: "Material Properties", text: material, path: materialPath)
+                    editableAssetBlock(title: "Material Properties", isParticle: false, text: material, path: materialPath)
                 }
             }
             .padding()
@@ -1019,7 +1031,7 @@ struct SceneInspectorView: View {
                             if let maskPath = effect.maskPath {
                                 HStack(spacing: 5) {
                                     Text("Mask").font(.headline)
-                                    InfoTip("Limits this effect to the white areas of the mask. Black areas are left untouched.")
+                                    InfoTip(String(localized: "Limits this effect to the white areas of the mask. Black areas are left untouched."))
                                 }
                                 Text(maskPath).font(.caption.monospaced()).foregroundStyle(.secondary)
                                 if let mask = model.decodedMasks[effect.id] {
@@ -1057,7 +1069,7 @@ struct SceneInspectorView: View {
                         .padding(.top, 6)
                     } label: {
                         HStack {
-                            Toggle("", isOn: Binding(
+                            Toggle("Enabled", isOn: Binding(
                                 get: { model.effectEnabled[effect.id] ?? true },
                                 set: { model.setEffectEnabled($0, effect: effect) }
                             ))
@@ -1178,28 +1190,32 @@ struct SceneInspectorView: View {
             Grid(horizontalSpacing: 8, verticalSpacing: 8) {
                 GridRow {
                     Color.clear.frame(width: 48, height: 40)
-                    moveButton(systemImage: "arrow.up", help: "Move up") {
+                    moveButton(systemImage: "arrow.up", title: "Move Up",
+                               help: "Move up. Shift = 50 px, Control = 1 px, default = 10 px") {
                         guard let item else { return }
                         model.moveObject(item, deltaX: 0, deltaY: movementStep())
                     }
                     Color.clear.frame(width: 48, height: 40)
                 }
                 GridRow {
-                    moveButton(systemImage: "arrow.left", help: "Move left") {
+                    moveButton(systemImage: "arrow.left", title: "Move Left",
+                               help: "Move left. Shift = 50 px, Control = 1 px, default = 10 px") {
                         guard let item else { return }
                         model.moveObject(item, deltaX: -movementStep(), deltaY: 0)
                     }
                     Text("Move")
                         .font(.callout.weight(.semibold))
                         .frame(width: 58, height: 40)
-                    moveButton(systemImage: "arrow.right", help: "Move right") {
+                    moveButton(systemImage: "arrow.right", title: "Move Right",
+                               help: "Move right. Shift = 50 px, Control = 1 px, default = 10 px") {
                         guard let item else { return }
                         model.moveObject(item, deltaX: movementStep(), deltaY: 0)
                     }
                 }
                 GridRow {
                     Color.clear.frame(width: 48, height: 40)
-                    moveButton(systemImage: "arrow.down", help: "Move down") {
+                    moveButton(systemImage: "arrow.down", title: "Move Down",
+                               help: "Move down. Shift = 50 px, Control = 1 px, default = 10 px") {
                         guard let item else { return }
                         model.moveObject(item, deltaX: 0, deltaY: -movementStep())
                     }
@@ -1217,15 +1233,16 @@ struct SceneInspectorView: View {
         .modifier(GroupBoxed())
     }
 
-    private func moveButton(systemImage: String, help: String, action: @escaping () -> Void) -> some View {
+    private func moveButton(systemImage: String, title: LocalizedStringKey, help: LocalizedStringKey,
+                            action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Label(help, systemImage: systemImage)
+            Label(title, systemImage: systemImage)
                 .labelStyle(.iconOnly)
                 .font(.title3.weight(.semibold))
                 .frame(width: 48, height: 40)
         }
         .glassButtonStyle(.prominent)
-        .help("\(help). Shift = 50 px, Control = 1 px, default = 10 px")
+        .help(help)
     }
 
     @ViewBuilder private func scaleControls(for item: SceneInspectorItem?) -> some View {
@@ -1235,7 +1252,7 @@ struct SceneInspectorView: View {
                     .font(.headline)
                 Spacer()
                 if let item {
-                    Text(String(format: "%.2f×", model.scale(for: item)))
+                    Text(verbatim: model.scale(for: item).formatted(.number.precision(.fractionLength(2))) + "×")
                         .font(.caption.monospacedDigit())
                         .foregroundStyle(.secondary)
                 }
@@ -1310,15 +1327,15 @@ struct SceneInspectorView: View {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
                 HStack(spacing: 6) {
-                    alignmentButton("Left", systemImage: "align.horizontal.left") {
+                    alignmentButton("Left", help: "Align Left", systemImage: "align.horizontal.left") {
                         guard let item else { return }
                         model.alignObject(item, horizontal: .left)
                     }
-                    alignmentButton("Center", systemImage: "align.horizontal.center") {
+                    alignmentButton("Center", help: "Align Center", systemImage: "align.horizontal.center") {
                         guard let item else { return }
                         model.alignObject(item, horizontal: .center)
                     }
-                    alignmentButton("Right", systemImage: "align.horizontal.right") {
+                    alignmentButton("Right", help: "Align Right", systemImage: "align.horizontal.right") {
                         guard let item else { return }
                         model.alignObject(item, horizontal: .right)
                     }
@@ -1329,15 +1346,15 @@ struct SceneInspectorView: View {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
                 HStack(spacing: 6) {
-                    alignmentButton("Top", systemImage: "align.vertical.top") {
+                    alignmentButton("Top", help: "Align Top", systemImage: "align.vertical.top") {
                         guard let item else { return }
                         model.alignObject(item, vertical: .top)
                     }
-                    alignmentButton("Center", systemImage: "align.vertical.center") {
+                    alignmentButton("Middle", help: "Align Middle", systemImage: "align.vertical.center") {
                         guard let item else { return }
                         model.alignObject(item, vertical: .center)
                     }
-                    alignmentButton("Bottom", systemImage: "align.vertical.bottom") {
+                    alignmentButton("Bottom", help: "Align Bottom", systemImage: "align.vertical.bottom") {
                         guard let item else { return }
                         model.alignObject(item, vertical: .bottom)
                     }
@@ -1348,7 +1365,8 @@ struct SceneInspectorView: View {
         .opacity(item == nil ? 0.4 : 1)
     }
 
-    private func alignmentButton(_ title: String, systemImage: String, action: @escaping () -> Void) -> some View {
+    private func alignmentButton(_ title: LocalizedStringKey, help: LocalizedStringKey, systemImage: String,
+                                 action: @escaping () -> Void) -> some View {
         Button(action: action) {
             VStack(spacing: 3) {
                 Image(systemName: systemImage)
@@ -1359,7 +1377,7 @@ struct SceneInspectorView: View {
             .frame(width: 68, height: 46)
         }
         .glassButtonStyle()
-        .help("Align \(title.lowercased())")
+        .help(help)
     }
 
     private func move(_ item: SceneInspectorItem, direction: MoveCommandDirection) {
@@ -1424,7 +1442,7 @@ struct SceneInspectorView: View {
         model.loadTextures(for: item)
     }
 
-    @ViewBuilder private func detailList(_ title: String, values: [String]) -> some View {
+    @ViewBuilder private func detailList(_ title: LocalizedStringKey, values: [String]) -> some View {
         if !values.isEmpty {
             VStack(alignment: .leading, spacing: 3) {
                 Text(title).font(.headline)
@@ -1441,7 +1459,8 @@ struct SceneInspectorView: View {
         }
     }
 
-    @ViewBuilder private func editableAssetBlock(title: String, text: String, path: String) -> some View {
+    @ViewBuilder private func editableAssetBlock(title: LocalizedStringKey, isParticle: Bool, text: String,
+                                                path: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text(title).font(.headline)
@@ -1455,7 +1474,7 @@ struct SceneInspectorView: View {
                 get: { text },
                 set: { value in
                     if let itemIndex = model.items.firstIndex(where: { $0.id == selectedID }) {
-                        if title == "Particle System" {
+                        if isParticle {
                             model.items[itemIndex].rawParticle = value
                         } else {
                             model.items[itemIndex].rawMaterial = value

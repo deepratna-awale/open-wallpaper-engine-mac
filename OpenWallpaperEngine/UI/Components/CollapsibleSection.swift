@@ -3,11 +3,11 @@ import SwiftUI
 /// A section header with the accent-coloured rule used throughout the details sidebar, that also
 /// collapses its content.
 struct CollapsibleSection<Content: View>: View {
-    let title: String
+    let title: LocalizedStringKey
     @State private var isExpanded: Bool
     private let content: () -> Content
 
-    init(title: String, initiallyExpanded: Bool = true, @ViewBuilder content: @escaping () -> Content) {
+    init(title: LocalizedStringKey, initiallyExpanded: Bool = true, @ViewBuilder content: @escaping () -> Content) {
         self.title = title
         self._isExpanded = State(initialValue: initiallyExpanded)
         self.content = content

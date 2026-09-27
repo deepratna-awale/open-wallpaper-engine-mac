@@ -19,9 +19,9 @@ struct GeneralPage: SettingsPage {
     @State private var isReclaiming = false
 
     private var reclaimableDescription: String {
-        guard reclaimableBytes > 0 else { return "No originals ready to remove" }
+        guard reclaimableBytes > 0 else { return String(localized: "No originals ready to remove") }
         let formatted = ByteCountFormatter.string(fromByteCount: reclaimableBytes, countStyle: .file)
-        return "\(formatted) of originals can be removed"
+        return String(localized: "\(formatted) of originals can be removed", comment: "%@ is a file size, e.g. 1.2 GB")
     }
 
     init(globalSettings viewModel: GlobalSettingsViewModel) {
@@ -99,7 +99,7 @@ struct GeneralPage: SettingsPage {
                     .disabled(isReclaiming || reclaimableBytes == 0)
                 }
                 if let reclaimedCount {
-                    Text("Removed \(reclaimedCount) original package\(reclaimedCount == 1 ? "" : "s").")
+                    Text("Removed \(reclaimedCount) original packages.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -138,8 +138,7 @@ struct GeneralPage: SettingsPage {
             } header: {
                 Label("Displays", systemImage: "display.2")
             } footer: {
-                Text("Off, a wallpaper shown on several displays keeps each display's properties, as "
-                     + "Wallpaper Engine does. On, one set of properties applies to every display.")
+                Text("Off, a wallpaper shown on several displays keeps each display's properties, as Wallpaper Engine does. On, one set of properties applies to every display.")
             }
             // MARK: Audio
             Section {
@@ -161,12 +160,11 @@ struct GeneralPage: SettingsPage {
             } header: {
                 Label("Video", systemImage: "film")
             } footer: {
-                Text("Metal draws video through the scene renderer so effects and music sync apply "
-                     + "to it, the way Wallpaper Engine does. Experimental.")
+                Text("Metal draws video through the scene renderer so effects and music sync apply to it, the way Wallpaper Engine does. Experimental.")
             }
             // MARK: Advanced
             Section {
-                Picker("Process Piority", selection: $viewModel.settings.processPiority) {
+                Picker("Process Priority", selection: $viewModel.settings.processPiority) {
                     Text("Normal").tag(GSProcessPiority.normal)
                     Text("Below Normal").tag(GSProcessPiority.belowNormal)
                 }
@@ -234,7 +232,7 @@ struct GeneralPage: SettingsPage {
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
-        panel.message = "Choose Wallpaper Storage Folder"
+        panel.message = String(localized: "Choose Wallpaper Storage Folder")
         if panel.runModal() == .OK, let directory = panel.url {
             pendingStorageDirectory = directory
             isStorageMoveConfirming = true

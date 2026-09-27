@@ -69,12 +69,12 @@ struct DownloadQueuePanel: View {
 
     private var panelTitle: String {
         if !failedDownloadIds.isEmpty {
-            return "Downloads: \(failedDownloadIds.count) failed"
+            return String(localized: "Downloads: \(failedDownloadIds.count) failed")
         }
-        return "Downloads: \(steamCmd.queuedDownloadIds.count)"
+        return String(localized: "Downloads: \(steamCmd.queuedDownloadIds.count)")
     }
 
-    private func statusRow(workshopId: String, label: String) -> some View {
+    private func statusRow(workshopId: String, label: LocalizedStringKey) -> some View {
         HStack(spacing: 8) {
             ProgressView()
                 .controlSize(.small)
@@ -88,11 +88,12 @@ struct DownloadQueuePanel: View {
     }
 
     private func downloadTitle(for workshopId: String) -> String {
-        steamCmd.downloadTitles[workshopId] ?? "Workshop item \(workshopId)"
+        steamCmd.downloadTitles[workshopId]
+            ?? String(localized: "Workshop item \(workshopId)", comment: "Download title before the item's name is known; %@ is its Workshop ID")
     }
 
     private func failureMessage(for workshopId: String) -> String {
-        guard case let .failed(message) = steamCmd.downloadProgress[workshopId] else { return "Retry download" }
+        guard case let .failed(message) = steamCmd.downloadProgress[workshopId] else { return String(localized: "Retry download") }
         return message
     }
 }

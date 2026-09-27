@@ -28,10 +28,11 @@ enum WallpaperStorage {
         var errorDescription: String? {
             switch self {
             case .volumeNotMounted(let directory, let volume):
-                return "The Wallpaper Storage folder \(directory.path) is on \(volume.lastPathComponent), which isn't connected. "
-                    + "Connect it, or choose another folder in Settings → General."
+                return String(localized: "The Wallpaper Storage folder \(directory.path) is on \(volume.lastPathComponent), which isn't connected. Connect it, or choose another folder in Settings → General.",
+                              comment: "The first %@ is a folder path, the second a disk name")
             case .notCreatable(let directory, let reason):
-                return "Can't create the Wallpaper Storage folder \(directory.path): \(reason)"
+                return String(localized: "Can't create the Wallpaper Storage folder \(directory.path): \(reason)",
+                              comment: "The first %@ is a folder path, the second the system's reason")
             }
         }
     }

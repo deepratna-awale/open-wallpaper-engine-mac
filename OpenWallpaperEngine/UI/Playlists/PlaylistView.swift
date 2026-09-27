@@ -80,7 +80,7 @@ struct PlaylistView: View {
                                 .frame(width: 64, height: 64)
                                 .clipped()
                                 .clipShape(RoundedRectangle(cornerRadius: 4))
-                            Text(item.wallpaper.project.title.isEmpty ? "Untitled" : item.wallpaper.project.title)
+                            Text(verbatim: item.wallpaper.project.displayTitle)
                                 .lineLimit(1)
                                 .frame(width: 180, alignment: .leading)
                             Button { wallpaperViewModel.movePlaylistItem(itemID: item.id, offset: -1) } label: { Image(systemName: "chevron.up") }

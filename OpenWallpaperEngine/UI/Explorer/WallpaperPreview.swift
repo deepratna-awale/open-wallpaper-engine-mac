@@ -42,7 +42,7 @@ struct WallpaperPreview: SubviewOfContentView {
     private static func sizeText(of directory: URL) -> String {
         // An unreadable folder has no size to show; the placeholder says so.
         guard let sizeBytes = try? directory.directoryTotalAllocatedSize(includingSubfolders: true) else {
-            return "??? MB"
+            return String(localized: "Unknown Size", comment: "Details panel: the wallpaper's size on disk can't be read")
         }
         return ByteCountFormatter.string(fromByteCount: Int64(sizeBytes), countStyle: .file)
     }
@@ -85,7 +85,7 @@ struct WallpaperPreview: SubviewOfContentView {
                                         isEditingId = ""
                                     }
                             } else {
-                                Text(wallpaperViewModel.displayedWallpaper.project.title.isEmpty ? "Untitled" : wallpaperViewModel.displayedWallpaper.project.title)
+                                Text(verbatim: wallpaperViewModel.displayedWallpaper.project.displayTitle)
                                     .frame(minWidth: 50)
                                     .id("title")
                                     .lineLimit(1)
@@ -127,7 +127,7 @@ struct WallpaperPreview: SubviewOfContentView {
                     }
                     favoriteControl
                     HStack {
-                        Text(wallpaperViewModel.displayedWallpaper.project.type)
+                        Text(verbatim: LocalizedLabels.wallpaperType(wallpaperViewModel.displayedWallpaper.project.type))
                         Text(wallpaperSize)
                             .task(id: wallpaperViewModel.displayedWallpaper.wallpaperDirectory) {
                                 let directory = wallpaperViewModel.displayedWallpaper.wallpaperDirectory
@@ -222,9 +222,9 @@ struct WallpaperPreview: SubviewOfContentView {
                                     get: { wallpaperViewModel.displayedWallpaper.project.contentrating ?? "Everyone" },
                                     set: { wallpaperViewModel.setContentRating($0, for: wallpaperViewModel.displayedWallpaper) }
                                 )) {
-                                    Text("Everyone").tag("Everyone")
-                                    Text("Questionable").tag("Questionable")
-                                    Text("Mature").tag("Mature")
+                                    ForEach(WorkshopTags.ratings, id: \.self) { rating in
+                                        Text(LocalizedLabels.filterOption(rating)).tag(rating)
+                                    }
                                 }
                                 .pickerStyle(.menu)
                             }
@@ -234,7 +234,7 @@ struct WallpaperPreview: SubviewOfContentView {
                                 Spacer()
                                 Picker("", selection: $wallpaperViewModel.wallpaperPlacement) {
                                     ForEach(WallpaperPlacement.allCases) { placement in
-                                        Text(placement.rawValue).tag(placement)
+                                        Text(placement.label).tag(placement)
                                     }
                                 }
                                 .labelsHidden()
@@ -440,7 +440,7 @@ struct WallpaperPreview: SubviewOfContentView {
             let projectTags = wallpaperViewModel.displayedWallpaper.project.tags ?? []
             if !tags.isEmpty {
                 ForEach(tags, id: \.self) { tag in
-                    Text(tag)
+                    Text(LocalizedLabels.filterOption(tag))
                         .padding(5)
                         .padding(.horizontal, 2)
                         .glassBackground(in: Capsule()) { pill in
@@ -507,7 +507,7 @@ struct WallpaperPreview: SubviewOfContentView {
     }
 
     private func formatCount(_ count: Int) -> String {
-        count >= 1_000 ? String(format: "%.1fK", Double(count) / 1_000) : "\(count)"
+        count.formatted(.number.notation(.compactName))
     }
 
     private func infoButton(_ help: String) -> some View {
@@ -528,7 +528,7 @@ private struct MissingWorkshopDependenciesBanner: View {
             if !missingIds.isEmpty {
                 GroupBox {
                     VStack(alignment: .leading, spacing: 6) {
-                        Label("This wallpaper needs \(missingIds.count) other Workshop item\(missingIds.count == 1 ? "" : "s") to render correctly.",
+                        Label("This wallpaper needs \(missingIds.count) other Workshop items to render correctly.",
                               systemImage: "shippingbox")
                             .font(.footnote)
                         ForEach(missingIds, id: \.self) { workshopId in

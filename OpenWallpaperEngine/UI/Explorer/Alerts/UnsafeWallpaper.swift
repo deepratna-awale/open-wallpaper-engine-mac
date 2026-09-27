@@ -15,19 +15,29 @@ struct UnsafeWallpaper: View {
     @State var seconds: Int = 5
     @State var isIgnored = false
     
-    var typeStringDict: [String : String] =
-    [
-        "web": "Web Page",
-        "application": "Application"
-    ]
-    
     init(wallpaper: WEWallpaper) {
         self.wallpaper = wallpaper
     }
     
+    private var title: LocalizedStringKey {
+        switch wallpaper.project.type.lowercased() {
+        case "web": return "Opening an Unknown Web Page"
+        case "application": return "Opening an Unknown Application"
+        default: return "Opening an Unknown Wallpaper"
+        }
+    }
+
+    private var intro: LocalizedStringKey {
+        switch wallpaper.project.type.lowercased() {
+        case "web": return "You are about to open an external web page as a wallpaper:"
+        case "application": return "You are about to open an external application as a wallpaper:"
+        default: return "You are about to open an external file of an unknown type as a wallpaper:"
+        }
+    }
+
     var body: some View {
         VStack(spacing: 0) {
-            Text("Opening Unkown \(typeStringDict[wallpaper.project.type.lowercased()] ?? "Wallpaper")")
+            Text(title)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()
                 .font(.title2)
@@ -41,9 +51,9 @@ struct UnsafeWallpaper: View {
                     .shadow(radius: 6)
                     .frame(maxWidth: 100)
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("You are about to open an external \((typeStringDict[wallpaper.project.type.lowercased()] ?? "unkown source type file").lowercased()) as a wallpaper:")
-                    Text("\(wallpaper.wallpaperDirectory.path(percentEncoded: false) + wallpaper.project.file)").bold()
-                    Text("Open Wallpaper Engine has no control over this file, you must ensure that it comes from a rellable source before proceeding.")
+                    Text(intro)
+                    Text(verbatim: wallpaper.wallpaperDirectory.path(percentEncoded: false) + wallpaper.project.file).bold()
+                    Text("Open Wallpaper Engine has no control over this file. Make sure it comes from a reliable source before proceeding.")
                     Text(seconds > 0 ? "Please wait \(seconds) seconds." : "Please be aware of malware.")
                     Toggle("Don't ask again for this wallpaper", isOn: $isIgnored)
                 }

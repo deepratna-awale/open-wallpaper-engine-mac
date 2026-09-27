@@ -48,7 +48,7 @@ struct DiagnosticsPage: SettingsPage {
     }
 
     @ViewBuilder
-    private func row(_ title: String, _ value: String, monospaced: Bool = false) -> some View {
+    private func row(_ title: LocalizedStringKey, _ value: String, monospaced: Bool = false) -> some View {
         HStack(alignment: .firstTextBaseline) {
             Text(title)
             Spacer()

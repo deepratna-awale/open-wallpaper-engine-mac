@@ -39,11 +39,11 @@ struct PluginsPage: SettingsPage {
                                         .clipShape(RoundedRectangle(cornerRadius: 16.0))
                                 }
                             VStack(alignment: .leading, spacing: 10) {
-                                Text("This plugin enables animation of GIF thumbnail images in wallpaper explorer")
+                                Text("This plugin animates the GIF thumbnails in the wallpaper explorer.")
                                 Spacer()
-                                Text("􀄪 You can toggle this to have a preview")
+                                Text("􀄪 Toggle it to see a preview.")
                                 Spacer()
-                                Text("!!! Notice that this may affects performance !!!")
+                                Text("This may affect performance.")
                                     .bold()
                             }
                             .frame(maxWidth: .infinity)
@@ -61,7 +61,7 @@ struct PluginsPage: SettingsPage {
                                     .imageScale(.large)
                                     .foregroundStyle(.secondary)
                             } else {
-                                Text("Description...")
+                                Text("Description…")
                             }
                         }
                     }
@@ -69,7 +69,7 @@ struct PluginsPage: SettingsPage {
                     .buttonStyle(.borderless)
                     .frame(maxWidth: .infinity)
                 }
-                Text("Come out soon...")
+                Text("Coming soon…")
             } header: {
                 Label("Internal", systemImage: "square.dashed.inset.filled")
             }
@@ -78,7 +78,7 @@ struct PluginsPage: SettingsPage {
             } header: {
                 Label("Third-party", systemImage: "person.3.fill")
             } footer: {
-                Text("Those all settings above don't have to be saved for taking effect.")
+                Text("These settings take effect without saving.")
             }
         }
         .formStyle(.grouped)

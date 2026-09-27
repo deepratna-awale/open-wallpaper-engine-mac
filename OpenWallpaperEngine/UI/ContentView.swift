@@ -107,7 +107,7 @@ struct ContentView: View {
                 viewModel.hoveredWallpaper = nil
             }
         } message: {
-            Text("\(viewModel.hoveredWallpaper?.project.title ?? "invalid wallpaper")")
+            Text(verbatim: viewModel.hoveredWallpaper?.project.displayTitle ?? "")
         }
         .confirmationDialog("Batch Unsubscribe Confirmation",
                             isPresented: $viewModel.isBatchUnsubscribeConfirming) {
@@ -133,10 +133,7 @@ struct ContentView: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            let items = viewModel.selectedWallpaperItems()
-            let names = items.prefix(3).map(\.project.title).joined(separator: ", ")
-            let suffix = items.count > 3 ? " and \(items.count - 3) more" : ""
-            Text("Unsubscribe \(items.count) wallpapers: \(names)\(suffix)")
+            batchUnsubscribeMessage
         }
         .alert(isPresented: $viewModel.importAlertPresented, error: viewModel.importAlertError) {
 
@@ -163,6 +160,17 @@ struct ContentView: View {
                 .presentationBackground(.regularMaterial)
         }
         .frame(minWidth: 1000, minHeight: 640, idealHeight: 800)
+    }
+
+    /// Up to three titles, then "and N more", as one list in the user's language.
+    private var batchUnsubscribeMessage: Text {
+        let items = viewModel.selectedWallpaperItems()
+        var names: [String] = items.prefix(3).map(\.project.displayTitle)
+        if items.count > 3 {
+            names.append(String(localized: "\(items.count - 3) more", comment: "Ends a list of wallpaper titles: and 2 more"))
+        }
+        let list: String = names.formatted(.list(type: .and))
+        return Text("Unsubscribe \(items.count) wallpapers: \(list)", comment: "%@ lists the wallpaper titles")
     }
 
     // MARK: Columns
@@ -303,12 +311,12 @@ private struct RemoteWallpaperURLSheet: View {
                 Button("Add") {
                     guard let url = URL(string: urlString),
                           ["http", "https"].contains(url.scheme?.lowercased() ?? "") else {
-                        error = "Enter a valid HTTP or HTTPS image/video URL."
+                        error = String(localized: "Enter a valid HTTP or HTTPS image/video URL.")
                         return
                     }
                     let extensionName = url.pathExtension.lowercased()
                     guard ["jpg", "jpeg", "png", "gif", "webp", "heic", "mp4", "mov", "m4v", "webm"].contains(extensionName) else {
-                        error = "The URL must end in a supported image or video extension."
+                        error = String(localized: "The URL must end in a supported image or video extension.")
                         return
                     }
                     wallpaperViewModel.addRemoteWallpaper(from: url)

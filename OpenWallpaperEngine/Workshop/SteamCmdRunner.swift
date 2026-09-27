@@ -57,7 +57,9 @@ struct ProcessSteamCmdRunner: SteamCmdRunning {
             try process.run()
         } catch {
             handle.readabilityHandler = nil
-            return SteamCmdRun(output: "Failed to run steamcmd: \(error.localizedDescription)", exitCode: -1)
+            return SteamCmdRun(output: String(localized: "Failed to run steamcmd: \(error.localizedDescription)",
+                                                comment: "steamcmd is a program name; %@ is the system's reason"),
+                               exitCode: -1)
         }
         Self.write(script, to: inputPipe)
 

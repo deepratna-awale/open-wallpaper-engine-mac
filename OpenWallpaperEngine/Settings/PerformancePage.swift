@@ -153,7 +153,7 @@ struct PerformancePage: SettingsPage {
                 }
             } header: {
                 Label("Quality", systemImage: "memorychip.fill")
-                Text("Currently, these settings below are designed for scene wallpapers \nand may not work as expect ")
+                Text("These settings are designed for scene wallpapers and may not work as expected for other types.")
             }
         }
         .formStyle(.grouped)
@@ -161,14 +161,14 @@ struct PerformancePage: SettingsPage {
     }
 
     /// A setting's title, followed by a warning triangle (with `help`) when `warning` is set.
-    private func warningLabel(_ title: LocalizedStringKey, warning: Color?, help: String) -> some View {
+    private func warningLabel(_ title: LocalizedStringKey, warning: Color?, help: LocalizedStringKey) -> some View {
         HStack(spacing: 6) {
             Text(title)
             if let warning {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundStyle(warning)
                     .help(help)
-                    .accessibilityLabel(help)
+                    .accessibilityLabel(Text(help))
             }
         }
     }

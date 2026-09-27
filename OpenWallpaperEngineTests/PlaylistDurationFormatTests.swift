@@ -4,13 +4,19 @@ import XCTest
 /// The playlist duration slider's label and steps.
 final class PlaylistDurationFormatTests: XCTestCase {
     func testLabels() {
+        let english = Locale(identifier: "en_US")
         let expected: [(Double, String)] = [
-            (5, "5s"), (45, "45s"), (60, "1m"), (75, "1m15s"), (90, "1m30s"),
-            (135, "2m15s"), (3599, "59m59s"), (3600, "1h"),
+            (5, "5s"), (45, "45s"), (60, "1m"), (75, "1m 15s"), (90, "1m 30s"),
+            (135, "2m 15s"), (3599, "59m 59s"), (3600, "1h"),
         ]
         for (seconds, label) in expected {
-            XCTAssertEqual(PlaylistDurationFormat.label(seconds), label, "\(seconds)")
+            XCTAssertEqual(PlaylistDurationFormat.label(seconds, locale: english), label, "\(seconds)")
         }
+    }
+
+    /// The units follow the language: Japanese writes them as 分 and 秒.
+    func testLabelsUseTheLocalesUnits() {
+        XCTAssertEqual(PlaylistDurationFormat.label(75, locale: Locale(identifier: "ja_JP")), "1分15秒")
     }
 
     func testSnapsToFiveSecondsBelowAMinuteAndFifteenFromIt() {

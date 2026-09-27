@@ -147,9 +147,17 @@ class SteamCmdService: ObservableObject {
 
     @Published var pathError: String?
 
+    /// The status of a download waiting its turn, and of one being moved into the storage folder;
+    /// the Downloads tab tells these phases by them.
+    /// The login error that asks for a Steam Guard code; the login form offers the code field for it.
+    static let guardCodeRequiredError = String(localized: "Steam Guard code required",
+                                               comment: "Login error; Steam Guard is Steam's two-factor authentication")
+    static let queuedStatus = String(localized: "Queued", comment: "Download status: waiting for other downloads")
+    static let installingStatus = String(localized: "Moving into Wallpaper Storage…", comment: "Download status; Wallpaper Storage is the name of the library folder setting")
+
     func setCustomPath(_ path: String) {
         guard FileManager.default.fileExists(atPath: path) else {
-            pathError = "File not found at selected path."
+            pathError = String(localized: "File not found at selected path.")
             return
         }
         // Make executable if needed (e.g. steamcmd.sh from Steam package)
@@ -194,11 +202,11 @@ class SteamCmdService: ObservableObject {
                     self.loginError = nil
                     self.rememberAccount(username)
                 } else if output.contains("Steam Guard") || output.contains("Two-factor") {
-                    self.loginError = "Steam Guard code required"
+                    self.loginError = Self.guardCodeRequiredError
                 } else if output.contains("Invalid Password") || output.contains("FAILED") {
-                    self.loginError = "Invalid username or password"
+                    self.loginError = String(localized: "Invalid username or password")
                 } else {
-                    self.loginError = "Login failed. Check credentials and try again."
+                    self.loginError = String(localized: "Login failed. Check credentials and try again.")
                 }
                 if !self.isLoggedIn {
                     OWELog.error(.workshop, "steamcmd login failed (exit \(exitCode)):\n\(output)")
@@ -242,7 +250,7 @@ class SteamCmdService: ObservableObject {
                     self.isLoggedIn = true
                     self.rememberAccount(username)
                 } else {
-                    self.loginError = "Cached session expired. Please log in with password."
+                    self.loginError = String(localized: "Cached session expired. Please log in with password.")
                 }
             }
         }
@@ -283,14 +291,14 @@ class SteamCmdService: ObservableObject {
         }
         queuedDownloadIds.append(workshopId)
         downloadPercentages[workshopId] = 0
-        downloadProgress[workshopId] = .downloading(status: "Queued")
+        downloadProgress[workshopId] = .downloading(status: Self.queuedStatus)
 
         downloadQueue.async { [weak self] in
             guard let self = self else { return }
             DispatchQueue.main.async {
                 self.activeDownloadId = workshopId
                 self.downloadStartedAt[workshopId] = .now
-                self.downloadProgress[workshopId] = .downloading(status: "Starting steamcmd...")
+                self.downloadProgress[workshopId] = .downloading(status: String(localized: "Starting steamcmd…", comment: "Download status; steamcmd is a program name"))
             }
             let result = Result { try self.downloadIntoStorage(workshopId, steamCmd: URL(fileURLWithPath: cmdPath)) }
             DispatchQueue.main.async {
@@ -331,7 +339,7 @@ class SteamCmdService: ObservableObject {
             throw DownloadError.steamCmdFailed(Self.failureMessage(output: run.output, exitCode: run.exitCode))
         }
         DispatchQueue.main.async {
-            self.downloadProgress[workshopId] = .downloading(status: "Moving into Wallpaper Storage...")
+            self.downloadProgress[workshopId] = .downloading(status: Self.installingStatus)
             self.downloadPercentages[workshopId] = 1
         }
         // The storage folder as it is now, in case it changed while steamcmd ran.
@@ -376,9 +384,10 @@ class SteamCmdService: ObservableObject {
             return errorLine
         }
         if exitCode != 0 {
-            return lines.last(where: { !$0.isEmpty }) ?? "steamcmd exited with code \(exitCode)"
+            return lines.last(where: { !$0.isEmpty })
+                ?? String(localized: "steamcmd exited with code \(exitCode).", comment: "Download error; steamcmd is a program name")
         }
-        return "steamcmd finished without downloading the item."
+        return String(localized: "steamcmd finished without downloading the item.", comment: "Download error; steamcmd is a program name")
     }
 
     func previewWorkshopItem(workshopId: String) {
@@ -426,7 +435,7 @@ class SteamCmdService: ObservableObject {
                 guard exitCode == 0, FileManager.default.fileExists(atPath: sourcePath.path) else {
                     let errorLine = output.components(separatedBy: "\n")
                         .first(where: { $0.contains("ERROR") || $0.contains("FAILED") })
-                        ?? "Preview download failed."
+                        ?? String(localized: "Preview download failed.")
                     self.finishPreview(workshopId, with: .failure(PreviewError.downloadFailed(errorLine)), presentWhenReady: presentWhenReady)
                     return
                 }
@@ -554,28 +563,29 @@ class SteamCmdService: ObservableObject {
         guard !trimmed.isEmpty else { return nil }
 
         if trimmed.contains("Logging in") || trimmed.contains("Logged in") {
-            return "Authenticating..."
+            return String(localized: "Authenticating…", comment: "Download status: logging in to Steam")
         }
         if trimmed.contains("Downloading item") || trimmed.contains("workshop_download_item") {
-            return "Requesting download..."
+            return String(localized: "Requesting download…", comment: "Download status")
         }
         if trimmed.contains("Downloading") || trimmed.contains("downloading") {
             if let percentage = parseDownloadPercentage(trimmed) {
-                return String(format: "Downloading... %.0f%%", percentage * 100)
+                let percent: String = percentage.formatted(.percent.precision(.fractionLength(0)))
+                return String(localized: "Downloading… \(percent)", comment: "Download status; %@ is a percentage")
             }
-            return "Downloading..."
+            return String(localized: "Downloading…", comment: "Download status")
         }
         if trimmed.contains("Validating") || trimmed.contains("validating") {
-            return "Validating..."
+            return String(localized: "Validating…", comment: "Download status: steamcmd checks the downloaded files")
         }
         if trimmed.contains("Success") {
-            return "Download complete, importing..."
+            return String(localized: "Download complete, importing…", comment: "Download status")
         }
         if trimmed.contains("Update state") {
             // Generic state update
-            if trimmed.contains("0x5") { return "Validating..." }
-            if trimmed.contains("0x61") { return "Downloading..." }
-            if trimmed.contains("0x101") { return "Committing..." }
+            if trimmed.contains("0x5") { return String(localized: "Validating…", comment: "Download status: steamcmd checks the downloaded files") }
+            if trimmed.contains("0x61") { return String(localized: "Downloading…", comment: "Download status") }
+            if trimmed.contains("0x101") { return String(localized: "Committing…", comment: "Download status: steamcmd writes the finished files") }
         }
         return nil
     }
@@ -610,7 +620,7 @@ private enum PreviewError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .downloadFailed(let message): return message
-        case .exceedsCacheLimit: return "Preview exceeds the 250 MB cache limit."
+        case .exceedsCacheLimit: return String(localized: "Preview exceeds the 250 MB cache limit.")
         }
     }
 }

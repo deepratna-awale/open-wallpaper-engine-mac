@@ -14,7 +14,7 @@ struct ShowOnlyFilterRows: View {
                 HStack(spacing: 2) {
                     Image(systemName: option.1)
                         .foregroundStyle(index < Self.colors.count ? Self.colors[index] : Color.accentColor)
-                    Text(option.0)
+                    Text(LocalizedLabels.filterOption(option.0))
                 }
             }
             .toggleStyle(.checkbox)
@@ -31,7 +31,7 @@ struct ResolutionFilterRows: View {
     var body: some View {
         ForEach(WEResolutionTags.groups) { group in
             VStack(alignment: .leading, spacing: 3) {
-                Text(group.title)
+                Text(LocalizedLabels.filterOption(group.title))
                     .bold()
                 HStack {
                     Button("All") { group.tags.forEach { set($0, true) } }
@@ -41,7 +41,9 @@ struct ResolutionFilterRows: View {
             }
             .padding(.top, 5)
             ForEach(group.tags, id: \.self) { tag in
-                Toggle(WEResolutionTags.label(tag), isOn: Binding(get: { isOn(tag) }, set: { set(tag, $0) }))
+                Toggle(isOn: Binding(get: { isOn(tag) }, set: { set(tag, $0) })) {
+                    Text(LocalizedLabels.filterOption(tag))
+                }
                     .toggleStyle(.checkbox)
             }
         }

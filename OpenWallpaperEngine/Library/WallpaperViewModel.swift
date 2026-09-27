@@ -383,7 +383,7 @@ class WallpaperViewModel: ObservableObject {
     private func importRemoteVideo(from url: URL) {
         let fileManager = FileManager.default
         let baseName = url.deletingPathExtension().lastPathComponent
-        let title = baseName.isEmpty ? (url.host ?? "Remote Video") : baseName
+        let title = baseName.isEmpty ? (url.host ?? String(localized: "Remote Video", comment: "Title of a video wallpaper added by URL")) : baseName
         var destination = fileManager.wallpapersDirectory.appending(path: title)
         var suffix = 2
         while fileManager.fileExists(atPath: destination.path) {
@@ -418,7 +418,7 @@ class WallpaperViewModel: ObservableObject {
     private func importImageAsScene(from url: URL) {
         let fileManager = FileManager.default
         let baseName = url.deletingPathExtension().lastPathComponent
-        let title = baseName.isEmpty ? (url.host ?? "Image Wallpaper") : baseName
+        let title = baseName.isEmpty ? (url.host ?? String(localized: "Image Wallpaper", comment: "Title of an image wallpaper added by URL")) : baseName
         var destination = fileManager.wallpapersDirectory.appending(path: title)
         var suffix = 2
         while fileManager.fileExists(atPath: destination.path) {
@@ -700,18 +700,19 @@ class WallpaperViewModel: ObservableObject {
     @Published public var playRate: Float = 1.0 {
         willSet {
             guard persistsWallpapers else { return }
+            // Matched by action: the titles are localized.
             if newValue == 0.0 {
                 for (index, item) in AppDelegate.shared.statusItem.menu!.items.enumerated() {
-                    if item.title == "Pause" {
+                    if item.action == #selector(AppDelegate.shared.pause) {
                         AppDelegate.shared.statusItem.menu!.items[index] =
-                            .init(title: "Resume", systemImage: "play.fill", action: #selector(AppDelegate.shared.resume), keyEquivalent: "")
+                            .init(title: String(localized: "Resume"), systemImage: "play.fill", action: #selector(AppDelegate.shared.resume), keyEquivalent: "")
                     }
                 }
             } else {
                 for (index, item) in AppDelegate.shared.statusItem.menu!.items.enumerated() {
-                    if item.title == "Resume" {
+                    if item.action == #selector(AppDelegate.shared.resume) {
                         AppDelegate.shared.statusItem.menu!.items[index] =
-                            .init(title: "Pause", systemImage: "pause.fill", action: #selector(AppDelegate.shared.pause), keyEquivalent: "")
+                            .init(title: String(localized: "Pause"), systemImage: "pause.fill", action: #selector(AppDelegate.shared.pause), keyEquivalent: "")
                     }
                 }
             }
@@ -739,14 +740,14 @@ class WallpaperViewModel: ObservableObject {
             guard persistsWallpapers else { return }
             if newValue == 0.0 {
                 for (index, item) in AppDelegate.shared.statusItem.menu!.items.enumerated() {
-                    if item.title == "Mute" {
+                    if item.action == #selector(AppDelegate.shared.mute) {
                         AppDelegate.shared.statusItem.menu!.items[index] =
                             .init(title: String(localized: "Unmute"), systemImage: "speaker.fill", action: #selector(AppDelegate.shared.unmute), keyEquivalent: "")
                     }
                 }
             } else {
                 for (index, item) in AppDelegate.shared.statusItem.menu!.items.enumerated() {
-                    if item.title == "Unmute" {
+                    if item.action == #selector(AppDelegate.shared.unmute) {
                         AppDelegate.shared.statusItem.menu!.items[index] =
                             .init(title: String(localized: "Mute"), systemImage: "speaker.slash.fill", action: #selector(AppDelegate.shared.mute), keyEquivalent: "")
                     }

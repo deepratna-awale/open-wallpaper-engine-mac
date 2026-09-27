@@ -136,17 +136,17 @@ private final class SceneUserPropertiesModel: ObservableObject {
                 : []
             authoredPropertyIDs.formUnion(visibilityProperties.filter { $0.id == "hyperdrive" }.map(\.id))
             properties.append(contentsOf: [
-                SceneUserProperty(id: "_owe_hue", title: "Hue", type: "slider", order: Int.max - 5, defaultValue: "0", options: [], minimum: -Double.pi, maximum: Double.pi),
-                SceneUserProperty(id: "_owe_saturation", title: "Saturation", type: "slider", order: Int.max - 4, defaultValue: "1", options: [], minimum: 0, maximum: 2),
-                SceneUserProperty(id: "_owe_bloom", title: "Bloom", type: "slider", order: Int.max - 3, defaultValue: "1", options: [], minimum: 0, maximum: 2),
-                SceneUserProperty(id: "_owe_blur", title: "Blur", type: "slider", order: Int.max - 2, defaultValue: "1", options: [], minimum: 0, maximum: 2),
-                SceneUserProperty(id: "_owe_speed", title: "Animation Speed", type: "slider", order: Int.max - 1, defaultValue: "1", options: [], minimum: 0, maximum: 2)
+                SceneUserProperty(id: "_owe_hue", title: String(localized: "Hue", comment: "Wallpaper setting added by the app"), type: "slider", order: Int.max - 5, defaultValue: "0", options: [], minimum: -Double.pi, maximum: Double.pi),
+                SceneUserProperty(id: "_owe_saturation", title: String(localized: "Saturation", comment: "Wallpaper setting added by the app"), type: "slider", order: Int.max - 4, defaultValue: "1", options: [], minimum: 0, maximum: 2),
+                SceneUserProperty(id: "_owe_bloom", title: String(localized: "Bloom", comment: "Wallpaper setting added by the app"), type: "slider", order: Int.max - 3, defaultValue: "1", options: [], minimum: 0, maximum: 2),
+                SceneUserProperty(id: "_owe_blur", title: String(localized: "Blur", comment: "Wallpaper setting added by the app"), type: "slider", order: Int.max - 2, defaultValue: "1", options: [], minimum: 0, maximum: 2),
+                SceneUserProperty(id: "_owe_speed", title: String(localized: "Animation Speed", comment: "Wallpaper setting added by the app"), type: "slider", order: Int.max - 1, defaultValue: "1", options: [], minimum: 0, maximum: 2)
             ])
             // Mouse parallax (setting keys kept from when it lived with the native effects).
             properties.append(contentsOf: [
-                SceneUserProperty(id: "_owe_effect_enabled_parallax", title: "Mouse Parallax", type: "bool",
+                SceneUserProperty(id: "_owe_effect_enabled_parallax", title: String(localized: "Mouse Parallax", comment: "Wallpaper setting added by the app"), type: "bool",
                                   order: Int.max - 7, defaultValue: "false", options: [], minimum: 0, maximum: 1),
-                SceneUserProperty(id: "_owe_effect_parallax_amount", title: "Parallax Amount", type: "slider",
+                SceneUserProperty(id: "_owe_effect_parallax_amount", title: String(localized: "Parallax Amount", comment: "Wallpaper setting added by the app"), type: "slider",
                                   order: Int.max - 6, defaultValue: "1", options: [], minimum: 0, maximum: 2)
             ])
             // Some scenes gate a layer's visibility on a user property (e.g. a "dark"/"colored" variant
@@ -162,12 +162,12 @@ private final class SceneUserPropertiesModel: ObservableObject {
                 properties.append(contentsOf: [
                     // Title is empty: the checkbox sits next to the text layer's own name, so "Enabled" would be redundant.
                     SceneUserProperty(id: prefix + "enabled", title: "", type: "bool", order: trailingOrder(offset: 110, index: index), defaultValue: "true", options: [], minimum: 0, maximum: 1),
-                    SceneUserProperty(id: prefix + "font", title: "Font", type: "textinput", order: trailingOrder(offset: 100, index: index), defaultValue: textLayer.font, options: [], minimum: 0, maximum: 1),
-                    SceneUserProperty(id: prefix + "size", title: "Font Size", type: "slider", order: trailingOrder(offset: 90, index: index), defaultValue: String(textLayer.size), options: [], minimum: 1, maximum: 256),
-                    SceneUserProperty(id: prefix + "bold", title: "Bold", type: "bool", order: trailingOrder(offset: 80, index: index), defaultValue: "false", options: [], minimum: 0, maximum: 1),
-                    SceneUserProperty(id: prefix + "italic", title: "Italic", type: "bool", order: trailingOrder(offset: 70, index: index), defaultValue: "false", options: [], minimum: 0, maximum: 1),
-                    SceneUserProperty(id: prefix + "color", title: "Color", type: "color", order: trailingOrder(offset: 60, index: index), defaultValue: "1 1 1", options: [], minimum: 0, maximum: 1),
-                    SceneUserProperty(id: prefix + "opacity", title: "Transparency", type: "slider", order: trailingOrder(offset: 50, index: index), defaultValue: "1", options: [], minimum: 0, maximum: 1)
+                    SceneUserProperty(id: prefix + "font", title: String(localized: "Font", comment: "Wallpaper setting added by the app"), type: "textinput", order: trailingOrder(offset: 100, index: index), defaultValue: textLayer.font, options: [], minimum: 0, maximum: 1),
+                    SceneUserProperty(id: prefix + "size", title: String(localized: "Font Size", comment: "Wallpaper setting added by the app"), type: "slider", order: trailingOrder(offset: 90, index: index), defaultValue: String(textLayer.size), options: [], minimum: 1, maximum: 256),
+                    SceneUserProperty(id: prefix + "bold", title: String(localized: "Bold", comment: "Wallpaper setting added by the app"), type: "bool", order: trailingOrder(offset: 80, index: index), defaultValue: "false", options: [], minimum: 0, maximum: 1),
+                    SceneUserProperty(id: prefix + "italic", title: String(localized: "Italic", comment: "Wallpaper setting added by the app"), type: "bool", order: trailingOrder(offset: 70, index: index), defaultValue: "false", options: [], minimum: 0, maximum: 1),
+                    SceneUserProperty(id: prefix + "color", title: String(localized: "Color", comment: "Wallpaper setting added by the app"), type: "color", order: trailingOrder(offset: 60, index: index), defaultValue: "1 1 1", options: [], minimum: 0, maximum: 1),
+                    SceneUserProperty(id: prefix + "opacity", title: String(localized: "Transparency", comment: "Wallpaper setting added by the app"), type: "slider", order: trailingOrder(offset: 50, index: index), defaultValue: "1", options: [], minimum: 0, maximum: 1)
                 ])
             }
         }
@@ -250,7 +250,8 @@ private final class SceneUserPropertiesModel: ObservableObject {
               let scene = try? package.extractJSON(named: sceneFile, as: WEScene.self) else { return [] }
         return scene.objects.enumerated().compactMap { index, object in
             guard object.textValue != nil else { return nil }
-            return SceneTextControl(id: String(object.id ?? index), title: object.name?.isEmpty == false ? object.name! : "Text \(index + 1)",
+            return SceneTextControl(id: String(object.id ?? index), title: object.name?.isEmpty == false ? object.name!
+                                        : String(localized: "Text \(index + 1)", comment: "A text layer without a name"),
                                     font: object.font ?? "", size: object.pointsize ?? WETextDefaults.pointSize)
         }
     }
@@ -339,20 +340,24 @@ struct SceneUserPropertiesView: View {
     private var videoMusicSyncControls: some View {
         DisclosureGroup("Sync Video to Music") {
             VStack(alignment: .leading, spacing: 10) {
-                videoMusicSyncRow(title: "Zoom", enabledKey: "zoomEnabled", amountKey: "zoomAmount",
+                videoMusicSyncRow(title: "Sync Zoom", help: SceneHelp.musicSync("zoom"),
+                                  enabledKey: "zoomEnabled", amountKey: "zoomAmount",
                                   range: 0...0.5, defaultAmount: 0.08, suffix: "x")
-                videoMusicSyncRow(title: "Pace", enabledKey: "paceEnabled", amountKey: "paceAmount",
+                videoMusicSyncRow(title: "Sync Pace", help: SceneHelp.musicSync("pace"),
+                                  enabledKey: "paceEnabled", amountKey: "paceAmount",
                                   range: -1...1, defaultAmount: 0.25, suffix: "x")
-                videoMusicSyncRow(title: "Tilt", enabledKey: "tiltEnabled", amountKey: "tiltAmount",
-                                  range: -15...15, defaultAmount: 3, suffix: "deg")
-                videoMusicSyncRow(title: "Saturation", enabledKey: "saturationEnabled", amountKey: "saturationAmount",
+                videoMusicSyncRow(title: "Sync Tilt", help: SceneHelp.musicSync("tilt"),
+                                  enabledKey: "tiltEnabled", amountKey: "tiltAmount",
+                                  range: -15...15, defaultAmount: 3, suffix: "°")
+                videoMusicSyncRow(title: "Sync Saturation", help: SceneHelp.musicSync("saturation"),
+                                  enabledKey: "saturationEnabled", amountKey: "saturationAmount",
                                   range: -1...2, defaultAmount: 0.6, suffix: "x")
             }
             .padding(.top, 6)
         }
     }
 
-    private func videoMusicSyncRow(title: String, enabledKey: String, amountKey: String,
+    private func videoMusicSyncRow(title: LocalizedStringKey, help: String, enabledKey: String, amountKey: String,
                                    range: ClosedRange<Double>, defaultAmount: Double, suffix: String) -> some View {
         let wallpaper = self.wallpaper
         let isEnabled = Binding<Bool>(
@@ -365,9 +370,9 @@ struct SceneUserPropertiesView: View {
         )
         return VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 5) {
-                Toggle("Sync \(title)", isOn: isEnabled)
+                Toggle(title, isOn: isEnabled)
                     .toggleStyle(.checkbox)
-                infoButton(SceneHelp.musicSync(title))
+                infoButton(help)
             }
             if isEnabled.wrappedValue {
                 HStack {
@@ -462,7 +467,7 @@ struct SceneUserPropertiesView: View {
                 pathPicker(property)
             case "usershortcut":
                 VStack(alignment: .leading, spacing: 2) {
-                    Button(property.title.isEmpty ? "Shortcut" : property.title) {}
+                    Button(property.title.isEmpty ? String(localized: "Shortcut") : property.title) {}
                         .disabled(true)
                     Text("Custom shortcuts are not supported yet.")
                         .font(.caption)
@@ -493,7 +498,7 @@ struct SceneUserPropertiesView: View {
         return VStack(alignment: .leading, spacing: 4) {
             parameterLabel(property.title, help: parameterHelp(property))
             HStack(spacing: 6) {
-                Text(current.isEmpty ? "None" : (current as NSString).lastPathComponent)
+                Text(current.isEmpty ? String(localized: "None") : (current as NSString).lastPathComponent)
                     .lineLimit(1)
                     .truncationMode(.middle)
                     .foregroundStyle(current.isEmpty ? .secondary : .primary)

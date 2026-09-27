@@ -80,7 +80,8 @@ private struct DownloadRow: View {
                 .clipped()
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(item?.title ?? steamCmd.downloadTitles[workshopId] ?? "Workshop item \(workshopId)")
+                    Text(item?.title ?? steamCmd.downloadTitles[workshopId]
+                         ?? String(localized: "Workshop item \(workshopId)", comment: "Download title before the item's name is known; %@ is its Workshop ID"))
                         .font(.headline)
                         .lineLimit(1)
                     HStack(spacing: 12) {
@@ -126,7 +127,7 @@ private struct DownloadRow: View {
                         .tint(progressColor)
                     if let percentage = steamCmd.downloadPercentages[workshopId],
                        isDownloading {
-                        Text("\(Int((percentage * 100).rounded()))%")
+                        Text(percentage.formatted(.percent.precision(.fractionLength(0))))
                             .font(.caption.monospacedDigit())
                             .foregroundStyle(.secondary)
                             .frame(width: 38, alignment: .trailing)
@@ -147,10 +148,10 @@ private struct DownloadRow: View {
     }
 
     private var statusText: String {
-        guard let state = steamCmd.downloadProgress[workshopId] else { return "Queued" }
+        guard let state = steamCmd.downloadProgress[workshopId] else { return SteamCmdService.queuedStatus }
         switch state {
         case .downloading(let status): return status
-        case .completed: return "Downloaded"
+        case .completed: return String(localized: "Downloaded", comment: "Download status")
         case .failed(let message): return message
         }
     }
@@ -177,8 +178,8 @@ private struct DownloadRow: View {
         case .completed, .failed:
             return 1
         case .downloading(let status):
-            if status == "Queued" { return 0.05 }
-            if status.contains("Copying") { return 0.92 }
+            if status == SteamCmdService.queuedStatus { return 0.05 }
+            if status == SteamCmdService.installingStatus { return 0.92 }
             if let percentage = steamCmd.downloadPercentages[workshopId], percentage > 0 {
                 return percentage
             }
@@ -188,11 +189,11 @@ private struct DownloadRow: View {
     }
 
     private var failureMessage: String {
-        guard case let .failed(message) = steamCmd.downloadProgress[workshopId] else { return "Retry download" }
+        guard case let .failed(message) = steamCmd.downloadProgress[workshopId] else { return String(localized: "Retry download") }
         return message
     }
 
     private func formatCount(_ count: Int) -> String {
-        count >= 1_000 ? String(format: "%.1fK", Double(count) / 1_000) : "\(count)"
+        count.formatted(.number.notation(.compactName))
     }
 }

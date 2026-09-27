@@ -23,9 +23,15 @@ struct ExplorerItem: SubviewOfContentView {
         viewModel.tags(of: wallpaper)
     }
 
+    /// The tags as the UI names them (`LocalizedLabels`), in the user's language.
+    private var tagLabels: [String] {
+        tags.map { String(localized: LocalizedLabels.filterOption($0)) }
+    }
+
     /// The title, and all the tags under it.
     private var tooltip: String {
-        tags.isEmpty ? wallpaper.project.title : wallpaper.project.title + "\n" + tags.joined(separator: ", ")
+        tagLabels.isEmpty ? wallpaper.project.title
+            : wallpaper.project.title + "\n" + tagLabels.formatted(.list(type: .and, width: .narrow))
     }
 
     var body: some View {
@@ -45,7 +51,7 @@ struct ExplorerItem: SubviewOfContentView {
                     .lineLimit(2)
                     .font(.footnote)
                 if !tags.isEmpty {
-                    Text(verbatim: tags.joined(separator: " · "))
+                    Text(verbatim: tagLabels.joined(separator: " · "))
                         .lineLimit(1)
                         .font(.caption2)
                         .opacity(0.75)
