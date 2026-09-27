@@ -24,7 +24,17 @@ final class SafeRestartNotice {
         panel.isReleasedWhenClosed = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         let hosting = NSHostingView(rootView: NoticeView(message: message, onRetry: onRetry, onDismiss: onDismiss))
-        panel.contentView = hosting
+        if #available(macOS 26, *) {
+            // The panel itself is the glass: a clear window whose content is one glass view.
+            let glass = NSGlassEffectView()
+            glass.cornerRadius = 16
+            glass.contentView = hosting
+            panel.isOpaque = false
+            panel.backgroundColor = .clear
+            panel.contentView = glass
+        } else {
+            panel.contentView = hosting
+        }
         panel.setContentSize(hosting.fittingSize)
     }
 
@@ -59,6 +69,7 @@ private struct NoticeView: View {
             }
             HStack {
                 Spacer()
+                // Not glass buttons: the panel is already glass on macOS 26.
                 Button("Dismiss", action: onDismiss)
                 Button("Retry", action: onRetry)
                     .buttonStyle(.borderedProminent)

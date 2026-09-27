@@ -44,27 +44,34 @@ private struct WorkshopPreviewContent: View {
             )
             .id(wallpaperViewModel.currentWallpaper.wallpaperDirectory)
 
-            HStack(spacing: 10) {
-                if SceneWallpaperViewModel.isVideoType(wallpaperViewModel.currentWallpaper.project.type) {
-                    Button {
-                        wallpaperViewModel.playRate = wallpaperViewModel.playRate == 0
-                            ? max(wallpaperViewModel.lastPlayRate, 0.1)
-                            : 0
-                    } label: {
-                        Image(systemName: wallpaperViewModel.playRate == 0 ? "play.fill" : "pause.fill")
+            // One small glass group over the live wallpaper.
+            GlassGroup(spacing: 10) {
+                HStack(spacing: 10) {
+                    if SceneWallpaperViewModel.isVideoType(wallpaperViewModel.currentWallpaper.project.type) {
+                        let isPaused = wallpaperViewModel.playRate == 0
+                        HStack(spacing: 8) {
+                            Button {
+                                wallpaperViewModel.playRate = isPaused ? max(wallpaperViewModel.lastPlayRate, 0.1) : 0
+                            } label: {
+                                Label(isPaused ? "Play" : "Pause", systemImage: isPaused ? "play.fill" : "pause.fill")
+                                    .labelStyle(.iconOnly)
+                            }
+                            .borderlessOnGlassButtonStyle()
+                            .help(isPaused ? "Play" : "Pause")
+
+                            NumericSliderInput(value: $wallpaperViewModel.playVolume, range: 0...1,
+                                               defaultValue: 1, displayScale: 100, suffix: "%",
+                                               fractionDigits: 0, sliderWidth: 110, fieldWidth: 36)
+                        }
+                        .glassBackground(in: Capsule(),
+                                         padding: EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)) { $0 }
                     }
-                    .buttonStyle(.bordered)
-                    .help(wallpaperViewModel.playRate == 0 ? "Play" : "Pause")
 
-                    NumericSliderInput(value: $wallpaperViewModel.playVolume, range: 0...1,
-                                       defaultValue: 1, displayScale: 100, suffix: "%",
-                                       fractionDigits: 0, sliderWidth: 110, fieldWidth: 36)
+                    Button("Set Wallpaper") {
+                        AppDelegate.shared.applyWorkshopPreview()
+                    }
+                    .glassButtonStyle(.prominent)
                 }
-
-                Button("Set Wallpaper") {
-                    AppDelegate.shared.applyWorkshopPreview()
-                }
-                .buttonStyle(.borderedProminent)
             }
             .padding()
         }
