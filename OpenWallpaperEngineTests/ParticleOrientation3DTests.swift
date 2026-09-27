@@ -69,7 +69,13 @@ final class ParticleOrientation3DTests: XCTestCase {
         XCTAssertLessThan(simd_distance(uniforms.orientationForward, back * -camera.forward), 1e-5)
         let worldForward = simd_float3x3(simd_quatf(angle: .pi / 2, axis: SIMD3(0, 1, 0))) * uniforms.orientationForward
         XCTAssertLessThan(simd_distance(worldForward, -camera.forward), 1e-5, "drawn through the model it faces the eye")
-        XCTAssertLessThan(simd_distance(uniforms.eyePosition, back * camera.eye), 1e-3, "g_EyePosition in the system's space")
+        // WE's built-ins stay the world's: the shaders take the eye into the system's space through
+        // g_ModelMatrixInverse, and light at mul(position, g_ModelMatrix).
+        XCTAssertLessThan(simd_distance(uniforms.eyePosition, camera.eye), 1e-3, "g_EyePosition in the world")
+        XCTAssertEqual(uniforms.modelMatrix, turn, "g_ModelMatrix is the system's model")
+        let local = uniforms.modelMatrix.inverse * SIMD4(uniforms.eyePosition, 1)
+        XCTAssertLessThan(simd_distance(SIMD3(local.x, local.y, local.z), back * camera.eye), 1e-3,
+                          "the eye the trails face, in the system's space")
     }
 
     // MARK: - On the GPU

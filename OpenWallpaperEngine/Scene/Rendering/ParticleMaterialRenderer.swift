@@ -330,6 +330,9 @@ final class ParticleMaterialRenderer {
                                                     orthographicDepth: context.depth != nil)
             var pass = BuiltinPassContext(targetSize: context.sceneSize)
             pass.modelViewProjection = uniforms.modelViewProjection
+            pass.modelMatrix = uniforms.modelMatrix
+            pass.viewMatrix = uniforms.viewMatrix
+            pass.viewProjection = uniforms.viewProjection
             pass.textures = textures
             pass.renderVars = uniforms.renderVars
             program.update(frame: uniforms.frame(from: context.frame), pass: pass, values: context.values)

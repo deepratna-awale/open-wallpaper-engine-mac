@@ -7,7 +7,20 @@ struct ParticleMaterialUniforms {
     /// Scene units (y up) to clip space. The translated vertex stage flips y (GL rows), so the
     /// top of the scene maps to GL's bottom.
     let modelViewProjection: simd_float4x4
+    /// `g_ModelMatrix`, `g_ViewMatrix` and `g_ViewProjectionMatrix`. WE sets them for a particle
+    /// draw from its matrix stacks as for any object (the per-draw setter 0x1400d83b0: id 9 the
+    /// model top, 0xb view × projection): the model top is the system's model matrix
+    /// (0x140236600…0x1402366c1), the camera the scene's or the temporary one of a `perspective`
+    /// system. Its shaders light and fog a particle at `mul(position, g_ModelMatrix)` against the
+    /// lights in the world (`genericparticle`, `genericropeparticle`). Through a 3D camera that is
+    /// `Placement.model`; the 2D view draws the particles where they are, so identity.
+    let modelMatrix: simd_float4x4
+    let viewMatrix: simd_float4x4
+    let viewProjection: simd_float4x4
     let renderVars: [Int: SIMD4<Float>]
+    /// `g_EyePosition`: the frame camera's eye in the world (0x1400d9699 copies it from the
+    /// renderer, which the particle draw never moves); trails and ropes take it into the system's
+    /// space through `g_ModelMatrixInverse` (`common_particles.h`).
     let eyePosition: SIMD3<Float>
     /// `g_OrientationRight` and `g_OrientationUp`: the renderer's orientation (`ParticleOrientation`;
     /// by default the scene camera's axes, 2D scenes look down −z with y up) through the emitter's
@@ -43,13 +56,6 @@ struct ParticleMaterialUniforms {
             let length = simd_length(local)
             return length > 1e-12 ? local / length : vector
         }
-
-        /// The camera's eye in the particles' own space (`g_EyePosition`, which trails face).
-        var eye: SIMD3<Float> {
-            guard abs(model.determinant) > 1e-12 else { return camera.eye }
-            let local = model.inverse * SIMD4(camera.eye, 1)
-            return SIMD3(local.x, local.y, local.z) / local.w
-        }
     }
 
     /// The scene camera's axes, as WE binds them to particles.
@@ -68,8 +74,11 @@ struct ParticleMaterialUniforms {
         let axes: (right: SIMD3<Float>, up: SIMD3<Float>, forward: SIMD3<Float>)
         if let placement {
             let camera = placement.camera
-            modelViewProjection = PassMatrices.shaderViewProjection(camera.viewProjection) * placement.model
-            eyePosition = placement.eye
+            modelMatrix = placement.model
+            viewMatrix = camera.view
+            viewProjection = PassMatrices.shaderViewProjection(camera.viewProjection)
+            modelViewProjection = viewProjection * placement.model
+            eyePosition = camera.eye
             let forward = placement.direction(camera.forward), up = placement.direction(camera.up)
             axes = system.configuration.orientation.axes(linear: system.drawLinear, cameraForward: forward, cameraUp: up)
             // The view-projection flips y as the 2D one does (see `viewUp2D`).
@@ -83,6 +92,9 @@ struct ParticleMaterialUniforms {
                 ? PassMatrices.shaderViewProjection(SceneCamera.orthographic(size: size))
                 : PassMatrices.ortho(left: 0, right: size.x, bottom: size.y, top: 0,
                                      near: -Self.eyeDistance, far: Self.eyeDistance)
+            modelMatrix = matrix_identity_float4x4
+            viewMatrix = matrix_identity_float4x4
+            viewProjection = modelViewProjection
             eyePosition = SIMD3(size.x / 2, size.y / 2, Self.eyeDistance)
             axes = system.configuration.orientation.axes(linear: system.drawLinear)
             viewUp = Self.viewUp2D
