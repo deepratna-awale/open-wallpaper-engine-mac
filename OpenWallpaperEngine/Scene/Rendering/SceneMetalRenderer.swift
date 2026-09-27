@@ -130,6 +130,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var effectAssetFrames: [String: [RenderTextureFrame]] = [:]
     /// Textureless layers' effect inputs (`solidEffectInput`), by layer id; once per content.
     private var solidEffectInputs: [String: MTLTexture] = [:]
+    /// The media system textures, while the content has a layer that shows one.
+    private var mediaTextures: SceneMediaTextures?
     /// Scene-input layers drawn through a 3D camera get the scene under them through this.
     private lazy var regionProjection = SceneRegionProjection(device: device)
     /// Scene time since the content loaded, speed applied; drives animations, `g_Time`,
@@ -470,6 +472,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         effectAssetTextures.removeAll()
         effectAssetFrames.removeAll()
         solidEffectInputs.removeAll()
+        mediaTextures = nil
         effectGraph?.releaseTargets()
         particleMaterials?.releaseAll()
         imageMaterials?.releaseAll()
@@ -512,6 +515,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             deferredReleases.removeAll()
             lastCommandBuffer = nil
             return
+        }
+        // Subscribed before the scripts start, so the artwork the session already has is there.
+        if content.layers.contains(where: { $0.systemImage != nil }), let media = scripts.services?.media {
+            mediaTextures = SceneMediaTextures(source: media)
         }
         contentQueue.async { [weak self] in
             guard let self, self.isCurrentContentGeneration(generation) else { return }
@@ -3034,6 +3041,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             return RenderTextureFrame(texture: texture, duration: .greatestFiniteMagnitude,
                                       uvOrigin: .zero, uvAxisX: SIMD2<Float>(1, 0), uvAxisY: SIMD2<Float>(0, 1))
         }
+        // A system texture (the now-playing artwork) replaces the image while there is one.
+        if let kind = entry.layer.systemImage, let texture = systemTexture(kind) {
+            return RenderTextureFrame(texture: texture, duration: .greatestFiniteMagnitude,
+                                      uvOrigin: .zero, uvAxisX: SIMD2<Float>(1, 0), uvAxisY: SIMD2<Float>(0, 1))
+        }
         guard entry.frames.count > 1, let id = Int(entry.layer.id) else { return entry.frames[0] }
         let frame = timelines.spriteFrame(object: id, delta: Float(clock.delta))
         drawProbe?.record(spriteFrame: frame, object: id)
@@ -3041,6 +3053,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         return frame >= 0 && Int(frame) < entry.frames.count ? entry.frames[Int(frame)] : entry.frames[0]
     }
 
+
+    /// A system texture's image now; nil without one (or without script services).
+    private func systemTexture(_ kind: SceneSystemTexture) -> MTLTexture? {
+        mediaTextures?.texture(kind, loader: textureLoader, device: device)
+    }
 
     private func spriteSheetUV(for particle: Particle,
                                configuration: SceneMetalParticleSystem) -> (origin: SIMD2<Float>, size: SIMD2<Float>) {

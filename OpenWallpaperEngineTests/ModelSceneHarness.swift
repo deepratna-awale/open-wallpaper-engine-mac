@@ -38,6 +38,7 @@ final class ModelSceneHarness {
 
     /// Loads `directory`'s wallpaper; nil content fails the calling test.
     init(directory: URL, settings: SceneRenderSettings, size: SIMD2<Int>, storage: URL,
+         media: SceneScriptReplayMediaSource = SceneScriptReplayMediaSource(),
          file: StaticString = #filePath, line: UInt = #line) throws {
         self.directory = directory
         self.size = size
@@ -53,7 +54,7 @@ final class ModelSceneHarness {
         view.autoResizeDrawable = false
         view.drawableSize = points
         let services = SceneScriptServices(prelude: SceneScriptPrelude.load(), storage: SceneScriptStorage(directory: storage),
-                                           media: SceneScriptReplayMediaSource(), spectrum: { .silent })
+                                           media: media, spectrum: { .silent })
         renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: services, screenID: "model-harness"))
         view.isPaused = true
         renderer.setPlacement(.fill)

@@ -68,6 +68,10 @@ struct WESceneObject: Decodable {
     var particle: String?    // path to particle JSON
     var instanceoverride: WEInstanceOverride?
 
+    /// An image object's `instance`: its material's per-object combos, textures and `usertextures`
+    /// (a solid layer's `{"textures": ["util/white"], "usertextures": [{"name": "$mediaThumbnail", …}]}`).
+    var instance: WEObjectEffectPass?
+
     // Sound objects (WE builds one when `"sound"` is not null)
     var sound: WESceneSound?
 
@@ -101,7 +105,7 @@ struct WESceneObject: Decodable {
         case padding, maxwidth, maxrows, limitwidth, limitrows, limituseellipsis, anchor, blockalign
         case image, alpha, brightness, color, colorBlendMode, clampuvs, size, alignment, shape
         case solid, disablepropagation, copybackground, parallaxDepth, perspective
-        case particle, instanceoverride, sound, light
+        case particle, instanceoverride, instance, sound, light
     }
 
     init(from decoder: Decoder) throws {
@@ -120,6 +124,7 @@ struct WESceneObject: Decodable {
         image = try? c.decodeIfPresent(String.self, forKey: .image)
         particle = try? c.decodeIfPresent(String.self, forKey: .particle)
         instanceoverride = c.decodeLogged(WEInstanceOverride.self, forKey: .instanceoverride, userInfo: decoder.userInfo)
+        instance = c.decodeLogged(WEObjectEffectPass.self, forKey: .instance, userInfo: decoder.userInfo)
         // `decodeNil` throws only for a missing key, which `contains` ruled out.
         if c.contains(.sound), (try? c.decodeNil(forKey: .sound)) == false {
             do {

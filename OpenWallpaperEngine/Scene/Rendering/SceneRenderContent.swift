@@ -87,6 +87,9 @@ struct SceneMetalLayer {
     /// state is WE's `additive` (the shape class's +0x108, `wallpaper64.exe` 0x140260790, writes
     /// blending 2, which `0x140157e0e` names `additive`), where an image's is its material's.
     var additive = false
+    /// A texture WE supplies at run time in place of the layer's image (its `instance`'s
+    /// `usertextures` slot 0, e.g. the now-playing artwork); the image stands in while there is none.
+    var systemImage: SceneSystemTexture? = nil
     /// Index of the object in scene.json: layers and particle systems draw in that order.
     var order = 0
     /// `alignment` (images) or the text block's aligned edge: where the quad sits against `position`.
