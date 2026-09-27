@@ -32,4 +32,16 @@ enum WallpaperPropertyGroups {
         }
         return keys
     }
+
+    /// The display whose properties each wallpaper's shared store takes when properties become
+    /// synced: the selected display if it shows the wallpaper, else the first (by id) that does.
+    /// `assignments` holds each display's wallpaper.
+    static func sharingDisplays(assignments: [String: WallpaperInstanceKey], selected: String) -> [WallpaperInstanceKey: String] {
+        var displays: [WallpaperInstanceKey: String] = [:]
+        for screen in [selected] + assignments.keys.sorted() {
+            guard let wallpaper = assignments[screen]?.wallpaper, displays[wallpaper] == nil else { continue }
+            displays[wallpaper] = screen
+        }
+        return displays
+    }
 }

@@ -61,4 +61,14 @@ extension WallpaperSettingsIdentity {
             if let shared = defaults.object(forKey: key(family)) { defaults.set(shared, forKey: key(family, scope: scope)) }
         }
     }
+
+    /// Saves `scope`'s own values as the shared ones, so turning "Sync properties across displays"
+    /// on keeps what that display ran instead of the shared store left from before displays had
+    /// their own (or, never saved, project.json's defaults).
+    func share(_ scope: WallpaperPropertyScope, defaults: UserDefaults = .app) {
+        guard scope != .shared else { return }
+        for family in Family.allCases {
+            if let own = defaults.object(forKey: key(family, scope: scope)) { defaults.set(own, forKey: key(family)) }
+        }
+    }
 }

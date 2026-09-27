@@ -639,7 +639,20 @@ class WallpaperViewModel: ObservableObject {
 
     /// "Sync properties across displays" (Settings → General); set by the app delegate.
     @Published var syncsPropertiesAcrossDisplays = GlobalSettings().syncPropertiesAcrossDisplays {
-        didSet { if oldValue != syncsPropertiesAcrossDisplays { refreshInstanceKeys() } }
+        didSet {
+            guard oldValue != syncsPropertiesAcrossDisplays else { return }
+            if syncsPropertiesAcrossDisplays, persistsWallpapers { shareDisplayedProperties() }
+            refreshInstanceKeys()
+        }
+    }
+
+    /// Syncing starts from what the displays ran: each wallpaper's shared store takes the
+    /// properties of the display `WallpaperPropertyGroups.sharingDisplays` picks.
+    private func shareDisplayedProperties() {
+        let assignments = wallpapers.mapValues { WallpaperInstanceKey($0) }
+        for (key, screen) in WallpaperPropertyGroups.sharingDisplays(assignments: assignments, selected: selectedScreenId) {
+            settingsIdentity(directory: key.directory)?.share(.display(screen))
+        }
     }
 
     /// Each display's running instance: its wallpaper and the user properties it runs with

@@ -49,6 +49,27 @@ final class WallpaperPropertyScopeTests: XCTestCase {
                        ["rain": "0.5"], "nor does a display's edit reach the shared store")
     }
 
+    /// Turning sync on keeps what the displays ran. 3802900973's audio bars, switched on for each
+    /// display, went back to project.json's "off" once synced: its shared store was never saved.
+    func testSyncingStartsFromTheSelectedDisplaysProperties() {
+        let identity = WallpaperSettingsIdentity(rawValue: "workshop-1")
+        defaults.set(["bars": "false"], forKey: identity.key(.userProperties))
+        defaults.set(["bars": "true"], forKey: identity.key(.userProperties, scope: .display("2")))
+        defaults.set(true, forKey: identity.key(.explicitUserProperties, scope: .display("2")))
+        identity.share(.display("2"), defaults: defaults)
+        XCTAssertEqual(identity.stored(.userProperties, scope: .shared, defaults: defaults) as? [String: String], ["bars": "true"])
+        XCTAssertTrue(defaults.bool(forKey: identity.key(.explicitUserProperties)),
+                      "saved as the user's, so a load doesn't re-derive the defaults")
+        identity.share(.display("9"), defaults: defaults)
+        XCTAssertEqual(identity.stored(.userProperties, scope: .shared, defaults: defaults) as? [String: String], ["bars": "true"],
+                       "a display without its own properties changes nothing")
+
+        let rain = key("rain"), snow = key("snow")
+        let displays = WallpaperPropertyGroups.sharingDisplays(assignments: ["1": rain, "2": rain, "3": snow, "4": snow],
+                                                               selected: "2")
+        XCTAssertEqual(displays, [rain: "2", snow: "3"], "the selected display's, else the first showing the wallpaper")
+    }
+
     func testRunningStoresAreKeptApart() {
         let directory = URL(filePath: "/tmp/owe/rain")
         XCTAssertEqual(WallpaperPropertyScope.shared.runtimeKey(directory: directory), "/tmp/owe/rain")
