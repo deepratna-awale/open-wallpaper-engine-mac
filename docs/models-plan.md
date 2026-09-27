@@ -546,7 +546,7 @@ T tester (after M5, again after M8 and P2)   O optimisation (after T)
 - **Deviations:**
   - WE reads past a target's blob when the `MDMP` vertex count is below the mesh's; the app packs zeros there.
   - A lit puppet without effects has its other textures laid out through the posed mesh (`ScenePuppetRenderer.warp`, P2), which skins but doesn't morph: a morphing puppet's normal map would lag its albedo where targets move vertices. No library rig morphs.
-  - `getBlendShapeWeight` of a missing target returns 0; WE's handler leaves the result as the DLL initialised it [?]. A non-finite weight is dropped (WE would store it).
+  - `getBlendShapeWeight` of a missing target returns 0; WE's handler leaves the result as the DLL initialised it [?]. A weight that isn't finite, from a script, a clip's track or a layer's weight, is dropped (WE would store it and draw the vertices at NaN).
 - **Open points:** the order of a puppet's update and scripts' `update` in WE's frame (§5.25) decides whether a script must set its weights every frame, as here; morph tracks under additive layers are now read from the binary (§5.2's morph half); WE's alpha `v_VertexAlpha` from the puppet texture's w is the shader's, fed by the flag-0x1000 blob as read [I: that the blob is the alpha].
 
 **M8 — Shadows (lighting-plan D2; one agent, after M5; parallel with M9 and M10).**
@@ -652,6 +652,11 @@ T tester (after M5, again after M8 and P2)   O optimisation (after T)
 - `ModelLibraryRenderTests` over every library 3D scene and puppet: no model or puppet fallback, no NaN or inf in a frame, the frame time, and the counts of meshes, bones and draws.
 - Adversarial fixtures: 128 and 129 bones, u32 indices, a model with no materials, a missing `.mdl`, a camera layer hidden mid-run, two camera layers switching, `orthogonalprojection` missing on an image-only scene, `skin` past the list, an attachment name that doesn't exist.
 - New "needs WE ground truth" entries in `docs/test-risks.md`: the camera-layer `queuemode` random order, `transparentsorting` in a library scene, additive layer composition, root motion axes, a puppet with morphs.
+- **Done (2026-09-27).** What landed (findings and the capture list in `docs/test-risks.md` "Models and puppets: tester pass"):
+  - `ModelLibraryRenderTests`: the 26 library scenes that are perspective or have models or puppets (the Workshop folder, OpenWallpaperStorage and WE's default projects; audiophile included), each with the shadows setting off, low, medium and high and with shadows high and the reflection off, through the real loader and renderer at 1920×1080: no model or puppet falls back, no GPU error or frame over 5 s, poses and float targets finite; it prints frame times and the mesh, bone and draw counts (about 8 minutes).
+  - `ModelAdversarialTests` (written wallpapers, `ModelFixtureWallpaper`, `.mdl`s in WE's layout from `FixtureMDL`): every item of the list above, plus script model data abuse, morph weights that aren't finite, `collisionmodel` on non-models, a reflective model with nothing reflected, a shadowed light without casters and 256 lights. `ModelScriptStressTests`: `applyData` every frame and `replaceData` from a timer while frames draw back to back and the content rebuilds (clean under the Thread Sanitizer).
+  - Fixes: morph weights that aren't finite (a clip's track, a layer weight, a script) are dropped (`SceneMorphWeights`); an `attachment` its parent's rig can't resolve is logged once per content (`SceneAttachmentCheck`).
+  - `ModelGroundTruthProjects` (`OWE_GROUND_TRUTH_OUT`) writes generated WE projects for root motion, additive layers and depth in an orthographic frame, with our frames as the prediction.
 
 **O — Optimisation (after T).** Frame and load time on the 3D scenes: 3378346807 (100 models), 3734636606 (~400 spheres through scripts, 46 model objects), PaRappa (115-bone skeletons); instancing identical meshes, caching bone palettes for hidden or paused layers, the shadow atlas layout reuse.
 
