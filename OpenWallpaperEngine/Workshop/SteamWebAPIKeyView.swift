@@ -48,7 +48,7 @@ struct SteamWebAPIKeyView: View {
                 ProgressView().controlSize(.small)
             }
             Button("Check & Save", action: save)
-                .buttonStyle(.borderedProminent)
+                .glassButtonStyle(.prominent)
                 .disabled(!viewModel.canSubmit)
             if viewModel.isKeySet {
                 Button("Cancel") { viewModel.cancelReplacing() }

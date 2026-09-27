@@ -72,7 +72,7 @@ struct UnsafeWallpaper: View {
                         .padding(.horizontal, 10)
                 }
                 .animation(.default, value: seconds)
-                .buttonStyle(.borderedProminent)
+                .glassButtonStyle(.prominent)
                 .tint(.red)
                 .disabled(seconds > 0 ? true : false)
                 Button {

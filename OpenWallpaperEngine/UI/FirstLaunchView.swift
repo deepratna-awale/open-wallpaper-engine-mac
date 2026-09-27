@@ -93,7 +93,7 @@ struct FirstLaunchView: View {
                         withAnimation(.easeInOut(duration: 0.15)) { pageIndex += 1 }
                     }
                 }
-                .buttonStyle(.borderedProminent)
+                .glassButtonStyle(.prominent)
                 .keyboardShortcut(.defaultAction)
             }
         }
