@@ -70,9 +70,9 @@ enum ParticleRecordWriter {
         let scale = system.drawSizeScale
         for (index, particle) in system.particles.prefix(count).enumerated() {
             records[index] = ParticleSpriteInstance(
-                position: SIMD4(particle.position.x, particle.position.y, 0, 0),
+                position: SIMD4(particle.position.x, particle.position.y, particle.z, 0),
                 rotationSize: SIMD4(0, 0, particle.rotation, shaderSize(particle, scale: scale)),
-                velocityLifetime: SIMD4(particle.velocity.x, particle.velocity.y, 0,
+                velocityLifetime: SIMD4(particle.velocity.x, particle.velocity.y, particle.zVelocity,
                                         spritePhase(particle, configuration: configuration)),
                 color: color(particle, opacity: opacity))
         }
@@ -121,8 +121,8 @@ enum ParticleRecordWriter {
             let next = particles[strands.next[following] ?? following].position
             let place = layout(index)
             records[index] = ParticleRopeSegmentInstance(
-                start: SIMD4(start.position.x, start.position.y, 0, shaderSize(start, scale: scale)),
-                end: SIMD4(end.position.x, end.position.y, 0, place.count),
+                start: SIMD4(start.position.x, start.position.y, start.z, shaderSize(start, scale: scale)),
+                end: SIMD4(end.position.x, end.position.y, end.z, place.count),
                 previous: SIMD4(previous.x, previous.y, 0, Float(strands.index[index]) + place.shift),
                 next: SIMD4(next.x, next.y, 0, shaderSize(end, scale: scale)),
                 endColor: color(end, opacity: opacity),

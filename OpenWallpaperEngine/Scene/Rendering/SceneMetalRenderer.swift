@@ -1629,7 +1629,14 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// transform) to where its 3D world matrix puts it. Nil in an orthographic scene.
     private func particlePlacement(_ system: ParticleSystemRuntime,
                                    camera: SceneFrameCamera) -> ParticleMaterialUniforms.Placement? {
-        guard isPerspective else { return nil }
+        guard isPerspective else {
+            // A `perspective` system (flag 4) of an orthographic scene: WE pushes the temporary
+            // camera a perspective layer gets (0x140236761 → 0x1401e5b60) and keeps g_EyePosition.
+            guard system.configuration.perspective else { return nil }
+            var temporary = SceneLayerPlacement.perspectiveLayerCamera(sceneSize: sceneSize, fov: Float(spatial.camera.sceneFov))
+            temporary.eye = SIMD3(sceneSize.x / 2, sceneSize.y / 2, ParticleMaterialUniforms.eyeDistance)
+            return ParticleMaterialUniforms.Placement(camera: temporary)
+        }
         guard let id = particleObjectID(system) else { return ParticleMaterialUniforms.Placement(camera: camera) }
         let planar = transforms.world(of: id, live: { [self] id in liveLocal(id) }, attachments: puppetAttachments.affine)
         let x = planar.linear.columns.0, y = planar.linear.columns.1, t = planar.translation

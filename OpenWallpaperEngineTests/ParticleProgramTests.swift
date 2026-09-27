@@ -206,6 +206,34 @@ final class ParticleProgramTests: XCTestCase {
         }
     }
 
+    /// WE simulates particles in 3D: `movement` moves them along z by their z velocity, with the
+    /// gravity's z and the drag (0x14023fc08), and an emitter spreading along z launches them
+    /// radially in depth too (0x140237c14). A `perspective` system's camera shows it.
+    func testMovementAndTheEmitterWorkInDepth() throws {
+        let movement = try `operator`(#"{"name": "movement", "gravity": "0 0 -10", "drag": 0.5}"#)
+        var particle = state(age: 0)
+        particle.zVelocity = 20
+        var context = ParticleProgramContext()
+        context.deltaTime = 0.5
+        context.dragDeltaTime = 0.5
+        _ = ParticleProgramCPU.runOperators([movement], on: &particle, context: context, index: 0, neighbors: .init())
+        XCTAssertEqual(particle.z, 7.5, accuracy: 1e-5, "(20 − 10·0.5)·0.5")
+        XCTAssertEqual(particle.zVelocity, 11.25, accuracy: 1e-5, "15·(1 − 0.5·0.5)")
+        var shape = ParticleEmitterShape()
+        shape.directions = SIMD3(0, 0, 1)
+        shape.distanceMinimum = SIMD3(repeating: 100)
+        shape.distanceMaximum = SIMD3(repeating: 100)
+        shape.speed = SIMD2(10, 10)
+        for serial in UInt32(0)..<8 {
+            var spawn = ParticleProgramContext()
+            spawn.serial = serial
+            let emitted = ParticleProgramCPU.emit(shape, context: spawn)
+            XCTAssertEqual(emitted.position, .zero)
+            XCTAssertEqual(abs(emitted.z), 100, accuracy: 1e-3)
+            XCTAssertEqual(emitted.zVelocity, emitted.z > 0 ? 10 : -10, accuracy: 1e-3, "radial, along z")
+        }
+    }
+
     func testRemapInitialValueDefaultMultipliesSizeByLifetime() throws {
         let remap = try initializer(#"{"name":"remapinitialvalue"}"#)
         var particle = state(age: 0, lifetime: 0.25)

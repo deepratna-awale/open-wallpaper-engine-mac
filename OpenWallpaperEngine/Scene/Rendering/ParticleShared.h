@@ -19,6 +19,7 @@ struct ParticleState {
     float4 baseColor;
     float4 trail;            // history timer, -, instance
     uint4 identity;          // serial, sprite frame, history count, history start
+    float4 depth;            // z, z velocity (along the system's z), -, -
 };
 
 struct ParticleParameters {

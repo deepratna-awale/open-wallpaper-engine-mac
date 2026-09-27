@@ -25,6 +25,9 @@ struct Particle {
     var serial: UInt32 = 0
     /// The instance it belongs to, in an instanced system (`ParticleChildLink`).
     var instance: Int = 0
+    /// Depth along the system's z and its velocity (`ParticleProgramState.z`).
+    var z: Float = 0
+    var zVelocity: Float = 0
 
     /// `history` is a circular buffer; this returns it oldest-first so a trail can be walked.
     var orderedHistory: [SIMD2<Float>] {
@@ -345,6 +348,8 @@ enum ParticleCPUSimulation {
             let emitted = ParticleProgramCPU.emit(shape, context: context)
             state.position = emitted.position
             state.velocity = emitted.velocity
+            state.z = emitted.z
+            state.zVelocity = emitted.zVelocity
         }
         ParticleProgramCPU.runInitializers(inputs.initializers, on: &state, in: &context)
         inputs.controlPoints = context.controlPoints
@@ -357,7 +362,7 @@ enum ParticleCPUSimulation {
             rotation: state.rotation + inputs.spawnTurn, angularVelocity: state.angularVelocity,
             color: color, baseColor: color,
             spriteFrame: ParticleRandom.index(configuration.spriteSheet?.frames ?? 1, seed: system.seed, serial: serial, .spriteFrame),
-            history: [], historyStart: 0, serial: serial, instance: instance)
+            history: [], historyStart: 0, serial: serial, instance: instance, z: state.z, zVelocity: state.zVelocity)
     }
 
     /// One step of every operator for the particle at `index`.
@@ -390,6 +395,8 @@ enum ParticleCPUSimulation {
         state.baseColor = SIMD3(particle.baseColor.x, particle.baseColor.y, particle.baseColor.z)
         state.rotation = particle.rotation
         state.angularVelocity = particle.angularVelocity
+        state.z = particle.z
+        state.zVelocity = particle.zVelocity
         return state
     }
 
@@ -405,6 +412,8 @@ enum ParticleCPUSimulation {
         particle.color = SIMD4(state.color, particle.color.w)
         particle.rotation = state.rotation
         particle.angularVelocity = state.angularVelocity
+        particle.z = state.z
+        particle.zVelocity = state.zVelocity
         // A deleted particle dies when it next ages (WE sets its age to its lifetime).
         if dies { particle.age = particle.lifetime }
         // Only the ropetrail renderer reads history, and it wants samples spread over the

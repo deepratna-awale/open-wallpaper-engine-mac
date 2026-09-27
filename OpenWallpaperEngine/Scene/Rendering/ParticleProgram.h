@@ -24,6 +24,8 @@ constant uint iSequenceAround = 13, iSequenceBetween = 14, iRemapInitialValue = 
 struct ProgramState {
     float2 position, velocity, previous;
     float age, lifetime, size, baseSize, alpha, baseAlpha, rotation, angularVelocity;
+    /// Depth and its velocity (`ParticleProgramState.z`).
+    float z, zVelocity;
     float3 color, baseColor;
 };
 
@@ -331,7 +333,7 @@ static float3 signedVector(float3 v, float3 sign) {
 
 /// `ParticleProgramCPU.emit`.
 static void emitParticle(EmitterParameters e, thread const ProgramContext &c, thread float2 &position,
-                         thread float2 &velocity) {
+                         thread float2 &velocity, thread float &z, thread float &zVelocity) {
     const uint seed = c.seed, serial = c.serial;
     const float3 directions = e.directions.xyz;
     float3 offset;
@@ -356,15 +358,18 @@ static void emitParticle(EmitterParameters e, thread const ProgramContext &c, th
     }
     const float2 turned = c.emitterLinear * offset.xy;
     position = programPoint(c.points, uint(e.origin.w)) + e.origin.xy + turned;
-    float2 heading = turned;
-    if (length_squared(float3(turned, offset.z)) < 0.0001f) {
+    z = e.origin.z + offset.z;
+    float3 heading = float3(turned, offset.z);
+    if (length_squared(heading) < 0.0001f) {
         const float3 fallback = (float3(unitRandom(seed, serial, sFallbackX), unitRandom(seed, serial, sFallbackY),
                                         unitRandom(seed, serial, sFallbackZ)) * 2 - 1) * directions;
-        heading = c.emitterLinear * fallback.xy;
+        heading = float3(c.emitterLinear * fallback.xy, fallback.z);
     }
     const float headingLength = length(heading);
     const float speed = e.minimum.w + unitRandom(seed, serial, sEmitterSpeed) * (e.maximum.w - e.minimum.w);
-    velocity = headingLength > 0 ? heading / headingLength * speed : float2(0);
+    const float3 launch = headingLength > 0 ? heading / headingLength * speed : float3(0);
+    velocity = launch.xy;
+    zVelocity = launch.z;
 }
 
 /// `ParticleProgramCPU.runInitializers`.
@@ -417,7 +422,10 @@ static void runInitializers(constant ProgramOp *records, uint count, thread Prog
             const float3 v = float3(record.a.x + (record.b.x - record.a.x) * shaped(unitRandom(seed, serial, initializerStream(index, 0)), exponent),
                                     record.a.y + (record.b.y - record.a.y) * shaped(unitRandom(seed, serial, initializerStream(index, 1)), exponent),
                                     record.a.z + (record.b.z - record.a.z) * shaped(unitRandom(seed, serial, initializerStream(index, 2)), exponent));
-            if (record.header.x == iVelocityRandom) p.velocity += c.emitterLinear * (v.xy * c.spawnScale.w);
+            if (record.header.x == iVelocityRandom) {
+                p.velocity += c.emitterLinear * (v.xy * c.spawnScale.w);
+                p.zVelocity += v.z * c.spawnScale.w;
+            }
             else if (record.header.x == iRotationRandom) p.rotation += v.z;
             else p.angularVelocity += v.z * c.spawnScale.w;
             break;
@@ -551,6 +559,9 @@ static bool runOperator(ProgramOp record, thread ProgramState &p, thread Program
             p.previous = p.position;
             p.position += velocity * dt;
             p.velocity = velocity * damping;
+            const float zVelocity = p.zVelocity + record.a.z * dt;
+            p.z += zVelocity * dt;
+            p.zVelocity = zVelocity * damping;
             break;
         }
         case oAngularMovement: {

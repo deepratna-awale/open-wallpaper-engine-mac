@@ -114,6 +114,19 @@ final class ParticleSimulationParityTests: XCTestCase {
         }, layerWorld: { $0 == "7" ? layer : nil })
     }
 
+    /// Depth: a sphere spread along z, `velocityrandom`'s z, and `movement`'s gravity and drag on it.
+    func testDepth() throws {
+        var system = ParticleTestSystem()
+        system.emitterSpeed = SIMD2(20, 60)
+        system.drag = 0.5
+        try assertParity(system, "depth", configure: { configuration in
+            configuration.emitter.directions = SIMD3(40, 30, 50)
+            configuration.program.initializers.append(ParticleInitializer(.velocityRandom, a: SIMD4(0, 0, -30, 1),
+                                                                           b: SIMD4(0, 0, 90, 0)))
+            configuration.program.operators[0].record.a.z = -40
+        })
+    }
+
     func testBoids() throws {
         var system = ParticleTestSystem()
         system.operators = [ParticleOperator(.boids, flags: 1, a: SIMD4(20, 60, 200, 0), b: SIMD4(15, 1, 2, 0))]
@@ -501,6 +514,7 @@ final class ParticleSimulationParityTests: XCTestCase {
         var size: Float = 0
         var alpha: Float = 0
         var color = SIMD4<Float>.zero
+        var depth: Float = 0
     }
 
     private func statistics(_ particles: [Particle]) -> Statistics {
@@ -511,9 +525,10 @@ final class ParticleSimulationParityTests: XCTestCase {
             result.size += particle.size
             result.alpha += particle.alpha
             result.color += particle.color
+            result.depth += particle.z
         }
         let n = Float(particles.count)
-        result.position /= n; result.size /= n; result.alpha /= n; result.color /= n
+        result.position /= n; result.size /= n; result.alpha /= n; result.color /= n; result.depth /= n
         return result
     }
 
@@ -525,9 +540,10 @@ final class ParticleSimulationParityTests: XCTestCase {
             result.size += state.life.z
             result.alpha += state.alphaRotation.x
             result.color += state.color
+            result.depth += state.depth.x
         }
         let n = Float(states.count)
-        result.position /= n; result.size /= n; result.alpha /= n; result.color /= n
+        result.position /= n; result.size /= n; result.alpha /= n; result.color /= n; result.depth /= n
         return result
     }
 
@@ -550,6 +566,7 @@ final class ParticleSimulationParityTests: XCTestCase {
                        "mean size \(label)", file: file, line: line)
         XCTAssertEqual(actual.alpha, expected.alpha, accuracy: 0.01, "mean alpha \(label)", file: file, line: line)
         XCTAssertLessThan(simd_distance(actual.color, expected.color), 0.01, "mean colour \(label)", file: file, line: line)
+        XCTAssertEqual(actual.depth, expected.depth, accuracy: positionTolerance, "mean depth \(label)", file: file, line: line)
         // The compaction keeps spawn order, as the CPU's array does.
         let serials = states.map(\.identity.x)
         XCTAssertEqual(serials, serials.sorted(), "spawn order \(label)", file: file, line: line)

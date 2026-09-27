@@ -98,6 +98,9 @@ extension ParticleProgramCPU {
         p.previous = p.position
         p.position += velocity * dt
         p.velocity = velocity * damping
+        let zVelocity = p.zVelocity + record.a.z * dt
+        p.z += zVelocity * dt
+        p.zVelocity = zVelocity * damping
     }
 
     /// `angularmovement` (0x14023ffc7, blended 0x1402400e7): the same scheme on the spin about z.

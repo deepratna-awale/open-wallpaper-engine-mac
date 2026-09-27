@@ -17,6 +17,8 @@ struct ParticleGPUState {
     var trail: SIMD4<Float>
     /// Serial, sprite frame, history count, history start.
     var identity: SIMD4<UInt32>
+    /// Depth and its velocity (`Particle.z`, `zVelocity`), -, -.
+    var depth: SIMD4<Float>
 }
 
 /// One instance of an instanced child system on the GPU (`ParticleInstance` on the CPU).

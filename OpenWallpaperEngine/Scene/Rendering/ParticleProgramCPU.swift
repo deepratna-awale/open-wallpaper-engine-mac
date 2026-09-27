@@ -16,6 +16,11 @@ struct ParticleProgramState {
     var baseAlpha: Float = 1
     var rotation: Float = 0
     var angularVelocity: Float = 0
+    /// Depth along the system's z and its velocity. WE simulates particles in 3D; here only the
+    /// emitter, `velocityrandom` and `movement` move them in depth, which a `perspective` system's
+    /// camera shows (`ParticleFrameInputs.perspective`).
+    var z: Float = 0
+    var zVelocity: Float = 0
     var color = SIMD3<Float>(repeating: 1)
     var baseColor = SIMD3<Float>(repeating: 1)
 

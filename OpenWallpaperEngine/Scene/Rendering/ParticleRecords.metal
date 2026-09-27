@@ -50,10 +50,10 @@ kernel void particleWriteSprites(device const ParticleState *particles [[buffer(
     if (gid >= control[cCount]) return;
     const ParticleState particle = particles[gid];
     SpriteRecord record;
-    record.position = float4(particle.positionVelocity.xy, 0, 0);
+    record.position = float4(particle.positionVelocity.xy, particle.depth.x, 0);
     // Sprites take the emitter's transform through `g_Orientation*`; trails scale by its area.
     record.rotationSize = float4(0, 0, particle.alphaRotation.z, particle.life.z * f.motionExtras.w);
-    record.velocityLifetime = float4(particle.positionVelocity.zw, 0, spritePhase(particle, p));
+    record.velocityLifetime = float4(particle.positionVelocity.zw, particle.depth.y, spritePhase(particle, p));
     record.color = recordColor(particle, p, f);
     records[gid] = record;
 }
@@ -131,8 +131,8 @@ kernel void particleWriteRope(device const ParticleState *particles [[buffer(0)]
     const float2 next = particles[after.next < count ? after.next : n.next].positionVelocity.xy;
     const float2 layout = ropeLayout(n.length, particles[n.oldest].life.x, control[cDied], p, f);
     RopeRecord record;
-    record.start = float4(start.positionVelocity.xy, 0, start.life.z * f.motionExtras.w);
-    record.end = float4(end.positionVelocity.xy, 0, layout.x);
+    record.start = float4(start.positionVelocity.xy, start.depth.x, start.life.z * f.motionExtras.w);
+    record.end = float4(end.positionVelocity.xy, end.depth.x, layout.x);
     record.previous = float4(previous, 0, float(n.index) + layout.y);
     record.next = float4(next, 0, end.life.z * f.motionExtras.w);
     record.endColor = recordColor(end, p, f);

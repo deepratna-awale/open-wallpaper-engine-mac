@@ -56,6 +56,9 @@ struct SceneMetalParticleSystem {
     /// where they are when the emitter moves. Otherwise they live in the emitter's space and move,
     /// turn and scale with it.
     var worldSpace = false
+    /// `flags` bit 2 (4): the system is drawn through a perspective camera even in an orthographic
+    /// scene (WE's temporary camera, 0x140236761), so its particles' depth shows.
+    var perspective = false
     /// The emitter's `instantaneous` burst: particles spawned at once when the emitter starts (and
     /// each period, when periodic).
     var instantaneous = 0

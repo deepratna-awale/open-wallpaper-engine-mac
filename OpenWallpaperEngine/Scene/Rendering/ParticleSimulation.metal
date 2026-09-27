@@ -181,13 +181,15 @@ static ParticleState spawn(uint serial, constant ParticleParameters &p, constant
     state.angularVelocity = 0;
     state.color = float3(1);
     state.baseColor = f.colorScale.xyz;
+    state.z = 0;
+    state.zVelocity = 0;
     if (emitter.flags.x == 2) {
         state.position = float2(0);
         state.velocity = float2(0);
         float3 color;
         if (emitFromImage(emitter, step, imagePoints, c, state.position, color)) state.baseColor *= color;
     } else {
-        emitParticle(emitter, c, state.position, state.velocity);
+        emitParticle(emitter, c, state.position, state.velocity, state.z, state.zVelocity);
     }
     state.previous = state.position;
     runInitializers(program, f.extra.w & 0xFFFFu, state, c);
@@ -201,6 +203,7 @@ static ParticleState spawn(uint serial, constant ParticleParameters &p, constant
     particle.baseColor = particle.color;
     particle.trail = float4(0);
     particle.identity = uint4(serial, min(uint(unitRandom(p.counts.z, serial, sSpriteFrame) * float(frames)), frames - 1), 0, 0);
+    particle.depth = float4(state.z, state.zVelocity, 0, 0);
     return particle;
 }
 
@@ -391,6 +394,8 @@ static ProgramState simulateState(ParticleState particle, thread const ProgramCo
     state.angularVelocity = particle.alphaRotation.w;
     state.color = particle.color.xyz;
     state.baseColor = particle.baseColor.xyz;
+    state.z = particle.depth.x;
+    state.zVelocity = particle.depth.y;
     return state;
 }
 
@@ -407,6 +412,7 @@ static void endSimulate(uint gid, ParticleState particle, ProgramState state, th
     particle.life = float4(dies ? state.lifetime : particle.life.x, state.lifetime, state.size, particle.life.w);
     particle.alphaRotation = float4(state.alpha, particle.alphaRotation.y, state.rotation, state.angularVelocity);
     particle.color = float4(state.color, particle.color.w);
+    particle.depth = float4(state.z, state.zVelocity, 0, 0);
     if (flags & kHistory) {
         const uint limit = p.counts.w;
         particle.trail.x += f.time.x;

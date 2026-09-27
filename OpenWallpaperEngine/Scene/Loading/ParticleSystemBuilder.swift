@@ -50,6 +50,7 @@ enum ParticleSystemBuilder {
         system.objectID = object.id.map(String.init)
         system.emitterLinear = world.linear
         system.worldSpace = particleSystem.isWorldSpace
+        system.perspective = (particleSystem.flags ?? 0) & 4 != 0
         system.overrides = overrides
         system.ignoredOverrides = SceneParticleOverrides.Parts(systemFlags: particleSystem.flags ?? 0)
         system.startTime = max(Float(particleSystem.starttime ?? 0), 0)

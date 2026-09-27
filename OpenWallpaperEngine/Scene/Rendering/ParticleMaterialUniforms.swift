@@ -74,7 +74,10 @@ struct ParticleMaterialUniforms {
             viewRight = placement.direction(simd_cross(camera.forward, camera.up))
             viewForward = forward
         } else {
-            modelViewProjection = PassMatrices.ortho(left: 0, right: size.x, bottom: size.y, top: 0)
+            // Particles have depth (`Particle.z`), which an orthographic view doesn't show; the
+            // depth range keeps it from clipping them.
+            modelViewProjection = PassMatrices.ortho(left: 0, right: size.x, bottom: size.y, top: 0,
+                                                     near: -Self.eyeDistance, far: Self.eyeDistance)
             eyePosition = SIMD3(size.x / 2, size.y / 2, Self.eyeDistance)
             axes = system.configuration.orientation.axes(linear: system.drawLinear)
             viewUp = Self.viewUp2D

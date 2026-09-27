@@ -8,7 +8,8 @@ import simd
 extension ParticleProgramCPU {
     /// The emitter's placement and launch velocity for spawn `serial` (0x140237c14 sphere,
     /// 0x14023847f box).
-    static func emit(_ emitter: ParticleEmitterShape, context: ParticleProgramContext) -> (position: SIMD2<Float>, velocity: SIMD2<Float>) {
+    static func emit(_ emitter: ParticleEmitterShape, context: ParticleProgramContext)
+        -> (position: SIMD2<Float>, velocity: SIMD2<Float>, z: Float, zVelocity: Float) {
         func random(_ stream: ParticleRandom.Stream) -> Float {
             ParticleRandom.unit(seed: context.seed, serial: context.serial, stream: stream.rawValue)
         }
@@ -39,14 +40,16 @@ extension ParticleProgramCPU {
         let turned = context.emitterLinear * SIMD2(offset.x, offset.y)
         let position = point(context.controlPoints, emitter.controlPoint) + SIMD2(emitter.origin.x, emitter.origin.y) + turned
         // A particle at the centre launches in a random direction (0x140237fc8).
-        var heading = turned
-        if simd_length_squared(SIMD3(turned.x, turned.y, offset.z)) < 0.0001 {
+        var heading = SIMD3(turned.x, turned.y, offset.z)
+        if simd_length_squared(heading) < 0.0001 {
             let fallback = (SIMD3(random(.fallbackX), random(.fallbackY), random(.fallbackZ)) * 2 - 1) * emitter.directions
-            heading = context.emitterLinear * SIMD2(fallback.x, fallback.y)
+            let flat = context.emitterLinear * SIMD2(fallback.x, fallback.y)
+            heading = SIMD3(flat.x, flat.y, fallback.z)
         }
         let length = simd_length(heading)
         let speed = emitter.speed.x + random(.emitterSpeed) * (emitter.speed.y - emitter.speed.x)
-        return (position, length > 0 ? heading / length * speed : .zero)
+        let launch = length > 0 ? heading / length * speed : .zero
+        return (position, SIMD2(launch.x, launch.y), emitter.origin.z + offset.z, launch.z)
     }
 
     /// A `layerimage` emitter's placement for spawn `serial` (0x140238c45): one of `points`
@@ -127,6 +130,7 @@ extension ParticleProgramCPU {
             case .velocityRandom:
                 let v = vector(0) * context.spawnScale.w
                 p.velocity += context.emitterLinear * SIMD2(v.x, v.y)
+                p.zVelocity += v.z
             case .inheritControlPointVelocity:
                 let index = record.controlPoint0
                 let moved = point(context.controlPoints, index) - point(context.previousControlPoints, index)
