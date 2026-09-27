@@ -156,7 +156,7 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     fileprivate func audioListenerRegistered() {
         guard audioTimer == nil else { return }
         let timer = Timer(timeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
-            guard let self, let webView = self.webView else { return }
+            guard let self, !self.isPaused, let webView = self.webView else { return }
             let snapshot = WallpaperServices.shared.audioSpectrumSnapshot
             let samples = WebWallpaperPropertyBridge.audioArray(left: snapshot.left64, right: snapshot.right64)
             webView.evaluateJavaScript(WebWallpaperPropertyBridge.audioDeliveryScript(samples), completionHandler: nil)
@@ -175,6 +175,24 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         if let webView { WebPageAudio.setMuted(muted, on: webView) }
     }
 
+    /// Whether the playback rules pause this display's page: its media is suspended and the page
+    /// hears WE's `setPaused(true)`. WebKit has no public way to stop a page's animation frames,
+    /// so a page that ignores `setPaused` keeps drawing.
+    private(set) var isPaused = false
+
+    func setPaused(_ paused: Bool) {
+        guard paused != isPaused else { return }
+        isPaused = paused
+        heartbeatGate.playing = !paused
+        reportHeartbeatGate()
+        if let webView { applyPaused(to: webView) }
+    }
+
+    private func applyPaused(to webView: WKWebView) {
+        webView.setAllMediaPlaybackSuspended(isPaused, completionHandler: nil)
+        webView.evaluateJavaScript(WebWallpaperPropertyBridge.setPausedScript(isPaused), completionHandler: nil)
+    }
+
     func stopAudio() {
         audioTimer?.invalidate()
         audioTimer = nil
@@ -189,8 +207,9 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         let javascriptStyle = "var css = '*{-webkit-touch-callout:none;-webkit-user-select:none}'; var head = document.head || document.getElementsByTagName('head')[0]; var style = document.createElement('style'); style.type = 'text/css'; style.appendChild(document.createTextNode(css)); head.appendChild(style);"
         webView.evaluateJavaScript(javascriptStyle, completionHandler: nil)
         applyAllProperties(to: webView)
-        // A new page starts unmuted by script.
+        // A new page starts unmuted by script, and playing.
         if isMuted { WebPageAudio.setMuted(true, on: webView) }
+        if isPaused { applyPaused(to: webView) }
         
         if AppDelegate.shared.globalSettingsViewModel.settings.adjustMenuBarTint {
             webView.takeSnapshot(with: nil) { [weak self] nsImage, error in

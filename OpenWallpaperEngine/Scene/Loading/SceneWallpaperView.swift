@@ -30,7 +30,7 @@ struct SceneWallpaperView: NSViewRepresentable {
             SceneWallpaperInstance(wallpaper: wallpaper, environment: environment, screenID: screenId,
                                    properties: key.properties)
         }
-        context.coordinator.show(lease, in: view)
+        context.coordinator.show(lease, in: view, screenID: screenId)
         return view
     }
 

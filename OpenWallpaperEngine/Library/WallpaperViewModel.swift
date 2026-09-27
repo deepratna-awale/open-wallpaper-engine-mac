@@ -598,9 +598,41 @@ class WallpaperViewModel: ObservableObject {
         guard audioOutputEnabled else { return false }
         guard persistsWallpapers else { return true }
         let audible = WallpaperAudioRouting.audibleInstance(
-            of: key.wallpaper, instanceKeys: instanceKeys, enabledScreens: enabledScreens,
+            of: key.wallpaper, instanceKeys: instanceKeys, enabledScreens: audibleCandidates(of: key),
             mainScreen: NSScreen.main.map(Self.screenId(for:)))
         return audible.map { $0 == key } ?? true
+    }
+
+    // MARK: - Playback rules per display
+
+    /// Each display's playback under Settings › Performance › Playback (`PlaybackRules`), set by the
+    /// app delegate's `DisplayPlaybackMonitor`. Empty in the Workshop preview: every display plays.
+    @Published var displayPlayback: [String: DisplayPlayback] = [:]
+
+    /// `screenId`'s own playback: whether its view draws new frames.
+    func playback(onScreen screenId: String) -> DisplayPlayback {
+        persistsWallpapers ? displayPlayback[screenId] ?? .run : .run
+    }
+
+    /// What the displays showing the instance `key` agree on: whether it renders
+    /// (`DisplayPlaybackRouting.instance`).
+    func playback(of key: WallpaperInstanceKey) -> DisplayPlayback {
+        guard persistsWallpapers else { return .run }
+        return DisplayPlaybackRouting.instance(key, instanceKeys: instanceKeys, enabledScreens: enabledScreens,
+                                               states: displayPlayback)
+    }
+
+    /// What the displays showing `key`'s wallpaper agree on, whatever their properties: whether its
+    /// sound plays (`DisplayPlaybackRouting.wallpaper`).
+    func wallpaperPlayback(of key: WallpaperInstanceKey) -> DisplayPlayback {
+        guard persistsWallpapers else { return .run }
+        return DisplayPlaybackRouting.wallpaper(key, instanceKeys: instanceKeys, enabledScreens: enabledScreens,
+                                                states: displayPlayback)
+    }
+
+    private func audibleCandidates(of key: WallpaperInstanceKey) -> Set<String> {
+        DisplayPlaybackRouting.audibleCandidates(of: key, instanceKeys: instanceKeys, enabledScreens: enabledScreens,
+                                                 states: displayPlayback)
     }
 
     // MARK: - User properties per display
@@ -674,7 +706,7 @@ class WallpaperViewModel: ObservableObject {
         let key = WallpaperInstanceKey(wallpaper(for: screenId))
         let audible = WallpaperAudioRouting.audibleScreen(
             of: key, assignments: wallpapers.mapValues { WallpaperInstanceKey($0) },
-            enabledScreens: enabledScreens, mainScreen: NSScreen.main.map(Self.screenId(for:)))
+            enabledScreens: audibleCandidates(of: key), mainScreen: NSScreen.main.map(Self.screenId(for:)))
         return audible == screenId
     }
 

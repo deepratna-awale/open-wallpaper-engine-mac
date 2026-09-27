@@ -10,11 +10,11 @@ final class SceneWallpaperPresenter: NSObject, MTKViewDelegate {
 
     var instance: SceneWallpaperInstance? { lease?.instance }
 
-    /// Shows `lease`'s instance in `view`.
+    /// Shows `lease`'s instance in `view`, on the display `screenID`.
     @MainActor
-    func show(_ lease: Lease, in view: MTKView) {
+    func show(_ lease: Lease, in view: MTKView, screenID: String) {
         self.lease = lease
-        lease.instance.attach(self, view: view)
+        lease.instance.attach(self, view: view, screenID: screenID)
     }
 
     /// Stops showing the instance; it stops too once no display shows it.

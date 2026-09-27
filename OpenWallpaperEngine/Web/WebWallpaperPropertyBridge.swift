@@ -81,6 +81,14 @@ enum WebWallpaperPropertyBridge {
         """
     }
 
+    /// WE's `wallpaperPropertyListener.setPaused(isPaused)`: the wallpaper was paused or resumed.
+    static func setPausedScript(_ paused: Bool) -> String {
+        """
+        (function(){var l=window.wallpaperPropertyListener;\
+        if(l&&typeof l.setPaused==='function'){try{l.setPaused(\(paused));}catch(e){console.error(e);}}})();
+        """
+    }
+
     static func applyGeneralPropertiesScript(fps: Int) -> String {
         """
         (function(){var l=window.wallpaperPropertyListener;\

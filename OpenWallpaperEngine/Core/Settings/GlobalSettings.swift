@@ -7,9 +7,12 @@ enum GSQuality {
     case low, medium, high, ultra
 }
 
+/// A playback rule's action (Settings › Performance › Playback). With several displays, WE
+/// offers "Pause per monitor" (`pause`) and "Pause all" (`pauseAll`) for the rules about other
+/// applications' windows (`PlaybackRules`); with one display only "Pause".
 enum GSPlayback: String, CaseIterable, Identifiable, Codable {
     var id: Self { self }
-    case keepRunning, mute, pause, stop
+    case keepRunning, mute, pause, pauseAll, stop
 }
 
 /// WE's `msaa` setting (none, x2, x4, x8): the scene pass draws multisampled and resolves into
@@ -170,6 +173,7 @@ struct GlobalSettings: Codable, Equatable {
     
     // MARK: Playback
     var otherApplicationFocused = GSPlayback.keepRunning
+    var otherApplicationMaximized = GSPlayback.keepRunning
     var otherApplicationFullscreen = GSPlayback.keepRunning
     var otherApplicationPlayingAudio = GSPlayback.keepRunning
     var displayAsleep = GSPlayback.keepRunning
@@ -238,7 +242,8 @@ struct GlobalSettings: Codable, Equatable {
     /// nothing (post-processing then defaulted to "disabled", anti-aliasing to MSAA x2), so they
     /// are left behind.
     enum CodingKeys: String, CodingKey {
-        case otherApplicationFocused, otherApplicationFullscreen, otherApplicationPlayingAudio, displayAsleep
+        case otherApplicationFocused, otherApplicationMaximized, otherApplicationFullscreen, otherApplicationPlayingAudio
+        case displayAsleep
         case laptopOnBattery, textureResolution, shadows, volumetrics, fps, particleBudget
         case antiAliasing = "msaa"
         case renderResolution, sceneDetail
@@ -265,6 +270,7 @@ extension GlobalSettings {
             }
         }
         read(.otherApplicationFocused, &otherApplicationFocused)
+        read(.otherApplicationMaximized, &otherApplicationMaximized)
         read(.otherApplicationFullscreen, &otherApplicationFullscreen)
         read(.otherApplicationPlayingAudio, &otherApplicationPlayingAudio)
         read(.displayAsleep, &displayAsleep)

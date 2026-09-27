@@ -33,8 +33,20 @@ class VideoWallpaperViewModel: ObservableObject {
     var playVolume: Float = 0 {
         didSet {
             self.player.volume = playVolume
-            self.audioPlayer.volume = playVolume
+            applyAudioVolume()
         }
+    }
+
+    /// What the displays showing this video agree on under the playback rules: it plays while any
+    /// of them plays (one player serves them all, so a paused display keeps showing it moving) and
+    /// is heard unless every one of them is muted, paused or stopped (`DisplayPlaybackRouting`).
+    private var displayPlayback: DisplayPlayback {
+        wallpaperViewModel.wallpaperPlayback(of: WallpaperInstanceKey(currentWallpaper))
+    }
+
+    /// The soundtrack's volume: the app's, or silent while the playback rules mute the video.
+    private func applyAudioVolume() {
+        audioPlayer.volume = displayPlayback.playsSound ? playVolume : 0
     }
 
     var player = AVPlayer()
@@ -98,6 +110,13 @@ class VideoWallpaperViewModel: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] volume in
                 self?.playVolume = volume
+            }
+            .store(in: &cancellables)
+        wallpaperViewModel.$displayPlayback
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.applyAudioVolume()
+                self?.updatePlaybackRates(audioLevel: WallpaperServices.shared.audioLevel)
             }
             .store(in: &cancellables)
         wallpaperViewModel.$audioOutputEnabled
@@ -182,10 +201,11 @@ class VideoWallpaperViewModel: ObservableObject {
             smoothedAudioLevel = level
         }
         // A paused wallpaper stays paused; pacing only modulates a video that is playing.
-        setVideoRate(playRate > 0 ? max(0, playRate + Float(smoothedAudioLevel * paceAmount)) : 0)
+        let rate = displayPlayback.rendersFrames ? playRate : 0
+        setVideoRate(rate > 0 ? max(0, rate + Float(smoothedAudioLevel * paceAmount)) : 0)
         // Audio runs on a second player, so a paused wallpaper keeps playing sound unless the
         // pause is applied here too.
-        setAudioRate(playsAudio && !audioPlayer.isMuted && playRate > 0 ? wallpaperViewModel.audioPlayRate : 0)
+        setAudioRate(playsAudio && !audioPlayer.isMuted && rate > 0 ? wallpaperViewModel.audioPlayRate : 0)
     }
 
     /// Assigning `AVPlayer.rate` restarts the timebase, so doing it on every audio sample stutters

@@ -21,6 +21,10 @@ struct SceneWallpaperEnvironment {
 final class SceneWallpaperInstance {
     private struct Display {
         weak var view: MTKView?
+        /// The display it is on, whose playback rules decide whether it draws.
+        let screenID: String
+        /// The playback rules pause this display: it keeps its last frame.
+        var frozen = false
     }
 
     let key: WallpaperInstanceKey
@@ -76,12 +80,12 @@ final class SceneWallpaperInstance {
 
     // MARK: - Displays
 
-    /// `presenter` shows this wallpaper in `view` from now on.
-    func attach(_ presenter: SceneWallpaperPresenter, view: MTKView) {
+    /// `presenter` shows this wallpaper in `view`, on the display `screenID`, from now on.
+    func attach(_ presenter: SceneWallpaperPresenter, view: MTKView, screenID: String) {
         let id = ObjectIdentifier(presenter)
         renderer?.configure(view)
         view.delegate = presenter
-        displays[id] = Display(view: view)
+        displays[id] = Display(view: view, screenID: screenID)
         if !displayOrder.contains(id) { displayOrder.append(id) }
         schedule.add(id, frameRate: Self.frameRate(of: view))
         update()
@@ -114,12 +118,14 @@ final class SceneWallpaperInstance {
         renderer.present(in: view)
     }
 
-    /// The displays as the frame needs them, the driving one first; views not yet laid out are left out.
+    /// The displays as the frame needs them, the driving one first; views not yet laid out, and
+    /// paused ones (they keep their last frame), are left out.
     private func viewports() -> [SceneViewport] {
         let driver = schedule.driver
         let ordered = displayOrder.filter { $0 == driver } + displayOrder.filter { $0 != driver }
         return ordered.compactMap { id -> SceneViewport? in
-            guard let view = displays[id]?.view, view.drawableSize.width > 0, view.drawableSize.height > 0 else { return nil }
+            guard let display = displays[id], !display.frozen, let view = display.view,
+                  view.drawableSize.width > 0, view.drawableSize.height > 0 else { return nil }
             return SceneViewport(view)
         }
     }
@@ -133,7 +139,8 @@ final class SceneWallpaperInstance {
     // MARK: - Updates
 
     /// Follows the app's controls: a rebuilt content, the placement, playback, the sound's gain, the
-    /// frame rate and pause. Displays call it when SwiftUI updates them.
+    /// frame rate and pause. Displays call it when SwiftUI updates them. A display the playback
+    /// rules pause keeps its last frame and stops driving the frames (`DisplayPlaybackRouting`).
     func update() {
         guard let wallpapers = environment.wallpapers else { return }
         if metalRevision != viewModel.metalRevision {
@@ -148,9 +155,11 @@ final class SceneWallpaperInstance {
         let fps = Int(environment.settings.settings.fps)
         for (id, display) in displays {
             guard let view = display.view else { continue }
+            let frozen = !wallpapers.playback(onScreen: display.screenID).rendersFrames
+            displays[id]?.frozen = frozen
             view.preferredFramesPerSecond = fps
-            view.isPaused = wallpapers.playRate == 0
-            schedule.setFrameRate(Self.frameRate(of: view), of: id)
+            view.isPaused = wallpapers.playRate == 0 || frozen
+            schedule.setFrameRate(frozen ? 0 : Self.frameRate(of: view), of: id)
         }
     }
 
@@ -167,9 +176,11 @@ final class SceneWallpaperInstance {
     private func updateVideoPlayback() {
         guard SceneWallpaperViewModel.isVideoType(viewModel.currentWallpaper.project.type),
               let wallpapers = environment.wallpapers else { return }
-        viewModel.updateVideoPlayback(playRate: wallpapers.playRate, audioRate: wallpapers.audioPlayRate,
+        let rendering = wallpapers.playback(of: key).rendersFrames
+        viewModel.updateVideoPlayback(playRate: rendering ? wallpapers.playRate : 0, audioRate: wallpapers.audioPlayRate,
                                       audioLevel: WallpaperServices.shared.audioLevel,
-                                      audioEnabled: wallpapers.playsAudio(for: key), volume: wallpapers.playVolume)
+                                      audioEnabled: wallpapers.playsAudio(for: key) && wallpapers.wallpaperPlayback(of: key).playsSound,
+                                      volume: wallpapers.playVolume)
     }
 
     private var sceneMusicEnabled: Bool {
@@ -186,10 +197,11 @@ final class SceneWallpaperInstance {
     /// The wallpaper's sound gain (its sound layers fade to it): the app's volume times this
     /// wallpaper's music volume, and 0 with the app's audio output off, or while muted, paused or
     /// with its music turned off, as WE's wallpaper volume goes to 0 then. A wallpaper running as
-    /// several instances (displays with different properties) plays from one of them.
+    /// several instances (displays with different properties) plays from one of them. The playback
+    /// rules silence it only when every display showing the wallpaper is muted, paused or stopped.
     private var soundGain: Float {
         guard let wallpapers = environment.wallpapers, wallpapers.playsAudio(for: key), sceneMusicEnabled,
-              wallpapers.playRate != 0 else { return 0 }
+              wallpapers.playRate != 0, wallpapers.wallpaperPlayback(of: key).playsSound else { return 0 }
         return wallpapers.playVolume * sceneMusicVolume
     }
 

@@ -105,8 +105,8 @@ final class SceneSharedInstanceTests: XCTestCase {
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let left = SceneWallpaperPresenter(), right = SceneWallpaperPresenter()
         let leftView = view(64, 64, device: device), rightView = view(96, 64, device: device)
-        left.show(lease(), in: leftView)
-        right.show(lease(), in: rightView)
+        left.show(lease(), in: leftView, screenID: "A")
+        right.show(lease(), in: rightView, screenID: "B")
         defer {
             left.stop()
             right.stop()

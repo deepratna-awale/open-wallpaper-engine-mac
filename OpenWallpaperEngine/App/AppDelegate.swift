@@ -120,6 +120,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var workshopDependencyCancellable: AnyCancellable?
     private var audioOutputCancellable: AnyCancellable?
     private var syncPropertiesCancellable: AnyCancellable?
+    /// Settings › Performance › Playback, per display (`App/Playback`).
+    private lazy var displayPlaybackMonitor = makeDisplayPlaybackMonitor()
     
     var importOpenPanel: NSOpenPanel!
     
@@ -193,6 +195,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
         
         safeRestart.showPendingNotice()
+        displayPlaybackMonitor.start(settings: globalSettingsViewModel.$settings)
 
         if globalSettingsViewModel.isFirstLaunch {
             self.mainWindowController.window.center()
@@ -352,7 +355,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
         wallpaperWindows.removeAll()
         setWallpaperWindows()
-        for (_, window) in wallpaperWindows { window.orderFront(nil) }
+        orderWallpaperWindowsFront()
     }
 
     @MainActor

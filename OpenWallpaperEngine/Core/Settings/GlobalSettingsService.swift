@@ -37,7 +37,6 @@ class GlobalSettingsViewModel: ObservableObject {
     @Published var isFirstLaunch = UserDefaults.app.value(forKey: "IsFirstLaunch") as? Bool ?? true
     
     var didFinishLaunchingNotificationCancellable: Cancellable?
-    var didActivateApplicationNotificationCancellable: Cancellable?
     var didCurrentWallpaperChangeCancellable: Cancellable?
     var didAddToLoginItemCancellable: Cancellable?
     var didChangeAdjustMenuBarTintCancellable: Cancellable?
@@ -58,7 +57,6 @@ class GlobalSettingsViewModel: ObservableObject {
     }
     
     deinit {
-        didActivateApplicationNotificationCancellable?.cancel()
         didFinishLaunchingNotificationCancellable?.cancel()
         didCurrentWallpaperChangeCancellable?.cancel()
         didAddToLoginItemCancellable?.cancel()
@@ -66,10 +64,6 @@ class GlobalSettingsViewModel: ObservableObject {
     }
     
     func didFinishLaunchingNotification() {
-        self.didActivateApplicationNotificationCancellable =
-        NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didActivateApplicationNotification)
-            .sink { [weak self] _ in self?.activateApplicationDidChange() }
-        
         self.didCurrentWallpaperChangeCancellable =
         AppDelegate.shared.wallpaperViewModel.$wallpapers
             .sink { [weak self] wallpapers in
@@ -182,41 +176,6 @@ class GlobalSettingsViewModel: ObservableObject {
             NSApp.appearance = NSAppearance(named: .darkAqua)
         case .followSystem:
             NSApp.appearance = nil
-        }
-    }
-    
-    func activateApplicationDidChange() {
-        guard let frontmostApplication = NSWorkspace.shared.frontmostApplication else { return }
-
-        switch frontmostApplication.bundleIdentifier {
-        case "com.apple.finder", Bundle.main.bundleIdentifier:
-            globalSettingsWhenApplicationDidBecomeActive()
-        default:
-            switch self.settings.otherApplicationFocused {
-            case .mute:
-                AppDelegate.shared.mute()
-            case .pause:
-                AppDelegate.shared.pause()
-            case .stop:
-                AppDelegate.shared.pause()
-                for window in AppDelegate.shared.wallpaperWindows.values { window.orderOut(nil) }
-            case .keepRunning:
-                break
-            }
-        }
-    }
-
-    func globalSettingsWhenApplicationDidBecomeActive() {
-        switch self.settings.otherApplicationFocused {
-        case .mute:
-            AppDelegate.shared.unmute()
-        case .pause:
-            AppDelegate.shared.resume()
-        case .stop:
-            AppDelegate.shared.resume()
-            for window in AppDelegate.shared.wallpaperWindows.values { window.orderFront(nil) }
-        case .keepRunning:
-            break
         }
     }
     
