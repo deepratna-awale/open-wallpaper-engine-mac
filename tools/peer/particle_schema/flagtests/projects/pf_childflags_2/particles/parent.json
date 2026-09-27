@@ -1,0 +1,58 @@
+{
+ "material": "materials/particle/halo_1.json",
+ "maxcount": 500,
+ "starttime": 0,
+ "emitter": [
+  {
+   "name": "sphererandom",
+   "rate": 20,
+   "distancemin": 0,
+   "distancemax": 150,
+   "id": 1,
+   "origin": "-400 0 0"
+  }
+ ],
+ "initializer": [
+  {
+   "id": 2,
+   "name": "lifetimerandom",
+   "min": 3,
+   "max": 3
+  },
+  {
+   "id": 3,
+   "name": "sizerandom",
+   "min": 40,
+   "max": 40
+  },
+  {
+   "id": 4,
+   "name": "colorrandom",
+   "min": "255 255 255",
+   "max": "255 255 255"
+  }
+ ],
+ "operator": [
+  {
+   "id": 5,
+   "name": "movement"
+  }
+ ],
+ "renderer": [
+  {
+   "id": 6,
+   "name": "sprite"
+  }
+ ],
+ "children": [
+  {
+   "id": 20,
+   "name": "particles/child.json",
+   "type": "static",
+   "flags": 2,
+   "origin": "800 0 0",
+   "maxcount": 10,
+   "probability": 1
+  }
+ ]
+}

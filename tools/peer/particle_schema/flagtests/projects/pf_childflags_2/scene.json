@@ -1,0 +1,30 @@
+{
+ "camera": {
+  "center": "0 0 -1",
+  "eye": "0 0 0",
+  "up": "0 1 0"
+ },
+ "general": {
+  "clearcolor": "0.05 0.05 0.05",
+  "ambientcolor": "0.3 0.3 0.3",
+  "skylightcolor": "0.3 0.3 0.3",
+  "orthogonalprojection": {
+   "width": 1920,
+   "height": 1080
+  }
+ },
+ "objects": [
+  {
+   "id": 10,
+   "name": "ps",
+   "particle": "particles/parent.json",
+   "origin": "960 540 0",
+   "angles": "0 0 0",
+   "scale": "1 1 1",
+   "visible": true,
+   "instanceoverride": {
+    "colorn": "1 0 0"
+   }
+  }
+ ]
+}
