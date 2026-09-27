@@ -1812,6 +1812,25 @@ Stage costs at 5280×2970 after the cuts (fastest frame, ms, one run): Hinata ul
 - Memoryless targets: every lighting target is read after the pass that writes it (the volumetrics' depth is converted in a later pass), so none qualifies. The scene targets, the mip buffer, the snapshots, the prelit images and the volumetrics' light buffers are `private` render targets without `shaderWrite` or `pixelFormatView`, which Apple GPUs can compress losslessly; only the volumetrics' small R32F depth copies take `shaderWrite`.
 - `LightingMemoryTests`: switching one renderer between the HDR fixture and an LDR scene ten times returns within 5% of the first HDR visit, and the LDR content holds no float target nor the HDR combine's output.
 
+## Effect gallery (effects at their defaults)
+
+Status 2026-09-26 (the scene-bloom default the gallery needs landed as audit §9.1). `WEEffectGalleryTests` against WE's effect gallery (docs/we-values-audit.md §8): all 55 scenes match WE's difference and motion within tolerance. What is still open:
+
+### FX1. The pointer's y and the effect texture projection have no capture (Medium, effects)
+WE's captures had the cursor off the display, so they show nothing of cursor ripple, x-ray or the fluid simulation's force. `g_PointerPosition` is now y-down in the shaders (WE's shaders flip it "to match texture space Y"; its camera parallax flips its raw cursor the same way, §3) and `g_EffectTextureProjectionMatrix` maps the effect's texture space to the layer's quad in an orthographic scene. Neither is measured: the matrix ignores the camera (zoom, shake, parallax, a perspective scene) and a layer drawn with a perspective transform. **Test:** capture x-ray and cursor ripple with the cursor at known points over a moved, scaled and rotated layer; compare the sprite's centre.
+
+### FX2. Film grain's spread (Low, effects)
+Film grain matches the difference and motion within tolerance (2.2 against WE's 3.3; 0.70 against 0.69), but its per-pixel spread over a flat area is about 0.66 of WE's, and WE's grain also shows over the checkerboard's edges where ours doesn't. The noise texture has no mips in either. Suspects: how `util/noise` is decoded (colour space), or the soft-light blend at strength 2. **Test:** compare the spread of `ApplyBlending(12, …)` over a grey ramp against a WE capture of film grain on a flat grey layer.
+
+### FX3. Image materials don't split stage uniforms (Low, image materials)
+A uniform both stages declare differently now has a fragment-stage copy (`<name>_weFragment`). The effect and particle planners resolve it from the fragment's annotation; `ImageMaterialPlan` (the puppets owner's file) still merges by name, so there the copy takes the vertex stage's value, as before. No shipped image or particle shader has such a uniform. **Fix:** use `ShaderUniformDeclaration.merged(vertex:fragment:)` in `ImageMaterialPlan`.
+
+### FX4. Motion is a little lower on some periodic effects (Low, effects)
+Pulse (3.5 against 4.2), shimmer (1.05 against 1.48) and the fluid simulation (0.96 against 0.70) are within tolerance but not close. WE's still time ("about 5 s after load") and its 25 fps are approximations here, and these effects' motion depends on the phase. **Test:** a capture with a known scene time (a timeline or script clock on screen).
+
+### FX5. The gallery takes about 25 minutes (Low, tests)
+`WEReferenceRenderer` steps every scene through 8 s at 30 fps and settles each one; 55 scenes take about 25 minutes, so the test is gated and doesn't run in CI.
+
 ## EX. WE 2.8's generated extras: what is still open (2026-09-26)
 
 From the effect gallery's extras (we-values-audit §9). Harness: `WEExtrasComparisonTests` (`OWE_WE_EXTRAS`). Comparison output is in `/Volumes/980Pro/agentEX-out`.
