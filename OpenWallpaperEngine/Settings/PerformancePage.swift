@@ -16,19 +16,39 @@ struct PerformancePage: SettingsPage {
         self.viewModel = viewModel
     }
     
+    /// WE's pause actions for the rules about other applications' windows: with several displays
+    /// "Pause per Display" (the display the window is on) and "Pause All"; with one, "Pause".
+    /// "Pause All" stays listed while chosen, so the picker shows it with one display too.
+    @ViewBuilder
+    private func pauseOptions(_ selected: GSPlayback) -> some View {
+        if NSScreen.screens.count > 1 || selected == .pauseAll {
+            Text("Pause per Display").tag(GSPlayback.pause)
+            Text("Pause All").tag(GSPlayback.pauseAll)
+        } else {
+            Text("Pause").tag(GSPlayback.pause)
+        }
+    }
+
     var body: some View {
         Form {
             Section {
                 Picker("Other Application Focused:", selection: $viewModel.settings.otherApplicationFocused) {
                     Text("Keep Running").tag(GSPlayback.keepRunning)
                     Text("Mute").tag(GSPlayback.mute)
-                    Text("Pause").tag(GSPlayback.pause)
+                    pauseOptions(viewModel.settings.otherApplicationFocused)
                 }
-                
+
+                Picker("Other Application Maximized:", selection: $viewModel.settings.otherApplicationMaximized) {
+                    Text("Keep Running").tag(GSPlayback.keepRunning)
+                    Text("Mute").tag(GSPlayback.mute)
+                    pauseOptions(viewModel.settings.otherApplicationMaximized)
+                    Text("Stop (free memory)").tag(GSPlayback.stop)
+                }
+
                 Picker("Other Application Fullscreen:", selection: $viewModel.settings.otherApplicationFullscreen) {
                     Text("Keep Running").tag(GSPlayback.keepRunning)
                     Text("Mute").tag(GSPlayback.mute)
-                    Text("Pause").tag(GSPlayback.pause)
+                    pauseOptions(viewModel.settings.otherApplicationFullscreen)
                     Text("Stop (free memory)").tag(GSPlayback.stop)
                 }
                 
