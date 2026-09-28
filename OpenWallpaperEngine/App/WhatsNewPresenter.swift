@@ -15,7 +15,7 @@ extension AppDelegate {
     @objc private func mainWindowBecameKey(_ notification: Notification) {
         guard let window = mainWindowController.window, window.attachedSheet == nil else { return }
         // Not over the setup assistant.
-        guard !globalSettingsViewModel.isFirstLaunch else { return }
+        guard !globalSettingsViewModel.isFirstLaunch, !globalSettingsViewModel.needsLegalNotice else { return }
         let whatsNew = WhatsNew(currentVersion: AppUpdateConfiguration.main.versionLabel)
         guard let pending = whatsNew.takePendingEntries() else { return }
         let sheet = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 520, height: 440),

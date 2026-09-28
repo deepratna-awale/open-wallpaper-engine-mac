@@ -144,7 +144,7 @@ struct ContentView: View {
         .alert(isPresented: $viewModel.importAlertPresented, error: viewModel.importAlertError) {
 
         }
-        .sheet(isPresented: $globalSettingsViewModel.isFirstLaunch, onDismiss: openOnboardingShortcut) {
+        .sheet(isPresented: onboardingPresented, onDismiss: openOnboardingShortcut) {
             OnboardingView(steamCmd: viewModel.steamCmd,
                            installer: AppDelegate.shared.steamCmdInstaller,
                            assets: AppDelegate.shared.assets,
@@ -270,6 +270,17 @@ struct ContentView: View {
         }
     }
 
+    /// The setup assistant, or only its notice step when setup is done but the Terms of Use and
+    /// Privacy Policy notice is due.
+    private var onboardingPresented: Binding<Bool> {
+        Binding(get: { globalSettingsViewModel.isFirstLaunch || globalSettingsViewModel.needsLegalNotice },
+                set: { presented in
+                    guard !presented else { return }
+                    globalSettingsViewModel.isFirstLaunch = false
+                    globalSettingsViewModel.needsLegalNotice = LegalNotice.isDue(in: .app)
+                })
+    }
+
     // MARK: Toolbar
 
     @ToolbarContentBuilder private var mainToolbar: some ToolbarContent {
@@ -298,7 +309,7 @@ struct ContentView: View {
             } label: {
                 Label("Settings", systemImage: "gearshape")
             }
-            .help("Settings")
+            .help("Settings", shortcut: .settings)
             if tab == 0 {
                 Button {
                     withAnimation { viewModel.isDetailsReveal.toggle() }

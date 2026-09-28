@@ -3,7 +3,8 @@ import Combine
 
 /// The setup assistant's steps, in order.
 enum OnboardingStep: Int, CaseIterable, Codable, Comparable {
-    case welcome, privacy, steam, assets, wallpapers, done
+    /// The Terms of Use and Privacy Policy notice (`LegalNotice`).
+    case notice, welcome, privacy, steam, assets, wallpapers, done
 
     static func < (lhs: OnboardingStep, rhs: OnboardingStep) -> Bool { lhs.rawValue < rhs.rawValue }
 }
@@ -30,7 +31,7 @@ final class OnboardingFlow: ObservableObject {
 
     init(defaults: UserDefaults = .app) {
         self.defaults = defaults
-        step = OnboardingStep(rawValue: defaults.integer(forKey: Self.stepKey)) ?? .welcome
+        step = OnboardingStep(rawValue: defaults.integer(forKey: Self.stepKey)) ?? .notice
         skipped = Set((defaults.array(forKey: Self.skippedKey) as? [Int] ?? []).compactMap(OnboardingStep.init(rawValue:)))
     }
 
@@ -50,8 +51,9 @@ final class OnboardingFlow: ObservableObject {
     }
 
     /// Skip for now: remembered for the summary; the step stays reachable.
+    /// The notice can't be skipped: Continue, once its checkbox is ticked, moves on.
     func skip() {
-        guard !isLast else { return }
+        guard !isLast, step != .notice else { return }
         skipped.insert(step)
         advance()
     }
