@@ -71193,6 +71193,194 @@
         }
       }
     },
+    "Shadows" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الظلال"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schatten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sombras"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ombres"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "छायाएँ"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ombre"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シャドウ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "그림자"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cienie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sombras"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тени"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gölgeler"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тіні"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "阴影"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "陰影"
+          }
+        }
+      }
+    },
+    "Shadows cast by wallpapers' lights. Higher qualities draw larger shadow maps." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ظلال تلقيها الأضواء في الخلفيات. ترسم مستويات الجودة الأعلى خرائط ظلال أكبر."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schatten, die die Lichter von Hintergrundbildern werfen. Höhere Qualitätsstufen zeichnen größere Schattenkarten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sombras que proyectan las luces de los fondos de pantalla. Las calidades más altas dibujan mapas de sombras más grandes."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ombres projetées par les éclairages des fonds d’écran. Les qualités supérieures dessinent des cartes d’ombres plus grandes."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वॉलपेपर की लाइट से पड़ने वाली छायाएँ. उच्च गुणवत्ता बड़े शैडो मैप बनाती है."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ombre proiettate dalle luci degli sfondi. Le qualità più alte disegnano mappe delle ombre più grandi."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "壁紙のライトが落とす影です。高品質ほど大きなシャドウマップを描画します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배경화면의 조명이 드리우는 그림자입니다. 품질이 높을수록 더 큰 그림자 맵을 그립니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cienie rzucane przez światła tapet. Wyższe jakości rysują większe mapy cieni."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sombras projetadas pelas luzes das imagens de fundo. Qualidades mais altas desenham mapas de sombra maiores."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тени от источников освещения в обоях. При более высоком качестве рисуются карты теней большего размера."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duvar kâğıtlarındaki ışıkların oluşturduğu gölgeler. Yüksek kalite ayarları daha büyük gölge haritaları çizer."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тіні від джерел світла шпалер. Вищі рівні якості малюють більші карти тіней."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "墙纸中的灯光投下的阴影。质量越高，绘制的阴影贴图越大。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "背景圖片中的光源投下的陰影。品質越高，繪製的陰影貼圖越大。"
+          }
+        }
+      }
+    },
     "Shapes the audio response. Above 1 reacts mainly to peaks." : {
       "comment" : "Scene Inspector tooltip for an effect parameter named like audioexponent",
       "localizations" : {
