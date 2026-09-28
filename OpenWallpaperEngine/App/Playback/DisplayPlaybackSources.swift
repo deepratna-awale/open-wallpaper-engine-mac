@@ -3,7 +3,11 @@ import IOKit.ps
 
 /// What `DisplayPlaybackMonitor` reads from the system, injectable so tests don't depend on the
 /// real desktop.
-struct DisplayPlaybackSources {
+///
+/// `displays`, `frontmostPID` and `showsWebWallpaper` are read on the main thread; `windows`,
+/// `otherApplicationPlayingAudio` and `onBattery` are the expensive ones (the window server,
+/// Core Audio, IOKit) and are read on the monitor's scan queue.
+struct DisplayPlaybackSources: @unchecked Sendable {
     /// Applications' windows, front to back.
     var windows: () -> [DesktopWindow]
     var displays: () -> [DesktopDisplay]
@@ -11,7 +15,10 @@ struct DisplayPlaybackSources {
     var frontmostPID: () -> pid_t?
     /// This app's process, whose windows never count as another application's.
     var ownPID: pid_t
-    var otherApplicationPlayingAudio: () -> Bool
+    /// Whether a web wallpaper is on screen (its sound then comes from WebKit's helpers).
+    var showsWebWallpaper: () -> Bool = { false }
+    /// Another application plays sound; the argument leaves WebKit's helper processes out.
+    var otherApplicationPlayingAudio: (_ ignoringWebKit: Bool) -> Bool
     var onBattery: () -> Bool
 }
 
@@ -33,7 +40,8 @@ extension DisplayPlaybackSources {
                 return app.processIdentifier
             },
             ownPID: ownPID,
-            otherApplicationPlayingAudio: { audio.isPlaying(ignoringWebKit: showsWebWallpaper()) },
+            showsWebWallpaper: { MainActor.assumeIsolated { showsWebWallpaper() } },
+            otherApplicationPlayingAudio: { audio.isPlaying(ignoringWebKit: $0) },
             onBattery: { PowerSource.isOnBattery() })
     }
 }
@@ -41,8 +49,7 @@ extension DisplayPlaybackSources {
 /// The window server's view of the desktop.
 enum DesktopWindowList {
     /// Windows on screen in the current Spaces, front to back. Needs no permission: only the
-    /// owner, level, alpha and bounds are read, not window titles.
-    @MainActor
+    /// owner, level, alpha and bounds are read, not window titles. Safe on any thread.
     static func onScreen() -> [DesktopWindow] {
         // Optional: nil only when the window server can't be reached (no session).
         guard let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements],

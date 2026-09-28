@@ -28,15 +28,30 @@ final class DisplayPlaybackMonitorTests: XCTestCase {
         super.setUp()
         desktop = Desktop()
         applied = []
+        monitor = makeMonitor(scanQueue: nil)
+    }
+
+    private func makeSources() -> DisplayPlaybackSources {
         let desktop = desktop
-        let sources = DisplayPlaybackSources(
+        return DisplayPlaybackSources(
             windows: { desktop.windowReads += 1; return desktop.windows },
             displays: { desktop.evaluations += 1; return desktop.displays },
             frontmostPID: { desktop.frontmost },
             ownPID: 1,
-            otherApplicationPlayingAudio: { desktop.audio },
+            otherApplicationPlayingAudio: { _ in desktop.audio },
             onBattery: { desktop.battery })
-        monitor = DisplayPlaybackMonitor(sources: sources) { [weak self] in self?.applied.append($0) }
+    }
+
+    private func makeMonitor(scanQueue: DispatchQueue?) -> DisplayPlaybackMonitor {
+        DisplayPlaybackMonitor(sources: makeSources(), scanQueue: scanQueue) { [weak self] in self?.applied.append($0) }
+    }
+
+    /// Runs the main run loop until `condition` holds or `timeout` passes.
+    private func spin(until condition: () -> Bool, timeout: TimeInterval = 3) {
+        let deadline = Date().addingTimeInterval(timeout)
+        while !condition(), Date() < deadline {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.01))
+        }
     }
 
     override func tearDown() {
@@ -105,4 +120,76 @@ final class DisplayPlaybackMonitorTests: XCTestCase {
         wait(for: [done], timeout: 2)
         XCTAssertEqual(desktop.evaluations, evaluations + 1)
     }
+
+    // MARK: - Off the main thread
+
+    func testTheWindowListIsReadOffTheMainThread() {
+        monitor.stop()
+        let desktop = desktop
+        var sources = makeSources()
+        let readOnMain = LockedFlag()
+        sources.windows = {
+            if Thread.isMainThread { readOnMain.set() }
+            return desktop.windows
+        }
+        monitor = DisplayPlaybackMonitor(sources: sources, scanQueue: DispatchQueue(label: "test.scan")) { [weak self] in
+            self?.applied.append($0)
+        }
+        desktop.frontmost = 100
+        desktop.windows = [DesktopWindow(ownerPID: 100, bounds: CGRect(x: 2200, y: 200, width: 800, height: 600))]
+        monitor.setRules(PlaybackRules(focused: .pause))
+        spin { !applied.isEmpty }
+        XCTAssertEqual(applied.last, ["1": .run, "2": .pause])
+        XCTAssertFalse(readOnMain.value, "the window list must be read on the scan queue")
+    }
+
+    func testAMovedWindowIsNoticedByThePollWithoutAnEvent() {
+        monitor.stop()
+        monitor = makeMonitor(scanQueue: DispatchQueue(label: "test.scan"))
+        desktop.frontmost = 100
+        desktop.windows = [DesktopWindow(ownerPID: 100, bounds: CGRect(x: 2200, y: 200, width: 800, height: 600))]
+        monitor.setRules(PlaybackRules(focused: .pause))
+        spin { applied.last == ["1": .run, "2": .pause] }
+        XCTAssertTrue(monitor.isPolling)
+        // No notification: only the timer on the scan queue can see the window move.
+        desktop.windows = [DesktopWindow(ownerPID: 100, bounds: CGRect(x: 200, y: 200, width: 800, height: 600))]
+        spin { applied.last == ["1": .pause, "2": .run] }
+        XCTAssertEqual(applied.last, ["1": .pause, "2": .run])
+    }
+
+    func testAnUnchangedDesktopDoesNotWakeTheMainThread() {
+        monitor.stop()
+        monitor = makeMonitor(scanQueue: DispatchQueue(label: "test.scan"))
+        monitor.setRules(PlaybackRules(fullscreen: .stop))
+        spin { !applied.isEmpty }
+        let evaluations: Int = desktop.evaluations
+        let reads: Int = desktop.windowReads
+        // Several poll intervals: the scan queue keeps reading, the main thread evaluates nothing.
+        spin(until: { false }, timeout: DisplayPlaybackMonitor.pollInterval * 4)
+        XCTAssertEqual(desktop.evaluations, evaluations)
+        XCTAssertGreaterThan(desktop.windowReads, reads)
+        XCTAssertEqual(applied.count, 1)
+    }
+
+    func testAStaleScanDoesNotOverwriteANewerAnswer() {
+        monitor.stop()
+        let gate = DispatchSemaphore(value: 0)
+        let queue = DispatchQueue(label: "test.scan")
+        monitor = makeMonitor(scanQueue: queue)
+        queue.async { gate.wait() }  // holds the first scan back
+        desktop.audio = true
+        monitor.setRules(PlaybackRules(playingAudio: .mute))
+        monitor.setRules(PlaybackRules(onBattery: .pause))
+        gate.signal()
+        spin { !applied.isEmpty }
+        spin(until: { false }, timeout: 0.2)
+        XCTAssertEqual(applied, [["1": .run, "2": .run]], "only the latest rules' answer is applied")
+    }
+}
+
+private final class LockedFlag: @unchecked Sendable {
+    private let lock = NSLock()
+    private var _value = false
+    var value: Bool { lock.lock(); defer { lock.unlock() }; return _value }
+    func set() { lock.lock(); _value = true; lock.unlock() }
 }
