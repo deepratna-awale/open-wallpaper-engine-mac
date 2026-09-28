@@ -6,20 +6,31 @@ Sources: `docs/roadmap.md` (item 10, measured costs), the optimisation audit `sc
 
 ## 0. Measured baseline
 
-M4, 3840×2160, Release, `SceneFrameBenchmarkTests` (`OWE_SCENE_BENCH`, `OWE_SCENE_BENCH_PASSES`):
+Re-measured by WP0-A on 2026-09-28 at `cbf5b894`: M4 (10-core GPU), AC power, optimised build (Debug config with `-O`; the Release test host lacks Sparkle), `SceneFrameBenchmarkTests` with `OWE_SCENE_BENCH_JSON`. Median of 3 runs, 60 measured frames each after 2.5 s warm-up. Machine-readable rows (every variant, both sizes): `docs/efficiency-baseline-2d.json`.
 
-| Wallpaper | GPU ms/frame | Effect MPix/frame | Notes |
-|---|---|---|---|
-| Tsunade 3742916237 | 22 | 245 | effects at texture size dominate |
-| One piece girls 3270035750 | 21 | 501 | six 2760×4466 layers |
-| Any library scene, effects off | < 4 | – | scene pass alone is cheap |
-| Render thread CPU | 0.5–2.5 ms | – | string keys, locks, signature arrays per pass (E3) |
-| dino_run text raster | 35 ms stall | – | on the render thread |
-| Script-created layers | 2–4 frames late | – | |
+Full scene, 3840×2160 (1920×1080 in brackets where it differs by more than 20 %):
+
+| Wallpaper | GPU ms median / p99 / min | GPU ms, effects off | Effect MPix/frame | Render-thread CPU ms (wall / thread) | Load s (content + first frame) | Peak GPU alloc MB | Footprint MB |
+|---|---|---|---|---|---|---|---|
+| Tsunade 3742916237 | 31.3 / 52.8 / 16.5 | 2.9 | 245 | 0.66 / 0.57 | 0.24 + 0.03 | 649 | 1019 |
+| One piece girls 3270035750 | 29.5 / 51.9 / 21.2 (22.6 / 27.1 / 17.6) | 5.3 (2.6) | 501 | 0.67 / 0.67 | 0.25 + 0.04 (first compile 0.62) | 1218 (1086) | 1671 |
+| Lofi Cafe 2370927443 | 27.5 / 39.8 / 14.7 | 8.9 | 120 | 1.69 / 1.50 | 0.74 + 0.04 | 625 | 1293 |
+| Dance Club 2176097362 | 20.8 / 39.6 / 9.9 (11.6 / 23.5 / 4.4) | 5.7 | 147 | 1.01 / 0.85 (2.43 / 2.13) | 0.36 + 0.06 | 1412 (1175) | 2325 |
+| 3803167460 (“witcher (beta)”) | 23.8 / 37.8 / 13.3 | 11.5 | 115 | 1.25 / 1.11 | 0.53 + 0.04 | 1010 | 2116 |
+| Kamado 3245833232 | 27.3 / 52.1 / 14.4 | 13.8 | 110 | 0.94 / 0.83 | 0.33 + 0.02 | 681 | 1823 |
+
+Reading the numbers:
+- Effects are 55–90 % of GPU time everywhere; Tsunade and One piece girls are almost all effect cost (effects off: 3–5 ms). Effect MPix does not depend on display size (effects run at texture size), so 1080p saves little.
+- GPU time is noisy: medians sit well above the least frame (1.5–2.5×), and p99 is up to 2× the median. Diff the median of 3 runs, and treat < 10 % as noise.
+- Render-thread CPU is 0.6–2.4 ms a frame. Lofi Cafe and 3803167460 spend more with effects off than on at 1080p (particles and scripts no longer wait behind the GPU), so the wall number includes waits; the thread-CPU column is the one to diff.
+- Load: content preparation 0.24–0.74 s on the calling thread (the test's main thread; `SceneWallpaperViewModel.metalContent()`), first frame 0.02–0.06 s once pipelines are warm; a cold pipeline compile adds about 0.6 s (One piece girls, first variant).
+- Footprint is the test process, cumulative across wallpapers in one run (it includes the previous wallpapers' caches), so only its growth per wallpaper and the GPU allocation column are comparable between packages. Peak GPU allocation is `MTLDevice.currentAllocatedSize`.
+
+Older figures from the roadmap and audit, kept for reference: dino_run text raster 35 ms stall on the render thread; script-created layers 2–4 frames late (both not re-measured by this benchmark).
 
 Memory: a 2760×4466 RGBA8 target is 49 MB. Each dynamic effect layer holds 2–4 of them. Each decoded texture also keeps a CPU copy in 3 places (C1). The composite pass costs about 118 MB of bandwidth per frame at 5K. The scene target is 5–18 % larger than the display (S1).
 
-**WP0 re-baselines before any change** (see Phase 0). The table is from the roadmap and audit and must be re-measured on the current `main`. Lofi Cafe 2370927443, Kamado, Dance Club 2176097362 and 3803167460 have not been measured yet. All later packages report against WP0's numbers.
+All later packages report against these numbers: run the benchmark with `OWE_SCENE_BENCH_JSON` and diff against `docs/efficiency-baseline-2d.json`.
 
 ## 1. Ideas not in the decided list (new)
 
