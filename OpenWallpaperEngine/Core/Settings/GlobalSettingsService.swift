@@ -24,14 +24,30 @@ class GlobalSettingsViewModel: ObservableObject {
     @Published var settings: GlobalSettings
     {
         didSet {
-            save()
-            validate()
+            Self.store(settings)
+            scheduleSave()
+            if settings.appearance != oldValue.appearance { validate() }
             OWELog.apply(logLevel: settings.logLevel)
             // Only on a change: following the system mustn't clear a language set in System Settings.
             if settings.language != oldValue.language { settings.language.apply(to: .app) }
         }
     }
     
+    /// The settings as last set, readable from any thread without touching UserDefaults or the
+    /// main actor (render and video loops, preparation jobs).
+    nonisolated static var current: GlobalSettings {
+        currentLock.lock(); defer { currentLock.unlock() }
+        return _current ?? GlobalSettings()
+    }
+    nonisolated private static let currentLock = NSLock()
+    nonisolated(unsafe) private static var _current: GlobalSettings?
+    nonisolated private static func store(_ settings: GlobalSettings) {
+        currentLock.lock(); _current = settings; currentLock.unlock()
+    }
+
+    /// Several changes in one turn of the run loop (a quality preset sets seven) save once.
+    private var savePending = false
+
     @Published var selection = 0
     
     /// The setup assistant is showing (at launch until finished, or from "Run setup again…").
@@ -54,6 +70,7 @@ class GlobalSettingsViewModel: ObservableObject {
             loaded = GlobalSettings()
         }
         self.settings = loaded
+        Self.store(loaded)
         languageChange = LanguageChange(atLaunch: loaded.language)
         OWELog.apply(logLevel: settings.logLevel)
 
@@ -124,6 +141,7 @@ class GlobalSettingsViewModel: ObservableObject {
     }
     
     func reset() {
+        flushPendingSave()
         settings = (try? JSONDecoder()
             .decode(GlobalSettings.self,
                 from: UserDefaults.app.data(forKey: "GlobalSettings")
@@ -131,6 +149,21 @@ class GlobalSettingsViewModel: ObservableObject {
         ?? GlobalSettings()
     }
     
+    private func scheduleSave() {
+        guard !savePending else { return }
+        savePending = true
+        DispatchQueue.main.async { [weak self] in
+            MainActor.assumeIsolated { self?.flushPendingSave() }
+        }
+    }
+
+    /// Writes a save still waiting for the end of the run-loop turn.
+    func flushPendingSave() {
+        guard savePending else { return }
+        savePending = false
+        save()
+    }
+
     func save() {
         let data = try! JSONEncoder().encode(settings)
         OWELog.debug(.settings, "Saved settings: \(String(describing: String(data: data, encoding: .utf8)))")
@@ -184,6 +217,7 @@ class GlobalSettingsViewModel: ObservableObject {
     }
     
     private func saveAndValidate() {
+        flushPendingSave()
         save()
         validate()
     }
