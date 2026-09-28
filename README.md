@@ -333,7 +333,7 @@ Building from source fetches the Sparkle Swift package on first build. Builds fr
 
 ## Privacy
 
-Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and SteamCMD's login. Open Wallpaper Engine has no server and collects no data or analytics. It contacts Valve (Steam when you use the Workshop or install assets, and Valve's server to download SteamCMD) and GitHub, to check for app updates (the appcast on GitHub Pages) and download them from GitHub Releases, without sending any personal data. Update checks can be turned off in Settings › General. Web wallpapers may load their own online content. Your Steam password and Steam Guard code go straight to SteamCMD and are never stored, logged or sent anywhere else; only your account name is remembered, to reuse SteamCMD's saved login.
+Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and SteamCMD's login. Open Wallpaper Engine has no server and collects no data or analytics. It contacts Valve (Steam when you use the Workshop or install assets, and Valve's server to download SteamCMD) and GitHub, to check for app updates (the appcast on GitHub Pages) and download them from GitHub Releases, without sending any personal data. Update checks can be turned off in Settings › Updates. Web wallpapers may load their own online content. Your Steam password and Steam Guard code go straight to SteamCMD and are never stored, logged or sent anywhere else; only your account name is remembered, to reuse SteamCMD's saved login.
 
 ## Project Layout
 
@@ -348,3 +348,24 @@ Everything Open Wallpaper Engine saves stays on your Mac: your settings, library
 - `OpenWallpaperEngine/Library/WallpaperDirectory.swift`, `ZipImporter.swift`, `WallpaperPackageConverter.swift` — library storage, import, and package conversion
 - `Scripts/fill-assets-cache.sh` — development helper: copies the assets subset of a Wallpaper Engine install into a local folder or the Wallpaper Storage cache
 - `Scripts/scene-api-coverage.py` — reports which SceneScript APIs installed wallpapers use versus what is implemented
+
+## Legal
+
+[Terms of Use](docs/legal/terms-of-use.md) · [Privacy Policy](docs/legal/privacy-policy.md) · [Security Policy](SECURITY.md)
+
+- **English:** Please read the Terms of Use and the Privacy Policy.
+- **Deutsch:** Bitte lesen Sie die Nutzungsbedingungen und die Datenschutzrichtlinie.
+- **Français :** Veuillez lire les conditions d’utilisation et la politique de confidentialité.
+- **Español:** Lee las condiciones de uso y la política de privacidad.
+- **Português (Brasil):** Leia os Termos de Uso e a Política de Privacidade.
+- **Italiano:** Leggi le condizioni d’uso e l’informativa sulla privacy.
+- **日本語：** 利用規約とプライバシーポリシーをお読みください。
+- **한국어:** 이용 약관과 개인정보 처리방침을 읽어 주십시오.
+- **简体中文：** 请阅读使用条款和隐私政策。
+- **繁體中文：** 請閱讀使用條款和隱私權政策。
+- **Русский:** Прочитайте условия использования и политику конфиденциальности.
+- **Polski:** Przeczytaj warunki korzystania i politykę prywatności.
+- **Türkçe:** Lütfen Kullanım Koşulları’nı ve Gizlilik Politikası’nı okuyun.
+- **Українська:** Прочитайте умови використання та політику приватності.
+- **العربية:** يُرجى قراءة شروط الاستخدام وسياسة الخصوصية.
+- **हिन्दी:** कृपया उपयोग की शर्तें और गोपनीयता नीति पढ़ें।
