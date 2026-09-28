@@ -224,7 +224,11 @@ final class SceneWallpaperInstance {
         if !paused || !easing { stopReported = false }
         for (id, display) in displays {
             guard let view = display.view else { continue }
-            let frozen = plays[id] == false && !easing
+            // A display that is asleep or fully covered shows nothing: it keeps its last frame and
+            // stops driving the frames until macOS reports its window visible again. Only the
+            // drawing stops; the clock and the sound follow the playback rules as before.
+            let hidden = view.window.map { !$0.occlusionState.contains(.visible) } ?? false
+            let frozen = (plays[id] == false || hidden) && !easing
             displays[id]?.frozen = frozen
             let refresh = view.window?.screen?.maximumFramesPerSecond ?? 60
             view.preferredFramesPerSecond = FramePacing.cadence(fps, refreshRate: refresh > 0 ? refresh : 60)
@@ -330,6 +334,14 @@ final class SceneWallpaperInstance {
     private func observeChanges() {
         let center = NotificationCenter.default
         observeCursor()
+        // A display falling asleep or being covered, or coming back, changes which displays draw.
+        observers.append(center.addObserver(forName: NSWindow.didChangeOcclusionStateNotification, object: nil, queue: .main) { [weak self] notification in
+            let window = notification.object as? NSWindow
+            MainActor.assumeIsolated {
+                guard let self, self.displays.values.contains(where: { $0.view?.window === window }) else { return }
+                self.update()
+            }
+        })
         // N10: thermal state and Low Power Mode move the slider's effective stop.
         powerObserver = PowerPolicyMonitor.shared.observe { [weak self] _ in
             DispatchQueue.main.async { MainActor.assumeIsolated { self?.update() } }
