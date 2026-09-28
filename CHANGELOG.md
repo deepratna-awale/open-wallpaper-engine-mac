@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0]
+
+### Highlights
+
+- **Wallpaper Engine's own shaders:** layers, effects and materials draw through each wallpaper's original shaders, translated to Metal in the app, Workshop authors' own effects included.
+- **Scene rendering:** composition, fullscreen and solid layers, layers that sample other layers, all 33 blend modes and more effect masks; WE's text layout with outline, blur and drop-shadow font effects; timelines with WE's single, loop and mirror rules; colour lookup tables, colour correction and the image filter and colour options in a wallpaper's properties.
+- **Puppet Warp:** images posed by their animations, with bone physics (springs, gravity, limits) and objects attached to their bones.
+- **3D and lighting:** 3D models with skinning, animation layers, morph targets and root motion; perspective cameras with paths, fades and shake, 2D layers in depth; scene lights with cookies, shadows, planar reflections, distance and height fog and volumetric lights; WE's HDR bloom, and EDR output with the "Ultra (Display HDR)" quality.
+- **Particles:** every system simulated on the GPU, in 3D, with 3D control points; child systems (including event children), bursts, delays and periodic emission, emitting from a layer's image; collision (a model's bones included), audio response, rotation about every axis, and settings bound to user properties.
+- **SceneScript:** a complete runtime (modules, the scene/layer/effect/material object model, animation events, `localStorage`, cursor hit testing), each wallpaper's scripts on their own thread; scripts create layers, particle systems and sounds, move the fog, drive bloom and pose puppets and models.
+- **Media and audio:** Now Playing for scenes and web wallpapers (macOS 15.4 or later); web wallpapers get their user properties and live audio; WE's stereo audio spectrum; sound layers on the scene's clock with spatial sound.
+- **Assets from the user's Steam copy:** Settings › Assets installs Wallpaper Engine's assets from the user's own copy (see Changed).
+- **WebM video wallpapers** play through WebKit.
+- **Requirements:** macOS 14 or later.
+
 ### Changed
 
 - Wallpaper Engine's assets (effects, materials, shaders, models, particles, scripts, fonts and UI strings) no longer ship in the repository or the app. Settings › Assets installs them from the user's own Wallpaper Engine copy on Steam through SteamCMD (keeping only the assets and the default wallpapers, which join the library), or reads them from a chosen Wallpaper Engine folder. Without them, scenes say so and video and web wallpapers still play. Tests read them from `OWE_ASSETS` and skip without it.
@@ -74,4 +89,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed hover-triggered Workshop preview downloads.
 - Removed the bottom download queue panel in favor of the Downloads tab.
 - Removed the external glslang/spirv-cross command-line fallback compiler and its Diagnostics rows. A shader whose in-process translation hung the app, or crashed it twice, is now skipped on later launches while every other shader keeps translating.
-- Removed the Wallpaper Engine assets folder setting: the app always uses its bundled assets. A previously saved folder is ignored (and left in place).
+- Removed the old Wallpaper Engine assets folder setting (a previously saved folder is ignored and left in place). Superseded in this release: the app ships no assets, and Settings › Assets installs them from the user's Steam copy or reads a chosen Wallpaper Engine folder (see Changed).
