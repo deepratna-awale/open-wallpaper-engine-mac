@@ -32,7 +32,8 @@ jobs:
           set -euo pipefail
           bash Scripts/release/test-release-version.sh
           python3 Scripts/release/test_appcast.py
-          for f in Scripts/release/*.sh; do bash -n "$f"; done
+          python3 Scripts/test_steam_totp.py
+          for f in Scripts/release/*.sh Scripts/*.sh; do bash -n "$f"; done
 
       - name: Build and test
         run: |
@@ -62,4 +63,70 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: xcodebuild-log
+          path: xcodebuild.log
+
+  # The same suite with Wallpaper Engine's built-in assets, so the asset-gated tests run. The assets
+  # come from the CI Steam account (docs/ci-assets.md), cached per WE build. A separate job so the
+  # no-asset job above stays the fast PR signal; fork PRs get no secrets and skip it.
+  asset-tests:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: macos-26
+    timeout-minutes: 60
+    env:
+      WE_ASSETS: ${{ github.workspace }}/../we-assets
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use the supported Xcode
+        run: |
+          X=/Applications/Xcode_26.3.app
+          [[ -d $X ]] || X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | head -1)
+          [[ -n "$X" && -d "$X" ]] || { echo "::error::no Xcode 26 on the runner"; exit 1; }
+          sudo xcode-select -s "$X"
+
+      - name: Read the Wallpaper Engine build
+        id: build
+        run: |
+          id=$(Scripts/fetch-we-assets.sh --build-id || true)
+          echo "id=${id:-unknown-${{ github.run_id }}}" >> "$GITHUB_OUTPUT"
+
+      - name: Restore the assets
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.WE_ASSETS }}
+          key: we-assets-${{ steps.build.outputs.id }}
+          restore-keys: we-assets-
+
+      - name: Fetch the assets
+        if: steps.cache.outputs.cache-hit != 'true'
+        timeout-minutes: 20
+        env:
+          OWE_CI_STEAM_USER: ${{ secrets.OWE_CI_STEAM_USER }}
+          OWE_CI_STEAM_PASSWORD: ${{ secrets.OWE_CI_STEAM_PASSWORD }}
+          OWE_CI_STEAM_SHARED_SECRET: ${{ secrets.OWE_CI_STEAM_SHARED_SECRET }}
+          OWE_TOOLS_DIR: ${{ runner.temp }}/owe-tools
+        run: Scripts/fetch-we-assets.sh "$WE_ASSETS"
+
+      - name: Build and test with the assets
+        # OWE_LIBRARY stays unset: the library-gated tests skip.
+        env:
+          TEST_RUNNER_OWE_ASSETS: ${{ env.WE_ASSETS }}
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project OpenWallpaperEngine.xcodeproj \
+            -scheme OpenWallpaperEngine \
+            -configuration Debug \
+            -destination 'platform=macOS' \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee xcodebuild.log
+
+      - name: Upload log
+        # The log only; never the assets.
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-log-assets
           path: xcodebuild.log
