@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0]
+
+### Highlights
+
+- **Automatic updates (Sparkle 2):** updates are signed with EdDSA, listed in an appcast on GitHub Pages and downloaded from GitHub Releases. "Update automatically" (on by default) checks, downloads and installs by itself: an update installs on quit, after 10 minutes away from the Mac, or within a day, with a quick relaunch that restores the wallpapers. With it off, "Automatically check for updates" asks before installing. "Receive beta updates" (off by default, on for pre-release builds) offers `vX.Y.Z-(alpha|beta|rc).N` releases. Settings › General › Updates shows when the app last checked, with Check Now; Check for Updates… is in the app menu and the menu bar menu. Builds without the update signing key (Debug and local builds from source) never check.
+- **Setup assistant:** replaces the welcome sheet with skippable steps for the language, privacy, SteamCMD, the Steam login, an optional Steam Web API key, the Wallpaper Engine assets and importing wallpapers. The Privacy step has "Keep Open Wallpaper Engine up to date automatically".
+- **SteamCMD sets itself up:** Valve's SteamCMD is downloaded when none is found; Homebrew's, Steam's or a chosen one is used when present. Terminal login and privacy notes explain what is sent where.
+- **Imports:** Workshop collections and subscriptions read from Steam's Web API, the Workshop items of an existing Steam library (Valve KeyValues/ACF manifests), and wallpaper folders.
+- **Assets after signing in:** the Wallpaper Engine assets can install automatically from the user's Steam copy once SteamCMD is logged in, with or without the default wallpapers.
+- **Wiki:** Support & FAQ opens the project wiki's Troubleshooting page.
+
+### Changed
+
+- The privacy notes now say the app contacts GitHub, without personal data, to check for and download updates, which can be turned off in Settings › General.
+- Quality presets set Shadows (a new Performance control) and volumetrics as Wallpaper Engine does.
+- The repository is now `deepratna-awale/open-wallpaper-engine-mac`; the default Wallpaper Storage folder is `~/Documents/Open Wallpaper Engine`, and the assets cache and hidden data move with it.
+
+### Fixed
+
+- A SteamCMD login counts only once SteamCMD confirms it, and the cached Steam session is restored before installing assets.
+- Unrated import items list as the Installed rating filter does; asset packs without a type stay out of the library.
+- Video: WebM plays through WebKit, AVKit videos keep looping, Metal video frames live until the GPU is done, and wallpaper players let the display sleep.
+- Now-playing artwork binds to effect and material passes; inspector sliders update live; puppets without effects draw past their image's rect.
+
 ## [0.9.0]
 
 ### Highlights
