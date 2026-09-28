@@ -28,6 +28,26 @@ Bu proje aşağıdaki kişilerin çalışmaları üzerine inşa edilmiştir:
 
 Orijinal projeyle aynı şekilde [GPL-3.0](../../LICENSE) lisansı altında lisanslanmıştır.
 
+## 0.8.1'den 1.0.0'a
+
+### Başlangıç noktası
+
+Bu fork, üst projenin 0.8.1 sürümünden (commit `aa29a89e`, Mart 2026) başlar. 0.8.1 video ve web duvar kâğıtlarını oynatıyor; çoklu ekran ve çoklu masaüstü desteği, oynatma listeleri, son kullanılan duvar kâğıtları menüsü, zip ve klasör içe aktarma ile Homebrew'un SteamCMD'si üzerinden indiren bir Steam Atölyesi tarayıcısı sunuyordu. Sahneler PKG ve TEX dosyalarından SpriteKit ile çiziliyordu: konum, renk tonu ve karışım modlarına sahip görüntü katmanları; DXT dokularında ise önizleme görseline geri dönülüyordu. Wallpaper Engine gölgelendiricileri ve efektleri, parçacıklar, sprite ve zaman çizelgesi animasyonları, kamera paralaksı, sese duyarlı betikler, 3D modeller, kuklalar, aydınlatma ve SceneScript desteklenmiyordu.
+
+### Eklenenler
+
+O zamandan bu yana 1.118 commit şunları ekledi:
+
+- **İşleme:** Wallpaper Engine gölgelendiricilerini süreç içinde çevirip önbelleğe alan yeni bir Metal sahne işleyicisi, efektler, bloom ve HDR.
+- **Sahne içeriği:** GPU'da simüle edilen parçacıklar; 3D modeller, iskelet animasyonlu kuklalar ve aydınlatma.
+- **Davranış:** bir SceneScript çalışma ortamı, özellik zaman çizelgeleri, sese duyarlı görseller ve uzamsal ses.
+- **Ekranlar ve Atölye:** ekran başına kurallar, yenilenen Atölye tarayıcısı ve indirmeleri, daha fazla içe aktarma yolu. Wallpaper Engine varlıkları kullanıcının kendi Steam kopyasından alınır; hiçbiri pakete dahil değildir.
+- **Uygulama:** bir kurulum asistanı, otomatik SteamCMD kurulumu, Sparkle güncellemeleri, Liquid Glass arayüzü ve 15 dil.
+- **Kalite:** yaklaşık 1.900 testlik bir test paketi, bunları Wallpaper Engine varlıklarıyla çalıştıran CI ve imzalı, noter onaylı sürümler.
+- **Belgeler:** bir proje web sitesi ve wiki.
+
+Tam liste [1.0.0 Sürümünün Destekledikleri](#100-sürümünün-destekledikleri) bölümünde, kılavuzlar [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki) içinde.
+
 ## 1.0.0 Sürümünün Destekledikleri
 
 ### Kurulum, kitaplık ve güncellemeler

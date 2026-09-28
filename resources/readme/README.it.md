@@ -28,6 +28,26 @@ Questo progetto si basa sul lavoro di:
 
 Distribuito con licenza [GPL-3.0](../../LICENSE), come il progetto originale.
 
+## Da 0.8.1 a 1.0.0
+
+### Il punto di partenza
+
+Questo fork parte dalla versione 0.8.1 originale (commit `aa29a89e`, marzo 2026). La 0.8.1 riproduceva sfondi video e web, supportava più schermi e scrivanie, playlist, un menu degli sfondi recenti, l'importazione di zip e cartelle e un browser dello Steam Workshop che scaricava tramite lo SteamCMD di Homebrew. Le scene venivano disegnate con SpriteKit dai file PKG e TEX: livelli immagine con posizione, tinta e modalità di fusione, con l'immagine di anteprima come ripiego per le texture DXT. Shader ed effetti di Wallpaper Engine, particelle, animazioni di sprite e timeline, parallasse della camera, script audio-reattivi, modelli 3D, puppet, illuminazione e SceneScript non erano supportati.
+
+### Cosa è stato aggiunto
+
+Da allora, 1.118 commit hanno aggiunto:
+
+- **Rendering:** un nuovo renderer di scene Metal che traduce e mette in cache gli shader di Wallpaper Engine all'interno del processo, effetti, bloom e HDR.
+- **Contenuto delle scene:** particelle simulate sulla GPU; modelli 3D, puppet con animazione scheletrica e illuminazione.
+- **Comportamento:** un runtime SceneScript, timeline delle proprietà, visual audio-reattivi e audio spaziale.
+- **Schermi e Workshop:** regole per schermo, browser e download del Workshop rinnovati e più modi di importare. Gli asset di Wallpaper Engine provengono dalla tua copia di Steam; nessuno è incluso.
+- **App:** un assistente di configurazione, l'installazione automatica di SteamCMD, aggiornamenti Sparkle, un'interfaccia Liquid Glass e 15 lingue.
+- **Qualità:** una suite di circa 1.900 test, una CI che li esegue con gli asset di Wallpaper Engine e release firmate e notarizzate.
+- **Documentazione:** un sito web del progetto e la wiki.
+
+L'elenco completo è in [Cosa supporta la versione 1.0.0](#cosa-supporta-la-versione-100); le guide sono nella [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
+
 ## Cosa supporta la versione 1.0.0
 
 ### Configurazione, libreria e aggiornamenti

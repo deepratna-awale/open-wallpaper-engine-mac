@@ -28,6 +28,26 @@ This project is built on top of the work of:
 
 Licensed under [GPL-3.0](LICENSE), same as the original project.
 
+## From 0.8.1 to 1.0.0
+
+### Where it started
+
+This fork starts from upstream 0.8.1 (commit `aa29a89e`, March 2026). 0.8.1 played video and web wallpapers, had multi-display and multi-desktop support, playlists, a recent-wallpapers menu, zip and folder import, and a Steam Workshop browser that downloaded through Homebrew's SteamCMD. Scenes were drawn with SpriteKit from PKG and TEX files: image layers with position, tint and blend modes, falling back to the preview image for DXT textures. Wallpaper Engine shaders and effects, particles, sprite and timeline animation, camera parallax, audio-reactive scripts, 3D models, puppets, lighting and SceneScript were not supported.
+
+### What was added
+
+Since then, 1,118 commits have added:
+
+- **Rendering:** a new Metal scene renderer with Wallpaper Engine's shaders translated in-process and cached, effects, bloom and HDR.
+- **Scene content:** particles simulated on the GPU; 3D models, puppets with skeletal animation, and lighting.
+- **Behaviour:** a SceneScript runtime, property timelines, audio-reactive visuals and spatial sound.
+- **Displays and Workshop:** per-display rules, a reworked Workshop browser and downloads, and more import paths. Wallpaper Engine's assets come from the user's own Steam copy; none are bundled.
+- **App:** a setup assistant, automatic SteamCMD installation, Sparkle updates, a Liquid Glass interface and 15 languages.
+- **Quality:** a test suite of about 1,900 tests, CI that runs them with Wallpaper Engine's assets, and signed and notarized releases.
+- **Documentation:** a project website and the wiki.
+
+The full list is in [What 1.0.0 Supports](#what-100-supports); guides are in the [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
+
 ## What 1.0.0 Supports
 
 ### Setup, library & updates

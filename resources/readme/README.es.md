@@ -28,6 +28,26 @@ Este proyecto se basa en el trabajo de:
 
 Con licencia [GPL-3.0](../../LICENSE), igual que el proyecto original.
 
+## De 0.8.1 a 1.0.0
+
+### El punto de partida
+
+Este fork parte de la versión 0.8.1 original (commit `aa29a89e`, marzo de 2026). La 0.8.1 reproducía fondos de pantalla de vídeo y web, admitía varias pantallas y escritorios, listas de reproducción, un menú de fondos recientes, importación de zip y carpetas, y un explorador del Steam Workshop que descargaba mediante el SteamCMD de Homebrew. Las escenas se dibujaban con SpriteKit a partir de archivos PKG y TEX: capas de imagen con posición, tinte y modos de fusión, usando la imagen de vista previa como alternativa para las texturas DXT. No admitía los shaders ni los efectos de Wallpaper Engine, las partículas, las animaciones de sprites y de línea de tiempo, el paralaje de cámara, los scripts reactivos al audio, los modelos 3D, los puppets, la iluminación ni SceneScript.
+
+### Lo que se ha añadido
+
+Desde entonces, 1118 commits han añadido:
+
+- **Renderizado:** un nuevo renderizador de escenas en Metal que traduce y almacena en caché los shaders de Wallpaper Engine dentro del proceso, efectos, bloom y HDR.
+- **Contenido de escenas:** partículas simuladas en la GPU; modelos 3D, puppets con animación esquelética e iluminación.
+- **Comportamiento:** un entorno de ejecución de SceneScript, líneas de tiempo de propiedades, visuales reactivos al audio y sonido espacial.
+- **Pantallas y Workshop:** reglas por pantalla, un explorador y descargas del Workshop renovados, y más formas de importar. Los recursos de Wallpaper Engine proceden de tu propia copia de Steam; no se incluye ninguno.
+- **Aplicación:** un asistente de configuración, instalación automática de SteamCMD, actualizaciones con Sparkle, una interfaz Liquid Glass y 15 idiomas.
+- **Calidad:** un conjunto de unas 1900 pruebas, CI que las ejecuta con los recursos de Wallpaper Engine, y versiones firmadas y notarizadas.
+- **Documentación:** un sitio web del proyecto y la wiki.
+
+La lista completa está en [Funciones compatibles de la versión 1.0.0](#funciones-compatibles-de-la-versión-100); las guías están en la [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
+
 ## Funciones compatibles de la versión 1.0.0
 
 ### Configuración, biblioteca y actualizaciones

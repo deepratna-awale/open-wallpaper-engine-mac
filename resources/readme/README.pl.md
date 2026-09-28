@@ -28,6 +28,26 @@ Ten projekt powstał na bazie pracy następujących osób:
 
 Projekt jest udostępniany na licencji [GPL-3.0](../../LICENSE), tak samo jak projekt oryginalny.
 
+## Od 0.8.1 do 1.0.0
+
+### Punkt wyjścia
+
+Ten fork wywodzi się z wersji 0.8.1 projektu nadrzędnego (commit `aa29a89e`, marzec 2026). Wersja 0.8.1 odtwarzała tapety wideo i webowe, obsługiwała wiele ekranów i biurek, playlisty, menu ostatnich tapet, import plików zip i folderów oraz przeglądarkę Steam Workshop pobierającą przez SteamCMD z Homebrew. Sceny były rysowane za pomocą SpriteKit z plików PKG i TEX: warstwy obrazów z pozycją, zabarwieniem i trybami mieszania, a dla tekstur DXT wyświetlany był obraz podglądu. Shadery i efekty Wallpaper Engine, cząsteczki, animacje sprite'ów i osi czasu, paralaksa kamery, skrypty reagujące na dźwięk, modele 3D, puppety, oświetlenie i SceneScript nie były obsługiwane.
+
+### Co dodano
+
+Od tego czasu 1118 commitów dodało:
+
+- **Renderowanie:** nowy renderer scen w Metal, który tłumaczy i buforuje shadery Wallpaper Engine w obrębie procesu, efekty, bloom i HDR.
+- **Zawartość scen:** cząsteczki symulowane na GPU; modele 3D, puppety z animacją szkieletową i oświetlenie.
+- **Zachowanie:** środowisko uruchomieniowe SceneScript, osie czasu właściwości, efekty reagujące na dźwięk i dźwięk przestrzenny.
+- **Ekrany i Workshop:** reguły dla poszczególnych ekranów, przebudowana przeglądarka i pobieranie z Workshopu oraz więcej sposobów importu. Zasoby Wallpaper Engine pochodzą z Twojej własnej kopii w Steam; żadne nie są dołączone.
+- **Aplikacja:** asystent konfiguracji, automatyczna instalacja SteamCMD, aktualizacje przez Sparkle, interfejs Liquid Glass i 15 języków.
+- **Jakość:** zestaw około 1900 testów, CI uruchamiające je z zasobami Wallpaper Engine oraz podpisane i notaryzowane wydania.
+- **Dokumentacja:** strona internetowa projektu i wiki.
+
+Pełna lista znajduje się w sekcji [Co obsługuje wersja 1.0.0](#co-obsługuje-wersja-100); poradniki są w [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
+
 ## Co obsługuje wersja 1.0.0
 
 ### Konfiguracja, biblioteka i aktualizacje
