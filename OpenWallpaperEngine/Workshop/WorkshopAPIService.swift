@@ -246,6 +246,54 @@ class WorkshopAPIService {
         return items
     }
 
+    /// The items of a public Workshop collection, in its order (keyless: GetCollectionDetails,
+    /// then GetPublishedFileDetails in batches). Nested collections are left out.
+    func getCollection(id collectionID: String) async throws -> (title: String?, items: [WorkshopItem]) {
+        var request = URLRequest(url: WorkshopCollection.detailsURL)
+        request.httpMethod = "POST"
+        request.httpBody = WorkshopCollection.detailsBody(collectionID: collectionID)
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        let (data, response) = try await send(request)
+        guard response.statusCode == 200 else { throw WorkshopAPIError.httpError(response.statusCode) }
+        guard let children = try WorkshopCollection.children(of: collectionID, in: data) else {
+            throw WorkshopCollection.Failure.notFound(collectionID)
+        }
+        let ids = children.filter { $0.type != .collection }.map(\.id)
+        let title = try await getItemDetails(workshopIds: [collectionID]).first?.title
+        return (title, try await getItemDetails(inBatches: ids))
+    }
+
+    /// GetPublishedFileDetails for any number of ids, in Steam's batch size, in the ids' order.
+    func getItemDetails(inBatches ids: [String]) async throws -> [WorkshopItem] {
+        var items: [String: WorkshopItem] = [:]
+        var start = 0
+        while start < ids.count {
+            let batch = Array(ids[start..<min(start + WorkshopCollection.detailsBatchSize, ids.count)])
+            for item in try await getItemDetails(workshopIds: batch) { items[item.id] = item }
+            start += WorkshopCollection.detailsBatchSize
+        }
+        return ids.compactMap { items[$0] }
+    }
+
+    /// The account's subscribed Wallpaper Engine items (GetUserFiles `type=subscribed`, with the
+    /// user's Web API key). Best effort: Steam often returns `{"response":{}}` for it (`.empty`).
+    func getSubscribedItemIDs(steamID: String) async throws -> WorkshopSubscriptions.Outcome {
+        guard WorkshopSubscriptions.isSteamID64(steamID) else { throw WorkshopAPIError.invalidURL }
+        guard let key = apiKey.load() else { throw WorkshopAPIError.noAPIKey }
+        var ids: [String] = []
+        // Up to 50 pages of 100; Steam stops returning files past the last one.
+        for page in 1...50 {
+            var components = URLComponents(url: WorkshopSubscriptions.userFilesURL, resolvingAgainstBaseURL: false)!
+            components.queryItems = WorkshopSubscriptions.queryItems(steamID: steamID, page: page)
+            guard let url = components.url else { throw WorkshopAPIError.invalidURL }
+            guard case .items(let found) = try WorkshopSubscriptions.outcome(from: try await sendKeyed(url, key: key)) else { break }
+            let new = found.filter { !ids.contains($0) }
+            ids += new
+            if found.count < 100 || new.isEmpty { break }
+        }
+        return ids.isEmpty ? .empty : .items(ids)
+    }
+
     func getAuthorWorkshopItems(steamId: String) async throws -> [WorkshopItem] {
         var components = URLComponents(string: "https://steamcommunity.com/profiles/\(steamId)/myworkshopfiles/")!
         components.queryItems = [
