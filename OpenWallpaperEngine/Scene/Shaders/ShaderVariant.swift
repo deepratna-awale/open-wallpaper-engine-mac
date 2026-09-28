@@ -51,7 +51,7 @@ enum ShaderVariantError: Error, CustomStringConvertible {
 /// hundreds of thousands possible, so nothing is precompiled.
 final class ShaderVariantTranslator {
     /// Bump whenever translated output for the same input can change.
-    static let revision = 10
+    static let revision = 11
 
     let compiler: ShaderCompiler
     /// Root of the disk cache; variants go into its `generationDirectory`.
@@ -69,12 +69,18 @@ final class ShaderVariantTranslator {
 
     static let defaultFailureDirectory = URL(fileURLWithPath: "/tmp/owe-failed-shaders", isDirectory: true)
 
+    /// Colour outputs are written as `half` (`ShaderHalfPrecision`).
+    let halfOutputs: Bool
+
     init(compiler: ShaderCompiler, cacheDirectory: URL? = ShaderVariantTranslator.defaultCacheDirectory,
-         failureDirectory: URL? = ShaderVariantTranslator.defaultFailureDirectory) {
+         failureDirectory: URL? = ShaderVariantTranslator.defaultFailureDirectory,
+         halfOutputs: Bool = ShaderHalfPrecision.isEnabled) {
         self.compiler = compiler
         self.cacheDirectory = cacheDirectory
         self.failureDirectory = failureDirectory
-        toolchainFingerprint = compiler.cacheFingerprint
+        self.halfOutputs = halfOutputs
+        // The output precision decides the MSL, so it keys the cache like the compiler does.
+        toolchainFingerprint = compiler.cacheFingerprint + (halfOutputs ? "" : "|float-outputs")
         let generation = Self.generation(toolchain: toolchainFingerprint)
         generationDirectory = cacheDirectory?.appending(path: generation, directoryHint: .isDirectory)
         if let cacheDirectory {
@@ -240,7 +246,8 @@ final class ShaderVariantTranslator {
             let fragmentOut = try compiler.compileToMSL(pair.fragment, stage: .fragment)
             step = nil
             let layout = try Self.uniformLayout(from: fragmentOut.reflection) ?? Self.uniformLayout(from: vertexOut.reflection)
-            return TranslatedShaderVariant(vertexMSL: vertexOut.msl, fragmentMSL: fragmentOut.msl, uniforms: layout,
+            return TranslatedShaderVariant(vertexMSL: vertexOut.msl,
+                                           fragmentMSL: halfOutputs ? ShaderHalfPrecision.rewriteFragmentOutputs(fragmentOut.msl) : fragmentOut.msl, uniforms: layout,
                                            textureSlots: pair.textureSlots, attributes: pair.attributes, combos: combos)
         } catch {
             if let step { recordFailure(step.source, text: step.text, error: error) }
