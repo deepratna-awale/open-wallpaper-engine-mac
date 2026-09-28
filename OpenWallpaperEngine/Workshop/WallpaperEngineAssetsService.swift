@@ -54,16 +54,71 @@ final class WallpaperEngineAssetsService: ObservableObject {
     private let storageDirectory: () throws -> URL
     private let defaults: UserDefaults
     private var cancellation: SteamCmdCancellation?
+    private var loginCancellable: AnyCancellable?
 
+    /// Settings › Assets: install the assets by themselves after a Steam login (on by default).
+    static let autoInstallKey = "InstallsWallpaperEngineAssetsAfterLogin"
+    /// The onboarding's "Also add Wallpaper Engine's default wallpapers" (on by default).
+    static let addsDefaultWallpapersKey = "OnboardingAddsDefaultWallpapers"
+    /// The Steam account the last install found doesn't own Wallpaper Engine; logging in with it
+    /// again doesn't retry by itself.
+    static let notOwnedAccountKey = "WallpaperEngineAssetsNotOwnedAccount"
+
+    /// `automaticInstallAllowed` is off under XCTest unless a test turns it on.
     init(steamCmd: SteamCmdService,
          runner: SteamCmdRunning = ProcessSteamCmdRunner(),
          storageDirectory: @escaping () throws -> URL = { try WallpaperStorage.availableDirectory() },
-         defaults: UserDefaults = .app) {
+         defaults: UserDefaults = .app,
+         automaticInstallAllowed: Bool = !WallpaperEngineAssets.isTesting) {
         self.steamCmd = steamCmd
         self.runner = runner
         self.storageDirectory = storageDirectory
         self.defaults = defaults
         refresh()
+        guard automaticInstallAllowed else { return }
+        loginCancellable = steamCmd.loginSucceeded.sink { [weak self] in self?.installAfterLoginIfNeeded() }
+    }
+
+    enum AutomaticInstallDecision: Equatable {
+        case install(includingDefaultWallpapers: Bool)
+        case turnedOff
+        case busy
+        case folderChosen
+        case cached
+        case notOwned
+        case storageUnavailable
+    }
+
+    /// Whether a login starts the Steam install by itself: only when it is turned on, nothing is
+    /// running, and no assets are there (no chosen folder, no cache), and not again for an account
+    /// that doesn't own Wallpaper Engine.
+    func automaticInstallDecision() -> AutomaticInstallDecision {
+        guard defaults.object(forKey: Self.autoInstallKey) as? Bool ?? true else { return .turnedOff }
+        guard !isBusy else { return .busy }
+        if let chosen = defaults.string(forKey: WallpaperEngineAssets.chosenFolderKey), !chosen.isEmpty {
+            return .folderChosen
+        }
+        guard let cache = cacheDirectory else { return .storageUnavailable }
+        if WallpaperEngineAssets.isAssetTree(cache) { return .cached }
+        if let account = defaults.string(forKey: Self.notOwnedAccountKey), account == steamCmd.steamUsername {
+            return .notOwned
+        }
+        let includes: Bool = defaults.object(forKey: Self.addsDefaultWallpapersKey) as? Bool ?? true
+        return .install(includingDefaultWallpapers: includes)
+    }
+
+    /// Called after each successful Steam login.
+    func installAfterLoginIfNeeded() {
+        let decision = automaticInstallDecision()
+        switch decision {
+        case .install(let includes):
+            OWELog.info(.library, "Assets: installing from Steam after login")
+            installFromSteam(includingDefaultWallpapers: includes)
+        case .notOwned:
+            fail(.notOwned)
+        case .turnedOff, .busy, .folderChosen, .cached, .storageUnavailable:
+            break
+        }
     }
 
     var isMissing: Bool { status.resolution == nil }
@@ -205,6 +260,7 @@ final class WallpaperEngineAssetsService: ObservableObject {
         cancellation = nil
         switch result {
         case .success:
+            defaults.removeObject(forKey: Self.notOwnedAccountKey)
             phase = .idle
             OWELog.info(.library, "Assets installed from Steam")
             changed()
@@ -212,6 +268,9 @@ final class WallpaperEngineAssetsService: ObservableObject {
             if cancelled || error is CancellationError {
                 phase = .idle
             } else {
+                if (error as? Failure) == .notOwned {
+                    defaults.set(steamCmd.steamUsername, forKey: Self.notOwnedAccountKey)
+                }
                 OWELog.error(.library, "Assets install failed: \(error.localizedDescription)")
                 phase = .failed(error.localizedDescription)
             }

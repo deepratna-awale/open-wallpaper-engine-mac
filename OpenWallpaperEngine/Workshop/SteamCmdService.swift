@@ -44,6 +44,10 @@ class SteamCmdService: ObservableObject {
     /// on the main queue.
     let itemInstalled = PassthroughSubject<URL, Never>()
 
+    /// Fires on the main queue after each successful login: with a password, the Terminal login's
+    /// cached session, or the session restored at launch.
+    let loginSucceeded = PassthroughSubject<Void, Never>()
+
     private let runner: SteamCmdRunning
     /// The Wallpaper Storage folder every download goes into; throws when it can't be used.
     private let storageDirectory: () throws -> URL
@@ -189,6 +193,7 @@ class SteamCmdService: ObservableObject {
                     self.isLoggedIn = true
                     self.loginError = nil
                     self.rememberAccount(username)
+                    self.loginSucceeded.send()
                 } else if output.contains("Steam Guard") || output.contains("Two-factor") {
                     self.loginError = Self.guardCodeRequiredError
                 } else if output.contains("Invalid Password") || output.contains("FAILED") {
@@ -238,6 +243,7 @@ class SteamCmdService: ObservableObject {
                 if output.contains("Logged in OK") || (output.contains("OK") && exitCode == 0) {
                     self.isLoggedIn = true
                     self.rememberAccount(username)
+                    self.loginSucceeded.send()
                 } else {
                     self.loginError = failureMessage
                         ?? String(localized: "Cached session expired. Please log in with password.")

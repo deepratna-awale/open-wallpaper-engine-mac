@@ -179,7 +179,7 @@ struct OnboardingSteamStep: View {
 struct OnboardingAssetsStep: View {
     @ObservedObject var assets: WallpaperEngineAssetsService
     @ObservedObject var steamCmd: SteamCmdService
-    @AppStorage("OnboardingAddsDefaultWallpapers", store: .app) private var addsDefaultWallpapers = true
+    @AppStorage(WallpaperEngineAssetsService.addsDefaultWallpapersKey, store: .app) private var addsDefaultWallpapers = true
     @State private var folderError: String?
 
     var body: some View {

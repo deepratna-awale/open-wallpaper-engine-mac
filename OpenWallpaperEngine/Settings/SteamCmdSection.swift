@@ -7,6 +7,7 @@ struct SteamCmdSection: View {
     @ObservedObject var steamCmd: SteamCmdService
     @ObservedObject var installer: SteamCmdInstaller
     @AppStorage(SteamCmdInstaller.autoInstallKey, store: .app) private var installsAutomatically = true
+    @AppStorage(WallpaperEngineAssetsService.autoInstallKey, store: .app) private var installsAssetsAutomatically = true
     @State private var removeError: String?
 
     var body: some View {
@@ -27,6 +28,7 @@ struct SteamCmdSection: View {
                 }
             }
             Toggle("Install SteamCMD automatically", isOn: $installsAutomatically)
+            Toggle("Install Wallpaper Engine assets automatically after signing in", isOn: $installsAssetsAutomatically)
             if installer.isBusy || steamCmd.steamCmdPath == nil {
                 SteamCmdSetupView(installer: installer)
                     .frame(maxWidth: .infinity, alignment: .leading)
