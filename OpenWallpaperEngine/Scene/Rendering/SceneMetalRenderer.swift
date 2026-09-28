@@ -479,10 +479,13 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         self.layerPipelines = layerPipelines
         self.dxtDecodePipeline = decodePipeline
         self.textureLoader = MTKTextureLoader(device: device)
+        self.textRaster = SceneTextRasterQueue(device: device, loader: textureLoader)
         self.renderTargetPool = SceneRenderTargetPool(device: device)
         scripts = SceneRendererScripts(services: scriptServices, screenID: screenID)
         sounds = SceneSoundLayers(label: screenID.isEmpty ? "sounds" : "sounds \(screenID)")
         super.init()
+        // Created objects are built on the script thread, so they draw in the frame that made them.
+        scripts.prepareCreated = { [weak self] created, id in self?.prepare(created, id: String(id)) }
         modelDrawing = SceneModelRenderer(device: device, archive: effectGraph?.pipelineArchive)
         shadowPass = SceneShadowPass(device: device, archive: effectGraph?.pipelineArchive)
         planarReflection = ScenePlanarReflection(device: device)
@@ -707,6 +710,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 let createdParticles = scriptParticles.removeValue(forKey: key)
                 let createdSound = scriptSounds.removeValue(forKey: id)
                 let createdModel = scriptModels.removeValue(forKey: key)
+                _ = scripts.wallpaper?.takePrepared(id)
                 if scriptLayers.removeValue(forKey: key) == nil, createdParticles == nil, createdSound == nil, createdModel == nil {
                     destroyedScriptLayers.insert(key)
                 }
@@ -761,9 +765,15 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// Builds an object a script created through the loader, off the main thread: a layer, a
     /// particle system (with its children) or a sound.
     private func buildScriptLayer(_ id: String, object: [String: SceneJSON]) {
-        guard let makeLayer = scripts.makeLayer else { return }
         var visible = true
         if case .bool(let flag)? = object["visible"] { visible = flag }
+        // Built on the script thread already: drawn in this frame, as WE's createLayer is.
+        if let key = Int(id), let built = scripts.wallpaper?.takePrepared(key) as? PreparedScriptObject {
+            destroyedScriptLayers.remove(id)
+            installScriptObject(built, id: id, visible: visible)
+            return
+        }
+        guard let makeLayer = scripts.makeLayer else { return }
         let generation = currentContentGeneration
         let wallpaper = scripts.wallpaper
         pendingScriptLayers += 1
@@ -782,26 +792,31 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 self.pendingScriptLayers -= 1
                 guard let built, self.isCurrentContentGeneration(generation), self.scripts.wallpaper === wallpaper else { return }
                 guard self.destroyedScriptLayers.remove(id) == nil else { return }
-                self.scripts.setBaseVisibility(visible, for: id)
-                switch built {
-                case .layer(let entry):
-                    self.scriptLayers[id] = (entry, visible)
-                    self.layers.append(entry)
-                    self.registerTextureAnimation(entry)
-                case .particles(let systems, let motion):
-                    self.scriptParticles[id] = (systems, motion)
-                    self.objectMotions[id] = motion
-                    self.particleSystems.append(contentsOf: systems)
-                case .sound(let content):
-                    self.scriptSounds[content.id] = content
-                    self.sounds.add(content)
-                case let .model(model, node, motion):
-                    self.scriptModels[id] = (model, node, motion)
-                    self.addScriptModel(id, (model, node, motion))
-                }
-                self.orderLayers()
+                self.installScriptObject(built, id: id, visible: visible)
             }
         }
+    }
+
+    /// Starts drawing a created object, in the scripts' order.
+    private func installScriptObject(_ built: PreparedScriptObject, id: String, visible: Bool) {
+        scripts.setBaseVisibility(visible, for: id)
+        switch built {
+        case .layer(let entry):
+            scriptLayers[id] = (entry, visible)
+            layers.append(entry)
+            registerTextureAnimation(entry)
+        case .particles(let systems, let motion):
+            scriptParticles[id] = (systems, motion)
+            objectMotions[id] = motion
+            particleSystems.append(contentsOf: systems)
+        case .sound(let content):
+            scriptSounds[content.id] = content
+            sounds.add(content)
+        case let .model(model, node, motion):
+            scriptModels[id] = (model, node, motion)
+            addScriptModel(id, (model, node, motion))
+        }
+        orderLayers()
     }
 
     /// A created object with its textures loaded (off the main thread).

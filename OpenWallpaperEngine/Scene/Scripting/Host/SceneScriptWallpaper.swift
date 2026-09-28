@@ -36,6 +36,13 @@ final class SceneScriptWallpaper {
     let thread: SceneScriptThread
     /// Called on the main thread once, when the watchdog stopped this wallpaper's scripts.
     var onHalt: ((SceneScriptError?) -> Void)?
+    /// Builds what `createLayer` made into the renderer's drawable form (textures uploaded), on the
+    /// script thread before the frame is published, so the renderer draws it in the same frame as
+    /// WE does (`takePrepared`). Nil when it can't be built here; the renderer then builds it itself.
+    typealias PrepareCreated = (SceneScriptCreatedObject, _ id: Int) -> Any?
+    private let prepareCreated: PrepareCreated?
+    /// What `prepareCreated` built, by object id, until the renderer takes it (under `lock`).
+    private var prepared: [Int: Any] = [:]
 
     private let content: SceneScriptSceneContent
     private let services: SceneScriptServices
@@ -66,7 +73,9 @@ final class SceneScriptWallpaper {
 
     /// Creates the runtime on its thread and starts loading the scripts there. Nil (logged) when
     /// the scene has no scripts.
-    init?(content: SceneScriptSceneContent, services: SceneScriptServices, screenID: String) throws {
+    init?(content: SceneScriptSceneContent, services: SceneScriptServices, screenID: String,
+          prepareCreated: PrepareCreated? = nil) throws {
+        self.prepareCreated = prepareCreated
         identity = SceneScriptIdentity(wallpaperID: content.wallpaperID, screenID: screenID)
         documentSignature = content.documentSignature
         self.content = content
@@ -165,6 +174,13 @@ final class SceneScriptWallpaper {
         lock.unlock()
         if newlyHalted { onHalt?(scriptHost.lastTermination) }
         return (state, events)
+    }
+
+    /// What the script thread built for created object `id` (see `prepareCreated`), once.
+    func takePrepared(_ id: Int) -> Any? {
+        lock.lock()
+        defer { lock.unlock() }
+        return prepared.removeValue(forKey: id)
     }
 
     /// Script CPU time per frame so far.
@@ -269,10 +285,17 @@ final class SceneScriptWallpaper {
         guard let mirror else { return }
         if runtime.state == .halted { mirror.markHalted() }
         let result = mirror.readBack()
+        var built: [Int: Any] = [:]
+        if let prepareCreated {
+            for case let .create(id, object) in result.events {
+                if let created = content.makeLayer(object), let value = prepareCreated(created, id) { built[id] = value }
+            }
+        }
         let milliseconds = frameStart.map { Double(clock_gettime_nsec_np(CLOCK_THREAD_CPUTIME_ID) - $0) / 1_000_000 }
         lock.lock()
         published = result.state
         pendingEvents.append(contentsOf: result.events)
+        prepared.merge(built) { _, new in new }
         if let milliseconds {
             timing.frames += 1
             timing.totalMilliseconds += milliseconds

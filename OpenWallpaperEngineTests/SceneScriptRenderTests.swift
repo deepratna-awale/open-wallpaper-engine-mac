@@ -41,6 +41,26 @@ final class SceneScriptRenderTests: XCTestCase {
     }
 
     /// Without scripts the same scene shows what scene.json authored: a baseline for the test above.
+    /// WP4-C: the layer `createLayer` made draws in the first frame that takes its event, not a
+    /// frame or more later (WE builds it inside `createLayer`).
+    func testACreatedLayerDrawsInTheFrameThatTakesIt() throws {
+        _ = try Fixtures.assets()
+        let scene = try Scene(fixture: "scripted", services: services(), size: SIMD2(128, 64))
+        defer { scene.close() }
+        let deadline = Date().addingTimeInterval(30)
+        while !scene.renderer.hasContent && Date() < deadline {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.01))
+            scene.renderer.draw(in: scene.view)
+            scene.renderer.lastCommandBuffer?.waitUntilCompleted()
+        }
+        // The scripts' `init` (and its createLayer) ran; its event waits for the next draw.
+        scene.renderer.scripts.wallpaper?.waitUntilIdle()
+        scene.renderer.draw(in: scene.view)
+        scene.renderer.lastCommandBuffer?.waitUntilCompleted()
+        XCTAssertEqual(scene.renderer.pendingScriptLayers, 0, "nothing was left to build off the frame")
+        XCTAssertEqual(scene.read().color(atScene: SIMD2(56, 56)), .yellow, "drawn in the same frame")
+    }
+
     func testTheSameSceneWithoutScriptsShowsTheAuthoredValues() throws {
         _ = try Fixtures.assets()
         let scene = try Scene(fixture: "scripted", services: nil, size: SIMD2(128, 64))
@@ -231,7 +251,7 @@ final class SceneScriptRenderTests: XCTestCase {
             return pixels
         }
 
-        private func read() -> Pixels {
+        func read() -> Pixels {
             var bytes = [UInt8](repeating: 0, count: size.x * size.y * 4)
             view.currentDrawable?.texture.getBytes(&bytes, bytesPerRow: size.x * 4,
                                                    from: MTLRegionMake2D(0, 0, size.x, size.y), mipmapLevel: 0)

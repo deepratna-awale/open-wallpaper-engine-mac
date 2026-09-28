@@ -93,6 +93,31 @@ final class SceneScriptWallpaperTests: XCTestCase {
         XCTAssertEqual(taken.state?.order, [1, 2])
     }
 
+    /// WP4-C: what `createLayer` made is built on the script thread with the frame, so the renderer
+    /// takes it with that frame's events and draws it in the same frame, as WE does.
+    func testACreatedLayerIsPreparedWithTheFrameThatMadeIt() throws {
+        let sound = SceneSoundContent(id: 0, name: "made", sound: WESceneSound(files: ["sounds/tone.wav"], playbackMode: .loop),
+                                      files: [], volume: 1)
+        let script = "let made; export function update(value) { if (!made) made = thisScene.createLayer({ sound: ['sounds/tone.wav'] }); return value; }"
+        var preparedOnScriptThread = false
+        let wallpaper = try make(objects: [object(id: 1, fields: #""origin": {"script": "\#(script)", "value": "0 0 0"}"#)],
+                                 makeLayer: { _ in .sound(sound) },
+                                 prepareCreated: { created, id in
+                                     preparedOnScriptThread = !Thread.isMainThread
+                                     guard case .sound = created else { return nil }
+                                     return id
+                                 })
+        var input = SceneScriptFrameInput()
+        input.deltaTime = 1.0 / 60
+        wallpaper.submit(input)
+        XCTAssertTrue(wallpaper.waitForSubmittedFrame(timeout: 5))
+        let taken = wallpaper.take()
+        guard case .create(let id, _)? = taken.events.first else { return XCTFail("no create: \(taken.events)") }
+        XCTAssertEqual(wallpaper.takePrepared(id) as? Int, id, "built before the frame was published")
+        XCTAssertTrue(preparedOnScriptThread)
+        XCTAssertNil(wallpaper.takePrepared(id), "taken once")
+    }
+
     /// test-risks S11's clone stress test: a layer created and destroyed every frame for 1000
     /// frames leaves the scene as it was (every create has its destroy; slots are reused).
     func testCreatingAndDestroyingALayerEveryFrameStaysFlat() throws {
@@ -277,16 +302,19 @@ final class SceneScriptWallpaperTests: XCTestCase {
         #"{"id": \#(id), "name": "Object \#(id)", \#(fields)}"#
     }
 
-    private func make(objects: [String], general: String = "") throws -> SceneScriptWallpaper {
+    private func make(objects: [String], general: String = "",
+                      makeLayer: @escaping ([String: SceneJSON]) -> SceneScriptCreatedObject? = { _ in nil },
+                      prepareCreated: SceneScriptWallpaper.PrepareCreated? = nil) throws -> SceneScriptWallpaper {
         let settings = general.isEmpty ? "" : ", " + general
         let text = #"{"general": {"orthogonalprojection": {"width": 200, "height": 100}\#(settings)}, "objects": [\#(objects.joined(separator: ", "))]}"#
         let document = try SceneScriptSiteBuilder.document(from: Data(text.utf8))
         let content = SceneScriptSceneContent(wallpaperID: "test-\(UUID().uuidString.prefix(8))", document: document,
                                               documentSignature: "1", project: nil, userValues: { [:] },
-                                              file: { _ in nil }, makeLayer: { _ in nil })
+                                              file: { _ in nil }, makeLayer: makeLayer)
         let services = SceneScriptServices(prelude: SceneScriptPrelude.load(), storage: SceneScriptStorage(directory: storage),
                                            media: SceneScriptReplayMediaSource(), spectrum: { .silent })
-        let wallpaper = try XCTUnwrap(try SceneScriptWallpaper(content: content, services: services, screenID: "test"))
+        let wallpaper = try XCTUnwrap(try SceneScriptWallpaper(content: content, services: services, screenID: "test",
+                                                                  prepareCreated: prepareCreated))
         addTeardownBlock { wallpaper.tearDown(); wallpaper.waitUntilIdle() }
         return wallpaper
     }
