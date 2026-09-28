@@ -134,21 +134,32 @@ class SteamCmdService: ObservableObject {
     }
 
     static func loginOutcome(output: String) -> LoginOutcome {
-        if output.contains("Steam Guard") || output.contains("Two-factor") || output.contains("two-factor") {
-            return .guardCodeRequired
+        let lines = output.components(separatedBy: .newlines).map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        // SteamCMD's own confirmation decides first: a login with Steam Guard prints "Steam Guard code
+        // provided." or "protected by a Steam Guard mobile authenticator" on its way to success.
+        if lines.contains(where: { $0.hasPrefix("Logging in user") && $0.contains("FAILED") }) {
+            if output.contains("Invalid Password") || output.contains("InvalidPassword") { return .invalidPassword }
+            if output.contains("TwoFactorCodeMismatch") || output.contains("Two-factor code mismatch") {
+                return .guardCodeRequired
+            }
+            return .failed
         }
+        let confirmed = lines.contains { line in
+            line.hasPrefix("Logged in OK") || line.hasPrefix("Waiting for user info...OK")
+                || (line.hasPrefix("Logging in user") && line.hasSuffix("...OK"))
+        }
+        if confirmed { return .loggedIn }
         if output.contains("Invalid Password") || output.contains("InvalidPassword") { return .invalidPassword }
         if output.contains("Cached credentials not found") || output.contains("No cached credentials")
             || output.contains("password prompt disabled") {
             return .noCachedLogin
         }
-        let lines = output.components(separatedBy: .newlines).map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-        if lines.contains(where: { $0.hasPrefix("Logging in user") && $0.contains("FAILED") }) { return .failed }
-        let confirmed = lines.contains { line in
-            line.hasPrefix("Logged in OK") || line.hasPrefix("Waiting for user info...OK")
-                || (line.hasPrefix("Logging in user") && line.hasSuffix("...OK"))
-        }
-        return confirmed ? .loggedIn : .failed
+        // Only a prompt or a refusal asks for a code; SteamCMD names Steam Guard in success lines too.
+        let asksForCode = ["Steam Guard code:", "Two-factor code:", "two-factor code:", "Please check your email",
+                           "Steam Guard code required", "TwoFactorCodeMismatch", "AccountLoginDeniedNeedTwoFactor",
+                           "AccountLogonDenied", "Steam Guard mobile authenticator"]
+        if asksForCode.contains(where: output.contains) { return .guardCodeRequired }
+        return .failed
     }
 
     /// Finds steamcmd (`SteamCmdLocator`), then, when none of the known places has one, asks the
