@@ -99,39 +99,7 @@ struct AssetsPage: SettingsPage {
 
     @ViewBuilder
     private var progress: some View {
-        switch assets.phase {
-        case .idle:
-            EmptyView()
-        case .downloading(let text, let progress):
-            VStack(alignment: .leading, spacing: 6) {
-                if let progress {
-                    ProgressView(value: progress.fraction)
-                } else {
-                    ProgressView().progressViewStyle(.linear)
-                }
-                HStack {
-                    Text(text)
-                    Spacer()
-                    if let done = progress?.downloadedBytes, let total = progress?.totalBytes, total > 0 {
-                        let doneText: String = done.formatted(.byteCount(style: .file))
-                        let totalText: String = total.formatted(.byteCount(style: .file))
-                        Text("\(doneText) of \(totalText)", comment: "Download progress: bytes done of bytes in total")
-                            .monospacedDigit()
-                    }
-                }
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            }
-        case .copying:
-            HStack {
-                ProgressView().controlSize(.small)
-                Text("Copying assets…")
-            }
-        case .failed(let message):
-            Label(message, systemImage: "xmark.octagon.fill")
-                .foregroundStyle(.red)
-                .textSelection(.enabled)
-        }
+        AssetsInstallProgressView(assets: assets)
         if let folderError {
             Label(folderError, systemImage: "xmark.octagon.fill")
                 .foregroundStyle(.red)
