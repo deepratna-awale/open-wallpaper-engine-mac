@@ -69,6 +69,7 @@ struct SettingsSearch {
             entry("Shadows", .performance, SettingsAnchor.quality),
             entry("Volumetrics", .performance, SettingsAnchor.quality),
             entry("FPS", .performance, SettingsAnchor.quality),
+            entry("Quality ↔ Efficiency", .performance, SettingsAnchor.quality),
             entry("Particle Budget", .performance, SettingsAnchor.quality),
             entry("Reflections", .performance, SettingsAnchor.quality),
 
@@ -83,6 +84,7 @@ struct SettingsSearch {
             entry("Rendering", .optimizations, SettingsAnchor.rendering),
             entry("Process Priority", .optimizations, SettingsAnchor.rendering),
             entry("Restart after crashing", .optimizations, SettingsAnchor.rendering),
+            entry("Optimise textures", .optimizations, SettingsAnchor.rendering),
 
             entry("Wallpaper Engine Assets", .assets, SettingsAnchor.assets),
             entry("SteamCMD", .assets, SettingsAnchor.steamCmd),

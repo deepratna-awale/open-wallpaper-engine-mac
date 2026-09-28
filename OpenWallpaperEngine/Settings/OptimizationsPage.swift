@@ -100,6 +100,9 @@ struct OptimizationsPage: SettingsPage {
             .settingsAnchor(SettingsAnchor.audio)
             // MARK: Rendering
             Section {
+                Toggle("Optimise textures", isOn: $viewModel.settings.optimiseTextures)
+                    .changedFromDefault(viewModel.isChanged(\.optimiseTextures))
+                    .help("Compresses wallpaper images once in the background so they use about a third of the GPU memory. Images that would lose visible detail stay as they are.")
                 Picker("Process Priority", selection: $viewModel.settings.processPiority) {
                     Text("Normal").tag(GSProcessPiority.normal)
                     Text("Below Normal").tag(GSProcessPiority.belowNormal)

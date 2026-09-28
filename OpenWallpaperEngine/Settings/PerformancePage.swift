@@ -180,6 +180,20 @@ struct PerformancePage: SettingsPage {
                                        sliderWidth: 150, fieldWidth: 44)
                 }
                 .changedFromDefault(viewModel.isChanged(\.fps))
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Quality ↔ Efficiency")
+                    Slider(value: qualityEfficiency, in: Double(QualityEfficiency.stops.lowerBound)...Double(QualityEfficiency.stops.upperBound),
+                           step: 1) {
+                        Text("Quality ↔ Efficiency")
+                    } minimumValueLabel: {
+                        Text("Quality")
+                    } maximumValueLabel: {
+                        Text("Efficiency")
+                    }
+                    .labelsHidden()
+                }
+                .changedFromDefault(viewModel.isChanged(\.qualityEfficiency))
+                .help("Toward Efficiency, motion is drawn at a lower frame rate and blurs at a lower resolution. A wallpaper that isn't changing isn't redrawn. A hot Mac, or one saving power, moves further toward Efficiency.")
                 Picker("Particle Budget", selection: $viewModel.settings.particleBudget) {
                     Text("Low (10,000)").tag(GSParticleBudget.low)
                     Text("Medium (25,000)").tag(GSParticleBudget.medium)
@@ -202,6 +216,12 @@ struct PerformancePage: SettingsPage {
             }
             .settingsAnchor(SettingsAnchor.quality)
         }
+    }
+
+    /// The slider's stop as the `Slider` reads it.
+    private var qualityEfficiency: Binding<Double> {
+        Binding(get: { Double(viewModel.settings.qualityEfficiency) },
+                set: { viewModel.settings.qualityEfficiency = QualityEfficiency(stop: Int($0.rounded())).stop })
     }
 
     /// A setting's title, followed by a warning triangle (with `help`) when `warning` is set.

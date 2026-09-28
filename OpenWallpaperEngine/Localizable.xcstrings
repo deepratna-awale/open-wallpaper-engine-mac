@@ -103263,6 +103263,476 @@
           }
         }
       }
+    },
+    "Quality ↔ Efficiency" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الجودة ↔ الكفاءة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qualität ↔ Effizienz"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calidad ↔ Eficiencia"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qualité ↔ Efficacité"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "गुणवत्ता ↔ दक्षता"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qualità ↔ Efficienza"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "品質 ↔ 効率"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "품질 ↔ 효율"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jakość ↔ Wydajność"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qualidade ↔ Eficiência"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Качество ↔ Эффективность"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kalite ↔ Verimlilik"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Якість ↔ Ефективність"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "质量 ↔ 效率"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "品質 ↔ 效率"
+          }
+        }
+      }
+    },
+    "Efficiency" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الكفاءة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Effizienz"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eficiencia"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Efficacité"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "दक्षता"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Efficienza"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "効率"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "효율"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wydajność"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eficiência"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Эффективность"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verimlilik"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ефективність"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "效率"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "效率"
+          }
+        }
+      }
+    },
+    "Toward Efficiency, motion is drawn at a lower frame rate and blurs at a lower resolution. A wallpaper that isn't changing isn't redrawn. A hot Mac, or one saving power, moves further toward Efficiency." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "كلما اتجهت نحو الكفاءة، تُرسم الحركة بمعدل إطارات أقل ويُرسم التمويه بدقة أقل. لا تُعاد رسم خلفية الشاشة التي لا تتغير. إذا كان Mac ساخنًا أو يوفر الطاقة، يتجه أكثر نحو الكفاءة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In Richtung Effizienz werden Bewegungen mit geringerer Bildrate und Weichzeichnungen mit geringerer Auflösung gezeichnet. Ein Hintergrundbild, das sich nicht ändert, wird nicht neu gezeichnet. Ist der Mac heiß oder spart er Energie, rückt die Einstellung weiter in Richtung Effizienz."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hacia Eficiencia, el movimiento se dibuja con una velocidad de fotogramas menor y los desenfoques con menor resolución. Un fondo de pantalla que no cambia no se vuelve a dibujar. Si el Mac está caliente o ahorrando energía, se desplaza más hacia Eficiencia."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vers Efficacité, les mouvements sont dessinés à une fréquence d’images plus faible et les flous à une résolution plus basse. Un fond d’écran qui ne change pas n’est pas redessiné. Un Mac chaud ou qui économise l’énergie se rapproche encore d’Efficacité."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "दक्षता की ओर, गति कम फ़्रेम दर पर और धुंधलापन कम रिज़ॉल्यूशन पर बनाया जाता है। जो वॉलपेपर बदल नहीं रहा, उसे दोबारा नहीं बनाया जाता। गर्म Mac, या ऊर्जा बचा रहा Mac, दक्षता की ओर और बढ़ जाता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verso Efficienza, il movimento viene disegnato con una frequenza fotogrammi più bassa e le sfocature a una risoluzione più bassa. Uno sfondo che non cambia non viene ridisegnato. Un Mac caldo, o che risparmia energia, si sposta ancora di più verso Efficienza."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "効率に近づけるほど、動きは低いフレームレートで、ぼかしは低い解像度で描画されます。変化していない壁紙は再描画されません。Mac が高温のときや省電力中は、さらに効率寄りになります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "효율 쪽으로 갈수록 움직임은 더 낮은 프레임 속도로, 흐림은 더 낮은 해상도로 그려집니다. 변하지 않는 배경화면은 다시 그리지 않습니다. Mac이 뜨겁거나 전력을 절약 중이면 효율 쪽으로 더 이동합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "W stronę wydajności ruch jest rysowany z mniejszą liczbą klatek, a rozmycia w niższej rozdzielczości. Tapeta, która się nie zmienia, nie jest rysowana ponownie. Gorący Mac lub Mac oszczędzający energię przesuwa się dalej w stronę wydajności."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Em direção à Eficiência, o movimento é desenhado com uma taxa de quadros menor e os desfoques com resolução menor. Uma imagem de fundo que não muda não é redesenhada. Um Mac quente, ou economizando energia, vai ainda mais em direção à Eficiência."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ближе к эффективности движение рисуется с меньшей частотой кадров, а размытие — с меньшим разрешением. Обои, которые не меняются, не перерисовываются. Если Mac нагрет или экономит энергию, настройка смещается ещё ближе к эффективности."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verimliliğe doğru, hareket daha düşük kare hızında ve bulanıklıklar daha düşük çözünürlükte çizilir. Değişmeyen bir duvar kâğıdı yeniden çizilmez. Isınan ya da enerji tasarrufu yapan bir Mac verimliliğe daha da yaklaşır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ближче до ефективності рух малюється з нижчою частотою кадрів, а розмиття — з нижчою роздільністю. Шпалера, яка не змінюється, не перемальовується. Якщо Mac гарячий або заощаджує енергію, налаштування зміщується ще ближче до ефективності."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "越靠近效率，动态画面以越低的帧速率绘制，模糊以越低的分辨率绘制。没有变化的墙纸不会重绘。Mac 过热或正在节能时，会进一步偏向效率。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "越靠近效率，動態畫面以越低的畫面播放速率繪製，模糊以越低的解析度繪製。沒有變化的背景圖片不會重繪。Mac 過熱或正在節能時，會進一步偏向效率。"
+          }
+        }
+      }
+    },
+    "Optimise textures" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحسين الأنسجة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texturen optimieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optimizar texturas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optimiser les textures"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "टेक्सचर ऑप्टिमाइज़ करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ottimizza texture"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "テクスチャを最適化"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "텍스처 최적화"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optymalizuj tekstury"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otimizar Texturas"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оптимизировать текстуры"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokuları optimize et"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оптимізувати текстури"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "优化纹理"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最佳化紋理"
+          }
+        }
+      }
+    },
+    "Compresses wallpaper images once in the background so they use about a third of the GPU memory. Images that would lose visible detail stay as they are." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يضغط صور خلفيات الشاشة مرة واحدة في الخلفية لتستخدم نحو ثلث ذاكرة وحدة معالجة الرسومات. تبقى الصور التي قد تفقد تفاصيل مرئية كما هي."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Komprimiert die Bilder von Hintergrundbildern einmal im Hintergrund, sodass sie etwa ein Drittel des GPU-Speichers belegen. Bilder, die sichtbare Details verlieren würden, bleiben unverändert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprime una vez en segundo plano las imágenes de los fondos de pantalla para que usen aproximadamente un tercio de la memoria de la GPU. Las imágenes que perderían detalle visible se quedan como están."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compresse une fois en arrière-plan les images des fonds d’écran pour qu’elles utilisent environ un tiers de la mémoire du GPU. Les images qui perdraient des détails visibles restent telles quelles."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वॉलपेपर की छवियों को बैकग्राउंड में एक बार कंप्रेस करता है, ताकि वे GPU मेमोरी का लगभग एक तिहाई ही लें। जिन छवियों का दिखने वाला विवरण खो जाता, वे जैसी हैं वैसी ही रहती हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprime una volta in background le immagini degli sfondi, così usano circa un terzo della memoria GPU. Le immagini che perderebbero dettagli visibili restano come sono."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "壁紙の画像をバックグラウンドで一度だけ圧縮し、GPU メモリの使用量を約3分の1にします。目に見える細部が失われる画像はそのままにします。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배경화면 이미지를 백그라운드에서 한 번 압축해 GPU 메모리를 약 3분의 1만 사용하게 합니다. 눈에 보이는 디테일이 사라질 이미지는 그대로 둡니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kompresuje raz w tle obrazy tapet, aby zajmowały około jednej trzeciej pamięci GPU. Obrazy, które straciłyby widoczne szczegóły, pozostają bez zmian."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprime uma vez em segundo plano as imagens das imagens de fundo para que usem cerca de um terço da memória da GPU. Imagens que perderiam detalhes visíveis ficam como estão."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Один раз сжимает изображения обоев в фоновом режиме, чтобы они занимали около трети памяти GPU. Изображения, которые потеряли бы видимые детали, остаются без изменений."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duvar kâğıdı görüntülerini arka planda bir kez sıkıştırır; böylece GPU belleğinin yaklaşık üçte birini kullanırlar. Görünür ayrıntı kaybedecek görüntüler olduğu gibi kalır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Один раз стискає зображення шпалер у фоні, щоб вони займали близько третини пам’яті GPU. Зображення, які втратили б видимі деталі, залишаються без змін."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在后台将墙纸图像压缩一次，使其只占用约三分之一的 GPU 内存。会丢失可见细节的图像保持原样。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在背景將背景圖片的影像壓縮一次，使其只佔用約三分之一的 GPU 記憶體。會失去可見細節的影像維持原樣。"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
