@@ -48,6 +48,11 @@ There is **one type per file** unless the types are tiny and private to it. A fi
    - Values that are stored or sent (tags, types, ratings) stay English; show them through `LocalizedLabels`.
    - The app ships in 15 languages besides English. A new string needs a translation in each, using the terms in [`docs/localization-glossary.md`](docs/localization-glossary.md). `LocalizationCatalogTests` and `LocalizationLintTests` fail otherwise.
 
+## Debugging
+
+- Read the app's logs with `/usr/bin/log` (a shell `log` alias or function may shadow it), e.g. `/usr/bin/log show --last 10m --predicate 'process == "Open Wallpaper Engine"'`.
+- Shaders the translator rejects are written to `/tmp/owe-failed-shaders` for inspection.
+
 ## Tests
 
 - **Where tests go:** the `OpenWallpaperEngineTests` target (unit tests hosted in the app, which starts without its delegate under XCTest). Fixtures live in `Tests/Fixtures/`, outside the target, and are read with `Fixtures.url(_:)`.

@@ -779,7 +779,7 @@ The particle textures are artwork, and their shapes set coverage in the particle
 - `release.yml:134` checks `shared-assets/effects/blur/effect.json` and the native metallib instead of `we-assets/shaders/common.h`;
 - `README.md:280`, `CONTRIBUTING.md` ("WE assets" section, `.metal` note), `docs/architecture.md` (`Resources/`) updated in P17.
 
-**Commit rules.** Per CLAUDE.md:
+**Commit rules.** Per CONTRIBUTING.md:
 - **P1a** is a pure move/rename commit: folder, type, keys, identifiers. It has no logic and must build.
 - **P1b** holds the string edits and the migration.
 - Asset drops never share a commit with code.

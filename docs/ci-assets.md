@@ -22,8 +22,7 @@ lookup fails, it downloads anyway. DepotDownloader keeps `.DepotDownloader/depot
 destination, so a later build downloads only the files that changed. `--dry-run` shows the plan
 without logging in, and `--force` downloads even when the build matches.
 
-Default destination: `$OWE_WE_ASSETS_DIR`, else `/Volumes/980Pro/.claude/owe-assets-ci` on the
-maintainer's Mac, else `~/Library/Caches/owe-we-assets`.
+Default destination: `$OWE_WE_ASSETS_DIR`, else `~/Library/Caches/owe-we-assets`.
 
 ## The CI account
 
@@ -81,7 +80,7 @@ Environment variables, when set, take precedence. Then:
 
 ```sh
 Scripts/fetch-we-assets.sh                      # refreshes the default folder
-TEST_RUNNER_OWE_ASSETS=/Volumes/980Pro/.claude/owe-assets-ci \
+TEST_RUNNER_OWE_ASSETS=~/Library/Caches/owe-we-assets \
   xcodebuild test -project OpenWallpaperEngine.xcodeproj -scheme OpenWallpaperEngine -destination 'platform=macOS'
 ```
 

@@ -7,8 +7,7 @@
 #   Scripts/fetch-we-assets.sh [--dry-run] [--force] [destination]
 #   Scripts/fetch-we-assets.sh --build-id      prints the current public build id and exits
 #
-# The destination (argument, else $OWE_WE_ASSETS_DIR, else /Volumes/980Pro/.claude/owe-assets-ci
-# when that volume exists, else ~/Library/Caches/owe-we-assets) is laid out like a WE install, so
+# The destination (argument, else $OWE_WE_ASSETS_DIR, else ~/Library/Caches/owe-we-assets) is laid out like a WE install, so
 # OWE_ASSETS / TEST_RUNNER_OWE_ASSETS accept it. Nothing is downloaded when its `.build` matches
 # the current build. Credentials: OWE_CI_STEAM_USER, OWE_CI_STEAM_PASSWORD and
 # OWE_CI_STEAM_SHARED_SECRET, else (macOS) the login Keychain items of service `owe-ci-steam`,
@@ -48,10 +47,7 @@ while (($#)); do
     shift
 done
 
-if [[ -d /Volumes/980Pro/.claude ]]; then
-    DEFAULT_DEST=/Volumes/980Pro/.claude/owe-assets-ci
-    DEFAULT_TOOLS=/Volumes/980Pro/.claude/tools
-elif [[ "$(uname -s)" == Darwin ]]; then
+if [[ "$(uname -s)" == Darwin ]]; then
     DEFAULT_DEST="$HOME/Library/Caches/owe-we-assets"
     DEFAULT_TOOLS="$HOME/Library/Caches/owe-tools"
 else

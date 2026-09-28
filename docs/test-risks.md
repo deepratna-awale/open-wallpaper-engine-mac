@@ -40,7 +40,7 @@ Paths are relative to `OpenWallpaperEngine/`. **A** = renderer agent, **B** = sh
 **Test.**
 - Unit: assert `cacheKey(...)` differs between the process toolchain and the in-process toolchain for the same inputs; assert the in-process fingerprint includes glslang + SPIRV-Cross *library* versions (e.g. `glslang::GetVersion()`, `SPIRV_CROSS_C_API_VERSION`) and the option set.
 - Unit: seed `~/Library/Caches/com.winddog.wallpaper-engine/shader-variants` with a v4 JSON for a known key, run the new build, assert it is not read (or is re-translated).
-- CLAUDE.md rule: bump `ShaderVariantTranslator.revision` in the same commit; add a test that fails when the translator output hash for a fixed corpus changes without a revision bump (golden-file test).
+- CONTRIBUTING.md rule: bump `ShaderVariantTranslator.revision` in the same commit; add a test that fails when the translator output hash for a fixed corpus changes without a revision bump (golden-file test).
 
 **Status (R2, 2026-09-25).** Fixed 8cd197b. The key already held the revision and the library versions and options (1231087). Variants now also live in a directory per revision and compiler, so an upgrade never reads old ones. Verified by `ShaderVariantCacheTests.testVariantsOfAnotherCompilerAreNotReused` and `testTranslatedOutputMatchesItsRevision`: a golden hash of every bundled effect pair's output, keyed by `revision`, fails when output changes without a bump. Also by `InProcessShaderCompilerTests.testFingerprintNamesLibraryVersionsAndOptions`. Update (2026-09-27): the command-line compiler is gone, and `testCacheKeyDiffersBetweenBackends` with it; the golden corpus test is the guard on translated output.
 
