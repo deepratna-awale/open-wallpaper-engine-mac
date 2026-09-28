@@ -1,0 +1,354 @@
+import Foundation
+import SwiftUI
+import Combine
+
+class WorkshopViewModel: ObservableObject {
+    @Published var items: [WorkshopItem] = []
+    @Published var searchText = ""
+    @Published var authorId: String?
+    @Published var sortOrder: WorkshopSortOrder = .trending
+    @Published var isLoading = false
+    @Published var errorMessage: String?
+    @Published var currentPage = 1
+    @Published private(set) var filter = WorkshopFilter()
+    @Published private(set) var hasNextPage = false
+    @Published var selectedItemIds = Set<String>()
+    @Published var isBatchDownloadConfirming = false
+    private var selectedItems: [String: WorkshopItem] = [:]
+
+    @Published private(set) var itemsPerPage = 21
+
+    let steamCmd: SteamCmdService
+    private let api = WorkshopAPIService()
+    /// One QueryFiles page: search text, filter, sort, page, page size.
+    typealias PageSearch = (String, WorkshopQuery, WorkshopSortOrder, Int, Int) async throws -> [WorkshopItem]
+    private let searchPage: PageSearch
+    /// Bumped by every search, so a search that a newer one overtook doesn't show its results.
+    private var searchGeneration = 0
+    private var cancellable: AnyCancellable?
+    private var downloadedIndexCancellable: AnyCancellable?
+    private var favoritesCancellable: AnyCancellable?
+    private var cachedPages: [Int: [WorkshopItem]] = [:]
+    /// QueryFiles result pages for the current search, so later pages and client-side filtering
+    /// don't request the same source pages again.
+    private var cachedSourcePages: [Int: [WorkshopItem]] = [:]
+    private var cachedSearchKey = ""
+    private var selectionAnchorId: String?
+
+    /// How many QueryFiles pages one displayed page may read when results are filtered here
+    /// (Show Only options Steam can't express): 2,000 items.
+    static let maxSourcePages = 40
+
+    init(steamCmd: SteamCmdService, searchPage: PageSearch? = nil) {
+        self.steamCmd = steamCmd
+        let service = WorkshopAPIService()
+        self.searchPage = searchPage ?? { text, query, sortOrder, page, perPage in
+            try await service.searchItems(query: text, filter: query, sortOrder: sortOrder, page: page, perPage: perPage)
+        }
+        // Forward steamCmd changes (e.g. downloadProgress) to trigger view updates
+        self.cancellable = steamCmd.objectWillChange.sink { [weak self] _ in
+            self?.objectWillChange.send()
+        }
+        self.downloadedIndexCancellable = DownloadedWallpaperIndex.shared.objectWillChange.sink { [weak self] _ in
+            DispatchQueue.main.async {
+                self?.cachedPages.removeAll()
+                self?.objectWillChange.send()
+            }
+        }
+        // "My Favourites" is checked on the results, so its pages go stale when favourites change.
+        self.favoritesCancellable = FavoritesStore.shared.objectWillChange.sink { [weak self] _ in
+            DispatchQueue.main.async {
+                guard let self, self.filter.showOnly.contains(.favourites) else { return }
+                self.cachedPages.removeAll()
+            }
+        }
+    }
+
+    /// Shows the current page for the current search text, sort and filter. Searches overlap
+    /// (every filter click starts one); only the newest one shows its results or its error, and
+    /// pages are cached only under the search they were read for.
+    @MainActor
+    func search() async {
+        searchGeneration += 1
+        let generation = searchGeneration
+        isLoading = true
+        errorMessage = nil
+        if let authorId {
+            let query = WorkshopQuery(filter)
+            do {
+                let results = try await api.getAuthorWorkshopItems(steamId: authorId)
+                guard generation == searchGeneration else { return }
+                // The author's items come unfiltered; the whole filter is checked here.
+                items = results.filter { query.matchesAllTags($0, isFavorite: isFavorite) }
+                preloadThumbnails(items)
+            } catch {
+                guard generation == searchGeneration else { return }
+                errorMessage = error.localizedDescription
+            }
+            isLoading = false
+            return
+        }
+        let searchKey = "\(searchText)|\(sortOrder.rawValue)|\(filter.cacheKey)|\(itemsPerPage)"
+
+        if cachedSearchKey != searchKey {
+            cachedPages.removeAll()
+            cachedSourcePages.removeAll()
+            cachedSearchKey = searchKey
+        }
+
+        let page = currentPage
+        do {
+            let results = try await pageItems(for: page, searchKey: searchKey)
+            guard generation == searchGeneration else { return }
+            items = results
+            preloadThumbnails(results)
+            await preloadAdjacentPages(for: page, searchKey: searchKey)
+        } catch {
+            guard generation == searchGeneration else { return }
+            errorMessage = error.localizedDescription
+        }
+
+        guard generation == searchGeneration else { return }
+        isLoading = false
+    }
+
+    func download(item: WorkshopItem) {
+        steamCmd.downloadWorkshopItem(
+            workshopId: item.id,
+            title: item.title,
+            previewURL: item.previewImageURL,
+            creatorId: item.creatorId,
+            subscriptions: item.subscriptions,
+            fileSize: item.fileSize
+        )
+    }
+
+    func showAuthor(_ steamId: String) {
+        authorId = steamId
+        searchText = ""
+        currentPage = 1
+        cachedPages.removeAll()
+        Task { @MainActor in await search() }
+    }
+
+    func clearAuthorFilter() {
+        authorId = nil
+        currentPage = 1
+        cachedPages.removeAll()
+        Task { @MainActor in await search() }
+    }
+
+    func downloadSelectedItems() {
+        for item in selectedItems.values {
+            download(item: item)
+        }
+        clearSelection()
+    }
+
+    /// Downloads the item, then adds it to the given playlist once steamcmd finishes copying it into the library.
+    func downloadAndAddToPlaylist(_ item: WorkshopItem, playlistID: UUID, wallpaperViewModel: WallpaperViewModel) {
+        steamCmd.downloadWorkshopItem(
+            workshopId: item.id,
+            title: item.title,
+            previewURL: item.previewImageURL,
+            creatorId: item.creatorId,
+            subscriptions: item.subscriptions,
+            fileSize: item.fileSize
+        ) { destination in
+            guard let destination,
+                  let data = try? Data(contentsOf: destination.appending(path: "project.json")),
+                  let project = try? JSONDecoder().decode(WEProject.self, from: data) else { return }
+            // steamcmd invokes this completion off the main thread.
+            DispatchQueue.main.async {
+                wallpaperViewModel.addToPlaylist(WEWallpaper(using: project, where: destination), playlistID: playlistID)
+            }
+        }
+    }
+
+    func preview(item: WorkshopItem) {
+        steamCmd.previewWorkshopItem(workshopId: item.id)
+    }
+
+    func downloadState(for item: WorkshopItem) -> SteamCmdService.DownloadState? {
+        if isDownloaded(item) {
+            return .completed
+        }
+        return steamCmd.downloadProgress[item.id]
+    }
+
+    var visibleItems: [WorkshopItem] {
+        items
+    }
+
+    /// In the library as the user's own item. A dependency-only copy doesn't count, so the user can
+    /// still download it to make it theirs.
+    func isDownloaded(_ item: WorkshopItem) -> Bool {
+        DownloadedWallpaperIndex.shared.contains(item.id) && !steamCmd.dependencyIndex.contains(item.id)
+    }
+
+    /// Key namespace for Workshop items (as opposed to local wallpapers) in `FavoritesStore`.
+    func favoriteKey(for item: WorkshopItem) -> String { "workshop-\(item.id)" }
+
+    func toggleFavorite(_ item: WorkshopItem) {
+        FavoritesStore.shared.toggle(favoriteKey(for: item))
+    }
+
+    func isFavorite(_ item: WorkshopItem) -> Bool {
+        FavoritesStore.shared.contains(favoriteKey(for: item))
+    }
+
+    func isPreviewLoading(_ item: WorkshopItem) -> Bool {
+        steamCmd.previewProgress.contains(item.id)
+    }
+
+    /// Changes the filter and searches again from the first page.
+    func updateFilter(_ change: (inout WorkshopFilter) -> Void) {
+        var updated = filter
+        change(&updated)
+        guard updated != filter else { return }
+        filter = updated
+        currentPage = 1
+        // The shown results no longer match: show the search in progress instead of them.
+        items = []
+        Task { @MainActor in await search() }
+    }
+
+    func resetFilters() {
+        updateFilter { $0 = WorkshopFilter() }
+    }
+
+    @MainActor
+    func updateItemsPerPage(for size: CGSize, itemSize: CGFloat) async {
+        let spacing: CGFloat = 13
+        let columns = max(1, Int((size.width + spacing) / (itemSize + spacing)))
+        let rows = max(1, Int((size.height + spacing) / (itemSize + spacing)))
+        let pageSize = columns * rows
+        guard itemsPerPage != pageSize else { return }
+        itemsPerPage = pageSize
+        currentPage = 1
+        cachedPages.removeAll()
+        await search()
+    }
+
+    func selectItem(_ item: WorkshopItem) {
+        let modifiers = NSEvent.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        let isAdditive = modifiers.contains(.control) || modifiers.contains(.command)
+
+        if modifiers.contains(.shift), !isAdditive,
+           let anchorId = selectionAnchorId,
+           let start = items.firstIndex(where: { $0.id == anchorId }),
+           let end = items.firstIndex(where: { $0.id == item.id }) {
+            let rangeItems = items[min(start, end)...max(start, end)]
+            selectedItemIds = Set(rangeItems.map(\.id))
+            selectedItems = Dictionary(uniqueKeysWithValues: rangeItems.map { ($0.id, $0) })
+        } else if isAdditive {
+            if selectedItemIds.contains(item.id) {
+                selectedItemIds.remove(item.id)
+                selectedItems.removeValue(forKey: item.id)
+            } else {
+                selectedItemIds.insert(item.id)
+                selectedItems[item.id] = item
+            }
+            selectionAnchorId = item.id
+        } else {
+            selectedItemIds = [item.id]
+            selectedItems = [item.id: item]
+            selectionAnchorId = item.id
+        }
+    }
+
+    func clearSelection() {
+        selectedItemIds.removeAll()
+        selectedItems.removeAll()
+        selectionAnchorId = nil
+    }
+
+    @MainActor
+    private func pageItems(for page: Int, searchKey: String) async throws -> [WorkshopItem] {
+        if let cachedItems = cachedPages[page] {
+            return cachedItems
+        }
+
+        let results = try await displayedPageItems(for: page, searchKey: searchKey)
+        if cachedSearchKey == searchKey {
+            cachedPages[page] = results
+        }
+        return results
+    }
+
+    /// Displayed page `displayedPage`: QueryFiles pages are read in order and what passes the
+    /// client-side Show Only check is counted, so a displayed page starts where the previous one
+    /// ended whatever was filtered out.
+    @MainActor
+    private func displayedPageItems(for displayedPage: Int, searchKey: String) async throws -> [WorkshopItem] {
+        let sourcePageSize = 50
+        let query = WorkshopQuery(filter)
+        let text = searchText
+        let sortOrder = sortOrder
+        let itemsPerPage = itemsPerPage
+        var sourcePage = 1
+        var skippedItems = (displayedPage - 1) * itemsPerPage
+        var visibleItems: [WorkshopItem] = []
+
+        while visibleItems.count < itemsPerPage, sourcePage <= Self.maxSourcePages {
+            let sourceItems = try await sourceItems(page: sourcePage, pageSize: sourcePageSize, text: text,
+                                                    sortOrder: sortOrder, query: query, searchKey: searchKey)
+            guard !sourceItems.isEmpty else { break }
+
+            for item in sourceItems where query.matches(item, isFavorite: isFavorite) {
+                if skippedItems > 0 {
+                    skippedItems -= 1
+                } else {
+                    visibleItems.append(item)
+                    if visibleItems.count == itemsPerPage {
+                        break
+                    }
+                }
+            }
+
+            guard sourceItems.count == sourcePageSize else { break }
+            sourcePage += 1
+        }
+
+        return visibleItems
+    }
+
+    @MainActor
+    private func sourceItems(page: Int, pageSize: Int, text: String, sortOrder: WorkshopSortOrder,
+                             query: WorkshopQuery, searchKey: String) async throws -> [WorkshopItem] {
+        if cachedSearchKey == searchKey, let cached = cachedSourcePages[page] { return cached }
+        let items = try await searchPage(text, query, sortOrder, page, pageSize)
+        if cachedSearchKey == searchKey {
+            cachedSourcePages[page] = items
+        }
+        return items
+    }
+
+    @MainActor
+    private func preloadAdjacentPages(for page: Int, searchKey: String) async {
+        let adjacentPages = [page - 1, page + 1].filter { $0 > 0 }
+        for adjacentPage in adjacentPages {
+            do {
+                let adjacentItems = try await pageItems(for: adjacentPage, searchKey: searchKey)
+                guard cachedSearchKey == searchKey, currentPage == page else { return }
+                preloadThumbnails(adjacentItems)
+                if adjacentPage == page + 1 {
+                    // A short last page is still a page.
+                    hasNextPage = !adjacentItems.isEmpty
+                }
+            } catch {
+                guard cachedSearchKey == searchKey, currentPage == page else { return }
+                if adjacentPage == page + 1 {
+                    hasNextPage = false
+                }
+            }
+        }
+    }
+
+    private func preloadThumbnails(_ items: [WorkshopItem]) {
+        for item in items {
+            guard let url = item.previewImageURL else { continue }
+            URLSession.shared.dataTask(with: url).resume()
+        }
+    }
+}

@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Open Wallpaper Engine</title>
+<meta name="description" content="Open Wallpaper Engine: a free, open-source macOS player for Wallpaper Engine scene, video and web wallpapers, rendered with Metal.">
+<meta property="og:title" content="Open Wallpaper Engine">
+<meta property="og:description" content="Scene, video and web wallpapers on your Mac, rendered with Metal.">
+<meta property="og:image" content="screenshots/live-snowy-plains.jpg">
+<link rel="icon" href="icon.png" media="(prefers-color-scheme: light)">
+<link rel="icon" href="icon-dark.png" media="(prefers-color-scheme: dark)">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<nav class="nav" aria-label="Main">
+  <div class="wrap">
+    <a class="brand" href="#top">
+      <img class="icon-light" src="icon.png" alt=""><img class="icon-dark" src="icon-dark.png" alt="">
+      Open Wallpaper Engine
+    </a>
+    <ul>
+      <li><a href="#types">Wallpapers</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#screenshots">Screenshots</a></li>
+      <li><a href="#install">Install</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <li><a href="#credits">Credits</a></li>
+    </ul>
+    <button class="theme" id="theme" type="button" aria-label="Switch between light and dark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor"/></svg>
+    </button>
+  </div>
+</nav>
+
+<main id="top">
+  <header class="hero wrap">
+    <img class="icon icon-light" src="icon.png" alt="Open Wallpaper Engine icon">
+    <img class="icon icon-dark" src="icon-dark.png" alt="Open Wallpaper Engine icon">
+    <h1>Open Wallpaper Engine</h1>
+    <p class="tag">Wallpaper Engine scene, video and web wallpapers, live on your Mac desktop.</p>
+    <div class="actions">
+      <a id="download" class="download" href="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/latest">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M6 11l6 6 6-6M5 20h14"/></svg>
+        <span id="download-label">Download for macOS</span>
+      </a>
+      <a class="ghost" href="https://github.com/deepratna-awale/open-wallpaper-engine-mac">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        View on GitHub
+      </a>
+    </div>
+    <p class="meta" id="meta">macOS 14 or later · Free and open source (GPL-3.0)</p>
+    <img class="hero-shot" src="screenshots/live-snowy-plains.jpg" width="1600" height="900"
+         alt="The Snowy Plains scene wallpaper running on a Mac desktop: a snow-covered cabin at sunset with falling snow.">
+  </header>
+
+  <section class="band alt" id="types" aria-labelledby="types-h">
+    <div class="wrap">
+      <p class="eyebrow">Wallpaper types</p>
+      <h2 id="types-h">Plays the Wallpaper Engine format</h2>
+      <p class="lede">Open Wallpaper Engine reads wallpapers in Wallpaper Engine's own format: the <code>project.json</code>, <code>scene.json</code>, packages, textures and shaders that Workshop items ship with. Three of the four wallpaper types run.</p>
+      <div class="types">
+        <article class="type">
+          <h3>Scene</h3>
+          <p class="kind">type: scene</p>
+          <ul>
+            <li>Rendered natively with Metal, through each wallpaper's original shaders translated to Metal</li>
+            <li>Image, composition, fullscreen and solid layers; all 33 blend modes; effect masks</li>
+            <li>GPU particles, text and clock layers, keyframe and texture timelines</li>
+            <li>SceneScript, 3D models, scene lights, shadows and fog</li>
+            <li>HDR bloom, with EDR output on displays that can show it</li>
+          </ul>
+        </article>
+        <article class="type">
+          <h3>Video</h3>
+          <p class="kind">type: video</p>
+          <ul>
+            <li>MP4, MOV and M4V through AVFoundation</li>
+            <li>WebM (VP8/VP9) plays through WebKit, with placement, looping, volume, speed and per-display pause; music sync applies to MP4/MOV only</li>
+            <li>Playback rate, volume and placement (Fill, Fit, Center, Stretch, Zoom)</li>
+            <li>Optional music-synced zoom and tilt</li>
+          </ul>
+        </article>
+        <article class="type">
+          <h3>Web</h3>
+          <p class="kind">type: web</p>
+          <ul>
+            <li>HTML and WebGL wallpapers with local file access, so textures and assets load</li>
+            <li>User properties through <code>wallpaperPropertyListener</code></li>
+            <li>Live audio through the audio listener</li>
+            <li>Now Playing through the media listeners</li>
+          </ul>
+        </article>
+      </div>
+      <p class="note"><strong>Not supported:</strong> <code>application</code> wallpapers. They are Windows programs and will not run.</p>
+    </div>
+  </section>
+
+  <section class="band" id="features" aria-labelledby="features-h">
+    <div class="wrap">
+      <p class="eyebrow">Features</p>
+      <h2 id="features-h">Built to render wallpapers the way their authors made them</h2>
+      <p class="lede">The goal is to run every Wallpaper Engine wallpaper except applications, faithful to how Wallpaper Engine draws them, with fixes that work for all wallpapers instead of one.</p>
+      <div class="features">
+        <div class="feature">
+          <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Rendering</h3>
+          <ul>
+            <li>Metal on the GPU; Wallpaper Engine's GLSL is translated to Metal (GLSL → SPIR-V → MSL) by glslang and SPIRV-Cross built into the app</li>
+            <li>Translated shaders are cached on disk and compiled in the background</li>
+            <li>Workshop authors' own custom effects run through the same path</li>
+            <li>Built-in effects need Wallpaper Engine on Steam: the app installs its assets from your own copy</li>
+            <li>Colour lookup tables, Wallpaper Engine's colour correction, bloom and HDR bloom</li>
+            <li>"Ultra (Display HDR)" outputs EDR on HDR-capable displays</li>
+            <li>Puppet Warp images with bone physics</li>
+          </ul>
+        </div>
+        <div class="feature">
+          <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="6" cy="7" r="1.5"/><circle cx="16" cy="5" r="1.5"/><circle cx="11" cy="12" r="1.5"/><circle cx="18" cy="14" r="1.5"/><circle cx="7" cy="18" r="1.5"/><circle cx="15" cy="20" r="1"/></svg>Particles</h3>
+          <ul>
+            <li>Every particle system simulated on the GPU, in 3D, with 3D control points</li>
+            <li>Child systems, including ones triggered by their parent's particles</li>
+            <li>Emitter bursts, delays, periodic emission, and emitting from a layer's image</li>
+            <li>Collision (including with a model's bones), audio response, rotation about every axis</li>
+            <li>Turbulence, attractors, vortex and boid motion, ropes and trails</li>
+          </ul>
+        </div>
+        <div class="feature">
+          <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="m3 7 9 5 9-5M12 12v10"/></svg>3D and lighting</h3>
+          <ul>
+            <li>3D models with skinning, animation layers, morph targets and root motion</li>
+            <li>Perspective cameras with camera paths, fades and shake; 2D layers sit in depth</li>
+            <li>Scene lights with light cookies, shadows and planar reflections</li>
+            <li>Distance and height fog, and volumetric lights</li>
+          </ul>
+        </div>
+        <div class="feature">
+          <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 7-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg>SceneScript and Now Playing</h3>
+          <ul>
+            <li>A complete SceneScript runtime: modules, the scene, layer, effect and material object model, animation events, <code>localStorage</code> and cursor hit testing</li>
+            <li>Each wallpaper's scripts run on their own thread</li>
+            <li>Scripts can create layers, particle systems and sounds, drive bloom and fog, and pose puppets and models</li>
+            <li>Now Playing: scenes and web wallpapers receive the current track and playback state (macOS 15.4 or later)</li>
+          </ul>
+        </div>
+        <div class="feature">
+          <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 10v4M8 6v12M12 3v18M16 7v10M20 10v4"/></svg>Audio</h3>
+          <ul>
+            <li>System audio captured with ScreenCaptureKit (needs the Screen &amp; System Audio Recording permission)</li>
+            <li>The audio spectrum is computed the way Wallpaper Engine computes it, in stereo</li>
+            <li>Audio-reactive layers, effects, particles and scripts</li>
+            <li>Sound layers play on the scene's clock, with spatial sound placed as in Wallpaper Engine</li>
+          </ul>
+        </div>
+        <div class="feature">
+          <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="11" height="8" rx="1.5"/><rect x="11" y="10" width="11" height="8" rx="1.5"/></svg>Every display</h3>
+          <ul>
+            <li>A different wallpaper on each display, or one on all of them</li>
+            <li>A wallpaper shown on several displays renders once and is presented on each</li>
+            <li>Pause per Display or Pause All, with playback rules checked for each display, including Wallpaper Engine's maximized-window rule</li>
+            <li>Rules for focused, maximized, fullscreen and audio-playing apps, a sleeping display and battery power</li>
+            <li>Per-display properties, with "Sync properties across displays"; playback continues across Spaces</li>
+          </ul>
+        </div>
+        <div class="feature">
+          <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg>Steam Workshop</h3>
+          <ul>
+            <li>Browse and search the Workshop inside the app, sorted by Trending, Most Recent, Most Popular or Most Subscribed</li>
+            <li>Wallpaper Engine's filters: Show Only, resolution, content rating, type, and genres combined with AND or OR</li>
+            <li>Downloads go through SteamCMD with your Steam account, which must own Wallpaper Engine</li>
+            <li>Missing dependencies download automatically; unused ones are removed after a delete</li>
+            <li>Content rating defaults to Everyone</li>
+          </ul>
+        </div>
+        <div class="feature">
+          <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Library and playlists</h3>
+          <ul>
+            <li>Installed wallpapers filter by their Workshop tags, type, rating and resolution</li>
+            <li>Import from folders or <code>.zip</code> packages, or by drag and drop</li>
+            <li>Playlists with shuffle and repeat</li>
+            <li>Reset in Details returns a wallpaper's properties, and its Scene Inspector edits, to the author's defaults</li>
+            <li>Safe restart skips a wallpaper that stalled or crashed the app and marks it in the library</li>
+          </ul>
+        </div>
+        <div class="feature">
+          <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>Performance settings</h3>
+          <ul>
+            <li>Quality, anti-aliasing and post-processing</li>
+            <li>Render Resolution and Texture Resolution</li>
+            <li>Match Display scene detail, reflections, shadows and volumetrics</li>
+          </ul>
+        </div>
+        <div class="feature">
+          <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="4"/><path d="M3 9h18" opacity=".5"/></svg>A native Mac app</h3>
+          <ul>
+            <li>Liquid Glass on macOS 26: a native split view, toolbar and inspector with glass controls</li>
+            <li>Earlier macOS versions keep the familiar look</li>
+            <li>A menu bar icon with recent wallpapers, following the menu bar's appearance</li>
+            <li>Automatic updates from GitHub Releases, which you can turn off in Settings</li>
+          </ul>
+        </div>
+        <div class="feature">
+          <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18"/></svg>15 languages</h3>
+          <ul>
+            <li>German, French, Spanish, Brazilian Portuguese, Italian, Japanese, Korean, Simplified and Traditional Chinese, Russian, Polish, Turkish, Ukrainian, Arabic and Hindi, in addition to English</li>
+            <li>Chosen from the Language picker in Settings</li>
+          </ul>
+        </div>
+        <div class="feature">
+          <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Privacy</h3>
+          <ul>
+            <li>Your Steam password is never stored; SteamCMD reuses its own cached session</li>
+            <li>The Steam Web API key is checked with Steam and kept in your Keychain</li>
+            <li>Everything the app saves stays on your Mac; no server, no data collection or analytics</li>
+            <li>Contacts Valve (Steam for the Workshop and assets, Valve's server for SteamCMD) and GitHub to check for app updates (the update feed on GitHub Pages, downloads from GitHub Releases); web wallpapers may load their own online content</li>
+            <li>Update checks send no personal data and can be turned off in Settings › General</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band alt" id="screenshots" aria-labelledby="shots-h">
+    <div class="wrap">
+      <p class="eyebrow">Screenshots</p>
+      <h2 id="shots-h">See it running</h2>
+      <p class="lede">Captured from the app on macOS. Select a screenshot to enlarge it.</p>
+      <div class="gallery">
+        <figure>
+          <button type="button"><img src="screenshots/library-installed.jpg" width="1600" height="1002" loading="lazy"
+            alt="The main window's Installed tab: a grid of wallpaper thumbnails, with the Details inspector showing Snowy Plains, its tags, Set Wallpaper, Scene Inspector and its wallpaper settings."></button>
+          <figcaption><strong>Library and Details</strong>Installed wallpapers, with properties for the selected one.</figcaption>
+        </figure>
+        <figure>
+          <button type="button"><img src="screenshots/library-filters.jpg" width="1600" height="1002" loading="lazy"
+            alt="The Installed tab with the filter sidebar open: Show Only, Type, Age Rating set to Everyone only, and resolution filters; Details shows the Dance Club wallpaper."></button>
+          <figcaption><strong>Filters</strong>Wallpaper Engine's filters, with only Everyone ticked.</figcaption>
+        </figure>
+        <figure>
+          <button type="button"><img src="screenshots/scene-inspector.jpg" width="1600" height="939" loading="lazy"
+            alt="The Scene Inspector window listing a scene's objects with visibility switches, the selected object's JSON properties, and move, size and align controls."></button>
+          <figcaption><strong>Scene Inspector</strong>Every object in a scene, its properties and placement.</figcaption>
+        </figure>
+        <figure>
+          <button type="button"><img src="screenshots/settings-performance.jpg" width="1010" height="1127" loading="lazy"
+            alt="The Settings window on the Performance page, with playback rules for focused, maximized, fullscreen and audio-playing apps, display sleep and battery."></button>
+          <figcaption><strong>Performance settings</strong>Playback rules and quality.</figcaption>
+        </figure>
+        <figure>
+          <button type="button"><img src="screenshots/settings-general.jpg" width="1060" height="1170" loading="lazy"
+            alt="The Settings window on the General page: Start with macOS, language, the Wallpaper Storage folder with a Choose button, and converted wallpapers."></button>
+          <figcaption><strong>General settings</strong>Startup, language and where wallpapers are stored.</figcaption>
+        </figure>
+        <figure>
+          <button type="button"><img src="screenshots/menubar-menu.jpg" width="580" height="560" loading="lazy"
+            alt="The Open Wallpaper Engine menu bar menu, open: Show Open Wallpaper Engine, Recent Wallpapers, Browse Workshop, Settings, Support and FAQ, Mute, Pause and Quit."></button>
+          <figcaption><strong>Menu bar</strong>Show, mute, pause or switch wallpapers from the menu bar.</figcaption>
+        </figure>
+        <figure>
+          <button type="button"><img src="screenshots/workshop.jpg" width="1600" height="875" loading="lazy"
+            alt="The Workshop tab searching for landscape, filtered to Everyone-rated items, with a grid of landscape wallpaper thumbnails."></button>
+          <figcaption><strong>Workshop</strong>Browse, search and download Steam Workshop wallpapers.</figcaption>
+        </figure>
+        <figure>
+          <button type="button"><img src="screenshots/display-settings.jpg" width="1037" height="600" loading="lazy"
+            alt="The Display Settings sheet showing two connected displays, with the selected display enabled and showing the Dance Club wallpaper."></button>
+          <figcaption><strong>Displays</strong>A wallpaper per display, each enabled on its own.</figcaption>
+        </figure>
+        <figure>
+          <button type="button"><img src="screenshots/live-solar-system.jpg" width="1600" height="900" loading="lazy"
+            alt="The Solar System 3D scene wallpaper on the desktop: planets orbiting a glowing sun beneath a clock and date."></button>
+          <figcaption><strong>3D scene</strong>Solar system, with a live clock.</figcaption>
+        </figure>
+        <figure>
+          <button type="button"><img src="screenshots/live-dance-club.jpg" width="1600" height="900" loading="lazy"
+            alt="The Dance Club audio-responsive scene wallpaper on the desktop: cartoon rabbits between rows of speakers."></button>
+          <figcaption><strong>Audio-reactive scene</strong>Dance Club moves to the music you play.</figcaption>
+        </figure>
+        <figure>
+          <button type="button"><img src="screenshots/live-snowy-plains.jpg" width="1600" height="900" loading="lazy"
+            alt="The Snowy Plains scene wallpaper on the desktop: a lit cabin in deep snow below mountains at sunset, with falling snow particles."></button>
+          <figcaption><strong>Particles and effects</strong>Snowy Plains, with falling snow and fog.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="install" aria-labelledby="install-h">
+    <div class="wrap split">
+      <div>
+        <p class="eyebrow">Requirements</p>
+        <h2 id="install-h">Install</h2>
+        <ul class="req">
+          <li>macOS 14 Sonoma or later, on a Mac with Metal</li>
+          <li>Liquid Glass interface on macOS 26</li>
+          <li>Now Playing needs macOS 15.4 or later</li>
+          <li>Scene wallpapers need Wallpaper Engine assets from your Steam copy (a Steam account that owns Wallpaper Engine); video and web wallpapers don't</li>
+          <li>Workshop downloads need a Steam account that owns Wallpaper Engine. The app downloads Valve's SteamCMD for you in the background the first time it's needed (from Valve, not bundled); Homebrew (<code>brew install steamcmd</code>) is optional, and an existing steamcmd (Homebrew, Steam, or one you pick) is used if found</li>
+          <li>Audio-reactive wallpapers need the Screen &amp; System Audio Recording permission</li>
+        </ul>
+        <ol class="steps">
+          <li>Download the DMG from the button above.</li>
+          <li>Open it and drag Open Wallpaper Engine to Applications.</li>
+          <li>Open the app. The download is signed and notarized by Apple, so macOS opens it without a Gatekeeper warning; the first time, it asks you to confirm opening an app downloaded from the internet.</li>
+          <li>Log in to the Workshop tab, then install the Wallpaper Engine assets in Settings → Assets, or choose an existing Wallpaper Engine folder there.</li>
+          <li>Import wallpaper folders or <code>.zip</code> packages, or download from the Workshop tab.</li>
+        </ol>
+      </div>
+      <div id="faq">
+        <p class="eyebrow">FAQ</p>
+        <h2>Questions</h2>
+        <details>
+          <summary>Do I need Wallpaper Engine installed?</summary>
+          <p>Scenes need Wallpaper Engine's built-in effects, materials, shaders, fonts and SceneScript runtime, which the app doesn't ship. Settings → Assets downloads them from your own Wallpaper Engine copy on Steam with SteamCMD, keeps only those files and Wallpaper Engine's default wallpapers, and deletes the rest; or you can choose an existing Wallpaper Engine folder. Video and web wallpapers play without them. Shaders are translated by a compiler built into the app.</p>
+        </details>
+        <details>
+          <summary>What does "Wallpaper Engine format" mean?</summary>
+          <p>Wallpapers made for Wallpaper Engine are folders with a <code>project.json</code> and their content: a <code>scene.json</code> or <code>scene.pkg</code> with textures, materials and shaders for scenes, a video file, or an HTML page. Open Wallpaper Engine reads those files directly, so Workshop items and wallpapers you made yourself both work.</p>
+        </details>
+        <details>
+          <summary>Where are wallpapers stored?</summary>
+          <p>In <code>~/Documents/Open Wallpaper Engine</code> by default. You can choose another folder in Settings and move the existing library there. Every Workshop download lands in that folder.</p>
+        </details>
+        <details>
+          <summary>Do I need to own Wallpaper Engine?</summary>
+          <p>For scene wallpapers and the Steam Workshop, yes: the built-in effects come from your own Wallpaper Engine copy, and SteamCMD downloads the app and Workshop items only for an account that owns Wallpaper Engine. Video and web wallpapers you already have can be imported and played without Steam.</p>
+        </details>
+        <details>
+          <summary>Which wallpapers do not work?</summary>
+          <p>Application wallpapers are not supported. Scene support is broad but still growing; a wallpaper that stalls or crashes the app is skipped on the next launch and marked in the library.</p>
+        </details>
+        <details>
+          <summary>Is my Steam login safe?</summary>
+          <p>Your Steam password is never stored. SteamCMD keeps its own cached session, and the Steam Web API key is kept in the macOS Keychain.</p>
+        </details>
+        <details>
+          <summary>What data does the app keep or send?</summary>
+          <p>Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and SteamCMD's login. Open Wallpaper Engine has no server and collects no data or analytics. It contacts Valve (Steam when you use the Workshop or install assets, and Valve's server to download SteamCMD) and GitHub, to check for app updates: the update feed on GitHub Pages and the downloads on GitHub Releases. Update checks send no personal data, and you can turn them off in Settings › General. Web wallpapers may load their own online content. Your Steam password and Steam Guard code go straight to SteamCMD and are never stored, logged or sent anywhere else; only your account name is remembered, to reuse SteamCMD's saved login.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section class="band alt" id="credits" aria-labelledby="credits-h">
+    <div class="wrap">
+      <p class="eyebrow">Credits</p>
+      <h2 id="credits-h">Who made it</h2>
+      <div class="credits">
+        <div class="credit lead">
+          <h3>Released by Deepratna Awale</h3>
+          Author and maintainer of this release: the Metal renderer, shader translation, SceneScript, audio, Workshop and the logo redesign.
+          <a href="https://github.com/deepratna-awale">github.com/deepratna-awale</a>
+        </div>
+        <div class="credit">
+          <h3>Based on Open Wallpaper Engine</h3>
+          The open-source <a href="https://github.com/MrWindDog/wallpaper-engine-mac">Open Wallpaper Engine</a> by MrWindDog and Haren Chen, licensed under GPL-3.0.
+        </div>
+        <div class="credit">
+          <h3>Logo</h3>
+          Original logo design by <a href="https://github.com/klauszhu1105">Klaus Zhu</a>. Logo redesign by Deepratna Awale.
+        </div>
+        <div class="credit">
+          <h3>Contributors</h3>
+          <a href="https://github.com/Erica-Iris">1ris_W</a> (Chinese translation) and everyone listed in
+          <a href="https://github.com/deepratna-awale/open-wallpaper-engine-mac/blob/main/AUTHORS.md">AUTHORS.md</a>.
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Free and open source under the <a href="https://github.com/deepratna-awale/open-wallpaper-engine-mac/blob/main/LICENSE">GPL-3.0 licence</a> ·
+      <a href="https://github.com/deepratna-awale/open-wallpaper-engine-mac">Source</a> ·
+      <a href="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases">All releases</a> ·
+      <a href="https://github.com/deepratna-awale/open-wallpaper-engine-mac/blob/main/ATTRIBUTION.txt">Attribution</a></p>
+    <p>Open Wallpaper Engine is not affiliated with Wallpaper Engine or Valve. Wallpapers belong to their authors.</p>
+  </div>
+</footer>
+
+<dialog class="lightbox" id="lightbox" aria-label="Screenshot">
+  <button class="close" type="button" aria-label="Close">×</button>
+  <img id="lightbox-img" src="data:," alt="">
+  <p id="lightbox-cap"></p>
+</dialog>
+
+<script>
+// Light/dark toggle. Follows the system until the viewer picks one; the pick is remembered per browser.
+(() => {
+  const root = document.documentElement;
+  let saved = null;
+  try { saved = localStorage.getItem("theme"); } catch (_) {}
+  if (saved === "light" || saved === "dark") root.dataset.theme = saved;
+  document.getElementById("theme").addEventListener("click", () => {
+    const current = root.dataset.theme ||
+      (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    const next = current === "dark" ? "light" : "dark";
+    root.dataset.theme = next;
+    try { localStorage.setItem("theme", next); } catch (_) {}
+  });
+})();
+
+// Screenshot gallery: a click opens the full image in a dialog.
+(() => {
+  const box = document.getElementById("lightbox");
+  const img = document.getElementById("lightbox-img");
+  const cap = document.getElementById("lightbox-cap");
+  if (typeof box.showModal !== "function") return;
+  document.querySelectorAll(".gallery button").forEach(b => b.addEventListener("click", () => {
+    const src = b.querySelector("img");
+    img.src = src.src; img.alt = src.alt;
+    const fc = b.parentElement.querySelector("figcaption");
+    cap.textContent = fc.querySelector("strong").textContent + ": " + fc.lastChild.textContent;
+    box.showModal();
+  }));
+  box.querySelector(".close").addEventListener("click", () => box.close());
+  box.addEventListener("click", e => { if (e.target === box) box.close(); });
+})();
+
+// Points the button at the newest published release's DMG (or zip), pre-releases included. If the
+// list is unavailable it falls back to releases/latest; if that fails too, the button keeps its link.
+const REPO_API = "https://api.github.com/repos/deepratna-awale/open-wallpaper-engine-mac";
+// "v1.0.0-beta.1" -> "1.0.0 Beta 1" (alpha -> "Alpha N", rc -> "RC N"); final or unknown tags stay as tagged.
+function releaseLabel(tag) {
+  const m = /^v?(\d+(?:\.\d+)*)-(alpha|beta|rc)\.?(\d+)?$/i.exec(tag || "");
+  if (!m) return { text: `Download ${tag}`, pre: false };
+  const kind = { alpha: "Alpha", beta: "Beta", rc: "RC" }[m[2].toLowerCase()];
+  return { text: `Download ${m[1]} ${kind}${m[3] ? " " + m[3] : ""}`, pre: true };
+}
+async function newestRelease(fetchFn) {
+  const get = async path => {
+    const r = await fetchFn(REPO_API + path, { headers: { Accept: "application/vnd.github+json" } });
+    return r.ok ? r.json() : null;
+  };
+  try {
+    const list = await get("/releases?per_page=10");
+    const found = Array.isArray(list) && list.find(rel => !rel.draft);
+    if (found) return found;
+  } catch (_) { /* try releases/latest */ }
+  try { return await get("/releases/latest"); } catch (_) { return null; }
+}
+(async () => {
+  try {
+    const release = await newestRelease(fetch);
+    if (!release || !release.tag_name) return;
+    const assets = release.assets || [];
+    const asset = assets.find(a => a.name.endsWith(".dmg")) || assets.find(a => a.name.endsWith(".zip"));
+    const label = releaseLabel(release.tag_name);
+    const pre = label.pre || release.prerelease;
+    document.getElementById("download").href = asset ? asset.browser_download_url : release.html_url;
+    document.getElementById("download-label").textContent = label.text + (pre ? " (beta)" : "");
+    const date = new Date(release.published_at).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+    const meta = document.getElementById("meta");
+    meta.textContent = `${date} · ${asset ? (asset.size / 1048576).toFixed(0) + " MB · " : ""}macOS 14 or later · `;
+    const notes = document.createElement("a");
+    notes.href = release.html_url; notes.textContent = "Release notes";
+    meta.appendChild(notes);
+  } catch (_) { /* keep the fallback link */ }
+})();
+</script>
+</body>
+</html>
