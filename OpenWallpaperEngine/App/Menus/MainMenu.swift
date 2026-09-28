@@ -15,6 +15,7 @@ extension AppDelegate {
         appMenu.submenu?.items = [
             // 在此处添加子菜单项
             .init(title: String(localized: "About Open Wallpaper Engine"), action: #selector(self.showAboutUs), keyEquivalent: ""),
+            .init(title: String(localized: "Check for Updates…"), action: #selector(checkForUpdates), keyEquivalent: ""),
             .separator(),
             .init(title: String(localized: "Settings..."), action: #selector(openSettingsWindow), keyEquivalent: ","),
             .separator(),
@@ -127,6 +128,11 @@ extension AppDelegate {
         }
     }
     
+    /// Disabled (see `validateMenuItem`) while Sparkle is off or busy.
+    @objc func checkForUpdates() {
+        updater.checkForUpdates()
+    }
+
     @objc func resetTrustedWallpapers() {
         UserDefaults.app.set([String](), forKey: "TrustedWallpapers")
     }
@@ -137,5 +143,12 @@ extension NSMenuItem {
         self.init(title: title, action: action, keyEquivalent: keyEquivalent)
         self.image = NSImage(systemSymbolName: systemImage, accessibilityDescription: nil)
         
+    }
+}
+
+extension AppDelegate: NSMenuItemValidation {
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        if menuItem.action == #selector(checkForUpdates) { return updater.canCheckForUpdates }
+        return true
     }
 }

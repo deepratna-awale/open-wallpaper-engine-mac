@@ -9776,6 +9776,101 @@
         }
       }
     },
+    "Automatically check for updates" : {
+      "comment" : "Settings › General › Updates toggle, shown when automatic updating is off: only check for new versions",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التحقق من وجود تحديثات تلقائيًا"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisch nach Updates suchen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar actualizaciones automáticamente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechercher automatiquement les mises à jour"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपडेट के लिए स्वचालित रूप से जाँचें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verifica automaticamente gli aggiornamenti"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アップデートを自動的に確認"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자동으로 업데이트 확인"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatycznie sprawdzaj uaktualnienia"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar atualizações automaticamente"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Автоматически проверять обновления"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Güncellemeleri otomatik olarak denetle"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Автоматично перевіряти оновлення"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动检查更新"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動檢查更新項目"
+          }
+        }
+      }
+    },
     "Back" : {
       "localizations" : {
         "ar" : {
@@ -13369,6 +13464,196 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "再次檢查"
+          }
+        }
+      }
+    },
+    "Check for Updates…" : {
+      "comment" : "Menu item in the app menu and the menu bar menu: checks GitHub for a new app version",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التحقق من وجود تحديثات…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach Updates suchen …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar actualizaciones…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechercher des mises à jour…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपडेट के लिए जाँचें…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verifica aggiornamenti…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アップデートを確認…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "업데이트 확인…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sprawdź uaktualnienia…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar Atualizações…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверить обновления…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Güncellemeleri Denetle…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірити оновлення…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "检查更新…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "檢查更新項目…"
+          }
+        }
+      }
+    },
+    "Check Now" : {
+      "comment" : "Settings › General › Updates button: check for updates right away",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التحقق الآن"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jetzt suchen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprobar ahora"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vérifier maintenant"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अभी जाँचें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verifica ora"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今すぐ確認"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지금 확인"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sprawdź teraz"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verificar Agora"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверить"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Şimdi Denetle"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірити зараз"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "立即检查"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "立即檢查"
           }
         }
       }
@@ -25959,97 +26244,97 @@
         }
       }
     },
-    "Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and SteamCMD's login. Open Wallpaper Engine has no server and collects no data or analytics. It only contacts Valve: Steam when you use the Workshop or install assets, and Valve's server to download SteamCMD. Web wallpapers may load their own online content." : {
+    "Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and SteamCMD's login. Open Wallpaper Engine has no server and collects no data or analytics. It contacts Valve (Steam when you use the Workshop or install assets, and Valve's server to download SteamCMD) and GitHub, to check for and download app updates without sending personal data; you can turn update checks off in Settings › General. Web wallpapers may load their own online content." : {
       "comment" : "Privacy statement in Settings",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "كل ما يحفظه Open Wallpaper Engine يبقى على جهاز Mac: الإعدادات والمكتبة وذاكرة التخزين المؤقت وتسجيل الدخول في SteamCMD. لا يملك Open Wallpaper Engine خادمًا ولا يجمع أي بيانات أو تحليلات. ولا يتصل إلا بـ Valve: بـ Steam عند استخدامك الورشة أو تثبيت الموارد، وبخادم Valve لتنزيل SteamCMD. قد تحمّل خلفيات الويب محتواها الخاص عبر الإنترنت."
+            "value" : "كل ما يحفظه Open Wallpaper Engine يبقى على جهاز Mac: الإعدادات والمكتبة وذاكرة التخزين المؤقت وتسجيل الدخول في SteamCMD. لا يملك Open Wallpaper Engine خادمًا ولا يجمع أي بيانات أو تحليلات. ويتصل بـ Valve (بـ Steam عند استخدامك الورشة أو تثبيت الموارد، وبخادم Valve لتنزيل SteamCMD) وبـ GitHub للتحقق من تحديثات التطبيق وتنزيلها دون إرسال بيانات شخصية؛ ويمكنك إيقاف التحقق من التحديثات من الإعدادات › عام. قد تحمّل خلفيات الويب محتواها الخاص عبر الإنترنت."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Alles, was Open Wallpaper Engine speichert, bleibt auf Ihrem Mac: Ihre Einstellungen, Ihre Mediathek, der Cache und die Anmeldung von SteamCMD. Open Wallpaper Engine hat keinen Server und erfasst keine Daten oder Analysen. Es kontaktiert nur Valve: Steam, wenn Sie den Workshop verwenden oder Assets installieren, und den Server von Valve, um SteamCMD zu laden. Web-Hintergrundbilder können eigene Onlineinhalte laden."
+            "value" : "Alles, was Open Wallpaper Engine speichert, bleibt auf Ihrem Mac: Ihre Einstellungen, Ihre Mediathek, der Cache und die Anmeldung von SteamCMD. Open Wallpaper Engine hat keinen Server und erfasst keine Daten oder Analysen. Es kontaktiert Valve (Steam, wenn Sie den Workshop verwenden oder Assets installieren, und den Server von Valve, um SteamCMD zu laden) und GitHub, um App-Updates zu suchen und zu laden, ohne persönliche Daten zu senden; Sie können die Suche nach Updates unter „Einstellungen“ › „Allgemein“ deaktivieren. Web-Hintergrundbilder können eigene Onlineinhalte laden."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Todo lo que guarda Open Wallpaper Engine se queda en tu Mac: tus ajustes, la biblioteca, la caché y el inicio de sesión de SteamCMD. Open Wallpaper Engine no tiene servidor ni recopila datos ni análisis. Solo se conecta con Valve: con Steam cuando usas el Workshop o instalas los recursos, y con el servidor de Valve para descargar SteamCMD. Los fondos de pantalla web pueden cargar su propio contenido en línea."
+            "value" : "Todo lo que guarda Open Wallpaper Engine se queda en tu Mac: tus ajustes, la biblioteca, la caché y el inicio de sesión de SteamCMD. Open Wallpaper Engine no tiene servidor ni recopila datos ni análisis. Se conecta con Valve (con Steam cuando usas el Workshop o instalas los recursos, y con el servidor de Valve para descargar SteamCMD) y con GitHub, para buscar y descargar actualizaciones de la app sin enviar datos personales; puedes desactivar la búsqueda de actualizaciones en Ajustes › General. Los fondos de pantalla web pueden cargar su propio contenido en línea."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tout ce qu’Open Wallpaper Engine enregistre reste sur votre Mac : vos réglages, votre bibliothèque, le cache et la connexion de SteamCMD. Open Wallpaper Engine n’a pas de serveur et ne collecte aucune donnée ni statistique. Il ne contacte que Valve : Steam lorsque vous utilisez le Workshop ou installez les ressources, et le serveur de Valve pour télécharger SteamCMD. Les fonds d’écran web peuvent charger leur propre contenu en ligne."
+            "value" : "Tout ce qu’Open Wallpaper Engine enregistre reste sur votre Mac : vos réglages, votre bibliothèque, le cache et la connexion de SteamCMD. Open Wallpaper Engine n’a pas de serveur et ne collecte aucune donnée ni statistique. Il contacte Valve (Steam lorsque vous utilisez le Workshop ou installez les ressources, et le serveur de Valve pour télécharger SteamCMD) et GitHub, pour rechercher et télécharger les mises à jour de l’app sans envoyer de données personnelles ; vous pouvez désactiver la recherche de mises à jour dans Réglages › Général. Les fonds d’écran web peuvent charger leur propre contenu en ligne."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open Wallpaper Engine जो कुछ भी सहेजता है, वह आपके Mac पर ही रहता है: आपकी सेटिंग्ज़, लाइब्रेरी, कैश और SteamCMD का लॉग इन. Open Wallpaper Engine का कोई सर्वर नहीं है और यह कोई डेटा या एनालिटिक्स इकट्ठा नहीं करता. यह केवल Valve से संपर्क करता है: Workshop का उपयोग करने या एसेट इंस्टॉल करने पर Steam से, और SteamCMD डाउनलोड करने के लिए Valve के सर्वर से. वेब वॉलपेपर अपनी ऑनलाइन सामग्री लोड कर सकते हैं."
+            "value" : "Open Wallpaper Engine जो कुछ भी सहेजता है, वह आपके Mac पर ही रहता है: आपकी सेटिंग्ज़, लाइब्रेरी, कैश और SteamCMD का लॉग इन. Open Wallpaper Engine का कोई सर्वर नहीं है और यह कोई डेटा या एनालिटिक्स इकट्ठा नहीं करता. यह Valve (Workshop का उपयोग करने या एसेट इंस्टॉल करने पर Steam, और SteamCMD डाउनलोड करने के लिए Valve के सर्वर) और GitHub से संपर्क करता है, ताकि कोई व्यक्तिगत डेटा भेजे बिना ऐप अपडेट जाँचे और डाउनलोड किए जा सकें; आप अपडेट जाँच सेटिंग › सामान्य में बंद कर सकते हैं. वेब वॉलपेपर अपनी ऑनलाइन सामग्री लोड कर सकते हैं."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tutto ciò che Open Wallpaper Engine salva resta sul tuo Mac: impostazioni, libreria, cache e accesso di SteamCMD. Open Wallpaper Engine non ha server e non raccoglie dati né analisi. Contatta solo Valve: Steam quando usi il Workshop o installi le risorse, e il server di Valve per scaricare SteamCMD. Gli sfondi web possono caricare contenuti online propri."
+            "value" : "Tutto ciò che Open Wallpaper Engine salva resta sul tuo Mac: impostazioni, libreria, cache e accesso di SteamCMD. Open Wallpaper Engine non ha server e non raccoglie dati né analisi. Contatta Valve (Steam quando usi il Workshop o installi le risorse, e il server di Valve per scaricare SteamCMD) e GitHub, per cercare e scaricare gli aggiornamenti dell’app senza inviare dati personali; puoi disattivare la verifica degli aggiornamenti in Impostazioni › Generali. Gli sfondi web possono caricare contenuti online propri."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open Wallpaper Engine が保存するものはすべてお使いの Mac に残ります：設定、ライブラリ、キャッシュ、SteamCMD のログイン。Open Wallpaper Engine にはサーバがなく、データや解析情報を収集しません。通信先は Valve のみです：ワークショップの使用時やアセットのインストール時の Steam、および SteamCMD をダウンロードするための Valve のサーバ。Web 壁紙は独自のオンラインコンテンツを読み込む場合があります。"
+            "value" : "Open Wallpaper Engine が保存するものはすべてお使いの Mac に残ります：設定、ライブラリ、キャッシュ、SteamCMD のログイン。Open Wallpaper Engine にはサーバがなく、データや解析情報を収集しません。通信先は Valve（ワークショップの使用時やアセットのインストール時の Steam、および SteamCMD をダウンロードするための Valve のサーバ）と、個人データを送信せずに App のアップデートを確認・ダウンロードするための GitHub です。アップデートの確認は「設定」›「一般」でオフにできます。Web 壁紙は独自のオンラインコンテンツを読み込む場合があります。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open Wallpaper Engine이 저장하는 모든 것은 사용자의 Mac에 남습니다. 설정, 보관함, 캐시, SteamCMD 로그인이 이에 해당합니다. Open Wallpaper Engine에는 서버가 없으며 데이터나 분석 정보를 수집하지 않습니다. Valve에만 연결합니다. 창작마당을 사용하거나 에셋을 설치할 때는 Steam에, SteamCMD를 다운로드할 때는 Valve 서버에 연결합니다. 웹 배경화면은 자체 온라인 콘텐츠를 불러올 수 있습니다."
+            "value" : "Open Wallpaper Engine이 저장하는 모든 것은 사용자의 Mac에 남습니다. 설정, 보관함, 캐시, SteamCMD 로그인이 이에 해당합니다. Open Wallpaper Engine에는 서버가 없으며 데이터나 분석 정보를 수집하지 않습니다. Valve(창작마당을 사용하거나 에셋을 설치할 때는 Steam, SteamCMD를 다운로드할 때는 Valve 서버)와 GitHub에 연결합니다. GitHub에는 개인 데이터를 보내지 않고 앱 업데이트를 확인하고 다운로드하기 위해 연결하며, 업데이트 확인은 설정 › 일반에서 끌 수 있습니다. 웹 배경화면은 자체 온라인 콘텐츠를 불러올 수 있습니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wszystko, co zapisuje Open Wallpaper Engine, pozostaje na Macu: ustawienia, biblioteka, pamięć podręczna i logowanie SteamCMD. Open Wallpaper Engine nie ma serwera i nie zbiera żadnych danych ani analiz. Łączy się tylko z Valve: ze Steam, gdy korzystasz z Warsztatu lub instalujesz zasoby, oraz z serwerem Valve, aby pobrać SteamCMD. Tapety internetowe mogą wczytywać własne treści online."
+            "value" : "Wszystko, co zapisuje Open Wallpaper Engine, pozostaje na Macu: ustawienia, biblioteka, pamięć podręczna i logowanie SteamCMD. Open Wallpaper Engine nie ma serwera i nie zbiera żadnych danych ani analiz. Łączy się z Valve (ze Steam, gdy korzystasz z Warsztatu lub instalujesz zasoby, oraz z serwerem Valve, aby pobrać SteamCMD) i z serwisem GitHub, aby sprawdzać i pobierać uaktualnienia aplikacji bez wysyłania danych osobowych; sprawdzanie uaktualnień możesz wyłączyć w Ustawienia › Ogólne. Tapety internetowe mogą wczytywać własne treści online."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tudo o que o Open Wallpaper Engine salva fica no seu Mac: seus ajustes, a biblioteca, o cache e a sessão do SteamCMD. O Open Wallpaper Engine não tem servidor e não coleta dados nem análises. Ele só se conecta à Valve: ao Steam quando você usa a Oficina ou instala os recursos, e ao servidor da Valve para baixar o SteamCMD. Imagens de fundo da web podem carregar o próprio conteúdo online."
+            "value" : "Tudo o que o Open Wallpaper Engine salva fica no seu Mac: seus ajustes, a biblioteca, o cache e a sessão do SteamCMD. O Open Wallpaper Engine não tem servidor e não coleta dados nem análises. Ele se conecta à Valve (ao Steam quando você usa a Oficina ou instala os recursos, e ao servidor da Valve para baixar o SteamCMD) e ao GitHub, para buscar e baixar atualizações do app sem enviar dados pessoais; você pode desativar a busca de atualizações em Ajustes › Geral. Imagens de fundo da web podem carregar o próprio conteúdo online."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Всё, что сохраняет Open Wallpaper Engine, остаётся на вашем Mac: настройки, медиатека, кэш и вход SteamCMD. У Open Wallpaper Engine нет сервера, и он не собирает никаких данных или аналитики. Он связывается только с Valve: со Steam, когда вы пользуетесь Мастерской или устанавливаете ресурсы, и с сервером Valve для загрузки SteamCMD. Веб-обои могут загружать собственное онлайн-содержимое."
+            "value" : "Всё, что сохраняет Open Wallpaper Engine, остаётся на вашем Mac: настройки, медиатека, кэш и вход SteamCMD. У Open Wallpaper Engine нет сервера, и он не собирает никаких данных или аналитики. Он связывается с Valve (со Steam, когда вы пользуетесь Мастерской или устанавливаете ресурсы, и с сервером Valve для загрузки SteamCMD) и с GitHub, чтобы проверять и загружать обновления приложения без отправки личных данных; проверку обновлений можно отключить в разделе «Настройки» › «Основные». Веб-обои могут загружать собственное онлайн-содержимое."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open Wallpaper Engine’in kaydettiği her şey Mac’inizde kalır: ayarlarınız, arşiviniz, önbellek ve SteamCMD’nin girişi. Open Wallpaper Engine’in sunucusu yoktur ve hiçbir veri veya analiz toplamaz. Yalnızca Valve ile iletişim kurar: Atölye’yi kullandığınızda veya varlıkları yüklediğinizde Steam ile, SteamCMD’yi indirmek için de Valve’ın sunucusuyla. Web duvar kâğıtları kendi çevrimiçi içeriklerini yükleyebilir."
+            "value" : "Open Wallpaper Engine’in kaydettiği her şey Mac’inizde kalır: ayarlarınız, arşiviniz, önbellek ve SteamCMD’nin girişi. Open Wallpaper Engine’in sunucusu yoktur ve hiçbir veri veya analiz toplamaz. Valve (Atölye’yi kullandığınızda veya varlıkları yüklediğinizde Steam, SteamCMD’yi indirmek için de Valve’ın sunucusu) ve GitHub ile iletişim kurar; GitHub’a, kişisel veri göndermeden uygulama güncellemelerini denetlemek ve indirmek için bağlanır. Güncelleme denetimlerini Ayarlar › Genel’de kapatabilirsiniz. Web duvar kâğıtları kendi çevrimiçi içeriklerini yükleyebilir."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Усе, що зберігає Open Wallpaper Engine, залишається на вашому Mac: параметри, бібліотека, кеш і вхід SteamCMD. Open Wallpaper Engine не має сервера й не збирає жодних даних чи аналітики. Він звʼязується лише з Valve: зі Steam, коли ви користуєтеся Майстернею або встановлюєте ресурси, і з сервером Valve, щоб завантажити SteamCMD. Вебшпалери можуть завантажувати власний онлайн-вміст."
+            "value" : "Усе, що зберігає Open Wallpaper Engine, залишається на вашому Mac: параметри, бібліотека, кеш і вхід SteamCMD. Open Wallpaper Engine не має сервера й не збирає жодних даних чи аналітики. Він звʼязується з Valve (зі Steam, коли ви користуєтеся Майстернею або встановлюєте ресурси, і з сервером Valve, щоб завантажити SteamCMD) і з GitHub, щоб перевіряти й викачувати оновлення програми без надсилання особистих даних; перевірку оновлень можна вимкнути в розділі «Параметри» › «Загальні». Вебшпалери можуть завантажувати власний онлайн-вміст."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open Wallpaper Engine 存储的所有内容都保留在你的 Mac 上：你的设置、资源库、缓存以及 SteamCMD 的登录。Open Wallpaper Engine 没有服务器，也不收集任何数据或分析信息。它只会连接 Valve：在你使用创意工坊或安装资源时连接 Steam，以及连接 Valve 的服务器以下载 SteamCMD。网页墙纸可能会载入其自己的在线内容。"
+            "value" : "Open Wallpaper Engine 存储的所有内容都保留在你的 Mac 上：你的设置、资源库、缓存以及 SteamCMD 的登录。Open Wallpaper Engine 没有服务器，也不收集任何数据或分析信息。它会连接 Valve（在你使用创意工坊或安装资源时连接 Steam，以及连接 Valve 的服务器以下载 SteamCMD）和 GitHub，以检查并下载 App 更新，且不发送任何个人数据；你可以在“设置”›“通用”中关闭更新检查。网页墙纸可能会载入其自己的在线内容。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open Wallpaper Engine 儲存的所有內容都會保留在你的 Mac 上：你的設定、資料庫、快取和 SteamCMD 的登入。Open Wallpaper Engine 沒有伺服器，也不會收集任何資料或分析資訊。它只會連線至 Valve：在你使用工作坊或安裝資源時連線至 Steam，以及連線至 Valve 的伺服器以下載 SteamCMD。網頁背景圖片可能會載入其自身的線上內容。"
+            "value" : "Open Wallpaper Engine 儲存的所有內容都會保留在你的 Mac 上：你的設定、資料庫、快取和 SteamCMD 的登入。Open Wallpaper Engine 沒有伺服器，也不會收集任何資料或分析資訊。它會連線至 Valve（在你使用工作坊或安裝資源時連線至 Steam，以及連線至 Valve 的伺服器以下載 SteamCMD）和 GitHub，以檢查並下載 App 更新，且不會傳送任何個人資料；你可以在「設定」›「一般」中關閉更新檢查。網頁背景圖片可能會載入其自身的線上內容。"
           }
         }
       }
@@ -38550,6 +38835,101 @@
         }
       }
     },
+    "Keep Open Wallpaper Engine up to date automatically" : {
+      "comment" : "Setup assistant toggle: turn on automatic app updates",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إبقاء Open Wallpaper Engine محدّثًا تلقائيًا"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine automatisch aktualisieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantener Open Wallpaper Engine actualizado automáticamente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maintenir Open Wallpaper Engine à jour automatiquement"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine को स्वचालित रूप से अप टू डेट रखें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantieni Open Wallpaper Engine aggiornato automaticamente"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine を自動的に最新の状態に保つ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine을 자동으로 최신 상태로 유지"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatycznie uaktualniaj Open Wallpaper Engine"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manter o Open Wallpaper Engine atualizado automaticamente"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Автоматически поддерживать Open Wallpaper Engine в актуальном состоянии"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine’i otomatik olarak güncel tut"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Автоматично оновлювати Open Wallpaper Engine"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动使 Open Wallpaper Engine 保持最新"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動讓 Open Wallpaper Engine 保持最新狀態"
+          }
+        }
+      }
+    },
     "Keep Running" : {
       "localizations" : {
         "ar" : {
@@ -39395,6 +39775,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "大型圖像"
+          }
+        }
+      }
+    },
+    "Last checked: %@" : {
+      "comment" : "Settings › General › Updates: when the app last checked for updates. %@ is a date and time",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "آخر تحقق: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zuletzt gesucht: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Última comprobación: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dernière vérification : %@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अंतिम जाँच: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ultima verifica: %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最終確認：%@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "마지막 확인: %@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ostatnio sprawdzono: %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Última verificação: %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Последняя проверка: %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Son denetim: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Остання перевірка: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次检查：%@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次檢查：%@"
           }
         }
       }
@@ -48561,6 +49036,101 @@
         }
       }
     },
+    "Never checked" : {
+      "comment" : "Settings › General › Updates: the app has not checked for updates yet",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لم يتم التحقق مطلقًا"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie gesucht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nunca comprobado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jamais vérifié"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कभी नहीं जाँचा गया"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mai verificato"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未確認"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "확인한 적 없음"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nigdy nie sprawdzono"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nunca verificado"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не проверялось"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hiç denetlenmedi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ще не перевірялося"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从未检查"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從未檢查"
+          }
+        }
+      }
+    },
     "Never show this again until next update" : {
       "localizations" : {
         "ar" : {
@@ -51667,6 +52237,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "打開隱私權設定"
+          }
+        }
+      }
+    },
+    "Open Wallpaper Engine checks GitHub for new versions: the update list on GitHub Pages and the downloads on GitHub Releases. No personal data is sent. Automatic updates install when you quit, when you're away from your Mac, or within a day." : {
+      "comment" : "Settings › General › Updates explanation of what the updater contacts and when updates install",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يتحقق Open Wallpaper Engine من وجود إصدارات جديدة على GitHub: قائمة التحديثات على GitHub Pages والتنزيلات على GitHub Releases. لا يتم إرسال أي بيانات شخصية. تُثبَّت التحديثات التلقائية عند إنهاء التطبيق، أو عندما تكون بعيدًا عن جهاز Mac، أو خلال يوم."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine sucht auf GitHub nach neuen Versionen: die Update-Liste auf GitHub Pages und die Downloads auf GitHub Releases. Es werden keine persönlichen Daten gesendet. Automatische Updates werden installiert, wenn Sie das Programm beenden, wenn Sie nicht an Ihrem Mac sind oder innerhalb eines Tages."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine busca nuevas versiones en GitHub: la lista de actualizaciones en GitHub Pages y las descargas en GitHub Releases. No se envían datos personales. Las actualizaciones automáticas se instalan al salir de la app, cuando no estás usando tu Mac o en el plazo de un día."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine recherche les nouvelles versions sur GitHub : la liste des mises à jour sur GitHub Pages et les téléchargements sur GitHub Releases. Aucune donnée personnelle n’est envoyée. Les mises à jour automatiques s’installent lorsque vous quittez l’app, lorsque vous vous éloignez de votre Mac ou dans la journée."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine नए संस्करणों के लिए GitHub जाँचता है: GitHub Pages पर अपडेट सूची और GitHub Releases पर डाउनलोड. कोई व्यक्तिगत डेटा नहीं भेजा जाता. स्वचालित अपडेट ऐप छोड़ने पर, जब आप अपने Mac से दूर हों, या एक दिन के भीतर इंस्टॉल होते हैं."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine cerca nuove versioni su GitHub: l’elenco degli aggiornamenti su GitHub Pages e i download su GitHub Releases. Non vengono inviati dati personali. Gli aggiornamenti automatici vengono installati quando esci dall’app, quando non stai usando il Mac o entro un giorno."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine は GitHub で新しいバージョンを確認します：GitHub Pages のアップデート一覧と GitHub Releases のダウンロード。個人データは送信されません。自動アップデートは、終了時、Mac から離れているとき、または 1 日以内にインストールされます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine은 GitHub에서 새 버전을 확인합니다. GitHub Pages의 업데이트 목록과 GitHub Releases의 다운로드를 사용합니다. 개인 데이터는 전송되지 않습니다. 자동 업데이트는 앱을 종료할 때, Mac을 사용하지 않을 때 또는 하루 안에 설치됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine sprawdza nowe wersje w serwisie GitHub: listę uaktualnień w GitHub Pages i pliki do pobrania w GitHub Releases. Żadne dane osobowe nie są wysyłane. Automatyczne uaktualnienia są instalowane po zakończeniu aplikacji, gdy nie korzystasz z Maca, lub w ciągu doby."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Open Wallpaper Engine busca novas versões no GitHub: a lista de atualizações no GitHub Pages e os downloads no GitHub Releases. Nenhum dado pessoal é enviado. As atualizações automáticas são instaladas quando você encerra o app, quando está longe do Mac ou em até um dia."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine проверяет новые версии на GitHub: список обновлений на GitHub Pages и загрузки на GitHub Releases. Личные данные не отправляются. Автоматические обновления устанавливаются при завершении работы приложения, когда вы не пользуетесь Mac, или в течение суток."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine yeni sürümleri GitHub’da denetler: GitHub Pages’taki güncelleme listesi ve GitHub Releases’taki indirmeler. Hiçbir kişisel veri gönderilmez. Otomatik güncellemeler, uygulamadan çıktığınızda, Mac’inizden uzaktayken veya bir gün içinde yüklenir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine перевіряє нові версії на GitHub: список оновлень на GitHub Pages і завантаження на GitHub Releases. Жодні особисті дані не надсилаються. Автоматичні оновлення встановлюються, коли ви завершуєте програму, коли ви не користуєтеся Mac, або протягом доби."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 会在 GitHub 上检查新版本：GitHub Pages 上的更新列表和 GitHub Releases 上的下载。不会发送任何个人数据。自动更新会在你退出 App、离开 Mac 时或在一天内安装。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 會在 GitHub 上檢查新版本：GitHub Pages 上的更新列表和 GitHub Releases 上的下載。不會傳送任何個人資料。自動更新會在你結束 App、離開 Mac 時或在一天內安裝。"
           }
         }
       }
@@ -61051,6 +61716,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "就緒"
+          }
+        }
+      }
+    },
+    "Receive beta updates" : {
+      "comment" : "Settings › General › Updates toggle: also offer beta (pre-release) versions",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تلقي تحديثات بيتا"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beta-Updates erhalten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recibir actualizaciones beta"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recevoir les mises à jour bêta"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बीटा अपडेट प्राप्त करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ricevi aggiornamenti beta"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ベータ版アップデートを受け取る"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "베타 업데이트 받기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otrzymuj uaktualnienia beta"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Receber atualizações beta"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Получать бета-обновления"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beta güncellemelerini al"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отримувати бета-оновлення"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接收 Beta 版更新"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接收 Beta 版更新"
           }
         }
       }
@@ -87603,6 +88363,101 @@
         }
       }
     },
+    "Update automatically" : {
+      "comment" : "Settings › General › Updates toggle: check for, download and install app updates without asking",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التحديث تلقائيًا"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisch aktualisieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizar automáticamente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre à jour automatiquement"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्वचालित रूप से अपडेट करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiorna automaticamente"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動的にアップデート"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자동으로 업데이트"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uaktualniaj automatycznie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atualizar automaticamente"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновлять автоматически"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otomatik olarak güncelle"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновлювати автоматично"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动更新"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動更新"
+          }
+        }
+      }
+    },
     "Update from Steam" : {
       "comment" : "Button",
       "localizations" : {
@@ -87789,6 +88644,196 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "更新時間"
+          }
+        }
+      }
+    },
+    "Updates" : {
+      "comment" : "Settings › General section header for app updates",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التحديثات"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updates"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizaciones"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mises à jour"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपडेट"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiornamenti"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アップデート"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "업데이트"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uaktualnienia"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atualizações"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновления"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Güncellemeler"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновлення"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新項目"
+          }
+        }
+      }
+    },
+    "Updates are off in this build because it has no update signing key. Builds from GitHub Releases update themselves." : {
+      "comment" : "Settings › General › Updates note for self-built copies without a Sparkle signing key",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التحديثات متوقفة في هذا الإصدار لأنه لا يحتوي على مفتاح توقيع التحديثات. الإصدارات من GitHub Releases تُحدّث نفسها."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updates sind in diesem Build deaktiviert, da er keinen Signaturschlüssel für Updates hat. Builds aus GitHub Releases aktualisieren sich selbst."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las actualizaciones están desactivadas en esta compilación porque no tiene clave de firma de actualizaciones. Las compilaciones de GitHub Releases se actualizan solas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les mises à jour sont désactivées dans cette version, car elle n’a pas de clé de signature des mises à jour. Les versions issues de GitHub Releases se mettent à jour d’elles-mêmes."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इस बिल्ड में अपडेट बंद हैं क्योंकि इसमें अपडेट साइनिंग कुंजी नहीं है. GitHub Releases के बिल्ड स्वयं अपडेट होते हैं."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gli aggiornamenti sono disattivati in questa build perché non ha una chiave di firma degli aggiornamenti. Le build da GitHub Releases si aggiornano da sole."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このビルドにはアップデート署名鍵がないため、アップデートはオフです。GitHub Releases のビルドは自動的にアップデートされます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 빌드에는 업데이트 서명 키가 없어 업데이트가 꺼져 있습니다. GitHub Releases의 빌드는 스스로 업데이트됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uaktualnienia są wyłączone w tej kompilacji, ponieważ nie ma ona klucza podpisu uaktualnień. Kompilacje z GitHub Releases uaktualniają się same."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "As atualizações estão desativadas nesta compilação porque ela não tem uma chave de assinatura de atualizações. As compilações do GitHub Releases se atualizam sozinhas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновления в этой сборке отключены, так как у неё нет ключа подписи обновлений. Сборки из GitHub Releases обновляются сами."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu derlemede güncelleme imzalama anahtarı olmadığından güncellemeler kapalı. GitHub Releases’tan alınan derlemeler kendi kendini günceller."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновлення в цій збірці вимкнено, бо вона не має ключа підпису оновлень. Збірки з GitHub Releases оновлюються самі."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此构建版本未包含更新签名密钥，因此已关闭更新。来自 GitHub Releases 的构建版本会自行更新。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此建置版本沒有更新簽署密鑰，因此已關閉更新。來自 GitHub Releases 的建置版本會自行更新。"
           }
         }
       }

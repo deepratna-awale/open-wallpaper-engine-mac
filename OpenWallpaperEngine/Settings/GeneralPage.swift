@@ -137,9 +137,11 @@ struct GeneralPage: SettingsPage {
             } footer: {
                 Text("Needed to browse and search the Workshop. It is stored in your keychain and checked with Steam before saving. Without it, author names come from public Steam profiles.")
             }
+            // MARK: Updates
+            UpdatesSection(updater: AppDelegate.shared.updater)
             // MARK: Privacy
             Section {
-                Text("Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and SteamCMD's login. Open Wallpaper Engine has no server and collects no data or analytics. It only contacts Valve: Steam when you use the Workshop or install assets, and Valve's server to download SteamCMD. Web wallpapers may load their own online content.")
+                Text("Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and SteamCMD's login. Open Wallpaper Engine has no server and collects no data or analytics. It contacts Valve (Steam when you use the Workshop or install assets, and Valve's server to download SteamCMD) and GitHub, to check for and download app updates without sending personal data; you can turn update checks off in Settings › General. Web wallpapers may load their own online content.")
                     .foregroundStyle(.secondary)
             } header: {
                 Label("Privacy", systemImage: "hand.raised")

@@ -95,7 +95,7 @@ struct OnboardingView: View {
         case .welcome:
             OnboardingWelcomeStep(settings: globalSettingsViewModel, onRelaunch: relaunch)
         case .privacy:
-            OnboardingPrivacyStep()
+            OnboardingPrivacyStep(updater: AppDelegate.shared.updater)
         case .steam:
             OnboardingSteamStep(steamCmd: steamCmd, installer: installer)
         case .assets:

@@ -102,6 +102,11 @@ extension AppDelegate {
                   action: #selector(openSettingsWindow),
                   keyEquivalent: ","),
 
+            .init(title: String(localized: "Check for Updates…"),
+                  systemImage: "arrow.down.circle",
+                  action: #selector(checkForUpdates),
+                  keyEquivalent: ""),
+
             .separator(),
 
             .init(title: String(localized: "Support & FAQ"),

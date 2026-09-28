@@ -100,6 +100,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var wallpaperViewModel = WallpaperViewModel()
     var globalSettingsViewModel = GlobalSettingsViewModel()
     lazy var safeRestart = SafeRestart()
+    /// Sparkle, off in builds without an update signing key (`Core/Updates`).
+    lazy var updater = AppUpdater(configuration: .main)
     /// The system's now-playing session, one for the process (MediaRemote registers per process):
     /// SceneScript's `media*` callbacks and web wallpapers' media listeners hear it.
     lazy var mediaSession = MacMediaSessionSource()
@@ -221,6 +223,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
         
         safeRestart.showPendingNotice()
+        updater.start()
         displayPlaybackMonitor.start(settings: globalSettingsViewModel.$settings)
 
         if globalSettingsViewModel.isFirstLaunch {

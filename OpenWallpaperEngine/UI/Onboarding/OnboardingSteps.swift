@@ -84,13 +84,15 @@ struct OnboardingWelcomeStep: View {
 // MARK: - 2. Privacy
 
 struct OnboardingPrivacyStep: View {
+    @ObservedObject var updater: AppUpdater
+
     var body: some View {
         VStack(spacing: 18) {
             OnboardingHeading(systemImage: "hand.raised.fill",
                               title: "Privacy",
                               subtitle: "Everything stays on your Mac")
             OnboardingCard {
-                Text("Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and SteamCMD's login. Open Wallpaper Engine has no server and collects no data or analytics. It only contacts Valve: Steam when you use the Workshop or install assets, and Valve's server to download SteamCMD. Web wallpapers may load their own online content.")
+                Text("Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and SteamCMD's login. Open Wallpaper Engine has no server and collects no data or analytics. It contacts Valve (Steam when you use the Workshop or install assets, and Valve's server to download SteamCMD) and GitHub, to check for and download app updates without sending personal data; you can turn update checks off in Settings › General. Web wallpapers may load their own online content.")
                     .fixedSize(horizontal: false, vertical: true)
             }
             OnboardingCard {
@@ -105,6 +107,11 @@ struct OnboardingPrivacyStep: View {
                         .fixedSize(horizontal: false, vertical: true)
                 } icon: {
                     Image(systemName: "lock.fill").foregroundStyle(.secondary)
+                }
+            }
+            if updater.isEnabled {
+                OnboardingCard {
+                    Toggle("Keep Open Wallpaper Engine up to date automatically", isOn: $updater.updatesAutomatically)
                 }
             }
         }
