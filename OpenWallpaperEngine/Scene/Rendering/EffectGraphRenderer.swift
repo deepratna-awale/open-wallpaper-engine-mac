@@ -761,6 +761,11 @@ final class EffectGraphRenderer {
         return pipeline
     }
 
+    /// Whether a pipeline is still compiling off the render thread (shader prewarm).
+    var hasPendingPipelines: Bool {
+        pipelineLock.withLock { !pendingPipelines.isEmpty }
+    }
+
     /// Blocks until every pipeline these effects need has compiled or failed (tests, prewarming).
     func waitUntilReady(_ effects: [SceneEffectPlan], width: Int, height: Int,
                         targetFormats: TargetFormats = TargetFormats(frameBuffer: .rgba8Unorm, output: .rgba8Unorm),

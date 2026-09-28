@@ -99,7 +99,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// Trims rebuildable memory when the system asks (`trimMemory`).
     private var memoryPressure: SceneMemoryPressure?
     /// Runs authored effects through Wallpaper Engine's own shaders.
-    private lazy var effectGraph = EffectGraphRenderer(device: device)
+    private lazy var effectGraph = EffectGraphRenderer(device: device, pipelineArchiveDirectory: pipelineArchiveDirectory)
+    /// Where the effect pipeline archive lives (`EffectGraphRenderer`); nil keeps none.
+    private let pipelineArchiveDirectory: URL?
     /// How much larger full detail would draw this frame's scene target (1 unless the scene is
     /// matched to a display smaller than it, `GSSceneDetail.matchDisplay`): the size effects on
     /// scene regions and text, and the bloom, stand for.
@@ -244,6 +246,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     func puppetCanvas(ofLayer id: String) -> ScenePuppetCanvas? { puppetCanvases[id] }
     /// Effect passes encoded so far, for tests.
     var effectPassesEncoded: Int { effectGraph?.passesEncoded ?? 0 }
+    /// Whether an effect pipeline is still compiling (shader prewarm waits for them).
+    var hasPendingEffectPipelines: Bool { effectGraph?.hasPendingPipelines ?? false }
     /// The last frame's scene target, before the post-process (tests, diagnostics).
     var lastSceneTarget: MTLTexture? { sceneRenderTarget }
     /// The bytes of the frame's own targets, by holder (diagnostics, test-risks LR10); the effect
@@ -384,9 +388,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// A renderer that draws into `view` itself (`draw(in:)`). `scriptServices` runs the scenes'
     /// SceneScripts (nil runs none); `screenID` names the display whose script storage they use.
     convenience init?(view: MTKView, particleSimulation: ParticleSimulation = .gpu, scriptServices: SceneScriptServices? = nil,
-                      screenID: String = "") {
+                      screenID: String = "", pipelineArchiveDirectory: URL? = EffectPipelineArchive.defaultDirectory) {
         self.init(pixelFormat: view.colorPixelFormat, particleSimulation: particleSimulation,
-                  scriptServices: scriptServices, screenID: screenID)
+                  scriptServices: scriptServices, screenID: screenID, pipelineArchiveDirectory: pipelineArchiveDirectory)
         configure(view)
         view.delegate = self
     }
@@ -394,7 +398,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// A renderer for drawables of `pixelFormat`. A shared scene's displays each show its frames
     /// through their own view (`configure`, `renderShared`, `present(in:)`).
     init?(pixelFormat: MTLPixelFormat, particleSimulation: ParticleSimulation = .gpu,
-          scriptServices: SceneScriptServices? = nil, screenID: String = "") {
+          scriptServices: SceneScriptServices? = nil, screenID: String = "",
+          pipelineArchiveDirectory: URL? = EffectPipelineArchive.defaultDirectory) {
         guard let device = MTLCreateSystemDefaultDevice(),
               let commandQueue = device.makeCommandQueue(),
               let library = device.makeDefaultLibrary(),
@@ -435,6 +440,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             particleSimulator = nil
         }
         self.device = device
+        self.pipelineArchiveDirectory = pipelineArchiveDirectory
         self.pixelFormat = pixelFormat
         self.copyPipeline = layerPipelines.pipelines(for: pixelFormat).copy
         self.postProcess = postProcess

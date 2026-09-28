@@ -173,9 +173,13 @@ class SceneWallpaperViewModel: ObservableObject {
     }
     private var registeredFontNames: [String: String] = [:]
 
-    init(wallpaper: WEWallpaper, propertyScope: WallpaperPropertyScope = .shared) {
+    /// `effectTranslator` translates and caches every shader variant the scene needs; the app's
+    /// shared one (`defaultEffectTranslator`) unless a caller keeps its own cache (shader prewarm, tests).
+    init(wallpaper: WEWallpaper, propertyScope: WallpaperPropertyScope = .shared,
+         effectTranslator: ShaderVariantTranslator? = SceneWallpaperViewModel.defaultEffectTranslator) {
         self.currentWallpaper = wallpaper
         self.propertyScope = propertyScope
+        self.effectTranslator = effectTranslator
         Self.log("init: wallpaper=\(wallpaper.project.title) dir=\(wallpaper.wallpaperDirectory.path)")
         loadScene(from: wallpaper)
     }
@@ -923,7 +927,7 @@ class SceneWallpaperViewModel: ObservableObject {
     /// A Puppet Warp image's mesh (`ScenePuppetPlan`); nil (logged) draws the image unwarped.
     private func buildPuppet(_ rig: String, materialPath: String, object: WESceneObject, source: SceneMetalTextureSource,
                              imageSize: SIMD2<Float>, wallpaperDir: URL) -> ScenePuppetPlan? {
-        guard let translator = Self.effectTranslator else { return nil }
+        guard let translator = effectTranslator else { return nil }
         let builder = ImageMaterialPlanBuilder(
             translator: translator,
             readFile: { [weak self] path in self?.assetData(named: path, wallpaperDir: wallpaperDir) },
@@ -944,7 +948,7 @@ class SceneWallpaperViewModel: ObservableObject {
     /// Plans are kept by `.mdl` and skin for the content's life, so a script's clones share their
     /// original's (and its GPU buffers).
     private func buildModels(_ models: [SceneModelObject], wallpaperDir: URL) -> [SceneModelObject] {
-        guard !models.isEmpty, let translator = Self.effectTranslator else { return models }
+        guard !models.isEmpty, let translator = effectTranslator else { return models }
         let known = models.map { object -> SceneModelObject in
             var object = object
             object.plan = object.authored.path.flatMap { modelPlans["\($0)|\(object.authored.skin)"] }
@@ -971,7 +975,7 @@ class SceneWallpaperViewModel: ObservableObject {
     /// object's `model`); nil (logged) when the token names no data or no shape can draw.
     private func buildScriptModel(_ object: SceneModelObject, token: Int, modelData: SceneScriptModelDataStore,
                                   wallpaperDir: URL) -> SceneModelObject? {
-        guard let translator = Self.effectTranslator else { return nil }
+        guard let translator = effectTranslator else { return nil }
         guard let data = modelData.snapshot(token)?.data else {
             OWELog.error(.script, "createLayer: model data \(token) of \(object.name) doesn't exist")
             return nil
@@ -1001,7 +1005,7 @@ class SceneWallpaperViewModel: ObservableObject {
     /// `prelit`: the layer has effects, so WE lights it before them (`ImageMaterialPlan.prelighting`).
     private func buildImageMaterial(_ materialPath: String, object: WESceneObject, wallpaperDir: URL,
                                     prelit: Bool = false) -> ImageMaterialPlan? {
-        guard let translator = Self.effectTranslator else { return nil }
+        guard let translator = effectTranslator else { return nil }
         let builder = ImageMaterialPlanBuilder(
             translator: translator,
             readFile: { [weak self] path in self?.assetData(named: path, wallpaperDir: wallpaperDir) },
@@ -1019,7 +1023,7 @@ class SceneWallpaperViewModel: ObservableObject {
     /// A layer's own image composited with its `colorBlendMode` through WE's composite material
     /// (`ImageMaterialPlanBuilder.buildBlendComposite`); nil (logged) keeps the native draw.
     private func buildBlendComposite(_ mode: Int, object: WESceneObject, wallpaperDir: URL) -> ImageMaterialPlan? {
-        guard let translator = Self.effectTranslator else { return nil }
+        guard let translator = effectTranslator else { return nil }
         let builder = ImageMaterialPlanBuilder(
             translator: translator,
             readFile: { [weak self] path in self?.assetData(named: path, wallpaperDir: wallpaperDir) },
@@ -1133,7 +1137,7 @@ class SceneWallpaperViewModel: ObservableObject {
     /// renderer's rasterised text. WE's MSDF atlas (`msdf`, outline, drop shadow) isn't generated:
     /// CoreText's coverage stands in for it, as for plain fonts. nil (logged) keeps the native draw.
     private func buildTextMaterial(_ object: WESceneObject, wallpaperDir: URL) -> ImageMaterialPlan? {
-        guard let translator = Self.effectTranslator else { return nil }
+        guard let translator = effectTranslator else { return nil }
         let builder = ImageMaterialPlanBuilder(
             translator: translator,
             readFile: { [weak self] path in self?.assetData(named: path, wallpaperDir: wallpaperDir) },
@@ -1272,14 +1276,16 @@ class SceneWallpaperViewModel: ObservableObject {
 
     /// Shared by every scene: translated variants are cached in memory and on disk.
     /// Optional only for its callers' `guard let`s; it always exists.
-    private static let effectTranslator: ShaderVariantTranslator? =
+    static let defaultEffectTranslator: ShaderVariantTranslator? =
         ShaderVariantTranslator(compiler: ShaderCompilerFactory.makeDefault())
+    /// This scene's translator (`init`).
+    private let effectTranslator: ShaderVariantTranslator?
 
     /// One of WE's post-processing chains (`SceneBloomChain`, `SceneHDRChain`) planned by `build`;
     /// nil, logged, when it can't be planned.
     private func engineChain<Chain>(_ name: String, wallpaperDir: URL,
                                     _ build: (SceneEffectPlanBuilder) throws -> Chain) -> Chain? {
-        guard let translator = Self.effectTranslator else { return nil }
+        guard let translator = effectTranslator else { return nil }
         let builder = SceneEffectPlanBuilder(
             translator: translator,
             readFile: { [weak self] path in self?.assetData(named: path, wallpaperDir: wallpaperDir) },
@@ -1297,7 +1303,7 @@ class SceneWallpaperViewModel: ObservableObject {
 
     /// WE's volumetric lights (`SceneVolumetricsPlan`); nil, logged, when they can't be planned.
     private func volumetricsPlan(_ lights: [SceneLightObject], wallpaperDir: URL) -> SceneVolumetricsPlan? {
-        guard lights.contains(where: \.light.castVolumetrics), let translator = Self.effectTranslator else { return nil }
+        guard lights.contains(where: \.light.castVolumetrics), let translator = effectTranslator else { return nil }
         let builder = SceneEffectPlanBuilder(
             translator: translator,
             readFile: { [weak self] path in self?.assetData(named: path, wallpaperDir: wallpaperDir) },
@@ -1317,7 +1323,7 @@ class SceneWallpaperViewModel: ObservableObject {
     /// planned (no toolchain, sources missing) is left out, with the reason logged.
     private func buildEffectPlans(_ effects: [WEObjectEffect], objectID: Int, wallpaperDir: URL,
                                   objectCombos: [String: Int] = [:]) -> (plans: [SceneEffectPlan], handled: Set<Int>) {
-        guard !effects.isEmpty, let translator = Self.effectTranslator else { return ([], []) }
+        guard !effects.isEmpty, let translator = effectTranslator else { return ([], []) }
         var builder = SceneEffectPlanBuilder(
             translator: translator,
             readFile: { [weak self] path in self?.assetData(named: path, wallpaperDir: wallpaperDir) },
@@ -1572,7 +1578,7 @@ class SceneWallpaperViewModel: ObservableObject {
                                        renderer: WEParticleRenderer?, source: SceneMetalTextureSource,
                                        spriteSheet: SpriteSheet?, object: WESceneObject,
                                        wallpaperDir: URL) -> ParticleMaterialPlan? {
-        guard let translator = Self.effectTranslator else { return nil }
+        guard let translator = effectTranslator else { return nil }
         let builder = ParticleMaterialPlanBuilder(
             translator: translator,
             readFile: { [weak self] path in self?.assetData(named: path, wallpaperDir: wallpaperDir) },
