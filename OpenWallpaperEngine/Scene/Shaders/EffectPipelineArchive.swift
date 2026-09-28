@@ -4,8 +4,13 @@ import Metal
 /// An `MTLBinaryArchive` of effect pipeline states, kept in the cache directory so a later launch
 /// skips the GPU backend compile of every pipeline it has seen.
 ///
-/// One file per GPU (name and registry ID), OS build and app build: a binary compiled for one of
-/// those is useless, or unsafe to hand the driver, under another. Files for the same GPU with an
+/// One file per GPU (name and registry ID), OS build and shader generation (`environmentKey`): a
+/// binary compiled for one GPU or OS is useless, or unsafe to hand the driver, under another. The
+/// app version is not part of the key, so an app update keeps the compiled pipelines: every
+/// function in them is compiled from translated MSL (`ShaderVariantTranslator`), whose output
+/// can only change with its revision or the toolchain, both in the key, and Metal matches each
+/// lookup on the pipeline's full descriptor and function hashes anyway
+/// (`failOnBinaryArchiveMiss`), so an entry an update made obsolete is a miss, never a wrong pipeline. Files for the same GPU with an
 /// older key are deleted. A file Metal refuses to open is deleted and replaced by an empty
 /// archive. Writes go to a staging file that is renamed into place, so a crash mid-write
 /// never leaves a truncated archive behind (see `write`).
@@ -34,7 +39,7 @@ import Metal
 /// time and builds them outside the lock; `lookup` is immutable.
 final class EffectPipelineArchive {
     /// Bump when what goes into the archive changes (e.g. descriptor fields).
-    static let revision = 2
+    static let revision = 3
 
     let url: URL
     private let device: MTLDevice
@@ -333,21 +338,27 @@ final class EffectPipelineArchive {
         "\(deviceName(device))-\(String(device.registryID, radix: 16))"
     }
 
-    /// OS build, app version and build, archive revision.
+    /// OS build, archive revision, translator revision and toolchain; not the app version (see
+    /// the type's comment).
     static var environmentKey: String {
-        let info = Bundle.main.infoDictionary
-        let version = info?["CFBundleShortVersionString"] as? String ?? "0"
-        let build = info?["CFBundleVersion"] as? String ?? "0"
-        let os = ProcessInfo.processInfo.operatingSystemVersionString
-            .map { $0.isLetter || $0.isNumber || $0 == "." ? $0 : "_" }
-        return "\(String(os))--\(version)-\(build)--r\(revision)"
+        environmentKey(os: ProcessInfo.processInfo.operatingSystemVersionString,
+                       toolchain: InProcessShaderCompiler.libraryFingerprint)
+    }
+
+    static func environmentKey(os: String, toolchain: String) -> String {
+        let os = os.map { $0.isLetter || $0.isNumber || $0 == "." ? $0 : "_" }
+        // FNV-1a: short and stable across launches (Swift's `hashValue` is seeded per process).
+        var hash: UInt64 = 0xcbf2_9ce4_8422_2325
+        for byte in toolchain.utf8 { hash = (hash ^ UInt64(byte)) &* 0x100_0000_01b3 }
+        let tools = String(hash, radix: 16)
+        return "\(String(os))--t\(ShaderVariantTranslator.revision)-\(tools)--r\(revision)"
     }
 
     /// How long an archive of another instance of the same GPU model (a registry ID that changed
     /// after a reboot or re-plug) is kept before it counts as abandoned.
     static let abandonedAge: TimeInterval = 30 * 24 * 3600
 
-    /// Deletes this GPU's archives for another OS or app build, and abandoned ones of the same model.
+    /// Deletes this GPU's archives for another OS build or shader generation, and abandoned ones of the same model.
     private static func deleteStale(in directory: URL, deviceName: String, prefix: String, keeping url: URL) {
         let fileManager = FileManager.default
         // Optional: an unreadable directory just means there is nothing to prune.
