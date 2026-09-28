@@ -21,11 +21,13 @@ final class AppStorageIsolationTests: XCTestCase {
         XCTAssertTrue(store.keychainServicePrefix.contains("isolated"))
     }
 
-    /// A test or development copy is marked in the Dock; the user's own copy isn't.
-    func testOnlyAnIsolatedCopyWearsTheTestBadge() {
-        XCTAssertEqual(AppStorageLocation.current.dockBadge, "TEST")
-        XCTAssertEqual(AppStorageLocation(isolationTag: "dev").dockBadge, "TEST")
-        XCTAssertNil(AppStorageLocation(isolationTag: nil).dockBadge)
+    /// A test copy is marked TEST, a local build Dev, a release nothing.
+    func testTheDockBadgeTellsCopiesApart() {
+        XCTAssertEqual(DockBadge.current, .test, "the test host is an isolated copy")
+        XCTAssertEqual(DockBadge.kind(isIsolated: true, isReleaseBuild: true), .test)
+        XCTAssertEqual(DockBadge.kind(isIsolated: true, isReleaseBuild: false), .test)
+        XCTAssertEqual(DockBadge.kind(isIsolated: false, isReleaseBuild: false), .dev)
+        XCTAssertEqual(DockBadge.kind(isIsolated: false, isReleaseBuild: true), .none)
     }
 
     func testDefaultLocationsLiveInTheIsolatedStore() {

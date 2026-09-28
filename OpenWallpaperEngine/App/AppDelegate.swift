@@ -216,9 +216,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     
 // MARK: - delegate methods
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // A test or development copy (isolated state) wears a "TEST" badge on its Dock icon, so it
-        // can't be mistaken for the user's own copy.
-        NSApp.dockTile.badgeLabel = AppStorageLocation.current.dockBadge
+        // A test copy wears "TEST", a local build "Dev", on its Dock icon (`DockBadge`).
+        DockBadge.current.apply()
         saveCurrentWallpaper()
         AppDelegate.shared.setPlacehoderWallpaper(with: wallpaperViewModel.currentWallpaper)
 
