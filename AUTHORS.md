@@ -18,7 +18,7 @@ Contributors  (sorted alphabetically)
 
 To contributors: please add your name to the list when you submit a patch to the project.
 
-* **[1ris_W](https://github.com/Erica-Iris)**
+* **1ris_W**
    * Help with Chinese i18n translation
 * **[Deepratna Awale](https://github.com/deepratna-awale)**
    * Metal scene renderer and effect stack, audio-reactive music sync, remote video/image wallpapers, Scene Inspector, details sidebar, logo redesign

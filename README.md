@@ -9,6 +9,8 @@ A patched fork of [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper
 
 > **Note:** This is NOT affiliated with the commercial Wallpaper Engine on Steam. This is an open-source macOS app that can display wallpaper assets from Wallpaper Engine's Steam Workshop. → [ATTRIBUTION.txt](ATTRIBUTION.txt)
 
+**Wiki:** guides and documentation are in the [wiki](https://github.com/deepratna-awale/wallpaper-engine-mac/wiki).
+
 ## Related Projects
 
 - **[Open Wallpaper Engine for Linux](https://github.com/Unayung/simple-linux-wallpaperengine-gui)** — A PyQt6 GUI for [linux-wallpaperengine](https://github.com/Almamu/linux-wallpaperengine), with Steam Workshop integration and UI design ported from this macOS version.
@@ -19,7 +21,7 @@ This project is built on top of the work of:
 
 - **[MrWindDog](https://github.com/MrWindDog)** — Maintainer of the upstream [wallpaper-engine-mac](https://github.com/MrWindDog/wallpaper-engine-mac) fork, added new features and UI refinements
 - **[Haren Chen](https://github.com/haren724)** — Original creator of [open-wallpaper-engine-mac](https://github.com/haren724/open-wallpaper-engine-mac), built the core app architecture (SwiftUI, video wallpaper playback, import system, playlist UI)
-- **[1ris_W](https://github.com/Erica-Iris)** — Chinese i18n translation
+- **1ris_W** — Chinese i18n translation
 - **[Klaus Zhu](https://github.com/klauszhu1105)** — Original app logo design
 - **[Chen Chia Yang](https://github.com/Unayung)** — Scene wallpaper rendering, web wallpaper fixes, Steam Workshop integration, multi-display support, zip import
 - **[Deepratna Awale](https://github.com/deepratna-awale)** — Metal scene renderer and effect pipeline, GLSL→MSL shader translation and caching, SceneScript runtime, audio-reactive rendering, Workshop/Downloads overhaul, placement and performance settings, logo redesign
@@ -223,15 +225,11 @@ The import panel now correctly handles both individual wallpaper folders and par
 ## Current Limitations
 
 - **Application wallpapers** — `type: "application"` wallpapers are not supported and will not run.
-- **3D models and rigging** — Bone transforms, blend shapes, attachments, and puppet-warp rigs (`.mdl`) are stubbed; affected layers render as flat atlases.
-- **Material script functions** — `getMaterial()`, `getMaterialCount()`, `setMaterialProperty()`, and `executeMaterialFunction()` are stubs that no-op or return empty values.
-- **Custom GLSL shader binding** — Converted MSL is cached at import time, but shaders depending on Wallpaper Engine-specific attributes, texture chains, or unsupported includes are not bound into the runtime Metal pipeline. Common bloom, blur, colour-correction, and transform parameters fall back to native Metal mappings.
-- **Metal buffer limit** — Shaders needing more than Metal's 31 buffer slots cannot be translated and are permanently marked unsupported for the current pipeline revision.
-- **HLSL shaders** — Direct3D-only shaders shipped alongside the GLSL sources are skipped entirely.
-- **Effect-schema coverage** — Unknown custom uniform names and arbitrary effect parameter schemas remain unsupported.
+- **SceneScript stubs** — `effect.executeMaterialFunction()`, `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `getVideoTexture()`, `engine.openUserShortcut()` do nothing yet.
 - **SceneScript parity** — Not every proprietary event name, input callback, lifecycle edge case, or exact timing semantic is reproduced.
-- **Particle operator coverage** — Common scripted rate, drag, and alpha-fade operators work; uncommon operator scripts, custom particle modules, and arbitrary operator schemas are partial.
-- **External asset recovery** — Some Workshop packages reference shared TEX assets absent from the downloaded package and need the original Wallpaper Engine install.
+- **Rare particle features** — Emitter shapes other than sphere, box and layer image, and renderers after a system's first, are not supported.
+- **Wallpaper Engine assets required** — Scenes need the assets from your own Wallpaper Engine copy (Settings → Assets); without them only video and web wallpapers play.
+- **WebM videos** — WebM (VP8/VP9) plays through WebKit, so music-sync effects don't apply to it.
 - **Some JPEG thumbnails** — A small number of TEXB format 1 files contain non-standard JPEG data that macOS cannot decode.
 - **Performance settings scope** — Quality, anti-aliasing, and post-processing options are designed for scene wallpapers and have limited effect on video and web wallpapers.
 - **Audio features require permission** — Without Screen Recording permission, audio visualizers and audio-reactive SceneScript receive silence.
@@ -246,17 +244,16 @@ The import panel now correctly handles both individual wallpaper folders and par
 | Scene — DXT1/DXT3/DXT5 textures | Working (Metal GPU decode) |
 | Scene — TEXS sprites / alpha timelines | Working |
 | Scene — sprite particles | Working |
-| Scene — advanced particles | Partial (scripted rate/drag/fade supported) |
-| Scene — native Metal effects | Working (~48 effects) |
-| Scene — translated Workshop GLSL effects | Partial (see Limitations) |
+| Scene — advanced particles | Partial (see Limitations) |
+| Scene — Wallpaper Engine and Workshop effects (WE's own shaders) | Working |
 | Scene — SceneScript | Partial (see Limitations) |
-| Scene — 3D models / rigging / puppet warp | Not supported |
+| Scene — 3D models / rigging / puppet warp | Working |
 | Application | Not supported |
 
 ## Requirements
 
 ### Required
-- **macOS 13.0 or later** (Ventura). ScreenCaptureKit audio capture and Metal scene rendering both depend on it.
+- **macOS 14.0 or later** (Sonoma). ScreenCaptureKit audio capture and Metal scene rendering both depend on it.
 
 ### Optional — needed for specific features
 
@@ -282,7 +279,7 @@ Scenes use Wallpaper Engine's shared effects, materials, shaders, fonts and Scen
 
 ### Steps
 ```sh
-git clone https://github.com/unayung/wallpaper-engine-mac
+git clone https://github.com/deepratna-awale/wallpaper-engine-mac.git
 cd wallpaper-engine-mac
 open "OpenWallpaperEngine.xcodeproj"
 ```

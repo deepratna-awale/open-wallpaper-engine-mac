@@ -9,6 +9,8 @@ Poprawiony fork [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-e
 
 > **Uwaga:** Ten projekt NIE jest powiązany z komercyjnym programem Wallpaper Engine dostępnym w Steam. To aplikacja open source dla macOS, która potrafi wyświetlać zasoby tapet z Warsztatu Steam programu Wallpaper Engine. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
+**Wiki:** poradniki i dokumentacja są w [wiki](https://github.com/deepratna-awale/wallpaper-engine-mac/wiki).
+
 ## Powiązane projekty
 
 - **[Open Wallpaper Engine for Linux](https://github.com/Unayung/simple-linux-wallpaperengine-gui)** — graficzny interfejs w PyQt6 dla [linux-wallpaperengine](https://github.com/Almamu/linux-wallpaperengine) z integracją z Warsztatem Steam i interfejsem przeniesionym z tej wersji dla macOS.
@@ -19,7 +21,7 @@ Ten projekt powstał na bazie pracy następujących osób:
 
 - **[MrWindDog](https://github.com/MrWindDog)** — opiekun nadrzędnego forka [wallpaper-engine-mac](https://github.com/MrWindDog/wallpaper-engine-mac); dodał nowe funkcje i dopracował interfejs
 - **[Haren Chen](https://github.com/haren724)** — twórca oryginalnego projektu [open-wallpaper-engine-mac](https://github.com/haren724/open-wallpaper-engine-mac); zbudował podstawową architekturę aplikacji (SwiftUI, odtwarzanie tapet wideo, system importu, interfejs playlist)
-- **[1ris_W](https://github.com/Erica-Iris)** — tłumaczenie na język chiński
+- **1ris_W** — tłumaczenie na język chiński
 - **[Klaus Zhu](https://github.com/klauszhu1105)** — oryginalny projekt logo
 - **[Chen Chia Yang](https://github.com/Unayung)** — renderowanie tapet typu scena, poprawki tapet internetowych, integracja z Warsztatem Steam, obsługa wielu wyświetlaczy, import plików zip
 - **[Deepratna Awale](https://github.com/deepratna-awale)** — renderer scen i potok efektów w Metal, tłumaczenie shaderów GLSL→MSL i ich buforowanie, środowisko uruchomieniowe SceneScript, renderowanie reagujące na dźwięk, przebudowa Warsztatu i pobierania, ustawienia rozmieszczenia i wydajności, przeprojektowanie logo
@@ -223,15 +225,11 @@ Panel importu prawidłowo obsługuje teraz zarówno pojedyncze foldery tapet, ja
 ## Obecne ograniczenia
 
 - **Tapety typu aplikacja** — tapety `type: "application"` nie są obsługiwane i nie zostaną uruchomione.
-- **Modele 3D i rigging** — przekształcenia kości, kształty mieszane (blend shapes), załączniki i rigi puppet warp (`.mdl`) mają jedynie implementacje zastępcze; takie warstwy są renderowane jako płaskie atlasy.
-- **Funkcje skryptów materiałów** — `getMaterial()`, `getMaterialCount()`, `setMaterialProperty()` i `executeMaterialFunction()` to implementacje zastępcze, które nic nie robią lub zwracają puste wartości.
-- **Wiązanie niestandardowych shaderów GLSL** — przekonwertowany kod MSL jest buforowany podczas importu, ale shadery zależne od atrybutów specyficznych dla Wallpaper Engine, łańcuchów tekstur lub nieobsługiwanych plików include nie są wiązane z potokiem Metal w czasie działania. Typowe parametry bloom, rozmycia, korekcji kolorów i przekształceń korzystają zastępczo z natywnych odwzorowań Metal.
-- **Limit buforów Metal** — shaderów wymagających więcej niż 31 slotów buforów Metal nie można przetłumaczyć; są one trwale oznaczane jako nieobsługiwane w bieżącej wersji potoku.
-- **Shadery HLSL** — shadery tylko dla Direct3D dostarczane obok źródeł GLSL są całkowicie pomijane.
-- **Zakres obsługi schematów efektów** — nieznane nazwy niestandardowych zmiennych uniform i dowolne schematy parametrów efektów pozostają nieobsługiwane.
+- **Niezaimplementowane funkcje SceneScript** — `effect.executeMaterialFunction()`, `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `getVideoTexture()`, `engine.openUserShortcut()` jeszcze nic nie robią.
 - **Zgodność SceneScript** — nie każda zastrzeżona nazwa zdarzenia, wywołanie zwrotne wejścia, przypadek brzegowy cyklu życia ani dokładna semantyka czasu jest odtworzona.
-- **Zakres obsługi operatorów cząsteczek** — typowe skryptowe operatory szybkości, oporu i zanikania alfa działają; nietypowe skrypty operatorów, niestandardowe moduły cząsteczek i dowolne schematy operatorów są obsługiwane częściowo.
-- **Odzyskiwanie zasobów zewnętrznych** — niektóre pakiety z Warsztatu odwołują się do współdzielonych zasobów TEX, których brak w pobranym pakiecie, i wymagają oryginalnej instalacji Wallpaper Engine.
+- **Rzadkie funkcje cząsteczek** — Kształty emiterów inne niż kula, prostopadłościan i obraz warstwy oraz renderery po pierwszym w systemie nie są obsługiwane.
+- **Wymagane zasoby Wallpaper Engine** — Sceny potrzebują zasobów z Twojej kopii Wallpaper Engine (Ustawienia → Zasoby); bez nich działają tylko tapety wideo i internetowe.
+- **Filmy WebM** — WebM (VP8/VP9) jest odtwarzany przez WebKit, więc efekty synchronizacji z muzyką nie działają.
 - **Niektóre miniatury JPEG** — niewielka liczba plików TEXB w formacie 1 zawiera niestandardowe dane JPEG, których macOS nie potrafi zdekodować.
 - **Zakres ustawień wydajności** — opcje jakości, antyaliasingu i przetwarzania końcowego są przeznaczone dla tapet typu scena i mają ograniczony wpływ na tapety wideo i internetowe.
 - **Funkcje dźwięku wymagają uprawnienia** — bez uprawnienia Nagrywanie ekranu i dźwięku systemowego wizualizatory dźwięku i SceneScript reagujący na dźwięk otrzymują ciszę.
@@ -246,17 +244,16 @@ Panel importu prawidłowo obsługuje teraz zarówno pojedyncze foldery tapet, ja
 | Scena — tekstury DXT1/DXT3/DXT5 | Działa (dekodowanie na GPU w Metal) |
 | Scena — sprite’y TEXS / osie czasu alfa | Działa |
 | Scena — cząsteczki sprite’ów | Działa |
-| Scena — zaawansowane cząsteczki | Częściowo (obsługa skryptowej szybkości/oporu/zanikania) |
-| Scena — natywne efekty Metal | Działa (około 48 efektów) |
-| Scena — przetłumaczone efekty GLSL z Warsztatu | Częściowo (zobacz Ograniczenia) |
+| Scena — zaawansowane cząsteczki | Częściowo (zobacz Ograniczenia) |
+| Scena — efekty Wallpaper Engine i z Warsztatu (własne shadery WE) | Działa |
 | Scena — SceneScript | Częściowo (zobacz Ograniczenia) |
-| Scena — modele 3D / rigging / puppet warp | Nieobsługiwane |
+| Scena — modele 3D / rigging / puppet warp | Działa |
 | Aplikacja | Nieobsługiwane |
 
 ## Wymagania
 
 ### Wymagane
-- **macOS 13.0 lub nowszy** (Ventura). Wymagają go zarówno przechwytywanie dźwięku przez ScreenCaptureKit, jak i renderowanie scen w Metal.
+- **macOS 14.0 lub nowszy** (Sonoma). Wymagają go zarówno przechwytywanie dźwięku przez ScreenCaptureKit, jak i renderowanie scen w Metal.
 
 ### Opcjonalne — potrzebne do określonych funkcji
 
@@ -282,7 +279,7 @@ Sceny korzystają ze wspólnych efektów, materiałów, shaderów, czcionek i ś
 
 ### Kroki
 ```sh
-git clone https://github.com/unayung/wallpaper-engine-mac
+git clone https://github.com/deepratna-awale/wallpaper-engine-mac.git
 cd wallpaper-engine-mac
 open "OpenWallpaperEngine.xcodeproj"
 ```

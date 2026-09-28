@@ -9,6 +9,8 @@ Ein gepatchter Fork von [Open Wallpaper Engine](https://github.com/MrWindDog/wal
 
 > **Hinweis:** Dieses Projekt steht in KEINER Verbindung zum kommerziellen Wallpaper Engine auf Steam. Es handelt sich um eine Open-Source-App für macOS, die Hintergrundbild-Assets aus dem Steam Workshop von Wallpaper Engine anzeigen kann. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
+**Wiki:** Anleitungen und Dokumentation findest du im [Wiki](https://github.com/deepratna-awale/wallpaper-engine-mac/wiki).
+
 ## Verwandte Projekte
 
 - **[Open Wallpaper Engine for Linux](https://github.com/Unayung/simple-linux-wallpaperengine-gui)** – Eine PyQt6-Oberfläche für [linux-wallpaperengine](https://github.com/Almamu/linux-wallpaperengine) mit Steam-Workshop-Integration und einem von dieser macOS-Version übernommenen UI-Design.
@@ -19,7 +21,7 @@ Dieses Projekt baut auf der Arbeit folgender Personen auf:
 
 - **[MrWindDog](https://github.com/MrWindDog)** – Maintainer des Upstream-Forks [wallpaper-engine-mac](https://github.com/MrWindDog/wallpaper-engine-mac), hat neue Funktionen und Verbesserungen der Benutzeroberfläche hinzugefügt
 - **[Haren Chen](https://github.com/haren724)** – Ursprünglicher Entwickler von [open-wallpaper-engine-mac](https://github.com/haren724/open-wallpaper-engine-mac), hat die Kernarchitektur der App erstellt (SwiftUI, Wiedergabe von Video-Hintergrundbildern, Importsystem, Playlist-Oberfläche)
-- **[1ris_W](https://github.com/Erica-Iris)** – Chinesische Übersetzung (i18n)
+- **1ris_W** – Chinesische Übersetzung (i18n)
 - **[Klaus Zhu](https://github.com/klauszhu1105)** – Ursprüngliches Logodesign
 - **[Chen Chia Yang](https://github.com/Unayung)** – Rendern von Szenen-Hintergrundbildern, Korrekturen für Web-Hintergrundbilder, Steam-Workshop-Integration, Unterstützung mehrerer Displays, Zip-Import
 - **[Deepratna Awale](https://github.com/deepratna-awale)** – Metal-Szenenrenderer und Effekt-Pipeline, Übersetzung und Caching von GLSL→MSL-Shadern, SceneScript-Laufzeitumgebung, audioreaktives Rendern, Überarbeitung von Workshop und Downloads, Platzierungs- und Leistungseinstellungen, Neugestaltung des Logos
@@ -223,15 +225,11 @@ Das Importfenster verarbeitet jetzt sowohl einzelne Hintergrundbildordner als au
 ## Aktuelle Einschränkungen
 
 - **Anwendungs-Hintergrundbilder** – Hintergrundbilder mit `type: "application"` werden nicht unterstützt und laufen nicht.
-- **3D-Modelle und Rigging** – Knochentransformationen, Blend Shapes, Anhänge und Puppet-Warp-Rigs (`.mdl`) sind nur als Platzhalter vorhanden; betroffene Ebenen werden als flache Atlanten gerendert.
-- **Skriptfunktionen für Materialien** – `getMaterial()`, `getMaterialCount()`, `setMaterialProperty()` und `executeMaterialFunction()` sind Platzhalter, die nichts tun oder leere Werte zurückgeben.
-- **Bindung eigener GLSL-Shader** – Konvertiertes MSL wird beim Import zwischengespeichert, aber Shader, die von Wallpaper-Engine-spezifischen Attributen, Texturketten oder nicht unterstützten Includes abhängen, werden nicht in die Metal-Pipeline zur Laufzeit eingebunden. Gängige Parameter für Bloom, Weichzeichnung, Farbkorrektur und Transformation greifen auf native Metal-Abbildungen zurück.
-- **Metal-Buffer-Limit** – Shader, die mehr als die 31 Buffer-Slots von Metal benötigen, können nicht übersetzt werden und werden für die aktuelle Pipeline-Revision dauerhaft als nicht unterstützt markiert.
-- **HLSL-Shader** – Reine Direct3D-Shader, die neben den GLSL-Quellen ausgeliefert werden, werden vollständig übersprungen.
-- **Abdeckung von Effektschemata** – Unbekannte eigene Uniform-Namen und beliebige Parameterschemata von Effekten werden weiterhin nicht unterstützt.
+- **SceneScript-Platzhalter** – `effect.executeMaterialFunction()`, `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `getVideoTexture()`, `engine.openUserShortcut()` tun noch nichts.
 - **SceneScript-Parität** – Nicht jeder proprietäre Ereignisname, jeder Eingabe-Callback, jeder Sonderfall im Lebenszyklus und jede exakte Timing-Semantik wird nachgebildet.
-- **Abdeckung von Partikeloperatoren** – Gängige skriptgesteuerte Operatoren für Rate, Luftwiderstand und Alpha-Überblendung funktionieren; seltene Operatorskripte, eigene Partikelmodule und beliebige Operatorschemata werden nur teilweise unterstützt.
-- **Wiederherstellung externer Assets** – Einige Workshop-Pakete verweisen auf gemeinsam genutzte TEX-Assets, die im geladenen Paket fehlen, und benötigen die ursprüngliche Wallpaper-Engine-Installation.
+- **Seltene Partikelfunktionen** – Emitterformen außer Kugel, Box und Ebenenbild sowie weitere Renderer nach dem ersten eines Systems werden nicht unterstützt.
+- **Wallpaper-Engine-Assets erforderlich** – Szenen brauchen die Assets aus deiner eigenen Wallpaper-Engine-Kopie (Einstellungen → Assets); ohne sie laufen nur Video- und Web-Hintergrundbilder.
+- **WebM-Videos** – WebM (VP8/VP9) läuft über WebKit, daher wirken Musiksynchronisations-Effekte darauf nicht.
 - **Einige JPEG-Miniaturen** – Einige wenige Dateien im Format TEXB 1 enthalten nicht standardkonforme JPEG-Daten, die macOS nicht decodieren kann.
 - **Geltungsbereich der Leistungseinstellungen** – Die Optionen für Qualität, Antialiasing und Post-Processing sind für Szenen-Hintergrundbilder gedacht und wirken sich auf Video- und Web-Hintergrundbilder nur begrenzt aus.
 - **Audiofunktionen erfordern eine Berechtigung** – Ohne die Berechtigung „Aufnahme von Bildschirm & Systemaudio“ erhalten Audio-Visualisierungen und audioreaktives SceneScript nur Stille.
@@ -246,17 +244,16 @@ Das Importfenster verarbeitet jetzt sowohl einzelne Hintergrundbildordner als au
 | Szene – DXT1/DXT3/DXT5-Texturen | Funktioniert (Metal-GPU-Decodierung) |
 | Szene – TEXS-Sprites / Alpha-Zeitleisten | Funktioniert |
 | Szene – Sprite-Partikel | Funktioniert |
-| Szene – erweiterte Partikel | Teilweise (skriptgesteuerte Rate/Luftwiderstand/Überblendung unterstützt) |
-| Szene – native Metal-Effekte | Funktioniert (~48 Effekte) |
-| Szene – übersetzte GLSL-Effekte aus dem Workshop | Teilweise (siehe Einschränkungen) |
+| Szene – erweiterte Partikel | Teilweise (siehe Einschränkungen) |
+| Szene – Effekte von Wallpaper Engine und aus dem Workshop (WEs eigene Shader) | Funktioniert |
 | Szene – SceneScript | Teilweise (siehe Einschränkungen) |
-| Szene – 3D-Modelle / Rigging / Puppet Warp | Nicht unterstützt |
+| Szene – 3D-Modelle / Rigging / Puppet Warp | Funktioniert |
 | Anwendung | Nicht unterstützt |
 
 ## Voraussetzungen
 
 ### Erforderlich
-- **macOS 13.0 oder neuer** (Ventura). Sowohl die Audioaufnahme über ScreenCaptureKit als auch das Rendern von Szenen mit Metal setzen dies voraus.
+- **macOS 14.0 oder neuer** (Sonoma). Sowohl die Audioaufnahme über ScreenCaptureKit als auch das Rendern von Szenen mit Metal setzen dies voraus.
 
 ### Optional – für bestimmte Funktionen erforderlich
 
@@ -282,7 +279,7 @@ Szenen verwenden die gemeinsamen Effekte, Materialien, Shader, Schriften und die
 
 ### Schritte
 ```sh
-git clone https://github.com/unayung/wallpaper-engine-mac
+git clone https://github.com/deepratna-awale/wallpaper-engine-mac.git
 cd wallpaper-engine-mac
 open "OpenWallpaperEngine.xcodeproj"
 ```

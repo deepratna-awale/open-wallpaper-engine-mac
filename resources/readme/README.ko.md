@@ -9,6 +9,8 @@ macOS용 [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-m
 
 > **참고:** 이 프로젝트는 Steam의 상용 Wallpaper Engine과 관련이 없습니다. Wallpaper Engine의 Steam 창작마당에 있는 배경화면 에셋을 표시할 수 있는 오픈 소스 macOS 앱입니다. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
+**위키:** 가이드와 문서는 [위키](https://github.com/deepratna-awale/wallpaper-engine-mac/wiki)에 있습니다.
+
 ## 관련 프로젝트
 
 - **[Open Wallpaper Engine for Linux](https://github.com/Unayung/simple-linux-wallpaperengine-gui)** — [linux-wallpaperengine](https://github.com/Almamu/linux-wallpaperengine)용 PyQt6 GUI로, Steam 창작마당 연동 기능과 UI 디자인을 이 macOS 버전에서 이식했습니다.
@@ -19,7 +21,7 @@ macOS용 [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-m
 
 - **[MrWindDog](https://github.com/MrWindDog)** — 업스트림 [wallpaper-engine-mac](https://github.com/MrWindDog/wallpaper-engine-mac) 포크의 메인테이너로, 새로운 기능과 UI 개선 사항을 추가
 - **[Haren Chen](https://github.com/haren724)** — [open-wallpaper-engine-mac](https://github.com/haren724/open-wallpaper-engine-mac)의 최초 제작자로, 앱의 핵심 아키텍처(SwiftUI, 비디오 배경화면 재생, 가져오기 시스템, 플레이리스트 UI)를 구축
-- **[1ris_W](https://github.com/Erica-Iris)** — 중국어 i18n 번역
+- **1ris_W** — 중국어 i18n 번역
 - **[Klaus Zhu](https://github.com/klauszhu1105)** — 원래 로고 디자인
 - **[Chen Chia Yang](https://github.com/Unayung)** — 장면 배경화면 렌더링, 웹 배경화면 수정, Steam 창작마당 연동, 다중 디스플레이 지원, zip 가져오기
 - **[Deepratna Awale](https://github.com/deepratna-awale)** — Metal 장면 렌더러와 효과 파이프라인, GLSL→MSL 셰이더 변환 및 캐싱, SceneScript 런타임, 오디오 응답 렌더링, 창작마당/다운로드 전면 개편, 배치 및 성능 설정, 로고 리디자인
@@ -223,15 +225,11 @@ WebGL 기반 배경화면은 `WKWebView`가 텍스처와 에셋에 대한 로컬
 ## 현재 제한 사항
 
 - **응용 프로그램 배경화면** — `type: "application"` 배경화면은 지원되지 않으며 실행되지 않습니다.
-- **3D 모델 및 리깅** — 본 변형, 블렌드 셰이프, 부착물, 퍼핏 워프 리그(`.mdl`)는 스텁으로 구현되어 있어, 해당 레이어는 평면 아틀라스로 렌더링됩니다.
-- **머티리얼 스크립트 함수** — `getMaterial()`, `getMaterialCount()`, `setMaterialProperty()`, `executeMaterialFunction()`은 아무 작업도 하지 않거나 빈 값을 반환하는 스텁입니다.
-- **사용자 정의 GLSL 셰이더 바인딩** — 변환된 MSL은 가져오기 시점에 캐시되지만, Wallpaper Engine 고유의 속성, 텍스처 체인 또는 지원되지 않는 include에 의존하는 셰이더는 런타임 Metal 파이프라인에 바인딩되지 않습니다. 일반적인 블룸, 흐림, 색 보정, 변형 매개변수는 네이티브 Metal 매핑으로 대체됩니다.
-- **Metal 버퍼 제한** — Metal의 31개 버퍼 슬롯보다 많은 슬롯이 필요한 셰이더는 변환할 수 없으며, 현재 파이프라인 리비전에서 영구적으로 지원되지 않음으로 표시됩니다.
-- **HLSL 셰이더** — GLSL 소스와 함께 제공되는 Direct3D 전용 셰이더는 모두 건너뜁니다.
-- **효과 스키마 지원 범위** — 알 수 없는 사용자 정의 uniform 이름과 임의의 효과 매개변수 스키마는 여전히 지원되지 않습니다.
+- **구현되지 않은 SceneScript 함수** — `effect.executeMaterialFunction()`, `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `getVideoTexture()`, `engine.openUserShortcut()`는 아직 아무 작업도 하지 않습니다.
 - **SceneScript 호환성** — 모든 독점 이벤트 이름, 입력 콜백, 수명 주기의 예외 상황, 정확한 타이밍 의미가 재현되지는 않습니다.
-- **파티클 연산자 지원 범위** — 일반적인 스크립트 속도, 저항, 알파 페이드 연산자는 동작하지만, 흔하지 않은 연산자 스크립트, 사용자 정의 파티클 모듈, 임의의 연산자 스키마는 부분적으로만 지원됩니다.
-- **외부 에셋 복구** — 일부 창작마당 패키지는 다운로드한 패키지에 없는 공유 TEX 에셋을 참조하므로 원본 Wallpaper Engine 설치가 필요합니다.
+- **드문 파티클 기능** — 구, 상자, 레이어 이미지 외의 이미터 모양과 시스템의 첫 번째 이후 렌더러는 지원되지 않습니다.
+- **Wallpaper Engine 에셋 필요** — 장면에는 사용자의 Wallpaper Engine 사본에 있는 에셋이 필요합니다(*설정 → 에셋*). 에셋이 없으면 비디오와 웹 배경화면만 재생됩니다.
+- **WebM 비디오** — WebM(VP8/VP9)은 WebKit으로 재생되므로 음악 동기화 효과가 적용되지 않습니다.
 - **일부 JPEG 썸네일** — 소수의 TEXB 형식 1 파일에는 macOS가 디코딩할 수 없는 비표준 JPEG 데이터가 포함되어 있습니다.
 - **성능 설정 적용 범위** — 품질, 앤티앨리어싱, 포스트 프로세싱 옵션은 장면 배경화면용으로 설계되었으며, 비디오 및 웹 배경화면에는 효과가 제한적입니다.
 - **오디오 기능에는 권한이 필요함** — 화면 기록 권한이 없으면 오디오 시각화와 오디오 반응형 SceneScript는 무음을 받습니다.
@@ -246,17 +244,16 @@ WebGL 기반 배경화면은 `WKWebView`가 텍스처와 에셋에 대한 로컬
 | 장면 — DXT1/DXT3/DXT5 텍스처 | 동작(Metal GPU 디코딩) |
 | 장면 — TEXS 스프라이트 / 알파 타임라인 | 동작 |
 | 장면 — 스프라이트 파티클 | 동작 |
-| 장면 — 고급 파티클 | 부분 지원(스크립트 속도/저항/페이드 지원) |
-| 장면 — 네이티브 Metal 효과 | 동작(약 48개 효과) |
-| 장면 — 변환된 창작마당 GLSL 효과 | 부분 지원(제한 사항 참고) |
+| 장면 — 고급 파티클 | 부분 지원(제한 사항 참고) |
+| 장면 — Wallpaper Engine 및 창작마당 효과(WE 자체 셰이더) | 동작 |
 | 장면 — SceneScript | 부분 지원(제한 사항 참고) |
-| 장면 — 3D 모델 / 리깅 / 퍼핏 워프 | 지원되지 않음 |
+| 장면 — 3D 모델 / 리깅 / 퍼핏 워프 | 동작 |
 | 응용 프로그램 | 지원되지 않음 |
 
 ## 요구 사항
 
 ### 필수
-- **macOS 13.0 이상**(Ventura). ScreenCaptureKit 오디오 캡처와 Metal 장면 렌더링 모두 이 버전에 의존합니다.
+- **macOS 14.0 이상**(Sonoma). ScreenCaptureKit 오디오 캡처와 Metal 장면 렌더링 모두 이 버전에 의존합니다.
 
 ### 선택 사항 — 특정 기능에 필요
 
@@ -282,7 +279,7 @@ Wallpaper Engine은 효과를 GLSL로 제공합니다. 이 효과는 배경화�
 
 ### 단계
 ```sh
-git clone https://github.com/unayung/wallpaper-engine-mac
+git clone https://github.com/deepratna-awale/wallpaper-engine-mac.git
 cd wallpaper-engine-mac
 open "OpenWallpaperEngine.xcodeproj"
 ```

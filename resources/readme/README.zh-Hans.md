@@ -9,6 +9,8 @@ Open Wallpaper Engine（修补版）
 
 > **注：** 本项目与 Steam 上的商业软件 Wallpaper Engine 没有任何关联。这是一款开源的 macOS App，可显示来自 Wallpaper Engine Steam 创意工坊的墙纸素材。 → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
+**Wiki：** 指南和文档见 [Wiki](https://github.com/deepratna-awale/wallpaper-engine-mac/wiki)。
+
 ## 相关项目
 
 - **[Open Wallpaper Engine for Linux](https://github.com/Unayung/simple-linux-wallpaperengine-gui)** — 适用于 [linux-wallpaperengine](https://github.com/Almamu/linux-wallpaperengine) 的 PyQt6 图形界面，其 Steam 创意工坊集成与 UI 设计移植自本 macOS 版本。
@@ -19,7 +21,7 @@ Open Wallpaper Engine（修补版）
 
 - **[MrWindDog](https://github.com/MrWindDog)** — 上游 [wallpaper-engine-mac](https://github.com/MrWindDog/wallpaper-engine-mac) 分支的维护者，添加了新功能并改进了 UI
 - **[Haren Chen](https://github.com/haren724)** — [open-wallpaper-engine-mac](https://github.com/haren724/open-wallpaper-engine-mac) 的原作者，构建了 App 的核心架构（SwiftUI、视频墙纸播放、导入系统、播放列表 UI）
-- **[1ris_W](https://github.com/Erica-Iris)** — 中文 i18n 翻译
+- **1ris_W** — 中文 i18n 翻译
 - **[Klaus Zhu](https://github.com/klauszhu1105)** — 原始标志设计
 - **[Chen Chia Yang](https://github.com/Unayung)** — 场景墙纸渲染、网页墙纸修复、Steam 创意工坊集成、多显示器支持、zip 导入
 - **[Deepratna Awale](https://github.com/deepratna-awale)** — Metal 场景渲染器与效果管线、GLSL→MSL 着色器转换与缓存、SceneScript 运行时、音频响应渲染、创意工坊／下载功能全面改进、摆放与性能设置、标志重新设计
@@ -223,15 +225,11 @@ Open Wallpaper Engine（修补版）
 ## 当前限制
 
 - **应用程序墙纸** — 不支持 `type: "application"` 墙纸，此类墙纸不会运行。
-- **3D 模型与骨骼绑定** — 骨骼变换、混合形状、附件和木偶变形绑定（`.mdl`）目前仅为桩实现；受影响的图层会渲染为平面图集。
-- **材质脚本函数** — `getMaterial()`、`getMaterialCount()`、`setMaterialProperty()` 和 `executeMaterialFunction()` 仅为桩实现，不执行任何操作或返回空值。
-- **自定 GLSL 着色器绑定** — 转换后的 MSL 会在导入时缓存，但依赖 Wallpaper Engine 特有属性、纹理链或不受支持的 include 的着色器不会绑定到运行时 Metal 管线中。常见的泛光、模糊、颜色校正和变换参数会回退到原生 Metal 映射。
-- **Metal 缓冲区限制** — 需要超过 Metal 31 个缓冲区槽位的着色器无法转换，并会在当前管线修订版本中被永久标记为不支持。
-- **HLSL 着色器** — 与 GLSL 源代码一同提供的仅限 Direct3D 的着色器会被完全跳过。
-- **效果架构覆盖范围** — 未知的自定 uniform 名称和任意效果参数架构仍不受支持。
+- **尚未实现的 SceneScript 函数** — `effect.executeMaterialFunction()`, `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `getVideoTexture()`, `engine.openUserShortcut()` 目前不执行任何操作。
 - **SceneScript 一致性** — 并未完全重现所有专有事件名称、输入回调、生命周期边界情况或精确的计时语义。
-- **粒子算子覆盖范围** — 常见的脚本化速率、阻力和 Alpha 淡变算子可以正常工作；不常见的算子脚本、自定粒子模块和任意算子架构仅部分支持。
-- **外部素材恢复** — 部分创意工坊包引用了下载包中不存在的共享 TEX 素材，需要原版 Wallpaper Engine 的安装文件。
+- **少见的粒子功能** — 不支持球体、盒体和图层图像以外的发射器形状，也不支持系统中第一个之后的渲染器。
+- **需要 Wallpaper Engine 资源** — 场景需要你自己的 Wallpaper Engine 副本中的资源（“设置 → 资源”）；没有这些资源时只能播放视频和网页墙纸。
+- **WebM 视频** — WebM（VP8/VP9）通过 WebKit 播放，因此音乐同步效果不适用于它。
 - **部分 JPEG 缩略图** — 少量 TEXB 格式 1 文件包含 macOS 无法解码的非标准 JPEG 数据。
 - **性能设置的适用范围** — 质量、抗锯齿和后处理选项是为场景墙纸设计的，对视频墙纸和网页墙纸的作用有限。
 - **音频功能需要权限** — 未授予录屏权限时，音频可视化和音频响应的 SceneScript 只会收到静音。
@@ -246,17 +244,16 @@ Open Wallpaper Engine（修补版）
 | 场景 — DXT1/DXT3/DXT5 纹理 | 可用（Metal GPU 解码） |
 | 场景 — TEXS 精灵／Alpha 时间线 | 可用 |
 | 场景 — 精灵粒子 | 可用 |
-| 场景 — 高级粒子 | 部分支持（支持脚本化速率／阻力／淡变） |
-| 场景 — 原生 Metal 效果 | 可用（约 48 种效果） |
-| 场景 — 转换后的创意工坊 GLSL 效果 | 部分支持（请参阅“当前限制”） |
+| 场景 — 高级粒子 | 部分支持（请参阅“当前限制”） |
+| 场景 — Wallpaper Engine 与创意工坊效果（WE 自身的着色器） | 可用 |
 | 场景 — SceneScript | 部分支持（请参阅“当前限制”） |
-| 场景 — 3D 模型／骨骼绑定／木偶变形 | 不支持 |
+| 场景 — 3D 模型／骨骼绑定／木偶变形 | 可用 |
 | 应用程序 | 不支持 |
 
 ## 系统要求
 
 ### 必需
-- **macOS 13.0 或更高版本**（Ventura）。ScreenCaptureKit 音频捕获和 Metal 场景渲染都依赖于此。
+- **macOS 14.0 或更高版本**（Sonoma）。ScreenCaptureKit 音频捕获和 Metal 场景渲染都依赖于此。
 
 ### 可选 — 特定功能所需
 
@@ -282,7 +279,7 @@ Wallpaper Engine 以 GLSL 形式提供其效果。当墙纸首次使用这些效
 
 ### 步骤
 ```sh
-git clone https://github.com/unayung/wallpaper-engine-mac
+git clone https://github.com/deepratna-awale/wallpaper-engine-mac.git
 cd wallpaper-engine-mac
 open "OpenWallpaperEngine.xcodeproj"
 ```

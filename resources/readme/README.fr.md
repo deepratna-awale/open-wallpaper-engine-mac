@@ -9,6 +9,8 @@ Un fork patché d’[Open Wallpaper Engine](https://github.com/MrWindDog/wallpap
 
 > **Remarque :** ce projet n’est PAS affilié au logiciel commercial Wallpaper Engine vendu sur Steam. Il s’agit d’une app open source pour macOS capable d’afficher les ressources de fonds d’écran du Steam Workshop de Wallpaper Engine. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
+**Wiki :** les guides et la documentation se trouvent dans le [wiki](https://github.com/deepratna-awale/wallpaper-engine-mac/wiki).
+
 ## Projets associés
 
 - **[Open Wallpaper Engine for Linux](https://github.com/Unayung/simple-linux-wallpaperengine-gui)** — Une interface PyQt6 pour [linux-wallpaperengine](https://github.com/Almamu/linux-wallpaperengine), avec intégration du Steam Workshop et un design d’interface repris de cette version macOS.
@@ -19,7 +21,7 @@ Ce projet s’appuie sur le travail de :
 
 - **[MrWindDog](https://github.com/MrWindDog)** — Mainteneur du fork en amont [wallpaper-engine-mac](https://github.com/MrWindDog/wallpaper-engine-mac), a ajouté de nouvelles fonctionnalités et des améliorations de l’interface
 - **[Haren Chen](https://github.com/haren724)** — Créateur d’origine d’[open-wallpaper-engine-mac](https://github.com/haren724/open-wallpaper-engine-mac), a conçu l’architecture de base de l’app (SwiftUI, lecture des fonds d’écran vidéo, système d’importation, interface des playlists)
-- **[1ris_W](https://github.com/Erica-Iris)** — Traduction chinoise (i18n)
+- **1ris_W** — Traduction chinoise (i18n)
 - **[Klaus Zhu](https://github.com/klauszhu1105)** — Conception du logo d’origine
 - **[Chen Chia Yang](https://github.com/Unayung)** — Rendu des fonds d’écran de scène, corrections des fonds d’écran web, intégration du Steam Workshop, prise en charge de plusieurs moniteurs, importation de fichiers zip
 - **[Deepratna Awale](https://github.com/deepratna-awale)** — Moteur de rendu de scène Metal et pipeline d’effets, traduction et mise en cache des nuanceurs GLSL→MSL, environnement d’exécution SceneScript, rendu réactif au son, refonte du Workshop et des téléchargements, réglages de placement et de performances, refonte du logo
@@ -223,15 +225,11 @@ Le panneau d’importation gère désormais correctement aussi bien les dossiers
 ## Limitations actuelles
 
 - **Fonds d’écran de type application** — Les fonds d’écran `type: "application"` ne sont pas pris en charge et ne s’exécutent pas.
-- **Modèles 3D et rigging** — Les transformations d’os, les blend shapes, les attachements et les rigs de déformation de marionnette (`.mdl`) ne sont que des ébauches ; les calques concernés sont rendus sous forme d’atlas plats.
-- **Fonctions de script de matériau** — `getMaterial()`, `getMaterialCount()`, `setMaterialProperty()` et `executeMaterialFunction()` sont des ébauches qui ne font rien ou renvoient des valeurs vides.
-- **Liaison des nuanceurs GLSL personnalisés** — Le MSL converti est mis en cache lors de l’importation, mais les nuanceurs qui dépendent d’attributs propres à Wallpaper Engine, de chaînes de textures ou d’inclusions non prises en charge ne sont pas liés au pipeline Metal à l’exécution. Les paramètres courants de flou lumineux, de flou, de correction colorimétrique et de transformation se rabattent sur des équivalents Metal natifs.
-- **Limite de tampons Metal** — Les nuanceurs nécessitant plus que les 31 emplacements de tampon de Metal ne peuvent pas être traduits et sont définitivement marqués comme non pris en charge pour la révision actuelle du pipeline.
-- **Nuanceurs HLSL** — Les nuanceurs réservés à Direct3D, fournis avec les sources GLSL, sont entièrement ignorés.
-- **Couverture des schémas d’effets** — Les noms d’uniformes personnalisés inconnus et les schémas de paramètres d’effet arbitraires restent non pris en charge.
+- **Fonctions SceneScript non implémentées** — `effect.executeMaterialFunction()`, `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `getVideoTexture()`, `engine.openUserShortcut()` ne font encore rien.
 - **Parité SceneScript** — Les noms d’événements propriétaires, les rappels d’entrée, les cas limites du cycle de vie et la sémantique exacte du minutage ne sont pas tous reproduits.
-- **Couverture des opérateurs de particules** — Les opérateurs scriptés courants de taux, de traînée et de fondu alpha fonctionnent ; les scripts d’opérateurs peu courants, les modules de particules personnalisés et les schémas d’opérateurs arbitraires ne sont que partiellement pris en charge.
-- **Récupération des ressources externes** — Certains paquets du Workshop font référence à des ressources TEX partagées absentes du paquet téléchargé et nécessitent l’installation d’origine de Wallpaper Engine.
+- **Fonctions de particules rares** — Les formes d’émetteur autres que sphère, boîte et image de calque, ainsi que les moteurs de rendu après le premier d’un système, ne sont pas pris en charge.
+- **Ressources de Wallpaper Engine requises** — Les scènes ont besoin des ressources de votre propre copie de Wallpaper Engine (Réglages → Ressources) ; sans elles, seuls les fonds d’écran vidéo et web fonctionnent.
+- **Vidéos WebM** — Le WebM (VP8/VP9) est lu par WebKit ; les effets de synchronisation musicale ne s’y appliquent donc pas.
 - **Certaines vignettes JPEG** — Un petit nombre de fichiers TEXB au format 1 contiennent des données JPEG non standard que macOS ne peut pas décoder.
 - **Portée des réglages de performances** — Les options de qualité, d’anticrénelage et de post-traitement sont conçues pour les fonds d’écran de scène et n’ont qu’un effet limité sur les fonds d’écran vidéo et web.
 - **Les fonctionnalités audio nécessitent une autorisation** — Sans l’autorisation Enregistrement de l’écran et des sons du système, les visualiseurs audio et les scripts SceneScript réactifs au son ne reçoivent que du silence.
@@ -246,17 +244,16 @@ Le panneau d’importation gère désormais correctement aussi bien les dossiers
 | Scène — textures DXT1/DXT3/DXT5 | Fonctionnel (décodage GPU Metal) |
 | Scène — sprites TEXS / chronologies alpha | Fonctionnel |
 | Scène — particules de sprites | Fonctionnel |
-| Scène — particules avancées | Partiel (taux, traînée et fondu scriptés pris en charge) |
-| Scène — effets Metal natifs | Fonctionnel (~48 effets) |
-| Scène — effets GLSL du Workshop traduits | Partiel (voir Limitations) |
+| Scène — particules avancées | Partiel (voir Limitations) |
+| Scène — effets de Wallpaper Engine et du Workshop (les nuanceurs de WE) | Fonctionnel |
 | Scène — SceneScript | Partiel (voir Limitations) |
-| Scène — modèles 3D / rigging / déformation de marionnette | Non pris en charge |
+| Scène — modèles 3D / rigging / déformation de marionnette | Fonctionnel |
 | Application | Non pris en charge |
 
 ## Configuration requise
 
 ### Obligatoire
-- **macOS 13.0 ou version ultérieure** (Ventura). La capture audio ScreenCaptureKit et le rendu de scène Metal en dépendent tous deux.
+- **macOS 14.0 ou version ultérieure** (Sonoma). La capture audio ScreenCaptureKit et le rendu de scène Metal en dépendent tous deux.
 
 ### Facultatif — nécessaire pour certaines fonctionnalités
 
@@ -282,7 +279,7 @@ Les scènes utilisent les effets, matériaux, nuanceurs, polices et l’environn
 
 ### Étapes
 ```sh
-git clone https://github.com/unayung/wallpaper-engine-mac
+git clone https://github.com/deepratna-awale/wallpaper-engine-mac.git
 cd wallpaper-engine-mac
 open "OpenWallpaperEngine.xcodeproj"
 ```

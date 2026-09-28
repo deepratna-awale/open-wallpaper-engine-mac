@@ -9,6 +9,8 @@ Open Wallpaper Engine (Yamalı Sürüm)
 
 > **Not:** Bu proje, Steam’deki ticari Wallpaper Engine ile bağlantılı DEĞİLDİR. Wallpaper Engine’in Steam Atölyesi’ndeki duvar kâğıdı varlıklarını görüntüleyebilen açık kaynaklı bir macOS uygulamasıdır. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
+**Wiki:** kılavuzlar ve belgeler [wiki](https://github.com/deepratna-awale/wallpaper-engine-mac/wiki)’de.
+
 ## İlgili Projeler
 
 - **[Open Wallpaper Engine for Linux](https://github.com/Unayung/simple-linux-wallpaperengine-gui)** — [linux-wallpaperengine](https://github.com/Almamu/linux-wallpaperengine) için Steam Atölyesi entegrasyonuna sahip, arayüz tasarımı bu macOS sürümünden aktarılmış bir PyQt6 grafik arayüzü.
@@ -19,7 +21,7 @@ Bu proje aşağıdaki kişilerin çalışmaları üzerine inşa edilmiştir:
 
 - **[MrWindDog](https://github.com/MrWindDog)** — Üst kaynak [wallpaper-engine-mac](https://github.com/MrWindDog/wallpaper-engine-mac) çatalının bakımcısı; yeni özellikler ve arayüz iyileştirmeleri ekledi
 - **[Haren Chen](https://github.com/haren724)** — [open-wallpaper-engine-mac](https://github.com/haren724/open-wallpaper-engine-mac)’in asıl yaratıcısı; uygulamanın temel mimarisini oluşturdu (SwiftUI, video duvar kâğıdı oynatma, içe aktarma sistemi, çalma listesi arayüzü)
-- **[1ris_W](https://github.com/Erica-Iris)** — Çince yerelleştirme çevirisi
+- **1ris_W** — Çince yerelleştirme çevirisi
 - **[Klaus Zhu](https://github.com/klauszhu1105)** — Özgün logo tasarımı
 - **[Chen Chia Yang](https://github.com/Unayung)** — Sahne duvar kâğıdı işleme, web duvar kâğıdı düzeltmeleri, Steam Atölyesi entegrasyonu, çoklu ekran desteği, zip içe aktarma
 - **[Deepratna Awale](https://github.com/deepratna-awale)** — Metal sahne işleyicisi ve efekt ardışık düzeni, GLSL→MSL gölgelendirici çevirisi ve önbelleğe alma, SceneScript çalışma zamanı, sese duyarlı işleme, Atölye ve İndirilenler bölümlerinin yenilenmesi, yerleşim ve performans ayarları, logo yeniden tasarımı
@@ -223,15 +225,11 @@ Sahne duvar kâğıtları (Steam Atölyesi’ndeki en yaygın tür) hiç uygulan
 ## Mevcut Sınırlamalar
 
 - **Uygulama duvar kâğıtları** — `type: "application"` duvar kâğıtları desteklenmez ve çalışmaz.
-- **3B modeller ve iskelet donatımı** — Kemik dönüşümleri, karışım şekilleri (blend shapes), ekler ve kukla bükme (puppet warp) donatımları (`.mdl`) yalnızca yer tutucu olarak uygulanmıştır; etkilenen katmanlar düz atlaslar olarak işlenir.
-- **Malzeme betiği işlevleri** — `getMaterial()`, `getMaterialCount()`, `setMaterialProperty()` ve `executeMaterialFunction()` hiçbir şey yapmayan veya boş değer döndüren yer tutuculardır.
-- **Özel GLSL gölgelendirici bağlama** — Dönüştürülmüş MSL içe aktarma sırasında önbelleğe alınır, ancak Wallpaper Engine’e özgü niteliklere, doku zincirlerine veya desteklenmeyen include dosyalarına bağımlı gölgelendiriciler çalışma zamanındaki Metal ardışık düzenine bağlanmaz. Yaygın bloom, bulanıklık, renk düzeltme ve dönüşüm parametreleri yerel Metal eşlemelerine geri döner.
-- **Metal arabellek sınırı** — Metal’in 31 arabellek yuvasından fazlasını gerektiren gölgelendiriciler çevrilemez ve geçerli ardışık düzen revizyonu için kalıcı olarak desteklenmiyor şeklinde işaretlenir.
-- **HLSL gölgelendiricileri** — GLSL kaynaklarının yanında gelen yalnızca Direct3D’ye yönelik gölgelendiriciler tamamen atlanır.
-- **Efekt şeması kapsamı** — Bilinmeyen özel uniform adları ve rastgele efekt parametresi şemaları desteklenmemeye devam etmektedir.
+- **Uygulanmamış SceneScript işlevleri** — `effect.executeMaterialFunction()`, `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `getVideoTexture()`, `engine.openUserShortcut()` henüz hiçbir şey yapmaz.
 - **SceneScript uyumluluğu** — Tescilli olay adlarının, giriş geri çağırmalarının, yaşam döngüsü uç durumlarının veya tam zamanlama anlamlarının tümü yeniden üretilmemiştir.
-- **Parçacık operatörü kapsamı** — Yaygın betikli hız, sürükleme ve alfa solması operatörleri çalışır; nadir operatör betikleri, özel parçacık modülleri ve rastgele operatör şemaları kısmen desteklenir.
-- **Harici varlık kurtarma** — Bazı Atölye paketleri, indirilen pakette bulunmayan paylaşılan TEX varlıklarına başvurur ve orijinal Wallpaper Engine kurulumunu gerektirir.
+- **Nadir parçacık özellikleri** — Küre, kutu ve katman görüntüsü dışındaki yayıcı şekilleri ile bir sistemin ilkinden sonraki işleyicileri desteklenmez.
+- **Wallpaper Engine varlıkları gerekir** — Sahneler kendi Wallpaper Engine kopyanızdaki varlıklara ihtiyaç duyar (Ayarlar → Varlıklar); bunlar olmadan yalnızca video ve web duvar kâğıtları oynar.
+- **WebM videoları** — WebM (VP8/VP9) WebKit üzerinden oynatılır, bu yüzden müzik senkronizasyonu efektleri ona uygulanmaz.
 - **Bazı JPEG küçük resimleri** — Az sayıda TEXB biçim 1 dosyası, macOS’in çözemediği standart dışı JPEG verileri içerir.
 - **Performans ayarlarının kapsamı** — Kalite, kenar yumuşatma ve son işleme seçenekleri sahne duvar kâğıtları için tasarlanmıştır ve video ile web duvar kâğıtları üzerinde sınırlı etkiye sahiptir.
 - **Ses özellikleri izin gerektirir** — Ekran ve Sistem Sesi Kaydı izni olmadan ses görselleştiricileri ve sese duyarlı SceneScript yalnızca sessizlik alır.
@@ -246,17 +244,16 @@ Sahne duvar kâğıtları (Steam Atölyesi’ndeki en yaygın tür) hiç uygulan
 | Sahne — DXT1/DXT3/DXT5 dokuları | Çalışıyor (Metal ile GPU’da çözme) |
 | Sahne — TEXS hareketli grafikleri / alfa zaman çizelgeleri | Çalışıyor |
 | Sahne — hareketli grafik parçacıkları | Çalışıyor |
-| Sahne — gelişmiş parçacıklar | Kısmen (betikli hız/sürükleme/solma desteklenir) |
-| Sahne — yerel Metal efektleri | Çalışıyor (yaklaşık 48 efekt) |
-| Sahne — çevrilmiş Atölye GLSL efektleri | Kısmen (bkz. Sınırlamalar) |
+| Sahne — gelişmiş parçacıklar | Kısmen (bkz. Sınırlamalar) |
+| Sahne — Wallpaper Engine ve Atölye efektleri (WE’nin kendi gölgelendiricileri) | Çalışıyor |
 | Sahne — SceneScript | Kısmen (bkz. Sınırlamalar) |
-| Sahne — 3B modeller / iskelet donatımı / kukla bükme | Desteklenmiyor |
+| Sahne — 3B modeller / iskelet donatımı / kukla bükme | Çalışıyor |
 | Uygulama | Desteklenmiyor |
 
 ## Gereksinimler
 
 ### Gerekli
-- **macOS 13.0 veya sonrası** (Ventura). ScreenCaptureKit ile ses yakalama ve Metal ile sahne işleme bu sürüme bağlıdır.
+- **macOS 14.0 veya sonrası** (Sonoma). ScreenCaptureKit ile ses yakalama ve Metal ile sahne işleme bu sürüme bağlıdır.
 
 ### İsteğe bağlı — belirli özellikler için gereklidir
 
@@ -282,7 +279,7 @@ Sahneler, Steam’deki kendi Wallpaper Engine kopyanızdaki paylaşılan efektle
 
 ### Adımlar
 ```sh
-git clone https://github.com/unayung/wallpaper-engine-mac
+git clone https://github.com/deepratna-awale/wallpaper-engine-mac.git
 cd wallpaper-engine-mac
 open "OpenWallpaperEngine.xcodeproj"
 ```

@@ -9,6 +9,8 @@ macOS 向け [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engi
 
 > **注意：** 本プロジェクトは Steam の商用版 Wallpaper Engine とは一切関係ありません。Wallpaper Engine の Steam ワークショップにある壁紙アセットを表示できる、オープンソースの macOS アプリです。 → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
+**Wiki：** ガイドとドキュメントは [Wiki](https://github.com/deepratna-awale/wallpaper-engine-mac/wiki) にあります。
+
 ## 関連プロジェクト
 
 - **[Open Wallpaper Engine for Linux](https://github.com/Unayung/simple-linux-wallpaperengine-gui)** — [linux-wallpaperengine](https://github.com/Almamu/linux-wallpaperengine) 向けの PyQt6 GUI です。Steam ワークショップとの連携と UI デザインは、この macOS 版から移植されています。
@@ -19,7 +21,7 @@ macOS 向け [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engi
 
 - **[MrWindDog](https://github.com/MrWindDog)** — 上流の [wallpaper-engine-mac](https://github.com/MrWindDog/wallpaper-engine-mac) フォークのメンテナー。新機能と UI の改良を追加
 - **[Haren Chen](https://github.com/haren724)** — [open-wallpaper-engine-mac](https://github.com/haren724/open-wallpaper-engine-mac) のオリジナル作者。アプリのコアアーキテクチャ（SwiftUI、ビデオ壁紙の再生、読み込みシステム、プレイリスト UI）を構築
-- **[1ris_W](https://github.com/Erica-Iris)** — 中国語 i18n 翻訳
+- **1ris_W** — 中国語 i18n 翻訳
 - **[Klaus Zhu](https://github.com/klauszhu1105)** — オリジナルのロゴデザイン
 - **[Chen Chia Yang](https://github.com/Unayung)** — シーン壁紙のレンダリング、Web 壁紙の修正、Steam ワークショップとの連携、マルチディスプレイ対応、zip の読み込み
 - **[Deepratna Awale](https://github.com/deepratna-awale)** — Metal シーンレンダラーとエフェクトパイプライン、GLSL→MSL シェーダー変換とキャッシュ、SceneScript ランタイム、オーディオレスポンスのレンダリング、ワークショップ／ダウンロードの全面改良、配置とパフォーマンスの設定、ロゴのリデザイン
@@ -223,15 +225,11 @@ WebGL ベースの壁紙は、`WKWebView` がテクスチャやアセットの�
 ## 現在の制限事項
 
 - **アプリケーション壁紙** — `type: "application"` の壁紙には対応しておらず、実行されません。
-- **3D モデルとリギング** — ボーンのトランスフォーム、ブレンドシェイプ、アタッチメント、パペットワープのリグ（`.mdl`）はスタブであり、該当するレイヤーは平面のアトラスとしてレンダリングされます。
-- **マテリアルのスクリプト関数** — `getMaterial()`、`getMaterialCount()`、`setMaterialProperty()`、`executeMaterialFunction()` はスタブで、何もしないか空の値を返します。
-- **カスタム GLSL シェーダーのバインディング** — 変換した MSL は読み込み時にキャッシュされますが、Wallpaper Engine 固有の属性、テクスチャチェーン、または未対応の include に依存するシェーダーは、実行時の Metal パイプラインにバインドされません。一般的なブルーム、ぼかし、色補正、トランスフォームのパラメータは、ネイティブの Metal への対応付けにフォールバックします。
-- **Metal のバッファ上限** — Metal の 31 個のバッファスロットを超えて必要とするシェーダーは変換できず、現在のパイプラインのリビジョンでは恒久的に非対応として記録されます。
-- **HLSL シェーダー** — GLSL ソースとともに同梱されている Direct3D 専用のシェーダーは、すべてスキップされます。
-- **エフェクトスキーマの対応範囲** — 不明なカスタム uniform 名や任意のエフェクトパラメータのスキーマには、引き続き対応していません。
+- **SceneScript の未実装関数** — `effect.executeMaterialFunction()`, `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `getVideoTexture()`, `engine.openUserShortcut()` はまだ何もしません。
 - **SceneScript の互換性** — 独自のイベント名、入力コールバック、ライフサイクルのエッジケース、正確なタイミングのセマンティクスのすべてが再現されているわけではありません。
-- **パーティクルオペレータの対応範囲** — 一般的なスクリプト対応のレート、抵抗、アルファのフェードのオペレータは動作しますが、一般的でないオペレータのスクリプト、カスタムのパーティクルモジュール、任意のオペレータのスキーマへの対応は部分的です。
-- **外部アセットの復元** — 一部のワークショップのパッケージは、ダウンロードしたパッケージに含まれない共有の TEX アセットを参照しており、オリジナルの Wallpaper Engine のインストールが必要です。
+- **まれなパーティクル機能** — 球・ボックス・レイヤー画像以外のエミッター形状と、システムの 2 番目以降のレンダラーには対応していません。
+- **Wallpaper Engine のアセットが必要** — シーンにはお持ちの Wallpaper Engine のアセットが必要です（「設定 → アセット」）。アセットがない場合、再生できるのはビデオと Web の壁紙だけです。
+- **WebM ビデオ** — WebM（VP8/VP9）は WebKit で再生されるため、音楽同期エフェクトは適用されません。
 - **一部の JPEG サムネール** — 少数の TEXB 形式 1 のファイルには、macOS でデコードできない非標準の JPEG データが含まれています。
 - **パフォーマンス設定の適用範囲** — 品質、アンチエイリアシング、ポストプロセッシングのオプションはシーン壁紙向けに設計されており、ビデオ壁紙と Web 壁紙への効果は限定的です。
 - **オーディオ機能には許可が必要** — 画面収録の許可がない場合、オーディオビジュアライザとオーディオに反応する SceneScript は無音を受け取ります。
@@ -246,17 +244,16 @@ WebGL ベースの壁紙は、`WKWebView` がテクスチャやアセットの�
 | シーン — DXT1/DXT3/DXT5 テクスチャ | 動作（Metal による GPU デコード） |
 | シーン — TEXS スプライト／アルファのタイムライン | 動作 |
 | シーン — スプライトパーティクル | 動作 |
-| シーン — 高度なパーティクル | 一部対応（スクリプトによるレート／抵抗／フェードに対応） |
-| シーン — ネイティブ Metal エフェクト | 動作（約 48 種類のエフェクト） |
-| シーン — 変換されたワークショップの GLSL エフェクト | 一部対応（「制限事項」を参照） |
+| シーン — 高度なパーティクル | 一部対応（「制限事項」を参照） |
+| シーン — Wallpaper Engine とワークショップのエフェクト（WE 自身のシェーダー） | 動作 |
 | シーン — SceneScript | 一部対応（「制限事項」を参照） |
-| シーン — 3D モデル／リギング／パペットワープ | 非対応 |
+| シーン — 3D モデル／リギング／パペットワープ | 動作 |
 | アプリケーション | 非対応 |
 
 ## 必要条件
 
 ### 必須
-- **macOS 13.0 以降**（Ventura）。ScreenCaptureKit によるオーディオキャプチャと Metal によるシーンのレンダリングは、いずれもこれに依存しています。
+- **macOS 14.0 以降**（Sonoma）。ScreenCaptureKit によるオーディオキャプチャと Metal によるシーンのレンダリングは、いずれもこれに依存しています。
 
 ### オプション — 特定の機能に必要
 
@@ -282,7 +279,7 @@ Wallpaper Engine のエフェクトは GLSL で提供されています。これ
 
 ### 手順
 ```sh
-git clone https://github.com/unayung/wallpaper-engine-mac
+git clone https://github.com/deepratna-awale/wallpaper-engine-mac.git
 cd wallpaper-engine-mac
 open "OpenWallpaperEngine.xcodeproj"
 ```
