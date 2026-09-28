@@ -16,6 +16,11 @@ import Foundation
 /// services under `<bundle id>.isolated.<tag>`. A normal launch uses `UserDefaults.standard` and
 /// the usual folders, unchanged. Launch arguments (`-Key value`) still override any default in an
 /// isolated copy, e.g. `-CustomWallpapersDirectory <path>`.
+///
+/// A helper run of the app (`ShaderPrewarmCommand`: `--prewarm-shaders`, `--print-shader-cache-key`)
+/// uses the same folders but only **reads** the defaults: `defaults` then is a scratch suite that
+/// falls back to a copy of the real domain (`readOnlyView`), so nothing it or the code it runs
+/// sets reaches the user's defaults; `discardReadOnlyScratch` deletes the scratch suite.
 struct AppStorageLocation: @unchecked Sendable { // UserDefaults is thread-safe; the rest is immutable.
     static let realBundleIdentifier = "com.winddog.wallpaper-engine"
     static let environmentKey = "OWE_ISOLATED_STATE"
@@ -23,10 +28,12 @@ struct AppStorageLocation: @unchecked Sendable { // UserDefaults is thread-safe;
     static let testsTag = "tests"
 
     /// The store of this process.
-    static let current = AppStorageLocation(isolationTag: isolationTag(
-        environment: ProcessInfo.processInfo.environment,
-        arguments: ProcessInfo.processInfo.arguments,
-        isRunningTests: NSClassFromString("XCTestCase") != nil))
+    static let current = AppStorageLocation(
+        isolationTag: isolationTag(
+            environment: ProcessInfo.processInfo.environment,
+            arguments: ProcessInfo.processInfo.arguments,
+            isRunningTests: NSClassFromString("XCTestCase") != nil),
+        readOnlyDefaults: ShaderPrewarmCommand.isHelperRun(arguments: ProcessInfo.processInfo.arguments))
 
     /// `nil` for the user's real state.
     let isolationTag: String?
@@ -39,30 +46,59 @@ struct AppStorageLocation: @unchecked Sendable { // UserDefaults is thread-safe;
     let cachesDirectory: URL
     /// Keychain services are `<keychainServicePrefix>.<suffix>`.
     let keychainServicePrefix: String
+    /// The scratch suite `defaults` writes to when it is a read-only view, else nil.
+    let readOnlyScratchSuite: String?
 
     var isIsolated: Bool { isolationTag != nil }
 
-    init(isolationTag: String?, bundleIdentifier: String = Bundle.main.bundleIdentifier ?? realBundleIdentifier) {
+    init(isolationTag: String?, bundleIdentifier: String = Bundle.main.bundleIdentifier ?? realBundleIdentifier,
+         readOnlyDefaults: Bool = false) {
         let fileManager = FileManager.default
         let support = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         let caches = fileManager.urls(for: .cachesDirectory, in: .userDomainMask)[0]
         self.isolationTag = isolationTag
+        let base: UserDefaults
         if let isolationTag {
             let suite = "\(bundleIdentifier).isolated.\(isolationTag)"
             let folder = "Open Wallpaper Engine (isolated \(isolationTag))"
             suiteName = suite
             // Only nil for the global domain or the bundle identifier itself, which `suite` never is.
-            defaults = UserDefaults(suiteName: suite)!
+            base = UserDefaults(suiteName: suite)!
             supportDirectory = support.appending(path: folder, directoryHint: .isDirectory)
             cachesDirectory = caches.appending(path: folder, directoryHint: .isDirectory)
             keychainServicePrefix = suite
         } else {
             suiteName = nil
-            defaults = .standard
+            base = .standard
             supportDirectory = support.appending(path: "Open Wallpaper Engine", directoryHint: .isDirectory)
             cachesDirectory = caches
             keychainServicePrefix = bundleIdentifier
         }
+        if readOnlyDefaults {
+            let scratch = "\(suiteName ?? bundleIdentifier).readonly.\(ProcessInfo.processInfo.processIdentifier)"
+            defaults = Self.readOnlyView(of: base, domain: suiteName ?? bundleIdentifier, scratchSuite: scratch)
+            readOnlyScratchSuite = scratch
+        } else {
+            defaults = base
+            readOnlyScratchSuite = nil
+        }
+    }
+
+    /// Defaults that read what `base` holds in `domain` (and launch arguments), and write only to
+    /// `scratchSuite`, which starts empty.
+    static func readOnlyView(of base: UserDefaults, domain: String, scratchSuite: String) -> UserDefaults {
+        // Only nil for the global domain or the bundle identifier itself, which a scratch suite never is.
+        let view = UserDefaults(suiteName: scratchSuite)!
+        view.removePersistentDomain(forName: scratchSuite)
+        // The registration domain: in memory, below the scratch suite, never written back.
+        view.register(defaults: base.persistentDomain(forName: domain) ?? [:])
+        return view
+    }
+
+    /// Deletes a read-only view's scratch suite (a helper run's last step).
+    func discardReadOnlyScratch() {
+        guard let readOnlyScratchSuite else { return }
+        defaults.removePersistentDomain(forName: readOnlyScratchSuite)
     }
 
     /// The tag to isolate this process under, or `nil` for the user's real state.
