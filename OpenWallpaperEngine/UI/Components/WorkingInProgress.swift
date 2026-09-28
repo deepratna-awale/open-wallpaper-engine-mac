@@ -69,6 +69,26 @@ struct NumericSliderInput<Value: BinaryFloatingPoint>: View where Value.Stride: 
         value = Value(clamped / displayScale)
     }
 
+    /// Whether the field should show `displayed` in place of `text`. Always when the field isn't
+    /// being edited; while it is, only when the value moved away from what the text says (the
+    /// slider was dragged, or Reset ran, with the field still focused), so typing isn't rewritten
+    /// under the cursor but the field never goes stale waiting for a click elsewhere.
+    static func shouldMirror(text: String, displayed: Double, isEditing: Bool, fractionDigits: Int) -> Bool {
+        guard isEditing else { return true }
+        guard let typed = Double(text.trimmingCharacters(in: .whitespaces)) else { return true }
+        return abs(typed - displayed) > 0.5 * pow(10, -Double(max(fractionDigits, 0)))
+    }
+
+    /// Arrow keys in the field nudge the value by the step (or one shown digit), live.
+    private func nudge(_ direction: Double) {
+        let increment = step.map { Double($0) } ?? pow(10, -Double(max(fractionDigits, 0))) / displayScale
+        let raw = Double(value) + direction * increment
+        let lower = Double(range.lowerBound), upper = Double(range.upperBound)
+        let next: Double = clampsTypedValue ? min(max(raw, lower), upper) : raw
+        value = Value(next)
+        text = formatted(displayedValue)
+    }
+
     /// Rounds `raw` to the nearest multiple of `step` counted from the range's lower bound,
     /// clamped to the range; without a step the value passes through.
     static func snapped(_ raw: Value, in range: ClosedRange<Value>, step: Value.Stride?) -> Value {
@@ -97,7 +117,12 @@ struct NumericSliderInput<Value: BinaryFloatingPoint>: View where Value.Stride: 
                     .onChange(of: text) { _, newText in
                         if isEditing { commit(newText) }
                     }
-                    .onSubmit { commit(text) }
+                    .onSubmit {
+                        commit(text)
+                        text = formatted(displayedValue)
+                    }
+                    .onKeyPress(.upArrow) { nudge(1); return .handled }
+                    .onKeyPress(.downArrow) { nudge(-1); return .handled }
                 if !suffix.isEmpty {
                     Text(suffix).foregroundStyle(.secondary)
                 }
@@ -105,7 +130,10 @@ struct NumericSliderInput<Value: BinaryFloatingPoint>: View where Value.Stride: 
         }
         .onAppear { text = formatted(displayedValue) }
         .onChange(of: value) { _, _ in
-            if !isEditing { text = formatted(displayedValue) }
+            if Self.shouldMirror(text: text, displayed: displayedValue, isEditing: isEditing,
+                                 fractionDigits: fractionDigits) {
+                text = formatted(displayedValue)
+            }
         }
         .onChange(of: isEditing) { _, editing in
             if !editing { text = formatted(displayedValue) }

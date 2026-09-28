@@ -21,4 +21,27 @@ final class NumericSliderInputTests: XCTestCase {
     func testWithoutStepPassesThrough() {
         XCTAssertEqual(Input.snapped(0.123, in: 0...1, step: nil), 0.123)
     }
+
+    /// A focused field follows a slider drag at once instead of waiting for focus to leave it,
+    /// but what the user is typing isn't rewritten while it still says the value.
+    func testFocusedFieldMirrorsOutsideChangesLive() {
+        typealias Input = NumericSliderInput<Double>
+        XCTAssertTrue(Input.shouldMirror(text: "0.50", displayed: 0.5, isEditing: false, fractionDigits: 2))
+        XCTAssertTrue(Input.shouldMirror(text: "0.50", displayed: 0.73, isEditing: true, fractionDigits: 2))
+        XCTAssertFalse(Input.shouldMirror(text: "0.5", displayed: 0.5, isEditing: true, fractionDigits: 2))
+        XCTAssertFalse(Input.shouldMirror(text: "1.", displayed: 1, isEditing: true, fractionDigits: 2))
+        XCTAssertTrue(Input.shouldMirror(text: "abc", displayed: 1, isEditing: true, fractionDigits: 2))
+    }
+
+    /// An inspector edit reads back at once, before the debounced save lands in the store.
+    func testInspectorEditReadsBackBeforeTheSave() {
+        var buffer = SceneInspectorEditBuffer()
+        let stored: [String: String] = ["a_musicAmount": "0"]
+        XCTAssertEqual(buffer.values(stored: stored)["a_musicAmount"], "0")
+        buffer.pending = ["a_musicAmount": "0.4", "b": "1"]
+        XCTAssertEqual(buffer.values(stored: stored)["a_musicAmount"], "0.4")
+        var next: [String: String] = buffer.values(stored: stored)
+        next["c"] = "2"
+        XCTAssertEqual(next["b"], "1", "a second edit inside the debounce keeps the first")
+    }
 }

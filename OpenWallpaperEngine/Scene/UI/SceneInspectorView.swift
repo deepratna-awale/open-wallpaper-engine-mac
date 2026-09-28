@@ -74,6 +74,15 @@ private enum SceneVerticalSnap {
     case top, center, bottom
 }
 
+/// The inspector's unsaved edits over the store it saves to.
+struct SceneInspectorEditBuffer {
+    var pending: [String: String]?
+
+    func values(stored: @autoclosure () -> [String: String]) -> [String: String] {
+        pending ?? stored()
+    }
+}
+
 private final class SceneInspectorModel: ObservableObject {
     @Published var items: [SceneInspectorItem] = []
     @Published var errorMessage: String?
@@ -95,6 +104,11 @@ private final class SceneInspectorModel: ObservableObject {
     private let targets: WallpaperPropertyTargets
     private var textureLoadGeneration = 0
     private var pendingSave: DispatchWorkItem?
+    /// The values handed to the wallpaper but not yet saved (the save is debounced). Reads go
+    /// through it, so a control reading the store (Music Amount, Sync to Music) shows its new value
+    /// at once, and a second edit inside the debounce doesn't drop the first.
+    @Published private var editBuffer = SceneInspectorEditBuffer()
+    private var storedValues: [String: String] { editBuffer.values(stored: targets.storedValues) }
 
     init(wallpaper: WEWallpaper, scopes: [WallpaperPropertyScope]) {
         directory = wallpaper.wallpaperDirectory
@@ -125,7 +139,7 @@ private final class SceneInspectorModel: ObservableObject {
         }
                 sceneSize = Self.sceneSize(for: scene)
 
-        let storedValues = targets.storedValues
+        let storedValues: [String: String] = targets.storedValues
         items = scene.objects.enumerated().map { index, object in
             let objectID = object.id ?? index
             var rawObject = rawObjects.indices.contains(index) ? prettyJSON(rawObjects[index]) : "{}"
@@ -347,7 +361,7 @@ private final class SceneInspectorModel: ObservableObject {
         guard parts.count == 2, let objectID = Int(parts[0]), let effectIndex = Int(parts[1]) else { return }
         let key = sceneAuthoredEffectOverrideKey(objectID: objectID, effectIndex: effectIndex,
                                                  parameter: control.key)
-        var values = targets.storedValues
+        var values = storedValues
         values[key] = components.map { String($0) }.joined(separator: " ")
         persist(values)
     }
@@ -383,7 +397,7 @@ private final class SceneInspectorModel: ObservableObject {
         let parts = combo.effectID.split(separator: ":")
         guard parts.count == 2, let objectID = Int(parts[0]), let effectIndex = Int(parts[1]) else { return }
         let key = sceneAuthoredEffectOverrideKey(objectID: objectID, effectIndex: effectIndex, parameter: SceneEffectParameters.comboOverrideKey(combo.combo))
-        var values = targets.storedValues
+        var values = storedValues
         values[key] = String(value)
         persist(values)
     }
@@ -412,7 +426,7 @@ private final class SceneInspectorModel: ObservableObject {
         let parts = control.effectID.split(separator: ":")
         guard parts.count == 2, let objectID = Int(parts[0]), let effectIndex = Int(parts[1]) else { return }
         let key = sceneAuthoredEffectOverrideKey(objectID: objectID, effectIndex: effectIndex, parameter: control.key)
-        var values = targets.storedValues
+        var values = storedValues
         values[key] = rgb.map(String.init).joined(separator: " ")
         persist(values)
     }
@@ -423,12 +437,12 @@ private final class SceneInspectorModel: ObservableObject {
 
     func musicSyncEnabled(for control: SceneInspectorEffectControl) -> Bool {
         let key = musicSyncKey(for: control)
-        let values = targets.storedValues
+        let values = storedValues
         return (values[key] ?? "false").lowercased() == "true"
     }
 
     func setMusicSyncEnabled(_ enabled: Bool, for control: SceneInspectorEffectControl) {
-        var values = targets.storedValues
+        var values = storedValues
         values[musicSyncKey(for: control)] = enabled ? "true" : "false"
         if values[musicAmountKey(for: control)] == nil {
             values[musicAmountKey(for: control)] = "0"
@@ -437,13 +451,13 @@ private final class SceneInspectorModel: ObservableObject {
     }
 
     func musicAmount(for control: SceneInspectorEffectControl) -> Double {
-        let values = targets.storedValues
+        let values = storedValues
         let raw = Double(values[musicAmountKey(for: control)] ?? "0") ?? 0
         return control.displaysDegrees ? raw * 180 / .pi : raw
     }
 
     func setMusicAmount(_ amount: Double, for control: SceneInspectorEffectControl) {
-        var values = targets.storedValues
+        var values = storedValues
         values[musicAmountKey(for: control)] = String(control.displaysDegrees ? amount * .pi / 180 : amount)
         persist(values)
     }
@@ -474,14 +488,14 @@ private final class SceneInspectorModel: ObservableObject {
         let parts = effect.id.split(separator: ":")
         guard parts.count == 2, let objectID = Int(parts[0]), let effectIndex = Int(parts[1]) else { return }
         let key = sceneAuthoredEffectEnabledKey(objectID: objectID, effectIndex: effectIndex)
-        var values = targets.storedValues
+        var values = storedValues
         values[key] = enabled ? "true" : "false"
         persist(values)
     }
 
     func setObjectVisible(_ visible: Bool, item: SceneInspectorItem) {
         let objectID = Int(item.id) ?? 0
-        var values = targets.storedValues
+        var values = storedValues
         values[sceneObjectVisibilityKey(objectID: objectID)] = visible ? "true" : "false"
         persist(values)
         if let index = items.firstIndex(where: { $0.id == item.id }) {
@@ -553,7 +567,7 @@ private final class SceneInspectorModel: ObservableObject {
         let origin = Self.originString(updated)
         object["origin"] = origin
         items[index].rawObject = prettyJSON(object)
-        var values = targets.storedValues
+        var values = storedValues
         values["_owe_scene_object_\(item.id)_origin"] = origin
         persist(values)
     }
@@ -579,7 +593,7 @@ private final class SceneInspectorModel: ObservableObject {
         let scale = Self.originString(updated)
         object["scale"] = scale
         items[index].rawObject = prettyJSON(object)
-        var values = targets.storedValues
+        var values = storedValues
         values["_owe_scene_object_\(item.id)_scale"] = scale
         persist(values)
     }
@@ -686,7 +700,7 @@ private final class SceneInspectorModel: ObservableObject {
               let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               JSONSerialization.isValidJSONObject(object) else { return }
         let formatted = prettyJSON(object)
-        var values = targets.storedValues
+        var values = storedValues
         values["_owe_scene_object_\(item.id)_json"] = formatted
         persist(values)
         if let index = items.firstIndex(where: { $0.id == item.id }) {
@@ -698,14 +712,14 @@ private final class SceneInspectorModel: ObservableObject {
         guard let data = text.data(using: .utf8),
               let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               JSONSerialization.isValidJSONObject(object) else { return }
-        var values = targets.storedValues
+        var values = storedValues
         values["_owe_scene_asset_\(path)_json"] = prettyJSON(object)
         persist(values)
     }
 
     func useVersion(_ item: SceneInspectorItem) {
         guard let value = item.versionValue else { return }
-        var values = targets.storedValues
+        var values = storedValues
         values["version"] = value
         persist(values)
     }
@@ -774,13 +788,18 @@ private final class SceneInspectorModel: ObservableObject {
     func removeEdits() {
         pendingSave?.cancel()
         pendingSave = nil
+        editBuffer = SceneInspectorEditBuffer()
         targets.removeSceneInspectorEdits()
     }
 
     private func persist(_ values: [String: String]) {
+        editBuffer.pending = values
         targets.publish(values)
         pendingSave?.cancel()
-        let work = DispatchWorkItem { [targets] in targets.save(values) }
+        let work = DispatchWorkItem { [weak self, targets] in
+            targets.save(values)
+            self?.editBuffer.pending = nil
+        }
         pendingSave = work
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.12, execute: work)
     }
