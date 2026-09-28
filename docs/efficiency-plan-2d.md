@@ -252,7 +252,7 @@ Three packages run in parallel in each phase. The files named are owned exclusiv
 ## 8. Integration order and full test runs
 
 1. Each package commits only its owned files and reports patches for hot files it does not own.
-2. At the end of each phase the coordinator applies the patches in the order the phase lists, builds, runs the **full test suite** (only the coordinator runs it, one xcodebuild at a time), runs the benchmark on the 6 wallpapers, and updates §0 with the new numbers.
+2. At the end of each phase the coordinator applies the patches in the order the phase lists, builds, runs the targeted tests of the phase, runs the benchmark on the 6 wallpapers, and updates §0 with the new numbers.
 3. A package whose numbers regress or whose thresholds fail is reverted from the phase and redone; the others stay.
 4. Phases run in order 0 → 5. Within a phase the listed packages run in parallel (3 at a time).
-5. After Phase 5: update `docs/roadmap.md` and `docs/progress-snapshot.md` with the final numbers.
+5. After Phase 5, with every optimisation in the PR, the coordinator runs the **full test suite** once (only the coordinator, one xcodebuild at a time). Then update `docs/roadmap.md` and `docs/progress-snapshot.md` with the final numbers.
