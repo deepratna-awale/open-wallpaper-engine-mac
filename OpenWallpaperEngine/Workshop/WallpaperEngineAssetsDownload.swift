@@ -23,8 +23,10 @@ enum WallpaperEngineAssetsDownload {
 
     /// The folder SteamCMD downloads into, inside the Wallpaper Storage folder (the same volume as
     /// the cache, so nothing large lands on the startup disk). Deleted after the copy.
+    static let downloadFolderName = ".owe-assets-download"
+
     static func downloadDirectory(in storage: URL) -> URL {
-        storage.appending(path: ".owe-assets-download", directoryHint: .isDirectory)
+        storage.appending(path: downloadFolderName, directoryHint: .isDirectory)
     }
 
     /// Logs in with SteamCMD's cached session (no password: it fails instead of prompting) and

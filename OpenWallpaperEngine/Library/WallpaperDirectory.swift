@@ -76,23 +76,42 @@ enum WallpaperStorage {
 
         try fileManager.createDirectory(at: destinationDirectory, withIntermediateDirectories: true)
         if moveExisting, fileManager.fileExists(atPath: sourceDirectory.path) {
-            let items = try fileManager.contentsOfDirectory(
-                at: sourceDirectory,
-                includingPropertiesForKeys: nil,
-                options: [.skipsHiddenFiles]
-            )
-            var moved = Set<String>()
-            for item in items {
-                let destination = destinationDirectory.appending(path: item.lastPathComponent)
-                guard !fileManager.fileExists(atPath: destination.path) else { continue }
-                try fileManager.moveItem(at: item, to: destination)
-                moved.insert(item.lastPathComponent)
-            }
-            // Hidden, so the loop above skips it; it lists which of the moved items are dependencies.
+            let moved = try moveContents(from: sourceDirectory, to: destinationDirectory, fileManager: fileManager)
+            // Merged rather than moved when the destination has one; it lists which of the moved
+            // items are dependencies.
             try WorkshopDependencyIndex.carry(from: sourceDirectory, to: destinationDirectory, movedItems: moved)
         }
         UserDefaults.app.set(destinationDirectory.path, forKey: customPathKey)
         return moveExisting ? (sourceDirectory, destinationDirectory) : nil
+    }
+
+    /// Whether a storage item moves with the folder: the wallpapers, and the app's own hidden data
+    /// (`.owe-*`: the assets cache with its info file, SteamCMD's staging, converted packages).
+    /// Other hidden files (`.DS_Store`, `._*`, `.Trashes`…) belong to the old folder, the dependency
+    /// index is merged by `WorkshopDependencyIndex.carry`, and half-finished work (a download
+    /// being unpacked, a staging copy) is left behind: it is rebuilt when needed.
+    static func movesWithStorage(_ name: String) -> Bool {
+        guard name.hasPrefix(".") else { return true }
+        guard name.hasPrefix(".owe") else { return false }
+        if name == WorkshopDependencyIndex.fileName { return false }
+        if name == WallpaperEngineAssetsDownload.downloadFolderName { return false }
+        return !name.hasPrefix(".owe-incoming-") && !name.hasSuffix(".partial")
+    }
+
+    /// Moves what `movesWithStorage` keeps from `source` into `destination`, never over an item of
+    /// the same name. Returns the names moved.
+    @discardableResult
+    static func moveContents(from source: URL, to destination: URL,
+                             fileManager: FileManager = .default) throws -> Set<String> {
+        let items = try fileManager.contentsOfDirectory(at: source, includingPropertiesForKeys: nil)
+        var moved = Set<String>()
+        for item in items where movesWithStorage(item.lastPathComponent) {
+            let target = destination.appending(path: item.lastPathComponent)
+            guard !fileManager.fileExists(atPath: target.path) else { continue }
+            try fileManager.moveItem(at: item, to: target)
+            moved.insert(item.lastPathComponent)
+        }
+        return moved
     }
 
     static func resetToDefault() {
