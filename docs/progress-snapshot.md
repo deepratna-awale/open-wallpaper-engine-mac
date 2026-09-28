@@ -1,5 +1,19 @@
 # Open Wallpaper Engine for macOS: progress snapshot
 
+## Current status (2026-09-28)
+
+The snapshot below (2026-09-25) is kept as it was written; most of its TL;DR has since been fixed. Where things stand now, on `deepratna/feature-work` (0.9.0):
+
+- **Scenes draw through WE's own shaders**, translated in process (glslang and SPIRV-Cross, `Vendor/ShaderToolchain`) and cached; the hand-written native effects are gone. Composition, fullscreen and solid layers, all blend modes, masks, WE's text layout, timelines and colour correction follow WE.
+- **Lighting, 3D models and puppet warp are done** (roadmap areas 5–7; `docs/lighting-plan.md`, `docs/models-plan.md`): lights, lit image layers, shadows, planar and screen-space reflection, volumetrics, WE's LDR and HDR bloom and display HDR; `.mdl` models with skinning, animation layers, morph targets and root motion; perspective cameras with paths, fades and shake; puppets posed by their animation layers, with bone physics.
+- **Particles** run on the GPU as WE's compiled operator program, in 3D, with children, control points, collisions (`collisionmodel` included) and a user particle budget.
+- **SceneScript** runs every scene's scripts on `SceneScriptRuntime` (one per wallpaper instance), with the full object model; the few stubs left are listed in the README's limitations.
+- **Audio** follows WE's spectrum and sound layers (spatial sound included); capture restarts after sleep. Now Playing reaches scenes and web wallpapers.
+- **Wallpaper instances** are shared across displays: a scene loads, scripts and renders once.
+- **Assets:** WE's effects, materials, shaders, models, particles, scripts and fonts no longer ship in the repo or the app (`Vendor/we-assets` is gone). Settings › Assets installs them from the user's own Steam copy with SteamCMD into `<Wallpaper Storage>/.owe-assets`, or reads a chosen WE folder. Tests read them from `OWE_ASSETS`.
+- **Video:** WebM (VP8/VP9) plays through WebKit; music-sync effects don't apply to it.
+- **Open:** the roadmap's remaining gaps (area 8 items 18–21, 23 and 24; the shader-compiler helper process) and the open points in the plans that need WE ground truth. Paths and file names in the sections below predate the reorganization (`docs/architecture.md` has the current layout).
+
 - **Date:** 2026-09-25
 - **Branch:** `deepratna/feature-work` @ `ebb88ae` plus uncommitted working-tree changes
 - **Goal:** run **every** Wallpaper Engine wallpaper type except `application`. That means any Workshop scene with custom effects, shaders and SceneScripts, not only the wallpapers in the local library.
