@@ -1,12 +1,12 @@
 import Foundation
 
 /// The user's Workshop subscriptions, from `IPublishedFileService/GetUserFiles/v1` with
-/// `type=subscribed`. Best effort: it needs the user's Web API key and SteamID64, and Steam often
-/// answers `{"response":{}}` for it, which is treated as "Steam didn't return your subscriptions".
+/// `type=mysubscriptions` (`subscribed` always answers `{"response":{}}`). It needs the user's Web API
+/// key and SteamID64; an empty answer is treated as "Steam didn't return your subscriptions".
 enum WorkshopSubscriptions {
     static let userFilesURL = URL(string: "https://api.steampowered.com/IPublishedFileService/GetUserFiles/v1/")!
     /// The probe's answer, kept so an account Steam returns nothing for doesn't show the option again.
-    static let probeResultKey = "WorkshopSubscriptionsProbe"
+    static let probeResultKey = "WorkshopSubscriptionsProbe.mysubscriptions"
 
     enum Outcome: Equatable {
         case items([String])
@@ -24,7 +24,7 @@ enum WorkshopSubscriptions {
         [
             URLQueryItem(name: "steamid", value: steamID),
             URLQueryItem(name: "appid", value: String(WorkshopAPIService.wallpaperEngineAppId)),
-            URLQueryItem(name: "type", value: "subscribed"),
+            URLQueryItem(name: "type", value: "mysubscriptions"),
             URLQueryItem(name: "page", value: String(page)),
             URLQueryItem(name: "numperpage", value: String(perPage)),
             URLQueryItem(name: "return_short_description", value: "false"),

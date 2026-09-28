@@ -89,7 +89,7 @@ final class WorkshopSubscriptionsTests: XCTestCase {
     func testTheQueryAsksForSubscribedItemsWithoutTheKey() {
         let query = WorkshopSubscriptions.queryItems(steamID: "76561190000000001", page: 2)
         let values = Dictionary(uniqueKeysWithValues: query.map { ($0.name, $0.value ?? "") })
-        XCTAssertEqual(values["type"], "subscribed")
+        XCTAssertEqual(values["type"], "mysubscriptions")
         XCTAssertEqual(values["appid"], "431960")
         XCTAssertEqual(values["steamid"], "76561190000000001")
         XCTAssertEqual(values["page"], "2")
