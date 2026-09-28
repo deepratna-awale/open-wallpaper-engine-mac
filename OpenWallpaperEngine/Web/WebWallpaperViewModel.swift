@@ -115,6 +115,7 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
 
     /// Restarts the heartbeat clock when the gate opens and stops it when it closes.
     private func reportHeartbeatGate() {
+        updateAudioTimer()
         guard pageHasBeaten else { return }
         renderWatchdog?.recordHeartbeat(from: ObjectIdentifier(self), expectingMore: heartbeatGate.expectsHeartbeats)
     }
@@ -201,6 +202,21 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     }
 
     fileprivate func audioListenerRegistered() {
+        audioRegistered = true
+        updateAudioTimer()
+    }
+
+    /// Whether the page registered an audio listener; the timer runs only while it can be seen.
+    private var audioRegistered = false
+
+    /// Runs the 30 Hz delivery only while the page is registered, playing and visible: a paused,
+    /// covered or sleeping page would drop the values, so the timer and its IPC stop too.
+    private func updateAudioTimer() {
+        guard audioRegistered, heartbeatGate.expectsHeartbeats else {
+            audioTimer?.invalidate()
+            audioTimer = nil
+            return
+        }
         guard audioTimer == nil else { return }
         let clock = audioClock ?? WallpaperServices.shared.makeAudioSpectrumClock(publishes: false)
         audioClock = clock
@@ -244,6 +260,7 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     }
 
     func stopAudio() {
+        audioRegistered = false
         audioTimer?.invalidate()
         audioTimer = nil
     }
