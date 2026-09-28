@@ -72,6 +72,51 @@ final class WECursorCaptureTests: XCTestCase {
         print("Cursor request (output \(ours.path)):\n\(text)")
     }
 
+    /// WE 2.8.0.42's halo centres from RenderDoc stills (we-test-wp-images,
+    /// `cursor_captures_rd/halo_centres.tsv`): cursor, then the halo's centre, in display pixels.
+    /// The centres were measured with a lower threshold than `haloCentre`, so ours may differ by
+    /// a few pixels; 560,540 is clipped by the layer's edge. With camera parallax the halo stays
+    /// under the cursor (the layer's effect projection includes the parallax shift): pre-parallax
+    /// mapping put it 160 px off, at 960,540 for the cursor at 1100,620.
+    private static let weHaloCentres: [String: [(cursor: SIMD2<Double>, halo: SIMD2<Double>)]] = [
+        "curs_xray_plain": [(SIMD2(960, 540), SIMD2(961.9, 540.4)), (SIMD2(700, 350), SIMD2(702.5, 351.5)),
+                            (SIMD2(1250, 760), SIMD2(1249.1, 760.0)), (SIMD2(560, 540), SIMD2(567.3, 540.1)),
+                            (SIMD2(960, 180), SIMD2(964.7, 180.0))],
+        "curs_xray_moved": [(SIMD2(1250, 460), SIMD2(1251.5, 459.5)), (SIMD2(1100, 340), SIMD2(1099.2, 340.9)),
+                            (SIMD2(1400, 600), SIMD2(1401.8, 598.7)), (SIMD2(1000, 520), SIMD2(995.8, 522.9))],
+        "curs_xray_zoom": [(SIMD2(960, 540), SIMD2(963.1, 540.9)), (SIMD2(1200, 700), SIMD2(1199.4, 699.8)),
+                           (SIMD2(700, 380), SIMD2(703.8, 381.1))],
+        "curs_xray_crop": [(SIMD2(960, 540), SIMD2(961.9, 540.4)), (SIMD2(1200, 800), SIMD2(1198.1, 799.9)),
+                           (SIMD2(700, 250), SIMD2(703.4, 251.8))],
+        "curs_xray_parallax": [(SIMD2(960, 540), SIMD2(961.9, 540.4)), (SIMD2(1100, 620), SIMD2(1098.7, 619.9)),
+                               (SIMD2(840, 460), SIMD2(844.3, 461.2))],
+    ]
+    /// Display pixels, against `weHaloCentres`.
+    private static let measuredTolerance = 6.0
+
+    /// FX1: every case (plain, moved, zoomed, cropped, parallax) against WE's measured centres.
+    func testXRayHaloMatchesWEMeasuredCentres() throws {
+        guard let path = ProcessInfo.processInfo.environment["OWE_CURSOR_REQUEST"], !path.isEmpty else {
+            throw XCTSkip("set OWE_CURSOR_REQUEST to the cursor request folder")
+        }
+        let projects = URL(fileURLWithPath: path, isDirectory: true).appending(path: "projects")
+        for (project, cases) in Self.weHaloCentres.sorted(by: { $0.key < $1.key }) {
+            let points: [SIMD2<Double>] = cases.map(\.cursor)
+            let frames = try render(projects.appending(path: project), points: points)
+            // Parallax moves the layer with the cursor: the control is the same scene without x-ray.
+            let controls = project.contains("parallax")
+                ? try render(projects.appending(path: "curs_parallax_none"), points: points) : nil
+            for (index, entry) in cases.enumerated() {
+                let name = "\(project)_\(Int(entry.cursor.x))_\(Int(entry.cursor.y))"
+                let control = controls?[index + 1] ?? frames[0]
+                let centre = try XCTUnwrap(Self.haloCentre(frames[index + 1], control: control), "\(name): no halo")
+                let distance: Double = simd_distance(centre, entry.halo)
+                XCTAssertLessThanOrEqual(distance, Self.measuredTolerance,
+                                         "\(name): the halo is at \(centre), \(distance) px from WE's \(entry.halo)")
+            }
+        }
+    }
+
     /// The parked frame, then one frame per point.
     private func render(_ directory: URL, points: [SIMD2<Double>]) throws -> [WEReferenceImage] {
         let data = try Data(contentsOf: directory.appending(path: "project.json"))
