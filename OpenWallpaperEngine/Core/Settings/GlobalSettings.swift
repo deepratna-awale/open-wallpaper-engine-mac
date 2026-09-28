@@ -56,6 +56,19 @@ enum GSLightingQuality: String, CaseIterable, Identifiable, Codable {
     }
 }
 
+extension GSQuality {
+    /// The `shadows` value WE's quality preset sets (`getQualityPreset` in WE's
+    /// `ui/dist/scripts/scripts.js`): the preset's own name.
+    var shadows: GSLightingQuality {
+        switch self {
+        case .low: return .low
+        case .medium: return .medium
+        case .high: return .high
+        case .ultra: return .ultra
+        }
+    }
+}
+
 /// The most particles one scene may hold (`ParticleBudget`); a scene authored with more is thinned
 /// to it, every system alike.
 enum GSParticleBudget: String, CaseIterable, Identifiable, Codable {

@@ -138,6 +138,14 @@ struct PerformancePage: SettingsPage {
                     Text("Desktop (1 pixel per point)", comment: "Render resolution: one pixel per screen point, as a non-Retina display draws; not the macOS Desktop").tag(GSRenderResolution.desktop)
                 }
                 .help("Native draws at the display's full pixel count. Desktop draws one pixel per point (half the width and height on a Retina display) and scales the frame up, for a quarter of the work.")
+                Picker("Shadows", selection: $viewModel.settings.shadows) {
+                    Text("Disabled").tag(GSLightingQuality.disabled)
+                    Text("Low").tag(GSLightingQuality.low)
+                    Text("Medium").tag(GSLightingQuality.medium)
+                    Text("High").tag(GSLightingQuality.high)
+                    Text("Ultra").tag(GSLightingQuality.ultra)
+                }
+                .help("Shadows cast by wallpapers' lights. Higher qualities draw larger shadow maps.")
                 Picker("Volumetrics", selection: $viewModel.settings.volumetrics) {
                     Text("Disabled").tag(GSLightingQuality.disabled)
                     Text("Low").tag(GSLightingQuality.low)

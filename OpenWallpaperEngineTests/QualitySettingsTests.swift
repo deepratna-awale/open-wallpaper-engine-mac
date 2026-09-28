@@ -57,6 +57,13 @@ final class QualitySettingsTests: XCTestCase {
         XCTAssertEqual(unknown.particleBudget, .medium, "an unknown value keeps the default")
     }
 
+    /// WE's quality presets set `shadows` to the preset's own name (`getQualityPreset`).
+    func testQualityPresetsSetShadowsAsWEDoes() {
+        let presets: [GSQuality] = [.low, .medium, .high, .ultra]
+        let shadows: [GSLightingQuality] = presets.map(\.shadows)
+        XCTAssertEqual(shadows, [.low, .medium, .high, .ultra])
+    }
+
     func testSettingsRoundTrip() throws {
         var settings = GlobalSettings()
         settings.postProcessing = .displayhdr
