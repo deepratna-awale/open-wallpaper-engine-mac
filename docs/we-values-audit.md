@@ -1,5 +1,7 @@
 # WE-authored values audit
 
+**Note (2026-09-28):** `Vendor/we-assets` no longer exists. Wallpaper Engine's assets now come from the user's own Steam copy (Settings › Assets, cached in `<Wallpaper Storage>/.owe-assets`) or a chosen Wallpaper Engine folder, and tests read them from `OWE_ASSETS`. Mentions of `we-assets` below describe the tree as it was when this was written.
+
 **Status: 2026-09-26.** Work queue item 2 in [`roadmap.md`](roadmap.md).
 
 The rule: every default, threshold, range, step, option list, label and unit that Wallpaper Engine authors comes from WE's own data. We never invent them. The sources are:

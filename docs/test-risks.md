@@ -1,5 +1,7 @@
 # Test risks: renderer (A), shaders M9 (B), recent `git log -25`
 
+**Note (2026-09-28):** `Vendor/we-assets` no longer exists. Wallpaper Engine's assets now come from the user's own Steam copy (Settings › Assets, cached in `<Wallpaper Storage>/.owe-assets`) or a chosen Wallpaper Engine folder, and tests read them from `OWE_ASSETS`. Mentions of `we-assets` below describe the tree as it was when this was written.
+
 Status: 2026-09-25, branch `deepratna/feature-work`. Adversarial list; ranked by severity × likelihood.
 Paths are relative to `OpenWallpaperEngine/`. **A** = renderer agent, **B** = shaders agent, **R** = already landed.
 

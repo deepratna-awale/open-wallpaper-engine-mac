@@ -1,5 +1,7 @@
 # SceneScript plan
 
+**Note (2026-09-28):** `Vendor/we-assets` no longer exists. Wallpaper Engine's assets now come from the user's own Steam copy (Settings › Assets, cached in `<Wallpaper Storage>/.owe-assets`) or a chosen Wallpaper Engine folder, and tests read them from `OWE_ASSETS`. Mentions of `we-assets` below describe the tree as it was when this was written.
+
 **Status: 2026-09-26, WP0 (from evidence) and WP1–WP11 done: the app runs every scene's scripts on `SceneScriptRuntime`, one per display, and the legacy `AudioReactiveScriptEngine` scripting is deleted. WP11's gaps are closed (sound layers, desktop clicks, no frame of latency, `createLayer` of every kind, `brightness`/`size`) and the optimisation pass is done (see "After WP11"). WP12 (timelines and animation APIs) is next.** Roadmap area 4 (Phase 6). This document is the evidence and the plan for making our SceneScript runtime run *every* script users have. It replaces §5 and P5 of [`progress-snapshot.md`](progress-snapshot.md) as the source of truth for scripting.
 
 Sources, in order of authority:

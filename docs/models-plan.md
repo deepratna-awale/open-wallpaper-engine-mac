@@ -1,5 +1,7 @@
 # 3D models, the perspective camera, skinning, shadows and planar reflection: evidence and plan
 
+**Note (2026-09-28):** `Vendor/we-assets` no longer exists. Wallpaper Engine's assets now come from the user's own Steam copy (Settings › Assets, cached in `<Wallpaper Storage>/.owe-assets`) or a chosen Wallpaper Engine folder, and tests read them from `OWE_ASSETS`. Mentions of `we-assets` below describe the tree as it was when this was written.
+
 **Status: 2026-09-28. Implemented: every package in §4.3 is done (M0–M10, P1, P2), with the tester pass T and the optimisation pass O (2026-09-27) and WE's ground truth MG1–MG8 checked; what landed is under each package. Open: instancing identical meshes (O) and the points in §5, which need the binary or WE ground truth. The research below was written 2026-09-26, before the work.** This covers roadmap area 6 (3D models, with particle `collisionmodel`), the parts of area 7 (puppet warp) that share the `.mdl` format and skinning, and the two lighting packages that were waiting for area 6: C2 (planar `_rt_Reflection`) and D2 (shadows) in [`lighting-plan.md`](lighting-plan.md). It sets out:
 
 - the `.mdl` binary format, every version in the library, from WE's own reader;

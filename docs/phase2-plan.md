@@ -1,5 +1,7 @@
 # Phase 2: real Wallpaper Engine shaders and effects
 
+**Note (2026-09-28):** `Vendor/we-assets` no longer exists. Wallpaper Engine's assets now come from the user's own Steam copy (Settings › Assets, cached in `<Wallpaper Storage>/.owe-assets`) or a chosen Wallpaper Engine folder, and tests read them from `OWE_ASSETS`. Mentions of `we-assets` below describe the tree as it was when this was written.
+
 **Goal:** every WE effect — built-in or Workshop, single- or multi-pass — renders through WE's own shaders with WE's semantics. When this phase is done, the hand-written native effect stack is deleted.
 
 **Status (2026-09-25):** M1–M7 landed on `deepratna/feature-work` (PR #2). M8 (library coverage sweep) and M9 (in-process compiler, binary archive) remain. Script access to effects (`getEffect`/`setMaterialProperty`) moved to the Phase 6 SceneScript rewrite.
