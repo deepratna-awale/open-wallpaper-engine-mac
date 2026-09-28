@@ -104,6 +104,67 @@ enum SceneTextureUpload {
         return grey ? coverage : nil
     }
 
+    // MARK: Block-compressed textures
+
+    /// The Metal format and block size of a block-compressed `.tex` format; nil for others.
+    static func blockFormat(for format: UInt32) -> (pixelFormat: MTLPixelFormat, bytesPerBlock: Int)? {
+        switch format {
+        case 4: return (.bc3_rgba, 16)   // DXT5
+        case 6: return (.bc2_rgba, 16)   // DXT3
+        case 7: return (.bc1_rgba, 8)    // DXT1
+        case TEXCompressedTexture.bc7Format: return (.bc7_rgbaUnorm, 16)
+        default: return nil
+        }
+    }
+
+    /// Uploads textures that share a prepared blob once: identical images in several layers,
+    /// materials or wallpapers get the same texture while any of them holds it.
+    private static let sharedLock = NSLock()
+    nonisolated(unsafe) private static let shared = NSMapTable<NSString, MTLTexture>.strongToWeakObjects()
+
+    /// `source` as a block-compressed texture with every mipmap it carries (`levels`), or nil when
+    /// the device can't sample its format or its data is short. The level count stops at the
+    /// first level whose data is short, so a partial chain still uploads what it has.
+    static func blockCompressedTexture(_ source: TEXCompressedTexture, device: MTLDevice) -> MTLTexture? {
+        guard device.supportsBCTextureCompression, let format = blockFormat(for: source.format),
+              source.width > 0, source.height > 0 else { return nil }
+        let sharedKey = source.sourceKey.map { "\($0)|\(device.registryID)" as NSString }
+        if let sharedKey {
+            sharedLock.lock()
+            let existing = shared.object(forKey: sharedKey)
+            sharedLock.unlock()
+            if let existing { return existing }
+        }
+        var levels: [(data: Data, width: Int, height: Int, rowBytes: Int)] = []
+        for (index, data) in source.levels.enumerated() {
+            let width = max(1, source.width >> index), height = max(1, source.height >> index)
+            let rowBytes = ((width + 3) / 4) * format.bytesPerBlock
+            // A truncated payload would read out of bounds inside replace(region:).
+            guard data.count >= rowBytes * ((height + 3) / 4) else { break }
+            levels.append((data, width, height, rowBytes))
+        }
+        guard !levels.isEmpty else { return nil }
+        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: format.pixelFormat, width: source.width,
+                                                                  height: source.height, mipmapped: levels.count > 1)
+        descriptor.mipmapLevelCount = levels.count
+        descriptor.usage = [.shaderRead]
+        descriptor.storageMode = .shared
+        guard let texture = device.makeTexture(descriptor: descriptor) else { return nil }
+        for (index, level) in levels.enumerated() {
+            level.data.withUnsafeBytes { raw in
+                texture.replace(region: MTLRegionMake2D(0, 0, level.width, level.height), mipmapLevel: index,
+                                withBytes: raw.baseAddress!, bytesPerRow: level.rowBytes)
+            }
+        }
+        if let sharedKey {
+            sharedLock.lock()
+            defer { sharedLock.unlock() }
+            if let raced = shared.object(forKey: sharedKey) { return raced }
+            shared.setObject(texture, forKey: sharedKey)
+        }
+        return texture
+    }
+
     enum UploadError: Error, CustomStringConvertible {
         case allocation(Int, Int)
         case unsupported(Int)

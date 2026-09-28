@@ -491,6 +491,8 @@ extension SceneLayerAnalysis {
             guard material.pass.blending.lowercased() == "normal", material.prelighting == nil else { return false }
         }
         if let fill = layer.solidFill { return fill.w >= 1 }
+        // A prepared texture recorded its opacity when it was compressed.
+        if case .dxt(let texture) = layer.source, let opaque = texture.opaque { return opaque }
         guard case .image(let image) = layer.source else { return false }
         return imageIsOpaque(image)
     }
@@ -536,6 +538,8 @@ extension SceneLayerAnalysis {
     static func classify(_ layer: SceneMetalLayer) -> (SceneLayerContentClass, Bool) {
         if layer.text != nil { return (.text, true) }
         if layer.solidFill != nil { return (.lineArt, true) }
+        // A prepared texture recorded its class when it was compressed, from the same sample.
+        if case .dxt(let texture) = layer.source, let contentClass = texture.contentClass { return (contentClass, true) }
         guard case .image(let image) = layer.source, let luma = lumaSample(image) else { return (.lineArt, false) }
         return (classify(luma: luma.values, width: luma.width, height: luma.height), true)
     }

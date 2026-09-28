@@ -3232,10 +3232,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     private func makeDXTTexture(_ source: TEXCompressedTexture) -> MTLTexture? {
         // DXT1/3/5 are BC1/BC2/BC3. Apple Silicon Macs consume those natively, so upload the
-        // blocks as-is instead of expanding them to rgba8Unorm through the decode kernel.
-        if let native = nativeBlockFormat(for: source.format), device.supportsBCTextureCompression {
-            return makeBlockCompressedTexture(source, pixelFormat: native.pixelFormat,
-                                              bytesPerBlock: native.bytesPerBlock)
+        // blocks as-is, with every stored mipmap, instead of expanding them to rgba8Unorm through
+        // the decode kernel.
+        if SceneTextureUpload.blockFormat(for: source.format) != nil, device.supportsBCTextureCompression {
+            return SceneTextureUpload.blockCompressedTexture(source, device: device)
         }
         let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm,
                                                                     width: source.width, height: source.height,
@@ -3262,34 +3262,6 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // Keep the decode asynchronous. Metal command buffers on the same queue
         // preserve ordering, so later scene draws wait on this texture on-GPU
         // without blocking the render/content thread here.
-        return texture
-    }
-
-    private func nativeBlockFormat(for format: UInt32) -> (pixelFormat: MTLPixelFormat, bytesPerBlock: Int)? {
-        switch format {
-        case 4: return (.bc3_rgba, 16)   // DXT5
-        case 6: return (.bc2_rgba, 16)   // DXT3
-        case 7: return (.bc1_rgba, 8)    // DXT1
-        case 12: return (.bc7_rgbaUnorm, 16)
-        default: return nil
-        }
-    }
-
-    private func makeBlockCompressedTexture(_ source: TEXCompressedTexture,
-                                            pixelFormat: MTLPixelFormat,
-                                            bytesPerBlock: Int) -> MTLTexture? {
-        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: pixelFormat,
-                                                                    width: source.width, height: source.height,
-                                                                    mipmapped: false)
-        descriptor.usage = [.shaderRead]
-        descriptor.storageMode = .shared
-        let blockBytesPerRow = ((source.width + 3) / 4) * bytesPerBlock
-        let requiredBytes = blockBytesPerRow * ((source.height + 3) / 4)
-        // A truncated payload would read out of bounds inside replace(region:).
-        guard source.data.count >= requiredBytes,
-              let texture = device.makeTexture(descriptor: descriptor) else { return nil }
-        texture.replace(region: MTLRegionMake2D(0, 0, source.width, source.height),
-                        mipmapLevel: 0, withBytes: source.data, bytesPerRow: blockBytesPerRow)
         return texture
     }
 

@@ -15,6 +15,9 @@ struct SceneRenderSettings: Equatable {
     /// WE's texture reduction (`TextureReduction`), 1 or 2: the user's setting resolved for the
     /// displays showing the scene and its size (`init(_:outputPixels:sceneSize:)`). Textures load for it.
     var textureReduction = 1
+    /// "Optimise textures" (`TexturePreparation`): colour images load as prepared BC7 textures.
+    /// Off without settings, so a settings-less renderer draws the images as they are.
+    var optimiseTextures = false
     /// The scene target's pixels per display point.
     var renderResolution = GSRenderResolution.native
     /// Draw as WE does (`full`, what a settings-less renderer does) or no more than the display shows.
@@ -33,6 +36,7 @@ struct SceneRenderSettings: Equatable {
         renderResolution = settings.renderResolution
         sceneDetail = settings.sceneDetail
         antiAliasing = settings.antiAliasing
+        optimiseTextures = settings.optimiseTextures
     }
 
     /// The scene pass's sample count on `device`: the setting's, or the most below it the GPU

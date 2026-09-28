@@ -219,6 +219,9 @@ struct GlobalSettings: Codable, Equatable {
     var fps: Double = 30
     /// The particle budget per scene (`ParticleBudget`).
     var particleBudget = GSParticleBudget.medium
+    /// "Optimise textures" (`TexturePreparation`): scenes' colour images are compressed once to
+    /// BC7 in the background and load from that cache after. On by default.
+    var optimiseTextures = true
     
     // MARK: Automatic Setup
     var autoStart = false
@@ -267,7 +270,7 @@ struct GlobalSettings: Codable, Equatable {
     enum CodingKeys: String, CodingKey {
         case otherApplicationFocused, otherApplicationMaximized, otherApplicationFullscreen, otherApplicationPlayingAudio
         case displayAsleep
-        case laptopOnBattery, textureResolution, shadows, volumetrics, fps, particleBudget
+        case laptopOnBattery, textureResolution, shadows, volumetrics, fps, particleBudget, optimiseTextures
         case antiAliasing = "msaa"
         case renderResolution, sceneDetail
         case postProcessing = "postProcessingQuality"
@@ -309,6 +312,7 @@ extension GlobalSettings {
         read(.volumetrics, &volumetrics)
         read(.fps, &fps)
         read(.particleBudget, &particleBudget)
+        read(.optimiseTextures, &optimiseTextures)
         read(.autoStart, &autoStart)
         read(.safeMode, &safeMode)
         read(.language, &language)

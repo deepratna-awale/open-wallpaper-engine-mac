@@ -45,6 +45,26 @@ struct TEXCompressedTexture {
     /// The image's own size inside the allocation (the header's image width/height).
     var contentWidth: Int
     var contentHeight: Int
+    /// The stored mipmaps after `data`'s, each half the one before (as Metal lays out a mipmapped
+    /// texture), uploaded with it.
+    var mipmaps: [Data] = []
+    /// Every level, mapped from a prepared blob (`TexturePreparation`), in place of `data` and
+    /// `mipmaps`.
+    var storedLevels: [Data]? = nil
+    /// The prepared blob's key, which identical textures share (one upload serves them all).
+    var sourceKey: String? = nil
+    /// The layer analysis's class and opacity, recorded when the texture was prepared.
+    var contentClass: SceneLayerContentClass? = nil
+    var opaque: Bool? = nil
+
+    /// The `.tex` format number a prepared BC7 texture reports.
+    static let bc7Format: UInt32 = 12
+
+    /// Bytes per 4×4 block of a block-compressed `.tex` format (DXT1 8, the others 16).
+    static func bytesPerBlock(format: UInt32) -> Int { format == 7 ? 8 : 16 }
+
+    /// Every level to upload: `storedLevels`, else `data` followed by `mipmaps`.
+    var levels: [Data] { storedLevels ?? ([Data(data)] + mipmaps) }
 }
 
 class TEXParser {
@@ -210,6 +230,8 @@ class TEXParser {
         }
         let loaded = TextureReduction.loadedMipmap(reduction: reduction, mipmapCount: Int(mipmapCount))
         guard let mipmap = readMipmap(at: loaded, version: version, cursor: &cursor) else { return nil }
+        // `readMipmap` leaves the cursor at the level's data; the following levels come after it.
+        cursor += mipmap.stored.count
         let width = mipmap.width, height = mipmap.height
         let compression = mipmap.compression, uncompressedSize = mipmap.uncompressedSize
         let storedData = mipmap.stored
@@ -233,8 +255,40 @@ class TEXParser {
         // later mipmap holds the image at its own scale (halved per level).
         let contentWidth = imageWidth > 0 ? min(TextureReduction.mipmapSide(Int(imageWidth), level: loaded), textureWidth) : textureWidth
         let contentHeight = imageHeight > 0 ? min(TextureReduction.mipmapSide(Int(imageHeight), level: loaded), textureHeight) : textureHeight
-        return TEXCompressedTexture(format: format, width: textureWidth, height: textureHeight, data: mipmapData,
-                                    contentWidth: contentWidth, contentHeight: contentHeight)
+        var texture = TEXCompressedTexture(format: format, width: textureWidth, height: textureHeight, data: mipmapData,
+                                           contentWidth: contentWidth, contentHeight: contentHeight)
+        texture.mipmaps = followingMipmaps(count: Int(mipmapCount) - loaded - 1, format: format, width: textureWidth,
+                                           height: textureHeight, version: version, cursor: &cursor)
+        return texture
+    }
+
+    /// The block-compressed mipmaps stored after the loaded one, as WE uploads them all. Stops at
+    /// the first one that isn't half the size of the one before or can't be read, since a mipmap
+    /// chain can't skip a level.
+    private func followingMipmaps(count: Int, format: UInt32, width: Int, height: Int, version: Int,
+                                  cursor: inout Int) -> [Data] {
+        var levels: [Data] = []
+        var expected = (width: width, height: height)
+        for _ in 0..<max(0, count) {
+            guard let mipmap = readMipmap(at: 0, version: version, cursor: &cursor) else { break }
+            cursor += mipmap.stored.count
+            expected = (max(1, expected.width / 2), max(1, expected.height / 2))
+            guard mipmap.width == expected.width, mipmap.height == expected.height else { break }
+            let bytes: [UInt8]
+            if mipmap.compression == 0 {
+                bytes = mipmap.stored
+            } else if mipmap.compression == 1, mipmap.uncompressedSize > 0 {
+                bytes = decompressLZ4(mipmap.stored, uncompressedSize: mipmap.uncompressedSize)
+            } else {
+                break
+            }
+            let size = TextureCompressor.blockCount(width: mipmap.width, height: mipmap.height)
+                * TEXCompressedTexture.bytesPerBlock(format: format)
+            guard bytes.count >= size else { break }
+            levels.append(Data(bytes[0..<size]))
+            if mipmap.width == 1, mipmap.height == 1 { break }
+        }
+        return levels
     }
 
     /// How many mipmaps the first image stores (1 for a video's conditional layout, which loads

@@ -986,7 +986,8 @@ class SceneWallpaperViewModel: ObservableObject {
             return layer
         }
         guard let textureName = material.passes?.first?.textures?.first ?? nil,
-              let source = loadMetalTexture(named: textureName, materialDir: materialPath, wallpaperDir: wallpaperDir) else {
+              let source = loadMetalTexture(named: textureName, materialDir: materialPath, wallpaperDir: wallpaperDir,
+                                            colour: true) else {
             return nil
         }
         let sceneInput = textureName == "_rt_FullFrameBuffer" || textureName == "_rt_MipMappedFrameBuffer"
@@ -1546,10 +1547,15 @@ class SceneWallpaperViewModel: ObservableObject {
         return SIMD3<Float>(Float(value.0), Float(value.1), Float(value.2))
     }
 
-    private func loadMetalTexture(named name: String, materialDir: String, wallpaperDir: URL) -> SceneMetalTextureSource? {
+    /// `colour`: the texture is a layer's or particle's own image, which "Optimise textures" may
+    /// load as a prepared BC7 texture (`TexturePreparation`). Every other texture (masks, flow and
+    /// normal maps, anything a material reads as data) loads as stored.
+    private func loadMetalTexture(named name: String, materialDir: String, wallpaperDir: URL,
+                                  colour: Bool = false) -> SceneMetalTextureSource? {
         // WE's texture reduction loads a smaller mipmap (`TextureReduction`), cached apart.
         let reduction = renderSettings.textureReduction
-        let cacheKey = "\(materialDir)|\(name)" + (reduction > 1 ? "|reduced\(reduction)" : "")
+        let optimise = colour && renderSettings.optimiseTextures && TexturePreparation.deviceSupportsBC7
+        let cacheKey = "\(materialDir)|\(name)" + (reduction > 1 ? "|reduced\(reduction)" : "") + (optimise ? "|bc7" : "")
         if let cached = cachedTexture(cacheKey) { return cached }
         OWEFrameMetrics.countTextureDecode()
         let signpost = OWESignpost.begin(OWESignpost.scene, "decodeTexture")
@@ -1569,7 +1575,14 @@ class SceneWallpaperViewModel: ObservableObject {
             if let texture = parser.extractCompressedTexture(reduction: reduction) {
                 return cacheTexture(.dxt(texture), for: cacheKey)
             }
+            let mipmaps = optimise ? parser.firstImageMipmapCount() ?? 1 : 1
+            let level = TextureReduction.loadedMipmap(reduction: reduction, mipmapCount: mipmaps)
+            let preparedKey = optimise ? TexturePreparation.key(texData: data, level: level) : nil
+            if let preparedKey, let prepared = TexturePreparation.cachedTexture(key: preparedKey) {
+                return cacheTexture(.dxt(prepared), for: cacheKey)
+            }
             if let image = parser.extractImage(reduction: reduction) {
+                if let preparedKey { TexturePreparation.schedule(image, key: preparedKey, mipmaps: mipmaps - level) }
                 return cacheTexture(.image(image), for: cacheKey)
             }
         }
@@ -1663,7 +1676,8 @@ class SceneWallpaperViewModel: ObservableObject {
         guard let materialPath = particleSystem.material,
               let material: WEMaterial = loadJSON(path: materialPath, wallpaperDir: wallpaperDir),
               let textureName = material.passes?.first?.textures?.first ?? nil else { return nil }
-        guard let source = loadMetalTexture(named: textureName, materialDir: materialPath, wallpaperDir: wallpaperDir) else {
+        guard let source = loadMetalTexture(named: textureName, materialDir: materialPath, wallpaperDir: wallpaperDir,
+                                            colour: true) else {
             OWELog.error(.scene, "\(wallpaperDir.lastPathComponent): particle \(particlePath) (object \(object.id ?? -1)): "
                          + "texture \(textureName) of \(materialPath) not found")
             return nil
