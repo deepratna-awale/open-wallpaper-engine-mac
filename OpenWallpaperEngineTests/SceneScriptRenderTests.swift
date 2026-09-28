@@ -247,7 +247,8 @@ final class SceneScriptRenderTests: XCTestCase {
                 renderer.scripts.wallpaper?.waitUntilIdle()
                 if renderer.hasContent { drawn += 1 }
                 pixels = read()
-            } while (drawn < frames || renderer.pendingScriptLayers > 0 || !ready(pixels)) && Date() < deadline
+            } while (drawn < frames || renderer.pendingScriptLayers > 0 || renderer.pendingTextRasters > 0
+                     || !ready(pixels)) && Date() < deadline
             return pixels
         }
 

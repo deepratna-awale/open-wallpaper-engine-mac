@@ -111,6 +111,15 @@ final class SceneTextRasterQueue {
     private var shown: [String: SceneTextRasterResult] = [:]
     /// Bumped by `reset`, so a job for dropped content is discarded.
     private var epoch = 0
+    /// Jobs still rasterising.
+    private var running = 0
+
+    /// Rasters not yet taken by a frame: jobs running or finished and waiting (for tests).
+    var inFlight: Int {
+        lock.lock()
+        defer { lock.unlock() }
+        return running + finished.count
+    }
 
     init(device: MTLDevice, loader: MTKTextureLoader) {
         self.device = device
@@ -143,6 +152,7 @@ final class SceneTextRasterQueue {
         lock.lock()
         let started = pending.insert(key).inserted
         let epoch = self.epoch
+        if started { running += 1 }
         lock.unlock()
         if started {
             let device = self.device, loader = self.loader
@@ -150,6 +160,7 @@ final class SceneTextRasterQueue {
                 let result = SceneTextRaster.render(request, device: device, loader: loader)
                 guard let self else { return }
                 self.lock.lock()
+                self.running -= 1
                 if self.epoch == epoch { self.finished.append((key, result)) } else { self.pending.remove(key) }
                 self.lock.unlock()
             }

@@ -350,6 +350,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     static let textCacheByteBudget = 32 << 20
     /// Rasterises changed strings off the render thread (`SceneTextRasterQueue`).
     private let textRaster: SceneTextRasterQueue
+    /// Changed strings still rasterising or waiting for a frame to take them (for tests).
+    var pendingTextRasters: Int { textRaster.inFlight }
     /// The finest raster scale each text layer has needed, so an animated scale doesn't
     /// re-rasterise at every step (see `SceneTextRasterScale.retained`).
     private var textRasterScales: [String: Float] = [:]
