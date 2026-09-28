@@ -5,5 +5,42 @@
         <link>https://deepratna-awale.github.io/open-wallpaper-engine-mac/appcast.xml</link>
         <description>Open Wallpaper Engine updates. Items are added by .github/workflows/appcast.yml when a release is published.</description>
         <language>en</language>
+        <item>
+            <title>1.0.0-beta.1</title>
+            <pubDate>Mon, 28 Sep 2026 07:55:41 +0000</pubDate>
+            <sparkle:version>1</sparkle:version>
+            <sparkle:shortVersionString>1.0.0-beta.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.1/OpenWallpaperEngine-1.0.0-beta.1.zip" length="75508098" type="application/octet-stream" sparkle:edSignature="HeBle6mj+7APrbwa1+Hrk//W/l3pwiCq+zp94E/ktX3qieoj1o7NPAbVBJvpKcWjTj1WxRQjvzwQ8hN4K+SJDQ==" />
+            <sparkle:channel>beta</sparkle:channel>
+            <sparkle:fullReleaseNotesLink>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.1</sparkle:fullReleaseNotesLink>
+            <link>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.1</link>
+            <description>&lt;p dir="auto"&gt;The first beta of Open Wallpaper Engine 1.0: a rebuilt macOS player for Wallpaper Engine wallpapers — scene, video and web — with a native Metal renderer, Wallpaper Engine's own shaders, GPU particles, 3D models, puppets, lighting, SceneScript and audio-reactive visuals. See the &lt;a href="https://github.com/deepratna-awale/open-wallpaper-engine-mac#from-081-to-100"&gt;README&lt;/a&gt; for what changed since 0.8.1 and the &lt;a href="https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki"&gt;wiki&lt;/a&gt; for guides.&lt;/p&gt;
+&lt;div class="markdown-alert markdown-alert-note" dir="auto"&gt;&lt;p class="markdown-alert-title" dir="auto"&gt;&lt;svg data-component="Octicon" class="octicon octicon-info mr-2" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"&gt;&lt;path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"&gt;&lt;/path&gt;&lt;/svg&gt;Note&lt;/p&gt;&lt;p dir="auto"&gt;This is a &lt;strong&gt;beta&lt;/strong&gt;. Please report problems in &lt;a href="https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues"&gt;Issues&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;p dir="auto"&gt;&lt;strong&gt;Install:&lt;/strong&gt; download the DMG, drag the app to Applications and open it. It is signed and notarized by Apple. Requires macOS 14 or later; scene wallpapers need a Steam account that owns Wallpaper Engine (the setup assistant installs the assets from your copy).&lt;/p&gt;
+&lt;h3 dir="auto"&gt;Highlights&lt;/h3&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;&lt;strong&gt;Automatic updates (Sparkle 2):&lt;/strong&gt; updates are signed with EdDSA, listed in an appcast on GitHub Pages and downloaded from GitHub Releases. "Update automatically" (on by default) checks, downloads and installs by itself: an update installs on quit, after 10 minutes away from the Mac, or within a day, with a quick relaunch that restores the wallpapers. With it off, "Automatically check for updates" asks before installing. "Receive beta updates" (off by default, on for pre-release builds) offers &lt;code class="notranslate"&gt;vX.Y.Z-(alpha|beta|rc).N&lt;/code&gt; releases. Settings › General › Updates shows when the app last checked, with Check Now; Check for Updates… is in the app menu and the menu bar menu. Builds without the update signing key (Debug and local builds from source) never check.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Setup assistant:&lt;/strong&gt; replaces the welcome sheet with skippable steps for the language, privacy, SteamCMD, the Steam login, an optional Steam Web API key, the Wallpaper Engine assets and importing wallpapers. The Privacy step has "Keep Open Wallpaper Engine up to date automatically".&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;SteamCMD sets itself up:&lt;/strong&gt; Valve's SteamCMD is downloaded when none is found; Homebrew's, Steam's or a chosen one is used when present. Terminal login and privacy notes explain what is sent where.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Imports:&lt;/strong&gt; Workshop collections and subscriptions read from Steam's Web API, the Workshop items of an existing Steam library (Valve KeyValues/ACF manifests), and wallpaper folders.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Assets after signing in:&lt;/strong&gt; the Wallpaper Engine assets can install automatically from the user's Steam copy once SteamCMD is logged in, with or without the default wallpapers.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Wiki:&lt;/strong&gt; Support &amp;amp; FAQ opens the project wiki's Troubleshooting page.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 dir="auto"&gt;Changed&lt;/h3&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;The privacy notes now say the app contacts GitHub, without personal data, to check for and download updates, which can be turned off in Settings › General.&lt;/li&gt;
+&lt;li&gt;Quality presets set Shadows (a new Performance control) and volumetrics as Wallpaper Engine does.&lt;/li&gt;
+&lt;li&gt;The repository is now &lt;code class="notranslate"&gt;deepratna-awale/open-wallpaper-engine-mac&lt;/code&gt;; the default Wallpaper Storage folder is &lt;code class="notranslate"&gt;~/Documents/Open Wallpaper Engine&lt;/code&gt;, and the assets cache and hidden data move with it.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 dir="auto"&gt;Fixed&lt;/h3&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;A SteamCMD login counts only once SteamCMD confirms it, and the cached Steam session is restored before installing assets.&lt;/li&gt;
+&lt;li&gt;Unrated import items list as the Installed rating filter does; asset packs without a type stay out of the library.&lt;/li&gt;
+&lt;li&gt;Video: WebM plays through WebKit, AVKit videos keep looping, Metal video frames live until the GPU is done, and wallpaper players let the display sleep.&lt;/li&gt;
+&lt;li&gt;Now-playing artwork binds to effect and material passes; inspector sliders update live; puppets without effects draw past their image's rect.&lt;/li&gt;
+&lt;/ul&gt;</description>
+        </item>
     </channel>
 </rss>
