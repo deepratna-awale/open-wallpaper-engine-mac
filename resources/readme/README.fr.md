@@ -181,7 +181,7 @@ Importez des paquets de fonds d’écran directement depuis des fichiers `.zip`,
 Cliquez tout en maintenant la touche Cmd enfoncée pour sélectionner plusieurs fonds d’écran, puis cliquez avec le bouton droit pour vous désabonner de tous en une fois.
 
 ### Isolation du stockage des fonds d’écran
-Les fonds d’écran sont désormais stockés dans `~/Documents/OpenWallpaperEngine/` plutôt qu’à la racine du dossier Documents, ce qui évite les fonds d’écran « error » lors du clonage du dépôt sur une nouvelle machine.
+Les fonds d’écran sont désormais stockés dans `~/Documents/Open Wallpaper Engine/` plutôt qu’à la racine du dossier Documents, ce qui évite les fonds d’écran « error » lors du clonage du dépôt sur une nouvelle machine.
 
 </details>
 
@@ -299,7 +299,7 @@ Dans Xcode, remplacez le certificat de signature par le vôtre ou sélectionnez 
 
 - **Dossier :** Fichier > Importer > Fond d’écran depuis un dossier — sélectionnez des dossiers de fond d’écran contenant `project.json`
 - **Zip :** Fichier > Importer, ou glissez-déposez un fichier `.zip` contenant des paquets de fonds d’écran
-- **Manuellement :** copiez les dossiers de fond d’écran directement dans `~/Documents/OpenWallpaperEngine/`
+- **Manuellement :** copiez les dossiers de fond d’écran directement dans `~/Documents/Open Wallpaper Engine/`
 
 ## Confidentialité
 

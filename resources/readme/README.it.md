@@ -181,7 +181,7 @@ Importa i pacchetti di sfondi direttamente dai file `.zip`, senza doverli prima 
 Fai Cmd-clic per selezionare più sfondi, quindi fai clic con il tasto destro per annullare la sottoscrizione in blocco.
 
 ### Isolamento dell’archivio sfondi
-Ora gli sfondi vengono archiviati in `~/Documents/OpenWallpaperEngine/` invece che direttamente nella directory Documenti, evitando gli sfondi in "errore" quando cloni il repository su un computer nuovo.
+Ora gli sfondi vengono archiviati in `~/Documents/Open Wallpaper Engine/` invece che direttamente nella directory Documenti, evitando gli sfondi in "errore" quando cloni il repository su un computer nuovo.
 
 </details>
 
@@ -299,7 +299,7 @@ In Xcode, sostituisci il certificato di firma con il tuo oppure seleziona "Sign 
 
 - **Cartella:** File > Importa > Sfondo da cartella: seleziona le cartelle degli sfondi che contengono `project.json`
 - **Zip:** File > Importa oppure trascina un file `.zip` che contiene pacchetti di sfondi
-- **Manuale:** copia le cartelle degli sfondi direttamente in `~/Documents/OpenWallpaperEngine/`
+- **Manuale:** copia le cartelle degli sfondi direttamente in `~/Documents/Open Wallpaper Engine/`
 
 ## Privacy
 

@@ -181,7 +181,7 @@ Duvar kâğıdı paketlerini doğrudan `.zip` dosyalarından içe aktarın — �
 Birden fazla duvar kâğıdı seçmek için Cmd tuşuna basılı tutarak tıklayın, ardından toplu olarak abonelikten çıkmak için sağ tıklayın.
 
 ### Duvar Kâğıdı Depolamasının Ayrılması
-Duvar kâğıtları artık doğrudan Belgeler dizini yerine `~/Documents/OpenWallpaperEngine/` içinde saklanır; böylece depo yeni bir bilgisayarda klonlandığında “hatalı” duvar kâğıtları oluşmaz.
+Duvar kâğıtları artık doğrudan Belgeler dizini yerine `~/Documents/Open Wallpaper Engine/` içinde saklanır; böylece depo yeni bir bilgisayarda klonlandığında “hatalı” duvar kâğıtları oluşmaz.
 
 </details>
 
@@ -299,7 +299,7 @@ Xcode’da imzalama sertifikasını kendi sertifikanızla değiştirin veya “S
 
 - **Klasör:** Dosya > Klasörden İçe Aktar — `project.json` içeren duvar kâğıdı klasörlerini seçin
 - **Zip:** Dosya > İçe Aktar’ı kullanın veya duvar kâğıdı paketleri içeren bir `.zip` dosyasını sürükleyip bırakın
-- **Elle:** Duvar kâğıdı klasörlerini doğrudan `~/Documents/OpenWallpaperEngine/` içine kopyalayın
+- **Elle:** Duvar kâğıdı klasörlerini doğrudan `~/Documents/Open Wallpaper Engine/` içine kopyalayın
 
 ## Gizlilik
 

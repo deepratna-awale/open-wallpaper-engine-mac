@@ -181,7 +181,7 @@ Importe pacotes de imagens de fundo diretamente de arquivos `.zip` — não é p
 Pressione Cmd e clique para selecionar várias imagens de fundo e, em seguida, clique com o botão direito para cancelar a inscrição em lote.
 
 ### Isolamento do Armazenamento de Imagens de Fundo
-As imagens de fundo agora são armazenadas em `~/Documents/OpenWallpaperEngine/` em vez de diretamente no diretório Documentos, o que evita imagens de fundo com "erro" ao clonar o repositório em uma máquina nova.
+As imagens de fundo agora são armazenadas em `~/Documents/Open Wallpaper Engine/` em vez de diretamente no diretório Documentos, o que evita imagens de fundo com "erro" ao clonar o repositório em uma máquina nova.
 
 </details>
 
@@ -299,7 +299,7 @@ No Xcode, altere o certificado de assinatura para o seu ou selecione "Sign to Ru
 
 - **Pasta:** Arquivo > Importar > Imagem de Fundo de uma Pasta — selecione pastas de imagens de fundo que contenham `project.json`
 - **Zip:** Arquivo > Importar ou arraste e solte um arquivo `.zip` que contenha pacotes de imagens de fundo
-- **Manual:** Copie as pastas de imagens de fundo diretamente para `~/Documents/OpenWallpaperEngine/`
+- **Manual:** Copie as pastas de imagens de fundo diretamente para `~/Documents/Open Wallpaper Engine/`
 
 ## Privacidade
 

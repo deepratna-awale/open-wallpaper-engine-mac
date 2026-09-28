@@ -181,7 +181,7 @@ Open Wallpaper Engine（修补版）
 按住 Cmd 键点按以选择多张墙纸，然后右键点按即可批量取消订阅。
 
 ### 墙纸存储隔离
-墙纸现在存储在 `~/Documents/OpenWallpaperEngine/` 中，而不是直接存放在“文稿”目录下，避免在新电脑上克隆仓库时出现“error”墙纸。
+墙纸现在存储在 `~/Documents/Open Wallpaper Engine/` 中，而不是直接存放在“文稿”目录下，避免在新电脑上克隆仓库时出现“error”墙纸。
 
 </details>
 
@@ -299,7 +299,7 @@ open "OpenWallpaperEngine.xcodeproj"
 
 - **文件夹：** 文件 > 导入 > 来自文件夹的墙纸 — 选择包含 `project.json` 的墙纸文件夹
 - **zip：** 文件 > 导入，或拖放包含墙纸包的 `.zip` 文件
-- **手动：** 将墙纸文件夹直接拷贝到 `~/Documents/OpenWallpaperEngine/`
+- **手动：** 将墙纸文件夹直接拷贝到 `~/Documents/Open Wallpaper Engine/`
 
 ## 隐私
 

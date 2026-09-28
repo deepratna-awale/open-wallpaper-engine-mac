@@ -181,7 +181,7 @@ macOS용 [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-m
 Cmd+클릭으로 여러 배경화면을 선택한 다음, 오른쪽 클릭으로 일괄 구독 취소할 수 있습니다.
 
 ### 배경화면 저장 공간 분리
-이제 배경화면은 Documents 디렉토리 바로 아래가 아닌 `~/Documents/OpenWallpaperEngine/`에 저장되므로, 새 컴퓨터에서 저장소를 복제할 때 'error' 배경화면이 나타나는 문제를 방지합니다.
+이제 배경화면은 Documents 디렉토리 바로 아래가 아닌 `~/Documents/Open Wallpaper Engine/`에 저장되므로, 새 컴퓨터에서 저장소를 복제할 때 'error' 배경화면이 나타나는 문제를 방지합니다.
 
 </details>
 
@@ -299,7 +299,7 @@ Xcode에서 서명 인증서를 본인의 인증서로 변경하거나 'Sign to 
 
 - **폴더:** 파일 > 가져오기 > 폴더에서 배경화면 가져오기 — `project.json`이 포함된 배경화면 폴더를 선택합니다
 - **zip:** 파일 > 가져오기를 사용하거나, 배경화면 패키지가 포함된 `.zip` 파일을 드래그 앤 드롭합니다
-- **수동:** 배경화면 폴더를 `~/Documents/OpenWallpaperEngine/`에 직접 복사합니다
+- **수동:** 배경화면 폴더를 `~/Documents/Open Wallpaper Engine/`에 직접 복사합니다
 
 ## 개인정보 보호
 

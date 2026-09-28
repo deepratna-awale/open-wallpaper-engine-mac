@@ -181,7 +181,7 @@ Importa paquetes de fondos de pantalla directamente desde archivos `.zip`, sin t
 Haz Cmd + clic para seleccionar varios fondos de pantalla y, después, haz clic con el botón derecho para anular todas las suscripciones a la vez.
 
 ### Aislamiento del almacenamiento de fondos de pantalla
-Los fondos de pantalla se guardan ahora en `~/Documents/OpenWallpaperEngine/` en lugar de directamente en la carpeta Documentos, lo que evita fondos de pantalla con «error» al clonar el repositorio en un ordenador nuevo.
+Los fondos de pantalla se guardan ahora en `~/Documents/Open Wallpaper Engine/` en lugar de directamente en la carpeta Documentos, lo que evita fondos de pantalla con «error» al clonar el repositorio en un ordenador nuevo.
 
 </details>
 
@@ -299,7 +299,7 @@ En Xcode, cambia el certificado de firma por el tuyo o selecciona «Sign to Run 
 
 - **Carpeta:** Archivo > Importar > Fondo de pantalla desde carpeta: selecciona carpetas de fondos de pantalla que contengan `project.json`
 - **Zip:** Archivo > Importar, o arrastra y suelta un archivo `.zip` que contenga paquetes de fondos de pantalla
-- **Manual:** copia las carpetas de fondos de pantalla directamente en `~/Documents/OpenWallpaperEngine/`
+- **Manual:** copia las carpetas de fondos de pantalla directamente en `~/Documents/Open Wallpaper Engine/`
 
 ## Privacidad
 

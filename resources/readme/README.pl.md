@@ -181,7 +181,7 @@ Importuj pakiety tapet bezpośrednio z plików `.zip` — bez wcześniejszego r�
 Kliknij z klawiszem Cmd, aby zaznaczyć wiele tapet, a następnie kliknij prawym przyciskiem, aby zbiorczo anulować ich subskrypcję.
 
 ### Wydzielone miejsce przechowywania tapet
-Tapety są teraz przechowywane w katalogu `~/Documents/OpenWallpaperEngine/` zamiast bezpośrednio w katalogu Dokumenty, co zapobiega tapetom z „błędem” po sklonowaniu repozytorium na nowym komputerze.
+Tapety są teraz przechowywane w katalogu `~/Documents/Open Wallpaper Engine/` zamiast bezpośrednio w katalogu Dokumenty, co zapobiega tapetom z „błędem” po sklonowaniu repozytorium na nowym komputerze.
 
 </details>
 
@@ -299,7 +299,7 @@ W Xcode zmień certyfikat podpisywania na własny lub wybierz „Sign to Run Loc
 
 - **Folder:** Plik > Importuj z folderu — wybierz foldery tapet zawierające `project.json`
 - **Zip:** Plik > Importuj lub przeciągnij i upuść plik `.zip` zawierający pakiety tapet
-- **Ręcznie:** skopiuj foldery tapet bezpośrednio do `~/Documents/OpenWallpaperEngine/`
+- **Ręcznie:** skopiuj foldery tapet bezpośrednio do `~/Documents/Open Wallpaper Engine/`
 
 ## Prywatność
 

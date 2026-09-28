@@ -181,7 +181,7 @@ Importieren Sie Hintergrundbildpakete direkt aus `.zip`-Dateien – ohne sie vor
 Klicken Sie mit gedrückter Befehlstaste (Cmd), um mehrere Hintergrundbilder auszuwählen, und klicken Sie dann mit der rechten Maustaste, um sie gesammelt abzubestellen.
 
 ### Isolierter Hintergrundbild-Speicher
-Hintergrundbilder werden jetzt in `~/Documents/OpenWallpaperEngine/` statt direkt im Ordner „Dokumente“ gespeichert. Dadurch werden „error“-Hintergrundbilder vermieden, wenn das Repository auf einem neuen Rechner geklont wird.
+Hintergrundbilder werden jetzt in `~/Documents/Open Wallpaper Engine/` statt direkt im Ordner „Dokumente“ gespeichert. Dadurch werden „error“-Hintergrundbilder vermieden, wenn das Repository auf einem neuen Rechner geklont wird.
 
 </details>
 
@@ -299,7 +299,7 @@ open "OpenWallpaperEngine.xcodeproj"
 
 - **Ordner:** Ablage > Importieren > Hintergrundbild aus Ordner – wählen Sie Hintergrundbildordner aus, die `project.json` enthalten
 - **Zip:** Ablage > Importieren oder ziehen Sie eine `.zip`-Datei mit Hintergrundbildpaketen per Drag & Drop in die App
-- **Manuell:** Kopieren Sie Hintergrundbildordner direkt nach `~/Documents/OpenWallpaperEngine/`
+- **Manuell:** Kopieren Sie Hintergrundbildordner direkt nach `~/Documents/Open Wallpaper Engine/`
 
 ## Datenschutz
 

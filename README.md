@@ -181,7 +181,7 @@ Import wallpaper packages directly from `.zip` files — no need to manually ext
 Cmd+click to select multiple wallpapers, then right-click to batch unsubscribe.
 
 ### Wallpaper Storage Isolation
-Wallpapers are now stored in `~/Documents/OpenWallpaperEngine/` instead of the raw Documents directory, preventing "error" wallpapers when cloning the repo on a fresh machine.
+Wallpapers are now stored in `~/Documents/Open Wallpaper Engine/` instead of the raw Documents directory, preventing "error" wallpapers when cloning the repo on a fresh machine.
 
 </details>
 
@@ -299,7 +299,7 @@ In Xcode, change the signing certificate to your own or select "Sign to Run Loca
 
 - **Folder:** File > Import > Wallpaper from Folder — select wallpaper folders containing `project.json`
 - **Zip:** File > Import or drag-and-drop a `.zip` file containing wallpaper packages
-- **Manual:** Copy wallpaper folders directly into `~/Documents/OpenWallpaperEngine/`
+- **Manual:** Copy wallpaper folders directly into `~/Documents/Open Wallpaper Engine/`
 
 ## Privacy
 

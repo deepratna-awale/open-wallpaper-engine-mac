@@ -181,7 +181,7 @@ macOS 向け [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engi
 Cmd キーを押しながらクリックして複数の壁紙を選択し、右クリックで一括して購読解除できます。
 
 ### 壁紙の保存場所の分離
-壁紙は Documents ディレクトリ直下ではなく `~/Documents/OpenWallpaperEngine/` に保存されるようになりました。これにより、新しいマシンでリポジトリをクローンしたときに「error」壁紙が表示される問題を防ぎます。
+壁紙は Documents ディレクトリ直下ではなく `~/Documents/Open Wallpaper Engine/` に保存されるようになりました。これにより、新しいマシンでリポジトリをクローンしたときに「error」壁紙が表示される問題を防ぎます。
 
 </details>
 
@@ -299,7 +299,7 @@ Xcode で署名証明書を自分のものに変更するか「Sign to Run Local
 
 - **フォルダ：** ファイル > 読み込む > フォルダから壁紙を読み込む — `project.json` を含む壁紙フォルダを選択します
 - **zip：** ファイル > 読み込む、または壁紙パッケージを含む `.zip` ファイルをドラッグ＆ドロップします
-- **手動：** 壁紙フォルダを `~/Documents/OpenWallpaperEngine/` に直接コピーします
+- **手動：** 壁紙フォルダを `~/Documents/Open Wallpaper Engine/` に直接コピーします
 
 ## プライバシー
 

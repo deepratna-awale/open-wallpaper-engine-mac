@@ -181,7 +181,7 @@ Open Wallpaper Engine（修補版）
 按住 Cmd 鍵並按一下以選取多張背景圖片，接著按一下右鍵即可批次取消訂閱。
 
 ### 背景圖片儲存隔離
-背景圖片現在儲存於 `~/Documents/OpenWallpaperEngine/`，而非直接存放於「文件」目錄下，可避免在新電腦上複製儲存庫時出現「error」背景圖片。
+背景圖片現在儲存於 `~/Documents/Open Wallpaper Engine/`，而非直接存放於「文件」目錄下，可避免在新電腦上複製儲存庫時出現「error」背景圖片。
 
 </details>
 
@@ -299,7 +299,7 @@ open "OpenWallpaperEngine.xcodeproj"
 
 - **檔案夾：** 檔案 > 輸入 > 從檔案夾輸入背景圖片 — 選擇包含 `project.json` 的背景圖片檔案夾
 - **zip：** 檔案 > 輸入，或拖放包含背景圖片套件的 `.zip` 檔案
-- **手動：** 將背景圖片檔案夾直接拷貝至 `~/Documents/OpenWallpaperEngine/`
+- **手動：** 將背景圖片檔案夾直接拷貝至 `~/Documents/Open Wallpaper Engine/`
 
 ## 隱私權
 
