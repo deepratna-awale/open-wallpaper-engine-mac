@@ -97,8 +97,10 @@ final class UpdatePreservesUserStateTests: XCTestCase {
     func testSourcesNeitherWriteIntoTheBundleNorKeyOnTheVersion() throws {
         let sources: URL = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .appending(path: "OpenWallpaperEngine")
+        // The update prewarm matches the downloaded update's bundle by its version; it keys no state on it.
         let versionReaders: Set<String> = ["MainWindow.swift", "AboutUsView.swift", "AppUpdateConfiguration.swift",
-                                           "ReleaseVersion.swift"]
+                                           "ReleaseVersion.swift", "UpdateBundleLocator.swift",
+                                           "UpdateShaderPrewarmer.swift"]
         let bundleLocations: [String] = ["Bundle.main.bundleURL", "Bundle.main.bundlePath", "Bundle.main.resourceURL",
                                          "Bundle.main.resourcePath", "Bundle.main.executableURL"]
         var problems: [String] = []
