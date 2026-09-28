@@ -1,0 +1,7 @@
+target wallpaper64 api  pid 17532
+capture 0 K:\DeepWorkspace\wem-images2\tools\peer\requests\rd_grab\cap\we_frame255.rdc at 1790570977.533
+capture 1 K:\DeepWorkspace\wem-images2\tools\peer\requests\rd_grab\cap\we_frame310.rdc at 1790570979.158
+frame 0 actions 68 swapbuffers [(1920, 1080)]
+  save K:\DeepWorkspace\wem-images2\tools\peer\requests\albumart-2963872291\alice_nomusic_f0_sw0.png <Result: 'Success'>
+frame 1 actions 68 swapbuffers [(1920, 1080)]
+  save K:\DeepWorkspace\wem-images2\tools\peer\requests\albumart-2963872291\alice_nomusic_f1_sw0.png <Result: 'Success'>

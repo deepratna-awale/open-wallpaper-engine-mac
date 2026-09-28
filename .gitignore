@@ -13,3 +13,4 @@ Thumbs.db
 
 ## Playwright MCP
 .playwright-mcp/
+tools/peer/requests/rd_grab/cap/

@@ -1,0 +1,31 @@
+target wallpaper64 api  pid 17532
+capture 0 K:\DeepWorkspace\wem-images2\tools\peer\requests\rd_grab\cap\we_frame2805.rdc at 1790570910.872
+capture 1 K:\DeepWorkspace\wem-images2\tools\peer\requests\rd_grab\cap\we_frame2842.rdc at 1790570912.304
+capture 2 K:\DeepWorkspace\wem-images2\tools\peer\requests\rd_grab\cap\we_frame2878.rdc at 1790570913.668
+capture 3 K:\DeepWorkspace\wem-images2\tools\peer\requests\rd_grab\cap\we_frame2912.rdc at 1790570915.057
+capture 4 K:\DeepWorkspace\wem-images2\tools\peer\requests\rd_grab\cap\we_frame2947.rdc at 1790570916.475
+capture 5 K:\DeepWorkspace\wem-images2\tools\peer\requests\rd_grab\cap\we_frame2975.rdc at 1790570917.951
+capture 6 K:\DeepWorkspace\wem-images2\tools\peer\requests\rd_grab\cap\we_frame3012.rdc at 1790570919.461
+capture 7 K:\DeepWorkspace\wem-images2\tools\peer\requests\rd_grab\cap\we_frame3049.rdc at 1790570920.915
+capture 8 K:\DeepWorkspace\wem-images2\tools\peer\requests\rd_grab\cap\we_frame3086.rdc at 1790570922.378
+capture 9 K:\DeepWorkspace\wem-images2\tools\peer\requests\rd_grab\cap\we_frame3123.rdc at 1790570923.895
+frame 0 actions 14 swapbuffers [(1920, 1080)]
+  save K:\DeepWorkspace\wem-images2\tools\peer\requests\knight-sword\knight_seq_f0_sw0.png <Result: 'Success'>
+frame 1 actions 14 swapbuffers [(1920, 1080)]
+  save K:\DeepWorkspace\wem-images2\tools\peer\requests\knight-sword\knight_seq_f1_sw0.png <Result: 'Success'>
+frame 2 actions 14 swapbuffers [(1920, 1080)]
+  save K:\DeepWorkspace\wem-images2\tools\peer\requests\knight-sword\knight_seq_f2_sw0.png <Result: 'Success'>
+frame 3 actions 14 swapbuffers [(1920, 1080)]
+  save K:\DeepWorkspace\wem-images2\tools\peer\requests\knight-sword\knight_seq_f3_sw0.png <Result: 'Success'>
+frame 4 actions 14 swapbuffers [(1920, 1080)]
+  save K:\DeepWorkspace\wem-images2\tools\peer\requests\knight-sword\knight_seq_f4_sw0.png <Result: 'Success'>
+frame 5 actions 14 swapbuffers [(1920, 1080)]
+  save K:\DeepWorkspace\wem-images2\tools\peer\requests\knight-sword\knight_seq_f5_sw0.png <Result: 'Success'>
+frame 6 actions 14 swapbuffers [(1920, 1080)]
+  save K:\DeepWorkspace\wem-images2\tools\peer\requests\knight-sword\knight_seq_f6_sw0.png <Result: 'Success'>
+frame 7 actions 14 swapbuffers [(1920, 1080)]
+  save K:\DeepWorkspace\wem-images2\tools\peer\requests\knight-sword\knight_seq_f7_sw0.png <Result: 'Success'>
+frame 8 actions 14 swapbuffers [(1920, 1080)]
+  save K:\DeepWorkspace\wem-images2\tools\peer\requests\knight-sword\knight_seq_f8_sw0.png <Result: 'Success'>
+frame 9 actions 14 swapbuffers [(1920, 1080)]
+  save K:\DeepWorkspace\wem-images2\tools\peer\requests\knight-sword\knight_seq_f9_sw0.png <Result: 'Success'>

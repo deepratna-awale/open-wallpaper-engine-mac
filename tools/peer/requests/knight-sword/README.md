@@ -1,0 +1,11 @@
+# 2515150033 Knight: sword across the idle animation (item 8)
+- **Capture method:** RenderDoc 1.46. WE was started under `renderdoccmd capture`, and each frame's swapchain image was saved from qrenderdoc (`../rd_grab/rd_grab.py`). This was needed because the Windows session was locked, and desktop screen capture returns black frames while locked. WE kept rendering at 25 fps.
+- **Settings:** 1920x1080, MSAA x2, post-processing on.
+- **Frames:**
+  - `knight_seq_f0..9_sw0.png`: 10 full frames about 1.4 s apart (WE frames 2805, 2842, 2878, 2912, 2947, 2975, 3012, 3049, 3086, 3123; see `knight_seq_report.txt`).
+  - `knight_f0..3_sw0.png`: an earlier set of 4 frames, WE frames 951–1021.
+- **Contact sheet:** `knight_blade_tip_sheet.png` crops x 0–960, y 600–1080 from each of the 10 frames.
+- **Result:**
+  - The blade swings widely over the idle cycle.
+  - In several frames the tip leaves the screen at the left edge (x = 0). In others it ends around x ≈ 60–250, y ≈ 900–1000.
+  - The posed puppet clearly draws beyond its image rect in WE.

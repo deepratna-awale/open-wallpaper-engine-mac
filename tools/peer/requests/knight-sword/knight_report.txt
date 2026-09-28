@@ -1,0 +1,13 @@
+target wallpaper64 api  pid 17532
+capture 0 K:\DeepWorkspace\wem-images2\tools\peer\requests\rd_grab\cap\we_frame951.rdc at 1790570834.73
+capture 1 K:\DeepWorkspace\wem-images2\tools\peer\requests\rd_grab\cap\we_frame975.rdc at 1790570835.655
+capture 2 K:\DeepWorkspace\wem-images2\tools\peer\requests\rd_grab\cap\we_frame998.rdc at 1790570836.573
+capture 3 K:\DeepWorkspace\wem-images2\tools\peer\requests\rd_grab\cap\we_frame1021.rdc at 1790570837.437
+frame 0 actions 14 swapbuffers [(1920, 1080)]
+  save K:\DeepWorkspace\wem-images2\tools\peer\requests\knight-sword\knight_f0_sw0.png <Result: 'Success'>
+frame 1 actions 14 swapbuffers [(1920, 1080)]
+  save K:\DeepWorkspace\wem-images2\tools\peer\requests\knight-sword\knight_f1_sw0.png <Result: 'Success'>
+frame 2 actions 14 swapbuffers [(1920, 1080)]
+  save K:\DeepWorkspace\wem-images2\tools\peer\requests\knight-sword\knight_f2_sw0.png <Result: 'Success'>
+frame 3 actions 14 swapbuffers [(1920, 1080)]
+  save K:\DeepWorkspace\wem-images2\tools\peer\requests\knight-sword\knight_f3_sw0.png <Result: 'Success'>
