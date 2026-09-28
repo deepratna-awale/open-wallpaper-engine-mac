@@ -66,6 +66,9 @@ final class ShaderVariantTranslator {
     let failureDirectory: URL?
     private let lock = NSLock()
     private var memory: [String: TranslatedShaderVariant] = [:]
+    /// Fused pairs (`fusedVariant`), refusals included, for this session only: a pair costs a few
+    /// milliseconds to fuse and only effect chains that qualify ask.
+    private var fusions: [String: Result<ShaderPassFusion.Plan, Error>] = [:]
 
     static let defaultFailureDirectory = URL(fileURLWithPath: "/tmp/owe-failed-shaders", isDirectory: true)
 
@@ -302,6 +305,18 @@ final class ShaderVariantTranslator {
     }
 
     // MARK: - Cache
+
+    func cachedFusion(_ key: String) -> Result<ShaderPassFusion.Plan, Error>? {
+        lock.lock()
+        defer { lock.unlock() }
+        return fusions[key]
+    }
+
+    func storeFusion(_ key: String, _ result: Result<ShaderPassFusion.Plan, Error>) {
+        lock.lock()
+        fusions[key] = result
+        lock.unlock()
+    }
 
     private func store(_ key: String, _ variant: TranslatedShaderVariant, persist: Bool) {
         lock.lock()
