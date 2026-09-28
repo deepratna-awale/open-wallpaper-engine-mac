@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Settings › General › Updates: Sparkle's preferences and the beta channel.
+/// Settings › Updates: Sparkle's preferences and the beta channel.
 struct UpdatesSection: View {
     @ObservedObject var updater: AppUpdater
     @AppStorage(WhatsNew.hidesReleaseNotesKey, store: .app) private var hidesReleaseNotes = false

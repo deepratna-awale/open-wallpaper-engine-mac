@@ -48,10 +48,12 @@ class GlobalSettingsViewModel: ObservableObject {
     /// Several changes in one turn of the run loop (a quality preset sets seven) save once.
     private var savePending = false
 
-    @Published var selection = 0
-    
     /// The setup assistant is showing (at launch until finished, or from "Run setup again…").
     @Published var isFirstLaunch = OnboardingFlow.showsAtLaunch()
+
+    /// The Terms of Use and Privacy Policy notice is due (`LegalNotice`): never confirmed, or the
+    /// documents changed since. Shown once, on its own when setup is already done.
+    @Published var needsLegalNotice = LegalNotice.isDue(in: .app)
 
     /// The language this process runs in; a different choice applies at the next launch.
     let languageChange: LanguageChange

@@ -1,0 +1,124 @@
+import SwiftUI
+
+/// Settings › Optimizations: the optional ways the app saves space and work, or changes how it
+/// renders. New optional optimizations are listed here.
+struct OptimizationsPage: SettingsPage {
+    @ObservedObject var viewModel: GlobalSettingsViewModel
+    @AppStorage("ReclaimOriginalPackages", store: .app) private var reclaimOriginalPackages = false
+    @State private var reclaimableBytes: Int64 = 0
+    @State private var reclaimedCount: Int?
+    @State private var isReclaiming = false
+
+    init(globalSettings viewModel: GlobalSettingsViewModel) {
+        self.viewModel = viewModel
+    }
+
+    private var reclaimableDescription: String {
+        guard reclaimableBytes > 0 else { return String(localized: "No originals ready to remove") }
+        let formatted = ByteCountFormatter.string(fromByteCount: reclaimableBytes, countStyle: .file)
+        return String(localized: "\(formatted) of originals can be removed", comment: "%@ is a file size, e.g. 1.2 GB")
+    }
+
+    var body: some View {
+        SettingsForm {
+            Section {
+                Text("Optional optimizations. Any added later are listed here too.")
+                    .foregroundStyle(.secondary)
+            }
+            // MARK: Converted Wallpapers
+            Section {
+                Toggle("Remove original packages after conversion", isOn: $reclaimOriginalPackages)
+                    .changedFromDefault(reclaimOriginalPackages)
+                HStack {
+                    Text(reclaimableDescription)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button("Reclaim Now") {
+                        isReclaiming = true
+                        DispatchQueue.global(qos: .utility).async {
+                            let removed = WallpaperPackageConverter.reclaimEligibleSources()
+                            let remaining = WallpaperPackageConverter.reclaimableBytes()
+                            DispatchQueue.main.async {
+                                reclaimedCount = removed
+                                reclaimableBytes = remaining
+                                isReclaiming = false
+                            }
+                        }
+                    }
+                    .disabled(isReclaiming || reclaimableBytes == 0)
+                }
+                if let reclaimedCount {
+                    Text("Removed \(reclaimedCount) original packages.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            } header: {
+                Label("Converted Wallpapers", systemImage: "arrow.triangle.2.circlepath")
+            } footer: {
+                Text("Wallpapers are unpacked into plain files when imported. The original package is kept until the wallpaper has rendered from those files, reported no conversion warnings, and no other wallpaper depends on it.")
+            }
+            .settingsAnchor(SettingsAnchor.converted)
+            // MARK: Displays
+            Section {
+                Toggle("Sync properties across displays", isOn: $viewModel.settings.syncPropertiesAcrossDisplays)
+                    .changedFromDefault(viewModel.isChanged(\.syncPropertiesAcrossDisplays))
+            } header: {
+                Label("Displays", systemImage: "display.2")
+            } footer: {
+                Text("Off, a wallpaper shown on several displays keeps each display's properties, as Wallpaper Engine does. On, one set of properties applies to every display.")
+            }
+            .settingsAnchor(SettingsAnchor.displays)
+            // MARK: Video Framework
+            Section {
+                Picker("Video Framework", selection: $viewModel.settings.videoFramework) {
+                    Text("Apple AVKit").tag(GSVideoFramework.avkit)
+                    Text("Metal (effects apply to video)").tag(GSVideoFramework.metal)
+                }
+                .changedFromDefault(viewModel.isChanged(\.videoFramework))
+            } header: {
+                Label("Video", systemImage: "film")
+            } footer: {
+                Text("Metal draws video through the scene renderer so effects and music sync apply to it, the way Wallpaper Engine does. Experimental.")
+            }
+            .settingsAnchor(SettingsAnchor.video)
+            // MARK: Audio
+            Section {
+                Toggle(isOn: $viewModel.settings.audioOutput) {
+                    Text("Audio Output")
+                }
+                .changedFromDefault(viewModel.isChanged(\.audioOutput))
+                Toggle(isOn: $viewModel.settings.reloadWhenChangingOutputDevice) {
+                    Text("Reload when changing output device")
+                }.disabled(true)
+                Toggle("Media integration support", isOn: $viewModel.settings.mediaIntegration)
+                    .changedFromDefault(viewModel.isChanged(\.mediaIntegration))
+            } header: {
+                Label("Audio", systemImage: "speaker.3.fill")
+            } footer: {
+                Text("Media integration lets wallpapers read the title, artist and album cover of the music playing now.")
+            }
+            .settingsAnchor(SettingsAnchor.audio)
+            // MARK: Rendering
+            Section {
+                Picker("Process Priority", selection: $viewModel.settings.processPiority) {
+                    Text("Normal").tag(GSProcessPiority.normal)
+                    Text("Below Normal").tag(GSProcessPiority.belowNormal)
+                }
+                .changedFromDefault(viewModel.isChanged(\.processPiority))
+                Toggle("Pause when VRAM is exhausted", isOn: $viewModel.settings.pauseOnVRAMExhausted)
+                    .changedFromDefault(viewModel.isChanged(\.pauseOnVRAMExhausted))
+                Toggle("Restart after crashing", isOn: $viewModel.settings.restartAfterCrashing)
+                    .changedFromDefault(viewModel.isChanged(\.restartAfterCrashing))
+            } header: {
+                Label("Rendering", systemImage: "wrench.and.screwdriver.fill")
+            }
+            .settingsAnchor(SettingsAnchor.rendering)
+        }
+        .onAppear {
+            DispatchQueue.global(qos: .utility).async {
+                let bytes = WallpaperPackageConverter.reclaimableBytes()
+                DispatchQueue.main.async { reclaimableBytes = bytes }
+            }
+        }
+    }
+}

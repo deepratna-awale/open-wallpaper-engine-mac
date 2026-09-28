@@ -9,7 +9,7 @@ extension AppDelegate {
             tab: contentViewModel.topTabBarSelection,
             selectedWallpapers: Array(contentViewModel.selectedWallpapers).sorted { $0.path < $1.path },
             settingsOpen: settingsWindow?.isVisible == true,
-            settingsPage: globalSettingsViewModel.selection,
+            settingsPage: settingsNavigation.tab.rawValue,
             settingsFrame: settingsWindow?.frameDescriptor,
             paused: wallpaperViewModel.playRate == 0)
     }
@@ -24,11 +24,7 @@ extension AppDelegate {
         contentViewModel.selectedWallpapers = Set(state.selectedWallpapers)
         if state.paused { wallpaperViewModel.playRate = 0 }
         if state.settingsOpen {
-            let page = state.settingsPage
-            globalSettingsViewModel.selection = page
-            if SettingsToolbarIdentifiers.all.indices.contains(page) {
-                settingsWindow.toolbar?.selectedItemIdentifier = SettingsToolbarIdentifiers.all[page]
-            }
+            if let tab = SettingsTab(rawValue: state.settingsPage) { settingsNavigation.show(tab) }
             if let frame = state.settingsFrame {
                 settingsWindow.setFrame(from: frame)
             } else {

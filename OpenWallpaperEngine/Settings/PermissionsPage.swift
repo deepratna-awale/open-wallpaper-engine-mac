@@ -10,7 +10,7 @@ struct PermissionsPage: SettingsPage {
     }
 
     var body: some View {
-        Form {
+        SettingsForm {
             Section {
                 permissionRow(
                     title: "Screen & System Audio Recording",
@@ -28,9 +28,8 @@ struct PermissionsPage: SettingsPage {
             } footer: {
                 Text("Audio capture starts on its own once the permission is granted; no restart is needed.")
             }
+            .settingsAnchor(SettingsAnchor.permissions)
         }
-        .formStyle(.grouped)
-        .scrollContentBackground(.hidden)
         .onAppear(perform: refresh)
     }
 

@@ -1,8 +1,9 @@
 import SwiftUI
 import AppKit
 
-/// Settings › Assets: the Wallpaper Engine assets scenes need, from the user's own Steam copy.
-/// Shows which copy is in use and installs, updates or removes it. Changes apply at once; the
+/// Settings › Assets: the Wallpaper Engine assets scenes need, from the user's own Steam copy,
+/// SteamCMD, the Wallpaper Storage folder and the Steam Web API key. Shows which copy is in use
+/// and installs, updates or removes it. Changes apply at once; the
 /// window's OK and Cancel don't cover them.
 struct AssetsPage: SettingsPage {
     var viewModel: GlobalSettingsViewModel
@@ -20,7 +21,7 @@ struct AssetsPage: SettingsPage {
     }
 
     var body: some View {
-        Form {
+        SettingsForm {
             Section {
                 Text("Scenes need Wallpaper Engine assets from your Steam copy: built-in effects, shaders, materials and fonts. Video and web wallpapers play without them.")
                     .foregroundStyle(.secondary)
@@ -28,6 +29,7 @@ struct AssetsPage: SettingsPage {
             } header: {
                 Label("Wallpaper Engine Assets", systemImage: "shippingbox")
             }
+            .settingsAnchor(SettingsAnchor.assets)
 
             Section {
                 progress
@@ -37,9 +39,20 @@ struct AssetsPage: SettingsPage {
             }
 
             SteamCmdSection(steamCmd: steamCmd, installer: installer)
+                .settingsAnchor(SettingsAnchor.steamCmd)
+
+            WallpaperStorageSection()
+                .settingsAnchor(SettingsAnchor.storage)
+
+            Section {
+                SteamWebAPIKeyView()
+            } header: {
+                Label("Steam Web API Key", systemImage: "key")
+            } footer: {
+                Text("Needed to browse and search the Workshop. It is stored in your keychain and checked with Steam before saving. Without it, author names come from public Steam profiles.")
+            }
+            .settingsAnchor(SettingsAnchor.apiKey)
         }
-        .formStyle(.grouped)
-        .scrollContentBackground(.hidden)
         .onAppear { assets.refresh() }
         .confirmationDialog("Remove the assets?", isPresented: $confirmsRemoval) {
             if assets.defaultWallpapers.isEmpty {

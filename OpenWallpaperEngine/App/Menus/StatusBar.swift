@@ -72,65 +72,7 @@ extension AppDelegate {
 
         let menu = NSMenu()
         menu.delegate = self
-        menu.items = [
-            .init(title: String(localized: "Show Open Wallpaper Engine"),
-                  systemImage: "photo",
-                  action: #selector(openMainWindow),
-                  keyEquivalent: "o"),
-
-            recentWallpapersMenuItem,
-
-            .separator(),
-
-            {
-                let item = NSMenuItem(title: String(localized: "Set Up Assets…"),
-                                      systemImage: "shippingbox",
-                                      action: #selector(openAssetsSettings),
-                                      keyEquivalent: "")
-                item.identifier = Self.setUpAssetsMenuItem
-                item.isHidden = !assets.isMissing
-                return item
-            }(),
-
-            .init(title: String(localized: "Browse Workshop"),
-                  systemImage: "globe",
-                  action: #selector(browseWorkshop),
-                  keyEquivalent: "w"),
-
-            .init(title: String(localized: "Settings"),
-                  systemImage: "gearshape.fill",
-                  action: #selector(openSettingsWindow),
-                  keyEquivalent: ","),
-
-            .init(title: String(localized: "Check for Updates…"),
-                  systemImage: "arrow.down.circle",
-                  action: #selector(checkForUpdates),
-                  keyEquivalent: ""),
-
-            .separator(),
-
-            .init(title: String(localized: "Support & FAQ"),
-                  systemImage: "person.fill.questionmark",
-                  action: #selector(openSupportWebpage),
-                  keyEquivalent: "i"),
-
-            .separator(),
-
-            .init(title: String(localized: "Mute"),
-                  systemImage: "speaker.slash.fill",
-                  action: #selector(AppDelegate.shared.mute),
-                  keyEquivalent: "m"),
-
-            .init(title: String(localized: "Pause"),
-                  systemImage: "pause.fill",
-                  action: #selector(pause),
-                  keyEquivalent: "p"),
-
-            .init(title: String(localized: "Quit"),
-                  systemImage: "power",
-                  action: #selector(NSApplication.terminate(_:)),
-                  keyEquivalent: "q")
-        ]
+        menu.items = Self.statusMenuItems(recentWallpapers: recentWallpapersMenuItem, assetsMissing: assets.isMissing)
 
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         self.statusItem.menu = menu
@@ -144,6 +86,37 @@ extension AppDelegate {
                 button.image = NSImage(systemSymbolName: "play.desktopcomputer", accessibilityDescription: nil)
             }
         }
+    }
+}
+
+extension AppDelegate {
+    /// The status menu's items. Items that are also in the menu bar use the same shortcuts
+    /// (`AppShortcut`), which work there; the status menu shows them for reference.
+    static func statusMenuItems(recentWallpapers: NSMenuItem, assetsMissing: Bool) -> [NSMenuItem] {
+        func item(_ title: LocalizedStringResource, _ systemImage: String, _ action: Selector,
+                  _ shortcut: AppShortcut.Name? = nil) -> NSMenuItem {
+            let item = NSMenuItem(title: String(localized: title), systemImage: systemImage, action: action, keyEquivalent: "")
+            if let shortcut { item.use(AppShortcut[shortcut]) }
+            return item
+        }
+        let setUpAssets = item("Set Up Assets…", "shippingbox", #selector(openAssetsSettings))
+        setUpAssets.identifier = setUpAssetsMenuItem
+        setUpAssets.isHidden = !assetsMissing
+        return [
+            item("Show Open Wallpaper Engine", "photo", #selector(openMainWindow), .wallpaperExplorer),
+            recentWallpapers,
+            .separator(),
+            setUpAssets,
+            item("Browse Workshop", "globe", #selector(browseWorkshop), .workshop),
+            item("Settings", "gearshape.fill", #selector(openSettingsWindow), .settings),
+            item("Check for Updates…", "arrow.down.circle", #selector(checkForUpdates), .checkForUpdates),
+            .separator(),
+            item("Support & FAQ", "person.fill.questionmark", #selector(openSupportWebpage)),
+            .separator(),
+            item("Mute", "speaker.slash.fill", #selector(toggleMuteWallpapers), .muteUnmute),
+            item("Pause", "pause.fill", #selector(togglePauseWallpapers), .pauseResume),
+            item("Quit", "power", #selector(NSApplication.terminate(_:)), .quit),
+        ]
     }
 }
 

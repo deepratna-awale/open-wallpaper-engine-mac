@@ -99,6 +99,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var contentViewModel = ContentViewModel()
     var wallpaperViewModel = WallpaperViewModel()
     var globalSettingsViewModel = GlobalSettingsViewModel()
+    /// The settings window's tab and the setting a link or search result opens.
+    let settingsNavigation = SettingsNavigation()
     lazy var safeRestart = SafeRestart()
     /// Sparkle, off in builds without an update signing key (`Core/Updates`).
     lazy var updater = AppUpdater(configuration: .main)
@@ -232,7 +234,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         displayPlaybackMonitor.start(settings: globalSettingsViewModel.$settings)
 
         // After an update relaunch, what was open before; otherwise the setup assistant if due.
-        if !restoreUpdateRelaunchState(), globalSettingsViewModel.isFirstLaunch {
+        if !restoreUpdateRelaunchState(),
+           globalSettingsViewModel.isFirstLaunch || globalSettingsViewModel.needsLegalNotice {
             self.mainWindowController.window.center()
             self.mainWindowController.window.makeKeyAndOrderFront(nil)
         }
@@ -299,11 +302,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         self.settingsWindow.makeKeyAndOrderFront(nil)
     }
     
+    /// Opens Settings on `tab`, scrolled to the section `anchor` names when given.
+    func openSettings(_ tab: SettingsTab, anchor: String? = nil) {
+        settingsNavigation.show(tab, anchor: anchor)
+        openSettingsWindow()
+    }
+
     /// Settings › Assets, where the assets scenes need are installed.
     @objc func openAssetsSettings() {
-        globalSettingsViewModel.selection = 2
-        settingsWindow.toolbar?.selectedItemIdentifier = SettingsToolbarIdentifiers.assets
-        openSettingsWindow()
+        openSettings(.assets, anchor: SettingsAnchor.assets)
     }
 
     /// The Workshop tab, where Steam's login form is.
@@ -339,8 +346,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         case .alertFirstButtonReturn:
             PermissionHelper.grantScreenRecordingAccess()
         case .alertSecondButtonReturn:
-            globalSettingsViewModel.selection = 4
-            openSettingsWindow()
+            openSettings(.permissions)
         case .alertThirdButtonReturn:
             break
         default:
@@ -363,10 +369,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let toolbar = NSToolbar(identifier: "SettingsToolbar")
         toolbar.delegate = self
         
-        toolbar.selectedItemIdentifier = SettingsToolbarIdentifiers.performance
-        
+        toolbar.selectedItemIdentifier = settingsNavigation.tab.toolbarIdentifier
+        settingsNavigation.toolbar = toolbar
+
         self.settingsWindow.toolbar = toolbar
-        self.settingsWindow.contentView = NSHostingView(rootView: SettingsView().environmentObject(self.globalSettingsViewModel))
+        self.settingsWindow.contentView = NSHostingView(rootView: SettingsView()
+            .environmentObject(self.globalSettingsViewModel)
+            .environmentObject(settingsNavigation))
     }
     
 // MARK: Set Wallpaper Windows - One per screen
