@@ -22,6 +22,15 @@ final class SceneUserPropertyService {
     /// Per store: the pending change notification and the keys it reports (guarded by `levelLock`).
     private var propertyNotificationWorkItems: [String: DispatchWorkItem] = [:]
     private var pendingChangedKeys: [String: Set<String>] = [:]
+    /// Bumped at once by every change to any store (guarded by `levelLock`): what a frame compares
+    /// to see a change before the batched notification arrives.
+    private var changeRevision: UInt64 = 0
+
+    var revision: UInt64 {
+        levelLock.lock()
+        defer { levelLock.unlock() }
+        return changeRevision
+    }
 
     init(audioLevel: @escaping () -> Double) {
         self.audioLevel = audioLevel
@@ -35,6 +44,7 @@ final class SceneUserPropertyService {
     func setUserProperties(_ values: [String: String], wallpaper: String, replacing: Bool) {
         levelLock.lock()
         let changedKeys = propertyStores.set(values, for: wallpaper, replacing: replacing)
+        if !changedKeys.isEmpty { changeRevision &+= 1 }
         if frameSnapshot == nil { propertyStores.activeKey = wallpaper }
         pendingChangedKeys[wallpaper, default: []].formUnion(changedKeys)
         propertyNotificationWorkItems[wallpaper]?.cancel()

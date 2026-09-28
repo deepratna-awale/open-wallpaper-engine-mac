@@ -32,6 +32,11 @@ final class ParticleMaterialRenderer {
     /// Pipelines drawn with since the last `trimMemory` that dropped idle ones.
     private var usedPipelines = Set<String>()
     private var pendingPipelines = Set<String>()
+
+    /// Whether a pipeline is still compiling: a frame drawn now may change when it lands.
+    var hasPendingPipelines: Bool {
+        pipelineLock.withLock { !pendingPipelines.isEmpty }
+    }
     private var failedPipelines: [String: String] = [:]
 
     /// Per system, render thread only.

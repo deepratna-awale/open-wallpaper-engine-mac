@@ -30,6 +30,11 @@ final class ImageMaterialRenderer {
     /// Pipelines drawn with since the last `trimMemory` that dropped idle ones.
     private var usedPipelines = Set<String>()
     private var pending = Set<String>()
+
+    /// Whether a pipeline is still compiling: a frame drawn now may change when it lands.
+    var hasPendingPipelines: Bool {
+        pipelineLock.withLock { !pending.isEmpty }
+    }
     private var failed = Set<String>()
 
     /// Uniform programs per layer instance (script clones share a plan but not a placement), rebuilt
