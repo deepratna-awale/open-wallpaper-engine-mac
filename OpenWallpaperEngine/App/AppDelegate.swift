@@ -120,6 +120,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }()
     /// The Wallpaper Engine assets scenes need, from the user's own Steam copy (Settings › Assets).
     lazy var assets = WallpaperEngineAssetsService(steamCmd: contentViewModel.steamCmd)
+    /// Installs Valve's SteamCMD when none is found; the new copy is picked up by detection.
+    lazy var steamCmdInstaller = SteamCmdInstaller(onInstalled: { [weak contentViewModel] in
+        contentViewModel?.steamCmd.detectSteamCmd()
+    })
     private var assetsCancellable: AnyCancellable?
     /// Fetches the Workshop items shown wallpapers borrow assets from.
     lazy var workshopDependencies = WorkshopDependencyService(steamCmd: contentViewModel.steamCmd)
@@ -220,6 +224,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             self.mainWindowController.window.makeKeyAndOrderFront(nil)
         }
 
+        // Workshop downloads need SteamCMD; set it up from Valve in the background when it's missing.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+            guard let self else { return }
+            self.steamCmdInstaller.detectThenAutoInstall(self.contentViewModel.steamCmd)
+        }
+
         DispatchQueue.global(qos: .utility).async {
             WallpaperPackageConverter.convertInstalledLibrary()
             if UserDefaults.app.bool(forKey: "ReclaimOriginalPackages") {
@@ -230,6 +240,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     
     func applicationDidBecomeActive(_ notification: Notification) {
         contentViewModel.isApplicationActive = true
+        // Picks up a steamcmd installed meanwhile, e.g. with Homebrew.
+        if !steamCmdInstaller.isBusy {
+            contentViewModel.steamCmd.detectSteamCmd()
+        }
         NSApp.activate(ignoringOtherApps: true)
     }
 

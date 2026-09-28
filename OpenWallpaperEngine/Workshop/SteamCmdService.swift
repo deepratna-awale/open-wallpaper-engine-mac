@@ -50,6 +50,10 @@ class SteamCmdService: ObservableObject {
     private let previewCacheRoot: URL
     private let downloadedIndex: DownloadedWallpaperIndex
     private let presentPreview: @MainActor (WEWallpaper) -> Void
+    /// Where `detectSteamCmd` looks.
+    private let locator: () -> SteamCmdLocator
+    /// Whether detection falls back to the login shell's `PATH`; off when the search is redirected.
+    private let asksLoginShell: Bool
 
     init(dependencyIndex: WorkshopDependencyIndex = WorkshopDependencyIndex(),
          runner: SteamCmdRunning = ProcessSteamCmdRunner(),
@@ -57,7 +61,11 @@ class SteamCmdService: ObservableObject {
          previewCacheRoot: URL = WorkshopItemInstaller.previewCacheRoot,
          downloadedIndex: DownloadedWallpaperIndex = .shared,
          presentPreview: @escaping @MainActor (WEWallpaper) -> Void = { AppDelegate.shared.showWorkshopPreview($0) },
+         locator: @escaping () -> SteamCmdLocator = { SteamCmdLocator.standard() },
+         asksLoginShell: Bool = SteamCmdLocator.searchRoot(environment: ProcessInfo.processInfo.environment) == nil,
          restoresSession: Bool = true) {
+        self.locator = locator
+        self.asksLoginShell = asksLoginShell
         self.dependencyIndex = dependencyIndex
         self.runner = runner
         self.storageDirectory = storageDirectory
@@ -85,60 +93,27 @@ class SteamCmdService: ObservableObject {
         }
     }
 
-    func detectSteamCmd() {
-        // Check user-configured path first
-        if let customPath = UserDefaults.app.string(forKey: "SteamCmdPath"),
-           FileManager.default.isExecutableFile(atPath: customPath) {
-            steamCmdPath = customPath
+    /// Finds steamcmd (`SteamCmdLocator`), then, when none of the known places has one, asks the
+    /// user's login shell on a background queue. `completion` runs on the main queue once the
+    /// search is done, with whether a steamcmd was found.
+    func detectSteamCmd(completion: ((Bool) -> Void)? = nil) {
+        let locator = locator()
+        if let path = locator.locate() {
+            if steamCmdPath != path { steamCmdPath = path }
+            completion?(true)
             return
         }
-
-        let homeDir = FileManager.default.homeDirectoryForCurrentUser.path
-        let searchPaths = [
-            // Homebrew / system installs
-            "/usr/local/bin/steamcmd",
-            "/opt/homebrew/bin/steamcmd",
-            "/usr/bin/steamcmd",
-            // Steam client / SDK locations
-            "\(homeDir)/Library/Application Support/Steam/steamcmd",
-            "\(homeDir)/Library/Application Support/Steam/steamcmd/steamcmd",
-            "\(homeDir)/Library/Application Support/Steam/steamcmd.sh",
-            // Standalone SteamCMD package (common extract locations)
-            "\(homeDir)/steamcmd/steamcmd.sh",
-            "\(homeDir)/steamcmd/steamcmd",
-            "\(homeDir)/Downloads/steamcmd/steamcmd.sh",
-            "\(homeDir)/Downloads/steamcmd/steamcmd",
-            "/Applications/steamcmd/steamcmd.sh",
-            "/Applications/steamcmd/steamcmd",
-            "\(homeDir)/Projects/SteamSDK/tools/ContentBuilder/builder_osx/steamcmd",
-        ]
-
-        for path in searchPaths {
-            if FileManager.default.fileExists(atPath: path) {
-                steamCmdPath = path
-                return
-            }
+        guard asksLoginShell else {
+            steamCmdPath = nil
+            completion?(false)
+            return
         }
-
-        // Try `which` as fallback — run on background thread to avoid blocking main thread
         DispatchQueue.global(qos: .utility).async { [weak self] in
-            let process = Process()
-            let pipe = Pipe()
-            process.executableURL = URL(fileURLWithPath: "/usr/bin/which")
-            process.arguments = ["steamcmd"]
-            process.standardOutput = pipe
-            process.standardError = FileHandle.nullDevice
-            try? process.run()
-            process.waitUntilExit()
-
-            if process.terminationStatus == 0 {
-                let data = pipe.fileHandleForReading.readDataToEndOfFile()
-                if let path = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
-                   !path.isEmpty {
-                    DispatchQueue.main.async {
-                        self?.steamCmdPath = path
-                    }
-                }
+            let path = SteamCmdLocator.loginShellLookup()
+            DispatchQueue.main.async {
+                guard let self else { return }
+                if self.steamCmdPath != path { self.steamCmdPath = path }
+                completion?(path != nil)
             }
         }
     }
@@ -168,12 +143,19 @@ class SteamCmdService: ObservableObject {
         }
         // Make executable if needed (e.g. steamcmd.sh from Steam package)
         if !FileManager.default.isExecutableFile(atPath: path) {
-            try? FileManager.default.setAttributes(
-                [.posixPermissions: 0o755], ofItemAtPath: path
-            )
+            do {
+                try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: path)
+            } catch {
+                OWELog.error(.workshop, "Can't make \(path) executable: \(error)")
+            }
+        }
+        guard SteamCmdLocator.isExecutableFile(path) else {
+            pathError = String(localized: "The selected file isn't a program that can run.",
+                               comment: "Error after choosing a steamcmd binary")
+            return
         }
         pathError = nil
-        UserDefaults.app.set(path, forKey: "SteamCmdPath")
+        UserDefaults.app.set(path, forKey: SteamCmdLocator.customPathKey)
         steamCmdPath = path
     }
 
@@ -230,7 +212,8 @@ class SteamCmdService: ObservableObject {
     }
 
     /// Try login with cached session (no password needed if previously authenticated).
-    func loginWithCachedSession(username: String) {
+    /// `failureMessage` replaces the default error when the session isn't there.
+    func loginWithCachedSession(username: String, failureMessage: String? = nil) {
         guard steamCmdPath != nil else { return }
 
         var script = SteamCmdScript.withoutPasswordPrompt()
@@ -256,7 +239,8 @@ class SteamCmdService: ObservableObject {
                     self.isLoggedIn = true
                     self.rememberAccount(username)
                 } else {
-                    self.loginError = String(localized: "Cached session expired. Please log in with password.")
+                    self.loginError = failureMessage
+                        ?? String(localized: "Cached session expired. Please log in with password.")
                 }
             }
         }
