@@ -32,7 +32,7 @@ class SteamCmdService: ObservableObject {
 
     /// The account name of the last successful login, kept to reuse steamcmd's cached session.
     /// The password is never stored: steamcmd keeps its own login token after the first login.
-    private let account = SteamCredentials.steamCmdAccount()
+    private let account: SteamCmdAccountMemory
     private static let previewCacheLimit = 250 * 1024 * 1024
     private let previewQueue = DispatchQueue(label: "steamcmd.preview.download")
     private let downloadQueue = DispatchQueue(label: "steamcmd.workshop.download")
@@ -67,7 +67,9 @@ class SteamCmdService: ObservableObject {
          presentPreview: @escaping @MainActor (WEWallpaper) -> Void = { AppDelegate.shared.showWorkshopPreview($0) },
          locator: @escaping () -> SteamCmdLocator = { SteamCmdLocator.standard() },
          asksLoginShell: Bool = SteamCmdLocator.searchRoot(environment: ProcessInfo.processInfo.environment) == nil,
+         account: SteamCmdAccountMemory = .keychain,
          restoresSession: Bool = true) {
+        self.account = account
         self.locator = locator
         self.asksLoginShell = asksLoginShell
         self.dependencyIndex = dependencyIndex
@@ -78,8 +80,9 @@ class SteamCmdService: ObservableObject {
         self.presentPreview = presentPreview
         // Without it the service starts with no steamcmd and logged out, for the caller to set up.
         guard restoresSession else { return }
-        detectSteamCmd()
-        attemptCachedLogin()
+        // The session is restored once detection is done: a steamcmd found only through the login
+        // shell arrives later, and restoring before it would never log in.
+        detectSteamCmd { [weak self] _ in self?.attemptCachedLogin() }
     }
 
     /// Runs steamcmd with `script` on its stdin; nothing of the script shows in the process list.
@@ -91,10 +94,61 @@ class SteamCmdService: ObservableObject {
 
     /// Automatically try cached session if we have a saved username and steamcmd is installed.
     private func attemptCachedLogin() {
-        guard isInstalled, !isLoggedIn else { return }
+        guard isInstalled, !isLoggedIn, !isLoggingIn else { return }
         if let saved = account.load() {
             loginWithCachedSession(username: saved)
         }
+    }
+
+    /// The account of the last successful login, whose SteamCMD session may still be cached.
+    var rememberedAccount: String? {
+        if !steamUsername.isEmpty { return steamUsername }
+        return account.load()
+    }
+
+    /// Logs in with the remembered account's cached session unless logged in already.
+    /// `completion` runs on the main queue with whether a session is there.
+    func restoreSession(completion: @escaping (Bool) -> Void) {
+        if isLoggedIn { return completion(true) }
+        guard isInstalled, !isLoggingIn, let username = rememberedAccount else { return completion(false) }
+        loginWithCachedSession(username: username, completion: completion)
+    }
+
+    /// Another steamcmd run found the cached login gone (e.g. the assets install): the app shows
+    /// the account as logged out again.
+    func sessionExpired() {
+        isLoggedIn = false
+        loginError = String(localized: "SteamCMD has no saved login for this account. Log in again.",
+                            comment: "Login error after SteamCMD reported its cached login missing")
+    }
+
+    /// What a steamcmd `login` printed. Success needs SteamCMD's own login confirmation: other
+    /// lines end in "OK" too ("Loading Steam API...OK"), and steamcmd exits 0 after `quit` even
+    /// when the login failed.
+    enum LoginOutcome: Equatable {
+        case loggedIn
+        case guardCodeRequired
+        case invalidPassword
+        case noCachedLogin
+        case failed
+    }
+
+    static func loginOutcome(output: String) -> LoginOutcome {
+        if output.contains("Steam Guard") || output.contains("Two-factor") || output.contains("two-factor") {
+            return .guardCodeRequired
+        }
+        if output.contains("Invalid Password") || output.contains("InvalidPassword") { return .invalidPassword }
+        if output.contains("Cached credentials not found") || output.contains("No cached credentials")
+            || output.contains("password prompt disabled") {
+            return .noCachedLogin
+        }
+        let lines = output.components(separatedBy: .newlines).map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        if lines.contains(where: { $0.hasPrefix("Logging in user") && $0.contains("FAILED") }) { return .failed }
+        let confirmed = lines.contains { line in
+            line.hasPrefix("Logged in OK") || line.hasPrefix("Waiting for user info...OK")
+                || (line.hasPrefix("Logging in user") && line.hasSuffix("...OK"))
+        }
+        return confirmed ? .loggedIn : .failed
     }
 
     /// Finds steamcmd (`SteamCmdLocator`), then, when none of the known places has one, asks the
@@ -189,16 +243,17 @@ class SteamCmdService: ObservableObject {
 
             DispatchQueue.main.async {
                 self.isLoggingIn = false
-                if output.contains("Logged in OK") || (output.contains("OK") && exitCode == 0) {
+                switch Self.loginOutcome(output: output) {
+                case .loggedIn:
                     self.isLoggedIn = true
                     self.loginError = nil
                     self.rememberAccount(username)
                     self.loginSucceeded.send()
-                } else if output.contains("Steam Guard") || output.contains("Two-factor") {
+                case .guardCodeRequired:
                     self.loginError = Self.guardCodeRequiredError
-                } else if output.contains("Invalid Password") || output.contains("FAILED") {
+                case .invalidPassword, .noCachedLogin:
                     self.loginError = String(localized: "Invalid username or password")
-                } else {
+                case .failed:
                     self.loginError = String(localized: "Login failed. Check credentials and try again.")
                 }
                 if !self.isLoggedIn {
@@ -218,14 +273,16 @@ class SteamCmdService: ObservableObject {
 
     /// Try login with cached session (no password needed if previously authenticated).
     /// `failureMessage` replaces the default error when the session isn't there.
-    func loginWithCachedSession(username: String, failureMessage: String? = nil) {
-        guard steamCmdPath != nil else { return }
+    func loginWithCachedSession(username: String, failureMessage: String? = nil,
+                                completion: ((Bool) -> Void)? = nil) {
+        guard steamCmdPath != nil else { completion?(false); return }
 
         var script = SteamCmdScript.withoutPasswordPrompt()
         do {
             try script.append("login", [username])
         } catch {
             loginError = error.localizedDescription
+            completion?(false)
             return
         }
 
@@ -240,13 +297,17 @@ class SteamCmdService: ObservableObject {
 
             DispatchQueue.main.async {
                 self.isLoggingIn = false
-                if output.contains("Logged in OK") || (output.contains("OK") && exitCode == 0) {
+                if Self.loginOutcome(output: output) == .loggedIn {
                     self.isLoggedIn = true
                     self.rememberAccount(username)
                     self.loginSucceeded.send()
+                    completion?(true)
                 } else {
+                    OWELog.error(.workshop, "steamcmd cached login failed (exit \(exitCode)):\n\(output)")
+                    self.isLoggedIn = false
                     self.loginError = failureMessage
                         ?? String(localized: "Cached session expired. Please log in with password.")
+                    completion?(false)
                 }
             }
         }
@@ -618,5 +679,17 @@ private enum PreviewError: LocalizedError {
         case .downloadFailed(let message): return message
         case .exceedsCacheLimit: return String(localized: "Preview exceeds the 250 MB cache limit.")
         }
+    }
+}
+
+/// Where the account name of the last login is kept (the Keychain in the app); tests keep it in
+/// memory.
+struct SteamCmdAccountMemory {
+    let load: () -> String?
+    let save: (String) throws -> Void
+
+    static var keychain: SteamCmdAccountMemory {
+        let secret = SteamCredentials.steamCmdAccount()
+        return SteamCmdAccountMemory(load: { secret.load() }, save: { try secret.save($0) })
     }
 }
