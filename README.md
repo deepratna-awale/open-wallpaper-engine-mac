@@ -28,7 +28,15 @@ This project is built on top of the work of:
 
 Licensed under [GPL-3.0](LICENSE), same as the original project.
 
-## What 0.9.0 Supports
+## What 1.0.0 Supports
+
+### Setup, library & updates
+- **Setup assistant** — on first launch, a few skippable steps set the language, show the privacy notes, set up SteamCMD, the Steam login and an optional Steam Web API key, install the Wallpaper Engine assets and bring in your wallpapers.
+- **SteamCMD sets itself up** — when none is found, the app downloads Valve's SteamCMD; Homebrew's or Steam's is used if present.
+- **Wallpaper Engine assets from your own Steam copy** — installed through SteamCMD after you sign in, optionally with Wallpaper Engine's default wallpapers.
+- **Imports** — your Workshop collections and subscriptions (read from Steam's Web API), the Workshop items of an existing Steam library, and wallpaper folders.
+- **The [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)** — guides, settings reference and troubleshooting; Support & FAQ in the app opens it.
+- **Automatic updates** — signed updates install by themselves (on quit, after 10 minutes away, or within a day, then a quick relaunch restores your wallpapers). Settings › General › Updates lets you only check, or turn checks off, and opt into beta updates. Check for Updates… is in the app menu and the menu bar menu.
 
 ### Scene rendering
 - **Wallpaper Engine's own shaders** — layers, effects and materials now draw through each wallpaper's original shaders, translated to Metal, including effects that Workshop authors made themselves.
@@ -286,6 +294,8 @@ open "OpenWallpaperEngine.xcodeproj"
 
 In Xcode, change the signing certificate to your own or select "Sign to Run Locally", then press `Cmd + R` to build and run.
 
+Building from source fetches the Sparkle Swift package on first build. Builds from source don't check for updates.
+
 ## Usage
 
 ### Browse & Download from Steam Workshop
@@ -303,7 +313,7 @@ In Xcode, change the signing certificate to your own or select "Sign to Run Loca
 
 ## Privacy
 
-Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and SteamCMD's login. Open Wallpaper Engine has no server and collects no data or analytics. It only contacts Valve: Steam when you use the Workshop or install assets, and Valve's server to download SteamCMD. Web wallpapers may load their own online content. Your Steam password and Steam Guard code go straight to SteamCMD and are never stored, logged or sent anywhere else; only your account name is remembered, to reuse SteamCMD's saved login.
+Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and SteamCMD's login. Open Wallpaper Engine has no server and collects no data or analytics. It contacts Valve (Steam when you use the Workshop or install assets, and Valve's server to download SteamCMD) and GitHub, to check for app updates (the appcast on GitHub Pages) and download them from GitHub Releases, without sending any personal data. Update checks can be turned off in Settings › General. Web wallpapers may load their own online content. Your Steam password and Steam Guard code go straight to SteamCMD and are never stored, logged or sent anywhere else; only your account name is remembered, to reuse SteamCMD's saved login.
 
 ## Project Layout
 

@@ -28,7 +28,15 @@ Bu proje aşağıdaki kişilerin çalışmaları üzerine inşa edilmiştir:
 
 Orijinal projeyle aynı şekilde [GPL-3.0](../../LICENSE) lisansı altında lisanslanmıştır.
 
-## 0.9.0 Sürümünün Destekledikleri
+## 1.0.0 Sürümünün Destekledikleri
+
+### Kurulum, kitaplık ve güncellemeler
+- **Kurulum yardımcısı** — ilk açılışta, atlanabilen birkaç adım dili seçer, gizlilik notlarını gösterir, SteamCMD’yi, Steam oturumunu ve isteğe bağlı bir Steam Web API anahtarını ayarlar, Wallpaper Engine varlıklarını yükler ve duvar kâğıtlarınızı getirir.
+- **SteamCMD kendini kurar** — bulunamazsa uygulama Valve’ın SteamCMD’sini indirir; Homebrew’un veya Steam’inki varsa o kullanılır.
+- **Kendi Steam kopyanızdan Wallpaper Engine varlıkları** — oturum açtıktan sonra SteamCMD ile yüklenir, isteğe bağlı olarak Wallpaper Engine’in varsayılan duvar kâğıtlarıyla.
+- **İçe aktarma** — Atölye koleksiyonlarınız ve abonelikleriniz (Steam Web API’sinden), mevcut bir Steam kitaplığının Atölye öğeleri ve duvar kâğıdı klasörleri.
+- **[wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)** — kılavuzlar, ayar başvurusu ve sorun giderme; uygulamadaki Destek ve SSS onu açar.
+- **Otomatik güncellemeler** — imzalı güncellemeler kendiliğinden yüklenir (çıkışta, Mac’ten 10 dakika uzak kalındığında veya bir gün içinde; ardından hızlı bir yeniden başlatma duvar kâğıtlarınızı geri getirir). Ayarlar › Genel › Güncellemeler’de yalnızca denetlemeyi seçebilir, denetimi kapatabilir ve beta güncellemelerini alabilirsiniz. “Güncellemeleri Denetle…” uygulama menüsünde ve menü çubuğu menüsündedir.
 
 ### Sahne işleme
 - **Wallpaper Engine’in kendi gölgelendiricileri** — katmanlar, efektler ve malzemeler artık her duvar kâğıdının Metal’e çevrilmiş özgün gölgelendiricileriyle çiziliyor; Atölye yazarlarının kendi yaptığı efektler de buna dahil.
@@ -286,6 +294,8 @@ open "OpenWallpaperEngine.xcodeproj"
 
 Xcode’da imzalama sertifikasını kendi sertifikanızla değiştirin veya “Sign to Run Locally” seçeneğini belirleyin, ardından derleyip çalıştırmak için `Cmd + R` tuşlarına basın.
 
+Kaynaktan ilk derleme Sparkle Swift paketini indirir. Kaynaktan derlenen sürümler güncelleme denetlemez.
+
 ## Kullanım
 
 ### Steam Atölyesi’ne Göz Atma ve Steam Atölyesi’nden İndirme
@@ -303,7 +313,7 @@ Xcode’da imzalama sertifikasını kendi sertifikanızla değiştirin veya “S
 
 ## Gizlilik
 
-Open Wallpaper Engine’in kaydettiği her şey Mac’inizde kalır: ayarlarınız, kitaplığınız, önbellek ve SteamCMD oturum bilgisi. Open Wallpaper Engine’in sunucusu yoktur ve hiçbir veri ya analiz toplamaz. Yalnızca Valve ile iletişim kurar: Atölye’yi kullandığınızda veya varlıkları yüklediğinizde Steam ile, SteamCMD’yi indirmek için de Valve’ın sunucusuyla. Web duvar kâğıtları kendi çevrimiçi içeriklerini yükleyebilir. Steam parolanız ve Steam Guard kodunuz doğrudan SteamCMD’ye gider; hiçbir zaman saklanmaz, günlüğe kaydedilmez veya başka bir yere gönderilmez. SteamCMD’nin kayıtlı oturumunu yeniden kullanmak için yalnızca hesap adınız hatırlanır.
+Open Wallpaper Engine’in kaydettiği her şey Mac’inizde kalır: ayarlarınız, kitaplığınız, önbellek ve SteamCMD oturum bilgisi. Open Wallpaper Engine’in sunucusu yoktur ve hiçbir veri ya analiz toplamaz. Valve ile (Atölye’yi kullandığınızda veya varlıkları yüklediğinizde Steam ile, SteamCMD’yi indirmek için de Valve’ın sunucusuyla) ve uygulama güncellemelerini denetlemek (GitHub Pages’teki appcast) ve bunları GitHub Releases’ten indirmek için GitHub ile iletişim kurar; hiçbir kişisel veri gönderilmez. Güncelleme denetimi Ayarlar › Genel’den kapatılabilir. Web duvar kâğıtları kendi çevrimiçi içeriklerini yükleyebilir. Steam parolanız ve Steam Guard kodunuz doğrudan SteamCMD’ye gider; hiçbir zaman saklanmaz, günlüğe kaydedilmez veya başka bir yere gönderilmez. SteamCMD’nin kayıtlı oturumunu yeniden kullanmak için yalnızca hesap adınız hatırlanır.
 
 ## Proje Yapısı
 

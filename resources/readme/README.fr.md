@@ -28,7 +28,15 @@ Ce projet s’appuie sur le travail de :
 
 Distribué sous licence [GPL-3.0](../../LICENSE), comme le projet d’origine.
 
-## Fonctionnalités prises en charge par la version 0.9.0
+## Fonctionnalités prises en charge par la version 1.0.0
+
+### Configuration, bibliothèque et mises à jour
+- **Assistant de configuration** — au premier lancement, quelques étapes facultatives choisissent la langue, présentent les notes de confidentialité, configurent SteamCMD, la connexion Steam et une clé Steam Web API facultative, installent les ressources de Wallpaper Engine et importent vos fonds d’écran.
+- **SteamCMD s’installe tout seul** — s’il n’en trouve aucun, l’app télécharge SteamCMD de Valve ; celui de Homebrew ou de Steam est utilisé s’il existe.
+- **Ressources de Wallpaper Engine depuis votre propre copie Steam** — installées par SteamCMD après la connexion, avec en option les fonds d’écran par défaut de Wallpaper Engine.
+- **Imports** — vos collections et abonnements du Workshop (via la Web API de Steam), les éléments du Workshop d’une bibliothèque Steam existante et des dossiers de fonds d’écran.
+- **Le [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)** — guides, référence des réglages et dépannage ; « Assistance et FAQ » dans l’app l’ouvre.
+- **Mises à jour automatiques** — les mises à jour signées s’installent d’elles-mêmes (à la fermeture, après 10 minutes d’absence ou dans la journée, puis un relancement rapide restaure vos fonds d’écran). Réglages › Général › Mises à jour permet de seulement rechercher, de désactiver la recherche et de recevoir les versions bêta. « Rechercher les mises à jour… » se trouve dans le menu de l’app et dans le menu de la barre des menus.
 
 ### Rendu des scènes
 - **Les nuanceurs d’origine de Wallpaper Engine** — les calques, effets et matériaux sont désormais dessinés avec les nuanceurs d’origine de chaque fond d’écran, traduits en Metal, y compris les effets créés par les auteurs du Workshop.
@@ -286,6 +294,8 @@ open "OpenWallpaperEngine.xcodeproj"
 
 Dans Xcode, remplacez le certificat de signature par le vôtre ou sélectionnez « Sign to Run Locally », puis appuyez sur `Cmd + R` pour compiler et exécuter l’app.
 
+La première compilation depuis les sources télécharge le paquet Swift Sparkle. Les versions compilées depuis les sources ne recherchent pas de mises à jour.
+
 ## Utilisation
 
 ### Parcourir et télécharger depuis le Steam Workshop
@@ -303,7 +313,7 @@ Dans Xcode, remplacez le certificat de signature par le vôtre ou sélectionnez 
 
 ## Confidentialité
 
-Tout ce qu’Open Wallpaper Engine enregistre reste sur votre Mac : vos réglages, votre bibliothèque, le cache et la connexion de SteamCMD. Open Wallpaper Engine n’a pas de serveur et ne collecte aucune donnée ni statistique d’utilisation. Il ne contacte que Valve : Steam lorsque vous utilisez le Workshop ou installez les ressources, et le serveur de Valve pour télécharger SteamCMD. Les fonds d’écran web peuvent charger leur propre contenu en ligne. Votre mot de passe Steam et votre code Steam Guard sont transmis directement à SteamCMD et ne sont jamais enregistrés, journalisés ni envoyés ailleurs ; seul votre nom de compte est mémorisé, pour réutiliser la connexion enregistrée de SteamCMD.
+Tout ce qu’Open Wallpaper Engine enregistre reste sur votre Mac : vos réglages, votre bibliothèque, le cache et la connexion de SteamCMD. Open Wallpaper Engine n’a pas de serveur et ne collecte aucune donnée ni statistique d’utilisation. Il contacte Valve (Steam lorsque vous utilisez le Workshop ou installez les ressources, et le serveur de Valve pour télécharger SteamCMD) et GitHub, pour rechercher les mises à jour de l’app (l’appcast sur GitHub Pages) et les télécharger depuis GitHub Releases, sans envoyer aucune donnée personnelle. La recherche de mises à jour peut être désactivée dans Réglages › Général. Les fonds d’écran web peuvent charger leur propre contenu en ligne. Votre mot de passe Steam et votre code Steam Guard sont transmis directement à SteamCMD et ne sont jamais enregistrés, journalisés ni envoyés ailleurs ; seul votre nom de compte est mémorisé, pour réutiliser la connexion enregistrée de SteamCMD.
 
 ## Organisation du projet
 

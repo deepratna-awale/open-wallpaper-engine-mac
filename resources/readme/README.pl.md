@@ -28,7 +28,15 @@ Ten projekt powstał na bazie pracy następujących osób:
 
 Projekt jest udostępniany na licencji [GPL-3.0](../../LICENSE), tak samo jak projekt oryginalny.
 
-## Co obsługuje wersja 0.9.0
+## Co obsługuje wersja 1.0.0
+
+### Konfiguracja, biblioteka i aktualizacje
+- **Asystent konfiguracji** — przy pierwszym uruchomieniu kilka kroków, które można pominąć, ustawia język, pokazuje informacje o prywatności, konfiguruje SteamCMD, logowanie do Steam i opcjonalny klucz Steam Web API, instaluje zasoby Wallpaper Engine i sprowadza Twoje tapety.
+- **SteamCMD konfiguruje się sam** — jeśli go nie znajdzie, aplikacja pobiera SteamCMD od Valve; używa istniejącego z Homebrew lub Steam.
+- **Zasoby Wallpaper Engine z Twojej kopii na Steam** — instalowane przez SteamCMD po zalogowaniu, opcjonalnie z domyślnymi tapetami Wallpaper Engine.
+- **Importy** — Twoje kolekcje i subskrypcje z Warsztatu (z Web API Steam), elementy Warsztatu z istniejącej biblioteki Steam i foldery z tapetami.
+- **[wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)** — poradniki, opis ustawień i rozwiązywanie problemów; otwiera ją „Pomoc i FAQ” w aplikacji.
+- **Automatyczne aktualizacje** — podpisane aktualizacje instalują się same (przy zamknięciu, po 10 minutach nieobecności lub w ciągu doby, a szybkie ponowne uruchomienie przywraca tapety). W Ustawienia › Ogólne › Aktualizacje możesz tylko sprawdzać, wyłączyć sprawdzanie i otrzymywać wersje beta. „Sprawdź uaktualnienia…” jest w menu aplikacji i w menu na pasku menu.
 
 ### Renderowanie scen
 - **Własne shadery Wallpaper Engine** — warstwy, efekty i materiały są teraz rysowane oryginalnymi shaderami każdej tapety, przetłumaczonymi na Metal, w tym efekty stworzone samodzielnie przez autorów z Warsztatu.
@@ -286,6 +294,8 @@ open "OpenWallpaperEngine.xcodeproj"
 
 W Xcode zmień certyfikat podpisywania na własny lub wybierz „Sign to Run Locally”, a następnie naciśnij `Cmd + R`, aby skompilować i uruchomić aplikację.
 
+Pierwsza kompilacja ze źródeł pobiera pakiet Swift Sparkle. Wersje zbudowane ze źródeł nie sprawdzają aktualizacji.
+
 ## Użycie
 
 ### Przeglądanie i pobieranie z Warsztatu Steam
@@ -303,7 +313,7 @@ W Xcode zmień certyfikat podpisywania na własny lub wybierz „Sign to Run Loc
 
 ## Prywatność
 
-Wszystko, co zapisuje Open Wallpaper Engine, zostaje na Twoim Macu: ustawienia, biblioteka, pamięć podręczna i logowanie SteamCMD. Open Wallpaper Engine nie ma serwera i nie zbiera żadnych danych ani statystyk. Łączy się tylko z Valve: ze Steam, gdy korzystasz z Warsztatu lub instalujesz zasoby, oraz z serwerem Valve, aby pobrać SteamCMD. Tapety internetowe mogą wczytywać własne treści online. Twoje hasło Steam i kod Steam Guard trafiają bezpośrednio do SteamCMD i nigdy nie są zapisywane, rejestrowane ani wysyłane nigdzie indziej; zapamiętywana jest tylko nazwa konta, aby ponownie użyć zapisanego logowania SteamCMD.
+Wszystko, co zapisuje Open Wallpaper Engine, zostaje na Twoim Macu: ustawienia, biblioteka, pamięć podręczna i logowanie SteamCMD. Open Wallpaper Engine nie ma serwera i nie zbiera żadnych danych ani statystyk. Łączy się z Valve (ze Steam, gdy korzystasz z Warsztatu lub instalujesz zasoby, oraz z serwerem Valve, aby pobrać SteamCMD) i z GitHubem, aby sprawdzać aktualizacje aplikacji (appcast w GitHub Pages) i pobierać je z GitHub Releases, bez wysyłania jakichkolwiek danych osobowych. Sprawdzanie aktualizacji można wyłączyć w Ustawienia › Ogólne. Tapety internetowe mogą wczytywać własne treści online. Twoje hasło Steam i kod Steam Guard trafiają bezpośrednio do SteamCMD i nigdy nie są zapisywane, rejestrowane ani wysyłane nigdzie indziej; zapamiętywana jest tylko nazwa konta, aby ponownie użyć zapisanego logowania SteamCMD.
 
 ## Struktura projektu
 

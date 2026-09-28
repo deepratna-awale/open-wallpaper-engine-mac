@@ -28,7 +28,15 @@ Open Wallpaper Engine은 Wallpaper Engine 배경화면(장면, 동영상, 웹)�
 
 원본 프로젝트와 동일하게 [GPL-3.0](../../LICENSE) 라이선스가 적용됩니다.
 
-## 0.9.0에서 지원하는 기능
+## 1.0.0에서 지원하는 기능
+
+### 설정, 보관함 및 업데이트
+- **설정 도우미** — 처음 실행하면 건너뛸 수 있는 몇 단계로 언어를 고르고, 개인정보 안내를 보여 주고, SteamCMD·Steam 로그인·선택 사항인 Steam Web API 키를 설정하고, Wallpaper Engine 에셋을 설치하고, 배경화면을 가져옵니다.
+- **SteamCMD 자동 설정** — 찾지 못하면 Valve의 SteamCMD를 다운로드하며, Homebrew나 Steam의 것이 있으면 그것을 사용합니다.
+- **내 Steam 사본의 Wallpaper Engine 에셋** — 로그인 후 SteamCMD로 설치하며, 원하면 Wallpaper Engine 기본 배경화면도 함께 추가합니다.
+- **가져오기** — 창작마당 컬렉션과 구독(Steam Web API에서), 기존 Steam 라이브러리의 창작마당 항목, 배경화면 폴더.
+- **[wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)** — 가이드, 설정 참조, 문제 해결. 앱의 '지원 및 FAQ'에서 열립니다.
+- **자동 업데이트** — 서명된 업데이트가 알아서 설치됩니다(종료할 때, Mac을 10분 동안 사용하지 않을 때, 또는 하루 이내. 이후 빠른 재실행으로 배경화면이 복원됩니다). 설정 › 일반 › 업데이트에서 확인만 하거나, 확인을 끄거나, 베타 업데이트를 받을 수 있습니다. '업데이트 확인…'은 앱 메뉴와 메뉴 막대 메뉴에 있습니다.
 
 ### 장면 렌더링
 - **Wallpaper Engine 고유의 셰이더** — 레이어, 효과, 재질을 이제 각 배경화면의 원본 셰이더를 Metal로 변환해 그립니다. 창작마당 제작자가 직접 만든 효과도 포함됩니다.
@@ -286,6 +294,8 @@ open "OpenWallpaperEngine.xcodeproj"
 
 Xcode에서 서명 인증서를 본인의 인증서로 변경하거나 'Sign to Run Locally'를 선택한 다음, `Cmd + R`을 눌러 빌드하고 실행합니다.
 
+소스에서 처음 빌드할 때 Sparkle Swift 패키지를 가져옵니다. 소스에서 빌드한 앱은 업데이트를 확인하지 않습니다.
+
 ## 사용법
 
 ### Steam 창작마당에서 탐색 및 다운로드
@@ -303,7 +313,7 @@ Xcode에서 서명 인증서를 본인의 인증서로 변경하거나 'Sign to 
 
 ## 개인정보 보호
 
-Open Wallpaper Engine이 저장하는 모든 것은 사용자의 Mac에 남습니다. 설정, 보관함, 캐시, SteamCMD 로그인 정보가 여기에 해당합니다. Open Wallpaper Engine에는 서버가 없으며 어떤 데이터나 분석 정보도 수집하지 않습니다. Valve에만 연결합니다. 창작마당을 사용하거나 에셋을 설치할 때는 Steam에, SteamCMD를 다운로드할 때는 Valve 서버에 연결합니다. 웹 배경화면은 자체 온라인 콘텐츠를 불러올 수 있습니다. Steam 비밀번호와 Steam Guard 코드는 SteamCMD로 바로 전달되며 저장되거나 기록되거나 다른 곳으로 전송되지 않습니다. SteamCMD에 저장된 로그인을 다시 사용하기 위해 계정 이름만 기억합니다.
+Open Wallpaper Engine이 저장하는 모든 것은 사용자의 Mac에 남습니다. 설정, 보관함, 캐시, SteamCMD 로그인 정보가 여기에 해당합니다. Open Wallpaper Engine에는 서버가 없으며 어떤 데이터나 분석 정보도 수집하지 않습니다. Valve(창작마당을 사용하거나 에셋을 설치할 때는 Steam, SteamCMD를 다운로드할 때는 Valve 서버)와 GitHub에 연결합니다. GitHub에는 앱 업데이트를 확인(GitHub Pages의 appcast)하고 GitHub Releases에서 다운로드하기 위해 연결하며, 개인 데이터는 보내지 않습니다. 업데이트 확인은 설정 › 일반에서 끌 수 있습니다. 웹 배경화면은 자체 온라인 콘텐츠를 불러올 수 있습니다. Steam 비밀번호와 Steam Guard 코드는 SteamCMD로 바로 전달되며 저장되거나 기록되거나 다른 곳으로 전송되지 않습니다. SteamCMD에 저장된 로그인을 다시 사용하기 위해 계정 이름만 기억합니다.
 
 ## 프로젝트 구조
 

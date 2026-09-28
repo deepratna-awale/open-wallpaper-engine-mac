@@ -28,7 +28,15 @@ Dieses Projekt baut auf der Arbeit folgender Personen auf:
 
 Lizenziert unter [GPL-3.0](../../LICENSE), wie das ursprüngliche Projekt.
 
-## Funktionsumfang von 0.9.0
+## Funktionsumfang von 1.0.0
+
+### Einrichtung, Mediathek & Updates
+- **Einrichtungsassistent** — beim ersten Start legen einige überspringbare Schritte die Sprache fest, zeigen die Datenschutzhinweise, richten SteamCMD, die Steam-Anmeldung und einen optionalen Steam-Web-API-Schlüssel ein, installieren die Wallpaper-Engine-Assets und holen deine Hintergrundbilder.
+- **SteamCMD richtet sich selbst ein** — wird keines gefunden, lädt die App Valves SteamCMD; ein vorhandenes von Homebrew oder Steam wird verwendet.
+- **Wallpaper-Engine-Assets aus deiner eigenen Steam-Kopie** — nach der Anmeldung über SteamCMD installiert, auf Wunsch mit den Standard-Hintergrundbildern von Wallpaper Engine.
+- **Importe** — deine Workshop-Kollektionen und Abonnements (über Steams Web API), die Workshop-Objekte einer vorhandenen Steam-Bibliothek und Ordner mit Hintergrundbildern.
+- **Das [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)** — Anleitungen, Einstellungsreferenz und Fehlerbehebung; „Support & FAQ“ in der App öffnet es.
+- **Automatische Updates** — signierte Updates installieren sich selbst (beim Beenden, nach 10 Minuten Abwesenheit oder innerhalb eines Tages, danach stellt ein kurzer Neustart deine Hintergrundbilder wieder her). Unter Einstellungen › Allgemein › Updates kannst du nur suchen lassen, die Suche abschalten und Beta-Updates erhalten. „Nach Updates suchen…“ steht im App-Menü und im Menüleistenmenü.
 
 ### Szenen-Rendering
 - **Die eigenen Shader von Wallpaper Engine** – Ebenen, Effekte und Materialien werden jetzt mit den Original-Shadern des jeweiligen Hintergrundbilds gezeichnet, nach Metal übersetzt, auch Effekte, die Workshop-Autoren selbst erstellt haben.
@@ -286,6 +294,8 @@ open "OpenWallpaperEngine.xcodeproj"
 
 Ändern Sie in Xcode das Signaturzertifikat in Ihr eigenes oder wählen Sie „Sign to Run Locally“ und drücken Sie dann `Cmd + R`, um die App zu erstellen und auszuführen.
 
+Beim ersten Build aus dem Quellcode wird das Swift-Paket Sparkle geladen. Aus dem Quellcode gebaute Versionen suchen nicht nach Updates.
+
 ## Verwendung
 
 ### Aus dem Steam Workshop durchsuchen & laden
@@ -303,7 +313,7 @@ open "OpenWallpaperEngine.xcodeproj"
 
 ## Datenschutz
 
-Alles, was Open Wallpaper Engine speichert, bleibt auf deinem Mac: deine Einstellungen, Mediathek, der Cache und die Anmeldung von SteamCMD. Open Wallpaper Engine hat keinen Server und sammelt keine Daten oder Analysen. Es kontaktiert nur Valve: Steam, wenn du den Workshop verwendest oder Assets installierst, und Valves Server, um SteamCMD zu laden. Web-Hintergrundbilder können eigene Online-Inhalte laden. Dein Steam-Passwort und dein Steam-Guard-Code gehen direkt an SteamCMD und werden nie gespeichert, protokolliert oder anderswohin gesendet; nur dein Accountname wird gemerkt, um die gespeicherte Anmeldung von SteamCMD wiederzuverwenden.
+Alles, was Open Wallpaper Engine speichert, bleibt auf deinem Mac: deine Einstellungen, Mediathek, der Cache und die Anmeldung von SteamCMD. Open Wallpaper Engine hat keinen Server und sammelt keine Daten oder Analysen. Es kontaktiert Valve (Steam, wenn du den Workshop verwendest oder Assets installierst, und Valves Server, um SteamCMD zu laden) und GitHub, um nach App-Updates zu suchen (den Appcast auf GitHub Pages) und sie von GitHub Releases zu laden, ohne persönliche Daten zu senden. Die Update-Suche lässt sich unter Einstellungen › Allgemein abschalten. Web-Hintergrundbilder können eigene Online-Inhalte laden. Dein Steam-Passwort und dein Steam-Guard-Code gehen direkt an SteamCMD und werden nie gespeichert, protokolliert oder anderswohin gesendet; nur dein Accountname wird gemerkt, um die gespeicherte Anmeldung von SteamCMD wiederzuverwenden.
 
 ## Projektstruktur
 

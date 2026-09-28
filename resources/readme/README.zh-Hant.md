@@ -28,7 +28,15 @@ Open Wallpaper Engine 是一款免費、開源的 macOS 播放器，可播放 Wa
 
 與原始專案相同，本專案採用 [GPL-3.0](../../LICENSE) 授權。
 
-## 0.9.0 支援的功能
+## 1.0.0 支援的功能
+
+### 設定、資料庫與更新
+- **設定輔助程式**——首次啟動時，幾個可略過的步驟會選擇語言、說明隱私、設定 SteamCMD、Steam 登入和選用的 Steam Web API 金鑰、安裝 Wallpaper Engine 素材並匯入你的桌布。
+- **SteamCMD 自動設定**——找不到時，App 會下載 Valve 的 SteamCMD；若已有 Homebrew 或 Steam 的版本則直接使用。
+- **來自你自己 Steam 副本的 Wallpaper Engine 素材**——登入後透過 SteamCMD 安裝，可選擇一併加入 Wallpaper Engine 的預設桌布。
+- **匯入**——你的工作坊收藏集和訂閱（透過 Steam Web API）、現有 Steam 資料庫中的工作坊項目，以及桌布檔案夾。
+- **[wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)**——指南、設定參考和疑難排解；App 中的「支援與常見問題」會打開它。
+- **自動更新**——已簽署的更新會自動安裝（結束時、離開 Mac 10 分鐘後或一天之內，隨後快速重新啟動並還原你的桌布）。在「設定 › 一般 › 更新」中可以只檢查、關閉檢查或接收測試版更新。「檢查更新⋯」位於 App 選單和選單列選單中。
 
 ### 場景渲染
 - **Wallpaper Engine 本身的著色器** — 圖層、效果和材質現在以每張背景圖片的原始著色器繪製，並轉譯為 Metal，包含工作坊作者自行製作的效果。
@@ -286,6 +294,8 @@ open "OpenWallpaperEngine.xcodeproj"
 
 在 Xcode 中，將簽署憑證更改為你自己的憑證，或選擇「Sign to Run Locally」，然後按下 `Cmd + R` 建置並執行。
 
+從原始碼首次建置時會取得 Sparkle Swift 套件。從原始碼建置的版本不會檢查更新。
+
 ## 使用方式
 
 ### 從 Steam 工作坊瀏覽與下載
@@ -303,7 +313,7 @@ open "OpenWallpaperEngine.xcodeproj"
 
 ## 隱私權
 
-Open Wallpaper Engine 儲存的所有內容都留在你的 Mac 上：你的設定、資料庫、快取以及 SteamCMD 的登入資訊。Open Wallpaper Engine 沒有伺服器，不收集任何資料或分析資訊。它只與 Valve 連線：使用工作坊或安裝素材時連線到 Steam，下載 SteamCMD 時連線到 Valve 的伺服器。網頁桌布可能會載入自己的線上內容。你的 Steam 密碼和 Steam Guard 驗證碼會直接交給 SteamCMD，絕不會被儲存、記錄或傳送到其他任何地方；只會記住你的帳號名稱，以便重複使用 SteamCMD 已儲存的登入。
+Open Wallpaper Engine 儲存的所有內容都留在你的 Mac 上：你的設定、資料庫、快取以及 SteamCMD 的登入資訊。Open Wallpaper Engine 沒有伺服器，不收集任何資料或分析資訊。它會與 Valve 連線（使用工作坊或安裝素材時連線到 Steam，下載 SteamCMD 時連線到 Valve 的伺服器），並連線到 GitHub 檢查 App 更新（GitHub Pages 上的 appcast）以及從 GitHub Releases 下載更新，不傳送任何個人資料。可在「設定 › 一般」中關閉更新檢查。網頁桌布可能會載入自己的線上內容。你的 Steam 密碼和 Steam Guard 驗證碼會直接交給 SteamCMD，絕不會被儲存、記錄或傳送到其他任何地方；只會記住你的帳號名稱，以便重複使用 SteamCMD 已儲存的登入。
 
 ## 專案結構
 
