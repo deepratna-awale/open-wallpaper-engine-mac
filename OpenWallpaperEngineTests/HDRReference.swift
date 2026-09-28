@@ -1,3 +1,4 @@
+import Accelerate
 import Foundation
 import Metal
 import simd
@@ -47,13 +48,41 @@ enum HDRReference {
         }
 
         /// RGBA16F bytes, alpha 1.
-        var rgba16: [Float16] {
-            pixels.flatMap { [Float16($0.x), Float16($0.y), Float16($0.z), 1] }
+        var rgba16: [UInt16] {
+            HDRReference.halfBits(pixels.flatMap { [$0.x, $0.y, $0.z, 1] })
         }
     }
 
     static func half(_ value: SIMD3<Float>) -> SIMD3<Float> {
-        SIMD3(Float(Float16(value.x)), Float(Float16(value.y)), Float(Float16(value.z)))
+        let f = floats(halfBits([value.x, value.y, value.z]))
+        return SIMD3(f[0], f[1], f[2])
+    }
+
+    /// IEEE half bits of `values`, rounded to nearest even as `Float16.init` does. vImage rather than
+    /// `Float16` because Swift has no `Float16` on x86_64 macOS and the tests build universal.
+    static func halfBits(_ values: [Float]) -> [UInt16] {
+        var input = values, output = [UInt16](repeating: 0, count: values.count)
+        input.withUnsafeMutableBytes { src in
+            output.withUnsafeMutableBytes { dst in
+                var s = vImage_Buffer(data: src.baseAddress, height: 1, width: vImagePixelCount(values.count), rowBytes: src.count)
+                var d = vImage_Buffer(data: dst.baseAddress, height: 1, width: vImagePixelCount(values.count), rowBytes: dst.count)
+                _ = vImageConvert_PlanarFtoPlanar16F(&s, &d, vImage_Flags(kvImageNoFlags))
+            }
+        }
+        return output
+    }
+
+    /// Floats of IEEE half `bits`.
+    static func floats(_ bits: [UInt16]) -> [Float] {
+        var input = bits, output = [Float](repeating: 0, count: bits.count)
+        input.withUnsafeMutableBytes { src in
+            output.withUnsafeMutableBytes { dst in
+                var s = vImage_Buffer(data: src.baseAddress, height: 1, width: vImagePixelCount(bits.count), rowBytes: src.count)
+                var d = vImage_Buffer(data: dst.baseAddress, height: 1, width: vImagePixelCount(bits.count), rowBytes: dst.count)
+                _ = vImageConvert_Planar16FtoPlanarF(&s, &d, vImage_Flags(kvImageNoFlags))
+            }
+        }
+        return output
     }
 
     /// `lin` of `combine_hdr` and `passthroughsrgb`.
@@ -212,10 +241,11 @@ enum HDRReference {
         blit.endEncoding()
         commands.commit()
         commands.waitUntilCompleted()
-        let values = buffer.contents().assumingMemoryBound(to: Float16.self)
+        let count = texture.width * texture.height * 4
+        let values = floats(Array(UnsafeBufferPointer(start: buffer.contents().assumingMemoryBound(to: UInt16.self), count: count)))
         return Image(width: texture.width, height: texture.height) { x, y in
             let i = (y * texture.width + x) * 4
-            return SIMD3(Float(values[i]), Float(values[i + 1]), Float(values[i + 2]))
+            return SIMD3(values[i], values[i + 1], values[i + 2])
         }
     }
 }
