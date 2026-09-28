@@ -1,7 +1,9 @@
 name: Release
 
 # Builds a Developer ID signed, hardened-runtime, notarized and stapled app and publishes it
-# as a draft GitHub release (zip + DMG). Secrets and the release procedure: docs/releasing.md.
+# as a draft GitHub release (zip + DMG + the zip's Sparkle signature). Publishing the draft runs
+# appcast.yml, which adds the update to site/appcast.xml. Secrets and the release procedure:
+# docs/releasing.md.
 #
 # Required repository secrets:
 #   BUILD_CERTIFICATE_BASE64  Developer ID Application .p12 (cert + private key), base64
@@ -9,12 +11,16 @@ name: Release
 #   KEYCHAIN_PASSWORD         any throwaway string; secures the temporary keychain
 #   DEVELOPMENT_TEAM          10-character Apple Team ID that owns the certificate
 #   USER_PAT                  token used to publish the release
+#   SPARKLE_PRIVATE_KEY       Sparkle EdDSA private key (generate_keys -x), signs the update zip
+#   SPARKLE_PUBLIC_ED_KEY     its public key, built into the app as SUPublicEDKey
 # Notarization, either (preferred) an App Store Connect API key:
 #   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8_BASE64
 # or an Apple ID fallback:
 #   APPLE_ID, APPLE_APP_PASSWORD
 #
-# Trigger by pushing a tag (git tag v0.9.0 && git push origin v0.9.0) or manually.
+# Tags: vX.Y.Z, or vX.Y.Z-(alpha|beta|rc).N for a pre-release (a draft marked pre-release,
+# offered only on the beta update channel). Trigger by pushing a tag
+# (git tag v1.0.0 && git push origin v1.0.0) or manually.
 
 on:
   push:
@@ -23,7 +29,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Tag to publish (e.g. v0.9.0)"
+        description: "Tag to publish (e.g. v1.0.0 or v1.1.0-beta.1)"
         required: true
 
 concurrency:
@@ -56,11 +62,14 @@ jobs:
           ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+          SPARKLE_PUBLIC_ED_KEY: ${{ secrets.SPARKLE_PUBLIC_ED_KEY }}
         run: |
           set -euo pipefail
           echo "KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db" >> "$GITHUB_ENV"
           missing=()
-          for name in BUILD_CERTIFICATE_BASE64 P12_PASSWORD KEYCHAIN_PASSWORD DEVELOPMENT_TEAM USER_PAT; do
+          for name in BUILD_CERTIFICATE_BASE64 P12_PASSWORD KEYCHAIN_PASSWORD DEVELOPMENT_TEAM USER_PAT \
+                      SPARKLE_PRIVATE_KEY SPARKLE_PUBLIC_ED_KEY; do
             [ -n "${!name:-}" ] || missing+=("$name")
           done
           if [ -n "$ASC_KEY_ID" ] && [ -n "$ASC_ISSUER_ID" ] && [ -n "$ASC_KEY_P8_BASE64" ]; then
@@ -76,24 +85,38 @@ jobs:
             exit 1
           fi
 
-      - name: Resolve version
-        id: version
-        env:
-          INPUT_TAG: ${{ github.event.inputs.tag }}
-          REF_NAME: ${{ github.ref_name }}
-        run: |
-          set -euo pipefail
-          TAG="${INPUT_TAG:-$REF_NAME}"
-          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] \
-            || { echo "::error::tag '$TAG' is not vX.Y.Z"; exit 1; }
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
-          echo "build=${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
-
       - name: Check out source
         uses: actions/checkout@v7.0.1
         with:
-          ref: ${{ steps.version.outputs.tag }}
+          ref: ${{ github.event.inputs.tag || github.ref_name }}
+
+      - name: Resolve version
+        # vX.Y.Z -> version X.Y.Z; vX.Y.Z-beta.N also -> label X.Y.Z-beta.N, prerelease, channel beta.
+        id: version
+        env:
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+          parsed=$(Scripts/release/release-version.sh "$TAG") \
+            || { echo "::error::tag '$TAG' is not vX.Y.Z or vX.Y.Z-(alpha|beta|rc).N"; exit 1; }
+          echo "$parsed"
+          echo "$parsed" >> "$GITHUB_OUTPUT"
+          echo "build=${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+
+      - name: Check the Sparkle key pair
+        # The app must carry the public key of the private key that signs its updates; a mismatch
+        # would ship an app that rejects every update. Neither key is printed.
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+          SPARKLE_PUBLIC_ED_KEY: ${{ secrets.SPARKLE_PUBLIC_ED_KEY }}
+        run: |
+          set -euo pipefail
+          derived=$(printf '%s' "$SPARKLE_PRIVATE_KEY" | xcrun swift Scripts/release/sparkle-public-key.swift) \
+            || { echo "::error::SPARKLE_PRIVATE_KEY is not a Sparkle EdDSA private key (generate_keys -x)"; exit 1; }
+          expected=$(printf '%s' "$SPARKLE_PUBLIC_ED_KEY" | tr -d '[:space:]')
+          [ "$derived" = "$expected" ] \
+            || { echo "::error::SPARKLE_PUBLIC_ED_KEY is not the public key of SPARKLE_PRIVATE_KEY"; exit 1; }
+          echo "The Sparkle keys match."
 
       - name: Use the supported Xcode
         # The same Xcode as CI (26.3, macOS 26 SDK), so a release builds what CI tested.
@@ -139,6 +162,7 @@ jobs:
       - name: Archive
         env:
           DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
+          SPARKLE_PUBLIC_ED_KEY: ${{ secrets.SPARKLE_PUBLIC_ED_KEY }}
         run: |
           set -euo pipefail
           # CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO keeps get-task-allow out; notarization rejects it.
@@ -156,7 +180,9 @@ jobs:
             CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO \
             OTHER_CODE_SIGN_FLAGS="--timestamp --keychain $KEYCHAIN_PATH" \
             MARKETING_VERSION="${{ steps.version.outputs.version }}" \
-            CURRENT_PROJECT_VERSION="${{ steps.version.outputs.build }}"
+            CURRENT_PROJECT_VERSION="${{ steps.version.outputs.build }}" \
+            OWE_VERSION_LABEL="${{ steps.version.outputs.label }}" \
+            SPARKLE_PUBLIC_ED_KEY="$(printf '%s' "$SPARKLE_PUBLIC_ED_KEY" | tr -d '[:space:]')"
 
       - name: Export signed app
         env:
@@ -178,6 +204,8 @@ jobs:
       - name: Verify bundle before notarizing
         # Shaders compile with glslang/SPIRV-Cross linked into the app, and the WE assets are
         # bundled: the app must need nothing from Homebrew or a Wallpaper Engine install.
+        env:
+          SPARKLE_PUBLIC_ED_KEY: ${{ secrets.SPARKLE_PUBLIC_ED_KEY }}
         run: |
           set -euo pipefail
           APP="$RUNNER_TEMP/export/$APP_NAME.app"
@@ -191,8 +219,9 @@ jobs:
 
           codesign --verify --deep --strict --verbose=2 "$APP"
 
-          # Every Mach-O in the bundle (app, nested frameworks, dylibs, helpers): Developer ID,
-          # hardened runtime, secure timestamp.
+          # Every Mach-O in the bundle (the app, Sparkle.framework and its Autoupdate, Updater.app
+          # and XPC services): Developer ID, hardened runtime, secure timestamp. Xcode's
+          # developer-id export re-signs Sparkle's nested code; this proves it did.
           fail=0
           while IFS= read -r -d '' f; do
             file -b "$f" | grep -q 'Mach-O' || continue
@@ -209,20 +238,49 @@ jobs:
             echo "::error::get-task-allow is set; notarization rejects it"; exit 1
           fi
 
-          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" -c "Print :CFBundleVersion" \
-            "$APP/Contents/Info.plist"
-          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist")" \
-            = "${{ steps.version.outputs.version }}" || { echo "::error::version is not the tag's"; exit 1; }
+          INFO="$APP/Contents/Info.plist"
+          plist() { /usr/libexec/PlistBuddy -c "Print :$1" "$INFO"; }
+          echo "version $(plist CFBundleShortVersionString) ($(plist CFBundleVersion)), label $(plist OWEVersionLabel)"
+          test "$(plist CFBundleShortVersionString)" = "${{ steps.version.outputs.version }}" \
+            || { echo "::error::version is not the tag's"; exit 1; }
+          test "$(plist OWEVersionLabel)" = "${{ steps.version.outputs.label }}" \
+            || { echo "::error::OWEVersionLabel is not the tag's"; exit 1; }
+          # Sparkle: the public key the updates are signed for, and the GitHub Pages feed.
+          test "$(plist SUPublicEDKey)" = "$(printf '%s' "$SPARKLE_PUBLIC_ED_KEY" | tr -d '[:space:]')" \
+            || { echo "::error::SUPublicEDKey is not SPARKLE_PUBLIC_ED_KEY"; exit 1; }
+          test "$(plist SUFeedURL)" = "https://deepratna-awale.github.io/open-wallpaper-engine-mac/appcast.xml" \
+            || { echo "::error::unexpected SUFeedURL"; exit 1; }
 
-          # Only system libraries: nothing from Homebrew or elsewhere.
-          # (A universal binary lists each architecture under a "<path> (architecture …):" line.)
+          # Only system libraries and the embedded Sparkle.framework: nothing from Homebrew or
+          # elsewhere. (A universal binary lists each architecture under a "<path> (architecture …):" line.)
           if otool -L "$BINARY" | grep -v ':$' | awk '{print $1}' \
-               | grep -Ev '^(/usr/lib/|/System/Library/)'; then
+               | grep -Ev '^(/usr/lib/|/System/Library/|@rpath/Sparkle\.framework/Versions/B/Sparkle$)'; then
             echo "::error::the app links a non-system library"; exit 1
           fi
-          # No executables besides the app's own (nowPlayingAdapter.pl runs as an argument to
-          # /usr/bin/perl and is a plain resource).
-          extra=$(find "$APP/Contents" -type f -perm -u+x ! -path "$BINARY" -print)
+          # No executables besides the app's own and Sparkle's (nowPlayingAdapter.pl runs as an
+          # argument to /usr/bin/perl and is a plain resource). Sparkle's are each verified; the
+          # XPC services are unused (the app isn't sandboxed) but ship signed inside the framework.
+          SPARKLE="$APP/Contents/Frameworks/Sparkle.framework/Versions/B"
+          sparkle_executables=(
+            "$SPARKLE/Sparkle"
+            "$SPARKLE/Autoupdate"
+            "$SPARKLE/Updater.app/Contents/MacOS/Updater"
+            "$SPARKLE/XPCServices/Downloader.xpc/Contents/MacOS/Downloader"
+            "$SPARKLE/XPCServices/Installer.xpc/Contents/MacOS/Installer"
+          )
+          for helper in "${sparkle_executables[@]}"; do
+            test -f "$helper" || { echo "::error::missing Sparkle executable: $helper"; exit 1; }
+          done
+          for code in "$SPARKLE/Updater.app" "$SPARKLE/Autoupdate" "$SPARKLE/XPCServices/Downloader.xpc" \
+                      "$SPARKLE/XPCServices/Installer.xpc" "$APP/Contents/Frameworks/Sparkle.framework"; do
+            [ -e "$code" ] || continue
+            codesign --verify --strict --verbose=2 "$code"
+          done
+          extra=$(find "$APP/Contents" -type f -perm -u+x ! -path "$BINARY" -print | while IFS= read -r f; do
+            known=0
+            for helper in "${sparkle_executables[@]}"; do [ "$f" = "$helper" ] && known=1; done
+            [ "$known" = 1 ] || echo "$f"
+          done)
           test -z "$extra" || { echo "::error::unexpected executables: $extra"; exit 1; }
 
       - name: Set up notarization credentials
@@ -291,7 +349,7 @@ jobs:
         run: |
           set -euo pipefail
           APP="$RUNNER_TEMP/export/$APP_NAME.app"
-          BASE="$RUNNER_TEMP/OpenWallpaperEngine-${{ steps.version.outputs.version }}"
+          BASE="$RUNNER_TEMP/OpenWallpaperEngine-${{ steps.version.outputs.label }}"
 
           ditto -c -k --keepParent "$APP" "$BASE.zip"
 
@@ -326,27 +384,58 @@ jobs:
           spctl -a -t open --context context:primary-signature -vv "$BASE.dmg"
           xcrun stapler validate "$BASE.dmg"
 
+      - name: Sign the update for Sparkle
+        # The zip's EdDSA signature and length, uploaded as <zip>.sparkle.json. appcast.yml checks
+        # generate_appcast's signature against it when the release is published. The private key
+        # goes to sign_update on stdin only.
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          BASE="${{ steps.package.outputs.base }}"
+          BIN=$(Scripts/release/fetch-sparkle-tools.sh "$RUNNER_TEMP/sparkle")
+          signature=$(printf '%s' "$SPARKLE_PRIVATE_KEY" | "$BIN/sign_update" --ed-key-file - -p "$BASE.zip")
+          printf '%s' "$SPARKLE_PRIVATE_KEY" | "$BIN/sign_update" --ed-key-file - --verify "$BASE.zip" "$signature"
+          length=$(stat -f %z "$BASE.zip")
+          TAG="${{ steps.version.outputs.tag }}" LABEL="${{ steps.version.outputs.label }}" \
+          VERSION="${{ steps.version.outputs.version }}" BUILD="${{ steps.version.outputs.build }}" \
+          PRERELEASE="${{ steps.version.outputs.prerelease }}" CHANNEL="${{ steps.version.outputs.channel }}" \
+          ZIP="$(basename "$BASE.zip")" LENGTH="$length" SIGNATURE="$signature" \
+          python3 - > "$BASE.sparkle.json" <<'PY'
+          import json, os
+          e = os.environ
+          print(json.dumps({"tag": e["TAG"], "label": e["LABEL"], "version": e["VERSION"], "build": int(e["BUILD"]),
+                            "prerelease": e["PRERELEASE"] == "true", "channel": e["CHANNEL"], "zip": e["ZIP"],
+                            "length": int(e["LENGTH"]), "edSignature": e["SIGNATURE"]}, indent=2))
+          PY
+          cat "$BASE.sparkle.json"
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: OpenWallpaperEngine-${{ steps.version.outputs.version }}
+          name: OpenWallpaperEngine-${{ steps.version.outputs.label }}
           path: |
             ${{ steps.package.outputs.base }}.zip
             ${{ steps.package.outputs.base }}.dmg
             ${{ steps.package.outputs.base }}.sha256
+            ${{ steps.package.outputs.base }}.sparkle.json
           if-no-files-found: error
 
       - name: Publish release
         uses: softprops/action-gh-release@v3.0.3
         with:
           tag_name: ${{ steps.version.outputs.tag }}
-          name: ${{ steps.version.outputs.tag }}
+          name: Open Wallpaper Engine ${{ steps.version.outputs.title }}
+          # A draft until you publish it; publishing runs appcast.yml. Pre-releases stay marked so
+          # GitHub's "latest" and the stable update channel skip them.
           draft: true
+          prerelease: ${{ steps.version.outputs.prerelease == 'true' }}
           generate_release_notes: true
           files: |
             ${{ steps.package.outputs.base }}.zip
             ${{ steps.package.outputs.base }}.dmg
             ${{ steps.package.outputs.base }}.sha256
+            ${{ steps.package.outputs.base }}.sparkle.json
         env:
           GITHUB_TOKEN: ${{ secrets.USER_PAT }}
 
