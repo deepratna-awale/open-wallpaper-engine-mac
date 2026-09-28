@@ -24,6 +24,9 @@ struct FirstLaunchView: View {
             pageBody(pages[pageIndex])
                 .frame(height: 320)
             AssetsMissingBanner(assets: AppDelegate.shared.assets)
+            SteamCmdSetupView(installer: AppDelegate.shared.steamCmdInstaller, compact: true)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 8)
             Divider()
             footer
         }

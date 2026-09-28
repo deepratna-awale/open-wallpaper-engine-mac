@@ -7,12 +7,16 @@ import AppKit
 struct AssetsPage: SettingsPage {
     var viewModel: GlobalSettingsViewModel
     @ObservedObject private var assets: WallpaperEngineAssetsService
+    @ObservedObject private var steamCmd: SteamCmdService
+    private let installer: SteamCmdInstaller
     @State private var confirmsRemoval = false
     @State private var folderError: String?
 
     init(globalSettings: GlobalSettingsViewModel) {
         self.viewModel = globalSettings
         self.assets = AppDelegate.shared.assets
+        self.steamCmd = AppDelegate.shared.contentViewModel.steamCmd
+        self.installer = AppDelegate.shared.steamCmdInstaller
     }
 
     var body: some View {
@@ -31,6 +35,8 @@ struct AssetsPage: SettingsPage {
             } footer: {
                 Text("Downloads your Wallpaper Engine copy with SteamCMD, keeps only its assets and default wallpapers, and deletes the rest. Log in to Steam in the Workshop tab first.")
             }
+
+            SteamCmdSection(steamCmd: steamCmd, installer: installer)
         }
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
@@ -137,8 +143,13 @@ struct AssetsPage: SettingsPage {
             if assets.isBusy {
                 Button("Cancel") { assets.cancel() }
             } else {
-                Button(status.info == nil ? "Install from Steam" : "Update from Steam") { assets.installFromSteam() }
-                    .glassButtonStyle(.prominent)
+                if steamCmd.steamCmdPath == nil {
+                    // Installing from Steam needs SteamCMD first; offer it here.
+                    SteamCmdSetupView(installer: installer)
+                } else {
+                    Button(status.info == nil ? "Install from Steam" : "Update from Steam") { assets.installFromSteam() }
+                        .glassButtonStyle(.prominent)
+                }
                 Button("Choose Folder…") { chooseFolder() }
                 if status.chosenFolder != nil {
                     Button("Stop Using Folder") { assets.forgetChosenFolder() }

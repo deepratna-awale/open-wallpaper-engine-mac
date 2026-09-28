@@ -28,77 +28,96 @@ struct WorkshopView: SubviewOfContentView {
 
 private struct SteamCmdNotInstalledView: View {
     @ObservedObject var steamCmd: SteamCmdService
+    @ObservedObject private var installer = AppDelegate.shared.steamCmdInstaller
     @State private var isCopied = false
 
     var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 40))
-                .foregroundStyle(.secondary)
+        ScrollView {
+            VStack(spacing: 16) {
+                Image(systemName: installer.isBusy ? "arrow.down.circle" : "exclamationmark.triangle")
+                    .font(.system(size: 40))
+                    .foregroundStyle(.secondary)
 
-            Text("steamcmd Not Found")
-                .font(.title2)
-                .bold()
+                Text(installer.isBusy ? "Setting Up SteamCMD" : "steamcmd Not Found")
+                    .font(.title2)
+                    .bold()
 
-            Text("Steam Workshop requires steamcmd to download wallpapers.\nInstall it with Homebrew:")
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.secondary)
+                Text("Steam Workshop downloads use SteamCMD, Valve's command-line Steam client. Open Wallpaper Engine can download it from Valve for you.")
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: 420)
 
-            HStack {
-                Text(verbatim: "brew install steamcmd")
-                    .font(.system(.body, design: .monospaced))
-                    .textSelection(.enabled)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .glassBackground(in: RoundedRectangle(cornerRadius: 8)) { snippet in
-                        snippet
-                            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 6))
-                    }
+                SteamCmdSetupView(installer: installer)
 
-                Button {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString("brew install steamcmd", forType: .string)
-                    isCopied = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) { isCopied = false }
-                } label: {
-                    Label(isCopied ? "Copied" : "Copy", systemImage: isCopied ? "checkmark" : "doc.on.doc")
-                        .labelStyle(.iconOnly)
+                if !installer.isBusy {
+                    alternatives
                 }
-                .glassButtonStyle()
-                .help(isCopied ? "Copied" : "Copy the command")
             }
+            .padding(40)
+            .frame(maxWidth: .infinity)
+        }
+        .onAppear { installer.detectThenAutoInstall(steamCmd) }
+    }
 
-            Divider().frame(width: 200)
+    @ViewBuilder
+    private var alternatives: some View {
+        Divider().frame(width: 200)
 
-            Text("Or locate an existing steamcmd binary:")
-                .font(.callout)
-                .foregroundStyle(.secondary)
+        Text("Or install it with Homebrew:")
+            .font(.callout)
+            .foregroundStyle(.secondary)
 
-            Button("Browse...") {
-                let panel = NSOpenPanel()
-                panel.canChooseFiles = true
-                panel.canChooseDirectories = false
-                panel.allowsMultipleSelection = false
-                panel.message = String(localized: "Select the steamcmd executable", comment: "Open panel message; steamcmd is a program name")
-                if panel.runModal() == .OK, let url = panel.url {
-                    steamCmd.setCustomPath(url.path)
+        HStack {
+            Text(verbatim: "brew install steamcmd")
+                .font(.system(.body, design: .monospaced))
+                .textSelection(.enabled)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .glassBackground(in: RoundedRectangle(cornerRadius: 8)) { snippet in
+                    snippet
+                        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 6))
                 }
+
+            Button {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString("brew install steamcmd", forType: .string)
+                isCopied = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) { isCopied = false }
+            } label: {
+                Label(isCopied ? "Copied" : "Copy", systemImage: isCopied ? "checkmark" : "doc.on.doc")
+                    .labelStyle(.iconOnly)
             }
             .glassButtonStyle()
-
-            if let error = steamCmd.pathError {
-                Text(error)
-                    .font(.caption)
-                    .foregroundStyle(.red)
-            }
-
-            Button("Re-detect") {
-                steamCmd.detectSteamCmd()
-            }
-            .buttonStyle(.link)
-            .font(.caption)
+            .help(isCopied ? "Copied" : "Copy the command")
         }
-        .padding(40)
+
+        Text("Or locate an existing steamcmd binary:")
+            .font(.callout)
+            .foregroundStyle(.secondary)
+
+        Button("Browse...") {
+            let panel = NSOpenPanel()
+            panel.canChooseFiles = true
+            panel.canChooseDirectories = false
+            panel.allowsMultipleSelection = false
+            panel.message = String(localized: "Select the steamcmd executable", comment: "Open panel message; steamcmd is a program name")
+            if panel.runModal() == .OK, let url = panel.url {
+                steamCmd.setCustomPath(url.path)
+            }
+        }
+        .glassButtonStyle()
+
+        if let error = steamCmd.pathError {
+            Text(error)
+                .font(.caption)
+                .foregroundStyle(.red)
+        }
+
+        Button("Re-detect") {
+            steamCmd.detectSteamCmd()
+        }
+        .buttonStyle(.link)
+        .font(.caption)
     }
 }
 
@@ -110,89 +129,112 @@ private struct SteamLoginView: View {
     @State private var password = ""
     @State private var guardCode = ""
     @State private var showGuardCode = false
+    @State private var showsTerminalLogin = false
 
     var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "person.badge.key")
-                .font(.system(size: 40))
-                .foregroundStyle(.secondary)
+        ScrollView {
+            VStack(spacing: 16) {
+                Image(systemName: "person.badge.key")
+                    .font(.system(size: 40))
+                    .foregroundStyle(.secondary)
 
-            Text("Steam Login")
-                .font(.title2)
-                .bold()
+                Text("Steam Login")
+                    .font(.title2)
+                    .bold()
 
-            Text("Log in with your Steam account to browse and download wallpapers.\nYou must own Wallpaper Engine on Steam.")
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.secondary)
-                .font(.callout)
+                Text("Log in with your Steam account to browse and download wallpapers.\nYou must own Wallpaper Engine on Steam.")
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.secondary)
+                    .font(.callout)
 
-            VStack(spacing: 10) {
-                TextField("Steam Username", text: $username)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(width: 260)
-
-                SecureField("Password", text: $password)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(width: 260)
-
-                if showGuardCode {
-                    TextField("Steam Guard Code", text: $guardCode)
+                VStack(spacing: 10) {
+                    TextField("Steam Username", text: $username)
                         .textFieldStyle(.roundedBorder)
                         .frame(width: 260)
-                }
 
-                if let error = steamCmd.loginError {
-                    Text(error)
-                        .foregroundStyle(.red)
-                        .font(.caption)
+                    SecureField("Password", text: $password)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 260)
 
-                    if error == SteamCmdService.guardCodeRequiredError && !showGuardCode {
-                        Button("Enter Steam Guard Code") {
-                            showGuardCode = true
+                    if showGuardCode {
+                        TextField("Steam Guard Code", text: $guardCode)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 260)
+                    }
+
+                    if let error = steamCmd.loginError {
+                        Text(error)
+                            .foregroundStyle(.red)
+                            .font(.caption)
+
+                        if error == SteamCmdService.guardCodeRequiredError && !showGuardCode {
+                            Button("Enter Steam Guard Code") {
+                                showGuardCode = true
+                            }
+                            .buttonStyle(.link)
                         }
-                        .buttonStyle(.link)
                     }
-                }
 
-                HStack(spacing: 12) {
-                    Button("Log In") {
-                        steamCmd.login(
-                            username: username,
-                            password: password,
-                            guardCode: showGuardCode ? guardCode : nil
-                        )
-                    }
-                    .glassButtonStyle(.prominent)
-                    .disabled(username.isEmpty || password.isEmpty || steamCmd.isLoggingIn)
-
-                    if !username.isEmpty {
-                        Button("Use Cached Session") {
-                            steamCmd.loginWithCachedSession(username: username)
+                    HStack(spacing: 12) {
+                        Button("Log In") {
+                            steamCmd.login(
+                                username: username,
+                                password: password,
+                                guardCode: showGuardCode ? guardCode : nil
+                            )
                         }
-                        .glassButtonStyle()
-                        .disabled(steamCmd.isLoggingIn)
+                        .glassButtonStyle(.prominent)
+                        .disabled(username.isEmpty || password.isEmpty || steamCmd.isLoggingIn)
+
+                        if !username.isEmpty {
+                            Button("Use Cached Session") {
+                                steamCmd.loginWithCachedSession(username: username)
+                            }
+                            .glassButtonStyle()
+                            .disabled(steamCmd.isLoggingIn)
+                        }
+                    }
+
+                    if steamCmd.isLoggingIn {
+                        ProgressView()
+                            .controlSize(.small)
+                        Text("Authenticating with Steam...")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                 }
 
-                if steamCmd.isLoggingIn {
-                    ProgressView()
-                        .controlSize(.small)
-                    Text("Authenticating with Steam...")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            // API Key section
-            VStack(spacing: 6) {
-                Divider().padding(.vertical, 8)
-                Text("You'll also need a Steam Web API key to browse the Workshop.")
+                Text("Your password and Steam Guard code go straight to SteamCMD, Valve's official tool. Open Wallpaper Engine never stores, logs or sends them anywhere. It remembers only your account name, to reuse SteamCMD's saved login.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                SteamWebAPIKeyView()
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 420)
+
+                Text("Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and SteamCMD's login. Open Wallpaper Engine has no server and collects no data or analytics. It only contacts Valve: Steam when you use the Workshop or install assets, and Valve's server to download SteamCMD. Web wallpapers may load their own online content.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 420)
+
+                DisclosureGroup("Prefer to sign in yourself? Log in with SteamCMD in Terminal", isExpanded: $showsTerminalLogin) {
+                    SteamTerminalLoginView(steamCmd: steamCmd, account: $username)
+                        .padding(.top, 8)
+                }
+                .font(.callout)
+                .frame(maxWidth: 460)
+
+                // API Key section
+                VStack(spacing: 6) {
+                    Divider().padding(.vertical, 8)
+                    Text("You'll also need a Steam Web API key to browse the Workshop.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    SteamWebAPIKeyView()
+                }
             }
+            .padding(40)
+            .frame(maxWidth: .infinity)
         }
-        .padding(40)
     }
 }
 
