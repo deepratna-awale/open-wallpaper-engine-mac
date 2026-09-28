@@ -254,6 +254,12 @@ final class SceneCameraMotionTests: XCTestCase {
         content.camera.parallaxDelay = 0
         renderer.setContent(content)
         var pixels = [UInt8](repeating: 0, count: size * size * 4)
+        let row = size / 2
+        // The layer's image loads off the render thread; frames before it clear to opaque black,
+        // which isn't all zeros, so wait for the layer itself: a red or green texel in the row.
+        func drawsLayer() -> Bool {
+            (0..<size).contains { x in pixels[(row * size + x) * 4 + 1] > 128 || pixels[(row * size + x) * 4 + 2] > 128 }
+        }
         let deadline = Date().addingTimeInterval(10)
         repeat {
             RunLoop.main.run(until: Date().addingTimeInterval(0.02))
@@ -261,8 +267,7 @@ final class SceneCameraMotionTests: XCTestCase {
             renderer.lastCommandBuffer?.waitUntilCompleted()
             view.currentDrawable?.texture.getBytes(&pixels, bytesPerRow: size * 4,
                                                    from: MTLRegionMake2D(0, 0, size, size), mipmapLevel: 0)
-        } while Date() < deadline && pixels.allSatisfy { $0 == 0 }
-        let row = size / 2
+        } while Date() < deadline && !drawsLayer()
         return try XCTUnwrap((0..<size).first { x in
             let texel = pixels[(row * size + x) * 4..<(row * size + x) * 4 + 4]
             return texel[texel.startIndex + 1] > 128 && texel[texel.startIndex + 2] < 128
