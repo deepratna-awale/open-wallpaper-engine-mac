@@ -66,6 +66,9 @@ final class WorkshopCollectionImportTests: XCTestCase {
         checklist.ratings.remove("Mature")
         XCTAssertEqual(checklist.selected, ["3000000011", "3000000014"], "a hidden item is unchecked")
 
+        checklist.ratings = ["Mature"]
+        XCTAssertEqual(checklist.visible.map(\.id), ["3000000012", "3000000014"], "an unrated item always shows, as in Installed")
+
         XCTAssertEqual(ImportChecklist(ratings: []).ratings, Set(WorkshopTags.ratings), "no filter shows every rating")
     }
 }

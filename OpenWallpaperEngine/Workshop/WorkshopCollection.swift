@@ -96,10 +96,12 @@ struct WorkshopImportCandidate: Identifiable, Equatable {
 
     var isApplication: Bool { type?.caseInsensitiveCompare("application") == .orderedSame }
 
-    /// Shown under the rating filter: an item without a rating counts as Everyone, as Workshop
-    /// items without a rating tag are shown to everyone.
+    /// Shown under the rating filter. An item without a rating is always shown, as the Installed
+    /// tab's rating filter does (`ContentViewModel`); only a known Questionable or Mature rating
+    /// hides an item.
     func isAllowed(byRatings ratings: Set<String>) -> Bool {
-        ratings.contains(contentRating ?? "Everyone")
+        guard let contentRating else { return true }
+        return ratings.contains(contentRating)
     }
 
     init(id: String, title: String, previewURL: URL? = nil, previewFile: URL? = nil,
