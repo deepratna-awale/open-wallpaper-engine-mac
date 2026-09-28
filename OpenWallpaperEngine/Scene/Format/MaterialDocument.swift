@@ -28,10 +28,12 @@ struct MaterialPass: Decodable {
     /// Binds material keys to user properties, property first: `{"schemecolor": "tint"}` gives
     /// the key `tint` the wallpaper's `schemecolor` (`constantSources(uniforms:)`).
     var usershadervalues: [String: String]?
+    /// Run-time textures bound to slots (`SceneSystemTexture`): `[{"name": "$mediaThumbnail", "type": "system"}]`, kept raw.
+    var usertextures: SceneJSON?
 
     enum CodingKeys: String, CodingKey {
         case shader, blending, depthtest, depthwrite, cullmode, culling, alphawriting
-        case textures, combos, constantshadervalues, usershadervalues
+        case textures, combos, constantshadervalues, usershadervalues, usertextures
     }
 
     init(from decoder: Decoder) throws {
@@ -48,5 +50,6 @@ struct MaterialPass: Decodable {
         combos = c.decodeEntries(Int.self, forKey: .combos, userInfo: info) ?? [:]
         constantshadervalues = c.decodeEntries(SceneRawValue.self, forKey: .constantshadervalues, userInfo: info) ?? [:]
         usershadervalues = c.decodeEntries(String.self, forKey: .usershadervalues, userInfo: info)
+        usertextures = c.decodeLogged(SceneJSON.self, forKey: .usertextures, userInfo: info)
     }
 }

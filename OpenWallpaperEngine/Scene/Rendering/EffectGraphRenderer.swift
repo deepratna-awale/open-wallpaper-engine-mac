@@ -250,6 +250,9 @@ final class EffectGraphRenderer {
         var layerComposite: (String) -> MTLTexture? = { _ in nil }
         /// `_rt_Reflection` this frame (`ScenePlanarReflection`); nil unbinds it.
         var planarReflection: MTLTexture? = nil
+        /// A system texture's image this frame (`SceneEffectPassPlan.systemTextures`); nil keeps
+        /// the slot's authored input.
+        var systemTexture: (SceneSystemTexture) -> MTLTexture? = { _ in nil }
         let layerColor: SIMD3<Float>
         let layerAlpha: Float
         /// Bump when `input`'s contents change while the texture object stays the same.
@@ -387,6 +390,8 @@ final class EffectGraphRenderer {
         // change every frame.
         let readsScene = context.sceneSnapshot != nil
             || effects.contains { $0.passes.contains(where: \.readsMipMappedFrameBuffer) }
+            // The artwork changes with the song while the chain's inputs and constants don't.
+            || effects.contains { $0.passes.contains { !$0.systemTextures.isEmpty } }
         if !readsScene, let cached = state.staticOutput, cached.key.matches(staticKey),
            (state.staticDrawn != nil) == drawsLastPass {
             layersReused += 1
@@ -621,6 +626,7 @@ final class EffectGraphRenderer {
             !effects[index].carriesFrames && zip(effects[index].passes, programs[index]).allSatisfy { pass, program in
                 guard case .render = pass.command else { return true }
                 return (program?.isReusable ?? true) && !pass.readsSceneSnapshot && !pass.readsMipMappedFrameBuffer
+                    && pass.systemTextures.isEmpty
             }
         }
         var prefix = 0
@@ -821,7 +827,7 @@ final class EffectGraphRenderer {
         var textureInfo: [Int: BuiltinTextureInfo] = [:]
         for slot in variant.textureSlots {
             guard let input = pass.textures[slot] else { continue }
-            let texture: MTLTexture?
+            var texture: MTLTexture?
             var contentSize: SIMD2<Float>?
             var sprite: BuiltinSpriteFrame?
             var sampler = clampSampler
@@ -841,6 +847,13 @@ final class EffectGraphRenderer {
                 sprite = context.assetSprite?(key, source)
                 let flags = (pass.textureFlags[slot] ?? []).intersection([.clampUVs, .noInterpolation])
                 sampler = assetSamplers[flags.rawValue] ?? clampSampler
+            }
+            // A system texture (the now-playing artwork) replaces the slot's input while there is one.
+            if let kind = pass.systemTextures[slot], let system = context.systemTexture(kind) {
+                texture = system
+                contentSize = nil
+                sprite = nil
+                sampler = clampSampler
             }
             guard let texture else { continue }
             encoder.setFragmentTexture(texture, index: slot)

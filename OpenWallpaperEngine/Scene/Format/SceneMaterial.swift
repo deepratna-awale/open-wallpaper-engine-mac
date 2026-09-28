@@ -41,9 +41,11 @@ struct WEMaterialPass: Decodable {
     /// Scalar view of the constants: numbers, numeric strings, a vector string's first component,
     /// bools as 1/0, and `{"value", "script"}` objects.
     var constants: [String: WEScriptValue]?
+    /// Run-time textures bound to slots (`SceneSystemTexture`), kept raw.
+    var usertextures: SceneJSON?
 
     enum CodingKeys: String, CodingKey {
-        case blending, shader, textures, cullmode, depthtest, depthwrite, constants, constantshadervalues
+        case blending, shader, textures, cullmode, depthtest, depthwrite, constants, constantshadervalues, usertextures
     }
 
     init(from decoder: Decoder) throws {
@@ -58,6 +60,7 @@ struct WEMaterialPass: Decodable {
         let raw = c.decodeEntries(SceneRawValue.self, forKey: .constants, userInfo: info)
             ?? c.decodeEntries(SceneRawValue.self, forKey: .constantshadervalues, userInfo: info)
         constants = raw?.mapValues(Self.scalar)
+        usertextures = c.decodeLogged(SceneJSON.self, forKey: .usertextures, userInfo: info)
     }
 
     /// `raw` as a scalar constant: a vector string gives its first component, as a float uniform

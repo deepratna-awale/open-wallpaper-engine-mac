@@ -40,6 +40,9 @@ struct SceneEffectPassPlan {
     /// The pass's index in effect.json's `passes`, which scene.json's `passes` and scripts
     /// (`IEffect.getMaterial(i)`) address it by.
     var materialIndex = 0
+    /// Slots a `usertextures` entry binds to a texture WE supplies at run time (the now-playing
+    /// artwork): it replaces the slot's input while there is one, which stands in otherwise.
+    var systemTextures: [Int: SceneSystemTexture] = [:]
 
     var readsSceneSnapshot: Bool {
         textures.values.contains { if case .sceneSnapshot = $0 { return true } else { return false } }
@@ -240,10 +243,15 @@ struct SceneEffectPlanBuilder {
                 textureFlags[slot] = flags
             }
         }
-        return SceneEffectPassPlan(command: .render,
+        var plan = SceneEffectPassPlan(command: .render,
                                    variantKey: ShaderVariantTranslator.cacheKey(vertex: vertex, fragment: fragment, combos: combos),
                                    variant: variant, blending: materialPass.blending ?? "normal", target: pass.target,
                                    textures: inputs, constants: constants, textureFlags: textureFlags)
+        // `usertextures`: the object's pass over the material's, slot by slot.
+        plan.systemTextures = SceneSystemTexture.bindings(in: [instance?.usertextures, materialPass.usertextures],
+                                                          owner: "Effect pass (\(materialPass.shader))")
+            .filter { sampled.contains($0.key) }
+        return plan
     }
 
     /// The `.tex` flags of texture `name`; nil for a texture that isn't a `.tex`.

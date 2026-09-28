@@ -537,7 +537,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             return
         }
         // Subscribed before the scripts start, so the artwork the session already has is there.
-        if content.layers.contains(where: { $0.systemImage != nil }), let media = scripts.services?.media {
+        let bindsSystemTexture = content.layers.contains { layer in
+            layer.systemImage != nil
+                || layer.weEffects.contains { $0.passes.contains { !$0.systemTextures.isEmpty } }
+        }
+        if bindsSystemTexture, let media = scripts.services?.media {
             mediaTextures = SceneMediaTextures(source: media)
         }
         contentQueue.async { [weak self] in
@@ -2459,6 +2463,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         context.mipMappedFrameBuffer = mipMappedTarget
         context.layerComposite = { [unowned self] id in self.layerComposites[id] }
         context.planarReflection = frameReflection
+        context.systemTexture = { [unowned self] kind in self.systemTexture(kind) }
         context.effectTextureProjection = EffectGraphRenderer.effectTextureProjection(quad: draw.quad, sceneSize: sceneSize)
         // WE's layer buffers are frame-buffer class: RGBA16F in HDR.
         context.frameBufferFormat = postProcess.drawsHDR ? .rgba16Float : .rgba8Unorm

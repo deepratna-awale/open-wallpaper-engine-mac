@@ -833,19 +833,22 @@ class SceneWallpaperViewModel: ObservableObject {
 
     private func buildMetalLayer(_ object: WESceneObject, wallpaperDir: URL, sceneSize: SIMD2<Float>) -> SceneMetalLayer? {
         var layer = buildImageLayer(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize)
-        layer?.systemImage = systemImage(of: object)
+        layer?.systemImage = systemImage(of: object, wallpaperDir: wallpaperDir)
         return layer
     }
 
-    /// The system texture an image object's `instance` binds to its image's slot (0); nil (logged
-    /// when it names one this app doesn't supply) for none.
-    private func systemImage(of object: WESceneObject) -> SceneSystemTexture? {
-        guard let name = SceneSystemTexture.name(in: object.instance?.usertextures, slot: 0) else { return nil }
-        guard let texture = SceneSystemTexture(rawValue: name) else {
-            OWELog.error(.scene, "Layer \(object.id ?? -1) binds the system texture \(name), which isn't supplied; it shows its image")
-            return nil
+    /// The system texture an image object binds to its image's slot (0): its `instance`'s
+    /// `usertextures`, else its material's first pass's (2963872291's album-art placeholder);
+    /// nil (logged when it names one this app doesn't supply) for none.
+    private func systemImage(of object: WESceneObject, wallpaperDir: URL) -> SceneSystemTexture? {
+        var userTextures: [SceneJSON?] = [object.instance?.usertextures]
+        if let imagePath = object.image,
+           let model: WEModel = loadJSON(path: imagePath, wallpaperDir: wallpaperDir),
+           let materialPath = model.material,
+           let material: WEMaterial = loadJSON(path: materialPath, wallpaperDir: wallpaperDir) {
+            userTextures.append(material.passes?.first?.usertextures)
         }
-        return texture
+        return SceneSystemTexture.bindings(in: userTextures, owner: "Layer \(object.id ?? -1)")[0]
     }
 
     private func buildImageLayer(_ object: WESceneObject, wallpaperDir: URL, sceneSize: SIMD2<Float>) -> SceneMetalLayer? {

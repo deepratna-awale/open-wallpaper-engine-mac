@@ -53,7 +53,7 @@ final class MediaThumbnailLibraryTests: XCTestCase {
 
     /// A 64 × 64 PNG in quadrants, rows top-down: red top left, green top right, blue bottom left,
     /// white bottom right.
-    private static func quadrantPNG() throws -> Data {
+    static func quadrantPNG() throws -> Data {
         let size = 64
         var bytes = [UInt8](repeating: 255, count: size * size * 4)
         for y in 0..<size {
