@@ -1,5 +1,6 @@
 import XCTest
 import Metal
+import MetalKit
 @testable import OpenWallpaperEngine
 
 /// `ScenePostProcess`, the stage after the scene pass: WE's bloom gate and strength, and the
@@ -70,5 +71,91 @@ final class ScenePostProcessTests: XCTestCase {
         XCTAssertEqual(ScenePostProcess.bloomStrength(bloom, extras: .init(bloom: 1.5)), 3)
         XCTAssertEqual(ScenePostProcess.bloomStrength(bloom, extras: .init(bloom: 0)), 0)
         XCTAssertEqual(ScenePostProcess.bloomStrength(bloom, extras: .init(bloom: -1)), 0)
+    }
+
+    // MARK: - Composite skip (docs/efficiency-plan-2d.md WP3-A, S2)
+
+    /// The composite is a copy only for a quad exactly covering the output with every adjustment at identity.
+    func testTheCompositeCopiesOnlyAnExactIdentityPlacement() {
+        let size = SIMD2(1920, 1080)
+        XCTAssertTrue(ScenePostProcess.compositeCopies(placement, size: size))
+        var shifted = placement
+        shifted.position.x += 0.5
+        XCTAssertFalse(ScenePostProcess.compositeCopies(shifted, size: size))
+        XCTAssertFalse(ScenePostProcess.compositeCopies(placement, size: SIMD2(1920, 1200)))
+        XCTAssertFalse(ScenePostProcess.compositeCopies(
+            ScenePostProcess.compositeUniform(placement, extras: .init(saturation: 0.9)), size: size))
+        XCTAssertFalse(ScenePostProcess.compositeCopies(
+            ScenePostProcess.compositeUniform(placement, extras: .init(blur: 1.5)), size: size))
+        XCTAssertTrue(ScenePostProcess.compositeCopies(
+            ScenePostProcess.compositeUniform(placement, extras: .init(bloom: 2)), size: size), "no bloom to scale")
+    }
+
+    /// Every CI scene drawn at its own size with the composite skipped equals, byte for byte (colour;
+    /// the desktop ignores alpha), the frame drawn through the composite, wherever two composited
+    /// renders agree with each other (random particles don't); through a view and a shared frame.
+    func testTheCompositeSkipEqualsTheCompositeOnCIScenes() throws {
+        let root = Fixtures.url("Scenes")
+        var skipped = 0, compared = 0
+        for name in try FileManager.default.contentsOfDirectory(atPath: root.path).sorted() where name != "scripted-hang" {
+            let directory = root.appending(path: name)
+            guard let data = FileManager.default.contents(atPath: directory.appending(path: "scene.json").path),
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let general = json["general"] as? [String: Any],
+                  let projection = general["orthogonalprojection"] as? [String: Any],
+                  let width = projection["width"] as? Int, let height = projection["height"] as? Int,
+                  width * height <= 1920 * 1080 else { continue }
+            let size = SIMD2(width, height)
+            let skip = try SceneFrameHarness(directory: directory, size: size, screenID: "skip")
+            let plain = try SceneFrameHarness(directory: directory, size: size, screenID: "plain")
+            let control = try SceneFrameHarness(directory: directory, size: size, screenID: "control")
+            defer { skip.close(); plain.close(); control.close() }
+            for harness in [skip, plain, control] { harness.renderer.skipsIdleFrames = false }
+            plain.renderer.skipsIdentityComposite = false
+            control.renderer.skipsIdentityComposite = false
+            skip.renderer.skipsIdentityComposite = true
+            for frame in 0..<24 {
+                let shared = frame % 2 == 1
+                for harness in [skip, plain, control] {
+                    if shared {
+                        harness.now += 1.0 / 30
+                        let drawable = SIMD2<Float>(Float(size.x), Float(size.y))
+                        harness.renderer.renderShared([SceneViewport(drawableSize: drawable, pointSize: drawable, cursor: nil,
+                                                                     frameRateLimit: 60)])
+                        harness.renderer.lastCommandBuffer?.waitUntilCompleted()
+                        harness.renderer.scripts.wallpaper?.waitUntilIdle()
+                    } else {
+                        harness.draw(frames: 1, step: 1.0 / 30)
+                    }
+                }
+                let reference = Self.rgb(plain, shared: shared)
+                guard frame > 2, !reference.isEmpty, reference == Self.rgb(control, shared: shared) else { continue }
+                XCTAssertTrue(reference == Self.rgb(skip, shared: shared), "\(name) frame \(frame) (shared \(shared)) differs")
+                compared += 1
+            }
+            skipped += skip.renderer.compositesSkipped
+            XCTAssertEqual(plain.renderer.compositesSkipped, 0)
+        }
+        print("Composite skip CI: \(compared) frames compared, \(skipped) composites skipped")
+        XCTAssertGreaterThan(compared, 20)
+        XCTAssertGreaterThan(skipped, 20)
+    }
+
+    /// The last frame's colour bytes: the view's drawable, or the shared frame.
+    private static func rgb(_ harness: SceneFrameHarness, shared: Bool) -> [UInt8] {
+        guard let texture = shared ? harness.renderer.sharedFrame : harness.view.currentDrawable?.texture,
+              texture.width == harness.size.x, texture.height == harness.size.y,
+              let device = MTLCreateSystemDefaultDevice(), let queue = device.makeCommandQueue() else { return [] }
+        let bytesPerRow = texture.width * 4
+        guard let buffer = device.makeBuffer(length: bytesPerRow * texture.height, options: .storageModeShared),
+              let commands = queue.makeCommandBuffer(), let blit = commands.makeBlitCommandEncoder() else { return [] }
+        blit.copy(from: texture, sourceSlice: 0, sourceLevel: 0, sourceOrigin: MTLOrigin(),
+                  sourceSize: MTLSize(width: texture.width, height: texture.height, depth: 1), to: buffer,
+                  destinationOffset: 0, destinationBytesPerRow: bytesPerRow, destinationBytesPerImage: bytesPerRow * texture.height)
+        blit.endEncoding()
+        commands.commit()
+        commands.waitUntilCompleted()
+        let bytes = UnsafeBufferPointer(start: buffer.contents().assumingMemoryBound(to: UInt8.self), count: buffer.length)
+        return bytes.enumerated().compactMap { $0.offset % 4 == 3 ? nil : $0.element }
     }
 }

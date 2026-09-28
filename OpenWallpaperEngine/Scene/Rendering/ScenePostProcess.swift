@@ -57,6 +57,8 @@ final class ScenePostProcess {
         /// How the frame reaches the display: display HDR's EDR output combines with WE's display
         /// HDR combine and keeps linear values above 1 up to the drawable (`SceneDisplayOutput`).
         var display = SceneDisplayOutput.standard
+        /// The scene was drawn straight into the output (`passesThrough`, S2): nothing composites.
+        var sceneIsOutput = false
 
         /// The size the bloom's texel steps and HDR levels are counted in.
         var bloomReferenceSize: SIMD2<Float> {
@@ -158,7 +160,42 @@ final class ScenePostProcess {
         let finished = colorCorrected(combined, frame) ?? combined
         cameraFade?.encode(on: finished, alpha: frame.builtins.camera.fade, builtins: frame.builtins,
                            values: frame.values, commandBuffer: frame.commandBuffer)
+        // The scene already is the output (S2); `passesThrough` held, so nothing above changed it.
+        if frame.sceneIsOutput { return }
         composite(finished, frame)
+    }
+
+    /// Whether this frame's post-process would leave the scene as it is and the composite would
+    /// copy it 1:1 (S2): LDR, WE's bloom not running, colour correction identity, the app's
+    /// adjustments at their defaults, and the scene target the output's size with a placement that
+    /// fills it exactly. The camera fade doesn't count: it draws onto the finished frame in place.
+    /// The caller then draws the scene straight into the output and the composite is skipped.
+    func passesThrough(bloom: Bloom, extras: AppExtras, settings: SceneRenderSettings,
+                       colorCorrection: SceneColorCorrectionSettings, display: SceneDisplayOutput,
+                       sceneSize: SIMD2<Int>, outputSize: SIMD2<Int>, placement: LayerUniform) -> Bool {
+        guard !drawsHDR, !display.isExtended, !Self.runsBloom(bloom, settings: settings), colorCorrection.isIdentity,
+              sceneSize == outputSize else { return false }
+        return Self.compositeCopies(Self.compositeUniform(placement, extras: extras), size: outputSize)
+    }
+
+    /// Whether the composite drawn with `uniform` onto `size` pixels from a scene target of that
+    /// size is a copy: a quad exactly covering the output (to a thousandth of a pixel, so every
+    /// fragment samples its texel's centre), unrotated, whole-texture UVs and every adjustment
+    /// `sceneFragment` applies at its identity.
+    static func compositeCopies(_ uniform: LayerUniform, size: SIMD2<Int>) -> Bool {
+        let output = SIMD2<Float>(Float(size.x), Float(size.y))
+        let tolerance: Float = 1e-3
+        return uniform.sceneSize == output
+            && simd_reduce_max(simd_abs(uniform.position - output / 2)) < tolerance
+            && simd_reduce_max(simd_abs(uniform.size - output)) < tolerance
+            && uniform.rotation == 0 && uniform.quadAxisX == .zero && uniform.quadAxisY == .zero
+            && uniform.particleShape <= 0.5
+            && uniform.uvOrigin == .zero && uniform.uvAxisX == SIMD2(1, 0) && uniform.uvAxisY == SIMD2(0, 1)
+            && uniform.transform == SIMD4(0, 0, 0, 1) && uniform.transformScaleY == 1
+            && uniform.blur <= 0
+            && uniform.effects.x == 1 && uniform.effects.y == 1 && uniform.effects.z == 1
+            && uniform.colorEffects.x == 0 && uniform.colorEffects.y == 1 && abs(uniform.colorEffects.z) <= 0.0001
+            && uniform.color.x == 1 && uniform.color.y == 1 && uniform.color.z == 1
     }
 
     /// Whether WE runs its bloom this frame (`0x140180a41`): the post-processing setting allows it
