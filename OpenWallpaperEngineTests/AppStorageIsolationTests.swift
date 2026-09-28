@@ -21,6 +21,15 @@ final class AppStorageIsolationTests: XCTestCase {
         XCTAssertTrue(store.keychainServicePrefix.contains("isolated"))
     }
 
+    /// A test copy is marked TEST, a local build Dev, a release nothing.
+    func testTheDockBadgeTellsCopiesApart() {
+        XCTAssertEqual(DockBadge.current, .test, "the test host is an isolated copy")
+        XCTAssertEqual(DockBadge.kind(isIsolated: true, isReleaseBuild: true), .test)
+        XCTAssertEqual(DockBadge.kind(isIsolated: true, isReleaseBuild: false), .test)
+        XCTAssertEqual(DockBadge.kind(isIsolated: false, isReleaseBuild: false), .dev)
+        XCTAssertEqual(DockBadge.kind(isIsolated: false, isReleaseBuild: true), .none)
+    }
+
     func testDefaultLocationsLiveInTheIsolatedStore() {
         let store = AppStorageLocation.current
         XCTAssertTrue(SafeRestartStore.defaultFileURL.path.hasPrefix(store.supportDirectory.path))

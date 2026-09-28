@@ -84,13 +84,24 @@ enum SceneTextureUpload {
             return true
         }
         guard drawn else { throw UploadError.unsupported(image.bitsPerPixel) }
-        var coverage = [UInt8](repeating: 0, count: width * height)
-        for index in coverage.indices {
-            let alpha = texels[index * 4 + 3]
-            for channel in 0..<3 where abs(Int(texels[index * 4 + channel]) - Int(alpha)) > 2 { return nil }
-            coverage[index] = alpha
+        // Runs on the render thread whenever a text layer's string changes (a score, a clock), so it
+        // walks raw buffers: the indexed, generic loop took ~100 ms for a 5K-sized label.
+        let count = width * height
+        var coverage = [UInt8](repeating: 0, count: count)
+        let grey = texels.withUnsafeBufferPointer { source -> Bool in
+            coverage.withUnsafeMutableBufferPointer { target -> Bool in
+                var texel = 0
+                for index in 0..<count {
+                    let alpha = Int16(source[texel + 3])
+                    if abs(Int16(source[texel]) &- alpha) > 2 || abs(Int16(source[texel + 1]) &- alpha) > 2
+                        || abs(Int16(source[texel + 2]) &- alpha) > 2 { return false }
+                    target[index] = UInt8(truncatingIfNeeded: alpha)
+                    texel &+= 4
+                }
+                return true
+            }
         }
-        return coverage
+        return grey ? coverage : nil
     }
 
     enum UploadError: Error, CustomStringConvertible {

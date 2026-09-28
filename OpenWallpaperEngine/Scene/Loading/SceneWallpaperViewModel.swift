@@ -883,10 +883,11 @@ class SceneWallpaperViewModel: ObservableObject {
             let value = sizeString.parseVector2()
             size = SIMD2<Float>(Float(value.0), Float(value.1))
         } else {
-            // In pixels, and for a .tex the image's own size, not the padded allocation around it.
+            // In pixels, and for a .tex the image's own size, not the padded allocation around it;
+            // for a sprite sheet one frame's.
             if case let .animated(animation) = source, animation.images.isEmpty { return nil }
-            size = source.pixelSize * textureReductionApplied(named: textureName, materialDir: materialPath,
-                                                              wallpaperDir: wallpaperDir)
+            size = source.unsizedLayerSize * textureReductionApplied(named: textureName, materialDir: materialPath,
+                                                                     wallpaperDir: wallpaperDir)
         }
         let position: SIMD2<Float> = model.fullscreen == true
             ? sceneSize / 2

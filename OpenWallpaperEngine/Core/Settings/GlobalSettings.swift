@@ -2,6 +2,7 @@ import Cocoa
 import Combine
 import SwiftUI
 import ServiceManagement
+import Metal
 
 enum GSQuality {
     case low, medium, high, ultra
@@ -170,9 +171,12 @@ enum GSLocalization: String, CaseIterable, Identifiable, Codable {
 enum GSVideoFramework: String, CaseIterable, Identifiable, Codable {
     var id: Self { self }
     case avkit
-    /// Draws video through the scene renderer so the effect stack applies to it, the way
-    /// Wallpaper Engine does. Still experimental; avkit remains the default.
+    /// Draws video through the scene renderer on the GPU, so the effect stack applies to it, the
+    /// way Wallpaper Engine does. The default wherever Metal is available (every Apple silicon Mac).
     case metal
+
+    /// Metal when the Mac has a Metal device, AVKit otherwise.
+    static let preferred: GSVideoFramework = MTLCreateSystemDefaultDevice() != nil ? .metal : .avkit
 }
 
 enum GSProcessPiority: String, CaseIterable, Identifiable, Codable {
@@ -243,7 +247,7 @@ struct GlobalSettings: Codable, Equatable {
     var reloadWhenChangingOutputDevice = true // Not putting in use
     
     // MARK: Video
-    var videoFramework = GSVideoFramework.avkit
+    var videoFramework = GSVideoFramework.preferred
     
     // MARK: Advanced
     var processPiority = GSProcessPiority.normal // Not putting in use

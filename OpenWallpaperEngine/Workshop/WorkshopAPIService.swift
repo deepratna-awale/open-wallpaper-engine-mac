@@ -275,8 +275,8 @@ class WorkshopAPIService {
         return ids.compactMap { items[$0] }
     }
 
-    /// The account's subscribed Wallpaper Engine items (GetUserFiles `type=subscribed`, with the
-    /// user's Web API key). Best effort: Steam often returns `{"response":{}}` for it (`.empty`).
+    /// The account's subscribed Wallpaper Engine items (GetUserFiles `type=mysubscriptions`, with
+    /// the user's Web API key). An account with none, or a private one, answers `.empty`.
     func getSubscribedItemIDs(steamID: String) async throws -> WorkshopSubscriptions.Outcome {
         guard WorkshopSubscriptions.isSteamID64(steamID) else { throw WorkshopAPIError.invalidURL }
         guard let key = apiKey.load() else { throw WorkshopAPIError.noAPIKey }

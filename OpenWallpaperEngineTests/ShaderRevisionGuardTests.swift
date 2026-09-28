@@ -13,6 +13,9 @@ final class ShaderRevisionGuardTests: XCTestCase {
         var revision: Int
         var hash: String
         var assetsHash: String?
+        /// The WE assets' own shader sources the assets hash was recorded from. A new Wallpaper Engine
+        /// build changes these; its hash then can't be compared and needs re-recording, not a bump.
+        var assetsSourcesHash: String?
     }
 
     private struct Job {
@@ -109,6 +112,24 @@ final class ShaderRevisionGuardTests: XCTestCase {
         return try corpusHash(root: assets, includeRoots: [])
     }
 
+    /// The raw shader sources under `root` (paths and contents, sorted): what the translator reads.
+    private static func sourcesHash(root: URL) -> String {
+        var hasher = SHA256()
+        let base: String = root.standardizedFileURL.path
+        var files: [URL] = []
+        if let all = FileManager.default.enumerator(at: root, includingPropertiesForKeys: nil) {
+            for case let url as URL in all where ["vert", "frag", "geom", "h"].contains(url.pathExtension) {
+                files.append(url)
+            }
+        }
+        for url in files.sorted(by: { $0.path < $1.path }) {
+            let relative: String = String(url.standardizedFileURL.path.dropFirst(base.count + 1))
+            hasher.update(data: Data("\(relative)\u{0}".utf8))
+            hasher.update(data: (try? Data(contentsOf: url)) ?? Data())
+        }
+        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
+    }
+
     private static func loadExpected() throws -> Expected {
         let data: Data = try Data(contentsOf: fixtureURL)
         return try JSONDecoder().decode(Expected.self, from: data)
@@ -124,7 +145,10 @@ final class ShaderRevisionGuardTests: XCTestCase {
             let previous: Expected? = try? Self.loadExpected()
             // Without assets, keep the recorded assets hash only if the revision is unchanged.
             let keptAssets: String? = previous?.revision == revision ? previous?.assetsHash : nil
-            let expected = Expected(revision: revision, hash: base.hash, assetsHash: assets?.hash ?? keptAssets)
+            let keptSources: String? = previous?.revision == revision ? previous?.assetsSourcesHash : nil
+            let sources: String? = (try? Fixtures.assets()).map(Self.sourcesHash(root:))
+            let expected = Expected(revision: revision, hash: base.hash, assetsHash: assets?.hash ?? keptAssets,
+                                    assetsSourcesHash: assets == nil ? keptSources : sources)
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
             var data: Data = try encoder.encode(expected)
@@ -151,6 +175,12 @@ final class ShaderRevisionGuardTests: XCTestCase {
             \(Self.recordCommand)
             """)
         if let assets {
+            let sources: String = Self.sourcesHash(root: try Fixtures.assets())
+            if let recordedSources = expected.assetsSourcesHash, recordedSources != sources {
+                // A different Wallpaper Engine build: its shaders differ, so the output does too.
+                print("ShaderRevisionGuardTests: the WE assets differ from the recorded ones; re-record: \(Self.recordCommand)")
+                return
+            }
             if let recorded = expected.assetsHash {
                 XCTAssertEqual(assets.hash, recorded, """
                     Translated shader output of the WE assets changed: bump ShaderVariantTranslator.revision and \

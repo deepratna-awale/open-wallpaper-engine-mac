@@ -12,6 +12,8 @@ update themselves from it (Settings › General › Updates).
 
 ## One-time setup: repository secrets
 
+CI's asset tests use their own Steam secrets (`OWE_CI_STEAM_*`); see [ci-assets.md](ci-assets.md).
+
 Add these under *Settings → Secrets and variables → Actions → New repository secret*, or with
 `gh secret set` as shown below. Each workflow's first step fails with a list of whatever is
 missing.

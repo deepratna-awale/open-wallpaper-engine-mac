@@ -8,7 +8,7 @@ Read [`docs/architecture.md`](docs/architecture.md) first. It explains the modul
 - **Debug builds sign with *Apple Development*.** macOS ties the Screen Recording grant (needed for audio-reactive features) to the signature, and ad-hoc signing loses it on every rebuild.
   - If you aren't on the project's team, set your own team in *Signing & Capabilities* and don't commit that change.
 - **Shaders:** WE shaders are translated in process by the glslang and SPIRV-Cross libraries linked into the app (`Vendor/ShaderToolchain`). You don't need to install anything.
-- **WE assets:** none are in the repository or the app. The app reads them from a WE install the user chose, or from the cache Settings › Assets fills from the user's Steam copy (`<Wallpaper Storage>/.owe-assets`). For development, `Scripts/fill-assets-cache.sh <WE install> <folder>` copies the same subset to a local folder.
+- **WE assets:** none are in the repository or the app. The app reads them from a WE install the user chose, or from the cache Settings › Assets fills from the user's Steam copy (`<Wallpaper Storage>/.owe-assets`). For development, `Scripts/fetch-we-assets.sh` downloads them from Steam with the CI account (credentials in your login Keychain, see [docs/ci-assets.md](docs/ci-assets.md)), or `Scripts/fill-assets-cache.sh <WE install> <folder>` copies them from a WE install on disk.
 
 ## Where code goes
 
@@ -48,6 +48,11 @@ There is **one type per file** unless the types are tiny and private to it. A fi
    - Values that are stored or sent (tags, types, ratings) stay English; show them through `LocalizedLabels`.
    - The app ships in 15 languages besides English. A new string needs a translation in each, using the terms in [`docs/localization-glossary.md`](docs/localization-glossary.md). `LocalizationCatalogTests` and `LocalizationLintTests` fail otherwise.
 
+## Debugging
+
+- Read the app's logs with `/usr/bin/log` (a shell `log` alias or function may shadow it), e.g. `/usr/bin/log show --last 10m --predicate 'process == "Open Wallpaper Engine"'`.
+- Shaders the translator rejects are written to `/tmp/owe-failed-shaders` for inspection.
+
 ## Tests
 
 - **Where tests go:** the `OpenWallpaperEngineTests` target (unit tests hosted in the app, which starts without its delegate under XCTest). Fixtures live in `Tests/Fixtures/`, outside the target, and are read with `Fixtures.url(_:)`.
@@ -55,7 +60,7 @@ There is **one type per file** unless the types are tiny and private to it. A fi
 - **Known gaps** are asserted with `XCTExpectFailure("<snapshot id>: …")`. It's strict, so fixing a gap makes its test fail until you delete the expectation.
 - **Tests never touch the user's state.** The test host is the app, so under XCTest `AppStorageLocation` switches to the defaults suite `com.winddog.wallpaper-engine.isolated.tests`, `Open Wallpaper Engine (isolated tests)` under Application Support and Caches, and isolated keychain services. `AppStorageIsolationTests` guards this. Tests never read the user's assets either: the asset-dependent tests use `OWE_ASSETS=<assets folder or WE install>` (`TEST_RUNNER_OWE_ASSETS` through `xcodebuild`) and skip without it, as on CI. A test that needs them starts with `_ = try Fixtures.assets()`.
 - **Launch development copies isolated.** Every build shares the bundle id, so an agent or script that launches a copy of the app (screenshots, smoke runs) must set `OWE_ISOLATED_STATE=<tag>` in its environment or pass `-OWEIsolatedState <tag>`, e.g. `OWE_ISOLATED_STATE=shots "<build>/Open Wallpaper Engine.app/Contents/MacOS/Open Wallpaper Engine" -CustomWallpapersDirectory <library>`. Launch arguments (`-Key value`) still override defaults in the isolated suite. Never launch a dev copy against the real domain: it overwrites the user's playlists, per-screen wallpapers and safe-restart sentinel.
-- **Before pushing,** run `TEST_RUNNER_OWE_ASSETS=<assets folder> xcodebuild test -project OpenWallpaperEngine.xcodeproj -scheme OpenWallpaperEngine`, so the asset-dependent tests run too. CI (`.github/workflows/ci.yml`) runs the same command without assets, where they skip.
+- **Before pushing,** run `TEST_RUNNER_OWE_ASSETS=<assets folder> xcodebuild test -project OpenWallpaperEngine.xcodeproj -scheme OpenWallpaperEngine`, so the asset-dependent tests run too. With the fetched cache that's `Scripts/fetch-we-assets.sh && TEST_RUNNER_OWE_ASSETS=~/Library/Caches/owe-we-assets xcodebuild test …`. CI (`.github/workflows/ci.yml`) runs the suite twice: without assets for every PR, where they skip, and with assets fetched from Steam for pushes and same-repository PRs ([docs/ci-assets.md](docs/ci-assets.md)).
 
 ## Commits and PRs
 

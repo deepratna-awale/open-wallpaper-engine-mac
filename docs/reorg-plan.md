@@ -19,7 +19,7 @@
 
 ## Step 1: guidelines (docs only)
 
-Commit `CONTRIBUTING.md`, `CLAUDE.md`, `docs/architecture.md`, `docs/progress-snapshot.md` and this plan.
+Commit `CONTRIBUTING.md`, `docs/architecture.md`, `docs/progress-snapshot.md` and this plan.
 
 ## Step 2: delete dead code
 

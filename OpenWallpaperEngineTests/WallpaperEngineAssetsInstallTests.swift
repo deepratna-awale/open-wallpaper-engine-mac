@@ -330,6 +330,33 @@ extension WallpaperEngineAssetsInstallTests {
         XCTAssertEqual(SteamCmdService.loginOutcome(output: "This account is protected by a Steam Guard mobile authenticator."),
                        .guardCodeRequired)
 
+        // Real SteamCMD output of logins that succeeded with Steam Guard: its success lines name
+        // Steam Guard, which used to read as "code required".
+        let withCode: String = """
+            Steam>Logging in using username/password.
+            Steam Guard code provided.
+            Logging in user 'someone' [U:1:1] to Steam Public...OK
+            Waiting for client config...OK
+            Waiting for user info...OK
+            """
+        XCTAssertEqual(SteamCmdService.loginOutcome(output: withCode), .loggedIn)
+        let withMobileConfirmation: String = """
+            Logging in user 'someone' [U:1:1] to Steam Public...This account is protected by a Steam Guard mobile authenticator.
+            Please confirm the login in the Steam Mobile app on your phone.
+
+            Waiting for confirmation...
+            Waiting for confirmation...OK
+            Waiting for client config...OK
+            Waiting for user info...OK
+            """
+        XCTAssertEqual(SteamCmdService.loginOutcome(output: withMobileConfirmation), .loggedIn)
+        let unconfirmed: String = """
+            Logging in user 'someone' [U:1:1] to Steam Public...This account is protected by a Steam Guard mobile authenticator.
+            Please confirm the login in the Steam Mobile app on your phone.
+            Waiting for confirmation...
+            """
+        XCTAssertEqual(SteamCmdService.loginOutcome(output: unconfirmed), .guardCodeRequired)
+
         let memory = SteamCmdAccountMemory.inMemory()
         let steamCmd = makeSteamCmd(runner: SteamSessionRunner(loginOutput: steamCmdNoCachedLoginOutput), account: memory)
         steamCmd.loginWithCachedSession(username: "someone", failureMessage: "no session")

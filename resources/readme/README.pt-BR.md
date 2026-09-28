@@ -28,6 +28,26 @@ Este projeto foi construído sobre o trabalho de:
 
 Licenciado sob a [GPL-3.0](../../LICENSE), assim como o projeto original.
 
+## Da 0.8.1 à 1.0.0
+
+### O ponto de partida
+
+Este fork parte da versão 0.8.1 original (commit `aa29a89e`, março de 2026). A 0.8.1 reproduzia papéis de parede de vídeo e web, tinha suporte a várias telas e mesas, playlists, um menu de papéis de parede recentes, importação de zip e pastas, e um navegador do Steam Workshop que baixava pelo SteamCMD do Homebrew. As cenas eram desenhadas com SpriteKit a partir de arquivos PKG e TEX: camadas de imagem com posição, tonalidade e modos de mesclagem, usando a imagem de prévia como alternativa para texturas DXT. Shaders e efeitos do Wallpaper Engine, partículas, animações de sprites e de linha do tempo, paralaxe de câmera, scripts reativos ao áudio, modelos 3D, puppets, iluminação e SceneScript não eram suportados.
+
+### O que foi adicionado
+
+Desde então, 1.118 commits adicionaram:
+
+- **Renderização:** um novo renderizador de cenas em Metal que traduz e armazena em cache os shaders do Wallpaper Engine dentro do processo, efeitos, bloom e HDR.
+- **Conteúdo das cenas:** partículas simuladas na GPU; modelos 3D, puppets com animação esquelética e iluminação.
+- **Comportamento:** um runtime de SceneScript, linhas do tempo de propriedades, visuais reativos ao áudio e som espacial.
+- **Telas e Workshop:** regras por tela, navegador e downloads do Workshop reformulados e mais formas de importar. Os assets do Wallpaper Engine vêm da sua própria cópia na Steam; nenhum é incluído.
+- **App:** um assistente de configuração, instalação automática do SteamCMD, atualizações via Sparkle, uma interface Liquid Glass e 15 idiomas.
+- **Qualidade:** uma suíte de cerca de 1.900 testes, CI que os executa com os assets do Wallpaper Engine, e versões assinadas e notarizadas.
+- **Documentação:** um site do projeto e a wiki.
+
+A lista completa está em [O que a versão 1.0.0 suporta](#o-que-a-versão-100-suporta); os guias estão na [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
+
 ## O que a versão 1.0.0 suporta
 
 ### Configuração, biblioteca e atualizações

@@ -315,9 +315,22 @@ final class SceneModelRenderer: SceneModelDrawing {
         let key = ObjectIdentifier(plan)
         let current = replacedPlans[key] ?? plan
         guard let replacement = current.geometry?.replacement(for: current) else { return current }
+        forget(current)
         replacedPlans[key] = replacement
         uniforms.removeValue(forKey: objectID)
         return replacement
+    }
+
+    /// Drops what the renderer made for `plan` once another plan draws in its place. The caches
+    /// are keyed by the plan's `ObjectIdentifier`, which a later plan reuses once this one is
+    /// freed: kept, a new plan would take this one's buffers (another mesh count) as its own.
+    private func forget(_ plan: SceneModelPlan) {
+        let key = ObjectIdentifier(plan)
+        buffers[key] = nil
+        geometryRevisions[key] = nil
+        geometryIndexCounts[key] = nil
+        largestIndices[key] = nil
+        morphTextures.remove(plan)
     }
 
     func meshBuffers(_ plan: SceneModelPlan) -> [MeshBuffers?] {

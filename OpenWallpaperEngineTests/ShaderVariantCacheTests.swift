@@ -53,7 +53,7 @@ final class ShaderVariantCacheTests: XCTestCase {
     }
 
     /// Output of the translator over a fixed corpus, per `ShaderVariantTranslator.revision`.
-    /// Translated output changed: bump `revision` (CLAUDE.md) and add the new hash here.
+    /// Translated output changed: bump `revision` (CONTRIBUTING.md) and add the new hash here.
     static let goldenCorpusHashes: [Int: String] = [
         6: "46033e7a708b9df4b268e1f4e9be409c228d6ad367b7b6455c036729440ad2af",
         // The effects corpus has no lit pass: `LightingV1` changed lit variants only.
@@ -231,7 +231,7 @@ final class ShaderVariantCacheTests: XCTestCase {
         XCTAssertEqual(compiler.crashGuard?.isQuarantined("another"), false)
     }
 
-    /// The source a compiler step rejected lands in the failure directory (CLAUDE.md's
+    /// The source a compiler step rejected lands in the failure directory (CONTRIBUTING.md's
     /// `/tmp/owe-failed-shaders`), with the error after it so its line numbers still match.
     func testRejectedSourceIsWrittenForInspection() throws {
         let failures = temporaryDirectory("failed-shaders")

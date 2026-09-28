@@ -28,6 +28,26 @@ Ce projet s’appuie sur le travail de :
 
 Distribué sous licence [GPL-3.0](../../LICENSE), comme le projet d’origine.
 
+## De 0.8.1 à 1.0.0
+
+### Le point de départ
+
+Ce fork part de la version 0.8.1 en amont (commit `aa29a89e`, mars 2026). La 0.8.1 lisait les fonds d'écran vidéo et web, gérait plusieurs écrans et bureaux, les listes de lecture, un menu des fonds d'écran récents, l'import de zip et de dossiers, et un navigateur du Steam Workshop qui téléchargeait via le SteamCMD de Homebrew. Les scènes étaient dessinées avec SpriteKit à partir des fichiers PKG et TEX : calques d'image avec position, teinte et modes de fusion, avec l'image d'aperçu en repli pour les textures DXT. Les shaders et effets de Wallpaper Engine, les particules, les animations de sprites et de timeline, la parallaxe de caméra, les scripts audio-réactifs, les modèles 3D, les puppets, l'éclairage et SceneScript n'étaient pas pris en charge.
+
+### Ce qui a été ajouté
+
+Depuis, 1 118 commits ont ajouté :
+
+- **Rendu :** un nouveau moteur de rendu de scènes Metal qui traduit et met en cache les shaders de Wallpaper Engine dans le processus, les effets, le bloom et le HDR.
+- **Contenu des scènes :** des particules simulées sur le GPU ; les modèles 3D, les puppets avec animation squelettique et l'éclairage.
+- **Comportement :** un moteur d'exécution SceneScript, les timelines de propriétés, des visuels audio-réactifs et le son spatial.
+- **Écrans et Workshop :** des règles par écran, un navigateur et des téléchargements du Workshop repensés, et davantage de façons d'importer. Les ressources de Wallpaper Engine proviennent de votre propre copie Steam ; aucune n'est incluse.
+- **Application :** un assistant de configuration, l'installation automatique de SteamCMD, les mises à jour Sparkle, une interface Liquid Glass et 15 langues.
+- **Qualité :** une suite d'environ 1 900 tests, une CI qui les exécute avec les ressources de Wallpaper Engine, et des versions signées et notariées.
+- **Documentation :** un site web du projet et le wiki.
+
+La liste complète figure dans [Fonctionnalités prises en charge par la version 1.0.0](#fonctionnalités-prises-en-charge-par-la-version-100) ; les guides sont dans le [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
+
 ## Fonctionnalités prises en charge par la version 1.0.0
 
 ### Configuration, bibliothèque et mises à jour

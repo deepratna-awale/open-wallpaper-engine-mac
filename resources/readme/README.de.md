@@ -28,6 +28,26 @@ Dieses Projekt baut auf der Arbeit folgender Personen auf:
 
 Lizenziert unter [GPL-3.0](../../LICENSE), wie das ursprüngliche Projekt.
 
+## Von 0.8.1 zu 1.0.0
+
+### Der Ausgangspunkt
+
+Dieser Fork beginnt beim Upstream-Stand 0.8.1 (Commit `aa29a89e`, März 2026). 0.8.1 spielte Video- und Web-Hintergrundbilder ab, unterstützte mehrere Displays und Desktops, Wiedergabelisten, ein Menü zuletzt verwendeter Hintergrundbilder, Zip- und Ordnerimport sowie einen Steam-Workshop-Browser, der über das SteamCMD aus Homebrew herunterlud. Szenen wurden mit SpriteKit aus PKG- und TEX-Dateien gezeichnet: Bildebenen mit Position, Tönung und Mischmodi, bei DXT-Texturen mit dem Vorschaubild als Ersatz. Wallpaper-Engine-Shader und -Effekte, Partikel, Sprite- und Zeitleistenanimationen, Kamera-Parallaxe, audioreaktive Skripte, 3D-Modelle, Puppets, Beleuchtung und SceneScript wurden nicht unterstützt.
+
+### Was hinzugekommen ist
+
+Seitdem haben 1.118 Commits Folgendes hinzugefügt:
+
+- **Rendering:** ein neuer Metal-Szenenrenderer, der die Shader von Wallpaper Engine im Prozess übersetzt und zwischenspeichert, Effekte, Bloom und HDR.
+- **Szeneninhalte:** Partikel, die auf der GPU simuliert werden; 3D-Modelle, Puppets mit Skelettanimation und Beleuchtung.
+- **Verhalten:** eine SceneScript-Laufzeit, Eigenschafts-Zeitleisten, audioreaktive Visuals und räumlicher Klang.
+- **Displays und Workshop:** Regeln pro Display, ein überarbeiteter Workshop-Browser und Downloads sowie weitere Importwege. Die Assets von Wallpaper Engine stammen aus deiner eigenen Steam-Kopie; nichts davon wird mitgeliefert.
+- **App:** ein Einrichtungsassistent, automatische SteamCMD-Installation, Sparkle-Updates, eine Liquid-Glass-Oberfläche und 15 Sprachen.
+- **Qualität:** eine Testsuite mit rund 1.900 Tests, CI, die sie mit den Assets von Wallpaper Engine ausführt, sowie signierte und notarisierte Releases.
+- **Dokumentation:** eine Projektwebsite und das Wiki.
+
+Die vollständige Liste steht unter [Funktionsumfang von 1.0.0](#funktionsumfang-von-100); Anleitungen findest du im [Wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
+
 ## Funktionsumfang von 1.0.0
 
 ### Einrichtung, Mediathek & Updates
