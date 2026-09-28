@@ -394,6 +394,15 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// The clean run of layers drawn from a cached copy, and this frame's plan for it (WP2-B).
     let flattening = SceneFlattening()
     private var flattenPlan = SceneFlattening.Plan.draw
+    /// The blur-like buffer divisor (1, 2, 4) over the slider's (`OWE_BLUR_DIVISOR` for comparisons).
+    var blurDivisorOverride = ProcessInfo.processInfo.environment["OWE_BLUR_DIVISOR"].flatMap(Int.init)
+    private func effectResolution(of layerID: String) -> EffectResolutionPolicy {
+        let divisor = blurDivisorOverride ?? framePacing.limits.policy.blurResolutionDivisor
+        guard divisor > 1 else { return .full }
+        let layer = layerAnalysis.flatMap { analysis in analysis.index(of: layerID).map { analysis.layers[$0] } }
+        let sharp = layer.map { $0.contentClass == .text || ($0.contentClass == .lineArt && $0.classifiedFromPixels) } ?? false
+        return EffectResolutionPolicy(divisor: divisor, sharpContent: sharp)
+    }
     /// Off with `OWE_SCENE_CULL=0` (comparisons).
     var cullingEnabled = ProcessInfo.processInfo.environment["OWE_SCENE_CULL"] != "0"
     /// Layers this frame skipped: culled, and drawn from the flattened copy.
@@ -2555,6 +2564,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         context.hiddenEffects = scripted.hidden
         context.constantWrites = scripted.writes
         context.scriptRevision = scripted.revision
+        context.resolution = effectResolution(of: entry.layer.id)
         if renderSettings.sceneDetail == .matchDisplay {
             context.footprint = effectFootprint(entry, draw: draw, input: input)
             // Scene regions are drawn at the scene target's density, below full detail when the
