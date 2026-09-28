@@ -157,6 +157,11 @@ class SceneWallpaperViewModel: ObservableObject {
         parseCache.removeAll()
     }
 
+    /// Forgets the decoded textures, so the next load reads them again (tests).
+    static func dropSharedTextures() {
+        sharedTextureCache.removeAllObjects()
+    }
+
     private static func storeParse(_ entry: ParsedScene, for directory: URL) {
         parseCacheLock.lock()
         defer { parseCacheLock.unlock() }

@@ -158,10 +158,13 @@ enum TexturePreparation {
 
     /// Whether a compressed texture's quality passes: the efficiency plan's lossy bar (ΔE2000 99th
     /// percentile ≤ 2), with SSIM ≥ 0.995 for text and line art and ≥ 0.985 for photos (margin over
-    /// the scene-level 0.98), and alpha SSIM ≥ 0.995 so edges keep their shape.
+    /// the scene-level 0.98), alpha SSIM ≥ 0.995 so edges keep their shape, and SSIM ≥ 0.99 over
+    /// the windows with hard edges, so outlines, line art and lettering inside an image hold the
+    /// plan's text bar once drawn.
     static func accepts(_ quality: TextureCompressor.Quality, contentClass: SceneLayerContentClass) -> Bool {
         let lumaBar = contentClass == .photo ? 0.985 : 0.995
-        return quality.lumaSSIM >= lumaBar && quality.alphaSSIM >= 0.995 && quality.deltaE99 <= 2.0
+        return quality.lumaSSIM >= lumaBar && quality.alphaSSIM >= 0.995 && quality.edgeSSIM >= 0.99
+            && quality.deltaE99 <= 2.0
     }
 
     /// Compresses `bytes` and writes the blob for `key`; returns its header.
@@ -207,9 +210,9 @@ enum TexturePreparation {
             try? FileManager.default.removeItem(at: temporary)
             throw CocoaError(.fileWriteUnknown)
         }
-        OWELog.info(.scene, String(format: "Texture cache: %@ %d×%d %@ (%@, SSIM %.4f, ΔE99 %.2f)", key, width, height,
-                                   accepted ? "compressed to BC7" : "kept original", contentClass.rawValue,
-                                   quality.lumaSSIM, quality.deltaE99))
+        OWELog.info(.scene, String(format: "Texture cache: %@ %d×%d %@ (%@, SSIM %.4f, edges %.4f, ΔE99 %.2f)", key,
+                                   width, height, accepted ? "compressed to BC7" : "kept original", contentClass.rawValue,
+                                   quality.lumaSSIM, quality.edgeSSIM, quality.deltaE99))
         return header
     }
 

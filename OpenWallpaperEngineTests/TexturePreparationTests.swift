@@ -1,6 +1,6 @@
 import XCTest
 import AppKit
-import Metal
+import MetalKit
 @testable import OpenWallpaperEngine
 
 /// "Optimise textures" (`TexturePreparation`, `TextureCompressor`) and the mipmap upload of
@@ -121,6 +121,8 @@ final class TexturePreparationTests: XCTestCase {
         XCTAssertFalse(TexturePreparation.accepts(photoOnly, contentClass: .text))
         let colourShift = TextureCompressor.Quality(lumaSSIM: 0.999, alphaSSIM: 1, deltaE99: 2.5)
         XCTAssertFalse(TexturePreparation.accepts(colourShift, contentClass: .photo))
+        let softOutlines = TextureCompressor.Quality(lumaSSIM: 0.999, alphaSSIM: 1, deltaE99: 1, edgeSSIM: 0.985)
+        XCTAssertFalse(TexturePreparation.accepts(softOutlines, contentClass: .photo))
     }
 
     func testMipmapsHalveAndKeepTransparentColourOut() {
@@ -287,5 +289,171 @@ final class TexturePreparationTests: XCTestCase {
         output.getBytes(&bytes, bytesPerRow: texture.width * 4,
                         from: MTLRegionMake2D(0, 0, texture.width, texture.height), mipmapLevel: 0)
         return bytes
+    }
+}
+
+/// "Optimise textures" on library wallpapers against the efficiency plan's bars (§4, §5): the
+/// frames with it off and on at 1920×1080 and 3840×2160 over frames 0, 30 and 120 (lossy: SSIM ≥
+/// 0.98, ΔE2000 p99 ≤ 2, text and line art SSIM ≥ 0.995), and the costs: load time (off, first
+/// load with it on, cached), GPU memory and GPU ms. Only runs when asked: `OWE_TEXTURE_GATE`
+/// (`TEST_RUNNER_OWE_TEXTURE_GATE` through xcodebuild) lists workshop ids from `OWE_LIBRARY`.
+/// Scripts are left out; particles are random, so the frames with it off are drawn twice and a
+/// frame fails only when the change misses a bar that the repeat of itself passes.
+final class TexturePreparationLibraryTests: XCTestCase {
+    func testLibraryWallpapersPassTheLossyBar() throws {
+        let environment = ProcessInfo.processInfo.environment
+        guard let request = environment["OWE_TEXTURE_GATE"], !request.isEmpty else {
+            throw XCTSkip("set OWE_TEXTURE_GATE to run the texture gate")
+        }
+        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
+        try XCTSkipUnless(device.supportsBCTextureCompression)
+        let savedRoot = TexturePreparation.root
+        let savedStore = SceneWallpaperViewModel.sceneCacheStore
+        let root = URL(fileURLWithPath: environment["OWE_TEXTURE_GATE_CACHE"]
+                       ?? FileManager.default.temporaryDirectory.appending(path: "owe-texture-gate").path)
+        try? FileManager.default.removeItem(at: root)
+        TexturePreparation.root = root
+        SceneWallpaperViewModel.sceneCacheStore = nil
+        defer {
+            TexturePreparation.root = savedRoot
+            SceneWallpaperViewModel.sceneCacheStore = savedStore
+        }
+        var report: [String] = []
+        var failures: [String] = []
+        for id in request.split(separator: ",").map(String.init) {
+            let directory = LibrarySweepTests.libraryRoot.appending(path: id, directoryHint: .isDirectory)
+            guard let data = FileManager.default.contents(atPath: directory.appending(path: "project.json").path),
+                  let project = try? JSONDecoder().decode(WEProject.self, from: data) else {
+                report.append("\(id): missing; skipped")
+                continue
+            }
+            defer { Fixtures.removeStoredSettings(for: directory) }
+            let wallpaper = WEWallpaper(using: project, where: directory)
+            let off = try load(wallpaper, optimise: false)
+            let cold = try load(wallpaper, optimise: true)
+            let prepareStart = CACurrentMediaTime()
+            let idle = DispatchSemaphore(value: 0)
+            PreparationPool.shared.whenIdle { idle.signal() }
+            idle.wait()
+            let prepareSeconds: Double = CACurrentMediaTime() - prepareStart
+            let on = try load(wallpaper, optimise: true)
+            let blobs = try blobSummary(root)
+            report.append(String(format: "%@ “%@”: load off %.3f s, first on %.3f s, cached on %.3f s; background compression %.2f s; %@",
+                                 id, project.title, off.seconds, cold.seconds, on.seconds, prepareSeconds, blobs))
+            for size in [SIMD2(1920, 1080), SIMD2(3840, 2160)] {
+                let reference = try draw(off.content, size: size, device: device)
+                let repeatRun = try draw(off.content, size: size, device: device)
+                let candidate = try draw(on.content, size: size, device: device)
+                var verdicts: [String] = []
+                for (index, frame) in [0, 30, 120].enumerated() {
+                    let a = reference.frames[index], b = candidate.frames[index]
+                    let mask = PerceptualMask.edges(of: a)
+                    let verdict = PerceptualCompare.evaluate(reference: a, candidate: b, kind: .lossy, textMask: mask)
+                    let floor = PerceptualCompare.evaluate(reference: a, candidate: repeatRun.frames[index], kind: .lossy, textMask: mask)
+                    verdicts.append(String(format: "f%d SSIM %.4f ΔE99 %.2f text %.4f (repeat %.4f/%.2f/%.4f)", frame, verdict.ssim,
+                                           verdict.deltaE99, verdict.textSSIM ?? 1, floor.ssim, floor.deltaE99, floor.textSSIM ?? 1))
+                    if !verdict.passed, floor.passed {
+                        failures.append("\(id) \(size.x)x\(size.y) frame \(frame): \(verdict.failures)")
+                    }
+                }
+                report.append(String(format: "  %dx%d: GPU %.2f → %.2f ms (mean), %.2f → %.2f ms (p99); GPU memory %.1f → %.1f MB; %@",
+                                     size.x, size.y, reference.gpuMean, candidate.gpuMean, reference.gpuP99, candidate.gpuP99,
+                                     reference.allocatedMB, candidate.allocatedMB, verdicts.joined(separator: "; ")))
+            }
+        }
+        let text = report.joined(separator: "\n")
+        print(text)
+        if let path = environment["OWE_TEXTURE_GATE_OUT"] { try text.write(toFile: path, atomically: true, encoding: .utf8) }
+        XCTAssertTrue(failures.isEmpty, failures.joined(separator: "\n"))
+    }
+
+    private func load(_ wallpaper: WEWallpaper, optimise: Bool) throws -> (content: SceneMetalContent, seconds: Double) {
+        SceneWallpaperViewModel.dropSharedParses()
+        SceneWallpaperViewModel.dropSharedTextures()
+        var settings = SceneRenderSettings()
+        settings.particleBudget = .unlimited
+        settings.optimiseTextures = optimise
+        let model = SceneWallpaperViewModel(wallpaper: wallpaper)
+        model.setRenderSettings(settings)
+        let start = CACurrentMediaTime()
+        let content = try XCTUnwrap(model.metalContent(), "\(wallpaper.project.title): no content")
+        let seconds: Double = CACurrentMediaTime() - start
+        return (content, seconds)
+    }
+
+    private func blobSummary(_ root: URL) throws -> String {
+        var compressed = 0, kept = 0, bytes = 0, source = 0
+        for url in (try? FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)) ?? []
+            where url.pathExtension == TexturePreparation.fileExtension {
+            let header = try TexturePreparation.decodeHeader(Data(contentsOf: url, options: .alwaysMapped))
+            if header.status == .compressed {
+                compressed += 1
+                bytes += header.levels.reduce(0) { $0 + $1.length }
+                source += header.width * header.height * 4
+            } else {
+                kept += 1
+            }
+        }
+        return String(format: "%d textures compressed (%.1f MB RGBA8 → %.1f MB BC7 with mipmaps), %d kept original",
+                      compressed, Double(source) / 1e6, Double(bytes) / 1e6, kept)
+    }
+
+    private struct Drawn {
+        var frames: [PerceptualImage] = []
+        var gpuMean = 0.0
+        var gpuP99 = 0.0
+        var allocatedMB = 0.0
+    }
+
+    /// Frames 0, 30 and 120 of `content` (a fixed 1/30 s clock, no scripts) and the
+    /// GPU time of frames 60…120, with the GPU memory the renderer holds.
+    private func draw(_ source: SceneMetalContent, size: SIMD2<Int>, device: MTLDevice) throws -> Drawn {
+        let content = source
+        let points = SIMD2<Float>(Float(size.x / 2), Float(size.y / 2))
+        let drawable = SIMD2<Float>(Float(size.x), Float(size.y))
+        let before = device.currentAllocatedSize
+        let view = MTKView(frame: CGRect(x: 0, y: 0, width: CGFloat(points.x), height: CGFloat(points.y)), device: device)
+        view.colorPixelFormat = .bgra8Unorm
+        view.autoResizeDrawable = false
+        view.drawableSize = CGSize(width: size.x, height: size.y)
+        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: nil, screenID: "texture-gate"))
+        defer { renderer.releaseContent() }
+        view.isPaused = true
+        renderer.setPlacement(.fill)
+        var now: CFTimeInterval = 1000
+        renderer.wallTime = { now }
+        renderer.setContent(content)
+        let deadline = Date().addingTimeInterval(120)
+        while !renderer.hasContent, Date() < deadline { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
+        let viewport = SceneViewport(drawableSize: drawable, pointSize: points, cursor: nil, frameRateLimit: 30)
+        // Let every pipeline compile with the clock held, so frame 0 is the same in both runs.
+        var settled = 0
+        while settled < 3, Date() < deadline {
+            renderer.renderShared([viewport])
+            renderer.lastCommandBuffer?.waitUntilCompleted()
+            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+            settled = renderer.hasPendingEffectPipelines ? 0 : settled + 1
+        }
+        var drawn = Drawn()
+        var gpu: [Double] = []
+        var peak = 0
+        for frame in 0...120 {
+            renderer.renderShared([viewport])
+            let commands = renderer.lastCommandBuffer
+            commands?.waitUntilCompleted()
+            peak = max(peak, device.currentAllocatedSize)
+            if frame >= 60, let commands { gpu.append((commands.gpuEndTime - commands.gpuStartTime) * 1000) }
+            if [0, 30, 120].contains(frame), let texture = renderer.sharedFrame {
+                drawn.frames.append(PerceptualImage(width: texture.width, height: texture.height,
+                                                    rgba: try TextureUploadTests.read(texture, device: device)))
+            }
+            now += 1.0 / 30
+        }
+        XCTAssertEqual(drawn.frames.count, 3)
+        gpu.sort()
+        drawn.gpuMean = gpu.isEmpty ? 0 : gpu.reduce(0, +) / Double(gpu.count)
+        drawn.gpuP99 = gpu.isEmpty ? 0 : gpu[min(gpu.count - 1, Int(Double(gpu.count) * 0.99))]
+        drawn.allocatedMB = Double(peak - before) / 1e6
+        return drawn
     }
 }

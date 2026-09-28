@@ -15,7 +15,7 @@ import Foundation
 /// (`quality`) before it is used; one that fails stays uncompressed.
 enum TextureCompressor {
     /// Changes whenever the encoder's output changes, so older cached blobs are rebuilt.
-    static let revision = 1
+    static let revision = 2
 
     /// Error weight per channel: alpha counts more, since an alpha step multiplies the whole
     /// colour (a texel at alpha 0 turning 4/255 shows over dark content, a colour step of 4 barely does).
@@ -570,6 +570,9 @@ enum TextureCompressor {
         var alphaSSIM: Double
         /// 99th percentile CIEDE2000 over sampled texels, composited over black.
         var deltaE99: Double
+        /// Mean luma SSIM over the windows holding hard edges (line art, text, outlines), where
+        /// the eye and the plan's text bar look hardest; 1 without any.
+        var edgeSSIM: Double = 1
     }
 
     /// How `candidate` compares with `reference` (both straight RGBA8, same size).
@@ -597,11 +600,13 @@ enum TextureCompressor {
         differences.sort()
         let p99 = differences.isEmpty ? 0 : differences[min(differences.count - 1, Int(Double(differences.count) * 0.99))]
         return Quality(lumaSSIM: ssim(lumaA, lumaB, width: width, height: height),
-                       alphaSSIM: ssim(alphaA, alphaB, width: width, height: height), deltaE99: p99)
+                       alphaSSIM: ssim(alphaA, alphaB, width: width, height: height), deltaE99: p99,
+                       edgeSSIM: ssim(lumaA, lumaB, width: width, height: height, minimumDeviation: 0.12))
     }
 
     /// Mean SSIM over non-overlapping 8×8 windows (K1 = 0.01, K2 = 0.03, L = 1).
-    static func ssim(_ a: [Float], _ b: [Float], width: Int, height: Int) -> Double {
+    /// `minimumDeviation`: only windows whose reference luma deviates at least this much (edges).
+    static func ssim(_ a: [Float], _ b: [Float], width: Int, height: Int, minimumDeviation: Double = 0) -> Double {
         let c1 = 0.0001, c2 = 0.0009
         var total = 0.0
         var windows = 0
@@ -616,6 +621,7 @@ enum TextureCompressor {
                 }
                 let ma = sa / n, mb = sb / n
                 let va = saa / n - ma * ma, vb = sbb / n - mb * mb, cov = sab / n - ma * mb
+                if minimumDeviation > 0, va < minimumDeviation * minimumDeviation { continue }
                 total += ((2 * ma * mb + c1) * (2 * cov + c2)) / ((ma * ma + mb * mb + c1) * (va + vb + c2))
                 windows += 1
             }
