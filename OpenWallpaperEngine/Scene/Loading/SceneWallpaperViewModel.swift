@@ -330,12 +330,12 @@ class SceneWallpaperViewModel: ObservableObject {
         let looseSceneURL = dir.appending(path: sceneFile)
         let hasPackage = FileManager.default.fileExists(atPath: pkgURL.path(percentEncoded: false))
 
-        // The in-memory parse's key: it covers every file of the wallpaper, the edits baked into
-        // the parse, and what it is built for.
+        // The in-memory parse's key: it covers every file of the wallpaper, the scene file the
+        // project names, the edits baked into the parse, and what it is built for.
         let request = preparationRequest(for: wallpaper, settingsKey: settingsKey)
         let key = request.key
         guard isCurrent() else { return nil }
-        var read = SceneRead(wallpaper: wallpaper, signature: key.name, hasPackage: hasPackage)
+        var read = SceneRead(wallpaper: wallpaper, signature: key.name + "|" + sceneFile, hasPackage: hasPackage)
         if let cached = Self.cachedParse(for: dir, signature: read.signature) {
             read.parser = cached.parser
             read.scene = cached.scene
