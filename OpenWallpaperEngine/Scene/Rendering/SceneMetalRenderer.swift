@@ -3157,6 +3157,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let parallaxMoved = frame.parallax != pacedParallax
         pacedParallax = frame.parallax
         guard let analysis = layerAnalysis else { return framePacing.record(.smooth, at: now) }
+        // Models pose every frame (the analysis counts the scene's own as animated stages); one a
+        // script created after the load counts the same.
+        if !spatial.models.isEmpty { return framePacing.record(.smooth, at: now) || !skipsIdleFrames }
         var particlesLive = false, particlesFollowCursor = false
         for system in particleSystems where particleObjectID(system).map({ scripts.isVisible($0) }) ?? true {
             particlesLive = true
