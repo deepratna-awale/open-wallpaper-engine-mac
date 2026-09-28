@@ -163,6 +163,43 @@ final class ScenePuppetTests: XCTestCase {
         XCTAssertEqual(ScenePuppetPose.bind(boneCount: 1).boneComponents, [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0])
     }
 
+    /// A layer without effects is drawn by WE through its mesh in the scene, so a part a bone moves
+    /// past the image's rect still shows: its canvas grows (in eighths of the image) to the posed
+    /// mesh, never shrinks, and the target lays that canvas over the image's texels.
+    func testTheCanvasCoversAMeshPosedPastTheImage() throws {
+        let image = Self.picture(width: 32, height: 16, opaque: true)
+        let mesh = Self.mesh(quads: [(SIMD4(-16, 8, 0, -8), SIMD4(0, 0, 0.5, 1)), (SIMD4(0, 8, 16, -8), SIMD4(0.5, 0, 1, 1))],
+                             bones: [0, 1])
+        let plan = try plan(mesh, bones: 2, size: SIMD2(32, 16))
+        let bind = renderer.canvas(plan, layerID: "puppet", pose: .bind(boneCount: 2))
+        XCTAssertEqual(bind, ScenePuppetCanvas.image(SIMD2(32, 16)), "the bind pose stays on the image")
+        var pose = ScenePuppetPose.bind(boneCount: 2)
+        pose.bones[1] = Self.translation(SIMD3(15, 0, 0))
+        let bounds = try XCTUnwrap(plan.posedBounds(pose))
+        XCTAssertEqual(bounds.max, SIMD2<Float>(31, 8))
+        let canvas = renderer.canvas(plan, layerID: "puppet", pose: pose)
+        // 15 past the right edge, in steps of 32 / 8 = 4: 16.
+        XCTAssertEqual(canvas, ScenePuppetCanvas(min: SIMD2(-16, -8), max: SIMD2(32, 8)))
+        XCTAssertEqual(renderer.canvas(plan, layerID: "puppet", pose: .bind(boneCount: 2)), canvas, "never shrinks")
+
+        XCTAssertTrue(renderer.waitUntilReady(plan))
+        let texture = try Self.texture(image, device: device)
+        let commands = try XCTUnwrap(queue.makeCommandBuffer())
+        let target = try XCTUnwrap(renderer.albedo(plan, ScenePuppetRenderer.Draw(
+            layerID: "puppet", source: texture, pose: pose, frame: BuiltinFrameContext(), values: EmptySceneValues(),
+            assetTexture: { _, _ in nil }, canvas: canvas), commandBuffer: commands))
+        commands.commit()
+        commands.waitUntilCompleted()
+        let pixels = try ScenePuppetTestSupport.rgba8(target, device: device)
+        func alpha(_ x: Int, _ y: Int) -> UInt8 { pixels[(y * 32 + x) * 4 + 3] }
+        // Canvas x −16…32 over 32 texels: the moved half (15…31) lands on texels 21…31, the gap
+        // it left (0…15) on 11…20, the unmoved half on 0…10.
+        let moved: UInt8 = alpha(30, 8), gap: UInt8 = alpha(15, 8), kept: UInt8 = alpha(3, 8)
+        XCTAssertEqual(moved, 255, "the part past the image draws")
+        XCTAssertEqual(gap, 0)
+        XCTAssertEqual(kept, 255)
+    }
+
     /// `SKINNING_ALPHA` (mesh flag 0x4) multiplies the texel's alpha by the weighted `g_BonesAlpha`.
     func testSkinningAlphaFadesByTheBonesAlpha() throws {
         let image = Self.picture(width: 16, height: 16, opaque: true)

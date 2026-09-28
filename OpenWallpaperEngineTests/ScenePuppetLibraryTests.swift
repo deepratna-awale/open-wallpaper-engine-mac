@@ -114,7 +114,9 @@ final class ScenePuppetLibraryTests: XCTestCase {
             let size = SIMD2(drawn.image.width, drawn.image.height)
             XCTAssertEqual(size, SIMD2(drawn.source.width, drawn.source.height), "\(item.id) \(id): the source's layout")
             let pose = try XCTUnwrap(renderer.puppetPose(ofLayer: id), "\(item.id) \(id)")
-            let result = Self.compare(plan, source: source, image: image, size: size, pose: pose)
+            // A layer without effects covers its posed mesh (`ScenePuppetCanvas`).
+            let result = Self.compare(plan, source: source, image: image, size: size, pose: pose,
+                                      canvas: renderer.puppetCanvas(ofLayer: id))
             // The oracle in the bind pose against the picture: a rig laid over its picture covers it.
             let bind = Self.compare(plan, source: source, image: source, size: size, pose: .bind(boneCount: plan.boneCount))
             let label = "\(item.id) layer \(id)"
@@ -158,8 +160,10 @@ final class ScenePuppetLibraryTests: XCTestCase {
     /// The mesh skinned with `pose` (`p′ = Σ wᵢ · bone[iᵢ] · p`) rasterised on the CPU at pixel
     /// centres (every `step`th row and column): the source sampled bilinearly at each centre's
     /// texture coordinate, triangles composited "over" in index order; compared with the drawn image there.
+    /// `canvas` is what of the mesh's space the image covers (nil: the image's rect).
     static func compare(_ plan: ScenePuppetPlan, source: [UInt8], image: [UInt8], size: SIMD2<Int>,
-                        pose: ScenePuppetPose) -> Comparison {
+                        pose: ScenePuppetPose, canvas: ScenePuppetCanvas? = nil) -> Comparison {
+        let canvas = canvas ?? .image(plan.imageSize)
         let content = SIMD2(Float(plan.contentPixels.x), Float(plan.contentPixels.y))
         let texture = SIMD2(Float(size.x), Float(size.y))
         let mesh = MDLMesh(materials: [], flags: plan.usesUInt32Indices ? 1 : 0, format: plan.format,
@@ -178,7 +182,7 @@ final class ScenePuppetLibraryTests: XCTestCase {
                 skinned += weights[index * 4 + k] * (pose.bones[Int(bones[index * 4 + k])] * bind)
             }
             let p = SIMD2(skinned.x, skinned.y)
-            return SIMD2((p.x / plan.imageSize.x + 0.5) * content.x, (0.5 - p.y / plan.imageSize.y) * content.y)
+            return SIMD2((p.x - canvas.min.x) / canvas.size.x * content.x, (canvas.max.y - p.y) / canvas.size.y * content.y)
         }
         let texel = (0..<count).map { SIMD2(uvs[$0 * 2], uvs[$0 * 2 + 1]) * texture }
         let unwarped = zip(pixel, texel).allSatisfy { simd_length($0 - $1) < 0.05 }

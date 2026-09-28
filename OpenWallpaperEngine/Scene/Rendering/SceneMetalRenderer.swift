@@ -124,6 +124,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// A puppet without effects: its material's other textures laid out like its posed mesh, by
     /// layer id and texture key (`ScenePuppetRenderer.warp`).
     private var puppetWarps: [String: [String: MTLTexture]] = [:]
+    /// A puppet without effects: what of its mesh's space its image covers, which its quad grows
+    /// to (`ScenePuppetCanvas`), by layer id.
+    private var puppetCanvases: [String: ScenePuppetCanvas] = [:]
     /// Asset textures used by effect passes, materialised once per content.
     private var effectAssetTextures: [String: MTLTexture] = [:]
     /// Each decoded image's upload, by the image: layers, clones, particle systems and effect
@@ -237,6 +240,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     }
     /// A puppet layer's pose as its image was last drawn (tests, diagnostics).
     func puppetPose(ofLayer id: String) -> ScenePuppetPose? { puppetAnimators[id]?.pose }
+    /// What of a puppet's mesh space its image covers, when not the image's rect (tests, diagnostics).
+    func puppetCanvas(ofLayer id: String) -> ScenePuppetCanvas? { puppetCanvases[id] }
     /// Effect passes encoded so far, for tests.
     var effectPassesEncoded: Int { effectGraph?.passesEncoded ?? 0 }
     /// The last frame's scene target, before the post-process (tests, diagnostics).
@@ -500,6 +505,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         puppetAlbedos.removeAll()
         puppetAnimators.removeAll()
         puppetWarps.removeAll()
+        puppetCanvases.removeAll()
         contentGenerationLock.lock()
         contentGeneration &+= 1
         let generation = contentGeneration
@@ -832,6 +838,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             puppetAlbedos.removeValue(forKey: id)
             puppetAnimators.removeValue(forKey: id)
             puppetWarps.removeValue(forKey: id)
+            puppetCanvases.removeValue(forKey: id)
         }
     }
 
@@ -1081,18 +1088,26 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 textFrames[layerIndex] = layerTextFrame(entry, boxSize: layerBaseSize(entry),
                                                         pixelsPerUnit: pixelsPerUnit)
             }
-            // Text's block is centred on its lines, not on the origin (`SceneTextLayout.boxCenter`).
-            let textCenter = textFrames[layerIndex]?.frame.textCenter ?? .zero
-            var draw = layerDraw(entry, baseSize: textFrames[layerIndex]?.baseSize ?? layerBaseSize(entry),
-                                 motion: motion, contentOffset: textCenter)
-            draw.placement = layerPlacement(entry, size: textFrames[layerIndex]?.baseSize ?? layerBaseSize(entry),
+            // A puppet's mesh draws its image before anything reads it: its effects, its own draw.
+            if let puppet = entry.layer.puppet {
+                drawPuppet(puppet, entry, frame: effectFrame, compositeSource: isCompositeSource, commandBuffer: commandBuffer)
+            }
+            // Text's block is centred on its lines, not on the origin (`SceneTextLayout.boxCenter`);
+            // a puppet's quad covers its canvas (`ScenePuppetCanvas`).
+            var baseSize = textFrames[layerIndex]?.baseSize ?? layerBaseSize(entry)
+            var contentOffset = textFrames[layerIndex]?.frame.textCenter ?? .zero
+            if let canvas = puppetCanvases[entry.layer.id], let puppet = entry.layer.puppet {
+                let scale = baseSize / puppet.imageSize
+                baseSize = canvas.size * scale
+                contentOffset = canvas.center * scale
+            }
+            var draw = layerDraw(entry, baseSize: baseSize, motion: motion, contentOffset: contentOffset)
+            draw.placement = layerPlacement(entry, size: baseSize,
                                             musicSyncLevel: draw.musicSyncLevel, motion: motion, camera: effectFrame.camera)
-            draw.placement?.offset += textCenter
+            draw.placement?.offset += contentOffset
             // A hidden layer that runs in the scene pass still makes the image its readers sample.
             let runsInScene = entry.layer.readsScene || compositeOrder.inScene.contains(entry.layer.id)
             if visible || runsInScene { draws[layerIndex] = draw }
-            // A puppet's mesh draws its image before anything reads it: its effects, its own draw.
-            if let puppet = entry.layer.puppet { drawPuppet(puppet, entry, frame: effectFrame, commandBuffer: commandBuffer) }
             // Layers that read the scene run inside the scene pass, once what's beneath them is drawn,
             // and so do the layers that sample them (`SceneLayerCompositeOrder.inScene`).
             if runsInScene { continue }
@@ -2514,15 +2529,22 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// this frame (docs/models-plan.md §4.3 M6, P2). Called only while the layer is visible, which
     /// is when WE evaluates its layers.
     private func drawPuppet(_ puppet: ScenePuppetPlan, _ entry: PreparedLayer, frame: BuiltinFrameContext,
-                            commandBuffer: MTLCommandBuffer) {
+                            compositeSource: Bool, commandBuffer: MTLCommandBuffer) {
         guard let puppets, let source = entry.frames.first?.texture else { return }
         // Posed this frame by `advanceRigs`, before the scripts ran.
         let animator = puppetAnimator(entry.layer.id, puppet)
+        // Without effects WE draws the mesh in the scene (docs/models-plan.md §2.13): nothing clips
+        // it at the image's rect, so the image covers the posed mesh and the quad grows with it.
+        // With effects (or as the image another layer samples) the mesh stays in the image.
+        let direct = entry.layer.weEffects.isEmpty && !compositeSource
+        let canvas = direct ? puppets.canvas(puppet, layerID: entry.layer.id, pose: animator.pose) : nil
+        puppetCanvases[entry.layer.id] = canvas
 
         puppetAlbedos[entry.layer.id] = puppets.albedo(puppet, ScenePuppetRenderer.Draw(
             layerID: entry.layer.id, source: source, pose: animator.pose, frame: frame,
             values: timelines.values,
-            assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) }),
+            assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
+            canvas: canvas),
             commandBuffer: commandBuffer)
         // Without effects WE draws the mesh in the scene through the layer's material, sampling
         // every texture at the mesh's coordinates: the quad draws with them laid out likewise.
@@ -2531,7 +2553,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         for case let .asset(key, assetSource) in pass.textures.values {
             guard let texture = effectAssetTexture(key: key, source: assetSource) else { continue }
             warped[key] = puppets.warp(puppet, layerID: entry.layer.id, key: key, texture: texture,
-                                       contentSize: assetSource.contentSize, pose: animator.pose,
+                                       contentSize: assetSource.contentSize, pose: animator.pose, canvas: canvas,
                                        commandBuffer: commandBuffer)
         }
         puppetWarps[entry.layer.id] = warped
