@@ -296,6 +296,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         openSettingsWindow()
     }
 
+    /// The Workshop tab, where Steam's login form is.
+    @objc func openSteamLogin() {
+        contentViewModel.topTabBarSelection = 1
+        openMainWindow()
+    }
+
     @objc func openMainWindow() {
         self.mainWindowController.window?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)

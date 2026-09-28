@@ -99,7 +99,8 @@ struct OnboardingView: View {
         case .steam:
             OnboardingSteamStep(steamCmd: steamCmd, installer: installer)
         case .assets:
-            OnboardingAssetsStep(assets: assets, steamCmd: steamCmd)
+            OnboardingAssetsStep(assets: assets, steamCmd: steamCmd,
+                                 logIn: { withAnimation(.easeInOut(duration: 0.15)) { flow.go(to: .steam) } })
         case .wallpapers:
             OnboardingWallpapersStep(steamCmd: steamCmd, imports: imports)
         case .done:

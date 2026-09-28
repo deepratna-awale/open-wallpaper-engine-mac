@@ -179,6 +179,8 @@ struct OnboardingSteamStep: View {
 struct OnboardingAssetsStep: View {
     @ObservedObject var assets: WallpaperEngineAssetsService
     @ObservedObject var steamCmd: SteamCmdService
+    /// Goes back to the Steam step.
+    let logIn: () -> Void
     @AppStorage(WallpaperEngineAssetsService.addsDefaultWallpapersKey, store: .app) private var addsDefaultWallpapers = true
     @State private var folderError: String?
 
@@ -225,7 +227,7 @@ struct OnboardingAssetsStep: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-                AssetsInstallProgressView(assets: assets)
+                AssetsInstallProgressView(assets: assets, logIn: logIn)
                 if let folderError {
                     Label(folderError, systemImage: "xmark.octagon.fill")
                         .foregroundStyle(.red)

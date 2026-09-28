@@ -24,7 +24,8 @@ final class WallpaperEngineAssetsService: ObservableObject {
 
     enum Failure: LocalizedError, Equatable {
         case steamCmdMissing
-        case notLoggedIn
+        /// SteamCMD has no login (or no cached session) for `account`, the remembered one if any.
+        case notLoggedIn(account: String?)
         case notOwned
         case steamCmd(String)
 
@@ -33,8 +34,11 @@ final class WallpaperEngineAssetsService: ObservableObject {
             case .steamCmdMissing:
                 return String(localized: "Set up SteamCMD in the Workshop tab first.",
                               comment: "Assets install error; SteamCMD is a program name")
+            case .notLoggedIn(let account?) where !account.isEmpty:
+                return String(localized: "SteamCMD has no saved login for \(account). Log in to Steam again, then install the assets.",
+                              comment: "Assets install error; %@ is a Steam account name")
             case .notLoggedIn:
-                return String(localized: "Log in to Steam in the Workshop tab first.", comment: "Assets install error")
+                return String(localized: "Log in to Steam first, then install the assets.", comment: "Assets install error")
             case .notOwned:
                 return String(localized: "This Steam account doesn't own Wallpaper Engine. The assets come from your own copy: buy it on Steam, or choose the folder of an install.",
                               comment: "Assets install error")
@@ -46,6 +50,8 @@ final class WallpaperEngineAssetsService: ObservableObject {
 
     @Published private(set) var status = Status()
     @Published private(set) var phase: Phase = .idle
+    /// Why the last install failed, for the action offered beside the message (e.g. "Log In").
+    @Published private(set) var lastFailure: Failure?
     /// Fires when the asset tree in use changed, so wallpapers can reload.
     let assetsChanged = PassthroughSubject<Void, Never>()
 
@@ -226,8 +232,30 @@ final class WallpaperEngineAssetsService: ObservableObject {
     /// also move into the storage folder; without, they are deleted with the rest of the download.
     func installFromSteam(includingDefaultWallpapers: Bool = true) {
         guard !isBusy else { return }
+        guard steamCmd.steamCmdPath != nil else { return fail(.steamCmdMissing) }
+        if steamCmd.isLoggedIn, !steamCmd.steamUsername.isEmpty {
+            return startInstall(includingDefaultWallpapers: includingDefaultWallpapers)
+        }
+        // Not logged in in this session: SteamCMD may still hold the remembered account's login.
+        guard let account = steamCmd.rememberedAccount, !steamCmd.isLoggingIn else {
+            return fail(.notLoggedIn(account: steamCmd.rememberedAccount))
+        }
+        lastFailure = nil
+        phase = .downloading(status: String(localized: "Logging in to Steam…", comment: "Assets install status"), progress: nil)
+        steamCmd.restoreSession { [weak self] loggedIn in
+            guard let self else { return }
+            self.phase = .idle
+            if loggedIn {
+                self.startInstall(includingDefaultWallpapers: includingDefaultWallpapers)
+            } else {
+                self.fail(.notLoggedIn(account: account))
+            }
+        }
+    }
+
+    private func startInstall(includingDefaultWallpapers: Bool) {
         guard let steamCmdPath = steamCmd.steamCmdPath else { return fail(.steamCmdMissing) }
-        guard steamCmd.isLoggedIn, !steamCmd.steamUsername.isEmpty else { return fail(.notLoggedIn) }
+        lastFailure = nil
         let storage: URL
         do {
             storage = try storageDirectory()
@@ -268,9 +296,12 @@ final class WallpaperEngineAssetsService: ObservableObject {
             if cancelled || error is CancellationError {
                 phase = .idle
             } else {
-                if (error as? Failure) == .notOwned {
+                let failure = error as? Failure
+                if failure == .notOwned {
                     defaults.set(steamCmd.steamUsername, forKey: Self.notOwnedAccountKey)
                 }
+                if case .notLoggedIn = failure { steamCmd.sessionExpired() }
+                lastFailure = failure
                 OWELog.error(.library, "Assets install failed: \(error.localizedDescription)")
                 phase = .failed(error.localizedDescription)
             }
@@ -279,6 +310,7 @@ final class WallpaperEngineAssetsService: ObservableObject {
     }
 
     private func fail(_ failure: Failure) {
+        lastFailure = failure
         phase = .failed(failure.errorDescription ?? "")
     }
 
@@ -316,7 +348,7 @@ private struct InstallJob {
             switch WallpaperEngineAssetsDownload.outcome(output: run.output, exitCode: run.exitCode, assetsPresent: present) {
             case .installed: break
             case .notOwned: throw WallpaperEngineAssetsService.Failure.notOwned
-            case .loginRequired: throw WallpaperEngineAssetsService.Failure.notLoggedIn
+            case .loginRequired: throw WallpaperEngineAssetsService.Failure.notLoggedIn(account: username)
             case .failed(let message): throw WallpaperEngineAssetsService.Failure.steamCmd(message)
             }
             onCopying()

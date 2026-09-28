@@ -4,6 +4,8 @@ import SwiftUI
 /// idle. Used by Settings › Assets and the setup assistant.
 struct AssetsInstallProgressView: View {
     @ObservedObject var assets: WallpaperEngineAssetsService
+    /// Where "Log In" goes after a failure for want of a Steam login; the Workshop tab by default.
+    var logIn: () -> Void = { AppDelegate.shared.openSteamLogin() }
 
     var body: some View {
         switch assets.phase {
@@ -35,9 +37,14 @@ struct AssetsInstallProgressView: View {
                 Text("Copying assets…")
             }
         case .failed(let message):
-            Label(message, systemImage: "xmark.octagon.fill")
-                .foregroundStyle(.red)
-                .textSelection(.enabled)
+            VStack(alignment: .leading, spacing: 6) {
+                Label(message, systemImage: "xmark.octagon.fill")
+                    .foregroundStyle(.red)
+                    .textSelection(.enabled)
+                if case .notLoggedIn = assets.lastFailure {
+                    Button("Log In…", action: logIn)
+                }
+            }
         }
     }
 }

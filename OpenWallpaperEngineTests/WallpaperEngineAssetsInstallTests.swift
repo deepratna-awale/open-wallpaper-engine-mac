@@ -183,7 +183,7 @@ final class WallpaperEngineAssetsInstallTests: XCTestCase {
                                        previewCacheRoot: scratch.appending(path: "previews"),
                                        downloadedIndex: DownloadedWallpaperIndex(defaults: makeDefaults(),
                                                                                  libraryDirectory: { self.scratch }),
-                                       presentPreview: { _ in }, restoresSession: false)
+                                       presentPreview: { _ in }, account: .inMemory(), restoresSession: false)
         let service = WallpaperEngineAssetsService(steamCmd: steamCmd, runner: UnusedRunner(), storageDirectory: { self.scratch },
                                                    defaults: makeDefaults())
         XCTAssertTrue(service.isMissing)
@@ -191,7 +191,7 @@ final class WallpaperEngineAssetsInstallTests: XCTestCase {
         XCTAssertEqual(service.phase, .failed(WallpaperEngineAssetsService.Failure.steamCmdMissing.errorDescription ?? ""))
         steamCmd.steamCmdPath = "/usr/bin/false"
         service.installFromSteam()
-        XCTAssertEqual(service.phase, .failed(WallpaperEngineAssetsService.Failure.notLoggedIn.errorDescription ?? ""))
+        XCTAssertEqual(service.phase, .failed(WallpaperEngineAssetsService.Failure.notLoggedIn(account: nil).errorDescription ?? ""))
         XCTAssertFalse(service.isBusy)
     }
 
@@ -265,6 +265,197 @@ extension WallpaperEngineAssetsInstallTests {
 
     private func makeTestDefaults() -> UserDefaults {
         UserDefaults(suiteName: "owe-tests-\(UUID().uuidString)")!
+    }
+}
+
+// MARK: - Steam session (the setup assistant's cached login, then Settings › Assets)
+
+/// SteamCMD's real output when `login <account>` finds no cached login under `@NoPromptForPassword`:
+/// "Loading Steam API...OK" is there, and steamcmd still exits 0 after `quit`.
+let steamCmdNoCachedLoginOutput = """
+Redirecting stderr to '/Users/me/Library/Application Support/Steam/logs/stderr.txt'
+Steam Console Client (c) Valve Corporation - version 1726176498
+-- type 'quit' to exit --
+Loading Steam API...OK
+Logging in user 'someone' to Steam Public...
+Cached credentials not found.
+password prompt disabled
+"""
+
+let steamCmdCachedLoginOutput = """
+Loading Steam API...OK
+Logging in using cached credentials.
+Logging in user 'someone' [U:1:12345] to Steam Public...OK
+Waiting for client config...OK
+Waiting for user info...OK
+"""
+
+extension WallpaperEngineAssetsInstallTests {
+    @MainActor
+    private func makeSteamCmd(runner: SteamCmdRunning, account: SteamCmdAccountMemory) -> SteamCmdService {
+        let storage: URL = scratch
+        let steamCmd = SteamCmdService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { storage }),
+                                       runner: runner, storageDirectory: { storage },
+                                       previewCacheRoot: storage.appending(path: "previews"),
+                                       downloadedIndex: DownloadedWallpaperIndex(defaults: makeDefaults(),
+                                                                                 libraryDirectory: { storage }),
+                                       presentPreview: { _ in }, account: account, restoresSession: false)
+        steamCmd.steamCmdPath = "/usr/bin/false"
+        return steamCmd
+    }
+
+    @MainActor
+    private func waitUntilSettled(_ service: WallpaperEngineAssetsService) {
+        let settled = expectation(for: NSPredicate { _, _ in
+            MainActor.assumeIsolated {
+                switch service.phase {
+                case .idle, .failed: return true
+                case .downloading, .copying: return false
+                }
+            }
+        }, evaluatedWith: nil)
+        wait(for: [settled], timeout: 10)
+    }
+
+    /// The reported bug: "I've Signed In" with no cached login used to count as a login, because
+    /// "Loading Steam API...OK" and exit 0 passed for success; the install then failed with
+    /// "Log in to Steam". The login now fails where the user made it.
+    @MainActor
+    func testACachedLoginWithoutASavedSessionIsNotALogin() {
+        XCTAssertEqual(SteamCmdService.loginOutcome(output: steamCmdNoCachedLoginOutput), .noCachedLogin)
+        XCTAssertEqual(SteamCmdService.loginOutcome(output: "Loading Steam API...OK\n"), .failed)
+        XCTAssertEqual(SteamCmdService.loginOutcome(output: steamCmdCachedLoginOutput), .loggedIn)
+        XCTAssertEqual(SteamCmdService.loginOutcome(output: "Logged in OK\r\n"), .loggedIn)
+        XCTAssertEqual(SteamCmdService.loginOutcome(output: "Logging in user 'a' to Steam Public...FAILED (Rate Limit Exceeded)"), .failed)
+        XCTAssertEqual(SteamCmdService.loginOutcome(output: "This account is protected by a Steam Guard mobile authenticator."),
+                       .guardCodeRequired)
+
+        let memory = SteamCmdAccountMemory.inMemory()
+        let steamCmd = makeSteamCmd(runner: SteamSessionRunner(loginOutput: steamCmdNoCachedLoginOutput), account: memory)
+        steamCmd.loginWithCachedSession(username: "someone", failureMessage: "no session")
+        let failed = expectation(for: NSPredicate { _, _ in MainActor.assumeIsolated { steamCmd.loginError != nil } },
+                                 evaluatedWith: nil)
+        wait(for: [failed], timeout: 5)
+        XCTAssertFalse(steamCmd.isLoggedIn)
+        XCTAssertNil(memory.load(), "a failed login isn't remembered")
+    }
+
+    /// The exact sequence: cached login succeeds → the app is activated again (re-detection) →
+    /// Settings › Assets › Install from Steam. The install runs with the account.
+    @MainActor
+    func testCachedLoginThenActivationThenInstallRuns() throws {
+        let runner = SteamSessionRunner(loginOutput: steamCmdCachedLoginOutput)
+        let steamcmd = scratch.appending(path: "bin/steamcmd")
+        try FileManager.default.createDirectory(at: steamcmd.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data("#!/bin/sh\n".utf8).write(to: steamcmd)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: steamcmd.path)
+        let steamCmd = SteamCmdService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { self.scratch }),
+                                       runner: runner, storageDirectory: { self.scratch },
+                                       previewCacheRoot: scratch.appending(path: "previews"),
+                                       downloadedIndex: DownloadedWallpaperIndex(defaults: makeDefaults(),
+                                                                                 libraryDirectory: { self.scratch }),
+                                       presentPreview: { _ in },
+                                       locator: { SteamCmdLocator(customPath: steamcmd.path, ownInstallDirectory: self.scratch,
+                                                                  homeDirectory: self.scratch, systemRoot: self.scratch) },
+                                       asksLoginShell: false, account: .inMemory(), restoresSession: false)
+        steamCmd.detectSteamCmd()
+        steamCmd.loginWithCachedSession(username: "someone")
+        let loggedIn = expectation(for: NSPredicate { _, _ in MainActor.assumeIsolated { steamCmd.isLoggedIn } }, evaluatedWith: nil)
+        wait(for: [loggedIn], timeout: 5)
+
+        steamCmd.detectSteamCmd() // applicationDidBecomeActive, opening Settings
+        XCTAssertTrue(steamCmd.isLoggedIn)
+        XCTAssertEqual(steamCmd.steamUsername, "someone")
+
+        let service = WallpaperEngineAssetsService(steamCmd: steamCmd, runner: runner, storageDirectory: { self.scratch },
+                                                   defaults: makeDefaults())
+        service.installFromSteam(includingDefaultWallpapers: false)
+        waitUntilSettled(service)
+        XCTAssertEqual(service.phase, .idle)
+        XCTAssertTrue(WallpaperEngineAssets.isAssetTree(WallpaperEngineAssets.cacheDirectory(in: scratch)))
+    }
+
+    /// Not logged in this session, but an account is remembered: the install restores SteamCMD's
+    /// cached session first instead of failing.
+    @MainActor
+    func testInstallRestoresTheRememberedSessionFirst() throws {
+        let runner = SteamSessionRunner(loginOutput: steamCmdCachedLoginOutput)
+        let memory = SteamCmdAccountMemory.inMemory("someone")
+        let steamCmd = makeSteamCmd(runner: runner, account: memory)
+        XCTAssertFalse(steamCmd.isLoggedIn)
+        let service = WallpaperEngineAssetsService(steamCmd: steamCmd, runner: runner, storageDirectory: { self.scratch },
+                                                   defaults: makeDefaults())
+        service.installFromSteam(includingDefaultWallpapers: false)
+        XCTAssertTrue(service.isBusy)
+        waitUntilSettled(service)
+        XCTAssertEqual(service.phase, .idle)
+        XCTAssertTrue(steamCmd.isLoggedIn)
+        XCTAssertEqual(runner.scripts.map { $0.lines.last ?? "" }, [#"login "someone""#, #"app_update "431960" "validate""#])
+    }
+
+    /// No session to restore: the error names the account and offers "Log In".
+    @MainActor
+    func testWithoutASessionTheErrorNamesTheAccount() {
+        let runner = SteamSessionRunner(loginOutput: steamCmdNoCachedLoginOutput)
+        let steamCmd = makeSteamCmd(runner: runner, account: .inMemory("someone"))
+        let service = WallpaperEngineAssetsService(steamCmd: steamCmd, runner: runner, storageDirectory: { self.scratch },
+                                                   defaults: makeDefaults())
+        service.installFromSteam()
+        waitUntilSettled(service)
+        XCTAssertEqual(service.lastFailure, .notLoggedIn(account: "someone"))
+        guard case .failed(let message) = service.phase else { return XCTFail("\(service.phase)") }
+        XCTAssertTrue(message.contains("someone"), message)
+    }
+
+    /// The session was there at login but SteamCMD lost it by the install: the app shows the
+    /// account as logged out again, and the error names it.
+    @MainActor
+    func testAnInstallThatFindsNoSessionLogsOut() {
+        let runner = SteamSessionRunner(loginOutput: steamCmdCachedLoginOutput, installOutput: steamCmdNoCachedLoginOutput)
+        let steamCmd = makeSteamCmd(runner: runner, account: .inMemory())
+        steamCmd.isLoggedIn = true
+        steamCmd.steamUsername = "someone"
+        let service = WallpaperEngineAssetsService(steamCmd: steamCmd, runner: runner, storageDirectory: { self.scratch },
+                                                   defaults: makeDefaults())
+        service.installFromSteam()
+        waitUntilSettled(service)
+        XCTAssertEqual(service.lastFailure, .notLoggedIn(account: "someone"))
+        XCTAssertFalse(steamCmd.isLoggedIn)
+    }
+}
+
+extension SteamCmdAccountMemory {
+    /// Keeps the account in memory: tests never touch the Keychain.
+    static func inMemory(_ initial: String? = nil) -> SteamCmdAccountMemory {
+        final class Box: @unchecked Sendable { var value: String? }
+        let box = Box()
+        box.value = initial
+        return SteamCmdAccountMemory(load: { box.value }, save: { box.value = $0 })
+    }
+}
+
+/// A fake SteamCMD: a `login`-only script prints `loginOutput`; an `app_update` one prints
+/// `installOutput`, or installs like `InstallingRunner` when there is none.
+private final class SteamSessionRunner: SteamCmdRunning, @unchecked Sendable {
+    private let loginOutput: String
+    private let installOutput: String?
+    private let lock = NSLock()
+    private var recorded: [SteamCmdScript] = [] // Owned by `lock`.
+    var scripts: [SteamCmdScript] { lock.withLock { recorded } }
+
+    init(loginOutput: String, installOutput: String? = nil) {
+        self.loginOutput = loginOutput
+        self.installOutput = installOutput
+    }
+
+    func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?,
+             onOutput: @escaping (String) -> Void) -> SteamCmdRun {
+        lock.withLock { recorded.append(script) }
+        guard script.lines.contains(where: { $0.hasPrefix("app_update") }) else {
+            return SteamCmdRun(output: loginOutput, exitCode: 0)
+        }
+        if let installOutput { return SteamCmdRun(output: installOutput, exitCode: 0) }
+        return InstallingRunner().run(executable: executable, script: script, timeout: timeout, onOutput: onOutput)
     }
 }
 
