@@ -308,15 +308,12 @@ final class TexturePreparationLibraryTests: XCTestCase {
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         try XCTSkipUnless(device.supportsBCTextureCompression)
         let savedRoot = TexturePreparation.root
-        let savedStore = SceneWallpaperViewModel.sceneCacheStore
         let root = URL(fileURLWithPath: environment["OWE_TEXTURE_GATE_CACHE"]
                        ?? FileManager.default.temporaryDirectory.appending(path: "owe-texture-gate").path)
         try? FileManager.default.removeItem(at: root)
         TexturePreparation.root = root
-        SceneWallpaperViewModel.sceneCacheStore = nil
         defer {
             TexturePreparation.root = savedRoot
-            SceneWallpaperViewModel.sceneCacheStore = savedStore
         }
         var report: [String] = []
         var failures: [String] = []

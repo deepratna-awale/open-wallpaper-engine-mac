@@ -52,7 +52,7 @@ enum TexturePreparation {
         }
     }
 
-    static var defaultRoot: URL { SceneCacheStore.defaultRoot.appending(path: "textures", directoryHint: .isDirectory) }
+    static var defaultRoot: URL { WallpaperStorage.directory.appending(path: ".owe-cache/textures", directoryHint: .isDirectory) }
 
     /// Where blobs live; tests point it elsewhere.
     nonisolated(unsafe) static var root: URL = defaultRoot

@@ -312,8 +312,7 @@ class SceneWallpaperViewModel: ObservableObject {
         stateLock.withLock { loadGeneration == generation }
     }
 
-    /// Reads `wallpaper`'s scene: the in-memory parse, else the scene cache file, else the scene
-    /// file itself (and a background preparation of the cache file). Touches no loaded state, so
+    /// Reads `wallpaper`'s scene: the in-memory parse, else the scene file itself. Touches no loaded state, so
     /// it runs without the scene lock; nil when `isCurrent` says a newer load took over.
     private func readScene(_ wallpaper: WEWallpaper, isCurrent: () -> Bool) -> SceneRead? {
         let signpost = OWESignpost.begin(OWESignpost.scene, "loadScene")
@@ -331,34 +330,23 @@ class SceneWallpaperViewModel: ObservableObject {
         let looseSceneURL = dir.appending(path: sceneFile)
         let hasPackage = FileManager.default.fileExists(atPath: pkgURL.path(percentEncoded: false))
 
-        // One key for the in-memory parse and the cache file, computed once: it covers every
-        // file of the wallpaper, the edits baked into the parse, and what the file is built for.
+        // The in-memory parse's key: it covers every file of the wallpaper, the edits baked into
+        // the parse, and what it is built for.
         let request = preparationRequest(for: wallpaper, settingsKey: settingsKey)
         let key = request.key
         guard isCurrent() else { return nil }
         var read = SceneRead(wallpaper: wallpaper, signature: key.name, hasPackage: hasPackage)
-        var resolvedPlan: Data?
         if let cached = Self.cachedParse(for: dir, signature: read.signature) {
             read.parser = cached.parser
             read.scene = cached.scene
             read.document = cached.document
             read.source = "shared parse"
-        } else if let store = Self.sceneCacheStore,
-                  let file = store.read(wallpaper: request.wallpaperID, key: key),
-                  let plan = file.sections[.scenePlan],
-                  let decoded = try? JSONDecoder().decode(WEScene.self, from: plan) {
-            // The prepared scene plan already has the edits applied; the package is still opened
-            // for the assets it holds.
-            read.parser = hasPackage ? try? PKGParser(url: pkgURL) : nil
-            read.scene = decoded
-            read.document = Self.document(plan)
-            read.source = "scene cache"
         } else if hasPackage {
             do {
                 let parser = try PKGParser(url: pkgURL)
                 read.parser = parser
                 if let data = parser.extractFile(named: sceneFile) {
-                    (read.scene, read.document, resolvedPlan) = try decodeScene(data, edits: request.edits)
+                    (read.scene, read.document) = try decodeScene(data, edits: request.edits)
                 }
             } catch {
                 Self.log("Failed to parse PKG: \(error)")
@@ -367,15 +355,10 @@ class SceneWallpaperViewModel: ObservableObject {
             // Loose files (no .pkg)
             do {
                 let data = try Data(contentsOf: looseSceneURL)
-                (read.scene, read.document, resolvedPlan) = try decodeScene(data, edits: request.edits)
+                (read.scene, read.document) = try decodeScene(data, edits: request.edits)
             } catch {
                 Self.log("Failed to parse loose \(sceneFile): \(error)")
             }
-        }
-        // A miss prepares the cache file in the background from the plan just parsed.
-        if let resolvedPlan, let store = Self.sceneCacheStore {
-            ScenePreparation.schedule(request, key: key, priority: .currentWallpaper,
-                                      store: store, scenePlan: resolvedPlan)
         }
         guard isCurrent() else { return nil }
         if let scene = read.scene {
@@ -449,20 +432,13 @@ class SceneWallpaperViewModel: ObservableObject {
         bumpRevision()
     }
 
-    /// Where prepared scenes are cached (`<Wallpaper Storage>/.owe-cache`); nil turns the cache off.
-    /// Off by default inside test runs, so loading fixtures writes nothing into the user's storage.
-    nonisolated(unsafe) static var sceneCacheStore: SceneCacheStore? =
-        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil
-            ? SceneCacheStore(root: SceneCacheStore.defaultRoot) : nil
-
     /// What preparing `wallpaper` reads, as the scene cache key covers it.
     private func preparationRequest(for wallpaper: WEWallpaper, settingsKey: String) -> ScenePreparation.Request {
         let stored = UserDefaults.app.dictionary(forKey: settingsKey) as? [String: String] ?? [:]
         let split = ScenePreparation.split(storedValues: stored)
         let dir = wallpaper.wallpaperDirectory
         let settings = stateLock.withLock { pendingRenderSettings }
-        return ScenePreparation.Request(wallpaperID: Self.workshopId(of: wallpaper) ?? Self.localWallpaperID(dir),
-                                        directory: dir, sceneFile: wallpaper.project.file,
+        return ScenePreparation.Request(directory: dir, sceneFile: wallpaper.project.file,
                                         edits: split.edits, userProperties: split.properties,
                                         settings: String(describing: settings.contentKey),
                                         displays: SceneCacheKey.Display.connected())
@@ -470,9 +446,9 @@ class SceneWallpaperViewModel: ObservableObject {
 
     /// The scene and the document it was decoded from (for the scripts; nil when it isn't JSON the
     /// tolerant reader takes).
-    private func decodeScene(_ data: Data, edits: [String: String]) throws -> (WEScene, SceneJSON?, Data) {
+    private func decodeScene(_ data: Data, edits: [String: String]) throws -> (WEScene, SceneJSON?) {
         let resolved = try ScenePreparation.resolvedScene(data, edits: edits)
-        return (try JSONDecoder().decode(WEScene.self, from: resolved), Self.document(resolved), resolved)
+        return (try JSONDecoder().decode(WEScene.self, from: resolved), Self.document(resolved))
     }
 
     private static func document(_ data: Data) -> SceneJSON? {
