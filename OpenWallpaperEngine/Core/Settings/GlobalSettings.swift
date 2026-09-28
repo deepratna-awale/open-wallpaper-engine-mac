@@ -217,6 +217,8 @@ struct GlobalSettings: Codable, Equatable {
     /// WE's `volumetrics` setting, on the same scale as `shadows` [?: default taken as shadows'].
     var volumetrics = GSLightingQuality.medium
     var fps: Double = 30
+    /// The Quality↔Efficiency slider's stop (`QualityEfficiency`): 1 quality … 5 efficiency.
+    var qualityEfficiency = QualityEfficiency.defaultStop
     /// The particle budget per scene (`ParticleBudget`).
     var particleBudget = GSParticleBudget.medium
     /// "Optimise textures" (`TexturePreparation`): scenes' colour images are compressed once to
@@ -271,6 +273,7 @@ struct GlobalSettings: Codable, Equatable {
         case otherApplicationFocused, otherApplicationMaximized, otherApplicationFullscreen, otherApplicationPlayingAudio
         case displayAsleep
         case laptopOnBattery, textureResolution, shadows, volumetrics, fps, particleBudget, optimiseTextures
+        case qualityEfficiency
         case antiAliasing = "msaa"
         case renderResolution, sceneDetail
         case postProcessing = "postProcessingQuality"
@@ -311,6 +314,8 @@ extension GlobalSettings {
         read(.shadows, &shadows)
         read(.volumetrics, &volumetrics)
         read(.fps, &fps)
+        read(.qualityEfficiency, &qualityEfficiency)
+        qualityEfficiency = QualityEfficiency(stop: qualityEfficiency).stop
         read(.particleBudget, &particleBudget)
         read(.optimiseTextures, &optimiseTextures)
         read(.autoStart, &autoStart)

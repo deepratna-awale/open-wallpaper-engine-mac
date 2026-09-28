@@ -175,6 +175,7 @@ class GlobalSettingsViewModel: ObservableObject {
     func setQuality(_ quality: GSQuality) {
         self.settings.shadows = quality.shadows
         self.settings.volumetrics = quality.volumetrics
+        self.settings.qualityEfficiency = QualityEfficiency(preset: quality).stop
         switch quality {
         case .low:
             self.settings.antiAliasing = .none
