@@ -1,0 +1,416 @@
+{
+ "?installdirectory": "<str>",
+ "<username>": {
+  "general": {
+   "browser": {
+    "advertiseexplore": false,
+    "advertisesendtomobile": true,
+    "advertiseworkshop": false,
+    "advertiseworkshoppopup": false,
+    "agegateconfirmed": true,
+    "authorblocklistnames": [],
+    "defaultfilterconfig": {
+     "Anime": true,
+     "recommendedresolution": false,
+     "showotherresolution": true
+    },
+    "explore": {
+     "custom": [],
+     "disliked": [],
+     "favorites": [],
+     "liked": []
+    },
+    "filterinfo": {
+     "installed": {
+      "categorytags": {
+       "Preset": true,
+       "Wallpaper": true
+      },
+      "descending": false,
+      "ratingtags": {
+       "Everyone": true,
+       "Mature": true,
+       "Questionable": true
+      },
+      "resolutiontags": {
+       "1280 x 720": true,
+       "1366 x 768": true,
+       "1920 x 1080": true,
+       "2560 x 1440": true,
+       "3840 x 2160": true,
+       "Dual 3840 x 1080": true,
+       "Dual 5120 x 1440": true,
+       "Dual 7680 x 2160": true,
+       "Dual Standard Definition": true,
+       "Dynamic resolution": true,
+       "Other resolution": true,
+       "Portrait 1080 x 1920": true,
+       "Portrait 1440 x 2560": true,
+       "Portrait 2160 x 3840": true,
+       "Portrait 720 x 1280": true,
+       "Portrait Standard Definition": true,
+       "Standard Definition": true,
+       "Triple 11520 x 2160": true,
+       "Triple 4096 x 768": true,
+       "Triple 5760 x 1080": true,
+       "Triple 7680 x 1440": true,
+       "Triple Standard Definition": true,
+       "Ultrawide 2560 x 1080": true,
+       "Ultrawide 3440 x 1440": true,
+       "Ultrawide Standard Definition": true
+      },
+      "sort": "<str>",
+      "sourcetags": {
+       "Local": true,
+       "Official": true,
+       "Workshop": true
+      },
+      "tags": {
+       "Abstract": true,
+       "Animal": true,
+       "Anime": true,
+       "CGI": true,
+       "Cartoon": true,
+       "Cyberpunk": true,
+       "Fantasy": true,
+       "Game": true,
+       "Girls": true,
+       "Guys": true,
+       "Landscape": true,
+       "MMD": true,
+       "Medieval": true,
+       "Memes": true,
+       "Music": true,
+       "Nature": true,
+       "Pixel art": true,
+       "Relaxing": true,
+       "Retro": true,
+       "Sci-Fi": true,
+       "Sports": true,
+       "Technology": true,
+       "Television": true,
+       "Unspecified": true,
+       "Vehicle": true
+      },
+      "type": "<str>",
+      "typetags": {
+       "Application": true,
+       "Scene": true,
+       "Video": true,
+       "Web": true
+      },
+      "utilitytags": {}
+     },
+     "workshop": {
+      "categorytags": {
+       "Preset": true,
+       "Wallpaper": true
+      },
+      "descending": false,
+      "filterTitle": true,
+      "ratingtags": {
+       "Everyone": true,
+       "Mature": false,
+       "Questionable": true
+      },
+      "resolutiontags": {
+       "1280 x 720": true,
+       "1366 x 768": true,
+       "1920 x 1080": true,
+       "2560 x 1440": true,
+       "3840 x 2160": true,
+       "Dual 3840 x 1080": true,
+       "Dual 5120 x 1440": true,
+       "Dual 7680 x 2160": true,
+       "Dual Standard Definition": true,
+       "Dynamic resolution": true,
+       "Other resolution": true,
+       "Portrait 1080 x 1920": true,
+       "Portrait 1440 x 2560": true,
+       "Portrait 2160 x 3840": true,
+       "Portrait 720 x 1280": true,
+       "Portrait Standard Definition": true,
+       "Standard Definition": true,
+       "Triple 11520 x 2160": true,
+       "Triple 4096 x 768": true,
+       "Triple 5760 x 1080": true,
+       "Triple 7680 x 1440": true,
+       "Triple Standard Definition": true,
+       "Ultrawide 2560 x 1080": true,
+       "Ultrawide 3440 x 1440": true,
+       "Ultrawide Standard Definition": true
+      },
+      "sort": "<str>",
+      "sourcetags": {
+       "Local": true,
+       "Official": true,
+       "Workshop": true
+      },
+      "tags": {
+       "Abstract": true,
+       "Animal": true,
+       "Anime": true,
+       "CGI": true,
+       "Cartoon": true,
+       "Cyberpunk": true,
+       "Fantasy": true,
+       "Game": true,
+       "Girls": true,
+       "Guys": true,
+       "Landscape": true,
+       "MMD": true,
+       "Medieval": true,
+       "Memes": true,
+       "Music": true,
+       "Nature": true,
+       "Pixel art": true,
+       "Relaxing": true,
+       "Retro": true,
+       "Sci-Fi": true,
+       "Sports": true,
+       "Technology": true,
+       "Television": true,
+       "Unspecified": false,
+       "Vehicle": true
+      },
+      "type": "<str>",
+      "typetags": {
+       "Application": false,
+       "Scene": true,
+       "Video": true,
+       "Web": true
+      },
+      "utilitytags": {}
+     }
+    },
+    "folders": [],
+    "lastselectedmonitor": "<str>",
+    "paireddevices": [],
+    "pairingguid": "<str>",
+    "resultsperpage": "<number>",
+    "showmonitorselectiononstart": true,
+    "viewiconsize": "<str>"
+   },
+   "editor": {
+    "animationoptionsautokeyframe": true,
+    "autosavingenabled": true,
+    "cameracursorspeed2d": "<number>",
+    "cameracursorspeed3d": "<number>",
+    "hasshownworkshoprules": true,
+    "particleeditorsettings": {
+     "color": "<str>",
+     "showaxis": true,
+     "showstats": true
+    },
+    "previewratio": "<str>",
+    "recentfiles": [
+     "<str>",
+     "... 5 items"
+    ],
+    "savedlayouts": {
+     "scene": {
+      "background": {
+       "first": {
+        "panels": [
+         "<str>",
+         "... 2 items"
+        ]
+       },
+       "orientation": "<str>",
+       "position": "<number>",
+       "second": {
+        "align": "<str>",
+        "first": {
+         "panels": [
+          "<str>",
+          "... 1 items"
+         ]
+        },
+        "orientation": "<str>",
+        "position": "<number>",
+        "second": {
+         "panels": [
+          "<str>",
+          "... 1 items"
+         ]
+        }
+       }
+      },
+      "floating": []
+     },
+     "simple": {
+      "background": {
+       "first": {
+        "panels": [
+         "<str>",
+         "... 1 items"
+        ]
+       },
+       "orientation": "<str>",
+       "position": "<number>",
+       "second": {
+        "panels": [
+         "<str>",
+         "... 1 items"
+        ]
+       }
+      },
+      "floating": []
+     }
+    },
+    "scriptconsoleautoscroll": true,
+    "showgrid": true,
+    "showonstartup": true,
+    "showparticlecollision": true,
+    "showselectionbox": true,
+    "showstats": false,
+    "showstatsmode": "<str>",
+    "suggestimportresolution": true
+   },
+   "user": {
+    "adjustdwmcolormode": "<str>",
+    "adjustdwmcolorwarning": true,
+    "anticrash": "<str>",
+    "apprules": [],
+    "audioinputdevice": "<str>",
+    "audioinputthreshold": "<number>",
+    "audioinputvolume": "<number>",
+    "autostart": true,
+    "autostartscheduler": true,
+    "autostartx64": true,
+    "browsetransition": {
+     "transition": "<str>",
+     "transitiontime": "<number>"
+    },
+    "cefcommandline": "<str>",
+    "fps": "<number>",
+    "hasshownhighprioritywarning": true,
+    "hasshownwelcomedialog": true,
+    "highprecisiontimer": true,
+    "iconopacity": "<number>",
+    "language": "<str>",
+    "loglevel": "<str>",
+    "mediablocklist": "<str>",
+    "mediaintegration": true,
+    "monitordetection": "<str>",
+    "monitormap": {
+     "<path-key-0>": {
+      "absx": "<number>",
+      "absy": "<number>",
+      "location": "<number>",
+      "relx": "<number>",
+      "rely": "<number>",
+      "timestamp": "<number>"
+     },
+     "<path-key-1>": {
+      "absx": "<number>",
+      "absy": "<number>",
+      "location": "<number>",
+      "relx": "<number>",
+      "rely": "<number>",
+      "timestamp": "<number>"
+     }
+    },
+    "msaa": "<str>",
+    "overridelockscreen": false,
+    "overridewallpaper": false,
+    "pausevram": false,
+    "playbackaudio": "<str>",
+    "playbackfocus": "<str>",
+    "playbackfullscreen": "<str>",
+    "playbackmaximized": "<str>",
+    "playbackonbattery": "<str>",
+    "playbacksleep": "<str>",
+    "plugindelay": "<number>",
+    "plugins": {
+     "ledextensions": {
+      "enabled": true
+     }
+    },
+    "postprocessing": "<str>",
+    "preset": "<str>",
+    "processpriority": "<str>",
+    "reflection": true,
+    "reloadaudio": true,
+    "resolution": "<str>",
+    "safemode": false,
+    "shadows": "<str>",
+    "slideshowkiller": false,
+    "steamlanguage": "<str>",
+    "uicmd": "<str>",
+    "uieffects": "<str>",
+    "uihardwareacceleration": true,
+    "uiquality": "<str>",
+    "uiskin": "<str>",
+    "uiskinseasonal": true,
+    "unpauseaero": true,
+    "vdesktopenabled": false,
+    "videoaudiooutput": true,
+    "videoframework": "<str>",
+    "videohardwareacceleration": true,
+    "videoloopmode": "<str>",
+    "videomfstutterhack": false,
+    "videoreadmode": "<str>",
+    "volumetrics": "<str>",
+    "webmframework": "<str>",
+    "windowupdaterate": "<number>"
+   },
+   "wallpaperconfig": {
+    "layout": "<number>",
+    "profile": {
+     "splits": {}
+    },
+    "selectedwallpapers": {
+     "Monitor1": {
+      "file": "<str>"
+     }
+    }
+   },
+   "wallpaperconfigrecent": [
+    {
+     "config": {
+      "layout": "<str>",
+      "profile": "<str>",
+      "selectedwallpapers": {
+       "Monitor0": {
+        "file": "<str>"
+       },
+       "Monitor1": {
+        "file": "<str>"
+       }
+      }
+     },
+     "playlist": false,
+     "title": "<str>"
+    },
+    "... 5 items"
+   ],
+   "wallpaperconfigscreensaver": {
+    "layout": "<number>",
+    "sameaswallpaper": true
+   }
+  },
+  "version": "<number>",
+  "wproperties": {
+   "<path-key-0>": {
+    "Monitor0": {
+     "alignment": "<number>"
+    },
+    "Monitor1": {
+     "alignmentfliph": true,
+     "rate": "<number>"
+    }
+   },
+   "<path-key-1>": {
+    "Monitor1": {
+     "alignmentposition": "<number>"
+    }
+   },
+   "<path-key-2>": {
+    "Monitor1": {
+     "raintype": "<str>"
+    }
+   }
+  }
+ }
+}

@@ -1,0 +1,62 @@
+"AppWorkshop"
+{
+	"appid"		"431960"
+	"SizeOnDisk"		"1776132370"
+	"NeedsUpdate"		"0"
+	"NeedsDownload"		"0"
+	"TimeLastUpdated"		"1790569749"
+	"TimeLastFullCheck"		"1790569874"
+	"TimeLastAppRan"		"1790513417"
+	"LastBuildID"		"23967692"
+	"WorkshopItemsInstalled"
+	{
+		"861933876"
+		{
+			"size"		"1258121"
+			"timeupdated"		"1539454672"
+			"manifest"		"2750677754138937401"
+		}
+		"920684434"
+		{
+			"size"		"5868162"
+			"timeupdated"		"1494122464"
+			"manifest"		"1654727449120615314"
+		}
+		"1081733658"
+		{
+			"size"		"2861727"
+			"timeupdated"		"1671716441"
+			"manifest"		"1386516767308653904"
+		}
+	}
+	"WorkshopItemDetails"
+	{
+		"861933876"
+		{
+			"manifest"		"2750677754138937401"
+			"timeupdated"		"1539454672"
+			"timetouched"		"1790512725"
+			"subscribedby"		"<steamid>"
+			"latest_timeupdated"		"1539454672"
+			"latest_manifest"		"2750677754138937401"
+		}
+		"920684434"
+		{
+			"manifest"		"1654727449120615314"
+			"timeupdated"		"1494122464"
+			"timetouched"		"1790512725"
+			"subscribedby"		"<steamid>"
+			"latest_timeupdated"		"1494122464"
+			"latest_manifest"		"1654727449120615314"
+		}
+		"1081733658"
+		{
+			"manifest"		"1386516767308653904"
+			"timeupdated"		"1671716441"
+			"timetouched"		"1790512725"
+			"subscribedby"		"<steamid>"
+			"latest_timeupdated"		"1671716441"
+			"latest_manifest"		"1386516767308653904"
+		}
+	}
+}

@@ -1,0 +1,116 @@
+[
+ {
+  "folder": "arsenal",
+  "type": "scene",
+  "file": "scene.json",
+  "contentrating": "<absent>"
+ },
+ {
+  "folder": "audiophile",
+  "type": "<absent>",
+  "file": "audiophile.json",
+  "contentrating": "<absent>"
+ },
+ {
+  "folder": "beach",
+  "type": "scene",
+  "file": "scene.json",
+  "contentrating": "<absent>"
+ },
+ {
+  "folder": "corsair_collection",
+  "type": "web",
+  "file": "index.html",
+  "contentrating": "<absent>"
+ },
+ {
+  "folder": "corsair_o_tron",
+  "type": "web",
+  "file": "index.html",
+  "contentrating": "<absent>"
+ },
+ {
+  "folder": "deep_space",
+  "type": "scene",
+  "file": "scene.json",
+  "contentrating": "<absent>"
+ },
+ {
+  "folder": "demon_core",
+  "type": "scene",
+  "file": "scene.json",
+  "contentrating": "<absent>"
+ },
+ {
+  "folder": "dino_run",
+  "type": "scene",
+  "file": "scene.json",
+  "contentrating": "Everyone"
+ },
+ {
+  "folder": "dna_fragment",
+  "type": "scene",
+  "file": "scene.json",
+  "contentrating": "<absent>"
+ },
+ {
+  "folder": "eagleflag",
+  "type": "scene",
+  "file": "scene.json",
+  "contentrating": "<absent>"
+ },
+ {
+  "folder": "fantasticcar",
+  "type": "scene",
+  "file": "fantasticcar.json",
+  "contentrating": "<absent>"
+ },
+ {
+  "folder": "neon_sunset",
+  "type": "scene",
+  "file": "scene.json",
+  "contentrating": "Everyone"
+ },
+ {
+  "folder": "razer_bedroom",
+  "type": "scene",
+  "file": "scene.json",
+  "contentrating": "<absent>"
+ },
+ {
+  "folder": "razer_vortex",
+  "type": "scene",
+  "file": "scene.json",
+  "contentrating": "<absent>"
+ },
+ {
+  "folder": "retro",
+  "type": "scene",
+  "file": "scene.json",
+  "contentrating": "<absent>"
+ },
+ {
+  "folder": "ricepod",
+  "type": "scene",
+  "file": "ricepod.json",
+  "contentrating": "<absent>"
+ },
+ {
+  "folder": "sheep",
+  "type": "<absent>",
+  "file": "sheep.exe",
+  "contentrating": "<absent>"
+ },
+ {
+  "folder": "shimmering_particles",
+  "type": "scene",
+  "file": "scene.json",
+  "contentrating": "<absent>"
+ },
+ {
+  "folder": "techno",
+  "type": "<absent>",
+  "file": "techno.json",
+  "contentrating": "<absent>"
+ }
+]
