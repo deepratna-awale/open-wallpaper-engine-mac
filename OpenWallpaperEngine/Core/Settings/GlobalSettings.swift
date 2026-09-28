@@ -216,6 +216,9 @@ struct GlobalSettings: Codable, Equatable {
     var shadows = GSLightingQuality.medium
     /// WE's `volumetrics` setting, on the same scale as `shadows` [?: default taken as shadows'].
     var volumetrics = GSLightingQuality.medium
+    /// "Cheaper shadows" (on by default): shadow maps at half WE's size, smoothed by the
+    /// comparison filter (`SceneShadowAtlas.mapSize`).
+    var cheaperShadows = true
     var fps: Double = 30
     /// The Quality↔Efficiency slider's stop (`QualityEfficiency`): 1 quality … 5 efficiency.
     var qualityEfficiency = QualityEfficiency.defaultStop
@@ -283,6 +286,7 @@ struct GlobalSettings: Codable, Equatable {
         case restartAfterCrashing, logLevel, autoRefresh
         case syncPropertiesAcrossDisplays
         case mediaIntegration
+        case cheaperShadows
     }
 }
 
@@ -333,5 +337,6 @@ extension GlobalSettings {
         read(.autoRefresh, &autoRefresh)
         read(.syncPropertiesAcrossDisplays, &syncPropertiesAcrossDisplays)
         read(.mediaIntegration, &mediaIntegration)
+        read(.cheaperShadows, &cheaperShadows)
     }
 }

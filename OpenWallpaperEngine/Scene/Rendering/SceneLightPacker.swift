@@ -32,6 +32,8 @@ enum SceneLightPacker {
     /// scene's projection, and the atlas's size so far, which the layout never shrinks.
     struct ShadowContext: Equatable {
         var quality: Int
+        /// "Cheaper shadows": the maps are drawn smaller (`SceneShadowAtlas.mapSize`).
+        var reduced = false
         var eye: SIMD3<Float>
         var forward: SIMD3<Float>
         var orthographic: Bool
@@ -292,7 +294,7 @@ private struct LightBuffer {
         writeProjection(projection, slot: slot)
         guard shadowed, context.quality > 0 else { return }
         shadowFrame.maps.append(SceneShadowMap(
-            kind: .spot, lightID: entry.id, size: SceneShadowAtlas.mapSize(quality: context.quality),
+            kind: .spot, lightID: entry.id, size: SceneShadowAtlas.mapSize(quality: context.quality, reduced: context.reduced),
             renderViews: [SceneShadowViews.biased(projection, by: SceneShadowViews.spotBias)], transformIndex: slot))
     }
 
@@ -302,7 +304,7 @@ private struct LightBuffer {
     private mutating func packCascades(_ entry: SceneLightPacker.Light) {
         guard let context = shadowContext, context.quality > 0, featureEntriesLeft > 0 else { return }
         featureEntriesLeft -= 1
-        let size = SceneShadowAtlas.mapSize(quality: context.quality)
+        let size = SceneShadowAtlas.mapSize(quality: context.quality, reduced: context.reduced)
         let cascades = SceneShadowViews.cascades(world: entry.world, distances: entry.light.cascadeDistances, mapSize: size,
                                                  eye: context.eye, forward: context.forward,
                                                  orthographic: context.orthographic)
@@ -327,7 +329,7 @@ private struct LightBuffer {
         write(info, at: pointShadowBase + pointShadowCursor)
         shadowFrame.pointProjections[entry.id] = info
         shadowFrame.maps.append(SceneShadowMap(
-            kind: .point, lightID: entry.id, size: SceneShadowAtlas.mapSize(quality: context.quality),
+            kind: .point, lightID: entry.id, size: SceneShadowAtlas.mapSize(quality: context.quality, reduced: context.reduced),
             renderViews: SceneShadowViews.pointRenderViews(projection: projection, origin: entry.world.columns.3.xyz),
             transformIndex: pointShadowCursor))
         pointShadowCursor += 1

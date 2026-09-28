@@ -543,7 +543,9 @@ final class SceneShadowPass {
 
     /// A shadow variant's pipeline: depth only, the mesh's vertex layout. An alpha-to-coverage
     /// caster discards below half coverage (`shadowcaster.frag`); the atlas has one sample, so
-    /// coverage itself would change nothing.
+    /// coverage itself would change nothing. A fragment stage that neither discards nor writes
+    /// depth (WE's casters without `ALPHATOCOVERAGE`, whose `main` is empty) changes nothing in a
+    /// depth-only pass either, so the pipeline has none and the rasteriser writes the depth alone.
     static func pipelineDescriptor(_ variant: TranslatedShaderVariant, format: MDLVertexFormat,
                                    device: MTLDevice) throws -> MTLRenderPipelineDescriptor {
         let vertexLibrary = try device.makeLibrary(source: variant.vertexMSL, options: nil)
@@ -554,11 +556,17 @@ final class SceneShadowPass {
         }
         let descriptor = MTLRenderPipelineDescriptor()
         descriptor.vertexFunction = vertex
-        descriptor.fragmentFunction = fragment
+        descriptor.fragmentFunction = fragmentAffectsDepth(variant) ? fragment : nil
         descriptor.depthAttachmentPixelFormat = SceneShadowAtlas.pixelFormat
         descriptor.rasterSampleCount = 1
         descriptor.inputPrimitiveTopology = .triangle
         descriptor.vertexDescriptor = SceneModelRenderer.vertexDescriptor(for: vertex, attributes: variant.attributes, format: format)
         return descriptor
+    }
+
+    /// Whether a caster's fragment stage can change what a depth-only pass writes: it discards or
+    /// writes its own depth.
+    static func fragmentAffectsDepth(_ variant: TranslatedShaderVariant) -> Bool {
+        variant.fragmentMSL.contains("discard_fragment") || variant.fragmentMSL.contains("[[depth")
     }
 }

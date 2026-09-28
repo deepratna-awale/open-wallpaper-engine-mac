@@ -91,13 +91,22 @@ final class SceneShadowAtlas {
 
     /// A shadow map's side for the user's shadows setting (0x14025d3e0): 256 at low and medium,
     /// 512 at high, 1024 at ultra. A point light's cell and each directional cascade are one map.
-    static func mapSize(quality: Int) -> Int {
+    ///
+    /// "Cheaper shadows" (`reduced`) draws each map at half that side, a quarter of the texels to
+    /// rasterise and clear, never below `minimumReducedSize`; the atlas's linear comparison
+    /// sampler and WE's receivers' PCF (`LIGHTS_SHADOW_MAPPING_QUALITY`) keep the edges smooth,
+    /// and the setting still orders the sizes.
+    static func mapSize(quality: Int, reduced: Bool = false) -> Int {
+        let size: Int
         switch quality {
-        case ...2: return 256
-        case 3: return 512
-        default: return 1024
+        case ...2: size = 256
+        case 3: size = 512
+        default: size = 1024
         }
+        return reduced ? max(size / 2, minimumReducedSize) : size
     }
+
+    static let minimumReducedSize = 128
 }
 
 /// WE's shelf packer for the atlas (0x1401935dc…0x1401939ed), as a pure function of the maps'
