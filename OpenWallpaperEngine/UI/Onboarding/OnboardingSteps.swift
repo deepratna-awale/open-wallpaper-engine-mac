@@ -170,6 +170,23 @@ struct OnboardingSteamStep: View {
                     }
                 }
             }
+
+            if steamCmd.isLoggedIn {
+                OnboardingCard {
+                    HStack {
+                        Label("Steam Web API Key", systemImage: "key")
+                            .font(.headline)
+                        Spacer()
+                        Text("Optional")
+                            .foregroundStyle(.secondary)
+                    }
+                    Text("Workshop browsing and search use a Steam Web API key. You can skip this and add one later in Settings or the Workshop tab. The key is kept in your Keychain.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    SteamWebAPIKeyView()
+                }
+            }
         }
     }
 }

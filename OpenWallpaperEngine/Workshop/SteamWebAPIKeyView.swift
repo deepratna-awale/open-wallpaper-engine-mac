@@ -28,10 +28,16 @@ struct SteamWebAPIKeyView: View {
                     .font(.caption)
                     .foregroundStyle(.red)
             }
-            HStack(spacing: 4) {
-                Text("Get a free key at")
-                    .foregroundStyle(.tertiary)
-                Link("steamcommunity.com/dev/apikey", destination: Self.keyPage)
+            VStack(alignment: .leading, spacing: 2) {
+                // `Link` opens the page in the default browser.
+                Link(destination: Self.keyPage) {
+                    Label("Get your key on Steam", systemImage: "arrow.up.right.square")
+                }
+                .help(Self.keyPage.absoluteString)
+                Text("On Steam's page, enter any domain name, e.g. \"localhost\".",
+                     comment: "Steam's API key page asks for a domain name")
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .font(.caption)
         }
