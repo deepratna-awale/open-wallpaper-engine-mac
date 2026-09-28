@@ -272,6 +272,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     
     func applicationWillTerminate(_ notification: Notification) {
         safeRestart.applicationWillTerminate()
+        updater.stopShaderPrewarm()
         if let wallpaper = UserDefaults.app.url(forKey: "OSWallpaper") {
             for screen in NSScreen.screens {
                 try? NSWorkspace.shared.setDesktopImageURL(wallpaper, for: screen)

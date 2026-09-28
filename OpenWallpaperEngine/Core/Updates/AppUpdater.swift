@@ -30,6 +30,8 @@ final class AppUpdater: NSObject, ObservableObject {
     private let installPolicy: PendingUpdateInstallPolicy
     private var pendingInstall: (readySince: Date, install: () -> Void)?
     private var pendingInstallTimer: Timer?
+    /// Compiles an update's shaders before it relaunches (`UpdateShaderPrewarmer`); nil when off.
+    private var shaderPrewarmer: UpdateShaderPrewarmer?
 
     var isEnabled: Bool { controller != nil }
 
@@ -48,6 +50,8 @@ final class AppUpdater: NSObject, ObservableObject {
             OWELog.info(.app, "Updates are off: this build has no Sparkle public key (SPARKLE_PUBLIC_ED_KEY)")
             return
         }
+        shaderPrewarmer = UpdateShaderPrewarmer.standard(
+            bundleIdentifier: Bundle.main.bundleIdentifier ?? AppStorageLocation.realBundleIdentifier)
         let controller = SPUStandardUpdaterController(startingUpdater: false, updaterDelegate: self, userDriverDelegate: nil)
         self.controller = controller
         let updater: SPUUpdater = controller.updater
@@ -66,6 +70,11 @@ final class AppUpdater: NSObject, ObservableObject {
         } catch {
             OWELog.error(.app, "Sparkle updater failed to start: \(error.localizedDescription)")
         }
+    }
+
+    /// The app is quitting: stops a running shader prewarm (Sparkle installs on quit by itself).
+    func stopShaderPrewarm() {
+        shaderPrewarmer?.cancel()
     }
 
     func checkForUpdates() {
@@ -166,6 +175,19 @@ extension AppUpdater: SPUUpdaterDelegate {
         } catch {
             OWELog.error(.app, "Could not read an update's release notes: \(error)")
             return ""
+        }
+    }
+
+    /// Every install that relaunches passes here once (Sparkle's `installWithToolAndRelaunch:`),
+    /// the user's "Install and Relaunch" and `holdPendingInstall`'s immediate install alike; an
+    /// install on quit doesn't. The update is extracted by now: its shaders are compiled first.
+    nonisolated func updater(_ updater: SPUUpdater, shouldPostponeRelaunchForUpdate item: SUAppcastItem,
+                             untilInvokingBlock installHandler: @escaping () -> Void) -> Bool {
+        let version: String = item.versionString
+        return MainActor.assumeIsolated {
+            guard let shaderPrewarmer else { return false }
+            shaderPrewarmer.prewarmThenInstall(version: version, install: installHandler)
+            return true
         }
     }
 
