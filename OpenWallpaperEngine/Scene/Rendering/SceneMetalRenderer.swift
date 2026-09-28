@@ -375,6 +375,13 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var clickReader = DesktopClickReader()
     /// The last drawn frame's camera motion and text sizes (by layer id), for the next script frame.
     private var lastCameraMotion: CameraMotion?
+    /// Per-layer dependencies, coverage, class and this frame's dirty state
+    /// (docs/efficiency-plan-2d.md WP1-A); built with the content, off the main thread.
+    private(set) var layerAnalysis: SceneLayerAnalysis?
+    /// What the analysis last saw of the frame's shape: a change marks every layer dirty.
+    private var analysedShape: (layers: Int, target: SIMD2<Float>) = (0, .zero)
+    /// A pipeline was compiling last frame: the frame after one lands changes too.
+    private var analysedWarmUp = true
     private var lastTextSizes: [String: SIMD2<Float>] = [:]
     /// Told how long each frame took on the CPU, including the wait for a drawable.
     var frameTimeObserver: ((CFTimeInterval) -> Void)?
@@ -518,6 +525,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         contentGenerationLock.unlock()
 
         guard let content else {
+            layerAnalysis = nil
             layers = []
             particleSystems = []
             objectMotions = [:]
@@ -583,6 +591,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             ParticleSystemRuntime.linkFamilies(runtimes)
             let preparedParticleSystems = runtimes.compactMap { $0 }
             guard self.isCurrentContentGeneration(generation) else { return }
+            let analysis = SceneLayerAnalysis.make(content: content)
             DispatchQueue.main.async { [weak self] in
                 guard let self, self.isCurrentContentGeneration(generation) else { return }
                 self.sceneSize = content.size
@@ -598,6 +607,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 for stage in self.frameStages { stage.setContent(content) }
                 self.postProcess.setContent(content)
                 self.particleSystems = preparedParticleSystems
+                self.layerAnalysis = analysis
                 self.transforms = content.transforms
                 self.objectMotions = content.motions
                 self.objectIDs = content.objectIDs
@@ -852,7 +862,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     /// Renders a frame for `view` alone and presents it there.
     func draw(in view: MTKView) {
-        renderFrame(.view(view))
+        ThreadGuards.renderFrame { renderFrame(.view(view)) }
     }
 
     /// Renders one frame for all the displays of a shared scene, at the largest scene target any
@@ -861,7 +871,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// resolution scripts see.
     func renderShared(_ viewports: [SceneViewport]) {
         guard !viewports.isEmpty else { return }
-        renderFrame(.shared(viewports))
+        ThreadGuards.renderFrame { renderFrame(.shared(viewports)) }
     }
 
     /// Shows the latest shared frame (`renderShared`) on `view`, at its size and the user's
@@ -963,6 +973,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         renderTargetPool.endFrame()
         textFrameCache.beginGeneration()
         defer {
+            // Compiles this frame started: the next frame draws differently once they land.
+            if layerAnalysis != nil, pipelinesCompiling { analysedWarmUp = true }
             WallpaperServices.shared.endFrame()
             frameSignpost.end()
             frameTimeObserver?(CACurrentMediaTime() - frameStart)
@@ -1068,6 +1080,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                                             orthographicSize: isPerspective ? nil : sceneSize)
         effectFrame.lighting = frameLighting(eye: effectFrame.eyePosition, forward: effectFrame.viewForward,
                                              shake: motion.shake)
+        analyseLayers(effectFrame: effectFrame, motion: motion, drawableSize: drawableSize)
         drawProbe?.record(lighting: effectFrame.lighting)
         frameShadowAtlas = drawShadows(frame: effectFrame, commandBuffer: commandBuffer)
         // Text is rasterised first so its effects run on the finished text, like an image layer's.
@@ -3019,6 +3032,37 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                             effects: SIMD4<Float>(1, 1, 1, 0), blur: 0,
                             colorEffects: SIMD4<Float>(0, 1, 0, 0.7), transform: SIMD4<Float>(0, 0, 0, 1),
                             transformScaleY: 1)
+    }
+
+    private var pipelinesCompiling: Bool {
+        hasPendingEffectPipelines || imageMaterials?.hasPendingPipelines == true
+            || particleMaterials?.hasPendingPipelines == true
+    }
+
+    /// Hands this frame's inputs to the layer analysis, which marks the layers they change dirty.
+    private func analyseLayers(effectFrame: BuiltinFrameContext, motion: CameraMotion, drawableSize: SIMD2<Float>) {
+        guard let layerAnalysis else { return }
+        var inputs = SceneLayerFrameInputs()
+        inputs.time = effectFrame.time
+        inputs.pointer = effectFrame.pointer
+        inputs.parallax = effectFrame.parallax
+        inputs.parallaxActive = motion.parallax != nil
+        inputs.shake = motion.shake
+        inputs.cameraShake = motion.cameraShake
+        inputs.audio = effectFrame.audio
+        inputs.audioLevel = motion.audioLevel
+        inputs.userPropertiesRevision = WallpaperServices.shared.propertyService.revision
+        inputs.scripts = scripts.state
+        inputs.animatedSites = animations?.sites ?? []
+        let shape = (layers: layers.count, target: drawableSize)
+        // A layer, effect or post-process whose pipeline is still compiling draws another way until
+        // it lands; nothing the analysis tracks says when.
+        let warming = pipelinesCompiling
+        inputs.sceneChanged = shape.layers != analysedShape.layers || shape.target != analysedShape.target
+            || warming || analysedWarmUp
+        analysedShape = shape
+        analysedWarmUp = warming
+        layerAnalysis.update(inputs)
     }
 
     /// The cursor in scene units, mapped through the placement of the display it is on, or nil
