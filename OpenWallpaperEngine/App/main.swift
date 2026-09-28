@@ -23,7 +23,7 @@ MainActor.assumeIsolated {
 		NSApplication.shared.delegate = AppDelegate.shared
 	} else {
 		// A test host has no delegate, so it marks its own Dock icon (`DockBadge.test`).
-		DockBadge.current.apply()
+		DockBadge.current.apply(to: NSApplication.shared.dockTile)
 	}
 	NSApplication.shared.run()
 }
