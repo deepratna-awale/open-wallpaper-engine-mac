@@ -37324,6 +37324,101 @@
         }
       }
     },
+    "Install Wallpaper Engine assets automatically after signing in" : {
+      "comment" : "Settings toggle: download the Wallpaper Engine assets from Steam by themselves after a Steam login when none are installed",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تثبيت موارد Wallpaper Engine تلقائيًا بعد تسجيل الدخول"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine-Assets nach dem Anmelden automatisch installieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalar los recursos de Wallpaper Engine automáticamente tras iniciar sesión"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installer les ressources Wallpaper Engine automatiquement après la connexion"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लॉग इन करने के बाद Wallpaper Engine ऐसेट अपने आप इंस्टॉल करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installa automaticamente le risorse di Wallpaper Engine dopo l'accesso"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ログイン後に Wallpaper Engine アセットを自動的にインストール"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로그인 후 Wallpaper Engine 에셋 자동으로 설치"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instaluj zasoby Wallpaper Engine automatycznie po zalogowaniu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalar os recursos do Wallpaper Engine automaticamente após iniciar sessão"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Устанавливать ресурсы Wallpaper Engine автоматически после входа"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Giriş yaptıktan sonra Wallpaper Engine Varlıklarını otomatik olarak yükle"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Установлювати ресурси Wallpaper Engine автоматично після входу"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登录后自动安装 Wallpaper Engine 资源"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登入後自動安裝 Wallpaper Engine 資源"
+          }
+        }
+      }
+    },
     "Installed" : {
       "localizations" : {
         "ar" : {
