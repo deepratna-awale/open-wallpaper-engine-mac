@@ -167,7 +167,9 @@ final class WallpaperEngineAssetsService: ObservableObject {
     }
 
     /// Downloads the user's Wallpaper Engine copy with SteamCMD and keeps its assets in the cache.
-    func installFromSteam() {
+    /// With `includingDefaultWallpapers`, the copy's default wallpapers (never application ones)
+    /// also move into the storage folder; without, they are deleted with the rest of the download.
+    func installFromSteam(includingDefaultWallpapers: Bool = true) {
         guard !isBusy else { return }
         guard let steamCmdPath = steamCmd.steamCmdPath else { return fail(.steamCmdMissing) }
         guard steamCmd.isLoggedIn, !steamCmd.steamUsername.isEmpty else { return fail(.notLoggedIn) }
@@ -182,7 +184,8 @@ final class WallpaperEngineAssetsService: ObservableObject {
         phase = .downloading(status: String(localized: "Starting steamcmd…", comment: "Download status; steamcmd is a program name"),
                              progress: nil)
         let job = InstallJob(executable: URL(fileURLWithPath: steamCmdPath), username: steamCmd.steamUsername,
-                             storage: storage, runner: runner, cancellation: token)
+                             storage: storage, includesDefaultWallpapers: includingDefaultWallpapers,
+                             runner: runner, cancellation: token)
         steamCmd.enqueueSteamCmdWork { [weak self] in
             let result = job.run(
                 onProgress: { progress in DispatchQueue.main.async { self?.showDownloadProgress(progress) } },
@@ -231,6 +234,7 @@ private struct InstallJob {
     let executable: URL
     let username: String
     let storage: URL
+    let includesDefaultWallpapers: Bool
     let runner: SteamCmdRunning
     let cancellation: SteamCmdCancellation
 
@@ -263,8 +267,13 @@ private struct InstallJob {
                                                        steamBuildID: WallpaperEngineAssetsDownload.buildID(installDirectory: download))
             try WallpaperEngineAssetsCache.fill(cache, from: download, info: info, isCancelled: { cancellation.isCancelled })
             // The download is deleted next, so the default wallpapers move rather than copy.
-            let imported = try WallpaperEngineDefaultProjects.importProjects(from: download, into: storage, move: true)
-            OWELog.info(.library, "Default wallpapers: \(imported.imported.count) added, \(imported.existing.count) already there, \(imported.unsupported.count) unsupported")
+            var imported = WallpaperEngineDefaultProjects.ImportResult()
+            if includesDefaultWallpapers {
+                imported = try WallpaperEngineDefaultProjects.importProjects(from: download, into: storage, move: true)
+                OWELog.info(.library, "Default wallpapers: \(imported.imported.count) added, \(imported.existing.count) already there, \(imported.unsupported.count) unsupported")
+            } else {
+                OWELog.info(.library, "Default wallpapers not added: the user left them out")
+            }
             let kept = previous.filter { FileManager.default.fileExists(atPath: storage.appending(path: $0).path) }
             info.defaultProjects = kept + imported.imported.filter { !kept.contains($0) }
             try WallpaperEngineAssetsCache.writeInfo(info, cache: cache)

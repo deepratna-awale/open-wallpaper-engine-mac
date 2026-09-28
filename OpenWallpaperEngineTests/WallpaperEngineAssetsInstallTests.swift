@@ -223,6 +223,79 @@ final class WallpaperEngineAssetsInstallTests: XCTestCase {
     }
 }
 
+
+extension WallpaperEngineAssetsInstallTests {
+    /// The install with and without the default wallpapers: the assets land in the cache either
+    /// way; the default wallpapers only when asked, and never an application one.
+    @MainActor
+    func testDefaultWallpapersComeInOnlyWhenAsked() throws {
+        for includes in [true, false] {
+            let storage = scratch.appending(path: "storage-\(includes)")
+            try FileManager.default.createDirectory(at: storage, withIntermediateDirectories: true)
+            let runner = InstallingRunner()
+            let steamCmd = SteamCmdService(dependencyIndex: WorkshopDependencyIndex(libraryDirectory: { storage }),
+                                           runner: runner, storageDirectory: { storage },
+                                           previewCacheRoot: scratch.appending(path: "previews"),
+                                           downloadedIndex: DownloadedWallpaperIndex(defaults: makeTestDefaults(),
+                                                                                     libraryDirectory: { storage }),
+                                           presentPreview: { _ in }, restoresSession: false)
+            steamCmd.steamCmdPath = "/usr/bin/false"
+            steamCmd.isLoggedIn = true
+            steamCmd.steamUsername = "someone"
+            let service = WallpaperEngineAssetsService(steamCmd: steamCmd, runner: runner, storageDirectory: { storage },
+                                                       defaults: makeTestDefaults())
+            service.installFromSteam(includingDefaultWallpapers: includes)
+            let finished = expectation(description: "install finished")
+            let cancellable = service.$phase.sink { phase in
+                switch phase {
+                case .idle, .failed: finished.fulfill()
+                case .downloading, .copying: break
+                }
+            }
+            wait(for: [finished], timeout: 10)
+            cancellable.cancel()
+            XCTAssertEqual(service.phase, .idle)
+            XCTAssertTrue(WallpaperEngineAssets.isAssetTree(WallpaperEngineAssets.cacheDirectory(in: storage)))
+            XCTAssertEqual(FileManager.default.fileExists(atPath: storage.appending(path: "aurora/project.json").path), includes)
+            XCTAssertFalse(FileManager.default.fileExists(atPath: storage.appending(path: "game").path))
+            XCTAssertEqual(WallpaperEngineAssetsCache.readInfo(cache: WallpaperEngineAssets.cacheDirectory(in: storage))?.defaultProjects ?? [],
+                           includes ? ["aurora"] : [])
+        }
+    }
+
+    private func makeTestDefaults() -> UserDefaults {
+        UserDefaults(suiteName: "owe-tests-\(UUID().uuidString)")!
+    }
+}
+
+/// A fake SteamCMD that "downloads" a tiny Wallpaper Engine install where the script's
+/// `force_install_dir` says: an asset tree and two default projects, one of them an application.
+private final class InstallingRunner: SteamCmdRunning, @unchecked Sendable {
+    func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?,
+             onOutput: @escaping (String) -> Void) -> SteamCmdRun {
+        guard let line = script.lines.first(where: { $0.hasPrefix("force_install_dir ") }) else {
+            return SteamCmdRun(output: "no install dir", exitCode: 1)
+        }
+        let path = String(line.dropFirst("force_install_dir ".count)).trimmingCharacters(in: CharacterSet(charactersIn: "\""))
+        let install = URL(fileURLWithPath: path, isDirectory: true)
+        let files: [(String, String)] = [
+            ("assets/shaders/common.h", "x"), ("assets/effects/tint/effect.json", "{}"),
+            ("projects/defaultprojects/aurora/project.json", #"{"title":"A","file":"scene.json","type":"scene"}"#),
+            ("projects/defaultprojects/game/project.json", #"{"title":"G","file":"game.exe","type":"application"}"#),
+        ]
+        do {
+            for (relative, text) in files {
+                let url = install.appending(path: relative)
+                try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try Data(text.utf8).write(to: url)
+            }
+        } catch {
+            return SteamCmdRun(output: "write failed: \(error)", exitCode: 1)
+        }
+        return SteamCmdRun(output: "Success! App '431960' fully installed.", exitCode: 0)
+    }
+}
+
 private struct UnusedRunner: SteamCmdRunning {
     func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?,
              onOutput: @escaping (String) -> Void) -> SteamCmdRun {
