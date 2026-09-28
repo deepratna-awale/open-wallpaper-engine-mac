@@ -13657,6 +13657,100 @@
         }
       }
     },
+    "Cheaper shadows" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ظلال أخف"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sparsamere Schatten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sombras más ligeras"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ombres allégées"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "हल्की छायाएँ"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ombre più leggere"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "軽量シャドウ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "가벼운 그림자"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lżejsze cienie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sombras Mais Leves"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Облегчённые тени"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hafif Gölgeler"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Полегшені тіні"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "简化阴影"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "簡化陰影"
+          }
+        }
+      }
+    },
     "Changed from the default" : {
       "localizations" : {
         "ar" : {
@@ -25861,6 +25955,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "繪製隨你聽到的音訊起伏的長條。需要「螢幕與系統錄音」權限。"
+          }
+        }
+      }
+    },
+    "Draws shadow maps at half size, a quarter of the shadow work; the edges stay soft. Off draws them as Wallpaper Engine does." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يرسم خرائط الظلال بنصف الحجم، أي ربع عمل الظلال، وتبقى الحواف ناعمة. عند إيقافه تُرسم كما يرسمها Wallpaper Engine."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeichnet Schattenkarten in halber Größe, ein Viertel der Schattenarbeit; die Kanten bleiben weich. Aus zeichnet sie wie Wallpaper Engine."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dibuja los mapas de sombras a la mitad de tamaño, una cuarta parte del trabajo de sombras; los bordes siguen suaves. Desactivado los dibuja como Wallpaper Engine."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dessine les cartes d’ombres à mi-taille, un quart du travail des ombres ; les bords restent doux. Désactivé, elles sont dessinées comme dans Wallpaper Engine."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "शैडो मैप को आधे आकार में बनाता है, यानी छायाओं का एक-चौथाई काम; किनारे मुलायम रहते हैं। बंद होने पर Wallpaper Engine की तरह बनाता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disegna le mappe delle ombre a metà dimensione, un quarto del lavoro delle ombre; i bordi restano morbidi. Se disattivato le disegna come Wallpaper Engine."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シャドウマップを半分のサイズで描画し、シャドウの処理を4分の1にします。輪郭は滑らかなままです。オフにすると Wallpaper Engine と同じように描画します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "그림자 맵을 절반 크기로 그려 그림자 작업을 4분의 1로 줄입니다. 가장자리는 부드럽게 유지됩니다. 끄면 Wallpaper Engine과 같이 그립니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rysuje mapy cieni w połowie rozmiaru, czyli za ćwierć pracy; krawędzie pozostają miękkie. Wyłączone rysuje je jak Wallpaper Engine."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desenha os mapas de sombra na metade do tamanho, um quarto do trabalho das sombras; as bordas continuam suaves. Desativado, desenha como o Wallpaper Engine."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рисует карты теней в половинном размере — четверть работы над тенями; края остаются мягкими. Если выключено, рисует их как Wallpaper Engine."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gölge haritalarını yarı boyutta çizer, gölge işinin dörtte biri; kenarlar yumuşak kalır. Kapalıyken Wallpaper Engine gibi çizer."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Малює карти тіней у половинному розмірі — чверть роботи над тінями; краї лишаються мʼякими. Якщо вимкнено, малює їх як Wallpaper Engine."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以一半尺寸绘制阴影贴图，阴影工作量降至四分之一，边缘仍保持柔和。关闭时按 Wallpaper Engine 的方式绘制。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以一半尺寸繪製陰影貼圖，陰影工作量降至四分之一，邊緣仍保持柔和。關閉時按 Wallpaper Engine 的方式繪製。"
           }
         }
       }

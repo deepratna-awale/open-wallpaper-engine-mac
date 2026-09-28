@@ -159,6 +159,14 @@ struct PerformancePage: SettingsPage {
                 }
                 .changedFromDefault(viewModel.isChanged(\.shadows))
                 .help("Shadows cast by wallpapers' lights. Higher qualities draw larger shadow maps.")
+                HStack {
+                    Text("Cheaper shadows")
+                    Spacer()
+                    Toggle("Cheaper shadows", isOn: $viewModel.settings.cheaperShadows)
+                        .toggleStyle(.checkbox)
+                        .labelsHidden()
+                }
+                .help("Draws shadow maps at half size, a quarter of the shadow work; the edges stay soft. Off draws them as Wallpaper Engine does.")
                 Picker("Volumetrics", selection: $viewModel.settings.volumetrics) {
                     Text("Disabled").tag(GSLightingQuality.disabled)
                     Text("Low").tag(GSLightingQuality.low)
