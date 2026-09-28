@@ -596,8 +596,16 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         }
         contentQueue.async { [weak self] in
             guard let self, self.isCurrentContentGeneration(generation) else { return }
-            let preparedLayers: [PreparedLayer] = content.layers.compactMap { layer in
-                guard let frames = self.makeTextureFrames(from: layer.source), !frames.isEmpty else { return nil }
+            // Each layer's upload is independent; built side by side, kept in layer order.
+            var built = [[RenderTextureFrame]?](repeating: nil, count: content.layers.count)
+            built.withUnsafeMutableBufferPointer { slots in
+                let slots = slots
+                DispatchQueue.concurrentPerform(iterations: content.layers.count) { index in
+                    slots[index] = self.makeTextureFrames(from: content.layers[index].source)
+                }
+            }
+            let preparedLayers: [PreparedLayer] = zip(built, content.layers).compactMap { frames, layer in
+                guard let frames, !frames.isEmpty else { return nil }
                 return PreparedLayer(frames: frames, layer: layer)
             }
             let imageSources = Dictionary(preparedLayers.compactMap { entry -> (String, ParticleEmitterImagePoints.Source)? in
