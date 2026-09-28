@@ -10,6 +10,8 @@
 	<true/>
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
+	<key>SUScheduledCheckInterval</key>
+	<integer>14400</integer>
 	<key>SUFeedURL</key>
 	<string>https://deepratna-awale.github.io/open-wallpaper-engine-mac/appcast.xml</string>
 	<key>SUPublicEDKey</key>
