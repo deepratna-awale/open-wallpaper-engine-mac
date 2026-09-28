@@ -93,6 +93,9 @@ final class SceneMorphTextureCache {
 
     func removeAll() { textures.removeAll() }
 
+    /// Drops `plan`'s textures (it no longer draws; its identifier may be reused).
+    func remove(_ plan: SceneModelPlan) { textures[ObjectIdentifier(plan)] = nil }
+
     /// Mesh `index`'s texture of `plan`; nil when it has no targets (the empty stand-in is bound).
     func texture(_ plan: SceneModelPlan, mesh index: Int) -> MTLTexture? {
         let key = ObjectIdentifier(plan)
