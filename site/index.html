@@ -197,6 +197,7 @@
             <li>Liquid Glass on macOS 26: a native split view, toolbar and inspector with glass controls</li>
             <li>Earlier macOS versions keep the familiar look</li>
             <li>A menu bar icon with recent wallpapers, following the menu bar's appearance</li>
+            <li>Automatic updates from GitHub Releases, which you can turn off in Settings</li>
           </ul>
         </div>
         <div class="feature">
@@ -212,7 +213,8 @@
             <li>Your Steam password is never stored; SteamCMD reuses its own cached session</li>
             <li>The Steam Web API key is checked with Steam and kept in your Keychain</li>
             <li>Everything the app saves stays on your Mac; no server, no data collection or analytics</li>
-            <li>Only contacts Valve (Steam for the Workshop and assets, Valve's server for SteamCMD); web wallpapers may load their own online content</li>
+            <li>Contacts Valve (Steam for the Workshop and assets, Valve's server for SteamCMD) and GitHub to check for app updates (the update feed on GitHub Pages, downloads from GitHub Releases); web wallpapers may load their own online content</li>
+            <li>Update checks send no personal data and can be turned off in Settings › General</li>
           </ul>
         </div>
       </div>
@@ -334,7 +336,7 @@
         </details>
         <details>
           <summary>What data does the app keep or send?</summary>
-          <p>Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and SteamCMD's login. Open Wallpaper Engine has no server and collects no data or analytics. It only contacts Valve: Steam when you use the Workshop or install assets, and Valve's server to download SteamCMD. Web wallpapers may load their own online content. Your Steam password and Steam Guard code go straight to SteamCMD and are never stored, logged or sent anywhere else; only your account name is remembered, to reuse SteamCMD's saved login.</p>
+          <p>Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and SteamCMD's login. Open Wallpaper Engine has no server and collects no data or analytics. It contacts Valve (Steam when you use the Workshop or install assets, and Valve's server to download SteamCMD) and GitHub, to check for app updates: the update feed on GitHub Pages and the downloads on GitHub Releases. Update checks send no personal data, and you can turn them off in Settings › General. Web wallpapers may load their own online content. Your Steam password and Steam Guard code go straight to SteamCMD and are never stored, logged or sent anywhere else; only your account name is remembered, to reuse SteamCMD's saved login.</p>
         </details>
       </div>
     </div>
@@ -417,23 +419,41 @@
   box.addEventListener("click", e => { if (e.target === box) box.close(); });
 })();
 
-// Points the button at the newest published release's DMG (or zip). Without a release, or if the
-// API is unreachable, the button keeps its link to the releases page.
+// Points the button at the newest published release's DMG (or zip), pre-releases included. If the
+// list is unavailable it falls back to releases/latest; if that fails too, the button keeps its link.
+const REPO_API = "https://api.github.com/repos/deepratna-awale/open-wallpaper-engine-mac";
+// "v1.0.0-beta.1" -> "1.0.0 Beta 1" (alpha -> "Alpha N", rc -> "RC N"); final or unknown tags stay as tagged.
+function releaseLabel(tag) {
+  const m = /^v?(\d+(?:\.\d+)*)-(alpha|beta|rc)\.?(\d+)?$/i.exec(tag || "");
+  if (!m) return { text: `Download ${tag}`, pre: false };
+  const kind = { alpha: "Alpha", beta: "Beta", rc: "RC" }[m[2].toLowerCase()];
+  return { text: `Download ${m[1]} ${kind}${m[3] ? " " + m[3] : ""}`, pre: true };
+}
+async function newestRelease(fetchFn) {
+  const get = async path => {
+    const r = await fetchFn(REPO_API + path, { headers: { Accept: "application/vnd.github+json" } });
+    return r.ok ? r.json() : null;
+  };
+  try {
+    const list = await get("/releases?per_page=10");
+    const found = Array.isArray(list) && list.find(rel => !rel.draft);
+    if (found) return found;
+  } catch (_) { /* try releases/latest */ }
+  try { return await get("/releases/latest"); } catch (_) { return null; }
+}
 (async () => {
   try {
-    const r = await fetch("https://api.github.com/repos/deepratna-awale/open-wallpaper-engine-mac/releases/latest",
-                          { headers: { Accept: "application/vnd.github+json" } });
-    if (!r.ok) return;
-    const release = await r.json();
+    const release = await newestRelease(fetch);
+    if (!release || !release.tag_name) return;
     const assets = release.assets || [];
     const asset = assets.find(a => a.name.endsWith(".dmg")) || assets.find(a => a.name.endsWith(".zip"));
-    if (!asset) return;
-    document.getElementById("download").href = asset.browser_download_url;
-    document.getElementById("download-label").textContent = `Download ${release.tag_name}`;
+    const label = releaseLabel(release.tag_name);
+    const pre = label.pre || release.prerelease;
+    document.getElementById("download").href = asset ? asset.browser_download_url : release.html_url;
+    document.getElementById("download-label").textContent = label.text + (pre ? " (beta)" : "");
     const date = new Date(release.published_at).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
-    const mb = (asset.size / 1048576).toFixed(0);
     const meta = document.getElementById("meta");
-    meta.textContent = `${date} · ${mb} MB · macOS 14 or later · `;
+    meta.textContent = `${date} · ${asset ? (asset.size / 1048576).toFixed(0) + " MB · " : ""}macOS 14 or later · `;
     const notes = document.createElement("a");
     notes.href = release.html_url; notes.textContent = "Release notes";
     meta.appendChild(notes);
