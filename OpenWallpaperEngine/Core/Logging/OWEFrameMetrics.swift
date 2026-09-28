@@ -27,6 +27,8 @@ enum OWEFrameMetrics {
     nonisolated(unsafe) private static var layersDrawn = 0
     nonisolated(unsafe) private static var particlesUpdated = 0
     nonisolated(unsafe) private static var effectStackBuilds = 0
+    nonisolated(unsafe) private static var layersCulled = 0
+    nonisolated(unsafe) private static var layersFlattened = 0
 
     static func countLockAcquisition() {
         guard isReportingEnabled else { return }
@@ -53,6 +55,13 @@ enum OWEFrameMetrics {
         effectStackBuilds &+= 1
     }
 
+    /// Layers a frame skipped: culled, or drawn from the flattened copy (WP2-B).
+    static func countSkippedLayers(culled: Int, flattened: Int) {
+        guard isReportingEnabled else { return }
+        layersCulled &+= culled
+        layersFlattened &+= flattened
+    }
+
     static func recordFrame(seconds: Double, layers: Int, particles: Int) {
         guard isReportingEnabled else { return }
         frameCount &+= 1
@@ -75,9 +84,9 @@ enum OWEFrameMetrics {
         let perFrame = { (value: Int) in Double(value) / Double(frameCount) }
 
         OWELog.info(.perf, String(format:
-            "fps %.1f | frame avg %.2fms p-worst %.2fms | layers/f %.1f particles/f %.0f | locks/f %.1f scripts/f %.1f | stacks/f %.2f | reloads %d texDecodes %d",
+            "fps %.1f | frame avg %.2fms p-worst %.2fms | layers/f %.1f culled/f %.1f flattened/f %.1f particles/f %.0f | locks/f %.1f scripts/f %.1f | stacks/f %.2f | reloads %d texDecodes %d",
             fps, averageMs, worstMs,
-            perFrame(layersDrawn), perFrame(particlesUpdated),
+            perFrame(layersDrawn), perFrame(layersCulled), perFrame(layersFlattened), perFrame(particlesUpdated),
             perFrame(lockAcquisitions), perFrame(scriptEvaluations),
             perFrame(effectStackBuilds),
             sceneReloads, textureDecodes))
@@ -88,6 +97,8 @@ enum OWEFrameMetrics {
         lockAcquisitions = 0
         scriptEvaluations = 0
         layersDrawn = 0
+        layersCulled = 0
+        layersFlattened = 0
         particlesUpdated = 0
         effectStackBuilds = 0
         sceneReloads = 0

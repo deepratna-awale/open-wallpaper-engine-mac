@@ -380,8 +380,16 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private(set) var layerAnalysis: SceneLayerAnalysis?
     /// What the analysis last saw of the frame's shape: a change marks every layer dirty.
     private var analysedShape: (layers: Int, target: SIMD2<Float>) = (0, .zero)
-    /// A pipeline was compiling last frame: the frame after one lands changes too.
-    private var analysedWarmUp = true
+    /// Pipeline compiles landed when the analysis last ran (`ScenePipelineCompletions`): one
+    /// landing since changes how a layer draws.
+    private var analysedCompletions: UInt64?
+    /// The clean run of layers drawn from a cached copy, and this frame's plan for it (WP2-B).
+    let flattening = SceneFlattening()
+    private var flattenPlan = SceneFlattening.Plan.draw
+    /// Off with `OWE_SCENE_CULL=0` (comparisons).
+    var cullingEnabled = ProcessInfo.processInfo.environment["OWE_SCENE_CULL"] != "0"
+    /// Layers this frame skipped: culled, and drawn from the flattened copy.
+    private(set) var lastFrameSkips = (culled: 0, flattened: 0)
     private var lastTextSizes: [String: SIMD2<Float>] = [:]
     /// Told how long each frame took on the CPU, including the wait for a drawable.
     var frameTimeObserver: ((CFTimeInterval) -> Void)?
@@ -526,6 +534,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
         guard let content else {
             layerAnalysis = nil
+            flattening.drop()
             layers = []
             particleSystems = []
             objectMotions = [:]
@@ -973,8 +982,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         renderTargetPool.endFrame()
         textFrameCache.beginGeneration()
         defer {
-            // Compiles this frame started: the next frame draws differently once they land.
-            if layerAnalysis != nil, pipelinesCompiling { analysedWarmUp = true }
+            OWEFrameMetrics.countSkippedLayers(culled: lastFrameSkips.culled, flattened: lastFrameSkips.flattened)
             WallpaperServices.shared.endFrame()
             frameSignpost.end()
             frameTimeObserver?(CACurrentMediaTime() - frameStart)
@@ -1089,6 +1097,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         var draws: [Int: LayerDraw] = [:]
         layerComposites.removeAll(keepingCapacity: true)
         let compositeOrder = self.compositeOrder()
+        // Culled layers and the flattened run draw nothing of their own this frame (WP2-B).
+        let skippedLayers = planLayerSkips(compositeOrder, scene: sceneTexture)
         for layerIndex in compositeOrder.sequence {
             let entry = layers[layerIndex]
             // Hidden layers keep their transforms (scripts and hit tests read them) but draw nothing,
@@ -1096,7 +1106,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             let visible = scripts.isVisible(entry.layer.id)
             let isCompositeSource = compositeOrder.sources.contains(entry.layer.id)
                 || models?.compositeLayerIDs.contains(entry.layer.id) == true
-            guard visible || isCompositeSource else { continue }
+            guard visible || isCompositeSource, !skippedLayers.contains(layerIndex) else { continue }
             if entry.layer.text != nil {
                 // Drawn through a camera, text is as dense on screen as its projection makes it.
                 let onScreen = layerPlacement(entry, size: layerBaseSize(entry), musicSyncLevel: 0, motion: motion,
@@ -1124,6 +1134,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             draw.placement = layerPlacement(entry, size: baseSize,
                                             musicSyncLevel: draw.musicSyncLevel, motion: motion, camera: effectFrame.camera)
             draw.placement?.offset += contentOffset
+            if cullingEnabled, SceneCulling.isTransparent(
+                opacity: draw.opacity * draw.color.w, confinedToQuad: SceneCulling.confinedToQuad(entry.layer, perspectiveScene: isPerspective),
+                protected: isCompositeSource || SceneCulling.isProtected(entry.layer, compositeSources: compositeOrder.sources, inScene: compositeOrder.inScene)) {
+                lastFrameSkips.culled += 1
+                continue
+            }
             // A hidden layer that runs in the scene pass still makes the image its readers sample.
             let runsInScene = entry.layer.readsScene || compositeOrder.inScene.contains(entry.layer.id)
             if visible || runsInScene { draws[layerIndex] = draw }
@@ -1161,6 +1177,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         sceneRenderPass.colorAttachments[0].clearColor = MTLClearColor(red: Double(clear.x), green: Double(clear.y),
                                                                        blue: Double(clear.z), alpha: 1)
         attachSceneDepth(to: sceneRenderPass, scene: sceneTexture)
+        if case .restore = flattenPlan, flattening.restore(into: sceneTexture, commandBuffer: commandBuffer) {
+            sceneRenderPass.colorAttachments[0].loadAction = .load
+        }
         // One instanced draw per system rather than one per particle (or per rope segment, which
         // multiplies out to thousands on trail renderers).
         particleInstances.removeAll(keepingCapacity: true)
@@ -1344,7 +1363,20 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             reflection: renderSettings.reflection)
         snapshotTracker.reset()
         let targetSize = SIMD2(sceneTexture.width, sceneTexture.height)
+        /// Keeps a copy of the flattened run once its last layer is drawn. False when the scene pass
+        /// couldn't resume.
+        func captureFlattenedRun(before item: SceneDrawItem?) -> Bool {
+            guard case .capture(let key) = flattenPlan, let last = key.layers.last else { return true }
+            if case .layer(let index) = item, index <= last { return true }
+            flattenPlan = .draw
+            endScenePass(encoder, resumes: true)
+            flattening.capture(key, from: sceneTexture, device: device, commandBuffer: commandBuffer)
+            guard let resumed = resumeScenePass(on: sceneTexture, commandBuffer: commandBuffer) else { return false }
+            encoder = resumed
+            return true
+        }
         for (item, barrier) in sequence.items {
+            guard captureFlattenedRun(before: item) else { return }
             let batchesBefore = nextParticleBatch
             guard drawParticleBatches(before: barrier) else { return }
             // Particles cover no rect we track: the snapshot no longer matches anywhere.
@@ -1407,7 +1439,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                             sampleCount: sceneSampleCount, depth: frameDepth, pipelines: scenePassPipelines),
                         encoder: encoder, commandBuffer: commandBuffer)
         }
-        guard drawParticleBatches(before: .max) else { return }
+        guard captureFlattenedRun(before: nil), drawParticleBatches(before: .max) else { return }
         endScenePass(encoder, resumes: false)
 
         var stageContext = SceneFrameStageContext(scene: sceneTexture, commandBuffer: commandBuffer, sceneSize: sceneSize,
@@ -3034,11 +3066,6 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                             transformScaleY: 1)
     }
 
-    private var pipelinesCompiling: Bool {
-        hasPendingEffectPipelines || imageMaterials?.hasPendingPipelines == true
-            || particleMaterials?.hasPendingPipelines == true
-    }
-
     /// Hands this frame's inputs to the layer analysis, which marks the layers they change dirty.
     private func analyseLayers(effectFrame: BuiltinFrameContext, motion: CameraMotion, drawableSize: SIMD2<Float>) {
         guard let layerAnalysis else { return }
@@ -3055,14 +3082,68 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         inputs.scripts = scripts.state
         inputs.animatedSites = animations?.sites ?? []
         let shape = (layers: layers.count, target: drawableSize)
-        // A layer, effect or post-process whose pipeline is still compiling draws another way until
-        // it lands; nothing the analysis tracks says when.
-        let warming = pipelinesCompiling
+        // A layer, effect or post-process whose pipeline was compiling draws another way once it
+        // lands: any compile that landed since the last frame changes the scene.
+        let completions = ScenePipelineCompletions.count
         inputs.sceneChanged = shape.layers != analysedShape.layers || shape.target != analysedShape.target
-            || warming || analysedWarmUp
+            || completions != analysedCompletions
         analysedShape = shape
-        analysedWarmUp = warming
+        analysedCompletions = completions
         layerAnalysis.update(inputs)
+    }
+
+    /// The layers this frame skips (docs/efficiency-plan-2d.md WP2-B): those `SceneCulling` proves
+    /// invisible, and the clean run at the bottom drawn from the flattened copy (`flattenPlan`).
+    private func planLayerSkips(_ order: SceneLayerCompositeOrder, scene: MTLTexture) -> Set<Int> {
+        flattenPlan = .draw
+        lastFrameSkips = (0, 0)
+        guard let analysis = layerAnalysis else { flattening.drop(); return [] }
+        let sources = order.sources.union(models?.compositeLayerIDs ?? [])
+        let protected = layers.map { SceneCulling.isProtected($0.layer, compositeSources: sources, inScene: order.inScene) }
+        var culled: [Int: SceneCulling.Reason] = [:]
+        if cullingEnabled {
+            let refracting = particleSystems.contains { particleMaterials?.readsSceneSnapshot($0) == true }
+            let inputs = layers.indices.map { index -> SceneCulling.Layer in
+                let layer = layers[index].layer
+                // A layer the analysis hasn't seen (a script made it) is unknown: never culled, reads anything.
+                guard let at = analysis.index(of: layer.id) else {
+                    return .init(index: index, coverage: .full(sceneSize), confinedToQuad: false, opacity: nil,
+                                 protected: true, readsFrameBeneath: true, visible: true)
+                }
+                return .init(index: index, coverage: analysis.coverage(at: at),
+                             confinedToQuad: SceneCulling.confinedToQuad(layer, perspectiveScene: isPerspective), opacity: nil,
+                             protected: protected[index], readsFrameBeneath: analysis.layers[at].dependencies.contains(.frameBeneath),
+                             visible: scripts.isVisible(layer.id))
+            }
+            culled = SceneCulling.cull(inputs, sceneSize: sceneSize, margin: 1.5 / max(renderPixelsPerUnit, 1e-3),
+                                       occlusionAllowed: !refracting && frameDepth == nil && spatial.models.isEmpty
+                                           && !spatial.drawOrder.reorders)
+        }
+        var skips = Set(culled.keys)
+        lastFrameSkips.culled = culled.count
+        // Flattening: the scene pass drawn plainly (no samples or depth to restore), layers in order.
+        let firstParticle = particleSystems.map(\.configuration.order).min() ?? .max
+        var run = sceneMultisampleTarget != nil || frameDepth != nil || !spatial.models.isEmpty || isPerspective
+            || spatial.drawOrder.reorders ? [] : SceneFlattening.run(
+                count: layers.count,
+                eligible: { !protected[$0] && self.layers[$0].particleBarrier <= firstParticle },
+                clean: { !analysis.isDirty(self.layers[$0].layer.id) })
+        // A layer hidden under an occluder stays flattened only while its occluder is in the run.
+        if let cut = run.firstIndex(where: { if case .occluded(let by) = culled[$0] { return !run.contains(by) } else { return false } }) {
+            run.removeSubrange(cut...)
+        }
+        let clear = scripts.state.scene.vector3(.clearcolor) ?? clearColor
+        let key = SceneFlattening.Key(layers: run, visible: run.map { scripts.isVisible(layers[$0].layer.id) }, clearColor: clear,
+                                      width: scene.width, height: scene.height, pixelFormat: scene.pixelFormat,
+                                      pixelsPerUnit: renderPixelsPerUnit, detailScale: fullDetailScale, settings: renderSettings,
+                                      generation: contentGeneration)
+        flattenPlan = flattening.plan(candidate: key, propertiesRevision: WallpaperServices.shared.propertyService.revision,
+                                      now: CACurrentMediaTime())
+        if case .restore = flattenPlan {
+            skips.formUnion(run)
+            lastFrameSkips.flattened = run.filter { culled[$0] == nil }.count
+        }
+        return skips
     }
 
     /// The cursor in scene units, mapped through the placement of the display it is on, or nil
