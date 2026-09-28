@@ -67,10 +67,10 @@ struct ExplorerItemMenu: SubviewOfContentView {
                     Label("Open in Workshop", systemImage: "cloud.fill")
                 }.disabled(true)
                 Menu("Related Wallpapers") {
-                    Link(destination: URL(string: "https://github.com/haren724/open-wallpaper-engine-mac")!) {
+                    Link(destination: URL(string: "https://github.com/deepratna-awale/wallpaper-engine-mac")!) {
                         Label("Browse All By", systemImage: "person.fill")
                     }
-                    Link(destination: URL(string: "https://github.com/haren724/open-wallpaper-engine-mac")!) {
+                    Link(destination: URL(string: "https://github.com/deepratna-awale/wallpaper-engine-mac")!) {
                         Label("Browse Presets", systemImage: "cloud.fill")
                     }
                 }.disabled(true)
