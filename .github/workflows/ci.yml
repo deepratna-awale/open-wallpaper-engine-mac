@@ -27,6 +27,13 @@ jobs:
           sudo xcode-select -s "$X"
           xcodebuild -version
 
+      - name: Test the release scripts
+        run: |
+          set -euo pipefail
+          bash Scripts/release/test-release-version.sh
+          python3 Scripts/release/test_appcast.py
+          for f in Scripts/release/*.sh; do bash -n "$f"; done
+
       - name: Build and test
         run: |
           set -o pipefail
