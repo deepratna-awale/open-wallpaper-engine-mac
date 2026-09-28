@@ -60,10 +60,8 @@ final class EffectGraphRenderer {
         /// How far the chain's blur-like buffers are reduced (`EffectResolutionPolicy`).
         var resolution = EffectResolutionPolicy.full
         var programs: [[UniformProgram?]] = []
-        /// Each render pass's pipeline, resolved once the chain is ready (N5): no key or lock per pass.
+        /// Each render pass's pipeline, resolved once the chain is ready; held so a trim never drops one in use.
         var pipelines: [[MTLRenderPipelineState?]] = []
-        /// Each effect's FBOs sampled with repeat UVs (N5: made once, not per pass).
-        var repeatingFBOs: [Set<String>] = []
         /// Last output of a chain that doesn't change over time, and what produced it. When the chain
         /// draws its last pass into the scene, the output is that pass's input, and `staticDrawn` the pass.
         var staticOutput: (key: StaticChainKey, output: MTLTexture)?
@@ -347,7 +345,8 @@ final class EffectGraphRenderer {
         let state: LayerState
         let targetFormats = context.targetFormats
         // Compared in place, without building the chain's keys every frame (N5).
-        if let existing = layers[layerID], Self.chain(existing.chain, matches: effects), existing.targetFormats == targetFormats {
+        let chain = effects.map { $0.passes.map(\.variantKey) }
+        if let existing = layers[layerID], existing.chain == chain, existing.targetFormats == targetFormats {
             state = existing
         } else {
             if let stale = layers[layerID] { recycleTargets(stale) }
@@ -360,7 +359,6 @@ final class EffectGraphRenderer {
             guard let formats = readyFormats(effects, targetFormats: targetFormats) else { return (nil, nil) }
             state.formats = formats
             state.pipelines = resolvedPipelines(effects, formats: formats)
-            state.repeatingFBOs = effects.map { Set($0.fbos.filter { $0.uvs == "repeat" }.map(\.name)) }
             state.programs = effects.map { effect in
                 effect.passes.map { pass in pass.variant.map { UniformProgram(layout: $0.uniforms, constants: pass.constants) } }
             }
@@ -458,7 +456,7 @@ final class EffectGraphRenderer {
                                               previous: previous, fbos: fbos, standIn: standInSizes,
                                               targetSize: SIMD2(Float(state.standInSize.x), Float(state.standInSize.y)),
                                               scriptWrites: context.constantWrites[effect.effectIndex] ?? [],
-                                              repeatingFBOs: state.repeatingFBOs[effectIndex])
+                                              repeatingFBOs: Set(effect.fbos.filter { $0.uvs == "repeat" }.map(\.name)))
                         state.fbos[effectIndex] = fbos
                         break chain
                     }
@@ -477,7 +475,7 @@ final class EffectGraphRenderer {
                            current: current, previous: previous, fbos: fbos, context: context,
                            standIn: standInSizes,
                            scriptWrites: context.constantWrites[effect.effectIndex] ?? [],
-                           repeatingFBOs: state.repeatingFBOs[effectIndex],
+                           repeatingFBOs: Set(effect.fbos.filter { $0.uvs == "repeat" }.map(\.name)),
                            commandBuffer: commandBuffer)
                     didRender = true
                     if pass.target == nil { current = output }
@@ -713,16 +711,6 @@ final class EffectGraphRenderer {
                 }
             }
         }
-    }
-
-    /// Whether `chain` (variant keys per effect and pass) is `effects`' chain.
-    private static func chain(_ chain: [[String]], matches effects: [SceneEffectPlan]) -> Bool {
-        guard chain.count == effects.count else { return false }
-        for (keys, effect) in zip(chain, effects) {
-            guard keys.count == effect.passes.count else { return false }
-            for (key, pass) in zip(keys, effect.passes) where key != pass.variantKey { return false }
-        }
-        return true
     }
 
     private static func pipelineKey(_ pass: SceneEffectPassPlan, format: MTLPixelFormat) -> String {
