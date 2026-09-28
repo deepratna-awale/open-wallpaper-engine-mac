@@ -170,6 +170,7 @@ final class WallpaperEngineAssetsInstallTests: XCTestCase {
         XCTAssertEqual(typed.type, "video")
         XCTAssertEqual(WEProject.impliedType(file: "sheep.exe"), "application")
         XCTAssertEqual(WEProject.impliedType(file: "index.html"), "web")
+        XCTAssertEqual(WEProject.impliedType(file: "assets.json", category: "Asset"), "")
     }
 
     // MARK: Service

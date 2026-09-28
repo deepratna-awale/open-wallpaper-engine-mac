@@ -120,7 +120,7 @@ struct WEProject: Codable, Equatable, Hashable {
 extension WEProject {
     private enum DecodingKeys: String, CodingKey {
         case approved, contentrating, description, file, general, preview, tags, title, visibility
-        case workshopid, workshopurl, type, version
+        case workshopid, workshopurl, type, version, category
     }
 
     /// Decodes as the synthesized decoder would, except that a project without `type` (WE's own
@@ -139,12 +139,17 @@ extension WEProject {
                   visibility: try container.decodeIfPresent(String.self, forKey: .visibility),
                   workshopid: try container.decodeIfPresent(WorkshopId.self, forKey: .workshopid),
                   workshopurl: try container.decodeIfPresent(String.self, forKey: .workshopurl),
-                  type: try container.decodeIfPresent(String.self, forKey: .type) ?? Self.impliedType(file: file),
+                  type: try container.decodeIfPresent(String.self, forKey: .type)
+                      ?? Self.impliedType(file: file,
+                                          category: try container.decodeIfPresent(String.self, forKey: .category)),
                   version: try container.decodeIfPresent(Int.self, forKey: .version))
     }
 
-    /// The wallpaper type a project's `file` implies when `type` is absent.
-    static func impliedType(file: String) -> String {
+    /// The wallpaper type a project's `file` implies when `type` is absent. A Workshop asset pack
+    /// (`category` "Asset", `file` usually `assets.json`) has no wallpaper type, so it stays out of
+    /// the library as it did when a missing `type` failed to decode.
+    static func impliedType(file: String, category: String? = nil) -> String {
+        if category?.caseInsensitiveCompare("Asset") == .orderedSame { return "" }
         switch (file as NSString).pathExtension.lowercased() {
         case "json": return "scene"
         case "html", "htm": return "web"
