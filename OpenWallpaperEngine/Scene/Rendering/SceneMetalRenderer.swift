@@ -378,6 +378,14 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// Per-layer dependencies, coverage, class and this frame's dirty state
     /// (docs/efficiency-plan-2d.md WP1-A); built with the content, off the main thread.
     private(set) var layerAnalysis: SceneLayerAnalysis?
+    /// Adaptive rate and idle skipping (`FramePacing`, WP2-C): the instance sets its limits and
+    /// ticks the displays at its rate; an idle frame returns before anything is encoded.
+    var framePacing = FramePacing()
+    /// Off with `OWE_IDLE_SKIP=0` (comparisons): every frame is drawn, the rate still adapts.
+    var skipsIdleFrames = ProcessInfo.processInfo.environment["OWE_IDLE_SKIP"] != "0"
+    /// Frames encoded so far: a shared scene's displays present only a new one.
+    private(set) var encodedFrames: UInt64 = 0
+    private var pacedParallax = SIMD2<Float>(0.5, 0.5)
     /// What the analysis last saw of the frame's shape: a change marks every layer dirty.
     private var analysedShape: (layers: Int, target: SIMD2<Float>) = (0, .zero)
     /// Pipeline compiles landed when the analysis last ran (`ScenePipelineCompletions`): one
@@ -617,6 +625,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 self.postProcess.setContent(content)
                 self.particleSystems = preparedParticleSystems
                 self.layerAnalysis = analysis
+                self.framePacing.changesOnItsOwn = FramePacing.changesOnItsOwn(
+                    analysis, particles: !preparedParticleSystems.isEmpty, cameraShake: content.camera.shake)
+                self.framePacing.wake(.interactive, at: self.wallTime())
                 self.transforms = content.transforms
                 self.objectMotions = content.motions
                 self.objectIDs = content.objectIDs
@@ -1089,6 +1100,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         effectFrame.lighting = frameLighting(eye: effectFrame.eyePosition, forward: effectFrame.viewForward,
                                              shake: motion.shake)
         analyseLayers(effectFrame: effectFrame, motion: motion, drawableSize: drawableSize)
+        guard paceFrame(effectFrame, at: wallTime()) else { return }
+        encodedFrames &+= 1
         drawProbe?.record(lighting: effectFrame.lighting)
         frameShadowAtlas = drawShadows(frame: effectFrame, commandBuffer: commandBuffer)
         // Text is rasterised first so its effects run on the finished text, like an image layer's.
@@ -3090,6 +3103,22 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         analysedShape = shape
         analysedCompletions = completions
         layerAnalysis.update(inputs)
+    }
+
+    /// Whether this frame is drawn (`FramePacing`); called once the analysis has seen its inputs.
+    private func paceFrame(_ frame: BuiltinFrameContext, at now: CFTimeInterval) -> Bool {
+        let parallaxMoved = frame.parallax != pacedParallax
+        pacedParallax = frame.parallax
+        guard let analysis = layerAnalysis else { return framePacing.record(.smooth, at: now) }
+        var particlesLive = false, particlesFollowCursor = false
+        for system in particleSystems where particleObjectID(system).map({ scripts.isVisible($0) }) ?? true {
+            particlesLive = true
+            if system.configuration.controlPoints.contains(where: \.followsCursor) { particlesFollowCursor = true; break }
+        }
+        let inputs = FrameDemandInputs(analysis: analysis, pointerMoved: frame.pointer != frame.pointerLast,
+                                       parallaxMoved: parallaxMoved, particlesLive: particlesLive,
+                                       particlesFollowCursor: particlesFollowCursor)
+        return framePacing.record(framePacing.classify(inputs), at: now) || !skipsIdleFrames
     }
 
     /// The layers this frame skips (docs/efficiency-plan-2d.md WP2-B): those `SceneCulling` proves

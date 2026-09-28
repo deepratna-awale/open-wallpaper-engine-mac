@@ -25,6 +25,8 @@ final class SceneWallpaperInstance {
         let screenID: String
         /// The playback rules pause this display: it keeps its last frame.
         var frozen = false
+        /// The renderer's `encodedFrames` this display last presented (shared scenes).
+        var presentedFrame: UInt64 = .max
     }
 
     let key: WallpaperInstanceKey
@@ -44,6 +46,10 @@ final class SceneWallpaperInstance {
     private var scriptsNotice: SafeRestartNotice?
     /// `playbackDidStop` asked for an update that hasn't paused the displays yet.
     private var stopReported = false
+    /// The pacing rate the displays tick at (`FramePacing.targetRate`), and the observers that wake it.
+    private var pacedRate = 0
+    private var cursorMonitors: [Any] = []
+    private var powerObserver: UUID?
 
     /// `screenID` is the display that starts it; its scripts keep their per-display storage there.
     /// `properties` is the store of user properties it runs with (`WallpaperInstanceKey.properties`).
@@ -71,6 +77,10 @@ final class SceneWallpaperInstance {
         pendingUpdate = nil
         for observer in observers { NotificationCenter.default.removeObserver(observer) }
         observers.removeAll()
+        for monitor in cursorMonitors { NSEvent.removeMonitor(monitor) }
+        cursorMonitors.removeAll()
+        if let powerObserver { PowerPolicyMonitor.shared.removeObserver(powerObserver) }
+        powerObserver = nil
         cancellables.removeAll()
         scriptsNotice?.close()
         scriptsNotice = nil
@@ -108,6 +118,7 @@ final class SceneWallpaperInstance {
     /// the driving display renders the frame for all of them and each presents it.
     func draw(_ presenter: SceneWallpaperPresenter, in view: MTKView) {
         guard let renderer else { return }
+        defer { applyPacing() }
         guard displays.count > 1 else {
             renderer.draw(in: view)
             return
@@ -118,7 +129,50 @@ final class SceneWallpaperInstance {
             renderer.renderShared(viewports())
             schedule.rendered(at: now)
         }
+        // An idle frame encoded nothing: the display keeps the frame it shows.
+        guard displays[id]?.presentedFrame != renderer.encodedFrames else { return }
+        displays[id]?.presentedFrame = renderer.encodedFrames
         renderer.present(in: view)
+    }
+
+    // MARK: - Frame pacing
+
+    /// Ticks the displays at the pacing's rate (`FramePacing`), each at a divisor of its refresh
+    /// rate, when the rate changed. The draw calls it after each frame; a wake calls it at once.
+    private func applyPacing(force: Bool = false) {
+        guard let renderer else { return }
+        let target = renderer.framePacing.targetRate
+        guard force || target != pacedRate else { return }
+        pacedRate = target
+        for (id, display) in displays {
+            guard let view = display.view else { continue }
+            let refresh = view.window?.screen?.maximumFramesPerSecond ?? 60
+            let rate = FramePacing.cadence(target, refreshRate: refresh > 0 ? refresh : 60)
+            if view.preferredFramesPerSecond != rate { view.preferredFramesPerSecond = rate }
+            schedule.setFrameRate(display.frozen ? 0 : Self.frameRate(of: view), of: id)
+        }
+    }
+
+    /// Something that changes the picture happened: tick at `demand`'s rate from the next refresh.
+    private func wakePacing(_ demand: FrameDemand) {
+        guard let renderer, renderer.framePacing.level < demand else { return }
+        renderer.framePacing.wake(demand, at: CACurrentMediaTime())
+        applyPacing()
+    }
+
+    /// A cursor move wakes an idle or slow scene at once (the displays' draws only poll the
+    /// cursor, at the rate they tick). Mouse monitors need no permission.
+    private func observeCursor() {
+        let mask: NSEvent.EventTypeMask = [.mouseMoved, .leftMouseDragged, .rightMouseDragged, .otherMouseDragged]
+        let wake: () -> Void = { [weak self] in
+            MainActor.assumeIsolated { self?.wakePacing(.interactive) }
+        }
+        if let global = NSEvent.addGlobalMonitorForEvents(matching: mask, handler: { _ in wake() }) {
+            cursorMonitors.append(global)
+        }
+        if let local = NSEvent.addLocalMonitorForEvents(matching: mask, handler: { event in wake(); return event }) {
+            cursorMonitors.append(local)
+        }
     }
 
     /// The displays as the frame needs them, the driving one first; views not yet laid out, and
@@ -161,7 +215,8 @@ final class SceneWallpaperInstance {
         applyRenderSettings(renderSettings(for: environment.settings.settings))
         updateVideoPlayback()
         renderer?.sounds.setTargetGain(soundGain)
-        let fps = Int(environment.settings.settings.fps)
+        renderer?.framePacing.limits = FramePacing.Limits(environment.settings.settings, power: PowerPolicyMonitor.shared.policy)
+        let fps = renderer?.framePacing.targetRate ?? Int(environment.settings.settings.fps)
         let plays = displays.mapValues { wallpapers.playback(onScreen: $0.screenID).rendersFrames }
         let paused = wallpapers.playRate == 0 || !plays.values.contains(true)
         renderer?.pausesPlayback = paused
@@ -171,10 +226,12 @@ final class SceneWallpaperInstance {
             guard let view = display.view else { continue }
             let frozen = plays[id] == false && !easing
             displays[id]?.frozen = frozen
-            view.preferredFramesPerSecond = fps
+            let refresh = view.window?.screen?.maximumFramesPerSecond ?? 60
+            view.preferredFramesPerSecond = FramePacing.cadence(fps, refreshRate: refresh > 0 ? refresh : 60)
             view.isPaused = frozen || (paused && !easing)
             schedule.setFrameRate(frozen ? 0 : Self.frameRate(of: view), of: id)
         }
+        pacedRate = fps
     }
 
     /// The renderer's clock eased to a stop (`SceneMetalRenderer.onPlaybackStopped`, from its
@@ -272,6 +329,11 @@ final class SceneWallpaperInstance {
 
     private func observeChanges() {
         let center = NotificationCenter.default
+        observeCursor()
+        // N10: thermal state and Low Power Mode move the slider's effective stop.
+        powerObserver = PowerPolicyMonitor.shared.observe { [weak self] _ in
+            DispatchQueue.main.async { MainActor.assumeIsolated { self?.update() } }
+        }
         observers.append(center.addObserver(forName: .sceneUserPropertiesDidChange, object: nil, queue: .main) { [weak self] notification in
             let keys = notification.userInfo?["keys"] as? [String] ?? []
             let store = notification.userInfo?["wallpaper"] as? String
@@ -281,6 +343,7 @@ final class SceneWallpaperInstance {
                 // Scripts get every change (`applyUserProperties`); content is rebuilt only when it
                 // reads the property itself.
                 self.renderer?.scripts.userPropertiesDidChange(Set(keys))
+                self.wakePacing(.slow)
                 let impact = self.viewModel.impact(of: keys)
                 guard impact > .none else { return }
                 self.scheduleSceneUpdate(impact)
