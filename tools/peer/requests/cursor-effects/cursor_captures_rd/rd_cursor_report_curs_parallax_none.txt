@@ -1,0 +1,4 @@
+target pid 23440
+curs_parallax_none park setcursor 1 cursor (40, 40, True)
+  no capture for curs_parallax_none_park
+curs_parallax_none still 960 540 setcursor 1 cursor (960, 540, True)

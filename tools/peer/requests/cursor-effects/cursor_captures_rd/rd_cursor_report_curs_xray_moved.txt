@@ -1,0 +1,11 @@
+target pid 23440
+curs_xray_moved park setcursor 1 cursor (40, 40, True)
+  no capture for curs_xray_moved_park
+curs_xray_moved still 1250 460 setcursor 1 cursor (1250, 460, True)
+  no capture for curs_xray_moved_1250_460
+curs_xray_moved still 1100 340 setcursor 1 cursor (1100, 340, True)
+  no capture for curs_xray_moved_1100_340
+curs_xray_moved still 1400 600 setcursor 1 cursor (1400, 600, True)
+  no capture for curs_xray_moved_1400_600
+curs_xray_moved still 1000 520 setcursor 1 cursor (1000, 520, True)
+  no capture for curs_xray_moved_1000_520

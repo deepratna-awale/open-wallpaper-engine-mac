@@ -1,0 +1,13 @@
+target pid 23440
+curs_xray_plain park setcursor 1 cursor (40, 40, True)
+curs_xray_plain still 960 540 setcursor 1 cursor (960, 540, True)
+curs_xray_plain still 700 350 setcursor 1 cursor (700, 350, True)
+curs_xray_plain still 1250 760 setcursor 1 cursor (1250, 760, True)
+curs_xray_plain still 560 540 setcursor 1 cursor (560, 540, True)
+curs_xray_plain still 960 180 setcursor 1 cursor (960, 180, True)
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_xray_plain_park.png <Result: 'Success'>
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_xray_plain_960_540.png <Result: 'Success'>
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_xray_plain_700_350.png <Result: 'Success'>
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_xray_plain_1250_760.png <Result: 'Success'>
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_xray_plain_560_540.png <Result: 'Success'>
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_xray_plain_960_180.png <Result: 'Success'>

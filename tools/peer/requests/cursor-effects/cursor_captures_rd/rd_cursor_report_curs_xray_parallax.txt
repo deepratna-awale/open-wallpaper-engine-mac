@@ -1,0 +1,9 @@
+target pid 23440
+curs_xray_parallax park setcursor 1 cursor (40, 40, True)
+  no capture for curs_xray_parallax_park
+curs_xray_parallax still 960 540 setcursor 1 cursor (960, 540, True)
+  no capture for curs_xray_parallax_960_540
+curs_xray_parallax still 1100 620 setcursor 1 cursor (1100, 620, True)
+  no capture for curs_xray_parallax_1100_620
+curs_xray_parallax still 840 460 setcursor 1 cursor (840, 460, True)
+  no capture for curs_xray_parallax_840_460

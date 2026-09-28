@@ -1,0 +1,47 @@
+target pid 26212
+curs_none park setcursor 1 cursor (40, 40, True)
+curs_none still 960 540 setcursor 1 cursor (960, 540, True)
+curs_xray_moved park setcursor 1 cursor (40, 40, True)
+curs_xray_moved still 1250 460 setcursor 1 cursor (1250, 460, True)
+curs_xray_moved still 1100 340 setcursor 1 cursor (1100, 340, True)
+curs_xray_moved still 1400 600 setcursor 1 cursor (1400, 600, True)
+curs_xray_moved still 1000 520 setcursor 1 cursor (1000, 520, True)
+curs_xray_zoom park setcursor 1 cursor (40, 40, True)
+curs_xray_zoom still 960 540 setcursor 1 cursor (960, 540, True)
+curs_xray_zoom still 1200 700 setcursor 1 cursor (1200, 700, True)
+curs_xray_zoom still 700 380 setcursor 1 cursor (700, 380, True)
+curs_xray_crop park setcursor 1 cursor (40, 40, True)
+curs_xray_crop still 960 540 setcursor 1 cursor (960, 540, True)
+curs_xray_crop still 1200 800 setcursor 1 cursor (1200, 800, True)
+curs_xray_crop still 700 250 setcursor 1 cursor (700, 250, True)
+curs_xray_parallax park setcursor 1 cursor (40, 40, True)
+curs_xray_parallax still 960 540 setcursor 1 cursor (960, 540, True)
+curs_xray_parallax still 1100 620 setcursor 1 cursor (1100, 620, True)
+curs_xray_parallax still 840 460 setcursor 1 cursor (840, 460, True)
+curs_parallax_none park setcursor 1 cursor (40, 40, True)
+curs_parallax_none still 960 540 setcursor 1 cursor (960, 540, True)
+curs_parallax_none still 1100 620 setcursor 1 cursor (1100, 620, True)
+curs_parallax_none still 840 460 setcursor 1 cursor (840, 460, True)
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_none_park.png <Result: 'Success'>
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_none_960_540.png <Result: 'Success'>
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_xray_moved_park.png <Result: 'Success'>
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_xray_moved_1250_460.png <Result: 'Success'>
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_xray_moved_1100_340.png <Result: 'Success'>
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_xray_moved_1400_600.png <Result: 'Success'>
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_xray_moved_1000_520.png <Result: 'Success'>
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_xray_zoom_park.png <Result: 'Success'>
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_xray_zoom_960_540.png <Result: 'Success'>
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_xray_zoom_1200_700.png <Result: 'Success'>
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_xray_zoom_700_380.png <Result: 'Success'>
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_xray_crop_park.png <Result: 'Success'>
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_xray_crop_960_540.png <Result: 'Success'>
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_xray_crop_1200_800.png <Result: 'Success'>
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_xray_crop_700_250.png <Result: 'Success'>
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_xray_parallax_park.png <Result: 'Success'>
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_xray_parallax_960_540.png <Result: 'Success'>
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_xray_parallax_1100_620.png <Result: 'Success'>
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_xray_parallax_840_460.png <Result: 'Success'>
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_parallax_none_park.png <Result: 'Success'>
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_parallax_none_960_540.png <Result: 'Success'>
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_parallax_none_1100_620.png <Result: 'Success'>
+save K:\DeepWorkspace\wem-images2\tools\peer\requests\cursor-effects\cursor_captures_rd\curs_parallax_none_840_460.png <Result: 'Success'>

@@ -1,0 +1,9 @@
+target pid 23440
+curs_xray_zoom park setcursor 1 cursor (40, 40, True)
+  no capture for curs_xray_zoom_park
+curs_xray_zoom still 960 540 setcursor 1 cursor (960, 540, True)
+  no capture for curs_xray_zoom_960_540
+curs_xray_zoom still 1200 700 setcursor 1 cursor (1200, 700, True)
+  no capture for curs_xray_zoom_1200_700
+curs_xray_zoom still 700 380 setcursor 1 cursor (700, 380, True)
+  no capture for curs_xray_zoom_700_380
