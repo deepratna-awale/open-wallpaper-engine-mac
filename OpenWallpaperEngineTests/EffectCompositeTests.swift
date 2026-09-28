@@ -116,6 +116,7 @@ final class EffectCompositeTests: XCTestCase {
     /// Blend: the effect over the layer by `BLENDMODE` (Normal) at the effect's alpha × Alpha, and
     /// alpha max(effect · saturate(Alpha), layer). Alpha above 1 pushes past the effect, as in WE.
     func testBlendMixesTheEffectOverTheLayer() throws {
+        _ = try Fixtures.assets()
         let normal = try run(combos: [:])
         for alpha: Float in [0.35, 1, 1.6] {
             let blended = try run(combos: ["COMPOSITE": 1], constants: ["compositealpha": "\(alpha)"])
@@ -128,6 +129,7 @@ final class EffectCompositeTests: XCTestCase {
 
     /// Under: the effect below the layer, mix(effect, layer, layer's alpha).
     func testUnderPutsTheEffectBelowTheLayer() throws {
+        _ = try Fixtures.assets()
         let normal = try run(combos: [:])
         let under = try run(combos: ["COMPOSITE": 2], constants: ["compositealpha": "0.8"])
         check(under, normal: normal, "Under") { original, effect in
@@ -138,6 +140,7 @@ final class EffectCompositeTests: XCTestCase {
 
     /// Cutout: the effect only where the layer is transparent.
     func testCutoutKeepsTheEffectWhereTheLayerIsTransparent() throws {
+        _ = try Fixtures.assets()
         let normal = try run(combos: [:])
         let cutout = try run(combos: ["COMPOSITE": 3])
         check(cutout, normal: normal, "Cutout") { original, effect in
@@ -147,6 +150,7 @@ final class EffectCompositeTests: XCTestCase {
 
     /// Every mode multiplies the effect by `compositecolor`; `COMPOSITEMONO` greys it first.
     func testColourAndMonochromeApplyToTheEffect() throws {
+        _ = try Fixtures.assets()
         let normal = try run(combos: [:])
         let tinted = try run(combos: [:], constants: ["compositecolor": "1 0.5 0.25"])
         check(tinted, normal: normal, "tinted") { _, effect in effect * SIMD4(1, 0.5, 0.25, 1) }

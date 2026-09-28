@@ -71,6 +71,7 @@ final class ShaderVariantCacheTests: XCTestCase {
     /// Fails when translated output changes without a `revision` bump, which would let users keep
     /// stale variants from their disk cache.
     func testTranslatedOutputMatchesItsRevision() throws {
+        _ = try Fixtures.assets()
         let assets = ShaderVariantTests.weAssets
         let loader = ShaderSourceLoader(roots: [assets])
         let translator = ShaderVariantTranslator(compiler: InProcessShaderCompiler(), cacheDirectory: nil, failureDirectory: nil)
@@ -112,6 +113,7 @@ final class ShaderVariantCacheTests: XCTestCase {
     /// one variant. A combo the shader names, and `LIGHTING`/`LIGHTS_*` under
     /// `#require LightingV1`, still does.
     func testCombosTheShaderDoesntNameStayOutOfTheKey() throws {
+        _ = try Fixtures.assets()
         let loader = ShaderSourceLoader(roots: [ShaderVariantTests.weAssets])
         let path = "effects/tint/shaders/effects/tint"
         let vertex = try loader.load(path, stage: .vertex), fragment = try loader.load(path, stage: .fragment)
@@ -252,6 +254,7 @@ final class ShaderVariantCacheTests: XCTestCase {
 
     /// Malformed WE sources (truncated, garbled) fail with an error; none may abort the app.
     func testGarbledSourcesFailWithoutCrashing() throws {
+        _ = try Fixtures.assets()
         let assets = ShaderVariantTests.weAssets
         let loader = ShaderSourceLoader(roots: [assets])
         let compiler = InProcessShaderCompiler()

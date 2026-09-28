@@ -35,6 +35,7 @@ final class HDRLibrarySweepTests: XCTestCase {
     }
 
     func testEveryHDRSceneRunsWEsHDRChain() throws {
+        _ = try Fixtures.assets()
         let roots = LightingLibraryDecodeTests.roots.filter { FileManager.default.fileExists(atPath: $0.path) }
         try XCTSkipIf(roots.count < LightingLibraryDecodeTests.roots.count, "wallpaper library not present")
         var report = "scene\tHDR\tlevels\tstrength\tthreshold\ttarget\toverbright %\tworst\tGPU p50 ms\tLDR p50 ms\n"

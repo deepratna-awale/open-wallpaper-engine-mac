@@ -17,6 +17,7 @@ final class SceneBloomChainTests: XCTestCase {
     }
 
     override func setUpWithError() throws {
+        _ = try Fixtures.assets()
         device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         queue = try XCTUnwrap(device.makeCommandQueue())
         cache = FileManager.default.temporaryDirectory.appending(path: "owe-bloom-\(UUID().uuidString)")
@@ -40,6 +41,7 @@ final class SceneBloomChainTests: XCTestCase {
 
     /// Four passes of WE's own materials, with WE's targets, inputs and constants' defaults.
     func testThePlanIsWEsFourUtilPasses() throws {
+        _ = try Fixtures.assets()
         let plan = try XCTUnwrap(chain.plan)
         XCTAssertEqual(plan.passes.map(\.target), ["_rt_4FrameBuffer", "_rt_8FrameBuffer", "_rt_Bloom", nil])
         XCTAssertEqual(plan.fbos.map(\.name), ["_rt_4FrameBuffer", "_rt_8FrameBuffer", "_rt_Bloom"])
@@ -92,6 +94,7 @@ final class SceneBloomChainTests: XCTestCase {
 
     /// The rendered chain equals the CPU model within 2/255 on every pixel and channel.
     func testTheChainMatchesTheCPUModel() throws {
+        _ = try Fixtures.assets()
         for frame in Self.frames {
             for (strength, threshold, tint) in Self.constants {
                 let rendered = try run(frame.image, strength: strength, threshold: threshold, tint: tint)
@@ -109,6 +112,7 @@ final class SceneBloomChainTests: XCTestCase {
 
     /// Bloom adds only where the 4×4 box's brightest channel passes the threshold.
     func testBloomFollowsWEsThreshold() throws {
+        _ = try Fixtures.assets()
         func patch(_ value: Float) -> BloomReference.Image {
             BloomReference.Image(width: 64, height: 48) { x, y in
                 (24..<40).contains(x) && (16..<32).contains(y) ? SIMD3(value, value * 0.5, 0) : .zero
@@ -129,6 +133,7 @@ final class SceneBloomChainTests: XCTestCase {
 
     /// The same frame blooms the same way every time: no state leaks between frames.
     func testTheChainIsStable() throws {
+        _ = try Fixtures.assets()
         let frame = Self.frames[0].image
         let first = try run(frame, strength: 2, threshold: 0.65, tint: SIMD3(repeating: 1))
         _ = try run(Self.frames[2].image, strength: 1, threshold: 0.2, tint: SIMD3(1, 0, 0))
@@ -142,6 +147,7 @@ final class SceneBloomChainTests: XCTestCase {
     /// GPU time of the chain on a frame at 1080p and 5K: it has to be cheap. Each sample is one
     /// command buffer of `batch` chains back to back, as frames keep the GPU busy, over `batch`.
     func testTheChainIsCheap() throws {
+        _ = try Fixtures.assets()
         let batch = 10
         var report = ""
         for (name, width, height, budget) in [("1080p", 1920, 1080, 2.0), ("5K", 5120, 2880, 8.0)] {

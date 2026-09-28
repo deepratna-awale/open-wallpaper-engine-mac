@@ -54,6 +54,7 @@ final class SceneScriptLocalStorageTests: XCTestCase {
     }
 
     func testValuesRoundTripThroughJSON() throws {
+        _ = try Fixtures.assets()
         let fixture = try makeFixture()
         XCTAssertEqual(run("""
             localStorage.set('v', new Vec3(1, 2, 3));

@@ -62,6 +62,7 @@ final class SceneScriptCursorExtensionTests: XCTestCase {
     }
 
     func testOnlyTheHitObjectsScriptsHearTheClickWithWEsEventObject() throws {
+        _ = try Fixtures.assets()
         let runtime = try makeRuntime()
         runtime.add(SceneScriptInstance(id: "a", source: Self.loggingScript("a"), objectSlot: 0))
         runtime.add(SceneScriptInstance(id: "b", source: Self.loggingScript("b"), objectSlot: 1))
@@ -88,6 +89,7 @@ final class SceneScriptCursorExtensionTests: XCTestCase {
     }
 
     func testEachScriptGetsItsOwnEventObject() throws {
+        _ = try Fixtures.assets()
         let runtime = try makeRuntime()
         let mutating = """
             shared.seen = shared.seen || [];
@@ -102,6 +104,7 @@ final class SceneScriptCursorExtensionTests: XCTestCase {
     }
 
     func testAThrowingCursorCallbackIsDisabledOnlyForItsScript() throws {
+        _ = try Fixtures.assets()
         let runtime = try makeRuntime()
         runtime.add(SceneScriptInstance(id: "a", source: """
             shared.clicks = 0; shared.moves = 0;

@@ -61,6 +61,7 @@ final class ModelGroundTruthProjects: XCTestCase {
     /// centroid from the white one, y up) is 168.8° with the additive layer at blend 1 (−x:
     /// `base · additive`) and −175.3° at 0.5 (45° about z, the delta nlerped by the blend).
     func testAdditiveLayersMatchWEsCaptures() throws {
+        _ = try Fixtures.assets()
         let scratch = FileManager.default.temporaryDirectory.appending(path: "owe-mg3-\(UUID().uuidString)")
         defer {
             if FileManager.default.fileExists(atPath: scratch.path) {
@@ -84,6 +85,7 @@ final class ModelGroundTruthProjects: XCTestCase {
     /// nearer red cube covers the overlap at (960, 540) whichever is drawn first (WE: (253, 0, 0)
     /// in both).
     func testOrthographicDepthMatchesWEsCaptures() throws {
+        _ = try Fixtures.assets()
         let scratch = FileManager.default.temporaryDirectory.appending(path: "owe-mg6-\(UUID().uuidString)")
         defer {
             if FileManager.default.fileExists(atPath: scratch.path) {
@@ -111,6 +113,7 @@ final class ModelGroundTruthProjects: XCTestCase {
     /// sphere's disc over that outside it, 1.5–5 s after load, was 0.28 (shipped, depth test on),
     /// 0.13 (on) and 1.55 (off) in WE's captures.
     func testCollisionModelParticlesHideBehindTheSphereAsInWE() throws {
+        _ = try Fixtures.assets()
         let preview = URL(fileURLWithPath: Self.weAssets + "/scenes/particleelementpreviews/collisionmodel", isDirectory: true)
         guard FileManager.default.fileExists(atPath: preview.appending(path: "scene.json").path) else {
             throw XCTSkip("WE's collisionmodel preview isn't installed")

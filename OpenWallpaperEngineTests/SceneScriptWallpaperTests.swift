@@ -56,6 +56,7 @@ final class SceneScriptWallpaperTests: XCTestCase {
     }
 
     func testWorldMatricesReachGetTransformMatrix() throws {
+        _ = try Fixtures.assets()
         let wallpaper = try make(objects: [
             object(id: 1, fields: #""origin": {"script": "export function update(value) { shared.tx = thisLayer.getTransformMatrix().translation().x; return value; }", "value": "0 0 0"}"#),
         ])
@@ -206,6 +207,7 @@ final class SceneScriptWallpaperTests: XCTestCase {
     }
 
     func testEffectVisibilityAndMaterialConstantsComeBack() throws {
+        _ = try Fixtures.assets()
         let effect = #"{"file": "effects/tint/effect.json", "visible": false, "passes": [{"constantshadervalues": {"color": "0 0 1"}}]}"#
         let wallpaper = try make(objects: [
             object(id: 1, fields: #""image": "models/a.json", "effects": [\#(effect)], "origin": {"script": "export function update(value) { const e = thisLayer.getEffect(0); e.visible = true; e.setMaterialProperty('color', new Vec3(0, 1, 0)); return value; }", "value": "0 0 0"}"#),
@@ -236,6 +238,7 @@ final class SceneScriptWallpaperTests: XCTestCase {
 
     /// WP10: the renderer's cursor frame reaches only the hit object's scripts.
     func testTheCursorPassClicksTheLayerUnderTheCursor() throws {
+        _ = try Fixtures.assets()
         let clicker = #"export function cursorClick() { shared.clicks = (shared.clicks || 0) + 1; }"#
         let wallpaper = try make(objects: [
             object(id: 1, fields: #""image": "models/a.json", "size": "100 100", "origin": {"script": "\#(clicker) export function update(value) { return value; }", "value": "50 50 0"}"#),

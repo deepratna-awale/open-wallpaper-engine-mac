@@ -315,6 +315,7 @@ final class SceneBonePhysicsTests: XCTestCase {
     /// `applyBonePhysicsImpulse` and `resetBonePhysicsSimulation` reach the animator as commands
     /// for one bone, by index or name (an empty name is the first bone); other calls do nothing.
     func testScriptCalls() throws {
+        _ = try Fixtures.assets()
         var image = SceneScriptObjectDescription.make(.image, id: 5, name: "puppet")
         image.rig = SceneScriptRigTests.rig
         let plain = SceneScriptObjectDescription.make(.image, id: 6, name: "plain")

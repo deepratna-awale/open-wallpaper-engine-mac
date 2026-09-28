@@ -14,6 +14,7 @@ final class WEAuthoredValuesTests: XCTestCase {
     /// parameter's default, range, label and flags equal its uniform's annotation, and its
     /// default equals the value the renderer resolves for that uniform.
     func testEveryEffectParameterIsItsAnnotation() throws {
+        _ = try Fixtures.assets()
         var effects: [(file: String, roots: [URL])] = []
         let assets = ShaderVariantTests.weAssets
         for name in try FileManager.default.contentsOfDirectory(atPath: assets.appending(path: "effects").path).sorted() {
@@ -266,6 +267,7 @@ final class WEAuthoredValuesTests: XCTestCase {
     }
 
     func testScriptPropertyDefaultsAreWEs() throws {
+        _ = try Fixtures.assets()
         let values = try scriptProperties("""
             .addCombo({name:'mode',label:'Mode',options:[{label:'A',value:2},{label:'B',value:3}]})
             .addSlider({name:'speed',label:'Speed',value:0.5,min:0.1,max:4,integer:false})
@@ -283,6 +285,7 @@ final class WEAuthoredValuesTests: XCTestCase {
     }
 
     func testSceneScriptPropertiesOverrideDeclaredKeysOnly() throws {
+        _ = try Fixtures.assets()
         let values = try scriptProperties("""
             .addCombo({name:'mode',options:[{label:'A',value:2},{label:'B',value:3}]})
             .addColor({name:'tint',value:new Vec3(1,1,1)})

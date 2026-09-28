@@ -39,6 +39,7 @@ final class BloomLibrarySweepTests: XCTestCase {
     }
 
     func testEveryBloomSceneBloomsLikeWE() throws {
+        _ = try Fixtures.assets()
         let roots = LightingLibraryDecodeTests.roots.filter { FileManager.default.fileExists(atPath: $0.path) }
         try XCTSkipIf(roots.count < LightingLibraryDecodeTests.roots.count, "wallpaper library not present")
         let scenes = try Self.bloomScenes(in: roots)

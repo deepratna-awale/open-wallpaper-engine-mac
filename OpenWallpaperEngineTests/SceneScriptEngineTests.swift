@@ -47,6 +47,7 @@ final class SceneScriptEngineTests: XCTestCase {
     }
 
     func testSizesAreFreshVec2sAndFollowTheEnvironment() throws {
+        _ = try Fixtures.assets()
         let fixture = try makeFixture(environment: SceneScriptEngineEnvironment(screenResolution: SIMD2(2560, 1440),
                                                                                 canvasSize: SIMD2(1920, 1080)))
         fixture.add("sizes", """
@@ -94,6 +95,7 @@ final class SceneScriptEngineTests: XCTestCase {
     ]
 
     func testUserPropertiesAreConvertedByWEsOwnCode() throws {
+        _ = try Fixtures.assets()
         let fixture = try makeFixture()
         fixture.add("props", """
             function applyUserProperties(changed) {
@@ -171,6 +173,7 @@ final class SceneScriptEngineTests: XCTestCase {
     // MARK: - console
 
     func testConsoleNamesTheScriptAndIsRateLimited() throws {
+        _ = try Fixtures.assets()
         let fixture = try makeFixture()
         fixture.add("talker", """
             function init() { console.log('hello', 1, new Vec2(1, 2)); console.error('bad', true); }

@@ -24,6 +24,7 @@ final class ParticleLightingTests: XCTestCase {
     /// Moving the system and its light together leaves the particle's light as it was; with the
     /// light left behind (out of its radius) it is lit by the ambient alone.
     func testALitParticleIsLitWhereItsModelMatrixPutsIt() throws {
+        _ = try Fixtures.assets()
         let plan = try litPlan()
         let back = Self.translation(SIMD3(0, 0, -500))
         let atOrigin = try centre(plan, model: matrix_identity_float4x4, light: SIMD3(0, 0, 60))

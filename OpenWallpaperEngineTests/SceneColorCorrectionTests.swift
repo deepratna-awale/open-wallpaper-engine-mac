@@ -23,6 +23,7 @@ final class SceneColorCorrectionTests: XCTestCase {
     }
 
     override func setUpWithError() throws {
+        _ = try Fixtures.assets()
         device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         queue = try XCTUnwrap(device.makeCommandQueue())
         cache = FileManager.default.temporaryDirectory.appending(path: "owe-cc-\(UUID().uuidString)")
@@ -45,7 +46,8 @@ final class SceneColorCorrectionTests: XCTestCase {
     }
 
     /// WE's defaults are identity: no pass.
-    func testWEsDefaultsMakeNoPass() {
+    func testWEsDefaultsMakeNoPass() throws {
+        _ = try Fixtures.assets()
         let defaults = settings(Dictionary(uniqueKeysWithValues: WEColorCorrectionProperty.allCases.map { ($0, $0.defaultValue) }))
         XCTAssertEqual(defaults, SceneColorCorrectionSettings())
         XCTAssertTrue(defaults.isIdentity)
@@ -55,7 +57,8 @@ final class SceneColorCorrectionTests: XCTestCase {
 
     /// The sliders go through WE's scales: brightness (v/50)², contrast and saturation √(v/50),
     /// hue v/100 − 0.5; the strength v/100.
-    func testTheSlidersMapAsWEMapsThem() {
+    func testTheSlidersMapAsWEMapsThem() throws {
+        _ = try Fixtures.assets()
         let edited = settings([.showColorOptions: "true", .brightness: "100", .contrast: "100", .saturation: "0",
                                .hueShift: "75", .filter: "tower", .filterStrength: "40"])
         XCTAssertEqual(edited.params.x, 4)
@@ -68,7 +71,8 @@ final class SceneColorCorrectionTests: XCTestCase {
     }
 
     /// `COL` needs "Show color options" and a value away from identity; `LUT` a filter with strength.
-    func testWhatWEMakesThePassWith() {
+    func testWhatWEMakesThePassWith() throws {
+        _ = try Fixtures.assets()
         XCTAssertFalse(settings([.brightness: "80"]).appliesColor, "the options are hidden")
         XCTAssertFalse(settings([.showColorOptions: "true"]).appliesColor, "shown but at identity")
         XCTAssertTrue(settings([.showColorOptions: "true", .hueShift: "49"]).appliesColor)
@@ -79,6 +83,7 @@ final class SceneColorCorrectionTests: XCTestCase {
 
     /// The menu is "None" and WE's 25 filters, numbered, each a LUT that ships with WE.
     func testTheFilterMenuIsWEs() throws {
+        _ = try Fixtures.assets()
         let options = WEImageFilters.options { _ in nil }
         XCTAssertEqual(options.count, 26)
         XCTAssertEqual(options[0].title, "None")
@@ -94,7 +99,8 @@ final class SceneColorCorrectionTests: XCTestCase {
     }
 
     /// Every colour property is applied live, without rebuilding the scene.
-    func testThePropertiesAreLive() {
+    func testThePropertiesAreLive() throws {
+        _ = try Fixtures.assets()
         for key in WEColorCorrectionProperty.allCases {
             XCTAssertEqual(SceneChangeImpact.impact(of: key.rawValue), .none, key.rawValue)
         }
@@ -104,6 +110,7 @@ final class SceneColorCorrectionTests: XCTestCase {
 
     /// `lut/neutral` is the identity: texel (r, g, b) holds (r, g, b) · 255/31, slices stacked by blue.
     func testTheNeutralLUTIsTheIdentity() throws {
+        _ = try Fixtures.assets()
         let volume = try TEXVolume(texData: try XCTUnwrap(Self.assetData("materials/lut/neutral.tex")))
         XCTAssertEqual(volume.rgba.count, 32 * 32 * 32 * 4)
         for (x, y, z) in [(0, 0, 0), (31, 0, 0), (0, 31, 0), (0, 0, 31), (5, 7, 9), (31, 31, 31)] {
@@ -115,6 +122,7 @@ final class SceneColorCorrectionTests: XCTestCase {
 
     /// A 2D `.tex` isn't a volume.
     func testAPlainTextureIsntAVolume() throws {
+        _ = try Fixtures.assets()
         let data = try XCTUnwrap(Self.assetData("materials/util/noise.tex"))
         XCTAssertFalse(TEXVolume.isVolume(data))
         XCTAssertThrowsError(try TEXVolume(texData: data)) { XCTAssertEqual($0 as? TEXVolume.ParseError, .notVolume) }
@@ -172,6 +180,7 @@ final class SceneColorCorrectionTests: XCTestCase {
 
     /// The colour options alone (`COL`), at a few settings.
     func testTheColourOptionsMatchTheCPUModel() throws {
+        _ = try Fixtures.assets()
         try check(settings([.showColorOptions: "true", .brightness: "70"]), "brighter")
         try check(settings([.showColorOptions: "true", .contrast: "80", .saturation: "20"]), "contrast, desaturated")
         try check(settings([.showColorOptions: "true", .hueShift: "80", .brightness: "40"]), "hue shift")
@@ -179,6 +188,7 @@ final class SceneColorCorrectionTests: XCTestCase {
 
     /// A filter alone (`LUT`) and with the options, at full and partial strength.
     func testTheFiltersMatchTheCPUModel() throws {
+        _ = try Fixtures.assets()
         try check(settings([.filter: "neutral"]), "neutral")
         try check(settings([.filter: "k23_b"]), "Vibrant Contrast")
         try check(settings([.filter: "lutx32_amber", .filterStrength: "35"]), "Amber at 35")
@@ -187,6 +197,7 @@ final class SceneColorCorrectionTests: XCTestCase {
 
     /// Identity makes no pass, as in WE; an unknown filter draws the frame as it is.
     func testIdentityAndAMissingFilterDrawTheFrameAsItIs() throws {
+        _ = try Fixtures.assets()
         XCTAssertNil(try run(SceneColorCorrectionSettings()))
         XCTAssertNil(try run(settings([.filter: "no-such-filter"])))
     }

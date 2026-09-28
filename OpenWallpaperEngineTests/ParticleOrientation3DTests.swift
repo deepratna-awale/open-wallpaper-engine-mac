@@ -57,6 +57,7 @@ final class ParticleOrientation3DTests: XCTestCase {
     }
 
     func testTheUniformsCarryTheCameraIntoARotatedSystemsSpace() throws {
+        _ = try Fixtures.assets()
         // A system turned a quarter about y: the camera's forward in its space is turned back.
         let camera = Self.camera
         let turn = simd_float4x4(simd_quatf(angle: .pi / 2, axis: SIMD3(0, 1, 0)))
@@ -85,6 +86,7 @@ final class ParticleOrientation3DTests: XCTestCase {
     /// wide as its size at the eye's distance. Drawn in the scene's plane (the 2D axes) it would
     /// be a squashed, sheared quad.
     func testAScreenSpriteFacesTheCameraInAPerspectiveScene() throws {
+        _ = try Fixtures.assets()
         let plan = try self.plan()
         let renderer = try XCTUnwrap(ParticleMaterialRenderer(device: try device()))
         let quad: Float = 100

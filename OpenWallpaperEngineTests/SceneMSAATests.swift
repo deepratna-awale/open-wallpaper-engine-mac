@@ -47,6 +47,7 @@ final class SceneMSAATests: XCTestCase {
     /// Without MSAA the square's edges are hard (every pixel black or white); with it they are
     /// smoothed by coverage and the rest of the frame is unchanged.
     func testMSAASmoothsTheEdges() throws {
+        _ = try Fixtures.assets()
         let hard = try render(.none)
         let greys = hard.filter { $0 != 0 && $0 != 255 }.count
         XCTAssertEqual(greys, 0, "no MSAA: hard edges")

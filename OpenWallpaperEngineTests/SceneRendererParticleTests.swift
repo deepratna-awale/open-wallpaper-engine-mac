@@ -17,18 +17,22 @@ final class SceneRendererParticleTests: XCTestCase {
     }
 
     func testGPUSimulatedParticlesDrawThroughTheirMaterialBetweenTheirLayers() throws {
+        _ = try Fixtures.assets()
         try assertDrawOrder(simulation: .gpu, material: true)
     }
 
     func testCPUSimulatedParticlesDrawThroughTheirMaterialBetweenTheirLayers() throws {
+        _ = try Fixtures.assets()
         try assertDrawOrder(simulation: .cpu, material: true)
     }
 
     func testGPUSimulatedRefractionReadsTheSceneUpToItsSystem() throws {
+        _ = try Fixtures.assets()
         try assertRefractionSnapshot(simulation: .gpu)
     }
 
     func testCPUSimulatedRefractionReadsTheSceneUpToItsSystem() throws {
+        _ = try Fixtures.assets()
         try assertRefractionSnapshot(simulation: .cpu)
     }
 

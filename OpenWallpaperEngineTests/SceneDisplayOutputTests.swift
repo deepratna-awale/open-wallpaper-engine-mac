@@ -97,6 +97,7 @@ final class SceneDisplayOutputTests: XCTestCase {
     /// `combine_hdr`'s `DISPLAYHDR` branch on the float frame, and values above 1 reach the
     /// drawable where the overbright square blooms; the rest of the frame stays at SDR levels.
     func testDisplayHDRPutsValuesAboveOneOnTheDrawable() throws {
+        _ = try Fixtures.assets()
         let (view, renderer) = try render(.displayhdr, headroom: Self.edr)
         defer { renderer.releaseContent() }
         XCTAssertEqual(renderer.displayOutput, .extendedRange(headroom: 4))
@@ -133,6 +134,7 @@ final class SceneDisplayOutputTests: XCTestCase {
     /// "ultra" is unchanged by a screen with headroom: the same bytes on the same `bgra8Unorm`
     /// drawable, and the standard combine.
     func testUltraIsTheSameWithOrWithoutHeadroom() throws {
+        _ = try Fixtures.assets()
         let (plainView, plain) = try render(.ultra, headroom: SceneDisplayHeadroom())
         let plainBytes = try Self.bytes(plainView)
         plain.releaseContent()
@@ -147,6 +149,7 @@ final class SceneDisplayOutputTests: XCTestCase {
 
     /// "displayhdr" without headroom draws exactly as "ultra" (WE's fallback, 0x1401109be).
     func testDisplayHDRWithoutHeadroomDrawsAsUltra() throws {
+        _ = try Fixtures.assets()
         let (ultraView, ultra) = try render(.ultra, headroom: SceneDisplayHeadroom())
         let ultraBytes = try Self.bytes(ultraView)
         ultra.releaseContent()
@@ -159,6 +162,7 @@ final class SceneDisplayOutputTests: XCTestCase {
     /// A shared frame (several displays) is drawn in EDR once the views it is shown on have
     /// headroom, and each view is set up to show it.
     func testASharedFrameFollowsTheViewsItIsShownOn() throws {
+        _ = try Fixtures.assets()
         let content = try Self.content(.displayhdr)
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let view = Self.view(device: device)

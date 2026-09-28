@@ -32,18 +32,22 @@ final class ParticleGPURenderTests: XCTestCase {
     }
 
     func testSpritesDrawTheSameAsTheCPUSimulation() throws {
+        _ = try Fixtures.assets()
         try assertSameImage(renderer: "sprite")
     }
 
     func testRopeDrawsTheSameAsTheCPUSimulation() throws {
+        _ = try Fixtures.assets()
         try assertSameImage(renderer: "rope")
     }
 
     func testRopeTrailsDrawTheSameAsTheCPUSimulation() throws {
+        _ = try Fixtures.assets()
         try assertSameImage(renderer: "ropetrail")
     }
 
     func testRopeRenderVarHoldsTheGPUsPointCount() throws {
+        _ = try Fixtures.assets()
         let plan = try self.plan(renderer: "rope")
         let gpu = ParticleSystemRuntime(texture: white, configuration: system(renderer: "rope", plan: plan).configuration, seed: 3)
         var renderVar: (buffer: MTLBuffer, offset: Int)?
@@ -61,6 +65,7 @@ final class ParticleGPURenderTests: XCTestCase {
 
     /// I4: 10 000 GPU-simulated sprites draw from buffers made once, not every frame.
     func testTenThousandSpritesReuseTheirBuffers() throws {
+        _ = try Fixtures.assets()
         let plan = try self.plan(renderer: "sprite")
         var system = system(renderer: "sprite", plan: plan)
         system.maximum = 10_000

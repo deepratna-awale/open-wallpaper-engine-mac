@@ -38,6 +38,7 @@ final class SceneTextLayoutTests: XCTestCase {
     /// block from the ascender (286, rounded up) to the baseline is centred, not the whole line
     /// (363); its ink is centred on the origin.
     func testCentredLineSitsAsInWEsCapture() throws {
+        _ = try Fixtures.assets()
         let url = ShaderVariantTests.weAssets.appending(path: "fonts/NotoSans-Regular.ttf")
         let descriptors = try XCTUnwrap(CTFontManagerCreateFontDescriptorsFromURL(url as CFURL) as? [CTFontDescriptor])
         let noto = CTFontCreateWithFontDescriptor(try XCTUnwrap(descriptors.first),
@@ -127,6 +128,7 @@ final class SceneTextLayoutTests: XCTestCase {
     /// CoreText's fractional advances drift right along the line, to 2.5 units at the 3; the
     /// floored ones stay within about a unit.
     func testGlyphsAdvanceByWholeUnitsAsInWEsCapture() throws {
+        _ = try Fixtures.assets()
         let url = ShaderVariantTests.weAssets.appending(path: "fonts/NotoSans-Regular.ttf")
         let descriptors = try XCTUnwrap(CTFontManagerCreateFontDescriptorsFromURL(url as CFURL) as? [CTFontDescriptor])
         let noto = CTFontCreateWithFontDescriptor(try XCTUnwrap(descriptors.first),

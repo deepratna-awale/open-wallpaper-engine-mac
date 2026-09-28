@@ -39,6 +39,7 @@ final class VolumetricsLibraryTests: XCTestCase {
     // MARK: - Hinata
 
     func testHinatasCookieSpotDrawsItsVolume() throws {
+        _ = try Fixtures.assets()
         let (directory, project) = try wallpaper("3352730400")
         let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
         defer { Fixtures.removeStoredSettings(for: directory) }
@@ -95,6 +96,7 @@ final class VolumetricsLibraryTests: XCTestCase {
     /// volume in the light buffer move frame to frame by the same amount, and `g_EyePosition` is
     /// WE's orthographic eye.
     func testHinatasVolumeFollowsTheCameraShake() throws {
+        _ = try Fixtures.assets()
         let (directory, project) = try wallpaper("3352730400")
         let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
         defer { Fixtures.removeStoredSettings(for: directory) }
@@ -152,6 +154,7 @@ final class VolumetricsLibraryTests: XCTestCase {
     /// change blur and resolution, not brightness. This settles the light's rotation order
     /// (test-risks LR4): the other order, `Rx·Ry·Rz`, gives about 50.
     func testHinatasWedgeMatchesWE() throws {
+        _ = try Fixtures.assets()
         let (directory, project) = try wallpaper("3352730400")
         defer { Fixtures.removeStoredSettings(for: directory) }
         let expected: [(GSLightingQuality, Double)] = [(.disabled, 15.4), (.low, 40.2), (.medium, 40.4), (.high, 40.3)]
@@ -188,6 +191,7 @@ final class VolumetricsLibraryTests: XCTestCase {
     /// 0x1401a64ae…0x1401a6602): each sample of the march is squared and faded by it. Without it
     /// the scene's glow was about twice WE's (docs/lighting-plan.md §2.9).
     func testSnowflakesVolumesCompileWithTheScenesFog() throws {
+        _ = try Fixtures.assets()
         let (directory, project) = try wallpaper("3378346807")
         let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
         defer { Fixtures.removeStoredSettings(for: directory) }
@@ -275,6 +279,7 @@ final class VolumetricsLibraryTests: XCTestCase {
     ]
 
     func testTheTestSetPlansWEsVolumes() throws {
+        _ = try Fixtures.assets()
         let builder = try makeBuilder()
         var report = "scene\tshadows\tplanned\tskipped\n"
         for (id, expected) in Self.testSet.sorted(by: { $0.key < $1.key }) {
@@ -304,6 +309,7 @@ final class VolumetricsLibraryTests: XCTestCase {
     /// layer, `ScenePerspectiveCameraRig`) onto an empty frame (no models, so no depth): the
     /// volume shows only where its mesh projects.
     func testTheTestSetsRootLightsDrawThroughTheSceneCamera() throws {
+        _ = try Fixtures.assets()
         let builder = try makeBuilder()
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let queue = try XCTUnwrap(device.makeCommandQueue())

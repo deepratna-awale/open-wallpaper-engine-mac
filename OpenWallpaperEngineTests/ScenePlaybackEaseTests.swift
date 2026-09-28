@@ -123,6 +123,7 @@ final class ScenePlaybackEaseTests: XCTestCase {
     /// A sound layer's timers take the scene clock's step: at rate 2, `random`'s wait after its
     /// clip counts down twice as fast as the wall clock (the objects' update step, 0x1401891a0).
     func testSoundTimersRunOnTheSceneClock() throws {
+        _ = try Fixtures.assets()
         let directory = FileManager.default.temporaryDirectory.appending(path: "owe-sound-clock-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: directory.appending(path: "sounds"), withIntermediateDirectories: true)
         addTeardownBlock { try? FileManager.default.removeItem(at: directory) } // Optional: cleanup only.

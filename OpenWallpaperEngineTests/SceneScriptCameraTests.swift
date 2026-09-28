@@ -44,6 +44,7 @@ final class SceneScriptCameraTests: XCTestCase {
     /// A round trip: a script reads the default camera, sets another, the next frame reads it back,
     /// and the renderer's rig draws from it.
     func testSetCameraTransformsRoundTrip() throws {
+        _ = try Fixtures.assets()
         let script = #"""
             export function update(value) {
                 const c = thisScene.getCameraTransforms();

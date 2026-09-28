@@ -134,6 +134,7 @@ final class SceneScriptObjectHardeningTests: XCTestCase {
     // MARK: - SF13: angles
 
     func testAnglesRoundTripInDegrees() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         f.runtime.load()
         XCTAssertEqual(f.evaluate("thisScene.getLayer('background').angles.z")?.toDouble(), 90,

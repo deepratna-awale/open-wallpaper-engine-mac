@@ -67,6 +67,7 @@ final class ParticleChildrenTests: XCTestCase {
     }
 
     func testTheLoaderFlattensAFamilyDepthFirst() throws {
+        _ = try Fixtures.assets()
         let systems = try content().particleSystems
         XCTAssertEqual(systems.count, 6, "rocket, glow, trail, spark, burst and burst's glow")
         XCTAssertEqual(systems.map { $0.link?.parentIndex }, [nil, 0, 0, 0, 0, 4])
@@ -533,6 +534,7 @@ final class ParticleChildrenTests: XCTestCase {
     }
 
     func testTheFixtureFamilyRunsTheSameOnTheGPU() throws {
+        _ = try Fixtures.assets()
         let systems = try content().particleSystems
         let cpu = try Family(systems)
         let gpu = try Family(systems)

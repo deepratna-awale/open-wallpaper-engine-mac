@@ -57,6 +57,7 @@ final class GLSLReservedWordsTests: XCTestCase {
 
     /// WE's own blend effect names a local `input` when it writes alpha.
     func testBundledBlendTranslatesWhenWritingAlpha() throws {
+        _ = try Fixtures.assets()
         let loader = ShaderSourceLoader(roots: [ShaderVariantTests.weAssets])
         let path = "effects/blend/shaders/effects/blend"
         let vertex = try loader.load(path, stage: .vertex), fragment = try loader.load(path, stage: .fragment)

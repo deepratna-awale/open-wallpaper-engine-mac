@@ -44,6 +44,7 @@ final class SceneScriptRuntimeTests: XCTestCase {
     }
 
     func testWEBaseClassesAreLoadedUnmodified() throws {
+        _ = try Fixtures.assets()
         let runtime = try makeRuntime()
         // WE's `Vec2.perpendicular()` is `(y, -x)`; a look-alike would give `(-y, x)`.
         XCTAssertEqual(evaluate("new Vec2(3, 4).perpendicular().toString()", in: runtime)?.toString(), "4 -3")

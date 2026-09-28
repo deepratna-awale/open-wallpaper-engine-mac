@@ -28,6 +28,7 @@ final class SceneMemoryPressureTests: XCTestCase {
     /// A blend-mode layer draws through its material on the very next frame after a critical
     /// trim: its pipeline was in use, so it stays (the native fallback would not add).
     func testCriticalTrimKeepsWhatTheSceneDrawsWith() throws {
+        _ = try Fixtures.assets()
         let size = 64
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let view = MTKView(frame: CGRect(x: 0, y: 0, width: size, height: size), device: device)

@@ -67,6 +67,7 @@ final class SceneRetinaTextTests: XCTestCase {
     }
 
     func testOtherLayersDrawTheSameSceneAtTwiceThePixels() throws {
+        _ = try Fixtures.assets()
         let one = try FixtureSceneRenderer(directory: directory, pixelsPerPoint: 1).render()
         let two = try FixtureSceneRenderer(directory: directory, pixelsPerPoint: 2).render()
         // Each 1× pixel against the average of the 2 × 2 it became; the square's edges are hard in

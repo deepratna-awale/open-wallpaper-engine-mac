@@ -38,8 +38,7 @@ final class SceneShaderCompatTests: XCTestCase {
     }
 
     func testBundledZCompatConfigsParse() throws {
-        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-            .appending(path: "Vendor/we-assets/zcompat/scene/shaders")
+        let root = try Fixtures.assets().appending(path: "zcompat/scene/shaders")
         let bundled = SceneShaderCompat(root: root)
         let ids = try FileManager.default.contentsOfDirectory(atPath: root.path)
         XCTAssertFalse(ids.isEmpty)

@@ -24,6 +24,7 @@ final class SceneScriptModelDataTests: XCTestCase {
         """
 
     func testCreateModelDataHandsOutATokenTheLayerConfigurationCarries() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         f.evaluate(Self.triangle + "var data = thisScene.createModelData({ shapes: [shape] });")
         XCTAssertEqual(f.evaluate("data instanceof IModelData")?.toBool(), true)
@@ -50,6 +51,7 @@ final class SceneScriptModelDataTests: XCTestCase {
     }
 
     func testTheConfigurationIsCheckedWithWEsMessages() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         f.evaluate(Self.triangle)
         func message(_ expression: String) -> String? {
@@ -77,6 +79,7 @@ final class SceneScriptModelDataTests: XCTestCase {
     }
 
     func testApplyDataChangesOnlyWhatIsPassed() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         f.evaluate(Self.triangle + "var data = thisScene.createModelData({ shapes: [shape] });")
         let token = Int(try XCTUnwrap(f.evaluate("data.__modelDataToken")?.toInt32()))
@@ -110,6 +113,7 @@ final class SceneScriptModelDataTests: XCTestCase {
     }
 
     func testCreateModelDataIsNotForTheGlobalScope() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         f.add("global-model", slot: nil, Self.triangle + "var made = thisScene.createModelData({ shapes: [shape] });")
         f.runtime.load()

@@ -71,6 +71,7 @@ final class SceneLightCookieTests: XCTestCase {
     /// `generic4` under a cookie budget (`LIGHTS_COOKIE`) reads `_alias_lightCookie` as
     /// `g_Texture7`, which the renderer binds per frame.
     func testGeneric4BindsTheAliasUnderLightsCookie() throws {
+        _ = try Fixtures.assets()
         let cache = FileManager.default.temporaryDirectory.appending(path: "owe-cookie-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: cache) }
         let roots = [Fixtures.url("ModelMaterials"), ShaderVariantTests.weAssets]

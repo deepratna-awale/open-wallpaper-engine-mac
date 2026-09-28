@@ -21,6 +21,7 @@ final class SceneHDRChainTests: XCTestCase {
                                                                          output: SceneHDRChain.outputFormat)
 
     override func setUpWithError() throws {
+        _ = try Fixtures.assets()
         device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         queue = try XCTUnwrap(device.makeCommandQueue())
         cache = FileManager.default.temporaryDirectory.appending(path: "owe-hdr-\(UUID().uuidString)")
@@ -44,7 +45,8 @@ final class SceneHDRChainTests: XCTestCase {
     // MARK: - WE's arithmetic
 
     /// The levels: how many times the smaller side halves before 0, at most 8 (`0x14017f370`).
-    func testLevelsFollowTheSmallerSide() {
+    func testLevelsFollowTheSmallerSide() throws {
+        _ = try Fixtures.assets()
         XCTAssertEqual(SceneHDRChain.levels(width: 1920, height: 1080), 8)
         XCTAssertEqual(SceneHDRChain.levels(width: 5120, height: 2880), 8)
         XCTAssertEqual(SceneHDRChain.levels(width: 64, height: 48), 5, "48 → 24, 12, 6, 3, 1")
@@ -59,7 +61,8 @@ final class SceneHDRChainTests: XCTestCase {
     }
 
     /// WE's defaults give strength 2 / (1 + 1.619^6) and blend (1, 0.9, 0.2, 2.5) (`0x140184020`).
-    func testConstantsAreWEs() {
+    func testConstantsAreWEs() throws {
+        _ = try Fixtures.assets()
         let defaults = SceneHDRChain.Constants(SceneHDRBloomSettings(), levels: 8, tint: SIMD3(repeating: 1))
         XCTAssertEqual(defaults.strength, 2 / (1 + powf(1.619, 6)), accuracy: 1e-6)
         XCTAssertEqual(defaults.strength, 0.1052, accuracy: 1e-4)
@@ -80,7 +83,8 @@ final class SceneHDRChainTests: XCTestCase {
 
     /// `g_RenderVar0` per pass (`0x140183610`): D0 ±1 frame texel, then × 2^level; the combine
     /// gets the device's (1, 0) and keeps the last pass's zw.
-    func testRenderVarsAreWEs() {
+    func testRenderVarsAreWEs() throws {
+        _ = try Fixtures.assets()
         let size = SIMD2<Float>(1920, 1080)
         let base = SIMD4<Float>(1 / 1920, 1 / 1080, -1 / 1920, -1 / 1080)
         let vars = SceneHDRChain.renderVars(levels: 8, size: size)
@@ -97,6 +101,7 @@ final class SceneHDRChainTests: XCTestCase {
     /// Every pass is WE's own material with WE's targets; a frame's plan picks its levels, bicubic
     /// for the two coarsest upsamples.
     func testThePlanIsWEsMipChain() throws {
+        _ = try Fixtures.assets()
         let full = chain.full
         XCTAssertEqual(full.fbos.map(\.name), (0..<8).map(SceneHDRChain.target))
         XCTAssertEqual(full.fbos.map(\.name).first, "_rt_2FrameBuffer")
@@ -181,6 +186,7 @@ final class SceneHDRChainTests: XCTestCase {
 
     /// The rendered chain equals the CPU model within 2/255 on every pixel and channel.
     func testTheChainMatchesTheCPUModel() throws {
+        _ = try Fixtures.assets()
         for frame in Self.frames {
             for (settings, tint) in Self.settings {
                 let levels = SceneHDRChain.runLevels(width: frame.image.width, height: frame.image.height,
@@ -204,6 +210,7 @@ final class SceneHDRChainTests: XCTestCase {
 
     /// Without bloom a HDR frame goes through `combine_srgb`: the sRGB bytes of the frame, clamped.
     func testCombineSRGBIsTheFrameClamped() throws {
+        _ = try Fixtures.assets()
         let frame = Self.frames[1].image
         let constants = SceneHDRChain.Constants(SceneHDRBloomSettings(), levels: 1, tint: SIMD3(repeating: 1))
         let rendered = try run(frame, levels: nil, constants: constants)
@@ -218,6 +225,7 @@ final class SceneHDRChainTests: XCTestCase {
 
     /// Only light above the threshold blooms: a patch at 1.0 stays (almost) dark around, one at 3 glows.
     func testBloomFollowsWEsKnee() throws {
+        _ = try Fixtures.assets()
         func patch(_ value: Float) -> HDRReference.Image {
             HDRReference.Image(width: 64, height: 48) { x, y in
                 (24..<40).contains(x) && (16..<32).contains(y) ? SIMD3(value, value, value) : .zero
@@ -235,6 +243,7 @@ final class SceneHDRChainTests: XCTestCase {
 
     /// The same frame blooms the same way every time: no state leaks between frames or levels.
     func testTheChainIsStable() throws {
+        _ = try Fixtures.assets()
         let frame = Self.frames[0].image
         let constants = SceneHDRChain.Constants(SceneHDRBloomSettings(), levels: 5, tint: SIMD3(repeating: 1))
         let first = try run(frame, levels: 5, constants: constants)
@@ -250,6 +259,7 @@ final class SceneHDRChainTests: XCTestCase {
     /// GPU time of the chain on a frame at 1080p and 5K, 8 levels: one command buffer of `batch`
     /// chains back to back, over `batch`.
     func testTheChainIsCheap() throws {
+        _ = try Fixtures.assets()
         let batch = 10
         var report = ""
         let constants = SceneHDRChain.Constants(SceneHDRBloomSettings(), levels: 8, tint: SIMD3(repeating: 1))

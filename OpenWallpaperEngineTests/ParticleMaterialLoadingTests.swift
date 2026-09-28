@@ -16,6 +16,7 @@ final class ParticleMaterialLoadingTests: XCTestCase {
     /// The built-in draw's refraction look-alike (sprites faded to the refract amount, drawn
     /// thin) stays off a system that refracts through WE's shader, which uses its own alpha.
     func testRefractingMaterialKeepsTheParticlesOwnAlpha() throws {
+        _ = try Fixtures.assets()
         let system = try XCTUnwrap(try content("particle-refraction").particleSystems.first)
         let plan = try XCTUnwrap(system.material, "drawn through its WE material")
         XCTAssertTrue(plan.stages.allSatisfy(\.readsSceneSnapshot))
@@ -28,6 +29,7 @@ final class ParticleMaterialLoadingTests: XCTestCase {
     /// (a soft dot for `*halo*`, a streak for `particle/drop`; roadmap 8.9): the system is logged
     /// and not built, as a missing effect texture is. Systems whose texture loads are built as usual.
     func testAMissingParticleTextureIsNotGeneratedFromItsName() throws {
+        _ = try Fixtures.assets()
         let systems = try content("particle-missing-texture").particleSystems
         XCTAssertEqual(systems.count, 1, "only the system whose texture exists")
         XCTAssertEqual(systems.first?.objectID, "11")

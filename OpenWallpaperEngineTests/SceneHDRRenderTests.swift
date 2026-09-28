@@ -24,6 +24,7 @@ final class SceneHDRRenderTests: XCTestCase {
 
     /// The settings gate: HDR at load only for `bloom` and `hdr` with "ultra" or "displayhdr".
     func testHDROnlyWithUltra() throws {
+        _ = try Fixtures.assets()
         for (quality, hdr) in [(GSPostProcessingQuality.ultra, true), (.displayhdr, true), (.enabled, false), (.disabled, false)] {
             let content = try content(quality)
             XCTAssertEqual(content.engineCombos.hdr, hdr, "\(quality)")
@@ -35,6 +36,7 @@ final class SceneHDRRenderTests: XCTestCase {
     /// Ultra: the scene draws into RGBA16F with overbright kept, WE's HDR chain blooms only what
     /// passes its threshold of 1, and the result equals the CPU model on the frame.
     func testUltraBloomsOnlyTheOverbright() throws {
+        _ = try Fixtures.assets()
         let (pixels, renderer) = try render(.ultra)
         defer { renderer.releaseContent() }
         let post = renderer.postProcess
@@ -76,6 +78,7 @@ final class SceneHDRRenderTests: XCTestCase {
     /// (0x140184020): a timeline holding `bloomhdrstrength` at 0 (the authored value is 2) drives
     /// the chain's strength, and nothing blooms.
     func testATimelineOnBloomHDRStrengthDrivesTheChain() throws {
+        _ = try Fixtures.assets()
         directory = Fixtures.url("Scenes/hdr-animated")
         let (pixels, renderer) = try render(.ultra)
         defer { renderer.releaseContent() }
@@ -87,6 +90,7 @@ final class SceneHDRRenderTests: XCTestCase {
     /// LF7: the HDR combine's output (and the last frame's records) don't outlive the HDR content:
     /// the same renderer given the LDR content holds none of them.
     func testTheHDROutputGoesWithTheHDRContent() throws {
+        _ = try Fixtures.assets()
         let (_, renderer) = try render(.ultra)
         defer { renderer.releaseContent() }
         XCTAssertTrue(renderer.postProcess.holdsHDROutput)
@@ -100,6 +104,7 @@ final class SceneHDRRenderTests: XCTestCase {
 
     /// "displayhdr" without an HDR output draws as "ultra" (WE's fallback, 0x1401109be).
     func testDisplayHDRDrawsAsUltra() throws {
+        _ = try Fixtures.assets()
         let (ultra, first) = try render(.ultra)
         first.releaseContent()
         let (display, second) = try render(.displayhdr)
@@ -111,6 +116,7 @@ final class SceneHDRRenderTests: XCTestCase {
     /// "enabled" is LDR: an 8-bit scene target (the overbright square clamps to white), and WE's
     /// LDR bloom, which blooms both squares (0.85 is above its threshold of 0.65).
     func testEnabledStaysLDR() throws {
+        _ = try Fixtures.assets()
         let (pixels, renderer) = try render(.enabled)
         defer { renderer.releaseContent() }
         XCTAssertFalse(renderer.postProcess.drawsHDR)

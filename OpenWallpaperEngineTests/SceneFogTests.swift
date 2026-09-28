@@ -80,6 +80,7 @@ final class SceneFogTests: XCTestCase {
     /// The march then squares each sample (`shadowSample *= ApplyFogAlpha(shadowSample, …)`),
     /// which the stage does as the CPU model does.
     func testTheVolumetricRayMarchSquaresItsSamplesUnderFog() throws {
+        _ = try Fixtures.assets()
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let queue = try XCTUnwrap(device.makeCommandQueue())
         let cache = FileManager.default.temporaryDirectory.appending(path: "owe-fog-\(UUID().uuidString)")

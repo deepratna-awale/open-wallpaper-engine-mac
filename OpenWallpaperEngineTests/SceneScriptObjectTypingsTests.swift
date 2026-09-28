@@ -48,6 +48,7 @@ final class SceneScriptObjectTypingsTests: XCTestCase {
     }
 
     func testEveryTypedMemberIsImplementedOrAnExplicitStub() throws {
+        _ = try Fixtures.assets()
         let effect = SceneScriptObjectDescription.Effect(
             name: "fx", visible: true, materials: [.init(constants: [.init(name: "alpha", value: [1])])])
         let kinds: [SceneScriptObjectDescription.Kind] = [.image, .text, .sound, .particle, .model, .group, .camera]

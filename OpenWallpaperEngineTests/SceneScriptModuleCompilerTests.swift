@@ -170,6 +170,7 @@ final class SceneScriptModuleCompilerTests: XCTestCase {
     // MARK: - Imports
 
     func testImportsWEModules() throws {
+        _ = try Fixtures.assets()
         let exports = try evaluate("""
             export function update() {
                 return [WEMath.mix(0, 10, 0.5), smooth(0, 1, 0.5), WEColor.normalizeColor(new Vec3(255, 0, 0)).x,
@@ -190,6 +191,7 @@ final class SceneScriptModuleCompilerTests: XCTestCase {
     }
 
     func testMissingImportsFailWhenTheModuleIsEvaluated() throws {
+        _ = try Fixtures.assets()
         XCTAssertThrowsError(try evaluate("import { nope } from 'WEMath';")) { error in
             XCTAssertTrue("\(error)".contains("The requested module 'WEMath' does not provide an export named 'nope'"),
                           "\(error)")
@@ -204,6 +206,7 @@ final class SceneScriptModuleCompilerTests: XCTestCase {
 
     /// WE's jsmodules go through the same compiler; WEVector imports WEMath itself.
     func testWEJSModulesCompile() throws {
+        _ = try Fixtures.assets()
         let modules = SceneScriptPrelude.load().modules
         XCTAssertEqual(Set(modules.map(\.name)), ["wemath", "wevector", "wecolor"])
         for module in modules {
@@ -219,6 +222,7 @@ final class SceneScriptModuleCompilerTests: XCTestCase {
     // MARK: - Lines
 
     func testLineNumbersArePreserved() throws {
+        _ = try Fixtures.assets()
         let source = """
             'use strict';
             import * as WEMath
@@ -253,11 +257,13 @@ final class SceneScriptModuleCompilerTests: XCTestCase {
     }
 
     func testCRLFKeepsLines() throws {
+        _ = try Fixtures.assets()
         let source = "export let a = 1;\r\nexport let b = 'b';\r\nimport * as M from 'WEMath';\r\nexport function f() {\r\n  throw new Error();\r\n}"
         XCTAssertEqual(thrownLine(try evaluate(source).forProperty("f")), 5)
     }
 
     func testRuntimeErrorsReportTheSourceLine() throws {
+        _ = try Fixtures.assets()
         let host = ModuleCompilerTestHost()
         let runtime = try makeRuntime(host)
         runtime.add(SceneScriptInstance(id: "thrower", source: """
@@ -278,6 +284,7 @@ final class SceneScriptModuleCompilerTests: XCTestCase {
     // MARK: - Statement boundaries
 
     func testRemovedStatementsDoNotJoinTheirNeighbours() throws {
+        _ = try Fixtures.assets()
         let exports = try evaluate("""
             let calls = [];
             function log(value) { calls.push(value); return log; }

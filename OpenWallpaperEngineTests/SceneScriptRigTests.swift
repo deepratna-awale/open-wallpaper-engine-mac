@@ -41,6 +41,7 @@ final class SceneScriptRigTests: XCTestCase {
     }
 
     func testBones() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         XCTAssertEqual(string(f, """
             [puppet.getBoneCount(), puppet.getBoneIndex('arm'), puppet.getBoneIndex('nope'), puppet.getBoneParentIndex('hand'),

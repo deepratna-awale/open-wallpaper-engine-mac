@@ -72,6 +72,7 @@ final class SceneScriptTimerTests: XCTestCase {
     }
 
     func testTheReturnedFunctionCancels() throws {
+        _ = try Fixtures.assets()
         // The corpus pattern (3 scripts in 7 wallpapers): cancel the pending hide, start a new one.
         fixture.add("hide", """
             var lastHideEvent;

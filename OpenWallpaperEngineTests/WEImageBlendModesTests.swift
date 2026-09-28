@@ -20,6 +20,7 @@ final class WEImageBlendModesTests: XCTestCase {
 
     /// Each mode's value selects the `ApplyBlending` branch that computes that mode.
     func testValuesSelectTheirBranchInCommonBlending() throws {
+        _ = try Fixtures.assets()
         let source = try String(contentsOf: ShaderVariantTests.weAssets.appending(path: "shaders/common_blending.h"), encoding: .utf8)
         let expected: [String: String] = [
             "Darken": "BlendDarken", "Multiply": "BlendMultiply", "Color burn": "BlendColorBurn",
@@ -43,9 +44,9 @@ final class WEImageBlendModesTests: XCTestCase {
         }
     }
 
-    /// The labels are WE's own keys, and the English text is WE's (`locale/ui_en-us.json`, bundled).
+    /// The labels are WE's own keys, and the English text is WE's (`locale/ui_en-us.json`, `OWE_ASSETS`).
     func testLabelsAreWEsLocalisationKeysAndText() throws {
-        let labels = WallpaperEngineLabels.load(assets: try XCTUnwrap(WallpaperEngineAssets.bundled), languages: ["en"])
+        let labels = WallpaperEngineLabels.load(assets: try Fixtures.assets(), languages: ["en"])
         for mode in WEImageBlendModes.all {
             XCTAssertEqual(labels.translation(mode.label), mode.english, mode.label)
         }

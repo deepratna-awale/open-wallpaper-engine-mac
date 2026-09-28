@@ -3,9 +3,11 @@ import Metal
 @testable import OpenWallpaperEngine
 
 final class ShaderVariantTests: XCTestCase {
-    /// The WE assets shipped in the app bundle, so tests cover what users get without a WE install.
-    static let weAssets = URL(fileURLWithPath: #filePath)
-        .deletingLastPathComponent().deletingLastPathComponent().appending(path: "Vendor/we-assets")
+    /// The WE assets from `OWE_ASSETS`; a path that doesn't exist without them, so tests that
+    /// check for it skip (CI has none).
+    static var weAssets: URL {
+        WallpaperEngineAssets.directory ?? URL(fileURLWithPath: "/nonexistent/owe-assets", isDirectory: true)
+    }
 
     private var translator: ShaderVariantTranslator!
     private var cache: URL!

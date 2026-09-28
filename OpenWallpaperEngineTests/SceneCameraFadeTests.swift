@@ -34,6 +34,7 @@ final class SceneCameraFadeTests: XCTestCase {
 
     /// The pass is WE's: its shader, translucent blending, and `color` bound to `schemecolor`.
     func testThePassIsWEsFadeMaterial() throws {
+        _ = try Fixtures.assets()
         let fade = try SceneCameraFade.build(with: builder)
         XCTAssertEqual(fade.pass.blending, "translucent")
         let color = try XCTUnwrap(fade.pass.constants.dynamic.first { $0.uniform == "color" }, "color follows a user property")
@@ -44,6 +45,7 @@ final class SceneCameraFadeTests: XCTestCase {
     /// Drawn over a frame: `frame·(1 − a) + color·0.7·a`, with the shader's default colour without
     /// a `schemecolor` and the property's with one; nothing at alpha 0.
     func testTheFadeBlendsTheTintOverTheFrame() throws {
+        _ = try Fixtures.assets()
         let fade = try SceneCameraFade.build(with: builder)
         let cases: [(Properties, SIMD3<Float>, Float)] = [
             (Properties(), SIMD3(0.315, 0.135, 0.1125), 0.5),
@@ -75,6 +77,7 @@ final class SceneCameraFadeTests: XCTestCase {
     /// renderer after other passes: it still covers the whole target (it drew a trapezoid over part
     /// of the default projects arsenal and fantasticcar).
     func testTheFadeCoversAWideTargetAfterOtherDraws() throws {
+        _ = try Fixtures.assets()
         let fade = try SceneCameraFade.build(with: builder)
         for _ in 0..<2 {
             let frame = try target(filledWith: SIMD4(0, 0, 0, 255), width: 192, height: 108)

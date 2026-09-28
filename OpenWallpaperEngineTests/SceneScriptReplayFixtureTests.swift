@@ -28,6 +28,7 @@ final class SceneScriptReplayFixtureTests: XCTestCase {
     // MARK: - Behaviour
 
     func testBehaviourFixtureMeetsEveryExpectation() throws {
+        _ = try Fixtures.assets()
         let options = SceneScriptReplayHarness.Options()
         let (wallpaper, result, findings) = try replay("behaviour", options: options)
         XCTAssertEqual(wallpaper.sites.count, 12)
@@ -107,6 +108,7 @@ final class SceneScriptReplayFixtureTests: XCTestCase {
     // MARK: - Failures
 
     func testFailuresFixtureIsReportedAndMatchesItsExpectations() throws {
+        _ = try Fixtures.assets()
         let (wallpaper, result, findings) = try replay("failures")
         let hashes = Dictionary(uniqueKeysWithValues: wallpaper.sites.map {
             (wallpaper.objects[$0.objectIndex ?? 0].name, $0.hash)

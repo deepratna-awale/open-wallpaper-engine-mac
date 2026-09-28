@@ -1,7 +1,8 @@
 import XCTest
 @testable import OpenWallpaperEngine
 
-/// Risk #19: the WE assets without a WE install. The app always uses its bundled copy.
+/// Risk #19: the app ships no WE assets. They come from a chosen WE install, else the cache in the
+/// Wallpaper Storage folder, else nowhere; tests only ever use `OWE_ASSETS`.
 final class WallpaperEngineAssetsTests: XCTestCase {
     private var scratch: URL!
 
@@ -20,30 +21,66 @@ final class WallpaperEngineAssetsTests: XCTestCase {
         try Data(text.utf8).write(to: url)
     }
 
-    /// The app ships its own copy, so effects work with no WE install at all. A value left in the
-    /// removed `WallpaperEngineAssetsDirectory` setting is ignored.
-    func testBundledAssetsAreShippedAndUsed() throws {
-        try XCTSkipIf(WallpaperEngineAssets.testInstall != nil, "OWE_WE_ASSETS names a WE install for this run")
-        let bundled = try XCTUnwrap(WallpaperEngineAssets.bundled)
-        XCTAssertTrue(FileManager.default.fileExists(atPath: bundled.appending(path: "shaders/genericimage2.frag").path))
-        let key = "WallpaperEngineAssetsDirectory", before = UserDefaults.app.object(forKey: key)
-        defer { UserDefaults.app.set(before, forKey: key) }
-        UserDefaults.app.set(scratch.path, forKey: key)
-        XCTAssertEqual(WallpaperEngineAssets.directory, bundled)
-        XCTAssertEqual(WallpaperEngineAssets.searchDirectories, [bundled])
+    /// A minimal asset tree: what `isAssetTree` looks for.
+    private func makeTree(_ directory: URL) throws {
+        try write("x", to: "shaders/common.h", in: directory)
+        try write("{}", to: "effects/tint/effect.json", in: directory)
+    }
+
+    /// A chosen install wins over the cache; an install root and its `assets` folder both work.
+    func testAChosenInstallComesBeforeTheCache() throws {
+        let install = scratch.appending(path: "wallpaper_engine"), storage = scratch.appending(path: "storage")
+        try makeTree(install.appending(path: "assets"))
+        try makeTree(WallpaperEngineAssets.cacheDirectory(in: storage))
+        let chosen = WallpaperEngineAssets.resolve(chosenPath: install.path, storage: storage, testOverride: nil, isTesting: false)
+        XCTAssertEqual(chosen?.source, .chosenFolder)
+        XCTAssertEqual(chosen?.directory.path, install.appending(path: "assets").standardizedFileURL.path)
+        let assetsFolder = WallpaperEngineAssets.resolve(chosenPath: install.appending(path: "assets").path, storage: nil,
+                                                         testOverride: nil, isTesting: false)
+        XCTAssertEqual(assetsFolder?.directory.path, chosen?.directory.path)
+    }
+
+    /// A chosen folder that isn't an install (or is gone) falls back to the cache, then to none.
+    func testTheCacheIsNextAndThenNothing() throws {
+        let storage = scratch.appending(path: "storage")
+        let missing = scratch.appending(path: "gone").path
+        XCTAssertNil(WallpaperEngineAssets.resolve(chosenPath: missing, storage: storage, testOverride: nil, isTesting: false))
+        try makeTree(WallpaperEngineAssets.cacheDirectory(in: storage))
+        let cache = WallpaperEngineAssets.resolve(chosenPath: missing, storage: storage, testOverride: nil, isTesting: false)
+        XCTAssertEqual(cache?.source, .cache)
+        XCTAssertEqual(cache?.directory.lastPathComponent, ".owe-assets")
+        XCTAssertEqual(cache?.directory.deletingLastPathComponent().standardizedFileURL.path, storage.standardizedFileURL.path)
+    }
+
+    /// Under XCTest only `OWE_ASSETS` counts: a developer's own install or cache never leaks in.
+    func testTestsUseOnlyTheEnvironment() throws {
+        let storage = scratch.appending(path: "storage"), override = scratch.appending(path: "override")
+        try makeTree(WallpaperEngineAssets.cacheDirectory(in: storage))
+        XCTAssertNil(WallpaperEngineAssets.resolve(chosenPath: nil, storage: storage, testOverride: nil, isTesting: true))
+        try makeTree(override)
+        let resolved = WallpaperEngineAssets.resolve(chosenPath: nil, storage: storage, testOverride: override.path, isTesting: true)
+        XCTAssertEqual(resolved?.source, .testEnvironment)
+        XCTAssertEqual(resolved?.directory.path, override.standardizedFileURL.path)
+    }
+
+    /// Without assets nothing is searched, so scenes see them as missing.
+    func testMissingAssetsSearchNothing() throws {
+        try XCTSkipIf(WallpaperEngineAssets.directory != nil, "OWE_ASSETS is set for this run")
+        XCTAssertTrue(WallpaperEngineAssets.searchDirectories.isEmpty)
+        XCTAssertNil(WallpaperEngineAssets.locate(["shaders/common.h"], in: WallpaperEngineAssets.searchDirectories))
     }
 
     /// A file the first directory lacks still resolves from the next.
     func testLookupFallsBackToTheNextDirectory() throws {
-        let install = scratch.appending(path: "install"), bundled = scratch.appending(path: "bundled")
-        try write("install", to: "shaders/both.frag", in: install)
-        try write("bundled", to: "shaders/both.frag", in: bundled)
-        try write("bundled", to: "materials/only-bundled.json", in: bundled)
-        let both = try XCTUnwrap(WallpaperEngineAssets.locate(["shaders/both.frag"], in: [install, bundled]))
-        XCTAssertEqual(try String(contentsOf: both, encoding: .utf8), "install")
-        let fallback = try XCTUnwrap(WallpaperEngineAssets.locate(["only-bundled.json", "materials/only-bundled.json"],
-                                                                  in: [install, bundled]))
-        XCTAssertEqual(fallback.path, bundled.appending(path: "materials/only-bundled.json").standardizedFileURL.path)
-        XCTAssertNil(WallpaperEngineAssets.locate(["missing"], in: [install, bundled]))
+        let first = scratch.appending(path: "first"), second = scratch.appending(path: "second")
+        try write("first", to: "shaders/both.frag", in: first)
+        try write("second", to: "shaders/both.frag", in: second)
+        try write("second", to: "materials/only-second.json", in: second)
+        let both = try XCTUnwrap(WallpaperEngineAssets.locate(["shaders/both.frag"], in: [first, second]))
+        XCTAssertEqual(try String(contentsOf: both, encoding: .utf8), "first")
+        let fallback = try XCTUnwrap(WallpaperEngineAssets.locate(["only-second.json", "materials/only-second.json"],
+                                                                  in: [first, second]))
+        XCTAssertEqual(fallback.path, second.appending(path: "materials/only-second.json").standardizedFileURL.path)
+        XCTAssertNil(WallpaperEngineAssets.locate(["missing"], in: [first, second]))
     }
 }

@@ -24,6 +24,7 @@ final class ShaderTextPassTests: XCTestCase {
 
     /// The identifier prefilter never hides a declaration the full pattern would find.
     func testReservedLocalsMatchTheUnfilteredPatterns() throws {
+        _ = try Fixtures.assets()
         let sources = try Self.bundledSources()
         XCTAssertGreaterThan(sources.count, 100)
         for source in sources {

@@ -1,11 +1,11 @@
 import XCTest
 @testable import OpenWallpaperEngine
 
-/// WE's UI strings ship in the bundled assets (`we-assets/locale/ui_*.json`, WE's files unchanged),
+/// WE's UI strings come with the assets (`locale/ui_*.json`, WE's files unchanged; `OWE_ASSETS`),
 /// so property labels keyed as `ui_editor_properties_*` read as WE shows them.
 final class WallpaperEngineLabelsTests: XCTestCase {
     private func bundledAssets() throws -> URL {
-        try XCTUnwrap(WallpaperEngineAssets.bundled, "the app bundles we-assets")
+        try Fixtures.assets()
     }
 
     func testTheBundledEnglishTableResolvesAPropertyKey() throws {

@@ -123,6 +123,7 @@ final class SceneScriptMediaTests: XCTestCase {
     }
 
     func testANewScriptGetsTheCurrentStateRightAfterInitAndNothingTwice() throws {
+        _ = try Fixtures.assets()
         let runtime = try makeRuntime()
         source.send(playing)
         runtime.add(SceneScriptInstance(id: "a", source: Self.loggingScript("a")))
@@ -137,6 +138,7 @@ final class SceneScriptMediaTests: XCTestCase {
     }
 
     func testChangesArriveAsEventsInWEOrder() throws {
+        _ = try Fixtures.assets()
         let runtime = try makeRuntime()
         runtime.add(SceneScriptInstance(id: "a", source: Self.loggingScript("a")))
         runtime.load()
@@ -185,6 +187,7 @@ final class SceneScriptMediaTests: XCTestCase {
     }
 
     func testAScriptAddedLaterStartsFromTheCurrentState() throws {
+        _ = try Fixtures.assets()
         let runtime = try makeRuntime()
         runtime.add(SceneScriptInstance(id: "a", source: Self.loggingScript("a")))
         runtime.load()

@@ -8,6 +8,7 @@ import AppKit
 /// evaluating `4 + 2S` emits. Prints the timings; the bound only catches a pathological slowdown.
 final class ParticleMaterialPerformanceTests: XCTestCase {
     func testSubdividedRopeTrailCost() throws {
+        _ = try Fixtures.assets()
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let queue = try XCTUnwrap(device.makeCommandQueue())
         let renderer = try XCTUnwrap(ParticleMaterialRenderer(device: device))
@@ -83,6 +84,7 @@ final class ParticleMaterialPerformanceTests: XCTestCase {
     /// The CPU cost of a GPU-simulated system's material draw a frame (`prepareSimulated` and
     /// `draw`): its uniforms and bindings. Prints the median; the bound only catches a pathology.
     func testMaterialDrawEncodeCost() throws {
+        _ = try Fixtures.assets()
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let queue = try XCTUnwrap(device.makeCommandQueue())
         let renderer = try XCTUnwrap(ParticleMaterialRenderer(device: device))

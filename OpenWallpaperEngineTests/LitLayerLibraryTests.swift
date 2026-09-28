@@ -31,6 +31,7 @@ final class LitLayerLibraryTests: XCTestCase {
     }
 
     func testEveryLitLayerDrawsThroughItsMaterial() throws {
+        _ = try Fixtures.assets()
         let roots = LightingLibraryDecodeTests.roots.filter { FileManager.default.fileExists(atPath: $0.path) }
         try XCTSkipIf(roots.count < LightingLibraryDecodeTests.roots.count, "wallpaper library not present")
         let scenes = try Self.litScenes(in: roots)
@@ -46,6 +47,7 @@ final class LitLayerLibraryTests: XCTestCase {
     /// `f1`'s 4 vertical tubes (x ≈ 0, 641, 1282, 1917, at z = 250 with radius 500): the lit
     /// frame over the ambient-only one is highest at the tubes and lowest halfway between them.
     func testOnePieceGirlsIsLitByItsTubes() throws {
+        _ = try Fixtures.assets()
         let roots = LightingLibraryDecodeTests.roots.filter { FileManager.default.fileExists(atPath: $0.path) }
         try XCTSkipIf(roots.count < LightingLibraryDecodeTests.roots.count, "wallpaper library not present")
         let item = try XCTUnwrap(try Self.litScenes(in: roots).first { $0.id == "3270035750" })

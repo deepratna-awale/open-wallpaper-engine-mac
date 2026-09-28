@@ -21,6 +21,7 @@ final class SceneScriptFogTests: XCTestCase {
     /// `thisScene.fog…` start at the authored values (WE's defaults for the rest), and a script's
     /// writes come back as the scene's settings.
     func testScriptsReadAndWriteTheFog() throws {
+        _ = try Fixtures.assets()
         let script = """
             export function update(value) {
                 shared.read = [thisScene.fogdistance, thisScene.fogdistancestart, thisScene.fogdistanceend,

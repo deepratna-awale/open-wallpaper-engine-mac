@@ -46,7 +46,9 @@ assert sys.byteorder == 'little'
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FIXTURES = os.path.join(REPO, 'Tests', 'Fixtures', 'Models')
-VENDORED = ['Vendor/we-assets/models/editor/camera/camera.mdl']
+# WE's own models, read from the assets named by OWE_ASSETS and recorded as 'assets:<path>'.
+ASSET_MODELS = ['models/editor/camera/camera.mdl']
+ASSETS = os.environ.get('OWE_ASSETS', '')
 
 # ---------------------------------------------------------------- vertex format
 # Tables at 0x140484a20 (mask), 0x1404849b0 (byte size), 0x140484a90 (GLSL
@@ -822,8 +824,12 @@ def main():
     elif args.command == 'fixtures':
         paths = sorted(os.path.relpath(os.path.join(FIXTURES, n), REPO) for n in os.listdir(FIXTURES) if n.endswith('.mdl'))
         # The hand-built fixtures in full; WE's camera (36 KB) with its long arrays as digests.
-        lines = [encode({'file': p, 'inline': inline, 'model': decode(open(os.path.join(REPO, p), 'rb').read(), inline)})
-                 for p, inline in [(p, None) for p in paths] + [(p, 16) for p in VENDORED]]
+        lines = [encode({'file': p, 'inline': None, 'model': decode(open(os.path.join(REPO, p), 'rb').read(), None)})
+                 for p in paths]
+        if not ASSETS:
+            sys.exit('set OWE_ASSETS to the assets folder: expected.json also covers WE\'s camera model')
+        lines += [encode({'file': 'assets:' + p, 'inline': 16, 'model': decode(open(os.path.join(ASSETS, p), 'rb').read(), 16)})
+                  for p in ASSET_MODELS]
         write(lines, args.out, 'models')
     else:
         known = set()

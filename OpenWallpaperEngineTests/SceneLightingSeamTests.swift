@@ -79,6 +79,7 @@ final class SceneLightingSeamTests: XCTestCase {
     /// The loader hands the renderer every light in scene order, draws none of them, and keeps
     /// their transforms in the hierarchy.
     func testContentCarriesTheLights() throws {
+        _ = try Fixtures.assets()
         let directory = Fixtures.url("Scenes/lights")
         let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/lights/project.json"))
         addTeardownBlock { Fixtures.removeStoredSettings(for: directory) }

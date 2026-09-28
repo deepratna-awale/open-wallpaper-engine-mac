@@ -27,7 +27,6 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     var compatPatches: WebCompatPatches? {
         let id = SceneWallpaperViewModel.workshopId(of: currentWallpaper)
         return WebCompatPatches(workshopId: id, assetsDirectory: WallpaperEngineAssets.directory)
-            ?? WebCompatPatches(workshopId: id, assetsDirectory: WallpaperEngineAssets.bundled)
     }
     /// Receives the page's frame intervals and heartbeats (a page that stops beating is hung).
     weak var renderWatchdog: RenderWatchdog?

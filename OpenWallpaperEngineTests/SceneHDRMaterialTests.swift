@@ -18,6 +18,7 @@ final class SceneHDRMaterialTests: XCTestCase {
 
     /// Every shipped shader with an `HDR` branch translates and builds a pipeline with `HDR=1`.
     func testHDRShadersTranslate() throws {
+        _ = try Fixtures.assets()
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let translator = ShaderVariantTranslator(compiler: InProcessShaderCompiler(), cacheDirectory: nil, failureDirectory: nil)
         let loader = ShaderSourceLoader(roots: [ShaderVariantTests.weAssets])
@@ -42,6 +43,7 @@ final class SceneHDRMaterialTests: XCTestCase {
     /// with `HDR=1` it is `saturate(ambient + light) + light · overbright`, where overbright is
     /// `saturate(|light| − 2) · 0.5 / max(0.01, |light|)`; without, `ambient + light`.
     func testCombineLightingOverbrightsInHDR() throws {
+        _ = try Fixtures.assets()
         let lights: [SIMD3<Float>] = [SIMD3(0, 0, 0), SIMD3(0.5, 0.25, 0), SIMD3(1, 1, 1), SIMD3(1.5, 1.5, 1),
                                       SIMD3(3, 2, 1), SIMD3(6, 0, 0), SIMD3(10, 8, 6), SIMD3(0.9, 0.9, 0.9)]
         let ambient = SIMD3<Float>(repeating: 0.25)

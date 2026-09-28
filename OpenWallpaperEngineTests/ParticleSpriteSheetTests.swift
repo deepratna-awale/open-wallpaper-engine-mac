@@ -55,6 +55,7 @@ final class ParticleSpriteSheetTests: XCTestCase {
 
     /// WE's rain sheet, loaded for a scene: 4 × 4 frames, a quarter of the texture each.
     func testTheRainSheetLoadsAsFourByFour() throws {
+        _ = try Fixtures.assets()
         let content = try content(.enabled)
         let system = try XCTUnwrap(content.particleSystems.first)
         let sheet = try XCTUnwrap(system.spriteSheet)
@@ -83,6 +84,7 @@ final class ParticleSpriteSheetTests: XCTestCase {
     /// `Scenes/particle-texs-sheet`: a 64 × 16 strip of four 16-pixel frames, each an opaque white
     /// square over its middle 8 pixels, with `TEXS` frames and no `.tex-json`.
     func testASheetWithoutTexJSONComesFromTheTexFrames() throws {
+        _ = try Fixtures.assets()
         let content = try content(.enabled, directory: texsDirectory)
         let system = try XCTUnwrap(content.particleSystems.first)
         let sheet = try XCTUnwrap(system.spriteSheet, "the .tex's TEXS frames are the sheet")
@@ -118,6 +120,7 @@ final class ParticleSpriteSheetTests: XCTestCase {
     /// albedo's luminance (white) times the colour times the refracted scene, with the albedo's
     /// alpha: a red-tinted copy of the grey, the frame's whole blob and nothing else of its quad.
     func testARefractingDropShowsItsWholeFrameOfTheRefractedScene() throws {
+        _ = try Fixtures.assets()
         for quality in [GSPostProcessingQuality.enabled, .ultra] {
             let pixels = try render(quality)
             let drop = pixels.points { $0.x > $0.y + 60 }

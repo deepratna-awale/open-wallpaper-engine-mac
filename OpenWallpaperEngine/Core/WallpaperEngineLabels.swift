@@ -1,8 +1,8 @@
 import Foundation
 
 /// WE's own UI strings (`locale/ui_<language>.json`), which translate the localisation keys
-/// wallpapers and shaders use as labels (`ui_editor_properties_speed` → "Speed"). The bundled
-/// assets carry WE's files in `we-assets/locale`; a WE install keeps them in `<install>/locale`,
+/// wallpapers and shaders use as labels (`ui_editor_properties_speed` → "Speed"). The assets cache
+/// carries WE's files in `.owe-assets/locale`; a WE install keeps them in `<install>/locale`,
 /// beside `<install>/assets`.
 struct WallpaperEngineLabels {
     private let strings: [String: String]

@@ -186,6 +186,7 @@ final class EffectPipelineArchiveTests: XCTestCase {
     /// pipelines ("missing 'vertex' stage in pipeline no. N"); every write is built afresh, so
     /// frequent writes across two launches keep every pipeline.
     func testBuiltinEffectPipelinesSurviveRepeatedWritesAndLaunches() throws {
+        _ = try Fixtures.assets()
         let assets = ShaderVariantTests.weAssets
         let loader = ShaderSourceLoader(roots: [assets])
         let translator = ShaderVariantTranslator(compiler: InProcessShaderCompiler(), cacheDirectory: nil)

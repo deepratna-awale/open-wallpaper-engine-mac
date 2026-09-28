@@ -54,6 +54,7 @@ final class SceneScriptObjectModelTests: XCTestCase {
     // MARK: - Shared memory
 
     func testLayerMembersReadAndWriteTheObjectTable() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         f.evaluate("var bg = thisScene.getLayer('background');")
         XCTAssertEqual(f.evaluate("[bg.origin.x, bg.origin.y, Math.round(bg.angles.z * 1000) / 1000].join(',')")?.toString(),
@@ -86,6 +87,7 @@ final class SceneScriptObjectModelTests: XCTestCase {
     /// WE's own WEMath and WEVector code works on members: their bodies are evaluated here with
     /// `export`/`import` removed (the module compiler is WP3's), everything else unmodified.
     func testMembersInteroperateWithWEVectorAndWEMath() throws {
+        _ = try Fixtures.assets()
         let modules = SceneScriptPrelude.load().modules
         let weMath = try XCTUnwrap(modules.first { $0.name == "wemath" }).source
         let weVector = try XCTUnwrap(modules.first { $0.name == "wevector" }).source
@@ -175,6 +177,7 @@ final class SceneScriptObjectModelTests: XCTestCase {
     // MARK: - thisObject scopes
 
     func testEffectAndMaterialScopes() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         f.add("effect-visible", slot: 0, binding: .effect(slot: 0, effect: 0, property: "visible"), initialValue: true, """
             function init(value) {
@@ -276,6 +279,7 @@ final class SceneScriptObjectModelTests: XCTestCase {
     // MARK: - Structure commands
 
     func testCreateSortAndDestroyLayers() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         // The audio-bar pattern of the corpus (08861b7e67b4, 585203d7f809).
         f.add("bars", slot: 0, """
@@ -351,6 +355,7 @@ final class SceneScriptObjectModelTests: XCTestCase {
     // MARK: - Playback, animations, scene
 
     func testPlaybackAndAnimationCommands() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         f.evaluate("""
             var music = thisScene.getLayer('music'), snow = thisScene.getLayer('snow'), bg = thisScene.getLayer(0);
@@ -387,6 +392,7 @@ final class SceneScriptObjectModelTests: XCTestCase {
     }
 
     func testSceneSettingsAndCameraTransforms() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         XCTAssertEqual(f.evaluate("thisScene.bloomstrength")?.toDouble(), 2)
         f.evaluate("thisScene.bloomstrength = 3; thisScene.camerashake = true; thisScene.clearcolor = new Vec3(0.5);")
@@ -460,6 +466,7 @@ final class SceneScriptObjectModelTests: XCTestCase {
     private static func components(_ vector: SIMD3<Float>) -> [Float] { [vector.x, vector.y, vector.z] }
 
     func testStubsAreInertAndLoggedOnce() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         XCTAssertEqual(f.evaluate("""
             var bg = thisScene.getLayer(0);

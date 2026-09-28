@@ -7,6 +7,7 @@ import MetalKit
 /// is removed, and the gap can't be forgotten.
 final class RenderCheckTests: XCTestCase {
     func testLoaderKeepsEveryVisibleLayer() throws {
+        _ = try Fixtures.assets()
         let directory = Fixtures.url("Scenes/layers")
         let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/layers/project.json"))
         let wallpaper = WEWallpaper(using: project, where: directory)
@@ -32,6 +33,7 @@ final class RenderCheckTests: XCTestCase {
     /// player's scripts) centred on the bottom edge at 1.4×. WE draws nothing of an empty quad; a
     /// scene-sized stand-in painted the bottom half of the screen white.
     func testZeroSizeSolidLayerDrawsNothing() throws {
+        _ = try Fixtures.assets()
         let size = SIMD2(480, 272)
         let directory = Fixtures.url("Scenes/zero-size-solid")
         let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/zero-size-solid/project.json"))
@@ -73,6 +75,7 @@ final class RenderCheckTests: XCTestCase {
     /// not to the 1×1 fill its quad stretches. The fixture's effect writes the pixel's u into red:
     /// at the layer's size it ramps across the layer; on a 1×1 buffer the layer was one flat colour.
     func testSolidLayerEffectsRunAtTheLayersSize() throws {
+        _ = try Fixtures.assets()
         XCTAssertEqual(SolidEffectInput.size(SIMD2(128, 64)), SIMD2(128, 64))
         XCTAssertEqual(SolidEffectInput.size(SIMD2(100.5, 0.4)), SIMD2(101, 1))
         let size = SIMD2(128, 64)
@@ -120,6 +123,7 @@ final class RenderCheckTests: XCTestCase {
     /// (brightness 0.89) is as bright in WE's capture, taken with post-processing enabled, as
     /// without its brightness.
     func testBrightnessAppliesOnlyUnderUltraPostProcessing() throws {
+        _ = try Fixtures.assets()
         XCTAssertFalse(SceneRenderSettings().appliesBrightness)
         let size = SIMD2(64, 64)
         let directory = Fixtures.url("Scenes/brightness")
@@ -163,6 +167,7 @@ final class RenderCheckTests: XCTestCase {
     /// property shows. With the property off the layer is hidden; with it on, the bars follow
     /// the frame's `g_AudioSpectrum*` over the scene under the layer, and silence draws none.
     func testAudioBarsOnAComposeLayerFollowTheirPropertyAndTheSpectrum() throws {
+        _ = try Fixtures.assets()
         let size = SIMD2(128, 64)
         let directory = Fixtures.url("Scenes/audio-bars")
         let projectData = try Fixtures.data("Scenes/audio-bars/project.json")

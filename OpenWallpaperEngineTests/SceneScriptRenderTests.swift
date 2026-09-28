@@ -22,6 +22,7 @@ final class SceneScriptRenderTests: XCTestCase {
     // MARK: - Pixels
 
     func testScriptWritesReachThePixels() throws {
+        _ = try Fixtures.assets()
         let scene = try Scene(fixture: "scripted", services: services(), size: SIMD2(128, 64))
         defer { scene.close() }
         // Effect pipelines compile off the render thread; the tinted layer draws plain until then.
@@ -41,6 +42,7 @@ final class SceneScriptRenderTests: XCTestCase {
 
     /// Without scripts the same scene shows what scene.json authored: a baseline for the test above.
     func testTheSameSceneWithoutScriptsShowsTheAuthoredValues() throws {
+        _ = try Fixtures.assets()
         let scene = try Scene(fixture: "scripted", services: nil, size: SIMD2(128, 64))
         defer { scene.close() }
         let pixels = try scene.render(frames: 3) { !Fixtures.hasWEShaderSources || $0.color(atScene: SIMD2(16, 16)) != .white }
@@ -61,6 +63,7 @@ final class SceneScriptRenderTests: XCTestCase {
     /// S22: two displays showing the same wallpaper run two runtimes that share nothing: module
     /// variables, `shared` and frame counts are their own.
     func testTwoDisplaysShareNothing() throws {
+        _ = try Fixtures.assets()
         let services = services()
         let first = try Scene(fixture: "scripted-counter", services: services, size: SIMD2(64, 64), screenID: "A")
         defer { first.close() }
@@ -80,6 +83,7 @@ final class SceneScriptRenderTests: XCTestCase {
     /// Like WE, a frame draws what its own scripts did: the draw waits for the script frame it
     /// started (plan §4.4), so there is no frame of latency.
     func testADrawShowsItsOwnScriptFrame() throws {
+        _ = try Fixtures.assets()
         let scene = try Scene(fixture: "scripted-counter", services: services(), size: SIMD2(64, 64))
         defer { scene.close() }
         scene.renderer.scripts.frameWait = 5 // a loaded test machine; the app waits 4 ms
@@ -94,6 +98,7 @@ final class SceneScriptRenderTests: XCTestCase {
 
     /// A user property only scripts read reaches `applyUserProperties` without a content rebuild.
     func testAScriptOnlyUserPropertyReachesTheScriptsWithoutARebuild() throws {
+        _ = try Fixtures.assets()
         let scene = try Scene(fixture: "scripted-counter", services: services(), size: SIMD2(64, 64))
         defer { scene.close() }
         _ = try scene.render(frames: 2)
@@ -109,6 +114,7 @@ final class SceneScriptRenderTests: XCTestCase {
     /// The watchdog stops a hung script's wallpaper (plan §1.9 P5): the renderer is told once and
     /// keeps drawing, and another display's scripts keep running.
     func testAHungScriptHaltsOnlyItsWallpaper() throws {
+        _ = try Fixtures.assets()
         var configuration = SceneScriptRuntime.Configuration.standard
         configuration.frameTimeLimit = 0.3
         let services = services(configuration: configuration)
@@ -133,6 +139,7 @@ final class SceneScriptRenderTests: XCTestCase {
     /// Sound layers under script control (`stop()`, a bound `volume`), `createLayer` of a particle
     /// system and of a sound, a bound `brightness` dimming a layer and a bound `size` growing one.
     func testScriptsDriveSoundsCreatedObjectsBrightnessAndSize() throws {
+        _ = try Fixtures.assets()
         let scene = try Scene(fixture: "scripted-objects", services: services(), size: SIMD2(64, 64))
         defer { scene.close() }
         // WE applies `brightness` only under ultra post-processing (`SceneRenderSettings.appliesBrightness`).

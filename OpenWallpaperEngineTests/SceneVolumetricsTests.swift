@@ -91,6 +91,7 @@ final class SceneVolumetricsTests: XCTestCase {
 
     /// Every util material translates at every quality, with WE's combos and passes.
     func testThePlanIsWEsUtilMaterials() throws {
+        _ = try Fixtures.assets()
         let lights = [Self.object("1", Self.spot()), Self.object("2", Self.spot(cookie: true)), Self.object("3", Self.point())]
         for quality in [GSLightingQuality.low, .medium, .high, .ultra] {
             let plan = try XCTUnwrap(plan(lights, quality))
@@ -121,6 +122,7 @@ final class SceneVolumetricsTests: XCTestCase {
 
     /// WE's trigger: nothing with the setting disabled or without a light that casts volumetrics.
     func testTheSettingGatesThePlan() throws {
+        _ = try Fixtures.assets()
         XCTAssertNil(try plan([Self.object("1", Self.spot())], .disabled))
         var quiet = Self.spot()
         quiet.castVolumetrics = false
@@ -135,6 +137,7 @@ final class SceneVolumetricsTests: XCTestCase {
     /// A shadow caster reads its map in the shadow atlas (`SHADOW`, LR22) while shadows are on;
     /// with them off WE compiles it without `SHADOW`, as it does.
     func testShadowCastersReadTheShadowAtlas() throws {
+        _ = try Fixtures.assets()
         let caster = Self.object("9", Self.spot(cookie: true, shadow: true))
         let on = try XCTUnwrap(plan([caster, Self.object("1", Self.spot())], .high))
         XCTAssertEqual(on.lights.map(\.id), ["9", "1"])
@@ -152,6 +155,7 @@ final class SceneVolumetricsTests: XCTestCase {
     /// LF4: a cookie that doesn't load falls back to WE's default (0x14025d1b7), per light; one
     /// whose default is missing too is skipped alone, and the other lights still draw.
     func testAMissingCookieFallsBackPerLight() throws {
+        _ = try Fixtures.assets()
         var missing = Self.spot(cookie: true)
         missing.cookie = "cookie/missing"
         let fallback = try XCTUnwrap(plan([Self.object("1", missing), Self.object("2", Self.spot())], .medium))
@@ -275,6 +279,7 @@ final class SceneVolumetricsTests: XCTestCase {
     /// `volumetrics_blur_h`, `_v` and `volumetrics_combine` on a synthetic light buffer, against
     /// `VolumetricsReference.finish`, with and without the blur.
     func testTheBlurAndCombineMatchTheCPUModel() throws {
+        _ = try Fixtures.assets()
         let stage = SceneVolumetrics(device: device)
         let pipelines = try XCTUnwrap(stage.pipelines)
         let width = 40, height = 23
@@ -311,6 +316,7 @@ final class SceneVolumetricsTests: XCTestCase {
     /// The whole stage on a synthetic frame: each light's front pass against `volumetrics_front`
     /// along each pixel's ray (`VolumetricsReference.march`), before the combine.
     func testTheRayMarchMatchesTheCPUModelAlongEachRay() throws {
+        _ = try Fixtures.assets()
         let width = 256, height = 144
         var rightward = matrix_identity_float4x4
         rightward.columns.3 = SIMD4(70, 80, -10, 1)
@@ -397,6 +403,7 @@ final class SceneVolumetricsTests: XCTestCase {
 
     /// With the setting disabled the stage draws nothing, whatever the plan.
     func testTheStageIsGatedByTheSetting() throws {
+        _ = try Fixtures.assets()
         let plan = try XCTUnwrap(plan([Self.object("1", Self.point())], .high))
         let stage = SceneVolumetrics(device: device)
         stage.setPlan(plan)
@@ -423,6 +430,7 @@ final class SceneVolumetricsTests: XCTestCase {
 
     /// What volumetrics cost on the GPU at 1920×1080, per quality: two spots and a point.
     func testTheCost() throws {
+        _ = try Fixtures.assets()
         let lights = [Self.object("1", Self.spot()), Self.object("2", Self.spot(cookie: true)), Self.object("3", Self.point())]
         var report = "quality\tlights\tGPU min ms\tGPU median ms\n"
         for quality in [GSLightingQuality.low, .medium, .high, .ultra] {

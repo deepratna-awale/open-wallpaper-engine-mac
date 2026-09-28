@@ -28,6 +28,7 @@ final class SceneShapeObjectTests: XCTestCase {
 
     /// The object's combos go over the authored ones of every pass.
     func testObjectCombosGoOverThePassCombos() throws {
+        _ = try Fixtures.assets()
         let root = ShaderVariantTests.weAssets
         var builder = SceneEffectPlanBuilder(
             translator: ShaderVariantTranslator(compiler: InProcessShaderCompiler(), cacheDirectory: scratch.appending(path: "cache")),
@@ -45,6 +46,7 @@ final class SceneShapeObjectTests: XCTestCase {
     /// The preset "Light shafts - corner" (lightshafts_0) over black: coloured rays from the
     /// gradient map, all inside the 1080 × 1080 square at the screen's centre.
     func testTheLightShaftPresetDrawsTheGradientInsideItsSquare() throws {
+        _ = try Fixtures.assets()
         let directory = try makeCornerPreset()
         let data = try Data(contentsOf: directory.appending(path: "project.json"))
         let project = try decodeTolerant(WEProject.self, from: data)
@@ -77,6 +79,7 @@ final class SceneShapeObjectTests: XCTestCase {
     /// under them, and its `scale` (2 here) sizes its square like any object's. Blended over the
     /// grey, its dim rays of high alpha drew a dark box, and at scale 1 the box's edges showed.
     func testALightShaftShapeAddsToTheSceneAtItsScale() throws {
+        _ = try Fixtures.assets()
         let directory = try makePreset(name: "linear", clearColor: "0.5 0.5 0.5", scale: "2 2 2", pass: #"""
             {"combos":{"RENDERING":0},
              "constantshadervalues":{"colorastart":"1 1 1","colorend":"0.435 0.886 1","colorwexponent":0.2,

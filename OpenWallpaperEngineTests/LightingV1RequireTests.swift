@@ -83,6 +83,7 @@ final class LightingV1RequireTests: XCTestCase {
     /// The helpers `PerformLighting_V1` calls come before the `#require` in every shipped shader
     /// that has one.
     func testHeadersPrecedeTheRequire() throws {
+        _ = try Fixtures.assets()
         let loader = ShaderSourceLoader(roots: [ShaderVariantTests.weAssets])
         for path in Self.shipped {
             let text = try loader.load(path, stage: .fragment).text
@@ -204,6 +205,7 @@ final class LightingV1RequireTests: XCTestCase {
     /// Every shipped lit shader translates and builds a pipeline under each budget, with the
     /// light arrays sized by it.
     func testLitShadersTranslateUnderEachBudget() throws {
+        _ = try Fixtures.assets()
         for (label, budget) in Self.budgets {
             XCTAssertEqual(try translateShipped(budget), [], label)
         }
@@ -213,6 +215,7 @@ final class LightingV1RequireTests: XCTestCase {
     /// (`sampler2DComparison`, `texSample2DCompare`): a Metal `depth2d` read with `sample_compare`
     /// (docs/models-plan.md §2.10).
     func testShadowBudgetsNeedTheShadowAtlas() throws {
+        _ = try Fixtures.assets()
         for budget in [WELightConfig(spot: 1, spotShadow: 1), WELightConfig(point: 1, pointShadow: 1),
                        WELightConfig(directional: 2, directionalShadow: 2)] {
             XCTAssertEqual(try translateShipped(budget, quality: 4), [], "\(budget)")
@@ -222,6 +225,7 @@ final class LightingV1RequireTests: XCTestCase {
     /// genericimage4 with lighting on and no light is `CombineLighting(0, ambient · albedo)`: the
     /// generated function is called, not the old stub's `color · f0`.
     func testGenericImage4CallsTheGeneratedFunction() throws {
+        _ = try Fixtures.assets()
         let loader = ShaderSourceLoader(roots: [ShaderVariantTests.weAssets])
         let fragment = try loader.load("genericimage4", stage: .fragment)
         let combos = SceneEngineCombos(sceneOrtho: true).applied(to: ["LIGHTING": 1])

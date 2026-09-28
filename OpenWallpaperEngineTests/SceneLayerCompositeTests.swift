@@ -66,6 +66,7 @@ final class SceneLayerCompositeTests: XCTestCase {
     }
 
     func testTheCompositeNameBindsAnotherLayersImage() throws {
+        _ = try Fixtures.assets()
         let cache = FileManager.default.temporaryDirectory.appending(path: "owe-composite-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: cache) } // scratch cleanup
         let builder = builder(cache: cache)
@@ -83,6 +84,7 @@ final class SceneLayerCompositeTests: XCTestCase {
     }
 
     func testThePassSamplesTheCompositeTheRendererHandsIt() throws {
+        _ = try Fixtures.assets()
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let queue = try XCTUnwrap(device.makeCommandQueue())
         let cache = FileManager.default.temporaryDirectory.appending(path: "owe-composite-\(UUID().uuidString)")

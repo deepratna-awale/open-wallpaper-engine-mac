@@ -122,6 +122,7 @@ final class ScenePlanarReflectionObjectTests: XCTestCase {
     /// have the centre of its pixels in the scene target flipped. An image with `reflected: false`
     /// draws in the scene and not in the reflection.
     func testImagesTextsAndParticlesAreMirroredAcrossYZero() throws {
+        _ = try Fixtures.assets()
         let harness = try harness("perspective", objects: [
             Self.floor(y: "-2"),
             #"{"id":2,"name":"red","image":"models/util/solidlayer.json","origin":"-2 1.2 0","size":"0.8 0.8","color":"1 0 0"}"#,
@@ -166,6 +167,7 @@ final class ScenePlanarReflectionObjectTests: XCTestCase {
 
     /// With the reflection setting off the pass only clears: nothing is drawn.
     func testTheSettingOffDrawsNoObjects() throws {
+        _ = try Fixtures.assets()
         let harness = try harness("off", objects: [
             Self.floor(y: "-2"),
             #"{"id":2,"name":"red","image":"models/util/solidlayer.json","origin":"-2 1.2 0","size":"0.8 0.8","color":"1 0 0"}"#,
@@ -184,6 +186,7 @@ final class ScenePlanarReflectionObjectTests: XCTestCase {
     /// screen) lands inside the reflection, as far above the bottom edge as it lies below it; one
     /// inside the scene lands below it, off the target.
     func testAnOrthographicLayerBelowTheSceneLandsAboveItsBottomEdge() throws {
+        _ = try Fixtures.assets()
         let harness = try harness("orthographic", objects: [
             Self.floor(y: "-500"),
             #"{"id":2,"name":"below","image":"models/util/solidlayer.json","origin":"100 -40 0","size":"40 20","color":"1 0 0"}"#,

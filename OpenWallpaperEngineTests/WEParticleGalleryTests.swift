@@ -11,9 +11,8 @@ import simd
 ///
 /// Runs only when `OWE_PARTICLE_GALLERY` (`TEST_RUNNER_OWE_PARTICLE_GALLERY` through xcodebuild) is
 /// set: `1`, or the gallery folder, which adds WE | ours pictures of the stills. It needs a WE
-/// install (the presets and previews aren't bundled): `OWE_WE_ASSETS` (`TEST_RUNNER_OWE_WE_ASSETS`), the
-/// install or its `assets` folder, which the test host then uses as its assets directory
-/// (`WallpaperEngineAssets.testInstall`).
+/// install (the presets and previews aren't in the assets cache): `OWE_ASSETS` (`TEST_RUNNER_OWE_ASSETS`),
+/// the install or its `assets` folder, which the test host then uses as its assets directory.
 /// `OWE_PARTICLE_GALLERY_ONLY` lists names (`fire_1`, `ptce_rope`); the report and pictures go to
 /// `OWE_PARTICLE_GALLERY_OUT`, and `OWE_PARTICLE_GALLERY_FRAMES=1` also writes each clip frame at half size.
 final class WEParticleGalleryTests: XCTestCase {

@@ -32,6 +32,7 @@ final class ScenePuppetLibraryTests: XCTestCase {
     }
 
     func testEveryLibraryPuppetDrawsItsPose() throws {
+        _ = try Fixtures.assets()
         let roots = LightingLibraryDecodeTests.roots.filter { FileManager.default.fileExists(atPath: $0.path) }
         try XCTSkipIf(roots.count < LightingLibraryDecodeTests.roots.count, "wallpaper library not present")
         let items = try Self.puppetScenes(in: roots)

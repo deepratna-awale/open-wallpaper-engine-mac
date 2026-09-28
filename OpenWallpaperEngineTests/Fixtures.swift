@@ -1,4 +1,5 @@
 import Foundation
+import XCTest
 @testable import OpenWallpaperEngine
 
 /// Fixtures live in `Tests/Fixtures` at the repository root, outside the test target, so they are
@@ -35,8 +36,18 @@ extension Fixtures {
         UserDefaults.app.removeObject(forKey: "SceneAdditionalControlsVersion." + directory.path)
     }
 
-    /// True when WE's effect shader sources are reachable (a configured install or a bundled copy
-    /// with GLSL). Tests that need an effect to plan skip without them.
+    /// The Wallpaper Engine assets named by `OWE_ASSETS` (`TEST_RUNNER_OWE_ASSETS` through
+    /// xcodebuild): an assets folder or a WE install. The repository ships none, so tests that need
+    /// them skip without it, as on CI.
+    static func assets() throws -> URL {
+        guard let directory = WallpaperEngineAssets.directory else {
+            throw XCTSkip("needs Wallpaper Engine assets: set OWE_ASSETS to an assets folder or a WE install")
+        }
+        return directory
+    }
+
+    /// True when WE's effect shader sources are reachable (`OWE_ASSETS`). Tests that need an effect
+    /// to plan skip without them.
     static var hasWEShaderSources: Bool {
         guard let assets = WallpaperEngineAssets.directory else { return false }
         return FileManager.default.fileExists(atPath: assets.appending(path: "effects/tint/shaders/effects/tint.frag").path)

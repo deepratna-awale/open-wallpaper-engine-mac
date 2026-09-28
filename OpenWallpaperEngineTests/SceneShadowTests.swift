@@ -298,6 +298,7 @@ final class SceneShadowTests: XCTestCase {
 
     /// fur4 and foliage4 name their own casters; everything else takes `shadowcaster.json`'s.
     func testShadowPassHeaders() throws {
+        _ = try Fixtures.assets()
         let loader = ShaderSourceLoader(roots: [ShaderVariantTests.weAssets])
         XCTAssertEqual(ModelMaterialPlanBuilder.shadowPassShader(in: try loader.load("fur4", stage: .fragment).text), "shadowcasterfur4")
         XCTAssertEqual(ModelMaterialPlanBuilder.shadowPassShader(in: try loader.load("foliage4", stage: .fragment).text),
@@ -308,6 +309,7 @@ final class SceneShadowTests: XCTestCase {
     /// Every shipped caster translates with and without skinning and alpha-to-coverage, draws one
     /// instance per view into the viewport its instance picks, and builds a depth-only pipeline.
     func testEveryShippedCasterTranslatesAndBuilds() throws {
+        _ = try Fixtures.assets()
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let translator = ShaderVariantTranslator(compiler: InProcessShaderCompiler(), cacheDirectory: nil, failureDirectory: nil)
         let loader = ShaderSourceLoader(roots: [ShaderVariantTests.weAssets])
@@ -331,6 +333,7 @@ final class SceneShadowTests: XCTestCase {
     /// A lit image under a shadowed budget (`genericimage4`'s `g_Texture6`) and a lit model
     /// (`generic4`'s) read the frame's atlas; the model's opaque material gets its shadow variant.
     func testLitMaterialsBindTheShadowAtlas() throws {
+        _ = try Fixtures.assets()
         let budget = WELightConfig(spot: 1, spotShadow: 1)
         let engine = SceneEngineCombos(sceneOrtho: false, lightBudget: budget, shadowQuality: 2)
         XCTAssertTrue(engine.castsShadows)

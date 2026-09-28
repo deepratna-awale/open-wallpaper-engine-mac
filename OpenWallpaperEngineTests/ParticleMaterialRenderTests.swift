@@ -32,6 +32,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
     // MARK: - Tests
 
     func testSpriteThroughEmulatedGeometryStage() throws {
+        _ = try Fixtures.assets()
         let plan = try self.plan("materials/solid.json", renderer: "sprite", keeping: .emulated(vertexCount: 6))
         // One particle in the top-left quadrant (scene y is up). Its size is half the authored
         // one, and the shaders read it as the quad's width.
@@ -46,6 +47,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
     /// WE draws a system through its model matrix: a non-uniform scale squashes the sprite
     /// (`g_Orientation*` carry the emitter's transform).
     func testANonUniformEmitterScaleSquashesTheSprite() throws {
+        _ = try Fixtures.assets()
         for geometry in [ParticleMaterialPlan.Stage.Geometry.emulated(vertexCount: 6), .expandedQuads] {
             let plan = try self.plan("materials/solid.json", renderer: "sprite", keeping: geometry)
             // Size 80 draws a 40-wide quad; scaled 2 across and 0.5 up it is 80 by 20.
@@ -59,6 +61,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
     }
 
     func testSpriteThroughNoGeometryShaderStream() throws {
+        _ = try Fixtures.assets()
         let plan = try self.plan("materials/solid.json", renderer: "sprite", keeping: .expandedQuads)
         let pixels = try render(plan, particles: [particle(at: SIMD2(64, 192), size: 80),
                                                   particle(at: SIMD2(192, 64), size: 40)])
@@ -69,6 +72,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
     }
 
     func testBothPathsDrawTheSameRotatedSprite() throws {
+        _ = try Fixtures.assets()
         var rotated = particle(at: SIMD2(128, 128), size: 120)
         rotated.rotation = .pi / 4
         let emulated = try render(try plan("materials/solid.json", renderer: "sprite", keeping: .emulated(vertexCount: 6)),
@@ -83,6 +87,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
     }
 
     func testSpriteTrailStretchesAlongVelocity() throws {
+        _ = try Fixtures.assets()
         let plan = try self.plan("materials/solid.json", renderer: "spritetrail", keeping: .emulated(vertexCount: 6))
         var moving = particle(at: SIMD2(128, 128), size: 20)
         moving.velocity = SIMD2(200, 0)
@@ -93,6 +98,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
     }
 
     func testRopeThroughEmulatedGeometryStage() throws {
+        _ = try Fixtures.assets()
         let plan = try self.plan("materials/solid.json", renderer: "rope", keeping: .emulated(vertexCount: 6))
         XCTAssertEqual(plan.shader, "genericropeparticle", "rope renderers swap in WE's rope shader")
         // A horizontal strand across the middle, as wide as the particles' size (the shader's
@@ -108,6 +114,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
     }
 
     func testSubdividedRopeCurvesThroughItsPoints() throws {
+        _ = try Fixtures.assets()
         let renderer = try decodeRenderer(#"{"name":"rope","subdivision":3}"#)
         let plan = try builder.build(materialPath: "materials/solid.json", renderer: renderer, flags: 0,
                                      baseTexture: .image(NSImage()), spriteSheet: nil)
@@ -120,6 +127,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
     }
 
     func testRopeThroughNoGeometryShaderStream() throws {
+        _ = try Fixtures.assets()
         let plan = try self.plan("materials/solid.json", renderer: "rope", keeping: .expandedQuads)
         let pixels = try render(plan, particles: [particle(at: SIMD2(32, 128), size: 20),
                                                   particle(at: SIMD2(224, 128), size: 20)])
@@ -128,6 +136,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
     }
 
     func testRopeTrailFollowsEachParticlesHistory() throws {
+        _ = try Fixtures.assets()
         let plan = try self.plan("materials/solid.json", renderer: "ropetrail", keeping: .emulated(vertexCount: 6))
         var head = particle(at: SIMD2(200, 128), size: 16)
         // A full ring whose oldest sample sits at `historyStart`.
@@ -139,6 +148,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
     }
 
     func testRandomSpriteFramesShowOneFrameEvenWithFrameBlending() throws {
+        _ = try Fixtures.assets()
         // Two frames side by side: red, then green.
         let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: 2, height: 1, mipmapped: false)
         let sheet = try XCTUnwrap(device.makeTexture(descriptor: descriptor))
@@ -170,6 +180,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
     }
 
     func testClampUVsKeepsTheOppositeEdgeOut() throws {
+        _ = try Fixtures.assets()
         // A texture whose top row is transparent and bottom row opaque white: repeat would pull
         // the bottom row into the top edge under bilinear filtering.
         let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: 1, height: 4, mipmapped: false)
@@ -223,6 +234,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
     }
 
     func testBuilderReadsTheTextureFlags() throws {
+        _ = try Fixtures.assets()
         let plan = try builder.build(materialPath: "materials/particle/halo.json", renderer: nil, flags: 0,
                                      baseTexture: .image(NSImage()), spriteSheet: nil)
         XCTAssertEqual(plan.textureFlags[0], .clampUVs, "WE's halo.tex clamps")
@@ -232,6 +244,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
     }
 
     func testAdditiveBlendingAndMaterialConstants() throws {
+        _ = try Fixtures.assets()
         let plan = try self.plan("materials/additive_overbright.json", renderer: "sprite", keeping: .emulated(vertexCount: 6))
         XCTAssertEqual(plan.blending, "additive")
         // Two overlapping sprites at half brightness (`g_Overbright` 0.5) add up.
@@ -244,6 +257,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
     // MARK: Refraction (`_rt_FullFrameBuffer`)
 
     func testRefractionMultipliesTheScenePixelBeneath() throws {
+        _ = try Fixtures.assets()
         for geometry in [ParticleMaterialPlan.Stage.Geometry.emulated(vertexCount: 6), .expandedQuads] {
             let plan = try self.plan("materials/refract.json", renderer: "sprite", keeping: geometry)
             XCTAssertTrue(plan.stages.allSatisfy(\.readsSceneSnapshot))
@@ -261,6 +275,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
     }
 
     func testRefractionNormalOffsetsAlongTheScreenAxes() throws {
+        _ = try Fixtures.assets()
         let plan = try refractionPlan()
         XCTAssertEqual(plan.stages.first?.variant.combos["NORMALMAP"], 1, "a bound normal map switches NORMALMAP on")
         // Left half red, right half green. The normal map's x (alpha, `DecompressNormalWithMask`)
@@ -283,6 +298,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
     }
 
     func testCompilingPipelineDrawsNothingRatherThanTheBuiltInDraw() throws {
+        _ = try Fixtures.assets()
         // A pixel format no other test compiles for, so the pipeline is new here.
         let format = MTLPixelFormat.bgra8Unorm_srgb
         let plan = try self.plan("materials/additive_overbright.json", renderer: "sprite", keeping: .expandedQuads)
@@ -299,6 +315,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
 
     /// Uniform blocks over 4 KB come from the reused arena, not a new buffer per draw.
     func testLargeUniformBlocksComeFromTheArena() throws {
+        _ = try Fixtures.assets()
         renderer.uniformArena.inlineLimit = 0
         let plan = try self.plan("materials/solid.json", renderer: "sprite", keeping: .emulated(vertexCount: 6))
         for _ in 0..<3 {
@@ -310,6 +327,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
 
     /// Memory pressure drops the pipelines not drawn with since the last critical trim.
     func testMemoryPressureDropsIdlePipelines() throws {
+        _ = try Fixtures.assets()
         let plan = try self.plan("materials/solid.json", renderer: "sprite", keeping: .emulated(vertexCount: 6))
         _ = try render(plan, particles: [particle(at: SIMD2(128, 128), size: 80)])
         XCTAssertEqual(renderer.pipelineCount, 1)
@@ -322,6 +340,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
     }
 
     func testUserShaderValuesDriveTheMaterialLive() throws {
+        _ = try Fixtures.assets()
         let plan = try self.plan("materials/user_overbright.json", renderer: "sprite", keeping: .emulated(vertexCount: 6))
         var dim = particle(at: SIMD2(128, 128), size: 80)
         dim.color = SIMD4(0.25, 0.25, 0.25, 1)
@@ -349,6 +368,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
     /// An RG88 normal map (loaded as (r, g, 0, 1)) refracts by `DecompressNormalWithMask`'s RG88
     /// branch: x from green, y from red, the mask (alpha) 1.
     func testRG88NormalMapRefractsThroughItsFormatCombo() throws {
+        _ = try Fixtures.assets()
         let built = try reducedFormatBuilder().build(materialPath: "materials/refract_rg88.json",
                                                      renderer: try decodeRenderer(#"{"name":"sprite"}"#), flags: 0,
                                                      baseTexture: .image(NSImage()), spriteSheet: nil)
@@ -364,6 +384,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
 
     /// An RG88 albedo reads as luminance and alpha (`ConvertTexture0Format`'s `.rrrg`).
     func testRG88AlbedoReadsAsLuminanceAndAlpha() throws {
+        _ = try Fixtures.assets()
         let built = try reducedFormatBuilder().build(materialPath: "materials/albedo_rg88.json",
                                                      renderer: try decodeRenderer(#"{"name":"sprite"}"#), flags: 0,
                                                      baseTexture: .image(NSImage()), spriteSheet: nil)
@@ -377,6 +398,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
     }
 
     func testFailedPipelineFallsBackToTheBuiltInDraw() throws {
+        _ = try Fixtures.assets()
         let (plan, broken) = try brokenPlan()
         let system = ParticleSystemRuntime(texture: white, configuration: Self.configuration(plan: plan))
         XCTAssertTrue(renderer.waitUntilCompiled(plan, pixelFormat: .rgba8Unorm))
@@ -398,6 +420,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
 
     /// I3: every attribute a stage reads is fed from the record, for every renderer form.
     func testEveryAttributeTheStageReadsComesFromTheRecord() throws {
+        _ = try Fixtures.assets()
         let sheet = SpriteSheet(columns: 2, rows: 2, frames: 4, duration: 1)
         for (name, spriteSheet) in [("sprite", nil), ("sprite", sheet), ("spritetrail", nil), ("spritetrail", sheet),
                                     ("rope", nil), ("ropetrail", nil)] as [(String, SpriteSheet?)] {
@@ -418,6 +441,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
 
     /// I3: `a_Color` carries the particle's colour and alpha to the pixel.
     func testColourAndAlphaReachThePixel() throws {
+        _ = try Fixtures.assets()
         let plan = try self.plan("materials/solid.json", renderer: "sprite", keeping: .emulated(vertexCount: 6))
         var red = particle(at: SIMD2(128, 128), size: 80)
         red.color = SIMD4(1, 0, 0, 0.5)
@@ -430,6 +454,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
 
     /// I7: a mid-grey texel stays mid-grey in the scene target's format (no sRGB conversion).
     func testGreyStaysGreyInTheSceneFormat() throws {
+        _ = try Fixtures.assets()
         let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: 4, height: 4, mipmapped: false)
         let grey = try XCTUnwrap(device.makeTexture(descriptor: descriptor))
         grey.replace(region: MTLRegionMake2D(0, 0, 4, 4), mipmapLevel: 0,
@@ -449,6 +474,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
     /// colour from the particle and its alpha from the mask: `TEX0FORMAT` makes
     /// `ConvertTexture0Format` read it as (1, 1, 1, r).
     func testCoverageMaskSpriteTakesTheParticlesColour() throws {
+        _ = try Fixtures.assets()
         let built = try reducedFormatBuilder().build(materialPath: "materials/albedo_r8.json",
                                                      renderer: try decodeRenderer(#"{"name":"sprite"}"#), flags: 0,
                                                      baseTexture: .image(NSImage()), spriteSheet: nil)
@@ -465,6 +491,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
 
     /// I16: a system that can't use its material is reported once, however many frames ask.
     func testAFallbackIsReportedOnce() throws {
+        _ = try Fixtures.assets()
         let (plan, _) = try brokenPlan()
         XCTAssertTrue(renderer.waitUntilCompiled(plan, pixelFormat: .rgba8Unorm))
         let system = ParticleSystemRuntime(texture: white, configuration: Self.configuration(plan: plan))
@@ -478,6 +505,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
     /// I21: every uniform a particle stage declares gets a value: a built-in, a material or
     /// annotation constant, or one of the particle uniforms `ParticleMaterialUniforms` writes.
     func testEveryParticleUniformHasASource() throws {
+        _ = try Fixtures.assets()
         let particleUniforms: Set = ["g_OrientationRight", "g_OrientationUp", "g_OrientationForward", "g_EyePosition",
                                      "g_RenderVar0", "g_RenderVar1"]
         let sheet = SpriteSheet(columns: 2, rows: 2, frames: 4, duration: 1)
@@ -500,6 +528,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
 
     /// I14: a rope joins its particles in their order; without a particle, its neighbours join.
     func testRopeJoinsParticlesInOrder() throws {
+        _ = try Fixtures.assets()
         let plan = try self.plan("materials/solid.json", renderer: "rope", keeping: .emulated(vertexCount: 6))
         let zigzag = [SIMD2<Float>(32, 64), SIMD2(96, 192), SIMD2(160, 64), SIMD2(224, 192)]
             .map { particle(at: $0, size: 20) }
@@ -520,6 +549,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
     /// doesn't compile: with `TRAILSCROLLALPHA` and `TRAILFADESIZE` it writes `sizeStart.w` on a
     /// float.
     func testRopeShaderBuildsForEverySubdivisionAndTrailCombo() throws {
+        _ = try Fixtures.assets()
         let comboSets: [[String: Int]] = [[:], ["TRAILSCROLLALPHA": 1], ["TRAILSCROLLALPHA": 1, "TRAILFADEALPHA": 1],
                                           ["TRAILSCROLLALPHA": 1, "TRAILFADESIZE": 1],
                                           ["TRAILSCROLLALPHA": 1, "TRAILFADEALPHA": 1, "TRAILFADESIZE": 1]]
@@ -563,6 +593,7 @@ final class ParticleMaterialRenderTests: XCTestCase {
 
     /// I24: additive particles with overbright above 1 saturate the 8-bit target.
     func testAdditiveOverbrightSaturates() throws {
+        _ = try Fixtures.assets()
         let overbright = #"{"passes":[{"blending":"additive","shader":"genericparticle","textures":["particle/solid"],"#
             + #""constantshadervalues":{"ui_editor_properties_overbright":1.6}}]}"#
         let roots = [Fixtures.url("Particles"), ShaderVariantTests.weAssets]

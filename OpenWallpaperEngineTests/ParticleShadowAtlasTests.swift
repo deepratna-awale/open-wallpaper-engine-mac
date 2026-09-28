@@ -14,6 +14,7 @@ final class ParticleShadowAtlasTests: XCTestCase {
     """#.utf8)
 
     func testALitParticleMaterialReadsTheFramesShadowAtlas() throws {
+        _ = try Fixtures.assets()
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let queue = try XCTUnwrap(device.makeCommandQueue())
         let roots = [Fixtures.url("Particles"), ShaderVariantTests.weAssets]

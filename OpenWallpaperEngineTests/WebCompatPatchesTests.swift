@@ -34,8 +34,7 @@ final class WebCompatPatchesTests: XCTestCase {
     }
 
     func testBundledWebPatchesParse() throws {
-        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-            .appending(path: "Vendor/we-assets/zcompat/web")
+        let root = try Fixtures.assets().appending(path: "zcompat/web")
         let files = try FileManager.default.contentsOfDirectory(atPath: root.path).filter { $0.hasSuffix(".json") }
         XCTAssertFalse(files.isEmpty)
         for file in files {

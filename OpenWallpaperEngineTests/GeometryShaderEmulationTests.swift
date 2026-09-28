@@ -42,6 +42,7 @@ final class GeometryShaderEmulationTests: XCTestCase {
     }
 
     func testGenericParticleGeometryCompilesForEveryRendererForm() throws {
+        _ = try Fixtures.assets()
         for combos in [["GS_ENABLED": 1],
                        ["GS_ENABLED": 1, "THICKFORMAT": 1, "TRAILRENDERER": 1],
                        ["GS_ENABLED": 1, "THICKFORMAT": 1, "SPRITESHEET": 1, "SPRITESHEETBLEND": 1],
@@ -55,6 +56,7 @@ final class GeometryShaderEmulationTests: XCTestCase {
     }
 
     func testRopeGeometryCountsSubdivisions() throws {
+        _ = try Fixtures.assets()
         for subdivision in [0, 3] {
             let combos = ["GS_ENABLED": 1, "THICKFORMAT": 1, "TRAILSUBDIVISION": subdivision]
             let (variant, emulation) = try translate("genericropeparticle", combos: combos)
@@ -67,6 +69,7 @@ final class GeometryShaderEmulationTests: XCTestCase {
     }
 
     func testWEGeometryStagesDrawEachStripVertexOnce() throws {
+        _ = try Fixtures.assets()
         for shader in ["genericparticle", "genericropeparticle", "flatpoint"] {
             let (_, emulation) = try translate(shader, combos: ["GS_ENABLED": 1])
             XCTAssertFalse(emulation.restartsStrips, "\(shader) never restarts its strip")
@@ -87,6 +90,7 @@ final class GeometryShaderEmulationTests: XCTestCase {
     }
 
     func testFlatPointGeometryCompiles() throws {
+        _ = try Fixtures.assets()
         let (variant, _) = try translate("flatpoint", combos: ["GS_ENABLED": 1])
         try assertBuildsPipeline(variant)
     }

@@ -133,6 +133,7 @@ final class ParticleEmitterMotionTests: XCTestCase {
     }
 
     func testEmittersFollowTheirAnimatedParent() throws {
+        _ = try Fixtures.assets()
         let content = try content("particle-animated-parent")
         let systems = content.particleSystems
         XCTAssertEqual(systems.map(\.objectID), ["2", "3"])
@@ -149,6 +150,7 @@ final class ParticleEmitterMotionTests: XCTestCase {
     }
 
     func testParticleSystemsParentOtherObjectsLive() throws {
+        _ = try Fixtures.assets()
         let content = try content("particle-animated-parent")
         let marker = try XCTUnwrap(content.layers.first { $0.id == "4" })
         let emitter = try world("2", in: content, at: 1)

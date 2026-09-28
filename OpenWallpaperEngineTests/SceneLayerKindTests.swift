@@ -31,6 +31,7 @@ final class SceneLayerKindTests: XCTestCase {
 
     /// D7: text is no longer lifted above later layers, and particles sit between layers by object index.
     func testLayersAndParticlesKeepSceneOrder() throws {
+        _ = try Fixtures.assets()
         let content = try content("ordering")
         XCTAssertEqual(content.layers.map(\.id), ["10", "20", "40"], "layers must keep scene.json order")
         XCTAssertEqual(content.layers.map(\.order), [0, 1, 3])
@@ -48,6 +49,7 @@ final class SceneLayerKindTests: XCTestCase {
     }
 
     func testSolidLayersRenderTheirColourAtTheirSize() throws {
+        _ = try Fixtures.assets()
         let layers = Dictionary(uniqueKeysWithValues: try content("solid").layers.map { ($0.id, $0) })
         XCTAssertEqual(Set(layers.keys), ["1", "2", "3"])
 
@@ -92,6 +94,7 @@ final class SceneLayerKindTests: XCTestCase {
     /// WE's objects default `parallaxDepth` to 1 1 and its writer leaves defaults out: a layer
     /// without the key moves with camera parallax; an authored depth, even 0 0, is kept.
     func testAbsentParallaxDepthIsWEsDefault() throws {
+        _ = try Fixtures.assets()
         let layers = Dictionary(uniqueKeysWithValues: try content("parallax-depth").layers.map { ($0.id, $0) })
         XCTAssertEqual(layers["1"]?.parallaxDepth, SIMD3(1, 1, 0))
         XCTAssertEqual(layers["2"]?.parallaxDepth, SIMD3(0, 0, 0))

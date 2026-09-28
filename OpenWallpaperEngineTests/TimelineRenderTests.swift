@@ -25,6 +25,7 @@ final class TimelineRenderTests: XCTestCase {
     /// Alpha on WE's default (ease) handles with `wraploop`, against the float32 model stepped by
     /// the same deltas.
     func testAnAlphaLoopFollowsTheModel() throws {
+        _ = try Fixtures.assets()
         let scene = try Scene(services: services())
         defer { scene.close() }
         var model = try Self.timeline(of: 1, key: "alpha")
@@ -41,6 +42,7 @@ final class TimelineRenderTests: XCTestCase {
     /// wall step × the rate (`SceneClock`). `g_Time`, particles, camera motion and the audio
     /// smoothing take the same clock's time and step in the renderer.
     func testTimelinesAndScriptsRunOnTheSceneClockAtItsRate() throws {
+        _ = try Fixtures.assets()
         let scene = try Scene(services: services())
         defer { scene.close() }
         scene.renderer.playbackRate = { 2 }
@@ -64,6 +66,7 @@ final class TimelineRenderTests: XCTestCase {
 
     /// A `relative` origin is baked on the authored value; scale and `angles.z` animate (roadmap E7).
     func testOriginScaleAndAnglesAnimate() throws {
+        _ = try Fixtures.assets()
         let scene = try Scene(services: services())
         defer { scene.close() }
         var pixels = try scene.draw(frames: 0)
@@ -83,6 +86,7 @@ final class TimelineRenderTests: XCTestCase {
     /// A `startpaused` single holds its first keyframe, not the authored value; a script's
     /// `play()` runs it once, and the `alpha` linked to it runs on its clock (§2.5).
     func testAStartPausedParentPlayedByAScriptRunsItsLinkedChild() throws {
+        _ = try Fixtures.assets()
         let scene = try Scene(services: services())
         defer { scene.close() }
         XCTAssertEqual(try scene.draw(frames: 6).color(40, 8), .black, "alpha holds c0[0] = 0, not its value 1")
@@ -97,6 +101,7 @@ final class TimelineRenderTests: XCTestCase {
     /// stale or load-time value shows) and its return is drawn; an accumulator adds to the
     /// animated value each frame instead of running away (test-risks TF2).
     func testScriptsOnAnimatedFieldsSeeAndBeatTheAnimation() throws {
+        _ = try Fixtures.assets()
         let scene = try Scene(services: services())
         defer { scene.close() }
         var model = try Self.timeline(of: 6, key: "alpha")
@@ -128,6 +133,7 @@ final class TimelineRenderTests: XCTestCase {
 
     /// Without scripts the animated values are drawn all the same (the set is the renderer's).
     func testTimelinesRunWithoutScripts() throws {
+        _ = try Fixtures.assets()
         let scene = try Scene(services: nil)
         defer { scene.close() }
         let pixels = try scene.draw(frames: 70)

@@ -14,17 +14,23 @@ final class MDLParseTests: XCTestCase {
         let model: [String: Any]
     }
 
+    /// The fixtures, and WE's own models (`assets:<path>`) when `OWE_ASSETS` names the assets.
     static func entries() throws -> [Entry] {
         let json = try JSONSerialization.jsonObject(with: Fixtures.data("Models/expected.json")) as? [[String: Any]]
         return try XCTUnwrap(json).map {
             Entry(file: $0["file"] as? String ?? "", inline: $0["inline"] as? Int, model: $0["model"] as? [String: Any] ?? [:])
-        }
+        }.filter { !$0.file.hasPrefix(assetsPrefix) || WallpaperEngineAssets.directory != nil }
     }
+
+    static let assetsPrefix = "assets:"
 
     static let repository = Fixtures.root.deletingLastPathComponent().deletingLastPathComponent()
 
     static func data(_ entry: Entry) throws -> Data {
-        try Data(contentsOf: repository.appending(path: entry.file))
+        if entry.file.hasPrefix(assetsPrefix) {
+            return try Data(contentsOf: Fixtures.assets().appending(path: String(entry.file.dropFirst(assetsPrefix.count))))
+        }
+        return try Data(contentsOf: repository.appending(path: entry.file))
     }
 
     /// Checks one decode against the script's: the same error kind, or the same fields.
@@ -51,7 +57,8 @@ final class MDLParseTests: XCTestCase {
 
     func testFixturesDecodeAsTheReferenceDoes() throws {
         let entries = try Self.entries()
-        XCTAssertEqual(entries.count, 19)
+        // 18 fixtures, and WE's camera model when `OWE_ASSETS` is set.
+        XCTAssertEqual(entries.count, WallpaperEngineAssets.directory == nil ? 18 : 19)
         for entry in entries {
             Self.check(try Self.data(entry), expected: entry.model, inline: entry.inline, label: entry.file)
         }

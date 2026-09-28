@@ -244,6 +244,7 @@ final class ModelAdversarialTests: XCTestCase {
     /// A scene of images alone without `orthogonalprojection` is perspective (§2.1: 1920×1080), and
     /// its image draws through the camera.
     func testAnImageOnlySceneWithoutOrthogonalProjectionDraws() throws {
+        _ = try Fixtures.assets()
         let wallpaper = try ModelFixtureWallpaper(in: scratch, name: "image-perspective", objects: [
             #"{"id":1,"name":"red","image":"models/util/solidlayer.json","origin":"0 0 0","size":"2 2","color":"1 0 0"}"#,
         ])
@@ -260,6 +261,7 @@ final class ModelAdversarialTests: XCTestCase {
     /// vertices under the indices: the script errors are logged, the geometry draws, the GPU never
     /// reads past a buffer (a fault ends the command buffer with an error).
     func testScriptModelDataAbuseFailsCleanly() throws {
+        _ = try Fixtures.assets()
         let log = ModelLogWindow()
         let quad = "new Float32Array([-1,-1,0, 0,0,1,  1,-1,0, 0,0,1,  1,1,0, 0,0,1,  -1,1,0, 0,0,1])"
         func shape(_ indices: String) -> String {
@@ -347,6 +349,7 @@ final class ModelAdversarialTests: XCTestCase {
     /// `collisionmodel` linked to an image, a hidden model and an object that doesn't exist: the
     /// non-models are logged once; the particles simulate and draw.
     func testCollisionModelLinksToNonModelsFailCleanly() throws {
+        _ = try Fixtures.assets()
         let log = ModelLogWindow()
         let system = """
             {"emitter":[{"name":"sphererandom","rate":200,"distancemax":1,"speedmin":1,"speedmax":2}],
@@ -375,6 +378,7 @@ final class ModelAdversarialTests: XCTestCase {
     /// A reflective model (`_rt_Reflection`) when every other model is `reflected: false`: the
     /// reflection pass clears and draws nothing; both models draw.
     func testAReflectiveModelWithNothingReflected() throws {
+        _ = try Fixtures.assets()
         var floor = FixtureMDL.cubeModel(material: "materials/reflective.json")
         floor.meshes[0].materials = ["materials/reflective.json"]
         var files = model("floor", floor)
@@ -394,6 +398,7 @@ final class ModelAdversarialTests: XCTestCase {
     /// A shadowed spot in the budget whose scene has no caster (the only model doesn't cast): the
     /// map is drawn empty, and the lit model reads it.
     func testAShadowedLightWithNoCasters() throws {
+        _ = try Fixtures.assets()
         let wallpaper = try ModelFixtureWallpaper(in: scratch, name: "no-casters", objects: [
             object(1, "lit", origin: "0 -1 0", extra: #","castshadow":false,"scale":"3 0.2 3""#),
             #"{"id":2,"name":"spot","light":"lspot","origin":"0 4 0","angles":"-1.5708 0 0","castshadow":true,"#
@@ -412,6 +417,7 @@ final class ModelAdversarialTests: XCTestCase {
     /// 256 lights of every kind, all casting shadows and volumetrics, against the largest budget:
     /// the budget takes what fits; frames stay finite and bounded.
     func testTwoHundredFiftySixLights() throws {
+        _ = try Fixtures.assets()
         let kinds = ["lpoint", "lspot", "ltube", "ldirectional"]
         var objects = [object(1, "lit", origin: "0 -1 0", extra: #","scale":"3 0.2 3""#), object(2, "cube", origin: "0 0.5 0",
                                                                                            extra: #","scale":"0.4 0.4 0.4""#)]

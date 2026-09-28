@@ -80,6 +80,7 @@ final class ModelScriptStressTests: XCTestCase {
         """
 
     func testApplyAndReplaceDataWhileFramesDraw() throws {
+        _ = try Fixtures.assets()
         let text = String(data: try JSONSerialization.data(withJSONObject: [Self.script]), encoding: .utf8)!
         let host = #"{"id":1,"name":"host","origin":{"script":\#(text.dropFirst().dropLast()),"value":"0 0 0"}}"#
         let wallpaper = try ModelFixtureWallpaper(in: scratch, name: "stress", objects: [host])

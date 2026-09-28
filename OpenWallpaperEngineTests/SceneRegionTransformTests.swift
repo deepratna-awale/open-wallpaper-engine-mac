@@ -17,6 +17,7 @@ final class SceneRegionTransformTests: XCTestCase {
     private var directory: URL { Fixtures.url("Scenes/scene-region") }
 
     func testCompositionLayersShowTheSceneUnderTheirLiveQuads() throws {
+        _ = try Fixtures.assets()
         let with = try FixtureSceneRenderer(directory: directory).render()
         let without = try FixtureSceneRenderer(directory: directory, sceneFile: "reference.json").render()
         XCTAssertEqual(with.width, without.width)
@@ -45,6 +46,7 @@ final class SceneRegionTransformTests: XCTestCase {
     /// turn (0.4 rad) of its scale (1.2, 0.9) times the timeline's last origin (40, −25), and it
     /// covers its size times the parent's scale.
     func testTheLayersAreDrawnWhereTheirTransformsPutThem() throws {
+        _ = try Fixtures.assets()
         let frame = try FixtureSceneRenderer(directory: directory, sceneFile: "marked.json").render()
         try Self.write(frame, name: "scene-region-marked")
         var magenta = (count: 0, sum: SIMD2<Double>(0, 0))

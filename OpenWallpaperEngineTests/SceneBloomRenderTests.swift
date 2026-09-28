@@ -22,6 +22,7 @@ final class SceneBloomRenderTests: XCTestCase {
     }
 
     func testBloomGlowsAroundWhatPassesTheThreshold() throws {
+        _ = try Fixtures.assets()
         let (pixels, record) = try render(.enabled)
         let bloom = try XCTUnwrap(record, "WE's bloom didn't run")
         XCTAssertEqual(bloom.strength, 2)
@@ -43,6 +44,7 @@ final class SceneBloomRenderTests: XCTestCase {
 
     /// Post-processing "disabled" turns WE's bloom off (render flag 0x40).
     func testNoBloomWithPostProcessingDisabled() throws {
+        _ = try Fixtures.assets()
         let (pixels, record) = try render(.disabled)
         XCTAssertNil(record)
         XCTAssertEqual(pixels.rgb(Self.bright.center), SIMD3(repeating: 255))

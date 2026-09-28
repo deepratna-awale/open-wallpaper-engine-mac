@@ -189,6 +189,7 @@ final class SceneScriptRuntimeHardeningTests: XCTestCase {
     // MARK: - Integration: resizeScreen, callback
 
     func testResizeScreenGetsItsOwnVec2() throws {
+        _ = try Fixtures.assets()
         let runtime = try makeRuntime()
         for id in ["a", "b"] {
             runtime.add(SceneScriptInstance(id: id, source: """

@@ -45,6 +45,7 @@ final class SceneScriptBindingCorpusPatternTests: XCTestCase {
     /// ade9bddce036, 49ddf6ffcdf7: a clock whose format comes from `scriptProperties`, one of them
     /// bound to a user property.
     func testTextClockFormattedByScriptProperties() throws {
+        _ = try Fixtures.assets()
         let properties = try SceneScriptUserProperties.parsing(#"{"showseconds": {"type": "bool", "value": false}}"#)
         let f = try fixture()
         let script = """
@@ -80,6 +81,7 @@ final class SceneScriptBindingCorpusPatternTests: XCTestCase {
     /// The 33 `mediaPropertiesChanged` text sites: the callback writes `thisLayer.text`, `update`
     /// passes the value through.
     func testTextFollowsTheMediaTitle() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         try f.load("""
             {"objects": [{"id": 2, "name": "Clock", "text": \(bound("""
@@ -99,6 +101,7 @@ final class SceneScriptBindingCorpusPatternTests: XCTestCase {
     /// daf50e8c7157 (15 sites): `thisObject` is the material, and `getAnimation()` without a name
     /// is the constant's own timeline.
     func testShaderConstantRestartsItsOwnAnimationOnAThumbnail() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         try f.load("""
             {"objects": [{"id": 1, "name": "Layer", "effects": [{"passes": [{"constantshadervalues": {"multiply": \(bound("""
@@ -124,6 +127,7 @@ final class SceneScriptBindingCorpusPatternTests: XCTestCase {
 
     /// 4181ca8b13fd (`multiply` and the particle overrides): a value from `WEMath` and the time of day.
     func testShaderConstantFromWEMathAndTheTimeOfDay() throws {
+        _ = try Fixtures.assets()
         let night = Calendar.current.date(from: DateComponents(year: 2026, month: 1, day: 2, hour: 23)) ?? Date()
         let f = try fixture(now: { night })
         let script = """
@@ -153,6 +157,7 @@ final class SceneScriptBindingCorpusPatternTests: XCTestCase {
 
     /// 298c77c253bb: `update` passes the value through; a click plays a sound found by name.
     func testVisiblePassThroughWithACursorCallback() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         try f.load("""
             {"objects": [{"id": 1, "name": "Layer", "visible": \(bound("""
@@ -174,6 +179,7 @@ final class SceneScriptBindingCorpusPatternTests: XCTestCase {
     /// a2bd9a0afb5f / 8e2e61a2a540 (Dance Club): each dancer is visible when a combo equals its
     /// condition, and carries literal `scriptproperties`.
     func testVisibleFollowsAUserConditionPerLayer() throws {
+        _ = try Fixtures.assets()
         let properties = try SceneScriptUserProperties.parsing(#"{"dance_move": {"type": "combo", "value": "1"}}"#)
         let f = try SceneScriptBindingFixture(objects: [
             .make(.image, id: 10, name: "Dancer1", values: [.visible: [1]]),
@@ -205,6 +211,7 @@ final class SceneScriptBindingCorpusPatternTests: XCTestCase {
 
     /// 8bb9b9a54120: a `visible` script WE can't compile either keeps the authored value.
     func testAScriptThatDoesNotCompileKeepsTheAuthoredValue() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         try f.load("""
             {"objects": [{"id": 1, "name": "Layer", "visible": \(bound("export function update(value) { return 'broken\nstring'; }", value: "true"))}]}
@@ -218,6 +225,7 @@ final class SceneScriptBindingCorpusPatternTests: XCTestCase {
 
     /// 37b27aea0c2b: `init` reads another layer found by name, `applyUserProperties` moves the layer.
     func testOriginMovedFromApplyUserProperties() throws {
+        _ = try Fixtures.assets()
         let properties = try SceneScriptUserProperties.parsing(#"{"scale": {"type": "slider", "value": 1}}"#)
         let f = try fixture()
         try f.load("""
@@ -249,6 +257,7 @@ final class SceneScriptBindingCorpusPatternTests: XCTestCase {
 
     /// c6d2821a99fa (15 sites): `thisObject.visible = event.hasThumbnail`; `thisObject` is the effect.
     func testEffectVisibilityFollowsTheThumbnail() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         let script = "export function mediaThumbnailChanged(event) { thisObject.visible = event.hasThumbnail; }"
         try f.load("""
@@ -269,6 +278,7 @@ final class SceneScriptBindingCorpusPatternTests: XCTestCase {
 
     /// 66d86c32cce9: an accumulator gated by `shared`, which another script sets.
     func testAlphaAccumulatesWhileASharedFlagIsSet() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         try f.load("""
             {"objects": [{"id": 1, "name": "Layer",
@@ -292,6 +302,7 @@ final class SceneScriptBindingCorpusPatternTests: XCTestCase {
 
     /// 1b3a92cc7a8f: audio bars scaled between two `scriptProperties` sliders.
     func testScaleFollowsTheAudioBetweenScriptPropertyBounds() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         try f.load("""
             {"objects": [{"id": 1, "name": "Layer", "scale": \(bound("""
@@ -321,6 +332,7 @@ final class SceneScriptBindingCorpusPatternTests: XCTestCase {
 
     /// 3cba3c21bfe8: the argument is changed and returned; angles are degrees.
     func testAnglesRotateWithTheRuntime() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         try f.load("""
             {"objects": [{"id": 1, "name": "Layer", "angles": \(bound("""
@@ -342,6 +354,7 @@ final class SceneScriptBindingCorpusPatternTests: XCTestCase {
 
     /// 7c6eb650a61e: returns `shared.accentColor`, undefined until a media script sets it.
     func testColorFromASharedAccentColor() throws {
+        _ = try Fixtures.assets()
         let f = try SceneScriptBindingFixture(objects: [.make(.image, id: 1, name: "Layer", values: [.color: [1, 1, 1]])])
         try f.load("""
             {"objects": [{"id": 1, "name": "Layer",
@@ -361,6 +374,7 @@ final class SceneScriptBindingCorpusPatternTests: XCTestCase {
     /// 9a297f93b1ff (rate) and 72e103064d75 (lifetime): `init` keeps the authored value, `update`
     /// scales it by the audio.
     func testParticleOverridesScaledByTheAudio() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         func script(resolution: Int, band: Int, minimum: Double, maximum: Double) -> String {
             """
@@ -394,6 +408,7 @@ final class SceneScriptBindingCorpusPatternTests: XCTestCase {
 
     /// 992b23de26f1: `general.bloomstrength` follows the audio from the value `init` got.
     func testBloomStrengthFollowsTheAudio() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         try f.load("""
             {"general": {"bloomstrength": \(bound("""
@@ -419,6 +434,7 @@ final class SceneScriptBindingCorpusPatternTests: XCTestCase {
     /// 1e2bc795b0cf: `general.camerashake` bound to a user property and a script that returns
     /// nothing until another user property turns it on.
     func testCameraShakeFromAUserPropertyAndTheAudio() throws {
+        _ = try Fixtures.assets()
         let properties = try SceneScriptUserProperties.parsing("""
             {"camera_shake": {"type": "bool", "value": true}, "audiocheckbox": {"type": "bool", "value": false}}
             """)

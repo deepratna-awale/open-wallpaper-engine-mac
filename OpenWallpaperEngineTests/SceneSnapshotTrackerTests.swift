@@ -68,6 +68,7 @@ final class SceneSnapshotTrackerTests: XCTestCase {
     /// 9 (add), each reading the scene under it; D (right) does too, alone. Every result needs the
     /// scene as drawn just before that layer, and far less than whole-scene copies are made.
     func testBlendLayersReadTheSceneBeneathFromPartialCopies() throws {
+        _ = try Fixtures.assets()
         let size = 128
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let view = MTKView(frame: CGRect(x: 0, y: 0, width: size, height: size), device: device)

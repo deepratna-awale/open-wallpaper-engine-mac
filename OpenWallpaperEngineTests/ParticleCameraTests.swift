@@ -26,6 +26,7 @@ final class ParticleCameraTests: XCTestCase {
     private static let culling = SceneRasterState(depthTest: true, depthWrite: false, cullsBackFaces: true)
 
     func testACullingMaterialShowsItsParticlesThroughAPerspectiveCamera() throws {
+        _ = try Fixtures.assets()
         let renderer = try XCTUnwrap(ParticleMaterialRenderer(device: try device()))
         let system = try system(position: .zero)
         let camera = Self.camera()
@@ -42,6 +43,7 @@ final class ParticleCameraTests: XCTestCase {
     }
 
     func testTheParticlesFollowACameraThatMoves() throws {
+        _ = try Fixtures.assets()
         let renderer = try XCTUnwrap(ParticleMaterialRenderer(device: try device()))
         let system = try system(position: .zero)
         let first = Self.camera()
@@ -64,6 +66,7 @@ final class ParticleCameraTests: XCTestCase {
     /// The 2D path: no camera; without depth nothing culls, with an orthographic scene's depth
     /// (a scene with models) the same rule as in 3D keeps the sprite. Both draw it in one place.
     func testOrthographicParticlesAreUnchanged() throws {
+        _ = try Fixtures.assets()
         let renderer = try XCTUnwrap(ParticleMaterialRenderer(device: try device()))
         let system = try system(position: SIMD2(96, 64))
         let flat = try XCTUnwrap(try render(system, renderer: renderer, placement: nil, depth: .none).coverage)

@@ -50,6 +50,7 @@ final class SceneScriptBindingTests: XCTestCase {
     // MARK: - Numbers (alpha)
 
     func testAccumulatorChainsTheReturnedValue() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         try f.load(scene(object: 1, field: "alpha", value: "0", script: "export function update(value) { return value + 0.25; }"))
         f.frames(3)
@@ -104,6 +105,7 @@ final class SceneScriptBindingTests: XCTestCase {
     // MARK: - Vectors (origin, scale, angles, color, parallaxDepth)
 
     func testVectorReturnsFollowWEsConverter() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         try f.load(scene(object: 1, field: "origin", value: "\"10 20 30\"", script: """
             let calls = 0;
@@ -128,6 +130,7 @@ final class SceneScriptBindingTests: XCTestCase {
     }
 
     func testTheArgumentIsAFreshVectorEveryCall() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         try f.load("""
             {"objects": [{"id": 1, "name": "Image",
@@ -153,6 +156,7 @@ final class SceneScriptBindingTests: XCTestCase {
     }
 
     func testColorAndParallaxDepthAndScale() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         try f.load("""
             {"objects": [{"id": 1, "name": "Image",
@@ -227,6 +231,7 @@ final class SceneScriptBindingTests: XCTestCase {
     }
 
     func testAThrowingToStringKeepsTheText() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         try f.load(scene(object: 2, field: "text", value: "\"<Clock>\"", script: """
             export function update(value) { return { toString() { throw new Error('no'); } }; }
@@ -272,6 +277,7 @@ final class SceneScriptBindingTests: XCTestCase {
     }
 
     func testMaterialConstantsBindThisObjectToTheMaterial() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         try f.load("""
             {"objects": [{"id": 1, "name": "Image", "effects": [{"passes": [{"constantshadervalues": {
@@ -293,6 +299,7 @@ final class SceneScriptBindingTests: XCTestCase {
     // MARK: - Particles and the scene
 
     func testInstanceOverrides() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         try f.load("""
             {"objects": [{"id": 3, "name": "Sparks", "instanceoverride": {
@@ -326,6 +333,7 @@ final class SceneScriptBindingTests: XCTestCase {
     /// `intensity` isn't an `ILayer` member (lib.sceneScript.d.ts has no light interface), but the
     /// script sets it every frame and gets the value it set as its argument.
     func testALightFieldBindsWithoutBeingAMember() throws {
+        _ = try Fixtures.assets()
         let lamp = SceneScriptObjectDescription.make(.light, id: 29, name: "Lamp",
                                                      values: [.intensity: [1], .origin: [2124, 536, 588]])
         let f = try SceneScriptBindingFixture(objects: [lamp])
@@ -345,6 +353,7 @@ final class SceneScriptBindingTests: XCTestCase {
     /// B2: 2350874185 binds a script to `general.bloomhdrstrength`. `IScene` doesn't declare the
     /// `bloomhdr*` fields, but a bound script sets them.
     func testHDRBloomFieldsBindToTheSceneWithoutBeingMembers() throws {
+        _ = try Fixtures.assets()
         let f = try SceneScriptBindingFixture(objects: [Self.image], settings: [.bloomhdrstrength: [2]])
         try f.load("""
             {"general": {
@@ -361,6 +370,7 @@ final class SceneScriptBindingTests: XCTestCase {
     // MARK: - User properties (S8)
 
     func testUserBoundScriptPropertiesAreInjectedBeforeApplyUserProperties() throws {
+        _ = try Fixtures.assets()
         let properties = try SceneScriptUserProperties.parsing("""
             {"bars": {"type": "slider", "value": 12}, "tint": {"type": "color", "value": "1 0 0"}}
             """)
@@ -418,6 +428,7 @@ final class SceneScriptBindingTests: XCTestCase {
     }
 
     func testTheUserPropertiesPayloadIsWEsRawForm() throws {
+        _ = try Fixtures.assets()
         let properties = try SceneScriptUserProperties.parsing("""
             {"tint": {"type": "color", "value": "1 0.5 0", "text": "Tint", "order": 1},
              "go": {"type": "usershortcut", "value": "", "isbound": true, "commandtype": 1, "file": "a.exe"}}

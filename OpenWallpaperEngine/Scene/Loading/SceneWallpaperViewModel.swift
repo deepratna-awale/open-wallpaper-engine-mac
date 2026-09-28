@@ -245,7 +245,6 @@ class SceneWallpaperViewModel: ObservableObject {
             builtVideoFrameSize = nil
             workshopAssets = WorkshopAssetResolver(roots: WorkshopAssetResolver.defaultRoots())
             shaderCompat = SceneShaderCompat(assetsDirectory: WallpaperEngineAssets.directory)
-                ?? SceneShaderCompat(assetsDirectory: WallpaperEngineAssets.bundled)
             loadedProjectId = Self.workshopId(of: wallpaper)
         }
         // Symlink in any already-installed cross-workshop-item asset dependencies before parsing,

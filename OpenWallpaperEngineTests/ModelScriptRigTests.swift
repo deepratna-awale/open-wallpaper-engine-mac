@@ -20,6 +20,7 @@ final class ModelScriptRigTests: XCTestCase {
     private func string(_ f: SceneScriptObjectFixture, _ script: String) -> String? { f.evaluate(script)?.toString() }
 
     func testAModelHasLayersAndAttachmentsButNoBoneAPI() throws {
+        _ = try Fixtures.assets()
         let f = try fixture()
         XCTAssertEqual(string(f, """
             var idle = robot.getAnimationLayer('idle');

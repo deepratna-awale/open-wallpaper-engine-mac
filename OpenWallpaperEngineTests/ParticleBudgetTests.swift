@@ -119,6 +119,7 @@ final class ParticleBudgetTests: XCTestCase {
     /// The loader counts every system of the scene, children, instances and the `count` override
     /// included, and thins them all when they exceed the budget; under it they stay as authored.
     func testTheLoaderAppliesTheBudgetToTheWholeScene() throws {
+        _ = try Fixtures.assets()
         let directory = Fixtures.url("Scenes/particle-budget")
         let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/particle-budget/project.json"))
         addTeardownBlock { Fixtures.removeStoredSettings(for: directory) }
