@@ -6,6 +6,37 @@
         <description>Open Wallpaper Engine updates. Items are added by .github/workflows/appcast.yml when a release is published.</description>
         <language>en</language>
         <item>
+            <title>1.0.0-beta.2</title>
+            <pubDate>Mon, 28 Sep 2026 10:10:16 +0000</pubDate>
+            <sparkle:version>2</sparkle:version>
+            <sparkle:shortVersionString>1.0.0-beta.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.2/OpenWallpaperEngine-1.0.0-beta.2.zip" length="75515286" type="application/octet-stream" sparkle:edSignature="a1cCDYJrf4aQk7/xZgqjI9ElAJCwkpdXpBmjxbTRffQ6AtfCSu6/YPJqoSLwWQoXEiNIb9oGp2vUCVh1OhPqCg==" />
+            <sparkle:deltas>
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.2/OpenWallpaperEngine-1.0.0-beta.2-from-1.delta" sparkle:deltaFrom="1" length="1101890" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="4/sqhGuAt9KVPQLVFSd0ydRL4V748i3vt7eZbzwHFEA4WSzDj2oeugrxzP45Yz7lves61vPE2RCKi7vPh3ROAQ==" />
+            </sparkle:deltas>
+            <sparkle:channel>beta</sparkle:channel>
+            <sparkle:fullReleaseNotesLink>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.2</sparkle:fullReleaseNotesLink>
+            <link>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.2</link>
+            <description>&lt;p dir="auto"&gt;The second beta of Open Wallpaper Engine 1.0. Installed betas update to it automatically.&lt;/p&gt;
+&lt;div class="markdown-alert markdown-alert-note" dir="auto"&gt;&lt;p class="markdown-alert-title" dir="auto"&gt;&lt;svg data-component="Octicon" class="octicon octicon-info mr-2" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"&gt;&lt;path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"&gt;&lt;/path&gt;&lt;/svg&gt;Note&lt;/p&gt;&lt;p dir="auto"&gt;This is a &lt;strong&gt;beta&lt;/strong&gt;. Please report problems in &lt;a href="https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues"&gt;Issues&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;h3 dir="auto"&gt;Fixed&lt;/h3&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;&lt;strong&gt;Steam login:&lt;/strong&gt; a login that succeeded with Steam Guard (a code or the Steam Mobile app's approval) was reported as failed. Logins now count as soon as SteamCMD confirms them.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Subscriptions:&lt;/strong&gt; "Download my subscriptions" now lists your Workshop subscriptions.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Sprite sheets:&lt;/strong&gt; an image or script-created layer without its own size is one frame big, not the whole sprite sheet (e.g. the coins in the Dino Run wallpaper).&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Stability:&lt;/strong&gt; a crash when a wallpaper's script replaced a 3D model's data with a different number of meshes.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Text:&lt;/strong&gt; changing labels (scores, clocks) cause much shorter hitches.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 dir="auto"&gt;Changed&lt;/h3&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;&lt;strong&gt;Video wallpapers play through Metal on the GPU by default&lt;/strong&gt;, so wallpaper effects apply to video. Apple AVKit remains available in Settings › General › Video Framework.&lt;/li&gt;
+&lt;li&gt;Test and development copies of the app are marked with a badge on their Dock icon.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p dir="auto"&gt;&lt;strong&gt;Install:&lt;/strong&gt; download the DMG, drag the app to Applications and open it. Signed and notarized by Apple. Requires macOS 14 or later; scene wallpapers need a Steam account that owns Wallpaper Engine.&lt;/p&gt;</description>
+        </item>
+        <item>
             <title>1.0.0-beta.1</title>
             <pubDate>Mon, 28 Sep 2026 07:55:41 +0000</pubDate>
             <sparkle:version>1</sparkle:version>
