@@ -167,7 +167,7 @@ Os ajustes de reprodução de desempenho (pausar/silenciar/parar quando outros a
 Explore, busque e baixe imagens de fundo diretamente da Oficina Steam sem sair do app.
 - **Busca e filtros** — Busque pelo nome e filtre por classificação de conteúdo (Livre/Questionável/Adulto), tipo (Cena/Vídeo/Web) e tags de gênero
 - **Opções de ordenação** — Em Alta, Mais Recentes, Mais Populares, Mais Inscritos
-- **Integração com o steamcmd** — Detecta automaticamente o steamcmd (Homebrew ou caminho personalizado) e mostra instruções de instalação caso ele não seja encontrado
+- **Integração com o steamcmd** — Baixa automaticamente o SteamCMD da Valve na primeira vez que ele é necessário (não vem incluído); um steamcmd existente (Homebrew, Steam ou caminho personalizado) é usado se for encontrado
 - **Início de sessão no Steam** — Suporta autenticação por senha, Steam Guard e sessão em cache
 - **Download com progresso** — Atualizações de status em tempo real durante o download (autenticando, % baixado, validando, copiando)
 - **Padrões seguros** — A classificação de conteúdo é "Livre" por padrão, para filtrar conteúdo adulto
@@ -262,7 +262,7 @@ O painel de importação agora lida corretamente tanto com pastas individuais de
 
 | Recurso | Requisito | Instalação |
 |---------|-------------|---------|
-| Explorar / baixar da Oficina Steam | `steamcmd` | `brew install steamcmd` |
+| Explorar / baixar da Oficina Steam | `steamcmd` | Automático (opcional: `brew install steamcmd`) |
 | Visualizadores de áudio e SceneScript sensível a áudio | Permissão de Gravação do Áudio do Sistema e da Tela | Ajustes → Permissões |
 
 #### Shaders
@@ -293,7 +293,7 @@ No Xcode, altere o certificado de assinatura para o seu ou selecione "Sign to Ru
 
 ### Explorar e Baixar da Oficina Steam
 
-1. Instale o steamcmd (`brew install steamcmd`) ou indique ao app um binário existente
+1. Nada para instalar: o app baixa o SteamCMD da Valve em segundo plano na primeira vez que ele é necessário (da Valve, não vem incluído). O Homebrew (`brew install steamcmd`) é opcional; um steamcmd existente (Homebrew, Steam ou um que você escolher) é usado se for encontrado
 2. Vá para a aba **Oficina** e inicie sessão com a sua conta Steam (é preciso ter o Wallpaper Engine)
 3. Digite uma [Chave de API Web do Steam](https://steamcommunity.com/dev/apikey) quando solicitado, ou em *Ajustes → Geral*. Ela é verificada com o Steam e guardada nas suas Chaves; a sua senha do Steam nunca é armazenada (o steamcmd reutiliza a própria sessão em cache)
 4. Busque, filtre e clique em **Baixar** em qualquer imagem de fundo
@@ -303,6 +303,10 @@ No Xcode, altere o certificado de assinatura para o seu ou selecione "Sign to Ru
 - **Pasta:** Arquivo > Importar > Imagem de Fundo de uma Pasta — selecione pastas de imagens de fundo que contenham `project.json`
 - **Zip:** Arquivo > Importar ou arraste e solte um arquivo `.zip` que contenha pacotes de imagens de fundo
 - **Manual:** Copie as pastas de imagens de fundo diretamente para `~/Documents/OpenWallpaperEngine/`
+
+## Privacidade
+
+Tudo o que o Open Wallpaper Engine salva fica no seu Mac: seus ajustes, sua biblioteca, o cache e o login do SteamCMD. O Open Wallpaper Engine não tem servidor e não coleta dados nem análises. Ele só se comunica com a Valve: com a Steam quando você usa a Oficina ou instala os recursos, e com o servidor da Valve para baixar o SteamCMD. Papéis de parede web podem carregar seu próprio conteúdo online. Sua senha da Steam e seu código do Steam Guard vão direto para o SteamCMD e nunca são salvos, registrados ou enviados para nenhum outro lugar; só o nome da sua conta é lembrado, para reutilizar o login salvo do SteamCMD.
 
 ## Estrutura do Projeto
 

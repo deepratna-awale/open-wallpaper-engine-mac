@@ -167,7 +167,7 @@ macOS용 [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-m
 앱을 벗어나지 않고 Steam 창작마당에서 배경화면을 바로 탐색, 검색, 다운로드할 수 있습니다.
 - **검색 및 필터** — 이름으로 검색하고, 연령 등급(전체 이용가/선정적/성인), 유형(장면/비디오/웹), 장르 태그로 필터링합니다
 - **정렬 옵션** — 인기 급상승, 최신순, 인기순, 구독자순
-- **steamcmd 연동** — steamcmd를 자동으로 감지하며(Homebrew 또는 사용자 지정 경로), 찾을 수 없으면 설치 방법을 안내합니다
+- **steamcmd 연동** — 처음 필요할 때 Valve의 SteamCMD를 자동으로 다운로드하며(번들로 포함하지 않음), 기존 steamcmd(Homebrew, Steam 또는 사용자 지정 경로)가 있으면 그것을 사용합니다
 - **Steam 로그인** — 비밀번호, Steam Guard, 캐시된 세션 인증을 지원합니다
 - **진행률이 표시되는 다운로드** — 다운로드 중 상태(인증 중, 다운로드 %, 검증 중, 복사 중)를 실시간으로 업데이트합니다
 - **안전한 기본값** — 성인 콘텐츠를 걸러내기 위해 연령 등급의 기본값은 '전체 이용가'입니다
@@ -262,7 +262,7 @@ WebGL 기반 배경화면은 `WKWebView`가 텍스처와 에셋에 대한 로컬
 
 | 기능 | 요구 사항 | 설치 |
 |---------|-------------|---------|
-| Steam 창작마당 탐색 / 다운로드 | `steamcmd` | `brew install steamcmd` |
+| Steam 창작마당 탐색 / 다운로드 | `steamcmd` | 자동(선택 사항: `brew install steamcmd`) |
 | 오디오 시각화 및 오디오 반응형 SceneScript | 화면 기록 권한 | 설정 → 권한 |
 
 #### 셰이더
@@ -293,7 +293,7 @@ Xcode에서 서명 인증서를 본인의 인증서로 변경하거나 'Sign to 
 
 ### Steam 창작마당에서 탐색 및 다운로드
 
-1. steamcmd를 설치(`brew install steamcmd`)하거나 앱에서 기존 바이너리를 지정합니다
+1. 설치할 필요가 없습니다. 처음 필요할 때 앱이 Valve의 SteamCMD를 백그라운드에서 다운로드합니다(Valve에서 받으며 번들로 포함하지 않음). Homebrew(`brew install steamcmd`)는 선택 사항이며, 기존 steamcmd(Homebrew, Steam 또는 직접 선택한 것)가 있으면 그것을 사용합니다
 2. **창작마당** 탭으로 전환하고 Steam 계정으로 로그인합니다(Wallpaper Engine을 보유하고 있어야 함)
 3. 요청이 표시되면 또는 *설정 → 일반*에서 [Steam Web API 키](https://steamcommunity.com/dev/apikey)를 입력합니다. 키는 Steam에서 확인된 후 키체인에 보관되며, Steam 비밀번호는 저장되지 않습니다(steamcmd는 자체 캐시된 세션을 재사용함)
 4. 검색하고 필터링한 다음, 원하는 배경화면에서 **다운로드**를 클릭합니다
@@ -303,6 +303,10 @@ Xcode에서 서명 인증서를 본인의 인증서로 변경하거나 'Sign to 
 - **폴더:** 파일 > 가져오기 > 폴더에서 배경화면 가져오기 — `project.json`이 포함된 배경화면 폴더를 선택합니다
 - **zip:** 파일 > 가져오기를 사용하거나, 배경화면 패키지가 포함된 `.zip` 파일을 드래그 앤 드롭합니다
 - **수동:** 배경화면 폴더를 `~/Documents/OpenWallpaperEngine/`에 직접 복사합니다
+
+## 개인정보 보호
+
+Open Wallpaper Engine이 저장하는 모든 것은 사용자의 Mac에 남습니다. 설정, 보관함, 캐시, SteamCMD 로그인 정보가 여기에 해당합니다. Open Wallpaper Engine에는 서버가 없으며 어떤 데이터나 분석 정보도 수집하지 않습니다. Valve에만 연결합니다. 창작마당을 사용하거나 에셋을 설치할 때는 Steam에, SteamCMD를 다운로드할 때는 Valve 서버에 연결합니다. 웹 배경화면은 자체 온라인 콘텐츠를 불러올 수 있습니다. Steam 비밀번호와 Steam Guard 코드는 SteamCMD로 바로 전달되며 저장되거나 기록되거나 다른 곳으로 전송되지 않습니다. SteamCMD에 저장된 로그인을 다시 사용하기 위해 계정 이름만 기억합니다.
 
 ## 프로젝트 구조
 

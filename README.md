@@ -167,7 +167,7 @@ Performance playback settings (pause/mute/stop when other apps are focused) now 
 Browse, search, and download wallpapers directly from the Steam Workshop without leaving the app.
 - **Search & filter** — Search by name, filter by content rating (Everyone/Questionable/Mature), type (Scene/Video/Web), and genre tags
 - **Sort options** — Trending, Most Recent, Most Popular, Most Subscribed
-- **steamcmd integration** — Auto-detects steamcmd (Homebrew or custom path), with install instructions if not found
+- **steamcmd integration** — Downloads Valve's SteamCMD automatically the first time it's needed (not bundled); an existing steamcmd (Homebrew, Steam, or a custom path) is used if found
 - **Steam login** — Supports password, Steam Guard, and cached session authentication
 - **Download with progress** — Real-time status updates during download (authenticating, downloading %, validating, copying)
 - **Safe defaults** — Content rating defaults to "Everyone" to filter out mature content
@@ -262,7 +262,7 @@ The import panel now correctly handles both individual wallpaper folders and par
 
 | Feature | Requirement | Install |
 |---------|-------------|---------|
-| Browsing / downloading from Steam Workshop | `steamcmd` | `brew install steamcmd` |
+| Browsing / downloading from Steam Workshop | `steamcmd` | Automatic (optional: `brew install steamcmd`) |
 | Audio visualizers & audio-reactive SceneScript | Screen Recording permission | Settings → Permissions |
 
 #### Shaders
@@ -293,7 +293,7 @@ In Xcode, change the signing certificate to your own or select "Sign to Run Loca
 
 ### Browse & Download from Steam Workshop
 
-1. Install steamcmd (`brew install steamcmd`) or point the app to an existing binary
+1. Nothing to install: the app downloads Valve's SteamCMD in the background the first time it's needed (from Valve, not bundled). Homebrew (`brew install steamcmd`) is optional; an existing steamcmd (Homebrew, Steam, or one you pick) is used if found
 2. Switch to the **Workshop** tab and log in with your Steam account (must own Wallpaper Engine)
 3. Enter a [Steam Web API key](https://steamcommunity.com/dev/apikey) when prompted, or in *Settings → General*. It is checked with Steam and kept in your keychain; your Steam password is never stored (steamcmd reuses its own cached session)
 4. Search, filter, and click **Download** on any wallpaper
@@ -303,6 +303,10 @@ In Xcode, change the signing certificate to your own or select "Sign to Run Loca
 - **Folder:** File > Import > Wallpaper from Folder — select wallpaper folders containing `project.json`
 - **Zip:** File > Import or drag-and-drop a `.zip` file containing wallpaper packages
 - **Manual:** Copy wallpaper folders directly into `~/Documents/OpenWallpaperEngine/`
+
+## Privacy
+
+Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and SteamCMD's login. Open Wallpaper Engine has no server and collects no data or analytics. It only contacts Valve: Steam when you use the Workshop or install assets, and Valve's server to download SteamCMD. Web wallpapers may load their own online content. Your Steam password and Steam Guard code go straight to SteamCMD and are never stored, logged or sent anywhere else; only your account name is remembered, to reuse SteamCMD's saved login.
 
 ## Project Layout
 

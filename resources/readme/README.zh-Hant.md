@@ -167,7 +167,7 @@ Open Wallpaper Engine（修補版）
 無需離開 App，即可直接瀏覽、搜尋及下載 Steam 工作坊中的背景圖片。
 - **搜尋與篩選** — 依名稱搜尋，並依內容分級（全年齡／爭議性／成人）、類型（場景／影片／網頁）及風格標籤篩選
 - **排序選項** — 熱門、最新、最受歡迎、最多訂閱
-- **steamcmd 整合** — 自動偵測 steamcmd（Homebrew 或自訂路徑），找不到時會提供安裝說明
+- **steamcmd 整合** — 首次需要時自動下載 Valve 的 SteamCMD（不隨 App 附帶）；若找到現有的 steamcmd（Homebrew、Steam 或自訂路徑）則直接使用
 - **Steam 登入** — 支援密碼、Steam Guard 及快取工作階段驗證
 - **顯示下載進度** — 下載期間即時更新狀態（驗證身分中、下載百分比、檢查中、拷貝中）
 - **安全的預設值** — 內容分級預設為「全年齡」，以過濾成人內容
@@ -262,7 +262,7 @@ Open Wallpaper Engine（修補版）
 
 | 功能 | 需求 | 安裝 |
 |---------|-------------|---------|
-| 瀏覽／下載 Steam 工作坊內容 | `steamcmd` | `brew install steamcmd` |
+| 瀏覽／下載 Steam 工作坊內容 | `steamcmd` | 自動（選用：`brew install steamcmd`） |
 | 音訊視覺化與音訊回應式 SceneScript | 「螢幕錄製」權限 | 設定 → 權限 |
 
 #### 著色器
@@ -293,7 +293,7 @@ open "OpenWallpaperEngine.xcodeproj"
 
 ### 從 Steam 工作坊瀏覽與下載
 
-1. 安裝 steamcmd（`brew install steamcmd`），或在 App 中指定現有的二進位檔
+1. 無需安裝：首次需要時，App 會在背景自動下載 Valve 的 SteamCMD（從 Valve 下載，不隨 App 附帶）。Homebrew（`brew install steamcmd`）為選用；若找到現有的 steamcmd（Homebrew、Steam 或你指定的）則直接使用
 2. 切換到 **工作坊** 標籤頁，並使用 Steam 帳號登入（必須擁有 Wallpaper Engine）
 3. 出現提示時，或在 *設定 → 一般* 中輸入 [Steam Web API 密鑰](https://steamcommunity.com/dev/apikey)。密鑰會經過 Steam 驗證並保存在你的鑰匙圈中；你的 Steam 密碼絕不會被儲存（steamcmd 會重複使用其自身的快取工作階段）
 4. 搜尋、篩選，然後在任一背景圖片上按一下 **下載**
@@ -303,6 +303,10 @@ open "OpenWallpaperEngine.xcodeproj"
 - **檔案夾：** 檔案 > 輸入 > 從檔案夾輸入背景圖片 — 選擇包含 `project.json` 的背景圖片檔案夾
 - **zip：** 檔案 > 輸入，或拖放包含背景圖片套件的 `.zip` 檔案
 - **手動：** 將背景圖片檔案夾直接拷貝至 `~/Documents/OpenWallpaperEngine/`
+
+## 隱私權
+
+Open Wallpaper Engine 儲存的所有內容都留在你的 Mac 上：你的設定、資料庫、快取以及 SteamCMD 的登入資訊。Open Wallpaper Engine 沒有伺服器，不收集任何資料或分析資訊。它只與 Valve 連線：使用工作坊或安裝素材時連線到 Steam，下載 SteamCMD 時連線到 Valve 的伺服器。網頁桌布可能會載入自己的線上內容。你的 Steam 密碼和 Steam Guard 驗證碼會直接交給 SteamCMD，絕不會被儲存、記錄或傳送到其他任何地方；只會記住你的帳號名稱，以便重複使用 SteamCMD 已儲存的登入。
 
 ## 專案結構
 

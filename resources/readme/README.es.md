@@ -167,7 +167,7 @@ Los ajustes de reproducción de Rendimiento (pausar, silenciar o detener cuando 
 Explora, busca y descarga fondos de pantalla directamente desde el Steam Workshop sin salir de la app.
 - **Búsqueda y filtros**: busca por nombre y filtra por clasificación de contenido (Todos/Dudoso/Adulto), tipo (Escena/Vídeo/Web) y etiquetas de género
 - **Opciones de ordenación**: Tendencias, Más recientes, Más populares, Más suscritos
-- **Integración con steamcmd**: detecta steamcmd automáticamente (Homebrew o ruta personalizada) y muestra instrucciones de instalación si no lo encuentra
+- **Integración con steamcmd**: descarga automáticamente SteamCMD de Valve la primera vez que se necesita (no viene incluido); si encuentra un steamcmd existente (Homebrew, Steam o ruta personalizada), lo usa
 - **Inicio de sesión en Steam**: admite la autenticación con contraseña, Steam Guard y sesión en caché
 - **Descarga con progreso**: actualizaciones de estado en tiempo real durante la descarga (autenticando, porcentaje descargado, validando, copiando)
 - **Valores predeterminados seguros**: la clasificación de contenido es «Todos» por omisión para filtrar el contenido para adultos
@@ -262,7 +262,7 @@ El panel de importación ahora gestiona correctamente tanto las carpetas de fond
 
 | Función | Requisito | Instalación |
 |---------|-------------|---------|
-| Explorar y descargar desde el Steam Workshop | `steamcmd` | `brew install steamcmd` |
+| Explorar y descargar desde el Steam Workshop | `steamcmd` | Automático (opcional: `brew install steamcmd`) |
 | Visualizadores de audio y SceneScript que reacciona al audio | Permiso de Grabación de pantalla y del audio del sistema | Ajustes → Permisos |
 
 #### Sombreadores
@@ -293,7 +293,7 @@ En Xcode, cambia el certificado de firma por el tuyo o selecciona «Sign to Run 
 
 ### Explorar y descargar desde el Steam Workshop
 
-1. Instala steamcmd (`brew install steamcmd`) o indica a la app un ejecutable existente
+1. No hay que instalar nada: la app descarga SteamCMD de Valve en segundo plano la primera vez que se necesita (desde Valve, no viene incluido). Homebrew (`brew install steamcmd`) es opcional; si encuentra un steamcmd existente (Homebrew, Steam o el que elijas), lo usa
 2. Cambia a la pestaña **Workshop** e inicia sesión con tu cuenta de Steam (debes tener Wallpaper Engine)
 3. Introduce una [clave de la API web de Steam](https://steamcommunity.com/dev/apikey) cuando se te pida, o en *Ajustes → General*. Se comprueba con Steam y se guarda en tu llavero; tu contraseña de Steam nunca se almacena (steamcmd reutiliza su propia sesión en caché)
 4. Busca, filtra y haz clic en **Descargar** en cualquier fondo de pantalla
@@ -303,6 +303,10 @@ En Xcode, cambia el certificado de firma por el tuyo o selecciona «Sign to Run 
 - **Carpeta:** Archivo > Importar > Fondo de pantalla desde carpeta: selecciona carpetas de fondos de pantalla que contengan `project.json`
 - **Zip:** Archivo > Importar, o arrastra y suelta un archivo `.zip` que contenga paquetes de fondos de pantalla
 - **Manual:** copia las carpetas de fondos de pantalla directamente en `~/Documents/OpenWallpaperEngine/`
+
+## Privacidad
+
+Todo lo que guarda Open Wallpaper Engine se queda en tu Mac: tus ajustes, tu biblioteca, la caché y el inicio de sesión de SteamCMD. Open Wallpaper Engine no tiene servidor y no recopila datos ni analíticas. Solo se comunica con Valve: con Steam cuando usas el Workshop o instalas los recursos, y con el servidor de Valve para descargar SteamCMD. Los fondos de pantalla web pueden cargar su propio contenido en línea. Tu contraseña de Steam y tu código de Steam Guard van directamente a SteamCMD y nunca se guardan, se registran ni se envían a ningún otro sitio; solo se recuerda tu nombre de cuenta, para reutilizar el inicio de sesión guardado de SteamCMD.
 
 ## Estructura del proyecto
 

@@ -167,7 +167,7 @@ Die Wiedergabeeinstellungen unter „Leistung“ (Pause/Ton aus/Stopp, wenn ande
 Durchsuchen, suchen und laden Sie Hintergrundbilder direkt aus dem Steam Workshop, ohne die App zu verlassen.
 - **Suchen & Filtern** – Suche nach Name, Filter nach Altersfreigabe (Jeder/Fragwürdig/Nicht jugendfrei), Typ (Szene/Video/Web) und Genre-Tags
 - **Sortieroptionen** – Im Trend, Neueste, Beliebteste, Meiste Abonnements
-- **steamcmd-Integration** – Erkennt steamcmd automatisch (Homebrew oder eigener Pfad) und zeigt Installationsanweisungen an, wenn es nicht gefunden wird
+- **steamcmd-Integration** – Lädt Valves SteamCMD beim ersten Bedarf automatisch (nicht mitgeliefert); ein vorhandenes steamcmd (Homebrew, Steam oder eigener Pfad) wird verwendet, falls gefunden
 - **Steam-Anmeldung** – Unterstützt die Authentifizierung per Passwort, Steam Guard und zwischengespeicherter Sitzung
 - **Download mit Fortschritt** – Statusaktualisierungen in Echtzeit während des Downloads (Authentifizierung, Download in %, Überprüfung, Kopieren)
 - **Sichere Standardwerte** – Die Altersfreigabe ist standardmäßig auf „Jeder“ gesetzt, um nicht jugendfreie Inhalte herauszufiltern
@@ -262,7 +262,7 @@ Das Importfenster verarbeitet jetzt sowohl einzelne Hintergrundbildordner als au
 
 | Funktion | Voraussetzung | Installation |
 |---------|-------------|---------|
-| Durchsuchen / Laden aus dem Steam Workshop | `steamcmd` | `brew install steamcmd` |
+| Durchsuchen / Laden aus dem Steam Workshop | `steamcmd` | Automatisch (optional: `brew install steamcmd`) |
 | Audio-Visualisierungen & audioreaktives SceneScript | Berechtigung „Aufnahme von Bildschirm & Systemaudio“ | Einstellungen → Berechtigungen |
 
 #### Shader
@@ -293,7 +293,7 @@ open "OpenWallpaperEngine.xcodeproj"
 
 ### Aus dem Steam Workshop durchsuchen & laden
 
-1. Installieren Sie steamcmd (`brew install steamcmd`) oder verweisen Sie die App auf eine vorhandene Binärdatei
+1. Keine Installation nötig: Die App lädt Valves SteamCMD beim ersten Bedarf im Hintergrund (von Valve, nicht mitgeliefert). Homebrew (`brew install steamcmd`) ist optional; ein vorhandenes steamcmd (Homebrew, Steam oder ein selbst gewähltes) wird verwendet, falls gefunden
 2. Wechseln Sie zum Tab **Workshop** und melden Sie sich mit Ihrem Steam-Account an (Sie müssen Wallpaper Engine besitzen)
 3. Geben Sie einen [Steam-Web-API-Schlüssel](https://steamcommunity.com/dev/apikey) ein, wenn Sie dazu aufgefordert werden, oder unter *Einstellungen → Allgemein*. Er wird bei Steam überprüft und in Ihrem Schlüsselbund gespeichert; Ihr Steam-Passwort wird nie gespeichert (steamcmd verwendet seine eigene zwischengespeicherte Sitzung erneut)
 4. Suchen und filtern Sie und klicken Sie bei einem beliebigen Hintergrundbild auf **Laden**
@@ -303,6 +303,10 @@ open "OpenWallpaperEngine.xcodeproj"
 - **Ordner:** Ablage > Importieren > Hintergrundbild aus Ordner – wählen Sie Hintergrundbildordner aus, die `project.json` enthalten
 - **Zip:** Ablage > Importieren oder ziehen Sie eine `.zip`-Datei mit Hintergrundbildpaketen per Drag & Drop in die App
 - **Manuell:** Kopieren Sie Hintergrundbildordner direkt nach `~/Documents/OpenWallpaperEngine/`
+
+## Datenschutz
+
+Alles, was Open Wallpaper Engine speichert, bleibt auf deinem Mac: deine Einstellungen, Mediathek, der Cache und die Anmeldung von SteamCMD. Open Wallpaper Engine hat keinen Server und sammelt keine Daten oder Analysen. Es kontaktiert nur Valve: Steam, wenn du den Workshop verwendest oder Assets installierst, und Valves Server, um SteamCMD zu laden. Web-Hintergrundbilder können eigene Online-Inhalte laden. Dein Steam-Passwort und dein Steam-Guard-Code gehen direkt an SteamCMD und werden nie gespeichert, protokolliert oder anderswohin gesendet; nur dein Accountname wird gemerkt, um die gespeicherte Anmeldung von SteamCMD wiederzuverwenden.
 
 ## Projektstruktur
 

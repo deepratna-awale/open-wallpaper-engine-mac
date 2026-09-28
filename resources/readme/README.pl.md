@@ -167,7 +167,7 @@ Ustawienia odtwarzania w sekcji wydajności (wstrzymanie, wyciszenie lub zatrzym
 Przeglądaj, wyszukuj i pobieraj tapety bezpośrednio z Warsztatu Steam bez opuszczania aplikacji.
 - **Wyszukiwanie i filtrowanie** — wyszukiwanie według nazwy, filtrowanie według klasyfikacji treści (Dla wszystkich/Wątpliwe/Dla dorosłych), typu (Scena/Wideo/Sieć) i tagów gatunku
 - **Opcje sortowania** — Popularne teraz, Najnowsze, Najpopularniejsze, Najczęściej subskrybowane
-- **Integracja ze steamcmd** — automatyczne wykrywanie steamcmd (Homebrew lub własna ścieżka) oraz instrukcje instalacji, jeśli nie zostanie znaleziony
+- **Integracja ze steamcmd** — automatyczne pobieranie SteamCMD od Valve przy pierwszej potrzebie (nie jest dołączony); jeśli zostanie znaleziony istniejący steamcmd (Homebrew, Steam lub własna ścieżka), jest używany
 - **Logowanie do Steam** — obsługa uwierzytelniania hasłem, kodem Steam Guard i zapisaną sesją
 - **Pobieranie z postępem** — aktualizacje stanu w czasie rzeczywistym podczas pobierania (uwierzytelnianie, procent pobrania, weryfikacja, kopiowanie)
 - **Bezpieczne ustawienia domyślne** — klasyfikacja treści jest domyślnie ustawiona na „Dla wszystkich”, aby odfiltrować treści dla dorosłych
@@ -262,7 +262,7 @@ Panel importu prawidłowo obsługuje teraz zarówno pojedyncze foldery tapet, ja
 
 | Funkcja | Wymaganie | Instalacja |
 |---------|-------------|---------|
-| Przeglądanie i pobieranie z Warsztatu Steam | `steamcmd` | `brew install steamcmd` |
+| Przeglądanie i pobieranie z Warsztatu Steam | `steamcmd` | Automatycznie (opcjonalnie: `brew install steamcmd`) |
 | Wizualizatory dźwięku i SceneScript reagujący na dźwięk | Uprawnienie Nagrywanie ekranu i dźwięku systemowego | Ustawienia → Uprawnienia |
 
 #### Shadery
@@ -293,7 +293,7 @@ W Xcode zmień certyfikat podpisywania na własny lub wybierz „Sign to Run Loc
 
 ### Przeglądanie i pobieranie z Warsztatu Steam
 
-1. Zainstaluj steamcmd (`brew install steamcmd`) lub wskaż aplikacji istniejący plik wykonywalny
+1. Nie trzeba nic instalować: przy pierwszej potrzebie aplikacja pobiera w tle SteamCMD od Valve (z serwerów Valve, nie jest dołączony). Homebrew (`brew install steamcmd`) jest opcjonalny; jeśli zostanie znaleziony istniejący steamcmd (Homebrew, Steam lub wskazany przez Ciebie), jest używany
 2. Przejdź na kartę **Warsztat** i zaloguj się na swoje konto Steam (konto musi mieć Wallpaper Engine)
 3. Po wyświetleniu monitu lub w *Ustawienia → Ogólne* wprowadź [klucz Steam Web API](https://steamcommunity.com/dev/apikey). Jest on weryfikowany w Steam i przechowywany w pęku kluczy; hasło do Steam nigdy nie jest zapisywane (steamcmd korzysta z własnej zapisanej sesji)
 4. Wyszukaj i przefiltruj tapety, a następnie kliknij **Pobierz** przy dowolnej z nich
@@ -303,6 +303,10 @@ W Xcode zmień certyfikat podpisywania na własny lub wybierz „Sign to Run Loc
 - **Folder:** Plik > Importuj z folderu — wybierz foldery tapet zawierające `project.json`
 - **Zip:** Plik > Importuj lub przeciągnij i upuść plik `.zip` zawierający pakiety tapet
 - **Ręcznie:** skopiuj foldery tapet bezpośrednio do `~/Documents/OpenWallpaperEngine/`
+
+## Prywatność
+
+Wszystko, co zapisuje Open Wallpaper Engine, zostaje na Twoim Macu: ustawienia, biblioteka, pamięć podręczna i logowanie SteamCMD. Open Wallpaper Engine nie ma serwera i nie zbiera żadnych danych ani statystyk. Łączy się tylko z Valve: ze Steam, gdy korzystasz z Warsztatu lub instalujesz zasoby, oraz z serwerem Valve, aby pobrać SteamCMD. Tapety internetowe mogą wczytywać własne treści online. Twoje hasło Steam i kod Steam Guard trafiają bezpośrednio do SteamCMD i nigdy nie są zapisywane, rejestrowane ani wysyłane nigdzie indziej; zapamiętywana jest tylko nazwa konta, aby ponownie użyć zapisanego logowania SteamCMD.
 
 ## Struktura projektu
 

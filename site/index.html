@@ -211,6 +211,8 @@
           <ul>
             <li>Your Steam password is never stored; SteamCMD reuses its own cached session</li>
             <li>The Steam Web API key is checked with Steam and kept in your Keychain</li>
+            <li>Everything the app saves stays on your Mac; no server, no data collection or analytics</li>
+            <li>Only contacts Valve (Steam for the Workshop and assets, Valve's server for SteamCMD); web wallpapers may load their own online content</li>
           </ul>
         </div>
       </div>
@@ -292,7 +294,7 @@
           <li>Liquid Glass interface on macOS 26</li>
           <li>Now Playing needs macOS 15.4 or later</li>
           <li>Scene wallpapers need Wallpaper Engine assets from your Steam copy (a Steam account that owns Wallpaper Engine); video and web wallpapers don't</li>
-          <li>Workshop downloads need <code>steamcmd</code> (<code>brew install steamcmd</code>) and a Steam account that owns Wallpaper Engine</li>
+          <li>Workshop downloads need a Steam account that owns Wallpaper Engine. The app downloads Valve's SteamCMD for you in the background the first time it's needed (from Valve, not bundled); Homebrew (<code>brew install steamcmd</code>) is optional, and an existing steamcmd (Homebrew, Steam, or one you pick) is used if found</li>
           <li>Audio-reactive wallpapers need the Screen &amp; System Audio Recording permission</li>
         </ul>
         <ol class="steps">
@@ -329,6 +331,10 @@
         <details>
           <summary>Is my Steam login safe?</summary>
           <p>Your Steam password is never stored. SteamCMD keeps its own cached session, and the Steam Web API key is kept in the macOS Keychain.</p>
+        </details>
+        <details>
+          <summary>What data does the app keep or send?</summary>
+          <p>Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and SteamCMD's login. Open Wallpaper Engine has no server and collects no data or analytics. It only contacts Valve: Steam when you use the Workshop or install assets, and Valve's server to download SteamCMD. Web wallpapers may load their own online content. Your Steam password and Steam Guard code go straight to SteamCMD and are never stored, logged or sent anywhere else; only your account name is remembered, to reuse SteamCMD's saved login.</p>
         </details>
       </div>
     </div>

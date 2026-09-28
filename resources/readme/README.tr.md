@@ -167,7 +167,7 @@ Performans bölümündeki oynatma ayarları (başka uygulamalar etkinken durakla
 Uygulamadan çıkmadan duvar kâğıtlarına doğrudan Steam Atölyesi’nden göz atın, arayın ve indirin.
 - **Arama ve filtreleme** — Ada göre arama; içerik derecelendirmesine (Herkes/Şüpheli/Yetişkin), türe (Sahne/Video/Web) ve tür etiketlerine göre filtreleme
 - **Sıralama seçenekleri** — Popüler, En Yeni, En Popüler, En Çok Abone Olunan
-- **steamcmd entegrasyonu** — steamcmd’yi otomatik olarak algılar (Homebrew veya özel yol); bulunamazsa kurulum yönergeleri sunar
+- **steamcmd entegrasyonu** — Valve’ın SteamCMD’sini ilk gerektiğinde otomatik olarak indirir (uygulamayla birlikte gelmez); mevcut bir steamcmd (Homebrew, Steam veya özel yol) bulunursa onu kullanır
 - **Steam girişi** — Parola, Steam Guard ve önbelleğe alınmış oturumla kimlik doğrulamayı destekler
 - **İlerleme durumuyla indirme** — İndirme sırasında gerçek zamanlı durum güncellemeleri (kimlik doğrulama, indirme yüzdesi, doğrulama, kopyalama)
 - **Güvenli varsayılanlar** — Yetişkin içeriği filtrelemek için içerik derecelendirmesi varsayılan olarak “Herkes” şeklindedir
@@ -262,7 +262,7 @@ Sahne duvar kâğıtları (Steam Atölyesi’ndeki en yaygın tür) hiç uygulan
 
 | Özellik | Gereksinim | Kurulum |
 |---------|-------------|---------|
-| Steam Atölyesi’ne göz atma / Steam Atölyesi’nden indirme | `steamcmd` | `brew install steamcmd` |
+| Steam Atölyesi’ne göz atma / Steam Atölyesi’nden indirme | `steamcmd` | Otomatik (isteğe bağlı: `brew install steamcmd`) |
 | Ses görselleştiricileri ve sese duyarlı SceneScript | Ekran ve Sistem Sesi Kaydı izni | Ayarlar → İzinler |
 
 #### Gölgelendiriciler
@@ -293,7 +293,7 @@ Xcode’da imzalama sertifikasını kendi sertifikanızla değiştirin veya “S
 
 ### Steam Atölyesi’ne Göz Atma ve Steam Atölyesi’nden İndirme
 
-1. steamcmd’yi kurun (`brew install steamcmd`) veya uygulamayı mevcut bir yürütülebilir dosyaya yönlendirin
+1. Kurulacak bir şey yok: uygulama, Valve’ın SteamCMD’sini ilk gerektiğinde arka planda indirir (Valve’dan, uygulamayla birlikte gelmez). Homebrew (`brew install steamcmd`) isteğe bağlıdır; mevcut bir steamcmd (Homebrew, Steam veya sizin seçtiğiniz) bulunursa o kullanılır
 2. **Atölye** sekmesine geçin ve Steam hesabınızla giriş yapın (hesabın Wallpaper Engine’e sahip olması gerekir)
 3. İstendiğinde veya *Ayarlar → Genel* bölümünde bir [Steam Web API anahtarı](https://steamcommunity.com/dev/apikey) girin. Anahtar Steam ile doğrulanır ve anahtar zincirinizde saklanır; Steam parolanız hiçbir zaman kaydedilmez (steamcmd kendi önbelleğe alınmış oturumunu yeniden kullanır)
 4. Arayın, filtreleyin ve istediğiniz duvar kâğıdında **İndir**’e tıklayın
@@ -303,6 +303,10 @@ Xcode’da imzalama sertifikasını kendi sertifikanızla değiştirin veya “S
 - **Klasör:** Dosya > Klasörden İçe Aktar — `project.json` içeren duvar kâğıdı klasörlerini seçin
 - **Zip:** Dosya > İçe Aktar’ı kullanın veya duvar kâğıdı paketleri içeren bir `.zip` dosyasını sürükleyip bırakın
 - **Elle:** Duvar kâğıdı klasörlerini doğrudan `~/Documents/OpenWallpaperEngine/` içine kopyalayın
+
+## Gizlilik
+
+Open Wallpaper Engine’in kaydettiği her şey Mac’inizde kalır: ayarlarınız, kitaplığınız, önbellek ve SteamCMD oturum bilgisi. Open Wallpaper Engine’in sunucusu yoktur ve hiçbir veri ya analiz toplamaz. Yalnızca Valve ile iletişim kurar: Atölye’yi kullandığınızda veya varlıkları yüklediğinizde Steam ile, SteamCMD’yi indirmek için de Valve’ın sunucusuyla. Web duvar kâğıtları kendi çevrimiçi içeriklerini yükleyebilir. Steam parolanız ve Steam Guard kodunuz doğrudan SteamCMD’ye gider; hiçbir zaman saklanmaz, günlüğe kaydedilmez veya başka bir yere gönderilmez. SteamCMD’nin kayıtlı oturumunu yeniden kullanmak için yalnızca hesap adınız hatırlanır.
 
 ## Proje Yapısı
 
