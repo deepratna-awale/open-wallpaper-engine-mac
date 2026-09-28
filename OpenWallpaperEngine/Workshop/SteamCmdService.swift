@@ -145,6 +145,12 @@ class SteamCmdService: ObservableObject {
 
     var isInstalled: Bool { steamCmdPath != nil }
 
+    /// Runs `work` on the queue Workshop downloads use, so another steamcmd session (installing
+    /// the assets) never runs beside one of them.
+    func enqueueSteamCmdWork(_ work: @escaping () -> Void) {
+        downloadQueue.async(execute: work)
+    }
+
     @Published var pathError: String?
 
     /// The status of a download waiting its turn, and of one being moved into the storage folder;

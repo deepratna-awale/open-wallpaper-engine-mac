@@ -116,3 +116,41 @@ struct WEProject: Codable, Equatable, Hashable {
         }
     }
 }
+
+extension WEProject {
+    private enum DecodingKeys: String, CodingKey {
+        case approved, contentrating, description, file, general, preview, tags, title, visibility
+        case workshopid, workshopurl, type, version
+    }
+
+    /// Decodes as the synthesized decoder would, except that a project without `type` (WE's own
+    /// default projects leave it out) takes the type its `file` implies, as WE does.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: DecodingKeys.self)
+        let file = try container.decode(String.self, forKey: .file)
+        self.init(approved: try container.decodeIfPresent(Bool.self, forKey: .approved),
+                  contentrating: try container.decodeIfPresent(String.self, forKey: .contentrating),
+                  description: try container.decodeIfPresent(String.self, forKey: .description),
+                  file: file,
+                  general: try container.decodeIfPresent(WEProjectGeneral.self, forKey: .general),
+                  preview: try container.decodeIfPresent(String.self, forKey: .preview),
+                  tags: try container.decodeIfPresent([String].self, forKey: .tags),
+                  title: try container.decode(String.self, forKey: .title),
+                  visibility: try container.decodeIfPresent(String.self, forKey: .visibility),
+                  workshopid: try container.decodeIfPresent(WorkshopId.self, forKey: .workshopid),
+                  workshopurl: try container.decodeIfPresent(String.self, forKey: .workshopurl),
+                  type: try container.decodeIfPresent(String.self, forKey: .type) ?? Self.impliedType(file: file),
+                  version: try container.decodeIfPresent(Int.self, forKey: .version))
+    }
+
+    /// The wallpaper type a project's `file` implies when `type` is absent.
+    static func impliedType(file: String) -> String {
+        switch (file as NSString).pathExtension.lowercased() {
+        case "json": return "scene"
+        case "html", "htm": return "web"
+        case "exe": return "application"
+        case "mp4", "webm", "mov", "m4v", "avi", "mkv", "wmv": return "video"
+        default: return ""
+        }
+    }
+}

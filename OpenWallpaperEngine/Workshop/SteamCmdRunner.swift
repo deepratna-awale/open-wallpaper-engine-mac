@@ -14,15 +14,53 @@ struct SteamCmdRun {
     let exitCode: Int32
 }
 
+/// Stops a running steamcmd from another thread. One token per run.
+final class SteamCmdCancellation: @unchecked Sendable {
+    // `lock` owns `isCancelled` and `onCancel`.
+    private let lock = NSLock()
+    private var cancelled = false
+    private var onCancel: (() -> Void)?
+
+    var isCancelled: Bool { lock.withLock { cancelled } }
+
+    func cancel() {
+        let action: (() -> Void)? = lock.withLock {
+            cancelled = true
+            defer { onCancel = nil }
+            return onCancel
+        }
+        action?()
+    }
+
+    /// Runs `action` on cancellation, or right away when already cancelled.
+    func setCancelAction(_ action: (() -> Void)?) {
+        let runNow: Bool = lock.withLock {
+            onCancel = cancelled ? nil : action
+            return cancelled
+        }
+        if runNow { action?() }
+    }
+}
+
 protocol SteamCmdRunning {
     /// Runs the steamcmd at `executable` with `script` on its stdin and blocks until it exits, or
     /// until `timeout` passes (nil waits for as long as it takes). `onOutput` receives the output as
     /// it arrives, on a background queue.
     func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?,
              onOutput: @escaping (String) -> Void) -> SteamCmdRun
+
+    /// As above; `cancellation` terminates steamcmd.
+    func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?, cancellation: SteamCmdCancellation,
+             onOutput: @escaping (String) -> Void) -> SteamCmdRun
 }
 
 extension SteamCmdRunning {
+    /// A runner that can't stop steamcmd early runs it to the end.
+    func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?, cancellation: SteamCmdCancellation,
+             onOutput: @escaping (String) -> Void) -> SteamCmdRun {
+        run(executable: executable, script: script, timeout: timeout, onOutput: onOutput)
+    }
+
     func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?) -> SteamCmdRun {
         run(executable: executable, script: script, timeout: timeout, onOutput: { _ in })
     }
@@ -31,6 +69,12 @@ extension SteamCmdRunning {
 /// Runs the real steamcmd as a subprocess.
 struct ProcessSteamCmdRunner: SteamCmdRunning {
     func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?,
+             onOutput: @escaping (String) -> Void) -> SteamCmdRun {
+        run(executable: executable, script: script, timeout: timeout, cancellation: SteamCmdCancellation(),
+            onOutput: onOutput)
+    }
+
+    func run(executable: URL, script: SteamCmdScript, timeout: TimeInterval?, cancellation: SteamCmdCancellation,
              onOutput: @escaping (String) -> Void) -> SteamCmdRun {
         let process = Process()
         let outputPipe = Pipe()
@@ -61,6 +105,8 @@ struct ProcessSteamCmdRunner: SteamCmdRunning {
                                                 comment: "steamcmd is a program name; %@ is the system's reason"),
                                exitCode: -1)
         }
+        cancellation.setCancelAction { process.terminate() }
+        defer { cancellation.setCancelAction(nil) }
         Self.write(script, to: inputPipe)
 
         let exited = DispatchGroup()
