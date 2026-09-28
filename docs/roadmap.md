@@ -2,7 +2,7 @@
 
 Order: finish what is **most implemented** first, then what is **partly implemented**, then what is **not implemented**. Within each area, smaller items come first. The goal is to run every Wallpaper Engine wallpaper except the `application` type (see [`architecture.md`](architecture.md)).
 
-**Status: 2026-09-26.** PR #2, branch `deepratna/feature-work`.
+**Status: 2026-09-28.** PR #2, branch `deepratna/feature-work`.
 
 ## Done
 
@@ -23,11 +23,11 @@ Each step: research → parallel agents by file ownership + tester → fix the t
 
 1. Finish in flight: the depth-parallax and shine bug (3802047741). The particle finish (child control points, per-instance ropes, non-uniform scale, particle uniform arena, test cleanup) is done.
 2. WE-authored values everywhere (priority): every threshold, default, range, step and option comes from WE's json, shader annotations and scripts (effect.json, materials, `// {..}` uniform annotations, `[COMBO]`, project.json properties, particle jsons, SceneScript `createScriptProperties`). No invented constants, magic factors or app-made ranges. Audit → fix → a test that fails on hard-coded values.
-3. Area 4 SceneScript: research plan (docs/scenescript-plan.md) → implement → corpus replay over every library script → tester → optimise. WP0–WP11, their gaps and the optimisation pass done; WP12's timeline half is done with area 3 (animation layers and bones wait for areas 6 and 7).
-4. ~~Area 3 Timeline animations → tester → optimise.~~ Done (animation layers wait for areas 6 and 7).
-5. Area 5 Lighting and reflections → tester → optimise.
-6. Area 6 3D models (with particle collisionmodel) → tester → optimise.
-7. Area 7 Puppet warp → tester → optimise.
+3. Area 4 SceneScript: research plan (docs/scenescript-plan.md) → implement → corpus replay over every library script → tester → optimise. WP0–WP11, their gaps and the optimisation pass done; WP12's timeline half is done with area 3 (animation layers and bones done with areas 6 and 7).
+4. ~~Area 3 Timeline animations → tester → optimise.~~ Done (animation layers since areas 6 and 7).
+5. ~~Area 5 Lighting and reflections → tester → optimise.~~ Done.
+6. ~~Area 6 3D models (with particle collisionmodel) → tester → optimise.~~ Done (models-plan T and O, 2026-09-27).
+7. ~~Area 7 Puppet warp → tester → optimise.~~ Done.
 8. Gaps queue, worked in alongside when their files are free:
    - A shader-compiler helper process (hung compile with no Homebrew fallback).
    - Music-sync settings keyed by stable identity, not the path.
@@ -51,7 +51,7 @@ Blocked on WE ground truth (captures on Windows): see docs/test-risks.md "needs 
 
 1. ~~Instance overrides (rate, count, size, alpha, speed, lifetime, color)~~: done; user-bound fields resolve every frame, and `controlpoint<n>` places control points. A property change still triggers a content rebuild, which restarts the particles.
 2. ~~Child particle systems (`children`)~~: done. Static children and event children (`eventfollow`, `eventspawn`, `eventdeath`) with probability, instance budget (`maxcount`), nesting and `inherit…fromevent`, on the GPU (events never leave it) and the CPU. Link flag 1 ("set control points to particle positions"): from `controlpointstartindex` on, the child's control points are the parent's particles (a static child of an instanced system reads its own parent instance's), without a GPU read back; control point 0 stays the origin. Point operators (`controlpointattract`, `vortex`, `reducemovementnearcontrolpoint`, `maintaindistancetocontrolpoint`) and the emitter sit on their own `controlpoint`. A rope on an instanced system draws one strand per instance. Control point flags 1 (cursor), 2 (scene position) and 4 (the parent's control point `parentcontrolpoint`) and `mapsequence*`'s flags (taper, velocity, size, arc, count override, restart with periodic emission) follow `wallpaper64.exe`; operators and initializers run as WE's compiled program, in order, so two of one kind both apply. Every emitter of a system runs, each on its own clock (per system and per instance); remap's control point inputs and outputs follow WE, including its write-back into the shared control point array (a program that writes points runs record by record, on the GPU in one thread). Control point flag 16 has no runtime effect in WE.
-3. ~~Audio-reactive particle properties and collision operators~~: done. Audio response on emitters' rate, `turbulentvelocityrandom`, `turbulence` and `vortex`; `collisionplane`, `collisionsphere`, `collisionquad` and `collisionbounds` with bounce, slide, stop and delete (`collisionbox` is a no-op in WE). Emitter `delay`, `duration`, random periodic emission (flags bit 2, `min/maxperiodicduration`, `min/maxperiodicdelay`, `maxtoemitperperiod`, bursting `instantaneous` each period) and "limit to one per frame" (flags bit 1), per system and per instance, CPU and GPU. RG88 textures load as (r, g, 0, 1) and particle materials set `TEX<n>FORMAT=8` (albedo `.rrrg`, normal maps `.gr`), which also fixes RG88 flow maps (`shake`, `waterflow`). Open: `collisionmodel` (needs area 6).
+3. ~~Audio-reactive particle properties and collision operators~~: done. Audio response on emitters' rate, `turbulentvelocityrandom`, `turbulence` and `vortex`; `collisionplane`, `collisionsphere`, `collisionquad` and `collisionbounds` with bounce, slide, stop and delete (`collisionbox` is a no-op in WE). Emitter `delay`, `duration`, random periodic emission (flags bit 2, `min/maxperiodicduration`, `min/maxperiodicdelay`, `maxtoemitperperiod`, bursting `instantaneous` each period) and "limit to one per frame" (flags bit 1), per system and per instance, CPU and GPU. RG88 textures load as (r, g, 0, 1) and particle materials set `TEX<n>FORMAT=8` (albedo `.rrrg`, normal maps `.gr`), which also fixes RG88 flow maps (`shake`, `waterflow`). `collisionmodel`: done with area 6 (models-plan M10).
 4. Particles through WE's `genericparticle` shaders and materials: blend modes, sprite and trail material options, refraction.
 5. ~~Effects on particle systems~~: WE has no per-particle-system effects; wallpapers use composition layers, which already work.
 6. ~~Object scale on sprites~~: done. WE expands a sprite in its system's space and draws it through the model matrix, so a non-uniform scale squashes it (as linux-wallpaperengine and wallpaper-scene-renderer draw it); sizes and rotations stay local and the emitter's transform draws them (`g_Orientation*`, the built-in quad's axes). Open: WE simulates in the system's units, so velocities, gravity and operator distances would scale with the object too; ours are scene units turned but not scaled by it.
@@ -60,14 +60,14 @@ Blocked on WE ground truth (captures on Windows): see docs/test-risks.md "needs 
 9. ~~Particle budget~~: done (2026-09-26; `ParticleBudget`, Settings → Performance → Particle Budget: Low 10 000, Medium 25 000 (default), High 50 000, Unlimited). A scene whose systems can hold more than the budget (children and instances included; per system its `maxcount` × `count`, or what its emitters keep alive, rate × longest lifetime + bursts, when that is less) is thinned: every system's maximum and rate × budget / total, on both simulations through the frame's inputs; a scene within it is untouched, a change rebuilds the content, and the scaling is logged once per scene. The emission bound matters: counting `maxcount` alone, Lofi Cafe (2370927443, WE's rain preset holds 100 000 × `count` 5) authors 608 769 and would be thinned to 4 %, yet holds at most 7 903. The library's largest is 22 592 (3245833232), so Medium thins none of it. `SceneFrameBenchmarkTests` (`OWE_SCENE_BENCH`) measured the Test Wallpapers playlist at 3840×2160 (-O, M4): particles cost 0.2…2.8 ms of GPU a frame in every scene; the lag is WE effects at the layers' texture size (Tsunade 3742916237 22 ms, 245 MPix of effect passes a frame; One piece girls 3270035750 21 ms, 501 MPix on six 2760×4466 layers; Lofi Cafe 12 ms, 120 MPix; without effects every scene draws in under 4 ms). The render thread takes 0.5…2.5 ms and scripts 0.1…0.4 ms. WE's Texture Resolution setting: done in item 10.
 10. ~~Resolution settings and the effect graph's cost~~: done (2026-09-26). **Texture Resolution** (WE's `resolution`, from `wallpaper64.exe`, `TextureReduction`): High Performance, or Automatic under 0.95 × 1080p, loads every `.tex` image stored with several mipmaps from its second (sprite rects scaled), layers keep their header size, effect buffers follow the halved image and `g_TextureReductionScale` is 2. **Render Resolution**: Native, or Desktop (one pixel per point, scaled up bilinearly). **Scene Detail**: Match Display (the default) draws a scene larger than its display at the display's size and runs each image layer's effects on an area-averaged copy at its on-screen size (hysteresis: grows at once, shrinks after 45 frames under 0.8×), with built-ins reporting the full-size chain's sizes so texel-sized kernels span the same image; scene regions, text and the bloom stand for the full-detail frame likewise. Full (Wallpaper Engine) keeps WE's sizes. `SceneDetailEquivalenceTests` (`OWE_SCENE_DETAIL`) compares against full detail: mean 0–0.7/255 on a 4K display for Tsunade, One piece girls, Lofi Cafe, Kamado and The Unknown, 1.6–2.5/255 on a 1080p one (edges, resampling). The graph keeps a chain's static prefix (pixel for pixel), makes its second ping-pong target on first use (the engine chains never need it), caps a scaled-up composition layer at its own size (Tsunade's 4.1× ring shaded 67 MPix a frame), and a prelit image is a new input every frame (LF1). GPU ms at a 3840×2160 display (min of 60 frames, a busy machine; before → full / match / match+desktop): Tsunade 27.7 → 23.3 / 19.7 / 5.1, One piece girls 30.2 → 30.2 / 10.0 / 4.0, Lofi Cafe 15.0 → 15.8 / 14.5 / 4.5, Kamado 15.6 → 15.1 / 15.4 / 4.1, Dance Club 13.3 → 12.8 / 10.6 / 4.6. A layer that fills a 4K display is drawn at 4K in either detail; Desktop is what quarters it. `OWE_SCENE_BENCH_PASSES` times each effect pass (`EffectPassTimer`). Open: effects on solid layers run on their 1×1 texture (WE uses the layer's size); a mipmap level for layers without effects (their minification aliases in both details); a sharper upscale for Desktop.
 
-### 3. Timeline animations (implemented but for animation layers; docs/timeline-plan.md)
+### 3. Timeline animations (implemented; docs/timeline-plan.md)
 
 1. ~~Origin, scale, angles and size keyframes (E7)~~: done. WE's own format, evaluated per wallpaper instance by `SceneAnimationSet` (Bézier handles, per-frame samples, single/loop/mirror, `startpaused`, `wraploop`, `relative`, linked clocks); the timeline beats the static and user value, a script's return wins for its frame.
 2. ~~Bezier and easing parity, animated effect constants~~: done, bit for bit against the reference model.
 3. ~~The `getTextureAnimation` API~~: done. One clock per texture, one step per frame, a script's override (`rate`, `pause`, `stop`, `setFrame`, `join`).
 4. ~~`getAnimation`, `IAnimation` on objects, effects, materials and the scene, `animationEvent`~~: done; `thisScene.getAnimation(name)` searches every owner, taking only a string as scenescript64.dll does.
 5. ~~Animated `general.*` and particle `instanceoverride` values, sprite-sheet effect and material textures (8.15), the library render sweep and the optimisation pass (T6, T7)~~: done. Animated `visible` stays undrawn, as in WE (a bool isn't written). The tester's findings (script writes on animated constants, NaN clocks, late script frames, hidden layers' texture overrides, static-chain reuse, cold channels) are fixed.
-6. The animation-layer API for puppet and model animations; this completes with area 7.
+6. ~~The animation-layer API for puppet and model animations.~~ Done with areas 6 and 7 (models-plan M6, P2).
 
 ### 4. SceneScript (mostly implemented; Phase 6)
 
@@ -78,31 +78,35 @@ Blocked on WE ground truth (captures on Windows): see docs/test-risks.md "needs 
 5. ~~Input: scene-space cursor, events only on `solid` layers with hit-testing, angles in degrees.~~ Done (WP4, WP10, WP11).
 6. ~~Callbacks: `applyUserProperties` (changed keys only), `media*`, `destroy`, `resizeScreen`.~~ Done (WP4, WP6, WP11).
 7. ~~Layer API: `createLayer` from an asset (image, text, shape, particle system, sound), `destroyLayer`, `sortLayer`, `getLayerIndex`, `localStorage`; sound layers played like WE's (modes, gain, timers, mute and pause, script control)~~ done, sound `spatialization` included (no library sound uses it; checked against a WE capture, edge pan open).
-8. WP12: ~~scene, effect and material animations under script control, `animationEvent`~~ done (area 3); animation layers and bones with areas 6 and 7.
+8. WP12: ~~scene, effect and material animations under script control, `animationEvent`~~ done (area 3); ~~animation layers and bones~~ done with areas 6 and 7.
 9. ~~Live Now Playing on macOS 15.4+ (MediaRemote answers only entitled processes: the `/usr/bin/perl` adapter or a helper).~~ Done: `nowPlayingAdapter.pl` streams the session from `/usr/bin/perl` through Apple's PerlObjCBridge (nothing compiled or installed), MediaRemote directly before 15.4 (`NowPlayingBackend`); web wallpapers' media listeners too; Settings › General › Audio › Media integration support (WE's `mediaintegration`).
 10. ~~Performance: JIT (the `allow-jit` entitlement), per-frame allocations in the runtime, no frame of latency.~~ Done; see the plan's cost table.
 
-### 5. Lighting and reflections (mostly not implemented)
+### 5. Lighting and reflections (done; docs/lighting-plan.md)
 
-1. Light objects (point, spot, tube, directional) decoded and fed to shaders (`g_Lights*`).
-2. Lit image layers through `genericimage4` (normal maps, PBR masks); needs area 1 item 3.
+1. ~~Light objects (point, spot, tube, directional) decoded and fed to shaders (`g_Lights*`).~~ Done (lighting-plan A1, A2): WE's generated `LightingV1`, the light combos and WE's light packer (sort, budget, packing) from live transforms.
+2. ~~Lit image layers through `genericimage4` (normal maps, PBR masks).~~ Done (lighting-plan A3, A4): every lit or reflective image layer draws through its material, with the prelighting path for lit layers with effects.
 3. ~~`_rt_Reflection` and reflection planes.~~ Done (docs/models-plan.md M9): the mirrored pass draws models, images, texts and particle systems.
 4. ~~WE's bloom and HDR chain (`materials/util` downsample, blur and combine) instead of our approximation.~~ Done (docs/lighting-plan.md B1, B2): WE's LDR chain, and with "ultra" float targets, `HDR=1` and WE's HDR mip chain. The HDR display output is done too (lighting-plan B3): "displayhdr" outputs EDR on a display with headroom.
-5. Shadows (`shadowcaster`, `_rt_shadowAtlas`) and ~~volumetrics~~. Volumetrics done (docs/lighting-plan.md D1): WE's util passes for volumetric point and spot lights; 3D scenes get the scene's depth with area 6, shadow casters the atlas with shadows.
+5. ~~Shadows (`shadowcaster`, `_rt_shadowAtlas`) and volumetrics.~~ Done: volumetrics (lighting-plan D1) and WE's shadow atlas, views and casters (models-plan M8, lighting-plan D2); lit particles read the atlas too.
+6. Open: the points in lighting-plan §5, which need WE ground truth.
 
-### 6. 3D models (not implemented)
+### 6. 3D models (done; docs/models-plan.md)
 
-1. `.mdl` parsing: meshes, materials, bounds.
-2. Perspective camera path (`orthogonalprojection: null`, fov/near/far), depth buffer, draw order with depth.
-3. Model shaders (`generic4`, `foliage4`, `fur4`, `flag`, …) through the translator, with the full vertex attribute set.
-4. Skinning (bones) and morph targets.
-5. 2D objects in a perspective scene: text, solid and image layers drawn through the scene camera, not the orthographic 2D path. WE's captures show it: 3455121165's clock and orbit rings are missing, and 3378346807's VHS clock lands as a white strip at x 0–63 (docs/we-reference-report.md).
+1. ~~`.mdl` parsing: meshes, materials, bounds.~~ Done (M1), every version in the library.
+2. ~~Perspective camera path (`orthogonalprojection: null`, fov/near/far), depth buffer, draw order with depth.~~ Done (M2–M4), with camera layers, paths, fades and shake.
+3. ~~Model shaders (`generic4`, `foliage4`, `fur4`, `flag`, …) through the translator, with the full vertex attribute set.~~ Done (M5).
+4. ~~Skinning (bones) and morph targets.~~ Done (M6, M7), with animation layers, additive layers and root motion (MG4); scripts reach model animation layers and attachment points.
+5. ~~2D objects in a perspective scene drawn through the scene camera.~~ Done (M4).
+6. ~~Particles in 3D and `collisionmodel`.~~ Done (M10).
+7. Open: instancing identical meshes (not the cost today; models-plan O) and the open points in models-plan §5 (zoom in perspective, root motion with yaw alone, MDLV unknowns and others), which need WE ground truth.
 
-### 7. Puppet warp (not implemented)
+### 7. Puppet warp (done; docs/models-plan.md P1, P2)
 
-1. Puppet rigs from `.mdl` (bones, weights, mesh).
-2. Skinned rendering of the puppet mesh (shares skinning with area 6).
-3. Puppet animation layers (`getAnimationLayer`, blend, rate) and the script bone API.
+1. ~~Puppet rigs from `.mdl` (bones, weights, mesh).~~ Done (P1).
+2. ~~Skinned rendering of the puppet mesh (shares skinning with area 6).~~ Done (P1, M6).
+3. ~~Puppet animation layers (`getAnimationLayer`, blend, rate) and the script bone API.~~ Done (P2), with bone physics (springs, rigid bones, gravity, limits, impulses) matched against WE's capture, and layers attached to rig bones.
+4. Open: the mesh-flag-0x2 path (`BLENDROWCOUNT`, `g_BlendMap`, the auxiliary `fullscreenlayer` draw), which no library wallpaper uses (models-plan §5, point 17).
 
 ### 8. Regressions and gaps from the review (2026-09-25)
 
