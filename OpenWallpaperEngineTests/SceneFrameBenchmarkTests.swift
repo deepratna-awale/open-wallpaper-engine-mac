@@ -76,8 +76,10 @@ final class SceneFrameBenchmarkTests: XCTestCase {
 
     /// The render settings `OWE_SCENE_BENCH_MODES` asks for, by name (comma separated): `half` (WE's
     /// texture reduction), `match` (scene detail matched to the display), `desktop` (one pixel per
-    /// point), and `+` joins them (`match+desktop`). With the variable set, only these and `full`
-    /// are drawn.
+    /// point), `textures` ("Optimise textures" on: BC7 colour images, `TexturePreparation`), and `+`
+    /// joins them (`match+desktop`). With the variable set, only these and `full` are drawn.
+    /// `OWE_SCENE_BENCH_TEXTURES=1` adds the `textures` row to the default variants, so the rows
+    /// show the setting off (`full`) and on.
     private static func renderModes(_ request: String) -> [Variant] {
         request.split(separator: ",").map { name in
             var settings = SceneRenderSettings()
@@ -87,6 +89,7 @@ final class SceneFrameBenchmarkTests: XCTestCase {
                 case "half": settings.textureReduction = 2
                 case "match": settings.sceneDetail = .matchDisplay
                 case "desktop": settings.renderResolution = .desktop
+                case "textures": settings.optimiseTextures = true
                 default: XCTFail("unknown render mode \(part)")
                 }
             }
@@ -150,6 +153,9 @@ final class SceneFrameBenchmarkTests: XCTestCase {
                 variants += Self.renderModes(modes)
             } else {
                 if effects > 0 { variants.append(.withoutEffects) }
+            }
+            if environment["OWE_SCENE_BENCH_TEXTURES"] == "1", environment["OWE_SCENE_BENCH_MODES"]?.isEmpty ?? true {
+                variants += Self.renderModes("textures")
             }
             if environment["OWE_SCENE_BENCH_MODES"]?.isEmpty ?? true, !content.particleSystems.isEmpty {
                 variants += [.withoutParticles, .particlesOnly]
