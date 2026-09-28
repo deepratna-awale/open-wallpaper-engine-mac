@@ -125,3 +125,17 @@ details p { color: var(--muted); margin: 10px 0 0; font-size: 16px; }
 footer { padding-block: 40px 56px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); }
 footer p { margin: 0 0 6px; }
 footer a { color: inherit; }
+
+/* Legal pages (terms.html, privacy.html) */
+.legal { max-width: 760px; padding-block: 40px 64px; line-height: 1.6; }
+.legal h1 { font-size: clamp(28px, 5vw, 40px); margin: 0 0 8px; }
+.legal h2 { font-size: 22px; margin: 40px 0 8px; }
+.legal h3 { font-size: 17px; margin: 28px 0 6px; }
+.legal hr { border: 0; border-top: 1px solid var(--line); margin: 24px 0; }
+.legal code { font-size: .92em; background: var(--bg-alt); padding: 1px 5px; border-radius: 5px; overflow-wrap: anywhere; }
+.legal a { color: var(--accent); overflow-wrap: anywhere; }
+.legal-summary { background: var(--accent-soft); border-radius: 14px; padding: 4px 20px; margin: 16px 0; }
+.legal .table-wrap { overflow-x: auto; margin: 16px 0; }
+.legal table { border-collapse: collapse; width: 100%; font-size: 14px; }
+.legal th, .legal td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+.legal th { background: var(--bg-alt); }
