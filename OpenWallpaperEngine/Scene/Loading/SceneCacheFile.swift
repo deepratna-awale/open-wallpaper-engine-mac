@@ -45,16 +45,23 @@ struct SceneCacheKey: Equatable, Sendable {
     var displays: [Display]
     /// The settings that affect preparation (`SceneRenderSettings.contentKey`).
     var settings: String
-    var appBuild: String = SceneCacheKey.currentAppBuild
+    /// The OS build, the shader toolchain and the cache format (`currentEnvironment`), not the
+    /// app's version: an update keeps prepared scenes unless what prepares them changed.
+    var environment: String = SceneCacheKey.currentEnvironment
     var shaderRevision: Int = ShaderVariantTranslator.revision
     var gpu: String = SceneCacheKey.currentGPU
 
-    static let currentAppBuild: String = {
-        let info = Bundle.main.infoDictionary ?? [:]
-        let version = info["CFBundleShortVersionString"] as? String ?? "?"
-        let build = info["CFBundleVersion"] as? String ?? "?"
-        return "\(version)(\(build))"
-    }()
+    /// Changes whenever what a preparation writes changes, so older files are rebuilt.
+    static let contentRevision = 1
+
+    /// As `EffectPipelineArchive.environmentKey` keys compiled pipelines: the OS build, the shader
+    /// toolchain and translator revision, plus this cache's content revision.
+    static let currentEnvironment: String = environment(os: ProcessInfo.processInfo.operatingSystemVersionString,
+                                                        toolchain: InProcessShaderCompiler.libraryFingerprint)
+
+    static func environment(os: String, toolchain: String) -> String {
+        "\(EffectPipelineArchive.environmentKey(os: os, toolchain: toolchain))--c\(contentRevision)"
+    }
 
     /// The GPU's name and the newest Apple and Mac families it supports.
     static let currentGPU: String = {
@@ -105,7 +112,7 @@ struct SceneCacheKey: Equatable, Sendable {
             add("\(display.pixelWidth)x\(display.pixelHeight)@\(display.scale.bitPattern)")
         }
         add("settings"); add(settings)
-        add("build"); add(appBuild)
+        add("environment"); add(environment)
         add("revision"); add(String(shaderRevision))
         add("gpu"); add(gpu)
         return hasher.finalize()

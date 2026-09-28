@@ -20,7 +20,7 @@ final class SceneCacheFileTests: XCTestCase {
                       edits: ["_owe_scene_object_1_origin": "1 2 3"],
                       userProperties: ["speed": "1"],
                       displays: [.init(pixelWidth: 3840, pixelHeight: 2160, scale: 2)],
-                      settings: "hdr", appBuild: "1(1)", shaderRevision: 10, gpu: "gpu|apple9")
+                      settings: "hdr", environment: "os1", shaderRevision: 10, gpu: "gpu|apple9")
     }
 
     // MARK: - Key
@@ -36,7 +36,7 @@ final class SceneCacheFileTests: XCTestCase {
         key = base; key.displays[0].scale = 1; variants.append(("scale", key))
         key = base; key.displays[0].pixelWidth = 2560; variants.append(("display", key))
         key = base; key.settings = "sdr"; variants.append(("settings", key))
-        key = base; key.appBuild = "1(2)"; variants.append(("build", key))
+        key = base; key.environment = "os2"; variants.append(("environment", key))
         key = base; key.shaderRevision = 11; variants.append(("revision", key))
         key = base; key.gpu = "gpu|apple8"; variants.append(("gpu", key))
         let baseName: String = base.name
