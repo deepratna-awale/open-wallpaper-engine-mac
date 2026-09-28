@@ -9,7 +9,6 @@ $we = "C:\Program Files (x86)\Steam\steamapps\common\wallpaper_engine"
 $out = Join-Path $PSScriptRoot $OutName; New-Item -ItemType Directory -Force $out | Out-Null
 $log = Join-Path $out "capture.log"; Set-Content $log ""
 $env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')
-Add-Type -AssemblyName System.Windows.Forms, System.Drawing
 Add-Type @"
 using System;
 using System.Runtime.InteropServices;
@@ -17,16 +16,19 @@ public static class OweCursor {
   [StructLayout(LayoutKind.Sequential)] public struct POINT { public int X; public int Y; }
   [DllImport("user32.dll")] public static extern bool SetCursorPos(int x, int y);
   [DllImport("user32.dll")] public static extern bool GetCursorPos(out POINT p);
+  [DllImport("user32.dll")] public static extern bool SetProcessDpiAwarenessContext(IntPtr v);
 }
 "@
-$b = ([System.Windows.Forms.Screen]::AllScreens | ? { -not $_.Primary })[0].Bounds
+[OweCursor]::SetProcessDpiAwarenessContext([IntPtr](-4)) | Out-Null   # per-monitor v2: primary is at 125 %, monitor 2 at 100 %; system-aware mode misreports monitor 2
+Add-Type -AssemblyName System.Windows.Forms, System.Drawing   # after SetProcessDPIAware, so Screen bounds are physical
+$b =([System.Windows.Forms.Screen]::AllScreens | ? { -not $_.Primary })[0].Bounds
 Add-Content $log ("monitor 2 bounds: " + $b.X + "," + $b.Y + " " + $b.Width + "x" + $b.Height)
 function Shot($path) {
   $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height
   $g = [System.Drawing.Graphics]::FromImage($bmp); $g.CopyFromScreen($b.X, $b.Y, 0, 0, $bmp.Size)
   $bmp.Save($path); $g.Dispose(); $bmp.Dispose()
 }
-function Where() { $p = New-Object OweCursor+POINT; [OweCursor]::GetCursorPos([ref]$p) | Out-Null; "$($p.X - $b.X),$($p.Y - $b.Y)" }
+function CursorAt() { $p = New-Object OweCursor+POINT; [OweCursor]::GetCursorPos([ref]$p) | Out-Null; "$($p.X - $b.X),$($p.Y - $b.Y)" }
 function LogTail($from) { $fs = [IO.File]::Open("$we\log.txt", 'Open', 'Read', 'ReadWrite'); $fs.Seek($from, 'Begin') | Out-Null; $t = (New-Object IO.StreamReader $fs).ReadToEnd(); $fs.Close(); $t }
 
 $shots = Get-Content (Join-Path $PSScriptRoot "shots.json") -Raw | ConvertFrom-Json
@@ -42,7 +44,7 @@ foreach ($s in $shots) {
   foreach ($p in $s.stills) {
     [OweCursor]::SetCursorPos($b.X + [int]$p[0], $b.Y + [int]$p[1]) | Out-Null
     Start-Sleep -Milliseconds 1000
-    $at = Where
+    $at = CursorAt
     Shot (Join-Path $out "$($s.project)_$($p[0])_$($p[1]).png")
     Add-Content $log "$($s.project) still $($p[0]),$($p[1]) cursor $at"
   }
@@ -72,7 +74,7 @@ foreach ($s in $shots) {
     Start-Sleep -Milliseconds 300
     Shot (Join-Path $out "$($s.project)_after.png")
     $ff.WaitForExit()
-    Add-Content $log "$($s.project) sweep logged, cursor now $(Where)"
+    Add-Content $log "$($s.project) sweep logged, cursor now $(CursorAt)"
   }
   $errs = (LogTail $mark).Trim()
   Add-Content $log ("== $($s.project) " + $(if ($errs) { "ERRORS:`n$errs" } else { "ok" }))
