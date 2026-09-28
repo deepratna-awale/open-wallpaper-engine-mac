@@ -9,7 +9,7 @@ Open Wallpaper Engine（修補版）
 
 > **注意：** 本專案與 Steam 上的商業軟體 Wallpaper Engine 無關。這是一款開源的 macOS App，可顯示來自 Wallpaper Engine Steam 工作坊的背景圖片素材。 → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
-**Wiki：** 指南與文件請見 [Wiki](https://github.com/deepratna-awale/wallpaper-engine-mac/wiki)。
+**Wiki：** 指南與文件請見 [Wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)。
 
 ## 相關專案
 
@@ -279,7 +279,7 @@ Wallpaper Engine 以 GLSL 形式提供其效果。當背景圖片首次使用這
 
 ### 步驟
 ```sh
-git clone https://github.com/deepratna-awale/wallpaper-engine-mac.git
+git clone https://github.com/deepratna-awale/open-wallpaper-engine-mac.git
 cd wallpaper-engine-mac
 open "OpenWallpaperEngine.xcodeproj"
 ```

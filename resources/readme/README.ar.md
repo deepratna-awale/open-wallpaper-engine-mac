@@ -11,7 +11,7 @@ Open Wallpaper Engine (نسخة مُعدَّلة)
 
 > **ملاحظة:** هذا المشروع غير تابع لتطبيق Wallpaper Engine التجاري على Steam. إنه تطبيق مفتوح المصدر لنظام macOS يمكنه عرض ملفات خلفيات الشاشة من ورشة Steam الخاصة بـ Wallpaper Engine. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
-**الويكي:** الأدلة والتوثيق موجودة في [الويكي](https://github.com/deepratna-awale/wallpaper-engine-mac/wiki).
+**الويكي:** الأدلة والتوثيق موجودة في [الويكي](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
 
 ## مشاريع ذات صلة
 
@@ -281,7 +281,7 @@ Open Wallpaper Engine (نسخة مُعدَّلة)
 
 ### الخطوات
 ```sh
-git clone https://github.com/deepratna-awale/wallpaper-engine-mac.git
+git clone https://github.com/deepratna-awale/open-wallpaper-engine-mac.git
 cd wallpaper-engine-mac
 open "OpenWallpaperEngine.xcodeproj"
 ```

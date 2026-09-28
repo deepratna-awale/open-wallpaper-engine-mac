@@ -9,7 +9,7 @@ Open Wallpaper Engine（修补版）
 
 > **注：** 本项目与 Steam 上的商业软件 Wallpaper Engine 没有任何关联。这是一款开源的 macOS App，可显示来自 Wallpaper Engine Steam 创意工坊的墙纸素材。 → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
-**Wiki：** 指南和文档见 [Wiki](https://github.com/deepratna-awale/wallpaper-engine-mac/wiki)。
+**Wiki：** 指南和文档见 [Wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)。
 
 ## 相关项目
 
@@ -279,7 +279,7 @@ Wallpaper Engine 以 GLSL 形式提供其效果。当墙纸首次使用这些效
 
 ### 步骤
 ```sh
-git clone https://github.com/deepratna-awale/wallpaper-engine-mac.git
+git clone https://github.com/deepratna-awale/open-wallpaper-engine-mac.git
 cd wallpaper-engine-mac
 open "OpenWallpaperEngine.xcodeproj"
 ```

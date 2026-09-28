@@ -9,7 +9,7 @@ Open Wallpaper Engine (з виправленнями)
 
 > **Примітка.** Цей проєкт НЕ повʼязаний із комерційною програмою Wallpaper Engine у Steam. Це програма з відкритим кодом для macOS, яка може показувати ресурси шпалер із Майстерні Steam програми Wallpaper Engine. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
-**Вікі:** посібники та документація — у [вікі](https://github.com/deepratna-awale/wallpaper-engine-mac/wiki).
+**Вікі:** посібники та документація — у [вікі](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
 
 ## Повʼязані проєкти
 
@@ -279,7 +279,7 @@ Wallpaper Engine постачає свої ефекти у вигляді GLSL. 
 
 ### Кроки
 ```sh
-git clone https://github.com/deepratna-awale/wallpaper-engine-mac.git
+git clone https://github.com/deepratna-awale/open-wallpaper-engine-mac.git
 cd wallpaper-engine-mac
 open "OpenWallpaperEngine.xcodeproj"
 ```

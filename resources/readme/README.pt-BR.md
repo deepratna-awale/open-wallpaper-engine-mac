@@ -9,7 +9,7 @@ Um fork com patches do [Open Wallpaper Engine](https://github.com/MrWindDog/wall
 
 > **Observação:** este projeto NÃO tem nenhuma relação com o Wallpaper Engine comercial vendido no Steam. É um app de código aberto para macOS capaz de exibir os recursos de imagens de fundo da Oficina Steam do Wallpaper Engine. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
-**Wiki:** guias e documentação estão na [wiki](https://github.com/deepratna-awale/wallpaper-engine-mac/wiki).
+**Wiki:** guias e documentação estão na [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
 
 ## Projetos Relacionados
 
@@ -279,7 +279,7 @@ As cenas usam os efeitos, materiais, shaders, fontes e o runtime do SceneScript 
 
 ### Etapas
 ```sh
-git clone https://github.com/deepratna-awale/wallpaper-engine-mac.git
+git clone https://github.com/deepratna-awale/open-wallpaper-engine-mac.git
 cd wallpaper-engine-mac
 open "OpenWallpaperEngine.xcodeproj"
 ```

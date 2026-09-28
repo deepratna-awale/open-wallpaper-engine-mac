@@ -9,7 +9,7 @@ Open Wallpaper Engine (Yamalı Sürüm)
 
 > **Not:** Bu proje, Steam’deki ticari Wallpaper Engine ile bağlantılı DEĞİLDİR. Wallpaper Engine’in Steam Atölyesi’ndeki duvar kâğıdı varlıklarını görüntüleyebilen açık kaynaklı bir macOS uygulamasıdır. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
-**Wiki:** kılavuzlar ve belgeler [wiki](https://github.com/deepratna-awale/wallpaper-engine-mac/wiki)’de.
+**Wiki:** kılavuzlar ve belgeler [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)’de.
 
 ## İlgili Projeler
 
@@ -279,7 +279,7 @@ Sahneler, Steam’deki kendi Wallpaper Engine kopyanızdaki paylaşılan efektle
 
 ### Adımlar
 ```sh
-git clone https://github.com/deepratna-awale/wallpaper-engine-mac.git
+git clone https://github.com/deepratna-awale/open-wallpaper-engine-mac.git
 cd wallpaper-engine-mac
 open "OpenWallpaperEngine.xcodeproj"
 ```

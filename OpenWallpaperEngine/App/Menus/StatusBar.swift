@@ -35,7 +35,7 @@ extension AppDelegate {
     }
 
     @objc func openSupportWebpage() {
-        NSWorkspace.shared.open(URL(string: "https://github.com/deepratna-awale/wallpaper-engine-mac/wiki/Troubleshooting")!)
+        NSWorkspace.shared.open(URL(string: "https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki/Troubleshooting")!)
     }
 
     @objc func selectRecentWallpaper(_ sender: NSMenuItem) {

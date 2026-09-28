@@ -9,7 +9,7 @@ macOS용 [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-m
 
 > **참고:** 이 프로젝트는 Steam의 상용 Wallpaper Engine과 관련이 없습니다. Wallpaper Engine의 Steam 창작마당에 있는 배경화면 에셋을 표시할 수 있는 오픈 소스 macOS 앱입니다. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
-**위키:** 가이드와 문서는 [위키](https://github.com/deepratna-awale/wallpaper-engine-mac/wiki)에 있습니다.
+**위키:** 가이드와 문서는 [위키](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)에 있습니다.
 
 ## 관련 프로젝트
 
@@ -279,7 +279,7 @@ Wallpaper Engine은 효과를 GLSL로 제공합니다. 이 효과는 배경화�
 
 ### 단계
 ```sh
-git clone https://github.com/deepratna-awale/wallpaper-engine-mac.git
+git clone https://github.com/deepratna-awale/open-wallpaper-engine-mac.git
 cd wallpaper-engine-mac
 open "OpenWallpaperEngine.xcodeproj"
 ```

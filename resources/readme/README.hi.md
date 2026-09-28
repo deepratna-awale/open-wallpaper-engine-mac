@@ -9,7 +9,7 @@ macOS के लिए [Open Wallpaper Engine](https://github.com/MrWindDog/wall
 
 > **नोट:** यह Steam पर उपलब्ध कमर्शियल Wallpaper Engine से संबद्ध नहीं है. यह एक ओपन-सोर्स macOS ऐप है, जो Wallpaper Engine के Steam Workshop के वॉलपेपर एसेट दिखा सकता है. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
-**विकी:** गाइड और डॉक्यूमेंटेशन [विकी](https://github.com/deepratna-awale/wallpaper-engine-mac/wiki) में हैं.
+**विकी:** गाइड और डॉक्यूमेंटेशन [विकी](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki) में हैं.
 
 ## संबंधित प्रोजेक्ट
 
@@ -279,7 +279,7 @@ Wallpaper Engine अपने इफ़ेक्ट GLSL में देता 
 
 ### चरण
 ```sh
-git clone https://github.com/deepratna-awale/wallpaper-engine-mac.git
+git clone https://github.com/deepratna-awale/open-wallpaper-engine-mac.git
 cd wallpaper-engine-mac
 open "OpenWallpaperEngine.xcodeproj"
 ```
