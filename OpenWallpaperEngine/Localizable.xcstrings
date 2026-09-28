@@ -2610,6 +2610,101 @@
         }
       }
     },
+    "About SteamCMD" : {
+      "comment" : "Link to Valve's SteamCMD documentation",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حول SteamCMD"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Über SteamCMD"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acerca de SteamCMD"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "À propos de SteamCMD"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD के बारे में"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informazioni su SteamCMD"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD について"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD에 관하여"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD — informacje"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sobre o SteamCMD"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "О SteamCMD"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD Hakkında"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Про SteamCMD"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关于 SteamCMD"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "關於 SteamCMD"
+          }
+        }
+      }
+    },
     "Abstract" : {
       "comment" : "Workshop genre tag",
       "localizations" : {
@@ -11387,6 +11482,196 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "無法建立背景圖片儲存位置檔案夾 %1$@：%2$@"
+          }
+        }
+      }
+    },
+    "Can't extract SteamCMD: %@" : {
+      "comment" : "Error installing SteamCMD: the archive could not be extracted. %@ is the system's reason",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذر استخراج SteamCMD: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD kann nicht entpackt werden: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se puede extraer SteamCMD: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible d’extraire SteamCMD : %@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD को एक्सट्रैक्ट नहीं किया जा सकता: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile estrarre SteamCMD: %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD を展開できません：%@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD의 압축을 풀 수 없음: %@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie można rozpakować SteamCMD: %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não é possível extrair o SteamCMD: %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удаётся извлечь SteamCMD: %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD çıkarılamıyor: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдається розпакувати SteamCMD: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法解压缩 SteamCMD：%@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法解壓縮 SteamCMD：%@"
+          }
+        }
+      }
+    },
+    "Can't reach Valve's server to download SteamCMD. Check your internet connection and try again." : {
+      "comment" : "Error installing SteamCMD: network unreachable",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذر الوصول إلى خادم Valve لتنزيل SteamCMD. تحقق من اتصالك بالإنترنت وحاول مرة أخرى."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Server von Valve ist zum Laden von SteamCMD nicht erreichbar. Überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se puede conectar con el servidor de Valve para descargar SteamCMD. Comprueba tu conexión a Internet y vuelve a intentarlo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de joindre le serveur de Valve pour télécharger SteamCMD. Vérifiez votre connexion à Internet et réessayez."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD डाउनलोड करने के लिए Valve के सर्वर तक नहीं पहुँचा जा सकता. अपना इंटरनेट कनेक्शन जाँचें और फिर से कोशिश करें."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile raggiungere il server di Valve per scaricare SteamCMD. Controlla la connessione a Internet e riprova."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD をダウンロードするための Valve のサーバに接続できません。インターネット接続を確認して、もう一度お試しください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD를 다운로드하기 위해 Valve 서버에 연결할 수 없습니다. 인터넷 연결을 확인한 후 다시 시도하십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie można połączyć się z serwerem Valve, aby pobrać SteamCMD. Sprawdź połączenie z internetem i spróbuj ponownie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não é possível acessar o servidor da Valve para baixar o SteamCMD. Verifique sua conexão com a internet e tente novamente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удаётся связаться с сервером Valve для загрузки SteamCMD. Проверьте подключение к интернету и повторите попытку."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD’yi indirmek için Valve’ın sunucusuna ulaşılamıyor. İnternet bağlantınızı denetleyip yeniden deneyin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдається зʼєднатися із сервером Valve, щоб завантажити SteamCMD. Перевірте підключення до інтернету й спробуйте ще раз."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法连接 Valve 的服务器以下载 SteamCMD。请检查互联网连接，然后再试一次。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法連線至 Valve 的伺服器以下載 SteamCMD。請檢查網際網路連線，然後再試一次。"
           }
         }
       }
@@ -20536,6 +20821,196 @@
         }
       }
     },
+    "Downloading from Valve…" : {
+      "comment" : "Progress: downloading SteamCMD, size unknown",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يجري التنزيل من Valve…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird von Valve geladen …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descargando de Valve…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Téléchargement depuis Valve…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valve से डाउनलोड किया जा रहा है…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download da Valve…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valve からダウンロード中…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valve에서 다운로드 중…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pobieranie od Valve…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baixando da Valve…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Загрузка с сервера Valve…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valve’dan indiriliyor…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантаження від Valve…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在从 Valve 下载…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在從 Valve 下載⋯"
+          }
+        }
+      }
+    },
+    "Downloading from Valve… %@" : {
+      "comment" : "Progress: downloading SteamCMD. %@ is the percentage",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يجري التنزيل من Valve… %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird von Valve geladen … %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descargando de Valve… %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Téléchargement depuis Valve… %@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valve से डाउनलोड किया जा रहा है… %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download da Valve… %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valve からダウンロード中… %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valve에서 다운로드 중… %@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pobieranie od Valve… %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baixando da Valve… %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Загрузка с сервера Valve… %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valve’dan indiriliyor… %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантаження від Valve… %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在从 Valve 下载… %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在從 Valve 下載⋯ %@"
+          }
+        }
+      }
+    },
     "Downloading…" : {
       "comment" : "Download status",
       "localizations" : {
@@ -20816,6 +21291,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "下載項目"
+          }
+        }
+      }
+    },
+    "Downloads SteamCMD from Valve" : {
+      "comment" : "Tooltip of the Install SteamCMD button",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يقوم بتنزيل SteamCMD من Valve"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lädt SteamCMD von Valve"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descarga SteamCMD de Valve"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Télécharge SteamCMD depuis Valve"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valve से SteamCMD डाउनलोड करता है"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scarica SteamCMD da Valve"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valve から SteamCMD をダウンロードします"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valve에서 SteamCMD를 다운로드합니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pobiera SteamCMD od Valve"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baixa o SteamCMD da Valve"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Загружает SteamCMD с сервера Valve"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD’yi Valve’dan indirir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантажує SteamCMD від Valve"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从 Valve 下载 SteamCMD"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從 Valve 下載 SteamCMD"
           }
         }
       }
@@ -22843,6 +23413,196 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "全年齡"
+          }
+        }
+      }
+    },
+    "Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and SteamCMD's login. Open Wallpaper Engine has no server and collects no data or analytics. It only contacts Valve: Steam when you use the Workshop or install assets, and Valve's server to download SteamCMD. Web wallpapers may load their own online content." : {
+      "comment" : "Privacy statement in Settings",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "كل ما يحفظه Open Wallpaper Engine يبقى على جهاز Mac: الإعدادات والمكتبة وذاكرة التخزين المؤقت وتسجيل الدخول في SteamCMD. لا يملك Open Wallpaper Engine خادمًا ولا يجمع أي بيانات أو تحليلات. ولا يتصل إلا بـ Valve: بـ Steam عند استخدامك الورشة أو تثبيت الموارد، وبخادم Valve لتنزيل SteamCMD. قد تحمّل خلفيات الويب محتواها الخاص عبر الإنترنت."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alles, was Open Wallpaper Engine speichert, bleibt auf Ihrem Mac: Ihre Einstellungen, Ihre Mediathek, der Cache und die Anmeldung von SteamCMD. Open Wallpaper Engine hat keinen Server und erfasst keine Daten oder Analysen. Es kontaktiert nur Valve: Steam, wenn Sie den Workshop verwenden oder Assets installieren, und den Server von Valve, um SteamCMD zu laden. Web-Hintergrundbilder können eigene Onlineinhalte laden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todo lo que guarda Open Wallpaper Engine se queda en tu Mac: tus ajustes, la biblioteca, la caché y el inicio de sesión de SteamCMD. Open Wallpaper Engine no tiene servidor ni recopila datos ni análisis. Solo se conecta con Valve: con Steam cuando usas el Workshop o instalas los recursos, y con el servidor de Valve para descargar SteamCMD. Los fondos de pantalla web pueden cargar su propio contenido en línea."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tout ce qu’Open Wallpaper Engine enregistre reste sur votre Mac : vos réglages, votre bibliothèque, le cache et la connexion de SteamCMD. Open Wallpaper Engine n’a pas de serveur et ne collecte aucune donnée ni statistique. Il ne contacte que Valve : Steam lorsque vous utilisez le Workshop ou installez les ressources, et le serveur de Valve pour télécharger SteamCMD. Les fonds d’écran web peuvent charger leur propre contenu en ligne."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine जो कुछ भी सहेजता है, वह आपके Mac पर ही रहता है: आपकी सेटिंग्ज़, लाइब्रेरी, कैश और SteamCMD का लॉग इन. Open Wallpaper Engine का कोई सर्वर नहीं है और यह कोई डेटा या एनालिटिक्स इकट्ठा नहीं करता. यह केवल Valve से संपर्क करता है: Workshop का उपयोग करने या एसेट इंस्टॉल करने पर Steam से, और SteamCMD डाउनलोड करने के लिए Valve के सर्वर से. वेब वॉलपेपर अपनी ऑनलाइन सामग्री लोड कर सकते हैं."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tutto ciò che Open Wallpaper Engine salva resta sul tuo Mac: impostazioni, libreria, cache e accesso di SteamCMD. Open Wallpaper Engine non ha server e non raccoglie dati né analisi. Contatta solo Valve: Steam quando usi il Workshop o installi le risorse, e il server di Valve per scaricare SteamCMD. Gli sfondi web possono caricare contenuti online propri."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine が保存するものはすべてお使いの Mac に残ります：設定、ライブラリ、キャッシュ、SteamCMD のログイン。Open Wallpaper Engine にはサーバがなく、データや解析情報を収集しません。通信先は Valve のみです：ワークショップの使用時やアセットのインストール時の Steam、および SteamCMD をダウンロードするための Valve のサーバ。Web 壁紙は独自のオンラインコンテンツを読み込む場合があります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine이 저장하는 모든 것은 사용자의 Mac에 남습니다. 설정, 보관함, 캐시, SteamCMD 로그인이 이에 해당합니다. Open Wallpaper Engine에는 서버가 없으며 데이터나 분석 정보를 수집하지 않습니다. Valve에만 연결합니다. 창작마당을 사용하거나 에셋을 설치할 때는 Steam에, SteamCMD를 다운로드할 때는 Valve 서버에 연결합니다. 웹 배경화면은 자체 온라인 콘텐츠를 불러올 수 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wszystko, co zapisuje Open Wallpaper Engine, pozostaje na Macu: ustawienia, biblioteka, pamięć podręczna i logowanie SteamCMD. Open Wallpaper Engine nie ma serwera i nie zbiera żadnych danych ani analiz. Łączy się tylko z Valve: ze Steam, gdy korzystasz z Warsztatu lub instalujesz zasoby, oraz z serwerem Valve, aby pobrać SteamCMD. Tapety internetowe mogą wczytywać własne treści online."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tudo o que o Open Wallpaper Engine salva fica no seu Mac: seus ajustes, a biblioteca, o cache e a sessão do SteamCMD. O Open Wallpaper Engine não tem servidor e não coleta dados nem análises. Ele só se conecta à Valve: ao Steam quando você usa a Oficina ou instala os recursos, e ao servidor da Valve para baixar o SteamCMD. Imagens de fundo da web podem carregar o próprio conteúdo online."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Всё, что сохраняет Open Wallpaper Engine, остаётся на вашем Mac: настройки, медиатека, кэш и вход SteamCMD. У Open Wallpaper Engine нет сервера, и он не собирает никаких данных или аналитики. Он связывается только с Valve: со Steam, когда вы пользуетесь Мастерской или устанавливаете ресурсы, и с сервером Valve для загрузки SteamCMD. Веб-обои могут загружать собственное онлайн-содержимое."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine’in kaydettiği her şey Mac’inizde kalır: ayarlarınız, arşiviniz, önbellek ve SteamCMD’nin girişi. Open Wallpaper Engine’in sunucusu yoktur ve hiçbir veri veya analiz toplamaz. Yalnızca Valve ile iletişim kurar: Atölye’yi kullandığınızda veya varlıkları yüklediğinizde Steam ile, SteamCMD’yi indirmek için de Valve’ın sunucusuyla. Web duvar kâğıtları kendi çevrimiçi içeriklerini yükleyebilir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усе, що зберігає Open Wallpaper Engine, залишається на вашому Mac: параметри, бібліотека, кеш і вхід SteamCMD. Open Wallpaper Engine не має сервера й не збирає жодних даних чи аналітики. Він звʼязується лише з Valve: зі Steam, коли ви користуєтеся Майстернею або встановлюєте ресурси, і з сервером Valve, щоб завантажити SteamCMD. Вебшпалери можуть завантажувати власний онлайн-вміст."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 存储的所有内容都保留在你的 Mac 上：你的设置、资源库、缓存以及 SteamCMD 的登录。Open Wallpaper Engine 没有服务器，也不收集任何数据或分析信息。它只会连接 Valve：在你使用创意工坊或安装资源时连接 Steam，以及连接 Valve 的服务器以下载 SteamCMD。网页墙纸可能会载入其自己的在线内容。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 儲存的所有內容都會保留在你的 Mac 上：你的設定、資料庫、快取和 SteamCMD 的登入。Open Wallpaper Engine 沒有伺服器，也不會收集任何資料或分析資訊。它只會連線至 Valve：在你使用工作坊或安裝資源時連線至 Steam，以及連線至 Valve 的伺服器以下載 SteamCMD。網頁背景圖片可能會載入其自身的線上內容。"
+          }
+        }
+      }
+    },
+    "Extracting…" : {
+      "comment" : "Progress: extracting the downloaded SteamCMD archive",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يجري الاستخراج…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird entpackt …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extrayendo…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extraction…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एक्सट्रैक्ट किया जा रहा है…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estrazione…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "展開中…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "압축 해제 중…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rozpakowywanie…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extraindo…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Извлечение…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çıkarılıyor…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розпакування…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在解压缩…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在解壓縮⋯"
           }
         }
       }
@@ -32323,6 +33083,101 @@
         }
       }
     },
+    "I've Signed In" : {
+      "comment" : "Button: the user has logged in to SteamCMD in Terminal",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لقد سجّلت الدخول"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ich habe mich angemeldet"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ya he iniciado sesión"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je me suis connecté"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मैंने साइन इन कर लिया है"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ho effettuato l’accesso"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サインインしました"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로그인했습니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zalogowałem się"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Já Iniciei Sessão"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Я вошёл"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Giriş Yaptım"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Я ввійшов"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我已登录"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我已登入"
+          }
+        }
+      }
+    },
     "Icon Size" : {
       "localizations" : {
         "ar" : {
@@ -32886,6 +33741,196 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "檢視背景圖片中的每個圖層、紋理和效果，即時微調參數，並微移或對齊物件。"
+          }
+        }
+      }
+    },
+    "Install SteamCMD" : {
+      "comment" : "Button: download and install SteamCMD from Valve",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تثبيت SteamCMD"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD installieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalar SteamCMD"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installer SteamCMD"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD इंस्टॉल करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installa SteamCMD"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD をインストール"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD 설치"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zainstaluj SteamCMD"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalar SteamCMD"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Установить SteamCMD"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD’yi Yükle"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Установити SteamCMD"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装 SteamCMD"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安裝 SteamCMD"
+          }
+        }
+      }
+    },
+    "Install SteamCMD automatically" : {
+      "comment" : "Settings toggle: download SteamCMD from Valve when none is found",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تثبيت SteamCMD تلقائيًا"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD automatisch installieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalar SteamCMD automáticamente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installer SteamCMD automatiquement"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD अपने आप इंस्टॉल करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installa SteamCMD automaticamente"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD を自動的にインストール"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD 자동으로 설치"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instaluj SteamCMD automatycznie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalar o SteamCMD automaticamente"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Устанавливать SteamCMD автоматически"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD’yi otomatik olarak yükle"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Установлювати SteamCMD автоматично"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动安装 SteamCMD"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動安裝 SteamCMD"
           }
         }
       }
@@ -46669,6 +47714,101 @@
         }
       }
     },
+    "Open in Terminal" : {
+      "comment" : "Button: open the SteamCMD login command in Terminal",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فتح في Terminal"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Terminal öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir en Terminal"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir dans Terminal"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "टर्मिनल में खोलें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri in Terminale"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ターミナルで開く"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "터미널에서 열기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otwórz w Terminalu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir no Terminal"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть в Терминале"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminal’de Aç"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити в Терміналі"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在“终端”中打开"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在「終端機」中打開"
+          }
+        }
+      }
+    },
     "Open in Workshop" : {
       "localizations" : {
         "ar" : {
@@ -47136,6 +48276,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在圖層上開啟或關閉圓形遮罩。"
+          }
+        }
+      }
+    },
+    "Or install it with Homebrew:" : {
+      "comment" : "Precedes the Homebrew install command for steamcmd",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أو ثبّته باستخدام Homebrew:"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oder installieren Sie es mit Homebrew:"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O instálalo con Homebrew:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ou installez-le avec Homebrew :"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "या इसे Homebrew से इंस्टॉल करें:"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oppure installalo con Homebrew:"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "または Homebrew でインストールしてください："
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "또는 Homebrew로 설치하십시오:"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Możesz też zainstalować go za pomocą Homebrew:"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ou instale-o com o Homebrew:"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Или установите его с помощью Homebrew:"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ya da Homebrew ile yükleyin:"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Або встановіть його за допомогою Homebrew:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "或使用 Homebrew 安装："
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "或使用 Homebrew 安裝："
           }
         }
       }
@@ -52185,6 +53420,101 @@
         }
       }
     },
+    "Prefer to sign in yourself? Log in with SteamCMD in Terminal" : {
+      "comment" : "Disclosure title: alternative to logging in inside the app",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هل تفضّل تسجيل الدخول بنفسك؟ سجّل الدخول باستخدام SteamCMD في Terminal"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lieber selbst anmelden? Mit SteamCMD im Terminal anmelden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Prefieres iniciar sesión tú mismo? Inicia sesión con SteamCMD en Terminal"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vous préférez vous connecter vous-même ? Connectez-vous avec SteamCMD dans Terminal"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "खुद साइन इन करना चाहते हैं? टर्मिनल में SteamCMD से लॉग इन करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preferisci accedere da solo? Accedi con SteamCMD in Terminale"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自分でサインインしますか？ターミナルで SteamCMD を使ってログイン"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "직접 로그인하시겠습니까? 터미널에서 SteamCMD로 로그인"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wolisz zalogować się samodzielnie? Zaloguj się za pomocą SteamCMD w Terminalu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prefere iniciar sessão você mesmo? Inicie sessão com o SteamCMD no Terminal"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Хотите войти самостоятельно? Войдите через SteamCMD в Терминале"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kendiniz mi giriş yapmak istiyorsunuz? Terminal’de SteamCMD ile Giriş Yapın"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Бажаєте ввійти самостійно? Увійдіть через SteamCMD у Терміналі"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "想自行登录？在“终端”中使用 SteamCMD 登录"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "想自行登入？在「終端機」中使用 SteamCMD 登入"
+          }
+        }
+      }
+    },
     "Preparing preview" : {
       "localizations" : {
         "ar" : {
@@ -52745,6 +54075,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "上一頁"
+          }
+        }
+      }
+    },
+    "Privacy" : {
+      "comment" : "Settings section header",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الخصوصية"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datenschutz"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privacidad"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confidentialité"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "गोपनीयता"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privacy"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "プライバシー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "개인정보 보호"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prywatność"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privacidade"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Конфиденциальность"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gizlilik"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приватність"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐私"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隱私權"
           }
         }
       }
@@ -55105,6 +56530,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "重新整理背景圖片列表"
+          }
+        }
+      }
+    },
+    "Reinstall" : {
+      "comment" : "Button: reinstall SteamCMD",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة التثبيت"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neu installieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reinstalar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réinstaller"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फिर से इंस्टॉल करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reinstalla"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再インストール"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "재설치"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zainstaluj ponownie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reinstalar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переустановить"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeniden Yükle"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевстановити"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新安装"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新安裝"
           }
         }
       }
@@ -59684,6 +61204,101 @@
         }
       }
     },
+    "Run this in Terminal. SteamCMD asks for your password and Steam Guard code there." : {
+      "comment" : "Explains the Terminal login command",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "شغّل هذا في Terminal. سيطلب SteamCMD هناك كلمة السر ورمز Steam Guard."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Führen Sie dies im Terminal aus. SteamCMD fragt dort nach Ihrem Passwort und Ihrem Steam-Guard-Code."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ejecuta esto en Terminal. SteamCMD te pedirá allí tu contraseña y tu código de Steam Guard."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exécutez ceci dans Terminal. SteamCMD y demande votre mot de passe et votre code Steam Guard."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इसे टर्मिनल में चलाएँ. SteamCMD वहाँ आपका पासवर्ड और Steam Guard कोड माँगेगा."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esegui questo comando in Terminale. SteamCMD ti chiederà lì la password e il codice di Steam Guard."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "これをターミナルで実行してください。SteamCMD がそこでパスワードと Steamガードコードを要求します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "터미널에서 이 명령을 실행하십시오. SteamCMD가 터미널에서 비밀번호와 Steam Guard 코드를 요청합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uruchom to w Terminalu. SteamCMD zapyta tam o hasło i kod Steam Guard."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Execute isto no Terminal. O SteamCMD pede sua senha e seu código do Steam Guard lá."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выполните эту команду в Терминале. SteamCMD запросит там ваш пароль и код Steam Guard."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bunu Terminal’de çalıştırın. SteamCMD orada parolanızı ve Steam Guard kodunuzu ister."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виконайте це в Терміналі. SteamCMD запитає там ваш пароль і код Steam Guard."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请在“终端”中运行此命令。SteamCMD 会在那里要求输入你的密码和 Steam 令牌验证码。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請在「終端機」中執行此指令。SteamCMD 會在那裡要求輸入你的密碼和 Steam Guard 代碼。"
+          }
+        }
+      }
+    },
     "Runs Quietly in the Background" : {
       "localizations" : {
         "ar" : {
@@ -63554,6 +65169,196 @@
         }
       }
     },
+    "Setting Up SteamCMD" : {
+      "comment" : "Title of the SteamCMD install screen",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جارٍ إعداد SteamCMD"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD wird eingerichtet"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configurando SteamCMD"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuration de SteamCMD"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD सेट अप किया जा रहा है"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configurazione di SteamCMD"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD を設定中"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD 설정 중"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konfigurowanie SteamCMD"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configurando o SteamCMD"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настройка SteamCMD"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD Ayarlanıyor"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Налаштування SteamCMD"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在设置 SteamCMD"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在設定 SteamCMD"
+          }
+        }
+      }
+    },
+    "Setting up SteamCMD from Valve for Workshop downloads…" : {
+      "comment" : "Progress: installing SteamCMD so Workshop downloads work",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جارٍ إعداد SteamCMD من Valve لتنزيلات الورشة…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD von Valve wird für Workshop-Downloads eingerichtet …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configurando SteamCMD de Valve para las descargas del Workshop…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuration de SteamCMD de Valve pour les téléchargements du Workshop…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workshop डाउनलोड के लिए Valve से SteamCMD सेट अप किया जा रहा है…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configurazione di SteamCMD di Valve per i download dal Workshop…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ワークショップのダウンロード用に Valve の SteamCMD を設定中…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "창작마당 다운로드를 위해 Valve의 SteamCMD를 설정하는 중…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konfigurowanie SteamCMD od Valve do pobierania z Warsztatu…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configurando o SteamCMD da Valve para downloads da Oficina…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настройка SteamCMD от Valve для загрузок из Мастерской…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atölye indirmeleri için Valve’ın SteamCMD’si ayarlanıyor…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Налаштування SteamCMD від Valve для завантажень із Майстерні…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在设置 Valve 的 SteamCMD 以用于创意工坊下载…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在設定 Valve 的 SteamCMD 以用於工作坊下載⋯"
+          }
+        }
+      }
+    },
     "Settings" : {
       "localizations" : {
         "ar" : {
@@ -65343,6 +67148,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "顯示 Open Wallpaper Engine"
+          }
+        }
+      }
+    },
+    "Show in Finder" : {
+      "comment" : "Button: reveal SteamCMD's folder in the Finder",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إظهار في Finder"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Finder anzeigen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar en el Finder"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher dans le Finder"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finder में दिखाएँ"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra nel Finder"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finder で表示"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finder에서 보기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokaż w Finderze"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar no Finder"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показать в Finder"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finder’da Göster"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати у Finder"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在访达中显示"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顯示於 Finder"
           }
         }
       }
@@ -69600,96 +71500,97 @@
         }
       }
     },
-    "Steam Workshop requires steamcmd to download wallpapers.\nInstall it with Homebrew:" : {
+    "Steam Workshop downloads use SteamCMD, Valve's command-line Steam client. Open Wallpaper Engine can download it from Valve for you." : {
+      "comment" : "Explanation on the SteamCMD setup screen",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "تتطلب ورشة Steam أداة steamcmd لتنزيل الخلفيات.\nثبّتها باستخدام Homebrew:"
+            "value" : "تستخدم تنزيلات ورشة Steam أداة SteamCMD، وهي عميل Steam لسطر الأوامر من Valve. يمكن لـ Open Wallpaper Engine تنزيلها من Valve نيابةً عنك."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Steam Workshop benötigt steamcmd, um Hintergrundbilder zu laden.\nInstallieren Sie es mit Homebrew:"
+            "value" : "Downloads aus dem Steam Workshop verwenden SteamCMD, den Befehlszeilen-Steam-Client von Valve. Open Wallpaper Engine kann ihn für Sie von Valve laden."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Steam Workshop necesita steamcmd para descargar fondos de pantalla.\nInstálalo con Homebrew:"
+            "value" : "Las descargas del Steam Workshop usan SteamCMD, el cliente de Steam de línea de comandos de Valve. Open Wallpaper Engine puede descargarlo de Valve por ti."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Le Steam Workshop nécessite steamcmd pour télécharger des fonds d’écran.\nInstallez-le avec Homebrew :"
+            "value" : "Les téléchargements du Steam Workshop utilisent SteamCMD, le client Steam en ligne de commande de Valve. Open Wallpaper Engine peut le télécharger pour vous depuis Valve."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "वॉलपेपर डाउनलोड करने के लिए Steam Workshop को steamcmd की ज़रूरत है.\nइसे Homebrew से इंस्टॉल करें:"
+            "value" : "Steam Workshop डाउनलोड SteamCMD का उपयोग करते हैं, जो Valve का कमांड-लाइन Steam क्लाइंट है. Open Wallpaper Engine इसे आपके लिए Valve से डाउनलोड कर सकता है."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lo Steam Workshop richiede steamcmd per scaricare gli sfondi.\nInstallalo con Homebrew:"
+            "value" : "I download dallo Steam Workshop usano SteamCMD, il client Steam a riga di comando di Valve. Open Wallpaper Engine può scaricarlo da Valve per te."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Steam ワークショップから壁紙をダウンロードするにはsteamcmdが必要です。\nHomebrewでインストールしてください："
+            "value" : "Steam ワークショップのダウンロードには、Valve のコマンドライン版 Steam クライアントである SteamCMD を使用します。Open Wallpaper Engine が Valve から自動でダウンロードできます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Steam 창작마당에서 배경화면을 다운로드하려면 steamcmd가 필요합니다.\nHomebrew로 설치하십시오:"
+            "value" : "Steam 창작마당 다운로드에는 Valve의 명령줄 Steam 클라이언트인 SteamCMD가 사용됩니다. Open Wallpaper Engine이 Valve에서 대신 다운로드할 수 있습니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Warsztat Steam wymaga steamcmd do pobierania tapet.\nZainstaluj go za pomocą Homebrew:"
+            "value" : "Pobieranie z Warsztatu Steam korzysta z SteamCMD, wiersza poleceń klienta Steam od Valve. Open Wallpaper Engine może go pobrać od Valve za Ciebie."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A Oficina Steam requer o steamcmd para baixar imagens de fundo.\nInstale-o com o Homebrew:"
+            "value" : "Os downloads da Oficina Steam usam o SteamCMD, o cliente Steam de linha de comando da Valve. O Open Wallpaper Engine pode baixá-lo da Valve para você."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Для загрузки обоев из Мастерской Steam нужен steamcmd.\nУстановите его с помощью Homebrew:"
+            "value" : "Для загрузок из Мастерской Steam используется SteamCMD — консольный клиент Steam от Valve. Open Wallpaper Engine может загрузить его с сервера Valve за вас."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Steam Atölyesi’nin duvar kâğıtlarını indirmesi için steamcmd gerekir.\nHomebrew ile yükleyin:"
+            "value" : "Steam Atölyesi indirmeleri, Valve’ın komut satırı Steam istemcisi SteamCMD’yi kullanır. Open Wallpaper Engine onu sizin için Valve’dan indirebilir."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Для викачування шпалер із Майстерні Steam потрібен steamcmd.\nВстановіть його за допомогою Homebrew:"
+            "value" : "Для завантажень із Майстерні Steam використовується SteamCMD — консольний клієнт Steam від Valve. Open Wallpaper Engine може завантажити його від Valve для вас."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Steam 创意工坊需要 steamcmd 才能下载墙纸。\n请使用 Homebrew 安装："
+            "value" : "Steam 创意工坊下载使用 SteamCMD，即 Valve 的命令行 Steam 客户端。Open Wallpaper Engine 可以为你从 Valve 下载它。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Steam 工作坊需要 steamcmd 才能下載背景圖片。\n請使用 Homebrew 安裝："
+            "value" : "Steam 工作坊下載使用 SteamCMD，即 Valve 的命令列 Steam 用戶端。Open Wallpaper Engine 可以為你從 Valve 下載。"
           }
         }
       }
@@ -69785,6 +71686,481 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Steam 版本號"
+          }
+        }
+      }
+    },
+    "SteamCMD" : {
+      "comment" : "Settings section header",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD"
+          }
+        }
+      }
+    },
+    "SteamCMD couldn't update itself (exit code %lld): %@" : {
+      "comment" : "Error installing SteamCMD: its self-update failed. %1$lld is the exit code, %2$@ is SteamCMD's last output line",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذر على SteamCMD تحديث نفسه (رمز الخروج %1$lld): %2$@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD konnte sich nicht aktualisieren (Exit-Code %1$lld): %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD no ha podido actualizarse (código de salida %1$lld): %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD n’a pas pu se mettre à jour (code de sortie %1$lld) : %2$@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD खुद को अपडेट नहीं कर सका (एग्ज़िट कोड %1$lld): %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD non è riuscito ad aggiornarsi (codice di uscita %1$lld): %2$@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD を自己アップデートできませんでした（終了コード %1$lld）：%2$@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD가 자체 업데이트하지 못했습니다(종료 코드 %1$lld): %2$@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD nie mógł się zaktualizować (kod wyjścia %1$lld): %2$@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O SteamCMD não conseguiu se atualizar (código de saída %1$lld): %2$@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD не удалось обновиться (код выхода %1$lld): %2$@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD kendini güncelleyemedi (çıkış kodu %1$lld): %2$@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD не вдалося оновитися (код виходу %1$lld): %2$@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD 无法自我更新（退出代码 %1$lld）：%2$@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD 無法自行更新（結束代碼 %1$lld）：%2$@"
+          }
+        }
+      }
+    },
+    "SteamCMD has no saved login for this account. Finish signing in in Terminal, then try again." : {
+      "comment" : "Error after the user clicked I've Signed In but SteamCMD has no cached login",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يوجد في SteamCMD تسجيل دخول محفوظ لهذا الحساب. أكمل تسجيل الدخول في Terminal، ثم حاول مرة أخرى."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD hat keine gespeicherte Anmeldung für diesen Account. Schließen Sie die Anmeldung im Terminal ab und versuchen Sie es dann erneut."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD no tiene ningún inicio de sesión guardado para esta cuenta. Termina de iniciar sesión en Terminal y vuelve a intentarlo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD n’a aucune connexion enregistrée pour ce compte. Terminez la connexion dans Terminal, puis réessayez."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD में इस खाते के लिए कोई सहेजा गया लॉग इन नहीं है. टर्मिनल में साइन इन पूरा करें, फिर से कोशिश करें."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD non ha un accesso salvato per questo account. Completa l’accesso in Terminale, poi riprova."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD にこのアカウントの保存済みログインがありません。ターミナルでサインインを完了してから、もう一度お試しください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD에 이 계정의 저장된 로그인이 없습니다. 터미널에서 로그인을 완료한 후 다시 시도하십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD nie ma zapisanego logowania dla tego konta. Dokończ logowanie w Terminalu, a następnie spróbuj ponownie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O SteamCMD não tem uma sessão salva para esta conta. Termine de iniciar sessão no Terminal e tente novamente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В SteamCMD нет сохранённого входа для этой учётной записи. Завершите вход в Терминале и повторите попытку."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD’de bu hesap için kayıtlı giriş yok. Terminal’de girişi tamamlayıp yeniden deneyin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У SteamCMD немає збереженого входу для цього облікового запису. Завершіть вхід у Терміналі, а потім спробуйте ще раз."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD 中没有此账户的已存储登录。请在“终端”中完成登录，然后再试一次。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD 中沒有此帳號的已儲存登入。請在「終端機」中完成登入，然後再試一次。"
+          }
+        }
+      }
+    },
+    "SteamCMD is only downloaded over HTTPS." : {
+      "comment" : "Error installing SteamCMD: the download URL was not HTTPS",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يتم تنزيل SteamCMD عبر HTTPS فقط."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD wird nur über HTTPS geladen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD solo se descarga mediante HTTPS."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD n’est téléchargé que via HTTPS."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD केवल HTTPS पर डाउनलोड किया जाता है."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD viene scaricato solo tramite HTTPS."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD は HTTPS でのみダウンロードされます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD는 HTTPS를 통해서만 다운로드됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD jest pobierany wyłącznie przez HTTPS."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O SteamCMD só é baixado por HTTPS."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD загружается только по HTTPS."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD yalnızca HTTPS üzerinden indirilir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD завантажується лише через HTTPS."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD 仅通过 HTTPS 下载。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD 僅會透過 HTTPS 下載。"
+          }
+        }
+      }
+    },
+    "SteamCMD is updating itself…" : {
+      "comment" : "Progress: SteamCMD's first-run self-update",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يجري تحديث SteamCMD لنفسه…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD aktualisiert sich …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD se está actualizando…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD se met à jour…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD खुद को अपडेट कर रहा है…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD si sta aggiornando…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD を自己アップデート中…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD가 자체 업데이트하는 중…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD aktualizuje się…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O SteamCMD está se atualizando…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD обновляется…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD kendini güncelliyor…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD оновлюється…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD 正在自我更新…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD 正在自行更新⋯"
           }
         }
       }
@@ -72339,6 +74715,196 @@
         }
       }
     },
+    "The SteamCMD download from Valve isn't a valid archive. Try again later." : {
+      "comment" : "Error installing SteamCMD: the downloaded file is not a valid archive",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ملف SteamCMD الذي تم تنزيله من Valve ليس أرشيفًا صالحًا. حاول مرة أخرى لاحقًا."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der SteamCMD-Download von Valve ist kein gültiges Archiv. Versuchen Sie es später erneut."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La descarga de SteamCMD de Valve no es un archivo comprimido válido. Vuelve a intentarlo más tarde."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le téléchargement de SteamCMD depuis Valve n’est pas une archive valide. Réessayez plus tard."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valve से डाउनलोड किया गया SteamCMD मान्य आर्काइव नहीं है. बाद में फिर से कोशिश करें."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il download di SteamCMD da Valve non è un archivio valido. Riprova più tardi."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valve からダウンロードした SteamCMD は有効なアーカイブではありません。しばらくしてからもう一度お試しください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valve에서 다운로드한 SteamCMD가 유효한 압축 파일이 아닙니다. 나중에 다시 시도하십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pobrany od Valve SteamCMD nie jest prawidłowym archiwum. Spróbuj ponownie później."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O download do SteamCMD da Valve não é um arquivo compactado válido. Tente novamente mais tarde."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Загруженный с сервера Valve SteamCMD не является допустимым архивом. Повторите попытку позже."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valve’dan indirilen SteamCMD geçerli bir arşiv değil. Daha sonra yeniden deneyin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантажений від Valve SteamCMD не є дійсним архівом. Спробуйте пізніше."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从 Valve 下载的 SteamCMD 不是有效的归档。请稍后再试。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從 Valve 下載的 SteamCMD 不是有效的封存檔。請稍後再試一次。"
+          }
+        }
+      }
+    },
+    "The SteamCMD package from Valve has no runnable steamcmd.sh." : {
+      "comment" : "Error installing SteamCMD: the downloaded package lacks an executable steamcmd.sh",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا تحتوي حزمة SteamCMD من Valve على ملف steamcmd.sh قابل للتشغيل."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das SteamCMD-Paket von Valve enthält kein ausführbares steamcmd.sh."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El paquete de SteamCMD de Valve no contiene un steamcmd.sh ejecutable."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le paquet SteamCMD de Valve ne contient pas de steamcmd.sh exécutable."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valve के SteamCMD पैकेज में चलाने योग्य steamcmd.sh नहीं है."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il pacchetto SteamCMD di Valve non contiene un steamcmd.sh eseguibile."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valve の SteamCMD パッケージに実行可能な steamcmd.sh がありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valve의 SteamCMD 패키지에 실행 가능한 steamcmd.sh가 없습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pakiet SteamCMD od Valve nie zawiera wykonywalnego pliku steamcmd.sh."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O pacote do SteamCMD da Valve não contém um steamcmd.sh executável."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В пакете SteamCMD от Valve нет исполняемого steamcmd.sh."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valve’ın SteamCMD paketinde çalıştırılabilir bir steamcmd.sh yok."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У пакеті SteamCMD від Valve немає виконуваного steamcmd.sh."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valve 的 SteamCMD 软件包中没有可运行的 steamcmd.sh。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valve 的 SteamCMD 套件中沒有可執行的 steamcmd.sh。"
+          }
+        }
+      }
+    },
     "The URL must end in a supported image or video extension." : {
       "localizations" : {
         "ar" : {
@@ -72817,6 +75383,101 @@
         }
       }
     },
+    "The selected file isn't a program that can run." : {
+      "comment" : "Error after choosing a steamcmd binary: the file is not executable",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الملف المحدد ليس برنامجًا قابلًا للتشغيل."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die ausgewählte Datei ist kein ausführbares Programm."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El archivo seleccionado no es un programa ejecutable."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le fichier sélectionné n’est pas un programme exécutable."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "चुनी गई फ़ाइल चलाने योग्य प्रोग्राम नहीं है."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il file selezionato non è un programma eseguibile."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選択したファイルは実行可能なプログラムではありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "선택한 파일은 실행 가능한 프로그램이 아닙니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wybrany plik nie jest programem, który można uruchomić."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O arquivo selecionado não é um programa executável."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выбранный файл не является исполняемой программой."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seçilen dosya çalıştırılabilir bir program değil."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вибраний файл не є програмою, яку можна запустити."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所选文件不是可运行的程序。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所選檔案不是可執行的程式。"
+          }
+        }
+      }
+    },
     "The selected folders don't contain any wallpapers." : {
       "localizations" : {
         "ar" : {
@@ -73001,6 +75662,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "主題"
+          }
+        }
+      }
+    },
+    "There isn't enough free disk space to install SteamCMD." : {
+      "comment" : "Error installing SteamCMD: disk full",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا توجد مساحة خالية كافية على القرص لتثبيت SteamCMD."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es ist nicht genügend freier Speicherplatz vorhanden, um SteamCMD zu installieren."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay suficiente espacio libre en el disco para instalar SteamCMD."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’espace disque disponible est insuffisant pour installer SteamCMD."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD इंस्टॉल करने के लिए डिस्क पर पर्याप्त खाली जगह नहीं है."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non c’è abbastanza spazio libero su disco per installare SteamCMD."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD をインストールするための十分な空き容量がありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD를 설치할 디스크 여유 공간이 부족합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Za mało wolnego miejsca na dysku, aby zainstalować SteamCMD."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não há espaço livre em disco suficiente para instalar o SteamCMD."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Недостаточно свободного места на диске для установки SteamCMD."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD’yi yüklemek için yeterli boş disk alanı yok."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Недостатньо вільного місця на диску, щоб установити SteamCMD."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有足够的可用磁盘空间来安装 SteamCMD。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "沒有足夠的可用磁碟空間來安裝 SteamCMD。"
           }
         }
       }
@@ -75030,6 +77786,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "三顯示器"
+          }
+        }
+      }
+    },
+    "Try Again" : {
+      "comment" : "Button: retry the SteamCMD install",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة المحاولة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneut versuchen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reintentar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réessayer"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फिर से कोशिश करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riprova"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "もう一度試す"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다시 시도"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spróbuj ponownie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tentar Novamente"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повторить"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeniden Dene"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спробувати ще раз"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重试"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再試一次"
           }
         }
       }
@@ -78346,6 +81197,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在驗證⋯"
+          }
+        }
+      }
+    },
+    "Valve's server answered with HTTP status %lld." : {
+      "comment" : "Error installing SteamCMD: %lld is the HTTP status code returned by Valve's server",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استجاب خادم Valve برمز حالة HTTP ‏%lld."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Server von Valve hat mit dem HTTP-Status %lld geantwortet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El servidor de Valve ha respondido con el estado HTTP %lld."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le serveur de Valve a répondu avec le statut HTTP %lld."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valve के सर्वर ने HTTP स्टेटस %lld के साथ जवाब दिया."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il server di Valve ha risposto con lo stato HTTP %lld."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valve のサーバが HTTP ステータス %lld を返しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valve 서버가 HTTP 상태 %lld(으)로 응답했습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serwer Valve odpowiedział kodem stanu HTTP %lld."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O servidor da Valve respondeu com o status HTTP %lld."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сервер Valve вернул HTTP-статус %lld."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valve’ın sunucusu HTTP durum kodu %lld ile yanıt verdi."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сервер Valve повернув HTTP-статус %lld."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valve 的服务器返回了 HTTP 状态 %lld。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valve 的伺服器回傳了 HTTP 狀態 %lld。"
           }
         }
       }
@@ -81744,6 +84690,101 @@
         }
       }
     },
+    "Workshop downloads and the assets install use SteamCMD, Valve's command-line Steam client. When none is found, Open Wallpaper Engine downloads it from Valve. Homebrew's steamcmd works too." : {
+      "comment" : "Footer of the SteamCMD settings section",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تستخدم تنزيلات الورشة وتثبيت الموارد أداة SteamCMD، وهي عميل Steam لسطر الأوامر من Valve. إذا لم يتم العثور عليها، يقوم Open Wallpaper Engine بتنزيلها من Valve. تعمل أيضًا أداة steamcmd من Homebrew."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workshop-Downloads und die Installation der Assets verwenden SteamCMD, den Befehlszeilen-Steam-Client von Valve. Wird keiner gefunden, lädt Open Wallpaper Engine ihn von Valve. steamcmd von Homebrew funktioniert ebenfalls."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las descargas del Workshop y la instalación de los recursos usan SteamCMD, el cliente de Steam de línea de comandos de Valve. Si no se encuentra ninguno, Open Wallpaper Engine lo descarga de Valve. El steamcmd de Homebrew también funciona."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les téléchargements du Workshop et l’installation des ressources utilisent SteamCMD, le client Steam en ligne de commande de Valve. S’il est introuvable, Open Wallpaper Engine le télécharge depuis Valve. Le steamcmd de Homebrew fonctionne aussi."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workshop डाउनलोड और एसेट इंस्टॉल SteamCMD का उपयोग करते हैं, जो Valve का कमांड-लाइन Steam क्लाइंट है. कोई न मिलने पर Open Wallpaper Engine इसे Valve से डाउनलोड करता है. Homebrew का steamcmd भी काम करता है."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I download dal Workshop e l’installazione delle risorse usano SteamCMD, il client Steam a riga di comando di Valve. Se non ne viene trovato nessuno, Open Wallpaper Engine lo scarica da Valve. Funziona anche lo steamcmd di Homebrew."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ワークショップのダウンロードとアセットのインストールには、Valve のコマンドライン版 Steam クライアントである SteamCMD を使用します。見つからない場合、Open Wallpaper Engine が Valve からダウンロードします。Homebrew の steamcmd も使用できます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "창작마당 다운로드와 에셋 설치에는 Valve의 명령줄 Steam 클라이언트인 SteamCMD가 사용됩니다. 찾을 수 없으면 Open Wallpaper Engine이 Valve에서 다운로드합니다. Homebrew의 steamcmd도 사용할 수 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pobieranie z Warsztatu i instalacja zasobów korzystają z SteamCMD, wiersza poleceń klienta Steam od Valve. Jeśli nie zostanie znaleziony, Open Wallpaper Engine pobierze go od Valve. steamcmd z Homebrew też działa."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os downloads da Oficina e a instalação dos recursos usam o SteamCMD, o cliente Steam de linha de comando da Valve. Se nenhum for encontrado, o Open Wallpaper Engine o baixa da Valve. O steamcmd do Homebrew também funciona."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для загрузок из Мастерской и установки ресурсов используется SteamCMD — консольный клиент Steam от Valve. Если он не найден, Open Wallpaper Engine загрузит его с сервера Valve. steamcmd из Homebrew тоже подойдёт."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atölye indirmeleri ve varlıkların yüklenmesi, Valve’ın komut satırı Steam istemcisi SteamCMD’yi kullanır. Bulunamazsa Open Wallpaper Engine onu Valve’dan indirir. Homebrew’un steamcmd’si de çalışır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для завантажень із Майстерні та встановлення ресурсів використовується SteamCMD — консольний клієнт Steam від Valve. Якщо його не знайдено, Open Wallpaper Engine завантажить його від Valve. steamcmd із Homebrew також підходить."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "创意工坊下载和资源安装使用 SteamCMD，即 Valve 的命令行 Steam 客户端。如果找不到，Open Wallpaper Engine 会从 Valve 下载。Homebrew 的 steamcmd 也可以使用。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "工作坊下載和資源安裝使用 SteamCMD，即 Valve 的命令列 Steam 用戶端。若找不到，Open Wallpaper Engine 會從 Valve 下載。Homebrew 的 steamcmd 也可以使用。"
+          }
+        }
+      }
+    },
     "Workshop downloads, their dependencies and imported wallpapers go into this folder. You can move the current library to the new location." : {
       "localizations" : {
         "ar" : {
@@ -82590,6 +85631,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "你的預設組合"
+          }
+        }
+      }
+    },
+    "Your password and Steam Guard code go straight to SteamCMD, Valve's official tool. Open Wallpaper Engine never stores, logs or sends them anywhere. It remembers only your account name, to reuse SteamCMD's saved login." : {
+      "comment" : "Privacy note on the Steam login screen",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تنتقل كلمة السر ورمز Steam Guard مباشرةً إلى SteamCMD، أداة Valve الرسمية. لا يقوم Open Wallpaper Engine أبدًا بتخزينهما أو تسجيلهما أو إرسالهما إلى أي مكان. ولا يتذكر سوى اسم حسابك، لإعادة استخدام تسجيل الدخول المحفوظ في SteamCMD."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ihr Passwort und Ihr Steam-Guard-Code gehen direkt an SteamCMD, das offizielle Tool von Valve. Open Wallpaper Engine speichert, protokolliert oder sendet sie niemals. Es merkt sich nur Ihren Accountnamen, um die gespeicherte Anmeldung von SteamCMD wiederzuverwenden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu contraseña y tu código de Steam Guard van directamente a SteamCMD, la herramienta oficial de Valve. Open Wallpaper Engine nunca los guarda, registra ni envía a ningún sitio. Solo recuerda tu nombre de cuenta, para reutilizar el inicio de sesión guardado de SteamCMD."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre mot de passe et votre code Steam Guard sont transmis directement à SteamCMD, l’outil officiel de Valve. Open Wallpaper Engine ne les stocke, ne les journalise et ne les envoie jamais. Il ne retient que votre nom de compte, pour réutiliser la connexion enregistrée de SteamCMD."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपका पासवर्ड और Steam Guard कोड सीधे Valve के आधिकारिक टूल SteamCMD को जाते हैं. Open Wallpaper Engine उन्हें कभी स्टोर, लॉग या कहीं नहीं भेजता. यह SteamCMD के सहेजे गए लॉग इन का फिर से उपयोग करने के लिए केवल आपके खाते का नाम याद रखता है."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La password e il codice di Steam Guard vanno direttamente a SteamCMD, lo strumento ufficiale di Valve. Open Wallpaper Engine non li salva, non li registra e non li invia mai da nessuna parte. Ricorda solo il nome del tuo account, per riutilizzare l’accesso salvato di SteamCMD."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "パスワードと Steamガードコードは、Valve の公式ツールである SteamCMD に直接渡されます。Open Wallpaper Engine がそれらを保存、記録、または送信することはありません。SteamCMD の保存済みログインを再利用するため、アカウント名のみを記憶します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "비밀번호와 Steam Guard 코드는 Valve의 공식 도구인 SteamCMD로 바로 전달됩니다. Open Wallpaper Engine은 이를 저장, 기록하거나 어디에도 전송하지 않습니다. SteamCMD에 저장된 로그인을 재사용하기 위해 계정 이름만 기억합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hasło i kod Steam Guard trafiają bezpośrednio do SteamCMD, oficjalnego narzędzia Valve. Open Wallpaper Engine nigdy ich nie przechowuje, nie zapisuje w dzienniku ani nigdzie nie wysyła. Zapamiętuje tylko nazwę konta, aby ponownie użyć zapisanego logowania SteamCMD."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sua senha e seu código do Steam Guard vão direto para o SteamCMD, a ferramenta oficial da Valve. O Open Wallpaper Engine nunca os armazena, registra ou envia para lugar nenhum. Ele guarda apenas o nome da sua conta, para reutilizar a sessão salva do SteamCMD."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваш пароль и код Steam Guard передаются напрямую в SteamCMD — официальный инструмент Valve. Open Wallpaper Engine никогда не сохраняет, не записывает в журнал и никуда их не отправляет. Он запоминает только имя вашей учётной записи, чтобы повторно использовать сохранённый вход SteamCMD."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parolanız ve Steam Guard kodunuz doğrudan Valve’ın resmî aracı SteamCMD’ye gider. Open Wallpaper Engine bunları asla saklamaz, günlüğe kaydetmez veya bir yere göndermez. SteamCMD’nin kayıtlı girişini yeniden kullanmak için yalnızca hesap adınızı hatırlar."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваш пароль і код Steam Guard передаються безпосередньо в SteamCMD — офіційний інструмент Valve. Open Wallpaper Engine ніколи їх не зберігає, не записує в журнал і нікуди не надсилає. Він памʼятає лише імʼя вашого облікового запису, щоб повторно використовувати збережений вхід SteamCMD."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的密码和 Steam 令牌验证码会直接交给 Valve 的官方工具 SteamCMD。Open Wallpaper Engine 绝不会存储、记录或发送它们。它只会记住你的账户名称，以便重复使用 SteamCMD 已存储的登录。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你的密碼和 Steam Guard 代碼會直接交給 Valve 的官方工具 SteamCMD。Open Wallpaper Engine 絕不會儲存、記錄或傳送它們。它只會記住你的帳號名稱，以便重複使用 SteamCMD 已儲存的登入。"
           }
         }
       }
