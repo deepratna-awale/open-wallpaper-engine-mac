@@ -3148,7 +3148,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // it lands; nothing the analysis tracks says when.
         let warming = pipelinesCompiling
         inputs.sceneChanged = shape.layers != analysedShape.layers || shape.target != analysedShape.target
-            || warming || analysedWarmUp
+            || warming || analysedWarmUp || textRaster.hasFinished
         analysedShape = shape
         analysedWarmUp = warming
         layerAnalysis.update(inputs)

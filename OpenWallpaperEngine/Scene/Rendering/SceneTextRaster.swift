@@ -121,6 +121,14 @@ final class SceneTextRasterQueue {
         return running + finished.count
     }
 
+    /// Whether a job finished since the last frame took them: the frame that takes it must draw
+    /// (and redraw the text layer) even when nothing else changed.
+    var hasFinished: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return !finished.isEmpty
+    }
+
     init(device: MTLDevice, loader: MTKTextureLoader) {
         self.device = device
         self.loader = loader
