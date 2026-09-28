@@ -11,6 +11,7 @@
 		4923DF97305D13130038BE65 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4923DF95305D13130038BE65 /* MetalKit.framework */; };
 		AA1B2C3D4E5F600200ABCD05 /* SpriteKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA1B2C3D4E5F600100ABCD05 /* SpriteKit.framework */; };
 		EE3000000000000000000001 /* ShaderToolchain in Frameworks */ = {isa = PBXBuildFile; productRef = EE3000000000000000000002 /* ShaderToolchain */; };
+		EE4000000000000000000001 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = EE4000000000000000000002 /* Sparkle */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -68,6 +69,7 @@
 				4923DF96305D13130038BE65 /* MetalFX.framework in Frameworks */,
 				AA1B2C3D4E5F600200ABCD05 /* SpriteKit.framework in Frameworks */,
 				EE3000000000000000000001 /* ShaderToolchain in Frameworks */,
+				EE4000000000000000000001 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -149,6 +151,7 @@
 			name = OpenWallpaperEngine;
 			packageProductDependencies = (
 				EE3000000000000000000002 /* ShaderToolchain */,
+				EE4000000000000000000002 /* Sparkle */,
 			);
 			productName = OpenWallpaperEngine;
 			productReference = 5EC47E762A2DB2E600120CCC /* Open Wallpaper Engine.app */;
@@ -232,6 +235,7 @@
 			);
 			packageReferences = (
 				EE3000000000000000000003 /* XCLocalSwiftPackageReference "Vendor/ShaderToolchain" */,
+				EE4000000000000000000003 /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
 			preferredProjectObjectVersion = 77;
 			mainGroup = 5EC47E6D2A2DB2E600120CCC;
@@ -423,6 +427,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "OpenWallpaperEngine-Info.plist";
+				OWE_VERSION_LABEL = "$(MARKETING_VERSION)";
+				SPARKLE_PUBLIC_ED_KEY = "";
 				INFOPLIST_KEY_CFBundleDisplayName = "Open Wallpaper Engine";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
@@ -462,6 +468,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "OpenWallpaperEngine-Info.plist";
+				OWE_VERSION_LABEL = "$(MARKETING_VERSION)";
+				SPARKLE_PUBLIC_ED_KEY = "";
 				INFOPLIST_KEY_CFBundleDisplayName = "Open Wallpaper Engine";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
@@ -556,10 +564,26 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		EE4000000000000000000003 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = exactVersion;
+				version = 2.10.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		EE3000000000000000000002 /* ShaderToolchain */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ShaderToolchain;
+		};
+		EE4000000000000000000002 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EE4000000000000000000003 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
