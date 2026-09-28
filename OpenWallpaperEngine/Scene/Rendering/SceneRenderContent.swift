@@ -32,6 +32,14 @@ enum SceneMetalTextureSource {
         }
     }
 
+    /// The size WE gives an image object that names none (an `autosize` model placed without a
+    /// `size`, e.g. by `thisScene.createLayer('models/x.json')`): a sprite sheet's frame, the
+    /// first `TEXS` frame's edges, not the atlas it is packed in; any other image's own size.
+    var unsizedLayerSize: SIMD2<Float> {
+        guard case let .animated(animation) = self, let frame = animation.frames.first else { return pixelSize }
+        return SIMD2(simd_length(SIMD2(frame.width, frame.widthY)), simd_length(SIMD2(frame.heightX, frame.height)))
+    }
+
     /// The texture's pixels that a `.tex-json` sprite-sheet frame size is measured in: the whole
     /// allocated texture (TEXS frame rects include the .tex padding). An image's pixels come from
     /// its bitmap: an `NSImage` made from a `CGImage` reports its representation's `pixelsWide` at
