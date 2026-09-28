@@ -60,6 +60,10 @@ final class EffectGraphRenderer {
         /// How far the chain's blur-like buffers are reduced (`EffectResolutionPolicy`).
         var resolution = EffectResolutionPolicy.full
         var programs: [[UniformProgram?]] = []
+        /// Each render pass's pipeline, resolved once the chain is ready (N5): no key or lock per pass.
+        var pipelines: [[MTLRenderPipelineState?]] = []
+        /// Each effect's FBOs sampled with repeat UVs (N5: made once, not per pass).
+        var repeatingFBOs: [Set<String>] = []
         /// Last output of a chain that doesn't change over time, and what produced it. When the chain
         /// draws its last pass into the scene, the output is that pass's input, and `staticDrawn` the pass.
         var staticOutput: (key: StaticChainKey, output: MTLTexture)?
@@ -341,20 +345,22 @@ final class EffectGraphRenderer {
         let width = input.width
         let height = input.height
         let state: LayerState
-        let chain = effects.map { $0.passes.map(\.variantKey) }
         let targetFormats = context.targetFormats
-        if let existing = layers[layerID], existing.chain == chain, existing.targetFormats == targetFormats {
+        // Compared in place, without building the chain's keys every frame (N5).
+        if let existing = layers[layerID], Self.chain(existing.chain, matches: effects), existing.targetFormats == targetFormats {
             state = existing
         } else {
             if let stale = layers[layerID] { recycleTargets(stale) }
             state = LayerState(width: width, height: height)
-            state.chain = chain
+            state.chain = effects.map { $0.passes.map(\.variantKey) }
             state.targetFormats = targetFormats
             layers[layerID] = state
         }
         if !state.ready {
             guard let formats = readyFormats(effects, targetFormats: targetFormats) else { return (nil, nil) }
             state.formats = formats
+            state.pipelines = resolvedPipelines(effects, formats: formats)
+            state.repeatingFBOs = effects.map { Set($0.fbos.filter { $0.uvs == "repeat" }.map(\.name)) }
             state.programs = effects.map { effect in
                 effect.passes.map { pass in pass.variant.map { UniformProgram(layout: $0.uniforms, constants: pass.constants) } }
             }
@@ -443,7 +449,7 @@ final class EffectGraphRenderer {
                 case .render:
                     guard let variant = pass.variant, let program = state.programs[effectIndex][passIndex],
                           let format = state.formats[effectIndex][passIndex],
-                          let pipeline = readyPipeline(pass, format: format) else { continue }
+                          let pipeline = state.pipelines[effectIndex][passIndex] else { continue }
                     let standInSizes = StandIn(input: input, inputSize: standIn, targets: state.standInSizes,
                                                label: passTimer == nil ? "" : Self.passLabel(layerID, effect: effect, pass: passIndex))
                     if let last, last == (effectIndex, passIndex) {
@@ -452,7 +458,7 @@ final class EffectGraphRenderer {
                                               previous: previous, fbos: fbos, standIn: standInSizes,
                                               targetSize: SIMD2(Float(state.standInSize.x), Float(state.standInSize.y)),
                                               scriptWrites: context.constantWrites[effect.effectIndex] ?? [],
-                                              repeatingFBOs: Set(effect.fbos.filter { $0.uvs == "repeat" }.map(\.name)))
+                                              repeatingFBOs: state.repeatingFBOs[effectIndex])
                         state.fbos[effectIndex] = fbos
                         break chain
                     }
@@ -471,7 +477,7 @@ final class EffectGraphRenderer {
                            current: current, previous: previous, fbos: fbos, context: context,
                            standIn: standInSizes,
                            scriptWrites: context.constantWrites[effect.effectIndex] ?? [],
-                           repeatingFBOs: Set(effect.fbos.filter { $0.uvs == "repeat" }.map(\.name)),
+                           repeatingFBOs: state.repeatingFBOs[effectIndex],
                            commandBuffer: commandBuffer)
                     didRender = true
                     if pass.target == nil { current = output }
@@ -696,9 +702,27 @@ final class EffectGraphRenderer {
         return ready ? formats : nil
     }
 
-    private func readyPipeline(_ pass: SceneEffectPassPlan, format: MTLPixelFormat) -> MTLRenderPipelineState? {
-        let key = Self.pipelineKey(pass, format: format)
-        return pipelineLock.withLock { pipelines[key] }
+    /// Every render pass's pipeline once `readyFormats` found them all compiled (a failed one is
+    /// nil, and its pass is skipped). Held by the layer, so a trim that drops idle pipelines from
+    /// the cache never drops one a layer still draws with.
+    private func resolvedPipelines(_ effects: [SceneEffectPlan], formats: [[MTLPixelFormat?]]) -> [[MTLRenderPipelineState?]] {
+        pipelineLock.withLock {
+            effects.enumerated().map { effectIndex, effect in
+                effect.passes.enumerated().map { passIndex, pass in
+                    formats[effectIndex][passIndex].flatMap { pipelines[Self.pipelineKey(pass, format: $0)] }
+                }
+            }
+        }
+    }
+
+    /// Whether `chain` (variant keys per effect and pass) is `effects`' chain.
+    private static func chain(_ chain: [[String]], matches effects: [SceneEffectPlan]) -> Bool {
+        guard chain.count == effects.count else { return false }
+        for (keys, effect) in zip(chain, effects) {
+            guard keys.count == effect.passes.count else { return false }
+            for (key, pass) in zip(keys, effect.passes) where key != pass.variantKey { return false }
+        }
+        return true
     }
 
     private static func pipelineKey(_ pass: SceneEffectPassPlan, format: MTLPixelFormat) -> String {
