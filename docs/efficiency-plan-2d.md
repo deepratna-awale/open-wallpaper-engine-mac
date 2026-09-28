@@ -256,3 +256,23 @@ Three packages run in parallel in each phase. The files named are owned exclusiv
 3. A package whose numbers regress or whose thresholds fail is reverted from the phase and redone; the others stay.
 4. Phases run in order 0 → 5. Within a phase the listed packages run in parallel (3 at a time).
 5. After Phase 5, with every optimisation in the PR, the coordinator runs the **full test suite** once (only the coordinator, one xcodebuild at a time). Then update `docs/roadmap.md` and `docs/progress-snapshot.md` with the final numbers.
+
+## 9. Audit: what stayed and what went (2026-09-28)
+
+Rule: an optimisation stays only for a clear, repeatable win on real wallpapers (roughly ≥ 5 % GPU ms or ≥ 50 MB on at least two wallpapers, a large load-time cut, or idle GPU going to zero). Method: -O build, `SceneFrameBenchmarkTests` on the six baseline wallpapers at 3840×2160 and 3024×1964, off and on runs alternated, 5 rounds, medians with [min–max]. Texture memory and scene-cache load were measured with a separate process per run.
+
+| Optimisation | Measured (off → on, median) | Verdict |
+|---|---|---|
+| Blur/bloom/glow/god-ray buffers at ½ (slider stop 4) | Lofi Cafe 11.8 → 10.8 ms (−6 to −9 %), Tsunade 14.2 → 13.5 ms (−4 to −5 %), others ±1 % | kept |
+| Identity-composite skip + late drawable | Dance Club −5 to −7 %, Tsunade −5 to −7 %, 3245833232 −4 to −5 %, witcher −3 to −5 % | kept |
+| Idle skipping + adaptive rate | One piece girls encodes 0 of 120 frames when idle (GPU 0); animated scenes unchanged | kept, with the slider (it sets the blur divisor and the rate caps) and the power policy |
+| Optimise textures (BC7 + full mips) | GPU texture memory −5 to −30 MB on five wallpapers, −195 MB on One piece girls (339 → 144 MB); its load 1.30 → 0.35 s | kept |
+| Per-layer analysis | Needed by idle skipping; render-thread CPU is 0.4–3.6 ms per frame now against 0.4–1.7 ms at the baseline | kept |
+| Loading on the preparation pool, background scans, preview crossfade | Responsiveness guarantees, not speed-ups | kept |
+| Culling | ±2 % on all six | dropped |
+| Bottom-run flattening (+ pipeline-completion counter) | One piece girls −5 to −8 %, others ±2 % | dropped (one wallpaper) |
+| Pass fusion (shader and renderer side) | Dance Club −7 to −10 %, others −3 to +3 %; many fused variants failed to translate | dropped (one wallpaper) |
+| Half colour outputs | −0 to −2 % | dropped; translator revision 12 |
+| Per-scene heap, exact scene-target size, chain-key caching (together) | −3 to +2 % GPU, memory within 30 MB, CPU unchanged | dropped (the layer still holds its resolved pipelines) |
+| On-disk scene cache file | load 29–58 ms either way (within 1 ms) | dropped |
+| project.json in memory, music-sync values in memory, settings snapshot | cached lookup 29 µs vs 13–32 µs read + parse; a UserDefaults read is 0.3 µs; the snapshot had no reader | dropped |
