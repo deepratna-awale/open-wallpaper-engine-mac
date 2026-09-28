@@ -17,19 +17,22 @@ final class AudioSpectrumTests: XCTestCase {
 
     func testBluesteinMatchesADirectDFT() throws {
         let length = 37
-        let dft = try XCTUnwrap(BluesteinDFT(length: length))
+        // All bins, and the first 12 on the smaller padding the spectrum uses.
+        for bins in [length, 12] {
+        let dft = try XCTUnwrap(BluesteinDFT(length: length, bins: bins))
         let real = (0..<length).map { Float(sin(Double($0) * 0.7) + 0.3) }
         let imaginary = (0..<length).map { Float(cos(Double($0) * 1.3)) * 0.5 }
-        var power = [Float](repeating: 0, count: length)
+        var power = [Float](repeating: 0, count: bins)
         dft.powerSpectrum(real: real, imaginary: imaginary, into: &power)
-        for k in 0..<length {
+        for k in 0..<bins {
             var re = 0.0, im = 0.0
             for n in 0..<length {
                 let angle = -2 * Double.pi * Double(n * k) / Double(length)
                 re += Double(real[n]) * cos(angle) - Double(imaginary[n]) * sin(angle)
                 im += Double(real[n]) * sin(angle) + Double(imaginary[n]) * cos(angle)
             }
-            XCTAssertEqual(Double(power[k]), re * re + im * im, accuracy: 1e-3 * max(1, re * re + im * im), "bin \(k)")
+            XCTAssertEqual(Double(power[k]), re * re + im * im, accuracy: 1e-3 * max(1, re * re + im * im), "bins \(bins), bin \(k)")
+        }
         }
     }
 

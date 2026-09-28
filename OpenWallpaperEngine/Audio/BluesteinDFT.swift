@@ -7,9 +7,11 @@ import Foundation
 ///
 /// X[k] = Σₙ x[n]·e^(−2πink/L) = w[k]·Σₙ (x[n]·w[n])·conj(w[k−n]) with w[m] = e^(−iπm²/L), so
 /// |X[k]|² = |(a ⊛ b)[k]|² for a[n] = x[n]·w[n] and b[m] = conj(w[m]); the circular convolution runs
-/// on a padded power-of-two FFT. Not thread-safe: one instance per thread (it owns its scratch).
+/// on a padded power-of-two FFT. Only the first `bins` outputs are kept, so the padding needs only
+/// L + bins − 1 points (4096 instead of 8192 for WE's 640 of 2089). Not thread-safe: one instance per thread (it owns its scratch).
 final class BluesteinDFT {
     let length: Int
+    let bins: Int
     private let paddedLength: Int
     private let log2Padded: vDSP_Length
     private let setup: FFTSetup
@@ -20,13 +22,15 @@ final class BluesteinDFT {
     private var workReal: [Float]
     private var workImaginary: [Float]
 
-    init?(length: Int) {
-        guard length > 1 else { return nil }
+    init?(length: Int, bins: Int? = nil) {
+        let bins = min(bins ?? length, length)
+        guard length > 1, bins > 0 else { return nil }
         var padded = 1
-        while padded < 2 * length - 1 { padded <<= 1 }
+        while padded < length + bins - 1 { padded <<= 1 }
         let log2Padded = vDSP_Length(padded.trailingZeroBitCount)
         guard let setup = vDSP_create_fftsetup(log2Padded, FFTRadix(kFFTRadix2)) else { return nil }
         self.length = length
+        self.bins = bins
         self.paddedLength = padded
         self.log2Padded = log2Padded
         self.setup = setup
@@ -42,12 +46,14 @@ final class BluesteinDFT {
         self.chirpReal = chirpReal
         self.chirpImaginary = chirpImaginary
 
-        // b[m] = conj(w[m]) for m in −(L−1)…(L−1), wrapped into the padded length.
+        // b[m] = conj(w[m]) for m in −(L−1)…(bins−1), wrapped into the padded length.
         kernelReal = [Float](repeating: 0, count: padded)
         kernelImaginary = [Float](repeating: 0, count: padded)
         for m in 0..<length {
-            kernelReal[m] = chirpReal[m]
-            kernelImaginary[m] = -chirpImaginary[m]
+            if m < bins {
+                kernelReal[m] = chirpReal[m]
+                kernelImaginary[m] = -chirpImaginary[m]
+            }
             if m > 0 {
                 kernelReal[padded - m] = chirpReal[m]
                 kernelImaginary[padded - m] = -chirpImaginary[m]
@@ -62,11 +68,11 @@ final class BluesteinDFT {
         vDSP_destroy_fftsetup(setup)
     }
 
-    /// Writes |X[k]|² for k in 0..<`power.count` (at most `length`) of the forward DFT of
+    /// Writes |X[k]|² for k in 0..<`power.count` (at most `bins`) of the forward DFT of
     /// `real + i·imaginary`, both `length` long. Non-finite input propagates, as in any DFT.
     func powerSpectrum(real: [Float], imaginary: [Float], into power: inout [Float]) {
         precondition(real.count == length && imaginary.count == length, "BluesteinDFT input length")
-        precondition(power.count <= length, "BluesteinDFT asked for more bins than it has")
+        precondition(power.count <= bins, "BluesteinDFT asked for more bins than it has")
         for n in 0..<length {
             let re = real[n], im = imaginary[n], wr = chirpReal[n], wi = chirpImaginary[n]
             workReal[n] = re * wr - im * wi
