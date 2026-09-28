@@ -530,7 +530,6 @@ final class SceneModelRenderer: SceneModelDrawing {
             guard let self else { return }
             self.pipelineLock.withLock {
                 self.pending.remove(key)
-                ScenePipelineCompletions.landed()
                 if let result { self.pipelines[key] = result } else { self.failed.insert(key) }
             }
         }

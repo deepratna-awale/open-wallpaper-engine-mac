@@ -757,7 +757,6 @@ final class EffectGraphRenderer {
             guard let self else { return }
             self.pipelineLock.withLock {
                 self.pendingPipelines.remove(key)
-                ScenePipelineCompletions.landed()
                 if let result { self.pipelines[key] = result } else { self.failedPipelines.insert(key) }
             }
         }

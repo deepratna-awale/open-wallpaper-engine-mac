@@ -486,7 +486,6 @@ final class ParticleMaterialRenderer {
             guard let self else { return }
             self.pipelineLock.withLock {
                 self.pendingPipelines.remove(key)
-                ScenePipelineCompletions.landed()
                 if let pipeline { self.pipelines[key] = pipeline } else { self.failedPipelines[key] = failure ?? "unknown" }
             }
         }
