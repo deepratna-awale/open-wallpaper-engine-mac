@@ -28604,6 +28604,100 @@
         }
       }
     },
+    "Get your key on Steam" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "احصل على مفتاحك من Steam"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlüssel bei Steam holen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obtén tu clave en Steam"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obtenir votre clé sur Steam"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam पर अपनी कुंजी पाएं"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ottieni la tua chiave su Steam"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam でキーを取得"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam에서 키 받기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pobierz klucz na Steam"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obtenha sua chave no Steam"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Получить ключ в Steam"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anahtarınızı Steam’den alın"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отримати ключ у Steam"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Steam 上获取密钥"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Steam 上取得金鑰"
+          }
+        }
+      }
+    },
     "Girls" : {
       "comment" : "Workshop genre tag",
       "localizations" : {
@@ -40435,6 +40529,101 @@
         }
       }
     },
+    "Log in to Steam first, then install the assets." : {
+      "comment" : "Assets install error",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "سجّل الدخول إلى Steam أولًا، ثم ثبّت الأصول."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Melde dich zuerst bei Steam an und installiere dann die Assets."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia sesión en Steam primero y luego instala los recursos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connectez-vous d’abord à Steam, puis installez les ressources."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पहले Steam में लॉग इन करें, फिर एसेट इंस्टॉल करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accedi prima a Steam, poi installa le risorse."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まず Steam にログインしてから、アセットをインストールしてください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "먼저 Steam에 로그인한 다음 에셋을 설치하세요."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Najpierw zaloguj się do Steam, a następnie zainstaluj zasoby."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entre no Steam primeiro e depois instale os recursos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сначала войдите в Steam, затем установите ресурсы."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önce Steam’e giriş yapın, ardından varlıkları yükleyin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спочатку увійдіть у Steam, а потім установіть ресурси."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请先登录 Steam，然后安装资源。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請先登入 Steam，然後安裝資源。"
+          }
+        }
+      }
+    },
     "Log in to Steam to download. You can do it in the Workshop tab or the setup assistant." : {
       "localizations" : {
         "ar" : {
@@ -40525,6 +40714,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "登入 Steam 後才能下載。可以在「工作坊」標籤頁或設定輔助程式中登入。"
+          }
+        }
+      }
+    },
+    "Log In…" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تسجيل الدخول…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmelden …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar sesión…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se connecter…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लॉग इन करें…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accedi…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ログイン…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로그인…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaloguj…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entrar…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Войти…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Giriş Yap…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Увійти…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登录…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登入…"
           }
         }
       }
@@ -41091,6 +41374,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已登入為 %@"
+          }
+        }
+      }
+    },
+    "Logging in to Steam…" : {
+      "comment" : "Assets install status",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جارٍ تسجيل الدخول إلى Steam…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anmeldung bei Steam …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciando sesión en Steam…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connexion à Steam…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam में लॉग इन हो रहा है…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accesso a Steam…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam にログイン中…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam에 로그인하는 중…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Logowanie do Steam…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entrando no Steam…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход в Steam…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam’e giriş yapılıyor…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вхід у Steam…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在登录 Steam…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在登入 Steam…"
           }
         }
       }
@@ -50537,6 +50915,101 @@
         }
       }
     },
+    "On Steam's page, enter any domain name, e.g. \"localhost\"." : {
+      "comment" : "Steam's API key page asks for a domain name",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "في صفحة Steam، أدخل أي اسم نطاق، مثل \"localhost\"."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gib auf der Steam-Seite einen beliebigen Domainnamen ein, z. B. „localhost“."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En la página de Steam, escribe cualquier nombre de dominio, p. ej., \"localhost\"."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sur la page de Steam, saisissez n’importe quel nom de domaine, par exemple « localhost »."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam के पेज पर कोई भी डोमेन नाम दर्ज करें, जैसे \"localhost\"।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nella pagina di Steam, inserisci un nome di dominio qualsiasi, ad es. \"localhost\"."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam のページでは任意のドメイン名（例：\"localhost\"）を入力します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam 페이지에서 아무 도메인 이름이나 입력하세요(예: \"localhost\")."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na stronie Steam wpisz dowolną nazwę domeny, np. „localhost”."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na página do Steam, digite qualquer nome de domínio, por exemplo, \"localhost\"."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На странице Steam введите любое доменное имя, например «localhost»."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steam sayfasında herhangi bir alan adı girin, ör. \"localhost\"."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На сторінці Steam введіть будь-яке доменне ім’я, наприклад «localhost»."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Steam 页面上输入任意域名，例如“localhost”。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Steam 頁面上輸入任意網域名稱，例如「localhost」。"
+          }
+        }
+      }
+    },
     "One Wallpaper Per Display" : {
       "localizations" : {
         "ar" : {
@@ -52419,6 +52892,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在圖層上開啟或關閉圓形遮罩。"
+          }
+        }
+      }
+    },
+    "Optional" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختياري"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optional"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opcional"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Facultatif"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वैकल्पिक"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Facoltativo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任意"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "선택 사항"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opcjonalnie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opcional"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Необязательно"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İsteğe bağlı"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Необов’язково"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可选"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選用"
           }
         }
       }
@@ -78092,6 +78659,101 @@
         }
       }
     },
+    "SteamCMD has no saved login for %@. Log in to Steam again, then install the assets." : {
+      "comment" : "Assets install error; %@ is a Steam account name",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يحتوي SteamCMD على تسجيل دخول محفوظ للحساب %@. سجّل الدخول إلى Steam مرة أخرى، ثم ثبّت الأصول."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD hat keine gespeicherte Anmeldung für %@. Melde dich erneut bei Steam an und installiere dann die Assets."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD no tiene un inicio de sesión guardado para %@. Vuelve a iniciar sesión en Steam y luego instala los recursos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD n’a aucune connexion enregistrée pour %@. Reconnectez-vous à Steam, puis installez les ressources."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD में %@ का कोई सहेजा गया लॉगिन नहीं है। Steam में फिर से लॉग इन करें, फिर एसेट इंस्टॉल करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD non ha un accesso salvato per %@. Accedi di nuovo a Steam, poi installa le risorse."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD に %@ の保存済みログインがありません。Steam にもう一度ログインしてから、アセットをインストールしてください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD에 %@의 저장된 로그인이 없습니다. Steam에 다시 로그인한 다음 에셋을 설치하세요."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD nie ma zapisanego logowania dla %@. Zaloguj się ponownie do Steam, a następnie zainstaluj zasoby."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O SteamCMD não tem um login salvo para %@. Entre no Steam novamente e depois instale os recursos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В SteamCMD нет сохранённого входа для %@. Снова войдите в Steam, затем установите ресурсы."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD’de %@ için kayıtlı oturum yok. Steam’e yeniden giriş yapın, ardından varlıkları yükleyin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У SteamCMD немає збереженого входу для %@. Знову увійдіть у Steam, а потім установіть ресурси."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD 没有 %@ 的已保存登录。请重新登录 Steam，然后安装资源。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD 沒有 %@ 的已儲存登入。請重新登入 Steam，然後安裝資源。"
+          }
+        }
+      }
+    },
     "SteamCMD has no saved login for this account. Finish signing in in Terminal, then try again." : {
       "comment" : "Error after the user clicked I've Signed In but SteamCMD has no cached login",
       "localizations" : {
@@ -78183,6 +78845,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "SteamCMD 中沒有此帳號的已儲存登入。請在「終端機」中完成登入，然後再試一次。"
+          }
+        }
+      }
+    },
+    "SteamCMD has no saved login for this account. Log in again." : {
+      "comment" : "Login error after SteamCMD reported its cached login missing",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يحتوي SteamCMD على تسجيل دخول محفوظ لهذا الحساب. سجّل الدخول مرة أخرى."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD hat keine gespeicherte Anmeldung für dieses Konto. Melde dich erneut an."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD no tiene un inicio de sesión guardado para esta cuenta. Vuelve a iniciar sesión."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD n’a aucune connexion enregistrée pour ce compte. Reconnectez-vous."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD में इस खाते का कोई सहेजा गया लॉगिन नहीं है। फिर से लॉग इन करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD non ha un accesso salvato per questo account. Accedi di nuovo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD にこのアカウントの保存済みログインがありません。もう一度ログインしてください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD에 이 계정의 저장된 로그인이 없습니다. 다시 로그인하세요."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD nie ma zapisanego logowania dla tego konta. Zaloguj się ponownie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O SteamCMD não tem um login salvo para esta conta. Entre novamente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В SteamCMD нет сохранённого входа для этой учётной записи. Войдите снова."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD’de bu hesap için kayıtlı oturum yok. Yeniden giriş yapın."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У SteamCMD немає збереженого входу для цього облікового запису. Увійдіть знову."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD 没有此账户的已保存登录。请重新登录。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SteamCMD 沒有此帳號的已儲存登入。請重新登入。"
           }
         }
       }
@@ -91462,6 +92219,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "工作坊"
+          }
+        }
+      }
+    },
+    "Workshop browsing and search use a Steam Web API key. You can skip this and add one later in Settings or the Workshop tab. The key is kept in your Keychain." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يستخدم تصفح Workshop والبحث فيه مفتاح Steam Web API. يمكنك تخطي هذه الخطوة وإضافة مفتاح لاحقًا في الإعدادات أو في علامة التبويب Workshop. يُحفظ المفتاح في سلسلة المفاتيح."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Durchsuchen und die Suche im Workshop verwenden einen Steam-Web-API-Schlüssel. Du kannst diesen Schritt überspringen und später in den Einstellungen oder im Tab „Workshop“ einen hinzufügen. Der Schlüssel wird in deinem Schlüsselbund gespeichert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Para explorar y buscar en Workshop se usa una clave de la API web de Steam. Puedes omitir este paso y añadirla más tarde en Ajustes o en la pestaña Workshop. La clave se guarda en tu llavero."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La navigation et la recherche dans le Workshop utilisent une clé d’API Web Steam. Vous pouvez ignorer cette étape et en ajouter une plus tard dans Réglages ou dans l’onglet Workshop. La clé est conservée dans votre trousseau."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workshop ब्राउज़ करने और खोजने के लिए Steam Web API कुंजी का उपयोग होता है। आप इसे छोड़ सकते हैं और बाद में सेटिंग्स या Workshop टैब में कुंजी जोड़ सकते हैं। कुंजी आपके Keychain में रखी जाती है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La navigazione e la ricerca nel Workshop usano una chiave Steam Web API. Puoi saltare questo passaggio e aggiungerne una più tardi in Impostazioni o nella scheda Workshop. La chiave è conservata nel Portachiavi."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workshop の閲覧と検索には Steam Web API キーを使います。この手順はスキップして、あとで設定または Workshop タブで追加できます。キーはキーチェーンに保存されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workshop 둘러보기와 검색에는 Steam Web API 키가 사용됩니다. 이 단계를 건너뛰고 나중에 설정이나 Workshop 탭에서 추가할 수 있습니다. 키는 키체인에 보관됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przeglądanie i wyszukiwanie w Workshopie wymaga klucza Steam Web API. Możesz pominąć ten krok i dodać klucz później w Ustawieniach lub na karcie Workshop. Klucz jest przechowywany w pęku kluczy."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A navegação e a busca no Workshop usam uma chave de API Web do Steam. Você pode pular esta etapa e adicionar uma depois em Ajustes ou na aba Workshop. A chave fica guardada nas suas Chaves."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для просмотра и поиска в Workshop нужен ключ Steam Web API. Этот шаг можно пропустить и добавить ключ позже в настройках или на вкладке Workshop. Ключ хранится в Связке ключей."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workshop’a göz atma ve arama bir Steam Web API anahtarı kullanır. Bu adımı atlayıp daha sonra Ayarlar’da veya Workshop sekmesinde bir anahtar ekleyebilirsiniz. Anahtar Anahtar Zinciri’nde saklanır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для перегляду й пошуку в Workshop потрібен ключ Steam Web API. Цей крок можна пропустити й додати ключ пізніше в Параметрах або на вкладці Workshop. Ключ зберігається у В’язці ключів."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "浏览和搜索 Workshop 需要 Steam Web API 密钥。你可以跳过此步骤，稍后在设置或 Workshop 标签页中添加。密钥保存在你的钥匙串中。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "瀏覽和搜尋 Workshop 需要 Steam Web API 金鑰。你可以略過此步驟，稍後在設定或 Workshop 標籤頁中加入。金鑰會儲存在你的鑰匙圈中。"
           }
         }
       }
