@@ -1,7 +1,8 @@
 #!/bin/bash
-# Development helper: copies the Wallpaper Engine assets the app uses out of a local Wallpaper
-# Engine install, the same subset Settings › Assets keeps from the user's Steam copy
-# (`WallpaperEngineAssetsCache`).
+# Development helper for when you have a WE install on disk; Scripts/fetch-we-assets.sh downloads
+# the files from Steam instead (docs/ci-assets.md) and is what CI uses. Copies the Wallpaper
+# Engine assets the app uses out of a local Wallpaper Engine install, the same subset
+# Settings › Assets keeps from the user's Steam copy (`WallpaperEngineAssetsCache`).
 #
 #   ./Scripts/fill-assets-cache.sh <wallpaper_engine install or its assets dir> [destination]
 #
