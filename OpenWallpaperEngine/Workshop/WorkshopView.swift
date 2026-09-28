@@ -237,6 +237,14 @@ private struct WorkshopBrowserView: View {
             }
         }
         ToolbarItem {
+            Button {
+                contentViewModel.isCollectionImportPresented = true
+            } label: {
+                Label("Import Workshop Collection…", systemImage: "square.stack.3d.down.right")
+            }
+            .help("Download the items of a Workshop collection")
+        }
+        ToolbarItem {
             Picker("Sort", selection: $viewModel.sortOrder) {
                 ForEach(WorkshopSortOrder.allCases) { order in
                     Text(order.displayName).tag(order)

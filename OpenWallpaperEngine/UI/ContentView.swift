@@ -21,6 +21,8 @@ struct ContentView: View {
     @ObservedObject var wallpaperViewModel: WallpaperViewModel
     
     @State private var isRemoteWallpaperSheetPresented = false
+    /// Picked on the setup assistant's last step; opened once the sheet has closed.
+    @State private var onboardingShortcut: OnboardingShortcut?
 
     private var tab: Int { viewModel.topTabBarSelection }
 
@@ -142,9 +144,23 @@ struct ContentView: View {
         .alert(isPresented: $viewModel.importAlertPresented, error: viewModel.importAlertError) {
 
         }
-        .sheet(isPresented: $globalSettingsViewModel.isFirstLaunch) {
-            FirstLaunchView()
+        .sheet(isPresented: $globalSettingsViewModel.isFirstLaunch, onDismiss: openOnboardingShortcut) {
+            OnboardingView(steamCmd: viewModel.steamCmd,
+                           installer: AppDelegate.shared.steamCmdInstaller,
+                           assets: AppDelegate.shared.assets,
+                           imports: AppDelegate.shared.onboardingImports,
+                           onShortcut: { onboardingShortcut = $0 })
                 .environmentObject(globalSettingsViewModel)
+                .presentationBackground(.regularMaterial)
+        }
+        .sheet(isPresented: $viewModel.isCollectionImportPresented) {
+            WorkshopCollectionImportView(model: AppDelegate.shared.onboardingImports.collection)
+                .frame(width: 680, height: 560)
+                .presentationBackground(.regularMaterial)
+        }
+        .sheet(isPresented: $viewModel.isSteamLibraryImportPresented) {
+            SteamLibraryImportView(model: AppDelegate.shared.onboardingImports.library)
+                .frame(width: 680, height: 560)
                 .presentationBackground(.regularMaterial)
         }
         .sheet(isPresented: $viewModel.isUnsafeWallpaperWarningPresented) {
@@ -164,6 +180,16 @@ struct ContentView: View {
                 .presentationBackground(.regularMaterial)
         }
         .frame(minWidth: 1000, minHeight: 640, idealHeight: 800)
+    }
+
+    private func openOnboardingShortcut() {
+        defer { onboardingShortcut = nil }
+        switch onboardingShortcut {
+        case .installed: viewModel.topTabBarSelection = 0
+        case .workshop: viewModel.topTabBarSelection = 1
+        case .displaySettings: viewModel.isDisplaySettingsReveal = true
+        case nil: break
+        }
     }
 
     /// Up to three titles, then "and N more", as one list in the user's language.

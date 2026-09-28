@@ -128,6 +128,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// Fetches the Workshop items shown wallpapers borrow assets from.
     lazy var workshopDependencies = WorkshopDependencyService(steamCmd: contentViewModel.steamCmd)
     private var workshopDependencyCancellable: AnyCancellable?
+    /// The collection, subscription and Steam library imports, shared by the setup assistant and
+    /// the Installed and Workshop tabs.
+    lazy var onboardingImports = OnboardingImports(contentViewModel: contentViewModel,
+                                                   wallpaperViewModel: wallpaperViewModel)
     private var audioOutputCancellable: AnyCancellable?
     private var syncPropertiesCancellable: AnyCancellable?
     private var mediaIntegrationCancellable: AnyCancellable?

@@ -59,6 +59,9 @@ class ContentViewModel: ObservableObject, DropDelegate {
     @Published var isStaging = false
     
     @Published var topTabBarSelection: Int = 0
+    /// The Workshop collection and Steam library imports (Installed's Add menu, the Workshop tab).
+    @Published var isCollectionImportPresented = false
+    @Published var isSteamLibraryImportPresented = false
     /// The Playlists tab's list of playlists, in the main window's sidebar.
     @Published var isPlaylistSidebarReveal = true
     /// The Installed tab's Details inspector.

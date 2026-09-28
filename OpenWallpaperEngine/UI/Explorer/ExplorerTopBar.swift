@@ -35,6 +35,13 @@ struct ExplorerTopBar: ViewModifier {
                             AppDelegate.shared.openImportVideoPanel()
                         }
                         Button("Add Video/Image URL…", systemImage: "link", action: onAddURL)
+                        Divider()
+                        Button("Import Workshop Collection…", systemImage: "square.stack.3d.down.right") {
+                            viewModel.isCollectionImportPresented = true
+                        }
+                        Button("Import from Steam Library…", systemImage: "externaldrive.badge.person.crop") {
+                            viewModel.isSteamLibraryImportPresented = true
+                        }
                     } label: {
                         Label("Add Wallpaper", systemImage: "plus")
                     }

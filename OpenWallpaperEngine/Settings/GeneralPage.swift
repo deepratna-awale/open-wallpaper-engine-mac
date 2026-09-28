@@ -48,6 +48,21 @@ struct GeneralPage: SettingsPage {
                         }
                     }
                 }
+                if viewModel.languageChange.needsRelaunch(for: viewModel.settings.language) {
+                    HStack {
+                        Spacer()
+                        Button("Restart Now") { AppRelauncher.relaunch() }
+                    }
+                }
+                HStack {
+                    Text("Setup Assistant")
+                    Spacer()
+                    Button("Run Setup Again…") {
+                        OnboardingFlow.reopen()
+                        viewModel.isFirstLaunch = true
+                        AppDelegate.shared.openMainWindow()
+                    }
+                }
             } header: {
                 Label("Basic Setup", systemImage: "gearshape.fill")
             } footer: {

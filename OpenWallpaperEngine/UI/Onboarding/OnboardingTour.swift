@@ -1,112 +1,58 @@
-//
-//  FirstLaunchView.swift
-//  Open Wallpaper Engine
-//
-//  Created by Haren on 2023/8/4.
-//
-
 import SwiftUI
 
-struct FirstLaunchView: View {
-    @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var globalSettingsViewModel: GlobalSettingsViewModel
-
+/// The feature tour the first-run sheet showed, now a page of the setup assistant's welcome step:
+/// one page of highlights at a time, with arrows and dots to move between them.
+struct OnboardingTour: View {
     @State private var pageIndex = 0
-    @State private var checked = false
 
     private var pages: [Page] { Page.all }
-    private var isLastPage: Bool { pageIndex == pages.count - 1 }
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
-            Divider()
-            pageBody(pages[pageIndex])
-                .frame(height: 320)
-            AssetsMissingBanner(assets: AppDelegate.shared.assets)
-            SteamCmdSetupView(installer: AppDelegate.shared.steamCmdInstaller, compact: true)
-                .padding(.horizontal, 24)
-                .padding(.bottom, 8)
-            Divider()
-            footer
-        }
-        .textSelection(.enabled)
-        .frame(width: 620)
-    }
-
-    private var header: some View {
-        VStack(spacing: 6) {
-            Text(pages[pageIndex].title)
-                .font(.largeTitle.bold())
-                .multilineTextAlignment(.center)
-            Text(pages[pageIndex].subtitle)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.top, 22)
-        .padding(.horizontal, 24)
-        .padding(.bottom, 16)
-    }
-
-    private func pageBody(_ page: Page) -> some View {
-        ScrollView {
-            VStack(spacing: 18) {
-                Spacer(minLength: 0)
-                ForEach(page.sections) { section in
+        VStack(spacing: 10) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(pages[pageIndex].title)
+                    .font(.headline)
+                Text(pages[pageIndex].subtitle)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Button {
+                    withAnimation(.easeInOut(duration: 0.15)) { pageIndex -= 1 }
+                } label: {
+                    Label("Back", systemImage: "chevron.left").labelStyle(.iconOnly)
+                }
+                .disabled(pageIndex == 0)
+                HStack(spacing: 5) {
+                    ForEach(pages.indices, id: \.self) { index in
+                        Circle()
+                            .fill(index == pageIndex ? Color.accentColor : Color.secondary.opacity(0.3))
+                            .frame(width: 6, height: 6)
+                    }
+                }
+                Button {
+                    withAnimation(.easeInOut(duration: 0.15)) { pageIndex += 1 }
+                } label: {
+                    Label("Next", systemImage: "chevron.right").labelStyle(.iconOnly)
+                }
+                .disabled(pageIndex == pages.count - 1)
+            }
+            .buttonStyle(.borderless)
+            VStack(spacing: 10) {
+                ForEach(pages[pageIndex].sections) { section in
                     NewSection(title: section.title,
                                text: section.text,
                                systemImage: section.systemImage,
                                imageColor: section.imageColor)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                Spacer(minLength: 0)
             }
-            // Rows keep their text left aligned, but the block as a whole sits centred.
-            .frame(maxWidth: 470)
-            .frame(maxWidth: .infinity, minHeight: 320)
-            .padding(.vertical, 20)
-            .padding(.horizontal, 24)
+            .id(pageIndex)
+            .transition(.opacity)
         }
-        .id(pageIndex)
-        .transition(.opacity)
-    }
-
-    private var footer: some View {
-        VStack(spacing: 12) {
-            HStack(spacing: 6) {
-                ForEach(pages.indices, id: \.self) { index in
-                    Circle()
-                        .fill(index == pageIndex ? Color.accentColor : Color.secondary.opacity(0.3))
-                        .frame(width: 7, height: 7)
-                }
-            }
-            HStack {
-                Toggle("Never show this again until next update", isOn: $checked)
-                Spacer()
-                Button("Back") {
-                    withAnimation(.easeInOut(duration: 0.15)) { pageIndex -= 1 }
-                }
-                .disabled(pageIndex == 0)
-                Button(isLastPage ? "Finish" : "Next") {
-                    if isLastPage {
-                        UserDefaults.app.set(!checked, forKey: "IsFirstLaunch")
-                        dismiss()
-                    } else {
-                        withAnimation(.easeInOut(duration: 0.15)) { pageIndex += 1 }
-                    }
-                }
-                .glassButtonStyle(.prominent)
-                .keyboardShortcut(.defaultAction)
-            }
-        }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 16)
     }
 }
 
-extension FirstLaunchView {
+extension OnboardingTour {
     struct Section: Identifiable {
         let id = UUID()
         let title: LocalizedStringKey
@@ -197,13 +143,13 @@ extension FirstLaunchView {
         var body: some View {
             HStack(alignment: .top, spacing: 4) {
                 Image(systemName: systemImage)
-                    .frame(width: 50, height: 50)
-                    .font(.largeTitle)
+                    .frame(width: 40, height: 36)
+                    .font(.title)
                     .foregroundStyle(imageColor)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
                         .foregroundStyle(textColor)
-                        .font(.title3)
+                        .font(.body)
                         .bold()
                     Text(text)
                         .foregroundStyle(textColor)
@@ -212,17 +158,5 @@ extension FirstLaunchView {
                 Spacer()
             }
         }
-    }
-}
-
-extension AppDelegate {
-    @objc func resetFirstLaunch() {
-        UserDefaults.app.set(true, forKey: "IsFirstLaunch")
-    }
-}
-
-struct FirstLaunchView_Previews: PreviewProvider {
-    static var previews: some View {
-        FirstLaunchView()
     }
 }

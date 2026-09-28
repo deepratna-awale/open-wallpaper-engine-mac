@@ -34,7 +34,11 @@ class GlobalSettingsViewModel: ObservableObject {
     
     @Published var selection = 0
     
-    @Published var isFirstLaunch = UserDefaults.app.value(forKey: "IsFirstLaunch") as? Bool ?? true
+    /// The setup assistant is showing (at launch until finished, or from "Run setup again…").
+    @Published var isFirstLaunch = OnboardingFlow.showsAtLaunch()
+
+    /// The language this process runs in; a different choice applies at the next launch.
+    let languageChange: LanguageChange
     
     var didFinishLaunchingNotificationCancellable: Cancellable?
     var didCurrentWallpaperChangeCancellable: Cancellable?
@@ -42,12 +46,15 @@ class GlobalSettingsViewModel: ObservableObject {
     var didChangeAdjustMenuBarTintCancellable: Cancellable?
     
     init() {
+        let loaded: GlobalSettings
         if let data = UserDefaults.app.data(forKey: "GlobalSettings"),
            let settings = try? JSONDecoder().decode(GlobalSettings.self, from: data) {
-            self.settings = settings
+            loaded = settings
         } else {
-            self.settings = GlobalSettings()
+            loaded = GlobalSettings()
         }
+        self.settings = loaded
+        languageChange = LanguageChange(atLaunch: loaded.language)
         OWELog.apply(logLevel: settings.logLevel)
 
         // Add observers
