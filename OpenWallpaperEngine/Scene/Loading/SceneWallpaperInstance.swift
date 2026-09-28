@@ -50,7 +50,8 @@ final class SceneWallpaperInstance {
     init(wallpaper: WEWallpaper, environment: SceneWallpaperEnvironment, screenID: String,
          properties: WallpaperPropertyScope = .shared) {
         key = WallpaperInstanceKey(wallpaper, properties: properties)
-        viewModel = SceneWallpaperViewModel(wallpaper: wallpaper, propertyScope: properties)
+        // Loaded on the preparation pool: the displays show the preview until the scene is ready.
+        viewModel = SceneWallpaperViewModel(wallpaper: wallpaper, propertyScope: properties, loadsInBackground: true)
         self.environment = environment
         renderer = SceneMetalRenderer(pixelFormat: .bgra8Unorm, scriptServices: environment.scriptServices,
                                       screenID: screenID)
@@ -337,7 +338,10 @@ final class SceneWallpaperInstance {
                 let resolved = self.pendingImpact
                 self.pendingImpact = .none
                 if resolved == .reloadScene {
+                    // The reload runs in the background; its commit bumps the revision, and
+                    // `update()` then builds the content. The current content stays until then.
                     self.viewModel.reloadCurrentScene()
+                    return
                 } else {
                     // Content is memoised against metalRevision, so without this the rebuild
                     // would just hand back the pre-change scene.

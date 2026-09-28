@@ -22,17 +22,36 @@ class SceneWallpaperViewModel: ObservableObject {
 
     @Published var currentWallpaper: WEWallpaper {
         willSet {
-            loadScene(from: newValue)
+            if loadsInBackground { startLoad(from: newValue) } else { loadScene(from: newValue) }
         }
     }
 
-    private(set) var metalRevision = 0
+    /// Loads run on the preparation pool (`startLoad`) instead of the calling thread. The app's
+    /// instances load this way, so setting a wallpaper never blocks the main thread; tools and
+    /// tests that want the scene at once load synchronously.
+    let loadsInBackground: Bool
+
+    /// Guards the small state the main thread reads and writes (the revision, the settings, what
+    /// the loaded scene declares), so the main thread never waits on a load or a content build
+    /// holding `sceneLock`.
+    private let stateLock = NSLock()
+    private var _metalRevision = 0
+    var metalRevision: Int { stateLock.withLock { _metalRevision } }
+    /// The settings `setRenderSettings` last gave; the next content build takes them.
+    private var pendingRenderSettings = SceneRenderSettings()
+    private var loadedTextureReductionSize: SIMD2<Float>?
+    private var loadedContentUserProperties = Set<String>()
+    /// The newest load; an older one that finishes later is dropped.
+    private var loadGeneration = 0
+    private var loadJob: PreparationPool.Job?
+    /// Guards `settings` (the resolved settings identity), which loads resolve off the main thread.
+    private let identityLock = NSLock()
 
     /// Every content invalidation must both bump the revision and tell SwiftUI, or `updateNSView`
     /// never runs and the renderer keeps drawing the previous wallpaper until some unrelated
     /// re-render happens to come along.
     private func bumpRevision() {
-        metalRevision &+= 1
+        stateLock.withLock { _metalRevision &+= 1 }
         if Thread.isMainThread {
             objectWillChange.send()
         } else {
@@ -46,7 +65,8 @@ class SceneWallpaperViewModel: ObservableObject {
     private let contentQueue = DispatchQueue(label: "com.winddog.wallpaper-engine.scene-content", qos: .userInitiated)
     private var cachedContent: SceneMetalContent?
     private var cachedContentRevision = -1
-    /// The user's quality settings the content is built for (`setRenderSettings`).
+    /// The user's quality settings the content is built for: `pendingRenderSettings` as the
+    /// build in progress took them (under the scene lock).
     private var renderSettings = SceneRenderSettings()
     /// The engine combos of the content being built, for every material plan built with it.
     private var sceneEngineCombos = SceneEngineCombos()
@@ -61,7 +81,9 @@ class SceneWallpaperViewModel: ObservableObject {
     private var videoStream: VideoTextureStream?
     private var builtVideoFrameSize: SIMD2<Float>?
 
-    /// Builds the render content off the main thread and delivers it on the main queue.
+    /// Builds the render content off the main thread and delivers it on the main queue. While a
+    /// load is in flight it delivers the previous content (nil at first); the load's commit bumps
+    /// the revision, and the content is built again.
     func contentAsync(completion: @escaping (SceneMetalContent?) -> Void) {
         contentQueue.async { [weak self] in
             let content = self?.metalContent()
@@ -77,7 +99,7 @@ class SceneWallpaperViewModel: ObservableObject {
     private var loadedProject: SceneJSON?
     /// User properties the built content reads (layer visibility, bound values outside scripts):
     /// changing any other only reaches the scripts (`applyUserProperties`), without a rebuild.
-    private(set) var contentUserProperties = Set<String>()
+    var contentUserProperties: Set<String> { stateLock.withLock { loadedContentUserProperties } }
     /// The loaded scene has SceneScripts.
     private var hasScriptSites = false
     private var loadedWallpaperDirectory: URL?
@@ -121,25 +143,6 @@ class SceneWallpaperViewModel: ObservableObject {
     private static let parseCacheLock = NSLock()
     nonisolated(unsafe) private static var parseCache: [String: ParsedScene] = [:]
 
-    /// Size + mtime of the backing file, so an updated wallpaper re-parses instead of going stale.
-    private static func sourceSignature(for url: URL) -> String {
-        let attributes = try? FileManager.default.attributesOfItem(atPath: url.path(percentEncoded: false))
-        let size = (attributes?[.size] as? NSNumber)?.int64Value ?? -1
-        let modified = (attributes?[.modificationDate] as? Date)?.timeIntervalSince1970 ?? -1
-        return "\(size)|\(modified)"
-    }
-
-    /// `decodeScene` bakes per-object origin and JSON edits into the parsed scene, so those edits
-    /// have to take part in the cache key or a reload serves the pre-edit scene and the object
-    /// snaps back to its authored position.
-    private static func overrideSignature(settingsKey: String) -> String {
-        let values = UserDefaults.app.dictionary(forKey: settingsKey) as? [String: String] ?? [:]
-        let edits = values.filter { $0.key.hasPrefix("_owe_scene_object_") }
-        guard !edits.isEmpty else { return "-" }
-        return String(edits.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }
-            .joined(separator: ";").hashValue)
-    }
-
     private static func cachedParse(for directory: URL, signature: String) -> ParsedScene? {
         parseCacheLock.lock()
         defer { parseCacheLock.unlock() }
@@ -182,16 +185,21 @@ class SceneWallpaperViewModel: ObservableObject {
 
     /// `effectTranslator` translates and caches every shader variant the scene needs; the app's
     /// shared one (`defaultEffectTranslator`) unless a caller keeps its own cache (shader prewarm, tests).
+    /// `loadsInBackground` starts the load on the preparation pool and returns at once
+    /// (`startLoad`); otherwise the scene is loaded when init returns.
     init(wallpaper: WEWallpaper, propertyScope: WallpaperPropertyScope = .shared,
-         effectTranslator: ShaderVariantTranslator? = SceneWallpaperViewModel.defaultEffectTranslator) {
+         effectTranslator: ShaderVariantTranslator? = SceneWallpaperViewModel.defaultEffectTranslator,
+         loadsInBackground: Bool = false) {
         self.currentWallpaper = wallpaper
         self.propertyScope = propertyScope
         self.effectTranslator = effectTranslator
+        self.loadsInBackground = loadsInBackground
         Self.log("init: wallpaper=\(wallpaper.project.title) dir=\(wallpaper.wallpaperDirectory.path)")
-        loadScene(from: wallpaper)
+        if loadsInBackground { startLoad(from: wallpaper) } else { loadScene(from: wallpaper) }
     }
 
     deinit {
+        loadJob?.cancel()
         // The built layer hands a strong reference to the renderer, so releasing this view model
         // is not enough on its own to silence the soundtrack.
         videoStream?.stop()
@@ -203,50 +211,192 @@ class SceneWallpaperViewModel: ObservableObject {
         return value == "video" || value == "remote-video"
     }
 
+    /// Reloads the scene: in the background when this model loads there (`startLoad`), whose
+    /// commit then bumps the revision.
     func reloadCurrentScene() {
-        loadScene(from: currentWallpaper, prepareDefaults: false)
+        if loadsInBackground {
+            startLoad(from: currentWallpaper, prepareDefaults: false)
+        } else {
+            loadScene(from: currentWallpaper, prepareDefaults: false)
+        }
     }
 
     /// Drops the memoised scene content so the next build re-reads user properties that are
     /// consumed at build time, such as an authored effect's enabled flag.
     func invalidateContent() {
-        sceneLock.lock()
-        defer { sceneLock.unlock() }
         bumpRevision()
     }
 
     /// The user's quality settings; a change rebuilds the content, whose engine combos follow them.
+    /// The next build takes them, so this never waits on a build in progress.
     func setRenderSettings(_ settings: SceneRenderSettings) {
-        sceneLock.lock()
-        defer { sceneLock.unlock() }
-        guard settings != renderSettings else { return }
-        let rebuild = settings.contentKey != renderSettings.contentKey
-        renderSettings = settings
+        let rebuild: Bool? = stateLock.withLock {
+            guard settings != pendingRenderSettings else { return nil }
+            let rebuild = settings.contentKey != pendingRenderSettings.contentKey
+            pendingRenderSettings = settings
+            return rebuild
+        }
         // Settings applied per frame (reflection, the bloom gate, …) keep the content.
-        if rebuild { bumpRevision() }
+        if rebuild == true { bumpRevision() }
     }
 
     /// The loaded scene's size as WE's automatic texture resolution weighs it
     /// (`TextureReduction.orthographicSize(of:)`); nil for a perspective scene or none.
     var textureReductionSceneSize: SIMD2<Float>? {
-        sceneLock.lock()
-        defer { sceneLock.unlock() }
-        return loadedScene.flatMap(TextureReduction.orthographicSize(of:))
+        stateLock.withLock { loadedTextureReductionSize }
     }
 
     // MARK: - Scene Loading
 
+    /// What reading a wallpaper's scene yields, before it becomes the loaded scene (`commit`).
+    private struct SceneRead {
+        let wallpaper: WEWallpaper
+        /// The parse's identity: the scene cache key's name (the files, edits, properties,
+        /// displays and settings it was read for).
+        let signature: String
+        let hasPackage: Bool
+        var parser: PKGParser?
+        var scene: WEScene?
+        var document: SceneJSON?
+        var project: SceneJSON?
+        var source = "parsed"
+        var contentUserProperties = Set<String>()
+        var hasScriptSites = false
+    }
+
+    /// Loads `wallpaper` on the calling thread; the scene is loaded when it returns. The app loads
+    /// through `startLoad` instead, off the main thread.
     func loadScene(from wallpaper: WEWallpaper, prepareDefaults: Bool = true) {
-        sceneLock.lock()
-        defer { sceneLock.unlock() }
+        let generation = supersedeLoads()
+        guard let read = readScene(wallpaper, isCurrent: { true }) else { return }
+        commit(read, generation: generation, prepareDefaults: prepareDefaults)
+    }
+
+    /// Starts loading `wallpaper` on the preparation pool and returns at once: the key, the cache
+    /// read or the parse, and the commit all run there, and the main thread only sees the new
+    /// revision (`objectWillChange`). A newer load (a quick switch, a reload) cancels this one.
+    func startLoad(from wallpaper: WEWallpaper, prepareDefaults: Bool = true) {
+        let generation = supersedeLoads()
+        let job = Self.loadPool.submit(priority: .settingWallpaper, estimatedBytes: 64 << 20) { [weak self] job in
+            guard let self else { return }
+            defer { self.stateLock.withLock { if self.loadGeneration == generation { self.loadJob = nil } } }
+            let isCurrent = { !job.isCancelled && self.isCurrentLoad(generation) }
+            guard isCurrent(), let read = self.readScene(wallpaper, isCurrent: isCurrent) else { return }
+            self.commit(read, generation: generation, prepareDefaults: prepareDefaults)
+        }
+        stateLock.withLock { if loadGeneration == generation, !job.isCancelled { loadJob = job } }
+    }
+
+    /// The pool background loads run on (tests swap it).
+    nonisolated(unsafe) static var loadPool = PreparationPool.shared
+
+    /// A load started by `startLoad` has not committed yet.
+    var isLoading: Bool { stateLock.withLock { loadJob != nil } }
+
+    /// Starts a new load generation, cancelling the load in flight; returns the new generation.
+    private func supersedeLoads() -> Int {
+        stateLock.withLock {
+            loadGeneration &+= 1
+            loadJob?.cancel()
+            loadJob = nil
+            return loadGeneration
+        }
+    }
+
+    private func isCurrentLoad(_ generation: Int) -> Bool {
+        stateLock.withLock { loadGeneration == generation }
+    }
+
+    /// Reads `wallpaper`'s scene: the in-memory parse, else the scene cache file, else the scene
+    /// file itself (and a background preparation of the cache file). Touches no loaded state, so
+    /// it runs without the scene lock; nil when `isCurrent` says a newer load took over.
+    private func readScene(_ wallpaper: WEWallpaper, isCurrent: () -> Bool) -> SceneRead? {
         let signpost = OWESignpost.begin(OWESignpost.scene, "loadScene")
         defer { signpost.end() }
         OWEFrameMetrics.countSceneReload()
+        // Symlink in any already-installed cross-workshop-item asset dependencies before parsing,
+        // so paths like "effects/workshop/<id>/name/effect.json" resolve as ordinary loose files.
+        WorkshopDependencyResolver.linkInstalledDependencies(for: wallpaper)
+        let dir = wallpaper.wallpaperDirectory
+        let sceneFile = wallpaper.project.file  // e.g. "scene.json" or "gifscene.json"
+        let settingsKey = settingsIdentity(for: dir).key(.userProperties, scope: propertyScope)
+
+        // Derive PKG name from scene file: "scene.json" → "scene.pkg", "gifscene.json" → "gifscene.pkg"
+        let pkgURL = dir.appending(path: (sceneFile as NSString).deletingPathExtension + ".pkg")
+        let looseSceneURL = dir.appending(path: sceneFile)
+        let hasPackage = FileManager.default.fileExists(atPath: pkgURL.path(percentEncoded: false))
+
+        // One key for the in-memory parse and the cache file, computed once: it covers every
+        // file of the wallpaper, the edits baked into the parse, and what the file is built for.
+        let request = preparationRequest(for: wallpaper, settingsKey: settingsKey)
+        let key = request.key
+        guard isCurrent() else { return nil }
+        var read = SceneRead(wallpaper: wallpaper, signature: key.name, hasPackage: hasPackage)
+        var resolvedPlan: Data?
+        if let cached = Self.cachedParse(for: dir, signature: read.signature) {
+            read.parser = cached.parser
+            read.scene = cached.scene
+            read.document = cached.document
+            read.source = "shared parse"
+        } else if let store = Self.sceneCacheStore,
+                  let file = store.read(wallpaper: request.wallpaperID, key: key),
+                  let plan = file.sections[.scenePlan],
+                  let decoded = try? JSONDecoder().decode(WEScene.self, from: plan) {
+            // The prepared scene plan already has the edits applied; the package is still opened
+            // for the assets it holds.
+            read.parser = hasPackage ? try? PKGParser(url: pkgURL) : nil
+            read.scene = decoded
+            read.document = Self.document(plan)
+            read.source = "scene cache"
+        } else if hasPackage {
+            do {
+                let parser = try PKGParser(url: pkgURL)
+                read.parser = parser
+                if let data = parser.extractFile(named: sceneFile) {
+                    (read.scene, read.document, resolvedPlan) = try decodeScene(data, edits: request.edits)
+                }
+            } catch {
+                Self.log("Failed to parse PKG: \(error)")
+            }
+        } else if FileManager.default.fileExists(atPath: looseSceneURL.path(percentEncoded: false)) {
+            // Loose files (no .pkg)
+            do {
+                let data = try Data(contentsOf: looseSceneURL)
+                (read.scene, read.document, resolvedPlan) = try decodeScene(data, edits: request.edits)
+            } catch {
+                Self.log("Failed to parse loose \(sceneFile): \(error)")
+            }
+        }
+        // A miss prepares the cache file in the background from the plan just parsed.
+        if let resolvedPlan, let store = Self.sceneCacheStore {
+            ScenePreparation.schedule(request, key: key, priority: .currentWallpaper,
+                                      store: store, scenePlan: resolvedPlan)
+        }
+        guard isCurrent() else { return nil }
+        if let scene = read.scene {
+            Self.storeParse(ParsedScene(parser: read.parser, scene: scene, signature: read.signature,
+                                        document: read.document), for: dir)
+        }
+        if let document = read.document {
+            read.contentUserProperties = Self.contentUserProperties(in: document)
+            read.hasScriptSites = !SceneScriptSiteBuilder(wallpaperID: "").sites(in: document).isEmpty
+        }
+        read.project = Self.project(in: dir)
+        return read
+    }
+
+    /// Makes `read` the loaded scene, unless a newer load superseded it; short, under the scene lock.
+    private func commit(_ read: SceneRead, generation: Int, prepareDefaults: Bool) {
+        sceneLock.lock()
+        defer { sceneLock.unlock() }
+        guard isCurrentLoad(generation) else { return }
+        let wallpaper = read.wallpaper
+        let dir = wallpaper.wallpaperDirectory
 
         // Re-parsing the same wallpaper (a settings change) must keep decoded textures and fonts;
         // only a different wallpaper invalidates them. Textures are shared process-wide and keyed
         // per wallpaper, so they survive switches and are reclaimed by NSCache under pressure.
-        if loadedWallpaperDirectory != wallpaper.wallpaperDirectory {
+        if loadedWallpaperDirectory != dir {
             assetDataCache.removeAll(keepingCapacity: true)
             registeredFontNames.removeAll(keepingCapacity: true)
             // Otherwise a stale stream either keeps playing the previous video's audio after
@@ -258,76 +408,9 @@ class SceneWallpaperViewModel: ObservableObject {
             shaderCompat = SceneShaderCompat(assetsDirectory: WallpaperEngineAssets.directory)
             loadedProjectId = Self.workshopId(of: wallpaper)
         }
-        // Symlink in any already-installed cross-workshop-item asset dependencies before parsing,
-        // so paths like "effects/workshop/<id>/name/effect.json" resolve as ordinary loose files.
-        WorkshopDependencyResolver.linkInstalledDependencies(for: wallpaper)
-        let dir = wallpaper.wallpaperDirectory
-        let sceneFile = wallpaper.project.file  // e.g. "scene.json" or "gifscene.json"
-        let settingsKey = settingsIdentity(for: dir).key(.userProperties, scope: propertyScope)
+        pkgParser = read.parser
 
-        // Derive PKG name from scene file: "scene.json" → "scene.pkg", "gifscene.json" → "gifscene.pkg"
-        let pkgName = (sceneFile as NSString).deletingPathExtension + ".pkg"
-        let pkgURL = dir.appending(path: pkgName)
-        let looseSceneURL = dir.appending(path: sceneFile)
-
-        var scene: WEScene?
-        var document: SceneJSON?
-
-        let hasPackage = FileManager.default.fileExists(atPath: pkgURL.path(percentEncoded: false))
-        let sourceURL = hasPackage ? pkgURL : looseSceneURL
-        let signature = Self.sourceSignature(for: sourceURL)
-            + "|" + Self.overrideSignature(settingsKey: settingsKey)
-
-        var source = "parsed"
-        var resolvedPlan: Data?
-        // Built only past the in-memory parse: the key stats every file of the wallpaper.
-        lazy var preparation: (store: SceneCacheStore, request: ScenePreparation.Request)? =
-            Self.sceneCacheStore.map { ($0, preparationRequest(for: wallpaper, settingsKey: settingsKey)) }
-        if let cached = Self.cachedParse(for: dir, signature: signature) {
-            self.pkgParser = cached.parser
-            scene = cached.scene
-            document = cached.document
-            source = "shared parse"
-        } else if let preparation,
-                  let file = preparation.store.read(wallpaper: preparation.request.wallpaperID,
-                                                    key: preparation.request.key),
-                  let plan = file.sections[.scenePlan],
-                  let decoded = try? JSONDecoder().decode(WEScene.self, from: plan) {
-            // The prepared scene plan already has the edits applied; the package is still opened
-            // for the assets it holds.
-            self.pkgParser = hasPackage ? try? PKGParser(url: pkgURL) : nil
-            scene = decoded
-            document = Self.document(plan)
-            source = "scene cache"
-        } else if hasPackage {
-            do {
-                let parser = try PKGParser(url: pkgURL)
-                self.pkgParser = parser
-                if let data = parser.extractFile(named: sceneFile) {
-                    let decoded = try decodeScene(data, settingsKey: settingsKey)
-                    (scene, document, resolvedPlan) = (decoded.0, decoded.1, decoded.2)
-                }
-            } catch {
-                Self.log("Failed to parse PKG: \(error)")
-            }
-        } else if FileManager.default.fileExists(atPath: looseSceneURL.path(percentEncoded: false)) {
-            // Loose files (no .pkg)
-            self.pkgParser = nil
-            do {
-                let data = try Data(contentsOf: looseSceneURL)
-                let decoded = try decodeScene(data, settingsKey: settingsKey)
-                (scene, document, resolvedPlan) = (decoded.0, decoded.1, decoded.2)
-            } catch {
-                Self.log("Failed to parse loose \(sceneFile): \(error)")
-            }
-        }
-        // A miss prepares the cache file in the background from the plan just parsed.
-        if let resolvedPlan, let preparation {
-            ScenePreparation.schedule(preparation.request, priority: .currentWallpaper,
-                                      store: preparation.store, scenePlan: resolvedPlan)
-        }
-
-        guard let scene = scene else {
+        guard let scene = read.scene else {
             // A video or web wallpaper legitimately has no scene; only a scene wallpaper missing
             // one is a real failure, and treating both as errors buries the genuine case.
             let type = wallpaper.project.type.lowercased()
@@ -342,21 +425,22 @@ class SceneWallpaperViewModel: ObservableObject {
             }
             return
         }
-        Self.storeParse(ParsedScene(parser: pkgParser, scene: scene, signature: signature, document: document), for: dir)
-
         if prepareDefaults {
             prepareSceneUserPropertyDefaults(for: wallpaper, scene: scene)
         }
-        Self.log("Scene loaded: \(scene.objects.count) objects from \(sceneFile) [\(source)]")
-        if !hasPackage {
+        Self.log("Scene loaded: \(scene.objects.count) objects from \(wallpaper.project.file) [\(read.source)]")
+        if !read.hasPackage {
             WallpaperPackageConverter.markVerified(wallpaperDirectory: dir, objectCount: scene.objects.count)
         }
         loadedScene = scene
-        loadedDocument = document.map { ($0, "\(dir.path)|\(signature)") }
-        loadedProject = Self.project(in: dir)
-        contentUserProperties = document.map(Self.contentUserProperties(in:)) ?? []
-        hasScriptSites = document.map { !SceneScriptSiteBuilder(wallpaperID: "").sites(in: $0).isEmpty } ?? false
+        loadedDocument = read.document.map { ($0, "\(dir.path)|\(read.signature)") }
+        loadedProject = read.project
+        hasScriptSites = read.hasScriptSites
         loadedWallpaperDirectory = dir
+        stateLock.withLock {
+            loadedContentUserProperties = read.contentUserProperties
+            loadedTextureReductionSize = TextureReduction.orthographicSize(of: scene)
+        }
         bumpRevision()
     }
 
@@ -371,18 +455,18 @@ class SceneWallpaperViewModel: ObservableObject {
         let stored = UserDefaults.app.dictionary(forKey: settingsKey) as? [String: String] ?? [:]
         let split = ScenePreparation.split(storedValues: stored)
         let dir = wallpaper.wallpaperDirectory
+        let settings = stateLock.withLock { pendingRenderSettings }
         return ScenePreparation.Request(wallpaperID: Self.workshopId(of: wallpaper) ?? Self.localWallpaperID(dir),
                                         directory: dir, sceneFile: wallpaper.project.file,
                                         edits: split.edits, userProperties: split.properties,
-                                        settings: String(describing: renderSettings.contentKey),
+                                        settings: String(describing: settings.contentKey),
                                         displays: SceneCacheKey.Display.connected())
     }
 
     /// The scene and the document it was decoded from (for the scripts; nil when it isn't JSON the
     /// tolerant reader takes).
-    private func decodeScene(_ data: Data, settingsKey: String) throws -> (WEScene, SceneJSON?, Data) {
-        let values = UserDefaults.app.dictionary(forKey: settingsKey) as? [String: String] ?? [:]
-        let resolved = try ScenePreparation.resolvedScene(data, edits: values)
+    private func decodeScene(_ data: Data, edits: [String: String]) throws -> (WEScene, SceneJSON?, Data) {
+        let resolved = try ScenePreparation.resolvedScene(data, edits: edits)
         return (try JSONDecoder().decode(WEScene.self, from: resolved), Self.document(resolved), resolved)
     }
 
@@ -441,6 +525,8 @@ class SceneWallpaperViewModel: ObservableObject {
     /// The settings identity of the wallpaper in `directory`, resolved (and old path keys moved)
     /// once per load.
     private func settingsIdentity(for directory: URL) -> WallpaperSettingsIdentity {
+        identityLock.lock()
+        defer { identityLock.unlock() }
         if let settings, settings.directory == directory { return settings.identity }
         let identity = WallpaperSettingsIdentity.resolve(directory: directory)
         identity.seed(propertyScope)
@@ -519,15 +605,17 @@ class SceneWallpaperViewModel: ObservableObject {
     func metalContent() -> SceneMetalContent? {
         sceneLock.lock()
         defer { sceneLock.unlock() }
+        let revision = metalRevision
+        renderSettings = stateLock.withLock { pendingRenderSettings }
         // Rebuilding walks every object and re-resolves textures; the result only changes when
         // the scene or its user properties do.
-        if cachedContentRevision == metalRevision, let cachedContent {
+        if cachedContentRevision == revision, let cachedContent {
             return cachedContent
         }
         if SceneWallpaperViewModel.isVideoType(currentWallpaper.project.type) {
             let content = videoContent()
             cachedContent = content
-            cachedContentRevision = metalRevision
+            cachedContentRevision = revision
             return content
         }
         let signpost = OWESignpost.begin(OWESignpost.scene, "metalContent")
@@ -615,7 +703,7 @@ class SceneWallpaperViewModel: ObservableObject {
                 content.cameraFade = engineChain("WE's camera fade", wallpaperDir: wallpaperDir, SceneCameraFade.build)
             }
             cachedContent = content
-            cachedContentRevision = metalRevision
+            cachedContentRevision = revision
             return content
         }
         guard let preview = loadPreviewImage(wallpaperDir: wallpaperDir) else { return nil }

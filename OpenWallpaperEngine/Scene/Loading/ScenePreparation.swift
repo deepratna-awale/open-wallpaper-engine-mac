@@ -85,13 +85,19 @@ enum ScenePreparation {
         return try resolvedScene(data, edits: request.edits)
     }
 
-    /// Prepares `request` and writes its cache file. `scenePlan` skips the parse stage when the
-    /// caller already has the resolved scene (a load that just parsed it).
+    /// Prepares `request` and writes its cache file. `key` skips computing the key when the caller
+    /// already has it (a load that just looked the file up); `scenePlan` skips the parse stage when
+    /// the caller already has the resolved scene (a load that just parsed it).
     @discardableResult
-    static func prepare(_ request: Request, priority: PreparationPool.Priority,
+    static func prepare(_ request: Request, key knownKey: SceneCacheKey? = nil, priority: PreparationPool.Priority,
                         store: SceneCacheStore, pool: PreparationPool = .shared,
                         scenePlan: Data? = nil) async throws -> SceneCacheFile {
-        let key = try await pool.run(priority: priority) { _ in request.key }
+        let key: SceneCacheKey
+        if let knownKey {
+            key = knownKey
+        } else {
+            key = try await pool.run(priority: priority) { _ in request.key }
+        }
         let plan: Data
         if let scenePlan {
             plan = scenePlan
@@ -110,11 +116,12 @@ enum ScenePreparation {
 
     /// Fire-and-forget form of `prepare`, for a load that missed the cache.
     @discardableResult
-    static func schedule(_ request: Request, priority: PreparationPool.Priority, store: SceneCacheStore,
-                         pool: PreparationPool = .shared, scenePlan: Data? = nil) -> Task<Void, Never> {
+    static func schedule(_ request: Request, key: SceneCacheKey? = nil, priority: PreparationPool.Priority,
+                         store: SceneCacheStore, pool: PreparationPool = .shared,
+                         scenePlan: Data? = nil) -> Task<Void, Never> {
         Task.detached(priority: .utility) {
             do {
-                try await prepare(request, priority: priority, store: store, pool: pool, scenePlan: scenePlan)
+                try await prepare(request, key: key, priority: priority, store: store, pool: pool, scenePlan: scenePlan)
             } catch is CancellationError {
             } catch {
                 OWELog.info(.scene, "Scene preparation for \(request.wallpaperID) failed: \(error)")
