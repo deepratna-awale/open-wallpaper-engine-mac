@@ -44,6 +44,10 @@ final class ScenePuppetAnimator {
     /// untouched (0x14020f350). Kept until the next evaluation or local write recomputes the bones.
     private var worldOverrides: [Int: simd_float4x4] = [:]
     private var nextScriptKey = 1 << 20
+    /// Whether the next `advance` can change the pose: the first frame, a frame after layers ran
+    /// (their blend-shape weights start over), or after a script set a blend shape. A rig with no
+    /// layers and no physics otherwise poses exactly as it did, so its frame skips `recompute`.
+    private var poseMayChange = true
 
     /// `layers` are the image's authored `animationlayers`; one naming no clip of `clips` makes
     /// no layer (WE's parser, 0x1402230fe), and is reported through `missing`.
@@ -121,7 +125,10 @@ final class ScenePuppetAnimator {
             frame = SceneBonePhysics.Frame(delta: delta, objectWorld: objectWorld, previousWorlds: worlds.map { last * $0 })
         }
         lastObjectWorld = objectWorld
+        let layered = !stack.layers.isEmpty
+        guard layered || physics != nil || poseMayChange else { return }
         recompute(physics: frame)
+        poseMayChange = layered
     }
 
     /// What root motion moved the object by since the load (`SceneRootMotion`).
@@ -234,6 +241,7 @@ final class ScenePuppetAnimator {
             guard !morphs.isEmpty else { return }
             morphs[0].setFromScript(index, weight)
             recompute()
+            poseMayChange = true
         case let .physicsImpulse(bone, linear, angularDegrees):
             physics?.applyImpulse(bone: bone, linear: linear, angularDegrees: angularDegrees)
         case .resetPhysics(let bone):
