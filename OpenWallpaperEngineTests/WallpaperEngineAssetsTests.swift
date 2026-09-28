@@ -27,6 +27,10 @@ final class WallpaperEngineAssetsTests: XCTestCase {
         try write("{}", to: "effects/tint/effect.json", in: directory)
     }
 
+    func testTheAppBundlesNoAssets() {
+        XCTAssertNil(Bundle.main.url(forResource: "we-assets", withExtension: nil))
+    }
+
     /// A chosen install wins over the cache; an install root and its `assets` folder both work.
     func testAChosenInstallComesBeforeTheCache() throws {
         let install = scratch.appending(path: "wallpaper_engine"), storage = scratch.appending(path: "storage")

@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		4923DF96305D13130038BE65 /* MetalFX.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4923DF94305D13130038BE65 /* MetalFX.framework */; };
 		4923DF97305D13130038BE65 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4923DF95305D13130038BE65 /* MetalKit.framework */; };
-		EE1000000000000000000403 /* we-assets in Resources */ = {isa = PBXBuildFile; fileRef = EE1000000000000000000404 /* we-assets */; };
 		AA1B2C3D4E5F600200ABCD05 /* SpriteKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA1B2C3D4E5F600100ABCD05 /* SpriteKit.framework */; };
 		EE3000000000000000000001 /* ShaderToolchain in Frameworks */ = {isa = PBXBuildFile; productRef = EE3000000000000000000002 /* ShaderToolchain */; };
 /* End PBXBuildFile section */
@@ -24,7 +23,6 @@
 		5E5460C72A83027400655D85 /* wallpaper.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = wallpaper.png; sourceTree = "<group>"; };
 		5E6091F12A83E85D00D4C36C /* AUTHORS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = AUTHORS.md; sourceTree = "<group>"; };
 		5EC47E762A2DB2E600120CCC /* Open Wallpaper Engine.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Open Wallpaper Engine.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		EE1000000000000000000404 /* we-assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "Vendor/we-assets"; sourceTree = "<group>"; };
 		5EF4C24A2A4C9871009831E5 /* CNAME */ = {isa = PBXFileReference; lastKnownFileType = text; path = CNAME; sourceTree = "<group>"; };
 		5EF4C24B2A4C9872009831E5 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		5EF4C24C2A4C98FA009831E5 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
@@ -102,7 +100,6 @@
 				5EF4C24C2A4C98FA009831E5 /* README.md */,
 				5EEE8D5D2A7501C800DCE41A /* resources */,
 				5EC47E782A2DB2E600120CCC /* OpenWallpaperEngine */,
-				EE1000000000000000000404 /* we-assets */,
 				EE2000000000000000000002 /* OpenWallpaperEngineTests */,
 				5EC47E772A2DB2E600120CCC /* Products */,
 				AA1B2C3D4E5F600100ABCD05 /* SpriteKit.framework */,
@@ -252,7 +249,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EE1000000000000000000403 /* we-assets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

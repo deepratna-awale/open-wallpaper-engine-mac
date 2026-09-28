@@ -185,8 +185,9 @@ jobs:
 
           test ! -e "$APP/Contents/Resources/shader-tools" \
             || { echo "::error::stale shader-tools in the bundle"; exit 1; }
-          test -f "$APP/Contents/Resources/we-assets/shaders/common.h" \
-            || { echo "::error::bundled WE assets missing"; exit 1; }
+          # Wallpaper Engine's files come from the user's own copy, never from the app.
+          test ! -e "$APP/Contents/Resources/we-assets" \
+            || { echo "::error::Wallpaper Engine assets in the bundle"; exit 1; }
 
           codesign --verify --deep --strict --verbose=2 "$APP"
 
