@@ -62,6 +62,7 @@ class TEXParser {
     /// than one mipmap loads from its second, as WE's loader skips the first (`wallpaper64.exe`
     /// 0x14015d3fd); the frame rects, in the first mipmap's pixels, scale with it.
     func extractAnimatedImages(reduction: Int = 1) -> TEXAnimatedImages? {
+        ThreadGuards.assertBackground("TEXParser.extractAnimatedImages")
         var cursor = 0
         guard readNullTerminatedString(from: bytes, cursor: &cursor) == "TEXV0005",
               readNullTerminatedString(from: bytes, cursor: &cursor) == "TEXI0001",
@@ -169,6 +170,7 @@ class TEXParser {
 
     /// `reduction`: see `extractAnimatedImages(reduction:)`.
     func extractCompressedTexture(reduction: Int = 1) -> TEXCompressedTexture? {
+        ThreadGuards.assertBackground("TEXParser.extractCompressedTexture")
         var cursor = 0
 
         guard readNullTerminatedString(from: bytes, cursor: &cursor) == "TEXV0005",
@@ -301,6 +303,7 @@ class TEXParser {
     // MARK: - Private
 
     private func extractContainerImage(reduction: Int) -> NSImage? {
+        ThreadGuards.assertBackground("TEXParser.extractContainerImage")
         var cursor = 0
 
         guard readNullTerminatedString(from: bytes, cursor: &cursor) == "TEXV0005",

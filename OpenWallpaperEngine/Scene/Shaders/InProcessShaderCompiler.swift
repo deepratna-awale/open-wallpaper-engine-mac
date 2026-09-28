@@ -37,7 +37,8 @@ struct InProcessShaderCompiler: ShaderCompiler {
     }
 
     func preprocess(_ source: String, stage: ShaderStage) throws -> String {
-        try dispatch(step: "preprocess", key: Self.shaderKey(step: "preprocess", stage: stage, source: source)) {
+        ThreadGuards.assertBackground("shader preprocess")
+        return try dispatch(step: "preprocess", key: Self.shaderKey(step: "preprocess", stage: stage, source: source)) {
             var output: UnsafeMutablePointer<CChar>?
             var log: UnsafeMutablePointer<CChar>?
             defer { owe_shader_free(output); owe_shader_free(log) }
@@ -49,7 +50,8 @@ struct InProcessShaderCompiler: ShaderCompiler {
     }
 
     func compileToMSL(_ source: String, stage: ShaderStage) throws -> (msl: String, reflection: Data) {
-        try dispatch(step: "glslang", key: Self.shaderKey(step: "compile", stage: stage, source: source)) {
+        ThreadGuards.assertBackground("shader translation")
+        return try dispatch(step: "glslang", key: Self.shaderKey(step: "compile", stage: stage, source: source)) {
             var msl: UnsafeMutablePointer<CChar>?
             var reflection: UnsafeMutablePointer<CChar>?
             var log: UnsafeMutablePointer<CChar>?
