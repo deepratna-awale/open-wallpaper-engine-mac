@@ -16,7 +16,10 @@ final class SceneFrameHarness {
     var now: CFTimeInterval = 1000
 
     init(directory: URL, scope: WallpaperPropertyScope = .shared, size: SIMD2<Int> = SIMD2(128, 64),
-         services: SceneScriptServices? = nil, screenID: String = "harness") throws {
+         services: SceneScriptServices? = nil, screenID: String = "harness",
+         configure: (SceneMetalRenderer) -> Void = { _ in }) throws {
+        // The CI scenes draw WE's util models (`models/util/solidlayer.json`), which come from the assets.
+        _ = try Fixtures.assets()
         self.directory = directory
         self.size = size
         let project = try JSONDecoder().decode(WEProject.self, from: Data(contentsOf: directory.appending(path: "project.json")))
@@ -32,6 +35,8 @@ final class SceneFrameHarness {
         renderer.setPlacement(.stretch)
         renderer.scripts.frameWait = 5
         renderer.wallTime = { [unowned self] in self.now }
+        // Before the content: a draw can land while the load is waited for.
+        configure(renderer)
         renderer.setContent(try XCTUnwrap(model.metalContent()))
         let deadline = Date().addingTimeInterval(60)
         while !renderer.hasContent, Date() < deadline { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }

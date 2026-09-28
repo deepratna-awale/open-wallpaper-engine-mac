@@ -106,14 +106,17 @@ final class ScenePostProcessTests: XCTestCase {
                   let width = projection["width"] as? Int, let height = projection["height"] as? Int,
                   width * height <= 1920 * 1080 else { continue }
             let size = SIMD2(width, height)
-            let skip = try SceneFrameHarness(directory: directory, size: size, screenID: "skip")
-            let plain = try SceneFrameHarness(directory: directory, size: size, screenID: "plain")
-            let control = try SceneFrameHarness(directory: directory, size: size, screenID: "control")
+            // Set before each load: a draw while a later harness loads would otherwise count.
+            func harness(_ screen: String, skips: Bool) throws -> SceneFrameHarness {
+                try SceneFrameHarness(directory: directory, size: size, screenID: screen) {
+                    $0.skipsIdleFrames = false
+                    $0.skipsIdentityComposite = skips
+                }
+            }
+            let skip = try harness("skip", skips: true)
+            let plain = try harness("plain", skips: false)
+            let control = try harness("control", skips: false)
             defer { skip.close(); plain.close(); control.close() }
-            for harness in [skip, plain, control] { harness.renderer.skipsIdleFrames = false }
-            plain.renderer.skipsIdentityComposite = false
-            control.renderer.skipsIdentityComposite = false
-            skip.renderer.skipsIdentityComposite = true
             for frame in 0..<24 {
                 let shared = frame % 2 == 1
                 for harness in [skip, plain, control] {

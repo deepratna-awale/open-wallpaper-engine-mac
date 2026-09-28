@@ -81,6 +81,7 @@ final class SceneBackgroundLoadTests: XCTestCase {
 
     /// A load superseded before it ran never commits: only the newest wallpaper loads.
     func testSupersededLoadIsCancelled() throws {
+        _ = try Fixtures.assets()  // both scenes draw WE's util models, which come from the assets
         let first = Fixtures.url("Scenes/layers")
         let second = Fixtures.url("Scenes/solid")
         defer {
