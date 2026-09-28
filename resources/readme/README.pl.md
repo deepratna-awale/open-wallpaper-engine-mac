@@ -1,11 +1,11 @@
-Open Wallpaper Engine (wersja poprawiona)
+Open Wallpaper Engine
 =========
 
 [English](../../README.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [Italiano](README.it.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [简体中文](README.zh-Hans.md) | [繁體中文](README.zh-Hant.md) | [Русский](README.ru.md) | **Polski** | [Türkçe](README.tr.md) | [Українська](README.uk.md) | [العربية](README.ar.md) | [हिन्दी](README.hi.md)
 
 [![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE)
 
-Poprawiony fork [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) dla macOS, który dodaje renderowanie tapet typu scena i poprawki tapet internetowych.
+Open Wallpaper Engine to darmowy odtwarzacz open source dla macOS, który wyświetla tapety Wallpaper Engine: sceny, wideo i tapety internetowe. Ma natywny renderer Metal i obsługuje efekty, cząsteczki, modele 3D, oświetlenie, SceneScript, wizualizacje reagujące na dźwięk oraz Steam Workshop. Powstał jako fork [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) autorstwa Harena Chena i MrWindDoga, a od tamtej pory został w dużej mierze przepisany.
 
 > **Uwaga:** Ten projekt NIE jest powiązany z komercyjnym programem Wallpaper Engine dostępnym w Steam. To aplikacja open source dla macOS, która potrafi wyświetlać zasoby tapet z Warsztatu Steam programu Wallpaper Engine. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
@@ -186,7 +186,7 @@ Tapety są teraz przechowywane w katalogu `~/Documents/Open Wallpaper Engine/` z
 </details>
 
 <details>
-<summary>Co poprawiono względem projektu nadrzędnego</summary>
+<summary>Pierwsze zmiany względem oryginalnego projektu</summary>
 
 ### Tapety internetowe — poprawione szare/puste renderowanie
 Tapety oparte na WebGL były renderowane jako szare prostokąty, ponieważ `WKWebView` blokował dostęp do plików lokalnych z teksturami i zasobami.

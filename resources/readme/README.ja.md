@@ -1,11 +1,11 @@
-Open Wallpaper Engine（パッチ版）
+Open Wallpaper Engine
 =========
 
 [English](../../README.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [Italiano](README.it.md) | **日本語** | [한국어](README.ko.md) | [简体中文](README.zh-Hans.md) | [繁體中文](README.zh-Hant.md) | [Русский](README.ru.md) | [Polski](README.pl.md) | [Türkçe](README.tr.md) | [Українська](README.uk.md) | [العربية](README.ar.md) | [हिन्दी](README.hi.md)
 
 [![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE)
 
-macOS 向け [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) のパッチ適用フォークです。シーン壁紙のレンダリングと Web 壁紙の修正を追加しています。
+Open Wallpaper Engine は、Wallpaper Engine の壁紙（シーン・動画・Web）を再生できる、無料でオープンソースの macOS 向けプレーヤーです。ネイティブの Metal レンダラーを搭載し、エフェクト、パーティクル、3D モデル、ライティング、SceneScript、オーディオ連動ビジュアル、Steam ワークショップに対応しています。Haren Chen 氏と MrWindDog 氏の [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) のフォークとして始まり、現在ではその大部分が書き直されています。
 
 > **注意：** 本プロジェクトは Steam の商用版 Wallpaper Engine とは一切関係ありません。Wallpaper Engine の Steam ワークショップにある壁紙アセットを表示できる、オープンソースの macOS アプリです。 → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
@@ -186,7 +186,7 @@ Cmd キーを押しながらクリックして複数の壁紙を選択し、右�
 </details>
 
 <details>
-<summary>上流からのパッチ内容</summary>
+<summary>元のプロジェクトからの初期の変更点</summary>
 
 ### Web 壁紙 — グレー／空白で表示される問題を修正
 WebGL ベースの壁紙は、`WKWebView` がテクスチャやアセットのローカルファイルへのアクセスをブロックしていたため、グレーの矩形として表示されていました。

@@ -1,11 +1,11 @@
-Open Wallpaper Engine (Yamalı Sürüm)
+Open Wallpaper Engine
 =========
 
 [English](../../README.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [Italiano](README.it.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [简体中文](README.zh-Hans.md) | [繁體中文](README.zh-Hant.md) | [Русский](README.ru.md) | [Polski](README.pl.md) | **Türkçe** | [Українська](README.uk.md) | [العربية](README.ar.md) | [हिन्दी](README.hi.md)
 
 [![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE)
 
-[Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac)’in macOS için yamalı bir çatalı; sahne duvar kâğıdı işleme ve web duvar kâğıdı düzeltmeleri ekler.
+Open Wallpaper Engine, Wallpaper Engine duvar kâğıtlarını (sahne, video ve web) oynatan ücretsiz ve açık kaynaklı bir macOS oynatıcısıdır. Yerel bir Metal işleyiciye sahiptir; efektleri, parçacıkları, 3B modelleri, aydınlatmayı, SceneScript’i, sese duyarlı görselleri ve Steam Atölyesi’ni destekler. Haren Chen ve MrWindDog’un [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) projesinin bir çatalı olarak başladı ve o zamandan beri büyük ölçüde yeniden yazıldı.
 
 > **Not:** Bu proje, Steam’deki ticari Wallpaper Engine ile bağlantılı DEĞİLDİR. Wallpaper Engine’in Steam Atölyesi’ndeki duvar kâğıdı varlıklarını görüntüleyebilen açık kaynaklı bir macOS uygulamasıdır. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
@@ -186,7 +186,7 @@ Duvar kâğıtları artık doğrudan Belgeler dizini yerine `~/Documents/Open Wa
 </details>
 
 <details>
-<summary>Üst kaynağa göre yamalanan özellikler</summary>
+<summary>Özgün projeye göre ilk değişiklikler</summary>
 
 ### Web Duvar Kâğıtları — Gri/boş görüntü sorunu düzeltildi
 `WKWebView`, dokular ve varlıklar için yerel dosya erişimini engellediğinden WebGL tabanlı duvar kâğıtları gri dikdörtgenler olarak görüntüleniyordu.

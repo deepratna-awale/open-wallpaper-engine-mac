@@ -1,11 +1,11 @@
-Open Wallpaper Engine (Patched)
+Open Wallpaper Engine
 =========
 
 **English** | [Deutsch](resources/readme/README.de.md) | [Français](resources/readme/README.fr.md) | [Español](resources/readme/README.es.md) | [Português (Brasil)](resources/readme/README.pt-BR.md) | [Italiano](resources/readme/README.it.md) | [日本語](resources/readme/README.ja.md) | [한국어](resources/readme/README.ko.md) | [简体中文](resources/readme/README.zh-Hans.md) | [繁體中文](resources/readme/README.zh-Hant.md) | [Русский](resources/readme/README.ru.md) | [Polski](resources/readme/README.pl.md) | [Türkçe](resources/readme/README.tr.md) | [Українська](resources/readme/README.uk.md) | [العربية](resources/readme/README.ar.md) | [हिन्दी](resources/readme/README.hi.md)
 
 [![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
 
-A patched fork of [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) for macOS, adding scene wallpaper rendering and web wallpaper fixes.
+Open Wallpaper Engine is a free, open-source macOS player for Wallpaper Engine wallpapers: scene, video and web. It has a native Metal renderer and supports effects, particles, 3D models, lighting, SceneScript, audio-reactive visuals and the Steam Workshop. It began as a fork of Haren Chen's and MrWindDog's [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) and has since been largely rewritten.
 
 > **Note:** This is NOT affiliated with the commercial Wallpaper Engine on Steam. This is an open-source macOS app that can display wallpaper assets from Wallpaper Engine's Steam Workshop. → [ATTRIBUTION.txt](ATTRIBUTION.txt)
 
@@ -186,7 +186,7 @@ Wallpapers are now stored in `~/Documents/Open Wallpaper Engine/` instead of the
 </details>
 
 <details>
-<summary>What's patched relative to upstream</summary>
+<summary>Early changes from the original project</summary>
 
 ### Web Wallpapers — Fixed gray/blank rendering
 WebGL-based wallpapers rendered as gray rectangles because `WKWebView` blocked local file access for textures and assets.

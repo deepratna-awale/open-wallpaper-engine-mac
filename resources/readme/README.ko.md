@@ -1,11 +1,11 @@
-Open Wallpaper Engine (패치 버전)
+Open Wallpaper Engine
 =========
 
 [English](../../README.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [Italiano](README.it.md) | [日本語](README.ja.md) | **한국어** | [简体中文](README.zh-Hans.md) | [繁體中文](README.zh-Hant.md) | [Русский](README.ru.md) | [Polski](README.pl.md) | [Türkçe](README.tr.md) | [Українська](README.uk.md) | [العربية](README.ar.md) | [हिन्दी](README.hi.md)
 
 [![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE)
 
-macOS용 [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac)의 패치 포크로, 장면 배경화면 렌더링과 웹 배경화면 수정 사항을 추가합니다.
+Open Wallpaper Engine은 Wallpaper Engine 배경화면(장면, 동영상, 웹)을 재생하는 무료 오픈 소스 macOS 플레이어입니다. 네이티브 Metal 렌더러를 갖추고 있으며 효과, 파티클, 3D 모델, 조명, SceneScript, 오디오 반응형 비주얼, Steam 창작마당을 지원합니다. Haren Chen과 MrWindDog의 [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) 포크로 시작했으며, 이후 대부분 새로 작성되었습니다.
 
 > **참고:** 이 프로젝트는 Steam의 상용 Wallpaper Engine과 관련이 없습니다. Wallpaper Engine의 Steam 창작마당에 있는 배경화면 에셋을 표시할 수 있는 오픈 소스 macOS 앱입니다. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
@@ -186,7 +186,7 @@ Cmd+클릭으로 여러 배경화면을 선택한 다음, 오른쪽 클릭으로
 </details>
 
 <details>
-<summary>업스트림 대비 패치 내용</summary>
+<summary>원래 프로젝트 대비 초기 변경 사항</summary>
 
 ### 웹 배경화면 — 회색/빈 화면 렌더링 수정
 WebGL 기반 배경화면은 `WKWebView`가 텍스처와 에셋에 대한 로컬 파일 접근을 차단했기 때문에 회색 사각형으로 렌더링되었습니다.

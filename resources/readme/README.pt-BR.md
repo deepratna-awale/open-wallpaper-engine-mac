@@ -1,11 +1,11 @@
-Open Wallpaper Engine (com patches)
+Open Wallpaper Engine
 =========
 
 [English](../../README.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Español](README.es.md) | **Português (Brasil)** | [Italiano](README.it.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [简体中文](README.zh-Hans.md) | [繁體中文](README.zh-Hant.md) | [Русский](README.ru.md) | [Polski](README.pl.md) | [Türkçe](README.tr.md) | [Українська](README.uk.md) | [العربية](README.ar.md) | [हिन्दी](README.hi.md)
 
 [![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE)
 
-Um fork com patches do [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) para macOS, que adiciona a renderização de imagens de fundo de cena e correções para imagens de fundo web.
+O Open Wallpaper Engine é um player gratuito e de código aberto para macOS de imagens de fundo do Wallpaper Engine: cena, vídeo e web. Ele tem um renderizador nativo em Metal e suporta efeitos, partículas, modelos 3D, iluminação, SceneScript, visuais reativos ao áudio e o Steam Workshop. Começou como um fork do [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) de Haren Chen e MrWindDog e, desde então, foi em grande parte reescrito.
 
 > **Observação:** este projeto NÃO tem nenhuma relação com o Wallpaper Engine comercial vendido no Steam. É um app de código aberto para macOS capaz de exibir os recursos de imagens de fundo da Oficina Steam do Wallpaper Engine. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
@@ -186,7 +186,7 @@ As imagens de fundo agora são armazenadas em `~/Documents/Open Wallpaper Engine
 </details>
 
 <details>
-<summary>O que foi corrigido em relação ao upstream</summary>
+<summary>Primeiras mudanças em relação ao projeto original</summary>
 
 ### Imagens de Fundo Web — Corrigida a renderização cinza/em branco
 Imagens de fundo baseadas em WebGL eram renderizadas como retângulos cinza porque o `WKWebView` bloqueava o acesso a arquivos locais para texturas e recursos.

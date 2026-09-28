@@ -1,11 +1,11 @@
-Open Wallpaper Engine (gepatcht)
+Open Wallpaper Engine
 =========
 
 [English](../../README.md) | **Deutsch** | [Français](README.fr.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [Italiano](README.it.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [简体中文](README.zh-Hans.md) | [繁體中文](README.zh-Hant.md) | [Русский](README.ru.md) | [Polski](README.pl.md) | [Türkçe](README.tr.md) | [Українська](README.uk.md) | [العربية](README.ar.md) | [हिन्दी](README.hi.md)
 
 [![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE)
 
-Ein gepatchter Fork von [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) für macOS, der das Rendern von Szenen-Hintergrundbildern und Korrekturen für Web-Hintergrundbilder hinzufügt.
+Open Wallpaper Engine ist ein kostenloser Open-Source-Player für macOS, der Wallpaper-Engine-Hintergrundbilder abspielt: Szenen, Videos und Web. Er bringt einen nativen Metal-Renderer mit und unterstützt Effekte, Partikel, 3D-Modelle, Beleuchtung, SceneScript, audioreaktive Visuals und den Steam Workshop. Das Projekt begann als Fork von [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) von Haren Chen und MrWindDog und wurde seitdem weitgehend neu geschrieben.
 
 > **Hinweis:** Dieses Projekt steht in KEINER Verbindung zum kommerziellen Wallpaper Engine auf Steam. Es handelt sich um eine Open-Source-App für macOS, die Hintergrundbild-Assets aus dem Steam Workshop von Wallpaper Engine anzeigen kann. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
@@ -186,7 +186,7 @@ Hintergrundbilder werden jetzt in `~/Documents/Open Wallpaper Engine/` statt dir
 </details>
 
 <details>
-<summary>Änderungen gegenüber Upstream</summary>
+<summary>Frühe Änderungen gegenüber dem ursprünglichen Projekt</summary>
 
 ### Web-Hintergrundbilder – graue/leere Darstellung korrigiert
 WebGL-basierte Hintergrundbilder wurden als graue Rechtecke dargestellt, weil `WKWebView` den Zugriff auf lokale Dateien für Texturen und Assets blockiert hat.

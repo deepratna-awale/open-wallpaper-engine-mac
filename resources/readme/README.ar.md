@@ -1,4 +1,4 @@
-Open Wallpaper Engine (نسخة مُعدَّلة)
+Open Wallpaper Engine
 =========
 
 [English](../../README.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [Italiano](README.it.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [简体中文](README.zh-Hans.md) | [繁體中文](README.zh-Hant.md) | [Русский](README.ru.md) | [Polski](README.pl.md) | [Türkçe](README.tr.md) | [Українська](README.uk.md) | **العربية** | [हिन्दी](README.hi.md)
@@ -7,7 +7,7 @@ Open Wallpaper Engine (نسخة مُعدَّلة)
 
 [![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE)
 
-نسخة مُعدَّلة (fork) من [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) لنظام macOS، تضيف عرض خلفيات المشهد وإصلاحات لخلفيات الويب.
+Open Wallpaper Engine مشغّل مجاني ومفتوح المصدر لنظام macOS يعرض خلفيات Wallpaper Engine: المشهد والفيديو والويب. يضم محرك عرض أصليًا مبنيًا على Metal، ويدعم التأثيرات والجسيمات والنماذج ثلاثية الأبعاد والإضاءة وSceneScript والمؤثرات المرئية المتفاعلة مع الصوت وورشة Steam. بدأ المشروع كنسخة متفرعة (fork) من [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) لمطوّريه Haren Chen وMrWindDog، ثم أُعيدت كتابة معظمه منذ ذلك الحين.
 
 > **ملاحظة:** هذا المشروع غير تابع لتطبيق Wallpaper Engine التجاري على Steam. إنه تطبيق مفتوح المصدر لنظام macOS يمكنه عرض ملفات خلفيات الشاشة من ورشة Steam الخاصة بـ Wallpaper Engine. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
@@ -188,7 +188,7 @@ Open Wallpaper Engine (نسخة مُعدَّلة)
 </details>
 
 <details>
-<summary>التعديلات مقارنةً بالنسخة الأصلية</summary>
+<summary>التغييرات الأولى مقارنةً بالمشروع الأصلي</summary>
 
 ### خلفيات الويب — إصلاح العرض الرمادي/الفارغ
 كانت خلفيات الشاشة المعتمدة على WebGL تُعرض كمستطيلات رمادية لأن `WKWebView` كان يمنع الوصول إلى الملفات المحلية للأنسجة والملفات الأخرى.

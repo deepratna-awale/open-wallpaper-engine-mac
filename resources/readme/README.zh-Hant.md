@@ -1,11 +1,11 @@
-Open Wallpaper Engine（修補版）
+Open Wallpaper Engine
 =========
 
 [English](../../README.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [Italiano](README.it.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [简体中文](README.zh-Hans.md) | **繁體中文** | [Русский](README.ru.md) | [Polski](README.pl.md) | [Türkçe](README.tr.md) | [Українська](README.uk.md) | [العربية](README.ar.md) | [हिन्दी](README.hi.md)
 
 [![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE)
 
-這是 [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) 針對 macOS 的修補分支，加入了場景背景圖片渲染，並修正了網頁背景圖片的問題。
+Open Wallpaper Engine 是一款免費、開源的 macOS 播放器，可播放 Wallpaper Engine 的場景、影片與網頁背景圖片。它採用原生 Metal 渲染器，支援特效、粒子、3D 模型、光照、SceneScript、音訊響應視覺效果以及 Steam 工作坊。本專案最初是 Haren Chen 與 MrWindDog 的 [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) 的分支，此後已大部分重寫。
 
 > **注意：** 本專案與 Steam 上的商業軟體 Wallpaper Engine 無關。這是一款開源的 macOS App，可顯示來自 Wallpaper Engine Steam 工作坊的背景圖片素材。 → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
@@ -186,7 +186,7 @@ Open Wallpaper Engine（修補版）
 </details>
 
 <details>
-<summary>相對於上游的修補內容</summary>
+<summary>相對於原專案的早期變更</summary>
 
 ### 網頁背景圖片 — 修正灰色／空白渲染
 以 WebGL 為基礎的背景圖片會渲染成灰色矩形，原因是 `WKWebView` 封鎖了對紋理與素材的本機檔案存取。

@@ -1,11 +1,11 @@
-Open Wallpaper Engine (з виправленнями)
+Open Wallpaper Engine
 =========
 
 [English](../../README.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [Italiano](README.it.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [简体中文](README.zh-Hans.md) | [繁體中文](README.zh-Hant.md) | [Русский](README.ru.md) | [Polski](README.pl.md) | [Türkçe](README.tr.md) | **Українська** | [العربية](README.ar.md) | [हिन्दी](README.hi.md)
 
 [![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE)
 
-Форк [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) для macOS із виправленнями, що додає рендеринг шпалер-сцен і виправлення вебшпалер.
+Open Wallpaper Engine — безкоштовний плеєр із відкритим кодом для macOS, що відтворює шпалери Wallpaper Engine: сцени, відео та вебшпалери. Він має власний рендерер на Metal і підтримує ефекти, частинки, 3D-моделі, освітлення, SceneScript, візуалізації, що реагують на звук, і Steam Workshop. Проєкт починався як форк [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) від Харена Чена (Haren Chen) і MrWindDog, а відтоді його здебільшого переписано.
 
 > **Примітка.** Цей проєкт НЕ повʼязаний із комерційною програмою Wallpaper Engine у Steam. Це програма з відкритим кодом для macOS, яка може показувати ресурси шпалер із Майстерні Steam програми Wallpaper Engine. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
@@ -186,7 +186,7 @@ Open Wallpaper Engine (з виправленнями)
 </details>
 
 <details>
-<summary>Що виправлено порівняно з висхідним проєктом</summary>
+<summary>Перші зміни порівняно з оригінальним проєктом</summary>
 
 ### Вебшпалери — виправлено сірий або порожній рендеринг
 Шпалери на основі WebGL рендерилися як сірі прямокутники, оскільки `WKWebView` блокував доступ до локальних файлів текстур і ресурсів.

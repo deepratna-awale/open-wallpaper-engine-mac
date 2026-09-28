@@ -1,11 +1,11 @@
-Open Wallpaper Engine (version patchée)
+Open Wallpaper Engine
 =========
 
 [English](../../README.md) | [Deutsch](README.de.md) | **Français** | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [Italiano](README.it.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [简体中文](README.zh-Hans.md) | [繁體中文](README.zh-Hant.md) | [Русский](README.ru.md) | [Polski](README.pl.md) | [Türkçe](README.tr.md) | [Українська](README.uk.md) | [العربية](README.ar.md) | [हिन्दी](README.hi.md)
 
 [![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE)
 
-Un fork patché d’[Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) pour macOS, qui ajoute le rendu des fonds d’écran de scène et des corrections pour les fonds d’écran web.
+Open Wallpaper Engine est un lecteur macOS gratuit et open source pour les fonds d’écran Wallpaper Engine : scène, vidéo et web. Doté d’un moteur de rendu Metal natif, il prend en charge les effets, les particules, les modèles 3D, l’éclairage, SceneScript, les visuels réactifs à l’audio et le Steam Workshop. Il est né d’un fork d’[Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) de Haren Chen et MrWindDog, et a depuis été en grande partie réécrit.
 
 > **Remarque :** ce projet n’est PAS affilié au logiciel commercial Wallpaper Engine vendu sur Steam. Il s’agit d’une app open source pour macOS capable d’afficher les ressources de fonds d’écran du Steam Workshop de Wallpaper Engine. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
@@ -186,7 +186,7 @@ Les fonds d’écran sont désormais stockés dans `~/Documents/Open Wallpaper E
 </details>
 
 <details>
-<summary>Modifications par rapport au projet en amont</summary>
+<summary>Premières modifications par rapport au projet d’origine</summary>
 
 ### Fonds d’écran web — rendu gris ou vide corrigé
 Les fonds d’écran basés sur WebGL s’affichaient sous forme de rectangles gris, car `WKWebView` bloquait l’accès aux fichiers locaux pour les textures et les ressources.

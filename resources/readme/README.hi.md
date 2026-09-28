@@ -1,11 +1,11 @@
-Open Wallpaper Engine (पैच किया गया)
+Open Wallpaper Engine
 =========
 
 [English](../../README.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Español](README.es.md) | [Português (Brasil)](README.pt-BR.md) | [Italiano](README.it.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [简体中文](README.zh-Hans.md) | [繁體中文](README.zh-Hant.md) | [Русский](README.ru.md) | [Polski](README.pl.md) | [Türkçe](README.tr.md) | [Українська](README.uk.md) | [العربية](README.ar.md) | **हिन्दी**
 
 [![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE)
 
-macOS के लिए [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) का एक पैच किया गया fork, जो सीन वॉलपेपर रेंडरिंग और वेब वॉलपेपर के सुधार जोड़ता है.
+Open Wallpaper Engine, Wallpaper Engine वॉलपेपर (सीन, वीडियो और वेब) चलाने वाला एक मुफ़्त, ओपन-सोर्स macOS प्लेयर है. इसमें नेटिव Metal रेंडरर है, और यह इफ़ेक्ट, पार्टिकल, 3D मॉडल, लाइटिंग, SceneScript, ऑडियो पर प्रतिक्रिया देने वाले विज़ुअल और Steam Workshop सपोर्ट करता है. इसकी शुरुआत Haren Chen और MrWindDog के [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) के fork के रूप में हुई थी, और तब से इसका ज़्यादातर हिस्सा दोबारा लिखा जा चुका है.
 
 > **नोट:** यह Steam पर उपलब्ध कमर्शियल Wallpaper Engine से संबद्ध नहीं है. यह एक ओपन-सोर्स macOS ऐप है, जो Wallpaper Engine के Steam Workshop के वॉलपेपर एसेट दिखा सकता है. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
@@ -186,7 +186,7 @@ macOS के लिए [Open Wallpaper Engine](https://github.com/MrWindDog/wall
 </details>
 
 <details>
-<summary>अपस्ट्रीम की तुलना में क्या पैच किया गया है</summary>
+<summary>मूल प्रोजेक्ट की तुलना में शुरुआती बदलाव</summary>
 
 ### वेब वॉलपेपर — ग्रे/खाली रेंडरिंग ठीक की गई
 WebGL पर आधारित वॉलपेपर ग्रे आयतों के रूप में रेंडर होते थे, क्योंकि `WKWebView` टेक्सचर और एसेट के लिए लोकल फ़ाइल ऐक्सेस को ब्लॉक करता था.

@@ -1,11 +1,11 @@
-Open Wallpaper Engine (versión parcheada)
+Open Wallpaper Engine
 =========
 
 [English](../../README.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | **Español** | [Português (Brasil)](README.pt-BR.md) | [Italiano](README.it.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [简体中文](README.zh-Hans.md) | [繁體中文](README.zh-Hant.md) | [Русский](README.ru.md) | [Polski](README.pl.md) | [Türkçe](README.tr.md) | [Українська](README.uk.md) | [العربية](README.ar.md) | [हिन्दी](README.hi.md)
 
 [![GitHub license](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](../../LICENSE)
 
-Un fork parcheado de [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) para macOS que añade el renderizado de fondos de pantalla de escena y correcciones para los fondos de pantalla web.
+Open Wallpaper Engine es un reproductor gratuito y de código abierto para macOS de fondos de pantalla de Wallpaper Engine: de escena, de vídeo y web. Cuenta con un renderizador nativo en Metal y admite efectos, partículas, modelos 3D, iluminación, SceneScript, visuales que reaccionan al audio y Steam Workshop. Nació como un fork de [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) de Haren Chen y MrWindDog, y desde entonces se ha reescrito en gran parte.
 
 > **Nota:** Este proyecto NO está afiliado al Wallpaper Engine comercial de Steam. Es una app de código abierto para macOS que puede mostrar recursos de fondos de pantalla del Steam Workshop de Wallpaper Engine. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
@@ -186,7 +186,7 @@ Los fondos de pantalla se guardan ahora en `~/Documents/Open Wallpaper Engine/` 
 </details>
 
 <details>
-<summary>Cambios respecto al proyecto original</summary>
+<summary>Primeros cambios respecto al proyecto original</summary>
 
 ### Fondos de pantalla web: corregida la visualización gris o en blanco
 Los fondos de pantalla basados en WebGL se mostraban como rectángulos grises porque `WKWebView` bloqueaba el acceso a los archivos locales de texturas y recursos.
