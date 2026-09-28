@@ -51,7 +51,7 @@ enum ShaderVariantError: Error, CustomStringConvertible {
 /// hundreds of thousands possible, so nothing is precompiled.
 final class ShaderVariantTranslator {
     /// Bump whenever translated output for the same input can change.
-    static let revision = 11
+    static let revision = 12
 
     let compiler: ShaderCompiler
     /// Root of the disk cache; variants go into its `generationDirectory`.
@@ -66,24 +66,15 @@ final class ShaderVariantTranslator {
     let failureDirectory: URL?
     private let lock = NSLock()
     private var memory: [String: TranslatedShaderVariant] = [:]
-    /// Fused pairs (`fusedVariant`), refusals included, for this session only: a pair costs a few
-    /// milliseconds to fuse and only effect chains that qualify ask.
-    private var fusions: [String: Result<ShaderPassFusion.Plan, Error>] = [:]
 
     static let defaultFailureDirectory = URL(fileURLWithPath: "/tmp/owe-failed-shaders", isDirectory: true)
 
-    /// Colour outputs are written as `half` (`ShaderHalfPrecision`).
-    let halfOutputs: Bool
-
     init(compiler: ShaderCompiler, cacheDirectory: URL? = ShaderVariantTranslator.defaultCacheDirectory,
-         failureDirectory: URL? = ShaderVariantTranslator.defaultFailureDirectory,
-         halfOutputs: Bool = ShaderHalfPrecision.isEnabled) {
+         failureDirectory: URL? = ShaderVariantTranslator.defaultFailureDirectory) {
         self.compiler = compiler
         self.cacheDirectory = cacheDirectory
         self.failureDirectory = failureDirectory
-        self.halfOutputs = halfOutputs
-        // The output precision decides the MSL, so it keys the cache like the compiler does.
-        toolchainFingerprint = compiler.cacheFingerprint + (halfOutputs ? "" : "|float-outputs")
+        toolchainFingerprint = compiler.cacheFingerprint
         let generation = Self.generation(toolchain: toolchainFingerprint)
         generationDirectory = cacheDirectory?.appending(path: generation, directoryHint: .isDirectory)
         if let cacheDirectory {
@@ -249,8 +240,7 @@ final class ShaderVariantTranslator {
             let fragmentOut = try compiler.compileToMSL(pair.fragment, stage: .fragment)
             step = nil
             let layout = try Self.uniformLayout(from: fragmentOut.reflection) ?? Self.uniformLayout(from: vertexOut.reflection)
-            return TranslatedShaderVariant(vertexMSL: vertexOut.msl,
-                                           fragmentMSL: halfOutputs ? ShaderHalfPrecision.rewriteFragmentOutputs(fragmentOut.msl) : fragmentOut.msl, uniforms: layout,
+            return TranslatedShaderVariant(vertexMSL: vertexOut.msl, fragmentMSL: fragmentOut.msl, uniforms: layout,
                                            textureSlots: pair.textureSlots, attributes: pair.attributes, combos: combos)
         } catch {
             if let step { recordFailure(step.source, text: step.text, error: error) }
@@ -305,18 +295,6 @@ final class ShaderVariantTranslator {
     }
 
     // MARK: - Cache
-
-    func cachedFusion(_ key: String) -> Result<ShaderPassFusion.Plan, Error>? {
-        lock.lock()
-        defer { lock.unlock() }
-        return fusions[key]
-    }
-
-    func storeFusion(_ key: String, _ result: Result<ShaderPassFusion.Plan, Error>) {
-        lock.lock()
-        fusions[key] = result
-        lock.unlock()
-    }
 
     private func store(_ key: String, _ variant: TranslatedShaderVariant, persist: Bool) {
         lock.lock()
