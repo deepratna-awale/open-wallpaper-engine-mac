@@ -110,8 +110,8 @@ dialog.lightbox .close { position: absolute; top: 8px; right: 8px; width: 36px; 
 .split { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 40px; }
 .steps { margin: 0; padding-left: 22px; display: grid; gap: 10px; }
 .req { list-style: none; margin: 0 0 24px; padding: 0; display: grid; gap: 8px; }
-.req li { display: flex; gap: 10px; }
-.req li::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-top: 10px; flex: none; }
+.req li { position: relative; padding-left: 18px; }
+.req li::before { content: ""; position: absolute; left: 0; top: .6em; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
 details { border-bottom: 1px solid var(--line); padding-block: 14px; }
 details summary { cursor: pointer; font-weight: 600; list-style-position: outside; }
 details p { color: var(--muted); margin: 10px 0 0; font-size: 16px; }
