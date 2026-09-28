@@ -47,7 +47,7 @@ private struct CameraMotion {
     let audioLevel: Double
 }
 
-private struct RenderTextureFrame {
+struct RenderTextureFrame {
     let texture: MTLTexture
     let duration: Float
     let uvOrigin: SIMD2<Float>
@@ -345,9 +345,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// 1000x300 px raster plus its coverage) it held ~190 MB, 300 MB or more on Retina/5K. 32 MB
     /// still keeps 20 such rasters (and the full 128 small labels) for scripts that cycle or toggle
     /// strings; every string a frame draws stays regardless (`beginGeneration`).
-    private var textFrameCache = SceneLRUCache<String, (frame: RenderTextureFrame, baseSize: SIMD2<Float>)>(
+    private var textFrameCache = SceneLRUCache<String, SceneTextRasterResult>(
         capacity: 128, costLimit: SceneMetalRenderer.textCacheByteBudget)
     static let textCacheByteBudget = 32 << 20
+    /// Rasterises changed strings off the render thread (`SceneTextRasterQueue`).
+    private let textRaster: SceneTextRasterQueue
     /// The finest raster scale each text layer has needed, so an animated scale doesn't
     /// re-rasterise at every step (see `SceneTextRasterScale.retained`).
     private var textRasterScales: [String: Float] = [:]
@@ -568,6 +570,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             objectIDs = []
             hasContent = false
             textFrameCache.removeAll()
+            textRaster.reset()
             textRasterScales.removeAll()
             clock = SceneClock()
             transforms = .empty
@@ -648,6 +651,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 self.lastCameraMotion = nil
                 self.lastTextSizes.removeAll()
                 self.textFrameCache.removeAll()
+                self.textRaster.reset()
                 self.textRasterScales.removeAll()
                 let running = self.scripts.wallpaper
                 self.scripts.setContent(content.scripts, visibility: content.visibility,
@@ -3055,73 +3059,25 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let cacheKey = "\(stateKey)|\(value)|\(boxSize.x)|\(boxSize.y)|\(fontName)|\(sizeValue)|\(bold)|\(italic)|\(rasterScale)"
             + "|\(text.horizontalAlignment ?? "")|\(text.verticalAlignment ?? "")"
             + (fill.map { "|\($0)" } ?? "")
-        if let cached = textFrameCache.value(for: cacheKey) { return cached }
-
-        let requestedFont = fontName.isEmpty ? (text.font ?? "System") : fontName
-        let pixelSize = SceneTextLayout.pixelSize(pointSize: CGFloat(sizeValue))
-        var font = SceneFontRegistry.font(named: requestedFont, size: pixelSize)
-            ?? NSFont(name: requestedFont, size: pixelSize)
-            ?? NSFont.systemFont(ofSize: pixelSize)
-        if bold { font = NSFontManager.shared.convert(font, toHaveTrait: .boldFontMask) }
-        if italic { font = NSFontManager.shared.convert(font, toHaveTrait: .italicFontMask) }
-        let layout = SceneTextLayout(text: value, font: font, padding: text.padding,
-                                     horizontalAlignment: text.horizontalAlignment, verticalAlignment: text.verticalAlignment,
-                                     maxWidth: text.maxWidth, maxRows: text.maxRows, useEllipsis: text.useEllipsis,
-                                     blockAlign: text.blockAlign)
-        // A white coverage mask, as WE's `font` shader samples its glyphs: colour (authored and
-        // the user's), alpha and brightness are applied when the quad is drawn. Font effects colour
-        // a white raster themselves (`effectText`).
-        let white = NSColor(srgbRed: 1, green: 1, blue: 1, alpha: 1)
-        let color = text.effects != nil ? white
-            : fill.map { NSColor(srgbRed: CGFloat($0.x), green: CGFloat($0.y), blue: CGFloat($0.z), alpha: 1) } ?? white
-        let pixels = SceneTextRasterScale.clamped(rasterScale, boxSize: layout.boxSize)
-        guard let image = layout.rasterize(font: font, color: color, pixelsPerUnit: CGFloat(pixels)),
-              let texture = text.effects.map({ effectText(image, effects: $0, pointSize: sizeValue, pixelsPerUnit: pixels,
-                                                          fill: fill ?? SIMD3(repeating: 1)) })
-                ?? (try? SceneTextureUpload.texture(from: image, loader: textureLoader, device: device)) else {
-            OWELog.error(.scene, "Text layer \(layerID): could not rasterise \(layout.boxSize) at \(pixels) px/unit")
+        let slot = "\(stateKey)|\(fill != nil)|\(pixelsPerUnit == 1)"
+        for done in textRaster.takeFinished() {
+            if let result = done.result { textFrameCache.insert(result, for: done.key, cost: result.cost) }
+        }
+        if let cached = textFrameCache.value(for: cacheKey) {
+            textRaster.show(cached, slot: slot)
+            return (cached.frame, cached.baseSize)
+        }
+        // A changed string is rasterised on a pool job while the previous raster keeps drawing.
+        let request = SceneTextRasterRequest(text: text, value: value,
+                                             fontName: fontName.isEmpty ? (text.font ?? "System") : fontName,
+                                             pointSize: sizeValue, bold: bold, italic: italic,
+                                             rasterScale: rasterScale, fill: fill)
+        guard let (result, isNew) = textRaster.raster(key: cacheKey, slot: slot, request: request) else {
+            OWELog.error(.scene, "Text layer \(layerID): could not rasterise")
             return nil
         }
-        var coverage: MTLTexture?
-        do {
-            // Text with font effects has no coverage mask: it draws its coloured raster.
-            if text.effects == nil { coverage = try SceneTextureUpload.coverageTexture(from: image, device: device) }
-        } catch {
-            OWELog.error(.scene, "Text layer \(layerID): no coverage texture, drawn natively: \(error)")
-            coverage = nil
-        }
-        let entry = (RenderTextureFrame(texture: texture, duration: .greatestFiniteMagnitude,
-                                        uvOrigin: .zero, uvAxisX: SIMD2(1, 0), uvAxisY: SIMD2(0, 1), coverage: coverage,
-                                        textCenter: layout.boxCenter),
-                     layout.boxSize)
-        // Strings change every second for clocks; the LRU keeps the live ones and drops the rest.
-        textFrameCache.insert(entry, for: cacheKey,
-                              cost: texture.allocatedSize + (coverage?.allocatedSize ?? 0))
-        return entry
-    }
-
-    /// The glyphs of `image` (a white raster) with their font effects, as straight-alpha RGBA in
-    /// `fill`'s colour; nil (the caller logs) when it can't be read or uploaded.
-    private func effectText(_ image: CGImage, effects: SceneTextEffects, pointSize: Float, pixelsPerUnit: Float,
-                            fill: SIMD3<Float>) -> MTLTexture? {
-        let coverage: [UInt8]
-        do {
-            guard let white = try SceneTextureUpload.whiteCoverage(image) else { return nil }
-            coverage = white
-        } catch {
-            return nil
-        }
-        let rgba = effects.render(coverage: coverage, width: image.width, height: image.height,
-                                  pixelsPerUnit: pixelsPerUnit, pointSize: pointSize, fill: fill)
-        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: image.width,
-                                                                  height: image.height, mipmapped: false)
-        descriptor.usage = [.shaderRead]
-        guard let texture = device.makeTexture(descriptor: descriptor) else { return nil }
-        rgba.withUnsafeBytes { raw in
-            texture.replace(region: MTLRegionMake2D(0, 0, image.width, image.height), mipmapLevel: 0,
-                            withBytes: raw.baseAddress!, bytesPerRow: image.width * 4)
-        }
-        return texture
+        if isNew { textFrameCache.insert(result, for: cacheKey, cost: result.cost) }
+        return (result.frame, result.baseSize)
     }
 
     /// Maps a scene-unit position and size onto `drawableSize` pixels. Scene draws use
