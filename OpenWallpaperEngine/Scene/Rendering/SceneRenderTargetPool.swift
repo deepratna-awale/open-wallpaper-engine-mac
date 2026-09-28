@@ -15,10 +15,6 @@ import QuartzCore
 /// rate) at `endFrame()`. Eviction drops the pool's reference only; a texture still in flight on
 /// the GPU stays alive until its command buffer completes.
 ///
-/// Targets come from the scene's heap (`SceneHeap`): an evicted texture's memory goes back to it
-/// (`makeAliasable`) for the next target of any size, and chunks left empty are released at
-/// `endFrame()`. Callers must not keep a texture past its lease.
-///
 /// Not thread-safe: owned by one renderer and used on its render thread.
 final class SceneRenderTargetPool {
     private struct Key: Hashable {
@@ -48,14 +44,11 @@ final class SceneRenderTargetPool {
     private let now: () -> TimeInterval
     private var entries: [ObjectIdentifier: Entry] = [:]
     private var useCounter: UInt64 = 0
-    /// Nil makes each target a device allocation of its own.
-    let heap: SceneHeap?
 
     /// `now` is a monotonic clock in seconds (injectable for tests).
     init(device: MTLDevice, byteBudget: Int = 256 << 20, maxIdleSeconds: TimeInterval = 10,
-         now: @escaping () -> TimeInterval = CACurrentMediaTime, useHeap: Bool = true) {
+         now: @escaping () -> TimeInterval = CACurrentMediaTime) {
         self.device = device
-        heap = useHeap ? SceneHeap(device: device) : nil
         self.byteBudget = byteBudget
         self.maxIdleSeconds = maxIdleSeconds
         self.now = now
@@ -96,20 +89,13 @@ final class SceneRenderTargetPool {
         let cutoff = now() - maxIdleSeconds
         for (id, entry) in entries {
             if entry.lease == .frame { entries[id]!.lease = .free }
-            if entries[id]!.lease == .free, entry.lastUse < cutoff { drop(id) }
+            if entries[id]!.lease == .free, entry.lastUse < cutoff { entries[id] = nil }
         }
-        heap?.trim()
     }
 
     /// Drops every free texture; leased ones stay with their holders.
     func removeAll() {
-        for (id, entry) in entries where entry.lease == .free { drop(id) }
-        heap?.trim()
-    }
-
-    private func drop(_ id: ObjectIdentifier) {
-        guard let entry = entries.removeValue(forKey: id) else { return }
-        heap?.recycle(entry.texture)
+        entries = entries.filter { $0.value.lease != .free }
     }
 
     private func lease(width: Int, height: Int, pixelFormat: MTLPixelFormat, usage: MTLTextureUsage,
@@ -129,7 +115,7 @@ final class SceneRenderTargetPool {
                                                                     mipmapped: false)
         descriptor.usage = usage
         descriptor.storageMode = .private
-        guard let texture = heap?.makeTexture(descriptor) ?? device.makeTexture(descriptor: descriptor) else { return nil }
+        guard let texture = device.makeTexture(descriptor: descriptor) else { return nil }
         let id = ObjectIdentifier(texture)
         entries[id] = Entry(texture: texture, key: key, lease: lease, lastUse: now(), useOrder: useCounter)
         evictOverBudget()
@@ -145,7 +131,7 @@ final class SceneRenderTargetPool {
         for (id, entry) in free {
             guard total > byteBudget else { break }
             total -= entry.texture.allocatedSize
-            drop(id)
+            entries[id] = nil
         }
     }
 }

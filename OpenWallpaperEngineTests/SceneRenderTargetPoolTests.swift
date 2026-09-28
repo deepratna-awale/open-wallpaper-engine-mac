@@ -19,8 +19,7 @@ final class SceneRenderTargetPoolTests: XCTestCase {
         let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: width, height: height, mipmapped: false)
         descriptor.usage = [.renderTarget, .shaderRead]
         descriptor.storageMode = .private
-        // The pool's targets come from its heap (`SceneHeap`).
-        return SceneHeap(device: device).makeTexture(descriptor)?.allocatedSize ?? 0
+        return device.makeTexture(descriptor: descriptor)?.allocatedSize ?? 0
     }
 
     func testTwoRequestsInOneFrameGetDistinctTextures() throws {
@@ -85,50 +84,5 @@ final class SceneRenderTargetPoolTests: XCTestCase {
         pool.endFrame()
         XCTAssertTrue(pool.texture(width: 64, height: 64, pixelFormat: .rgba8Unorm) === a, "recently used texture survives")
         XCTAssertFalse(pool.texture(width: 64, height: 32, pixelFormat: .rgba8Unorm) === b, "least recently used was evicted")
-    }
-}
-
-final class SceneHeapTests: XCTestCase {
-    private func descriptor(_ side: Int) -> MTLTextureDescriptor {
-        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: side, height: side, mipmapped: false)
-        descriptor.usage = [.renderTarget, .shaderRead]
-        return descriptor
-    }
-
-    func testTargetsShareAChunkAndAnEmptyChunkIsReleased() throws {
-        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
-        let heap = SceneHeap(device: device, chunkBytes: 8 << 20)
-        var a: MTLTexture? = try XCTUnwrap(heap.makeTexture(descriptor(256)))
-        var b: MTLTexture? = try XCTUnwrap(heap.makeTexture(descriptor(256)))
-        XCTAssertEqual(heap.chunkCount, 1)
-        XCTAssertTrue(a?.heap === b?.heap)
-        heap.recycle(a!)
-        heap.recycle(b!)
-        a = nil
-        b = nil
-        heap.trim()
-        XCTAssertEqual(heap.chunkCount, 0)
-    }
-
-    func testARecycledTargetsMemoryIsTakenByTheNextOfAnotherSize() throws {
-        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
-        let heap = SceneHeap(device: device, chunkBytes: 4 << 20)
-        let big = try XCTUnwrap(heap.makeTexture(descriptor(900)))  // ~3.2 MB of the 4 MB chunk
-        heap.recycle(big)
-        _ = try XCTUnwrap(heap.makeTexture(descriptor(700)))
-        XCTAssertEqual(heap.chunkCount, 1, "the aliased memory is reused instead of a new chunk")
-    }
-
-    func testThePoolDrawsFromTheHeapAndReleasesIdleChunks() throws {
-        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
-        var seconds: TimeInterval = 0
-        let pool = SceneRenderTargetPool(device: device, maxIdleSeconds: 1, now: { seconds })
-        let texture = try XCTUnwrap(pool.texture(width: 64, height: 64, pixelFormat: .rgba8Unorm))
-        XCTAssertNotNil(texture.heap)
-        pool.endFrame()
-        seconds = 5
-        pool.endFrame()
-        XCTAssertEqual(pool.textureCount, 0)
-        XCTAssertEqual(pool.heap?.chunkCount, 0)
     }
 }
