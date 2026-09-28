@@ -108,8 +108,7 @@ private final class SceneUserPropertiesModel: ObservableObject {
     }
 
     private func load(_ wallpaper: WEWallpaper) {
-          guard let data = try? Data(contentsOf: wallpaper.wallpaperDirectory.appending(path: "project.json")),
-              let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+        guard let root = WEProjectFileCache.shared.root(in: wallpaper.wallpaperDirectory) else { return }
         let definitions = UserPropertyDefinition.all(projectJSON: root)
         let labels = WallpaperEngineLabels.load()
         authoredPropertyIDs = Set(definitions.map(\.key))

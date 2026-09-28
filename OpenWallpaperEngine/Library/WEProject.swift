@@ -159,3 +159,77 @@ extension WEProject {
         }
     }
 }
+
+/// project.json, read once per wallpaper and kept in memory: property edits, the web bridge, the
+/// settings identity and the sidebar ask for it again and again, and none of that should touch
+/// the disk. An entry is dropped when the file's modification date or size changes (a Workshop
+/// update, an import, a converter write), so a stat is all a repeat costs.
+final class WEProjectFileCache: @unchecked Sendable {
+    static let shared = WEProjectFileCache()
+
+    /// Entries kept; the oldest go first beyond this (a project.json is a few kilobytes).
+    static let capacity = 512
+
+    struct Entry {
+        let data: Data
+        /// The parsed JSON object; nil when the file isn't a JSON object.
+        let root: [String: Any]?
+        fileprivate let modified: Date?
+        fileprivate let size: Int?
+        fileprivate var lastUse: UInt64
+    }
+
+    private let lock = NSLock()
+    private var entries: [String: Entry] = [:]
+    private var clock: UInt64 = 0
+    /// How many times a project.json was read from disk (for tests and diagnostics).
+    private(set) var diskReads = 0
+
+    /// The raw bytes of `directory`/project.json; throws when it can't be read.
+    func data(in directory: URL) throws -> Data {
+        try entry(in: directory).data
+    }
+
+    /// The parsed JSON object of `directory`/project.json; nil when it can't be read or parsed.
+    func root(in directory: URL) -> [String: Any]? {
+        (try? entry(in: directory))?.root
+    }
+
+    /// Forgets `directory` (after the app writes its project.json), or everything.
+    func invalidate(_ directory: URL? = nil) {
+        lock.lock(); defer { lock.unlock() }
+        if let directory { entries[Self.key(directory)] = nil } else { entries.removeAll() }
+    }
+
+    private static func key(_ directory: URL) -> String {
+        directory.standardizedFileURL.appending(path: "project.json").path
+    }
+
+    private func entry(in directory: URL) throws -> Entry {
+        let path = Self.key(directory)
+        let attributes = try? FileManager.default.attributesOfItem(atPath: path)
+        let modified = attributes?[.modificationDate] as? Date
+        let size = (attributes?[.size] as? NSNumber)?.intValue
+        lock.lock()
+        clock &+= 1
+        if var cached = entries[path], attributes != nil, cached.modified == modified, cached.size == size {
+            cached.lastUse = clock
+            entries[path] = cached
+            lock.unlock()
+            return cached
+        }
+        lock.unlock()
+
+        let data = try Data(contentsOf: URL(filePath: path))
+        let root = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+        lock.lock(); defer { lock.unlock() }
+        diskReads += 1
+        let entry = Entry(data: data, root: root, modified: modified, size: size, lastUse: clock)
+        entries[path] = entry
+        if entries.count > Self.capacity,
+           let oldest = entries.min(by: { $0.value.lastUse < $1.value.lastUse })?.key {
+            entries[oldest] = nil
+        }
+        return entry
+    }
+}

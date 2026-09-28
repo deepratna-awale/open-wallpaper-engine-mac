@@ -43,7 +43,7 @@ struct WallpaperSettingsIdentity: Hashable {
         let projectURL = directory.appending(path: "project.json")
         let projectData: Data?
         do {
-            projectData = try Data(contentsOf: projectURL)
+            projectData = try WEProjectFileCache.shared.data(in: directory)
         } catch {
             OWELog.error(.library, "Could not read \(projectURL.path) to identify its settings: \(error)")
             projectData = nil
