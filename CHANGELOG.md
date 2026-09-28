@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Wallpaper Engine's assets (effects, materials, shaders, models, particles, scripts, fonts and UI strings) no longer ship in the repository or the app. Settings › Assets installs them from the user's own Wallpaper Engine copy on Steam through SteamCMD (keeping only the assets and the default wallpapers, which join the library), or reads them from a chosen Wallpaper Engine folder. Without them, scenes say so and video and web wallpapers still play. Tests read them from `OWE_ASSETS` and skip without it.
+
 ### Added
 
 - Added a native Metal scene renderer with layer compositing, keyframe timelines, camera/projection handling, pooled render targets, effect masking, and additive/alpha blending.

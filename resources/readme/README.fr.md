@@ -7,7 +7,7 @@ Open Wallpaper Engine (version patchée)
 
 Un fork patché d’[Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) pour macOS, qui ajoute le rendu des fonds d’écran de scène et des corrections pour les fonds d’écran web.
 
-> **Remarque :** ce projet n’est PAS affilié au logiciel commercial Wallpaper Engine vendu sur Steam. Il s’agit d’une app open source pour macOS capable d’afficher les ressources de fonds d’écran du Steam Workshop de Wallpaper Engine. → [ATTRIBUTION.txt](../../Vendor/we-assets/ATTRIBUTION.txt)
+> **Remarque :** ce projet n’est PAS affilié au logiciel commercial Wallpaper Engine vendu sur Steam. Il s’agit d’une app open source pour macOS capable d’afficher les ressources de fonds d’écran du Steam Workshop de Wallpaper Engine. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
 ## Projets associés
 
@@ -271,7 +271,7 @@ Wallpaper Engine fournit ses effets en GLSL. Ils sont traduits pour Metal (GLSL 
 
 #### Ressources de Wallpaper Engine
 
-Les effets, matériaux, nuanceurs et l’environnement d’exécution SceneScript partagés auxquels les fonds d’écran font référence sont fournis avec l’app (`Vendor/we-assets`, actualisé à partir d’une installation de Wallpaper Engine avec `Scripts/vendor-we-assets.sh`). Il n’y a rien à configurer.
+Les scènes utilisent les effets, matériaux, nuanceurs, polices et l’environnement d’exécution SceneScript partagés de votre propre copie de Wallpaper Engine sur Steam ; l’app ne les fournit pas. Installez-les dans *Réglages → Ressources* : l’app télécharge votre copie avec steamcmd (le compte doit posséder Wallpaper Engine), ne garde que les ressources et les fonds d’écran par défaut, et supprime le reste. Vous pouvez aussi choisir un dossier Wallpaper Engine existant. Les fonds d’écran vidéo et web fonctionnent sans elles.
 
 ## Compilation à partir des sources
 
@@ -315,5 +315,5 @@ Dans Xcode, remplacez le certificat de signature par le vôtre ou sélectionnez 
 - `OpenWallpaperEngine/Scene/Rendering/SceneMetalRenderer.swift`, `SceneShaders.metal` — le moteur de rendu de scène Metal et la bibliothèque de nuanceurs
 - `OpenWallpaperEngine/Workshop/SteamCmdService.swift`, `WorkshopAPIService.swift`, `WorkshopViewModel.swift` — navigation dans le Steam Workshop et téléchargements
 - `OpenWallpaperEngine/Library/WallpaperDirectory.swift`, `ZipImporter.swift`, `WallpaperPackageConverter.swift` — stockage de la bibliothèque, importation et conversion des paquets
-- `Scripts/vendor-we-assets.sh` — intègre les nuanceurs d’effets traduits et les manifestes dans `we-assets/`
+- `Scripts/fill-assets-cache.sh` — outil de développement : copie les ressources d’une installation de Wallpaper Engine dans un dossier local ou dans le cache du stockage des fonds d’écran
 - `Scripts/scene-api-coverage.py` — indique quelles API SceneScript les fonds d’écran installés utilisent par rapport à celles qui sont implémentées

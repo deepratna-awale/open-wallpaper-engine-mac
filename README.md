@@ -7,7 +7,7 @@ Open Wallpaper Engine (Patched)
 
 A patched fork of [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) for macOS, adding scene wallpaper rendering and web wallpaper fixes.
 
-> **Note:** This is NOT affiliated with the commercial Wallpaper Engine on Steam. This is an open-source macOS app that can display wallpaper assets from Wallpaper Engine's Steam Workshop. → [ATTRIBUTION.txt](Vendor/we-assets/ATTRIBUTION.txt)
+> **Note:** This is NOT affiliated with the commercial Wallpaper Engine on Steam. This is an open-source macOS app that can display wallpaper assets from Wallpaper Engine's Steam Workshop. → [ATTRIBUTION.txt](ATTRIBUTION.txt)
 
 ## Related Projects
 
@@ -271,7 +271,7 @@ Wallpaper Engine ships its effects as GLSL. They are translated to Metal (GLSL �
 
 #### Wallpaper Engine assets
 
-The shared effects, materials, shaders and SceneScript runtime that wallpapers reference ship inside the app (`Vendor/we-assets`, refreshed from a Wallpaper Engine install with `Scripts/vendor-we-assets.sh`). There is nothing to configure.
+Scenes use Wallpaper Engine's shared effects, materials, shaders, fonts and SceneScript runtime from your own Wallpaper Engine copy on Steam; the app doesn't ship them. Install them in *Settings → Assets*: the app downloads your copy with steamcmd (the account must own Wallpaper Engine), keeps only the assets and the default wallpapers, and deletes the rest. You can also choose an existing Wallpaper Engine folder. Video and web wallpapers work without them.
 
 ## Build from Source
 
@@ -315,5 +315,5 @@ In Xcode, change the signing certificate to your own or select "Sign to Run Loca
 - `OpenWallpaperEngine/Scene/Rendering/SceneMetalRenderer.swift`, `SceneShaders.metal` — the Metal scene renderer and shader library
 - `OpenWallpaperEngine/Workshop/SteamCmdService.swift`, `WorkshopAPIService.swift`, `WorkshopViewModel.swift` — Steam Workshop browsing and downloads
 - `OpenWallpaperEngine/Library/WallpaperDirectory.swift`, `ZipImporter.swift`, `WallpaperPackageConverter.swift` — library storage, import, and package conversion
-- `Scripts/vendor-we-assets.sh` — vendors translated effect shaders and manifests into `we-assets/`
+- `Scripts/fill-assets-cache.sh` — development helper: copies the assets subset of a Wallpaper Engine install into a local folder or the Wallpaper Storage cache
 - `Scripts/scene-api-coverage.py` — reports which SceneScript APIs installed wallpapers use versus what is implemented

@@ -76,7 +76,7 @@ These are folders in the app target today. The scene engine (`Scene/`, `Audio/`,
 ### `Resources/`
 
 - `Assets.xcassets`, `Localizable.xcstrings`, media.
-- The vendored WE runtime assets live outside the app folder in `Vendor/we-assets/` (repo root). They're a **folder reference**, copied into the app as `Resources/we-assets` and never compiled.
+- No Wallpaper Engine files ship in the repository or the app. `Core/WallpaperEngineAssets` resolves them at runtime: a WE install the user chose, else the cache in the Wallpaper Storage folder (`<storage>/.owe-assets`, filled by `Workshop/WallpaperEngineAssetsService` from the user's Steam copy through SteamCMD), else none (scenes show that they need them). Tests read them only from `OWE_ASSETS`.
 
 ## Scene data flow
 

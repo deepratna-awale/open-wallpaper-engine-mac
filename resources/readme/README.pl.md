@@ -7,7 +7,7 @@ Open Wallpaper Engine (wersja poprawiona)
 
 Poprawiony fork [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) dla macOS, który dodaje renderowanie tapet typu scena i poprawki tapet internetowych.
 
-> **Uwaga:** Ten projekt NIE jest powiązany z komercyjnym programem Wallpaper Engine dostępnym w Steam. To aplikacja open source dla macOS, która potrafi wyświetlać zasoby tapet z Warsztatu Steam programu Wallpaper Engine. → [ATTRIBUTION.txt](../../Vendor/we-assets/ATTRIBUTION.txt)
+> **Uwaga:** Ten projekt NIE jest powiązany z komercyjnym programem Wallpaper Engine dostępnym w Steam. To aplikacja open source dla macOS, która potrafi wyświetlać zasoby tapet z Warsztatu Steam programu Wallpaper Engine. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
 ## Powiązane projekty
 
@@ -271,7 +271,7 @@ Wallpaper Engine dostarcza swoje efekty w postaci GLSL. Są one tłumaczone na M
 
 #### Zasoby Wallpaper Engine
 
-Współdzielone efekty, materiały, shadery i środowisko uruchomieniowe SceneScript, do których odwołują się tapety, są dostarczane wraz z aplikacją (`Vendor/we-assets`, odświeżane z instalacji Wallpaper Engine za pomocą `Scripts/vendor-we-assets.sh`). Nie trzeba niczego konfigurować.
+Sceny korzystają ze wspólnych efektów, materiałów, shaderów, czcionek i środowiska uruchomieniowego SceneScript z Twojej kopii Wallpaper Engine w Steam; aplikacja ich nie zawiera. Zainstaluj je w *Ustawienia → Zasoby*: aplikacja pobiera Twoją kopię przez steamcmd (konto musi posiadać Wallpaper Engine), zachowuje tylko zasoby i domyślne tapety, a resztę usuwa. Możesz też wybrać istniejący folder Wallpaper Engine. Tapety wideo i sieciowe działają bez nich.
 
 ## Kompilowanie ze źródeł
 
@@ -315,5 +315,5 @@ W Xcode zmień certyfikat podpisywania na własny lub wybierz „Sign to Run Loc
 - `OpenWallpaperEngine/Scene/Rendering/SceneMetalRenderer.swift`, `SceneShaders.metal` — renderer scen Metal i biblioteka shaderów
 - `OpenWallpaperEngine/Workshop/SteamCmdService.swift`, `WorkshopAPIService.swift`, `WorkshopViewModel.swift` — przeglądanie Warsztatu Steam i pobieranie
 - `OpenWallpaperEngine/Library/WallpaperDirectory.swift`, `ZipImporter.swift`, `WallpaperPackageConverter.swift` — przechowywanie biblioteki, import i konwersja pakietów
-- `Scripts/vendor-we-assets.sh` — kopiuje przetłumaczone shadery efektów i manifesty do `we-assets/`
+- `Scripts/fill-assets-cache.sh` — narzędzie dla programistów: kopiuje zasoby instalacji Wallpaper Engine do lokalnego folderu lub pamięci podręcznej magazynu tapet
 - `Scripts/scene-api-coverage.py` — raportuje, których interfejsów API SceneScript używają zainstalowane tapety w porównaniu z tym, co zostało zaimplementowane

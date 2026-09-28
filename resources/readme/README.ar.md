@@ -9,7 +9,7 @@ Open Wallpaper Engine (نسخة مُعدَّلة)
 
 نسخة مُعدَّلة (fork) من [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) لنظام macOS، تضيف عرض خلفيات المشهد وإصلاحات لخلفيات الويب.
 
-> **ملاحظة:** هذا المشروع غير تابع لتطبيق Wallpaper Engine التجاري على Steam. إنه تطبيق مفتوح المصدر لنظام macOS يمكنه عرض ملفات خلفيات الشاشة من ورشة Steam الخاصة بـ Wallpaper Engine. → [ATTRIBUTION.txt](../../Vendor/we-assets/ATTRIBUTION.txt)
+> **ملاحظة:** هذا المشروع غير تابع لتطبيق Wallpaper Engine التجاري على Steam. إنه تطبيق مفتوح المصدر لنظام macOS يمكنه عرض ملفات خلفيات الشاشة من ورشة Steam الخاصة بـ Wallpaper Engine. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
 ## مشاريع ذات صلة
 
@@ -273,7 +273,7 @@ Open Wallpaper Engine (نسخة مُعدَّلة)
 
 #### ملفات Wallpaper Engine
 
-تأتي التأثيرات والمواد والمظللات المشتركة وبيئة تشغيل SceneScript التي تشير إليها خلفيات الشاشة مضمَّنة داخل التطبيق (`Vendor/we-assets`، ويجري تحديثها من تثبيت Wallpaper Engine باستخدام `Scripts/vendor-we-assets.sh`). لا يوجد ما يتطلب التهيئة.
+تستخدم المشاهد التأثيرات والمواد والمظللات والخطوط المشتركة وبيئة تشغيل SceneScript من نسختك الخاصة من Wallpaper Engine على Steam؛ ولا يتضمنها التطبيق. ثبّتها من *الإعدادات ← الموارد*: ينزّل التطبيق نسختك باستخدام steamcmd (يجب أن يمتلك الحساب Wallpaper Engine)، ويحتفظ بالموارد والخلفيات الافتراضية فقط، ويحذف الباقي. يمكنك أيضًا اختيار مجلد Wallpaper Engine موجود. تعمل خلفيات الفيديو والويب بدونها.
 
 ## البناء من المصدر
 
@@ -317,7 +317,7 @@ open "OpenWallpaperEngine.xcodeproj"
 - `OpenWallpaperEngine/Scene/Rendering/SceneMetalRenderer.swift` و`SceneShaders.metal` — عارض المشاهد في Metal ومكتبة المظللات
 - `OpenWallpaperEngine/Workshop/SteamCmdService.swift` و`WorkshopAPIService.swift` و`WorkshopViewModel.swift` — تصفح ورشة Steam والتنزيلات
 - `OpenWallpaperEngine/Library/WallpaperDirectory.swift` و`ZipImporter.swift` و`WallpaperPackageConverter.swift` — تخزين المكتبة، والاستيراد، وتحويل الحزم
-- `Scripts/vendor-we-assets.sh` — يضمّن مظللات التأثيرات المترجمة وملفات البيان في `we-assets/`
+- `Scripts/fill-assets-cache.sh` — أداة مساعدة للتطوير: تنسخ موارد تثبيت Wallpaper Engine إلى مجلد محلي أو إلى ذاكرة التخزين المؤقت في مخزن خلفيات الشاشة
 - `Scripts/scene-api-coverage.py` — يوضح واجهات SceneScript البرمجية التي تستخدمها خلفيات الشاشة المثبتة مقارنةً بما هو منفَّذ
 
 </div>

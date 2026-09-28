@@ -7,7 +7,7 @@ Open Wallpaper Engine (com patches)
 
 Um fork com patches do [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) para macOS, que adiciona a renderização de imagens de fundo de cena e correções para imagens de fundo web.
 
-> **Observação:** este projeto NÃO tem nenhuma relação com o Wallpaper Engine comercial vendido no Steam. É um app de código aberto para macOS capaz de exibir os recursos de imagens de fundo da Oficina Steam do Wallpaper Engine. → [ATTRIBUTION.txt](../../Vendor/we-assets/ATTRIBUTION.txt)
+> **Observação:** este projeto NÃO tem nenhuma relação com o Wallpaper Engine comercial vendido no Steam. É um app de código aberto para macOS capaz de exibir os recursos de imagens de fundo da Oficina Steam do Wallpaper Engine. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
 ## Projetos Relacionados
 
@@ -271,7 +271,7 @@ O Wallpaper Engine fornece seus efeitos em GLSL. Eles são traduzidos para Metal
 
 #### Recursos do Wallpaper Engine
 
-Os efeitos, materiais, shaders e o runtime do SceneScript compartilhados aos quais as imagens de fundo fazem referência são fornecidos dentro do app (`Vendor/we-assets`, atualizados a partir de uma instalação do Wallpaper Engine com `Scripts/vendor-we-assets.sh`). Não há nada para configurar.
+As cenas usam os efeitos, materiais, shaders, fontes e o runtime do SceneScript compartilhados da sua própria cópia do Wallpaper Engine no Steam; o app não os inclui. Instale-os em *Ajustes → Recursos*: o app baixa sua cópia com o steamcmd (a conta precisa ter o Wallpaper Engine), mantém apenas os recursos e as imagens de fundo padrão e apaga o resto. Você também pode escolher uma pasta existente do Wallpaper Engine. Imagens de fundo de vídeo e web funcionam sem eles.
 
 ## Compilar a partir do Código-Fonte
 
@@ -315,5 +315,5 @@ No Xcode, altere o certificado de assinatura para o seu ou selecione "Sign to Ru
 - `OpenWallpaperEngine/Scene/Rendering/SceneMetalRenderer.swift`, `SceneShaders.metal` — o renderizador de cenas em Metal e a biblioteca de shaders
 - `OpenWallpaperEngine/Workshop/SteamCmdService.swift`, `WorkshopAPIService.swift`, `WorkshopViewModel.swift` — navegação e downloads da Oficina Steam
 - `OpenWallpaperEngine/Library/WallpaperDirectory.swift`, `ZipImporter.swift`, `WallpaperPackageConverter.swift` — armazenamento da biblioteca, importação e conversão de pacotes
-- `Scripts/vendor-we-assets.sh` — incorpora ao projeto os shaders de efeitos traduzidos e os manifestos em `we-assets/`
+- `Scripts/fill-assets-cache.sh` — ferramenta de desenvolvimento: copia os recursos de uma instalação do Wallpaper Engine para uma pasta local ou para o cache do armazenamento de imagens de fundo
 - `Scripts/scene-api-coverage.py` — informa quais APIs do SceneScript as imagens de fundo instaladas usam em comparação com o que está implementado

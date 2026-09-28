@@ -110,6 +110,7 @@
             <li>Metal on the GPU; Wallpaper Engine's GLSL is translated to Metal (GLSL → SPIR-V → MSL) by glslang and SPIRV-Cross built into the app</li>
             <li>Translated shaders are cached on disk and compiled in the background</li>
             <li>Workshop authors' own custom effects run through the same path</li>
+            <li>Built-in effects need Wallpaper Engine on Steam: the app installs its assets from your own copy</li>
             <li>Colour lookup tables, Wallpaper Engine's colour correction, bloom and HDR bloom</li>
             <li>"Ultra (Display HDR)" outputs EDR on HDR-capable displays</li>
             <li>Puppet Warp images with bone physics</li>
@@ -290,6 +291,7 @@
           <li>macOS 14 Sonoma or later, on a Mac with Metal</li>
           <li>Liquid Glass interface on macOS 26</li>
           <li>Now Playing needs macOS 15.4 or later</li>
+          <li>Scene wallpapers need Wallpaper Engine assets from your Steam copy (a Steam account that owns Wallpaper Engine); video and web wallpapers don't</li>
           <li>Workshop downloads need <code>steamcmd</code> (<code>brew install steamcmd</code>) and a Steam account that owns Wallpaper Engine</li>
           <li>Audio-reactive wallpapers need the Screen &amp; System Audio Recording permission</li>
         </ul>
@@ -297,7 +299,8 @@
           <li>Download the DMG from the button above.</li>
           <li>Open it and drag Open Wallpaper Engine to Applications.</li>
           <li>Open the app. The download is signed and notarized by Apple, so macOS opens it without a Gatekeeper warning; the first time, it asks you to confirm opening an app downloaded from the internet.</li>
-          <li>Import wallpaper folders or <code>.zip</code> packages, or log in to the Workshop tab to download.</li>
+          <li>Log in to the Workshop tab, then install the Wallpaper Engine assets in Settings → Assets, or choose an existing Wallpaper Engine folder there.</li>
+          <li>Import wallpaper folders or <code>.zip</code> packages, or download from the Workshop tab.</li>
         </ol>
       </div>
       <div id="faq">
@@ -305,7 +308,7 @@
         <h2>Questions</h2>
         <details>
           <summary>Do I need Wallpaper Engine installed?</summary>
-          <p>No. The shared effects, materials, shaders and SceneScript runtime that wallpapers reference ship inside the app, and shaders are translated by a compiler built into it. Nothing else needs to be installed to play wallpapers.</p>
+          <p>Scenes need Wallpaper Engine's built-in effects, materials, shaders, fonts and SceneScript runtime, which the app doesn't ship. Settings → Assets downloads them from your own Wallpaper Engine copy on Steam with SteamCMD, keeps only those files and Wallpaper Engine's default wallpapers, and deletes the rest; or you can choose an existing Wallpaper Engine folder. Video and web wallpapers play without them. Shaders are translated by a compiler built into the app.</p>
         </details>
         <details>
           <summary>What does "Wallpaper Engine format" mean?</summary>
@@ -317,7 +320,7 @@
         </details>
         <details>
           <summary>Do I need to own Wallpaper Engine?</summary>
-          <p>To download from the Steam Workshop, yes: SteamCMD downloads Workshop items only for an account that owns Wallpaper Engine. Wallpapers you already have can be imported without Steam.</p>
+          <p>For scene wallpapers and the Steam Workshop, yes: the built-in effects come from your own Wallpaper Engine copy, and SteamCMD downloads the app and Workshop items only for an account that owns Wallpaper Engine. Video and web wallpapers you already have can be imported and played without Steam.</p>
         </details>
         <details>
           <summary>Which wallpapers do not work?</summary>
@@ -364,7 +367,7 @@
     <p>Free and open source under the <a href="https://github.com/deepratna-awale/wallpaper-engine-mac/blob/main/LICENSE">GPL-3.0 licence</a> ·
       <a href="https://github.com/deepratna-awale/wallpaper-engine-mac">Source</a> ·
       <a href="https://github.com/deepratna-awale/wallpaper-engine-mac/releases">All releases</a> ·
-      <a href="https://github.com/deepratna-awale/wallpaper-engine-mac/blob/main/Vendor/we-assets/ATTRIBUTION.txt">Attribution</a></p>
+      <a href="https://github.com/deepratna-awale/wallpaper-engine-mac/blob/main/ATTRIBUTION.txt">Attribution</a></p>
     <p>Open Wallpaper Engine is not affiliated with Wallpaper Engine or Valve. Wallpapers belong to their authors.</p>
   </div>
 </footer>

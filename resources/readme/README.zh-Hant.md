@@ -7,7 +7,7 @@ Open Wallpaper Engine（修補版）
 
 這是 [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) 針對 macOS 的修補分支，加入了場景背景圖片渲染，並修正了網頁背景圖片的問題。
 
-> **注意：** 本專案與 Steam 上的商業軟體 Wallpaper Engine 無關。這是一款開源的 macOS App，可顯示來自 Wallpaper Engine Steam 工作坊的背景圖片素材。 → [ATTRIBUTION.txt](../../Vendor/we-assets/ATTRIBUTION.txt)
+> **注意：** 本專案與 Steam 上的商業軟體 Wallpaper Engine 無關。這是一款開源的 macOS App，可顯示來自 Wallpaper Engine Steam 工作坊的背景圖片素材。 → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
 ## 相關專案
 
@@ -271,7 +271,7 @@ Wallpaper Engine 以 GLSL 形式提供其效果。當背景圖片首次使用這
 
 #### Wallpaper Engine 素材
 
-背景圖片所參照的共用效果、材質、著色器與 SceneScript 執行環境皆隨附於 App 中（`Vendor/we-assets`，透過 `Scripts/vendor-we-assets.sh` 從 Wallpaper Engine 安裝中更新）。無需進行任何設定。
+場景使用你在 Steam 上的 Wallpaper Engine 副本中的共用效果、材質、著色器、字體與 SceneScript 執行環境；App 不隨附這些資源。請在「設定 → 資源」中安裝：App 會用 steamcmd 下載你的副本（該帳號必須擁有 Wallpaper Engine），只保留資源與預設背景圖片，其餘部分會被刪除。你也可以選擇現有的 Wallpaper Engine 檔案夾。影片與網頁背景圖片不需要這些資源即可使用。
 
 ## 從原始碼建置
 
@@ -315,5 +315,5 @@ open "OpenWallpaperEngine.xcodeproj"
 - `OpenWallpaperEngine/Scene/Rendering/SceneMetalRenderer.swift`、`SceneShaders.metal` — Metal 場景渲染器與著色器函式庫
 - `OpenWallpaperEngine/Workshop/SteamCmdService.swift`、`WorkshopAPIService.swift`、`WorkshopViewModel.swift` — Steam 工作坊瀏覽與下載
 - `OpenWallpaperEngine/Library/WallpaperDirectory.swift`、`ZipImporter.swift`、`WallpaperPackageConverter.swift` — 資料庫儲存、輸入與套件轉換
-- `Scripts/vendor-we-assets.sh` — 將轉換後的效果著色器與清單納入 `we-assets/`
+- `Scripts/fill-assets-cache.sh` — 開發輔助工具：將 Wallpaper Engine 安裝中的資源拷貝到本機檔案夾或背景圖片儲存位置的快取
 - `Scripts/scene-api-coverage.py` — 報告已安裝的背景圖片使用了哪些 SceneScript API，並與已實作的 API 進行比較

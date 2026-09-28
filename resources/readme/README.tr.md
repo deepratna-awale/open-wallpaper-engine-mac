@@ -7,7 +7,7 @@ Open Wallpaper Engine (Yamalı Sürüm)
 
 [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac)’in macOS için yamalı bir çatalı; sahne duvar kâğıdı işleme ve web duvar kâğıdı düzeltmeleri ekler.
 
-> **Not:** Bu proje, Steam’deki ticari Wallpaper Engine ile bağlantılı DEĞİLDİR. Wallpaper Engine’in Steam Atölyesi’ndeki duvar kâğıdı varlıklarını görüntüleyebilen açık kaynaklı bir macOS uygulamasıdır. → [ATTRIBUTION.txt](../../Vendor/we-assets/ATTRIBUTION.txt)
+> **Not:** Bu proje, Steam’deki ticari Wallpaper Engine ile bağlantılı DEĞİLDİR. Wallpaper Engine’in Steam Atölyesi’ndeki duvar kâğıdı varlıklarını görüntüleyebilen açık kaynaklı bir macOS uygulamasıdır. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
 ## İlgili Projeler
 
@@ -271,7 +271,7 @@ Wallpaper Engine efektlerini GLSL olarak sunar. Bu efektler, bir duvar kâğıd�
 
 #### Wallpaper Engine varlıkları
 
-Duvar kâğıtlarının başvurduğu paylaşılan efektler, malzemeler, gölgelendiriciler ve SceneScript çalışma zamanı uygulamanın içinde gelir (`Vendor/we-assets`; bir Wallpaper Engine kurulumundan `Scripts/vendor-we-assets.sh` ile yenilenir). Yapılandırmanız gereken hiçbir şey yoktur.
+Sahneler, Steam’deki kendi Wallpaper Engine kopyanızdaki paylaşılan efektleri, malzemeleri, gölgelendiricileri, fontları ve SceneScript çalışma zamanını kullanır; uygulama bunları içermez. Bunları *Ayarlar → Varlıklar*’dan yükleyin: uygulama kopyanızı steamcmd ile indirir (hesabın Wallpaper Engine’e sahip olması gerekir), yalnızca varlıkları ve varsayılan duvar kâğıtlarını tutar, gerisini siler. Mevcut bir Wallpaper Engine klasörünü de seçebilirsiniz. Video ve web duvar kâğıtları onlarsız çalışır.
 
 ## Kaynaktan Derleme
 
@@ -315,5 +315,5 @@ Xcode’da imzalama sertifikasını kendi sertifikanızla değiştirin veya “S
 - `OpenWallpaperEngine/Scene/Rendering/SceneMetalRenderer.swift`, `SceneShaders.metal` — Metal sahne işleyicisi ve gölgelendirici kitaplığı
 - `OpenWallpaperEngine/Workshop/SteamCmdService.swift`, `WorkshopAPIService.swift`, `WorkshopViewModel.swift` — Steam Atölyesi’ne göz atma ve indirmeler
 - `OpenWallpaperEngine/Library/WallpaperDirectory.swift`, `ZipImporter.swift`, `WallpaperPackageConverter.swift` — arşiv depolama, içe aktarma ve paket dönüştürme
-- `Scripts/vendor-we-assets.sh` — çevrilmiş efekt gölgelendiricilerini ve bildirimleri `we-assets/` içine aktarır
+- `Scripts/fill-assets-cache.sh` — geliştirme yardımcısı: bir Wallpaper Engine kurulumunun varlıklarını yerel bir klasöre veya Duvar Kâğıdı Deposu önbelleğine kopyalar
 - `Scripts/scene-api-coverage.py` — kurulu duvar kâğıtlarının hangi SceneScript API’lerini kullandığını ve bunlardan hangilerinin uygulandığını raporlar

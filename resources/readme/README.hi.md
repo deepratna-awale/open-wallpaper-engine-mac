@@ -7,7 +7,7 @@ Open Wallpaper Engine (पैच किया गया)
 
 macOS के लिए [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) का एक पैच किया गया fork, जो सीन वॉलपेपर रेंडरिंग और वेब वॉलपेपर के सुधार जोड़ता है.
 
-> **नोट:** यह Steam पर उपलब्ध कमर्शियल Wallpaper Engine से संबद्ध नहीं है. यह एक ओपन-सोर्स macOS ऐप है, जो Wallpaper Engine के Steam Workshop के वॉलपेपर एसेट दिखा सकता है. → [ATTRIBUTION.txt](../../Vendor/we-assets/ATTRIBUTION.txt)
+> **नोट:** यह Steam पर उपलब्ध कमर्शियल Wallpaper Engine से संबद्ध नहीं है. यह एक ओपन-सोर्स macOS ऐप है, जो Wallpaper Engine के Steam Workshop के वॉलपेपर एसेट दिखा सकता है. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
 ## संबंधित प्रोजेक्ट
 
@@ -271,7 +271,7 @@ Wallpaper Engine अपने इफ़ेक्ट GLSL में देता 
 
 #### Wallpaper Engine एसेट
 
-वॉलपेपर जिन साझा इफ़ेक्ट, मटीरियल, शेडर और SceneScript रनटाइम का रेफ़रेंस देते हैं, वे ऐप के अंदर ही आते हैं (`Vendor/we-assets`, जिन्हें `Scripts/vendor-we-assets.sh` से Wallpaper Engine इंस्टॉलेशन से रीफ़्रेश किया जाता है). कुछ भी कॉन्फ़िगर करने की ज़रूरत नहीं है.
+सीन आपकी Steam पर मौजूद Wallpaper Engine कॉपी के साझा इफ़ेक्ट, मटीरियल, शेडर, फ़ॉन्ट और SceneScript रनटाइम इस्तेमाल करते हैं; ऐप इन्हें साथ नहीं लाता। इन्हें *सेटिंग → ऐसेट* में इंस्टॉल करें: ऐप steamcmd से आपकी कॉपी डाउनलोड करता है (अकाउंट के पास Wallpaper Engine होना चाहिए), सिर्फ़ ऐसेट और डिफ़ॉल्ट वॉलपेपर रखता है, और बाक़ी डिलीट कर देता है। आप कोई मौजूदा Wallpaper Engine फ़ोल्डर भी चुन सकते हैं। वीडियो और वेब वॉलपेपर इनके बिना चलते हैं।
 
 ## सोर्स से बिल्ड करें
 
@@ -315,5 +315,5 @@ Xcode में, साइनिंग सर्टिफ़िकेट को 
 - `OpenWallpaperEngine/Scene/Rendering/SceneMetalRenderer.swift`, `SceneShaders.metal` — Metal सीन रेंडरर और शेडर लाइब्रेरी
 - `OpenWallpaperEngine/Workshop/SteamCmdService.swift`, `WorkshopAPIService.swift`, `WorkshopViewModel.swift` — Steam Workshop ब्राउज़िंग और डाउनलोड
 - `OpenWallpaperEngine/Library/WallpaperDirectory.swift`, `ZipImporter.swift`, `WallpaperPackageConverter.swift` — लाइब्रेरी स्टोरेज, इंपोर्ट और पैकेज कन्वर्ज़न
-- `Scripts/vendor-we-assets.sh` — ट्रांसलेट किए गए इफ़ेक्ट शेडर और मैनिफ़ेस्ट को `we-assets/` में वेंडर करता है
+- `Scripts/fill-assets-cache.sh` — डेवलपमेंट हेल्पर: किसी Wallpaper Engine इंस्टॉलेशन के ऐसेट को लोकल फ़ोल्डर या वॉलपेपर स्टोरेज कैश में कॉपी करता है
 - `Scripts/scene-api-coverage.py` — बताता है कि इंस्टॉल किए गए वॉलपेपर कौन-से SceneScript API इस्तेमाल करते हैं और उनमें से क्या इम्प्लीमेंट किया गया है

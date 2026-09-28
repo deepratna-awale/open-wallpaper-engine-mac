@@ -18,7 +18,7 @@ In order of precedence:
    has no Hindi, and Arabic only in its client files; Hindi keeps "Workshop" in Latin script.
 3. **Microsoft Terminology** (the Microsoft Terminology Collection, TBX) for general software terms
    Apple doesn't name: refresh, sort, anti-aliasing, frame rate, shader, texture.
-4. **Wallpaper Engine's own UI** (`Vendor/we-assets/locale/ui_*.json`) for wallpaper-domain terms:
+4. **Wallpaper Engine's own UI** (`locale/ui_*.json` of a Wallpaper Engine install, or of the assets cache) for wallpaper-domain terms:
    scene, bloom, parallax, audio responsive, particle, age ratings.
 
 **Age rating “Questionable”** is Wallpaper Engine's middle tier between Everyone and Mature
@@ -97,18 +97,18 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Show in Finder (Open in Finder) | Im Finder anzeigen | [macOS strings](#sources) |
 | Sidebar / Inspector | Seitenleiste / Inspektor | [Apple](https://support.apple.com/de-de/guide/mac-help/mchl83c9e8b8/mac) · [macOS strings](#sources) |
 | Preview | Vorschau | [macOS strings](#sources) |
-| Mute / Unmute / Pause / Resume / Play | Ton aus / Ton ein / Pause / Fortsetzen / Wiedergeben | [macOS strings](#sources) · [WE `ui_de-de.json`](../Vendor/we-assets/locale/ui_de-de.json) |
-| Scene / Video / Web / Application (wallpaper types) | Szene / Video / Web / Anwendung | [WE `ui_de-de.json`](../Vendor/we-assets/locale/ui_de-de.json) |
-| Particle / particle system | Partikel / Partikelsystem | [WE `ui_de-de.json`](../Vendor/we-assets/locale/ui_de-de.json) · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
-| Bloom (glow effect) | Bloom | [WE `ui_de-de.json`](../Vendor/we-assets/locale/ui_de-de.json) |
-| Parallax | Parallaxe | [WE `ui_de-de.json`](../Vendor/we-assets/locale/ui_de-de.json) |
-| Audio responsive | Audio-reaktiv | [WE `ui_de-de.json`](../Vendor/we-assets/locale/ui_de-de.json) |
-| Anti-aliasing / Post-processing / Frame rate (FPS) | Antialiasing / Post-Processing / Bildrate (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_de-de.json`](../Vendor/we-assets/locale/ui_de-de.json) |
-| Texture / Shader / Material / Layer / Effect | Textur / Shader / Material / Ebene / Effekt | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_de-de.json`](../Vendor/we-assets/locale/ui_de-de.json) |
-| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | Altersfreigabe: Jeder / Ab 12 / Nicht jugendfrei | [WE `ui_de-de.json`](../Vendor/we-assets/locale/ui_de-de.json) · [FSK/USK „ab 12“](https://usk.de/alle-lernangebote/die-usk-alterskennzeichen/) |
+| Mute / Unmute / Pause / Resume / Play | Ton aus / Ton ein / Pause / Fortsetzen / Wiedergeben | [macOS strings](#sources) · WE `ui_de-de.json` |
+| Scene / Video / Web / Application (wallpaper types) | Szene / Video / Web / Anwendung | WE `ui_de-de.json` |
+| Particle / particle system | Partikel / Partikelsystem | WE `ui_de-de.json` · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
+| Bloom (glow effect) | Bloom | WE `ui_de-de.json` |
+| Parallax | Parallaxe | WE `ui_de-de.json` |
+| Audio responsive | Audio-reaktiv | WE `ui_de-de.json` |
+| Anti-aliasing / Post-processing / Frame rate (FPS) | Antialiasing / Post-Processing / Bildrate (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_de-de.json` |
+| Texture / Shader / Material / Layer / Effect | Textur / Shader / Material / Ebene / Effekt | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_de-de.json` |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | Altersfreigabe: Jeder / Ab 12 / Nicht jugendfrei | WE `ui_de-de.json` · [FSK/USK „ab 12“](https://usk.de/alle-lernangebote/die-usk-alterskennzeichen/) |
 | Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | Niedrige Auflösung | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | Bildschirmfüllend / An Bildschirm anpassen / Zentriert / Bildschirmfüllend vergrößern / Zoomen | [Apple](https://support.apple.com/de-de/guide/mac-help/mchlp1103/13.0/mac/13.0) |
-| Plugins / Diagnostics / Permissions / Performance / General / About | Plug-ins / Diagnose / Berechtigungen / Leistung / Allgemein / Info | [WE `ui_de-de.json`](../Vendor/we-assets/locale/ui_de-de.json) · [macOS strings](#sources) |
+| Plugins / Diagnostics / Permissions / Performance / General / About | Plug-ins / Diagnose / Berechtigungen / Leistung / Allgemein / Info | WE `ui_de-de.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | Hintergrundbild-Speicher | derived from “Wallpaper” |
 
 ## Français (fr)
@@ -138,18 +138,18 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Show in Finder (Open in Finder) | Afficher dans le Finder | [macOS strings](#sources) |
 | Sidebar / Inspector | Barre latérale / Inspecteur | [Apple](https://support.apple.com/fr-fr/guide/mac-help/mchl83c9e8b8/mac) · [macOS strings](#sources) |
 | Preview | Aperçu | [macOS strings](#sources) |
-| Mute / Unmute / Pause / Resume / Play | Couper le son / Réactiver le son / Pause / Reprendre / Lire | [macOS strings](#sources) · [WE `ui_fr-fr.json`](../Vendor/we-assets/locale/ui_fr-fr.json) |
-| Scene / Video / Web / Application (wallpaper types) | Scène / Vidéo / Web / Application | [WE `ui_fr-fr.json`](../Vendor/we-assets/locale/ui_fr-fr.json) |
-| Particle / particle system | Particule / système de particules | [WE `ui_fr-fr.json`](../Vendor/we-assets/locale/ui_fr-fr.json) · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
-| Bloom (glow effect) | Flou lumineux | [WE `ui_fr-fr.json`](../Vendor/we-assets/locale/ui_fr-fr.json) |
-| Parallax | Parallaxe | [WE `ui_fr-fr.json`](../Vendor/we-assets/locale/ui_fr-fr.json) |
-| Audio responsive | Réactif au son | [WE `ui_fr-fr.json`](../Vendor/we-assets/locale/ui_fr-fr.json) |
-| Anti-aliasing / Post-processing / Frame rate (FPS) | Anticrénelage / Post-traitement / Fréquence d’images (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_fr-fr.json`](../Vendor/we-assets/locale/ui_fr-fr.json) |
-| Texture / Shader / Material / Layer / Effect | Texture / Nuanceur / Matériau / Calque / Effet | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_fr-fr.json`](../Vendor/we-assets/locale/ui_fr-fr.json) |
-| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | Classification : Tout public / Suggestif / Adulte | [WE `ui_fr-fr.json`](../Vendor/we-assets/locale/ui_fr-fr.json) · content term (suggestive); CSA ratings are ages only |
+| Mute / Unmute / Pause / Resume / Play | Couper le son / Réactiver le son / Pause / Reprendre / Lire | [macOS strings](#sources) · WE `ui_fr-fr.json` |
+| Scene / Video / Web / Application (wallpaper types) | Scène / Vidéo / Web / Application | WE `ui_fr-fr.json` |
+| Particle / particle system | Particule / système de particules | WE `ui_fr-fr.json` · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
+| Bloom (glow effect) | Flou lumineux | WE `ui_fr-fr.json` |
+| Parallax | Parallaxe | WE `ui_fr-fr.json` |
+| Audio responsive | Réactif au son | WE `ui_fr-fr.json` |
+| Anti-aliasing / Post-processing / Frame rate (FPS) | Anticrénelage / Post-traitement / Fréquence d’images (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_fr-fr.json` |
+| Texture / Shader / Material / Layer / Effect | Texture / Nuanceur / Matériau / Calque / Effet | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_fr-fr.json` |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | Classification : Tout public / Suggestif / Adulte | WE `ui_fr-fr.json` · content term (suggestive); CSA ratings are ages only |
 | Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | Basse résolution | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | Occuper tout l’écran / Adapter à l’écran / Centrer / Étirer pour remplir l’écran / Zoomer | [Apple](https://support.apple.com/fr-fr/guide/mac-help/mchlp1103/13.0/mac/13.0) |
-| Plugins / Diagnostics / Permissions / Performance / General / About | Plug-ins / Diagnostic / Autorisations / Performances / Général / À propos | [WE `ui_fr-fr.json`](../Vendor/we-assets/locale/ui_fr-fr.json) · [macOS strings](#sources) |
+| Plugins / Diagnostics / Permissions / Performance / General / About | Plug-ins / Diagnostic / Autorisations / Performances / Général / À propos | WE `ui_fr-fr.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | Stockage des fonds d’écran | derived from “Wallpaper” |
 
 ## Español (España) (es)
@@ -179,18 +179,18 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Show in Finder (Open in Finder) | Mostrar en el Finder | [macOS strings](#sources) |
 | Sidebar / Inspector | Barra lateral / Inspector | [Apple](https://support.apple.com/es-es/guide/mac-help/mchl83c9e8b8/mac) · [macOS strings](#sources) |
 | Preview | Previsualización | [macOS strings](#sources) |
-| Mute / Unmute / Pause / Resume / Play | Silenciar / Activar sonido / Pausa / Reanudar / Reproducir | [macOS strings](#sources) · [WE `ui_es-es.json`](../Vendor/we-assets/locale/ui_es-es.json) |
-| Scene / Video / Web / Application (wallpaper types) | Escena / Vídeo / Web / Aplicación | [WE `ui_es-es.json`](../Vendor/we-assets/locale/ui_es-es.json) |
-| Particle / particle system | Partícula / sistema de partículas | [WE `ui_es-es.json`](../Vendor/we-assets/locale/ui_es-es.json) · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
-| Bloom (glow effect) | Resplandor | [WE `ui_es-es.json`](../Vendor/we-assets/locale/ui_es-es.json) |
-| Parallax | Paralaje | [WE `ui_es-es.json`](../Vendor/we-assets/locale/ui_es-es.json) |
-| Audio responsive | Reacciona al audio | [WE `ui_es-es.json`](../Vendor/we-assets/locale/ui_es-es.json) |
-| Anti-aliasing / Post-processing / Frame rate (FPS) | Suavizado de contorno / Posprocesado / Velocidad de fotogramas (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_es-es.json`](../Vendor/we-assets/locale/ui_es-es.json) |
-| Texture / Shader / Material / Layer / Effect | Textura / Sombreador / Material / Capa / Efecto | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_es-es.json`](../Vendor/we-assets/locale/ui_es-es.json) |
-| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | Clasificación: Todos / Sugerente / Adulto | [WE `ui_es-es.json`](../Vendor/we-assets/locale/ui_es-es.json) · content term (suggestive); ICAA ratings are ages only |
+| Mute / Unmute / Pause / Resume / Play | Silenciar / Activar sonido / Pausa / Reanudar / Reproducir | [macOS strings](#sources) · WE `ui_es-es.json` |
+| Scene / Video / Web / Application (wallpaper types) | Escena / Vídeo / Web / Aplicación | WE `ui_es-es.json` |
+| Particle / particle system | Partícula / sistema de partículas | WE `ui_es-es.json` · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
+| Bloom (glow effect) | Resplandor | WE `ui_es-es.json` |
+| Parallax | Paralaje | WE `ui_es-es.json` |
+| Audio responsive | Reacciona al audio | WE `ui_es-es.json` |
+| Anti-aliasing / Post-processing / Frame rate (FPS) | Suavizado de contorno / Posprocesado / Velocidad de fotogramas (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_es-es.json` |
+| Texture / Shader / Material / Layer / Effect | Textura / Sombreador / Material / Capa / Efecto | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_es-es.json` |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | Clasificación: Todos / Sugerente / Adulto | WE `ui_es-es.json` · content term (suggestive); ICAA ratings are ages only |
 | Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | Baja resolución | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | Llenar pantalla / Ajustar a pantalla / Centrar / Ampliar para rellenar / Acercar | [Apple](https://support.apple.com/es-es/guide/mac-help/mchlp1103/13.0/mac/13.0) |
-| Plugins / Diagnostics / Permissions / Performance / General / About | Complementos / Diagnóstico / Permisos / Rendimiento / General / Acerca de | [WE `ui_es-es.json`](../Vendor/we-assets/locale/ui_es-es.json) · [macOS strings](#sources) |
+| Plugins / Diagnostics / Permissions / Performance / General / About | Complementos / Diagnóstico / Permisos / Rendimiento / General / Acerca de | WE `ui_es-es.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | Almacenamiento de fondos de pantalla | derived from “Wallpaper” |
 
 ## Português (Brasil) (pt-BR)
@@ -220,18 +220,18 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Show in Finder (Open in Finder) | Mostrar no Finder | [macOS strings](#sources) |
 | Sidebar / Inspector | Barra Lateral / Inspetor | [Apple](https://support.apple.com/pt-br/guide/mac-help/mchl83c9e8b8/mac) · [macOS strings](#sources) |
 | Preview | Pré-visualização | [macOS strings](#sources) |
-| Mute / Unmute / Pause / Resume / Play | Silenciar / Ativar Som / Pausar / Retomar / Reproduzir | [macOS strings](#sources) · [WE `ui_pt-br.json`](../Vendor/we-assets/locale/ui_pt-br.json) |
-| Scene / Video / Web / Application (wallpaper types) | Cena / Vídeo / Web / Aplicativo | [WE `ui_pt-br.json`](../Vendor/we-assets/locale/ui_pt-br.json) |
-| Particle / particle system | Partícula / sistema de partículas | [WE `ui_pt-br.json`](../Vendor/we-assets/locale/ui_pt-br.json) · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
-| Bloom (glow effect) | Bloom | [WE `ui_pt-br.json`](../Vendor/we-assets/locale/ui_pt-br.json) |
-| Parallax | Paralaxe | [WE `ui_pt-br.json`](../Vendor/we-assets/locale/ui_pt-br.json) |
-| Audio responsive | Sensível a áudio | [WE `ui_pt-br.json`](../Vendor/we-assets/locale/ui_pt-br.json) |
-| Anti-aliasing / Post-processing / Frame rate (FPS) | Suavização / Pós-processamento / Taxa de quadros (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_pt-br.json`](../Vendor/we-assets/locale/ui_pt-br.json) |
-| Texture / Shader / Material / Layer / Effect | Textura / Shader / Material / Camada / Efeito | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_pt-br.json`](../Vendor/we-assets/locale/ui_pt-br.json) |
-| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | Classificação: Livre / 12+ / Adulto | [WE `ui_pt-br.json`](../Vendor/we-assets/locale/ui_pt-br.json) · [ClassInd “12”](https://www.gov.br/mj/pt-br/assuntos/seus-direitos/classificacao-1) |
+| Mute / Unmute / Pause / Resume / Play | Silenciar / Ativar Som / Pausar / Retomar / Reproduzir | [macOS strings](#sources) · WE `ui_pt-br.json` |
+| Scene / Video / Web / Application (wallpaper types) | Cena / Vídeo / Web / Aplicativo | WE `ui_pt-br.json` |
+| Particle / particle system | Partícula / sistema de partículas | WE `ui_pt-br.json` · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
+| Bloom (glow effect) | Bloom | WE `ui_pt-br.json` |
+| Parallax | Paralaxe | WE `ui_pt-br.json` |
+| Audio responsive | Sensível a áudio | WE `ui_pt-br.json` |
+| Anti-aliasing / Post-processing / Frame rate (FPS) | Suavização / Pós-processamento / Taxa de quadros (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_pt-br.json` |
+| Texture / Shader / Material / Layer / Effect | Textura / Shader / Material / Camada / Efeito | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_pt-br.json` |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | Classificação: Livre / 12+ / Adulto | WE `ui_pt-br.json` · [ClassInd “12”](https://www.gov.br/mj/pt-br/assuntos/seus-direitos/classificacao-1) |
 | Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | Baixa Resolução | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | Preencher Tela / Ajustar à Tela / Centralizar / Estender e Preencher Tela / Zoom | [Apple](https://support.apple.com/pt-br/guide/mac-help/mchlp1103/13.0/mac/13.0) |
-| Plugins / Diagnostics / Permissions / Performance / General / About | Plug-ins / Diagnóstico / Permissões / Desempenho / Geral / Sobre | [WE `ui_pt-br.json`](../Vendor/we-assets/locale/ui_pt-br.json) · [macOS strings](#sources) |
+| Plugins / Diagnostics / Permissions / Performance / General / About | Plug-ins / Diagnóstico / Permissões / Desempenho / Geral / Sobre | WE `ui_pt-br.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | Armazenamento de Imagens de Fundo | derived from “Wallpaper” |
 
 ## Italiano (it)
@@ -261,18 +261,18 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Show in Finder (Open in Finder) | Mostra nel Finder | [macOS strings](#sources) |
 | Sidebar / Inspector | Barra laterale / Inspector | [Apple](https://support.apple.com/it-it/guide/mac-help/mchl83c9e8b8/mac) · [macOS strings](#sources) |
 | Preview | Anteprima | [macOS strings](#sources) |
-| Mute / Unmute / Pause / Resume / Play | Disattiva audio / Riattiva audio / Pausa / Riprendi / Riproduci | [macOS strings](#sources) · [WE `ui_it-it.json`](../Vendor/we-assets/locale/ui_it-it.json) |
-| Scene / Video / Web / Application (wallpaper types) | Scena / Video / Web / Applicazione | [WE `ui_it-it.json`](../Vendor/we-assets/locale/ui_it-it.json) |
-| Particle / particle system | Particella / sistema particellare | [WE `ui_it-it.json`](../Vendor/we-assets/locale/ui_it-it.json) · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
-| Bloom (glow effect) | Bloom | [WE `ui_it-it.json`](../Vendor/we-assets/locale/ui_it-it.json) |
-| Parallax | Parallasse | [WE `ui_it-it.json`](../Vendor/we-assets/locale/ui_it-it.json) |
-| Audio responsive | Reattivo all’audio | [WE `ui_it-it.json`](../Vendor/we-assets/locale/ui_it-it.json) |
-| Anti-aliasing / Post-processing / Frame rate (FPS) | Anti-aliasing / Post-elaborazione / Frequenza fotogrammi (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_it-it.json`](../Vendor/we-assets/locale/ui_it-it.json) |
-| Texture / Shader / Material / Layer / Effect | Texture / Shader / Materiale / Livello / Effetto | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_it-it.json`](../Vendor/we-assets/locale/ui_it-it.json) |
-| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | Classificazione: Per tutti / Allusivo / Per adulti | [WE `ui_it-it.json`](../Vendor/we-assets/locale/ui_it-it.json) · content term (allusive): “suggestivo” means evocative in Italian |
+| Mute / Unmute / Pause / Resume / Play | Disattiva audio / Riattiva audio / Pausa / Riprendi / Riproduci | [macOS strings](#sources) · WE `ui_it-it.json` |
+| Scene / Video / Web / Application (wallpaper types) | Scena / Video / Web / Applicazione | WE `ui_it-it.json` |
+| Particle / particle system | Particella / sistema particellare | WE `ui_it-it.json` · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
+| Bloom (glow effect) | Bloom | WE `ui_it-it.json` |
+| Parallax | Parallasse | WE `ui_it-it.json` |
+| Audio responsive | Reattivo all’audio | WE `ui_it-it.json` |
+| Anti-aliasing / Post-processing / Frame rate (FPS) | Anti-aliasing / Post-elaborazione / Frequenza fotogrammi (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_it-it.json` |
+| Texture / Shader / Material / Layer / Effect | Texture / Shader / Materiale / Livello / Effetto | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_it-it.json` |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | Classificazione: Per tutti / Allusivo / Per adulti | WE `ui_it-it.json` · content term (allusive): “suggestivo” means evocative in Italian |
 | Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | Bassa risoluzione | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | A schermo pieno / Adatta allo schermo / Centro / Amplia per riempire lo schermo / Zoom | [Apple](https://support.apple.com/it-it/guide/mac-help/mchlp1103/13.0/mac/13.0) |
-| Plugins / Diagnostics / Permissions / Performance / General / About | Plug-in / Diagnosi / Autorizzazioni / Prestazioni / Generali / Informazioni | [WE `ui_it-it.json`](../Vendor/we-assets/locale/ui_it-it.json) · [macOS strings](#sources) |
+| Plugins / Diagnostics / Permissions / Performance / General / About | Plug-in / Diagnosi / Autorizzazioni / Prestazioni / Generali / Informazioni | WE `ui_it-it.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | Archivio sfondi | derived from “Wallpaper” |
 
 ## 日本語 (ja)
@@ -302,18 +302,18 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Show in Finder (Open in Finder) | Finderに表示 | [macOS strings](#sources) |
 | Sidebar / Inspector | サイドバー / インスペクタ | [Apple](https://support.apple.com/ja-jp/guide/mac-help/mchl83c9e8b8/mac) · [macOS strings](#sources) |
 | Preview | プレビュー | [macOS strings](#sources) |
-| Mute / Unmute / Pause / Resume / Play | 消音 / 消音解除 / 一時停止 / 再開 / 再生 | [macOS strings](#sources) · [WE `ui_ja-jp.json`](../Vendor/we-assets/locale/ui_ja-jp.json) |
-| Scene / Video / Web / Application (wallpaper types) | シーン / ビデオ / Web / アプリケーション | [WE `ui_ja-jp.json`](../Vendor/we-assets/locale/ui_ja-jp.json) |
-| Particle / particle system | パーティクル / パーティクルシステム | [WE `ui_ja-jp.json`](../Vendor/we-assets/locale/ui_ja-jp.json) · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
-| Bloom (glow effect) | ブルーム | [WE `ui_ja-jp.json`](../Vendor/we-assets/locale/ui_ja-jp.json) |
-| Parallax | 視差 | [WE `ui_ja-jp.json`](../Vendor/we-assets/locale/ui_ja-jp.json) |
-| Audio responsive | オーディオレスポンス | [WE `ui_ja-jp.json`](../Vendor/we-assets/locale/ui_ja-jp.json) |
-| Anti-aliasing / Post-processing / Frame rate (FPS) | アンチエイリアシング / ポストプロセッシング / フレームレート (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_ja-jp.json`](../Vendor/we-assets/locale/ui_ja-jp.json) |
-| Texture / Shader / Material / Layer / Effect | テクスチャ / シェーダー / マテリアル / レイヤー / エフェクト | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_ja-jp.json`](../Vendor/we-assets/locale/ui_ja-jp.json) |
-| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | 年齢制限: 全年齢 / 12歳以上 / 成人向け | [WE `ui_ja-jp.json`](../Vendor/we-assets/locale/ui_ja-jp.json) · [CERO B “12歳以上対象”](https://www.cero.gr.jp/publics/index/17/) |
+| Mute / Unmute / Pause / Resume / Play | 消音 / 消音解除 / 一時停止 / 再開 / 再生 | [macOS strings](#sources) · WE `ui_ja-jp.json` |
+| Scene / Video / Web / Application (wallpaper types) | シーン / ビデオ / Web / アプリケーション | WE `ui_ja-jp.json` |
+| Particle / particle system | パーティクル / パーティクルシステム | WE `ui_ja-jp.json` · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
+| Bloom (glow effect) | ブルーム | WE `ui_ja-jp.json` |
+| Parallax | 視差 | WE `ui_ja-jp.json` |
+| Audio responsive | オーディオレスポンス | WE `ui_ja-jp.json` |
+| Anti-aliasing / Post-processing / Frame rate (FPS) | アンチエイリアシング / ポストプロセッシング / フレームレート (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_ja-jp.json` |
+| Texture / Shader / Material / Layer / Effect | テクスチャ / シェーダー / マテリアル / レイヤー / エフェクト | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_ja-jp.json` |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | 年齢制限: 全年齢 / 12歳以上 / 成人向け | WE `ui_ja-jp.json` · [CERO B “12歳以上対象”](https://www.cero.gr.jp/publics/index/17/) |
 | Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | 低解像度 | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | 画面全体に表示 / 画面に収まるサイズで表示 / 中央に配置 / 引き伸ばして画面全体に表示 / ズーム | [Apple](https://support.apple.com/ja-jp/guide/mac-help/mchlp1103/13.0/mac/13.0) |
-| Plugins / Diagnostics / Permissions / Performance / General / About | プラグイン / 診断 / アクセス権 / パフォーマンス / 一般 / 情報 | [WE `ui_ja-jp.json`](../Vendor/we-assets/locale/ui_ja-jp.json) · [macOS strings](#sources) |
+| Plugins / Diagnostics / Permissions / Performance / General / About | プラグイン / 診断 / アクセス権 / パフォーマンス / 一般 / 情報 | WE `ui_ja-jp.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | 壁紙の保存場所 | derived from “Wallpaper” |
 
 ## 한국어 (ko)
@@ -343,18 +343,18 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Show in Finder (Open in Finder) | Finder에서 보기 | [macOS strings](#sources) |
 | Sidebar / Inspector | 사이드바 / 인스펙터 | [Apple](https://support.apple.com/ko-kr/guide/mac-help/mchl83c9e8b8/mac) · [macOS strings](#sources) |
 | Preview | 미리보기 | [macOS strings](#sources) |
-| Mute / Unmute / Pause / Resume / Play | 소리 끔 / 소리 켬 / 일시 정지 / 재개 / 재생 | [macOS strings](#sources) · [WE `ui_ko-kr.json`](../Vendor/we-assets/locale/ui_ko-kr.json) |
-| Scene / Video / Web / Application (wallpaper types) | 장면 / 비디오 / 웹 / 응용 프로그램 | [WE `ui_ko-kr.json`](../Vendor/we-assets/locale/ui_ko-kr.json) |
-| Particle / particle system | 파티클 / 파티클 시스템 | [WE `ui_ko-kr.json`](../Vendor/we-assets/locale/ui_ko-kr.json) · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
-| Bloom (glow effect) | 블룸 | [WE `ui_ko-kr.json`](../Vendor/we-assets/locale/ui_ko-kr.json) |
-| Parallax | 시차 | [WE `ui_ko-kr.json`](../Vendor/we-assets/locale/ui_ko-kr.json) |
-| Audio responsive | 오디오 응답 | [WE `ui_ko-kr.json`](../Vendor/we-assets/locale/ui_ko-kr.json) |
-| Anti-aliasing / Post-processing / Frame rate (FPS) | 앤티앨리어싱 / 포스트 프로세싱 / 프레임 속도(FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_ko-kr.json`](../Vendor/we-assets/locale/ui_ko-kr.json) |
-| Texture / Shader / Material / Layer / Effect | 텍스처 / 셰이더 / 머티리얼 / 레이어 / 효과 | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_ko-kr.json`](../Vendor/we-assets/locale/ui_ko-kr.json) |
-| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | 연령 등급: 전체 이용가 / 12세 이용가 / 성인 | [WE `ui_ko-kr.json`](../Vendor/we-assets/locale/ui_ko-kr.json) · [GRAC “12세 이용가”](https://www.grac.or.kr/) |
+| Mute / Unmute / Pause / Resume / Play | 소리 끔 / 소리 켬 / 일시 정지 / 재개 / 재생 | [macOS strings](#sources) · WE `ui_ko-kr.json` |
+| Scene / Video / Web / Application (wallpaper types) | 장면 / 비디오 / 웹 / 응용 프로그램 | WE `ui_ko-kr.json` |
+| Particle / particle system | 파티클 / 파티클 시스템 | WE `ui_ko-kr.json` · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
+| Bloom (glow effect) | 블룸 | WE `ui_ko-kr.json` |
+| Parallax | 시차 | WE `ui_ko-kr.json` |
+| Audio responsive | 오디오 응답 | WE `ui_ko-kr.json` |
+| Anti-aliasing / Post-processing / Frame rate (FPS) | 앤티앨리어싱 / 포스트 프로세싱 / 프레임 속도(FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_ko-kr.json` |
+| Texture / Shader / Material / Layer / Effect | 텍스처 / 셰이더 / 머티리얼 / 레이어 / 효과 | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_ko-kr.json` |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | 연령 등급: 전체 이용가 / 12세 이용가 / 성인 | WE `ui_ko-kr.json` · [GRAC “12세 이용가”](https://www.grac.or.kr/) |
 | Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | 저해상도 | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | 화면 채우기 / 화면에 맞추기 / 중앙 정렬 / 전체 화면으로 펼치기 / 확대 | [Apple](https://support.apple.com/ko-kr/guide/mac-help/mchlp1103/13.0/mac/13.0) |
-| Plugins / Diagnostics / Permissions / Performance / General / About | 플러그인 / 진단 / 권한 / 성능 / 일반 / 정보 | [WE `ui_ko-kr.json`](../Vendor/we-assets/locale/ui_ko-kr.json) · [macOS strings](#sources) |
+| Plugins / Diagnostics / Permissions / Performance / General / About | 플러그인 / 진단 / 권한 / 성능 / 일반 / 정보 | WE `ui_ko-kr.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | 배경화면 저장 공간 | derived from “Wallpaper” |
 
 ## 简体中文 (zh-Hans)
@@ -384,18 +384,18 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Show in Finder (Open in Finder) | 在访达中显示 | [macOS strings](#sources) |
 | Sidebar / Inspector | 边栏 / 检查器 | [Apple](https://support.apple.com/zh-cn/guide/mac-help/mchl83c9e8b8/mac) · [macOS strings](#sources) |
 | Preview | 预览 | [macOS strings](#sources) |
-| Mute / Unmute / Pause / Resume / Play | 静音 / 取消静音 / 暂停 / 继续 / 播放 | [macOS strings](#sources) · [WE `ui_zh-chs.json`](../Vendor/we-assets/locale/ui_zh-chs.json) |
-| Scene / Video / Web / Application (wallpaper types) | 场景 / 视频 / 网页 / 应用程序 | [WE `ui_zh-chs.json`](../Vendor/we-assets/locale/ui_zh-chs.json) |
-| Particle / particle system | 粒子 / 粒子系统 | [WE `ui_zh-chs.json`](../Vendor/we-assets/locale/ui_zh-chs.json) · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
-| Bloom (glow effect) | 泛光 | [WE `ui_zh-chs.json`](../Vendor/we-assets/locale/ui_zh-chs.json) |
-| Parallax | 视差 | [WE `ui_zh-chs.json`](../Vendor/we-assets/locale/ui_zh-chs.json) |
-| Audio responsive | 音频响应 | [WE `ui_zh-chs.json`](../Vendor/we-assets/locale/ui_zh-chs.json) |
-| Anti-aliasing / Post-processing / Frame rate (FPS) | 抗锯齿 / 后处理 / 帧速率 (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_zh-chs.json`](../Vendor/we-assets/locale/ui_zh-chs.json) |
-| Texture / Shader / Material / Layer / Effect | 纹理 / 着色器 / 材质 / 图层 / 效果 | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_zh-chs.json`](../Vendor/we-assets/locale/ui_zh-chs.json) |
-| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | 年龄分级：所有人 / 轻度暗示 / 成人 | [WE `ui_zh-chs.json`](../Vendor/we-assets/locale/ui_zh-chs.json) · content term (mildly suggestive); no national rating system |
+| Mute / Unmute / Pause / Resume / Play | 静音 / 取消静音 / 暂停 / 继续 / 播放 | [macOS strings](#sources) · WE `ui_zh-chs.json` |
+| Scene / Video / Web / Application (wallpaper types) | 场景 / 视频 / 网页 / 应用程序 | WE `ui_zh-chs.json` |
+| Particle / particle system | 粒子 / 粒子系统 | WE `ui_zh-chs.json` · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
+| Bloom (glow effect) | 泛光 | WE `ui_zh-chs.json` |
+| Parallax | 视差 | WE `ui_zh-chs.json` |
+| Audio responsive | 音频响应 | WE `ui_zh-chs.json` |
+| Anti-aliasing / Post-processing / Frame rate (FPS) | 抗锯齿 / 后处理 / 帧速率 (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_zh-chs.json` |
+| Texture / Shader / Material / Layer / Effect | 纹理 / 着色器 / 材质 / 图层 / 效果 | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_zh-chs.json` |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | 年龄分级：所有人 / 轻度暗示 / 成人 | WE `ui_zh-chs.json` · content term (mildly suggestive); no national rating system |
 | Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | 低分辨率 | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | 充满屏幕 / 适合于屏幕 / 居中 / 拉伸以充满屏幕 / 缩放 | [Apple](https://support.apple.com/zh-cn/guide/mac-help/mchlp1103/13.0/mac/13.0) |
-| Plugins / Diagnostics / Permissions / Performance / General / About | 插件 / 诊断 / 权限 / 性能 / 通用 / 关于 | [WE `ui_zh-chs.json`](../Vendor/we-assets/locale/ui_zh-chs.json) · [macOS strings](#sources) |
+| Plugins / Diagnostics / Permissions / Performance / General / About | 插件 / 诊断 / 权限 / 性能 / 通用 / 关于 | WE `ui_zh-chs.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | 墙纸存储位置 | derived from “Wallpaper” |
 
 ## 繁體中文 (zh-Hant)
@@ -425,18 +425,18 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Show in Finder (Open in Finder) | 顯示於Finder | [macOS strings](#sources) |
 | Sidebar / Inspector | 側邊欄 / 檢閱器 | [Apple](https://support.apple.com/zh-tw/guide/mac-help/mchl83c9e8b8/mac) · [macOS strings](#sources) |
 | Preview | 預覽 | [macOS strings](#sources) |
-| Mute / Unmute / Pause / Resume / Play | 靜音 / 取消靜音 / 暫停 / 繼續 / 播放 | [macOS strings](#sources) · [WE `ui_zh-cht.json`](../Vendor/we-assets/locale/ui_zh-cht.json) |
-| Scene / Video / Web / Application (wallpaper types) | 場景 / 影片 / 網頁 / 應用程式 | [WE `ui_zh-cht.json`](../Vendor/we-assets/locale/ui_zh-cht.json) |
-| Particle / particle system | 粒子 / 粒子系統 | [WE `ui_zh-cht.json`](../Vendor/we-assets/locale/ui_zh-cht.json) · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
-| Bloom (glow effect) | 光暈 | [WE `ui_zh-cht.json`](../Vendor/we-assets/locale/ui_zh-cht.json) |
-| Parallax | 視差 | [WE `ui_zh-cht.json`](../Vendor/we-assets/locale/ui_zh-cht.json) |
-| Audio responsive | 音訊回應式 | [WE `ui_zh-cht.json`](../Vendor/we-assets/locale/ui_zh-cht.json) |
-| Anti-aliasing / Post-processing / Frame rate (FPS) | 消除鋸齒 / 後處理 / 畫面播放速率 (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_zh-cht.json`](../Vendor/we-assets/locale/ui_zh-cht.json) |
-| Texture / Shader / Material / Layer / Effect | 紋理 / 著色器 / 材質 / 圖層 / 效果 | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_zh-cht.json`](../Vendor/we-assets/locale/ui_zh-cht.json) |
-| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | 年齡分級：全年齡 / 輔12級 / 成人 | [WE `ui_zh-cht.json`](../Vendor/we-assets/locale/ui_zh-cht.json) · [Taiwan 分級 “輔12級”](https://law.moj.gov.tw/) |
+| Mute / Unmute / Pause / Resume / Play | 靜音 / 取消靜音 / 暫停 / 繼續 / 播放 | [macOS strings](#sources) · WE `ui_zh-cht.json` |
+| Scene / Video / Web / Application (wallpaper types) | 場景 / 影片 / 網頁 / 應用程式 | WE `ui_zh-cht.json` |
+| Particle / particle system | 粒子 / 粒子系統 | WE `ui_zh-cht.json` · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
+| Bloom (glow effect) | 光暈 | WE `ui_zh-cht.json` |
+| Parallax | 視差 | WE `ui_zh-cht.json` |
+| Audio responsive | 音訊回應式 | WE `ui_zh-cht.json` |
+| Anti-aliasing / Post-processing / Frame rate (FPS) | 消除鋸齒 / 後處理 / 畫面播放速率 (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_zh-cht.json` |
+| Texture / Shader / Material / Layer / Effect | 紋理 / 著色器 / 材質 / 圖層 / 效果 | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_zh-cht.json` |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | 年齡分級：全年齡 / 輔12級 / 成人 | WE `ui_zh-cht.json` · [Taiwan 分級 “輔12級”](https://law.moj.gov.tw/) |
 | Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | 低解析度 | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | 填滿螢幕 / 符合螢幕大小 / 置中 / 擴展至填滿螢幕 / 縮放 | [Apple](https://support.apple.com/zh-tw/guide/mac-help/mchlp1103/13.0/mac/13.0) |
-| Plugins / Diagnostics / Permissions / Performance / General / About | 外掛程式 / 診斷 / 權限 / 效能 / 一般 / 關於 | [WE `ui_zh-cht.json`](../Vendor/we-assets/locale/ui_zh-cht.json) · [macOS strings](#sources) |
+| Plugins / Diagnostics / Permissions / Performance / General / About | 外掛程式 / 診斷 / 權限 / 效能 / 一般 / 關於 | WE `ui_zh-cht.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | 背景圖片儲存位置 | derived from “Wallpaper” |
 
 ## Русский (ru)
@@ -466,18 +466,18 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Show in Finder (Open in Finder) | Показать в Finder | [macOS strings](#sources) |
 | Sidebar / Inspector | Боковое меню / Инспектор | [Apple](https://support.apple.com/ru-ru/guide/mac-help/mchl83c9e8b8/mac) · [macOS strings](#sources) |
 | Preview | Предварительный просмотр | [macOS strings](#sources) |
-| Mute / Unmute / Pause / Resume / Play | Выключить звук / Включить звук / Пауза / Возобновить / Воспроизвести | [macOS strings](#sources) · [WE `ui_ru-ru.json`](../Vendor/we-assets/locale/ui_ru-ru.json) |
-| Scene / Video / Web / Application (wallpaper types) | Сцена / Видео / Веб / Приложение | [WE `ui_ru-ru.json`](../Vendor/we-assets/locale/ui_ru-ru.json) |
-| Particle / particle system | Частица / система частиц | [WE `ui_ru-ru.json`](../Vendor/we-assets/locale/ui_ru-ru.json) · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
-| Bloom (glow effect) | Bloom | [WE `ui_ru-ru.json`](../Vendor/we-assets/locale/ui_ru-ru.json) |
-| Parallax | Параллакс | [WE `ui_ru-ru.json`](../Vendor/we-assets/locale/ui_ru-ru.json) |
-| Audio responsive | Реагирующие на звук | [WE `ui_ru-ru.json`](../Vendor/we-assets/locale/ui_ru-ru.json) |
-| Anti-aliasing / Post-processing / Frame rate (FPS) | Сглаживание / Постобработка / Частота кадров (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_ru-ru.json`](../Vendor/we-assets/locale/ui_ru-ru.json) |
-| Texture / Shader / Material / Layer / Effect | Текстура / Шейдер / Материал / Слой / Эффект | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_ru-ru.json`](../Vendor/we-assets/locale/ui_ru-ru.json) |
-| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | Возрастной рейтинг: Для всех / 12+ / Для взрослых | [WE `ui_ru-ru.json`](../Vendor/we-assets/locale/ui_ru-ru.json) · [436-ФЗ “12+”](http://www.consultant.ru/document/cons_doc_LAW_108808/) |
+| Mute / Unmute / Pause / Resume / Play | Выключить звук / Включить звук / Пауза / Возобновить / Воспроизвести | [macOS strings](#sources) · WE `ui_ru-ru.json` |
+| Scene / Video / Web / Application (wallpaper types) | Сцена / Видео / Веб / Приложение | WE `ui_ru-ru.json` |
+| Particle / particle system | Частица / система частиц | WE `ui_ru-ru.json` · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
+| Bloom (glow effect) | Bloom | WE `ui_ru-ru.json` |
+| Parallax | Параллакс | WE `ui_ru-ru.json` |
+| Audio responsive | Реагирующие на звук | WE `ui_ru-ru.json` |
+| Anti-aliasing / Post-processing / Frame rate (FPS) | Сглаживание / Постобработка / Частота кадров (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_ru-ru.json` |
+| Texture / Shader / Material / Layer / Effect | Текстура / Шейдер / Материал / Слой / Эффект | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_ru-ru.json` |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | Возрастной рейтинг: Для всех / 12+ / Для взрослых | WE `ui_ru-ru.json` · [436-ФЗ “12+”](http://www.consultant.ru/document/cons_doc_LAW_108808/) |
 | Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | Низкое разрешение | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | Во весь экран / По размеру экрана / По центру / Заполнить весь экран / Масштаб | [Apple](https://support.apple.com/ru-ru/guide/mac-help/mchlp1103/13.0/mac/13.0) |
-| Plugins / Diagnostics / Permissions / Performance / General / About | Плагины / Диагностика / Разрешения / Производительность / Основные / О программе | [WE `ui_ru-ru.json`](../Vendor/we-assets/locale/ui_ru-ru.json) · [macOS strings](#sources) |
+| Plugins / Diagnostics / Permissions / Performance / General / About | Плагины / Диагностика / Разрешения / Производительность / Основные / О программе | WE `ui_ru-ru.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | Хранилище обоев | derived from “Wallpaper” |
 
 ## Polski (pl)
@@ -507,18 +507,18 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Show in Finder (Open in Finder) | Pokaż w Finderze | [macOS strings](#sources) |
 | Sidebar / Inspector | Pasek boczny / Inspektor | [Apple](https://support.apple.com/pl-pl/guide/mac-help/mchl83c9e8b8/mac) · [macOS strings](#sources) |
 | Preview | Podgląd | [macOS strings](#sources) |
-| Mute / Unmute / Pause / Resume / Play | Wycisz / Wyłącz wyciszenie / Wstrzymaj / Wznów / Odtwórz | [macOS strings](#sources) · [WE `ui_pl-pl.json`](../Vendor/we-assets/locale/ui_pl-pl.json) |
-| Scene / Video / Web / Application (wallpaper types) | Scena / Wideo / Sieć / Aplikacja | [WE `ui_pl-pl.json`](../Vendor/we-assets/locale/ui_pl-pl.json) |
-| Particle / particle system | Cząstka / system cząsteczek | [WE `ui_pl-pl.json`](../Vendor/we-assets/locale/ui_pl-pl.json) · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
-| Bloom (glow effect) | Bloom | [WE `ui_pl-pl.json`](../Vendor/we-assets/locale/ui_pl-pl.json) |
-| Parallax | Paralaksa | [WE `ui_pl-pl.json`](../Vendor/we-assets/locale/ui_pl-pl.json) |
-| Audio responsive | Reakcja na dźwięk | [WE `ui_pl-pl.json`](../Vendor/we-assets/locale/ui_pl-pl.json) |
-| Anti-aliasing / Post-processing / Frame rate (FPS) | Antyaliasing / Przetwarzanie końcowe / Liczba klatek (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_pl-pl.json`](../Vendor/we-assets/locale/ui_pl-pl.json) |
-| Texture / Shader / Material / Layer / Effect | Tekstura / Shader / Materiał / Warstwa / Efekt | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_pl-pl.json`](../Vendor/we-assets/locale/ui_pl-pl.json) |
-| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | Klasyfikacja wiekowa: Dla wszystkich / Od 12 lat / Dla dorosłych | [WE `ui_pl-pl.json`](../Vendor/we-assets/locale/ui_pl-pl.json) · [PEGI “od 12 lat”](https://pegi.info/pl) |
+| Mute / Unmute / Pause / Resume / Play | Wycisz / Wyłącz wyciszenie / Wstrzymaj / Wznów / Odtwórz | [macOS strings](#sources) · WE `ui_pl-pl.json` |
+| Scene / Video / Web / Application (wallpaper types) | Scena / Wideo / Sieć / Aplikacja | WE `ui_pl-pl.json` |
+| Particle / particle system | Cząstka / system cząsteczek | WE `ui_pl-pl.json` · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
+| Bloom (glow effect) | Bloom | WE `ui_pl-pl.json` |
+| Parallax | Paralaksa | WE `ui_pl-pl.json` |
+| Audio responsive | Reakcja na dźwięk | WE `ui_pl-pl.json` |
+| Anti-aliasing / Post-processing / Frame rate (FPS) | Antyaliasing / Przetwarzanie końcowe / Liczba klatek (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_pl-pl.json` |
+| Texture / Shader / Material / Layer / Effect | Tekstura / Shader / Materiał / Warstwa / Efekt | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_pl-pl.json` |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | Klasyfikacja wiekowa: Dla wszystkich / Od 12 lat / Dla dorosłych | WE `ui_pl-pl.json` · [PEGI “od 12 lat”](https://pegi.info/pl) |
 | Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | Niska rozdzielczość | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | Wypełnij ekran / Dopasuj do ekranu / Na środku / Rozciągnij, aby wypełnić ekran / Powiększ | [Apple](https://support.apple.com/pl-pl/guide/mac-help/mchlp1103/13.0/mac/13.0) |
-| Plugins / Diagnostics / Permissions / Performance / General / About | Wtyczki / Diagnostyka / Uprawnienia / Wydajność / Ogólne / Informacje | [WE `ui_pl-pl.json`](../Vendor/we-assets/locale/ui_pl-pl.json) · [macOS strings](#sources) |
+| Plugins / Diagnostics / Permissions / Performance / General / About | Wtyczki / Diagnostyka / Uprawnienia / Wydajność / Ogólne / Informacje | WE `ui_pl-pl.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | Magazyn tapet | derived from “Wallpaper” |
 
 ## Türkçe (tr)
@@ -548,18 +548,18 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Show in Finder (Open in Finder) | Finder’da Göster | [macOS strings](#sources) |
 | Sidebar / Inspector | Kenar Çubuğu / Denetçi | [Apple](https://support.apple.com/tr-tr/guide/mac-help/mchl83c9e8b8/mac) · [macOS strings](#sources) |
 | Preview | Önizleme | [macOS strings](#sources) |
-| Mute / Unmute / Pause / Resume / Play | Sesi Kapat / Sesi Aç / Duraklat / Sürdür / Oynat | [macOS strings](#sources) · [WE `ui_tr-tr.json`](../Vendor/we-assets/locale/ui_tr-tr.json) |
-| Scene / Video / Web / Application (wallpaper types) | Sahne / Video / Web / Uygulama | [WE `ui_tr-tr.json`](../Vendor/we-assets/locale/ui_tr-tr.json) |
-| Particle / particle system | Parçacık / parçacık sistemi | [WE `ui_tr-tr.json`](../Vendor/we-assets/locale/ui_tr-tr.json) · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
-| Bloom (glow effect) | Bloom | [WE `ui_tr-tr.json`](../Vendor/we-assets/locale/ui_tr-tr.json) |
-| Parallax | Paralaks | [WE `ui_tr-tr.json`](../Vendor/we-assets/locale/ui_tr-tr.json) |
-| Audio responsive | Sese duyarlı | [WE `ui_tr-tr.json`](../Vendor/we-assets/locale/ui_tr-tr.json) |
-| Anti-aliasing / Post-processing / Frame rate (FPS) | Kenar yumuşatma / Son işleme / Kare hızı (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_tr-tr.json`](../Vendor/we-assets/locale/ui_tr-tr.json) |
-| Texture / Shader / Material / Layer / Effect | Doku / Gölgelendirici / Malzeme / Katman / Efekt | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_tr-tr.json`](../Vendor/we-assets/locale/ui_tr-tr.json) |
-| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | Yaş sınırı: Herkes / 13+ / Yetişkin | [WE `ui_tr-tr.json`](../Vendor/we-assets/locale/ui_tr-tr.json) · [RTÜK Akıllı İşaretler “13+”](https://www.rtuk.gov.tr/) |
+| Mute / Unmute / Pause / Resume / Play | Sesi Kapat / Sesi Aç / Duraklat / Sürdür / Oynat | [macOS strings](#sources) · WE `ui_tr-tr.json` |
+| Scene / Video / Web / Application (wallpaper types) | Sahne / Video / Web / Uygulama | WE `ui_tr-tr.json` |
+| Particle / particle system | Parçacık / parçacık sistemi | WE `ui_tr-tr.json` · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
+| Bloom (glow effect) | Bloom | WE `ui_tr-tr.json` |
+| Parallax | Paralaks | WE `ui_tr-tr.json` |
+| Audio responsive | Sese duyarlı | WE `ui_tr-tr.json` |
+| Anti-aliasing / Post-processing / Frame rate (FPS) | Kenar yumuşatma / Son işleme / Kare hızı (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_tr-tr.json` |
+| Texture / Shader / Material / Layer / Effect | Doku / Gölgelendirici / Malzeme / Katman / Efekt | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_tr-tr.json` |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | Yaş sınırı: Herkes / 13+ / Yetişkin | WE `ui_tr-tr.json` · [RTÜK Akıllı İşaretler “13+”](https://www.rtuk.gov.tr/) |
 | Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | Düşük Çözünürlük | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | Ekranı Doldur / Ekrana Sığdır / Ortala / Ekranı Dolduracak Şekilde Büyüt / Yakınlaştır | [Apple](https://support.apple.com/tr-tr/guide/mac-help/mchlp1103/13.0/mac/13.0) |
-| Plugins / Diagnostics / Permissions / Performance / General / About | Eklentiler / Tanılar / İzinler / Performans / Genel / Hakkında | [WE `ui_tr-tr.json`](../Vendor/we-assets/locale/ui_tr-tr.json) · [macOS strings](#sources) |
+| Plugins / Diagnostics / Permissions / Performance / General / About | Eklentiler / Tanılar / İzinler / Performans / Genel / Hakkında | WE `ui_tr-tr.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | Duvar Kâğıdı Deposu | derived from “Wallpaper” |
 
 ## Українська (uk)
@@ -589,18 +589,18 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Show in Finder (Open in Finder) | Показати у Finder | [macOS strings](#sources) |
 | Sidebar / Inspector | Бічна панель / Інспектор | [Apple](https://support.apple.com/uk-ua/guide/mac-help/mchl83c9e8b8/mac) · [macOS strings](#sources) |
 | Preview | Попередній перегляд | [macOS strings](#sources) |
-| Mute / Unmute / Pause / Resume / Play | Вимкнути звук / Увімкнути звук / Пауза / Поновити / Відтворити | [macOS strings](#sources) · [WE `ui_uk-ua.json`](../Vendor/we-assets/locale/ui_uk-ua.json) |
-| Scene / Video / Web / Application (wallpaper types) | Сцена / Відео / Веб / Програма | [WE `ui_uk-ua.json`](../Vendor/we-assets/locale/ui_uk-ua.json) |
-| Particle / particle system | Частинка / система частинок | [WE `ui_uk-ua.json`](../Vendor/we-assets/locale/ui_uk-ua.json) · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
-| Bloom (glow effect) | Bloom-ефект | [WE `ui_uk-ua.json`](../Vendor/we-assets/locale/ui_uk-ua.json) |
-| Parallax | Паралакс | [WE `ui_uk-ua.json`](../Vendor/we-assets/locale/ui_uk-ua.json) |
-| Audio responsive | Реагують на звук | [WE `ui_uk-ua.json`](../Vendor/we-assets/locale/ui_uk-ua.json) |
-| Anti-aliasing / Post-processing / Frame rate (FPS) | Згладжування / Постобробка / Частота кадрів (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_uk-ua.json`](../Vendor/we-assets/locale/ui_uk-ua.json) |
-| Texture / Shader / Material / Layer / Effect | Текстура / Шейдер / Матеріал / Шар / Ефект | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_uk-ua.json`](../Vendor/we-assets/locale/ui_uk-ua.json) |
-| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | Вікова категорія: Для всіх / 12+ / Для дорослих | [WE `ui_uk-ua.json`](../Vendor/we-assets/locale/ui_uk-ua.json) · age marking “12+” as in Ukrainian film/TV ratings |
+| Mute / Unmute / Pause / Resume / Play | Вимкнути звук / Увімкнути звук / Пауза / Поновити / Відтворити | [macOS strings](#sources) · WE `ui_uk-ua.json` |
+| Scene / Video / Web / Application (wallpaper types) | Сцена / Відео / Веб / Програма | WE `ui_uk-ua.json` |
+| Particle / particle system | Частинка / система частинок | WE `ui_uk-ua.json` · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
+| Bloom (glow effect) | Bloom-ефект | WE `ui_uk-ua.json` |
+| Parallax | Паралакс | WE `ui_uk-ua.json` |
+| Audio responsive | Реагують на звук | WE `ui_uk-ua.json` |
+| Anti-aliasing / Post-processing / Frame rate (FPS) | Згладжування / Постобробка / Частота кадрів (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_uk-ua.json` |
+| Texture / Shader / Material / Layer / Effect | Текстура / Шейдер / Матеріал / Шар / Ефект | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_uk-ua.json` |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | Вікова категорія: Для всіх / 12+ / Для дорослих | WE `ui_uk-ua.json` · age marking “12+” as in Ukrainian film/TV ratings |
 | Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | Низька роздільність | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | Заповнити екран / Припасувати до екрана / По центру / Розтягнути до заповнення екрана / Масштаб | [Apple](https://support.apple.com/uk-ua/guide/mac-help/mchlp1103/13.0/mac/13.0) |
-| Plugins / Diagnostics / Permissions / Performance / General / About | Плагіни / Діагностика / Дозволи / Продуктивність / Загальні / Про програму | [WE `ui_uk-ua.json`](../Vendor/we-assets/locale/ui_uk-ua.json) · [macOS strings](#sources) |
+| Plugins / Diagnostics / Permissions / Performance / General / About | Плагіни / Діагностика / Дозволи / Продуктивність / Загальні / Про програму | WE `ui_uk-ua.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | Сховище шпалер | derived from “Wallpaper” |
 
 ## العربية (ar)
@@ -630,18 +630,18 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Show in Finder (Open in Finder) | إظهار في فايندر | [macOS strings](#sources) |
 | Sidebar / Inspector | الشريط الجانبي / المراقب | [Apple](https://support.apple.com/ar-ae/guide/mac-help/mchl83c9e8b8/mac) · [macOS strings](#sources) |
 | Preview | معاينة | [macOS strings](#sources) |
-| Mute / Unmute / Pause / Resume / Play | كتم الصوت / إلغاء كتم الصوت / إيقاف مؤقت / استئناف / تشغيل | [macOS strings](#sources) · [WE `ui_ar-sa.json`](../Vendor/we-assets/locale/ui_ar-sa.json) |
-| Scene / Video / Web / Application (wallpaper types) | مشهد / فيديو / ويب / تطبيق | [WE `ui_ar-sa.json`](../Vendor/we-assets/locale/ui_ar-sa.json) |
-| Particle / particle system | جسيم / نظام جسيمات | [WE `ui_ar-sa.json`](../Vendor/we-assets/locale/ui_ar-sa.json) · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
-| Bloom (glow effect) | التوهج | [WE `ui_ar-sa.json`](../Vendor/we-assets/locale/ui_ar-sa.json) |
-| Parallax | اختلاف المنظر | [WE `ui_ar-sa.json`](../Vendor/we-assets/locale/ui_ar-sa.json) |
-| Audio responsive | تستجيب للصوت | [WE `ui_ar-sa.json`](../Vendor/we-assets/locale/ui_ar-sa.json) |
-| Anti-aliasing / Post-processing / Frame rate (FPS) | مانع التشويش / المعالجة اللاحقة / معدل الإطارات (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_ar-sa.json`](../Vendor/we-assets/locale/ui_ar-sa.json) |
-| Texture / Shader / Material / Layer / Effect | نسيج / مظلل / مادة / طبقة / تأثير | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · [WE `ui_ar-sa.json`](../Vendor/we-assets/locale/ui_ar-sa.json) |
-| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | التصنيف العمري: للجميع / للمراهقين / للبالغين | [WE `ui_ar-sa.json`](../Vendor/we-assets/locale/ui_ar-sa.json) · content term (for teens); no common Arab rating label |
+| Mute / Unmute / Pause / Resume / Play | كتم الصوت / إلغاء كتم الصوت / إيقاف مؤقت / استئناف / تشغيل | [macOS strings](#sources) · WE `ui_ar-sa.json` |
+| Scene / Video / Web / Application (wallpaper types) | مشهد / فيديو / ويب / تطبيق | WE `ui_ar-sa.json` |
+| Particle / particle system | جسيم / نظام جسيمات | WE `ui_ar-sa.json` · [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) |
+| Bloom (glow effect) | التوهج | WE `ui_ar-sa.json` |
+| Parallax | اختلاف المنظر | WE `ui_ar-sa.json` |
+| Audio responsive | تستجيب للصوت | WE `ui_ar-sa.json` |
+| Anti-aliasing / Post-processing / Frame rate (FPS) | مانع التشويش / المعالجة اللاحقة / معدل الإطارات (FPS) | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_ar-sa.json` |
+| Texture / Shader / Material / Layer / Effect | نسيج / مظلل / مادة / طبقة / تأثير | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) · WE `ui_ar-sa.json` |
+| Age rating: Everyone / Questionable (the middle tier, PG-13-like: mildly suggestive) / Mature | التصنيف العمري: للجميع / للمراهقين / للبالغين | WE `ui_ar-sa.json` · content term (for teens); no common Arab rating label |
 | Low resolution (the 1 pixel per point render option, as in Get Info › Open in Low Resolution) | دقة منخفضة | [macOS strings](#sources) |
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | تعبئة الشاشة / الاحتواء ضمن الشاشة / الوسط / التمديد لتعبئة الشاشة / تكبير | [Apple](https://support.apple.com/ar-ae/guide/mac-help/mchlp1103/13.0/mac/13.0) |
-| Plugins / Diagnostics / Permissions / Performance / General / About | الإضافات / التشخيصات / الأذونات / الأداء / عام / حول | [WE `ui_ar-sa.json`](../Vendor/we-assets/locale/ui_ar-sa.json) · [macOS strings](#sources) |
+| Plugins / Diagnostics / Permissions / Performance / General / About | الإضافات / التشخيصات / الأذونات / الأداء / عام / حول | WE `ui_ar-sa.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | مخزن خلفيات الشاشة | derived from “Wallpaper” |
 
 ## हिन्दी (hi)

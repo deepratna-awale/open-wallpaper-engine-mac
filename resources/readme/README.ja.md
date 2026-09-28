@@ -7,7 +7,7 @@ Open Wallpaper Engine（パッチ版）
 
 macOS 向け [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) のパッチ適用フォークです。シーン壁紙のレンダリングと Web 壁紙の修正を追加しています。
 
-> **注意：** 本プロジェクトは Steam の商用版 Wallpaper Engine とは一切関係ありません。Wallpaper Engine の Steam ワークショップにある壁紙アセットを表示できる、オープンソースの macOS アプリです。 → [ATTRIBUTION.txt](../../Vendor/we-assets/ATTRIBUTION.txt)
+> **注意：** 本プロジェクトは Steam の商用版 Wallpaper Engine とは一切関係ありません。Wallpaper Engine の Steam ワークショップにある壁紙アセットを表示できる、オープンソースの macOS アプリです。 → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
 ## 関連プロジェクト
 
@@ -271,7 +271,7 @@ Wallpaper Engine のエフェクトは GLSL で提供されています。これ
 
 #### Wallpaper Engine のアセット
 
-壁紙が参照する共有のエフェクト、マテリアル、シェーダー、SceneScript ランタイムはアプリに同梱されています（`Vendor/we-assets`。`Scripts/vendor-we-assets.sh` により Wallpaper Engine のインストールから更新されます）。設定する必要はありません。
+シーンは、お持ちの Steam 版 Wallpaper Engine に含まれる共有のエフェクト、マテリアル、シェーダー、フォント、SceneScript ランタイムを使います。アプリにはこれらは同梱されていません。「設定 → アセット」でインストールしてください。アプリは steamcmd でお持ちのコピーをダウンロードし（アカウントが Wallpaper Engine を所有している必要があります）、アセットとデフォルトの壁紙だけを残して残りを削除します。既存の Wallpaper Engine フォルダを選択することもできます。ビデオと Web の壁紙はアセットなしで動作します。
 
 ## ソースからビルド
 
@@ -315,5 +315,5 @@ Xcode で署名証明書を自分のものに変更するか「Sign to Run Local
 - `OpenWallpaperEngine/Scene/Rendering/SceneMetalRenderer.swift`、`SceneShaders.metal` — Metal シーンレンダラーとシェーダーライブラリ
 - `OpenWallpaperEngine/Workshop/SteamCmdService.swift`、`WorkshopAPIService.swift`、`WorkshopViewModel.swift` — Steam ワークショップのブラウズとダウンロード
 - `OpenWallpaperEngine/Library/WallpaperDirectory.swift`、`ZipImporter.swift`、`WallpaperPackageConverter.swift` — ライブラリの保存、読み込み、パッケージの変換
-- `Scripts/vendor-we-assets.sh` — 変換済みのエフェクトシェーダーとマニフェストを `we-assets/` に取り込みます
+- `Scripts/fill-assets-cache.sh` — 開発用ツール: Wallpaper Engine のインストールからアセットをローカルフォルダまたは壁紙の保存場所のキャッシュにコピーします
 - `Scripts/scene-api-coverage.py` — インストール済みの壁紙が使用している SceneScript API と、実装済みの API を比較して報告します

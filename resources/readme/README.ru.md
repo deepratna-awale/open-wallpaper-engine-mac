@@ -7,7 +7,7 @@ Open Wallpaper Engine (с исправлениями)
 
 Форк [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) для macOS с исправлениями: добавлен рендеринг обоев типа «Сцена» и исправлена работа веб-обоев.
 
-> **Примечание.** Этот проект НЕ связан с коммерческим Wallpaper Engine в Steam. Это приложение для macOS с открытым исходным кодом, которое умеет показывать ресурсы обоев из Мастерской Steam для Wallpaper Engine. → [ATTRIBUTION.txt](../../Vendor/we-assets/ATTRIBUTION.txt)
+> **Примечание.** Этот проект НЕ связан с коммерческим Wallpaper Engine в Steam. Это приложение для macOS с открытым исходным кодом, которое умеет показывать ресурсы обоев из Мастерской Steam для Wallpaper Engine. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
 ## Связанные проекты
 
@@ -271,7 +271,7 @@ Wallpaper Engine поставляет свои эффекты в виде GLSL. 
 
 #### Ресурсы Wallpaper Engine
 
-Общие эффекты, материалы, шейдеры и среда выполнения SceneScript, на которые ссылаются обои, поставляются внутри приложения (`Vendor/we-assets`, обновляются из установленного Wallpaper Engine с помощью `Scripts/vendor-we-assets.sh`). Настраивать ничего не нужно.
+Сцены используют общие эффекты, материалы, шейдеры, шрифты и среду выполнения SceneScript из вашей копии Wallpaper Engine в Steam; приложение их не содержит. Установите их в разделе *Настройки → Ресурсы*: приложение загружает вашу копию через steamcmd (у аккаунта должен быть Wallpaper Engine), оставляет только ресурсы и стандартные обои, а остальное удаляет. Можно также выбрать существующую папку Wallpaper Engine. Видео- и веб-обои работают без них.
 
 ## Сборка из исходного кода
 
@@ -315,5 +315,5 @@ open "OpenWallpaperEngine.xcodeproj"
 - `OpenWallpaperEngine/Scene/Rendering/SceneMetalRenderer.swift`, `SceneShaders.metal` — рендерер сцен на Metal и библиотека шейдеров
 - `OpenWallpaperEngine/Workshop/SteamCmdService.swift`, `WorkshopAPIService.swift`, `WorkshopViewModel.swift` — просмотр Мастерской Steam и загрузки
 - `OpenWallpaperEngine/Library/WallpaperDirectory.swift`, `ZipImporter.swift`, `WallpaperPackageConverter.swift` — хранение библиотеки, импорт и преобразование пакетов
-- `Scripts/vendor-we-assets.sh` — копирует транслированные шейдеры эффектов и манифесты в `we-assets/`
+- `Scripts/fill-assets-cache.sh` — вспомогательный скрипт для разработки: копирует ресурсы установки Wallpaper Engine в локальную папку или в кэш хранилища обоев
 - `Scripts/scene-api-coverage.py` — показывает, какие API SceneScript используют установленные обои и что из этого реализовано

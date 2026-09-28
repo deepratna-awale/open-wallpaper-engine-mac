@@ -7,7 +7,7 @@ Open Wallpaper Engine（修补版）
 
 这是 [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) 面向 macOS 的修补分支，新增了场景墙纸渲染并修复了网页墙纸的问题。
 
-> **注：** 本项目与 Steam 上的商业软件 Wallpaper Engine 没有任何关联。这是一款开源的 macOS App，可显示来自 Wallpaper Engine Steam 创意工坊的墙纸素材。 → [ATTRIBUTION.txt](../../Vendor/we-assets/ATTRIBUTION.txt)
+> **注：** 本项目与 Steam 上的商业软件 Wallpaper Engine 没有任何关联。这是一款开源的 macOS App，可显示来自 Wallpaper Engine Steam 创意工坊的墙纸素材。 → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
 ## 相关项目
 
@@ -271,7 +271,7 @@ Wallpaper Engine 以 GLSL 形式提供其效果。当墙纸首次使用这些效
 
 #### Wallpaper Engine 素材
 
-墙纸所引用的共享效果、材质、着色器和 SceneScript 运行时已随 App 提供（`Vendor/we-assets`，通过 `Scripts/vendor-we-assets.sh` 从 Wallpaper Engine 安装中更新）。无需进行任何配置。
+场景使用你在 Steam 上的 Wallpaper Engine 副本中的共享效果、材质、着色器、字体和 SceneScript 运行时；App 不附带这些资源。请在“设置 → 资源”中安装：App 会用 steamcmd 下载你的副本（该账户必须拥有 Wallpaper Engine），仅保留资源和默认墙纸，其余部分会被删除。你也可以选择现有的 Wallpaper Engine 文件夹。视频和网页墙纸无需这些资源即可使用。
 
 ## 从源代码构建
 
@@ -315,5 +315,5 @@ open "OpenWallpaperEngine.xcodeproj"
 - `OpenWallpaperEngine/Scene/Rendering/SceneMetalRenderer.swift`、`SceneShaders.metal` — Metal 场景渲染器与着色器库
 - `OpenWallpaperEngine/Workshop/SteamCmdService.swift`、`WorkshopAPIService.swift`、`WorkshopViewModel.swift` — Steam 创意工坊浏览与下载
 - `OpenWallpaperEngine/Library/WallpaperDirectory.swift`、`ZipImporter.swift`、`WallpaperPackageConverter.swift` — 资源库存储、导入和包转换
-- `Scripts/vendor-we-assets.sh` — 将转换后的效果着色器和清单纳入 `we-assets/`
+- `Scripts/fill-assets-cache.sh` — 开发辅助工具：将 Wallpaper Engine 安装中的资源拷贝到本地文件夹或墙纸存储位置的缓存
 - `Scripts/scene-api-coverage.py` — 报告已安装的墙纸使用了哪些 SceneScript API，并与已实现的 API 进行对比

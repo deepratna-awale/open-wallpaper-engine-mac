@@ -7,7 +7,7 @@ Open Wallpaper Engine (con patch)
 
 Un fork con patch di [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac) per macOS, che aggiunge il rendering degli sfondi di tipo scena e correzioni per gli sfondi web.
 
-> **Nota:** questo progetto NON è affiliato al Wallpaper Engine commerciale venduto su Steam. È un’app open source per macOS in grado di mostrare le risorse degli sfondi dello Steam Workshop di Wallpaper Engine. → [ATTRIBUTION.txt](../../Vendor/we-assets/ATTRIBUTION.txt)
+> **Nota:** questo progetto NON è affiliato al Wallpaper Engine commerciale venduto su Steam. È un’app open source per macOS in grado di mostrare le risorse degli sfondi dello Steam Workshop di Wallpaper Engine. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
 ## Progetti correlati
 
@@ -271,7 +271,7 @@ Wallpaper Engine distribuisce i propri effetti in GLSL. Vengono tradotti in Meta
 
 #### Risorse di Wallpaper Engine
 
-Gli effetti, i materiali, gli shader e il runtime di SceneScript condivisi a cui fanno riferimento gli sfondi sono inclusi nell’app (`Vendor/we-assets`, aggiornati da un’installazione di Wallpaper Engine con `Scripts/vendor-we-assets.sh`). Non c’è nulla da configurare.
+Le scene usano gli effetti, i materiali, gli shader, i font e il runtime di SceneScript condivisi della tua copia di Wallpaper Engine su Steam; l’app non li include. Installali in *Impostazioni → Risorse*: l’app scarica la tua copia con steamcmd (l’account deve possedere Wallpaper Engine), conserva solo le risorse e gli sfondi predefiniti ed elimina il resto. Puoi anche scegliere una cartella di Wallpaper Engine esistente. Gli sfondi video e web funzionano senza.
 
 ## Compilare dal codice sorgente
 
@@ -315,5 +315,5 @@ In Xcode, sostituisci il certificato di firma con il tuo oppure seleziona "Sign 
 - `OpenWallpaperEngine/Scene/Rendering/SceneMetalRenderer.swift`, `SceneShaders.metal`: il renderer di scene Metal e la libreria degli shader
 - `OpenWallpaperEngine/Workshop/SteamCmdService.swift`, `WorkshopAPIService.swift`, `WorkshopViewModel.swift`: navigazione e download dello Steam Workshop
 - `OpenWallpaperEngine/Library/WallpaperDirectory.swift`, `ZipImporter.swift`, `WallpaperPackageConverter.swift`: archiviazione della libreria, importazione e conversione dei pacchetti
-- `Scripts/vendor-we-assets.sh`: copia nel progetto gli shader degli effetti tradotti e i manifest in `we-assets/`
+- `Scripts/fill-assets-cache.sh`: strumento di sviluppo che copia le risorse di un’installazione di Wallpaper Engine in una cartella locale o nella cache dell’archivio sfondi
 - `Scripts/scene-api-coverage.py`: indica quali API di SceneScript usano gli sfondi installati rispetto a quelle implementate

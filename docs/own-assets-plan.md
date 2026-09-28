@@ -1,5 +1,7 @@
 # Own shader and asset set: plan
 
+**Update 2026-09-28:** `Vendor/we-assets` was removed; the app now takes the reference assets from the user's own Steam copy (Settings › Assets, `<storage>/.owe-assets`) or a chosen install, and tests from `OWE_ASSETS`. Mentions of the bundled copy below describe the state when this plan was written.
+
 **Status: 2026-09-27, research and plan only.** Branch `deepratna/feature-work`. Nothing here is implemented yet.
 
 **The decision.** The app stops shipping the reference product's asset tree (`Vendor/we-assets`) and ships its own set:

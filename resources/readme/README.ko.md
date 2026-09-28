@@ -7,7 +7,7 @@ Open Wallpaper Engine (패치 버전)
 
 macOS용 [Open Wallpaper Engine](https://github.com/MrWindDog/wallpaper-engine-mac)의 패치 포크로, 장면 배경화면 렌더링과 웹 배경화면 수정 사항을 추가합니다.
 
-> **참고:** 이 프로젝트는 Steam의 상용 Wallpaper Engine과 관련이 없습니다. Wallpaper Engine의 Steam 창작마당에 있는 배경화면 에셋을 표시할 수 있는 오픈 소스 macOS 앱입니다. → [ATTRIBUTION.txt](../../Vendor/we-assets/ATTRIBUTION.txt)
+> **참고:** 이 프로젝트는 Steam의 상용 Wallpaper Engine과 관련이 없습니다. Wallpaper Engine의 Steam 창작마당에 있는 배경화면 에셋을 표시할 수 있는 오픈 소스 macOS 앱입니다. → [ATTRIBUTION.txt](../../ATTRIBUTION.txt)
 
 ## 관련 프로젝트
 
@@ -271,7 +271,7 @@ Wallpaper Engine은 효과를 GLSL로 제공합니다. 이 효과는 배경화�
 
 #### Wallpaper Engine 에셋
 
-배경화면이 참조하는 공유 효과, 머티리얼, 셰이더, SceneScript 런타임은 앱에 포함되어 있습니다(`Vendor/we-assets`, `Scripts/vendor-we-assets.sh`로 Wallpaper Engine 설치본에서 갱신). 별도로 설정할 것은 없습니다.
+장면은 Steam에 있는 사용자의 Wallpaper Engine 사본에서 공유 효과, 머티리얼, 셰이더, 서체, SceneScript 런타임을 가져와 사용하며, 앱에는 포함되어 있지 않습니다. *설정 → 에셋*에서 설치하십시오. 앱이 steamcmd로 사본을 다운로드하고(계정이 Wallpaper Engine을 소유해야 함) 에셋과 기본 배경화면만 남긴 후 나머지는 삭제합니다. 기존 Wallpaper Engine 폴더를 선택할 수도 있습니다. 비디오 및 웹 배경화면은 에셋 없이 작동합니다.
 
 ## 소스에서 빌드
 
@@ -315,5 +315,5 @@ Xcode에서 서명 인증서를 본인의 인증서로 변경하거나 'Sign to 
 - `OpenWallpaperEngine/Scene/Rendering/SceneMetalRenderer.swift`, `SceneShaders.metal` — Metal 장면 렌더러와 셰이더 라이브러리
 - `OpenWallpaperEngine/Workshop/SteamCmdService.swift`, `WorkshopAPIService.swift`, `WorkshopViewModel.swift` — Steam 창작마당 탐색 및 다운로드
 - `OpenWallpaperEngine/Library/WallpaperDirectory.swift`, `ZipImporter.swift`, `WallpaperPackageConverter.swift` — 라이브러리 저장, 가져오기, 패키지 변환
-- `Scripts/vendor-we-assets.sh` — 변환된 효과 셰이더와 매니페스트를 `we-assets/`로 가져옵니다
+- `Scripts/fill-assets-cache.sh` — 개발용 도구: Wallpaper Engine 설치본의 에셋을 로컬 폴더 또는 배경화면 저장 공간의 캐시로 복사합니다
 - `Scripts/scene-api-coverage.py` — 설치된 배경화면이 사용하는 SceneScript API와 구현된 API를 비교하여 보고합니다
