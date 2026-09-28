@@ -67,6 +67,9 @@ extension GSQuality {
         case .ultra: return .ultra
         }
     }
+
+    /// The `volumetrics` value the same preset sets: also the preset's own name.
+    var volumetrics: GSLightingQuality { shadows }
 }
 
 /// The most particles one scene may hold (`ParticleBudget`); a scene authored with more is thinned

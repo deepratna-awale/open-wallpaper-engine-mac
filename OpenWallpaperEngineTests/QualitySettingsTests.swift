@@ -64,6 +64,13 @@ final class QualitySettingsTests: XCTestCase {
         XCTAssertEqual(shadows, [.low, .medium, .high, .ultra])
     }
 
+    /// And `volumetrics` too, the same way (`getQualityPreset` in WE's `ui/dist/scripts/scripts.js`).
+    func testQualityPresetsSetVolumetricsAsWEDoes() {
+        let presets: [GSQuality] = [.low, .medium, .high, .ultra]
+        let volumetrics: [GSLightingQuality] = presets.map(\.volumetrics)
+        XCTAssertEqual(volumetrics, [.low, .medium, .high, .ultra])
+    }
+
     func testSettingsRoundTrip() throws {
         var settings = GlobalSettings()
         settings.postProcessing = .displayhdr
