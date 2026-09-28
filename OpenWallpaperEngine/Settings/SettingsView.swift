@@ -22,21 +22,25 @@ extension AppDelegate {
     @objc func jumpToGeneral() {
         self.globalSettingsViewModel.selection = 1
     }
-    
-    @objc func jumpToPlugins() {
+
+    @objc func jumpToAssets() {
         self.globalSettingsViewModel.selection = 2
     }
-
-    @objc func jumpToPermissions() {
+    
+    @objc func jumpToPlugins() {
         self.globalSettingsViewModel.selection = 3
     }
 
-    @objc func jumpToDiagnostics() {
+    @objc func jumpToPermissions() {
         self.globalSettingsViewModel.selection = 4
+    }
+
+    @objc func jumpToDiagnostics() {
+        self.globalSettingsViewModel.selection = 5
     }
     
     @objc func jumpToAbout() {
-        self.globalSettingsViewModel.selection = 5
+        self.globalSettingsViewModel.selection = 6
     }
 }
 
@@ -52,12 +56,14 @@ struct SettingsView: View {
                 case 1:
                     GeneralPage(globalSettings: viewModel)
                 case 2:
-                    PluginsPage(globalSettings: viewModel)
+                    AssetsPage(globalSettings: viewModel)
                 case 3:
-                    PermissionsPage(globalSettings: viewModel)
+                    PluginsPage(globalSettings: viewModel)
                 case 4:
-                    DiagnosticsPage(globalSettings: viewModel)
+                    PermissionsPage(globalSettings: viewModel)
                 case 5:
+                    DiagnosticsPage(globalSettings: viewModel)
+                case 6:
                     AboutUsView()
                 default:
                     fatalError()
@@ -130,6 +136,11 @@ extension AppDelegate: NSToolbarDelegate {
             toolbarItem.image = NSImage(systemSymbolName: "gearshape", accessibilityDescription: nil)
             toolbarItem.label = String(localized: "General")
             
+        case SettingsToolbarIdentifiers.assets:
+            toolbarItem.action = #selector(jumpToAssets)
+            toolbarItem.image = NSImage(systemSymbolName: "shippingbox", accessibilityDescription: nil)
+            toolbarItem.label = String(localized: "Assets")
+
         case SettingsToolbarIdentifiers.plugins:
             toolbarItem.action = #selector(jumpToPlugins)
             toolbarItem.image = NSImage(systemSymbolName: "puzzlepiece.extension", accessibilityDescription: nil)
@@ -165,7 +176,7 @@ struct SettingsView_Previews: PreviewProvider {
         SettingsView()
             .environmentObject({ () -> GlobalSettingsViewModel in 
                 let viewModel = GlobalSettingsViewModel()
-                viewModel.selection = 2
+                viewModel.selection = 3
                 return viewModel
             }())
             .frame(width: 500, height: 600)

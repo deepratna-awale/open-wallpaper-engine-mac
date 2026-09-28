@@ -91,7 +91,7 @@ struct PluginPage_Previews: PreviewProvider {
         SettingsView()
             .environmentObject({ () -> GlobalSettingsViewModel in
                 let viewModel = GlobalSettingsViewModel()
-                viewModel.selection = 2
+                viewModel.selection = 3
                 return viewModel
             }())
             .frame(width: 500, height: 600)

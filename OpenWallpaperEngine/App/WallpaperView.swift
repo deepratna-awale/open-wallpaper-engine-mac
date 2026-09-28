@@ -25,14 +25,20 @@ struct WallpaperView: View {
             // A video AVFoundation can't decode (WebM) plays through WebKit on either framework.
             if WebKitVideoPlayer.handles(wallpaper.mediaURL) {
                 WebKitVideoWallpaperView(wallpaperViewModel: viewModel, screenId: screenId).id(instance.wallpaper)
-            // The Metal path draws video as a scene layer so the effect stack applies to it.
-            } else if AppDelegate.shared.globalSettingsViewModel.settings.videoFramework == .metal {
+            // The Metal path draws video as a scene layer so the effect stack applies to it; that
+            // needs the assets' shaders, so without them video plays through AVKit.
+            } else if AppDelegate.shared.globalSettingsViewModel.settings.videoFramework == .metal,
+                      WallpaperEngineAssets.directory != nil {
                 SceneWallpaperView(wallpaperViewModel: viewModel, screenId: screenId).id(instance)
             } else {
                 AudioReactiveVideoWallpaperView(wallpaperViewModel: viewModel, screenId: screenId).id(instance.wallpaper)
             }
         case "scene":
-            SceneWallpaperView(wallpaperViewModel: viewModel, screenId: screenId).id(instance)
+            if WallpaperEngineAssets.directory != nil {
+                SceneWallpaperView(wallpaperViewModel: viewModel, screenId: screenId).id(instance)
+            } else {
+                AssetsMissingWallpaperView()
+            }
         case "web":
             WebWallpaperView(wallpaperViewModel: viewModel, screenId: screenId)
                 .id(viewModel.propertyScope(for: screenId))

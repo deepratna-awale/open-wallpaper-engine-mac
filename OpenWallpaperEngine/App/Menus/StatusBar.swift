@@ -82,6 +82,16 @@ extension AppDelegate {
 
             .separator(),
 
+            {
+                let item = NSMenuItem(title: String(localized: "Set Up Assets…"),
+                                      systemImage: "shippingbox",
+                                      action: #selector(openAssetsSettings),
+                                      keyEquivalent: "")
+                item.identifier = Self.setUpAssetsMenuItem
+                item.isHidden = !assets.isMissing
+                return item
+            }(),
+
             .init(title: String(localized: "Browse Workshop"),
                   systemImage: "globe",
                   action: #selector(browseWorkshop),
@@ -135,7 +145,12 @@ extension AppDelegate {
 // MARK: - NSMenuDelegate — refresh Recent Wallpapers on menu open
 
 extension AppDelegate: NSMenuDelegate {
+    static let setUpAssetsMenuItem = NSUserInterfaceItemIdentifier("setUpAssets")
+
     func menuWillOpen(_ menu: NSMenu) {
+        // Offered only while scenes are missing their assets.
+        assets.refresh()
+        menu.items.first { $0.identifier == Self.setUpAssetsMenuItem }?.isHidden = !assets.isMissing
         // Update the Recent Wallpapers submenu each time the status bar menu opens
         if let recentItem = menu.items.first(where: { $0.title == String(localized: "Recent Wallpapers") }) {
             recentItem.submenu = buildRecentWallpapersMenu()

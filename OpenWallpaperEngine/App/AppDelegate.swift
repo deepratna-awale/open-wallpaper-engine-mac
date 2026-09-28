@@ -118,6 +118,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             spectrum: { WallpaperServices.shared.audioSpectrumSnapshot },
             clicks: clicks)
     }()
+    /// The Wallpaper Engine assets scenes need, from the user's own Steam copy (Settings › Assets).
+    lazy var assets = WallpaperEngineAssetsService(steamCmd: contentViewModel.steamCmd)
+    private var assetsCancellable: AnyCancellable?
     /// Fetches the Workshop items shown wallpapers borrow assets from.
     lazy var workshopDependencies = WorkshopDependencyService(steamCmd: contentViewModel.steamCmd)
     private var workshopDependencyCancellable: AnyCancellable?
@@ -139,6 +142,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             for wallpaper in wallpapers.values {
                 self?.workshopDependencies.ensureDependencies(for: wallpaper)
             }
+        }
+
+        // New or removed assets: scripts, the library (default wallpapers) and every scene reload.
+        assetsCancellable = assets.assetsChanged.sink { [weak self] in
+            guard let self else { return }
+            self.sceneScriptServices.reloadPrelude()
+            self.contentViewModel.refresh()
+            self.rebuildWallpaperWindows()
         }
 
         wallpaperViewModel.keepWorkshopPreview = { [steamCmd = contentViewModel.steamCmd] in try steamCmd.keepPreview($0) }
@@ -260,6 +271,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         self.settingsWindow.makeKeyAndOrderFront(nil)
     }
     
+    /// Settings › Assets, where the assets scenes need are installed.
+    @objc func openAssetsSettings() {
+        globalSettingsViewModel.selection = 2
+        settingsWindow.toolbar?.selectedItemIdentifier = SettingsToolbarIdentifiers.assets
+        openSettingsWindow()
+    }
+
     @objc func openMainWindow() {
         self.mainWindowController.window?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
@@ -287,7 +305,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         case .alertFirstButtonReturn:
             PermissionHelper.grantScreenRecordingAccess()
         case .alertSecondButtonReturn:
-            globalSettingsViewModel.selection = 3
+            globalSettingsViewModel.selection = 4
             openSettingsWindow()
         case .alertThirdButtonReturn:
             break

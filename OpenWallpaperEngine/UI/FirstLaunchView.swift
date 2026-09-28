@@ -23,6 +23,7 @@ struct FirstLaunchView: View {
             Divider()
             pageBody(pages[pageIndex])
                 .frame(height: 320)
+            AssetsMissingBanner(assets: AppDelegate.shared.assets)
             Divider()
             footer
         }

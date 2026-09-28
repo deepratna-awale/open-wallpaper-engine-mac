@@ -71,6 +71,10 @@ struct ContentView: View {
             sidebar
         } detail: {
             detail
+                // Scenes can't draw without the assets; the library says so while they're missing.
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    if tab == 0 { AssetsMissingBanner(assets: AppDelegate.shared.assets) }
+                }
                 .inspector(isPresented: isDetailsPresented) {
                     Group {
                         if viewModel.isStaging {
