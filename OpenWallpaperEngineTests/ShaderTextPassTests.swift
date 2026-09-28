@@ -6,7 +6,8 @@ import XCTest
 final class ShaderTextPassTests: XCTestCase {
     /// Every `.vert`/`.frag` in the bundled WE assets, includes inlined.
     private static func bundledSources() throws -> [ShaderSource] {
-        let assets = ShaderVariantTests.weAssets
+        // Resolved, so an assets folder reached through a symlink is still enumerated.
+        let assets = ShaderVariantTests.weAssets.resolvingSymlinksInPath()
         let loader = ShaderSourceLoader(roots: [assets])
         guard let files = FileManager.default.enumerator(at: assets, includingPropertiesForKeys: nil) else { return [] }
         var sources: [ShaderSource] = []
