@@ -51,6 +51,9 @@ struct AppStorageLocation: @unchecked Sendable { // UserDefaults is thread-safe;
 
     var isIsolated: Bool { isolationTag != nil }
 
+    /// The Dock badge of this copy: "TEST" for an isolated (test or development) copy, none for the user's.
+    var dockBadge: String? { isIsolated ? "TEST" : nil }
+
     init(isolationTag: String?, bundleIdentifier: String = Bundle.main.bundleIdentifier ?? realBundleIdentifier,
          readOnlyDefaults: Bool = false) {
         let fileManager = FileManager.default
