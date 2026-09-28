@@ -13,24 +13,82 @@ final class SteamLibraryImportTests: XCTestCase {
         steamapps = root.appending(path: "Steam/steamapps", directoryHint: .isDirectory)
         storage = root.appending(path: "Storage", directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: storage, withIntermediateDirectories: true)
+        // The shape of a real appworkshop_431960.acf (Steam on Windows, WE 2.8): header values,
+        // then both item blocks with every field Steam writes; ids and values are made up.
         try write("""
         "AppWorkshop"
         {
-        \t"appid"\t\t"431960"
-        \t"WorkshopItemsInstalled"
-        \t{
-        \t\t"101" { "size" "1" "timeupdated" "1700000000" "manifest" "5" }
-        \t\t"102" { "size" "1" }
-        \t\t"103" { "size" "1" }
-        \t\t"104" { "size" "1" }
-        \t\t"105" { "size" "1" }
-        \t}
-        \t"WorkshopItemDetails"
-        \t{
-        \t\t"101" { "manifest" "5" "subscribedby" "12345" }
-        \t\t"102" { "subscribedby" "12345" }
-        \t\t"106" { "subscribedby" "12345" }
-        \t}
+        	"appid"		"431960"
+        	"SizeOnDisk"		"5000"
+        	"NeedsUpdate"		"0"
+        	"NeedsDownload"		"0"
+        	"TimeLastUpdated"		"1790000000"
+        	"TimeLastFullCheck"		"1790000001"
+        	"TimeLastAppRan"		"1790000002"
+        	"LastBuildID"		"100"
+        	"WorkshopItemsInstalled"
+        	{
+        		"101"
+        		{
+        			"size"		"1000"
+        			"timeupdated"		"1500000000"
+        			"manifest"		"9000000000000000000"
+        		}
+        		"102"
+        		{
+        			"size"		"1001"
+        			"timeupdated"		"1500000001"
+        			"manifest"		"9000000000000000001"
+        		}
+        		"103"
+        		{
+        			"size"		"1002"
+        			"timeupdated"		"1500000002"
+        			"manifest"		"9000000000000000002"
+        		}
+        		"104"
+        		{
+        			"size"		"1003"
+        			"timeupdated"		"1500000003"
+        			"manifest"		"9000000000000000003"
+        		}
+        		"105"
+        		{
+        			"size"		"1004"
+        			"timeupdated"		"1500000004"
+        			"manifest"		"9000000000000000004"
+        		}
+        	}
+        	"WorkshopItemDetails"
+        	{
+        		"101"
+        		{
+        			"manifest"		"9000000000000000000"
+        			"timeupdated"		"1500000000"
+        			"timetouched"		"1790000000"
+        			"subscribedby"		"76561190000000001"
+        			"latest_timeupdated"		"1500000000"
+        			"latest_manifest"		"9000000000000000000"
+        		}
+        		"102"
+        		{
+        			"manifest"		"9000000000000000001"
+        			"timeupdated"		"1500000001"
+        			"timetouched"		"1790000000"
+        			"subscribedby"		"76561190000000001"
+        			"latest_timeupdated"		"1500000001"
+        			"latest_manifest"		"9000000000000000001"
+        		}
+        		"106"
+        		{
+        			"manifest"		"9000000000000000002"
+        			"timeupdated"		"1500000002"
+        			"timetouched"		"1790000000"
+        			"subscribedby"		"76561190000000001"
+        			"latest_timeupdated"		"1500000002"
+        			"latest_manifest"		"9000000000000000002"
+        		}
+        	}
         }
         """, to: "Steam/steamapps/workshop/appworkshop_431960.acf")
         let content = "Steam/steamapps/workshop/content/431960"
