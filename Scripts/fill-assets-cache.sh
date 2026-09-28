@@ -1,54 +1,57 @@
 #!/bin/bash
-# Regenerates "Vendor/we-assets" from a local Wallpaper Engine install.
+# Development helper: copies the Wallpaper Engine assets the app uses out of a local Wallpaper
+# Engine install, the same subset Settings › Assets keeps from the user's Steam copy
+# (`WallpaperEngineAssetsCache`).
 #
-#   ./Scripts/vendor-we-assets.sh <assets-dir>
+#   ./Scripts/fill-assets-cache.sh <wallpaper_engine install or its assets dir> [destination]
 #
-# The result is committed to the repository and copied into the app bundle by Xcode as an ordinary
-# resource folder, so the app ships with working effects and needs no Wallpaper Engine install.
-# This script exists only to refresh that folder when Wallpaper Engine updates; it is not part of
-# the build.
+# The destination defaults to the app's cache in the default Wallpaper Storage folder,
+# `~/Documents/Open Wallpaper Engine/.owe-assets`. Point it at a folder of your own (e.g.
+# /Volumes/980Pro/owe-local-assets) and set OWE_ASSETS to it to run the asset-dependent tests.
+# Nothing it copies may be committed: the repository ships no Wallpaper Engine files.
 #
-# Kept: effect manifests, materials and their GLSL shaders (translated to Metal at runtime,
-# per option set), the shared shaders/headers in `shaders/`, textures, models, particles and the
-# SceneScript runtime, and the built-in fonts text layers name as "fonts/<file>" together with
-# their licence files, and WE's UI strings (`<install>/locale/ui_*.json`, beside `assets`) that
-# translate the label keys wallpapers use. Editor preview art and Direct3D (HLSL) shaders are left out.
+# Kept: effect manifests (without editor preview art), GLSL shaders and shared headers (without
+# Direct3D or editor shaders), materials, models, particles, the SceneScript runtime, the
+# compatibility patches, the built-in fonts with their licence files, and the UI strings
+# (`<install>/locale/ui_*.json`, beside `assets`) that translate label keys.
 
 set -euo pipefail
 
-REPO="$(cd "$(dirname "$0")/.." && pwd)"
-DEST="$REPO/Vendor/we-assets"
 ASSETS="${1:-}"
+DEST="${2:-$HOME/Documents/Open Wallpaper Engine/.owe-assets}"
 
-[[ -n "$ASSETS" ]] || { echo "usage: $0 <wallpaper_engine assets dir>" >&2; exit 2; }
+[[ -n "$ASSETS" ]] || { echo "usage: $0 <wallpaper_engine install or assets dir> [destination]" >&2; exit 2; }
 [[ "$(basename "$ASSETS")" == "assets" ]] || ASSETS="$ASSETS/assets"
-[[ -d "$ASSETS" ]] || { echo "error: $ASSETS is not a directory" >&2; exit 1; }
+[[ -d "$ASSETS/shaders" && -d "$ASSETS/effects" ]] || { echo "error: $ASSETS is not a Wallpaper Engine assets folder" >&2; exit 1; }
 
 echo "source: $ASSETS"
-# ATTRIBUTION.txt is the project's single Wallpaper Engine attribution file; keep it.
-NOTICE="$(mktemp)"
-[[ -f "$DEST/ATTRIBUTION.txt" ]] && cp "$DEST/ATTRIBUTION.txt" "$NOTICE"
-rm -rf "$DEST"
-mkdir -p "$DEST"
-[[ -s "$NOTICE" ]] && cp "$NOTICE" "$DEST/ATTRIBUTION.txt"
-rm -f "$NOTICE"
+echo "destination: $DEST"
+STAGING="$DEST.partial"
+rm -rf "$STAGING"
+mkdir -p "$STAGING"
 
 rsync -a --prune-empty-dirs \
     --exclude '*/preview*/' --exclude 'preview*/' --exclude '.DS_Store' \
-    "$ASSETS/effects/" "$DEST/effects/"
+    "$ASSETS/effects/" "$STAGING/effects/"
 
 rsync -a --prune-empty-dirs --exclude 'HLSL/' --exclude 'editor/' --exclude '.DS_Store' \
-    "$ASSETS/shaders/" "$DEST/shaders/"
+    "$ASSETS/shaders/" "$STAGING/shaders/"
 
 for dir in fonts materials models particles scripts zcompat; do
     [[ -d "$ASSETS/$dir" ]] || continue
-    rsync -a --exclude '.DS_Store' "$ASSETS/$dir/" "$DEST/$dir/"
+    rsync -a --exclude '.DS_Store' "$ASSETS/$dir/" "$STAGING/$dir/"
 done
 
 LOCALE="$(dirname "$ASSETS")/locale"
 if [[ -d "$LOCALE" ]]; then
-    mkdir -p "$DEST/locale"
-    rsync -a --include 'ui_*.json' --exclude '*' "$LOCALE/" "$DEST/locale/"
+    mkdir -p "$STAGING/locale"
+    rsync -a --include 'ui_*.json' --exclude '*' "$LOCALE/" "$STAGING/locale/"
 fi
 
+# What the app shows in Settings › Assets for a cache it didn't download itself.
+printf '{\n  "installedAt" : "%s",\n  "origin" : "folder"\n}\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    > "$STAGING/.owe-assets-info.json"
+
+rm -rf "$DEST"
+mv "$STAGING" "$DEST"
 echo "done: $(find "$DEST" -type f | wc -l | tr -d ' ') files"
