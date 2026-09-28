@@ -17,3 +17,5 @@ Thumbs.db
 
 ## Playwright MCP
 .playwright-mcp/
+
+__pycache__/
