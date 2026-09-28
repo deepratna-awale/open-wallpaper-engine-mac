@@ -147,6 +147,13 @@ class SceneWallpaperViewModel: ObservableObject {
         return entry
     }
 
+    /// Forgets the shared parses, so the next load reads the scene cache or the source (tests).
+    static func dropSharedParses() {
+        parseCacheLock.lock()
+        defer { parseCacheLock.unlock() }
+        parseCache.removeAll()
+    }
+
     private static func storeParse(_ entry: ParsedScene, for directory: URL) {
         parseCacheLock.lock()
         defer { parseCacheLock.unlock() }
@@ -265,24 +272,40 @@ class SceneWallpaperViewModel: ObservableObject {
 
         var scene: WEScene?
         var document: SceneJSON?
-        var servedFromCache = false
 
         let hasPackage = FileManager.default.fileExists(atPath: pkgURL.path(percentEncoded: false))
         let sourceURL = hasPackage ? pkgURL : looseSceneURL
         let signature = Self.sourceSignature(for: sourceURL)
             + "|" + Self.overrideSignature(settingsKey: settingsKey)
 
+        var source = "parsed"
+        var resolvedPlan: Data?
+        // Built only past the in-memory parse: the key stats every file of the wallpaper.
+        lazy var preparation: (store: SceneCacheStore, request: ScenePreparation.Request)? =
+            Self.sceneCacheStore.map { ($0, preparationRequest(for: wallpaper, settingsKey: settingsKey)) }
         if let cached = Self.cachedParse(for: dir, signature: signature) {
             self.pkgParser = cached.parser
             scene = cached.scene
             document = cached.document
-            servedFromCache = true
+            source = "shared parse"
+        } else if let preparation,
+                  let file = preparation.store.read(wallpaper: preparation.request.wallpaperID,
+                                                    key: preparation.request.key),
+                  let plan = file.sections[.scenePlan],
+                  let decoded = try? JSONDecoder().decode(WEScene.self, from: plan) {
+            // The prepared scene plan already has the edits applied; the package is still opened
+            // for the assets it holds.
+            self.pkgParser = hasPackage ? try? PKGParser(url: pkgURL) : nil
+            scene = decoded
+            document = Self.document(plan)
+            source = "scene cache"
         } else if hasPackage {
             do {
                 let parser = try PKGParser(url: pkgURL)
                 self.pkgParser = parser
                 if let data = parser.extractFile(named: sceneFile) {
-                    (scene, document) = try decodeScene(data, settingsKey: settingsKey)
+                    let decoded = try decodeScene(data, settingsKey: settingsKey)
+                    (scene, document, resolvedPlan) = (decoded.0, decoded.1, decoded.2)
                 }
             } catch {
                 Self.log("Failed to parse PKG: \(error)")
@@ -292,10 +315,16 @@ class SceneWallpaperViewModel: ObservableObject {
             self.pkgParser = nil
             do {
                 let data = try Data(contentsOf: looseSceneURL)
-                (scene, document) = try decodeScene(data, settingsKey: settingsKey)
+                let decoded = try decodeScene(data, settingsKey: settingsKey)
+                (scene, document, resolvedPlan) = (decoded.0, decoded.1, decoded.2)
             } catch {
                 Self.log("Failed to parse loose \(sceneFile): \(error)")
             }
+        }
+        // A miss prepares the cache file in the background from the plan just parsed.
+        if let resolvedPlan, let preparation {
+            ScenePreparation.schedule(preparation.request, priority: .currentWallpaper,
+                                      store: preparation.store, scenePlan: resolvedPlan)
         }
 
         guard let scene = scene else {
@@ -318,7 +347,7 @@ class SceneWallpaperViewModel: ObservableObject {
         if prepareDefaults {
             prepareSceneUserPropertyDefaults(for: wallpaper, scene: scene)
         }
-        Self.log("Scene loaded: \(scene.objects.count) objects from \(sceneFile) [\(servedFromCache ? "shared parse" : "parsed")]")
+        Self.log("Scene loaded: \(scene.objects.count) objects from \(sceneFile) [\(source)]")
         if !hasPackage {
             WallpaperPackageConverter.markVerified(wallpaperDirectory: dir, objectCount: scene.objects.count)
         }
@@ -331,33 +360,30 @@ class SceneWallpaperViewModel: ObservableObject {
         bumpRevision()
     }
 
+    /// Where prepared scenes are cached (`<Wallpaper Storage>/.owe-cache`); nil turns the cache off.
+    /// Off by default inside test runs, so loading fixtures writes nothing into the user's storage.
+    nonisolated(unsafe) static var sceneCacheStore: SceneCacheStore? =
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil
+            ? SceneCacheStore(root: SceneCacheStore.defaultRoot) : nil
+
+    /// What preparing `wallpaper` reads, as the scene cache key covers it.
+    private func preparationRequest(for wallpaper: WEWallpaper, settingsKey: String) -> ScenePreparation.Request {
+        let stored = UserDefaults.app.dictionary(forKey: settingsKey) as? [String: String] ?? [:]
+        let split = ScenePreparation.split(storedValues: stored)
+        let dir = wallpaper.wallpaperDirectory
+        return ScenePreparation.Request(wallpaperID: Self.workshopId(of: wallpaper) ?? Self.localWallpaperID(dir),
+                                        directory: dir, sceneFile: wallpaper.project.file,
+                                        edits: split.edits, userProperties: split.properties,
+                                        settings: String(describing: renderSettings.contentKey),
+                                        displays: SceneCacheKey.Display.connected())
+    }
+
     /// The scene and the document it was decoded from (for the scripts; nil when it isn't JSON the
     /// tolerant reader takes).
-    private func decodeScene(_ data: Data, settingsKey: String) throws -> (WEScene, SceneJSON?) {
-        guard var root = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-              var objects = root["objects"] as? [[String: Any]] else {
-            return (try JSONDecoder().decode(WEScene.self, from: data), Self.document(data))
-        }
-            let values = UserDefaults.app.dictionary(forKey: settingsKey) as? [String: String] ?? [:]
-        for index in objects.indices {
-            let objectID = (objects[index]["id"] as? NSNumber)?.intValue ?? index
-            guard let override = values["_owe_scene_object_\(objectID)_json"],
-                  let overrideData = override.data(using: .utf8),
-                  let replacement = try? JSONSerialization.jsonObject(with: overrideData) as? [String: Any] else { continue }
-            objects[index] = replacement
-        }
-        for index in objects.indices {
-            let objectID = (objects[index]["id"] as? NSNumber)?.intValue ?? index
-            if let origin = values["_owe_scene_object_\(objectID)_origin"] {
-                objects[index]["origin"] = origin
-            }
-            if let scale = values["_owe_scene_object_\(objectID)_scale"] {
-                objects[index]["scale"] = scale
-            }
-        }
-        root["objects"] = objects
-        let resolvedData = try JSONSerialization.data(withJSONObject: root)
-        return (try JSONDecoder().decode(WEScene.self, from: resolvedData), Self.document(resolvedData))
+    private func decodeScene(_ data: Data, settingsKey: String) throws -> (WEScene, SceneJSON?, Data) {
+        let values = UserDefaults.app.dictionary(forKey: settingsKey) as? [String: String] ?? [:]
+        let resolved = try ScenePreparation.resolvedScene(data, edits: values)
+        return (try JSONDecoder().decode(WEScene.self, from: resolved), Self.document(resolved), resolved)
     }
 
     private static func document(_ data: Data) -> SceneJSON? {
