@@ -21,27 +21,4 @@ final class RenderResolutionTests: XCTestCase {
         XCTAssertEqual(SceneRenderSettings(settings).renderResolution, .desktop)
         XCTAssertEqual(SceneRenderSettings().renderResolution, .native)
     }
-
-    /// S1: a steady size draws at the display's own density (the target the drawable's size along
-    /// the covering axis); while it changes, the quantised steps stand.
-    func testASteadySizeIsSizedExactly() {
-        let scene = SIMD2<Float>(1920, 1080)
-        let macBook = SIMD2<Float>(3024, 1964)
-        let quantised = SceneRenderResolution.pixelsPerUnit(sceneSize: scene, drawableSize: macBook)
-        let exact = SceneRenderResolution.pixelsPerUnit(sceneSize: scene, drawableSize: macBook, exact: true)
-        XCTAssertEqual(quantised, 1.875)
-        XCTAssertEqual(SceneRenderResolution.targetSize(sceneSize: scene, pixelsPerUnit: exact).y, 1964)
-        XCTAssertEqual(SceneRenderResolution.targetSize(sceneSize: scene, pixelsPerUnit: exact).x, 3492)
-        let fiveK = SceneRenderResolution.pixelsPerUnit(sceneSize: scene, drawableSize: SIMD2(5120, 2880), exact: true)
-        XCTAssertEqual(SceneRenderResolution.targetSize(sceneSize: scene, pixelsPerUnit: fiveK), SIMD2(5120, 2880))
-        // Never below the authored size.
-        XCTAssertEqual(SceneRenderResolution.pixelsPerUnit(sceneSize: scene, drawableSize: SIMD2(1280, 720), exact: true), 1)
-
-        var stability = SceneRenderResolution.SizeStability()
-        XCTAssertTrue(stability.isSteady(macBook), "the first size is steady")
-        XCTAssertTrue(stability.isSteady(macBook))
-        XCTAssertFalse(stability.isSteady(SIMD2(3000, 1900)), "a resize")
-        for _ in 1..<SceneRenderResolution.SizeStability.settleFrames { XCTAssertFalse(stability.isSteady(SIMD2(3000, 1900))) }
-        XCTAssertTrue(stability.isSteady(SIMD2(3000, 1900)), "settled")
-    }
 }

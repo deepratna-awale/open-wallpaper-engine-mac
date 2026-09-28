@@ -338,7 +338,6 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var sharedFrameTarget: MTLTexture?
     private var sceneRenderTargetSize = SIMD2<Int>.zero
     /// Whether the drawable's size has settled, for an exactly sized scene target (S1).
-    private var renderSizeStability = SceneRenderResolution.SizeStability()
     /// Render-target pixels per scene unit this frame (see `SceneRenderResolution`).
     private var renderPixelsPerUnit: Float = 1
     /// Rendered text, by string and style. Capped at 128 entries and 32 MB of rasters not drawn this
@@ -1100,14 +1099,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         drawablePixelsPerPoint = viewports[0].pixelsPerPoint
         // The largest target any display needs, so each shows the scene at its own density.
         let renderDrawable = SceneRenderResolution.drawableSize(viewports, resolution: renderSettings.renderResolution)
-        // Exact once the size has settled (S1): the target is the display's size, not up to 18 % more.
-        let steadySize = renderSizeStability.isSteady(renderDrawable)
         renderPixelsPerUnit = SceneRenderResolution.pixelsPerUnit(sceneSize: sceneSize, drawableSize: renderDrawable,
-                                                                  matchDisplay: renderSettings.sceneDetail == .matchDisplay,
-                                                                  exact: steadySize)
+                                                                  matchDisplay: renderSettings.sceneDetail == .matchDisplay)
         // A scene matched to a smaller display is drawn below full detail: what its buffers stand for.
-        fullDetailScale = SceneRenderResolution.pixelsPerUnit(sceneSize: sceneSize, drawableSize: renderDrawable,
-                                                              exact: steadySize) / renderPixelsPerUnit
+        fullDetailScale = SceneRenderResolution.pixelsPerUnit(sceneSize: sceneSize, drawableSize: renderDrawable) / renderPixelsPerUnit
         // A content drawn in HDR draws into RGBA16F (docs/lighting-plan.md §2.6).
         let scenePixelFormat: MTLPixelFormat = postProcess.drawsHDR ? .rgba16Float : destination.pixelFormat
         let sceneTargetSize = SceneRenderResolution.targetSize(sceneSize: sceneSize, pixelsPerUnit: renderPixelsPerUnit)

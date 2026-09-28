@@ -13,14 +13,10 @@ enum SceneRenderResolution {
     static let maximumTextureDimension: Float = 16384
 
     /// Pixels per scene unit for a scene of `sceneSize` shown on `drawableSize` pixels.
-    /// While the size is changing (`exact` false) it is quantised up to eighths so a live window
-    /// resize doesn't reallocate the target every frame (to 64ths below 1, where an eighth is a
-    /// large step). Once the size is steady (`exact`, `SizeStability`) it is the display's own
-    /// density, so the target is the drawable's size along the covering axis, as WE draws at the
-    /// swapchain's size, instead of up to 18 % larger. `matchDisplay` lets a display smaller than
-    /// the scene draw it smaller.
-    static func pixelsPerUnit(sceneSize: SIMD2<Float>, drawableSize: SIMD2<Float>, matchDisplay: Bool = false,
-                              exact: Bool = false) -> Float {
+    /// Quantised to eighths so a live window resize doesn't reallocate the target every frame
+    /// (to 64ths below 1, where an eighth is a large step). `matchDisplay` lets a display smaller
+    /// than the scene draw it smaller.
+    static func pixelsPerUnit(sceneSize: SIMD2<Float>, drawableSize: SIMD2<Float>, matchDisplay: Bool = false) -> Float {
         let scene = simd_max(sceneSize, SIMD2(1, 1))
         let fitsTexture = maximumTextureDimension / max(scene.x, scene.y)
         guard fitsTexture.isFinite, fitsTexture > 0 else { return 1 }
@@ -30,9 +26,9 @@ enum SceneRenderResolution {
         let wanted = max(drawableSize.x / scene.x, drawableSize.y / scene.y)
         guard wanted.isFinite else { return 1 }
         if matchDisplay, wanted < 1 {
-            return max(minimumMatchedPixelsPerUnit, exact ? wanted : (wanted * 64).rounded(.up) / 64)
+            return max(minimumMatchedPixelsPerUnit, (wanted * 64).rounded(.up) / 64)
         }
-        let quantized = exact ? max(wanted, 1) : (max(wanted, 1) * 8).rounded(.up) / 8
+        let quantized = (max(wanted, 1) * 8).rounded(.up) / 8
         return quantized > fitsTexture ? max(1, (fitsTexture * 8).rounded(.down) / 8) : quantized
     }
 
@@ -56,29 +52,5 @@ enum SceneRenderResolution {
         let size = (simd_max(sceneSize, SIMD2(1, 1)) * pixelsPerUnit).rounded(.toNearestOrAwayFromZero)
         func side(_ pixels: Float) -> Int { pixels.isFinite ? Int(min(max(pixels, 1), maximumTextureDimension)) : 1 }
         return SIMD2(side(size.x), side(size.y))
-    }
-
-    /// Whether the drawable's size has settled (`pixelsPerUnit`'s `exact`): the first size a
-    /// renderer sees is steady at once (a wallpaper's display rarely changes), and after a change it
-    /// is steady again once it has held for `settleFrames` frames, so a live resize keeps the
-    /// quantised steps and the target is reallocated once more when it ends.
-    struct SizeStability {
-        static let settleFrames = 30
-        private var size: SIMD2<Float>?
-        private var heldFrames = 0
-        private var settling = false
-
-        /// Records this frame's drawable size and says whether it is steady.
-        mutating func isSteady(_ drawableSize: SIMD2<Float>) -> Bool {
-            if let size, size != drawableSize {
-                settling = true
-                heldFrames = 0
-            } else if settling {
-                heldFrames += 1
-                if heldFrames >= Self.settleFrames { settling = false }
-            }
-            size = drawableSize
-            return !settling
-        }
     }
 }
