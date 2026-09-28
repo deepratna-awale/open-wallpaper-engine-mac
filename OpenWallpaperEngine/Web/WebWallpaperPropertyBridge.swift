@@ -34,7 +34,8 @@ enum WebWallpaperPropertyBridge {
     }
 
     static func declaredProperties(wallpaperDirectory: URL) -> [String: Property] {
-        guard let root = WEProjectFileCache.shared.root(in: wallpaperDirectory) else { return [:] }
+        guard let data = try? Data(contentsOf: wallpaperDirectory.appending(path: "project.json")),
+              let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return [:] }
         return declaredProperties(projectRoot: root)
     }
 

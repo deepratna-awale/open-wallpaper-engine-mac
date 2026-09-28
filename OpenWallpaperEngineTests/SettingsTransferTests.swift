@@ -110,7 +110,7 @@ final class SettingsTransferTests: XCTestCase {
     func testResetPerTabClearsItsPreferences() {
         let viewModel = GlobalSettingsViewModel()
         let saved = viewModel.settings
-        defer { viewModel.settings = saved; viewModel.flushPendingSave() }
+        defer { viewModel.settings = saved }
         defaults.set(true, forKey: "TestAnimates")
         defaults.set(true, forKey: "ReclaimOriginalPackages")
         XCTAssertTrue(SettingsTabReset.hasChanges(.plugins, settings: GlobalSettings(), defaults: defaults))
