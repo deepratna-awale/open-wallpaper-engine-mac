@@ -35,7 +35,7 @@ final class AppUpdateTests: XCTestCase {
         XCTAssertEqual(ReleaseVersion("v2.0.0-rc.12")?.prerelease?.number, 12)
 
         for bad in ["", "v1", "v1.0", "1.0.0.0", "v1.0.0-", "v1.0.0-beta", "v1.0.0-beta.", "v1.0.0-preview.1",
-                    "v1.0.0-beta.1.2", "v1.0.x", "1.0.0 ", "v1..0", "v1.0.0-Beta.1"] {
+                    "v1.0.0-beta.1.2", "v1.0.x", "1.0.0 ", "v1..0", "v1.0.0-Beta.1", "v01.0.0", "v1.0.0-beta.01"] {
             XCTAssertNil(ReleaseVersion(bad), bad)
         }
     }

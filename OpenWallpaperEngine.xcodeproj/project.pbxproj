@@ -11,6 +11,7 @@
 		4923DF97305D13130038BE65 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4923DF95305D13130038BE65 /* MetalKit.framework */; };
 		AA1B2C3D4E5F600200ABCD05 /* SpriteKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA1B2C3D4E5F600100ABCD05 /* SpriteKit.framework */; };
 		EE3000000000000000000001 /* ShaderToolchain in Frameworks */ = {isa = PBXBuildFile; productRef = EE3000000000000000000002 /* ShaderToolchain */; };
+		EE4000000000000000000011 /* CHANGELOG.md in Resources */ = {isa = PBXBuildFile; fileRef = EE4000000000000000000010 /* CHANGELOG.md */; };
 		EE4000000000000000000001 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = EE4000000000000000000002 /* Sparkle */; };
 /* End PBXBuildFile section */
 
@@ -22,6 +23,7 @@
 		5E1670752A88EDF000D1B199 /* import-panel.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "import-panel.png"; sourceTree = "<group>"; };
 		5E5460C62A83026D00655D85 /* wallpaper-with-windows.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "wallpaper-with-windows.png"; sourceTree = "<group>"; };
 		5E5460C72A83027400655D85 /* wallpaper.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = wallpaper.png; sourceTree = "<group>"; };
+		EE4000000000000000000010 /* CHANGELOG.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CHANGELOG.md; sourceTree = "<group>"; };
 		5E6091F12A83E85D00D4C36C /* AUTHORS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = AUTHORS.md; sourceTree = "<group>"; };
 		5EC47E762A2DB2E600120CCC /* Open Wallpaper Engine.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Open Wallpaper Engine.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		5EF4C24A2A4C9871009831E5 /* CNAME */ = {isa = PBXFileReference; lastKnownFileType = text; path = CNAME; sourceTree = "<group>"; };
@@ -97,6 +99,7 @@
 			children = (
 				B4AD1D0F2AA24E8200471AC8 /* .gitignore */,
 				5E6091F12A83E85D00D4C36C /* AUTHORS.md */,
+				EE4000000000000000000010 /* CHANGELOG.md */,
 				5EF4C24A2A4C9871009831E5 /* CNAME */,
 				5EF4C24B2A4C9872009831E5 /* LICENSE */,
 				5EF4C24C2A4C98FA009831E5 /* README.md */,
@@ -253,6 +256,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EE4000000000000000000011 /* CHANGELOG.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

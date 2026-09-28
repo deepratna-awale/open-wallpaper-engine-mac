@@ -3,6 +3,7 @@ import SwiftUI
 /// Settings › General › Updates: Sparkle's preferences and the beta channel.
 struct UpdatesSection: View {
     @ObservedObject var updater: AppUpdater
+    @AppStorage(WhatsNew.hidesReleaseNotesKey, store: .app) private var hidesReleaseNotes = false
 
     var body: some View {
         Section {
@@ -29,6 +30,7 @@ struct UpdatesSection: View {
                 Text("Updates are off in this build because it has no update signing key. Builds from GitHub Releases update themselves.")
                     .foregroundStyle(.secondary)
             }
+            Toggle("Don't show release notes", isOn: $hidesReleaseNotes)
         } header: {
             Label("Updates", systemImage: "arrow.down.circle")
         } footer: {

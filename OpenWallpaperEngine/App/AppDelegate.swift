@@ -204,6 +204,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         
         // 将外部输入传递到壁纸窗口
         AppDelegate.shared.setEventHandler()
+
+        observeMainWindowForWhatsNew()
     }
     
     func applicationDockMenu(_ sender: NSApplication) -> NSMenu? {
@@ -223,10 +225,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
         
         safeRestart.showPendingNotice()
+        updater.willRelaunch = { [unowned self] in self.captureUpdateRelaunchState().save(to: .app) }
         updater.start()
         displayPlaybackMonitor.start(settings: globalSettingsViewModel.$settings)
 
-        if globalSettingsViewModel.isFirstLaunch {
+        // After an update relaunch, what was open before; otherwise the setup assistant if due.
+        if !restoreUpdateRelaunchState(), globalSettingsViewModel.isFirstLaunch {
             self.mainWindowController.window.center()
             self.mainWindowController.window.makeKeyAndOrderFront(nil)
         }

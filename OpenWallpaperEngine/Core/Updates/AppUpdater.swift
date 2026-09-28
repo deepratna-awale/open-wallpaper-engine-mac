@@ -1,6 +1,7 @@
 import Combine
 import CoreGraphics
 import Foundation
+import AppKit
 import Sparkle
 
 /// Sparkle's standard updater, started only when the build carries a public EdDSA key
@@ -19,6 +20,9 @@ final class AppUpdater: NSObject, ObservableObject {
     private let defaults: UserDefaults
     /// nil when the updater is off.
     private(set) var controller: SPUStandardUpdaterController?
+
+    /// Called just before Sparkle relaunches the app to install an update.
+    var willRelaunch: (() -> Void)?
 
     @Published private(set) var canCheckForUpdates = false
     @Published private(set) var lastUpdateCheckDate: Date?
@@ -136,6 +140,37 @@ final class AppUpdater: NSObject, ObservableObject {
 extension AppUpdater: SPUUpdaterDelegate {
     nonisolated func allowedChannels(for updater: SPUUpdater) -> Set<String> {
         MainActor.assumeIsolated { allowedChannels }
+    }
+
+    /// Keeps the notes of every newer version, for What's New after the update (offline too).
+    nonisolated func updater(_ updater: SPUUpdater, didFinishLoading appcast: SUAppcast) {
+        MainActor.assumeIsolated {
+            guard let installed = ReleaseVersion(configuration.versionLabel) else { return }
+            var notes: [String: String] = [:]
+            for item in appcast.items {
+                guard let text = item.itemDescription, !text.isEmpty else { continue }
+                notes[item.displayVersionString] = item.itemDescriptionFormat == "plain-text" ? text : Self.plainText(html: text)
+            }
+            ReleaseNotesStore(defaults: defaults).cache(notes, newerThan: installed)
+        }
+    }
+
+    private static func plainText(html: String) -> String {
+        do {
+            let text = try NSAttributedString(
+                data: Data(html.utf8),
+                options: [.documentType: NSAttributedString.DocumentType.html,
+                          .characterEncoding: String.Encoding.utf8.rawValue],
+                documentAttributes: nil)
+            return text.string.trimmingCharacters(in: .whitespacesAndNewlines)
+        } catch {
+            OWELog.error(.app, "Could not read an update's release notes: \(error)")
+            return ""
+        }
+    }
+
+    nonisolated func updaterWillRelaunchApplication(_ updater: SPUUpdater) {
+        MainActor.assumeIsolated { willRelaunch?() }
     }
 
     /// Takes over installing a silently downloaded update, which Sparkle otherwise leaves until quit.
