@@ -322,8 +322,12 @@ final class ModelRenderTests: XCTestCase {
         XCTAssertTrue(first.vertices === renderer.meshBuffers(cube)[0]?.vertices, "the renderer draws the uploaded buffers")
         XCTAssertEqual(cube.meshes[0].vertexData, vertices)
         XCTAssertEqual(cube.meshes[0].indexData, indices)
-        XCTAssertEqual(cube.meshes[0].vertexData.withUnsafeBytes { $0.baseAddress }, UnsafeRawPointer(first.vertices.contents()),
-                       "no second CPU copy")
+        XCTAssertEqual(cube.meshes[0].indexData.withUnsafeBytes { $0.baseAddress }, UnsafeRawPointer(first.indices.contents()),
+                       "no second CPU copy of the indices")
+        if first.attributes == nil {
+            XCTAssertEqual(cube.meshes[0].vertexData.withUnsafeBytes { $0.baseAddress }, UnsafeRawPointer(first.vertices.contents()),
+                           "no second CPU copy of one-stream vertices")
+        }
     }
 
     // MARK: - Planning

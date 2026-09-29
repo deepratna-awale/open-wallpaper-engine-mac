@@ -75,9 +75,9 @@ final class SceneModelPlan {
                                                                    uint32: mesh.usesUInt32Indices,
                                                                    indexCount: mesh.indexCount)
             else { return nil }
-            // Split streams don't hold the interleaved bytes; that mesh keeps its loaded copy.
-            guard buffers.attributes == nil else { return buffers }
-            mesh.bytes.replace(vertices: Self.view(of: buffers.vertices, count: vertices.count),
+            // Split streams don't hold the interleaved bytes; that mesh keeps its loaded vertices.
+            mesh.bytes.replace(vertices: buffers.attributes == nil ? Self.view(of: buffers.vertices, count: vertices.count)
+                                                                   : vertices,
                                indices: Self.view(of: buffers.indices, count: indices.count))
             return buffers
         }
