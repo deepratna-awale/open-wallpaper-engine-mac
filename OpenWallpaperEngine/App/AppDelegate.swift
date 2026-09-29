@@ -333,18 +333,24 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     @objc func audioCapturePermissionMissing() {
         let alert = NSAlert()
         alert.messageText = String(localized: "Audio Visualizers Need Permission")
-        alert.informativeText = String(localized: """
-        Open Wallpaper Engine needs Screen & System Audio Recording permission to read system audio \
-        for audio bars and other audio-reactive wallpapers. Audio capture starts on its own once \
-        the permission is granted.
-        """, comment: "Screen & System Audio Recording is the name of the macOS privacy setting")
+        alert.informativeText = PermissionHelper.usesSystemAudioRecording
+            ? String(localized: """
+            Open Wallpaper Engine needs System Audio Recording permission to read system audio \
+            for audio bars and other audio-reactive wallpapers. Audio capture starts on its own once \
+            the permission is granted.
+            """, comment: "System Audio Recording is the name of the macOS privacy setting")
+            : String(localized: """
+            Open Wallpaper Engine needs Screen & System Audio Recording permission to read system audio \
+            for audio bars and other audio-reactive wallpapers. Audio capture starts on its own once \
+            the permission is granted.
+            """, comment: "Screen & System Audio Recording is the name of the macOS privacy setting")
         alert.addButton(withTitle: String(localized: "Grant Access"))
         alert.addButton(withTitle: String(localized: "Open Permissions Page"))
         alert.addButton(withTitle: String(localized: "Later"))
         alert.addButton(withTitle: String(localized: "Don't Ask Again"))
         switch alert.runModal() {
         case .alertFirstButtonReturn:
-            PermissionHelper.grantScreenRecordingAccess()
+            PermissionHelper.grantAudioCaptureAccess { WallpaperServices.shared.recheckCapturePermission() }
         case .alertSecondButtonReturn:
             openSettings(.permissions)
         case .alertThirdButtonReturn:

@@ -19,7 +19,7 @@ This document describes the target structure and the rules for what goes where. 
       └─────────┬─────────┘         │
                 └──────────┬────────┘
                     ┌──────▼──────┐
-                    │ Audio/      │  system capture (ScreenCaptureKit), per-item taps
+                    │ Audio/      │  system capture (process tap or SCK), item taps
                     └─────────────┘
 Core/  logging, diagnostics, settings store, asset locations: usable by everything above
 ```
@@ -52,7 +52,7 @@ These are folders in the app target today. The scene engine (`Scene/`, `Audio/`,
 
 ### `Audio/`
 
-- System audio capture (ScreenCaptureKit) with a restart lifecycle.
+- System audio capture (a Core Audio process tap on macOS 14.2+, ScreenCaptureKit before or as the fallback) with a restart lifecycle.
 - Per-player taps (`AudioLevelTap`).
 - Spectrum and waveform snapshots.
 - One producer, many consumers: scene shaders, SceneScript `registerAudioBuffers`, video music sync.

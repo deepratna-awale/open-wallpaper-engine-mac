@@ -21,7 +21,7 @@ Open Wallpaper Engine is a free, open-source macOS player for Wallpaper Engine w
 | Feature | Requirement | Install |
 |---------|-------------|---------|
 | Browsing / downloading from Steam Workshop | `steamcmd` | Automatic (optional: `brew install steamcmd`) |
-| Audio visualizers & audio-reactive SceneScript | Screen Recording permission | Settings → Permissions |
+| Audio visualizers & audio-reactive SceneScript | System Audio Recording permission (Screen & System Audio Recording before macOS 14.2) | Settings → Permissions |
 
 #### Shaders
 
@@ -127,8 +127,6 @@ Building from source fetches the Sparkle Swift package on first build. Builds fr
 ## Current Limitations
 
 - **SceneScript stubs** — `getVideoTexture()` does nothing yet.
-- **SceneScript parity** — Not every proprietary event name, input callback, lifecycle edge case, or exact timing semantic is reproduced.
-- **Audio features require permission** — Without Screen Recording permission, audio visualizers and audio-reactive SceneScript receive silence.
 
 ## Supported Wallpaper Types
 

@@ -28,6 +28,8 @@ final class WallpaperEngineAssetsService: ObservableObject {
         case notLoggedIn(account: String?)
         case notOwned
         case steamCmd(String)
+        /// Looking up the current build failed, so nothing was downloaded.
+        case updateCheckFailed(String)
 
         var errorDescription: String? {
             switch self {
@@ -44,6 +46,9 @@ final class WallpaperEngineAssetsService: ObservableObject {
                               comment: "Assets install error")
             case .steamCmd(let message):
                 return message
+            case .updateCheckFailed(let reason):
+                return String(localized: "Couldn't check for a Wallpaper Engine update, so nothing was downloaded: \(reason) To download anyway, choose Re-download.",
+                              comment: "Assets update check error; %@ is the reason SteamCMD gave")
             }
         }
     }
@@ -52,6 +57,8 @@ final class WallpaperEngineAssetsService: ObservableObject {
     @Published private(set) var phase: Phase = .idle
     /// Why the last install failed, for the action offered beside the message (e.g. "Log In").
     @Published private(set) var lastFailure: Failure?
+    /// The outcome of the last "Update from Steam" that found nothing to download.
+    @Published private(set) var notice: String?
     /// Fires when the asset tree in use changed, so wallpapers can reload.
     let assetsChanged = PassthroughSubject<Void, Never>()
 
@@ -230,11 +237,14 @@ final class WallpaperEngineAssetsService: ObservableObject {
     /// Downloads the user's Wallpaper Engine copy with SteamCMD and keeps its assets in the cache.
     /// With `includingDefaultWallpapers`, the copy's default wallpapers (never application ones)
     /// also move into the storage folder; without, they are deleted with the rest of the download.
-    func installFromSteam(includingDefaultWallpapers: Bool = true) {
+    /// A complete Steam copy is only downloaded again when Steam has a newer build, unless `force`
+    /// (Re-download, to repair a damaged copy).
+    func installFromSteam(includingDefaultWallpapers: Bool = true, force: Bool = false) {
         guard !isBusy else { return }
+        notice = nil
         guard steamCmd.steamCmdPath != nil else { return fail(.steamCmdMissing) }
         if steamCmd.isLoggedIn, !steamCmd.steamUsername.isEmpty {
-            return startInstall(includingDefaultWallpapers: includingDefaultWallpapers)
+            return startInstall(includingDefaultWallpapers: includingDefaultWallpapers, force: force)
         }
         // Not logged in in this session: SteamCMD may still hold the remembered account's login.
         guard let account = steamCmd.rememberedAccount, !steamCmd.isLoggingIn else {
@@ -246,14 +256,14 @@ final class WallpaperEngineAssetsService: ObservableObject {
             guard let self else { return }
             self.phase = .idle
             if loggedIn {
-                self.startInstall(includingDefaultWallpapers: includingDefaultWallpapers)
+                self.startInstall(includingDefaultWallpapers: includingDefaultWallpapers, force: force)
             } else {
                 self.fail(.notLoggedIn(account: account))
             }
         }
     }
 
-    private func startInstall(includingDefaultWallpapers: Bool) {
+    private func startInstall(includingDefaultWallpapers: Bool, force: Bool) {
         guard let steamCmdPath = steamCmd.steamCmdPath else { return fail(.steamCmdMissing) }
         lastFailure = nil
         let storage: URL
@@ -264,11 +274,17 @@ final class WallpaperEngineAssetsService: ObservableObject {
         }
         let token = SteamCmdCancellation()
         cancellation = token
-        phase = .downloading(status: String(localized: "Starting steamcmd…", comment: "Download status; steamcmd is a program name"),
+        let cache = WallpaperEngineAssets.cacheDirectory(in: storage)
+        let installed = WallpaperEngineAssetsCache.readInfo(cache: cache)
+        let checksFirst = WallpaperEngineAssetsUpdateCheck.needsLookup(force: force, installed: installed,
+                                                                       assetsComplete: WallpaperEngineAssets.isAssetTree(cache))
+        phase = .downloading(status: checksFirst
+                                ? String(localized: "Checking for updates…", comment: "Assets update check status")
+                                : String(localized: "Starting steamcmd…", comment: "Download status; steamcmd is a program name"),
                              progress: nil)
         let job = InstallJob(executable: URL(fileURLWithPath: steamCmdPath), username: steamCmd.steamUsername,
                              storage: storage, includesDefaultWallpapers: includingDefaultWallpapers,
-                             runner: runner, cancellation: token)
+                             checksFirst: checksFirst, runner: runner, cancellation: token)
         steamCmd.enqueueSteamCmdWork { [weak self] in
             let result = job.run(
                 onProgress: { progress in DispatchQueue.main.async { self?.showDownloadProgress(progress) } },
@@ -284,10 +300,16 @@ final class WallpaperEngineAssetsService: ObservableObject {
                              progress: progress)
     }
 
-    private func finishInstall(_ result: Result<Void, Error>, cancelled: Bool) {
+    private func finishInstall(_ result: Result<InstallJob.Outcome, Error>, cancelled: Bool) {
         cancellation = nil
         switch result {
-        case .success:
+        case .success(.upToDate(let build)):
+            phase = .idle
+            OWELog.info(.library, "Assets are up to date (build \(build)); nothing downloaded")
+            notice = String(localized: "Wallpaper Engine assets are up to date (build \(build)).",
+                            comment: "Assets update check result; %@ is Steam's build number")
+            refresh()
+        case .success(.installed):
             defaults.removeObject(forKey: Self.notOwnedAccountKey)
             phase = .idle
             OWELog.info(.library, "Assets installed from Steam")
@@ -315,6 +337,7 @@ final class WallpaperEngineAssetsService: ObservableObject {
     }
 
     private func changed() {
+        notice = nil
         refresh()
         assetsChanged.send()
     }
@@ -326,11 +349,54 @@ private struct InstallJob {
     let username: String
     let storage: URL
     let includesDefaultWallpapers: Bool
+    /// Looks up the current build first and downloads only when it differs from the cache's.
+    let checksFirst: Bool
     let runner: SteamCmdRunning
     let cancellation: SteamCmdCancellation
 
+    enum Outcome: Equatable {
+        case installed
+        case upToDate(build: String)
+    }
+
     func run(onProgress: @escaping (WallpaperEngineAssetsDownload.Progress) -> Void,
-             onCopying: () -> Void) -> Result<Void, Error> {
+             onCopying: () -> Void) -> Result<Outcome, Error> {
+        var currentBuild: String?
+        if checksFirst {
+            do {
+                let build = try lookUpCurrentBuild()
+                let cache = WallpaperEngineAssets.cacheDirectory(in: storage)
+                let decision = WallpaperEngineAssetsUpdateCheck.decision(installed: WallpaperEngineAssetsCache.readInfo(cache: cache),
+                                                                         assetsComplete: WallpaperEngineAssets.isAssetTree(cache),
+                                                                         currentBuild: build)
+                if case .upToDate(let build) = decision { return .success(.upToDate(build: build)) }
+                OWELog.info(.library, "Assets: Steam has build \(build); downloading")
+                currentBuild = build
+            } catch {
+                return .failure(error)
+            }
+        }
+        return download(currentBuild: currentBuild, onProgress: onProgress, onCopying: onCopying)
+    }
+
+    /// The current public build, from SteamCMD's app info; nothing is downloaded.
+    private func lookUpCurrentBuild() throws -> String {
+        let script = try WallpaperEngineAssetsUpdateCheck.script(username: username)
+        let run = runner.run(executable: executable, script: script, timeout: nil, cancellation: cancellation) { _ in }
+        if cancellation.isCancelled { throw CancellationError() }
+        switch WallpaperEngineAssetsUpdateCheck.lookup(output: run.output, exitCode: run.exitCode) {
+        case .build(let build):
+            return build
+        case .loginRequired:
+            throw WallpaperEngineAssetsService.Failure.notLoggedIn(account: username)
+        case .failed(let reason):
+            OWELog.error(.workshop, "steamcmd app info lookup failed exit=\(run.exitCode)\n\(run.output)")
+            throw WallpaperEngineAssetsService.Failure.updateCheckFailed(reason)
+        }
+    }
+
+    private func download(currentBuild: String?, onProgress: @escaping (WallpaperEngineAssetsDownload.Progress) -> Void,
+                          onCopying: () -> Void) -> Result<Outcome, Error> {
         let download = WallpaperEngineAssetsDownload.downloadDirectory(in: storage)
         // Only the assets are kept; the rest of the app is large and goes right away.
         defer { WallpaperEngineAssetsCache.removeIfPresent(download) }
@@ -355,7 +421,7 @@ private struct InstallJob {
             let cache = WallpaperEngineAssets.cacheDirectory(in: storage)
             let previous = WallpaperEngineAssetsCache.readInfo(cache: cache)?.defaultProjects ?? []
             var info = WallpaperEngineAssetsCache.Info(origin: .steam, installedAt: .now,
-                                                       steamBuildID: WallpaperEngineAssetsDownload.buildID(installDirectory: download))
+                                                       steamBuildID: WallpaperEngineAssetsDownload.buildID(installDirectory: download) ?? currentBuild)
             try WallpaperEngineAssetsCache.fill(cache, from: download, info: info, isCancelled: { cancellation.isCancelled })
             // The download is deleted next, so the default wallpapers move rather than copy.
             var imported = WallpaperEngineDefaultProjects.ImportResult()
@@ -368,7 +434,7 @@ private struct InstallJob {
             let kept = previous.filter { FileManager.default.fileExists(atPath: storage.appending(path: $0).path) }
             info.defaultProjects = kept + imported.imported.filter { !kept.contains($0) }
             try WallpaperEngineAssetsCache.writeInfo(info, cache: cache)
-            return .success(())
+            return .success(.installed)
         } catch {
             return .failure(error)
         }

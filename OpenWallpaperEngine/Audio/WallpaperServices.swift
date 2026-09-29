@@ -25,7 +25,7 @@ final class WallpaperServices {
         propertyService = SceneUserPropertyService(audioLevel: { capture.audioLevel })
     }
 
-    /// Starts capture if Screen Recording was granted since the last check. Never prompts, so it is
+    /// Starts capture if a capture permission was granted since the last check. Never prompts, so it is
     /// safe to call whenever the app activates or the Permissions page appears.
     @MainActor
     func recheckCapturePermission() {

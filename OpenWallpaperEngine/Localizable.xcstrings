@@ -51674,6 +51674,100 @@
         }
       }
     },
+    "Needed for audio visualizers and audio-reactive SceneScript. Only system audio is read, never the screen." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مطلوب للمؤثرات المرئية الصوتية وSceneScript المتفاعل مع الصوت. تتم قراءة صوت النظام فقط، وليس الشاشة أبدًا."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erforderlich für Audio-Visualisierungen und audio-reaktives SceneScript. Es wird nur das Systemaudio gelesen, nie der Bildschirm."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Necesario para los visualizadores de audio y el SceneScript que reacciona al audio. Solo se lee el audio del sistema, nunca la pantalla."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nécessaire pour les visualiseurs audio et les SceneScript réactifs au son. Seul l’audio du système est lu, jamais l’écran."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऑडियो विज़ुअलाइज़र और ऑडियो पर प्रतिक्रिया देने वाले SceneScript के लिए आवश्यक. केवल सिस्टम ऑडियो पढ़ा जाता है, स्क्रीन कभी नहीं."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Necessaria per i visualizzatori audio e per SceneScript reattivi all’audio. Viene letto solo l’audio di sistema, mai lo schermo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オーディオビジュアライザと、オーディオに反応するSceneScriptに必要です。読み取るのはシステムオーディオのみで、画面は読み取りません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오디오 시각화 및 오디오 반응형 SceneScript에 필요합니다. 시스템 오디오만 읽으며 화면은 읽지 않습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Potrzebne do wizualizatorów dźwięku i SceneScript reagującego na dźwięk. Odczytywany jest tylko dźwięk systemowy, nigdy ekran."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Necessária para visualizadores de áudio e SceneScript sensível a áudio. Somente o áudio do sistema é lido, nunca a tela."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Требуется для аудиовизуализаторов и SceneScript, реагирующего на звук. Считывается только системный звук, экран — никогда."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ses görselleştiricileri ve sese duyarlı SceneScript için gereklidir. Yalnızca sistem sesi okunur, ekran asla okunmaz."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Потрібно для аудіовізуалізаторів і SceneScript, що реагує на звук. Зчитується лише системний звук, екран — ніколи."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音频可视化和音频响应的 SceneScript 需要此权限。只读取系统音频，从不读取屏幕。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音訊視覺化和音訊回應式 SceneScript 需要此權限。只會讀取系統音訊，絕不讀取螢幕。"
+          }
+        }
+      }
+    },
     "Needed to browse and search the Workshop. It is stored in your keychain and checked with Steam before saving. Without it, author names come from public Steam profiles." : {
       "localizations" : {
         "ar" : {
@@ -56291,6 +56385,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Open Wallpaper Engine 需要「螢幕與系統錄音」權限，才能為音訊長條和其他音訊回應式背景圖片讀取系統音訊。授與權限後即會自動開始擷取音訊。"
+          }
+        }
+      }
+    },
+    "Open Wallpaper Engine needs System Audio Recording permission to read system audio for audio bars and other audio-reactive wallpapers. Audio capture starts on its own once the permission is granted." : {
+      "comment" : "System Audio Recording is the name of the macOS privacy setting",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يحتاج Open Wallpaper Engine إلى إذن «تسجيل صوت النظام» لقراءة صوت النظام من أجل أشرطة الصوت والخلفيات الأخرى التي تستجيب للصوت. يبدأ التقاط الصوت تلقائيًا بمجرد منح الإذن."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine benötigt die Berechtigung „Aufnahme von Systemaudio“, um das Systemaudio für Audiobalken und andere audio-reaktive Hintergrundbilder zu lesen. Die Audioaufnahme startet automatisch, sobald die Berechtigung erteilt wurde."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine necesita el permiso de Grabación del audio del sistema para leer el audio del sistema para las barras de audio y otros fondos de pantalla que reaccionan al audio. La captura de audio empezará sola en cuanto se conceda el permiso."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine a besoin de l’autorisation « Enregistrement des sons du système » pour lire l’audio du système pour les barres audio et les autres fonds d’écran réactifs au son. La capture audio démarre d’elle-même une fois l’autorisation accordée."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऑडियो बार और ऑडियो पर प्रतिक्रिया देने वाले अन्य वॉलपेपर के लिए सिस्टम ऑडियो पढ़ने हेतु Open Wallpaper Engine को सिस्टम ऑडियो रिकॉर्डिंग अनुमति की ज़रूरत है. अनुमति मिलते ही ऑडियो कैप्चर अपने आप शुरू हो जाता है."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine richiede l’autorizzazione Registrazione audio di sistema per leggere l’audio di sistema per le barre audio e gli altri sfondi reattivi all’audio. L’acquisizione audio si avvia da sola non appena concedi l’autorizzazione."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engineがオーディオバーやその他のオーディオに反応する壁紙のためにシステムオーディオを読み取るには、「システムオーディオ録音」の許可が必要です。許可されるとオーディオのキャプチャが自動的に開始されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine이 오디오 막대 및 기타 오디오 반응형 배경화면을 위해 시스템 오디오를 읽으려면 시스템 오디오 녹음 권한이 필요합니다. 권한이 허용되면 오디오 캡처가 자동으로 시작됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine wymaga pozwolenia Nagrywanie dźwięku systemowego, aby odczytywać dźwięk systemowy na potrzeby słupków audio i innych tapet reagujących na dźwięk. Przechwytywanie dźwięku rozpocznie się samo po udzieleniu pozwolenia."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Open Wallpaper Engine precisa da permissão de Gravação do Áudio do Sistema para ler o áudio do sistema para barras de áudio e outras imagens de fundo sensíveis a áudio. A captura de áudio começa sozinha assim que a permissão é concedida."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine требуется разрешение «Системная аудиозапись», чтобы получать системный звук для аудиополос и других обоев, реагирующих на звук. Захват звука начнётся сам после выдачи разрешения."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine’in ses çubukları ve sese duyarlı diğer duvar kâğıtları için sistem sesini okuyabilmesi için Sistem Ses Kaydı izni gerekir. İzin verildiğinde ses yakalama kendiliğinden başlar."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine потрібен дозвіл «Записування системного звуку», щоб зчитувати системний звук для аудіосмуг та інших шпалер, що реагують на звук. Записування звуку почнеться автоматично, щойно дозвіл буде надано."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 需要“系统录音”权限，才能为音频条和其他音频响应墙纸读取系统音频。授予权限后，音频捕获会自动开始。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 需要「系統錄音」權限，才能為音訊長條和其他音訊回應式背景圖片讀取系統音訊。授與權限後即會自動開始擷取音訊。"
           }
         }
       }
@@ -87717,6 +87906,101 @@
         }
       }
     },
+    "System Audio Recording" : {
+      "comment" : "Name of the macOS privacy setting that lets an app read system audio",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تسجيل صوت النظام"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufnahme von Systemaudio"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grabación del audio del sistema"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrement des sons du système"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सिस्टम ऑडियो रिकॉर्डिंग"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrazione audio di sistema"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "システムオーディオ録音"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시스템 오디오 녹음"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nagrywanie dźwięku systemowego"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gravação do Áudio do Sistema"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Системная аудиозапись"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sistem Ses Kaydı"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записування системного звуку"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "系统录音"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "系統錄音"
+          }
+        }
+      }
+    },
     "Tags" : {
       "localizations" : {
         "ar" : {
@@ -108098,6 +108382,576 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "選擇 Wallpaper Engine 安裝中的 config.json。"
+          }
+        }
+      }
+    },
+    "Couldn't check for a Wallpaper Engine update, so nothing was downloaded: %@ To download anyway, choose Re-download." : {
+      "comment" : "Assets update check error; %@ is the reason SteamCMD gave",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذّر التحقق من وجود تحديث لـ Wallpaper Engine، لذا لم يُنزَّل شيء: %@ للتنزيل على أي حال، اختر «إعادة التنزيل»."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es konnte nicht nach einem Wallpaper Engine-Update gesucht werden, daher wurde nichts geladen: %@ Um trotzdem zu laden, wähle „Erneut laden“."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo buscar una actualización de Wallpaper Engine, así que no se descargó nada: %@ Para descargar de todos modos, elige Volver a descargar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de rechercher une mise à jour de Wallpaper Engine, rien n’a donc été téléchargé : %@ Pour télécharger quand même, choisissez Retélécharger."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine अपडेट की जाँच नहीं हो सकी, इसलिए कुछ भी डाउनलोड नहीं हुआ: %@ फिर भी डाउनलोड करने के लिए, फिर से डाउनलोड करें चुनें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile cercare un aggiornamento di Wallpaper Engine, quindi non è stato scaricato nulla: %@ Per scaricare comunque, scegli Scarica di nuovo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine のアップデートを確認できなかったため、何もダウンロードしませんでした: %@ それでもダウンロードするには、「再ダウンロード」を選択してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine 업데이트를 확인할 수 없어 아무것도 다운로드하지 않았습니다: %@ 그래도 다운로드하려면 다시 다운로드를 선택하세요."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie udało się sprawdzić aktualizacji Wallpaper Engine, więc nic nie zostało pobrane: %@ Aby mimo to pobrać, wybierz Pobierz ponownie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível verificar se há uma atualização do Wallpaper Engine, então nada foi baixado: %@ Para baixar mesmo assim, escolha Baixar novamente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось проверить наличие обновления Wallpaper Engine, поэтому ничего не загружено: %@ Чтобы загрузить всё равно, выберите «Загрузить заново»."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine güncellemesi denetlenemedi, bu yüzden hiçbir şey indirilmedi: %@ Yine de indirmek için Yeniden İndir’i seçin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося перевірити наявність оновлення Wallpaper Engine, тому нічого не викачано: %@ Щоб викачати все одно, виберіть «Викачати знову»."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法检查 Wallpaper Engine 更新，因此未下载任何内容：%@ 若仍要下载，请选择“重新下载”。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法檢查 Wallpaper Engine 更新，因此未下載任何內容：%@ 若仍要下載，請選擇「重新下載」。"
+          }
+        }
+      }
+    },
+    "Wallpaper Engine assets are up to date (build %@)." : {
+      "comment" : "Assets update check result; %@ is Steam's build number",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أصول Wallpaper Engine محدَّثة (الإصدار %@)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Wallpaper Engine-Assets sind aktuell (Build %@)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los recursos de Wallpaper Engine están actualizados (compilación %@)."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les ressources de Wallpaper Engine sont à jour (build %@)."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine एसेट अप टू डेट हैं (बिल्ड %@)।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le risorse di Wallpaper Engine sono aggiornate (build %@)."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine のアセットは最新です（ビルド %@）。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine 에셋이 최신 상태입니다(빌드 %@)."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zasoby Wallpaper Engine są aktualne (kompilacja %@)."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os recursos do Wallpaper Engine estão atualizados (build %@)."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ресурсы Wallpaper Engine актуальны (сборка %@)."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine varlıkları güncel (derleme %@)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ресурси Wallpaper Engine актуальні (збірка %@)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine 资源已是最新（版本 %@）。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine 資源已是最新（版本 %@）。"
+          }
+        }
+      }
+    },
+    "Checking for updates…" : {
+      "comment" : "Assets update check status",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يجري التحقق من وجود تحديثات…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach Updates suchen …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscando actualizaciones…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recherche de mises à jour…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपडेट की जाँच की जा रही है…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ricerca di aggiornamenti…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アップデートを確認中…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "업데이트 확인 중…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sprawdzanie uaktualnień…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscando atualizações…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверка обновлений…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Güncellemeler denetleniyor…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірка оновлень…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在检查更新…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在檢查更新⋯"
+          }
+        }
+      }
+    },
+    "steamcmd didn't report the current build." : {
+      "comment" : "Assets update check error; steamcmd is a program name",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لم يُبلغ steamcmd عن الإصدار الحالي."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steamcmd hat den aktuellen Build nicht gemeldet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steamcmd no informó de la compilación actual."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steamcmd n’a pas indiqué le build actuel."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steamcmd ने मौजूदा बिल्ड नहीं बताया।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steamcmd non ha indicato la build attuale."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steamcmd から現在のビルドが返されませんでした。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steamcmd가 현재 빌드를 알려 주지 않았습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steamcmd nie podał bieżącej kompilacji."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O steamcmd não informou o build atual."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steamcmd не сообщил текущую сборку."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steamcmd geçerli derlemeyi bildirmedi."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steamcmd не повідомив поточну збірку."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steamcmd 未报告当前版本。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steamcmd 未回報目前版本。"
+          }
+        }
+      }
+    },
+    "Re-download" : {
+      "comment" : "Button: download the Wallpaper Engine assets again even when they're up to date",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة التنزيل"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneut laden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volver a descargar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retélécharger"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फिर से डाउनलोड करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scarica di nuovo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再ダウンロード"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다시 다운로드"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pobierz ponownie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baixar novamente"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Загрузить заново"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeniden İndir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Викачати знову"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新下载"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新下載"
+          }
+        }
+      }
+    },
+    "Downloads the assets from Steam again even when they're up to date, to repair a damaged copy." : {
+      "comment" : "Help tag of the Re-download button in Settings › Assets",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يُنزّل الأصول من Steam مجددًا حتى إن كانت محدَّثة، لإصلاح نسخة تالفة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lädt die Assets erneut von Steam, auch wenn sie aktuell sind, um eine beschädigte Kopie zu reparieren."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vuelve a descargar los recursos de Steam aunque estén actualizados, para reparar una copia dañada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Télécharge à nouveau les ressources depuis Steam même si elles sont à jour, pour réparer une copie endommagée."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "क्षतिग्रस्त कॉपी ठीक करने के लिए, एसेट अप टू डेट होने पर भी उन्हें Steam से फिर से डाउनलोड करता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scarica di nuovo le risorse da Steam anche se sono aggiornate, per riparare una copia danneggiata."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最新の場合でも Steam からアセットを再ダウンロードし、破損したコピーを修復します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "에셋이 최신 상태여도 Steam에서 다시 다운로드하여 손상된 사본을 복구합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pobiera zasoby ze Steam ponownie, nawet jeśli są aktualne, aby naprawić uszkodzoną kopię."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baixa os recursos do Steam novamente, mesmo que estejam atualizados, para reparar uma cópia danificada."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Загружает ресурсы из Steam заново, даже если они актуальны, чтобы восстановить повреждённую копию."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bozuk bir kopyayı onarmak için varlıkları güncel olsalar bile Steam’den yeniden indirir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Викачує ресурси зі Steam знову, навіть якщо вони актуальні, щоб виправити пошкоджену копію."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "即使资源已是最新，也从 Steam 重新下载，以修复损坏的副本。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "即使資源已是最新，也從 Steam 重新下載，以修復損毀的副本。"
           }
         }
       }

@@ -1,10 +1,10 @@
 'use strict';
-// The `engine` and `input` globals (lib.sceneScript.d.ts IEngine, IInput) and the conversion of
-// user properties (WP4, docs/scenescript-plan.md). Per-frame numbers are getters over the shared
-// Float32Array that SceneScriptEngineExtension.swift fills before each frame; the slot numbers
-// below mirror its `Slot` enum. `engine.runtime` alone is a double (`engineClock`), so it keeps
-// millisecond steps on a wallpaper that runs for weeks. Vectors are new objects on every read,
-// like WE's getters.
+// The `engine`, `input` and `renderContext` globals (lib.sceneScript.d.ts IEngine, IInput,
+// IRenderContext) and the conversion of user properties (WP4, docs/scenescript-plan.md).
+// Per-frame numbers are getters over the shared Float32Array that SceneScriptEngineExtension.swift
+// fills before each frame; the slot numbers below mirror its `Slot` enum. `engine.runtime` alone
+// is a double (`engineClock`), so it keeps millisecond steps on a wallpaper that runs for weeks.
+// Vectors are new objects on every read, like WE's getters.
 (function (global) {
     const rt = global.__rt;
     const frame = rt.native.engineFrame;
@@ -75,6 +75,12 @@
     engine.isScreensaver = function () { return frame[IS_SCREENSAVER] !== 0; };
     engine.openUserShortcut = openUserShortcut;
     global.engine = engine;
+
+    // MARK: renderContext
+
+    // lib.sceneScript.d.ts declares `renderContext: IRenderContext`, an interface with no members
+    // yet: a script can read the global, and finds nothing on it.
+    global.renderContext = {};
 
     // MARK: input
 

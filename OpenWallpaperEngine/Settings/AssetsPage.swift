@@ -130,6 +130,10 @@ struct AssetsPage: SettingsPage {
                 } else {
                     Button(status.info == nil ? "Install from Steam" : "Update from Steam") { assets.installFromSteam() }
                         .glassButtonStyle(.prominent)
+                    if status.info != nil {
+                        Button("Re-download") { assets.installFromSteam(force: true) }
+                            .help("Downloads the assets from Steam again even when they're up to date, to repair a damaged copy.")
+                    }
                 }
                 Button("Choose Folder…") { chooseFolder() }
                 if status.chosenFolder != nil {

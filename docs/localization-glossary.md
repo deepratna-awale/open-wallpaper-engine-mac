@@ -79,6 +79,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | System Settings | Systemeinstellungen | [Apple](https://support.apple.com/de-de/guide/mac-help/mchlp1103/mac) |
 | Privacy & Security | Datenschutz & Sicherheit | [Apple](https://support.apple.com/de-de/guide/mac-help/mchld6aa7d23/mac) |
 | Screen & System Audio Recording (macOS permission) | Aufnahme von Bildschirm & Systemaudio | [Apple](https://support.apple.com/de-de/guide/mac-help/mchld6aa7d23/mac) |
+| System Audio Recording (macOS permission) | Aufnahme von Systemaudio | macOS System Settings (Privacy & Security) |
 | Displays / display | Displays / Display | [Apple](https://support.apple.com/de-de/guide/mac-help/mh40768/mac) |
 | Main display | Hauptbildschirm | [Apple](https://support.apple.com/de-de/guide/mac-help/mh40768/mac) |
 | Desktop | Schreibtisch | [macOS strings](#sources) |
@@ -120,6 +121,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | System Settings | Réglages Système | [Apple](https://support.apple.com/fr-fr/guide/mac-help/mchlp1103/mac) |
 | Privacy & Security | Confidentialité et sécurité | [Apple](https://support.apple.com/fr-fr/guide/mac-help/mchld6aa7d23/mac) |
 | Screen & System Audio Recording (macOS permission) | Enregistrement de l’écran et des sons du système | [Apple](https://support.apple.com/fr-fr/guide/mac-help/mchld6aa7d23/mac) |
+| System Audio Recording (macOS permission) | Enregistrement des sons du système | macOS System Settings (Privacy & Security) |
 | Displays / display | Moniteurs / moniteur | [Apple](https://support.apple.com/fr-fr/guide/mac-help/mh40768/mac) |
 | Main display | Écran principal | [Apple](https://support.apple.com/fr-fr/guide/mac-help/mh40768/mac) |
 | Desktop | bureau | [macOS strings](#sources) |
@@ -161,6 +163,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | System Settings | Ajustes del Sistema | [Apple](https://support.apple.com/es-es/guide/mac-help/mchlp1103/mac) |
 | Privacy & Security | Privacidad y seguridad | [Apple](https://support.apple.com/es-es/guide/mac-help/mchld6aa7d23/mac) |
 | Screen & System Audio Recording (macOS permission) | Grabación de pantalla y del audio del sistema | [Apple](https://support.apple.com/es-es/guide/mac-help/mchld6aa7d23/mac) |
+| System Audio Recording (macOS permission) | Grabación del audio del sistema | macOS System Settings (Privacy & Security) |
 | Displays / display | Pantallas / pantalla | [Apple](https://support.apple.com/es-es/guide/mac-help/mh40768/mac) |
 | Main display | Pantalla principal | [Apple](https://support.apple.com/es-es/guide/mac-help/mh40768/mac) |
 | Desktop | escritorio | [macOS strings](#sources) |
@@ -202,6 +205,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | System Settings | Ajustes do Sistema | [Apple](https://support.apple.com/pt-br/guide/mac-help/mchlp1103/mac) |
 | Privacy & Security | Privacidade e Segurança | [Apple](https://support.apple.com/pt-br/guide/mac-help/mchld6aa7d23/mac) |
 | Screen & System Audio Recording (macOS permission) | Gravação do Áudio do Sistema e da Tela | [Apple](https://support.apple.com/pt-br/guide/mac-help/mchld6aa7d23/mac) |
+| System Audio Recording (macOS permission) | Gravação do Áudio do Sistema | macOS System Settings (Privacy & Security) |
 | Displays / display | Telas / tela | [Apple](https://support.apple.com/pt-br/guide/mac-help/mh40768/mac) |
 | Main display | Tela principal | [Apple](https://support.apple.com/pt-br/guide/mac-help/mh40768/mac) |
 | Desktop | mesa | [macOS strings](#sources) |
@@ -243,6 +247,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | System Settings | Impostazioni di Sistema | [Apple](https://support.apple.com/it-it/guide/mac-help/mchlp1103/mac) |
 | Privacy & Security | Privacy e sicurezza | [Apple](https://support.apple.com/it-it/guide/mac-help/mchld6aa7d23/mac) |
 | Screen & System Audio Recording (macOS permission) | Registrazione schermo e audio di sistema | [Apple](https://support.apple.com/it-it/guide/mac-help/mchld6aa7d23/mac) |
+| System Audio Recording (macOS permission) | Registrazione audio di sistema | macOS System Settings (Privacy & Security) |
 | Displays / display | Schermi / schermo | [Apple](https://support.apple.com/it-it/guide/mac-help/mh40768/mac) |
 | Main display | Schermo principale | [Apple](https://support.apple.com/it-it/guide/mac-help/mh40768/mac) |
 | Desktop | scrivania | [macOS strings](#sources) |
@@ -284,6 +289,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | System Settings | システム設定 | [Apple](https://support.apple.com/ja-jp/guide/mac-help/mchlp1103/mac) |
 | Privacy & Security | プライバシーとセキュリティ | [Apple](https://support.apple.com/ja-jp/guide/mac-help/mchld6aa7d23/mac) |
 | Screen & System Audio Recording (macOS permission) | 画面収録とシステムオーディオ録音 | [Apple](https://support.apple.com/ja-jp/guide/mac-help/mchld6aa7d23/mac) |
+| System Audio Recording (macOS permission) | システムオーディオ録音 | macOS System Settings (Privacy & Security) |
 | Displays / display | ディスプレイ | [Apple](https://support.apple.com/ja-jp/guide/mac-help/mh40768/mac) |
 | Main display | 主ディスプレイ | [Apple](https://support.apple.com/ja-jp/guide/mac-help/mh40768/mac) |
 | Desktop | デスクトップ | [macOS strings](#sources) |
@@ -325,6 +331,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | System Settings | 시스템 설정 | [Apple](https://support.apple.com/ko-kr/guide/mac-help/mchlp1103/mac) |
 | Privacy & Security | 개인정보 보호 및 보안 | [Apple](https://support.apple.com/ko-kr/guide/mac-help/mchld6aa7d23/mac) |
 | Screen & System Audio Recording (macOS permission) | 화면 및 시스템 오디오 녹음 | [Apple](https://support.apple.com/ko-kr/guide/mac-help/mchld6aa7d23/mac) |
+| System Audio Recording (macOS permission) | 시스템 오디오 녹음 | macOS System Settings (Privacy & Security) |
 | Displays / display | 디스플레이 | [Apple](https://support.apple.com/ko-kr/guide/mac-help/mh40768/mac) |
 | Main display | 메인 디스플레이 | [Apple](https://support.apple.com/ko-kr/guide/mac-help/mh40768/mac) |
 | Desktop | 데스크탑 | [macOS strings](#sources) |
@@ -366,6 +373,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | System Settings | 系统设置 | [Apple](https://support.apple.com/zh-cn/guide/mac-help/mchlp1103/mac) |
 | Privacy & Security | 隐私与安全 | [Apple](https://support.apple.com/zh-cn/guide/mac-help/mchld6aa7d23/mac) |
 | Screen & System Audio Recording (macOS permission) | 录屏与系统录音 | [Apple](https://support.apple.com/zh-cn/guide/mac-help/mchld6aa7d23/mac) |
+| System Audio Recording (macOS permission) | 系统录音 | macOS System Settings (Privacy & Security) |
 | Displays / display | 显示器 | [Apple](https://support.apple.com/zh-cn/guide/mac-help/mh40768/mac) |
 | Main display | 主显示器 | [Apple](https://support.apple.com/zh-cn/guide/mac-help/mh40768/mac) |
 | Desktop | 桌面 | [macOS strings](#sources) |
@@ -407,6 +415,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | System Settings | 系統設定 | [Apple](https://support.apple.com/zh-tw/guide/mac-help/mchlp1103/mac) |
 | Privacy & Security | 隱私權與安全性 | [Apple](https://support.apple.com/zh-tw/guide/mac-help/mchld6aa7d23/mac) |
 | Screen & System Audio Recording (macOS permission) | 螢幕與系統錄音 | [Apple](https://support.apple.com/zh-tw/guide/mac-help/mchld6aa7d23/mac) |
+| System Audio Recording (macOS permission) | 系統錄音 | macOS System Settings (Privacy & Security) |
 | Displays / display | 顯示器 | [Apple](https://support.apple.com/zh-tw/guide/mac-help/mh40768/mac) |
 | Main display | 主要顯示器 | [Apple](https://support.apple.com/zh-tw/guide/mac-help/mh40768/mac) |
 | Desktop | 桌面 | [macOS strings](#sources) |
@@ -448,6 +457,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | System Settings | Системные настройки | [Apple](https://support.apple.com/ru-ru/guide/mac-help/mchlp1103/mac) |
 | Privacy & Security | Конфиденциальность и безопасность | [Apple](https://support.apple.com/ru-ru/guide/mac-help/mchld6aa7d23/mac) |
 | Screen & System Audio Recording (macOS permission) | Запись экрана и системного звука | [Apple](https://support.apple.com/ru-ru/guide/mac-help/mchld6aa7d23/mac) |
+| System Audio Recording (macOS permission) | Системная аудиозапись | macOS System Settings (Privacy & Security) |
 | Displays / display | Дисплеи / дисплей | [Apple](https://support.apple.com/ru-ru/guide/mac-help/mh40768/mac) |
 | Main display | Основной дисплей | [Apple](https://support.apple.com/ru-ru/guide/mac-help/mh40768/mac) |
 | Desktop | рабочий стол | [macOS strings](#sources) |
@@ -489,6 +499,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | System Settings | Ustawienia systemowe | [Apple](https://support.apple.com/pl-pl/guide/mac-help/mchlp1103/mac) |
 | Privacy & Security | Prywatność i ochrona | [Apple](https://support.apple.com/pl-pl/guide/mac-help/mchld6aa7d23/mac) |
 | Screen & System Audio Recording (macOS permission) | Nagrywanie ekranu i dźwięku systemowego | [Apple](https://support.apple.com/pl-pl/guide/mac-help/mchld6aa7d23/mac) |
+| System Audio Recording (macOS permission) | Nagrywanie dźwięku systemowego | macOS System Settings (Privacy & Security) |
 | Displays / display | Wyświetlacze / wyświetlacz | [Apple](https://support.apple.com/pl-pl/guide/mac-help/mh40768/mac) |
 | Main display | Wyświetlacz główny | [Apple](https://support.apple.com/pl-pl/guide/mac-help/mh40768/mac) |
 | Desktop | biurko | [macOS strings](#sources) |
@@ -530,6 +541,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | System Settings | Sistem Ayarları | [Apple](https://support.apple.com/tr-tr/guide/mac-help/mchlp1103/mac) |
 | Privacy & Security | Gizlilik ve Güvenlik | [Apple](https://support.apple.com/tr-tr/guide/mac-help/mchld6aa7d23/mac) |
 | Screen & System Audio Recording (macOS permission) | Ekran ve Sistem Sesi Kaydı | [Apple](https://support.apple.com/tr-tr/guide/mac-help/mchld6aa7d23/mac) |
+| System Audio Recording (macOS permission) | Sistem Ses Kaydı | macOS System Settings (Privacy & Security) |
 | Displays / display | Ekranlar / ekran | [Apple](https://support.apple.com/tr-tr/guide/mac-help/mh40768/mac) |
 | Main display | Ana ekran | [Apple](https://support.apple.com/tr-tr/guide/mac-help/mh40768/mac) |
 | Desktop | masaüstü | [macOS strings](#sources) |
@@ -571,6 +583,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | System Settings | Системні параметри | [Apple](https://support.apple.com/uk-ua/guide/mac-help/mchlp1103/mac) |
 | Privacy & Security | Приватність і безпека | [Apple](https://support.apple.com/uk-ua/guide/mac-help/mchld6aa7d23/mac) |
 | Screen & System Audio Recording (macOS permission) | Записування системного звуку й екрана | [Apple](https://support.apple.com/uk-ua/guide/mac-help/mchld6aa7d23/mac) |
+| System Audio Recording (macOS permission) | Записування системного звуку | macOS System Settings (Privacy & Security) |
 | Displays / display | Дисплеї / дисплей | [Apple](https://support.apple.com/uk-ua/guide/mac-help/mh40768/mac) |
 | Main display | Основний дисплей | [Apple](https://support.apple.com/uk-ua/guide/mac-help/mh40768/mac) |
 | Desktop | робочий стіл | [macOS strings](#sources) |
@@ -612,6 +625,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | System Settings | إعدادات النظام | [Apple](https://support.apple.com/ar-ae/guide/mac-help/mchlp1103/mac) |
 | Privacy & Security | الخصوصية والأمن | [Apple](https://support.apple.com/ar-ae/guide/mac-help/mchld6aa7d23/mac) |
 | Screen & System Audio Recording (macOS permission) | تسجيل الشاشة وصوت النظام | [Apple](https://support.apple.com/ar-ae/guide/mac-help/mchld6aa7d23/mac) |
+| System Audio Recording (macOS permission) | تسجيل صوت النظام | macOS System Settings (Privacy & Security) |
 | Displays / display | شاشات العرض / شاشة العرض | [Apple](https://support.apple.com/ar-ae/guide/mac-help/mh40768/mac) |
 | Main display | شاشة العرض الرئيسية | [Apple](https://support.apple.com/ar-ae/guide/mac-help/mh40768/mac) |
 | Desktop | سطح المكتب | [macOS strings](#sources) |
@@ -653,6 +667,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | System Settings | सिस्टम सेटिंग्ज़ | [Apple](https://support.apple.com/hi-in/guide/mac-help/mchlp1103/mac) |
 | Privacy & Security | गोपनीयता और सुरक्षा | [Apple](https://support.apple.com/hi-in/guide/mac-help/mchld6aa7d23/mac) |
 | Screen & System Audio Recording (macOS permission) | स्क्रीन और सिस्टम ऑडियो रिकॉर्डिंग | [Apple](https://support.apple.com/hi-in/guide/mac-help/mchld6aa7d23/mac) |
+| System Audio Recording (macOS permission) | सिस्टम ऑडियो रिकॉर्डिंग | macOS System Settings (Privacy & Security) |
 | Displays / display | डिस्प्ले | [Apple](https://support.apple.com/hi-in/guide/mac-help/mh40768/mac) |
 | Main display | मुख्य डिस्प्ले | [Apple](https://support.apple.com/hi-in/guide/mac-help/mh40768/mac) |
 | Desktop | डेस्कटॉप | [macOS strings](#sources) |

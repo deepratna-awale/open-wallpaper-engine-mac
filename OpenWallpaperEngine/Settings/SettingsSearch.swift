@@ -102,6 +102,7 @@ struct SettingsSearch {
             entry("Report a Security Issue", .privacy, SettingsAnchor.security),
 
             entry("Screen & System Audio Recording", .permissions, SettingsAnchor.permissions),
+            entry("System Audio Recording", .permissions, SettingsAnchor.permissions),
             entry("Audio Visualizers", .permissions, SettingsAnchor.permissions),
 
             entry("Shader Cache", .diagnostics, SettingsAnchor.diagnostics),
