@@ -33,7 +33,7 @@ final class ParticleGPUSimulator {
     private let age, begin, emit, simulate, scanBlocks, scanBlockSums, compact, finish: MTLComputePipelineState
     private let emitSerial, simulateSerial: MTLComputePipelineState
     private let eventMark, eventScatter, instanceStep, linkPoints: MTLComputePipelineState
-    private let boidsMark, boidsScatter: MTLComputePipelineState
+    private let boidsMark, boidsScatter, ropeSort: MTLComputePipelineState
     /// Compactions that also write sprite records, by draw kind.
     private let compactWriters: [ParticleGPUDrawKind: MTLComputePipelineState]
     private let writers: [ParticleGPUDrawKind: MTLComputePipelineState]
@@ -63,6 +63,7 @@ final class ParticleGPUSimulator {
         linkPoints = try pipeline("particleLinkPoints")
         boidsMark = try pipeline("particleBoidsMark")
         boidsScatter = try pipeline("particleBoidsScatter")
+        ropeSort = try pipeline("particleRopeOrder")
         let compactFallback = try pipeline("particleCompactFallbackSprites")
         compactWriters = [.sprite: try pipeline("particleCompactSprites"), .fallbackSprite: compactFallback,
                           .fallbackSpriteTrail: compactFallback]
@@ -173,7 +174,7 @@ final class ParticleGPUSimulator {
     private enum Stage: CaseIterable {
         case linkPoints, age, eventMark, eventScanBlocks, eventScanSums, eventScatter, begin, emit
         case boidsMark, boidsScanBlocks, boidsScanSums, boidsScatter, simulate
-        case scanBlocks, scanSums, compact, trailScanBlocks, trailScanSums, finish, write
+        case scanBlocks, scanSums, compact, trailScanBlocks, trailScanSums, finish, ropeOrder, write
     }
 
     /// One request's step: its buffers and frame, captured when the frame is encoded. A class, so
@@ -198,6 +199,8 @@ final class ParticleGPUSimulator {
         let boidsMembers: MTLBuffer?
         /// The compaction that also writes the step's sprite records (no `.write` stage).
         let compactWriter: MTLComputePipelineState?
+        /// An instanced `rope`'s strand order (`particleRopeOrder`); nil otherwise.
+        let ropeOrder: MTLBuffer?
 
         init?(_ request: Request, gpu: ParticleGPUSystem, sceneSize: SIMD2<Float>, targetSize: SIMD2<Float>,
               compactWriters: [ParticleGPUDrawKind: MTLComputePipelineState]) {
@@ -242,6 +245,8 @@ final class ParticleGPUSimulator {
             boidsMembers = boids && serialPoints == nil ? gpu.boidsMembers() : nil
             // Sprites have no trail history to move; a step nothing draws writes no records.
             compactWriter = request.writesRecords && !gpu.tracksHistory ? compactWriters[request.kind] : nil
+            let rope = request.kind == .rope || request.kind == .fallbackRope
+            ropeOrder = rope && configuration.isInstanced && request.writesRecords ? gpu.ropeOrder() : nil
         }
     }
 
@@ -256,7 +261,7 @@ final class ParticleGPUSimulator {
                                          threadsPerThreadgroup: group)
         }
         switch stage {
-        case .trailScanBlocks, .trailScanSums, .finish, .write:
+        case .trailScanBlocks, .trailScanSums, .finish, .ropeOrder, .write:
             guard plan.request.writesRecords else { return false }
         default:
             break
@@ -473,6 +478,15 @@ final class ParticleGPUSimulator {
             encoder.setBuffer(gpu.parameters, offset: 0, index: 2)
             encoder.setBytes(&plan.frame, length: frameLength, index: 3)
             encoder.dispatchThreads(single, threadsPerThreadgroup: single)
+        case .ropeOrder:
+            guard let order = plan.ropeOrder else { return false }
+            var sizes = gpu.ropeOrderSizes
+            encoder.setComputePipelineState(ropeSort)
+            encoder.setBuffer(plan.particles, offset: 0, index: 0)
+            encoder.setBuffer(order, offset: 0, index: 1)
+            encoder.setBuffer(control, offset: 0, index: 2)
+            encoder.setBytes(&sizes, length: MemoryLayout<SIMD2<UInt32>>.stride, index: 3)
+            encoder.dispatchThreads(single, threadsPerThreadgroup: single)
         case .write:
             guard plan.compactWriter == nil, let writer = writers[plan.request.kind] else { return false }
             encoder.setComputePipelineState(writer)
@@ -489,6 +503,9 @@ final class ParticleGPUSimulator {
                 encoder.setBuffer(control, offset: 0, index: 2)
                 encoder.setBuffer(gpu.parameters, offset: 0, index: 3)
                 encoder.setBytes(&plan.frame, length: frameLength, index: 4)
+                var sizes = gpu.ropeOrderSizes
+                encoder.setBuffer(plan.ropeOrder ?? control, offset: 0, index: 5)
+                encoder.setBytes(&sizes, length: MemoryLayout<SIMD2<UInt32>>.stride, index: 6)
             }
             perParticle()
         }
