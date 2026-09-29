@@ -340,9 +340,9 @@ final class SceneModelRenderer: SceneModelDrawing {
         let key = ObjectIdentifier(plan)
         if let source = plan.geometry { refreshGeometry(plan, from: source) }
         if let existing = buffers[key] { return existing }
-        let made = plan.meshes.map { mesh -> MeshBuffers? in
-            makeBuffers(mesh, of: plan, vertices: mesh.vertexData, indices: mesh.indexData, indexCount: mesh.indexCount)
-        }
+        // Made on the content's background load already (`SceneModelPlan.upload`); only a plan
+        // that load didn't see (a script's) uploads here.
+        let made = plan.upload(device: device)
         buffers[key] = made
         return made
     }
@@ -383,13 +383,32 @@ final class SceneModelRenderer: SceneModelDrawing {
             largest = Self.largestIndex(indices, uint32: mesh.usesUInt32Indices, count: indexCount)
             largestIndices[key, default: [:]][mesh.index] = (indices, indexCount, largest)
         }
-        let stride = mesh.format.stride
+        return Self.makeMeshBuffers(device: device, stride: mesh.format.stride, vertices: vertices, indices: indices,
+                                    largest: largest)
+    }
+
+    /// A mesh's buffers from its bytes, the vertices zero-padded up to the largest index drawn
+    /// (`makeBuffers`). Any thread.
+    static func makeMeshBuffers(device: MTLDevice, stride: Int, vertices: Data, indices: Data, uint32: Bool,
+                                indexCount: Int) -> MeshBuffers? {
+        guard !vertices.isEmpty, !indices.isEmpty else { return nil }
+        return makeMeshBuffers(device: device, stride: stride, vertices: vertices, indices: indices,
+                               largest: largestIndex(indices, uint32: uint32, count: indexCount))
+    }
+
+    private static func makeMeshBuffers(device: MTLDevice, stride: Int, vertices: Data, indices: Data,
+                                        largest: Int?) -> MeshBuffers? {
         let needed = stride > 0 ? (largest.map { ($0 + 1) * stride } ?? 0) : 0
-        var padded = vertices
-        if needed > padded.count { padded.append(Data(count: needed - padded.count)) }
-        guard let vertexBuffer = padded.withUnsafeBytes({ device.makeBuffer(bytes: $0.baseAddress!, length: $0.count) }),
+        let length = max(vertices.count, needed)
+        guard let vertexBuffer = device.makeBuffer(length: length, options: .storageModeShared),
               let indexBuffer = indices.withUnsafeBytes({ device.makeBuffer(bytes: $0.baseAddress!, length: $0.count) })
         else { return nil }
+        // Only the vertices are copied; the padding is cleared explicitly (Metal doesn't document zero-filled buffers).
+        vertices.withUnsafeBytes { vertexBuffer.contents().copyMemory(from: $0.baseAddress!, byteCount: $0.count) }
+        if length > vertices.count {
+            (vertexBuffer.contents() + vertices.count).initializeMemory(as: UInt8.self, repeating: 0,
+                                                                       count: length - vertices.count)
+        }
         return MeshBuffers(vertices: vertexBuffer, indices: indexBuffer)
     }
 

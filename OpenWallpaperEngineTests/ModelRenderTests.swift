@@ -296,6 +296,22 @@ final class ModelRenderTests: XCTestCase {
         XCTAssertNil(SceneModelRenderer.largestIndex(Data(), uint32: false, count: 4))
     }
 
+    /// M8/M13: a plan uploads once, on any thread, and the renderer draws those buffers; after
+    /// the upload the mesh's bytes are still the file's, read from the buffers' storage.
+    func testPlanUploadsOnceAndKeepsItsBytes() throws {
+        let cube = try plan()
+        let vertices = cube.meshes[0].vertexData, indices = cube.meshes[0].indexData
+        var uploaded: [SceneModelRenderer.MeshBuffers?] = []
+        DispatchQueue.global().sync { uploaded = cube.upload(device: device) }
+        let first = try XCTUnwrap(uploaded[0])
+        XCTAssertTrue(first.vertices === cube.upload(device: device)[0]?.vertices, "made once")
+        XCTAssertTrue(first.vertices === renderer.meshBuffers(cube)[0]?.vertices, "the renderer draws the uploaded buffers")
+        XCTAssertEqual(cube.meshes[0].vertexData, vertices)
+        XCTAssertEqual(cube.meshes[0].indexData, indices)
+        XCTAssertEqual(cube.meshes[0].vertexData.withUnsafeBytes { $0.baseAddress }, UnsafeRawPointer(first.vertices.contents()),
+                       "no second CPU copy")
+    }
+
     // MARK: - Planning
 
     /// WE's model combos (0x140224c70) over `generic4`: `SKINNING` from the mesh's blend indices,
