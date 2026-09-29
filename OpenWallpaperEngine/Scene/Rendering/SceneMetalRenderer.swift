@@ -1769,6 +1769,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                             timeline: { self.timelines.objectField(object.id, $0) })
             },
             shadows: renderSettings.shadows != .disabled, shadowQuality: renderSettings.shadows.level,
+            reducedShadowMaps: renderSettings.cheaperShadows,
             orthographic: !isPerspective, shadowAtlasExtent: shadowPass?.atlas.extent ?? .zero, cameraShake: shake,
             eyePosition: eye, viewForward: forward))
         frame.fog = frame.fog.live(number: { [unowned self] in self.sceneSetting($0) }, color: { scene.vector3($0) })

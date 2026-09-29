@@ -10,6 +10,9 @@ struct SceneRenderSettings: Equatable {
     var reflection = true
     var shadows = GSLightingQuality.medium
     var volumetrics = GSLightingQuality.medium
+    /// "Cheaper shadows": shadow maps at half WE's size (`SceneShadowAtlas.mapSize`). Off draws
+    /// them as WE does.
+    var cheaperShadows = false
     /// The most particles a scene may hold (`ParticleBudget`); the content is built for it.
     var particleBudget = GSParticleBudget.medium
     /// WE's texture reduction (`TextureReduction`), 1 or 2: the user's setting resolved for the
@@ -35,6 +38,7 @@ struct SceneRenderSettings: Equatable {
         reflection = settings.reflections
         shadows = settings.shadows
         volumetrics = settings.volumetrics
+        cheaperShadows = settings.cheaperShadows
         particleBudget = settings.particleBudget
         renderResolution = settings.renderResolution
         sceneDetail = settings.sceneDetail

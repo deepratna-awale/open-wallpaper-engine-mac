@@ -80,6 +80,8 @@ struct SceneFrameLightingInput {
     /// The shadow maps' inputs (`SceneLightPacker.ShadowContext`): the shadows setting's level
     /// (0 makes no map), the scene's projection and the atlas's size so far.
     var shadowQuality = 0
+    /// "Cheaper shadows" (`SceneShadowAtlas.mapSize`).
+    var reducedShadowMaps = false
     var orthographic = true
     var shadowAtlasExtent = SIMD2<Int>.zero
     /// The camera shake this frame, in scene units. WE moves the camera's eye and centre by it
@@ -137,7 +139,7 @@ struct SceneFrameLighting: Equatable {
         if let config = content.settings.lightConfig {
             let budget = input.shadows ? config : config.withShadowsDisabled
             let context = SceneLightPacker.ShadowContext(
-                quality: input.shadows ? input.shadowQuality : 0, eye: input.eyePosition, forward: input.viewForward,
+                quality: input.shadows ? input.shadowQuality : 0, reduced: input.reducedShadowMaps, eye: input.eyePosition, forward: input.viewForward,
                 orthographic: input.orthographic, atlasExtent: input.shadowAtlasExtent)
             let packed = SceneLightPacker.lightingV1(lights, budget: budget, shadows: input.shadows,
                                                      viewForward: input.viewForward, shadowContext: context)

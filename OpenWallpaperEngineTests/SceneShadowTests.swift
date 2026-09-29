@@ -62,6 +62,16 @@ final class SceneShadowTests: XCTestCase {
         XCTAssertEqual(SceneShadowAtlas.mapSize(quality: 4), 1024)
     }
 
+    /// "Cheaper shadows" halves each map, never below 128, keeping the settings' order; old
+    /// settings without the key keep it on.
+    func testCheaperShadowsHalveTheMaps() throws {
+        XCTAssertEqual([1, 2, 3, 4].map { SceneShadowAtlas.mapSize(quality: $0, reduced: true) }, [128, 128, 256, 512])
+        let old = try JSONDecoder().decode(GlobalSettings.self, from: Data("{}".utf8))
+        XCTAssertTrue(old.cheaperShadows)
+        XCTAssertTrue(SceneRenderSettings(old).cheaperShadows)
+        XCTAssertFalse(SceneRenderSettings().cheaperShadows)
+    }
+
     /// Each point light's six faces are one batch; the other maps go six views at a time.
     func testBatchesPutEachPointAloneAndSixViewsTogether() {
         let view = matrix_identity_float4x4
