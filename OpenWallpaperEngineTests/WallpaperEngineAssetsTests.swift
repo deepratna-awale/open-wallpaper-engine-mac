@@ -84,7 +84,9 @@ final class WallpaperEngineAssetsTests: XCTestCase {
         XCTAssertEqual(try String(contentsOf: both, encoding: .utf8), "first")
         let fallback = try XCTUnwrap(WallpaperEngineAssets.locate(["only-second.json", "materials/only-second.json"],
                                                                   in: [first, second]))
-        XCTAssertEqual(fallback.path, second.appending(path: "materials/only-second.json").standardizedFileURL.path)
+        // The lookup returns the file's canonical path (links resolved, `AssetPathResolver`).
+        XCTAssertEqual(fallback.resolvingSymlinksInPath().path,
+                       second.appending(path: "materials/only-second.json").resolvingSymlinksInPath().path)
         XCTAssertNil(WallpaperEngineAssets.locate(["missing"], in: [first, second]))
     }
 }

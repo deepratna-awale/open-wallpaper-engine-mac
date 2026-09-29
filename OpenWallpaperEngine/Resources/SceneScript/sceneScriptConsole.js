@@ -38,8 +38,22 @@
         'profile', 'profileEnd', 'time', 'timeLog', 'timeEnd', 'timeStamp'].forEach(function (name) {
         console[name] = function () {};
     });
-    Object.defineProperty(global, 'console', {
-        value: console,
-        enumerable: false, writable: true, configurable: true,
-    });
+    try {
+        Object.defineProperty(global, 'console', {
+            value: console,
+            enumerable: false, writable: true, configurable: true,
+        });
+    } catch (error) {
+        // Some JavaScriptCore versions define their own `console` as non-configurable: its
+        // members are replaced instead.
+        for (const name in console) {
+            try {
+                Object.defineProperty(global.console, name, {
+                    value: console[name], enumerable: false, writable: true, configurable: true,
+                });
+            } catch (inner) {
+                global.console[name] = console[name];
+            }
+        }
+    }
 })(this);
