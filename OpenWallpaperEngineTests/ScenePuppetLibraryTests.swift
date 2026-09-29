@@ -95,13 +95,19 @@ final class ScenePuppetLibraryTests: XCTestCase {
         var deadline = Date().addingTimeInterval(60)
         while !renderer.hasContent, Date() < deadline { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
         XCTAssertTrue(renderer.hasContent, "\(item.id) never got its content")
-        deadline = Date().addingTimeInterval(90)
-        while plans.keys.contains(where: { renderer.puppetImage(ofLayer: $0) == nil }), Date() < deadline {
+        func frame() {
             renderer.renderShared([SceneViewport(drawableSize: SIMD2(320, 180), pointSize: SIMD2(320, 180),
                                                  cursor: SIMD2(160, 90), frameRateLimit: 30)])
             renderer.lastCommandBuffer?.waitUntilCompleted()
             RunLoop.main.run(until: Date().addingTimeInterval(0.005))
+        }
+        // The clock stands still until every mesh has drawn (how long that takes depends on which
+        // pipelines earlier tests compiled), then runs a fixed second: every run checks the same pose.
+        deadline = Date().addingTimeInterval(90)
+        while plans.keys.contains(where: { renderer.puppetImage(ofLayer: $0) == nil }), Date() < deadline { frame() }
+        for _ in 0..<30 {
             now += 1.0 / 30
+            frame()
         }
 
         var lines = ""

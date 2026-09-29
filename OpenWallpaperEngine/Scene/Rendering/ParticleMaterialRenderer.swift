@@ -34,6 +34,12 @@ final class ParticleMaterialRenderer {
     private var pendingPipelines = Set<String>()
 
     /// Whether a pipeline is still compiling: a frame drawn now may change when it lands.
+    /// Compiles finished so far, however they ended: a frame drawn before one landed is redrawn.
+    var pipelinesLanded: Int {
+        pipelineLock.withLock { landedPipelines }
+    }
+    private var landedPipelines = 0
+
     var hasPendingPipelines: Bool {
         pipelineLock.withLock { !pendingPipelines.isEmpty }
     }
@@ -61,6 +67,8 @@ final class ParticleMaterialRenderer {
         /// This frame's draw, set by `prepare` or `prepareSimulated`.
         var prepared: (stage: ParticleMaterialPlan.Stage, pipeline: MTLRenderPipelineState, records: Records)?
         var reportedFallback = false
+        /// This frame's refraction reach (`prepare`); nil when unknown.
+        var snapshotExtent: ParticleSnapshotExtent?
 
         init(owner: ParticleSystemRuntime, device: MTLDevice) {
             self.owner = owner
@@ -148,6 +156,7 @@ final class ParticleMaterialRenderer {
         guard let plan = system.configuration.material else { return false }
         let state = state(for: system)
         state.prepared = nil
+        state.snapshotExtent = nil
         let ready: (stage: ParticleMaterialPlan.Stage, pipeline: MTLRenderPipelineState)
         switch readiness(plan, pixelFormat: pixelFormat, sampleCount: sampleCount, depthFormat: depthFormat, state: state) {
         case .unavailable: return false
@@ -160,6 +169,12 @@ final class ParticleMaterialRenderer {
             guard let next = state.records.next(bytes: count * plan.format.stride) else { return false }
             ParticleRecordWriter.write(system, format: plan.format, count: count, into: next.contents(), opacity: opacity)
             buffer = next
+            if plan.format == .sprite, system.configuration.rendererName == "sprite", ready.stage.readsSceneSnapshot {
+                let records = UnsafeBufferPointer(start: next.contents().bindMemory(to: ParticleSpriteInstance.self, capacity: count),
+                                                  count: count)
+                let aspect = Float(system.texture.height) / Float(max(system.texture.width, 1))
+                state.snapshotExtent = ParticleSnapshotExtent(records: records, spriteLinear: system.spriteLinear, aspect: aspect)
+            }
         }
         state.prepared = (ready.stage, ready.pipeline, .cpu(buffer: buffer, count: count))
         return true
@@ -173,6 +188,7 @@ final class ParticleMaterialRenderer {
         guard let plan = system.configuration.material else { return nil }
         let state = state(for: system)
         state.prepared = nil
+        state.snapshotExtent = nil
         let ready: (stage: ParticleMaterialPlan.Stage, pipeline: MTLRenderPipelineState)
         switch readiness(plan, pixelFormat: pixelFormat, sampleCount: sampleCount, depthFormat: depthFormat, state: state) {
         case .unavailable: return nil
@@ -253,6 +269,22 @@ final class ParticleMaterialRenderer {
         var placement: ParticleMaterialUniforms.Placement? = nil
     }
 
+    /// The part of the scene `system`'s refracting draw reads this frame (`ParticleSnapshotExtent`),
+    /// or nil when it isn't known and the whole scene must be copied: records the GPU writes, a
+    /// renderer other than a plain sprite, or a refraction amount that is animated, user-bound or
+    /// scriptable. Only for a draw through the orthographic scene view (no placement).
+    func sceneSnapshotRect(_ system: ParticleSystemRuntime, sceneSize: SIMD2<Float>,
+                           targetSize: SIMD2<Int>) -> SceneSnapshotTracker.Rect? {
+        guard let state = systems[ObjectIdentifier(system)], state.owner === system,
+              let extent = state.snapshotExtent, let stage = state.prepared?.stage else { return nil }
+        let name = "g_RefractAmount"
+        let constants = stage.constants
+        guard !constants.dynamic.contains(where: { $0.uniform == name }),
+              !constants.scriptBindings.contains(where: { $0.uniform == name }),
+              let amount = constants.staticValues[name]?.components.first, amount.isFinite else { return nil }
+        return extent.pixelRect(refractAmount: amount, sceneSize: sceneSize, targetSize: targetSize)
+    }
+
     /// Whether `system`'s draw this frame reads the scene drawn so far, which the caller then
     /// snapshots right before it and passes in `DrawContext.sceneSnapshot`.
     func readsSceneSnapshot(_ system: ParticleSystemRuntime) -> Bool {
@@ -277,18 +309,20 @@ final class ParticleMaterialRenderer {
     /// records draw through a pipeline for that target, and the uniforms, `context`'s camera
     /// included, go through the arena (the GPU step patches only the scene draw's block, so a
     /// GPU-simulated rope keeps its material's `g_RenderVar0` here). Nothing is drawn while that
-    /// pipeline compiles or the system has no draw this frame.
+    /// pipeline compiles or the system has no draw this frame; false then.
+    @discardableResult
     func draw(_ system: ParticleSystemRuntime, alsoInto pixelFormat: MTLPixelFormat, sampleCount: Int,
               depthFormat: MTLPixelFormat, encoder: MTLRenderCommandEncoder, commandBuffer: MTLCommandBuffer,
-              context: DrawContext) {
+              context: DrawContext) -> Bool {
         guard let plan = system.configuration.material,
               let state = systems[ObjectIdentifier(system)], state.owner === system,
               let prepared = state.prepared,
               case .ready(let stage, let pipeline) = readiness(plan, pixelFormat: pixelFormat, sampleCount: sampleCount,
                                                                depthFormat: depthFormat, state: state),
-              stage.variantKey == prepared.stage.variantKey else { return }
+              stage.variantKey == prepared.stage.variantKey else { return false }
         encode(system, plan: plan, state: state, prepared: prepared, pipeline: pipeline, reflected: true,
                encoder: encoder, commandBuffer: commandBuffer, context: context)
+        return true
     }
 
     /// Encodes `prepared` through `pipeline`; `reflected` for the planar reflection's draw, whose
@@ -486,6 +520,7 @@ final class ParticleMaterialRenderer {
             guard let self else { return }
             self.pipelineLock.withLock {
                 self.pendingPipelines.remove(key)
+                self.landedPipelines &+= 1
                 if let pipeline { self.pipelines[key] = pipeline } else { self.failedPipelines[key] = failure ?? "unknown" }
             }
         }

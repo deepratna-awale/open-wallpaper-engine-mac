@@ -32,6 +32,12 @@ final class ImageMaterialRenderer {
     private var pending = Set<String>()
 
     /// Whether a pipeline is still compiling: a frame drawn now may change when it lands.
+    /// Compiles finished so far, however they ended: a frame drawn before one landed is redrawn.
+    var pipelinesLanded: Int {
+        pipelineLock.withLock { landedPipelines }
+    }
+    private var landedPipelines = 0
+
     var hasPendingPipelines: Bool {
         pipelineLock.withLock { !pending.isEmpty }
     }
@@ -594,6 +600,7 @@ final class ImageMaterialRenderer {
             guard let self else { return }
             self.pipelineLock.withLock {
                 self.pending.remove(key)
+                self.landedPipelines &+= 1
                 if let result { self.pipelines[key] = result } else { self.failed.insert(key) }
             }
         }

@@ -21,6 +21,7 @@ class VideoWallpaperViewModel: ObservableObject {
     @Published var currentWallpaper: WEWallpaper {
         didSet {
             replacePlayers(with: currentWallpaper)
+            updateMusicSyncCapture()
         }
     }
 
@@ -57,6 +58,8 @@ class VideoWallpaperViewModel: ObservableObject {
     private var sleepObserver: NSObjectProtocol?
     private var wakeObserver: NSObjectProtocol?
     private var musicSyncObserver: NSObjectProtocol?
+    /// Keeps system audio capture on while any music sync of the current wallpaper is on.
+    private var musicSyncCaptureLease: AudioCaptureLease?
     /// Samples playback once a second for the render watchdog.
     private var probe = VideoPlaybackProbe()
     private var probeTimer: Timer?
@@ -111,6 +114,10 @@ class VideoWallpaperViewModel: ObservableObject {
                 self?.updatePlaybackRates(audioLevel: WallpaperServices.shared.audioLevel)
             }
             .store(in: &cancellables)
+        VideoMusicSyncStore.shared.$revision
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.updateMusicSyncCapture() }
+            .store(in: &cancellables)
         wallpaperViewModel.$playVolume
             .receive(on: DispatchQueue.main)
             .sink { [weak self] volume in
@@ -137,6 +144,7 @@ class VideoWallpaperViewModel: ObservableObject {
     /// Stops playback for good: no display shows the video any more.
     func stop() {
         cancellables.removeAll()
+        musicSyncCaptureLease = nil
         probeTimer?.invalidate()
         probeTimer = nil
         player.pause()
@@ -153,6 +161,12 @@ class VideoWallpaperViewModel: ObservableObject {
         if let wakeObserver { NSWorkspace.shared.notificationCenter.removeObserver(wakeObserver) }
         if let musicSyncObserver { NotificationCenter.default.removeObserver(musicSyncObserver) }
         probeTimer?.invalidate()
+    }
+
+    private func updateMusicSyncCapture() {
+        let needed = VideoMusicSyncSettings.isAnyEnabled(currentWallpaper)
+        guard needed != (musicSyncCaptureLease != nil) else { return }
+        musicSyncCaptureLease = needed ? WallpaperServices.shared.acquireAudioCapture() : nil
     }
 
     // MARK: - Watchdog

@@ -12,9 +12,11 @@ import Darwin
 enum ShaderPrewarmCommand {
     static let printKeyArgument = "--print-shader-cache-key"
     static let prewarmArgument = "--prewarm-shaders"
+    static let prepareArgument = "--prepare-wallpapers"
 
     static func isHelperRun(arguments: [String]) -> Bool {
         arguments.contains(printKeyArgument) || arguments.contains(prewarmArgument)
+            || arguments.contains(prepareArgument)
     }
 
     /// Runs the helper `arguments` ask for and returns its exit status, or nil for a normal launch.
@@ -30,14 +32,31 @@ enum ShaderPrewarmCommand {
                 return 1
             }
         }
-        guard arguments.contains(prewarmArgument) else { return nil }
+        let prepareIndex = arguments.firstIndex(of: prepareArgument)
+        guard arguments.contains(prewarmArgument) || prepareIndex != nil else { return nil }
         defer { AppStorageLocation.current.discardReadOnlyScratch() }
         // Background priority for the CPU work (shader translation); Metal compiles in its own
         // service. No Dock icon or menu bar: an app that is never activated.
         setpriority(PRIO_PROCESS, 0, 10)
         NSApplication.shared.setActivationPolicy(.prohibited)
         OWELog.info(.app, "Shader prewarm started (pid \(ProcessInfo.processInfo.processIdentifier))")
-        let report = ShaderPrewarm(defaults: .app).run()
+        let report: ShaderPrewarm.Report
+        if let prepareIndex {
+            let (displays, main) = ShaderPrewarmTargets.connectedDisplays()
+            let display = main.flatMap { displays[$0] } ?? displays.values.first
+                ?? ShaderPrewarmTargets.Display(drawableSize: SIMD2(1920, 1080), pointSize: SIMD2(1920, 1080))
+            let targets = arguments[(prepareIndex + 1)...]
+                .compactMap { InstalledLibrary.wallpaper(at: URL(filePath: $0, directoryHint: .isDirectory), hiding: []) }
+                .filter { $0.project.type.caseInsensitiveCompare("scene") == .orderedSame }
+                .map { ShaderPrewarmTargets.Target(wallpaper: $0, display: display) }
+            report = ShaderPrewarm(defaults: .app).run(targets)
+            // The texture blobs the loads scheduled.
+            var idle = false
+            PreparationPool.shared.whenIdle { idle = true }
+            while !idle { RunLoop.main.run(until: Date().addingTimeInterval(0.1)) }
+        } else {
+            report = ShaderPrewarm(defaults: .app).run()
+        }
         return report.wallpapers > 0 && report.failed == report.wallpapers ? 1 : 0
     }
 }

@@ -223,6 +223,8 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
 
     /// Whether the page registered an audio listener; the timer runs only while it can be seen.
     private var audioRegistered = false
+    /// Keeps system audio capture on while the audio delivery runs.
+    private var audioCaptureLease: AudioCaptureLease?
 
     /// Runs the 30 Hz delivery only while the page is registered, playing and visible: a paused,
     /// covered or sleeping page would drop the values, so the timer and its IPC stop too.
@@ -230,9 +232,11 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         guard audioRegistered, heartbeatGate.expectsHeartbeats else {
             audioTimer?.invalidate()
             audioTimer = nil
+            audioCaptureLease = nil
             return
         }
         guard audioTimer == nil else { return }
+        audioCaptureLease = WallpaperServices.shared.acquireAudioCapture()
         let clock = audioClock ?? WallpaperServices.shared.makeAudioSpectrumClock(publishes: false)
         audioClock = clock
         // WE delivers 64 left and 64 right values to web listeners 30 times a second.
@@ -254,6 +258,15 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         guard muted != isMuted else { return }
         isMuted = muted
         if let webView { WebPageAudio.setMuted(muted, on: webView) }
+        applySchedulingPolicy()
+    }
+
+    /// What WebKit does with the page while its window is covered: a muted page is suspended (no
+    /// JS, timers or frames), an audible one only throttled, because a suspended page falls silent
+    /// and Wallpaper Engine keeps a covered wallpaper's sound. The heartbeat gate and the audio
+    /// timer already expect nothing from a covered window (`WebHeartbeatGate.windowVisible`).
+    func applySchedulingPolicy() {
+        webView?.configuration.preferences.inactiveSchedulingPolicy = isMuted ? .suspend : .throttle
     }
 
     /// Whether the playback rules pause this display's page: its media is suspended and the page

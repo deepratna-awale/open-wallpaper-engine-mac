@@ -3,8 +3,11 @@ import AppKit
 /// Quits and opens the app again, e.g. so a new language applies (macOS reads an app's language
 /// at launch). The new copy gets the same launch arguments and isolated-state tag, so a
 /// development copy stays isolated.
-@MainActor
 enum AppRelauncher {
+    /// This app's own executable, for launching a background helper copy of it.
+    nonisolated static var helperExecutable: URL? { Bundle.main.executableURL }
+
+    @MainActor
     static func relaunch() {
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.createsNewApplicationInstance = true

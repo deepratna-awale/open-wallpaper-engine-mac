@@ -103,6 +103,12 @@ struct OptimizationsPage: SettingsPage {
                 Toggle("Optimise textures", isOn: $viewModel.settings.optimiseTextures)
                     .changedFromDefault(viewModel.isChanged(\.optimiseTextures))
                     .help("Compresses wallpaper images once in the background so they use about a third of the GPU memory. Images that would lose visible detail stay as they are.")
+                Toggle("Render web wallpapers at standard resolution", isOn: $viewModel.settings.webStandardResolution)
+                    .changedFromDefault(viewModel.isChanged(\.webStandardResolution))
+                    .help("On Retina displays, web wallpapers draw a quarter of the pixels. They look softer and use less GPU.")
+                Toggle("Draw large glowing particles at half resolution", isOn: $viewModel.settings.reducedResolutionParticles)
+                    .changedFromDefault(viewModel.isChanged(\.reducedResolutionParticles))
+                    .help("Large additive particle effects in 2D scenes, like glows and light haze, draw a quarter of the pixels. Their edges look softer and they use less GPU.")
                 Picker("Process Priority", selection: $viewModel.settings.processPiority) {
                     Text("Normal").tag(GSProcessPiority.normal)
                     Text("Below Normal").tag(GSProcessPiority.belowNormal)

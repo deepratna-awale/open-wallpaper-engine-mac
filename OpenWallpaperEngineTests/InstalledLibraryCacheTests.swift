@@ -41,6 +41,18 @@ final class InstalledLibraryCacheTests: XCTestCase {
         XCTAssertEqual(titles(cached), ["Scene"])
     }
 
+    func testReportsOnlyWallpapersThatArriveAfterTheFirstPass() throws {
+        try writeProject("1", title: "Existing")
+        let cache = InstalledLibraryCache()
+        var arrived: [String] = []
+        cache.onArrival = { arrived.append($0.project.title) }
+        _ = cache.wallpapers(in: library, hiding: [])
+        try writeProject("2", title: "Downloaded")
+        _ = cache.wallpapers(in: library, hiding: [])
+        _ = cache.wallpapers(in: library, hiding: [])
+        XCTAssertEqual(arrived, ["Downloaded"])
+    }
+
     func testFollowsAddedRewrittenAndRemovedWallpapers() throws {
         let cache = InstalledLibraryCache()
         try writeProject("1", title: "Before", modified: Date(timeIntervalSinceNow: -60))

@@ -28,8 +28,13 @@ final class SceneScriptAudioBuffersExtension: SceneScriptRuntimeExtension {
 
     /// `spectrum` returns the current frame's arrays; the renderer advances its own spectrum clock
     /// once per frame (`AudioSpectrumClock`) and this only reads.
-    init(spectrum: @escaping () -> AudioSpectrumSnapshot) {
+    private let acquireCapture: () -> AudioCaptureLease?
+    private var captureLease: AudioCaptureLease?
+
+    init(spectrum: @escaping () -> AudioSpectrumSnapshot,
+         acquireCapture: @escaping () -> AudioCaptureLease? = { WallpaperServices.shared.acquireAudioCapture() }) {
         self.spectrum = spectrum
+        self.acquireCapture = acquireCapture
         storage = UnsafeMutablePointer<Float>.allocate(capacity: count)
         storage.initialize(repeating: 0, count: count)
     }
@@ -73,6 +78,8 @@ final class SceneScriptAudioBuffersExtension: SceneScriptRuntimeExtension {
     private func makeArray(resolution: Int, channel: Int, in context: JSContext) -> JSValue? {
         guard let offset = offset(resolution: resolution, channel: channel),
               let contextRef = context.jsGlobalContextRef else { return nil }
+        // A registration keeps system audio capture on for as long as the runtime lives.
+        if captureLease == nil { captureLease = acquireCapture() }
         let noDeallocation: JSTypedArrayBytesDeallocator = { _, _ in }
         var exception: JSValueRef?
         guard let object = JSObjectMakeTypedArrayWithBytesNoCopy(

@@ -149,7 +149,12 @@ class ContentViewModel: ObservableObject, DropDelegate {
 //    }
     
     /// Re-reads only the wallpapers that changed on disk.
-    private let library = InstalledLibraryCache()
+    private let library: InstalledLibraryCache = {
+        let cache = InstalledLibraryCache()
+        // Downloads and imports are prepared in the background for a warm first show.
+        cache.onArrival = { LibraryPreparationScheduler.shared.prepare($0) }
+        return cache
+    }()
     /// `sortedWallpapers` for the current update: the Installed tab reads it many times per redraw
     /// (grid, page count, pagination, selection). Cleared whenever this model changes, when
     /// favourites or stored filters and sorting change, and after the current main-queue turn, so a
