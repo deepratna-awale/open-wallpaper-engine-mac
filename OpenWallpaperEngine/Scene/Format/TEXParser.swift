@@ -4,21 +4,12 @@
 //
 //  Parse Wallpaper Engine TEXV texture container files.
 //  Structure: TEXV0005 > TEXI (metadata) > TEXB (image data).
-//  Currently supports JPEG (format 0) extraction only.
 //
 
 import Cocoa
 import Compression
 import Foundation
 import AVFoundation
-
-struct TEXMetadata {
-    let format: UInt32
-    let width: UInt32
-    let height: UInt32
-    let textureWidth: UInt32  // power-of-2 padded
-    let textureHeight: UInt32
-}
 
 struct TEXAnimatedImages {
     let images: [NSImage]
@@ -337,20 +328,6 @@ class TEXParser {
             return image
         }
         OWELog.error(.texture, "Unsupported or malformed TEX container (\(data.count) bytes); refusing embedded thumbnail fallback")
-        return nil
-    }
-
-    /// Extract raw JPEG/PNG data without creating NSImage
-    func extractImageData() -> Data? {
-        guard let texbRange = findSection("TEXB") else { return nil }
-        let texbData = data[texbRange]
-
-        if let jpegOffset = findJPEGMagic(in: texbData) {
-            return Data(texbData[jpegOffset...])
-        }
-        if let pngOffset = findPNGMagic(in: texbData) {
-            return Data(texbData[pngOffset...])
-        }
         return nil
     }
 
@@ -830,113 +807,5 @@ class TEXParser {
         defer { cursor += 4 }
         return UInt32(bytes[cursor]) | (UInt32(bytes[cursor + 1]) << 8)
             | (UInt32(bytes[cursor + 2]) << 16) | (UInt32(bytes[cursor + 3]) << 24)
-    }
-
-    /// Read TEXI metadata section: format, flags, width, height, textureWidth, textureHeight
-    private func readTEXIMetadata() -> TEXMetadata? {
-        guard let texiMagic = "TEXI".data(using: .ascii) else { return nil }
-        var i = data.startIndex
-        while i + 4 <= data.endIndex {
-            if data[i..<i+4] == texiMagic {
-                // Skip past "TEXIxxxx\0" (null-terminated name with version)
-                var j = i + 4
-                while j < data.endIndex && data[j] != 0 { j += 1 }
-                j += 1 // skip null byte
-                guard j + 24 <= data.endIndex else { return nil }
-                func u32(_ off: Int) -> UInt32 {
-                    UInt32(data[j+off]) | (UInt32(data[j+off+1]) << 8)
-                    | (UInt32(data[j+off+2]) << 16) | (UInt32(data[j+off+3]) << 24)
-                }
-                return TEXMetadata(format: u32(0), width: u32(8), height: u32(12),
-                                   textureWidth: u32(16), textureHeight: u32(20))
-            }
-            i += 1
-        }
-        return nil
-    }
-
-    /// Read the TEXB format field (first uint32 after the null-terminated section name).
-    /// Format 1 = image-extractable, Format 2 = DXT5, etc.
-    private func readTEXBFormat() -> Int {
-        guard let texbMagic = "TEXB".data(using: .ascii) else { return -1 }
-        var i = data.startIndex
-        while i + 4 <= data.endIndex {
-            if data[i..<i+4] == texbMagic {
-                // Skip past "TEXBxxxx\0" (null-terminated name with version)
-                var j = i + 4
-                while j < data.endIndex && data[j] != 0 { j += 1 }
-                j += 1 // skip null byte
-                guard j + 4 <= data.endIndex else { return -1 }
-                return Int(UInt32(data[j])
-                    | (UInt32(data[j+1]) << 8)
-                    | (UInt32(data[j+2]) << 16)
-                    | (UInt32(data[j+3]) << 24))
-            }
-            i += 1
-        }
-        return -1
-    }
-
-    /// Find a named section (e.g. "TEXI", "TEXB") in the TEX data
-    private func findSection(_ name: String) -> Range<Data.Index>? {
-        guard let nameData = name.data(using: .ascii) else { return nil }
-        let nameLen = nameData.count
-
-        var i = data.startIndex
-        while i + nameLen + 4 <= data.endIndex {
-            if data[i..<i+nameLen] == nameData {
-                // Section found — next 4 bytes after name are section length
-                let lenStart = i + nameLen
-                guard lenStart + 4 <= data.endIndex else { return nil }
-                let sectionLen = UInt32(data[lenStart])
-                    | (UInt32(data[lenStart+1]) << 8)
-                    | (UInt32(data[lenStart+2]) << 16)
-                    | (UInt32(data[lenStart+3]) << 24)
-                let contentStart = lenStart + 4
-                let contentEnd = contentStart + Int(sectionLen)
-                guard contentEnd <= data.endIndex else {
-                    return contentStart..<data.endIndex
-                }
-                return contentStart..<contentEnd
-            }
-            i += 1
-        }
-        return nil
-    }
-
-    /// Find JPEG end marker (FFD9) scanning from a given start position
-    private func findJPEGEnd(in slice: Data, from start: Data.Index) -> Data.Index? {
-        var i = start
-        while i + 1 < slice.endIndex {
-            if slice[i] == 0xFF && slice[i+1] == 0xD9 {
-                return i + 1  // Include the D9 byte
-            }
-            i += 1
-        }
-        return nil
-    }
-
-    private func findJPEGMagic(in slice: Data) -> Data.Index? {
-        var i = slice.startIndex
-        while i + 1 < slice.endIndex {
-            if slice[i] == 0xFF && slice[i+1] == 0xD8 {
-                return i
-            }
-            i += 1
-        }
-        return nil
-    }
-
-    private func findPNGMagic(in slice: Data) -> Data.Index? {
-        let pngMagic: [UInt8] = [0x89, 0x50, 0x4E, 0x47]
-        var i = slice.startIndex
-        while i + 3 < slice.endIndex {
-            if slice[i] == pngMagic[0] && slice[i+1] == pngMagic[1]
-                && slice[i+2] == pngMagic[2] && slice[i+3] == pngMagic[3] {
-                return i
-            }
-            i += 1
-        }
-        return nil
     }
 }
