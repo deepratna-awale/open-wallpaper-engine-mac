@@ -134,8 +134,14 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var effectAssetTextures: [String: MTLTexture] = [:]
     /// Each decoded image's upload, by the image: layers, clones, particle systems and effect
     /// assets that load the same image (the loader hands them one `NSImage`) share one texture.
-    /// Holds the image so its identifier isn't reused; cleared with the content.
-    private var uploadedImages: [ObjectIdentifier: (image: NSImage, frames: [RenderTextureFrame])] = [:]
+    /// Keyed weakly by the image itself, so an entry goes with the last copy of the image and the
+    /// renderer never keeps the pixels alive; cleared with the content.
+    private let uploadedImages = NSMapTable<NSImage, UploadedFrames>(
+        keyOptions: [.weakMemory, .objectPointerPersonality], valueOptions: .strongMemory)
+    private final class UploadedFrames {
+        let frames: [RenderTextureFrame]
+        init(_ frames: [RenderTextureFrame]) { self.frames = frames }
+    }
     private let uploadedImagesLock = NSLock()
     /// Particle textures with their mip chains (`ParticleTextureMipmaps`), by the uploaded texture
     /// they were made from, which each entry holds so its identifier isn't reused. Under
@@ -618,7 +624,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             }
             let preparedLayers: [PreparedLayer] = zip(built, content.layers).compactMap { frames, layer in
                 guard let frames, !frames.isEmpty else { return nil }
-                return PreparedLayer(frames: frames, layer: layer)
+                return PreparedLayer(frames: frames, layer: Self.droppingPixels(layer))
             }
             let imageSources = Dictionary(preparedLayers.compactMap { entry -> (String, ParticleEmitterImagePoints.Source)? in
                 guard let frame = entry.frames.first else { return nil }
@@ -633,6 +639,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                                 queue: self.commandQueue, cache: &imagePoints)
                 guard let texture = self.particleTexture(from: system.source, spriteSheet: system.spriteSheet != nil) else { return nil }
                 let fallback = system.fallbackSource.flatMap { self.makeTextureFrames(from: $0)?.first?.texture }
+                Self.dropPixels(&system)
                 // Seeded by position in the scene, so a wallpaper's particles replay the same way.
                 let seed = UInt32(index) &+ self.particleSeed &* 0x9E37_79B9
                 return ParticleSystemRuntime(texture: texture, configuration: system, seed: ParticleRandom.pcg(seed),
@@ -863,7 +870,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         case .layer(var layer):
             layer.order = Int.max
             guard let frames = makeTextureFrames(from: layer.source), !frames.isEmpty else { return nil }
-            return .layer(PreparedLayer(frames: frames, layer: layer))
+            return .layer(PreparedLayer(frames: frames, layer: Self.droppingPixels(layer)))
         case .particles(let systems, let motion):
             // Above every authored object, like WE's createLayer; the scripts' order places it.
             let runtimes: [ParticleSystemRuntime?] = systems.enumerated().map { index, system in
@@ -871,6 +878,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 system.order = Int(Int32.max)
                 guard let texture = particleTexture(from: system.source, spriteSheet: system.spriteSheet != nil) else { return nil }
                 let fallback = system.fallbackSource.flatMap { makeTextureFrames(from: $0)?.first?.texture }
+                Self.dropPixels(&system)
                 let seed = UInt32(truncatingIfNeeded: (Int(id) ?? 0) &* 31 &+ index)
                 return ParticleSystemRuntime(texture: texture, configuration: system, seed: ParticleRandom.pcg(seed),
                                              fallbackTexture: fallback)
@@ -3309,7 +3317,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     private func clearUploadedImages() {
         uploadedImagesLock.lock()
-        uploadedImages.removeAll()
+        uploadedImages.removeAllObjects()
         particleMipmaps.removeAll()
         uploadedImagesLock.unlock()
     }
@@ -3335,16 +3343,15 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     private func makeTextureFrames(from source: SceneMetalTextureSource) -> [RenderTextureFrame]? {
         guard case let .image(image) = source else { return uploadTextureFrames(from: source) }
-        let key = ObjectIdentifier(image)
         uploadedImagesLock.lock()
-        let cached = uploadedImages[key]?.frames
+        let cached = uploadedImages.object(forKey: image)?.frames
         uploadedImagesLock.unlock()
         if let cached { return cached }
         guard let frames = uploadTextureFrames(from: source) else { return nil }
         uploadedImagesLock.lock()
         defer { uploadedImagesLock.unlock() }
-        if let raced = uploadedImages[key]?.frames { return raced }
-        uploadedImages[key] = (image, frames)
+        if let raced = uploadedImages.object(forKey: image)?.frames { return raced }
+        uploadedImages.setObject(UploadedFrames(frames), forKey: image)
         return frames
     }
 
@@ -3403,6 +3410,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                           uvAxisX: SIMD2<Float>(frame.width, frame.widthY) / atlasSize,
                                           uvAxisY: SIMD2<Float>(frame.heightX, frame.height) / atlasSize)
             }
+        case .uploaded:
+            // Its pixels were dropped after its first upload; a new upload loads the file again.
+            OWELog.error(.scene, "An uploaded image was handed back for upload without its pixels")
+            return nil
         }
     }
 

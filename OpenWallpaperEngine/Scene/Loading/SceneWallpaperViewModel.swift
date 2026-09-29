@@ -116,19 +116,11 @@ class SceneWallpaperViewModel: ObservableObject {
     /// The loaded wallpaper's Workshop id, which bounds the zcompat fixes.
     private var loadedProjectId: String?
 
-    /// Decoded textures are identical for every screen showing the same wallpaper, so they live in
-    /// one process-wide cache. NSCache lets the system reclaim them under pressure rather than
-    /// holding a full decoded copy per display.
-    private final class TextureBox {
-        let source: SceneMetalTextureSource
-        init(_ source: SceneMetalTextureSource) { self.source = source }
-    }
-
-    private static let sharedTextureCache: NSCache<NSString, TextureBox> = {
-        let cache = NSCache<NSString, TextureBox>()
-        cache.countLimit = 512
-        return cache
-    }()
+    /// The textures decoded by the build in progress, so every layer, clone and effect that names
+    /// the same file shares one image (and the renderer one upload). Emptied when the build ends:
+    /// once the renderer uploaded them, the only copy of the pixels is on the GPU, and the next
+    /// build loads the files again. Guarded by `sceneLock`, which every build holds.
+    private var buildTextures: [String: SceneMetalTextureSource] = [:]
 
     /// Every screen showing the same wallpaper parses the identical PKG index and scene.json.
     /// PKGParser is immutable after init and WEScene is a value type, so both are safe to share.
@@ -157,11 +149,6 @@ class SceneWallpaperViewModel: ObservableObject {
         parseCache.removeAll()
     }
 
-    /// Forgets the decoded textures, so the next load reads them again (tests).
-    static func dropSharedTextures() {
-        sharedTextureCache.removeAllObjects()
-    }
-
     private static func storeParse(_ entry: ParsedScene, for directory: URL) {
         parseCacheLock.lock()
         defer { parseCacheLock.unlock() }
@@ -174,17 +161,24 @@ class SceneWallpaperViewModel: ObservableObject {
         parseCache[directory.path] = entry
     }
 
-    private func textureCacheKey(_ key: String) -> NSString {
-        "\(loadedWallpaperDirectory?.path ?? currentWallpaper.wallpaperDirectory.path)|\(key)" as NSString
-    }
-
     private func cachedTexture(_ key: String) -> SceneMetalTextureSource? {
-        Self.sharedTextureCache.object(forKey: textureCacheKey(key))?.source
+        sceneLock.lock()
+        defer { sceneLock.unlock() }
+        return buildTextures[key]
     }
 
     private func cacheTexture(_ source: SceneMetalTextureSource, for key: String) -> SceneMetalTextureSource {
-        Self.sharedTextureCache.setObject(TextureBox(source), forKey: textureCacheKey(key))
+        sceneLock.lock()
+        defer { sceneLock.unlock() }
+        buildTextures[key] = source
         return source
+    }
+
+    /// Ends a build: the content now holds the only CPU copies, which the renderer drops once uploaded.
+    private func endBuildTextures() {
+        sceneLock.lock()
+        defer { sceneLock.unlock() }
+        buildTextures.removeAll()
     }
     private var registeredFontNames: [String: String] = [:]
 
@@ -616,6 +610,7 @@ class SceneWallpaperViewModel: ObservableObject {
         }
         let signpost = OWESignpost.begin(OWESignpost.scene, "metalContent")
         defer { signpost.end() }
+        defer { endBuildTextures() }
         guard let authoredScene = loadedScene, let wallpaperDir = loadedWallpaperDirectory else { return nil }
         // Content is built from what the user properties say; a property change rebuilds it.
         let valueContext = userValueContext
@@ -698,8 +693,9 @@ class SceneWallpaperViewModel: ObservableObject {
             if !content.spatial.cameraPaths.isEmpty {
                 content.cameraFade = engineChain("WE's camera fade", wallpaperDir: wallpaperDir, SceneCameraFade.build)
             }
-            cachedContent = content
-            cachedContentRevision = revision
+            // Not kept: it holds every decoded image, which the renderer drops once uploaded. The
+            // instance asks again only after the revision changed, which rebuilds it anyway.
+            cachedContent = nil
             return content
         }
         guard let preview = loadPreviewImage(wallpaperDir: wallpaperDir) else { return nil }
@@ -829,6 +825,7 @@ class SceneWallpaperViewModel: ObservableObject {
                                   modelData: SceneScriptModelDataStore) -> SceneScriptCreatedObject? {
         sceneLock.lock()
         defer { sceneLock.unlock() }
+        defer { endBuildTextures() }
         let object: WESceneObject
         do {
             let data = try JSONSerialization.data(withJSONObject: SceneJSON.object(json).foundationObject)

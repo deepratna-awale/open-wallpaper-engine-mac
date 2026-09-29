@@ -6,7 +6,7 @@ import CryptoKit
 /// (`ParticleProgram`: initializers and operators in authored order), control points and renderer.
 /// `ParticleSystemBuilder` makes it from the particle json with WE's defaults.
 struct SceneMetalParticleSystem {
-    let source: SceneMetalTextureSource
+    var source: SceneMetalTextureSource
     /// Index of the object in scene.json; systems draw between layers in that order.
     var order = 0
     /// The emitter's scene position at load. With `emitterLinear` it is the emitter object's
