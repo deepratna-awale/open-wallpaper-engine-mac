@@ -85,6 +85,7 @@ struct SettingsSearch {
             entry("Process Priority", .optimizations, SettingsAnchor.rendering),
             entry("Restart after crashing", .optimizations, SettingsAnchor.rendering),
             entry("Optimise textures", .optimizations, SettingsAnchor.rendering),
+            entry("Cheaper shadows", .optimizations, SettingsAnchor.rendering),
 
             entry("Wallpaper Engine Assets", .assets, SettingsAnchor.assets),
             entry("SteamCMD", .assets, SettingsAnchor.steamCmd),

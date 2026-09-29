@@ -69,7 +69,7 @@ enum SettingsTab: Int, CaseIterable, Identifiable {
                     SettingField(\.audioOutput), SettingField(\.reloadWhenChangingOutputDevice),
                     SettingField(\.mediaIntegration), SettingField(\.processPiority),
                     SettingField(\.pauseOnVRAMExhausted), SettingField(\.restartAfterCrashing),
-                    SettingField(\.optimiseTextures)]
+                    SettingField(\.optimiseTextures), SettingField(\.cheaperShadows)]
         case .diagnostics:
             return [SettingField(\.logLevel)]
         case .assets, .updates, .privacy, .permissions, .plugins, .about:

@@ -103,6 +103,9 @@ struct OptimizationsPage: SettingsPage {
                 Toggle("Optimise textures", isOn: $viewModel.settings.optimiseTextures)
                     .changedFromDefault(viewModel.isChanged(\.optimiseTextures))
                     .help("Compresses wallpaper images once in the background so they use about a third of the GPU memory. Images that would lose visible detail stay as they are.")
+                Toggle("Cheaper shadows", isOn: $viewModel.settings.cheaperShadows)
+                    .changedFromDefault(viewModel.isChanged(\.cheaperShadows))
+                    .help("Draws shadow maps at half size, a quarter of the shadow work; the edges stay soft. Off draws them as Wallpaper Engine does.")
                 Picker("Process Priority", selection: $viewModel.settings.processPiority) {
                     Text("Normal").tag(GSProcessPiority.normal)
                     Text("Below Normal").tag(GSProcessPiority.belowNormal)
