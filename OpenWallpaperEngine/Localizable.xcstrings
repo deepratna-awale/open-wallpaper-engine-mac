@@ -108101,6 +108101,576 @@
           }
         }
       }
+    },
+    "Couldn't check for a Wallpaper Engine update, so nothing was downloaded: %@ To download anyway, choose Re-download." : {
+      "comment" : "Assets update check error; %@ is the reason SteamCMD gave",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذّر التحقق من وجود تحديث لـ Wallpaper Engine، لذا لم يُنزَّل شيء: %@ للتنزيل على أي حال، اختر «إعادة التنزيل»."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es konnte nicht nach einem Wallpaper Engine-Update gesucht werden, daher wurde nichts geladen: %@ Um trotzdem zu laden, wähle „Erneut laden“."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo buscar una actualización de Wallpaper Engine, así que no se descargó nada: %@ Para descargar de todos modos, elige Volver a descargar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de rechercher une mise à jour de Wallpaper Engine, rien n’a donc été téléchargé : %@ Pour télécharger quand même, choisissez Retélécharger."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine अपडेट की जाँच नहीं हो सकी, इसलिए कुछ भी डाउनलोड नहीं हुआ: %@ फिर भी डाउनलोड करने के लिए, फिर से डाउनलोड करें चुनें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile cercare un aggiornamento di Wallpaper Engine, quindi non è stato scaricato nulla: %@ Per scaricare comunque, scegli Scarica di nuovo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine のアップデートを確認できなかったため、何もダウンロードしませんでした: %@ それでもダウンロードするには、「再ダウンロード」を選択してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine 업데이트를 확인할 수 없어 아무것도 다운로드하지 않았습니다: %@ 그래도 다운로드하려면 다시 다운로드를 선택하세요."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie udało się sprawdzić aktualizacji Wallpaper Engine, więc nic nie zostało pobrane: %@ Aby mimo to pobrać, wybierz Pobierz ponownie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível verificar se há uma atualização do Wallpaper Engine, então nada foi baixado: %@ Para baixar mesmo assim, escolha Baixar novamente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось проверить наличие обновления Wallpaper Engine, поэтому ничего не загружено: %@ Чтобы загрузить всё равно, выберите «Загрузить заново»."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine güncellemesi denetlenemedi, bu yüzden hiçbir şey indirilmedi: %@ Yine de indirmek için Yeniden İndir’i seçin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося перевірити наявність оновлення Wallpaper Engine, тому нічого не викачано: %@ Щоб викачати все одно, виберіть «Викачати знову»."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法检查 Wallpaper Engine 更新，因此未下载任何内容：%@ 若仍要下载，请选择“重新下载”。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法檢查 Wallpaper Engine 更新，因此未下載任何內容：%@ 若仍要下載，請選擇「重新下載」。"
+          }
+        }
+      }
+    },
+    "Wallpaper Engine assets are up to date (build %@)." : {
+      "comment" : "Assets update check result; %@ is Steam's build number",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أصول Wallpaper Engine محدَّثة (الإصدار %@)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Wallpaper Engine-Assets sind aktuell (Build %@)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los recursos de Wallpaper Engine están actualizados (compilación %@)."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les ressources de Wallpaper Engine sont à jour (build %@)."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine एसेट अप टू डेट हैं (बिल्ड %@)।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le risorse di Wallpaper Engine sono aggiornate (build %@)."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine のアセットは最新です（ビルド %@）。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine 에셋이 최신 상태입니다(빌드 %@)."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zasoby Wallpaper Engine są aktualne (kompilacja %@)."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os recursos do Wallpaper Engine estão atualizados (build %@)."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ресурсы Wallpaper Engine актуальны (сборка %@)."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine varlıkları güncel (derleme %@)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ресурси Wallpaper Engine актуальні (збірка %@)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine 资源已是最新（版本 %@）。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine 資源已是最新（版本 %@）。"
+          }
+        }
+      }
+    },
+    "Checking for updates…" : {
+      "comment" : "Assets update check status",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يجري التحقق من وجود تحديثات…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach Updates suchen …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscando actualizaciones…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recherche de mises à jour…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपडेट की जाँच की जा रही है…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ricerca di aggiornamenti…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アップデートを確認中…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "업데이트 확인 중…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sprawdzanie uaktualnień…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscando atualizações…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверка обновлений…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Güncellemeler denetleniyor…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірка оновлень…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在检查更新…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在檢查更新⋯"
+          }
+        }
+      }
+    },
+    "steamcmd didn't report the current build." : {
+      "comment" : "Assets update check error; steamcmd is a program name",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لم يُبلغ steamcmd عن الإصدار الحالي."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steamcmd hat den aktuellen Build nicht gemeldet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steamcmd no informó de la compilación actual."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steamcmd n’a pas indiqué le build actuel."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steamcmd ने मौजूदा बिल्ड नहीं बताया।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steamcmd non ha indicato la build attuale."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steamcmd から現在のビルドが返されませんでした。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steamcmd가 현재 빌드를 알려 주지 않았습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steamcmd nie podał bieżącej kompilacji."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O steamcmd não informou o build atual."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steamcmd не сообщил текущую сборку."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steamcmd geçerli derlemeyi bildirmedi."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steamcmd не повідомив поточну збірку."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steamcmd 未报告当前版本。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "steamcmd 未回報目前版本。"
+          }
+        }
+      }
+    },
+    "Re-download" : {
+      "comment" : "Button: download the Wallpaper Engine assets again even when they're up to date",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة التنزيل"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneut laden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volver a descargar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retélécharger"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फिर से डाउनलोड करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scarica di nuovo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再ダウンロード"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다시 다운로드"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pobierz ponownie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baixar novamente"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Загрузить заново"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeniden İndir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Викачати знову"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新下载"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新下載"
+          }
+        }
+      }
+    },
+    "Downloads the assets from Steam again even when they're up to date, to repair a damaged copy." : {
+      "comment" : "Help tag of the Re-download button in Settings › Assets",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يُنزّل الأصول من Steam مجددًا حتى إن كانت محدَّثة، لإصلاح نسخة تالفة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lädt die Assets erneut von Steam, auch wenn sie aktuell sind, um eine beschädigte Kopie zu reparieren."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vuelve a descargar los recursos de Steam aunque estén actualizados, para reparar una copia dañada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Télécharge à nouveau les ressources depuis Steam même si elles sont à jour, pour réparer une copie endommagée."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "क्षतिग्रस्त कॉपी ठीक करने के लिए, एसेट अप टू डेट होने पर भी उन्हें Steam से फिर से डाउनलोड करता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scarica di nuovo le risorse da Steam anche se sono aggiornate, per riparare una copia danneggiata."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最新の場合でも Steam からアセットを再ダウンロードし、破損したコピーを修復します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "에셋이 최신 상태여도 Steam에서 다시 다운로드하여 손상된 사본을 복구합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pobiera zasoby ze Steam ponownie, nawet jeśli są aktualne, aby naprawić uszkodzoną kopię."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baixa os recursos do Steam novamente, mesmo que estejam atualizados, para reparar uma cópia danificada."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Загружает ресурсы из Steam заново, даже если они актуальны, чтобы восстановить повреждённую копию."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bozuk bir kopyayı onarmak için varlıkları güncel olsalar bile Steam’den yeniden indirir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Викачує ресурси зі Steam знову, навіть якщо вони актуальні, щоб виправити пошкоджену копію."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "即使资源已是最新，也从 Steam 重新下载，以修复损坏的副本。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "即使資源已是最新，也從 Steam 重新下載，以修復損毀的副本。"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
