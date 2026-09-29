@@ -30,13 +30,21 @@ struct WebWallpaperView: NSViewRepresentable {
         viewModel.installBridge(on: configuration.userContentController)
         configuration.setURLSchemeHandler(viewModel.schemeHandler, forURLScheme: WebWallpaperSchemeHandler.scheme)
         viewModel.renderWatchdog = wallpaperViewModel.renderWatchdog
+        // The related page only lends its process; this page's configuration stays its own.
+        let pageURL = Self.pageURL(of: viewModel.currentWallpaper)
+        wallpaperViewModel.webProcessGroup.relate(configuration, to: pageURL)
 
         let nsView = WKWebView(frame: .zero, configuration: configuration)
+        wallpaperViewModel.webProcessGroup.register(nsView, for: pageURL)
         nsView.navigationDelegate = viewModel
         viewModel.webView = nsView
         viewModel.applySchedulingPolicy()
         Self.loadWallpaper(nsView, viewModel: viewModel)
         return nsView
+    }
+
+    static func pageURL(of wallpaper: WEWallpaper) -> URL {
+        wallpaper.wallpaperDirectory.appending(path: wallpaper.project.file)
     }
 
     /// Load wallpaper — uses loadHTMLString for URL-based wallpapers (YouTube/Vimeo)
@@ -84,6 +92,8 @@ struct WebWallpaperView: NSViewRepresentable {
 
         if selectedWallpaper.wallpaperDirectory.appending(path: selectedWallpaper.project.file) != currentWallpaper.wallpaperDirectory.appending(path: currentWallpaper.project.file) {
             viewModel.currentWallpaper = selectedWallpaper
+            // The process was chosen at creation; only later pages of the new wallpaper join this one.
+            wallpaperViewModel.webProcessGroup.register(nsView, for: Self.pageURL(of: selectedWallpaper))
             viewModel.stopAudio()
             Self.loadWallpaper(nsView, viewModel: viewModel)
         }

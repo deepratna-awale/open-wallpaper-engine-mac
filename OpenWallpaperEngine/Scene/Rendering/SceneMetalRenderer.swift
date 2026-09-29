@@ -143,6 +143,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         init(_ frames: [RenderTextureFrame]) { self.frames = frames }
     }
     private let uploadedImagesLock = NSLock()
+    /// Particle textures with their mip chains (`ParticleTextureMipmaps`), by the uploaded texture
+    /// they were made from, which each entry holds so its identifier isn't reused. Under
+    /// `uploadedImagesLock`; cleared with the content.
+    private var particleMipmaps: [ObjectIdentifier: (source: MTLTexture, chained: MTLTexture)] = [:]
     /// Animated asset textures' sprite frames, by the same key.
     private var effectAssetFrames: [String: [RenderTextureFrame]] = [:]
     /// Textureless layers' effect inputs (`solidEffectInput`), by layer id; once per content.
@@ -392,6 +396,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// Per-layer dependencies, coverage, class and this frame's dirty state
     /// (docs/efficiency-plan-2d.md WP1-A); built with the content, off the main thread.
     private(set) var layerAnalysis: SceneLayerAnalysis?
+    /// Keeps system audio capture on while the content reacts to audio (`needsAudio`).
+    private var audioCaptureLease: AudioCaptureLease?
     /// Adaptive rate and idle skipping (`FramePacing`, WP2-C): the instance sets its limits and
     /// ticks the displays at its rate; an idle frame returns before anything is encoded.
     var framePacing = FramePacing()
@@ -566,6 +572,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
         guard let content else {
             layerAnalysis = nil
+            audioCaptureLease = nil
             layers = []
             particleSystems = []
             objectMotions = [:]
@@ -603,7 +610,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 || layer.weEffects.contains { $0.passes.contains { !$0.systemTextures.isEmpty } }
         }
         if bindsSystemTexture, let media = scripts.services?.media {
-            mediaTextures = SceneMediaTextures(source: media)
+            mediaTextures = SceneMediaTextures(source: media, device: device)
         }
         contentQueue.async { [weak self] in
             guard let self, self.isCurrentContentGeneration(generation) else { return }
@@ -630,7 +637,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 var system = system
                 ParticleEmitterImagePoints.fill(&system.emitterImages, sources: imageSources, device: self.device,
                                                 queue: self.commandQueue, cache: &imagePoints)
-                guard let texture = self.makeTextureFrames(from: system.source)?.first?.texture else { return nil }
+                guard let texture = self.particleTexture(from: system.source, spriteSheet: system.spriteSheet != nil) else { return nil }
                 let fallback = system.fallbackSource.flatMap { self.makeTextureFrames(from: $0)?.first?.texture }
                 Self.dropPixels(&system)
                 // Seeded by position in the scene, so a wallpaper's particles replay the same way.
@@ -641,6 +648,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             ParticleSystemRuntime.linkFamilies(runtimes)
             let preparedParticleSystems = runtimes.compactMap { $0 }
             guard self.isCurrentContentGeneration(generation) else { return }
+            // The models' meshes go to the GPU here, off the render thread, so the first frame
+            // drawing them has nothing to upload.
+            for model in content.spatial.models { _ = model.plan?.upload(device: self.device) }
             let analysis = SceneLayerAnalysis.make(content: content)
             DispatchQueue.main.async { [weak self] in
                 guard let self, self.isCurrentContentGeneration(generation) else { return }
@@ -658,6 +668,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 self.postProcess.setContent(content)
                 self.particleSystems = preparedParticleSystems
                 self.layerAnalysis = analysis
+                let needsAudio = Self.needsAudio(analysis, particles: preparedParticleSystems.map(\.configuration))
+                if needsAudio != (self.audioCaptureLease != nil) {
+                    self.audioCaptureLease = needsAudio ? WallpaperServices.shared.acquireAudioCapture() : nil
+                }
                 self.framePacing.changesOnItsOwn = FramePacing.changesOnItsOwn(
                     analysis, particles: !preparedParticleSystems.isEmpty, cameraShake: content.camera.shake)
                 self.framePacing.wake(.interactive, at: self.wallTime())
@@ -862,7 +876,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             let runtimes: [ParticleSystemRuntime?] = systems.enumerated().map { index, system in
                 var system = system
                 system.order = Int(Int32.max)
-                guard let texture = makeTextureFrames(from: system.source)?.first?.texture else { return nil }
+                guard let texture = particleTexture(from: system.source, spriteSheet: system.spriteSheet != nil) else { return nil }
                 let fallback = system.fallbackSource.flatMap { makeTextureFrames(from: $0)?.first?.texture }
                 Self.dropPixels(&system)
                 let seed = UInt32(truncatingIfNeeded: (Int(id) ?? 0) &* 31 &+ index)
@@ -877,6 +891,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         case let .model(model, node, motion):
             var model = model
             model.id = id
+            _ = model.plan?.upload(device: device)
             return .model(model, node: node, motion: motion)
         }
     }
@@ -1476,10 +1491,15 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 }
                 if batch.material {
                     var snapshot: MTLTexture?
+                    let placement = particlePlacement(batch.system, camera: effectFrame.camera)
                     if particleMaterials?.readsSceneSnapshot(batch.system) == true {
-                        // Refraction reads the scene drawn up to this system (`_rt_FullFrameBuffer`).
+                        // Refraction reads the scene drawn up to this system (`_rt_FullFrameBuffer`):
+                        // only around its particles when that is known, else all of it.
                         endScenePass(encoder, resumes: true)
-                        snapshot = sceneSnapshot(of: sceneTexture, commandBuffer: commandBuffer)
+                        let pixels = SIMD2(sceneTexture.width, sceneTexture.height)
+                        let needed = placement != nil ? nil
+                            : particleMaterials?.sceneSnapshotRect(batch.system, sceneSize: sceneSize, targetSize: pixels)
+                        snapshot = sceneSnapshot(of: sceneTexture, commandBuffer: commandBuffer, needing: needed)
                         guard let resumed = resumeScenePass(on: sceneTexture, commandBuffer: commandBuffer) else { return false }
                         encoder = resumed
                     }
@@ -1488,7 +1508,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                         values: timelines.values,
                         assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
                         sceneSnapshot: snapshot, mipMappedFrameBuffer: mipMappedTarget, shadowAtlas: frameShadowAtlas,
-                        depth: frameDepth, placement: particlePlacement(batch.system, camera: effectFrame.camera)))
+                        depth: frameDepth, placement: placement))
                     drew = true
                     continue
                 }
@@ -3298,7 +3318,27 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private func clearUploadedImages() {
         uploadedImagesLock.lock()
         uploadedImages.removeAllObjects()
+        particleMipmaps.removeAll()
         uploadedImagesLock.unlock()
+    }
+
+    /// A particle system's texture 0 with its mip chain; systems that share a texture share it.
+    /// A sprite sheet keeps the levels its file stores: a generated chain would bleed its cells
+    /// into each other at the small levels.
+    private func particleTexture(from source: SceneMetalTextureSource, spriteSheet: Bool) -> MTLTexture? {
+        guard let texture = makeTextureFrames(from: source)?.first?.texture else { return nil }
+        guard !spriteSheet, ParticleTextureMipmaps.needsChain(texture) else { return texture }
+        let key = ObjectIdentifier(texture)
+        uploadedImagesLock.lock()
+        let cached = particleMipmaps[key]?.chained
+        uploadedImagesLock.unlock()
+        if let cached { return cached }
+        let chained = ParticleTextureMipmaps.mipmapped(texture, device: device, queue: commandQueue)
+        uploadedImagesLock.lock()
+        defer { uploadedImagesLock.unlock() }
+        if let raced = particleMipmaps[key]?.chained { return raced }
+        particleMipmaps[key] = (texture, chained)
+        return chained
     }
 
     private func makeTextureFrames(from source: SceneMetalTextureSource) -> [RenderTextureFrame]? {
@@ -3427,7 +3467,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     /// A system texture's image now; nil without one (or without script services).
     private func systemTexture(_ kind: SceneSystemTexture) -> MTLTexture? {
-        mediaTextures?.texture(kind, loader: textureLoader, device: device)
+        mediaTextures?.texture(kind)
     }
 
     private func spriteSheetUV(for particle: Particle,

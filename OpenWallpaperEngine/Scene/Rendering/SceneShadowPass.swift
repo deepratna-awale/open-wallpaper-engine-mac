@@ -273,6 +273,7 @@ final class SceneShadowPass {
         /// The same objects and counts (the uniforms are compared as bytes).
         func drawsSame(as other: MeshDraw) -> Bool {
             pipeline === other.pipeline && buffers.vertices === other.buffers.vertices
+                && buffers.attributes === other.buffers.attributes
                 && buffers.indices === other.buffers.indices && indexCount == other.indexCount && indexType == other.indexType
                 && textures.count == other.textures.count
                 && zip(textures, other.textures).allSatisfy { $0.slot == $1.slot && $0.texture === $1.texture && $0.sampler === $1.sampler }
@@ -340,7 +341,7 @@ final class SceneShadowPass {
                     }
                 }
                 encoder.setRenderPipelineState(draw.pipeline)
-                encoder.setVertexBuffer(draw.buffers.vertices, offset: 0, index: SceneModelRenderer.meshBuffer)
+                draw.buffers.bindVertices(to: encoder)
                 encoder.setVertexBuffer(zeroAttributes, offset: 0, index: EffectGraphRenderer.zeroBuffer)
                 for entry in draw.textures {
                     encoder.setFragmentTexture(entry.texture, index: entry.slot)

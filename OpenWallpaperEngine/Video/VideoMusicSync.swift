@@ -11,6 +11,14 @@ enum VideoMusicSyncSettings {
         UserDefaults.app.bool(forKey: key(wallpaper, name))
     }
 
+    /// The music-sync switches; any of them on makes the wallpaper follow the system audio.
+    static let switches = ["zoomEnabled", "tiltEnabled", "saturationEnabled", "paceEnabled"]
+
+    /// Whether any music sync is on for `wallpaper`, so it needs system audio capture.
+    static func isAnyEnabled(_ wallpaper: WEWallpaper) -> Bool {
+        switches.contains { bool(wallpaper, $0) }
+    }
+
     static func double(_ wallpaper: WEWallpaper, _ name: String, default defaultValue: Double = 0) -> Double {
         let key = key(wallpaper, name)
         return UserDefaults.app.object(forKey: key) == nil ? defaultValue : UserDefaults.app.double(forKey: key)
