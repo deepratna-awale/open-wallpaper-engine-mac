@@ -52,10 +52,6 @@ struct SceneModelDraw {
     var planarReflection: MTLTexture?
     /// Drawn into the planar reflection through the mirrored camera, which flips the winding.
     var mirrored = false
-    /// The colour the scene target was cleared to, when the model draws straight over it in the
-    /// frame's own view: a model the distance fog paints this colour is skipped
-    /// (`SceneModelFogCulling`). Nil never skips one.
-    var clearColor: SIMD3<Float>? = nil
 
     /// The matrices a model's material takes (`BuiltinPassContext.place`): world, camera view,
     /// and the view-projection in the translated shaders' convention.

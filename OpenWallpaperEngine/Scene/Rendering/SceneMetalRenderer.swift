@@ -2319,15 +2319,14 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         guard let modelDrawing, spatial.models.indices.contains(index) else { return }
         let model = spatial.models[index]
         guard scripts.isVisible(model.id) else { return }
-        var draw = SceneModelDraw(
+        modelDrawing.draw(model, SceneModelDraw(
             world: world3D(model.id, in: spatial.transforms), camera: frame.camera, frame: frame,
             values: timelines.values, pixelFormat: pixelFormat, sampleCount: sceneSampleCount, depth: frameDepth,
             mipMappedFrameBuffer: mipMappedTarget,
             assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
             layerComposite: { [unowned self] id in self.layerComposites[id] }, shadowAtlas: frameShadowAtlas,
-            planarReflection: frameReflection)
-        draw.clearColor = scripts.state.scene.vector3(.clearcolor) ?? clearColor
-        modelDrawing.draw(model, draw, encoder: encoder, commandBuffer: commandBuffer)
+            planarReflection: frameReflection),
+            encoder: encoder, commandBuffer: commandBuffer)
         encoder.setRenderPipelineState(renderPipeline)
     }
 
