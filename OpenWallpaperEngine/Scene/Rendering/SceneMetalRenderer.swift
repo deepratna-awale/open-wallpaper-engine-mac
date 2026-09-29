@@ -936,7 +936,16 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         transforms.setParent(id, to: parent, attachment: attachment)
         spatial.transforms.setParent(id, to: parent, attachment: attachment)
         cameraTransforms.setParent(id, to: parent, attachment: attachment)
+        cameraRig.setParent(id, to: parent, attachment: attachment)
         scripts.setParent(parent, for: id)
+        // The analysis worked out lineages and bounds under the old parents; without this, idle
+        // skipping could keep the old pose on screen.
+        if let analysis = layerAnalysis?.reparented(nodes: transforms.nodes, motions: objectMotions) {
+            layerAnalysis = analysis
+            if audioCaptureLease == nil, Self.needsAudio(analysis, particles: particleSystems.map(\.configuration)) {
+                audioCaptureLease = WallpaperServices.shared.acquireAudioCapture()
+            }
+        }
     }
 
     /// Puts `layers` in draw order (the scene's, or the one scripts set) with each layer's

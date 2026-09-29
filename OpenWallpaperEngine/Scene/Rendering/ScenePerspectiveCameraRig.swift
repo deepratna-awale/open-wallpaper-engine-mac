@@ -27,6 +27,10 @@ final class ScenePerspectiveCameraRig: SceneCameraRig {
         layers = SceneCameraLayers(spatial.cameraLayers, transforms: spatial.transforms, values: values)
     }
 
+    func setParent(_ id: String, to parent: String?, attachment: String?) {
+        layers.setParent(id, to: parent, attachment: attachment)
+    }
+
     /// The camera layers' state (tests).
     var cameraLayers: SceneCameraLayers { layers }
 
