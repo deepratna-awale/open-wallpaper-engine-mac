@@ -65,4 +65,15 @@ final class VideoMusicSyncEffectTests: XCTestCase {
         XCTAssertTrue(WebKitVideoPlayer.musicSyncScript(.init(zoom: .nan, tilt: .infinity, saturation: 1, rate: nil))
             .contains("{zoom:0.0000,tilt:0.0000,"), "a non-finite value never reaches the page")
     }
+
+    func testPaceRateMovesInStepsAFewTimesASecond() {
+        var limiter = WebKitVideoPlayer.PaceRateLimiter()
+        XCTAssertEqual(limiter.rate(for: 1.02, base: 1, at: 0), 1.02, "the first rate goes through")
+        XCTAssertEqual(limiter.rate(for: 1.04, base: 1, at: 1), 1.02, "a change under a step is held")
+        XCTAssertEqual(limiter.rate(for: 1.2, base: 1, at: 1.1), 1.2)
+        XCTAssertEqual(limiter.rate(for: 1.0, base: 1, at: 1.2), 1.2, "held until the interval passes")
+        XCTAssertEqual(limiter.rate(for: 1.0, base: 1, at: 1.4), 1.0)
+        XCTAssertEqual(limiter.rate(for: 0, base: 1, at: 1.41), 0, "a stop goes through at once")
+        XCTAssertEqual(limiter.rate(for: 1.51, base: 1.5, at: 1.42), 1.51, "a new base rate goes through at once")
+    }
 }

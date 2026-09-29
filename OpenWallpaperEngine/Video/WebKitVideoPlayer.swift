@@ -53,6 +53,8 @@ final class WebKitVideoPlayer: NSObject, WKNavigationDelegate {
     private var audioCaptureLease: AudioCaptureLease?
     /// The level pace follows (`VideoMusicSyncEffect.paceSmoothing`).
     private var smoothedLevel: Double = 0
+    /// Holds pace's `playbackRate` between meaningful steps (`PaceRateLimiter`).
+    private var paceLimiter = PaceRateLimiter()
     /// The last music-sync script the page applied, so an unchanged frame isn't sent again. A new
     /// page starts without music sync.
     private var appliedMusicSyncScript = WebKitVideoPlayer.musicSyncScript(nil)
@@ -214,7 +216,34 @@ final class WebKitVideoPlayer: NSObject, WKNavigationDelegate {
         smoothedLevel = musicSync.paceAmount != 0
             ? smoothedLevel + (level - smoothedLevel) * VideoMusicSyncEffect.paceSmoothing
             : level
-        send(MusicSyncFrame(effect: musicSync, level: level, smoothedLevel: smoothedLevel, baseRate: state.rate))
+        var frame = MusicSyncFrame(effect: musicSync, level: level, smoothedLevel: smoothedLevel, baseRate: state.rate)
+        if let rate = frame.rate {
+            frame.rate = paceLimiter.rate(for: rate, base: state.rate, at: ProcessInfo.processInfo.systemUptime)
+        }
+        send(frame)
+    }
+
+    /// The media element's video and sound share one `playbackRate`, and every change re-times
+    /// both (WebKit's pitch-preserving stretch restarts), so pacing it at the 30 Hz frame rate reads
+    /// as stutter and warbles the sound. The rate moves only by a real step and at most a few times
+    /// a second; a new base rate or a stop (rate 0) goes through at once.
+    struct PaceRateLimiter {
+        static let step: Float = 0.05
+        static let interval: TimeInterval = 0.25
+        private var applied: Float?
+        private var base: Float?
+        private var changedAt: TimeInterval = -.infinity
+
+        mutating func rate(for target: Float, base: Float, at time: TimeInterval) -> Float {
+            if let applied, self.base == base, target != 0 || applied == 0,
+               abs(target - applied) < Self.step || time - changedAt < Self.interval {
+                return applied
+            }
+            applied = target
+            self.base = base
+            changedAt = time
+            return target
+        }
     }
 
     /// Sends `frame` unless the page already shows it; a page without its `<video>` yet gets it again.
