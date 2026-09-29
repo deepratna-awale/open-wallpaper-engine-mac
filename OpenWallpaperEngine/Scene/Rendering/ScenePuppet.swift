@@ -761,7 +761,7 @@ final class ScenePuppetRenderer {
                                  format: MDLVertexFormat) -> MTLVertexDescriptor {
         let descriptor = MTLVertexDescriptor()
         let names = Dictionary(attributes.map { ($0.value, $0.key) }, uniquingKeysWith: { a, _ in a })
-        var usesZero = false
+        var usesZero = false, usesMesh = false
         for input in function.vertexAttributes ?? [] where input.isActive {
             let element = descriptor.attributes[input.attributeIndex]!
             let isInteger = [.uint, .uint2, .uint3, .uint4, .int, .int2, .int3, .int4].contains(input.attributeType)
@@ -770,6 +770,7 @@ final class ScenePuppetRenderer {
                 element.format = vertexFormat(attribute)
                 element.offset = offset
                 element.bufferIndex = meshBuffer
+                usesMesh = true
             } else {
                 element.format = isInteger ? .uint4 : .float4
                 element.offset = 0
@@ -777,7 +778,8 @@ final class ScenePuppetRenderer {
                 usesZero = true
             }
         }
-        descriptor.layouts[meshBuffer].stride = format.stride
+        // Metal refuses a layout no attribute reads, so it is set only when one does.
+        if usesMesh { descriptor.layouts[meshBuffer].stride = format.stride }
         if usesZero {
             descriptor.layouts[EffectGraphRenderer.zeroBuffer].stride = 16
             descriptor.layouts[EffectGraphRenderer.zeroBuffer].stepFunction = .constant

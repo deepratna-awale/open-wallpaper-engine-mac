@@ -654,7 +654,7 @@ final class SceneModelRenderer: SceneModelDrawing {
         let descriptor = MTLVertexDescriptor()
         var names: [Int: [String]] = [:]
         for (name, location) in attributes { names[location, default: []].append(name) }
-        var usesZero = false, usesAttributes = false
+        var usesZero = false, usesAttributes = false, usesMesh = false
         let streams = SceneModelVertexStreams(format)
         for input in function.vertexAttributes ?? [] where input.isActive {
             let element = descriptor.attributes[input.attributeIndex]!
@@ -665,10 +665,11 @@ final class SceneModelRenderer: SceneModelDrawing {
                 if let streams, let location = streams.location(of: attribute, in: format) {
                     element.offset = location.offset
                     element.bufferIndex = location.stream == 0 ? meshBuffer : meshAttributesBuffer
-                    if location.stream == 1 { usesAttributes = true }
+                    if location.stream == 1 { usesAttributes = true } else { usesMesh = true }
                 } else {
                     element.offset = offset
                     element.bufferIndex = meshBuffer
+                    usesMesh = true
                 }
             } else {
                 element.format = isInteger ? .uint4 : .float4
@@ -677,7 +678,9 @@ final class SceneModelRenderer: SceneModelDrawing {
                 usesZero = true
             }
         }
-        descriptor.layouts[meshBuffer].stride = streams?.positionStride ?? format.stride
+        // Metal refuses a layout no attribute reads (a stage that reads only the attribute stream
+        // or zeros), so each buffer's layout is set only when used.
+        if usesMesh { descriptor.layouts[meshBuffer].stride = streams?.positionStride ?? format.stride }
         if let streams, usesAttributes { descriptor.layouts[meshAttributesBuffer].stride = streams.attributeStride }
         if usesZero {
             descriptor.layouts[EffectGraphRenderer.zeroBuffer].stride = 16

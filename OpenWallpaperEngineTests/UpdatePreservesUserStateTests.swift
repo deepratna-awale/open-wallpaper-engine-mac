@@ -100,7 +100,7 @@ final class UpdatePreservesUserStateTests: XCTestCase {
         // The update prewarm matches the downloaded update's bundle by its version; it keys no state on it.
         let versionReaders: Set<String> = ["MainWindow.swift", "AboutUsView.swift", "AppUpdateConfiguration.swift", "AppVersion.swift",
                                            "ReleaseVersion.swift", "UpdateBundleLocator.swift",
-                                           "UpdateShaderPrewarmer.swift"]
+                                           "UpdateShaderPrewarmer.swift", "AppUpdater.swift", "UpdateVersionDisplay.swift"]
         let bundleLocations: [String] = ["Bundle.main.bundleURL", "Bundle.main.bundlePath", "Bundle.main.resourceURL",
                                          "Bundle.main.resourcePath", "Bundle.main.executableURL"]
         var problems: [String] = []
