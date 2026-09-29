@@ -32,10 +32,12 @@ class GlobalSettingsViewModel: ObservableObject {
         }
     }
     
-    @Published var selection = 0
-    
     /// The setup assistant is showing (at launch until finished, or from "Run setup again…").
     @Published var isFirstLaunch = OnboardingFlow.showsAtLaunch()
+
+    /// The Terms of Use and Privacy Policy notice is due (`LegalNotice`): never confirmed, or the
+    /// documents changed since. Shown once, on its own when setup is already done.
+    @Published var needsLegalNotice = LegalNotice.isDue(in: .app)
 
     /// The language this process runs in; a different choice applies at the next launch.
     let languageChange: LanguageChange
@@ -140,6 +142,7 @@ class GlobalSettingsViewModel: ObservableObject {
     func setQuality(_ quality: GSQuality) {
         self.settings.shadows = quality.shadows
         self.settings.volumetrics = quality.volumetrics
+        self.settings.qualityEfficiency = QualityEfficiency(preset: quality).stop
         switch quality {
         case .low:
             self.settings.antiAliasing = .none

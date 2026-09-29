@@ -41,7 +41,7 @@ struct WhatsNewView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             HStack {
-                Text("You can turn release notes off in Settings › General › Updates.")
+                Text("You can turn release notes off in Settings › Updates.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer()

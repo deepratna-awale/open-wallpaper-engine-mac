@@ -119,4 +119,15 @@ final class AppUpdateTests: XCTestCase {
                       "never waits more than a day")
         XCTAssertLessThan(policy.pollInterval, policy.idleThreshold)
     }
+
+    /// A launch checks right away when checks are on and the last check is over an hour old or never happened.
+    func testALaunchChecksWhenTheLastCheckIsStale() {
+        let now: Date = Date(timeIntervalSince1970: 1_000_000)
+        let recent: Date = now.addingTimeInterval(-30 * 60)
+        let stale: Date = now.addingTimeInterval(-2 * 60 * 60)
+        XCTAssertTrue(AppUpdater.checksAtLaunch(automaticChecks: true, lastCheck: nil, now: now))
+        XCTAssertTrue(AppUpdater.checksAtLaunch(automaticChecks: true, lastCheck: stale, now: now))
+        XCTAssertFalse(AppUpdater.checksAtLaunch(automaticChecks: true, lastCheck: recent, now: now))
+        XCTAssertFalse(AppUpdater.checksAtLaunch(automaticChecks: false, lastCheck: nil, now: now))
+    }
 }

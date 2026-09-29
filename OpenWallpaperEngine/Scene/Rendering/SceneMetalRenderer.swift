@@ -47,7 +47,7 @@ private struct CameraMotion {
     let audioLevel: Double
 }
 
-private struct RenderTextureFrame {
+struct RenderTextureFrame {
     let texture: MTLTexture
     let duration: Float
     let uvOrigin: SIMD2<Float>
@@ -70,7 +70,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var additiveRenderPipeline: MTLRenderPipelineState { scenePassPipelines.additive }
     /// The layer pipelines for the scene target's format, this frame's sample count and depth.
     private var scenePassPipelines: SceneLayerPipelines.Pipelines {
-        guard let format = sceneRenderTarget?.pixelFormat else { return layerPipelines.pipelines(for: nil) }
+        // The drawable's when the scene draws straight into it (S2).
+        guard let format = (sceneRenderTarget ?? lastDrawableScene)?.pixelFormat else { return layerPipelines.pipelines(for: nil) }
         return layerPipelines.pipelines(for: format, sampleCount: sceneSampleCount, depthFormat: sceneDepthFormat)
             ?? layerPipelines.pipelines(for: format)
     }
@@ -249,7 +250,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// Whether an effect pipeline is still compiling (shader prewarm waits for them).
     var hasPendingEffectPipelines: Bool { effectGraph?.hasPendingPipelines ?? false }
     /// The last frame's scene target, before the post-process (tests, diagnostics).
-    var lastSceneTarget: MTLTexture? { sceneRenderTarget }
+    var lastSceneTarget: MTLTexture? { sceneRenderTarget ?? lastDrawableScene }
+    /// The drawable the last frame drew its scene straight into (S2), not held.
+    private weak var lastDrawableScene: MTLTexture?
     /// The bytes of the frame's own targets, by holder (diagnostics, test-risks LR10); the effect
     /// graph's layer and bloom buffers aren't among them.
     var frameTargetBytes: [String: Int] {
@@ -334,6 +337,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// A shared scene's finished frame, the scene target's size (`sharedFrame`).
     private var sharedFrameTarget: MTLTexture?
     private var sceneRenderTargetSize = SIMD2<Int>.zero
+    /// Whether the drawable's size has settled, for an exactly sized scene target (S1).
     /// Render-target pixels per scene unit this frame (see `SceneRenderResolution`).
     private var renderPixelsPerUnit: Float = 1
     /// Rendered text, by string and style. Capped at 128 entries and 32 MB of rasters not drawn this
@@ -341,9 +345,13 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// 1000x300 px raster plus its coverage) it held ~190 MB, 300 MB or more on Retina/5K. 32 MB
     /// still keeps 20 such rasters (and the full 128 small labels) for scripts that cycle or toggle
     /// strings; every string a frame draws stays regardless (`beginGeneration`).
-    private var textFrameCache = SceneLRUCache<String, (frame: RenderTextureFrame, baseSize: SIMD2<Float>)>(
+    private var textFrameCache = SceneLRUCache<String, SceneTextRasterResult>(
         capacity: 128, costLimit: SceneMetalRenderer.textCacheByteBudget)
     static let textCacheByteBudget = 32 << 20
+    /// Rasterises changed strings off the render thread (`SceneTextRasterQueue`).
+    private let textRaster: SceneTextRasterQueue
+    /// Changed strings still rasterising or waiting for a frame to take them (for tests).
+    var pendingTextRasters: Int { textRaster.inFlight }
     /// The finest raster scale each text layer has needed, so an animated scale doesn't
     /// re-rasterise at every step (see `SceneTextRasterScale.retained`).
     private var textRasterScales: [String: Float] = [:]
@@ -375,6 +383,30 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var clickReader = DesktopClickReader()
     /// The last drawn frame's camera motion and text sizes (by layer id), for the next script frame.
     private var lastCameraMotion: CameraMotion?
+    /// Per-layer dependencies, coverage, class and this frame's dirty state
+    /// (docs/efficiency-plan-2d.md WP1-A); built with the content, off the main thread.
+    private(set) var layerAnalysis: SceneLayerAnalysis?
+    /// Adaptive rate and idle skipping (`FramePacing`, WP2-C): the instance sets its limits and
+    /// ticks the displays at its rate; an idle frame returns before anything is encoded.
+    var framePacing = FramePacing()
+    /// Off with `OWE_IDLE_SKIP=0` (comparisons): every frame is drawn, the rate still adapts.
+    var skipsIdleFrames = ProcessInfo.processInfo.environment["OWE_IDLE_SKIP"] != "0"
+    /// Frames encoded so far: a shared scene's displays present only a new one.
+    private(set) var encodedFrames: UInt64 = 0
+    private var pacedParallax = SIMD2<Float>(0.5, 0.5)
+    /// What the analysis last saw of the frame's shape: a change marks every layer dirty.
+    private var analysedShape: (layers: Int, target: SIMD2<Float>) = (0, .zero)
+    /// A pipeline was compiling last frame: the frame after one lands changes too.
+    private var analysedWarmUp = true
+    /// The blur-like buffer divisor (1, 2, 4) over the slider's (`OWE_BLUR_DIVISOR` for comparisons).
+    var blurDivisorOverride = ProcessInfo.processInfo.environment["OWE_BLUR_DIVISOR"].flatMap(Int.init)
+    private func effectResolution(of layerID: String) -> EffectResolutionPolicy {
+        let divisor = blurDivisorOverride ?? framePacing.limits.policy.blurResolutionDivisor
+        guard divisor > 1 else { return .full }
+        let layer = layerAnalysis.flatMap { analysis in analysis.index(of: layerID).map { analysis.layers[$0] } }
+        let sharp = layer.map { $0.contentClass == .text || ($0.contentClass == .lineArt && $0.classifiedFromPixels) } ?? false
+        return EffectResolutionPolicy(divisor: divisor, sharpContent: sharp)
+    }
     private var lastTextSizes: [String: SIMD2<Float>] = [:]
     /// Told how long each frame took on the CPU, including the wait for a drawable.
     var frameTimeObserver: ((CFTimeInterval) -> Void)?
@@ -451,10 +483,13 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         self.layerPipelines = layerPipelines
         self.dxtDecodePipeline = decodePipeline
         self.textureLoader = MTKTextureLoader(device: device)
+        self.textRaster = SceneTextRasterQueue(device: device, loader: textureLoader)
         self.renderTargetPool = SceneRenderTargetPool(device: device)
         scripts = SceneRendererScripts(services: scriptServices, screenID: screenID)
         sounds = SceneSoundLayers(label: screenID.isEmpty ? "sounds" : "sounds \(screenID)")
         super.init()
+        // Created objects are built on the script thread, so they draw in the frame that made them.
+        scripts.prepareCreated = { [weak self] created, id in self?.prepare(created, id: String(id)) }
         modelDrawing = SceneModelRenderer(device: device, archive: effectGraph?.pipelineArchive)
         shadowPass = SceneShadowPass(device: device, archive: effectGraph?.pipelineArchive)
         planarReflection = ScenePlanarReflection(device: device)
@@ -468,6 +503,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         view.device = device
         view.colorPixelFormat = pixelFormat
         view.framebufferOnly = false
+        // The composite never wrote the drawable's alpha; a scene drawn straight into it (S2)
+        // does, and the desktop shows colour only.
+        view.layer?.isOpaque = true
         view.enableSetNeedsDisplay = false
         view.isPaused = false
     }
@@ -518,6 +556,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         contentGenerationLock.unlock()
 
         guard let content else {
+            layerAnalysis = nil
             layers = []
             particleSystems = []
             objectMotions = [:]
@@ -533,6 +572,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             objectIDs = []
             hasContent = false
             textFrameCache.removeAll()
+            textRaster.reset()
             textRasterScales.removeAll()
             clock = SceneClock()
             transforms = .empty
@@ -558,8 +598,16 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         }
         contentQueue.async { [weak self] in
             guard let self, self.isCurrentContentGeneration(generation) else { return }
-            let preparedLayers: [PreparedLayer] = content.layers.compactMap { layer in
-                guard let frames = self.makeTextureFrames(from: layer.source), !frames.isEmpty else { return nil }
+            // Each layer's upload is independent; built side by side, kept in layer order.
+            var built = [[RenderTextureFrame]?](repeating: nil, count: content.layers.count)
+            built.withUnsafeMutableBufferPointer { slots in
+                let slots = slots
+                DispatchQueue.concurrentPerform(iterations: content.layers.count) { index in
+                    slots[index] = self.makeTextureFrames(from: content.layers[index].source)
+                }
+            }
+            let preparedLayers: [PreparedLayer] = zip(built, content.layers).compactMap { frames, layer in
+                guard let frames, !frames.isEmpty else { return nil }
                 return PreparedLayer(frames: frames, layer: layer)
             }
             let imageSources = Dictionary(preparedLayers.compactMap { entry -> (String, ParticleEmitterImagePoints.Source)? in
@@ -583,6 +631,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             ParticleSystemRuntime.linkFamilies(runtimes)
             let preparedParticleSystems = runtimes.compactMap { $0 }
             guard self.isCurrentContentGeneration(generation) else { return }
+            let analysis = SceneLayerAnalysis.make(content: content)
             DispatchQueue.main.async { [weak self] in
                 guard let self, self.isCurrentContentGeneration(generation) else { return }
                 self.sceneSize = content.size
@@ -598,6 +647,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 for stage in self.frameStages { stage.setContent(content) }
                 self.postProcess.setContent(content)
                 self.particleSystems = preparedParticleSystems
+                self.layerAnalysis = analysis
+                self.framePacing.changesOnItsOwn = FramePacing.changesOnItsOwn(
+                    analysis, particles: !preparedParticleSystems.isEmpty, cameraShake: content.camera.shake)
+                self.framePacing.wake(.interactive, at: self.wallTime())
                 self.transforms = content.transforms
                 self.objectMotions = content.motions
                 self.objectIDs = content.objectIDs
@@ -608,6 +661,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 self.lastCameraMotion = nil
                 self.lastTextSizes.removeAll()
                 self.textFrameCache.removeAll()
+                self.textRaster.reset()
                 self.textRasterScales.removeAll()
                 let running = self.scripts.wallpaper
                 self.scripts.setContent(content.scripts, visibility: content.visibility,
@@ -670,6 +724,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 let createdParticles = scriptParticles.removeValue(forKey: key)
                 let createdSound = scriptSounds.removeValue(forKey: id)
                 let createdModel = scriptModels.removeValue(forKey: key)
+                _ = scripts.wallpaper?.takePrepared(id)
                 if scriptLayers.removeValue(forKey: key) == nil, createdParticles == nil, createdSound == nil, createdModel == nil {
                     destroyedScriptLayers.insert(key)
                 }
@@ -724,9 +779,15 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// Builds an object a script created through the loader, off the main thread: a layer, a
     /// particle system (with its children) or a sound.
     private func buildScriptLayer(_ id: String, object: [String: SceneJSON]) {
-        guard let makeLayer = scripts.makeLayer else { return }
         var visible = true
         if case .bool(let flag)? = object["visible"] { visible = flag }
+        // Built on the script thread already: drawn in this frame, as WE's createLayer is.
+        if let key = Int(id), let built = scripts.wallpaper?.takePrepared(key) as? PreparedScriptObject {
+            destroyedScriptLayers.remove(id)
+            installScriptObject(built, id: id, visible: visible)
+            return
+        }
+        guard let makeLayer = scripts.makeLayer else { return }
         let generation = currentContentGeneration
         let wallpaper = scripts.wallpaper
         pendingScriptLayers += 1
@@ -745,26 +806,31 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 self.pendingScriptLayers -= 1
                 guard let built, self.isCurrentContentGeneration(generation), self.scripts.wallpaper === wallpaper else { return }
                 guard self.destroyedScriptLayers.remove(id) == nil else { return }
-                self.scripts.setBaseVisibility(visible, for: id)
-                switch built {
-                case .layer(let entry):
-                    self.scriptLayers[id] = (entry, visible)
-                    self.layers.append(entry)
-                    self.registerTextureAnimation(entry)
-                case .particles(let systems, let motion):
-                    self.scriptParticles[id] = (systems, motion)
-                    self.objectMotions[id] = motion
-                    self.particleSystems.append(contentsOf: systems)
-                case .sound(let content):
-                    self.scriptSounds[content.id] = content
-                    self.sounds.add(content)
-                case let .model(model, node, motion):
-                    self.scriptModels[id] = (model, node, motion)
-                    self.addScriptModel(id, (model, node, motion))
-                }
-                self.orderLayers()
+                self.installScriptObject(built, id: id, visible: visible)
             }
         }
+    }
+
+    /// Starts drawing a created object, in the scripts' order.
+    private func installScriptObject(_ built: PreparedScriptObject, id: String, visible: Bool) {
+        scripts.setBaseVisibility(visible, for: id)
+        switch built {
+        case .layer(let entry):
+            scriptLayers[id] = (entry, visible)
+            layers.append(entry)
+            registerTextureAnimation(entry)
+        case .particles(let systems, let motion):
+            scriptParticles[id] = (systems, motion)
+            objectMotions[id] = motion
+            particleSystems.append(contentsOf: systems)
+        case .sound(let content):
+            scriptSounds[content.id] = content
+            sounds.add(content)
+        case let .model(model, node, motion):
+            scriptModels[id] = (model, node, motion)
+            addScriptModel(id, (model, node, motion))
+        }
+        orderLayers()
     }
 
     /// A created object with its textures loaded (off the main thread).
@@ -852,7 +918,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     /// Renders a frame for `view` alone and presents it there.
     func draw(in view: MTKView) {
-        renderFrame(.view(view))
+        ThreadGuards.renderFrame { renderFrame(.view(view)) }
     }
 
     /// Renders one frame for all the displays of a shared scene, at the largest scene target any
@@ -861,7 +927,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// resolution scripts see.
     func renderShared(_ viewports: [SceneViewport]) {
         guard !viewports.isEmpty else { return }
-        renderFrame(.shared(viewports))
+        ThreadGuards.renderFrame { renderFrame(.shared(viewports)) }
     }
 
     /// Shows the latest shared frame (`renderShared`) on `view`, at its size and the user's
@@ -901,11 +967,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private func frameDestination(_ output: FrameOutput) -> SceneFrameDestination? {
         switch output {
         case .view(let view):
-            guard let descriptor = view.currentRenderPassDescriptor, let drawable = view.currentDrawable else { return nil }
-            let size = SIMD2<Float>(Float(drawable.texture.width), Float(drawable.texture.height))
-            return SceneFrameDestination(descriptor: descriptor, drawable: drawable,
-                                         pixelFormat: drawable.texture.pixelFormat, placement: placement,
-                                         viewports: [SceneViewport(view, drawableSize: size)])
+            // The drawable is taken late (`lateOutput`, F1): its size and format are the view's,
+            // which `selectDisplayOutput` set up.
+            let size = SIMD2<Float>(Float(view.drawableSize.width), Float(view.drawableSize.height))
+            guard size.x >= 1, size.y >= 1 else { return nil }
+            return SceneFrameDestination(descriptor: nil, drawable: nil, pixelFormat: view.colorPixelFormat,
+                                         placement: placement, viewports: [SceneViewport(view, drawableSize: size)])
         case .shared(let viewports):
             // The finished frame keeps the scene's aspect; each display places it when presenting.
             return SceneFrameDestination(descriptor: nil, drawable: nil, pixelFormat: pixelFormat, placement: .stretch,
@@ -956,6 +1023,78 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         return pass
     }
 
+    /// This frame's scene target and, when the scene draws straight into its output, that output.
+    private struct FrameTargets {
+        var scene: MTLTexture
+        /// Set when `scene` is the output (S2): the drawable's pass (or nil for a shared frame's,
+        /// which is `scene` itself) and the drawable.
+        var output: (descriptor: MTLRenderPassDescriptor?, drawable: CAMetalDrawable?)?
+        var sceneIsOutput: Bool { output != nil }
+    }
+
+    /// Off with `OWE_COMPOSITE_SKIP=0` (comparisons): the composite always runs.
+    var skipsIdentityComposite = ProcessInfo.processInfo.environment["OWE_COMPOSITE_SKIP"] != "0"
+    /// Frames drawn straight into their output, the composite skipped (tests, diagnostics).
+    private(set) var compositesSkipped = 0
+
+    /// The scene target for this frame. When the post-process would change nothing and the
+    /// composite would be a 1:1 copy (`ScenePostProcess.passesThrough`), the scene is drawn straight
+    /// into its output instead (S2): the view's drawable, taken now, or for a shared frame the
+    /// scene target is the frame its displays present. Else the scene's own target.
+    private func frameTargets(_ output: FrameOutput, destination: SceneFrameDestination, format: MTLPixelFormat,
+                              size: SIMD2<Int>, frame: BuiltinFrameContext) -> FrameTargets? {
+        let outputSize = SIMD2<Float>(Float(size.x), Float(size.y))
+        let passesThrough = skipsIdentityComposite && !postProcess.drawsHDR && format == destination.pixelFormat
+            && postProcess.passesThrough(
+                bloom: liveBloom(), extras: appExtras(), settings: renderSettings, colorCorrection: colorCorrection(),
+                display: displayOutput, sceneSize: size, outputSize: size,
+                placement: layerUniform(position: sceneSize / 2, size: sceneSize, opacity: 1, drawableSize: outputSize,
+                                        placement: destination.placement))
+        if passesThrough {
+            switch output {
+            case .view(let view):
+                if let descriptor = view.currentRenderPassDescriptor, let drawable = view.currentDrawable,
+                   drawable.texture.width == size.x, drawable.texture.height == size.y,
+                   drawable.texture.pixelFormat == format {
+                    // The scene's own target isn't needed while it draws into the drawable.
+                    sceneRenderTarget = nil
+                    sceneRenderTargetSize = .zero
+                    lastDrawableScene = drawable.texture
+                    return FrameTargets(scene: drawable.texture, output: (descriptor, drawable))
+                }
+            case .shared:
+                if let scene = sceneRenderTarget(pixelFormat: format, size: size) {
+                    sharedFrameTarget = nil
+                    return FrameTargets(scene: scene, output: (Self.outputPass(onto: scene), nil))
+                }
+            }
+        }
+        return sceneRenderTarget(pixelFormat: format, size: size).map { FrameTargets(scene: $0, output: nil) }
+    }
+
+    /// The pass the post-process composites onto, taken once the frame's work is encoded (F1): the
+    /// view's drawable, or the shared frame. Nil (the frame isn't shown) without a drawable.
+    private func lateOutput(_ output: FrameOutput, matching scene: MTLTexture)
+        -> (descriptor: MTLRenderPassDescriptor?, drawable: CAMetalDrawable?) {
+        switch output {
+        case .view(let view):
+            guard let descriptor = view.currentRenderPassDescriptor, let drawable = view.currentDrawable else { return (nil, nil) }
+            return (descriptor, drawable)
+        case .shared:
+            return (sharedFramePass(matching: scene), nil)
+        }
+    }
+
+    /// A pass whose attachment is `texture` as it stands: what the post-process's steps read when
+    /// the scene is its own output (nothing composites onto it).
+    private static func outputPass(onto texture: MTLTexture) -> MTLRenderPassDescriptor {
+        let pass = MTLRenderPassDescriptor()
+        pass.colorAttachments[0].texture = texture
+        pass.colorAttachments[0].loadAction = .load
+        pass.colorAttachments[0].storeAction = .store
+        return pass
+    }
+
     private func renderFrame(_ output: FrameOutput) {
         let frameStart = CACurrentMediaTime()
         let frameSignpost = OWESignpost.begin(OWESignpost.render, "frame")
@@ -963,6 +1102,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         renderTargetPool.endFrame()
         textFrameCache.beginGeneration()
         defer {
+            // Compiles this frame started: the next frame draws differently once they land.
+            if layerAnalysis != nil, pipelinesCompiling { analysedWarmUp = true }
             WallpaperServices.shared.endFrame()
             frameSignpost.end()
             frameTimeObserver?(CACurrentMediaTime() - frameStart)
@@ -982,24 +1123,14 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         renderPixelsPerUnit = SceneRenderResolution.pixelsPerUnit(sceneSize: sceneSize, drawableSize: renderDrawable,
                                                                   matchDisplay: renderSettings.sceneDetail == .matchDisplay)
         // A scene matched to a smaller display is drawn below full detail: what its buffers stand for.
-        fullDetailScale = SceneRenderResolution.pixelsPerUnit(sceneSize: sceneSize, drawableSize: renderDrawable)
-            / renderPixelsPerUnit
+        fullDetailScale = SceneRenderResolution.pixelsPerUnit(sceneSize: sceneSize, drawableSize: renderDrawable) / renderPixelsPerUnit
         // A content drawn in HDR draws into RGBA16F (docs/lighting-plan.md §2.6).
-        guard let sceneTexture = sceneRenderTarget(pixelFormat: postProcess.drawsHDR ? .rgba16Float : destination.pixelFormat),
-              let commandBuffer = commandQueue.makeCommandBuffer(),
-              let descriptor = destination.descriptor ?? sharedFramePass(matching: sceneTexture) else {
-            return
-        }
-        // What the post-process composites onto: the drawable, or the shared frame.
-        let realDrawableSize = SIMD2<Float>(Float(descriptor.colorAttachments[0].texture?.width ?? sceneTexture.width),
-                                            Float(descriptor.colorAttachments[0].texture?.height ?? sceneTexture.height))
+        let scenePixelFormat: MTLPixelFormat = postProcess.drawsHDR ? .rgba16Float : destination.pixelFormat
+        let sceneTargetSize = SceneRenderResolution.targetSize(sceneSize: sceneSize, pixelsPerUnit: renderPixelsPerUnit)
 
         // Layers and particles are drawn in scene units onto a target at the output's pixel
         // density; placement scaling happens once, in the final composite pass.
-        let drawableSize = SIMD2<Float>(Float(sceneTexture.width), Float(sceneTexture.height))
-        let multisampledScene = sceneMultisample(for: sceneTexture)
-        // Draws sample the last frame's copy; this frame's is made after the scene pass.
-        mipMappedTarget = mipMappedFrameBuffer?.target(matching: sceneTexture, commandBuffer: commandBuffer)
+        let drawableSize = SIMD2<Float>(Float(sceneTargetSize.x), Float(sceneTargetSize.y))
         clock.paused = pausesPlayback
         let rate = playbackRate?() ?? ScenePlaybackSpeed.speed(ofStore: wallpaperKey)
         if holdsClock { clock.hold(at: wallTime()) } else { clock.advance(to: wallTime(), speed: rate) }
@@ -1068,6 +1199,19 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                                             orthographicSize: isPerspective ? nil : sceneSize)
         effectFrame.lighting = frameLighting(eye: effectFrame.eyePosition, forward: effectFrame.viewForward,
                                              shake: motion.shake)
+        analyseLayers(effectFrame: effectFrame, motion: motion, drawableSize: drawableSize)
+        guard paceFrame(effectFrame, at: wallTime()) else { return }
+        // Only a frame that is drawn takes its targets, and the drawable only once its work is
+        // encoded (F1), unless the scene draws straight into it (`FrameTargets`, S2).
+        guard let commandBuffer = commandQueue.makeCommandBuffer(),
+              let targets = frameTargets(output, destination: destination, format: scenePixelFormat, size: sceneTargetSize,
+                                         frame: effectFrame) else { return }
+        let sceneTexture = targets.scene
+        if targets.sceneIsOutput { compositesSkipped += 1 }
+        let multisampledScene = sceneMultisample(for: sceneTexture)
+        // Draws sample the last frame's copy; this frame's is made after the scene pass.
+        mipMappedTarget = mipMappedFrameBuffer?.target(matching: sceneTexture, commandBuffer: commandBuffer)
+        encodedFrames &+= 1
         drawProbe?.record(lighting: effectFrame.lighting)
         frameShadowAtlas = drawShadows(frame: effectFrame, commandBuffer: commandBuffer)
         // Text is rasterised first so its effects run on the finished text, like an image layer's.
@@ -1403,20 +1547,26 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         stageContext.sceneDepth = frameDepth == nil ? nil : depthBuffer.texture
         stageContext.shadowAtlas = frameShadowAtlas
         for stage in frameStages { stage.encode(stageContext) }
-        // The scene-resolution target goes onto the real drawable, placement applied exactly once.
-        postProcess.encode(ScenePostProcess.Frame(
-            scene: sceneTexture, output: descriptor, commandBuffer: commandBuffer,
-            placement: layerUniform(position: sceneSize / 2, size: sceneSize, opacity: 1, drawableSize: realDrawableSize,
-                                    placement: destination.placement),
-            bloom: liveBloom(), extras: appExtras(), settings: renderSettings,
-            colorCorrection: colorCorrection(),
-            effects: effectGraph, builtins: effectFrame, values: timelines.values, fullDetailScale: fullDetailScale,
-            display: displayOutput))
-
-        if let drawable = destination.drawable {
-            commandBuffer.present(drawable)
-        } else {
-            sharedFrame = descriptor.colorAttachments[0].texture
+        // The drawable (F1: taken now, after the frame's work is encoded) or the shared frame.
+        let (descriptor, drawable) = targets.output ?? lateOutput(output, matching: sceneTexture)
+        if let descriptor {
+            // What the post-process composites onto: the drawable, or the shared frame.
+            let realDrawableSize = SIMD2<Float>(Float(descriptor.colorAttachments[0].texture?.width ?? sceneTexture.width),
+                                                Float(descriptor.colorAttachments[0].texture?.height ?? sceneTexture.height))
+            // The scene-resolution target goes onto the real drawable, placement applied exactly once.
+            postProcess.encode(ScenePostProcess.Frame(
+                scene: sceneTexture, output: descriptor, commandBuffer: commandBuffer,
+                placement: layerUniform(position: sceneSize / 2, size: sceneSize, opacity: 1, drawableSize: realDrawableSize,
+                                        placement: destination.placement),
+                bloom: liveBloom(), extras: appExtras(), settings: renderSettings,
+                colorCorrection: colorCorrection(),
+                effects: effectGraph, builtins: effectFrame, values: timelines.values, fullDetailScale: fullDetailScale,
+                display: displayOutput, sceneIsOutput: targets.sceneIsOutput))
+            if let drawable {
+                commandBuffer.present(drawable)
+            } else {
+                sharedFrame = descriptor.colorAttachments[0].texture
+            }
         }
         // A video frame's pixel buffer returns to the decoder's pool once released; hold each one
         // this frame sampled until the GPU is done reading it.
@@ -2497,6 +2647,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         context.hiddenEffects = scripted.hidden
         context.constantWrites = scripted.writes
         context.scriptRevision = scripted.revision
+        context.resolution = effectResolution(of: entry.layer.id)
         if renderSettings.sceneDetail == .matchDisplay {
             context.footprint = effectFootprint(entry, draw: draw, input: input)
             // Scene regions are drawn at the scene target's density, below full detail when the
@@ -2870,8 +3021,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         return target
     }
 
-    private func sceneRenderTarget(pixelFormat: MTLPixelFormat) -> MTLTexture? {
-        let pixelSize = SceneRenderResolution.targetSize(sceneSize: sceneSize, pixelsPerUnit: renderPixelsPerUnit)
+    private func sceneRenderTarget(pixelFormat: MTLPixelFormat, size pixelSize: SIMD2<Int>) -> MTLTexture? {
         if let sceneRenderTarget, sceneRenderTargetSize == pixelSize, sceneRenderTarget.pixelFormat == pixelFormat {
             return sceneRenderTarget
         }
@@ -2919,73 +3069,25 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let cacheKey = "\(stateKey)|\(value)|\(boxSize.x)|\(boxSize.y)|\(fontName)|\(sizeValue)|\(bold)|\(italic)|\(rasterScale)"
             + "|\(text.horizontalAlignment ?? "")|\(text.verticalAlignment ?? "")"
             + (fill.map { "|\($0)" } ?? "")
-        if let cached = textFrameCache.value(for: cacheKey) { return cached }
-
-        let requestedFont = fontName.isEmpty ? (text.font ?? "System") : fontName
-        let pixelSize = SceneTextLayout.pixelSize(pointSize: CGFloat(sizeValue))
-        var font = SceneFontRegistry.font(named: requestedFont, size: pixelSize)
-            ?? NSFont(name: requestedFont, size: pixelSize)
-            ?? NSFont.systemFont(ofSize: pixelSize)
-        if bold { font = NSFontManager.shared.convert(font, toHaveTrait: .boldFontMask) }
-        if italic { font = NSFontManager.shared.convert(font, toHaveTrait: .italicFontMask) }
-        let layout = SceneTextLayout(text: value, font: font, padding: text.padding,
-                                     horizontalAlignment: text.horizontalAlignment, verticalAlignment: text.verticalAlignment,
-                                     maxWidth: text.maxWidth, maxRows: text.maxRows, useEllipsis: text.useEllipsis,
-                                     blockAlign: text.blockAlign)
-        // A white coverage mask, as WE's `font` shader samples its glyphs: colour (authored and
-        // the user's), alpha and brightness are applied when the quad is drawn. Font effects colour
-        // a white raster themselves (`effectText`).
-        let white = NSColor(srgbRed: 1, green: 1, blue: 1, alpha: 1)
-        let color = text.effects != nil ? white
-            : fill.map { NSColor(srgbRed: CGFloat($0.x), green: CGFloat($0.y), blue: CGFloat($0.z), alpha: 1) } ?? white
-        let pixels = SceneTextRasterScale.clamped(rasterScale, boxSize: layout.boxSize)
-        guard let image = layout.rasterize(font: font, color: color, pixelsPerUnit: CGFloat(pixels)),
-              let texture = text.effects.map({ effectText(image, effects: $0, pointSize: sizeValue, pixelsPerUnit: pixels,
-                                                          fill: fill ?? SIMD3(repeating: 1)) })
-                ?? (try? SceneTextureUpload.texture(from: image, loader: textureLoader, device: device)) else {
-            OWELog.error(.scene, "Text layer \(layerID): could not rasterise \(layout.boxSize) at \(pixels) px/unit")
+        let slot = "\(stateKey)|\(fill != nil)|\(pixelsPerUnit == 1)"
+        for done in textRaster.takeFinished() {
+            if let result = done.result { textFrameCache.insert(result, for: done.key, cost: result.cost) }
+        }
+        if let cached = textFrameCache.value(for: cacheKey) {
+            textRaster.show(cached, slot: slot)
+            return (cached.frame, cached.baseSize)
+        }
+        // A changed string is rasterised on a pool job while the previous raster keeps drawing.
+        let request = SceneTextRasterRequest(text: text, value: value,
+                                             fontName: fontName.isEmpty ? (text.font ?? "System") : fontName,
+                                             pointSize: sizeValue, bold: bold, italic: italic,
+                                             rasterScale: rasterScale, fill: fill)
+        guard let (result, isNew) = textRaster.raster(key: cacheKey, slot: slot, request: request) else {
+            OWELog.error(.scene, "Text layer \(layerID): could not rasterise")
             return nil
         }
-        var coverage: MTLTexture?
-        do {
-            // Text with font effects has no coverage mask: it draws its coloured raster.
-            if text.effects == nil { coverage = try SceneTextureUpload.coverageTexture(from: image, device: device) }
-        } catch {
-            OWELog.error(.scene, "Text layer \(layerID): no coverage texture, drawn natively: \(error)")
-            coverage = nil
-        }
-        let entry = (RenderTextureFrame(texture: texture, duration: .greatestFiniteMagnitude,
-                                        uvOrigin: .zero, uvAxisX: SIMD2(1, 0), uvAxisY: SIMD2(0, 1), coverage: coverage,
-                                        textCenter: layout.boxCenter),
-                     layout.boxSize)
-        // Strings change every second for clocks; the LRU keeps the live ones and drops the rest.
-        textFrameCache.insert(entry, for: cacheKey,
-                              cost: texture.allocatedSize + (coverage?.allocatedSize ?? 0))
-        return entry
-    }
-
-    /// The glyphs of `image` (a white raster) with their font effects, as straight-alpha RGBA in
-    /// `fill`'s colour; nil (the caller logs) when it can't be read or uploaded.
-    private func effectText(_ image: CGImage, effects: SceneTextEffects, pointSize: Float, pixelsPerUnit: Float,
-                            fill: SIMD3<Float>) -> MTLTexture? {
-        let coverage: [UInt8]
-        do {
-            guard let white = try SceneTextureUpload.whiteCoverage(image) else { return nil }
-            coverage = white
-        } catch {
-            return nil
-        }
-        let rgba = effects.render(coverage: coverage, width: image.width, height: image.height,
-                                  pixelsPerUnit: pixelsPerUnit, pointSize: pointSize, fill: fill)
-        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: image.width,
-                                                                  height: image.height, mipmapped: false)
-        descriptor.usage = [.shaderRead]
-        guard let texture = device.makeTexture(descriptor: descriptor) else { return nil }
-        rgba.withUnsafeBytes { raw in
-            texture.replace(region: MTLRegionMake2D(0, 0, image.width, image.height), mipmapLevel: 0,
-                            withBytes: raw.baseAddress!, bytesPerRow: image.width * 4)
-        }
-        return texture
+        if isNew { textFrameCache.insert(result, for: cacheKey, cost: result.cost) }
+        return (result.frame, result.baseSize)
     }
 
     /// Maps a scene-unit position and size onto `drawableSize` pixels. Scene draws use
@@ -3019,6 +3121,56 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                             effects: SIMD4<Float>(1, 1, 1, 0), blur: 0,
                             colorEffects: SIMD4<Float>(0, 1, 0, 0.7), transform: SIMD4<Float>(0, 0, 0, 1),
                             transformScaleY: 1)
+    }
+
+    private var pipelinesCompiling: Bool {
+        hasPendingEffectPipelines || imageMaterials?.hasPendingPipelines == true
+            || particleMaterials?.hasPendingPipelines == true
+    }
+
+    /// Hands this frame's inputs to the layer analysis, which marks the layers they change dirty.
+    private func analyseLayers(effectFrame: BuiltinFrameContext, motion: CameraMotion, drawableSize: SIMD2<Float>) {
+        guard let layerAnalysis else { return }
+        var inputs = SceneLayerFrameInputs()
+        inputs.time = effectFrame.time
+        inputs.pointer = effectFrame.pointer
+        inputs.parallax = effectFrame.parallax
+        inputs.parallaxActive = motion.parallax != nil
+        inputs.shake = motion.shake
+        inputs.cameraShake = motion.cameraShake
+        inputs.audio = effectFrame.audio
+        inputs.audioLevel = motion.audioLevel
+        inputs.userPropertiesRevision = WallpaperServices.shared.propertyService.revision
+        inputs.scripts = scripts.state
+        inputs.animatedSites = animations?.sites ?? []
+        let shape = (layers: layers.count, target: drawableSize)
+        // A layer, effect or post-process whose pipeline is still compiling draws another way until
+        // it lands; nothing the analysis tracks says when.
+        let warming = pipelinesCompiling
+        inputs.sceneChanged = shape.layers != analysedShape.layers || shape.target != analysedShape.target
+            || warming || analysedWarmUp || textRaster.hasFinished
+        analysedShape = shape
+        analysedWarmUp = warming
+        layerAnalysis.update(inputs)
+    }
+
+    /// Whether this frame is drawn (`FramePacing`); called once the analysis has seen its inputs.
+    private func paceFrame(_ frame: BuiltinFrameContext, at now: CFTimeInterval) -> Bool {
+        let parallaxMoved = frame.parallax != pacedParallax
+        pacedParallax = frame.parallax
+        guard let analysis = layerAnalysis else { return framePacing.record(.smooth, at: now) }
+        // Models pose every frame (the analysis counts the scene's own as animated stages); one a
+        // script created after the load counts the same.
+        if !spatial.models.isEmpty { return framePacing.record(.smooth, at: now) || !skipsIdleFrames }
+        var particlesLive = false, particlesFollowCursor = false
+        for system in particleSystems where particleObjectID(system).map({ scripts.isVisible($0) }) ?? true {
+            particlesLive = true
+            if system.configuration.controlPoints.contains(where: \.followsCursor) { particlesFollowCursor = true; break }
+        }
+        let inputs = FrameDemandInputs(analysis: analysis, pointerMoved: frame.pointer != frame.pointerLast,
+                                       parallaxMoved: parallaxMoved, particlesLive: particlesLive,
+                                       particlesFollowCursor: particlesFollowCursor)
+        return framePacing.record(framePacing.classify(inputs), at: now) || !skipsIdleFrames
     }
 
     /// The cursor in scene units, mapped through the placement of the display it is on, or nil
@@ -3188,10 +3340,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     private func makeDXTTexture(_ source: TEXCompressedTexture) -> MTLTexture? {
         // DXT1/3/5 are BC1/BC2/BC3. Apple Silicon Macs consume those natively, so upload the
-        // blocks as-is instead of expanding them to rgba8Unorm through the decode kernel.
-        if let native = nativeBlockFormat(for: source.format), device.supportsBCTextureCompression {
-            return makeBlockCompressedTexture(source, pixelFormat: native.pixelFormat,
-                                              bytesPerBlock: native.bytesPerBlock)
+        // blocks as-is, with every stored mipmap, instead of expanding them to rgba8Unorm through
+        // the decode kernel.
+        if SceneTextureUpload.blockFormat(for: source.format) != nil, device.supportsBCTextureCompression {
+            return SceneTextureUpload.blockCompressedTexture(source, device: device)
         }
         let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm,
                                                                     width: source.width, height: source.height,
@@ -3218,34 +3370,6 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // Keep the decode asynchronous. Metal command buffers on the same queue
         // preserve ordering, so later scene draws wait on this texture on-GPU
         // without blocking the render/content thread here.
-        return texture
-    }
-
-    private func nativeBlockFormat(for format: UInt32) -> (pixelFormat: MTLPixelFormat, bytesPerBlock: Int)? {
-        switch format {
-        case 4: return (.bc3_rgba, 16)   // DXT5
-        case 6: return (.bc2_rgba, 16)   // DXT3
-        case 7: return (.bc1_rgba, 8)    // DXT1
-        case 12: return (.bc7_rgbaUnorm, 16)
-        default: return nil
-        }
-    }
-
-    private func makeBlockCompressedTexture(_ source: TEXCompressedTexture,
-                                            pixelFormat: MTLPixelFormat,
-                                            bytesPerBlock: Int) -> MTLTexture? {
-        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: pixelFormat,
-                                                                    width: source.width, height: source.height,
-                                                                    mipmapped: false)
-        descriptor.usage = [.shaderRead]
-        descriptor.storageMode = .shared
-        let blockBytesPerRow = ((source.width + 3) / 4) * bytesPerBlock
-        let requiredBytes = blockBytesPerRow * ((source.height + 3) / 4)
-        // A truncated payload would read out of bounds inside replace(region:).
-        guard source.data.count >= requiredBytes,
-              let texture = device.makeTexture(descriptor: descriptor) else { return nil }
-        texture.replace(region: MTLRegionMake2D(0, 0, source.width, source.height),
-                        mipmapLevel: 0, withBytes: source.data, bytesPerRow: blockBytesPerRow)
         return texture
     }
 

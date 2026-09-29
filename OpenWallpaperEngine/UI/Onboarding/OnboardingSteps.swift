@@ -92,8 +92,12 @@ struct OnboardingPrivacyStep: View {
                               title: "Privacy",
                               subtitle: "Everything stays on your Mac")
             OnboardingCard {
-                Text("Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and SteamCMD's login. Open Wallpaper Engine has no server and collects no data or analytics. It contacts Valve (Steam when you use the Workshop or install assets, and Valve's server to download SteamCMD) and GitHub, to check for and download app updates without sending personal data; you can turn update checks off in Settings › General. Web wallpapers may load their own online content.")
-                    .fixedSize(horizontal: false, vertical: true)
+                Label("Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and SteamCMD's login.",
+                      systemImage: "internaldrive")
+                Label("There are no servers, accounts, analytics or tracking.", systemImage: "hand.raised")
+                Label("The app contacts only Valve (Steam and SteamCMD) and GitHub (app updates). Web wallpapers may load their own online content.",
+                      systemImage: "network")
+                Label("You can turn update checks off in Settings › Updates.", systemImage: "arrow.down.circle")
             }
             OnboardingCard {
                 Label {

@@ -7,25 +7,25 @@
 
 import SwiftUI
 
+/// Settings › Plugins: optional features. Animated Thumbnails works now; Depth Map Generation is
+/// coming as downloadable plugins.
 struct PluginsPage: SettingsPage {
     @ObservedObject var viewModel: GlobalSettingsViewModel
-    
-    @State var bigGearAngle = 0.0
-    @State var smallGearAngle = 0.0
-    
+
     @AppStorage("TestAnimates", store: .app) var animates = false
-    
+
     @State var isExpanded = false
-    
+
     init(globalSettings viewModel: GlobalSettingsViewModel) {
         self.viewModel = viewModel
     }
-    
+
     var body: some View {
-        Form {
+        SettingsForm {
             Section {
                 VStack(spacing: 20) {
-                    Toggle("Animates", isOn: $animates)
+                    Toggle("Animated Thumbnails", isOn: $animates)
+                        .changedFromDefault(animates)
                     if isExpanded {
                         HStack {
                             GifImage("maxwell-cat", animates: animates)
@@ -69,31 +69,27 @@ struct PluginsPage: SettingsPage {
                     .buttonStyle(.borderless)
                     .frame(maxWidth: .infinity)
                 }
-                Text("Coming soon…")
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text("Depth Map Generation")
+                        Spacer()
+                        Text("Coming soon")
+                            .font(.caption.weight(.semibold))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(.quaternary, in: Capsule())
+                    }
+                    Text("Machine-learning models that generate depth maps for depth parallax in the scene editor, offered as downloadable plugins.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             } header: {
-                Label("Internal", systemImage: "square.dashed.inset.filled")
-            }
-            Section {
-                Text("None")
-            } header: {
-                Label("Third-party", systemImage: "person.3.fill")
+                Label("Plugins", systemImage: "puzzlepiece.extension.fill")
             } footer: {
                 Text("These settings take effect without saving.")
             }
+            .settingsAnchor(SettingsAnchor.plugins)
         }
-        .formStyle(.grouped)
-        .scrollContentBackground(.hidden)
-    }
-}
-
-struct PluginPage_Previews: PreviewProvider {
-    static var previews: some View {
-        SettingsView()
-            .environmentObject({ () -> GlobalSettingsViewModel in
-                let viewModel = GlobalSettingsViewModel()
-                viewModel.selection = 3
-                return viewModel
-            }())
-            .frame(width: 500, height: 600)
     }
 }

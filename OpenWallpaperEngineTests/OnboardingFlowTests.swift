@@ -20,11 +20,14 @@ final class OnboardingFlowTests: XCTestCase {
     func testEveryStepCanBeSkippedAndRevisited() {
         let flow = OnboardingFlow(defaults: defaults)
         XCTAssertTrue(OnboardingFlow.showsAtLaunch(defaults: defaults))
-        XCTAssertEqual(flow.step, .welcome)
+        XCTAssertEqual(flow.step, .notice)
         XCTAssertTrue(flow.isFirst)
         flow.back()
-        XCTAssertEqual(flow.step, .welcome)
+        XCTAssertEqual(flow.step, .notice)
+        flow.skip()
+        XCTAssertEqual(flow.step, .notice, "the Terms of Use and Privacy Policy notice can't be skipped")
 
+        flow.next()
         flow.next()
         flow.next()
         XCTAssertEqual(flow.step, .steam)
@@ -33,7 +36,7 @@ final class OnboardingFlowTests: XCTestCase {
         flow.skip()
         XCTAssertEqual(flow.step, .done)
         XCTAssertEqual(flow.skipped, [.steam, .assets, .wallpapers])
-        XCTAssertEqual(flow.completed, [.welcome, .privacy])
+        XCTAssertEqual(flow.completed, [.notice, .welcome, .privacy])
         flow.skip()
         XCTAssertEqual(flow.step, .done, "the last step can't be skipped past")
 
@@ -50,6 +53,7 @@ final class OnboardingFlowTests: XCTestCase {
     /// "Run setup again…" brings it back from the top.
     func testProgressIsKeptUntilFinishAndReopenStartsOver() {
         let flow = OnboardingFlow(defaults: defaults)
+        flow.next()
         flow.skip()
         flow.next()
         let resumed = OnboardingFlow(defaults: defaults)
@@ -59,12 +63,12 @@ final class OnboardingFlowTests: XCTestCase {
         resumed.go(to: .done)
         resumed.finish()
         XCTAssertFalse(OnboardingFlow.showsAtLaunch(defaults: defaults))
-        XCTAssertEqual(OnboardingFlow(defaults: defaults).step, .welcome)
+        XCTAssertEqual(OnboardingFlow(defaults: defaults).step, .notice)
 
         OnboardingFlow.reopen(defaults: defaults)
         XCTAssertTrue(OnboardingFlow.showsAtLaunch(defaults: defaults))
         let reopened = OnboardingFlow(defaults: defaults)
-        XCTAssertEqual(reopened.step, .welcome)
+        XCTAssertEqual(reopened.step, .notice)
         XCTAssertEqual(reopened.skipped, [])
     }
 
@@ -76,6 +80,7 @@ final class OnboardingFlowTests: XCTestCase {
         XCTAssertFalse(LanguageChange(atLaunch: .ja).needsRelaunch(for: .ja))
 
         let flow = OnboardingFlow(defaults: defaults)
+        flow.next()
         defaults.set(false, forKey: OnboardingFlow.showsAtLaunchKey)
         flow.prepareForRelaunch()
         XCTAssertTrue(OnboardingFlow.showsAtLaunch(defaults: defaults))

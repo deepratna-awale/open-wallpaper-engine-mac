@@ -69,7 +69,21 @@ final class AppUpdater: NSObject, ObservableObject {
             try updater.start()
         } catch {
             OWELog.error(.app, "Sparkle updater failed to start: \(error.localizedDescription)")
+            return
         }
+        // Sparkle's schedule alone waits up to its interval after launch (and skips the first run),
+        // so a launch checks at once when checks are on and the last one is over an hour old.
+        if Self.checksAtLaunch(automaticChecks: updater.automaticallyChecksForUpdates,
+                               lastCheck: updater.lastUpdateCheckDate, now: Date()) {
+            updater.checkForUpdatesInBackground()
+        }
+    }
+
+    /// Whether a launch checks for updates in the background right away.
+    static func checksAtLaunch(automaticChecks: Bool, lastCheck: Date?, now: Date) -> Bool {
+        guard automaticChecks else { return false }
+        guard let lastCheck else { return true }
+        return now.timeIntervalSince(lastCheck) >= 60 * 60
     }
 
     /// The app is quitting: stops a running shader prewarm (Sparkle installs on quit by itself).

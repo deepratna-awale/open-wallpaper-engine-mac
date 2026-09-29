@@ -20,8 +20,10 @@ extension AppDelegate {
 }
 
 struct AboutUsView: View {
+    static let authorsURL = URL(string: "https://github.com/deepratna-awale/open-wallpaper-engine-mac/blob/main/AUTHORS.md")!
+
     var body: some View {
-        VStack(spacing: 50) {
+        VStack(spacing: 28) {
             HStack {
                 Image(nsImage: NSImage(named: "AppIcon")!)
                 Divider().frame(maxHeight: 100)
@@ -31,26 +33,39 @@ struct AboutUsView: View {
                 }
             }
             VStack(spacing: 12) {
-                Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as! String)")
+                Text("Version \(AppVersion.current)")
+                    .textSelection(.enabled)
+                Text("Released and maintained by \("Deepratna Awale")",
+                     comment: "%@ is the maintainer's name")
+                    .font(.callout)
 
                 Divider().frame(width: 200)
 
-                Text("Contributors")
+                Text("Maintainer")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                creditRow("Deepratna Awale", handle: "deepratna-awale", role: "Maintainer")
+                    .font(.caption)
+
+                Text("Credits")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 4)
 
                 VStack(alignment: .leading, spacing: 6) {
                     creditRow("Haren Chen", handle: "haren724", role: "Original creator")
                     creditRow("MrWindDog", handle: "MrWindDog", role: "Upstream maintainer")
                     creditRow("Chen Chia Yang", handle: "Unayung", role: "Scene rendering, Workshop, multi-display")
-                    creditRow("Deepratna Awale", handle: "deepratna-awale", role: "Metal effects, music sync, remote media, logo redesign")
                     creditRow("1ris_W", handle: "Erica-Iris", role: "Chinese i18n")
                     creditRow("Klaus Zhu", handle: "klauszhu1105", role: "Original logo design")
                 }
                 .font(.caption)
+
+                Link("All contributors", destination: Self.authorsURL)
+                    .font(.caption)
             }
         }
-        .frame(width: 420, height: 380)
+        .frame(width: 440, height: 480)
     }
 }
 

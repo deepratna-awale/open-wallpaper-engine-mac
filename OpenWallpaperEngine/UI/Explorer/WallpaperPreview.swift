@@ -215,6 +215,7 @@ struct WallpaperPreview: SubviewOfContentView {
                                     .frame(maxWidth: .infinity)
                             }
                             .glassButtonStyle()
+                            .help("Scene Inspector", shortcut: .sceneInspector)
                         }
                     }
                     // MARK: Properties

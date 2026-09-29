@@ -63,12 +63,15 @@ final class PrelitEffectChainTests: XCTestCase {
         let deadline = Date().addingTimeInterval(30)
         while renderer.imageMaterialPrelitDraws < 2 || renderer.effectPassesEncoded < 2, Date() < deadline {
             RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+            // Every frame drawn, as if something changed: a still scene would otherwise go idle.
+            renderer.layerAnalysis?.invalidateAll()
             renderer.draw(in: view)
             renderer.lastCommandBuffer?.waitUntilCompleted()
         }
         XCTAssertGreaterThan(renderer.effectPassesEncoded, 0, "the chain never ran")
         let passes = renderer.effectPassesEncoded, prelit = renderer.imageMaterialPrelitDraws
         for _ in 0..<3 {
+            renderer.layerAnalysis?.invalidateAll()
             renderer.draw(in: view)
             renderer.lastCommandBuffer?.waitUntilCompleted()
         }

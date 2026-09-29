@@ -30,6 +30,8 @@ final class SceneRendererScripts {
     /// How long a draw waits for its script frame (`SceneScriptWallpaper.Timing.frameWait`; tests
     /// on a loaded machine wait longer).
     var frameWait = SceneScriptWallpaper.Timing.frameWait
+    /// The renderer's builder for created objects, handed to each new `SceneScriptWallpaper`.
+    var prepareCreated: SceneScriptWallpaper.PrepareCreated?
 
     init(services: SceneScriptServices?, screenID: String) {
         self.services = services
@@ -53,7 +55,8 @@ final class SceneRendererScripts {
         self.content = content
         guard let content, let services else { return }
         do {
-            let started = try SceneScriptWallpaper(content: content, services: services, screenID: screenID)
+            let started = try SceneScriptWallpaper(content: content, services: services, screenID: screenID,
+                                                   prepareCreated: prepareCreated)
             started?.onHalt = { [weak self] error in self?.onHalt?(error) }
             wallpaper = started
         } catch {

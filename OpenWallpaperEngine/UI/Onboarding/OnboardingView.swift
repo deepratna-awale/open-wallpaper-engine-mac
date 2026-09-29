@@ -7,7 +7,7 @@ enum OnboardingShortcut: Equatable {
     case displaySettings
 }
 
-/// The setup assistant: welcome and language, privacy, Steam and SteamCMD, the Wallpaper Engine
+/// The setup assistant: the Terms of Use and Privacy Policy notice, welcome and language, privacy, Steam and SteamCMD, the Wallpaper Engine
 /// assets, bringing wallpapers in, and a summary. Every step can be skipped and visited again,
 /// here with Back or the step list, or later with Settings › General › "Run setup again…".
 struct OnboardingView: View {
@@ -20,11 +20,19 @@ struct OnboardingView: View {
     @ObservedObject var imports: OnboardingImports
     /// Called with the shortcut the user picked on the Done step, before the sheet closes.
     let onShortcut: (OnboardingShortcut?) -> Void
+    /// The notice's checkbox: ticked already when the current documents were confirmed before.
+    @State private var noticeRead = !LegalNotice.isDue(in: .app)
+
+    /// Setup is done and only the notice is due (the documents changed, or setup was finished
+    /// before the notice existed): the notice shows on its own.
+    private var isNoticeOnly: Bool { !globalSettingsViewModel.isFirstLaunch }
 
     var body: some View {
         VStack(spacing: 0) {
-            stepList
-            Divider()
+            if !isNoticeOnly {
+                stepList
+                Divider()
+            }
             ScrollView {
                 stepBody
                     .frame(maxWidth: 560)
@@ -59,6 +67,7 @@ struct OnboardingView: View {
                     .background(step == flow.step ? Color.accentColor.opacity(0.15) : Color.clear, in: Capsule())
                 }
                 .buttonStyle(.plain)
+                .disabled(step != .notice && !noticeRead)
                 .help(flow.skipped.contains(step) ? Text("Skipped. Click to set it up.") : Text(Self.title(of: step)))
             }
         }
@@ -69,6 +78,7 @@ struct OnboardingView: View {
     private func icon(for step: OnboardingStep) -> String {
         if flow.completed.contains(step) && step != flow.step { return "checkmark.circle.fill" }
         switch step {
+        case .notice: return "doc.text"
         case .welcome: return "hand.wave"
         case .privacy: return "hand.raised"
         case .steam: return "person.badge.key"
@@ -80,6 +90,7 @@ struct OnboardingView: View {
 
     static func title(of step: OnboardingStep) -> LocalizedStringKey {
         switch step {
+        case .notice: return "Terms"
         case .welcome: return "Welcome"
         case .privacy: return "Privacy"
         case .steam: return "Steam"
@@ -91,7 +102,18 @@ struct OnboardingView: View {
 
     @ViewBuilder
     private var stepBody: some View {
+        if isNoticeOnly {
+            OnboardingNoticeStep(isRead: $noticeRead, isUpdate: true)
+        } else {
+            flowStepBody
+        }
+    }
+
+    @ViewBuilder
+    private var flowStepBody: some View {
         switch flow.step {
+        case .notice:
+            OnboardingNoticeStep(isRead: $noticeRead, isUpdate: false)
         case .welcome:
             OnboardingWelcomeStep(settings: globalSettingsViewModel, onRelaunch: relaunch)
         case .privacy:
@@ -113,18 +135,45 @@ struct OnboardingView: View {
     // MARK: Footer
 
     private var footer: some View {
+        if isNoticeOnly { return AnyView(noticeFooter) }
+        return AnyView(flowFooter)
+    }
+
+    /// The notice on its own: Continue records it and closes the sheet.
+    private var noticeFooter: some View {
+        HStack {
+            Spacer()
+            Button("Continue") {
+                LegalNotice.acknowledge(in: .app)
+                globalSettingsViewModel.needsLegalNotice = false
+                dismiss()
+            }
+            .glassButtonStyle(.prominent)
+            .keyboardShortcut(.defaultAction)
+            .disabled(!noticeRead)
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 14)
+    }
+
+    private var flowFooter: some View {
         HStack {
             Button("Back") {
                 withAnimation(.easeInOut(duration: 0.15)) { flow.back() }
             }
             .disabled(flow.isFirst)
             Spacer()
+            if flow.step == .notice && !noticeRead {
+                Text("Tick the box to continue.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
             if let note = skipNote {
                 Text(note)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            if !flow.isLast {
+            if !flow.isLast && flow.step != .notice {
                 Button("Skip for Now") {
                     withAnimation(.easeInOut(duration: 0.15)) { flow.skip() }
                 }
@@ -133,11 +182,16 @@ struct OnboardingView: View {
                 if flow.isLast {
                     finish(nil)
                 } else {
+                    if flow.step == .notice {
+                        LegalNotice.acknowledge(in: .app)
+                        globalSettingsViewModel.needsLegalNotice = false
+                    }
                     withAnimation(.easeInOut(duration: 0.15)) { flow.next() }
                 }
             }
             .glassButtonStyle(.prominent)
             .keyboardShortcut(.defaultAction)
+            .disabled(flow.step == .notice && !noticeRead)
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 14)

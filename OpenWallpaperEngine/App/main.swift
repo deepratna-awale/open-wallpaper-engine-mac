@@ -21,6 +21,9 @@ MainActor.assumeIsolated {
 	// windows, start playback or overwrite the user's saved state.
 	if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
 		NSApplication.shared.delegate = AppDelegate.shared
+	} else {
+		// A test host has no delegate, so it marks its own Dock icon (`DockBadge.test`).
+		DockBadge.current.apply(to: NSApplication.shared.dockTile)
 	}
 	NSApplication.shared.run()
 }

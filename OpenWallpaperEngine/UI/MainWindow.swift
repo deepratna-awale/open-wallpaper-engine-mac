@@ -25,7 +25,7 @@ class MainWindowController: NSWindowController, NSWindowDelegate {
             backing: .buffered, defer: false))
         self.window.delegate = self
         self.window.isReleasedWhenClosed = false
-        self.window.title = "Open Wallpaper Engine \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as! String)"
+        self.window.title = "Open Wallpaper Engine \(AppVersion.current)"
         // The content's split view, toolbar and inspector draw the window chrome (glass on macOS 26).
         self.window.toolbarStyle = .unified
         // The tabs sit in the toolbar's centre; the title stays for the Window menu and Mission Control.

@@ -9,117 +9,119 @@ import Cocoa
 
 extension AppDelegate {
     func setMainMenu() {
-        // 主菜单
-        let appMenu = NSMenuItem()
-        appMenu.submenu = NSMenu(title: "Open Wallpaper Engine")
-        appMenu.submenu?.items = [
-            // 在此处添加子菜单项
-            .init(title: String(localized: "About Open Wallpaper Engine"), action: #selector(self.showAboutUs), keyEquivalent: ""),
-            .init(title: String(localized: "Check for Updates…"), action: #selector(checkForUpdates), keyEquivalent: ""),
-            .separator(),
-            .init(title: String(localized: "Settings..."), action: #selector(openSettingsWindow), keyEquivalent: ","),
-            .separator(),
-            .init(title: String(localized: "Quit"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"),
-            .separator(),
-            .init(title: String(localized: "Hide"), action: #selector(NSApplication.hide(_:)), keyEquivalent: "h"),
-            {
-                let item = NSMenuItem(title: String(localized: "Hide Others"), action: #selector(NSApplication.hideOtherApplications(_:)), keyEquivalent: "h")
-                item.keyEquivalentModifierMask = [.command, .option]
-                return item
-            }()
-        ]
-        
-        // 导入子菜单
-        let importMenu = NSMenuItem(title: String(localized: "Import"), action: nil, keyEquivalent: "")
-        importMenu.submenu = NSMenu()
-        importMenu.submenu?.items = [
-            .init(title: String(localized: "Wallpaper from Folder"), action: #selector(openImportFromFolderPanel), keyEquivalent: "i"),
-            .init(title: String(localized: "Wallpapers in Folders"), action: nil, keyEquivalent: "")
-        ]
-        
-        // 文件菜单
-        let fileMenu = NSMenuItem()
-        fileMenu.submenu = NSMenu(title: String(localized: "File"))
-        fileMenu.submenu?.items = [
-            // 在此处添加子菜单项
-            importMenu,
-            .separator(),
-            .init(title: String(localized: "Close Window"), action: #selector(AppDelegate.shared.mainWindowController.window.performClose), keyEquivalent: "w")
-        ]
-        
-        // Edit Menu
-        let editMenu = NSMenuItem()
-        editMenu.submenu = NSMenu(title: String(localized: "Edit"))
-        editMenu.submenu?.items = [
-            .init(title: String(localized: "Undo"), action: #selector(UndoManager.undo), keyEquivalent: "z"),
-            .init(title: String(localized: "Redo"), action: #selector(UndoManager.redo), keyEquivalent: "Z"),
-            .separator(),
-            .init(title: String(localized: "Cut"), action: #selector(NSText.cut(_:)), keyEquivalent: "x"),
-            .init(title: String(localized: "Copy"), action: #selector(NSText.copy(_:)), keyEquivalent: "c"),
-            .init(title: String(localized: "Paste"), action: #selector(NSText.paste(_:)), keyEquivalent: "v"),
-            .init(title: String(localized: "Delete All"), action: #selector(NSText.delete(_:)), keyEquivalent: String(NSBackspaceCharacter)),
-            .separator(),
-            .init(title: String(localized: "Select All"), action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
-        ]
-        
-        // 查看菜单
-        let viewMenu = NSMenuItem()
-        viewMenu.submenu = NSMenu(title: String(localized: "View"))
-        viewMenu.submenu?.items = [
-            {
-                let item = NSMenuItem(title: String(localized: "Show Filter Results"), action: #selector(self.toggleFilter), keyEquivalent: "s")
-                item.keyEquivalentModifierMask = [.command, .control]
-                return item
-            }(),
-            .separator(),
-            {
-                let item = NSMenuItem(title: String(localized: "Enter Full Screen"), action: #selector(AppDelegate.shared.mainWindowController.window.toggleFullScreen(_:)), keyEquivalent: "f")
-                item.keyEquivalentModifierMask = [.command, .control]
-                return item
-            }()
-        ]
-        
-        // 窗口菜单
-        let windowMenu = NSMenuItem()
-        windowMenu.submenu = NSMenu(title: String(localized: "Window"))
-        windowMenu.submenu?.items = [
-            {
-                let item = NSMenuItem(title: String(localized: "Wallpaper Explorer"), action: #selector(openMainWindow), keyEquivalent: "1")
-                item.keyEquivalentModifierMask = [.command, .shift]
-                return item
-            }()
-        ]
-        
-        // Debug Submenu -> Help Menu
-        let debugMenu = NSMenuItem(title: String(localized: "Debug"), action: nil, keyEquivalent: "")
-        debugMenu.submenu = NSMenu()
-        debugMenu.submenu?.items = [
-            .init(title: String(localized: "Reset First Launch"), action: #selector(resetFirstLaunch), keyEquivalent: ""),
-            .init(title: String(localized: "Toggle Desktop Wallpaper Window (Debug)"), action: #selector(toggleDesktopWallpaperWindow), keyEquivalent: ""),
-            .init(title: String(localized: "Reset All Trusted Wallpapers"), action: #selector(resetTrustedWallpapers), keyEquivalent: "")
-        ]
-        
-        // Help Menu
-        let helpMenu = NSMenuItem()
-        helpMenu.submenu = NSMenu(title: String(localized: "Help"))
-        helpMenu.submenu?.items = [
-            debugMenu
-        ]
-        
-        // Main Menu
-        let mainMenu = NSMenu()
-        mainMenu.items = [
-            appMenu,
-            fileMenu,
-            editMenu,
-            viewMenu,
-            windowMenu,
-            helpMenu
-        ]
-        
-        NSApplication.shared.mainMenu = mainMenu
+        NSApplication.shared.mainMenu = Self.makeMainMenu()
+        NSApp.servicesMenu = NSApplication.shared.mainMenu?.items.first?.submenu?.item(withTag: MainMenuTag.services)?.submenu
+        NSApp.windowsMenu = NSApplication.shared.mainMenu?.item(withTag: MainMenuTag.window)?.submenu
+        NSApp.helpMenu = NSApplication.shared.mainMenu?.item(withTag: MainMenuTag.help)?.submenu
     }
-    
+
+    /// The menu bar: the standard App, File, Edit, View, Window and Help menus, with a Playback
+    /// menu for the wallpapers. Shortcuts come from `AppShortcut.all`.
+    static func makeMainMenu() -> NSMenu {
+        func submenu(_ title: String, tag: Int = 0, _ items: [NSMenuItem]) -> NSMenuItem {
+            let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+            item.tag = tag
+            item.submenu = NSMenu(title: title)
+            item.submenu?.items = items
+            return item
+        }
+        func item(_ name: AppShortcut.Name, _ action: Selector, target: AnyObject? = nil) -> NSMenuItem {
+            NSMenuItem(AppShortcut[name], action: action, target: target)
+        }
+        func plain(_ title: LocalizedStringResource, _ action: Selector?) -> NSMenuItem {
+            NSMenuItem(title: String(localized: title), action: action, keyEquivalent: "")
+        }
+
+        let servicesItem = plain("Services", nil)
+        servicesItem.submenu = NSMenu()
+        servicesItem.tag = MainMenuTag.services
+
+        let appMenu = submenu("Open Wallpaper Engine", [
+            plain("About Open Wallpaper Engine", #selector(showAboutUs)),
+            item(.checkForUpdates, #selector(checkForUpdates)),
+            .separator(),
+            item(.settings, #selector(openSettingsWindow)),
+            .separator(),
+            servicesItem,
+            .separator(),
+            item(.hide, #selector(NSApplication.hide(_:))),
+            item(.hideOthers, #selector(NSApplication.hideOtherApplications(_:))),
+            plain("Show All", #selector(NSApplication.unhideAllApplications(_:))),
+            .separator(),
+            item(.quit, #selector(NSApplication.terminate(_:))),
+        ])
+
+        let fileMenu = submenu(String(localized: "File"), [
+            item(.importFolder, #selector(openImportFromFolderPanel)),
+            .separator(),
+            item(.closeWindow, #selector(NSWindow.performClose(_:))),
+        ])
+
+        let editMenu = submenu(String(localized: "Edit"), [
+            item(.undo, Selector(("undo:"))),
+            item(.redo, Selector(("redo:"))),
+            .separator(),
+            item(.cut, #selector(NSText.cut(_:))),
+            item(.copy, #selector(NSText.copy(_:))),
+            item(.paste, #selector(NSText.paste(_:))),
+            plain("Delete", #selector(NSText.delete(_:))),
+            item(.selectAll, #selector(NSText.selectAll(_:))),
+            .separator(),
+            item(.find, #selector(focusSearch)),
+        ])
+
+        let viewMenu = submenu(String(localized: "View"), [
+            item(.installed, #selector(showInstalledTab)),
+            item(.workshop, #selector(browseWorkshop)),
+            item(.downloads, #selector(showDownloadsTab)),
+            item(.playlists, #selector(showPlaylistsTab)),
+            .separator(),
+            item(.showFilters, #selector(toggleFilter)),
+            .separator(),
+            item(.fullScreen, #selector(NSWindow.toggleFullScreen(_:))),
+        ])
+
+        let playbackMenu = submenu(String(localized: "Playback"), [
+            item(.pauseResume, #selector(togglePauseWallpapers)),
+            item(.muteUnmute, #selector(toggleMuteWallpapers)),
+            .separator(),
+            item(.nextWallpaper, #selector(nextPlaylistWallpaper)),
+            item(.previousWallpaper, #selector(previousPlaylistWallpaper)),
+        ])
+
+        let windowMenu = submenu(String(localized: "Window"), tag: MainMenuTag.window, [
+            item(.minimize, #selector(NSWindow.performMiniaturize(_:))),
+            plain("Zoom", #selector(NSWindow.performZoom(_:))),
+            .separator(),
+            item(.wallpaperExplorer, #selector(openMainWindow)),
+            item(.sceneInspector, #selector(showSceneInspectorForDisplayedWallpaper)),
+            .separator(),
+            plain("Bring All to Front", #selector(NSApplication.arrangeInFront(_:))),
+        ])
+
+        let debugMenu = submenu(String(localized: "Debug"), [
+            plain("Reset First Launch", #selector(resetFirstLaunch)),
+            plain("Toggle Desktop Wallpaper Window (Debug)", #selector(toggleDesktopWallpaperWindow)),
+            plain("Reset All Trusted Wallpapers", #selector(resetTrustedWallpapers)),
+        ])
+
+        let helpMenu = submenu(String(localized: "Help"), tag: MainMenuTag.help, [
+            item(.help, #selector(openHelp)),
+            plain("Support & FAQ", #selector(openSupportWebpage)),
+            plain("Keyboard Shortcuts", #selector(showKeyboardShortcuts)),
+            .separator(),
+            plain("Terms of Use", #selector(showTermsOfUse)),
+            plain("Privacy Policy", #selector(showPrivacyPolicy)),
+            plain("Report a Security Issue", #selector(openSecurityReport)),
+            .separator(),
+            debugMenu,
+        ])
+
+        let mainMenu = NSMenu()
+        mainMenu.items = [appMenu, fileMenu, editMenu, viewMenu, playbackMenu, windowMenu, helpMenu]
+        return mainMenu
+    }
+
     @objc func toggleDesktopWallpaperWindow() {
         if wallpaperWindows.values.first?.isVisible == true {
             for window in wallpaperWindows.values { window.orderOut(nil) }
@@ -127,7 +129,7 @@ extension AppDelegate {
             for window in wallpaperWindows.values { window.orderFront(nil) }
         }
     }
-    
+
     /// Disabled (see `validateMenuItem`) while Sparkle is off or busy.
     @objc func checkForUpdates() {
         updater.checkForUpdates()
@@ -138,17 +140,37 @@ extension AppDelegate {
     }
 }
 
+/// Tags that find the menus AppKit manages (the window list, Help's search field).
+enum MainMenuTag {
+    static let window = 9001
+    static let help = 9002
+    static let services = 9003
+}
+
 extension NSMenuItem {
     public convenience init(title: String, systemImage: String, action: Selector?, keyEquivalent: String) {
         self.init(title: title, action: action, keyEquivalent: keyEquivalent)
         self.image = NSImage(systemSymbolName: systemImage, accessibilityDescription: nil)
-        
+
     }
 }
 
 extension AppDelegate: NSMenuItemValidation {
     func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
-        if menuItem.action == #selector(checkForUpdates) { return updater.canCheckForUpdates }
-        return true
+        switch menuItem.action {
+        case #selector(checkForUpdates):
+            return updater.canCheckForUpdates
+        case #selector(togglePauseWallpapers):
+            menuItem.title = wallpaperViewModel.playRate == 0
+                ? String(localized: "Resume Wallpapers") : String(localized: "Pause Wallpapers")
+            return true
+        case #selector(toggleMuteWallpapers):
+            menuItem.title = wallpaperViewModel.playVolume == 0 ? String(localized: "Unmute") : String(localized: "Mute")
+            return true
+        case #selector(nextPlaylistWallpaper), #selector(previousPlaylistWallpaper):
+            return wallpaperViewModel.activePlaylist?.items.isEmpty == false
+        default:
+            return true
+        }
     }
 }

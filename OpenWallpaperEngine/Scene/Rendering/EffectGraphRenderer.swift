@@ -57,7 +57,11 @@ final class EffectGraphRenderer {
         var standInSizes: [ObjectIdentifier: SIMD2<Float>] = [:]
         /// The size the chain's buffers stand for (the input's, or `Context.inputStandInSize`).
         var standInSize = SIMD2<Int>(0, 0)
+        /// How far the chain's blur-like buffers are reduced (`EffectResolutionPolicy`).
+        var resolution = EffectResolutionPolicy.full
         var programs: [[UniformProgram?]] = []
+        /// Each render pass's pipeline, resolved once the chain is ready; held so a trim never drops one in use.
+        var pipelines: [[MTLRenderPipelineState?]] = []
         /// Last output of a chain that doesn't change over time, and what produced it. When the chain
         /// draws its last pass into the scene, the output is that pass's input, and `staticDrawn` the pass.
         var staticOutput: (key: StaticChainKey, output: MTLTexture)?
@@ -299,6 +303,8 @@ final class EffectGraphRenderer {
         /// region or text at a scene target matched to a smaller display); nil for its own. Its
         /// built-ins report it, as for `footprint`.
         var inputStandInSize: SIMD2<Int>? = nil
+        /// How far blur-like effect buffers may be reduced (`EffectResolutionPolicy`).
+        var resolution = EffectResolutionPolicy.full
 
         var targetFormats: TargetFormats { TargetFormats(frameBuffer: frameBufferFormat, output: outputFormat ?? frameBufferFormat) }
     }
@@ -337,27 +343,32 @@ final class EffectGraphRenderer {
         let width = input.width
         let height = input.height
         let state: LayerState
-        let chain = effects.map { $0.passes.map(\.variantKey) }
         let targetFormats = context.targetFormats
+        // Compared in place, without building the chain's keys every frame (N5).
+        let chain = effects.map { $0.passes.map(\.variantKey) }
         if let existing = layers[layerID], existing.chain == chain, existing.targetFormats == targetFormats {
             state = existing
         } else {
             if let stale = layers[layerID] { recycleTargets(stale) }
             state = LayerState(width: width, height: height)
-            state.chain = chain
+            state.chain = effects.map { $0.passes.map(\.variantKey) }
             state.targetFormats = targetFormats
             layers[layerID] = state
         }
         if !state.ready {
             guard let formats = readyFormats(effects, targetFormats: targetFormats) else { return (nil, nil) }
             state.formats = formats
+            state.pipelines = resolvedPipelines(effects, formats: formats)
             state.programs = effects.map { effect in
                 effect.passes.map { pass in pass.variant.map { UniformProgram(layout: $0.uniforms, constants: pass.constants) } }
             }
+            state.resolution = context.resolution
             allocateTargets(state, effects: effects, width: width, height: height, standIn: standIn)
             state.ready = true
-        } else if state.width != width || state.height != height || state.standInSize != standIn {
+        } else if state.width != width || state.height != height || state.standInSize != standIn
+                    || state.resolution != context.resolution {
             recycleTargets(state)
+            state.resolution = context.resolution
             allocateTargets(state, effects: effects, width: width, height: height, standIn: standIn)
         }
         // The leading effects that don't change over time, when later ones do: their output is kept
@@ -436,7 +447,7 @@ final class EffectGraphRenderer {
                 case .render:
                     guard let variant = pass.variant, let program = state.programs[effectIndex][passIndex],
                           let format = state.formats[effectIndex][passIndex],
-                          let pipeline = readyPipeline(pass, format: format) else { continue }
+                          let pipeline = state.pipelines[effectIndex][passIndex] else { continue }
                     let standInSizes = StandIn(input: input, inputSize: standIn, targets: state.standInSizes,
                                                label: passTimer == nil ? "" : Self.passLabel(layerID, effect: effect, pass: passIndex))
                     if let last, last == (effectIndex, passIndex) {
@@ -689,9 +700,17 @@ final class EffectGraphRenderer {
         return ready ? formats : nil
     }
 
-    private func readyPipeline(_ pass: SceneEffectPassPlan, format: MTLPixelFormat) -> MTLRenderPipelineState? {
-        let key = Self.pipelineKey(pass, format: format)
-        return pipelineLock.withLock { pipelines[key] }
+    /// Every render pass's pipeline once `readyFormats` found them all compiled (a failed one is
+    /// nil, and its pass is skipped). Held by the layer, so a trim that drops idle pipelines from
+    /// the cache never drops one a layer still draws with.
+    private func resolvedPipelines(_ effects: [SceneEffectPlan], formats: [[MTLPixelFormat?]]) -> [[MTLRenderPipelineState?]] {
+        pipelineLock.withLock {
+            effects.enumerated().map { effectIndex, effect in
+                effect.passes.enumerated().map { passIndex, pass in
+                    formats[effectIndex][passIndex].flatMap { pipelines[Self.pipelineKey(pass, format: $0)] }
+                }
+            }
+        }
     }
 
     private static func pipelineKey(_ pass: SceneEffectPassPlan, format: MTLPixelFormat) -> String {
@@ -972,8 +991,8 @@ final class EffectGraphRenderer {
         state.standInSize = standIn
         state.standInSizes = [:]
         let drawnSmaller = standIn != SIMD2(width, height)
-        func remember(_ texture: MTLTexture?, standsFor size: SIMD2<Int>) {
-            guard drawnSmaller, let texture else { return }
+        func remember(_ texture: MTLTexture?, standsFor size: SIMD2<Int>, reduced: Bool = false) {
+            guard drawnSmaller || reduced, let texture else { return }
             state.standInSizes[ObjectIdentifier(texture)] = SIMD2(Float(size.x), Float(size.y))
         }
         // The ping-pong targets are made when a pass first draws into one (`pingTarget`).
@@ -981,10 +1000,10 @@ final class EffectGraphRenderer {
         state.pingB = nil
         state.fbos = effects.map { effect in
             Dictionary(effect.fbos.compactMap { fbo -> (String, MTLTexture)? in
-                let size = Self.fboSize(fbo, width: width, height: height)
+                let (size, reducedFrom) = state.resolution.fboSize(fbo, in: effect, width: width, height: height)
                 let format = Self.pixelFormat(fbo.format, frameBuffer: state.targetFormats.frameBuffer)
                 let texture = target(width: size.x, height: size.y, format: format)
-                remember(texture, standsFor: Self.fboSize(fbo, width: standIn.x, height: standIn.y))
+                remember(texture, standsFor: Self.fboSize(fbo, width: standIn.x, height: standIn.y), reduced: reducedFrom != nil)
                 if let texture { state.pendingClears.append((texture, Self.clearColor(fbo.clear))) }
                 return texture.map { (fbo.name, $0) }
             }, uniquingKeysWith: { a, _ in a })
@@ -1054,10 +1073,10 @@ final class EffectGraphRenderer {
         let drawnSmaller = state.standInSize != SIMD2(state.width, state.height)
         for (index, effect) in effects.enumerated() where index < state.fbos.count {
             for fbo in effect.fbos where state.fbos[index][fbo.name] == nil {
-                let size = Self.fboSize(fbo, width: state.width, height: state.height)
+                let (size, reducedFrom) = state.resolution.fboSize(fbo, in: effect, width: state.width, height: state.height)
                 let format = Self.pixelFormat(fbo.format, frameBuffer: state.targetFormats.frameBuffer)
                 guard let texture = target(width: size.x, height: size.y, format: format) else { continue }
-                if drawnSmaller {
+                if drawnSmaller || reducedFrom != nil {
                     let standsFor = Self.fboSize(fbo, width: state.standInSize.x, height: state.standInSize.y)
                     state.standInSizes[ObjectIdentifier(texture)] = SIMD2(Float(standsFor.x), Float(standsFor.y))
                 }

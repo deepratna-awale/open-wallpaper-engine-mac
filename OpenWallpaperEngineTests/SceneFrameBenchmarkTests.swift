@@ -14,8 +14,10 @@ import simd
 /// `SceneRenderResolution`), as a whole, without its particle systems, with them alone, and under
 /// each particle budget that thins it (`ParticleBudget`). A row gives the GPU time (the least of the
 /// measured frames, and the median), the render thread's CPU time for `draw(in:)` (median; it
-/// includes the wait for the script frame) and the script thread's frame (median). Written to
-/// `OWE_BENCH_OUT` when set.
+/// includes the wait for the script frame; its thread-CPU clock beside it leaves waits out) and the
+/// script thread's frame (median), plus the load (content preparation, then until the renderer holds
+/// it), the peak GPU allocation and process footprint. Written to `OWE_BENCH_OUT` when set, and as
+/// JSON rows to `OWE_SCENE_BENCH_JSON`, for later runs to diff against.
 final class SceneFrameBenchmarkTests: XCTestCase {
     private struct Measure {
         var gpuMin = 0.0
@@ -23,6 +25,36 @@ final class SceneFrameBenchmarkTests: XCTestCase {
         var cpuMedian = 0.0
         var scriptMedian = 0.0
         var particleCapacity = 0
+        var gpuMean = 0.0
+        var gpuP99 = 0.0
+        /// The render thread's own CPU time for `draw(in:)` (thread CPU clock, median), without waits.
+        var threadCPUMedian = 0.0
+        /// From `setContent` to the renderer holding the content (pipelines and textures ready).
+        var firstFrameSeconds = 0.0
+        var peakGPUAllocatedBytes = 0
+        var peakFootprintBytes = 0
+    }
+
+    /// One row of `OWE_SCENE_BENCH_JSON`, for later runs to diff against.
+    private struct Row: Encodable {
+        let wallpaper: String
+        let title: String
+        let width: Int
+        let height: Int
+        let variant: String
+        let contentSeconds: Double
+        let firstFrameSeconds: Double
+        let gpuMin: Double
+        let gpuMedian: Double
+        let gpuMean: Double
+        let gpuP99: Double
+        let cpuMedian: Double
+        let threadCPUMedian: Double
+        let scriptMedian: Double
+        let effectMPix: Double
+        let peakGPUAllocatedMB: Double
+        let peakFootprintMB: Double
+        let particleCapacity: Int
     }
 
     private enum Variant: CustomStringConvertible {
@@ -44,8 +76,10 @@ final class SceneFrameBenchmarkTests: XCTestCase {
 
     /// The render settings `OWE_SCENE_BENCH_MODES` asks for, by name (comma separated): `half` (WE's
     /// texture reduction), `match` (scene detail matched to the display), `desktop` (one pixel per
-    /// point), and `+` joins them (`match+desktop`). With the variable set, only these and `full`
-    /// are drawn.
+    /// point), `textures` ("Optimise textures" on: BC7 colour images, `TexturePreparation`), and `+`
+    /// joins them (`match+desktop`). With the variable set, only these and `full` are drawn.
+    /// `OWE_SCENE_BENCH_TEXTURES=1` adds the `textures` row to the default variants, so the rows
+    /// show the setting off (`full`) and on.
     private static func renderModes(_ request: String) -> [Variant] {
         request.split(separator: ",").map { name in
             var settings = SceneRenderSettings()
@@ -55,6 +89,7 @@ final class SceneFrameBenchmarkTests: XCTestCase {
                 case "half": settings.textureReduction = 2
                 case "match": settings.sceneDetail = .matchDisplay
                 case "desktop": settings.renderResolution = .desktop
+                case "textures": settings.optimiseTextures = true
                 default: XCTFail("unknown render mode \(part)")
                 }
             }
@@ -84,7 +119,9 @@ final class SceneFrameBenchmarkTests: XCTestCase {
             let parts = entry.split(separator: "x").compactMap { Int($0) }
             return parts.count == 2 ? SIMD2(parts[0], parts[1]) : nil
         }
-        var lines = ["Scene frame cost (ms): GPU min / median, render-thread CPU median, script median; particle capacity"]
+        var lines = ["Scene frame cost (ms): GPU min / median / p99, render-thread wall and thread-CPU median, script median; "
+                     + "load s (content, first frame), peak GPU allocation and footprint MB; particle capacity"]
+        var rows: [Row] = []
         for directory in try Self.wallpapers(request, library: library) {
             guard let data = FileManager.default.contents(atPath: directory.appending(path: "project.json").path),
                   let project = try? JSONDecoder().decode(WEProject.self, from: data), // optional: not every folder is a wallpaper
@@ -98,7 +135,10 @@ final class SceneFrameBenchmarkTests: XCTestCase {
             var unlimited = SceneRenderSettings()
             unlimited.particleBudget = .unlimited
             model.setRenderSettings(unlimited)
-            guard let content = model.metalContent() else {
+            let contentStart = CACurrentMediaTime()
+            let prepared = model.metalContent()
+            let contentSeconds: Double = CACurrentMediaTime() - contentStart
+            guard let content = prepared else {
                 lines.append("\(directory.lastPathComponent): no content")
                 continue
             }
@@ -113,6 +153,9 @@ final class SceneFrameBenchmarkTests: XCTestCase {
                 variants += Self.renderModes(modes)
             } else {
                 if effects > 0 { variants.append(.withoutEffects) }
+            }
+            if environment["OWE_SCENE_BENCH_TEXTURES"] == "1", environment["OWE_SCENE_BENCH_MODES"]?.isEmpty ?? true {
+                variants += Self.renderModes("textures")
             }
             if environment["OWE_SCENE_BENCH_MODES"]?.isEmpty ?? true, !content.particleSystems.isEmpty {
                 variants += [.withoutParticles, .particlesOnly]
@@ -150,9 +193,22 @@ final class SceneFrameBenchmarkTests: XCTestCase {
                         model.setRenderSettings(unlimited)
                     }
                     let measure = try frameCost(drawn, size: size, settings: settings, device: device, services: services)
-                    lines.append(String(format: "  %4dx%-4d %-16@ gpu %7.3f / %7.3f  cpu %6.3f  script %6.3f  particles %d",
+                    lines.append(String(format: "  %4dx%-4d %-16@ gpu %7.3f / %7.3f / %7.3f  cpu %6.3f (thread %6.3f)  script %6.3f  "
+                                        + "load %.2f+%.2f s  gpu mem %.0f MB  footprint %.0f MB  particles %d",
                                         size.x, size.y, variant.description as NSString, measure.gpuMin, measure.gpuMedian,
-                                        measure.cpuMedian, measure.scriptMedian, measure.particleCapacity))
+                                        measure.gpuP99, measure.cpuMedian, measure.threadCPUMedian, measure.scriptMedian,
+                                        contentSeconds, measure.firstFrameSeconds, Double(measure.peakGPUAllocatedBytes) / 1e6,
+                                        Double(measure.peakFootprintBytes) / 1e6, measure.particleCapacity))
+                    let effectMPix: Double = drawn.layers.reduce(0) { $0 + Self.effectPixels($1) } / 1e6
+                    rows.append(Row(wallpaper: directory.lastPathComponent, title: project.title, width: size.x, height: size.y,
+                                    variant: variant.description, contentSeconds: contentSeconds,
+                                    firstFrameSeconds: measure.firstFrameSeconds, gpuMin: measure.gpuMin,
+                                    gpuMedian: measure.gpuMedian, gpuMean: measure.gpuMean, gpuP99: measure.gpuP99,
+                                    cpuMedian: measure.cpuMedian, threadCPUMedian: measure.threadCPUMedian,
+                                    scriptMedian: measure.scriptMedian, effectMPix: effectMPix,
+                                    peakGPUAllocatedMB: Double(measure.peakGPUAllocatedBytes) / 1e6,
+                                    peakFootprintMB: Double(measure.peakFootprintBytes) / 1e6,
+                                    particleCapacity: measure.particleCapacity))
                     print(lines.last!)
                 }
             }
@@ -175,6 +231,36 @@ final class SceneFrameBenchmarkTests: XCTestCase {
         if let path = environment["OWE_BENCH_OUT"] {
             try report.write(toFile: path, atomically: true, encoding: .utf8)
         }
+        if let path = environment["OWE_SCENE_BENCH_JSON"], !path.isEmpty {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            try encoder.encode(rows).write(to: URL(fileURLWithPath: path), options: .atomic)
+        }
+    }
+
+    /// The calling thread's CPU time so far, in milliseconds (its own work, not time spent waiting).
+    static func threadCPUMilliseconds() -> Double {
+        Double(clock_gettime_nsec_np(CLOCK_THREAD_CPUTIME_ID)) / 1e6
+    }
+
+    /// The process's physical footprint (what Activity Monitor calls Memory), in bytes; 0 if unknown.
+    static func processFootprint() -> Int {
+        var info = task_vm_info_data_t()
+        var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<natural_t>.size)
+        let result = withUnsafeMutablePointer(to: &info) { pointer in
+            pointer.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count)
+            }
+        }
+        return result == KERN_SUCCESS ? Int(info.phys_footprint) : 0
+    }
+
+    /// The value at `fraction` (0…1) of `values` sorted; 0 for none.
+    static func percentile(_ values: [Double], _ fraction: Double) -> Double {
+        guard !values.isEmpty else { return 0 }
+        let sorted = values.sorted()
+        let index = min(sorted.count - 1, Int((Double(sorted.count - 1) * fraction).rounded(.up)))
+        return sorted[index]
     }
 
     /// The pixels `layer`'s effect passes render a frame: each render pass's target, the layer's
@@ -310,10 +396,12 @@ final class SceneFrameBenchmarkTests: XCTestCase {
         view.isPaused = true
         renderer.setPlacement(.fill)
         renderer.renderSettings = settings
+        let loadStart = CACurrentMediaTime()
         renderer.setContent(content)
         defer { renderer.releaseContent() }
         let deadline = Date().addingTimeInterval(60)
-        while !renderer.hasContent, Date() < deadline { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
+        while !renderer.hasContent, Date() < deadline { RunLoop.main.run(until: Date().addingTimeInterval(0.002)) }
+        let firstFrameSeconds: Double = CACurrentMediaTime() - loadStart
         if let materials = ParticleMaterialRenderer(device: device) {
             for plan in content.particleSystems.compactMap(\.material) {
                 _ = materials.waitUntilCompiled(plan, pixelFormat: .bgra8Unorm)
@@ -321,21 +409,27 @@ final class SceneFrameBenchmarkTests: XCTestCase {
         }
         let viewport = SceneViewport(drawableSize: SIMD2(Float(size.x), Float(size.y)),
                                      pointSize: SIMD2(Float(size.x / 2), Float(size.y / 2)), cursor: nil, frameRateLimit: 30)
-        var gpu: [Double] = [], cpu: [Double] = [], script: [Double] = []
+        var gpu: [Double] = [], cpu: [Double] = [], threadCPU: [Double] = [], script: [Double] = []
+        var peakAllocated = 0, peakFootprint = 0
         for frame in 0..<210 {
             if frame < 150 { RunLoop.main.run(until: Date().addingTimeInterval(1.0 / 60)) } else { RunLoop.main.run(until: Date()) }
             let scriptFrames = renderer.scripts.wallpaper?.frameTiming.frames ?? 0
             let start = CACurrentMediaTime()
+            let threadStart = Self.threadCPUMilliseconds()
             // The frame a display (or the displays of a shared wallpaper) shows, at the asked size: an
             // offscreen view's drawable can fall back to its bounds' size, one pixel per point.
             renderer.renderShared([viewport])
             let elapsed = CACurrentMediaTime() - start
+            let threadElapsed: Double = Self.threadCPUMilliseconds() - threadStart
+            peakAllocated = max(peakAllocated, device.currentAllocatedSize)
+            peakFootprint = max(peakFootprint, Self.processFootprint())
             guard let commandBuffer = renderer.lastCommandBuffer else { continue }
             commandBuffer.waitUntilCompleted()
             renderer.scripts.wallpaper?.waitUntilIdle()
             guard frame >= 150 else { continue }
             gpu.append((commandBuffer.gpuEndTime - commandBuffer.gpuStartTime) * 1000)
             cpu.append(elapsed * 1000)
+            threadCPU.append(threadElapsed)
             if let timing = renderer.scripts.wallpaper?.frameTiming, timing.frames > scriptFrames {
                 script.append(timing.recentMilliseconds.last ?? 0)
             }
@@ -345,6 +439,28 @@ final class SceneFrameBenchmarkTests: XCTestCase {
             total + Int((Float(ParticleBudget.capacity(of: system)) * system.budgetScale).rounded())
         }
         return Measure(gpuMin: gpu.min() ?? 0, gpuMedian: Self.median(gpu), cpuMedian: Self.median(cpu),
-                       scriptMedian: Self.median(script), particleCapacity: capacity)
+                       scriptMedian: Self.median(script), particleCapacity: capacity,
+                       gpuMean: gpu.isEmpty ? 0 : gpu.reduce(0, +) / Double(gpu.count), gpuP99: Self.percentile(gpu, 0.99),
+                       threadCPUMedian: Self.median(threadCPU), firstFrameSeconds: firstFrameSeconds,
+                       peakGPUAllocatedBytes: peakAllocated, peakFootprintBytes: peakFootprint)
+    }
+}
+
+/// The benchmark's measuring helpers, which run without the library.
+final class SceneFrameBenchmarkHelperTests: XCTestCase {
+    func testPercentileAndCounters() {
+        let values: [Double] = (1...100).map(Double.init)
+        let p99: Double = SceneFrameBenchmarkTests.percentile(values, 0.99)
+        XCTAssertEqual(p99, 100)
+        let none: Double = SceneFrameBenchmarkTests.percentile([], 0.5)
+        XCTAssertEqual(none, 0)
+        let footprint: Int = SceneFrameBenchmarkTests.processFootprint()
+        XCTAssertGreaterThan(footprint, 0)
+        let before: Double = SceneFrameBenchmarkTests.threadCPUMilliseconds()
+        var sum = 0.0
+        for index in 0..<2_000_000 { sum += Double(index).squareRoot() }
+        XCTAssertGreaterThan(sum, 0)
+        let after: Double = SceneFrameBenchmarkTests.threadCPUMilliseconds()
+        XCTAssertGreaterThan(after, before)
     }
 }
