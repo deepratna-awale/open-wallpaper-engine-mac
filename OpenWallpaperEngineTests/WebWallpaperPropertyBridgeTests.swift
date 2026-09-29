@@ -51,4 +51,20 @@ final class WebWallpaperPropertyBridgeTests: XCTestCase {
         XCTAssertEqual(samples[64], 0)
         XCTAssertTrue(WebWallpaperPropertyBridge.audioDeliveryScript(samples).hasPrefix("window.__oweDeliverAudio"))
     }
+
+    func testGeneralPropertiesCarryFPS() {
+        XCTAssertTrue(WebWallpaperPropertyBridge.applyGeneralPropertiesScript(fps: 15).contains("{fps:15}"))
+    }
+
+    func testPauseScriptDefinesWEHooksAndQueues() {
+        let script = WebWallpaperPropertyBridge.pauseScript
+        for token in ["___wpxPause", "___wpxUnpause", "wpxPausePseudoAnimationAll", "pending.raf",
+                      "suspend()", "WeakRef", "CAP = 1000"] {
+            XCTAssertTrue(script.contains(token), token)
+        }
+        XCTAssertEqual(WebWallpaperPropertyBridge.wpxPauseScript(true), "window.___wpxPause&&window.___wpxPause();")
+        XCTAssertTrue(WebWallpaperPropertyBridge.wpxPauseScript(false).contains("___wpxUnpause()"))
+        // The heartbeat keeps the originals so a paused page's queue doesn't stop it.
+        XCTAssertTrue(WebWallpaperPropertyBridge.bootstrapScript.contains("window.___wpxRAF"))
+    }
 }

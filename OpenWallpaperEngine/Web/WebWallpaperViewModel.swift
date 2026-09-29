@@ -7,6 +7,7 @@
 
 import WebKit
 import SwiftUI
+import Combine
 
 class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     @Published var currentWallpaper: WEWallpaper
@@ -40,6 +41,8 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     /// hears audio whether or not a scene is running next to it.
     private var audioClock: AudioSpectrumClock?
     private var propertyObserver: NSObjectProtocol?
+    /// Resends WE's general properties when the user's FPS changes.
+    private var fpsObserver: AnyCancellable?
 
     /// Whose user properties the page gets: its display's, or the shared ones while synced.
     let propertyScope: WallpaperPropertyScope
@@ -115,6 +118,7 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
 
     /// Restarts the heartbeat clock when the gate opens and stops it when it closes.
     private func reportHeartbeatGate() {
+        updateAudioTimer()
         guard pageHasBeaten else { return }
         renderWatchdog?.recordHeartbeat(from: ObjectIdentifier(self), expectingMore: heartbeatGate.expectsHeartbeats)
     }
@@ -129,6 +133,8 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     // MARK: Wallpaper Engine web API
 
     func installBridge(on controller: WKUserContentController) {
+        controller.addUserScript(WKUserScript(source: WebWallpaperPropertyBridge.pauseScript,
+                                              injectionTime: .atDocumentStart, forMainFrameOnly: true))
         controller.addUserScript(WKUserScript(source: WebWallpaperPropertyBridge.bootstrapScript,
                                               injectionTime: .atDocumentStart, forMainFrameOnly: true))
         controller.add(WeakScriptMessageHandler(self), name: WebWallpaperPropertyBridge.audioMessageName)
@@ -183,7 +189,17 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
             WebWallpaperPropertyBridge.payload(properties: properties, values: values)) {
             webView.evaluateJavaScript(script, completionHandler: nil)
         }
-        webView.evaluateJavaScript(WebWallpaperPropertyBridge.applyGeneralPropertiesScript(fps: 30), completionHandler: nil)
+        let settings = AppDelegate.shared.globalSettingsViewModel
+        webView.evaluateJavaScript(WebWallpaperPropertyBridge.applyGeneralPropertiesScript(fps: Int(settings.settings.fps)),
+                                   completionHandler: nil)
+        if fpsObserver == nil {
+            fpsObserver = settings.$settings.map { Int($0.fps) }.removeDuplicates().dropFirst()
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] fps in
+                    self?.webView?.evaluateJavaScript(WebWallpaperPropertyBridge.applyGeneralPropertiesScript(fps: fps),
+                                                      completionHandler: nil)
+                }
+        }
     }
 
     private func propertyChanged(_ notification: Notification) {
@@ -201,6 +217,21 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     }
 
     fileprivate func audioListenerRegistered() {
+        audioRegistered = true
+        updateAudioTimer()
+    }
+
+    /// Whether the page registered an audio listener; the timer runs only while it can be seen.
+    private var audioRegistered = false
+
+    /// Runs the 30 Hz delivery only while the page is registered, playing and visible: a paused,
+    /// covered or sleeping page would drop the values, so the timer and its IPC stop too.
+    private func updateAudioTimer() {
+        guard audioRegistered, heartbeatGate.expectsHeartbeats else {
+            audioTimer?.invalidate()
+            audioTimer = nil
+            return
+        }
         guard audioTimer == nil else { return }
         let clock = audioClock ?? WallpaperServices.shared.makeAudioSpectrumClock(publishes: false)
         audioClock = clock
@@ -240,10 +271,13 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
 
     private func applyPaused(to webView: WKWebView) {
         webView.setAllMediaPlaybackSuspended(isPaused, completionHandler: nil)
-        webView.evaluateJavaScript(WebWallpaperPropertyBridge.setPausedScript(isPaused), completionHandler: nil)
+        // WE's order: the page hears setPaused, then its callbacks and media are held.
+        webView.evaluateJavaScript(WebWallpaperPropertyBridge.setPausedScript(isPaused) +
+                                   WebWallpaperPropertyBridge.wpxPauseScript(isPaused), completionHandler: nil)
     }
 
     func stopAudio() {
+        audioRegistered = false
         audioTimer?.invalidate()
         audioTimer = nil
     }

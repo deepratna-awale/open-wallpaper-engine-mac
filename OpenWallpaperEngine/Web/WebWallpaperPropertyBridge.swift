@@ -89,6 +89,91 @@ enum WebWallpaperPropertyBridge {
         """
     }
 
+    /// WE's `___wpxPause()` / `___wpxUnpause()` (its `___STAHP` script), called after `setPaused`.
+    static func wpxPauseScript(_ paused: Bool) -> String {
+        paused ? "window.___wpxPause&&window.___wpxPause();" : "window.___wpxUnpause&&window.___wpxUnpause();"
+    }
+
+    /// Injected at document start, modelled on WE's `___STAHP` script: while paused, animation
+    /// frame, interval and timeout callbacks are queued (at most 1000 each) and replayed on
+    /// unpause; CSS animations, playing media and running AudioContexts are paused and only the
+    /// ones it paused are resumed.
+    static let pauseScript = """
+    (function(){
+      if (window.___wpxPause) return;
+      var RAF = window.requestAnimationFrame.bind(window), INT = window.setInterval.bind(window),
+          TIM = window.setTimeout.bind(window), CAP = 1000;
+      var state = { isPaused: false }, pending = { raf: [], int: [], tim: [] };
+      var paused = { anims: [], media: [], audio: [] }, contexts = [];
+      window.___wpxRAF = RAF; window.___wpxINT = INT; window.___wpxTIM = TIM;
+      var run = function(fn, args){ if (typeof fn === 'function') fn.apply(window, args); else eval(String(fn)); };
+      window.requestAnimationFrame = function(fn){
+        return RAF(function(t){
+          if (state.isPaused) { if (pending.raf.length < CAP) pending.raf.push(fn); return; }
+          fn(t);
+        });
+      };
+      window.setInterval = function(fn, ms){
+        var args = Array.prototype.slice.call(arguments, 2);
+        return INT(function(){
+          if (state.isPaused) { if (pending.int.length < CAP) pending.int.push([fn, args]); return; }
+          run(fn, args);
+        }, ms);
+      };
+      window.setTimeout = function(fn, ms){
+        var args = Array.prototype.slice.call(arguments, 2);
+        return TIM(function(){
+          if (state.isPaused) { if (pending.tim.length < CAP) pending.tim.push([fn, args]); return; }
+          run(fn, args);
+        }, ms);
+      };
+      ['AudioContext', 'webkitAudioContext'].forEach(function(name){
+        var Base = window[name];
+        if (typeof Base !== 'function' || typeof WeakRef !== 'function') return;
+        var Wrapped = function(){
+          var ctx = new (Function.prototype.bind.apply(Base, [null].concat(Array.prototype.slice.call(arguments))))();
+          contexts.push(new WeakRef(ctx));
+          return ctx;
+        };
+        Wrapped.prototype = Base.prototype;
+        window[name] = Wrapped;
+      });
+      var style = null;
+      window.___wpxPause = function(){
+        if (state.isPaused) return; state.isPaused = true;
+        if (!style) {
+          style = document.createElement('style');
+          style.textContent = '.wpxPausePseudoAnimationAll,.wpxPausePseudoAnimationAll *,.wpxPausePseudoAnimationAll *::before,.wpxPausePseudoAnimationAll *::after{animation-play-state:paused!important}';
+          (document.head || document.documentElement).appendChild(style);
+        }
+        document.documentElement.classList.add('wpxPausePseudoAnimationAll');
+        if (document.getAnimations) document.getAnimations().forEach(function(a){
+          if (a.playState === 'running') { a.pause(); paused.anims.push(a); }
+        });
+        document.querySelectorAll('video,audio').forEach(function(m){
+          if (!m.paused) { m.pause(); paused.media.push(m); }
+        });
+        contexts = contexts.filter(function(r){
+          var c = r.deref(); if (!c) return false;
+          if (c.state === 'running') { c.suspend(); paused.audio.push(c); }
+          return true;
+        });
+      };
+      window.___wpxUnpause = function(){
+        if (!state.isPaused) return; state.isPaused = false;
+        document.documentElement.classList.remove('wpxPausePseudoAnimationAll');
+        paused.anims.forEach(function(a){ try { a.play(); } catch(e) {} });
+        paused.media.forEach(function(m){ try { var p = m.play(); if (p && p.catch) p.catch(function(){}); } catch(e) {} });
+        paused.audio.forEach(function(c){ try { c.resume(); } catch(e) {} });
+        paused = { anims: [], media: [], audio: [] };
+        var raf = pending.raf, int = pending.int, tim = pending.tim;
+        pending = { raf: [], int: [], tim: [] };
+        raf.forEach(function(fn){ window.requestAnimationFrame(fn); });
+        int.concat(tim).forEach(function(c){ try { run(c[0], c[1]); } catch(e) { console.error(e); } });
+      };
+    })();
+    """
+
     static func applyGeneralPropertiesScript(fps: Int) -> String {
         """
         (function(){var l=window.wallpaperPropertyListener;\
@@ -150,15 +235,18 @@ enum WebWallpaperPropertyBridge {
       // its requestAnimationFrame intervals since the last post. A hidden page gets no frame
       // callbacks, so the gap across a hide is not a frame. A page whose script hangs posts
       // nothing, which the watchdog notices while the page should be visible.
+      // The originals, so the heartbeat keeps its own clock when the pause script queues the page's.
+      var RAF = window.___wpxRAF || window.requestAnimationFrame.bind(window);
+      var INT = window.___wpxINT || window.setInterval.bind(window);
       var last = 0, intervals = [];
       document.addEventListener('visibilitychange', function(){ last = 0; });
       var beat = function(t){
         if (document.visibilityState === 'visible') { if (last) intervals.push((t - last) / 1000); last = t; }
         else { last = 0; }
-        window.requestAnimationFrame(beat);
+        RAF(beat);
       };
-      window.requestAnimationFrame(beat);
-      setInterval(function(){
+      RAF(beat);
+      INT(function(){
         var message = { visible: document.visibilityState === 'visible', intervals: intervals };
         try { window.webkit.messageHandlers.\(frameMessageName).postMessage(message); } catch(e) {}
         intervals = [];
