@@ -131,7 +131,6 @@ Kaynaktan ilk derleme Sparkle Swift paketini indirir. Kaynaktan derlenen sürüm
 - **Nadir parçacık özellikleri** — Küre, kutu ve katman görüntüsü dışındaki yayıcı şekilleri ile bir sistemin ilkinden sonraki işleyicileri desteklenmez.
 - **WebM videoları** — WebM (VP8/VP9) WebKit üzerinden oynatılır, bu yüzden müzik senkronizasyonu efektleri ona uygulanmaz.
 - **Bazı JPEG küçük resimleri** — Az sayıda TEXB biçim 1 dosyası, macOS’in çözemediği standart dışı JPEG verileri içerir.
-- **Performans ayarlarının kapsamı** — Kalite, kenar yumuşatma ve son işleme seçenekleri sahne duvar kâğıtları için tasarlanmıştır ve video ile web duvar kâğıtları üzerinde sınırlı etkiye sahiptir.
 - **Ses özellikleri izin gerektirir** — Ekran ve Sistem Sesi Kaydı izni olmadan ses görselleştiricileri ve sese duyarlı SceneScript yalnızca sessizlik alır.
 - **Wallpaper Engine ile yan yana karşılaştırılmadı** – Wallpaper Engine macOS'ta çalışmaz; bu yüzden davranış Wallpaper Engine'in kendi dosyalarını ve gölgelendiricilerini izler. Bazı uç durumlar (zaman çizelgeleri, aydınlatma, HDR çıkışı) doğrulanmadı.
 

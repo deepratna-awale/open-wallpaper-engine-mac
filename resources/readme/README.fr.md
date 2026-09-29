@@ -131,7 +131,6 @@ La première compilation depuis les sources télécharge le paquet Swift Sparkle
 - **Fonctions de particules rares** — Les formes d’émetteur autres que sphère, boîte et image de calque, ainsi que les moteurs de rendu après le premier d’un système, ne sont pas pris en charge.
 - **Vidéos WebM** — Le WebM (VP8/VP9) est lu par WebKit ; les effets de synchronisation musicale ne s’y appliquent donc pas.
 - **Certaines vignettes JPEG** — Un petit nombre de fichiers TEXB au format 1 contiennent des données JPEG non standard que macOS ne peut pas décoder.
-- **Portée des réglages de performances** — Les options de qualité, d’anticrénelage et de post-traitement sont conçues pour les fonds d’écran de scène et n’ont qu’un effet limité sur les fonds d’écran vidéo et web.
 - **Les fonctionnalités audio nécessitent une autorisation** — Sans l’autorisation Enregistrement de l’écran et des sons du système, les visualiseurs audio et les scripts SceneScript réactifs au son ne reçoivent que du silence.
 - **Pas comparé côte à côte avec Wallpaper Engine** – Wallpaper Engine ne fonctionne pas sous macOS : le comportement suit les fichiers et shaders de Wallpaper Engine ; certains cas limites (chronologies, éclairage, sortie HDR) ne sont pas confirmés.
 

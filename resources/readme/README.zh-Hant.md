@@ -131,7 +131,6 @@ open "OpenWallpaperEngine.xcodeproj"
 - **少見的粒子功能** — 不支援球體、盒體與圖層影像以外的發射器形狀，也不支援系統中第一個之後的渲染器。
 - **WebM 影片** — WebM（VP8/VP9）透過 WebKit 播放，因此音樂同步效果不適用。
 - **部分 JPEG 縮覽圖** — 少數 TEXB 格式 1 檔案含有 macOS 無法解碼的非標準 JPEG 資料。
-- **效能設定的適用範圍** — 品質、消除鋸齒與後處理選項是為場景背景圖片而設計，對影片與網頁背景圖片的效果有限。
 - **音訊功能需要權限** — 若未授予「螢幕錄製」權限，音訊視覺化與音訊回應式 SceneScript 只會收到無聲訊號。
 - **未與 Wallpaper Engine 並排比對** — Wallpaper Engine 無法在 macOS 上執行，因此行為依據 Wallpaper Engine 本身的檔案與著色器實作；部分邊界情況（時間軸、光照、HDR 輸出）尚未確認。
 

@@ -131,7 +131,6 @@ Beim ersten Build aus dem Quellcode wird das Swift-Paket Sparkle geladen. Aus de
 - **Seltene Partikelfunktionen** – Emitterformen außer Kugel, Box und Ebenenbild sowie weitere Renderer nach dem ersten eines Systems werden nicht unterstützt.
 - **WebM-Videos** – WebM (VP8/VP9) läuft über WebKit, daher wirken Musiksynchronisations-Effekte darauf nicht.
 - **Einige JPEG-Miniaturen** – Einige wenige Dateien im Format TEXB 1 enthalten nicht standardkonforme JPEG-Daten, die macOS nicht decodieren kann.
-- **Geltungsbereich der Leistungseinstellungen** – Die Optionen für Qualität, Antialiasing und Post-Processing sind für Szenen-Hintergrundbilder gedacht und wirken sich auf Video- und Web-Hintergrundbilder nur begrenzt aus.
 - **Audiofunktionen erfordern eine Berechtigung** – Ohne die Berechtigung „Aufnahme von Bildschirm & Systemaudio“ erhalten Audio-Visualisierungen und audioreaktives SceneScript nur Stille.
 - **Nicht direkt mit Wallpaper Engine verglichen** – Wallpaper Engine läuft nicht unter macOS, daher folgt das Verhalten den eigenen Dateien und Shadern von Wallpaper Engine; einige Sonderfälle (Zeitleisten, Beleuchtung, HDR-Ausgabe) sind unbestätigt.
 

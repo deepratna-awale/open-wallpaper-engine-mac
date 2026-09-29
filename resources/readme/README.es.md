@@ -131,7 +131,6 @@ Al compilar desde el código fuente, la primera compilación descarga el paquete
 - **Funciones de partículas poco comunes**: no se admiten formas de emisor distintas de esfera, caja e imagen de capa, ni los renderizadores posteriores al primero de un sistema.
 - **Vídeos WebM**: el formato WebM (VP8/VP9) se reproduce a través de WebKit, por lo que los efectos de sincronización con la música no se aplican.
 - **Algunas miniaturas JPEG**: un pequeño número de archivos TEXB de formato 1 contienen datos JPEG no estándar que macOS no puede descodificar.
-- **Alcance de los ajustes de rendimiento**: las opciones de calidad, suavizado de contorno y posprocesado están pensadas para los fondos de pantalla de escena y tienen un efecto limitado en los fondos de pantalla de vídeo y web.
 - **Las funciones de audio requieren permiso**: sin el permiso de Grabación de pantalla y del audio del sistema, los visualizadores de audio y los scripts de SceneScript que reaccionan al audio solo reciben silencio.
 - **Sin comparar lado a lado con Wallpaper Engine** – Wallpaper Engine no funciona en macOS, así que el comportamiento sigue los propios archivos y shaders de Wallpaper Engine; algunos casos límite (líneas de tiempo, iluminación, salida HDR) no están confirmados.
 
