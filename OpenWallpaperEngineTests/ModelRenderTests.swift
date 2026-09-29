@@ -281,14 +281,28 @@ final class ModelRenderTests: XCTestCase {
                                        indexCount: indices.count)
         let padded = SceneModelPlan(path: "past.mdl", meshes: [mesh], bounds: cube.bounds, skeleton: nil)
         let buffers = try XCTUnwrap(renderer.meshBuffers(padded)[0])
-        XCTAssertEqual(buffers.vertices.length, 1001 * source.format.stride)
-        let tail = UnsafeRawBufferPointer(start: buffers.vertices.contents() + source.vertexData.count,
-                                          count: buffers.vertices.length - source.vertexData.count)
-        XCTAssertTrue(tail.allSatisfy { $0 == 0 }, "the padding is zeros")
-        XCTAssertTrue(UnsafeRawBufferPointer(start: buffers.vertices.contents(), count: source.vertexData.count)
-            .elementsEqual(source.vertexData), "the vertices are as they were")
-        // In range: the buffer is the vertices as they are.
-        XCTAssertEqual(try XCTUnwrap(renderer.meshBuffers(cube)[0]).vertices.length, source.vertexData.count)
+        let streams = try XCTUnwrap(SceneModelVertexStreams(source.format), "positions and other attributes")
+        let vertexCount = source.vertexData.count / source.format.stride
+        XCTAssertEqual(buffers.vertices.length, 1001 * streams.positionStride)
+        let attributes = try XCTUnwrap(buffers.attributes)
+        XCTAssertEqual(attributes.length, 1001 * streams.attributeStride)
+        for (buffer, stride) in [(buffers.vertices, streams.positionStride), (attributes, streams.attributeStride)] {
+            let tail = UnsafeRawBufferPointer(start: buffer.contents() + vertexCount * stride, count: buffer.length - vertexCount * stride)
+            XCTAssertTrue(tail.allSatisfy { $0 == 0 }, "the padding is zeros")
+        }
+        // The streams hold each vertex's bytes, position first.
+        let original = [UInt8](source.vertexData)
+        let positions = UnsafeRawBufferPointer(start: buffers.vertices.contents(), count: vertexCount * streams.positionStride)
+        let rest = UnsafeRawBufferPointer(start: attributes.contents(), count: vertexCount * streams.attributeStride)
+        for vertex in 0..<vertexCount {
+            let start = vertex * source.format.stride
+            XCTAssertEqual(Array(positions[(vertex * streams.positionStride)..<((vertex + 1) * streams.positionStride)]),
+                           Array(original[start..<(start + streams.positionStride)]))
+            XCTAssertEqual(Array(rest[(vertex * streams.attributeStride)..<((vertex + 1) * streams.attributeStride)]),
+                           Array(original[(start + streams.positionStride)..<(start + source.format.stride)]))
+        }
+        // In range: the streams hold the vertices as they are.
+        XCTAssertEqual(try XCTUnwrap(renderer.meshBuffers(cube)[0]).vertices.length, vertexCount * streams.positionStride)
         // Only the indices drawn count, and 32-bit ones read as such.
         let wide: [UInt32] = [3, 70_000, 9]
         XCTAssertEqual(SceneModelRenderer.largestIndex(wide.withUnsafeBytes { Data($0) }, uint32: true, count: 3), 70_000)
