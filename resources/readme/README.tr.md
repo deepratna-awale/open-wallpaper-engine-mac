@@ -128,7 +128,7 @@ Kaynaktan ilk derleme Sparkle Swift paketini indirir. Kaynaktan derlenen sürüm
 
 - **Uygulanmamış SceneScript işlevleri** — `getVideoTexture()` henüz hiçbir şey yapmaz.
 - **SceneScript uyumluluğu** — Tescilli olay adlarının, giriş geri çağırmalarının, yaşam döngüsü uç durumlarının veya tam zamanlama anlamlarının tümü yeniden üretilmemiştir.
-- **Nadir parçacık özellikleri** — Küre, kutu ve katman görüntüsü dışındaki yayıcı şekilleri ile bir sistemin ilkinden sonraki işleyicileri desteklenmez.
+- **Nadir parçacık özellikleri** — Bir sistemin ilkinden sonraki işleyicileri desteklenmez.
 - **WebM videoları** — WebM (VP8/VP9) WebKit üzerinden oynatılır, bu yüzden müzik senkronizasyonu efektleri ona uygulanmaz.
 - **Bazı JPEG küçük resimleri** — Az sayıda TEXB biçim 1 dosyası, macOS’in çözemediği standart dışı JPEG verileri içerir.
 - **Ses özellikleri izin gerektirir** — Ekran ve Sistem Sesi Kaydı izni olmadan ses görselleştiricileri ve sese duyarlı SceneScript yalnızca sessizlik alır.
