@@ -8,7 +8,8 @@ import WebKit
 
 /// Plays a local video AVFoundation can't decode (WebM: VP8/VP9) through WebKit's `<video>`.
 /// The file is opened as WebKit's media document with read access limited to its wallpaper
-/// folder; no network is involved. Music-sync effects don't apply on this path.
+/// folder; no network is involved. Music sync (`VideoMusicSyncEffect`) styles the `<video>` with
+/// CSS and paces its `playbackRate`, from the system audio level delivered while the page is seen.
 @MainActor
 final class WebKitVideoPlayer: NSObject, WKNavigationDelegate {
     struct State: Equatable {
@@ -32,8 +33,29 @@ final class WebKitVideoPlayer: NSObject, WKNavigationDelegate {
     private var generation = 0
     private var stopped = false
     var state = State() {
-        didSet { if state != oldValue { apply() } }
+        didSet {
+            guard state != oldValue else { return }
+            apply()
+            updateMusicSyncTimer()
+        }
     }
+
+    /// The wallpaper's music-sync amounts; while any is on the level is delivered to the page.
+    var musicSync = VideoMusicSyncEffect() {
+        didSet { if musicSync != oldValue { updateMusicSyncTimer() } }
+    }
+    /// Whether the page can be seen: its window is on screen, the displays are awake and it plays.
+    /// The music-sync timer runs only then, as a web wallpaper's audio delivery does.
+    private var visibility = WebHeartbeatGate()
+    private var visibilityObservers: [(NotificationCenter, NSObjectProtocol)] = []
+    private var musicSyncTimer: Timer?
+    /// Keeps system audio capture on while the music-sync timer runs.
+    private var audioCaptureLease: AudioCaptureLease?
+    /// The level pace follows (`VideoMusicSyncEffect.paceSmoothing`).
+    private var smoothedLevel: Double = 0
+    /// The last music-sync script the page applied, so an unchanged frame isn't sent again. A new
+    /// page starts without music sync.
+    private var appliedMusicSyncScript = WebKitVideoPlayer.musicSyncScript(nil)
 
     init(url: URL, readAccess: URL) {
         self.url = url
@@ -46,7 +68,8 @@ final class WebKitVideoPlayer: NSObject, WKNavigationDelegate {
         super.init()
         webView.navigationDelegate = self
         webView.setValue(false, forKey: "drawsBackground")
-        OWELog.info(.library, "Playing \(url.lastPathComponent) through WebKit; music-sync zoom/tilt/saturation/pace don't apply to it")
+        OWELog.info(.library, "Playing \(url.lastPathComponent) through WebKit")
+        observeVisibility()
         // WebKit shows the file as its media document; `apply()` styles and drives its `<video>`.
         webView.loadFileURL(url, allowingReadAccessTo: readAccess)
         apply()
@@ -54,6 +77,9 @@ final class WebKitVideoPlayer: NSObject, WKNavigationDelegate {
 
     func stop() {
         stopped = true
+        updateMusicSyncTimer()
+        for (center, observer) in visibilityObservers { center.removeObserver(observer) }
+        visibilityObservers = []
         webView.evaluateJavaScript("document.querySelectorAll('video').forEach(function(v){v.pause();v.removeAttribute('src');v.load();})")
         webView.stopLoading()
     }
@@ -106,7 +132,130 @@ final class WebKitVideoPlayer: NSObject, WKNavigationDelegate {
         v.muted=\(state.muted);v.volume=\(volume);
         if(\(rate)>0){v.defaultPlaybackRate=\(rate);v.playbackRate=\(rate);}
         if(\(paused)){v.pause();}else if(v.paused){v.play().catch(function(){});}
+        document.documentElement.style.overflow='hidden';if(document.body){document.body.style.overflow='hidden';}
+        if(window.__oweSyncApply){window.__oweSyncApply(v);}
         return true;})()
         """
+    }
+
+    // MARK: - Music sync
+
+    /// What music sync does to the picture and pace at one audio level.
+    struct MusicSyncFrame: Equatable {
+        var zoom: Double
+        var tilt: Double
+        var saturation: Double
+        /// The playback rate with pace on; nil leaves the state's rate.
+        var rate: Float?
+
+        init(zoom: Double = 1, tilt: Double = 0, saturation: Double = 1, rate: Float? = nil) {
+            self.zoom = zoom
+            self.tilt = tilt
+            self.saturation = saturation
+            self.rate = rate
+        }
+
+        /// `effect` at `level`, with pace following `smoothedLevel` for a video playing at `baseRate`.
+        init(effect: VideoMusicSyncEffect, level: Double, smoothedLevel: Double, baseRate: Float) {
+            self.init(zoom: effect.zoom(at: level), tilt: effect.tilt(at: level),
+                      saturation: effect.saturation(at: level),
+                      rate: effect.paceAmount != 0 ? effect.rate(base: baseRate, level: smoothedLevel) : nil)
+        }
+    }
+
+    /// Applies `frame` to the page's `<video>` as the AVKit view does: scale and rotation about the
+    /// centre, a saturation filter, and pace as `playbackRate`. nil removes music sync, back to the
+    /// rate `script(for:)` set. The frame stays on the page, so `script(for:)` reapplies it.
+    nonisolated static func musicSyncScript(_ frame: MusicSyncFrame?) -> String {
+        func number(_ value: Double) -> String { String(format: "%.4f", value.isFinite ? value : 0) }
+        let payload: String
+        if let frame {
+            let rate = frame.rate.map { number(Double($0)) } ?? "null"
+            payload = "{zoom:\(number(frame.zoom)),tilt:\(number(frame.tilt)),saturation:\(number(frame.saturation)),rate:\(rate)}"
+        } else {
+            payload = "null"
+        }
+        return """
+        (function(){window.__oweSync=\(payload);
+        if(!window.__oweSyncApply){window.__oweSyncApply=function(v){var s=window.__oweSync;
+        v.style.transform=s?'scale('+s.zoom+') rotate('+s.tilt+'deg)':'';
+        v.style.filter=s&&s.saturation!==1?'saturate('+s.saturation+')':'';
+        var r=s&&s.rate!==null?s.rate:v.defaultPlaybackRate;
+        if(!v.paused&&v.playbackRate!==r){try{v.playbackRate=r;}catch(e){}}};}
+        var v=document.querySelector('video');if(!v)return false;window.__oweSyncApply(v);return true;})()
+        """
+    }
+
+    /// Runs the 30 Hz level delivery only while music sync is on and the page can be seen; a
+    /// hidden page would drop the values, so the timer and its IPC stop too.
+    private func updateMusicSyncTimer() {
+        visibility.playing = !state.paused && state.rate > 0
+        guard !stopped, musicSync.isActive, visibility.expectsHeartbeats else {
+            musicSyncTimer?.invalidate()
+            musicSyncTimer = nil
+            audioCaptureLease = nil
+            // Switched off: the plain picture and rate. A hidden page keeps its last frame.
+            if !stopped, !musicSync.isActive { send(nil) }
+            return
+        }
+        guard musicSyncTimer == nil else { return }
+        audioCaptureLease = WallpaperServices.shared.acquireAudioCapture()
+        // The rate of WE's audio delivery to web wallpapers.
+        let timer = Timer(timeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.deliverMusicSync() }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        musicSyncTimer = timer
+    }
+
+    private func deliverMusicSync() {
+        let raw = WallpaperServices.shared.audioLevel
+        let level = raw.isFinite ? raw : 0
+        smoothedLevel = musicSync.paceAmount != 0
+            ? smoothedLevel + (level - smoothedLevel) * VideoMusicSyncEffect.paceSmoothing
+            : level
+        send(MusicSyncFrame(effect: musicSync, level: level, smoothedLevel: smoothedLevel, baseRate: state.rate))
+    }
+
+    /// Sends `frame` unless the page already shows it; a page without its `<video>` yet gets it again.
+    private func send(_ frame: MusicSyncFrame?) {
+        let script = Self.musicSyncScript(frame)
+        guard script != appliedMusicSyncScript else { return }
+        webView.evaluateJavaScript(script) { [weak self] result, _ in
+            // An error here is the page still loading; the next frame is sent anyway.
+            guard (result as? Bool) == true else { return }
+            MainActor.assumeIsolated { self?.appliedMusicSyncScript = script }
+        }
+    }
+
+    /// Tracks what hides the page: an occluded window and sleeping displays (system sleep also
+    /// sleeps the displays), as `WebWallpaperViewModel` does for web wallpapers.
+    private func observeVisibility() {
+        let workspace = NSWorkspace.shared.notificationCenter
+        let displays: [(Notification.Name, Bool)] = [
+            (NSWorkspace.screensDidSleepNotification, false), (NSWorkspace.screensDidWakeNotification, true),
+            (NSWorkspace.willSleepNotification, false), (NSWorkspace.didWakeNotification, true),
+            (NSWorkspace.sessionDidResignActiveNotification, false), (NSWorkspace.sessionDidBecomeActiveNotification, true),
+        ]
+        for (name, awake) in displays {
+            let observer = workspace.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated {
+                    self?.visibility.displaysAwake = awake
+                    self?.updateMusicSyncTimer()
+                }
+            }
+            visibilityObservers.append((workspace, observer))
+        }
+        let center = NotificationCenter.default
+        let occlusion = center.addObserver(forName: NSWindow.didChangeOcclusionStateNotification, object: nil,
+                                           queue: .main) { [weak self] notification in
+            MainActor.assumeIsolated {
+                guard let self, let window = notification.object as? NSWindow,
+                      window === self.webView.window else { return }
+                self.visibility.windowVisible = window.occlusionState.contains(.visible)
+                self.updateMusicSyncTimer()
+            }
+        }
+        visibilityObservers.append((center, occlusion))
     }
 }

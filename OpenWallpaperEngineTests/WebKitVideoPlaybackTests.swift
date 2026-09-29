@@ -46,6 +46,38 @@ final class WebKitVideoPlaybackTests: XCTestCase {
         XCTAssertTrue(paused)
     }
 
+    /// The page's `<video>` takes music sync's zoom, tilt, saturation and pace, keeps them across a
+    /// state change, and drops them when music sync goes off.
+    func testMusicSyncStylesAndPacesTheVideo() async throws {
+        let player = WebKitVideoPlayer(url: clip, readAccess: clip.deletingLastPathComponent())
+        defer { player.stop() }
+        let window = host(player)
+        defer { window.close() }
+        player.state = WebKitVideoPlayer.State(placement: .fill, paused: false, muted: true, volume: 0, rate: 1)
+        _ = try await currentTime(player, after: 0.05)
+        let frame = WebKitVideoPlayer.MusicSyncFrame(zoom: 1.1, tilt: 2, saturation: 1.5, rate: 1.25)
+        let applied = try await evaluate(player, WebKitVideoPlayer.musicSyncScript(frame)) as? Bool
+        XCTAssertEqual(applied, true)
+        try await assertVideo(player, transform: "scale(1.1) rotate(2deg)", filter: "saturate(1.5)", rate: 1.25)
+
+        // A state change restyles the video; the frame stays on it.
+        player.state.placement = .fit
+        try await Task.sleep(for: .milliseconds(200))
+        try await assertVideo(player, transform: "scale(1.1) rotate(2deg)", filter: "saturate(1.5)", rate: 1.25)
+
+        _ = try await evaluate(player, WebKitVideoPlayer.musicSyncScript(nil))
+        try await assertVideo(player, transform: "", filter: "", rate: 1)
+    }
+
+    private func assertVideo(_ player: WebKitVideoPlayer, transform: String, filter: String, rate: Double,
+                             file: StaticString = #filePath, line: UInt = #line) async throws {
+        let style = try await evaluate(player, "(function(){var v=document.querySelector('video');" +
+                                       "return [v.style.transform, v.style.filter, v.playbackRate];})()") as? [Any]
+        XCTAssertEqual(style?[0] as? String, transform, file: file, line: line)
+        XCTAssertEqual(style?[1] as? String, filter, file: file, line: line)
+        XCTAssertEqual(style?[2] as? Double ?? 0, rate, accuracy: 1e-6, file: file, line: line)
+    }
+
     /// A page plays only while in a window, as on a display.
     private func host(_ player: WebKitVideoPlayer) -> NSWindow {
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 128, height: 128), styleMask: .borderless,
