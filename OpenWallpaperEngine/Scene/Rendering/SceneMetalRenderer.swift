@@ -1468,10 +1468,15 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 }
                 if batch.material {
                     var snapshot: MTLTexture?
+                    let placement = particlePlacement(batch.system, camera: effectFrame.camera)
                     if particleMaterials?.readsSceneSnapshot(batch.system) == true {
-                        // Refraction reads the scene drawn up to this system (`_rt_FullFrameBuffer`).
+                        // Refraction reads the scene drawn up to this system (`_rt_FullFrameBuffer`):
+                        // only around its particles when that is known, else all of it.
                         endScenePass(encoder, resumes: true)
-                        snapshot = sceneSnapshot(of: sceneTexture, commandBuffer: commandBuffer)
+                        let pixels = SIMD2(sceneTexture.width, sceneTexture.height)
+                        let needed = placement != nil ? nil
+                            : particleMaterials?.sceneSnapshotRect(batch.system, sceneSize: sceneSize, targetSize: pixels)
+                        snapshot = sceneSnapshot(of: sceneTexture, commandBuffer: commandBuffer, needing: needed)
                         guard let resumed = resumeScenePass(on: sceneTexture, commandBuffer: commandBuffer) else { return false }
                         encoder = resumed
                     }
@@ -1480,7 +1485,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                         values: timelines.values,
                         assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
                         sceneSnapshot: snapshot, mipMappedFrameBuffer: mipMappedTarget, shadowAtlas: frameShadowAtlas,
-                        depth: frameDepth, placement: particlePlacement(batch.system, camera: effectFrame.camera)))
+                        depth: frameDepth, placement: placement))
                     drew = true
                     continue
                 }
