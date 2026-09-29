@@ -9,6 +9,7 @@
 //  installed, and links installed ones in so the loose-file loaders resolve them.
 //
 
+import Darwin
 import Foundation
 
 enum WorkshopDependencyResolver {
@@ -31,7 +32,9 @@ enum WorkshopDependencyResolver {
         }
         if let manifest = WallpaperPackageConverter.manifest(in: directory) {
             // Converted wallpapers no longer have the archive; the manifest lists its paths.
-            for path in manifest.extractedFiles { ids.formUnion(WorkshopAssetResolver.referencedIds(in: path)) }
+            for path in manifest.extractedFiles + (manifest.dependencyEntries ?? []) {
+                ids.formUnion(WorkshopAssetResolver.referencedIds(in: path))
+            }
         }
         ids.formUnion(looseReferences(in: directory))
         ids.formUnion(projectDependencies(inItemAt: directory))
@@ -94,8 +97,14 @@ enum WorkshopDependencyResolver {
     /// `effects/workshop/<id>/…` like any other file. Idempotent.
     static func linkInstalledDependencies(for wallpaper: WEWallpaper,
                                           resolver: WorkshopAssetResolver = WorkshopAssetResolver(roots: WorkshopAssetResolver.defaultRoots())) {
+        linkInstalledDependencies(inItemAt: wallpaper.wallpaperDirectory, resolver: resolver)
+    }
+
+    /// Links the installed dependencies of the item in `directory`; see
+    /// `linkInstalledDependencies(for:resolver:)`.
+    static func linkInstalledDependencies(inItemAt directory: URL, resolver: WorkshopAssetResolver) {
         let fm = FileManager.default
-        for id in referencedWorkshopIds(inItemAt: wallpaper.wallpaperDirectory) {
+        for id in referencedWorkshopIds(inItemAt: directory) {
             guard let item = resolver.itemDirectory(for: id) else { continue }
             let categories: [URL]
             do {
@@ -106,16 +115,61 @@ enum WorkshopDependencyResolver {
                 continue
             }
             for categorySource in categories {
-                let linkParent = wallpaper.wallpaperDirectory.appending(path: categorySource.lastPathComponent).appending(path: "workshop")
-                let linkPath = linkParent.appending(path: id)
-                guard !fm.fileExists(atPath: linkPath.path) else { continue }
-                do {
-                    try fm.createDirectory(at: linkParent, withIntermediateDirectories: true)
-                    try fm.createSymbolicLink(at: linkPath, withDestinationURL: categorySource)
-                } catch {
-                    OWELog.error(.workshop, "Failed to link workshop dependency \(id): \(error)")
-                }
+                linkDependency(id: id, category: categorySource.lastPathComponent, to: categorySource, inItemAt: directory)
             }
+        }
+    }
+
+    /// Creates `<directory>/<category>/workshop/<id>` as a link to `source`. Existing folders on
+    /// the way are used only when none of them is a symbolic link, so the link and its parent
+    /// folders always stay inside `directory`. An existing link at the destination is one this
+    /// resolver made and is replaced when it points elsewhere (removing a link never touches what
+    /// it points at); a real file or folder there is kept. Returns whether the link is in place.
+    @discardableResult
+    static func linkDependency(id: String, category: String, to source: URL, inItemAt directory: URL) -> Bool {
+        guard !id.isEmpty, id.allSatisfy(\.isNumber),
+              !category.isEmpty, category != ".", category != "..", !category.contains("/") else {
+            OWELog.error(.workshop, "Not linking workshop dependency \(id): unusable folder name \(category)")
+            return false
+        }
+        let parentPath = "\(category)/workshop"
+        let linkParent = directory.appending(path: category).appending(path: "workshop")
+        let linkPath = linkParent.appending(path: id)
+        guard ContainedPath.hasNoLinks(below: directory, relativePath: parentPath) else {
+            OWELog.error(.workshop, "Not linking workshop dependency \(id): \(parentPath) in \(directory.path) is a symbolic link")
+            return false
+        }
+        let fm = FileManager.default
+        let linkFilePath = linkPath.path(percentEncoded: false)
+        if ContainedPath.isSymbolicLink(linkPath) {
+            let destination: String
+            do {
+                destination = try fm.destinationOfSymbolicLink(atPath: linkFilePath)
+            } catch {
+                OWELog.error(.workshop, "Can't read workshop dependency link \(linkPath.path): \(error)")
+                return false
+            }
+            if URL(fileURLWithPath: destination).standardizedFileURL.path == source.standardizedFileURL.path { return true }
+            guard unlink(linkFilePath) == 0 else {
+                OWELog.error(.workshop, "Can't replace workshop dependency link \(linkPath.path): errno \(errno)")
+                return false
+            }
+        } else if fm.fileExists(atPath: linkFilePath) {
+            // The wallpaper ships these files itself.
+            return true
+        }
+        do {
+            try fm.createDirectory(at: linkParent, withIntermediateDirectories: true)
+            // Checked again once the parents exist: they must still be real folders.
+            guard ContainedPath.hasNoLinks(below: directory, relativePath: "\(parentPath)/\(id)") else {
+                OWELog.error(.workshop, "Not linking workshop dependency \(id): \(parentPath) in \(directory.path) is a symbolic link")
+                return false
+            }
+            try fm.createSymbolicLink(at: linkPath, withDestinationURL: source)
+            return true
+        } catch {
+            OWELog.error(.workshop, "Failed to link workshop dependency \(id): \(error)")
+            return false
         }
     }
 }
