@@ -45,7 +45,7 @@ final class AudioSpectrumBlockTransform {
 
     init?(sampleRate: Double) {
         let length = Self.blockLength(sampleRate: sampleRate)
-        guard length > Self.binCount, let dft = BluesteinDFT(length: length) else { return nil }
+        guard length > Self.binCount, let dft = BluesteinDFT(length: length, bins: Self.binCount) else { return nil }
         blockLength = length
         self.dft = dft
         bandOfBin = Self.bandMap()
