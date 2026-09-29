@@ -227,6 +227,9 @@ struct GlobalSettings: Codable, Equatable {
     /// Web wallpapers render at 1 point per pixel on Retina displays (`WebPageScale`): a quarter
     /// of the pixels for pages that size their canvas by `devicePixelRatio`. Off by default.
     var webStandardResolution = false
+    /// Large additive particle systems of 2D scenes draw at half resolution and are added back
+    /// (`SceneRenderSettings.reducedResolutionParticles`). Off by default.
+    var reducedResolutionParticles = false
     
     // MARK: Automatic Setup
     var autoStart = false
@@ -276,7 +279,7 @@ struct GlobalSettings: Codable, Equatable {
         case otherApplicationFocused, otherApplicationMaximized, otherApplicationFullscreen, otherApplicationPlayingAudio
         case displayAsleep
         case laptopOnBattery, textureResolution, shadows, volumetrics, fps, particleBudget, optimiseTextures
-        case webStandardResolution
+        case webStandardResolution, reducedResolutionParticles
         case qualityEfficiency
         case antiAliasing = "msaa"
         case renderResolution, sceneDetail
@@ -323,6 +326,7 @@ extension GlobalSettings {
         read(.particleBudget, &particleBudget)
         read(.optimiseTextures, &optimiseTextures)
         read(.webStandardResolution, &webStandardResolution)
+        read(.reducedResolutionParticles, &reducedResolutionParticles)
         read(.autoStart, &autoStart)
         read(.safeMode, &safeMode)
         read(.language, &language)

@@ -103546,6 +103546,194 @@
         }
       }
     },
+    "Draw large glowing particles at half resolution" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "رسم الجسيمات المتوهجة الكبيرة بنصف الدقة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Große leuchtende Partikel mit halber Auflösung zeichnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dibujar partículas brillantes grandes a media resolución"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dessiner les grandes particules lumineuses en demi-résolution"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बड़े चमकते पार्टिकल को आधे रिज़ॉल्यूशन पर बनाएँ"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disegna le particelle luminose grandi a metà risoluzione"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "大きな発光パーティクルを半分の解像度で描画"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "큰 발광 파티클을 절반 해상도로 그리기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rysuj duże świecące cząstki w połowie rozdzielczości"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desenhar partículas brilhantes grandes em meia resolução"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отрисовывать крупные светящиеся частицы в половинном разрешении"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Büyük parlayan parçacıkları yarı çözünürlükte çiz"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Малювати великі світні частинки з половинною роздільною здатністю"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以一半分辨率绘制大型发光粒子"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以一半解析度繪製大型發光粒子"
+          }
+        }
+      }
+    },
+    "Large additive particle effects in 2D scenes, like glows and light haze, draw a quarter of the pixels. Their edges look softer and they use less GPU." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ترسم تأثيرات الجسيمات الإضافية الكبيرة في المشاهد ثنائية الأبعاد، مثل التوهج والضباب الخفيف، ربع عدد البكسلات. تبدو حوافها أقل حدة وتستخدم وحدة معالجة الرسومات بقدر أقل."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Große additive Partikeleffekte in 2D-Szenen, etwa Leuchten und leichter Dunst, zeichnen ein Viertel der Pixel. Ihre Kanten wirken weicher und sie belasten die GPU weniger."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los efectos de partículas aditivas grandes en escenas 2D, como brillos y neblina ligera, dibujan una cuarta parte de los píxeles. Sus bordes se ven más suaves y usan menos GPU."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les grands effets de particules additifs des scènes 2D, comme les lueurs et la brume légère, dessinent un quart des pixels. Leurs bords paraissent plus doux et ils utilisent moins le GPU."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2D दृश्यों में बड़े एडिटिव पार्टिकल इफ़ेक्ट, जैसे चमक और हल्की धुंध, एक चौथाई पिक्सेल बनाते हैं। उनके किनारे नरम दिखते हैं और वे कम GPU उपयोग करते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gli effetti particellari additivi grandi nelle scene 2D, come bagliori e foschia leggera, disegnano un quarto dei pixel. I bordi appaiono più morbidi e usano meno GPU."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2Dシーンの大きな加算パーティクル効果（光の輝きや薄いもやなど）は、4分の1のピクセルで描画されます。縁が柔らかく見え、GPUの使用量が減ります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2D 장면의 큰 가산 파티클 효과(빛 번짐, 옅은 안개 등)는 픽셀의 4분의 1만 그립니다. 가장자리가 부드러워 보이고 GPU를 덜 사용합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duże addytywne efekty cząsteczkowe w scenach 2D, takie jak poświata i lekka mgiełka, rysują jedną czwartą pikseli. Ich krawędzie wyglądają łagodniej i zużywają mniej GPU."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Efeitos de partículas aditivas grandes em cenas 2D, como brilhos e névoa leve, desenham um quarto dos pixels. Suas bordas ficam mais suaves e usam menos GPU."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Крупные аддитивные эффекты частиц в 2D-сценах, например свечение и лёгкая дымка, отрисовывают четверть пикселей. Их края выглядят мягче, а нагрузка на GPU ниже."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2D sahnelerdeki parıltı ve hafif pus gibi büyük toplamsal parçacık efektleri piksellerin dörtte birini çizer. Kenarları daha yumuşak görünür ve daha az GPU kullanır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Великі адитивні ефекти частинок у 2D-сценах, як-от сяйво та легкий серпанок, малюють чверть пікселів. Їхні краї виглядають м’якшими, а навантаження на GPU менше."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2D 场景中较大的叠加粒子效果（如光晕和薄雾）只绘制四分之一的像素。边缘看起来更柔和，占用的 GPU 更少。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2D 場景中較大的疊加粒子效果（如光暈和薄霧）只繪製四分之一的像素。邊緣看起來更柔和，佔用的 GPU 更少。"
+          }
+        }
+      }
+    },
     "Render web wallpapers at standard resolution" : {
       "localizations" : {
         "ar" : {

@@ -1429,6 +1429,43 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             while nextParticleBatch < particleBatches.count, sequence.batchKeys[nextParticleBatch] < order {
                 let batch = particleBatches[nextParticleBatch]
                 nextParticleBatch += 1
+                if batch.material, drawsReducedResolution(batch.system) {
+                    // A run of large additive systems draws at half resolution and is added back
+                    // in its place (`SceneRenderSettings.reducedResolutionParticles`); addition
+                    // commutes, so a system whose half-resolution pipeline still compiles draws
+                    // at full resolution right after.
+                    var group = [batch.system]
+                    while nextParticleBatch < particleBatches.count, sequence.batchKeys[nextParticleBatch] < order,
+                          particleBatches[nextParticleBatch].material,
+                          drawsReducedResolution(particleBatches[nextParticleBatch].system) {
+                        group.append(particleBatches[nextParticleBatch].system)
+                        nextParticleBatch += 1
+                    }
+                    func context(_ system: ParticleSystemRuntime) -> ParticleMaterialRenderer.DrawContext {
+                        .init(sceneSize: sceneSize, frame: effectFrame, values: timelines.values,
+                              assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
+                              mipMappedFrameBuffer: mipMappedTarget, shadowAtlas: frameShadowAtlas,
+                              placement: particlePlacement(system, camera: effectFrame.camera))
+                    }
+                    endScenePass(encoder, resumes: true)
+                    let reduced = drawReducedResolution(group, scene: sceneTexture, commandBuffer: commandBuffer, context: context)
+                    guard let resumed = resumeScenePass(on: sceneTexture, commandBuffer: commandBuffer) else { return false }
+                    encoder = resumed
+                    if let half = reduced.target {
+                        var uniform = layerUniform(position: sceneSize / 2, size: sceneSize, opacity: 1,
+                                                   drawableSize: SIMD2(Float(sceneTexture.width), Float(sceneTexture.height)),
+                                                   placement: .stretch)
+                        encoder.setRenderPipelineState(scenePassPipelines.addCopy)
+                        encoder.setVertexBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
+                        encoder.setFragmentTexture(half, index: 0)
+                        encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
+                    }
+                    for system in reduced.left {
+                        particleMaterials?.draw(system, encoder: encoder, commandBuffer: commandBuffer, context: context(system))
+                    }
+                    drew = true
+                    continue
+                }
                 if batch.material {
                     var snapshot: MTLTexture?
                     if particleMaterials?.readsSceneSnapshot(batch.system) == true {
@@ -2452,6 +2489,46 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             steps += 1
         }
         return nil
+    }
+
+    /// Systems below this many live particles keep drawing at full resolution: the pass split of a
+    /// reduced-resolution draw costs more than it saves on a few sprites.
+    static let reducedResolutionParticleMinimum = 256
+
+    /// Whether `system` draws at half resolution this frame (`SceneRenderSettings.reducedResolutionParticles`):
+    /// a large additive material system of a scene without depth, not reading the scene.
+    private func drawsReducedResolution(_ system: ParticleSystemRuntime) -> Bool {
+        guard renderSettings.reducedResolutionParticles, frameDepth == nil,
+              system.configuration.material?.blending.lowercased() == "additive",
+              particleMaterials?.readsSceneSnapshot(system) == false else { return false }
+        return (system.gpu?.completedCount ?? system.particles.count) >= Self.reducedResolutionParticleMinimum
+    }
+
+    /// Draws `systems` additively into a cleared half-resolution target, returned to be added onto
+    /// the scene; `left` are the systems whose pipeline for it isn't ready (or all, without a target).
+    private func drawReducedResolution(_ systems: [ParticleSystemRuntime], scene: MTLTexture, commandBuffer: MTLCommandBuffer,
+                                       context: (ParticleSystemRuntime) -> ParticleMaterialRenderer.DrawContext)
+        -> (target: MTLTexture?, left: [ParticleSystemRuntime]) {
+        var avoiding = [scene]
+        if let sceneCopy { avoiding.append(sceneCopy) }
+        guard let particleMaterials,
+              let target = renderTargetPool.texture(width: max(scene.width / 2, 1), height: max(scene.height / 2, 1),
+                                                    pixelFormat: scene.pixelFormat, avoiding: avoiding) else { return (nil, systems) }
+        let pass = MTLRenderPassDescriptor()
+        pass.colorAttachments[0].texture = target
+        pass.colorAttachments[0].loadAction = .clear
+        pass.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 0)
+        pass.colorAttachments[0].storeAction = .store
+        guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { return (nil, systems) }
+        encoder.label = "Reduced-resolution particles"
+        var left: [ParticleSystemRuntime] = []
+        for system in systems where !particleMaterials.draw(system, alsoInto: target.pixelFormat, sampleCount: 1,
+                                                            depthFormat: .invalid, encoder: encoder,
+                                                            commandBuffer: commandBuffer, context: context(system)) {
+            left.append(system)
+        }
+        encoder.endEncoding()
+        return (left.count < systems.count ? target : nil, left)
     }
 
     /// Steps a system whose object is hidden (`ParticleFrameInputs.hidden`): the one step that

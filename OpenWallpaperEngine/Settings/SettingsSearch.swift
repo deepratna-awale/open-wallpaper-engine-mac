@@ -86,6 +86,7 @@ struct SettingsSearch {
             entry("Restart after crashing", .optimizations, SettingsAnchor.rendering),
             entry("Optimise textures", .optimizations, SettingsAnchor.rendering),
             entry("Render web wallpapers at standard resolution", .optimizations, SettingsAnchor.rendering),
+            entry("Draw large glowing particles at half resolution", .optimizations, SettingsAnchor.rendering),
 
             entry("Wallpaper Engine Assets", .assets, SettingsAnchor.assets),
             entry("SteamCMD", .assets, SettingsAnchor.steamCmd),

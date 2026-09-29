@@ -277,18 +277,20 @@ final class ParticleMaterialRenderer {
     /// records draw through a pipeline for that target, and the uniforms, `context`'s camera
     /// included, go through the arena (the GPU step patches only the scene draw's block, so a
     /// GPU-simulated rope keeps its material's `g_RenderVar0` here). Nothing is drawn while that
-    /// pipeline compiles or the system has no draw this frame.
+    /// pipeline compiles or the system has no draw this frame; false then.
+    @discardableResult
     func draw(_ system: ParticleSystemRuntime, alsoInto pixelFormat: MTLPixelFormat, sampleCount: Int,
               depthFormat: MTLPixelFormat, encoder: MTLRenderCommandEncoder, commandBuffer: MTLCommandBuffer,
-              context: DrawContext) {
+              context: DrawContext) -> Bool {
         guard let plan = system.configuration.material,
               let state = systems[ObjectIdentifier(system)], state.owner === system,
               let prepared = state.prepared,
               case .ready(let stage, let pipeline) = readiness(plan, pixelFormat: pixelFormat, sampleCount: sampleCount,
                                                                depthFormat: depthFormat, state: state),
-              stage.variantKey == prepared.stage.variantKey else { return }
+              stage.variantKey == prepared.stage.variantKey else { return false }
         encode(system, plan: plan, state: state, prepared: prepared, pipeline: pipeline, reflected: true,
                encoder: encoder, commandBuffer: commandBuffer, context: context)
+        return true
     }
 
     /// Encodes `prepared` through `pipeline`; `reflected` for the planar reflection's draw, whose
