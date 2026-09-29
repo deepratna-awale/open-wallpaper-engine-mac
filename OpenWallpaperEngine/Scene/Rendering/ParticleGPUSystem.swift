@@ -137,7 +137,7 @@ final class ParticleGPUSystem {
         self.parameters = parameters
         self.control = control
         historyLimit = values.historyLimit
-        tracksHistory = configuration.rendererName == "ropetrail"
+        tracksHistory = configuration.trailHistory.kept
         if configuration.isInstanced {
             let slots = max(configuration.link?.maximumInstances ?? 0, 0)
             self.slots = slots
@@ -168,6 +168,14 @@ final class ParticleGPUSystem {
     }
 
     func toggleHistory() { historyIndex ^= 1 }
+
+    /// For a renderer after a system's first (`ParticleSystemRuntime.simulation`): sizes this
+    /// frame's records for `simulation`'s particles, which the step draws from. False when that
+    /// system has nothing to draw from this frame.
+    func follow(_ simulation: ParticleGPUSystem) -> Bool {
+        capacity = simulation.capacity
+        return simulation.isReady && simulation.particles != nil
+    }
 
     /// Updates the bound for this step and grows the state buffers to hold it, copying the live
     /// particles with `blit` (made on demand). False when a buffer can't be allocated.

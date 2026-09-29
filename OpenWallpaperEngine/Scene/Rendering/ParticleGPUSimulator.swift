@@ -34,6 +34,8 @@ final class ParticleGPUSimulator {
     private let emitSerial, simulateSerial: MTLComputePipelineState
     private let eventMark, eventScatter, instanceStep, linkPoints: MTLComputePipelineState
     private let boidsMark, boidsScatter, ropeSort: MTLComputePipelineState
+    /// A renderer after a system's first takes the system's step counters (`particleFollowControl`).
+    private let followControl: MTLComputePipelineState
     /// Compactions that also write sprite records, by draw kind.
     private let compactWriters: [ParticleGPUDrawKind: MTLComputePipelineState]
     private let writers: [ParticleGPUDrawKind: MTLComputePipelineState]
@@ -64,6 +66,7 @@ final class ParticleGPUSimulator {
         boidsMark = try pipeline("particleBoidsMark")
         boidsScatter = try pipeline("particleBoidsScatter")
         ropeSort = try pipeline("particleRopeOrder")
+        followControl = try pipeline("particleFollowControl")
         let compactFallback = try pipeline("particleCompactFallbackSprites")
         compactWriters = [.sprite: try pipeline("particleCompactSprites"), .fallbackSprite: compactFallback,
                           .fallbackSpriteTrail: compactFallback]
@@ -96,6 +99,12 @@ final class ParticleGPUSimulator {
         var blit: MTLBlitCommandEncoder?
         for request in requests {
             guard let gpu = state(for: request.system) else { continue }
+            if let simulation = request.system.simulation {
+                // A renderer after the system's first steps nothing: it draws that system's
+                // particles, whose step comes before it.
+                gpu.isReady = simulation.gpu.map(gpu.follow) ?? false
+                continue
+            }
             gpu.isReady = gpu.reserve(for: request.inputs) {
                 if blit == nil { blit = commandBuffer.makeBlitCommandEncoder() }
                 return blit
@@ -125,10 +134,13 @@ final class ParticleGPUSimulator {
             guard let gpu = request.system.gpu, gpu.isReady,
                   let plan = StepPlan(request, gpu: gpu, sceneSize: sceneSize, targetSize: targetSize,
                                          compactWriters: compactWriters) else { continue }
-            let own = lastWave[ObjectIdentifier(request.system)].map { $0 + 1 } ?? 0
+            // A renderer after a system's first draws in the wave after that system's step, and
+            // each further renderer after the one before (they share its scratch buffers).
+            let key = ObjectIdentifier(request.system.simulation ?? request.system)
+            let own = lastWave[key].map { $0 + 1 } ?? 0
             let parent = request.system.parent.flatMap { lastWave[ObjectIdentifier($0)] }.map { $0 + 1 } ?? 0
             let wave = max(own, parent)
-            lastWave[ObjectIdentifier(request.system)] = wave
+            lastWave[key] = wave
             while plans.count <= wave { plans.append([]) }
             plans[wave].append(plan)
         }
@@ -159,7 +171,7 @@ final class ParticleGPUSimulator {
         let parents = Set(requests.compactMap { $0.system.parent.map(ObjectIdentifier.init) })
         return requests.filter { request in
             let system = request.system
-            guard let gpu = system.gpu, system.parent == nil, !system.configuration.isInstanced,
+            guard let gpu = system.gpu, system.parent == nil, system.simulation == nil, !system.configuration.isInstanced,
                   !parents.contains(ObjectIdentifier(system)) else { return true }
             let adds = request.inputs.clears || request.inputs.emitters.contains { $0.rate > 0 || $0.burst > 0 }
             guard !adds, let live = gpu.lastLiveSerial else {
@@ -174,7 +186,7 @@ final class ParticleGPUSimulator {
     private enum Stage: CaseIterable {
         case linkPoints, age, eventMark, eventScanBlocks, eventScanSums, eventScatter, begin, emit
         case boidsMark, boidsScanBlocks, boidsScanSums, boidsScatter, simulate
-        case scanBlocks, scanSums, compact, trailScanBlocks, trailScanSums, finish, ropeOrder, write
+        case scanBlocks, scanSums, compact, follow, trailScanBlocks, trailScanSums, finish, ropeOrder, write
     }
 
     /// One request's step: its buffers and frame, captured when the frame is encoded. A class, so
@@ -183,6 +195,9 @@ final class ParticleGPUSimulator {
         let request: Request
         let gpu: ParticleGPUSystem
         let parent: ParticleGPUSystem?
+        /// For a renderer after a system's first: that system's state, whose particles, trail
+        /// history and scratch the step reads; it only writes its own control block and records.
+        let simulation: ParticleGPUSystem?
         var frame: ParticleGPUFrame
         let isInstanced: Bool
         /// An instanced child of an event (`eventfollow`, `eventspawn`, `eventdeath`).
@@ -206,11 +221,20 @@ final class ParticleGPUSimulator {
               compactWriters: [ParticleGPUDrawKind: MTLComputePipelineState]) {
             let configuration = request.system.configuration
             let subdivision = max(configuration.ropeSubdivision, 1)
-            guard let particles = gpu.particles, let stepped = gpu.stepped, let alive = gpu.alive,
-                  let offsets = gpu.offsets, let blockSums = gpu.blockSums,
+            let followed: ParticleGPUSystem?
+            if let system = request.system.simulation {
+                guard let state = system.gpu else { return nil }
+                followed = state
+            } else {
+                followed = nil
+            }
+            let source = followed ?? gpu
+            guard let particles = source.particles, let stepped = source.stepped, let alive = source.alive,
+                  let offsets = source.offsets, let blockSums = source.blockSums,
                   let records = gpu.recordBuffer(for: request.kind, subdivision: subdivision) else { return nil }
-            parent = request.system.parent?.gpu
-            if configuration.isInstanced, parent == nil { return nil }
+            simulation = followed
+            parent = followed == nil ? request.system.parent?.gpu : nil
+            if configuration.isInstanced, followed == nil, parent == nil { return nil }
             isInstanced = configuration.isInstanced
             isEventChild = configuration.isInstanced && configuration.link?.kind != .static
             self.request = request
@@ -229,10 +253,17 @@ final class ParticleGPUSimulator {
             self.blockSums = blockSums
             self.records = records
             // Buffers a system without trails never touches still need a binding.
-            history = gpu.history[gpu.historyIndex] ?? gpu.control
-            nextHistory = gpu.history[gpu.historyIndex ^ 1] ?? gpu.control
-            gpu.toggleHistory()
-            trailCounts = gpu.trailCounts ?? gpu.control
+            if followed != nil {
+                // The system's live trails: its step this frame, encoded before, already swapped them in.
+                let live = source.history[source.historyIndex] ?? gpu.control
+                history = live
+                nextHistory = live
+            } else {
+                history = gpu.history[gpu.historyIndex] ?? gpu.control
+                nextHistory = gpu.history[gpu.historyIndex ^ 1] ?? gpu.control
+                gpu.toggleHistory()
+            }
+            trailCounts = source.trailCounts ?? gpu.control
             instances = gpu.instances ?? gpu.control
             linked = gpu.linkedPoints ?? gpu.control
             program = request.inputs.initializers + request.inputs.operators
@@ -242,9 +273,11 @@ final class ParticleGPUSimulator {
             trails = request.kind == .ropeTrail || request.kind == .fallbackRopeTrail
             serialPoints = gpu.writesControlPoints ? gpu.pointStates : nil
             let boids = request.inputs.operators.contains { $0.header.x == ParticleOperatorKind.boids.rawValue }
-            boidsMembers = boids && serialPoints == nil ? gpu.boidsMembers() : nil
-            // Sprites have no trail history to move; a step nothing draws writes no records.
-            compactWriter = request.writesRecords && !gpu.tracksHistory ? compactWriters[request.kind] : nil
+            boidsMembers = boids && serialPoints == nil && followed == nil ? gpu.boidsMembers() : nil
+            // Sprites have no trail history to move; a step nothing draws writes no records. A
+            // renderer after the first has no compaction and writes its records itself.
+            compactWriter = request.writesRecords && !gpu.tracksHistory && followed == nil
+                ? compactWriters[request.kind] : nil
             let rope = request.kind == .rope || request.kind == .fallbackRope
             ropeOrder = rope && configuration.isInstanced && request.writesRecords ? gpu.ropeOrder() : nil
         }
@@ -261,10 +294,11 @@ final class ParticleGPUSimulator {
                                          threadsPerThreadgroup: group)
         }
         switch stage {
-        case .trailScanBlocks, .trailScanSums, .finish, .ropeOrder, .write:
+        case .follow, .trailScanBlocks, .trailScanSums, .finish, .ropeOrder, .write:
             guard plan.request.writesRecords else { return false }
         default:
-            break
+            // A renderer after a system's first only draws what that system's step left.
+            guard plan.simulation == nil else { return false }
         }
         switch stage {
         case .linkPoints:
@@ -463,6 +497,13 @@ final class ParticleGPUSimulator {
             encoder.setBuffer(control, offset: 0, index: 8)
             encoder.setBuffer(gpu.parameters, offset: 0, index: 9)
             perParticle()
+        case .follow:
+            guard let simulation = plan.simulation else { return false }
+            let words = MTLSize(width: ParticleGPUSystem.Control.materialDrawOffset / 4, height: 1, depth: 1)
+            encoder.setComputePipelineState(followControl)
+            encoder.setBuffer(simulation.control, offset: 0, index: 0)
+            encoder.setBuffer(control, offset: 0, index: 1)
+            encoder.dispatchThreads(words, threadsPerThreadgroup: words)
         case .trailScanBlocks:
             guard plan.trails else { return false }
             scanBlocks(plan.trailCounts, count: ParticleGPUSystem.Control.count, offsets: plan.offsets, blockSums: plan.blockSums,

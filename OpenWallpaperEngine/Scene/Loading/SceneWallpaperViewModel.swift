@@ -1691,6 +1691,12 @@ class SceneWallpaperViewModel: ObservableObject {
             assetData(named: $0, wallpaperDir: wallpaperDir)
         }
         system.fallbackSource = ParticleFallbackTexture.converted(source, format: albedo.flatMap(TEXImageFormat.init(texData:)))
+        // WE draws every renderer of the system from its one simulation, each through the material
+        // with that renderer's combos.
+        ParticleSystemBuilder.addRenderers(to: &system, particleSystem: particleSystem) { renderer in
+            buildParticleMaterial(materialPath, particleSystem: particleSystem, renderer: renderer, source: source,
+                                  spriteSheet: spriteSheet, object: object, wallpaperDir: wallpaperDir)
+        }
         return system
     }
 
