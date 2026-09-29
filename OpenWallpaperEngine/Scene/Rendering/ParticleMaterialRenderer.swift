@@ -34,6 +34,12 @@ final class ParticleMaterialRenderer {
     private var pendingPipelines = Set<String>()
 
     /// Whether a pipeline is still compiling: a frame drawn now may change when it lands.
+    /// Compiles finished so far, however they ended: a frame drawn before one landed is redrawn.
+    var pipelinesLanded: Int {
+        pipelineLock.withLock { landedPipelines }
+    }
+    private var landedPipelines = 0
+
     var hasPendingPipelines: Bool {
         pipelineLock.withLock { !pendingPipelines.isEmpty }
     }
@@ -514,6 +520,7 @@ final class ParticleMaterialRenderer {
             guard let self else { return }
             self.pipelineLock.withLock {
                 self.pendingPipelines.remove(key)
+                self.landedPipelines &+= 1
                 if let pipeline { self.pipelines[key] = pipeline } else { self.failedPipelines[key] = failure ?? "unknown" }
             }
         }

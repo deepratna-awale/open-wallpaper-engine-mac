@@ -413,6 +413,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var analysedShape: (layers: Int, target: SIMD2<Float>) = (0, .zero)
     /// A pipeline was compiling last frame: the frame after one lands changes too.
     private var analysedWarmUp = true
+    /// `pipelinesLanded` as the last analysed frame saw it.
+    private var analysedLanded = 0
     /// The blur-like buffer divisor (1, 2, 4) over the slider's (`OWE_BLUR_DIVISOR` for comparisons).
     var blurDivisorOverride = ProcessInfo.processInfo.environment["OWE_BLUR_DIVISOR"].flatMap(Int.init)
     private func effectResolution(of layerID: String) -> EffectResolutionPolicy {
@@ -3235,7 +3237,13 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                             transformScaleY: 1)
     }
 
-    private var pipelinesCompiling: Bool {
+    /// Compiles landed so far in the layer, effect and particle renderers.
+    private var pipelinesLanded: Int {
+        (effectGraph?.pipelinesLanded ?? 0) &+ (imageMaterials?.pipelinesLanded ?? 0) &+ (particleMaterials?.pipelinesLanded ?? 0)
+    }
+
+    /// Whether any pipeline is still compiling off the render thread.
+    var pipelinesCompiling: Bool {
         hasPendingEffectPipelines || imageMaterials?.hasPendingPipelines == true
             || particleMaterials?.hasPendingPipelines == true
     }
@@ -3277,9 +3285,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let shape = (layers: layers.count, target: drawableSize)
         // A layer, effect or post-process whose pipeline is still compiling draws another way until
         // it lands; nothing the analysis tracks says when.
+        // A compile can also start and land between two frames, unseen by `warming`.
         let warming = pipelinesCompiling
+        let landed = pipelinesLanded
         inputs.sceneChanged = shape.layers != analysedShape.layers || shape.target != analysedShape.target
-            || warming || analysedWarmUp || textRaster.hasFinished
+            || warming || analysedWarmUp || landed != analysedLanded || textRaster.hasFinished
+        analysedLanded = landed
         analysedShape = shape
         analysedWarmUp = warming
         layerAnalysis.update(inputs)
