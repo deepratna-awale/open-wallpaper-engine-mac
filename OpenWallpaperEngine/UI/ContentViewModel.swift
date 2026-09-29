@@ -357,7 +357,7 @@ class ContentViewModel: ObservableObject, DropDelegate {
     }
 
     var displayedWallpapers: [WEWallpaper] {
-        let startIndex = (currentPage - 1) * installedItemsPerPage
+        let startIndex = (InstalledPageWindow.clamp(currentPage, total: maxPage) - 1) * installedItemsPerPage
         guard startIndex < sortedWallpapers.count else { return [] }
         let endIndex = min(startIndex + installedItemsPerPage, sortedWallpapers.count)
         return Array(sortedWallpapers[startIndex..<endIndex])
@@ -375,7 +375,14 @@ class ContentViewModel: ObservableObject, DropDelegate {
         let pageSize = columns * rows
         guard installedItemsPerPage != pageSize else { return }
         installedItemsPerPage = pageSize
-        currentPage = min(currentPage, maxPage)
+        clampCurrentPage()
+    }
+
+    /// Keeps the current page inside the library after the page count changed (wallpapers
+    /// removed, a search or filter narrowed the list, a new page size).
+    func clampCurrentPage() {
+        let page = InstalledPageWindow.clamp(currentPage, total: maxPage)
+        if page != currentPage { currentPage = page }
     }
     
     /// Caculates the maximium possible page index for all wallpapers in your application wallpaper directory
