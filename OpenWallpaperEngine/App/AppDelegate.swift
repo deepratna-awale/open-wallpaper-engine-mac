@@ -278,7 +278,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         safeRestart.applicationWillTerminate()
         updater.stopShaderPrewarm()
-        if let wallpaper = UserDefaults.app.url(forKey: "OSWallpaper") {
+        if DesktopSnapshotCache.mayChangeDesktopPicture, let wallpaper = UserDefaults.app.url(forKey: "OSWallpaper") {
             for screen in NSScreen.screens {
                 try? NSWorkspace.shared.setDesktopImageURL(wallpaper, for: screen)
             }
@@ -523,7 +523,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     
     func saveCurrentWallpaper() {
-        guard let mainScreen = NSScreen.main else { return }
+        guard DesktopSnapshotCache.mayChangeDesktopPicture, let mainScreen = NSScreen.main else { return }
         var wallpaper: URL {
             var osWallpaper: URL { NSWorkspace.shared.desktopImageURL(for: mainScreen)! }
             if let wallpaper = UserDefaults.app.url(forKey: "OSWallpaper") {
