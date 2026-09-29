@@ -21,7 +21,7 @@ Open Wallpaper Engine, Wallpaper Engine duvar kâğıtlarını (sahne, video ve 
 | Özellik | Gereksinim | Kurulum |
 |---------|-------------|---------|
 | Steam Atölyesi’ne göz atma / Steam Atölyesi’nden indirme | `steamcmd` | Otomatik (isteğe bağlı: `brew install steamcmd`) |
-| Ses görselleştiricileri ve sese duyarlı SceneScript | Ekran ve Sistem Sesi Kaydı izni | Ayarlar → İzinler |
+| Ses görselleştiricileri ve sese duyarlı SceneScript | Sistem Ses Kaydı izni (macOS 14.2’den önce: Ekran ve Sistem Sesi Kaydı) | Ayarlar → İzinler |
 
 #### Gölgelendiriciler
 
@@ -128,7 +128,6 @@ Kaynaktan ilk derleme Sparkle Swift paketini indirir. Kaynaktan derlenen sürüm
 
 - **Uygulanmamış SceneScript işlevleri** — `getVideoTexture()` henüz hiçbir şey yapmaz.
 - **WebM videoları** — WebM (VP8/VP9) WebKit üzerinden oynatılır, bu yüzden müzik senkronizasyonu efektleri ona uygulanmaz.
-- **Ses özellikleri izin gerektirir** — Ekran ve Sistem Sesi Kaydı izni olmadan ses görselleştiricileri ve sese duyarlı SceneScript yalnızca sessizlik alır.
 
 ## Desteklenen Duvar Kâğıdı Türleri
 

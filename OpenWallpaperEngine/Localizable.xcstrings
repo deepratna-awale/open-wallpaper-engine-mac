@@ -51674,6 +51674,100 @@
         }
       }
     },
+    "Needed for audio visualizers and audio-reactive SceneScript. Only system audio is read, never the screen." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مطلوب للمؤثرات المرئية الصوتية وSceneScript المتفاعل مع الصوت. تتم قراءة صوت النظام فقط، وليس الشاشة أبدًا."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erforderlich für Audio-Visualisierungen und audio-reaktives SceneScript. Es wird nur das Systemaudio gelesen, nie der Bildschirm."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Necesario para los visualizadores de audio y el SceneScript que reacciona al audio. Solo se lee el audio del sistema, nunca la pantalla."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nécessaire pour les visualiseurs audio et les SceneScript réactifs au son. Seul l’audio du système est lu, jamais l’écran."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऑडियो विज़ुअलाइज़र और ऑडियो पर प्रतिक्रिया देने वाले SceneScript के लिए आवश्यक. केवल सिस्टम ऑडियो पढ़ा जाता है, स्क्रीन कभी नहीं."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Necessaria per i visualizzatori audio e per SceneScript reattivi all’audio. Viene letto solo l’audio di sistema, mai lo schermo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オーディオビジュアライザと、オーディオに反応するSceneScriptに必要です。読み取るのはシステムオーディオのみで、画面は読み取りません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오디오 시각화 및 오디오 반응형 SceneScript에 필요합니다. 시스템 오디오만 읽으며 화면은 읽지 않습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Potrzebne do wizualizatorów dźwięku i SceneScript reagującego na dźwięk. Odczytywany jest tylko dźwięk systemowy, nigdy ekran."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Necessária para visualizadores de áudio e SceneScript sensível a áudio. Somente o áudio do sistema é lido, nunca a tela."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Требуется для аудиовизуализаторов и SceneScript, реагирующего на звук. Считывается только системный звук, экран — никогда."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ses görselleştiricileri ve sese duyarlı SceneScript için gereklidir. Yalnızca sistem sesi okunur, ekran asla okunmaz."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Потрібно для аудіовізуалізаторів і SceneScript, що реагує на звук. Зчитується лише системний звук, екран — ніколи."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音频可视化和音频响应的 SceneScript 需要此权限。只读取系统音频，从不读取屏幕。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音訊視覺化和音訊回應式 SceneScript 需要此權限。只會讀取系統音訊，絕不讀取螢幕。"
+          }
+        }
+      }
+    },
     "Needed to browse and search the Workshop. It is stored in your keychain and checked with Steam before saving. Without it, author names come from public Steam profiles." : {
       "localizations" : {
         "ar" : {
@@ -56291,6 +56385,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Open Wallpaper Engine 需要「螢幕與系統錄音」權限，才能為音訊長條和其他音訊回應式背景圖片讀取系統音訊。授與權限後即會自動開始擷取音訊。"
+          }
+        }
+      }
+    },
+    "Open Wallpaper Engine needs System Audio Recording permission to read system audio for audio bars and other audio-reactive wallpapers. Audio capture starts on its own once the permission is granted." : {
+      "comment" : "System Audio Recording is the name of the macOS privacy setting",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يحتاج Open Wallpaper Engine إلى إذن «تسجيل صوت النظام» لقراءة صوت النظام من أجل أشرطة الصوت والخلفيات الأخرى التي تستجيب للصوت. يبدأ التقاط الصوت تلقائيًا بمجرد منح الإذن."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine benötigt die Berechtigung „Aufnahme von Systemaudio“, um das Systemaudio für Audiobalken und andere audio-reaktive Hintergrundbilder zu lesen. Die Audioaufnahme startet automatisch, sobald die Berechtigung erteilt wurde."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine necesita el permiso de Grabación del audio del sistema para leer el audio del sistema para las barras de audio y otros fondos de pantalla que reaccionan al audio. La captura de audio empezará sola en cuanto se conceda el permiso."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine a besoin de l’autorisation « Enregistrement des sons du système » pour lire l’audio du système pour les barres audio et les autres fonds d’écran réactifs au son. La capture audio démarre d’elle-même une fois l’autorisation accordée."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऑडियो बार और ऑडियो पर प्रतिक्रिया देने वाले अन्य वॉलपेपर के लिए सिस्टम ऑडियो पढ़ने हेतु Open Wallpaper Engine को सिस्टम ऑडियो रिकॉर्डिंग अनुमति की ज़रूरत है. अनुमति मिलते ही ऑडियो कैप्चर अपने आप शुरू हो जाता है."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine richiede l’autorizzazione Registrazione audio di sistema per leggere l’audio di sistema per le barre audio e gli altri sfondi reattivi all’audio. L’acquisizione audio si avvia da sola non appena concedi l’autorizzazione."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engineがオーディオバーやその他のオーディオに反応する壁紙のためにシステムオーディオを読み取るには、「システムオーディオ録音」の許可が必要です。許可されるとオーディオのキャプチャが自動的に開始されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine이 오디오 막대 및 기타 오디오 반응형 배경화면을 위해 시스템 오디오를 읽으려면 시스템 오디오 녹음 권한이 필요합니다. 권한이 허용되면 오디오 캡처가 자동으로 시작됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine wymaga pozwolenia Nagrywanie dźwięku systemowego, aby odczytywać dźwięk systemowy na potrzeby słupków audio i innych tapet reagujących na dźwięk. Przechwytywanie dźwięku rozpocznie się samo po udzieleniu pozwolenia."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Open Wallpaper Engine precisa da permissão de Gravação do Áudio do Sistema para ler o áudio do sistema para barras de áudio e outras imagens de fundo sensíveis a áudio. A captura de áudio começa sozinha assim que a permissão é concedida."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine требуется разрешение «Системная аудиозапись», чтобы получать системный звук для аудиополос и других обоев, реагирующих на звук. Захват звука начнётся сам после выдачи разрешения."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine’in ses çubukları ve sese duyarlı diğer duvar kâğıtları için sistem sesini okuyabilmesi için Sistem Ses Kaydı izni gerekir. İzin verildiğinde ses yakalama kendiliğinden başlar."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine потрібен дозвіл «Записування системного звуку», щоб зчитувати системний звук для аудіосмуг та інших шпалер, що реагують на звук. Записування звуку почнеться автоматично, щойно дозвіл буде надано."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 需要“系统录音”权限，才能为音频条和其他音频响应墙纸读取系统音频。授予权限后，音频捕获会自动开始。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 需要「系統錄音」權限，才能為音訊長條和其他音訊回應式背景圖片讀取系統音訊。授與權限後即會自動開始擷取音訊。"
           }
         }
       }
@@ -87713,6 +87902,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "與音樂同步"
+          }
+        }
+      }
+    },
+    "System Audio Recording" : {
+      "comment" : "Name of the macOS privacy setting that lets an app read system audio",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تسجيل صوت النظام"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufnahme von Systemaudio"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grabación del audio del sistema"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrement des sons du système"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सिस्टम ऑडियो रिकॉर्डिंग"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrazione audio di sistema"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "システムオーディオ録音"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시스템 오디오 녹음"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nagrywanie dźwięku systemowego"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gravação do Áudio do Sistema"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Системная аудиозапись"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sistem Ses Kaydı"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записування системного звуку"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "系统录音"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "系統錄音"
           }
         }
       }
