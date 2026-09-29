@@ -47,6 +47,40 @@ final class ScenePuppetLibraryTests: XCTestCase {
         print("Library puppets, posed (and their bind pose against the picture):\n\(report)")
     }
 
+    /// A puppet with effects runs them on its posed image, frame after frame. The Cyberpunk
+    /// Samurai (2321732083: `pulse` and `blend` on the puppet) stood in its first pose while its
+    /// effects' kept output was keyed by the image's texture alone, which the mesh redraws in
+    /// place; only the pulse moved. Its crop now changes as its cape and head layers play.
+    func testAPuppetWithEffectsMovesWithItsPose() throws {
+        _ = try Fixtures.assets()
+        let directory = LibrarySweepTests.libraryRoot.appending(path: "2321732083", directoryHint: .isDirectory)
+        let projectURL = directory.appending(path: "project.json")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: projectURL.path), "2321732083 not in the library")
+        let text = String(decoding: try Data(contentsOf: projectURL), as: UTF8.self)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "\u{FEFF}"))
+        let project = try decodeTolerant(WEProject.self, from: Data(text.utf8))
+        var settings = SceneRenderSettings()
+        settings.postProcessing = .enabled
+        let renderer = WEReferenceRenderer(directory: directory, project: project, settings: settings, storage: storage)
+        let frames = try renderer.render((0..<5).map { WEReferenceRenderer.Shot(time: 10 + Double($0) * 0.25, cursor: SIMD2(960, 540)) })
+        // The samurai's crop of the 1920×1080 frame, grey.
+        let crops = frames.map { frame -> [Float] in
+            stride(from: 250, to: 810, by: 2).flatMap { y in
+                stride(from: 550, to: 1050, by: 2).map { x -> Float in
+                    let index = (y * frame.width + x) * 4
+                    return 0.299 * Float(frame.pixels[index]) + 0.587 * Float(frame.pixels[index + 1])
+                        + 0.114 * Float(frame.pixels[index + 2])
+                }
+            }
+        }
+        let steps = zip(crops, crops.dropFirst()).map { a, b in
+            zip(a, b).reduce(Float(0)) { $0 + abs($1.0 - $1.1) } / Float(a.count)
+        }
+        let mean = steps.reduce(0, +) / Float(steps.count)
+        // Frozen with only the pulse: 0.7–1.0 a step; posed: 2–6.
+        XCTAssertGreaterThan(mean, 1.8, "the samurai's crop per 0.25 s: \(steps)")
+    }
+
     // MARK: - One scene
 
     private func sweep(_ item: Item, output: URL?) throws -> String {
