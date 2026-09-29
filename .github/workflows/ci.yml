@@ -27,6 +27,10 @@ env:
   TEST_FLAGS: >-
     -parallel-testing-enabled YES
     -parallel-testing-worker-count 3
+  # Timing and frame-timed render classes flake under three workers' CPU/GPU contention;
+  # the parallel run skips them and a serial run follows.
+  SERIAL_CLASSES: >-
+    TimelineCostTests TimelineRenderTests ImageMaterialPrelightingTests SceneScriptRenderTests ParticleEmitterTimingTests ParticleSimulationPerformanceTests SceneFrameBenchmarkTests
 
 jobs:
   # Builds the app and the test bundle once; both test jobs run that build without recompiling.
@@ -116,9 +120,13 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p build/DerivedData && tar -C build/DerivedData -xzf products.tgz
-          xcodebuild test-without-building $TEST_FLAGS \
-            -xctestrun "$(ls build/DerivedData/Build/Products/*.xctestrun | head -1)" \
-            -destination platform=macOS | tee xcodebuild.log
+          XCTESTRUN="$(ls build/DerivedData/Build/Products/*.xctestrun | head -1)"
+          SKIP=(); ONLY=()
+          for c in $SERIAL_CLASSES; do SKIP+=(-skip-testing:OpenWallpaperEngineTests/$c); ONLY+=(-only-testing:OpenWallpaperEngineTests/$c); done
+          xcodebuild test-without-building $TEST_FLAGS "${SKIP[@]}" \
+            -xctestrun "$XCTESTRUN" -destination platform=macOS | tee xcodebuild.log
+          xcodebuild test-without-building -parallel-testing-enabled NO "${ONLY[@]}" \
+            -xctestrun "$XCTESTRUN" -destination platform=macOS | tee -a xcodebuild.log
 
       - name: Upload log
         if: failure()
@@ -199,9 +207,13 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p build/DerivedData && tar -C build/DerivedData -xzf products.tgz
-          xcodebuild test-without-building $TEST_FLAGS \
-            -xctestrun "$(ls build/DerivedData/Build/Products/*.xctestrun | head -1)" \
-            -destination platform=macOS | tee xcodebuild.log
+          XCTESTRUN="$(ls build/DerivedData/Build/Products/*.xctestrun | head -1)"
+          SKIP=(); ONLY=()
+          for c in $SERIAL_CLASSES; do SKIP+=(-skip-testing:OpenWallpaperEngineTests/$c); ONLY+=(-only-testing:OpenWallpaperEngineTests/$c); done
+          xcodebuild test-without-building $TEST_FLAGS "${SKIP[@]}" \
+            -xctestrun "$XCTESTRUN" -destination platform=macOS | tee xcodebuild.log
+          xcodebuild test-without-building -parallel-testing-enabled NO "${ONLY[@]}" \
+            -xctestrun "$XCTESTRUN" -destination platform=macOS | tee -a xcodebuild.log
 
       - name: Upload log
         # The log only; never the assets.
