@@ -597,7 +597,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 || layer.weEffects.contains { $0.passes.contains { !$0.systemTextures.isEmpty } }
         }
         if bindsSystemTexture, let media = scripts.services?.media {
-            mediaTextures = SceneMediaTextures(source: media)
+            mediaTextures = SceneMediaTextures(source: media, device: device)
         }
         contentQueue.async { [weak self] in
             guard let self, self.isCurrentContentGeneration(generation) else { return }
@@ -3416,7 +3416,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     /// A system texture's image now; nil without one (or without script services).
     private func systemTexture(_ kind: SceneSystemTexture) -> MTLTexture? {
-        mediaTextures?.texture(kind, loader: textureLoader, device: device)
+        mediaTextures?.texture(kind)
     }
 
     private func spriteSheetUV(for particle: Particle,
