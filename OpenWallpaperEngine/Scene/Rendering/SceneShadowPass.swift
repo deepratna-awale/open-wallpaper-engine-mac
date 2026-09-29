@@ -170,6 +170,8 @@ final class SceneShadowPass {
                 }
                 recording.setViewports(kept.map { batch.viewports[$0] })
                 for draw in caster.draws {
+                    // A mesh outside every kept view is clipped in all of them.
+                    if let sphere = draw.sphere, !kept.contains(where: { frustums[$0].contains(sphere) }) { continue }
                     recording.add(draw, matrices: matrices, instances: kept.count)
                 }
             }
@@ -265,6 +267,8 @@ final class SceneShadowPass {
         let indexType: MTLIndexType
         /// A texture's contents may change while it stays the same object.
         let hasChangingTexture: Bool
+        /// The mesh's own sphere (`SceneModelPlan.Mesh.bounds`), nil to follow the caster's.
+        var sphere: SceneModelCulling.Sphere? = nil
 
         /// The same objects and counts (the uniforms are compared as bytes).
         func drawsSame(as other: MeshDraw) -> Bool {
@@ -313,7 +317,8 @@ final class SceneShadowPass {
             draws.append(MeshDraw(pipeline: pipeline, buffers: meshBuffers, textures: bound, uniforms: program,
                                   indexCount: models.indexCount(of: mesh, in: plan),
                                   indexType: mesh.usesUInt32Indices ? .uint32 : .uint16,
-                                  hasChangingTexture: bound.contains { $0.changes }))
+                                  hasChangingTexture: bound.contains { $0.changes },
+                                  sphere: mesh.bounds.map { SceneModelCulling.Sphere($0, world: caster.world) }))
         }
         return PreparedCaster(sphere: SceneModelCulling.Sphere(plan.bounds, world: caster.world), draws: draws)
     }

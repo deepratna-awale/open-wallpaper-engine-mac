@@ -159,7 +159,8 @@ final class SceneModelRenderer: SceneModelDrawing {
         let plan = currentPlan(authored, objectID: model.id)
         // WE poses a visible model every frame, culled or not (0x14021c480).
         let bones = advance(model, plan: plan, frame: draw.frame, values: draw.values)
-        guard frustum(draw.camera.viewProjection).contains(SceneModelCulling.Sphere(plan.bounds, world: draw.world)) else {
+        let viewFrustum = frustum(draw.camera.viewProjection)
+        guard viewFrustum.contains(SceneModelCulling.Sphere(plan.bounds, world: draw.world)) else {
             modelsCulled += 1
             culledModels.insert(model.id)
             return
@@ -170,6 +171,8 @@ final class SceneModelRenderer: SceneModelDrawing {
         let placement = draw.placement
         var drew = false
         for (index, mesh) in plan.meshes.enumerated() {
+            // A mesh wholly outside the view draws nothing (its triangles are all clipped).
+            if let bounds = mesh.bounds, !viewFrustum.contains(SceneModelCulling.Sphere(bounds, world: draw.world)) { continue }
             guard let buffers = meshBuffers[index], mesh.material.pass.variant != nil,
                   let pipeline = pipeline(for: mesh, pixelFormat: draw.pixelFormat, sampleCount: draw.sampleCount,
                                           depthFormat: depthFormat),

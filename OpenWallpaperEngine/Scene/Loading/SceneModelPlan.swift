@@ -16,6 +16,9 @@ final class SceneModelPlan {
         let indexData: Data
         let usesUInt32Indices: Bool
         let indexCount: Int
+        /// The mesh's own box (`MDLV` ≥ 17), for culling it apart from the model's; nil when
+        /// unknown or when its vertices move in the shader (skinning, morphs), so the box can't hold them.
+        var bounds: MDLBounds? = nil
     }
 
     /// The `.mdl` path, for logging.
