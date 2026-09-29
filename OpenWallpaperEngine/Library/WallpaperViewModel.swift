@@ -117,6 +117,8 @@ class WallpaperViewModel: ObservableObject {
     /// The scenes (and Metal videos) running on this model's displays, one per wallpaper however
     /// many displays show it (docs/architecture.md "Wallpaper instances").
     let sceneInstances = WallpaperInstanceRegistry<WallpaperInstanceKey, SceneWallpaperInstance>(teardown: { $0.shutdown() })
+    /// The scenes' loading snapshots refreshed this launch (`SceneLoadingSnapshotCapture`).
+    let loadingSnapshots = SceneLoadingSnapshotSession(store: .current)
     /// The AVKit videos running on this model's displays, one player per video.
     let videoInstances = WallpaperInstanceRegistry<WallpaperInstanceKey, VideoWallpaperViewModel>(teardown: { $0.stop() })
     private var playlistIndex = 0
