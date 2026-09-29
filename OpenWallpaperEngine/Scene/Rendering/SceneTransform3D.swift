@@ -189,6 +189,15 @@ struct SceneTransformHierarchy3D: Equatable {
     /// Removes an object's node: one a script destroyed.
     mutating func remove(_ id: String) { nodes.removeValue(forKey: id) }
 
+    /// `ILayer.setParent`: hangs `id` from `parent` (nil makes it a root), from the attachment
+    /// named `attachment` of the parent's rig when given; its own transform stays. An object or a
+    /// parent without a node (one a script created) gets one, whose own transform is its live one.
+    mutating func setParent(_ id: String, to parent: String?, attachment: String?) {
+        guard parent != nil || nodes[id] != nil else { return }
+        if let parent, nodes[parent] == nil { nodes[parent] = Node(parentID: nil, local: .identity) }
+        nodes[id] = Node(parentID: parent, local: nodes[id]?.local ?? .identity, attachment: parent == nil ? nil : attachment)
+    }
+
     /// Every object of `objects`, keyed like the 2D hierarchy (`id`, else its index). The
     /// `attachment` is every object's (`WESceneObject.attachment`).
     init(objects: [WESceneObject], rootOrigin: SIMD3<Float> = .zero) {

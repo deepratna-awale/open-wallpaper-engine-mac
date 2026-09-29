@@ -1,5 +1,5 @@
 'use strict';
-// SceneScript object model, part 2 of 5: `IAnimation` and `ITextureAnimation` over the animation
+// SceneScript object model, part 2 of 6: `IAnimation` and `ITextureAnimation` over the animation
 // buffer (docs/timeline-plan.md §3; layout in SceneScriptObjectStore.AnimationLayout). The
 // renderer writes each clock's state before a frame; the methods here apply WE's rules to it in
 // call order, so a script reads back what it just did, mark the slot dirty and push the command.
