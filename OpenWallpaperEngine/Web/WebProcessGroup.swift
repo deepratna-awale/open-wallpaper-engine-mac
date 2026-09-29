@@ -30,6 +30,9 @@ final class WebProcessGroup {
     func relate(_ configuration: WKWebViewConfiguration, to wallpaper: URL) -> Bool {
         guard configuration.responds(to: Self.setRelated),
               let related = relatedWebView(for: wallpaper) else { return false }
+        // WebKit raises unless a related page shares its process pool and data store.
+        configuration.processPool = related.configuration.processPool
+        configuration.websiteDataStore = related.configuration.websiteDataStore
         configuration.perform(Self.setRelated, with: related)
         return true
     }
