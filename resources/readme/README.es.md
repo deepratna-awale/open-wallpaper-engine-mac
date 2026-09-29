@@ -126,7 +126,7 @@ Al compilar desde el código fuente, la primera compilación descarga el paquete
 
 ## Limitaciones actuales
 
-- **Funciones de SceneScript sin implementar**: `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `transformAttachmentToTexture()`, `getVideoTexture()` todavía no hacen nada.
+- **Funciones de SceneScript sin implementar**: `getVideoTexture()` todavía no hace nada.
 - **Paridad con SceneScript**: no se reproducen todos los nombres de eventos propietarios, callbacks de entrada, casos límite del ciclo de vida ni la semántica exacta de temporización.
 - **Funciones de partículas poco comunes**: no se admiten formas de emisor distintas de esfera, caja e imagen de capa, ni los renderizadores posteriores al primero de un sistema.
 - **Vídeos WebM**: el formato WebM (VP8/VP9) se reproduce a través de WebKit, por lo que los efectos de sincronización con la música no se aplican.

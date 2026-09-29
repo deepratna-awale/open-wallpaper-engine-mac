@@ -126,7 +126,7 @@ Xcode で署名証明書を自分のものに変更するか「Sign to Run Local
 
 ## 現在の制限事項
 
-- **SceneScript の未実装関数** — `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `transformAttachmentToTexture()`, `getVideoTexture()` はまだ何もしません。
+- **SceneScript の未実装関数** — `getVideoTexture()` はまだ何もしません。
 - **SceneScript の互換性** — 独自のイベント名、入力コールバック、ライフサイクルのエッジケース、正確なタイミングのセマンティクスのすべてが再現されているわけではありません。
 - **まれなパーティクル機能** — 球・ボックス・レイヤー画像以外のエミッター形状と、システムの 2 番目以降のレンダラーには対応していません。
 - **WebM ビデオ** — WebM（VP8/VP9）は WebKit で再生されるため、音楽同期エフェクトは適用されません。

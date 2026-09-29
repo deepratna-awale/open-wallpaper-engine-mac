@@ -126,7 +126,7 @@ Beim ersten Build aus dem Quellcode wird das Swift-Paket Sparkle geladen. Aus de
 
 ## Aktuelle Einschränkungen
 
-- **SceneScript-Platzhalter** – `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `transformAttachmentToTexture()`, `getVideoTexture()` tun noch nichts.
+- **SceneScript-Platzhalter** – `getVideoTexture()` tut noch nichts.
 - **SceneScript-Parität** – Nicht jeder proprietäre Ereignisname, jeder Eingabe-Callback, jeder Sonderfall im Lebenszyklus und jede exakte Timing-Semantik wird nachgebildet.
 - **Seltene Partikelfunktionen** – Emitterformen außer Kugel, Box und Ebenenbild sowie weitere Renderer nach dem ersten eines Systems werden nicht unterstützt.
 - **WebM-Videos** – WebM (VP8/VP9) läuft über WebKit, daher wirken Musiksynchronisations-Effekte darauf nicht.
