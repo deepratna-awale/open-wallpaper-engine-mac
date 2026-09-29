@@ -628,7 +628,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 var system = system
                 ParticleEmitterImagePoints.fill(&system.emitterImages, sources: imageSources, device: self.device,
                                                 queue: self.commandQueue, cache: &imagePoints)
-                guard let texture = self.particleTexture(from: system.source) else { return nil }
+                guard let texture = self.particleTexture(from: system.source, spriteSheet: system.spriteSheet != nil) else { return nil }
                 let fallback = system.fallbackSource.flatMap { self.makeTextureFrames(from: $0)?.first?.texture }
                 // Seeded by position in the scene, so a wallpaper's particles replay the same way.
                 let seed = UInt32(index) &+ self.particleSeed &* 0x9E37_79B9
@@ -862,7 +862,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             let runtimes: [ParticleSystemRuntime?] = systems.enumerated().map { index, system in
                 var system = system
                 system.order = Int(Int32.max)
-                guard let texture = particleTexture(from: system.source) else { return nil }
+                guard let texture = particleTexture(from: system.source, spriteSheet: system.spriteSheet != nil) else { return nil }
                 let fallback = system.fallbackSource.flatMap { makeTextureFrames(from: $0)?.first?.texture }
                 let seed = UInt32(truncatingIfNeeded: (Int(id) ?? 0) &* 31 &+ index)
                 return ParticleSystemRuntime(texture: texture, configuration: system, seed: ParticleRandom.pcg(seed),
@@ -3308,9 +3308,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     }
 
     /// A particle system's texture 0 with its mip chain; systems that share a texture share it.
-    private func particleTexture(from source: SceneMetalTextureSource) -> MTLTexture? {
+    /// A sprite sheet keeps the levels its file stores: a generated chain would bleed its cells
+    /// into each other at the small levels.
+    private func particleTexture(from source: SceneMetalTextureSource, spriteSheet: Bool) -> MTLTexture? {
         guard let texture = makeTextureFrames(from: source)?.first?.texture else { return nil }
-        guard ParticleTextureMipmaps.needsChain(texture) else { return texture }
+        guard !spriteSheet, ParticleTextureMipmaps.needsChain(texture) else { return texture }
         let key = ObjectIdentifier(texture)
         uploadedImagesLock.lock()
         let cached = particleMipmaps[key]?.chained
