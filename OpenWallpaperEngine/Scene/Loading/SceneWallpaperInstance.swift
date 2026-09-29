@@ -187,6 +187,13 @@ final class SceneWallpaperInstance {
         }
     }
 
+    /// Drawables a wallpaper's layer may have in flight. Up to 60 fps a frame has a whole refresh
+    /// to finish, so two are enough and the third's memory (a full-screen texture) is saved; faster
+    /// pacing keeps three so the GPU never waits on the display.
+    nonisolated static func maximumDrawableCount(forRate rate: Int) -> Int {
+        rate <= 60 ? 2 : 3
+    }
+
     /// The rate a display draws at: the user's limit, or its screen's refresh rate if lower.
     private static func frameRate(of view: MTKView) -> Int {
         let screenRate = view.window?.screen?.maximumFramesPerSecond ?? view.preferredFramesPerSecond
@@ -231,7 +238,12 @@ final class SceneWallpaperInstance {
             let frozen = (plays[id] == false || hidden) && !easing
             displays[id]?.frozen = frozen
             let refresh = view.window?.screen?.maximumFramesPerSecond ?? 60
-            view.preferredFramesPerSecond = FramePacing.cadence(fps, refreshRate: refresh > 0 ? refresh : 60)
+            let cadence = FramePacing.cadence(fps, refreshRate: refresh > 0 ? refresh : 60)
+            view.preferredFramesPerSecond = cadence
+            if let layer = view.layer as? CAMetalLayer {
+                let count = Self.maximumDrawableCount(forRate: cadence)
+                if layer.maximumDrawableCount != count { layer.maximumDrawableCount = count }
+            }
             view.isPaused = frozen || (paused && !easing)
             schedule.setFrameRate(frozen ? 0 : Self.frameRate(of: view), of: id)
         }
