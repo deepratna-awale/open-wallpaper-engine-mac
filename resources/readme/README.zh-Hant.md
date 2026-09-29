@@ -129,7 +129,6 @@ open "OpenWallpaperEngine.xcodeproj"
 - **尚未實作的 SceneScript 函式** — `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `transformAttachmentToTexture()`, `getVideoTexture()` 目前不執行任何動作。
 - **SceneScript 一致性** — 並未完整重現所有專有事件名稱、輸入回呼、生命週期的邊界情況或精確的計時語意。
 - **少見的粒子功能** — 不支援球體、盒體與圖層影像以外的發射器形狀，也不支援系統中第一個之後的渲染器。
-- **需要 Wallpaper Engine 資源** — 場景需要你自己的 Wallpaper Engine 副本中的資源（「設定 → 資源」）；沒有這些資源時只能播放影片與網頁背景圖片。
 - **WebM 影片** — WebM（VP8/VP9）透過 WebKit 播放，因此音樂同步效果不適用。
 - **部分 JPEG 縮覽圖** — 少數 TEXB 格式 1 檔案含有 macOS 無法解碼的非標準 JPEG 資料。
 - **效能設定的適用範圍** — 品質、消除鋸齒與後處理選項是為場景背景圖片而設計，對影片與網頁背景圖片的效果有限。

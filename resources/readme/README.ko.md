@@ -129,7 +129,6 @@ Xcode에서 서명 인증서를 본인의 인증서로 변경하거나 'Sign to 
 - **구현되지 않은 SceneScript 함수** — `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `transformAttachmentToTexture()`, `getVideoTexture()`는 아직 아무 작업도 하지 않습니다.
 - **SceneScript 호환성** — 모든 독점 이벤트 이름, 입력 콜백, 수명 주기의 예외 상황, 정확한 타이밍 의미가 재현되지는 않습니다.
 - **드문 파티클 기능** — 구, 상자, 레이어 이미지 외의 이미터 모양과 시스템의 첫 번째 이후 렌더러는 지원되지 않습니다.
-- **Wallpaper Engine 에셋 필요** — 장면에는 사용자의 Wallpaper Engine 사본에 있는 에셋이 필요합니다(*설정 → 에셋*). 에셋이 없으면 비디오와 웹 배경화면만 재생됩니다.
 - **WebM 비디오** — WebM(VP8/VP9)은 WebKit으로 재생되므로 음악 동기화 효과가 적용되지 않습니다.
 - **일부 JPEG 썸네일** — 소수의 TEXB 형식 1 파일에는 macOS가 디코딩할 수 없는 비표준 JPEG 데이터가 포함되어 있습니다.
 - **성능 설정 적용 범위** — 품질, 앤티앨리어싱, 포스트 프로세싱 옵션은 장면 배경화면용으로 설계되었으며, 비디오 및 웹 배경화면에는 효과가 제한적입니다.

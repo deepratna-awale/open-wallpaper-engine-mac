@@ -129,7 +129,6 @@ La prima compilazione dal codice sorgente scarica il pacchetto Swift Sparkle. Le
 - **Funzioni SceneScript non implementate**: `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `transformAttachmentToTexture()`, `getVideoTexture()` non fanno ancora nulla.
 - **Parità di SceneScript**: non vengono riprodotti tutti i nomi di eventi proprietari, i callback di input, i casi limite del ciclo di vita o l’esatta semantica delle tempistiche.
 - **Funzioni particellari rare**: le forme di emettitore diverse da sfera, box e immagine del livello e i renderer successivi al primo di un sistema non sono supportati.
-- **Risorse di Wallpaper Engine necessarie**: le scene richiedono le risorse della tua copia di Wallpaper Engine (Impostazioni → Risorse); senza di esse funzionano solo gli sfondi video e web.
 - **Video WebM**: i WebM (VP8/VP9) vengono riprodotti tramite WebKit, quindi gli effetti di sincronizzazione musicale non si applicano.
 - **Alcune miniature JPEG**: un piccolo numero di file TEXB di formato 1 contiene dati JPEG non standard che macOS non riesce a decodificare.
 - **Ambito delle impostazioni delle prestazioni**: le opzioni di qualità, anti-aliasing e post-elaborazione sono pensate per gli sfondi di tipo scena e hanno un effetto limitato sugli sfondi video e web.

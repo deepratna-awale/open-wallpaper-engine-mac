@@ -129,7 +129,6 @@ Beim ersten Build aus dem Quellcode wird das Swift-Paket Sparkle geladen. Aus de
 - **SceneScript-Platzhalter** – `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `transformAttachmentToTexture()`, `getVideoTexture()` tun noch nichts.
 - **SceneScript-Parität** – Nicht jeder proprietäre Ereignisname, jeder Eingabe-Callback, jeder Sonderfall im Lebenszyklus und jede exakte Timing-Semantik wird nachgebildet.
 - **Seltene Partikelfunktionen** – Emitterformen außer Kugel, Box und Ebenenbild sowie weitere Renderer nach dem ersten eines Systems werden nicht unterstützt.
-- **Wallpaper-Engine-Assets erforderlich** – Szenen brauchen die Assets aus deiner eigenen Wallpaper-Engine-Kopie (Einstellungen → Assets); ohne sie laufen nur Video- und Web-Hintergrundbilder.
 - **WebM-Videos** – WebM (VP8/VP9) läuft über WebKit, daher wirken Musiksynchronisations-Effekte darauf nicht.
 - **Einige JPEG-Miniaturen** – Einige wenige Dateien im Format TEXB 1 enthalten nicht standardkonforme JPEG-Daten, die macOS nicht decodieren kann.
 - **Geltungsbereich der Leistungseinstellungen** – Die Optionen für Qualität, Antialiasing und Post-Processing sind für Szenen-Hintergrundbilder gedacht und wirken sich auf Video- und Web-Hintergrundbilder nur begrenzt aus.

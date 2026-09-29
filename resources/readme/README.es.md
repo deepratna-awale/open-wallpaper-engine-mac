@@ -129,7 +129,6 @@ Al compilar desde el código fuente, la primera compilación descarga el paquete
 - **Funciones de SceneScript sin implementar**: `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `transformAttachmentToTexture()`, `getVideoTexture()` todavía no hacen nada.
 - **Paridad con SceneScript**: no se reproducen todos los nombres de eventos propietarios, callbacks de entrada, casos límite del ciclo de vida ni la semántica exacta de temporización.
 - **Funciones de partículas poco comunes**: no se admiten formas de emisor distintas de esfera, caja e imagen de capa, ni los renderizadores posteriores al primero de un sistema.
-- **Se necesitan los recursos de Wallpaper Engine**: las escenas necesitan los recursos de tu propia copia de Wallpaper Engine (Ajustes → Recursos); sin ellos solo se reproducen los fondos de vídeo y web.
 - **Vídeos WebM**: el formato WebM (VP8/VP9) se reproduce a través de WebKit, por lo que los efectos de sincronización con la música no se aplican.
 - **Algunas miniaturas JPEG**: un pequeño número de archivos TEXB de formato 1 contienen datos JPEG no estándar que macOS no puede descodificar.
 - **Alcance de los ajustes de rendimiento**: las opciones de calidad, suavizado de contorno y posprocesado están pensadas para los fondos de pantalla de escena y tienen un efecto limitado en los fondos de pantalla de vídeo y web.

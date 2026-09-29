@@ -129,7 +129,6 @@ Pierwsza kompilacja ze źródeł pobiera pakiet Swift Sparkle. Wersje zbudowane 
 - **Niezaimplementowane funkcje SceneScript** — `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `transformAttachmentToTexture()`, `getVideoTexture()` jeszcze nic nie robią.
 - **Zgodność SceneScript** — nie każda zastrzeżona nazwa zdarzenia, wywołanie zwrotne wejścia, przypadek brzegowy cyklu życia ani dokładna semantyka czasu jest odtworzona.
 - **Rzadkie funkcje cząsteczek** — Kształty emiterów inne niż kula, prostopadłościan i obraz warstwy oraz renderery po pierwszym w systemie nie są obsługiwane.
-- **Wymagane zasoby Wallpaper Engine** — Sceny potrzebują zasobów z Twojej kopii Wallpaper Engine (Ustawienia → Zasoby); bez nich działają tylko tapety wideo i internetowe.
 - **Filmy WebM** — WebM (VP8/VP9) jest odtwarzany przez WebKit, więc efekty synchronizacji z muzyką nie działają.
 - **Niektóre miniatury JPEG** — niewielka liczba plików TEXB w formacie 1 zawiera niestandardowe dane JPEG, których macOS nie potrafi zdekodować.
 - **Zakres ustawień wydajności** — opcje jakości, antyaliasingu i przetwarzania końcowego są przeznaczone dla tapet typu scena i mają ograniczony wpływ na tapety wideo i internetowe.
