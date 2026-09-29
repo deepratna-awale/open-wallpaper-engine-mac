@@ -78,12 +78,17 @@ struct WallpaperExplorer: SubviewOfContentView {
             .onPreferenceChange(ExplorerFooterHeightKey.self) { height in
                 footerHeight = height
             }
-            .onAppear { recomputePageSize(in: geometry) }
+            .onAppear {
+                recomputePageSize(in: geometry)
+                viewModel.clampCurrentPage()
+            }
             .onChange(of: geometry.size) { recomputePageSize(in: geometry) }
             // Tile size changes the row/column count, so the page size has to be recomputed too;
             // otherwise the grid overflows and pushes the footer controls out of view.
             .onChange(of: viewModel.explorerIconSize) { recomputePageSize(in: geometry) }
             .onChange(of: footerHeight) { recomputePageSize(in: geometry) }
+            // Removing wallpapers or narrowing the search or filters can leave the current page past the last one.
+            .onChange(of: viewModel.maxPage) { viewModel.clampCurrentPage() }
             .sheet(isPresented: $isCreatePlaylistPresented) {
                 CreatePlaylistSheet(
                     wallpapers: viewModel.selectedWallpaperItems(),
@@ -151,7 +156,7 @@ private struct InstalledPagination: View {
                 Image(systemName: "chevron.left")
             }
             .accessibilityLabel(Text("Previous Page"))
-            .disabled(viewModel.currentPage == 1)
+            .disabled(viewModel.currentPage <= 1)
 
             ForEach(pageNumbers, id: \.self) { page in
                 if page == viewModel.currentPage {
@@ -174,9 +179,7 @@ private struct InstalledPagination: View {
     }
 
     private var pageNumbers: [Int] {
-        let firstPage = max(1, viewModel.currentPage - 2)
-        let lastPage = min(viewModel.maxPage, viewModel.currentPage + 2)
-        return Array(firstPage...lastPage)
+        InstalledPageWindow.pageNumbers(current: viewModel.currentPage, total: viewModel.maxPage)
     }
 
     private func pageButton(_ page: Int) -> some View {
