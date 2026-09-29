@@ -71,6 +71,22 @@ final class AudioCaptureDemandTests: XCTestCase {
         XCTAssertNotNil(lease)
     }
 
+    /// Switching to an audio wallpaper after capture stopped starts it again.
+    func testReacquireAfterStopRestartsCapture() {
+        let clock = ManualClock()
+        let (demand, changes) = makeDemand(clock)
+        var lease: AudioCaptureLease? = demand.acquire()
+        clock.advance(by: 0)
+        lease = nil
+        clock.advance(by: 6)
+        XCTAssertFalse(demand.isDemanded)
+        lease = demand.acquire()
+        clock.advance(by: 0)
+        XCTAssertTrue(demand.isDemanded)
+        XCTAssertEqual(changes(), [true, false, true])
+        XCTAssertNotNil(lease)
+    }
+
     func testExplicitReleaseIsIdempotent() {
         let clock = ManualClock()
         let (demand, _) = makeDemand(clock)
