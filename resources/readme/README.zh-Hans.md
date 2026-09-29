@@ -132,7 +132,6 @@ open "OpenWallpaperEngine.xcodeproj"
 - **WebM 视频** — WebM（VP8/VP9）通过 WebKit 播放，因此音乐同步效果不适用于它。
 - **部分 JPEG 缩略图** — 少量 TEXB 格式 1 文件包含 macOS 无法解码的非标准 JPEG 数据。
 - **音频功能需要权限** — 未授予录屏权限时，音频可视化和音频响应的 SceneScript 只会收到静音。
-- **未与 Wallpaper Engine 并排对比** — Wallpaper Engine 无法在 macOS 上运行，因此行为依据 Wallpaper Engine 自身的文件和着色器实现；部分边界情况（时间线、光照、HDR 输出）尚未确认。
 
 ## 支持的墙纸类型
 

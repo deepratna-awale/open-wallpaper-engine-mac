@@ -132,7 +132,6 @@ Pierwsza kompilacja ze źródeł pobiera pakiet Swift Sparkle. Wersje zbudowane 
 - **Filmy WebM** — WebM (VP8/VP9) jest odtwarzany przez WebKit, więc efekty synchronizacji z muzyką nie działają.
 - **Niektóre miniatury JPEG** — niewielka liczba plików TEXB w formacie 1 zawiera niestandardowe dane JPEG, których macOS nie potrafi zdekodować.
 - **Funkcje dźwięku wymagają uprawnienia** — bez uprawnienia Nagrywanie ekranu i dźwięku systemowego wizualizatory dźwięku i SceneScript reagujący na dźwięk otrzymują ciszę.
-- **Nie porównano bezpośrednio z Wallpaper Engine** – Wallpaper Engine nie działa w systemie macOS, więc działanie opiera się na własnych plikach i shaderach Wallpaper Engine; niektóre przypadki brzegowe (osie czasu, oświetlenie, wyjście HDR) nie są potwierdzone.
 
 ## Obsługiwane typy tapet
 

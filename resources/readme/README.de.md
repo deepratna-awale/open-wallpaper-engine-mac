@@ -132,7 +132,6 @@ Beim ersten Build aus dem Quellcode wird das Swift-Paket Sparkle geladen. Aus de
 - **WebM-Videos** – WebM (VP8/VP9) läuft über WebKit, daher wirken Musiksynchronisations-Effekte darauf nicht.
 - **Einige JPEG-Miniaturen** – Einige wenige Dateien im Format TEXB 1 enthalten nicht standardkonforme JPEG-Daten, die macOS nicht decodieren kann.
 - **Audiofunktionen erfordern eine Berechtigung** – Ohne die Berechtigung „Aufnahme von Bildschirm & Systemaudio“ erhalten Audio-Visualisierungen und audioreaktives SceneScript nur Stille.
-- **Nicht direkt mit Wallpaper Engine verglichen** – Wallpaper Engine läuft nicht unter macOS, daher folgt das Verhalten den eigenen Dateien und Shadern von Wallpaper Engine; einige Sonderfälle (Zeitleisten, Beleuchtung, HDR-Ausgabe) sind unbestätigt.
 
 ## Unterstützte Hintergrundbildtypen
 
