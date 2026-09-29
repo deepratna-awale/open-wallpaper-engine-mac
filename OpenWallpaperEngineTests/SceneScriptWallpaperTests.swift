@@ -201,6 +201,48 @@ final class SceneScriptWallpaperTests: XCTestCase {
         XCTAssertFalse(wallpaper.take().events.contains { if case .animation = $0 { return true } else { return false } })
     }
 
+    /// 2321732083 flies its cars with `ship.getAnimation('origin').play()` on `origin` timelines
+    /// that have no `options.name` and start paused: the property's key finds such a timeline, and
+    /// the play comes back as that timeline running. A timeline's name still wins over a key.
+    func testGetAnimationFindsAnUnnamedTimelineByItsPropertyAndPlaysIt() throws {
+        let keys = #"[{"frame": 0, "value": 0}, {"frame": 30, "value": 100}]"#
+        let origin = #""origin": {"value": "0 0 0", "animation": {"c0": \#(keys), "c1": \#(keys), "c2": \#(keys), "#
+            + #""options": {"fps": 6, "length": 30, "mode": "single", "startpaused": true}}}"#
+        let alpha = #""alpha": {"value": 1, "animation": {"c0": [{"frame": 0, "value": 0}, {"frame": 30, "value": 1}], "#
+            + #""options": {"fps": 6, "length": 30, "name": "origin"}}}"#
+        let script = "export function update(value) { if (shared.done) return value; shared.done = true; "
+            + "const ship = thisScene.getLayer('Object 1'), a = ship.getAnimation('origin'); "
+            + "shared.found = a ? 1 : 0; shared.fps = a.fps; shared.before = a.isPlaying() ? 1 : 0; a.play(); "
+            + "shared.after = a.isPlaying() ? 1 : 0; shared.named = thisScene.getLayer('Object 3').getAnimation('origin').fps; "
+            + "shared.none = ship.getAnimation('scale') === null ? 1 : 0; return value; }"
+        let wallpaper = try make(objects: [
+            object(id: 1, fields: origin),
+            object(id: 2, fields: #""origin": {"script": "\#(script)", "value": "0 0 0"}"#),
+            object(id: 3, fields: "\(origin.replacingOccurrences(of: #""fps": 6"#, with: #""fps": 12"#)), \(alpha)"),
+        ])
+        let site = SceneAnimationSite(owner: .object(1), key: "origin")
+        var input = SceneScriptFrameInput()
+        input.deltaTime = 1.0 / 60
+        input.animations[site] = SceneAnimationState(name: nil, fps: 6, frameCount: 30, duration: 5, rate: 1,
+                                                     time: 0, flags: [.paused], frame: 0)
+        wallpaper.submit(input)
+        wallpaper.waitUntilIdle()
+        let events = wallpaper.take().events
+        XCTAssertEqual(try shared(wallpaper, "found"), 1, "getAnimation('origin') finds the unnamed origin timeline")
+        XCTAssertEqual(try XCTUnwrap(try shared(wallpaper, "fps")), 6, accuracy: 1e-4)
+        XCTAssertEqual(try shared(wallpaper, "before"), 0, "it starts paused")
+        XCTAssertEqual(try shared(wallpaper, "after"), 1)
+        XCTAssertEqual(try XCTUnwrap(try shared(wallpaper, "named")), 6, accuracy: 1e-4,
+                       "the alpha timeline named 'origin' wins over the origin property's (12 fps)")
+        XCTAssertEqual(try shared(wallpaper, "none"), 1, "a property without a timeline has no animation")
+        let restores = events.compactMap { event -> (SceneAnimationSite, SceneTimelineClock.Flags)? in
+            guard case let .animation(site, _, flags, _, _) = event else { return nil }
+            return (site, flags)
+        }
+        XCTAssertEqual(restores.map(\.0), [site], "\(events)")
+        XCTAssertEqual(restores.first?.1, [], "play() leaves it running")
+    }
+
     /// §2.6 for the scene's settings (TF3): a script bound to an animated `general` value gets
     /// this frame's animated value, and its different return holds for that frame only.
     func testScriptsSeeAnimatedSceneSettingsAndBeatThemForTheirFrameOnly() throws {

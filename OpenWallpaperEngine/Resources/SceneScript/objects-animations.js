@@ -224,8 +224,10 @@
         return binding.property;
     };
 
-    // IObject.getAnimation(name?) over `records` (the owner's animation records). Null when the
-    // owner has no such animation.
+    // IObject.getAnimation(name?) over `records` (the owner's animation records): the animation
+    // named so (`options.name`), else the one on the property of that key, which is how a
+    // timeline without a name is found (2321732083 plays its ships' unnamed `origin` timelines
+    // with `getAnimation('origin').play()`, and WE flies them). Null when the owner has neither.
     objects.resolveAnimation = function (owner, records, name) {
         let found;
         if (name === undefined || name === null) {
@@ -234,7 +236,8 @@
             found = records.find(function (record) { return record.property === property; });
         } else {
             const key = String(name);
-            found = records.find(function (record) { return record.name === key; });
+            found = records.find(function (record) { return record.name === key; })
+                || records.find(function (record) { return record.property === key; });
         }
         return found ? objects.animationFor(owner, found, false) : null;
     };

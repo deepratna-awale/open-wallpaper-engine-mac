@@ -2856,6 +2856,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         context.constantWrites = scripted.writes
         context.scriptRevision = scripted.revision
         context.resolution = effectResolution(of: entry.layer.id)
+        // A puppet's mesh redraws its image into the same texture as it moves: without the
+        // drawing's version, the chain's kept output and base pass would hold the first pose.
+        if entry.layer.puppet != nil { context.inputVersion = puppets?.albedoVersion(entry.layer.id) ?? 0 }
         if renderSettings.sceneDetail == .matchDisplay {
             context.footprint = effectFootprint(entry, draw: draw, input: input)
             // Scene regions are drawn at the scene target's density, below full detail when the

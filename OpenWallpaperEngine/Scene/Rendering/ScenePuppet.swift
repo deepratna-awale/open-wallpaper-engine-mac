@@ -317,6 +317,8 @@ final class ScenePuppetRenderer {
         var drawnCanvas: ScenePuppetCanvas?
         /// The canvas a layer without effects grows to (`canvas(_:layerID:pose:)`).
         var canvas: ScenePuppetCanvas?
+        /// Which drawing `target` holds (`albedoVersion`).
+        var version: UInt64 = 0
 
         init?(plan: ScenePuppetPlan, device: MTLDevice) {
             self.plan = plan
@@ -339,6 +341,8 @@ final class ScenePuppetRenderer {
 
     /// Mesh draws encoded, for tests and diagnostics.
     private(set) var drawsEncoded = 0
+    /// The last version handed to a layer's image; versions are unique across layers and loads.
+    private var lastVersion: UInt64 = 0
     /// Bytes of the albedo targets and the scratch (diagnostics).
     var allocatedBytes: Int {
         layers.values.reduce(scratch?.allocatedSize ?? 0) { $0 + ($1.target?.allocatedSize ?? 0) }
@@ -391,6 +395,11 @@ final class ScenePuppetRenderer {
 
     /// Whether the layer's mesh has been drawn into its image (the pipeline was ready).
     func hasDrawn(_ layerID: String) -> Bool { layers[layerID]?.drawnPose != nil }
+
+    /// Which drawing the layer's image holds: a new value each time `albedo` redraws it. The image
+    /// is redrawn into the same texture, so caches keyed by the texture (a layer's kept effect
+    /// output, its base pass) also key on this, or they keep the pose they were made from.
+    func albedoVersion(_ layerID: String) -> UInt64 { layers[layerID]?.version ?? 0 }
 
     /// Drops per-layer state when the content changes. Compiled pipelines are kept.
     func releaseAll() {
@@ -463,6 +472,8 @@ final class ScenePuppetRenderer {
         let content = simd_min(plan.contentPixels, size)
         guard let scratch = scratchTexture(covering: content) else { return nil }
         let drawn = encodeMesh(plan, state: state, draw, into: scratch, content: content, commandBuffer: commandBuffer)
+        lastVersion &+= 1
+        state.version = lastVersion
         guard let compute = commandBuffer.makeComputeCommandEncoder() else { return nil }
         compute.setComputePipelineState(unpremultiply)
         compute.setTexture(scratch, index: 0)

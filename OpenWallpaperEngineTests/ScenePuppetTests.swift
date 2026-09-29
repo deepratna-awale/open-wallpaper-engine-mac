@@ -303,6 +303,30 @@ final class ScenePuppetTests: XCTestCase {
         XCTAssertEqual(renderer.drawsEncoded, 2)
     }
 
+    /// The image is redrawn into the same texture, so its version is what tells a cache keyed by
+    /// that texture (a layer's kept effect output, its base pass) that the pose moved: a new one
+    /// with every redraw, the same while the pose holds. The Cyberpunk Samurai (2321732083), a
+    /// puppet with effects, stood in its first pose while that cache kept its effects' output.
+    func testTheImageVersionChangesWithEveryRedraw() throws {
+        let image = Self.picture(width: 16, height: 16)
+        let plan = try plan(Self.gridMesh(size: SIMD2(16, 16), columns: 2, rows: 2), bones: 1, size: SIMD2(16, 16))
+        let texture = try Self.texture(image, device: device)
+        XCTAssertTrue(renderer.waitUntilReady(plan))
+        XCTAssertEqual(renderer.albedoVersion("puppet"), 0, "no image yet")
+        _ = try draw(plan, texture: texture, pose: .bind(boneCount: 1))
+        let first = renderer.albedoVersion("puppet")
+        XCTAssertNotEqual(first, 0)
+        _ = try draw(plan, texture: texture, pose: .bind(boneCount: 1))
+        XCTAssertEqual(renderer.albedoVersion("puppet"), first, "the same pose keeps the image and its version")
+        var pose = ScenePuppetPose.bind(boneCount: 1)
+        pose.bones[0] = Self.translation(SIMD3(1, 0, 0))
+        _ = try draw(plan, texture: texture, pose: pose)
+        let moved = renderer.albedoVersion("puppet")
+        XCTAssertNotEqual(moved, first, "a new pose is a new drawing")
+        _ = try draw(plan, texture: texture, pose: .bind(boneCount: 1))
+        XCTAssertNotEqual(renderer.albedoVersion("puppet"), moved, "going back is a new drawing too")
+    }
+
     // MARK: - Helpers
 
     struct Picture {
