@@ -137,6 +137,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// Holds the image so its identifier isn't reused; cleared with the content.
     private var uploadedImages: [ObjectIdentifier: (image: NSImage, frames: [RenderTextureFrame])] = [:]
     private let uploadedImagesLock = NSLock()
+    /// Particle textures with their mip chains (`ParticleTextureMipmaps`), by the uploaded texture
+    /// they were made from, which each entry holds so its identifier isn't reused. Under
+    /// `uploadedImagesLock`; cleared with the content.
+    private var particleMipmaps: [ObjectIdentifier: (source: MTLTexture, chained: MTLTexture)] = [:]
     /// Animated asset textures' sprite frames, by the same key.
     private var effectAssetFrames: [String: [RenderTextureFrame]] = [:]
     /// Textureless layers' effect inputs (`solidEffectInput`), by layer id; once per content.
@@ -624,7 +628,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 var system = system
                 ParticleEmitterImagePoints.fill(&system.emitterImages, sources: imageSources, device: self.device,
                                                 queue: self.commandQueue, cache: &imagePoints)
-                guard let texture = self.makeTextureFrames(from: system.source)?.first?.texture else { return nil }
+                guard let texture = self.particleTexture(from: system.source) else { return nil }
                 let fallback = system.fallbackSource.flatMap { self.makeTextureFrames(from: $0)?.first?.texture }
                 // Seeded by position in the scene, so a wallpaper's particles replay the same way.
                 let seed = UInt32(index) &+ self.particleSeed &* 0x9E37_79B9
@@ -855,7 +859,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             let runtimes: [ParticleSystemRuntime?] = systems.enumerated().map { index, system in
                 var system = system
                 system.order = Int(Int32.max)
-                guard let texture = makeTextureFrames(from: system.source)?.first?.texture else { return nil }
+                guard let texture = particleTexture(from: system.source) else { return nil }
                 let fallback = system.fallbackSource.flatMap { makeTextureFrames(from: $0)?.first?.texture }
                 let seed = UInt32(truncatingIfNeeded: (Int(id) ?? 0) &* 31 &+ index)
                 return ParticleSystemRuntime(texture: texture, configuration: system, seed: ParticleRandom.pcg(seed),
@@ -3295,7 +3299,25 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private func clearUploadedImages() {
         uploadedImagesLock.lock()
         uploadedImages.removeAll()
+        particleMipmaps.removeAll()
         uploadedImagesLock.unlock()
+    }
+
+    /// A particle system's texture 0 with its mip chain; systems that share a texture share it.
+    private func particleTexture(from source: SceneMetalTextureSource) -> MTLTexture? {
+        guard let texture = makeTextureFrames(from: source)?.first?.texture else { return nil }
+        guard ParticleTextureMipmaps.needsChain(texture) else { return texture }
+        let key = ObjectIdentifier(texture)
+        uploadedImagesLock.lock()
+        let cached = particleMipmaps[key]?.chained
+        uploadedImagesLock.unlock()
+        if let cached { return cached }
+        let chained = ParticleTextureMipmaps.mipmapped(texture, device: device, queue: commandQueue)
+        uploadedImagesLock.lock()
+        defer { uploadedImagesLock.unlock() }
+        if let raced = particleMipmaps[key]?.chained { return raced }
+        particleMipmaps[key] = (texture, chained)
+        return chained
     }
 
     private func makeTextureFrames(from source: SceneMetalTextureSource) -> [RenderTextureFrame]? {
