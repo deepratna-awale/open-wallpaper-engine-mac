@@ -127,7 +127,6 @@ Beim ersten Build aus dem Quellcode wird das Swift-Paket Sparkle geladen. Aus de
 ## Aktuelle Einschränkungen
 
 - **SceneScript-Platzhalter** – `getVideoTexture()` tut noch nichts.
-- **SceneScript-Parität** – Nicht jeder proprietäre Ereignisname, jeder Eingabe-Callback, jeder Sonderfall im Lebenszyklus und jede exakte Timing-Semantik wird nachgebildet.
 - **WebM-Videos** – WebM (VP8/VP9) läuft über WebKit, daher wirken Musiksynchronisations-Effekte darauf nicht.
 - **Audiofunktionen erfordern eine Berechtigung** – Ohne die Berechtigung „Aufnahme von Bildschirm & Systemaudio“ erhalten Audio-Visualisierungen und audioreaktives SceneScript nur Stille.
 

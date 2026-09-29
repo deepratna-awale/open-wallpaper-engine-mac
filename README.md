@@ -127,7 +127,6 @@ Building from source fetches the Sparkle Swift package on first build. Builds fr
 ## Current Limitations
 
 - **SceneScript stubs** — `getVideoTexture()` does nothing yet.
-- **SceneScript parity** — Not every proprietary event name, input callback, lifecycle edge case, or exact timing semantic is reproduced.
 - **WebM videos** — WebM (VP8/VP9) plays through WebKit, so music-sync effects don't apply to it.
 - **Audio features require permission** — Without Screen Recording permission, audio visualizers and audio-reactive SceneScript receive silence.
 

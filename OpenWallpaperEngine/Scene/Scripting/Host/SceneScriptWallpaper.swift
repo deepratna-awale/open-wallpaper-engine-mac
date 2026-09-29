@@ -70,6 +70,10 @@ final class SceneScriptWallpaper {
     private var haltReported = false
     /// The user property values the scripts last got (main thread).
     private var lastUserValues: [String: SceneJSON] = [:]
+    /// The language `applyGeneralSettings` last sent (main thread), and the observer that sends a
+    /// new one when the user's preferred languages change.
+    private var lastLanguage = SceneScriptGeneralSettings.defaultLanguage
+    private var localeObserver: NSObjectProtocol?
 
     /// Creates the runtime on its thread and starts loading the scripts there. Nil (logged) when
     /// the scene has no scripts.
@@ -86,12 +90,18 @@ final class SceneScriptWallpaper {
         guard !SceneScriptSiteBuilder(wallpaperID: content.wallpaperID).sites(in: content.document).isEmpty else { return nil }
         for (name, property) in properties.properties { lastUserValues[name] = property.value }
         try thread.sync { try create(properties: properties) }
+        let generalSettings = SceneScriptGeneralSettings.current()
+        lastLanguage = generalSettings["language"] as? String ?? SceneScriptGeneralSettings.defaultLanguage
         thread.async { [self] in
             guard let runtime else { return }
-            runtime.load(userProperties: properties.payload())
+            runtime.load(userProperties: properties.payload(), generalSettings: generalSettings)
             usesCursor = Self.exportsCursorCallbacks(runtime)
             finish(runtime, frameStart: nil)
         }
+        localeObserver = NotificationCenter.default.addObserver(
+            forName: NSLocale.currentLocaleDidChangeNotification, object: nil, queue: .main) { [weak self] _ in
+                self?.generalSettingsDidChange(SceneScriptGeneralSettings.current())
+            }
     }
 
     /// On the script thread: the runtime with its extensions, the scene placed, the sites added.
@@ -124,6 +134,7 @@ final class SceneScriptWallpaper {
     }
 
     deinit {
+        if let localeObserver { NotificationCenter.default.removeObserver(localeObserver) }
         thread.async { [runtime] in runtime?.tearDown() }
     }
 
@@ -203,6 +214,14 @@ final class SceneScriptWallpaper {
         }
         guard !changed.isEmpty else { return }
         withRuntime({ $0.userPropertiesDidChange(properties.payload(only: changed)) })
+    }
+
+    /// `applyGeneralSettings` with the settings that changed, at the start of the next script frame
+    /// (the docs: "called once initially", then on every change). Main thread.
+    func generalSettingsDidChange(_ settings: [String: Any]) {
+        guard let language = settings["language"] as? String, language != lastLanguage else { return }
+        lastLanguage = language
+        withRuntime({ $0.generalSettingsDidChange(["language": language]) })
     }
 
     /// `resizeScreen` at the start of the next script frame; never for the first size.
