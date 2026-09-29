@@ -128,7 +128,7 @@ Building from source fetches the Sparkle Swift package on first build. Builds fr
 
 - **SceneScript stubs** — `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `transformAttachmentToTexture()`, `getVideoTexture()` do nothing yet.
 - **SceneScript parity** — Not every proprietary event name, input callback, lifecycle edge case, or exact timing semantic is reproduced.
-- **Rare particle features** — Emitter shapes other than sphere, box and layer image, and renderers after a system's first, are not supported.
+- **Rare particle features** — Renderers after a system's first are not supported.
 - **WebM videos** — WebM (VP8/VP9) plays through WebKit, so music-sync effects don't apply to it.
 - **Some JPEG thumbnails** — A small number of TEXB format 1 files contain non-standard JPEG data that macOS cannot decode.
 - **Audio features require permission** — Without Screen Recording permission, audio visualizers and audio-reactive SceneScript receive silence.
