@@ -128,7 +128,7 @@ Xcode에서 서명 인증서를 본인의 인증서로 변경하거나 'Sign to 
 
 - **구현되지 않은 SceneScript 함수** — `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `transformAttachmentToTexture()`, `getVideoTexture()`는 아직 아무 작업도 하지 않습니다.
 - **SceneScript 호환성** — 모든 독점 이벤트 이름, 입력 콜백, 수명 주기의 예외 상황, 정확한 타이밍 의미가 재현되지는 않습니다.
-- **드문 파티클 기능** — 구, 상자, 레이어 이미지 외의 이미터 모양과 시스템의 첫 번째 이후 렌더러는 지원되지 않습니다.
+- **드문 파티클 기능** — 시스템의 첫 번째 이후 렌더러는 지원되지 않습니다.
 - **WebM 비디오** — WebM(VP8/VP9)은 WebKit으로 재생되므로 음악 동기화 효과가 적용되지 않습니다.
 - **일부 JPEG 썸네일** — 소수의 TEXB 형식 1 파일에는 macOS가 디코딩할 수 없는 비표준 JPEG 데이터가 포함되어 있습니다.
 - **오디오 기능에는 권한이 필요함** — 화면 기록 권한이 없으면 오디오 시각화와 오디오 반응형 SceneScript는 무음을 받습니다.

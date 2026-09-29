@@ -367,6 +367,28 @@ final class ParticleProgramTests: XCTestCase {
         XCTAssertEqual(runtime.particles.count, 80)
     }
 
+    /// WE's parser knows only `sphererandom`, `boxrandom` and `layerimage`, by name ignoring case;
+    /// any other element, or one without a name, is skipped (wallpaper64.exe 0x1401c6fdf): it
+    /// doesn't spawn and doesn't become the system's first emitter.
+    func testEmittersWEDoesntKnowAreSkipped() throws {
+        func build(_ emitters: String) throws -> SceneMetalParticleSystem {
+            let particles: WEParticleSystem = try decode(#"{"maxcount": 100, "emitter": [\#(emitters)]}"#)
+            let object: WESceneObject = try decode(#"{"id": 1, "name": "p", "particle": "p.json"}"#)
+            return ParticleSystemBuilder.build(
+                "p.json", particleSystem: particles, object: object, world: .identity, overrides: SceneParticleOverrides(),
+                sceneSize: SIMD2(1000, 1000), source: .image(NSImage()), spriteSheet: nil, material: WEMaterial(),
+                materialPlan: nil)
+        }
+        let mixed = try build(#"{"name": "conerandom", "rate": 7}, {"rate": 8}, {"name": "BoxRandom", "rate": 9}"#)
+        XCTAssertEqual(mixed.emitters.count, 1)
+        XCTAssertEqual(mixed.emitter.kind, .box, "the first known emitter is the system's first")
+        XCTAssertEqual(mixed.emissionRate, 9)
+        let unknown = try build(#"{"name": "linerandom", "rate": 50, "instantaneous": 5}"#)
+        XCTAssertEqual(unknown.emissionRate, 0, "nothing spawns without an emitter")
+        XCTAssertEqual(unknown.instantaneous, 0)
+        XCTAssertTrue(unknown.extraEmitters.isEmpty)
+    }
+
     // MARK: - Frame rate
 
     /// WE damps drag (and the field operators' step) by `pow(min(0.025 / frame time, 1), 0.7)` and
