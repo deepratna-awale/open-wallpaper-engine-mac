@@ -58,14 +58,17 @@ DEST="${DEST:-${OWE_WE_ASSETS_DIR:-$DEFAULT_DEST}}"
 TOOLS="${OWE_TOOLS_DIR:-$DEFAULT_TOOLS}"
 
 # The current public build, keyless (api.steamcmd.net mirrors Steam's PICS app info). Empty when
-# the lookup fails: the download then runs, and DepotDownloader resolves the build itself.
+# the lookup fails or returns anything but digits: the download then runs, and DepotDownloader
+# resolves the build itself.
 build_id() {
-    curl -fsSL --retry 3 --max-time 20 "$BUILD_ID_URL" 2>/dev/null | python3 -c '
+    local id
+    id=$(curl -fsSL --retry 3 --max-time 20 "$BUILD_ID_URL" 2>/dev/null | python3 -c '
 import json, sys
 try:
     print(json.load(sys.stdin)["data"][sys.argv[1]]["depots"]["branches"]["public"]["buildid"])
 except Exception:
-    pass' "$APP_ID" || true
+    pass' "$APP_ID" || true)
+    [[ "$id" =~ ^[0-9]+$ ]] && echo "$id" || true
 }
 
 BUILD="$(build_id)"
