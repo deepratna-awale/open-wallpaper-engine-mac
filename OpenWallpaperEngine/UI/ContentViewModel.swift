@@ -179,6 +179,13 @@ class ContentViewModel: ObservableObject, DropDelegate {
         InstalledWorkshopTags.tags(of: wallpaper, in: .shared)
     }
 
+    /// A wallpaper was deleted: drops it from the library index and removes its loading snapshots.
+    func forgetDeletedWallpaper(at directory: URL) {
+        DownloadedWallpaperIndex.shared.remove(directory: directory)
+        let store = SceneLoadingSnapshotStore.current
+        Task.detached(priority: .utility) { store.removeSnapshots(forWallpaperAt: directory) }
+    }
+
     /// After wallpapers were deleted: removes the dependency-only items none of the remaining ones use.
     func removeUnusedWorkshopDependencies() {
         let library = FileManager.default.wallpapersDirectory
