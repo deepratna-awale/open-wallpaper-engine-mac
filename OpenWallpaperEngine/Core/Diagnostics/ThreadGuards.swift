@@ -3,9 +3,10 @@ import Foundation
 /// Debug-only checks that heavy work stays off the main thread and the render thread, and that
 /// per-frame work stays on the render thread. Release builds compile every check to nothing.
 ///
-/// The render thread is whichever thread is inside `ThreadGuards.renderFrame { … }`: the render
-/// loop wraps its frame entry in it, so the flag follows the loop wherever it runs (today that
-/// may be the main thread, which is then both).
+/// The render thread is whichever thread is inside `ThreadGuards.renderFrame { … }`: a scene
+/// instance's `SceneRenderThread` runs its whole run loop inside it, and every frame entry wraps
+/// itself in it too, so a renderer drawn by its view's own timer (tests, prewarm) still counts
+/// the main thread as the render thread while it draws.
 ///
 /// A hit is logged once per call site and passed to `handler`. The default handler only calls
 /// `assertionFailure` when `OWE_STRICT_THREAD_GUARDS=1`, so existing offenders are reported, not

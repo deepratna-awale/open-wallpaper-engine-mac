@@ -17,37 +17,36 @@ struct SceneWallpaperEnvironment {
 /// (`SceneWallpaperPresenter`): the display with the highest frame rate renders the frames
 /// (`SceneFrameSchedule`), at the largest scene target the displays need, and every display
 /// presents them at its own size.
+/// Rendering runs on the instance's own render thread (`SceneRenderLoop`); this half stays on the
+/// main thread and sends it what the app's controls, windows and displays change.
 @MainActor
 final class SceneWallpaperInstance {
     private struct Display {
         weak var view: MTKView?
         /// The display it is on, whose playback rules decide whether it draws.
         let screenID: String
-        /// The playback rules pause this display: it keeps its last frame.
-        var frozen = false
-        /// The renderer's `encodedFrames` this display last presented (shared scenes).
-        var presentedFrame: UInt64 = .max
     }
 
     let key: WallpaperInstanceKey
     let viewModel: SceneWallpaperViewModel
-    /// Nil when Metal can't make one; the displays then stay black.
-    let renderer: SceneMetalRenderer?
+    /// The render-thread half: it owns the renderer and draws the displays.
+    let renderLoop: SceneRenderLoop
+    /// Nil when Metal can't make one; the displays then stay black. Render thread only (tests reach
+    /// it through `renderLoop.thread.sync`).
+    var renderer: SceneMetalRenderer? { renderLoop.renderer }
+    /// A display drew the live scene (set on main after the render thread's first frame).
+    var hasContent = false
+    private let hasRenderer: Bool
     private let environment: SceneWallpaperEnvironment
     private var displays: [ObjectIdentifier: Display] = [:]
-    /// Displays in the order they joined, which breaks frame-rate ties.
-    private var displayOrder: [ObjectIdentifier] = []
-    private var schedule = SceneFrameSchedule()
+    /// The render settings last sent to the renderer.
+    private var sentRenderSettings = SceneRenderSettings()
     private var metalRevision = -1
     private var observers: [NSObjectProtocol] = []
     private var cancellables = Set<AnyCancellable>()
     private var pendingImpact: SceneChangeImpact = .none
     private var pendingUpdate: DispatchWorkItem?
     private var scriptsNotice: SafeRestartNotice?
-    /// `playbackDidStop` asked for an update that hasn't paused the displays yet.
-    private var stopReported = false
-    /// The pacing rate the displays tick at (`FramePacing.targetRate`), and the observers that wake it.
-    private var pacedRate = 0
     private var cursorMonitors: [Any] = []
     private var powerObserver: UUID?
 
@@ -59,19 +58,22 @@ final class SceneWallpaperInstance {
         // Loaded on the preparation pool: the displays show the preview until the scene is ready.
         viewModel = SceneWallpaperViewModel(wallpaper: wallpaper, propertyScope: properties, loadsInBackground: true)
         self.environment = environment
-        renderer = SceneMetalRenderer(pixelFormat: .bgra8Unorm, scriptServices: environment.scriptServices,
-                                      screenID: screenID)
+        let renderer = SceneMetalRenderer(pixelFormat: .bgra8Unorm, scriptServices: environment.scriptServices,
+                                          screenID: screenID)
+        hasRenderer = renderer != nil
         if renderer == nil {
             OWELog.error(.scene, "\(wallpaper.project.title): Metal renderer unavailable; the wallpaper can't be drawn")
         }
-        configureRenderer()
+        renderLoop = SceneRenderLoop(renderer: renderer, name: "OWE render \(wallpaper.project.title)")
+        // Set up before any frame; from here on only the render thread touches the renderer.
+        configureRenderer(renderer)
         observeChanges()
         metalRevision = viewModel.metalRevision
         loadContent()
     }
 
-    /// Stops everything: the scripts, the sound layers, a video's stream. The registry calls it
-    /// once no display shows the wallpaper.
+    /// Stops everything: the scripts, the sound layers, a video's stream, the render thread. The
+    /// registry calls it once no display shows the wallpaper.
     func shutdown() {
         pendingUpdate?.cancel()
         pendingUpdate = nil
@@ -86,9 +88,9 @@ final class SceneWallpaperInstance {
         scriptsNotice = nil
         // Built layers hold the video stream and the sound layers, so the renderer has to let go
         // of them or the soundtrack outlives the wallpaper.
-        renderer?.releaseContent()
+        renderLoop.perform { $0.releaseContent() }
+        renderLoop.shutdown()
         displays.removeAll()
-        displayOrder.removeAll()
     }
 
     // MARK: - Displays
@@ -96,68 +98,36 @@ final class SceneWallpaperInstance {
     /// `presenter` shows this wallpaper in `view`, on the display `screenID`, from now on.
     func attach(_ presenter: SceneWallpaperPresenter, view: MTKView, screenID: String) {
         let id = ObjectIdentifier(presenter)
+        // The view's setup is main-thread work, done before its link draws it on the render thread.
         renderer?.configure(view)
-        view.delegate = presenter
         displays[id] = Display(view: view, screenID: screenID)
-        if !displayOrder.contains(id) { displayOrder.append(id) }
-        schedule.add(id, frameRate: Self.frameRate(of: view))
+        // The link takes over (the view's own timer stops) before the view has a delegate to draw.
+        renderLoop.attach(id, view: view, state: SceneRenderLoop.DisplayState(refresh: Self.refreshRate(of: view)))
+        view.delegate = presenter
         update()
     }
 
+    /// The view's link stops on the render thread; the view keeps its delegate (the presenter,
+    /// which the view doesn't retain), so a draw already running there still finishes.
     func detach(_ presenter: SceneWallpaperPresenter) {
         let id = ObjectIdentifier(presenter)
-        displays[id]?.view?.delegate = nil
+        renderLoop.detach(id)
         displays[id] = nil
-        displayOrder.removeAll { $0 == id }
-        schedule.remove(id)
     }
 
     var displayCount: Int { displays.count }
 
-    /// A display's draw: one display draws the scene straight onto its drawable; with several,
-    /// the driving display renders the frame for all of them and each presents it.
-    func draw(_ presenter: SceneWallpaperPresenter, in view: MTKView) {
-        guard let renderer else { return }
-        defer { applyPacing() }
-        guard displays.count > 1 else {
-            renderer.draw(in: view)
-            return
-        }
-        let id = ObjectIdentifier(presenter)
-        let now = CACurrentMediaTime()
-        if schedule.shouldRender(id, at: now) {
-            renderer.renderShared(viewports())
-            schedule.rendered(at: now)
-        }
-        // An idle frame encoded nothing: the display keeps the frame it shows.
-        guard displays[id]?.presentedFrame != renderer.encodedFrames else { return }
-        displays[id]?.presentedFrame = renderer.encodedFrames
-        renderer.present(in: view)
+    private static func refreshRate(of view: MTKView) -> Int {
+        let refresh = view.window?.screen?.maximumFramesPerSecond ?? 60
+        return refresh > 0 ? refresh : 60
     }
 
     // MARK: - Frame pacing
 
-    /// Ticks the displays at the pacing's rate (`FramePacing`), each at a divisor of its refresh
-    /// rate, when the rate changed. The draw calls it after each frame; a wake calls it at once.
-    private func applyPacing(force: Bool = false) {
-        guard let renderer else { return }
-        let target = renderer.framePacing.targetRate
-        guard force || target != pacedRate else { return }
-        pacedRate = target
-        for (id, display) in displays {
-            guard let view = display.view else { continue }
-            let refresh = view.window?.screen?.maximumFramesPerSecond ?? 60
-            let rate = FramePacing.cadence(target, refreshRate: refresh > 0 ? refresh : 60)
-            if view.preferredFramesPerSecond != rate { view.preferredFramesPerSecond = rate }
-            schedule.setFrameRate(display.frozen ? 0 : Self.frameRate(of: view), of: id)
-        }
-    }
-
     /// Something that changes the picture happened: tick at `demand`'s rate from the next refresh.
     private func wakePacing(_ demand: FrameDemand) {
-        guard let renderer, renderer.framePacing.level < demand else { return }
-        renderer.framePacing.wake(demand, at: CACurrentMediaTime())
-        applyPacing()
+        // Thread boundary: main → render thread.
+        renderLoop.thread.perform { [renderLoop] in renderLoop.wake(demand) }
     }
 
     /// A cursor move wakes an idle or slow scene at once (the displays' draws only poll the
@@ -175,18 +145,6 @@ final class SceneWallpaperInstance {
         }
     }
 
-    /// The displays as the frame needs them, the driving one first; views not yet laid out, and
-    /// paused ones (they keep their last frame), are left out.
-    private func viewports() -> [SceneViewport] {
-        let driver = schedule.driver
-        let ordered = displayOrder.filter { $0 == driver } + displayOrder.filter { $0 != driver }
-        return ordered.compactMap { id -> SceneViewport? in
-            guard let display = displays[id], !display.frozen, let view = display.view,
-                  view.drawableSize.width > 0, view.drawableSize.height > 0 else { return nil }
-            return SceneViewport(view)
-        }
-    }
-
     /// Drawables a wallpaper's layer may have in flight. Up to 60 fps a frame has a whole refresh
     /// to finish, so two are enough and the third's memory (a full-screen texture) is saved; faster
     /// pacing keeps three so the GPU never waits on the display.
@@ -194,74 +152,48 @@ final class SceneWallpaperInstance {
         rate <= 60 ? 2 : 3
     }
 
-    /// The rate a display draws at: the user's limit, or its screen's refresh rate if lower.
-    private static func frameRate(of view: MTKView) -> Int {
-        let screenRate = view.window?.screen?.maximumFramesPerSecond ?? view.preferredFramesPerSecond
-        return min(view.preferredFramesPerSecond, screenRate > 0 ? screenRate : view.preferredFramesPerSecond)
-    }
-
     // MARK: - Updates
 
     /// Follows the app's controls: a rebuilt content, the placement, playback, the sound's gain, the
-    /// frame rate and pause. Displays call it when SwiftUI updates them.
-    ///
-    /// A paused wallpaper (the app's pause, or the playback rules pausing every display it shows
-    /// on) eases its clock to a stop, as WE eases a paused wallpaper's rate to 0 and stops drawing
-    /// only then (`SceneClock`); its displays draw until the renderer reports the stop. A display
-    /// the rules pause while others play the instance keeps its last frame at once and stops
-    /// driving the frames (`DisplayPlaybackRouting`): its frames are the instance's, which go on
-    /// at full speed for the others, so they can't slow down for it alone.
+    /// frame rate and pause. Displays call it when SwiftUI updates them. The render thread applies
+    /// the pause and each display's state (`SceneRenderLoop.applyPlayback`): a paused wallpaper
+    /// eases its clock to a stop first; a display the rules pause, or that is asleep or covered,
+    /// keeps its last frame at once while the others play.
     func update() {
         guard let wallpapers = environment.wallpapers else { return }
         if metalRevision != viewModel.metalRevision {
             metalRevision = viewModel.metalRevision
             loadContent()
         }
-        renderer?.setPlacement(wallpapers.wallpaperPlacement)
         // A display that joined or changed size can change WE's automatic texture resolution.
         applyRenderSettings(renderSettings(for: environment.settings.settings))
         updateVideoPlayback()
-        renderer?.sounds.setTargetGain(soundGain)
-        renderer?.framePacing.limits = FramePacing.Limits(environment.settings.settings, power: PowerPolicyMonitor.shared.policy)
-        let fps = renderer?.framePacing.targetRate ?? Int(environment.settings.settings.fps)
-        let plays = displays.mapValues { wallpapers.playback(onScreen: $0.screenID).rendersFrames }
-        let paused = wallpapers.playRate == 0 || !plays.values.contains(true)
-        renderer?.pausesPlayback = paused
-        let easing = paused && renderer?.hasStoppedPlayback == false
-        if !paused || !easing { stopReported = false }
+        var playback = SceneRenderLoop.Playback()
         for (id, display) in displays {
             guard let view = display.view else { continue }
-            // A display that is asleep or fully covered shows nothing: it keeps its last frame and
-            // stops driving the frames until macOS reports its window visible again. Only the
-            // drawing stops; the clock and the sound follow the playback rules as before.
+            SceneViewSnapshots.refresh(view)
             let hidden = view.window.map { !$0.occlusionState.contains(.visible) } ?? false
-            let frozen = (plays[id] == false || hidden) && !easing
-            displays[id]?.frozen = frozen
-            let refresh = view.window?.screen?.maximumFramesPerSecond ?? 60
-            let cadence = FramePacing.cadence(fps, refreshRate: refresh > 0 ? refresh : 60)
-            view.preferredFramesPerSecond = cadence
-            if let layer = view.layer as? CAMetalLayer {
-                let count = Self.maximumDrawableCount(forRate: cadence)
-                if layer.maximumDrawableCount != count { layer.maximumDrawableCount = count }
-            }
-            view.isPaused = frozen || (paused && !easing)
-            schedule.setFrameRate(frozen ? 0 : Self.frameRate(of: view), of: id)
+            playback.displays[id] = SceneRenderLoop.DisplayState(plays: wallpapers.playback(onScreen: display.screenID).rendersFrames,
+                                                                 hidden: hidden, refresh: Self.refreshRate(of: view))
         }
-        pacedRate = fps
-    }
-
-    /// The renderer's clock eased to a stop (`SceneMetalRenderer.onPlaybackStopped`, from its
-    /// draw): the displays stop drawing once this draw is over.
-    private func playbackDidStop() {
-        guard !stopReported else { return }
-        stopReported = true
-        DispatchQueue.main.async { [weak self] in self?.update() }
+        playback.paused = wallpapers.playRate == 0 || !playback.displays.values.contains { $0.plays }
+        let placement = wallpapers.wallpaperPlacement
+        let gain = soundGain
+        let limits = FramePacing.Limits(environment.settings.settings, power: PowerPolicyMonitor.shared.policy)
+        // Thread boundary: main → render thread (applied before the playback, which reads the rate).
+        renderLoop.perform { renderer in
+            renderer.setPlacement(placement)
+            renderer.sounds.setTargetGain(gain)
+            renderer.framePacing.limits = limits
+        }
+        renderLoop.update(playback)
     }
 
     private func loadContent() {
         viewModel.contentAsync { [weak self] content in
             guard let self else { return }
-            self.renderer?.setContent(content)
+            // Thread boundary: main → render thread.
+            self.renderLoop.perform { $0.setContent(content) }
             self.updateVideoPlayback()
         }
     }
@@ -302,24 +234,22 @@ final class SceneWallpaperInstance {
 
     // MARK: - Setup
 
-    private func configureRenderer() {
+    /// Sets the renderer up before any frame (no frame runs until a display attaches).
+    private func configureRenderer(_ renderer: SceneMetalRenderer?) {
         guard let renderer else { return }
         renderer.sounds.setTargetGain(soundGain)
-        renderer.onPlaybackStopped = { [weak self] in
-            // The renderer draws on the main thread.
-            MainActor.assumeIsolated { self?.playbackDidStop() }
-        }
         renderer.scripts.onHalt = { [weak self] error in
-            // `take()` reports it from the renderer's draw, on the main thread.
-            MainActor.assumeIsolated { self?.showScriptsHalted(error: error) }
+            // Thread boundary: `take()` reports it from the renderer's draw, on the render thread.
+            DispatchQueue.main.async { MainActor.assumeIsolated { self?.showScriptsHalted(error: error) } }
         }
         if let watchdog = environment.wallpapers?.renderWatchdog {
-            // One frame time per rendered frame, however many displays show it.
+            // One frame time per rendered frame, however many displays show it (the watchdog locks).
             renderer.frameTimeObserver = { watchdog.recordFrame(duration: $0) }
         }
         // The user's quality settings: the renderer reads them per frame, the content is built for them.
         let renderSettings = renderSettings(for: environment.settings.settings)
         renderer.renderSettings = renderSettings
+        sentRenderSettings = renderSettings
         viewModel.setRenderSettings(renderSettings)
     }
 
@@ -336,9 +266,11 @@ final class SceneWallpaperInstance {
     /// Applies `settings` when they differ from the renderer's, rebuilding the content only when
     /// it is built for what changed (`SceneRenderSettings.contentKey`); the rest apply per frame.
     private func applyRenderSettings(_ settings: SceneRenderSettings) {
-        guard let renderer, settings != renderer.renderSettings else { return }
-        let rebuild = settings.contentKey != renderer.renderSettings.contentKey
-        renderer.renderSettings = settings
+        guard hasRenderer, settings != sentRenderSettings else { return }
+        let rebuild = settings.contentKey != sentRenderSettings.contentKey
+        sentRenderSettings = settings
+        // Thread boundary: main → render thread.
+        renderLoop.perform { $0.renderSettings = settings }
         viewModel.setRenderSettings(settings)
         if rebuild { scheduleSceneUpdate(.rebuildContent) }
     }
@@ -366,7 +298,8 @@ final class SceneWallpaperInstance {
                 guard let self, store == nil || store == self.viewModel.propertyStoreKey else { return }
                 // Scripts get every change (`applyUserProperties`); content is rebuilt only when it
                 // reads the property itself.
-                self.renderer?.scripts.userPropertiesDidChange(Set(keys))
+                let changed = Set(keys)
+                self.renderLoop.perform { $0.scripts.userPropertiesDidChange(changed) }
                 self.wakePacing(.slow)
                 let impact = self.viewModel.impact(of: keys)
                 guard impact > .none else { return }
@@ -385,7 +318,8 @@ final class SceneWallpaperInstance {
             let path = notification.userInfo?["path"] as? String
             MainActor.assumeIsolated {
                 guard let self, path == nil || path == self.viewModel.currentWallpaper.wallpaperDirectory.path else { return }
-                self.renderer?.sounds.setTargetGain(self.soundGain)
+                let gain = self.soundGain
+                self.renderLoop.perform { $0.sounds.setTargetGain(gain) }
             }
         })
         // Zoom/tilt/saturation amounts are baked into the layer when content is built, so the
@@ -462,7 +396,7 @@ final class SceneWallpaperInstance {
                 self.dismissScriptsNotice()
                 // A new document signature is not needed: dropping the content stops the halted
                 // scripts, and the reload starts new ones.
-                self.renderer?.releaseContent()
+                self.renderLoop.perform { $0.releaseContent() }
                 self.scheduleSceneUpdate(.reloadScene)
             },
             onDismiss: { [weak self] in self?.dismissScriptsNotice() })

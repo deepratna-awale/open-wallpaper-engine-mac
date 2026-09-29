@@ -128,7 +128,7 @@ struct FrameDemandInputs: Equatable {
 /// (`QualityEfficiency`) and the power policy (N10). Events that change the picture (a cursor
 /// move, a property edit) wake it with `wake`.
 ///
-/// Main thread only (MTKView draws there), like the renderer's draw.
+/// Owned by the renderer: only on its render thread, like the renderer's draw.
 struct FramePacing: Equatable {
     /// Lower demand must last this long before the rate falls.
     static let rampDownDelay: Double = 1

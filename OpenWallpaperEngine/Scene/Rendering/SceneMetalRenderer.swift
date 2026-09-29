@@ -183,6 +183,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// once it stood still, so the displays can stop drawing.
     var pausesPlayback = false
     var onPlaybackStopped: (() -> Void)?
+    /// Runs `block` on the thread that owns this renderer's state (thread boundary): content and
+    /// script objects prepared in the background land through it. The main queue by default, for a
+    /// renderer drawn by its view's own timer; a scene instance's renderer uses its render thread.
+    var performOnRenderThread: (@escaping () -> Void) -> Void = { DispatchQueue.main.async(execute: $0) }
     /// The paused clock has eased to a stop.
     var hasStoppedPlayback: Bool { clock.hasStopped }
     /// A script's fog on/off switch was reported (`frameLighting`).
@@ -381,6 +385,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private(set) var lastPresentCommandBuffer: MTLCommandBuffer?
     /// A screen's EDR headroom (tests set their own); a view without a window has none.
     var displayHeadroom: (NSScreen?) -> SceneDisplayHeadroom = { SceneDisplayHeadroom(screen: $0) }
+
+    /// `view`'s screen's headroom: from its main-thread snapshot when a render thread draws it.
+    private func viewHeadroom(_ view: MTKView) -> SceneDisplayHeadroom {
+        SceneViewSnapshots.snapshot(of: view)?.headroom ?? displayHeadroom(view.window?.screen)
+    }
     /// How the last frame reached the display (`SceneDisplayOutput`).
     private(set) var displayOutput = SceneDisplayOutput.standard
     /// The headroom of each view a shared frame was presented on since the last one was drawn.
@@ -654,7 +663,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             // drawing them has nothing to upload.
             for model in content.spatial.models { _ = model.plan?.upload(device: self.device) }
             let analysis = SceneLayerAnalysis.make(content: content)
-            DispatchQueue.main.async { [weak self] in
+            // Thread boundary: content queue → render thread.
+            self.performOnRenderThread { [weak self] in
                 guard let self, self.isCurrentContentGeneration(generation) else { return }
                 self.sceneSize = content.size
                 self.sharedFrame = nil
@@ -827,7 +837,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 }
                 return self.prepare(created, id: id)
             }()
-            DispatchQueue.main.async { [weak self] in
+            // Thread boundary: content queue → render thread.
+            self.performOnRenderThread { [weak self] in
                 guard let self else { return }
                 self.pendingScriptLayers -= 1
                 guard let built, self.isCurrentContentGeneration(generation), self.scripts.wallpaper === wallpaper else { return }
@@ -961,7 +972,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// Shows the latest shared frame (`renderShared`) on `view`, at its size and the user's
     /// placement: one pass per display.
     func present(in view: MTKView) {
-        let headroom = displayHeadroom(view.window?.screen)
+        let headroom = viewHeadroom(view)
         sharedHeadrooms[ObjectIdentifier(view)] = headroom
         guard let frame = sharedFrame else { return }
         // The view shows the frame in its own format: EDR when the frame was drawn for it.
@@ -971,7 +982,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
               let drawable = view.currentDrawable, let commandBuffer = commandQueue.makeCommandBuffer(),
               let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor) else { return }
         let size = SIMD2<Float>(Float(drawable.texture.width), Float(drawable.texture.height))
-        let pixelsPerPoint = view.bounds.width > 0 ? size.x / Float(view.bounds.width) : 1
+        let pointWidth = SceneViewSnapshots.snapshot(of: view).map { CGFloat($0.pointSize.x) } ?? view.bounds.width
+        let pixelsPerPoint = pointWidth > 0 ? size.x / Float(pointWidth) : 1
         var uniform = layerUniform(position: sceneSize / 2, size: sceneSize, opacity: 1, drawableSize: size,
                                    placement: placement, pixelsPerPoint: pixelsPerPoint)
         encoder.setRenderPipelineState(extended ? layerPipelines.pipelines(for: frame.pixelFormat).copy : copyPipeline)
@@ -999,7 +1011,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             // which `selectDisplayOutput` set up.
             let size = SIMD2<Float>(Float(view.drawableSize.width), Float(view.drawableSize.height))
             guard size.x >= 1, size.y >= 1 else { return nil }
-            return SceneFrameDestination(descriptor: nil, drawable: nil, pixelFormat: view.colorPixelFormat,
+            let format = SceneViewSnapshots.snapshot(of: view)?.layer?.pixelFormat ?? view.colorPixelFormat
+            return SceneFrameDestination(descriptor: nil, drawable: nil, pixelFormat: format,
                                          placement: placement, viewports: [SceneViewport(view, drawableSize: size)])
         case .shared(let viewports):
             // The finished frame keeps the scene's aspect; each display places it when presenting.
@@ -1015,7 +1028,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let headroom: SceneDisplayHeadroom
         switch output {
         case .view(let view):
-            headroom = displayHeadroom(view.window?.screen)
+            headroom = viewHeadroom(view)
         case .shared:
             let shown = Array(sharedHeadrooms.values)
             sharedHeadrooms.removeAll(keepingCapacity: true)
