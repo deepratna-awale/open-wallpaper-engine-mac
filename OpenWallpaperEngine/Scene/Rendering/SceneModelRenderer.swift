@@ -87,6 +87,8 @@ final class SceneModelRenderer: SceneModelDrawing {
     /// (tests, diagnostics).
     private(set) var meshDraws: [String: Int] = [:]
     private(set) var culledModels = Set<String>()
+    /// Whether each plan's meshes all end in an opaque distance fog (`SceneModelFogCulling`).
+    private var fogsEveryMesh: [ObjectIdentifier: Bool] = [:]
     /// Compiled pipelines.
     var pipelineCount: Int { pipelineLock.withLock { pipelines.count } }
     /// Bytes of the meshes' buffers (diagnostics).
@@ -140,6 +142,7 @@ final class SceneModelRenderer: SceneModelDrawing {
         boneComponents.removeAll()
         meshDraws.removeAll()
         culledModels.removeAll()
+        fogsEveryMesh.removeAll()
         morphTextures.removeAll()
     }
 
@@ -173,6 +176,11 @@ final class SceneModelRenderer: SceneModelDrawing {
         let bones = advance(model, plan: plan, frame: draw.frame, values: draw.values)
         let viewFrustum = frustum(draw.camera.viewProjection)
         guard viewFrustum.contains(SceneModelCulling.Sphere(plan.bounds, world: draw.world)) else {
+            modelsCulled += 1
+            culledModels.insert(model.id)
+            return
+        }
+        if let clear = draw.clearColor, isHiddenByFog(plan, draw, clearColor: clear) {
             modelsCulled += 1
             culledModels.insert(model.id)
             return
@@ -306,6 +314,20 @@ final class SceneModelRenderer: SceneModelDrawing {
     }
 
     // MARK: - Culling
+
+    /// The model lies wholly beyond the distance fog's end, which paints it the clear colour
+    /// (`SceneModelFogCulling`).
+    private func isHiddenByFog(_ plan: SceneModelPlan, _ draw: SceneModelDraw, clearColor: SIMD3<Float>) -> Bool {
+        let fog = draw.frame.lighting.fog
+        guard SceneModelFogCulling.coversWithClearColor(fog, clearColor: clearColor),
+              SceneModelFogCulling.isBeyondFog(plan.bounds, world: draw.world, eye: draw.frame.eyePosition, fog: fog)
+        else { return false }
+        let key = ObjectIdentifier(plan)
+        if let known = fogsEveryMesh[key] { return known }
+        let fogs = SceneModelFogCulling.fogsEveryMesh(plan)
+        fogsEveryMesh[key] = fogs
+        return fogs
+    }
 
     /// WE's cull test (0x1402222f2…0x1401e5a10, `SceneModelCulling`): the box's min and max corners
     /// through the world matrix, the sphere through them (centre their midpoint, radius half their
