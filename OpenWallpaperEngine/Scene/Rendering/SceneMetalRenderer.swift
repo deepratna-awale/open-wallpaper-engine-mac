@@ -387,7 +387,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     var displayHeadroom: (NSScreen?) -> SceneDisplayHeadroom = { SceneDisplayHeadroom(screen: $0) }
 
     /// `view`'s screen's headroom: from its main-thread snapshot when a render thread draws it.
-    private func headroom(of view: MTKView) -> SceneDisplayHeadroom {
+    private func viewHeadroom(_ view: MTKView) -> SceneDisplayHeadroom {
         SceneViewSnapshots.snapshot(of: view)?.headroom ?? displayHeadroom(view.window?.screen)
     }
     /// How the last frame reached the display (`SceneDisplayOutput`).
@@ -970,7 +970,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// Shows the latest shared frame (`renderShared`) on `view`, at its size and the user's
     /// placement: one pass per display.
     func present(in view: MTKView) {
-        let headroom = headroom(of: view)
+        let headroom = viewHeadroom(view)
         sharedHeadrooms[ObjectIdentifier(view)] = headroom
         guard let frame = sharedFrame else { return }
         // The view shows the frame in its own format: EDR when the frame was drawn for it.
@@ -1026,7 +1026,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let headroom: SceneDisplayHeadroom
         switch output {
         case .view(let view):
-            headroom = headroom(of: view)
+            headroom = viewHeadroom(view)
         case .shared:
             let shown = Array(sharedHeadrooms.values)
             sharedHeadrooms.removeAll(keepingCapacity: true)
