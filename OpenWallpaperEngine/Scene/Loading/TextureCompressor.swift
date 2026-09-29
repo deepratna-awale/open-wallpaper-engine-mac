@@ -30,13 +30,14 @@ enum TextureCompressor {
     // MARK: Encoding
 
     /// `rgba` (straight alpha, `rowBytes` per row) as BC7 blocks, row by row of blocks. Blocks run
-    /// in parallel over block rows.
+    /// serially on the calling thread: callers run on the preparation pool, whose library lane
+    /// already bounds how many cores compression may use.
     static func encodeBC7(_ rgba: UnsafeRawBufferPointer, width: Int, height: Int, rowBytes: Int) -> [UInt8] {
         let columns = (width + 3) / 4, rows = (height + 3) / 4
         var output = [UInt8](repeating: 0, count: columns * rows * 16)
         output.withUnsafeMutableBytes { target in
             let base = UInt(bitPattern: target.baseAddress)
-            DispatchQueue.concurrentPerform(iterations: rows) { row in
+            for row in 0..<rows {
                 let out = UnsafeMutableRawPointer(bitPattern: base)!
                 var block = [Int32](repeating: 0, count: 64)
                 for column in 0..<columns {
@@ -242,7 +243,7 @@ enum TextureCompressor {
         var output = [UInt8](repeating: 0, count: width * height * 4)
         output.withUnsafeMutableBytes { target in
             let base = UInt(bitPattern: target.baseAddress)
-            DispatchQueue.concurrentPerform(iterations: rows) { row in
+            for row in 0..<rows {
                 let out = UnsafeMutableRawPointer(bitPattern: base)!.assumingMemoryBound(to: UInt8.self)
                 for column in 0..<columns {
                     let offset = (row * columns + column) * 16
