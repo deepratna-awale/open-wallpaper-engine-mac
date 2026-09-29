@@ -88,6 +88,8 @@ struct WebWallpaperView: NSViewRepresentable {
             Self.loadWallpaper(nsView, viewModel: viewModel)
         }
         applyPlacement(wallpaperViewModel.wallpaperPlacement, to: nsView)
+        WebPageScale.apply(standardResolution: AppDelegate.shared.globalSettingsViewModel.settings.webStandardResolution,
+                           to: nsView)
         // A page per display, so only the one on the wallpaper's audible display plays sound. The
         // playback rules pause each display's page on its own, and silence the wallpaper only when
         // every display showing it is muted, paused or stopped.
@@ -109,5 +111,26 @@ struct WebWallpaperView: NSViewRepresentable {
         }
         let javascript = "document.documentElement.style.width='100%';document.documentElement.style.height='100%';document.body.style.margin='0';document.body.style.width='100%';document.body.style.height='100%';document.querySelectorAll('video,img,canvas').forEach(function(element){element.style.width='100%';element.style.height='100%';element.style.objectFit='\(objectFit)';});"
         webView.evaluateJavaScript(javascript, completionHandler: nil)
+    }
+}
+
+/// "Render web wallpapers at standard resolution": on a Retina display the page renders with a
+/// device scale factor of 1, so a page that sizes its canvas by `devicePixelRatio` draws a quarter
+/// of the pixels. WebKit's `_overrideDeviceScaleFactor` (0 = the window's own) has no public
+/// equivalent; where it is missing the page keeps its full resolution.
+enum WebPageScale {
+    private static let setOverride = NSSelectorFromString("_setOverrideDeviceScaleFactor:")
+
+    static func scaleFactor(standardResolution: Bool, backingScale: CGFloat) -> CGFloat {
+        standardResolution && backingScale > 1 ? 1 : 0
+    }
+
+    static func apply(standardResolution: Bool, to webView: WKWebView) {
+        let backingScale = webView.window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 1
+        let factor = scaleFactor(standardResolution: standardResolution, backingScale: backingScale)
+        guard webView.responds(to: setOverride), let method = webView.method(for: setOverride) else { return }
+        typealias SetOverride = @convention(c) (AnyObject, Selector, CGFloat) -> Void
+        if (webView.value(forKey: "_overrideDeviceScaleFactor") as? CGFloat) == factor { return }
+        unsafeBitCast(method, to: SetOverride.self)(webView, setOverride, factor)
     }
 }

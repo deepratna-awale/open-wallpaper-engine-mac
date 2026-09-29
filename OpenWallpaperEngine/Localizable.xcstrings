@@ -103546,6 +103546,194 @@
         }
       }
     },
+    "Render web wallpapers at standard resolution" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عرض خلفيات الشاشة من نوع الويب بالدقة القياسية"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web-Hintergrundbilder in Standardauflösung rendern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renderizar fondos de pantalla web a resolución estándar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rendre les fonds d’écran web en résolution standard"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वेब वॉलपेपर को मानक रिज़ॉल्यूशन पर रेंडर करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esegui il rendering degli sfondi web a risoluzione standard"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web壁紙を標準解像度でレンダリング"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "웹 배경화면을 표준 해상도로 렌더링"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renderuj tapety internetowe w standardowej rozdzielczości"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renderizar imagens de fundo da web em resolução padrão"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отрисовывать веб-обои в стандартном разрешении"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web duvar kâğıtlarını standart çözünürlükte işle"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відтворювати вебшпалери у стандартній роздільній здатності"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以标准分辨率渲染网页墙纸"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以標準解析度渲染網頁背景圖片"
+          }
+        }
+      }
+    },
+    "On Retina displays, web wallpapers draw a quarter of the pixels. They look softer and use less GPU." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "على شاشات Retina، ترسم خلفيات الشاشة من نوع الويب ربع عدد البكسلات. تبدو أقل حدة وتستخدم وحدة معالجة الرسومات بقدر أقل."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf Retina-Displays zeichnen Web-Hintergrundbilder ein Viertel der Pixel. Sie wirken weicher und belasten die GPU weniger."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En pantallas Retina, los fondos de pantalla web dibujan una cuarta parte de los píxeles. Se ven más suaves y usan menos la GPU."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sur les moniteurs Retina, les fonds d’écran web dessinent un quart des pixels. Ils paraissent plus flous et sollicitent moins le GPU."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retina डिस्प्ले पर वेब वॉलपेपर एक चौथाई पिक्सेल बनाते हैं। वे थोड़े धुंधले दिखते हैं और GPU का कम उपयोग करते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sugli schermi Retina, gli sfondi web disegnano un quarto dei pixel. Appaiono più morbidi e usano meno la GPU."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retinaディスプレイでは、Web壁紙が描画するピクセル数が4分の1になります。やや柔らかく見えますが、GPUの使用量が減ります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retina 디스플레이에서 웹 배경화면이 픽셀을 4분의 1만 그립니다. 조금 부드럽게 보이지만 GPU를 덜 사용합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na wyświetlaczach Retina tapety internetowe rysują jedną czwartą pikseli. Wyglądają łagodniej i mniej obciążają GPU."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Em telas Retina, as imagens de fundo da web desenham um quarto dos pixels. Elas parecem mais suaves e usam menos a GPU."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На дисплеях Retina веб-обои отрисовывают четверть пикселей. Они выглядят мягче и меньше нагружают GPU."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retina ekranlarda web duvar kâğıtları piksellerin dörtte birini çizer. Daha yumuşak görünür ve GPU’yu daha az kullanır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На дисплеях Retina вебшпалери малюють чверть пікселів. Вони виглядають м’якше й менше навантажують GPU."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Retina 显示器上，网页墙纸只绘制四分之一的像素。画面会稍显柔和，但 GPU 占用更少。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Retina 顯示器上，網頁背景圖片只繪製四分之一的像素。畫面會稍顯柔和，但 GPU 用量較少。"
+          }
+        }
+      }
+    },
     "Optimise textures" : {
       "localizations" : {
         "ar" : {

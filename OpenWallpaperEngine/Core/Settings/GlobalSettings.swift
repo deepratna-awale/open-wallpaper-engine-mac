@@ -224,6 +224,9 @@ struct GlobalSettings: Codable, Equatable {
     /// "Optimise textures" (`TexturePreparation`): scenes' colour images are compressed once to
     /// BC7 in the background and load from that cache after. On by default.
     var optimiseTextures = true
+    /// Web wallpapers render at 1 point per pixel on Retina displays (`WebPageScale`): a quarter
+    /// of the pixels for pages that size their canvas by `devicePixelRatio`. Off by default.
+    var webStandardResolution = false
     
     // MARK: Automatic Setup
     var autoStart = false
@@ -273,6 +276,7 @@ struct GlobalSettings: Codable, Equatable {
         case otherApplicationFocused, otherApplicationMaximized, otherApplicationFullscreen, otherApplicationPlayingAudio
         case displayAsleep
         case laptopOnBattery, textureResolution, shadows, volumetrics, fps, particleBudget, optimiseTextures
+        case webStandardResolution
         case qualityEfficiency
         case antiAliasing = "msaa"
         case renderResolution, sceneDetail
@@ -318,6 +322,7 @@ extension GlobalSettings {
         qualityEfficiency = QualityEfficiency(stop: qualityEfficiency).stop
         read(.particleBudget, &particleBudget)
         read(.optimiseTextures, &optimiseTextures)
+        read(.webStandardResolution, &webStandardResolution)
         read(.autoStart, &autoStart)
         read(.safeMode, &safeMode)
         read(.language, &language)
