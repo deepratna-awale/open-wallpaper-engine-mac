@@ -181,7 +181,7 @@ final class SceneScriptRuntime {
     /// no `applyUserProperties` (P8's best guess for runtime-created scripts). Commands issued
     /// while loading (`createLayer`, `sortLayer`, `play` in `init`) run before it returns, so they
     /// take effect before the first frame (SF5).
-    func load(userProperties: [String: Any] = [:], generalSettings: [String: Any] = ["language": "en-us"]) {
+    func load(userProperties: [String: Any] = [:], generalSettings: [String: Any] = SceneScriptGeneralSettings.current()) {
         assertConfined()
         guard state == .created || state == .loaded else { return }
         compilePending()
@@ -247,6 +247,11 @@ final class SceneScriptRuntime {
     /// `applyUserProperties` with only the changed properties, at the start of the next frame.
     func userPropertiesDidChange(_ changed: [String: Any]) {
         inbox.post(SceneScriptEvent(kind: .userProperties, payload: changed))
+    }
+
+    /// `applyGeneralSettings` with only the changed settings, at the start of the next frame.
+    func generalSettingsDidChange(_ changed: [String: Any]) {
+        inbox.post(SceneScriptEvent(kind: .generalSettings, payload: changed))
     }
 
     /// `resizeScreen(size)` at the start of the next frame. Never call it for the initial size.
