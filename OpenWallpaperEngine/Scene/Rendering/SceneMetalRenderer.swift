@@ -386,6 +386,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// Per-layer dependencies, coverage, class and this frame's dirty state
     /// (docs/efficiency-plan-2d.md WP1-A); built with the content, off the main thread.
     private(set) var layerAnalysis: SceneLayerAnalysis?
+    /// Keeps system audio capture on while the content reacts to audio (`needsAudio`).
+    private var audioCaptureLease: AudioCaptureLease?
     /// Adaptive rate and idle skipping (`FramePacing`, WP2-C): the instance sets its limits and
     /// ticks the displays at its rate; an idle frame returns before anything is encoded.
     var framePacing = FramePacing()
@@ -560,6 +562,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
         guard let content else {
             layerAnalysis = nil
+            audioCaptureLease = nil
             layers = []
             particleSystems = []
             objectMotions = [:]
@@ -651,6 +654,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 self.postProcess.setContent(content)
                 self.particleSystems = preparedParticleSystems
                 self.layerAnalysis = analysis
+                let needsAudio = Self.needsAudio(analysis, particles: preparedParticleSystems.map(\.configuration))
+                if needsAudio != (self.audioCaptureLease != nil) {
+                    self.audioCaptureLease = needsAudio ? WallpaperServices.shared.acquireAudioCapture() : nil
+                }
                 self.framePacing.changesOnItsOwn = FramePacing.changesOnItsOwn(
                     analysis, particles: !preparedParticleSystems.isEmpty, cameraShake: content.camera.shake)
                 self.framePacing.wake(.interactive, at: self.wallTime())
