@@ -70,12 +70,14 @@ final class SceneModelPlan {
         if let uploaded { return uploaded }
         let made = meshes.map { mesh -> SceneModelRenderer.MeshBuffers? in
             let vertices = mesh.vertexData, indices = mesh.indexData
-            guard let buffers = SceneModelRenderer.makeMeshBuffers(device: device, stride: mesh.format.stride,
+            guard let buffers = SceneModelRenderer.makeMeshBuffers(device: device, format: mesh.format,
                                                                    vertices: vertices, indices: indices,
                                                                    uint32: mesh.usesUInt32Indices,
                                                                    indexCount: mesh.indexCount)
             else { return nil }
-            mesh.bytes.replace(vertices: Self.view(of: buffers.vertices, count: vertices.count),
+            // Split streams don't hold the interleaved bytes; that mesh keeps its loaded vertices.
+            mesh.bytes.replace(vertices: buffers.attributes == nil ? Self.view(of: buffers.vertices, count: vertices.count)
+                                                                   : vertices,
                                indices: Self.view(of: buffers.indices, count: indices.count))
             return buffers
         }
