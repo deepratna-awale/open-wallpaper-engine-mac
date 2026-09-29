@@ -28,6 +28,20 @@ final class WallpaperInstanceRegistry<Key: Hashable, Instance: AnyObject> {
         self.deferTeardown = deferTeardown
     }
 
+    /// Instances still here when the registry goes (its owner went before a deferred teardown
+    /// ran) stop now: nothing could release them any more, and a running instance keeps its
+    /// render thread, display links and sound.
+    deinit {
+        let instances = entries.values.map(\.instance)
+        guard !instances.isEmpty else { return }
+        let teardown = teardown
+        if Thread.isMainThread {
+            MainActor.assumeIsolated { for instance in instances { teardown(instance) } }
+        } else {
+            DispatchQueue.main.async { MainActor.assumeIsolated { for instance in instances { teardown(instance) } } }
+        }
+    }
+
     /// The instance for `key`, made by `make` when none runs, now held by `holder` too.
     func acquire(_ key: Key, holder: AnyObject, make: () -> Instance) -> Instance {
         let id = ObjectIdentifier(holder)

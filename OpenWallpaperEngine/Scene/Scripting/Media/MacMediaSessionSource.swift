@@ -1,4 +1,4 @@
-import Foundation
+import AppKit
 import ImageIO
 import UniformTypeIdentifiers
 
@@ -16,10 +16,18 @@ import UniformTypeIdentifiers
 /// while something plays with a known duration the position is re-reported once a second (WE:
 /// timeline events are "sent frequently while media is playing"). Fetching and artwork decoding
 /// run on `queue`; `unsubscribe` never waits for them.
+///
+/// An item without artwork of its own (a browser tab's video, say) has the playing app's icon as
+/// its thumbnail, as the menu bar's Now Playing shows it. On Windows, WE's media helper gets a
+/// thumbnail from nearly every player, browsers included; macOS players often send none, and
+/// wallpapers that start their media layout on `mediaThumbnailChanged` (a paused timeline played
+/// by it, say) would otherwise never start it.
 final class MacMediaSessionSource: MediaSessionSource {
     private let queue = DispatchQueue(label: "OpenWallpaperEngine.MediaSession", qos: .utility)
     private let framework: NowPlayingFramework?
     private let now: () -> Date
+    /// The icon of the app with this bundle id, or nil.
+    private let playerIcon: (String) -> CGImage?
 
     /// Owns `subscribers`, `nextID` and `latest`. Held while delivering a state, so `unsubscribe`
     /// waits at most for one delivery in progress (subscribers only queue it), never for fetching.
@@ -45,9 +53,11 @@ final class MacMediaSessionSource: MediaSessionSource {
     /// The decoded artwork: its key (a hash of the data), colours and PNG.
     typealias Artwork = (key: Int, colors: ArtworkPalette.Colors?, png: Data?)
 
-    init(framework: NowPlayingFramework? = NowPlayingBackend.load(), now: @escaping () -> Date = Date.init) {
+    init(framework: NowPlayingFramework? = NowPlayingBackend.load(), now: @escaping () -> Date = Date.init,
+         playerIcon: @escaping (String) -> CGImage? = MacMediaSessionSource.applicationIcon(bundleIdentifier:)) {
         self.framework = framework
         self.now = now
+        self.playerIcon = playerIcon
     }
 
     deinit {
@@ -178,12 +188,12 @@ final class MacMediaSessionSource: MediaSessionSource {
         lock.unlock()
     }
 
-    /// Decodes the artwork once per image.
+    /// Decodes the artwork once per image; for an item without any, the player's icon once per player.
     private func artworkColors() -> Artwork? {
         guard let data = info[MediaRemote.Key.artworkData] as? Data, !data.isEmpty else {
-            artwork = nil
             artworkData = nil
-            return nil
+            artwork = playerArtwork()
+            return artwork
         }
         if let artwork, let artworkData, Self.sameStorage(artworkData, data) { return artwork }
         var hasher = Hasher()
@@ -207,6 +217,29 @@ final class MacMediaSessionSource: MediaSessionSource {
         return artwork
     }
 
+    /// The playing app's icon as the artwork, when the session names the app (only for an item
+    /// without artwork); nil otherwise. A missing icon is remembered too, so it is looked up once.
+    private func playerArtwork() -> Artwork? {
+        guard let player = info[MediaRemote.Key.playerBundleIdentifier] as? String, !player.isEmpty else { return nil }
+        var hasher = Hasher()
+        hasher.combine("player icon")
+        hasher.combine(player)
+        let key = hasher.finalize()
+        if let artwork, artwork.key == key { return artwork }
+        guard let image = playerIcon(player) else {
+            OWELog.debug(.script, "No icon for the now-playing app \(player); the item has no thumbnail")
+            return (key, nil, nil)
+        }
+        return (key, ArtworkPalette.colors(of: image), Self.png(of: image, original: nil, type: nil))
+    }
+
+    /// The icon of the installed app with `bundleIdentifier`, at 300 × 300 pixels, or nil.
+    static func applicationIcon(bundleIdentifier: String) -> CGImage? {
+        guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier) else { return nil }
+        var rect = CGRect(x: 0, y: 0, width: 300, height: 300)
+        return NSWorkspace.shared.icon(forFile: url.path).cgImage(forProposedRect: &rect, context: nil, hints: nil)
+    }
+
     /// The two are the same bytes in memory (the now-playing info handed back unchanged).
     static func sameStorage(_ a: Data, _ b: Data) -> Bool {
         guard a.count == b.count else { return false }
@@ -215,8 +248,8 @@ final class MacMediaSessionSource: MediaSessionSource {
     }
 
     /// The artwork as PNG: the original when it is one, else re-encoded (WE hands web wallpapers PNG).
-    private static func png(of image: CGImage, original: Data, type: CFString?) -> Data? {
-        if let type, type as String == UTType.png.identifier { return original }
+    private static func png(of image: CGImage, original: Data?, type: CFString?) -> Data? {
+        if let original, let type, type as String == UTType.png.identifier { return original }
         let output = NSMutableData()
         guard let destination = CGImageDestinationCreateWithData(output, UTType.png.identifier as CFString, 1, nil) else {
             OWELog.error(.script, "PNG encoding is unavailable; web wallpapers get no album cover")

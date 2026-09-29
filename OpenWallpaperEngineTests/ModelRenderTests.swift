@@ -268,8 +268,9 @@ final class ModelRenderTests: XCTestCase {
             .contains(SceneModelCulling.Sphere(.unbounded, world: matrix_identity_float4x4)), "a model without bounds")
     }
 
-    /// MT5: a triangle list indexing past its vertices (a script's model data may) draws from a
-    /// vertex buffer padded with zeros up to its largest index, as D3D11 reads zeros there.
+    /// MT5: a triangle list indexing past its vertices (a script's model data may) reads zeros
+    /// there, as D3D11 does: those indices name one zero vertex after the vertices, so the buffer
+    /// never grows with the index.
     func testIndicesPastTheVerticesReadZeros() throws {
         let cube = try plan()
         let source = cube.meshes[0]
@@ -283,9 +284,12 @@ final class ModelRenderTests: XCTestCase {
         let buffers = try XCTUnwrap(renderer.meshBuffers(padded)[0])
         let streams = try XCTUnwrap(SceneModelVertexStreams(source.format), "positions and other attributes")
         let vertexCount = source.vertexData.count / source.format.stride
-        XCTAssertEqual(buffers.vertices.length, 1001 * streams.positionStride)
+        XCTAssertEqual(buffers.vertices.length, (vertexCount + 1) * streams.positionStride)
         let attributes = try XCTUnwrap(buffers.attributes)
-        XCTAssertEqual(attributes.length, 1001 * streams.attributeStride)
+        XCTAssertEqual(attributes.length, (vertexCount + 1) * streams.attributeStride)
+        let drawn = UnsafeBufferPointer(start: buffers.indices.contents().assumingMemoryBound(to: UInt16.self),
+                                        count: indices.count)
+        XCTAssertEqual(Array(drawn.suffix(3)), [0, UInt16(vertexCount), 2], "the index past the vertices names the zero vertex")
         for (buffer, stride) in [(buffers.vertices, streams.positionStride), (attributes, streams.attributeStride)] {
             let tail = UnsafeRawBufferPointer(start: buffer.contents() + vertexCount * stride, count: buffer.length - vertexCount * stride)
             XCTAssertTrue(tail.allSatisfy { $0 == 0 }, "the padding is zeros")
@@ -308,6 +312,25 @@ final class ModelRenderTests: XCTestCase {
         XCTAssertEqual(SceneModelRenderer.largestIndex(wide.withUnsafeBytes { Data($0) }, uint32: true, count: 3), 70_000)
         XCTAssertEqual(SceneModelRenderer.largestIndex(wide.withUnsafeBytes { Data($0) }, uint32: true, count: 1), 3)
         XCTAssertNil(SceneModelRenderer.largestIndex(Data(), uint32: false, count: 4))
+        let clamped = SceneModelRenderer.clampedIndices(wide.withUnsafeBytes { Data($0) }, uint32: true, to: 8)
+        XCTAssertEqual(clamped.withUnsafeBytes { Array($0.bindMemory(to: UInt32.self)) }, [3, 8, 8])
+    }
+
+    /// An index near the 32-bit limit adds one vertex, not billions of bytes.
+    func testAHugeIndexDoesNotGrowTheVertexBuffer() throws {
+        let cube = try plan()
+        let source = cube.meshes[0]
+        let stride = source.format.stride
+        let vertexCount = source.vertexData.count / stride
+        let indices: [UInt32] = [0, 1, UInt32.max - 1]
+        let buffers = try XCTUnwrap(SceneModelRenderer.makeMeshBuffers(device: device, format: source.format,
+                                                                        vertices: source.vertexData,
+                                                                        indices: indices.withUnsafeBytes { Data($0) },
+                                                                        uint32: true, indexCount: 3))
+        let total = buffers.vertices.length + (buffers.attributes?.length ?? 0)
+        XCTAssertEqual(total, (vertexCount + 1) * stride)
+        let drawn = UnsafeBufferPointer(start: buffers.indices.contents().assumingMemoryBound(to: UInt32.self), count: 3)
+        XCTAssertEqual(Array(drawn), [0, 1, UInt32(vertexCount)])
     }
 
     /// M8/M13: a plan uploads once, on any thread, and the renderer draws those buffers; after

@@ -15,7 +15,7 @@ import JavaScriptCore
 ///   (`unsupportedMembers`).
 final class SceneScriptObjectModel: SceneScriptRuntimeExtension {
     let scriptResources = ["objects-values", "objects-animations", "objects-effects", "objects-layers",
-                           "objects-scene", "objects-modeldata"]
+                           "objects-transforms", "objects-scene", "objects-modeldata"]
 
     /// `emitParticles(count)` never asks for more than this at once (objects-layers.js clamps to
     /// the same); the renderer still caps it to the system's own maximum.
@@ -222,6 +222,14 @@ final class SceneScriptObjectModel: SceneScriptRuntimeExtension {
                 return nil
             }
             return .setString(slot: target, field: field, value: command.strings[1])
+        case .objectSetParent:
+            guard let number = numbers.first else {
+                return .setParent(slot: target, parent: nil, attachment: nil)
+            }
+            guard let parent = SceneScriptNumber.index(number, in: 0...Self.maximumIndex), parent != target,
+                  store.isLive(parent) else { return nil }
+            let attachment = command.strings.first.flatMap { $0.isEmpty ? nil : $0 }
+            return .setParent(slot: target, parent: parent, attachment: attachment)
         case .materialSetProperty:
             guard numbers.count >= 3, let name = command.strings.first,
                   let effect = SceneScriptNumber.index(numbers[0], in: 0...Self.maximumIndex),

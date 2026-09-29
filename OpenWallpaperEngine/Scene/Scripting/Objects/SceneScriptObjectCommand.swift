@@ -23,6 +23,10 @@ enum SceneScriptObjectCommand: Equatable {
     /// Move the layer to `index` in draw order (`sortLayer`).
     case sort(slot: Int, index: Int)
     case setString(slot: Int, field: SceneScriptStringField, value: String)
+    /// `ILayer.setParent`: hang the layer from the layer in `parent` (nil: no parent), from its
+    /// rig's attachment named `attachment` when set. `objects-transforms.js` already rewrote the
+    /// layer's own transform when the script asked to keep it in place.
+    case setParent(slot: Int, parent: Int?, attachment: String?)
     /// `IEffect.setMaterialProperty` (`material` nil: every material of the effect that has the
     /// constant) and `IMaterial` member writes (`material` set).
     case setMaterialProperty(slot: Int, effect: Int, material: Int?, name: String, value: [Float])

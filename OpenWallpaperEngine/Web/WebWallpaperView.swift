@@ -23,10 +23,7 @@ struct WebWallpaperView: NSViewRepresentable {
     }
 
     func makeNSView(context: Context) -> WKWebView {
-        let configuration = WKWebViewConfiguration()
-        Self.enableFileAccess(on: configuration)
-        configuration.allowsAirPlayForMediaPlayback = true
-        configuration.mediaTypesRequiringUserActionForPlayback = []
+        let configuration = Self.makeConfiguration()
         viewModel.installBridge(on: configuration.userContentController)
         configuration.setURLSchemeHandler(viewModel.schemeHandler, forURLScheme: WebWallpaperSchemeHandler.scheme)
         viewModel.renderWatchdog = wallpaperViewModel.renderWatchdog
@@ -47,42 +44,50 @@ struct WebWallpaperView: NSViewRepresentable {
         wallpaper.wallpaperDirectory.appending(path: wallpaper.project.file)
     }
 
-    /// Load wallpaper — uses loadHTMLString for URL-based wallpapers (YouTube/Vimeo)
-    /// so the origin isn't file://, or loadFileURL for local wallpapers.
-    private static func loadWallpaper(_ webView: WKWebView, viewModel: WebWallpaperViewModel) {
-        viewModel.pageWillLoad()
-        let fileUrl = viewModel.fileUrl
-        // Check if the HTML contains a redirect/embed to an external URL
-        if let html = try? String(contentsOf: fileUrl, encoding: .utf8),
-           html.contains("youtube.com") || html.contains("vimeo.com") {
-            // Load as HTML string with https origin so YouTube/Vimeo embeds work
-            webView.loadHTMLString(html, baseURL: URL(string: "https://localhost"))
-        } else if let patches = viewModel.compatPatches,
-                  let url = WebWallpaperSchemeHandler.url(forRelativePath: viewModel.currentWallpaper.project.file) {
-            OWELog.info(.web, "Serving \(viewModel.currentWallpaper.project.title) with WE's compatibility patches")
-            viewModel.schemeHandler.directory = viewModel.readAccessURL
-            viewModel.schemeHandler.patches = patches
-            webView.load(URLRequest(url: url))
-        } else {
-            webView.loadFileURL(fileUrl, allowingReadAccessTo: viewModel.readAccessURL)
-        }
+    /// The page's configuration before the wallpaper's own parts are added. Local files are
+    /// served by `WebWallpaperSchemeHandler`, so no file-URL access preference is changed.
+    static func makeConfiguration() -> WKWebViewConfiguration {
+        let configuration = WKWebViewConfiguration()
+        configuration.allowsAirPlayForMediaPlayback = true
+        configuration.mediaTypesRequiringUserActionForPlayback = []
+        return configuration
     }
 
-    /// Enable file:// cross-origin access for WebGL wallpapers.
-    /// Tries multiple private WebKit key variants, catching ObjC exceptions for each.
-    private static func enableFileAccess(on configuration: WKWebViewConfiguration) {
-        let prefs = configuration.preferences
+    /// How a wallpaper's page is loaded.
+    enum PageLoad: Equatable {
+        /// A page embedding a remote player (YouTube/Vimeo), loaded as a string with an https
+        /// origin so the embed accepts it.
+        case remoteEmbed(html: String)
+        /// A local page, served from the wallpaper folder by `WebWallpaperSchemeHandler`.
+        case scheme(URL)
+    }
 
-        // Key variants across macOS versions
-        let fileAccessKeys = ["allowFileAccessFromFileURLs", "_allowFileAccessFromFileURLs"]
-        let universalAccessKeys = ["allowUniversalAccessFromFileURLs", "_allowUniversalAccessFromFileURLs"]
-
-        for key in fileAccessKeys {
-            if ObjCExceptionCatcher.performSafe({ prefs.setValue(true, forKey: key) }) { break }
+    static func pageLoad(pageFile: URL, relativePath: String) -> PageLoad? {
+        // A page that can't be read here is still requested, and the handler answers it with a 404.
+        if let html = try? String(contentsOf: pageFile, encoding: .utf8),
+           html.contains("youtube.com") || html.contains("vimeo.com") {
+            return .remoteEmbed(html: html)
         }
+        return WebWallpaperSchemeHandler.url(forRelativePath: relativePath).map(PageLoad.scheme)
+    }
 
-        for key in universalAccessKeys {
-            if ObjCExceptionCatcher.performSafe({ prefs.setValue(true, forKey: key) }) { break }
+    private static func loadWallpaper(_ webView: WKWebView, viewModel: WebWallpaperViewModel) {
+        viewModel.pageWillLoad()
+        let wallpaper = viewModel.currentWallpaper
+        switch pageLoad(pageFile: viewModel.fileUrl, relativePath: wallpaper.project.file) {
+        case .remoteEmbed(let html):
+            viewModel.schemeHandler.directory = nil
+            webView.loadHTMLString(html, baseURL: URL(string: "https://localhost"))
+        case .scheme(let url):
+            let patches = viewModel.compatPatches
+            if patches != nil {
+                OWELog.info(.web, "Serving \(wallpaper.project.title) with WE's compatibility patches")
+            }
+            viewModel.schemeHandler.directory = viewModel.readAccessURL
+            viewModel.schemeHandler.patches = patches ?? WebCompatPatches(actions: [])
+            webView.load(URLRequest(url: url))
+        case nil:
+            OWELog.error(.web, "Can't load web wallpaper \(wallpaper.project.title): invalid page path \(wallpaper.project.file)")
         }
     }
 

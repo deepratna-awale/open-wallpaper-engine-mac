@@ -126,11 +126,9 @@ Pierwsza kompilacja ze źródeł pobiera pakiet Swift Sparkle. Wersje zbudowane 
 
 ## Obecne ograniczenia
 
-- **Niezaimplementowane funkcje SceneScript** — `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `transformAttachmentToTexture()`, `getVideoTexture()` jeszcze nic nie robią.
+- **Niezaimplementowane funkcje SceneScript** — `getVideoTexture()` jeszcze nic nie robi.
 - **Zgodność SceneScript** — nie każda zastrzeżona nazwa zdarzenia, wywołanie zwrotne wejścia, przypadek brzegowy cyklu życia ani dokładna semantyka czasu jest odtworzona.
-- **Rzadkie funkcje cząsteczek** — Renderery po pierwszym w systemie nie są obsługiwane.
 - **Filmy WebM** — WebM (VP8/VP9) jest odtwarzany przez WebKit, więc efekty synchronizacji z muzyką nie działają.
-- **Niektóre miniatury JPEG** — niewielka liczba plików TEXB w formacie 1 zawiera niestandardowe dane JPEG, których macOS nie potrafi zdekodować.
 - **Funkcje dźwięku wymagają uprawnienia** — bez uprawnienia Nagrywanie ekranu i dźwięku systemowego wizualizatory dźwięku i SceneScript reagujący na dźwięk otrzymują ciszę.
 
 ## Obsługiwane typy tapet

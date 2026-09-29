@@ -60,6 +60,12 @@ struct SceneCameraRigInput {
 /// playback state (paths, queues, fades), so it is a class.
 protocol SceneCameraRig: AnyObject {
     func frameCamera(_ input: SceneCameraRigInput) -> SceneFrameCamera
+    /// `ILayer.setParent` on the rig's copy of the parent graph (camera layers hang from it).
+    func setParent(_ id: String, to parent: String?, attachment: String?)
+}
+
+extension SceneCameraRig {
+    func setParent(_ id: String, to parent: String?, attachment: String?) {}
 }
 
 enum SceneCameraRigs {

@@ -214,7 +214,11 @@ enum SteamLibraryImport {
             let staging = storage.appending(path: ".owe-import-\(item.id)", directoryHint: .isDirectory)
             do {
                 if fileManager.fileExists(atPath: staging.path) { try fileManager.removeItem(at: staging) }
+                guard !ContainedPath.isSymbolicLink(item.folder) else {
+                    throw ImportedFolderLinks.FolderIsLinkError(path: item.folder.path)
+                }
                 try fileManager.copyItem(at: item.folder, to: staging)
+                try ImportedFolderLinks.removeLinks(in: staging, fileManager: fileManager)
                 try fileManager.moveItem(at: staging, to: destination)
                 result.copied.append(item.id)
             } catch {

@@ -276,6 +276,19 @@ final class ScenePuppetTests: XCTestCase {
                                                       source: source, imageSize: SIMD2(8, 8), builder: builder))
     }
 
+    /// A rig whose indices name a vertex past its mesh is rejected before anything is uploaded.
+    func testRigIndexingPastItsVerticesIsRejected() throws {
+        let source = SceneMetalTextureSource.dxt(TEXCompressedTexture(format: 0, width: 8, height: 8, data: [],
+                                                                      contentWidth: 8, contentHeight: 8))
+        var mesh = Self.gridMesh(size: SIMD2(8, 8), columns: 1, rows: 1)
+        mesh.indexData += [UInt16(0), 1, 60_000].withUnsafeBytes { Data($0) }
+        XCTAssertThrowsError(try ScenePuppetPlan.make(model: Self.model(mesh, bones: 1), rigPath: "a.mdl",
+                                                      materialPath: "materials/image4.json", source: source,
+                                                      imageSize: SIMD2(8, 8), builder: builder)) { error in
+            XCTAssertTrue("\(error)".contains("indexes vertex 60000"), "\(error)")
+        }
+    }
+
     /// A redraw happens only when what the image is drawn from changes (the pose here).
     func testTheImageIsRedrawnOnlyWhenThePoseChanges() throws {
         let image = Self.picture(width: 16, height: 16)

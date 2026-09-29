@@ -113,7 +113,7 @@ struct SettingsSearch {
             entry("Depth Map Generation", .plugins, SettingsAnchor.plugins),
 
             entry("Credits", .about, nil),
-        ]
+        ] + AppShortcut.all.map { entry($0.title, .general, SettingsAnchor.shortcuts) }
     }()
 
     /// The entries whose title (in the app's language, or in English) contains every word of
