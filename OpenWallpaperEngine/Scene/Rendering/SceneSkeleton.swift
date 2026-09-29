@@ -72,8 +72,17 @@ struct SceneSkeleton: Equatable {
     let parents: [Int?]
     /// The bind transform relative to the parent (the `.mdl` bone matrix).
     let bindLocal: [simd_float4x4]
-    /// `bindLocal` as the pose every frame starts from (skel+0x8).
+    /// The rest pose relative to the parent: the `.mdl`'s optional per-bone block after the links
+    /// (`MDLSkeleton.bindMatrices`) when it has one, else `bindLocal`. A puppet whose editor moved
+    /// a part away from where it sits in the texture (a head drawn beside the body, placed on the
+    /// neck) keeps the texture's place in the bone matrices, which skin, and the placed one here;
+    /// every clip's unanimated tracks hold these values.
+    let restLocal: [simd_float4x4]
+    /// `restLocal` as the pose every frame starts from and additive layers add their change to
+    /// (skel+0x8).
     let bindPose: [SceneBoneTransform]
+    /// `restLocal` in model space: the pose a rig with no layers draws.
+    let restWorld: [simd_float4x4]
     let bindWorld: [simd_float4x4]
     /// The inverse of the bind pose chain (0x14021b46f).
     let inverseBind: [simd_float4x4]
@@ -89,7 +98,9 @@ struct SceneSkeleton: Equatable {
         let local = skeleton.bones.map(\.matrix)
         self.parents = parents
         bindLocal = local
-        bindPose = local.map(SceneBoneTransform.init(matrix:))
+        let rest = skeleton.bindMatrices.flatMap { $0.count == count ? $0 : nil } ?? local
+        restLocal = rest
+        bindPose = rest.map(SceneBoneTransform.init(matrix:))
         var world: [simd_float4x4] = []
         world.reserveCapacity(count)
         for index in 0..<count {
@@ -97,6 +108,12 @@ struct SceneSkeleton: Equatable {
         }
         bindWorld = world
         inverseBind = world.map(\.inverse)
+        var restWorld: [simd_float4x4] = []
+        restWorld.reserveCapacity(count)
+        for index in 0..<count {
+            restWorld.append(parents[index].map { restWorld[$0] * rest[index] } ?? rest[index])
+        }
+        self.restWorld = restWorld
     }
 
     /// The first bone named `name` (`getBoneIndex`); nil when none is.

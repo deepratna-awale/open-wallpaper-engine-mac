@@ -259,4 +259,30 @@ final class SceneAnimationLayersTests: XCTestCase {
             }
         }
     }
+
+    /// A puppet whose editor placed a part away from its place in the texture (3238423642: the head
+    /// drawn beside the body, put on the neck): the bone matrix keeps the texture's place, which
+    /// skins, and the `.mdl`'s rest block the placed one, which every clip's unanimated track holds.
+    /// Ten additive layers each holding the rest value add nothing (not ten times the move), and a
+    /// rig without layers draws at rest.
+    func testAdditiveLayersAddToTheRestPoseNotTheSkinningBind() {
+        let texturePlace = ScenePuppetTests.translation(SIMD3(-1468, -173, 0))
+        let placed = ScenePuppetTests.translation(SIMD3(64, 55, 0))
+        var mdl = MDLSkeleton(version: 2, bones: [MDLBone(name: "head", flags: 1, parent: 0xFFFF_FFFF,
+                                                          matrix: texturePlace, properties: "")])
+        mdl.bindMatrices = [placed]
+        let skeleton = SceneSkeleton(mdl)
+        let clips = (0..<10).map { Self.clip(id: UInt64($0 + 1), pose: Self.still(SIMD3(64, 55, 0))) }
+        var stack = SceneAnimationLayerStack(skeleton: skeleton, clips: clips)
+        for index in clips.indices { stack.insert(layer(clips[index], key: index, index: index, additive: true)) }
+        var update = SceneAnimationLayerUpdate()
+        let pose = stack.evaluate(delta: 0.1, update: &update)[0]
+        XCTAssertEqual(pose.translation.x, 64, accuracy: 1e-3)
+        XCTAssertEqual(pose.translation.y, 55, accuracy: 1e-3)
+        // Skinning still maps from the texture's place: the palette moves the head by the placement.
+        let entry = skeleton.palette(worlds: skeleton.worlds(locals: [pose.matrix]))[0]
+        XCTAssertEqual(entry.columns.3.x, 64 + 1468, accuracy: 1e-2)
+        XCTAssertEqual(entry.columns.3.y, 55 + 173, accuracy: 1e-2)
+        XCTAssertEqual(skeleton.restWorld[0].columns.3.x, 64, accuracy: 1e-3)
+    }
 }
