@@ -145,7 +145,11 @@ struct ShaderSourceLoader {
     init(roots: [URL]) {
         self.init(readFile: { path in
             for root in roots {
-                if let data = FileManager.default.contents(atPath: root.appending(path: path).path) { return data }
+                do {
+                    if let data = try AssetPathResolver.data(path, in: root) { return data }
+                } catch {
+                    OWELog.error(.shader, "Failed to read shader \(path) in \(root.path): \(error)")
+                }
             }
             return nil
         })

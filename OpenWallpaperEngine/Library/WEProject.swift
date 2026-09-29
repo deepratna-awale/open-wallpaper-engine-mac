@@ -124,10 +124,15 @@ extension WEProject {
     }
 
     /// Decodes as the synthesized decoder would, except that a project without `type` (WE's own
-    /// default projects leave it out) takes the type its `file` implies, as WE does.
+    /// default projects leave it out) takes the type its `file` implies, as WE does, and `file`
+    /// must be a relative path inside the wallpaper (`sanitizedFile`).
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: DecodingKeys.self)
-        let file = try container.decode(String.self, forKey: .file)
+        let written = try container.decode(String.self, forKey: .file)
+        guard let file = Self.sanitizedFile(written) else {
+            throw DecodingError.dataCorruptedError(forKey: .file, in: container,
+                                                   debugDescription: "not a relative path inside the wallpaper: \(written)")
+        }
         self.init(approved: try container.decodeIfPresent(Bool.self, forKey: .approved),
                   contentrating: try container.decodeIfPresent(String.self, forKey: .contentrating),
                   description: try container.decodeIfPresent(String.self, forKey: .description),
@@ -143,6 +148,15 @@ extension WEProject {
                       ?? Self.impliedType(file: file,
                                           category: try container.decodeIfPresent(String.self, forKey: .category)),
                   version: try container.decodeIfPresent(Int.self, forKey: .version))
+    }
+
+    /// `file` as the app uses it: a remote wallpaper's http(s) URL as written, an empty one as it
+    /// is, and any other a clean relative path (`AssetPathResolver.sanitize`); nil for a path that
+    /// is absolute or climbs out of the wallpaper's folder.
+    static func sanitizedFile(_ file: String) -> String? {
+        if file.isEmpty { return file }
+        if let scheme = URL(string: file)?.scheme?.lowercased(), scheme == "http" || scheme == "https" { return file }
+        return AssetPathResolver.sanitize(file)
     }
 
     /// The wallpaper type a project's `file` implies when `type` is absent. A Workshop asset pack

@@ -348,8 +348,11 @@ class SceneWallpaperViewModel: ObservableObject {
         } else if FileManager.default.fileExists(atPath: looseSceneURL.path(percentEncoded: false)) {
             // Loose files (no .pkg)
             do {
-                let data = try Data(contentsOf: looseSceneURL)
-                (read.scene, read.document) = try decodeScene(data, edits: request.edits)
+                if let data = try AssetPathResolver.data(sceneFile, in: dir) {
+                    (read.scene, read.document) = try decodeScene(data, edits: request.edits)
+                } else {
+                    Self.log("Loose \(sceneFile) is not a usable file inside the wallpaper folder")
+                }
             } catch {
                 Self.log("Failed to parse loose \(sceneFile): \(error)")
             }
@@ -1373,7 +1376,14 @@ class SceneWallpaperViewModel: ObservableObject {
         }
         if let directory = loadedWallpaperDirectory {
             for candidate in [normalized, (normalized as NSString).lastPathComponent] {
-                if let data = try? Data(contentsOf: directory.appending(path: candidate)) {
+                let data: Data?
+                do {
+                    data = try AssetPathResolver.data(candidate, in: directory)
+                } catch {
+                    OWELog.error(.scene, "Failed to read font \(candidate): \(error)")
+                    continue
+                }
+                if let data {
                     assetDataCache[path] = data
                     return data
                 }
@@ -1792,10 +1802,14 @@ class SceneWallpaperViewModel: ObservableObject {
 
     /// A file of the wallpaper itself: its package, its folder, or a Workshop item it references.
     private func wallpaperData(named path: String, wallpaperDir: URL) -> Data? {
+        if let data = pkgParser?.extractFile(named: path) { return data }
         // A missing loose file is an ordinary miss: the next source is tried.
-        pkgParser?.extractFile(named: path)
-            ?? (try? Data(contentsOf: wallpaperDir.appending(path: path)))
-            ?? workshopAssets.data(for: path)
+        do {
+            if let data = try AssetPathResolver.data(path, in: wallpaperDir) { return data }
+        } catch {
+            OWELog.error(.scene, "Failed to read \(path) in \(wallpaperDir.path): \(error)")
+        }
+        return workshopAssets.data(for: path)
     }
 
     /// The project's Workshop id: `workshopid` in project.json, else a numeric folder name
@@ -1824,7 +1838,7 @@ class SceneWallpaperViewModel: ObservableObject {
         }
         guard let candidate = WallpaperEngineAssets.locate(relativePaths, in: assetsDirectories) else { return nil }
         do {
-            let data = try Data(contentsOf: candidate)
+            let data = try AssetPathResolver.readRegularFile(at: candidate)
             Self.logDetail("Using shared asset '\(candidate.path)'")
             return data
         } catch {

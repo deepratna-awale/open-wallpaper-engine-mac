@@ -89,12 +89,12 @@ enum WallpaperEngineAssets {
         directory.map { [$0] } ?? []
     }
 
-    /// The first of `relativePaths` that exists, trying every path in each directory before the next.
+    /// The first of `relativePaths` that is a usable file inside its directory
+    /// (`AssetPathResolver`), trying every path in each directory before the next.
     static func locate(_ relativePaths: [String], in directories: [URL]) -> URL? {
         for directory in directories {
             for path in relativePaths {
-                let candidate = directory.appending(path: path).standardizedFileURL
-                if FileManager.default.fileExists(atPath: candidate.path) { return candidate }
+                if let candidate = AssetPathResolver.fileURL(path, in: directory) { return candidate }
             }
         }
         return nil
