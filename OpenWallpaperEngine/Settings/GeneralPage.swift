@@ -101,24 +101,24 @@ struct KeyboardShortcutsSection: View {
     var body: some View {
         Section {
             DisclosureGroup(isExpanded: $isExpanded) {
-                ForEach(AppShortcut.Menu.allCases, id: \.self) { menu in
-                    let shortcuts = AppShortcut.all.filter { $0.menu == menu }
-                    if !shortcuts.isEmpty {
-                        Text(menu.title)
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(Array(groups.enumerated()), id: \.element.menu) { index, group in
+                        Text(group.menu.title)
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(.secondary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        ForEach(shortcuts) { shortcut in
+                            .padding(.top, index == 0 ? 6 : 16)
+                            .padding(.bottom, 4)
+                        ForEach(group.shortcuts) { shortcut in
                             HStack {
                                 Text(shortcut.title)
-                                Spacer()
-                                Text(verbatim: shortcut.symbols)
-                                    .font(.body.monospaced())
-                                    .foregroundStyle(.secondary)
+                                Spacer(minLength: 12)
+                                ShortcutKeyCap(symbols: shortcut.symbols)
                             }
+                            .padding(.vertical, 2.5)
                         }
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             } label: {
                 Label("Keyboard Shortcuts", systemImage: "keyboard")
             }
@@ -129,7 +129,29 @@ struct KeyboardShortcutsSection: View {
         }
     }
 
+    /// The menus that have shortcuts, in menu-bar order.
+    private var groups: [(menu: AppShortcut.Menu, shortcuts: [AppShortcut])] {
+        AppShortcut.Menu.allCases.compactMap { menu in
+            let shortcuts = AppShortcut.all.filter { $0.menu == menu }
+            return shortcuts.isEmpty ? nil : (menu, shortcuts)
+        }
+    }
+
     private func expandIfSearched(_ anchor: String?) {
         if anchor == SettingsAnchor.shortcuts { isExpanded = true }
+    }
+}
+
+/// A shortcut's key symbols as a small key cap, in the style of the settings search field.
+private struct ShortcutKeyCap: View {
+    let symbols: String
+
+    var body: some View {
+        Text(verbatim: symbols)
+            .font(.callout.monospaced())
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 2)
+            .background(.quaternary.opacity(0.6), in: RoundedRectangle(cornerRadius: 6))
     }
 }
