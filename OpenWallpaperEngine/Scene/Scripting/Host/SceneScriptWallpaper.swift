@@ -88,6 +88,9 @@ final class SceneScriptWallpaper {
         scriptHost = ScriptHost(identity: identity, prelude: services.prelude)
         let properties = content.userProperties()
         guard !SceneScriptSiteBuilder(wallpaperID: content.wallpaperID).sites(in: content.document).isEmpty else { return nil }
+        if let legacyStorageID = content.legacyStorageID {
+            services.storage.adoptLegacyStore(from: legacyStorageID, to: content.wallpaperID)
+        }
         for (name, property) in properties.properties { lastUserValues[name] = property.value }
         try thread.sync { try create(properties: properties) }
         let generalSettings = SceneScriptGeneralSettings.current()

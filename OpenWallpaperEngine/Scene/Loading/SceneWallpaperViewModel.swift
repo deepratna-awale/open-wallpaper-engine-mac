@@ -795,23 +795,26 @@ class SceneWallpaperViewModel: ObservableObject {
         guard let loadedDocument else { return nil }
         let storeKey = propertyStoreKey
         let modelData = SceneScriptModelDataStore()
+        // Keyed on the install folder, not project.json (SceneScriptStorageKey); the key used before.
+        let previousKey = loadedProjectId ?? Self.localWallpaperID(wallpaperDir)
         return SceneScriptSceneContent(
-            wallpaperID: loadedProjectId ?? Self.localWallpaperID(wallpaperDir),
+            wallpaperID: SceneScriptStorageKey.key(forWallpaperDirectory: wallpaperDir),
             document: loadedDocument.document, documentSignature: loadedDocument.signature,
             project: loadedProject,
             userValues: { WallpaperServices.shared.userProperties(wallpaper: storeKey) },
             file: { [weak self] path in self?.scriptFile(path, wallpaperDir: wallpaperDir) },
             modelData: modelData,
+            legacyStorageID: SceneScriptStorageKey.legacyKeyToAdopt(previousKey: previousKey,
+                                                                    wallpaperDirectory: wallpaperDir),
             makeLayer: { [weak self] json in
                 self?.buildScriptLayer(json, wallpaperDir: wallpaperDir, sceneSize: sceneSize, modelData: modelData)
             })
     }
 
-    /// A stable id for a wallpaper without a Workshop id: its directory's hash (scripts' ids and
-    /// `localStorage` are keyed on it).
+    /// A stable id for a wallpaper without a Workshop id: its directory's hash (timelines are keyed
+    /// on it; `localStorage` uses `SceneScriptStorageKey`).
     static func localWallpaperID(_ directory: URL) -> String {
-        let digest = SHA256.hash(data: Data(directory.standardizedFileURL.path.utf8))
-        return "local-" + digest.prefix(8).map { String(format: "%02x", $0) }.joined()
+        SceneScriptStorageKey.localKey(forWallpaperDirectory: directory)
     }
 
     /// A file for the scripts (`createLayer` assets, texture animations). Called on a script

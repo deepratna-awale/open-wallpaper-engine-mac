@@ -529,7 +529,7 @@ The 0.47 ms was measured on the wall clock while each drawn frame took about 2.6
   - Web wallpapers get the same session through `WebWallpaperMediaBridge` (`wallpaperRegisterMedia…Listener`, colours as `#RRGGBB`, the cover as a PNG data URL).
   - Thumbnail colours: WE's media helper (`winrtutil64.exe`) scores 360 hue bins and picks primary, secondary and tertiary by score and hue distance; `textColor` and `highContrastColor` by WCAG contrast ≥ 2.5 (`ArtworkPalette`).
   - `BrowserMediaIntegration` is deleted.
-- **localStorage.** A per-wallpaper JSON file in Application Support: `scenestorage/<workshopId|dir-hash>/{global,screen-<displayID>}.json`. Values go through `_Internal.stringifyConfig`, so `Vec3` survives through `toConfigString`.
+- **localStorage.** A per-wallpaper JSON file in Application Support: `scenestorage/<key>/{global,screen-<displayID>}.json`. `<key>` is the Steam folder id (a numeric folder name) or `local-<hash of the install path>`, never project.json's `workshopid`; `SceneScriptStorageKey` also says when a store an earlier version kept under the `workshopid` is adopted. Values go through `_Internal.stringifyConfig`, so `Vec3` survives through `toConfigString`.
 
 ### 4.8 Input
 

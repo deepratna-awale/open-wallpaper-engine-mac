@@ -110,11 +110,46 @@ final class SceneScriptStorage: @unchecked Sendable {
 
     /// Where a store lives: `<wallpaper>/global.json` or `<wallpaper>/screen-<screen>.json`.
     func fileURL(for location: Location, of identity: SceneScriptIdentity) -> URL {
-        let folder = directory.appending(path: Self.fileComponent(identity.wallpaperID), directoryHint: .isDirectory)
+        let folder = storeFolder(for: identity.wallpaperID)
         switch location {
         case .global: return folder.appending(path: "global.json")
         case .screen: return folder.appending(path: "screen-\(Self.fileComponent(identity.screenID)).json")
         }
+    }
+
+    /// The folder of one wallpaper's stores (`SceneScriptStorageKey` names it).
+    func storeFolder(for wallpaperID: String) -> URL {
+        directory.appending(path: Self.fileComponent(wallpaperID), directoryHint: .isDirectory)
+    }
+
+    /// Copies the stores kept under `legacyID` to `wallpaperID`, once: only while `wallpaperID`
+    /// has no stores, on disk or in memory. `SceneScriptStorageKey.legacyKeyToAdopt` decides
+    /// whether a wallpaper may adopt a legacy store; the legacy store itself is left in place.
+    /// True when something was copied.
+    @discardableResult
+    func adoptLegacyStore(from legacyID: String, to wallpaperID: String) -> Bool {
+        let source = storeFolder(for: legacyID)
+        let target = storeFolder(for: wallpaperID)
+        guard source.path != target.path else { return false }
+        flush() // the legacy stores' latest writes, if a runtime of the old key is running
+        flushLock.lock()
+        defer { flushLock.unlock() }
+        lock.lock()
+        defer { lock.unlock() }
+        let fileManager = FileManager.default
+        let targetPrefix = target.path + "/"
+        guard !stores.keys.contains(where: { $0.hasPrefix(targetPrefix) }),
+              !fileManager.fileExists(atPath: target.path),
+              fileManager.fileExists(atPath: source.path) else { return false }
+        do {
+            try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+            try fileManager.copyItem(at: source, to: target)
+        } catch {
+            OWELog.error(.script, "Copying SceneScript localStorage \(source.path) to \(target.path) failed: \(error)")
+            return false
+        }
+        OWELog.info(.script, "SceneScript localStorage of \(legacyID) now kept as \(wallpaperID)")
+        return true
     }
 
     // MARK: - Stores
