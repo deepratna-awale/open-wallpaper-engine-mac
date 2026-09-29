@@ -1213,6 +1213,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         guard let commandBuffer = commandQueue.makeCommandBuffer(),
               let targets = frameTargets(output, destination: destination, format: scenePixelFormat, size: sceneTargetSize,
                                          frame: effectFrame) else { return }
+        // Each video takes its frame for this host time first; a Y'CbCr frame is converted to RGB
+        // in this command buffer, ahead of every draw that samples it.
+        for entry in layers { if case let .video(stream) = entry.layer.source { stream.prepareFrame(commandBuffer: commandBuffer) } }
         let sceneTexture = targets.scene
         if targets.sceneIsOutput { compositesSkipped += 1 }
         let multisampledScene = sceneMultisample(for: sceneTexture)
