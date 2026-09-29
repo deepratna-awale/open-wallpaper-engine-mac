@@ -725,10 +725,14 @@ private final class SceneInspectorModel: ObservableObject {
         persist(values)
     }
 
-    /// Back to the material's own blending. It is stored rather than removed: the running
-    /// wallpaper keeps a key its store no longer has until it reloads.
+    /// Back to the material's own blending: the edit is removed, so the layer no longer counts as
+    /// edited, and the running wallpaper's store is replaced so it drops the key too.
     func resetMaterialBlending(for item: SceneInspectorItem) {
-        setMaterialBlending(authoredBlending(for: item), for: item)
+        guard let objectID = Int(item.id) else { return }
+        var values = storedValues
+        guard values.removeValue(forKey: sceneObjectBlendingKey(objectID: objectID)) != nil else { return }
+        objectWillChange.send()
+        persist(values, replacing: true)
     }
 
     /// WE's blend modes as its editor lists them (`WEImageBlendModes`), with WE's labels.
@@ -840,9 +844,14 @@ private final class SceneInspectorModel: ObservableObject {
         targets.removeSceneInspectorEdits()
     }
 
-    private func persist(_ values: [String: String]) {
+    /// `replacing`: the running stores take `values` whole, so a removed key is dropped there too.
+    private func persist(_ values: [String: String], replacing: Bool = false) {
         editBuffer.pending = values
-        targets.publish(values)
+        if replacing {
+            for key in targets.runtimeKeys { WallpaperPropertyTargets.publishReplacing(key, values) }
+        } else {
+            targets.publish(values)
+        }
         pendingSave?.cancel()
         let work = DispatchWorkItem { [weak self, targets] in
             targets.save(values)

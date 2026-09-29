@@ -64,6 +64,17 @@ final class WEMaterialBlendingTests: XCTestCase {
 
     /// Setting a layer's blending rebuilds its material with it: the pass the scene draws the
     /// image with, and so its pipeline's blend state, and the particle system's material.
+    /// The Inspector's Reset removes the edit and replaces the running store, so the key is
+    /// dropped there as a change that rebuilds the content with the material's own blending.
+    func testResetDropsTheEditFromTheRunningStore() {
+        let key = sceneObjectBlendingKey(objectID: 7)
+        var stores = SceneUserPropertyStores()
+        stores.set(["speed": "1", key: "additive"], for: "wallpaper", replacing: false)
+        let changed = stores.set(["speed": "1"], for: "wallpaper", replacing: true)
+        XCTAssertEqual(changed, [key])
+        XCTAssertEqual(SceneChangeImpact.impact(of: key), .rebuildContent)
+    }
+
     func testChangingTheBlendingUpdatesTheLayersPipelineBlendState() throws {
         _ = try Fixtures.assets()
         let directory = Fixtures.url("Scenes/ordering")
