@@ -173,6 +173,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// once it stood still, so the displays can stop drawing.
     var pausesPlayback = false
     var onPlaybackStopped: (() -> Void)?
+    /// Runs `block` on the thread that owns this renderer's state (thread boundary): content and
+    /// script objects prepared in the background land through it. The main queue by default, for a
+    /// renderer drawn by its view's own timer; a scene instance's renderer uses its render thread.
+    var performOnRenderThread: (@escaping () -> Void) -> Void = { DispatchQueue.main.async(execute: $0) }
     /// The paused clock has eased to a stop.
     var hasStoppedPlayback: Bool { clock.hasStopped }
     /// A script's fog on/off switch was reported (`frameLighting`).
@@ -635,7 +639,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             let preparedParticleSystems = runtimes.compactMap { $0 }
             guard self.isCurrentContentGeneration(generation) else { return }
             let analysis = SceneLayerAnalysis.make(content: content)
-            DispatchQueue.main.async { [weak self] in
+            // Thread boundary: content queue → render thread.
+            self.performOnRenderThread { [weak self] in
                 guard let self, self.isCurrentContentGeneration(generation) else { return }
                 self.sceneSize = content.size
                 self.sharedFrame = nil
@@ -804,7 +809,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 }
                 return self.prepare(created, id: id)
             }()
-            DispatchQueue.main.async { [weak self] in
+            // Thread boundary: content queue → render thread.
+            self.performOnRenderThread { [weak self] in
                 guard let self else { return }
                 self.pendingScriptLayers -= 1
                 guard let built, self.isCurrentContentGeneration(generation), self.scripts.wallpaper === wallpaper else { return }
