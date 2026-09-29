@@ -757,6 +757,7 @@ final class EffectGraphRenderer {
             guard let self else { return }
             self.pipelineLock.withLock {
                 self.pendingPipelines.remove(key)
+                self.landedPipelines &+= 1
                 if let result { self.pipelines[key] = result } else { self.failedPipelines.insert(key) }
             }
         }
@@ -781,6 +782,12 @@ final class EffectGraphRenderer {
     }
 
     /// Whether a pipeline is still compiling off the render thread (shader prewarm).
+    /// Compiles finished so far, however they ended: a frame drawn before one landed is redrawn.
+    var pipelinesLanded: Int {
+        pipelineLock.withLock { landedPipelines }
+    }
+    private var landedPipelines = 0
+
     var hasPendingPipelines: Bool {
         pipelineLock.withLock { !pendingPipelines.isEmpty }
     }
