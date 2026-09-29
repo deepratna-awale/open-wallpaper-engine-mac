@@ -468,11 +468,12 @@ class ContentViewModel: ObservableObject, DropDelegate {
                     return
                 }
                 DispatchQueue.main.async {
-                    try? FileManager.default.copyItem(
-                        at: url,
-                        to: FileManager.default.wallpapersDirectory
-                            .appending(path: url.lastPathComponent)
-                    )
+                    let destination = FileManager.default.wallpapersDirectory.appending(path: url.lastPathComponent)
+                    do {
+                        try ImportedFolderLinks.copyWithoutLinks(from: url, to: destination)
+                    } catch {
+                        OWELog.error(.importer, "Can't import dropped folder \(url.path): \(error)")
+                    }
                 }
             } else if wallpaper.isRegularFile, url.pathExtension.lowercased() == "zip" {
                 DispatchQueue.main.async {

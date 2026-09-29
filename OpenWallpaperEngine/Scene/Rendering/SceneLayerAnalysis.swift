@@ -147,6 +147,9 @@ final class SceneLayerAnalysis {
     /// This frame's result, by layer index.
     private(set) var dirty: [Bool]
     private(set) var dirtyCount = 0
+    /// This frame changed as a whole (`update`'s scene-wide case): the picture changes even when the
+    /// scene has no layers (particles only), e.g. once a compiling pipeline lands.
+    private(set) var sceneWideDirty = true
     /// The inputs that changed this frame, across the dirty layers' dependencies.
     private(set) var changed: SceneLayerDependencies = []
     /// Frames `update` has run.
@@ -193,7 +196,7 @@ final class SceneLayerAnalysis {
         return dirty[index]
     }
 
-    var anyDirty: Bool { dirtyCount > 0 }
+    var anyDirty: Bool { dirtyCount > 0 || sceneWideDirty }
 
     /// This frame's coverage: the static bounds unless something that moves the layer is live.
     func coverage(at index: Int) -> SceneLayerCoverage {
@@ -244,6 +247,7 @@ final class SceneLayerAnalysis {
         }
         if global.contains(.inspector) { sceneWide = true }
         forceAll = false
+        sceneWideDirty = sceneWide
         changed = sceneWide ? SceneLayerDependencies(rawValue: ~0) : global
 
         var count = 0
@@ -359,14 +363,7 @@ extension SceneLayerAnalysis {
         var layers: [Layer] = []
         layers.reserveCapacity(content.layers.count)
         for layer in content.layers {
-            // The layer and its ancestors (cycles stop the walk).
-            var lineageIDs = [layer.id]
-            var visited: Set<String> = [layer.id]
-            var cursor = nodes[layer.id]?.parentID
-            while let parent = cursor, visited.insert(parent).inserted {
-                lineageIDs.append(parent)
-                cursor = nodes[parent]?.parentID
-            }
+            let lineageIDs = Self.lineageIDs(of: layer.id, nodes: nodes)
             let lineage = lineageIDs.compactMap { Int($0) }
             ancestors.formUnion(lineage.dropFirst())
             let ancestorBindings = lineageIDs.dropFirst().contains { content.motions[$0]?.bindings.isEmpty == false }
@@ -407,6 +404,51 @@ extension SceneLayerAnalysis {
             || !content.spatial.cameraPaths.isEmpty || !content.spatial.cameraLayers.isEmpty
         return SceneLayerAnalysis(sceneSize: size, layers: layers, knownObjectIDs: known, ancestorObjectIDs: ancestors,
                                   sceneStagesAnimate: stages)
+    }
+
+    /// The layer and its ancestors (cycles stop the walk).
+    static func lineageIDs(of id: String, nodes: [String: SceneTransformHierarchy.Node]) -> [String] {
+        var lineageIDs = [id]
+        var visited: Set<String> = [id]
+        var cursor = nodes[id]?.parentID
+        while let parent = cursor, visited.insert(parent).inserted {
+            lineageIDs.append(parent)
+            cursor = nodes[parent]?.parentID
+        }
+        return lineageIDs
+    }
+
+    /// The analysis once scripts reparented objects (`ILayer.setParent`), from the parent graph
+    /// `nodes` now holds. A layer whose ancestry changed takes its new lineage and what its new
+    /// ancestors bring (parallax, bindings), and the whole scene as coverage, since the bounds
+    /// were worked out under its old parent. Nothing is rescanned. Every layer is dirty on the
+    /// next update, so the frame after the change is drawn.
+    func reparented(nodes: [String: SceneTransformHierarchy.Node],
+                    motions: [String: SceneObjectMotion]) -> SceneLayerAnalysis {
+        var ancestors = Set<Int>()
+        let updated = layers.map { layer -> Layer in
+            let lineageIDs = Self.lineageIDs(of: layer.id, nodes: nodes)
+            let lineage = lineageIDs.compactMap { Int($0) }
+            ancestors.formUnion(lineage.dropFirst())
+            guard lineage != layer.lineage else { return layer }
+            var deps = layer.dependencies
+            var movedBy = layer.movedBy
+            if lineageIDs.dropFirst().contains(where: { motions[$0]?.bindings.isEmpty == false }) {
+                deps.formUnion([.userProperties, .audio])
+                movedBy.insert(.userProperties)
+            }
+            if lineageIDs.contains(where: { (nodes[$0]?.parallaxDepth ?? SIMD2(1, 1)) != .zero }) {
+                deps.insert(.parallax)
+                movedBy.insert(.parallax)
+            }
+            return Layer(id: layer.id, objectID: layer.objectID, lineage: lineage, order: layer.order,
+                         dependencies: deps, staticCoverage: .full(sceneSize), movedBy: movedBy,
+                         contentClass: layer.contentClass, classifiedFromPixels: layer.classifiedFromPixels,
+                         readsPreviousFrame: layer.readsPreviousFrame, compositeSources: layer.compositeSources,
+                         particlesBeneath: layer.particlesBeneath)
+        }
+        return SceneLayerAnalysis(sceneSize: sceneSize, layers: updated, knownObjectIDs: knownObjectIDs,
+                                  ancestorObjectIDs: ancestors, sceneStagesAnimate: sceneStagesAnimate)
     }
 
     /// What the layer's own description says it follows (before its place in the scene).

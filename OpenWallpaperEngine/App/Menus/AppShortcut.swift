@@ -61,6 +61,9 @@ struct AppShortcut: Identifiable, Equatable {
         return text
     }
 
+    /// `symbols` split into its keys, modifiers first (⌥, ⌘, U).
+    var keys: [String] { symbols.map(String.init) }
+
     /// A key and its modifiers, to compare shortcuts.
     var combination: String { "\(modifiers.intersection(.deviceIndependentFlagsMask).rawValue)-\(key.lowercased())" }
 

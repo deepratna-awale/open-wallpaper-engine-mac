@@ -126,10 +126,8 @@ open "OpenWallpaperEngine.xcodeproj"
 
 ## 目前的限制
 
-- **尚未實作的 SceneScript 函式** — `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `transformAttachmentToTexture()`, `getVideoTexture()` 目前不執行任何動作。
-- **少見的粒子功能** — 不支援球體、盒體與圖層影像以外的發射器形狀，也不支援系統中第一個之後的渲染器。
+- **尚未實作的 SceneScript 函式** — `getVideoTexture()` 目前不執行任何動作。
 - **WebM 影片** — WebM（VP8/VP9）透過 WebKit 播放，因此音樂同步效果不適用。
-- **部分 JPEG 縮覽圖** — 少數 TEXB 格式 1 檔案含有 macOS 無法解碼的非標準 JPEG 資料。
 - **音訊功能需要權限** — 若未授予「螢幕錄製」權限，音訊視覺化與音訊回應式 SceneScript 只會收到無聲訊號。
 
 ## 支援的背景圖片類型

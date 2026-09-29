@@ -126,10 +126,8 @@ Al compilar desde el código fuente, la primera compilación descarga el paquete
 
 ## Limitaciones actuales
 
-- **Funciones de SceneScript sin implementar**: `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `transformAttachmentToTexture()`, `getVideoTexture()` todavía no hacen nada.
-- **Funciones de partículas poco comunes**: no se admiten formas de emisor distintas de esfera, caja e imagen de capa, ni los renderizadores posteriores al primero de un sistema.
+- **Funciones de SceneScript sin implementar**: `getVideoTexture()` todavía no hace nada.
 - **Vídeos WebM**: el formato WebM (VP8/VP9) se reproduce a través de WebKit, por lo que los efectos de sincronización con la música no se aplican.
-- **Algunas miniaturas JPEG**: un pequeño número de archivos TEXB de formato 1 contienen datos JPEG no estándar que macOS no puede descodificar.
 - **Las funciones de audio requieren permiso**: sin el permiso de Grabación de pantalla y del audio del sistema, los visualizadores de audio y los scripts de SceneScript que reaccionan al audio solo reciben silencio.
 
 ## Tipos de fondos de pantalla compatibles

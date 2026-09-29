@@ -26,6 +26,8 @@ struct WallpaperPreview: SubviewOfContentView {
     /// Counts the confirmed Resets; `SceneUserPropertiesView` resets on each change.
     @State private var propertyResets = 0
     @State private var isConfirmingPropertyReset = false
+    /// Counts applied presets; the property rows reload their values on each change.
+    @State private var presetApplications = 0
 
     init(contentViewModel viewModel: ContentViewModel, wallpaperViewModel: WallpaperViewModel) {
         self.viewModel = viewModel
@@ -295,7 +297,8 @@ struct WallpaperPreview: SubviewOfContentView {
                                             scopes: wallpaperViewModel.editedPropertyScopes(of: wallpaperViewModel.displayedWallpaper),
                                             resetRequest: propertyResets)
                         .id([wallpaperViewModel.displayedWallpaper.wallpaperDirectory.path]
-                            + wallpaperViewModel.editedPropertyScopes(of: wallpaperViewModel.displayedWallpaper).map(\.description))
+                            + wallpaperViewModel.editedPropertyScopes(of: wallpaperViewModel.displayedWallpaper).map(\.description)
+                            + [String(presetApplications)])
                     VStack(spacing: 3) {
                         HStack(spacing: 3) {
                             Text("Your Presets")
@@ -305,28 +308,11 @@ struct WallpaperPreview: SubviewOfContentView {
                                     .overlay(Color.accentColor)
                             }
                         }
-                        Group {
-                            HStack(spacing: 3) {
-                                Button { } label: {
-                                    Label("Load", systemImage: "folder.fill")
-                                        .frame(maxWidth: .infinity)
-                                    
-                                }
-                                Button { } label: {
-                                    Label("Save", systemImage: "square.and.arrow.down.fill")
-                                        .frame(maxWidth: .infinity)
-                                }
-                            }
-                            Button { } label: {
-                                Label("Apply to all Wallpapers", systemImage: "list.bullet.rectangle.fill")
-                                    .frame(maxWidth: .infinity)
-                            }
-                            Button { } label: {
-                                Label("Share JSON", systemImage: "arrow.2.squarepath")
-                                    .frame(maxWidth: .infinity)
-                            }
-                        }
-                        .disabled(true)
+                        WallpaperPresetsSection(wallpaper: wallpaperViewModel.displayedWallpaper,
+                                                scopes: wallpaperViewModel.editedPropertyScopes(of: wallpaperViewModel.displayedWallpaper),
+                                                onApply: { presetApplications += 1 })
+                            .id([wallpaperViewModel.displayedWallpaper.wallpaperDirectory.path]
+                                + wallpaperViewModel.editedPropertyScopes(of: wallpaperViewModel.displayedWallpaper).map(\.description))
                         // WE's Reset, last in its properties' action rows.
                         Button {
                             isConfirmingPropertyReset = true

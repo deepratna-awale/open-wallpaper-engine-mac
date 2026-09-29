@@ -108,6 +108,40 @@ final class SceneLayerAnalysisTests: XCTestCase {
         XCTAssertFalse(analysis.isDirty("12"))
     }
 
+    /// `ILayer.setParent`: after a reparent the new parent's script writes dirty the child, the
+    /// old one's don't, the child's bounds no longer hold, and the next frame is drawn.
+    func testReparentedLayerFollowsItsNewParent() {
+        let layers = [Self.layer("10", order: 0), Self.layer("11", order: 1), Self.layer("12", order: 2)]
+        var content = Self.content(layers, parents: ["11": "10"])
+        content.scripts = nil
+        let analysis = Self.analyse(content)
+        var inputs = SceneLayerFrameInputs()
+        inputs.scripts.objects[10] = SceneScriptObjectState(values: [0])
+        inputs.scripts.objects[12] = SceneScriptObjectState(values: [0])
+        analysis.update(inputs)
+        analysis.update(inputs)
+        XCTAssertFalse(analysis.coverage(at: 1).fullScene)
+
+        var hierarchy = content.transforms
+        hierarchy.setParent("11", to: "12", attachment: nil)
+        let reparented = analysis.reparented(nodes: hierarchy.nodes, motions: [:])
+        XCTAssertEqual(reparented.layers[1].lineage, [11, 12])
+        XCTAssertTrue(reparented.coverage(at: 1).fullScene, "bounds worked out under the old parent")
+        XCTAssertFalse(reparented.coverage(at: 2).fullScene, "an untouched layer keeps its bounds")
+        reparented.update(inputs)
+        XCTAssertEqual(reparented.dirtyCount, 3, "the frame after the reparent is drawn")
+        reparented.update(inputs)
+        XCTAssertEqual(reparented.dirtyCount, 0)
+        inputs.scripts.objects[12]?.values[0] = 5
+        reparented.update(inputs)
+        XCTAssertTrue(reparented.isDirty("11"), "the new parent moves it")
+        inputs.scripts.objects[10]?.values[0] = 5
+        inputs.scripts.objects[12]?.values[0] = 5
+        reparented.update(inputs)
+        XCTAssertFalse(reparented.isDirty("11"), "the old parent no longer does")
+        XCTAssertTrue(reparented.isDirty("10"))
+    }
+
     func testCoverageAndOpacity() {
         let opaque = Self.layer("1", source: .image(Self.opaqueImage(width: 8, height: 8)), size: SIMD2(100, 50))
         let holey = Self.layer("2", source: .image(Self.opaqueImage(width: 8, height: 8, alpha: 254)))

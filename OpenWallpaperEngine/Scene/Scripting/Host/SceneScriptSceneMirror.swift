@@ -142,6 +142,13 @@ final class SceneScriptSceneMirror: SceneScriptObjectHost {
             order.insert(slot, at: max(0, min(index, order.count)))
             orderChanged = true
             hitTestableValid = false
+        case .setParent(let slot, let parentSlot, let attachment):
+            guard var object = objects[slot] else { return }
+            let parentID = parentSlot.flatMap { objects[$0]?.id }
+            if parentSlot != nil, parentID == nil { return }
+            object.parentID = parentID
+            objects[slot] = object
+            events.append(.setParent(id: object.id, parentID: parentID, attachment: parentID == nil ? nil : attachment))
         case .setString(let slot, let field, let value):
             update(slot) { $0.strings[field] = value }
         case .setMaterialProperty(let slot, let effect, let material, let name, let value):

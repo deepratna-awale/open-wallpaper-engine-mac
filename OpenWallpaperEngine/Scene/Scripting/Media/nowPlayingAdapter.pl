@@ -14,7 +14,8 @@
 #
 # Output on stdout, one line per change:
 #   S <base64 binary property list>  the session: MediaRemote's now-playing dictionary, only the
-#                                    keys the app reads, plus "isPlaying"; empty when nothing plays
+#                                    keys the app reads, plus "isPlaying" and, for an item without
+#                                    artwork, "playerBundleIdentifier"; empty when nothing plays
 #   E <reason>                       a fatal error; the script then exits with status 1
 # It exits when stdin closes (the app quit or crashed) and on SIGTERM.
 use strict;
@@ -49,6 +50,9 @@ my @KEYS = map { string("kMRMediaRemoteNowPlayingInfo$_") }
     qw(Title Artist Album AlbumArtist Genre MediaType Duration ElapsedTime Timestamp PlaybackRate ArtworkData);
 my $ARTWORK = string('kMRMediaRemoteNowPlayingInfoArtworkData');
 my $IS_PLAYING = string('isPlaying');
+# Sent only for an item without artwork of its own: the app playing it, whose icon the app shows
+# as the thumbnail instead, as the menu bar's Now Playing does.
+my $PLAYER = string('playerBundleIdentifier');
 
 # The artwork. Most players (Music among them) don't put the image in the now-playing item; its
 # metadata only says one is available, and MediaRemote sends the image to a client that asks for
@@ -111,6 +115,29 @@ sub requestedArtwork {
     return undef;
 }
 
+# Whether the item says it has artwork (loaded or still loading).
+sub itemHasArtwork {
+    my ($item) = @_;
+    return 0 unless $item->respondsToSelector_('metadata');
+    my $metadata = $item->metadata;
+    return present($metadata) && $metadata->respondsToSelector_('artworkAvailable') && $metadata->artworkAvailable;
+}
+
+# The bundle id of the app playing (the parent app's for a helper process, such as a browser's
+# media process), or undef.
+sub playerBundleIdentifier {
+    return undef unless MRNowPlayingRequest->respondsToSelector_('localNowPlayingPlayerPath');
+    my $path = MRNowPlayingRequest->localNowPlayingPlayerPath;
+    my $client = present($path) && $path->respondsToSelector_('client') ? $path->client : undef;
+    return undef unless present($client);
+    for my $selector (qw(parentApplicationBundleIdentifier bundleIdentifier)) {
+        next unless $client->respondsToSelector_($selector);
+        my $identifier = $client->$selector;
+        return $identifier if present($identifier) && $identifier->length > 0;
+    }
+    return undef;
+}
+
 # The session as one line (without the "S "), or undef when it can't be read.
 sub session {
     $artworkPending = 0;
@@ -132,6 +159,10 @@ sub session {
         if (!present($out->objectForKey_($ARTWORK))) {
             my $data = requestedArtwork($item);
             $out->setObject_forKey_($data, $ARTWORK) if present($data);
+        }
+        if (!present($out->objectForKey_($ARTWORK)) && !itemHasArtwork($item)) {
+            my $player = playerBundleIdentifier();
+            $out->setObject_forKey_($player, $PLAYER) if present($player);
         }
         $out->setObject_forKey_(NSNumber->numberWithBool_(MRNowPlayingRequest->localIsPlaying ? 1 : 0), $IS_PLAYING);
     }

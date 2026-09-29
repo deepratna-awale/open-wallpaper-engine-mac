@@ -239,10 +239,13 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private typealias ScriptModel = (model: SceneModelObject, node: SceneTransformHierarchy3D.Node, motion: SceneObjectMotion)
     /// Layers scripts destroyed while they were still being built.
     private var destroyedScriptLayers = Set<String>()
+    /// Parents scripts set (`ILayer.setParent`), by object id, kept across content rebuilds like
+    /// `scriptLayers`: the parent's id (nil: a root) and the attachment it hangs from.
+    private var scriptParents: [String: (parent: String?, attachment: String?)] = [:]
     /// `emitParticles` counts waiting for their system's next step, by object id.
     private var pendingEmits: [String: Int] = [:]
     /// How many particle systems are drawn (tests, diagnostics).
-    var particleSystemCount: Int { particleSystems.count }
+    var particleSystemCount: Int { particleSystems.lazy.filter { $0.simulation == nil }.count }
     /// Layers drawn through their material, and prelighting passes run (tests, diagnostics).
     var imageMaterialDraws: Int { imageMaterials?.drawsEncoded ?? 0 }
     var imageMaterialPrelitDraws: Int { imageMaterials?.prelitDraws ?? 0 }
@@ -657,7 +660,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                              fallbackTexture: fallback)
             }
             ParticleSystemRuntime.linkFamilies(runtimes)
-            let preparedParticleSystems = runtimes.compactMap { $0 }
+            let preparedParticleSystems = ParticleSystemRuntime.addingRendererDraws(runtimes.compactMap { $0 })
             guard self.isCurrentContentGeneration(generation) else { return }
             // The models' meshes go to the GPU here, off the render thread, so the first frame
             // drawing them has nothing to upload.
@@ -712,8 +715,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                     self.scriptParticles.removeAll()
                     self.scriptSounds.removeAll()
                     self.scriptModels.removeAll()
+                    self.scriptParents.removeAll()
                 }
                 for (id, created) in self.scriptModels { self.addScriptModel(id, created) }
+                for (id, parent) in self.scriptParents { self.reparent(id, to: parent.parent, attachment: parent.attachment) }
                 for (id, created) in self.scriptParticles {
                     self.particleSystems += created.systems
                     self.objectMotions[id] = created.motion
@@ -755,8 +760,13 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             case .create(let id, let object):
                 timelines.addObject(object, id: id)
                 buildScriptLayer(String(id), object: object)
+            case let .setParent(id, parentID, attachment):
+                let key = String(id)
+                scriptParents[key] = (parentID.map(String.init), attachment)
+                reparent(key, to: parentID.map(String.init), attachment: attachment)
             case .destroy(let id):
                 let key = String(id)
+                scriptParents.removeValue(forKey: key)
                 let createdParticles = scriptParticles.removeValue(forKey: key)
                 let createdSound = scriptSounds.removeValue(forKey: id)
                 let createdModel = scriptModels.removeValue(forKey: key)
@@ -897,7 +907,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                              fallbackTexture: fallback)
             }
             ParticleSystemRuntime.linkFamilies(runtimes)
-            let prepared = runtimes.compactMap { $0 }
+            let prepared = ParticleSystemRuntime.addingRendererDraws(runtimes.compactMap { $0 })
             return prepared.isEmpty ? nil : .particles(prepared, motion: motion)
         case .sound(let content):
             return .sound(content)
@@ -915,14 +925,34 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         spatial.models.removeAll { $0.id == id }
         spatial.models.append(created.model)
         spatial.transforms.insert(id, node: created.node)
+        if let parent = scriptParents[id] { spatial.transforms.setParent(id, to: parent.parent, attachment: parent.attachment) }
         objectMotions[id] = created.motion
         models?.add(created.model)
+    }
+
+    /// `ILayer.setParent` in every parent graph the renderer composes worlds with, and in the
+    /// visibility chain (a hidden parent hides its children).
+    private func reparent(_ id: String, to parent: String?, attachment: String?) {
+        transforms.setParent(id, to: parent, attachment: attachment)
+        spatial.transforms.setParent(id, to: parent, attachment: attachment)
+        cameraTransforms.setParent(id, to: parent, attachment: attachment)
+        cameraRig.setParent(id, to: parent, attachment: attachment)
+        scripts.setParent(parent, for: id)
+        // The analysis worked out lineages and bounds under the old parents; without this, idle
+        // skipping could keep the old pose on screen.
+        if let analysis = layerAnalysis?.reparented(nodes: transforms.nodes, motions: objectMotions) {
+            layerAnalysis = analysis
+            if audioCaptureLease == nil, Self.needsAudio(analysis, particles: particleSystems.map(\.configuration)) {
+                audioCaptureLease = WallpaperServices.shared.acquireAudioCapture()
+            }
+        }
     }
 
     /// Puts `layers` in draw order (the scene's, or the one scripts set) with each layer's
     /// particle barrier.
     private func orderLayers() {
-        let systems = particleSystems.map { system -> (id: String?, order: Int) in
+        // A renderer after a system's first sits where the system does.
+        let systems = particleSystems.filter { $0.simulation == nil }.map { system -> (id: String?, order: Int) in
             let order = system.configuration.order
             if order >= 0 && order < objectIDs.count { return (String(objectIDs[order]), order) }
             return (particleObjectID(system), order)
@@ -1151,7 +1181,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             if OWEFrameMetrics.isReportingEnabled {
                 OWEFrameMetrics.recordFrame(seconds: CACurrentMediaTime() - frameStart,
                                             layers: layers.count,
-                                            particles: particleSystems.reduce(0) { $0 + ($1.gpu?.completedCount ?? $1.particles.count) })
+                                            particles: particleSystems.reduce(0) {
+                                                $1.simulation != nil ? $0 : $0 + ($1.gpu?.completedCount ?? $1.particles.count)
+                                            })
             }
         }
 
@@ -1347,39 +1379,55 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             .sorted { ($0.element.configuration.order, $0.offset) < ($1.element.configuration.order, $1.offset) }
             .map(\.element)
         let particleSignpost = OWESignpost.begin(OWESignpost.render, "updateParticles")
+        // Each visible system's step this frame, for the renderers after its first.
+        var steppedInputs: [ObjectIdentifier: ParticleFrameInputs] = [:]
         for system in orderedSystems {
-            // A hidden system (its own `visible` or a parent's) draws nothing; WE clears it once and
-            // keeps its time running with emission off (`ParticleFrameInputs.hidden`).
-            let objectID = particleObjectID(system)
-            if let objectID, !scripts.isVisible(objectID) {
-                stepHiddenParticles(system, deltaTime: Float(clock.delta), pixelFormat: sceneTexture.pixelFormat)
-                continue
-            }
-            let script = objectID.flatMap(scripts.object)
-            let scripted = script.flatMap(SceneScriptInstanceOverrides.init)
             let base = particleInstances.count
-            let emitter = emitterWorld(system.configuration, motion: motion)
-            // `starttime`: the system's first frame comes after WE's pre-simulation.
-            // WE's engine frame time and frame-rate limit steer drag and the operators' half steps
-            // (`ParticleFrameInputs.dragDeltaTime`, `substeps`); the pre-simulation runs in this frame.
-            let layerWorld = { [self] (id: String) in emitterImageLayerWorld(id, motion: motion) }
-            let modelCapsules = { [self] (id: String) in particleCapsules(id, for: system) }
-            let prewarm = ParticlePrewarm.steps(system).map {
-                ParticleFrameInputs.advance(system, deltaTime: $0, cursor: cursor, emitter: emitter, values: timelines.values,
-                                            scripted: scripted,
-                                            audio: effectFrame.audio, frameTime: Float(clock.delta),
-                                            frameRateLimit: destination.frameRateLimit, layerWorld: layerWorld,
-                                            modelCapsules: modelCapsules)
-            }
-            // A script's `pause()` holds the system as it is; `stop()` clears it until `play()`.
-            let paused = script?.playback == .pause
-            var inputs = ParticleFrameInputs.advance(system, deltaTime: paused ? 0 : Float(clock.delta), cursor: cursor,
+            let prewarm: [ParticleFrameInputs]
+            var inputs: ParticleFrameInputs
+            if let simulation = system.simulation {
+                // A renderer after a system's first draws the particles that system's step (just
+                // before, in the same order) left, with its own orientation; a hidden system's none.
+                guard let stepped = steppedInputs[ObjectIdentifier(simulation)] else { continue }
+                system.followSimulation()
+                prewarm = []
+                inputs = stepped
+                inputs.drawSizeScale = system.drawSizeScale
+                inputs.spriteLinear = system.spriteLinear
+            } else {
+                // A hidden system (its own `visible` or a parent's) draws nothing; WE clears it once and
+                // keeps its time running with emission off (`ParticleFrameInputs.hidden`).
+                let objectID = particleObjectID(system)
+                if let objectID, !scripts.isVisible(objectID) {
+                    stepHiddenParticles(system, deltaTime: Float(clock.delta), pixelFormat: sceneTexture.pixelFormat)
+                    continue
+                }
+                let script = objectID.flatMap(scripts.object)
+                let scripted = script.flatMap(SceneScriptInstanceOverrides.init)
+                let emitter = emitterWorld(system.configuration, motion: motion)
+                // `starttime`: the system's first frame comes after WE's pre-simulation.
+                // WE's engine frame time and frame-rate limit steer drag and the operators' half steps
+                // (`ParticleFrameInputs.dragDeltaTime`, `substeps`); the pre-simulation runs in this frame.
+                let layerWorld = { [self] (id: String) in emitterImageLayerWorld(id, motion: motion) }
+                let modelCapsules = { [self] (id: String) in particleCapsules(id, for: system) }
+                prewarm = ParticlePrewarm.steps(system).map {
+                    ParticleFrameInputs.advance(system, deltaTime: $0, cursor: cursor, emitter: emitter, values: timelines.values,
+                                                scripted: scripted,
+                                                audio: effectFrame.audio, frameTime: Float(clock.delta),
+                                                frameRateLimit: destination.frameRateLimit, layerWorld: layerWorld,
+                                                modelCapsules: modelCapsules)
+                }
+                // A script's `pause()` holds the system as it is; `stop()` clears it until `play()`.
+                let paused = script?.playback == .pause
+                inputs = ParticleFrameInputs.advance(system, deltaTime: paused ? 0 : Float(clock.delta), cursor: cursor,
                                                      emitter: emitter, values: timelines.values, scripted: scripted,
                                                      audio: effectFrame.audio,
                                                      frameTime: Float(clock.delta), frameRateLimit: destination.frameRateLimit,
                                                      layerWorld: layerWorld, modelCapsules: modelCapsules)
-            Self.applyScriptPlayback(script?.playback, emitting: objectID.flatMap { pendingEmits.removeValue(forKey: $0) },
-                                     to: &inputs)
+                Self.applyScriptPlayback(script?.playback, emitting: objectID.flatMap { pendingEmits.removeValue(forKey: $0) },
+                                         to: &inputs)
+                steppedInputs[ObjectIdentifier(system)] = inputs
+            }
             if particleSimulator != nil {
                 // The GPU steps the system and writes whichever records it is drawn from.
                 let rendererName = system.configuration.rendererName
@@ -1402,8 +1450,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 }
                 continue
             }
-            for step in prewarm { ParticleCPUSimulation.step(system, inputs: step) }
-            ParticleCPUSimulation.step(system, inputs: inputs)
+            if system.simulation == nil {
+                for step in prewarm { ParticleCPUSimulation.step(system, inputs: step) }
+                ParticleCPUSimulation.step(system, inputs: inputs)
+            }
             if particleMaterials?.prepare(system, pixelFormat: sceneTexture.pixelFormat, sampleCount: sceneSampleCount,
                                           depthFormat: sceneDepthFormat,
                                           opacity: { [unowned self] in self.particleOpacity($0, in: system) }) == true {
@@ -2524,7 +2574,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     /// The scene object a particle system belongs to: its own, or its family root's for a child.
     private func particleObjectID(_ system: ParticleSystemRuntime) -> String? {
-        var current: ParticleSystemRuntime? = system
+        var current: ParticleSystemRuntime? = system.simulation ?? system
         var steps = 0
         while let candidate = current, steps < 64 {
             if let id = candidate.configuration.objectID { return id }

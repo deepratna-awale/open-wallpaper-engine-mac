@@ -121,6 +121,11 @@ final class ScenePuppetPlan {
         guard let mesh = model.meshes.first, mesh.vertexCount > 0, mesh.indexCount > 0 else {
             throw ScenePuppetError.unsupported("\(rigPath) has no mesh")
         }
+        // Every index drawn must name one of the mesh's vertices, so the draws read inside its buffer.
+        if let largest = SceneModelRenderer.largestIndex(mesh.indexData, uint32: mesh.usesUInt32Indices, count: mesh.indexCount),
+           largest >= mesh.vertexCount {
+            throw ScenePuppetError.unsupported("\(rigPath) indexes vertex \(largest) of its \(mesh.vertexCount)")
+        }
         guard let skeleton = model.skeleton, !skeleton.bones.isEmpty else {
             throw ScenePuppetError.unsupported("\(rigPath) has no skeleton")
         }

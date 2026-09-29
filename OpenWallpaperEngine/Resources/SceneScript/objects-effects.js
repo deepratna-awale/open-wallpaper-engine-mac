@@ -1,5 +1,5 @@
 'use strict';
-// SceneScript object model, part 3 of 5: `IEffect` and `IMaterial`. An effect's `visible` lives in
+// SceneScript object model, part 3 of 6: `IEffect` and `IMaterial`. An effect's `visible` lives in
 // the effect buffer; material constants live in the constant pool (read by getters) and every
 // write is also a command, so the renderer applies it even to a constant the description left out.
 (function (global) {

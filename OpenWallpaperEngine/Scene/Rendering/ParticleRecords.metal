@@ -42,6 +42,15 @@ kernel void particleFinish(device uint *control [[buffer(0)]],
     }
 }
 
+/// A renderer after a system's first (`ParticleSystemRuntime.simulation`) draws the particles the
+/// system's step left: that step's counters and dispatch arguments into its own control block,
+/// before its own draw arguments and records are written.
+kernel void particleFollowControl(device const uint *simulation [[buffer(0)]],
+                                  device uint *control [[buffer(1)]],
+                                  uint gid [[thread_position_in_grid]]) {
+    if (gid < cMaterialDraw) control[gid] = simulation[gid];
+}
+
 /// `ParticleRecordWriter.writeSprites`: one particle's record.
 static SpriteRecord spriteRecord(ParticleState particle, constant ParticleParameters &p, constant ParticleFrame &f) {
     SpriteRecord record;
