@@ -11,42 +11,58 @@ Open Wallpaper Engine to darmowy odtwarzacz open source dla macOS, który wyświ
 
 **Wiki:** poradniki i dokumentacja są w [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
 
-## Powiązane projekty
+## Wymagania
 
-- **[Open Wallpaper Engine for Linux](https://github.com/Unayung/simple-linux-wallpaperengine-gui)** — graficzny interfejs w PyQt6 dla [linux-wallpaperengine](https://github.com/Almamu/linux-wallpaperengine) z integracją z Warsztatem Steam i interfejsem przeniesionym z tej wersji dla macOS.
+### Wymagane
+- **macOS 14.0 lub nowszy** (Sonoma). Wymagają go zarówno przechwytywanie dźwięku przez ScreenCaptureKit, jak i renderowanie scen w Metal.
 
-## Podziękowania
+### Opcjonalne — potrzebne do określonych funkcji
 
-Ten projekt powstał na bazie pracy następujących osób:
+| Funkcja | Wymaganie | Instalacja |
+|---------|-------------|---------|
+| Przeglądanie i pobieranie z Warsztatu Steam | `steamcmd` | Automatycznie (opcjonalnie: `brew install steamcmd`) |
+| Wizualizatory dźwięku i SceneScript reagujący na dźwięk | Uprawnienie Nagrywanie ekranu i dźwięku systemowego | Ustawienia → Uprawnienia |
 
-- **[MrWindDog](https://github.com/MrWindDog)** — opiekun nadrzędnego forka [wallpaper-engine-mac](https://github.com/MrWindDog/wallpaper-engine-mac); dodał nowe funkcje i dopracował interfejs
-- **[Haren Chen](https://github.com/haren724)** — twórca oryginalnego projektu [open-wallpaper-engine-mac](https://github.com/haren724/open-wallpaper-engine-mac); zbudował podstawową architekturę aplikacji (SwiftUI, odtwarzanie tapet wideo, system importu, interfejs playlist)
-- **1ris_W** — tłumaczenie na język chiński
-- **[Klaus Zhu](https://github.com/klauszhu1105)** — oryginalny projekt logo
-- **[Chen Chia Yang](https://github.com/Unayung)** — renderowanie tapet typu scena, poprawki tapet internetowych, integracja z Warsztatem Steam, obsługa wielu wyświetlaczy, import plików zip
-- **[Deepratna Awale](https://github.com/deepratna-awale)** — renderer scen i potok efektów w Metal, tłumaczenie shaderów GLSL→MSL i ich buforowanie, środowisko uruchomieniowe SceneScript, renderowanie reagujące na dźwięk, przebudowa Warsztatu i pobierania, ustawienia rozmieszczenia i wydajności, przeprojektowanie logo
+#### Shadery
 
-Projekt jest udostępniany na licencji [GPL-3.0](../../LICENSE), tak samo jak projekt oryginalny.
+Wallpaper Engine dostarcza swoje efekty w postaci GLSL. Są one tłumaczone na Metal (GLSL → SPIR-V → MSL) przez biblioteki glslang i SPIRV-Cross wbudowane w aplikację (`Vendor/ShaderToolchain`) przy pierwszym użyciu przez tapetę, a następnie buforowane na dysku. Nie trzeba niczego instalować. Shader, którego tłumaczenie zawiesiło aplikację lub dwukrotnie spowodowało jej awarię, jest pomijany przy kolejnych uruchomieniach, a wszystkie pozostałe shadery są nadal tłumaczone.
 
-## Od 0.8.1 do 1.0.0
+#### Zasoby Wallpaper Engine
 
-### Punkt wyjścia
+Sceny korzystają ze wspólnych efektów, materiałów, shaderów, czcionek i środowiska uruchomieniowego SceneScript z Twojej kopii Wallpaper Engine w Steam; aplikacja ich nie zawiera. Zainstaluj je w *Ustawienia → Zasoby*: aplikacja pobiera Twoją kopię przez steamcmd (konto musi posiadać Wallpaper Engine), zachowuje tylko zasoby i domyślne tapety, a resztę usuwa. Możesz też wybrać istniejący folder Wallpaper Engine. Tapety wideo i sieciowe działają bez nich.
 
-Ten fork wywodzi się z wersji 0.8.1 projektu nadrzędnego (commit `aa29a89e`, marzec 2026). Wersja 0.8.1 odtwarzała tapety wideo i webowe, obsługiwała wiele ekranów i biurek, playlisty, menu ostatnich tapet, import plików zip i folderów oraz przeglądarkę Steam Workshop pobierającą przez SteamCMD z Homebrew. Sceny były rysowane za pomocą SpriteKit z plików PKG i TEX: warstwy obrazów z pozycją, zabarwieniem i trybami mieszania, a dla tekstur DXT wyświetlany był obraz podglądu. Shadery i efekty Wallpaper Engine, cząsteczki, animacje sprite'ów i osi czasu, paralaksa kamery, skrypty reagujące na dźwięk, modele 3D, puppety, oświetlenie i SceneScript nie były obsługiwane.
+## Kompilowanie ze źródeł
 
-### Co dodano
+### Wymagania wstępne
+- macOS >= 14.0
+- Xcode >= 26.3 (macOS 26 SDK)
+- Narzędzia wiersza poleceń Xcode
 
-Od tego czasu 1118 commitów dodało:
+### Kroki
+```sh
+git clone https://github.com/deepratna-awale/open-wallpaper-engine-mac.git
+cd open-wallpaper-engine-mac
+open "OpenWallpaperEngine.xcodeproj"
+```
 
-- **Renderowanie:** nowy renderer scen w Metal, który tłumaczy i buforuje shadery Wallpaper Engine w obrębie procesu, efekty, bloom i HDR.
-- **Zawartość scen:** cząsteczki symulowane na GPU; modele 3D, puppety z animacją szkieletową i oświetlenie.
-- **Zachowanie:** środowisko uruchomieniowe SceneScript, osie czasu właściwości, efekty reagujące na dźwięk i dźwięk przestrzenny.
-- **Ekrany i Workshop:** reguły dla poszczególnych ekranów, przebudowana przeglądarka i pobieranie z Workshopu oraz więcej sposobów importu. Zasoby Wallpaper Engine pochodzą z Twojej własnej kopii w Steam; żadne nie są dołączone.
-- **Aplikacja:** asystent konfiguracji, automatyczna instalacja SteamCMD, aktualizacje przez Sparkle, interfejs Liquid Glass i 15 języków.
-- **Jakość:** zestaw około 1900 testów, CI uruchamiające je z zasobami Wallpaper Engine oraz podpisane i notaryzowane wydania.
-- **Dokumentacja:** strona internetowa projektu i wiki.
+W Xcode zmień certyfikat podpisywania na własny lub wybierz „Sign to Run Locally”, a następnie naciśnij `Cmd + R`, aby skompilować i uruchomić aplikację.
 
-Pełna lista znajduje się w sekcji [Co obsługuje wersja 1.0.0](#co-obsługuje-wersja-100); poradniki są w [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki).
+Pierwsza kompilacja ze źródeł pobiera pakiet Swift Sparkle. Wersje zbudowane ze źródeł nie sprawdzają aktualizacji.
+
+## Użycie
+
+### Przeglądanie i pobieranie z Warsztatu Steam
+
+1. Nie trzeba nic instalować: przy pierwszej potrzebie aplikacja pobiera w tle SteamCMD od Valve (z serwerów Valve, nie jest dołączony). Homebrew (`brew install steamcmd`) jest opcjonalny; jeśli zostanie znaleziony istniejący steamcmd (Homebrew, Steam lub wskazany przez Ciebie), jest używany
+2. Przejdź na kartę **Warsztat** i zaloguj się na swoje konto Steam (konto musi mieć Wallpaper Engine)
+3. Po wyświetleniu monitu lub w *Ustawienia → Ogólne* wprowadź [klucz Steam Web API](https://steamcommunity.com/dev/apikey). Jest on weryfikowany w Steam i przechowywany w pęku kluczy; hasło do Steam nigdy nie jest zapisywane (steamcmd korzysta z własnej zapisanej sesji)
+4. Wyszukaj i przefiltruj tapety, a następnie kliknij **Pobierz** przy dowolnej z nich
+
+### Import z plików lokalnych
+
+- **Folder:** Plik > Importuj z folderu — wybierz foldery tapet zawierające `project.json`
+- **Zip:** Plik > Importuj lub przeciągnij i upuść plik `.zip` zawierający pakiety tapet
+- **Ręcznie:** skopiuj foldery tapet bezpośrednio do `~/Documents/Open Wallpaper Engine/`
 
 ## Co obsługuje wersja 1.0.0
 
@@ -108,152 +124,10 @@ Pełna lista znajduje się w sekcji [Co obsługuje wersja 1.0.0](#co-obsługuje-
 - **15 nowych języków**: niemiecki, francuski, hiszpański, portugalski (Brazylia), włoski, japoński, koreański, chiński uproszczony i tradycyjny, rosyjski, polski, turecki, ukraiński, arabski i hindi, do wyboru w ustawieniach języka.
 - Nowa ikona aplikacji i ikona na pasku menu, która dopasowuje się do wyglądu paska menu.
 
-<details>
-<summary>Wcześniej w wersji 0.8.1</summary>
-
-### Odtwarzanie tapet
-- **Tapety typu scena** renderowane natywnie za pomocą Metal — warstwy obrazów, przekształcenia, osie czasu z klatkami kluczowymi, kolejność głębi oraz dane kamery i projekcji z pliku `scene.json`.
-- **Tapety wideo** (`.mp4`, `.webm`) z regulacją szybkości odtwarzania i głośności, powiązaniem szybkości dźwięku i obrazu oraz opcjonalnym zbliżeniem, pochyleniem i nasyceniem zsynchronizowanymi z muzyką.
-- **Tapety internetowe** (HTML/WebGL) z włączonym dostępem do plików lokalnych, dzięki czemu tekstury i zasoby WebGL wczytują się prawidłowo, a także z osadzonymi materiałami zewnętrznymi (YouTube/Vimeo).
-- **Tryby rozmieszczenia** — Wypełnij ekran, Dopasuj do ekranu, Na środku, Rozciągnij, aby wypełnić ekran, Powiększ.
-- **Wiele wyświetlaczy** — inna tapeta na każdym monitorze, włączanie i wyłączanie dla poszczególnych ekranów, wizualny układ monitorów oraz automatyczne wykrywanie nowo podłączonych wyświetlaczy.
-- **Wiele biurek (Spaces)** — ciągłe odtwarzanie na wszystkich biurkach, w tym opcja przypisania `Wszystkie biurka`.
-- **Reguły odtwarzania** — dalsze działanie, wyciszenie, wstrzymanie lub zatrzymanie, gdy aktywna jest inna aplikacja; prawidłowe działanie po uśpieniu i wybudzeniu oraz przy przełączaniu biurek.
-
-### Obsługa formatu scen
-- **Parser PKG** dla archiwów `PKGV` programu Wallpaper Engine (scene.json, materiały, tekstury, shadery).
-- **Parser TEX** dla kontenerów `TEXV0005`: osadzone obrazy JPEG/PNG oraz tekstury DXT1/DXT3/DXT5 z mipmapami dekodowane na GPU za pomocą shadera obliczeniowego Metal.
-- **Osie czasu sprite’ów TEXS** (0001/0002/0003), w tym prostokąty klatek w pojedynczym atlasie i sekwencje wielu obrazów.
-- **Elastyczne dekodowanie pliku scene.json**, które obsługuje polimorficzne pola programu Wallpaper Engine (zwykłe wartości lub `{"script":…,"value":…}`).
-- **Zastępczy podgląd** z pliku `preview.jpg/png/gif`, gdy nie można wyodrębnić tekstur.
-
-### Efekty i shadery
-- **Około 48 natywnych efektów Metal** obejmujących zniekształcenia, rozmycie (standardowe/precyzyjne/promieniowe/ruchu), bloom, promienie i snopy światła, fale, zmarszczki, kaustyki i przepływ wody, chmury i mgłę, ziarno filmowe, glitch/VHS, aberrację chromatyczną, kluczowanie kolorem, przekształcenia/pochylenie/obrót/zawirowanie/perspektywę, odbicie, załamanie, połysk/migotanie/brokat, wykrywanie krawędzi i inne.
-- **Efekty reagujące na dźwięk** — pulsowanie, słupki audio, przesunięcie odcienia zsynchronizowane z dźwiękiem oraz efekt hyperdrive sterowane widmem dźwięku systemowego na żywo.
-- **Semantyczne efekty materiałów** — jasność, kontrast, nasycenie, ekspozycja, gamma, odcień, próg bloom, bloom i rozmycie odwzorowane na natywne przebiegi Metal.
-- **Tłumaczenie GLSL → SPIR-V → MSL** podczas wczytywania przez wbudowane w aplikację biblioteki glslang i SPIRV-Cross, z definicjami COMBO, rozwiązywaniem dyrektyw include i przenumerowaniem slotów buforów Metal.
-- **Bufor wstępnie skompilowanych shaderów** — przetłumaczone pliki `.metal`, skompilowane pliki `.metallib` i pomocnicze pliki `.reflection.json` są buforowane w katalogu `.open-wallpaper-engine/shaders`; skróty (hash) sprawiają, że ponownie tłumaczone są tylko zmienione shadery, a kompilacja odbywa się w tle, więc nigdy nie blokuje renderowania.
-- **Dynamiczny katalog efektów** wczytywany z manifestów `assets/effects/*/effect.json` programu Wallpaper Engine, w tym efekty wieloprzebiegowe i powiązania zmiennych uniform odczytane z refleksji.
-- **Maskowanie efektów** (do 4 tekstur masek na warstwę), mieszanie addytywne i alfa oraz pula obiektów docelowych renderowania.
-
-### Cząsteczki
-- Emitery sprite’ów z losowym czasem życia, rozmiarem, prędkością, kolorem, obrotem, prędkością kątową, grawitacją, oporem i zanikaniem alfa.
-- Zaawansowane zachowanie — turbulencje, atraktory, ruch wirowy i stadny (boid), statyczne i powiązane z kursorem punkty kontrolne, połączone segmenty liny oraz ślady z zanikaniem alfa i rozmiaru.
-- Animacja klatek z arkuszy sprite’ów za pomocą sekwencji `.tex-json`.
-- Skryptowe operatory szybkości emisji, oporu i czasu zanikania alfa.
-
-### Środowisko uruchomieniowe SceneScript
-- Trwałe konteksty skryptów dla każdej warstwy: `init()` wywoływane raz, a `update(value)` w każdej klatce.
-- Zmienne globalne: `thisScene`, `thisLayer`, `engine`, `input`, `audio(low, high)`, rzeczywiste `fft(index)`, `setTimeout`/`setInterval` oraz trwałe zmienne globalne skryptów.
-- Pełna biblioteka matematyczna `Vec2`/`Vec3`/`Vec4`/`Mat3`/`Mat4` oraz funkcje pomocnicze `WEMath`, `WEVector` i `WEColor`.
-- Moduły JS środowiska uruchomieniowego Wallpaper Engine wczytywane z `assets/scripts/jsmodules` i `jsclasses`.
-- Zdarzenia kursora (`cursorMove`/`Down`/`Up`/`Click`/`Enter`/`Leave`) oraz `resizeScreen`.
-- Skrypty mogą sterować wartością alfa, punktem początkowym, rozmiarem, skalą, kątami, jasnością i kolorem warstwy, stałymi materiałów, progami efektów i szybkością emisji cząsteczek.
-- Rejestrowanie wyjątków skryptów bez duplikatów, z liczbą powtórzeń.
-
-### Dźwięk
-- Przechwytywanie dźwięku systemowego za pomocą ScreenCaptureKit, które dostarcza wygładzone 16-pasmowe widmo, przebieg fali oraz poziomy basów, średnich i wysokich tonów.
-- **Synchronizacja z muzyką** dla poszczególnych właściwości — dowolną właściwość użytkownika można modulować poziomem dźwięku z konfigurowalną siłą.
-
-### Właściwości użytkownika i inspektor
-- Ustawienia projektu w postaci suwaków, pól wyboru, list rozwijanych, pól tekstowych i kolorów, dostępne na pasku bocznym sceny, stosowane na żywo i czytelne dla SceneScript.
-- Śledzenie myszy i paralaksa dla warstw ze zdefiniowanym przez autora parametrem `parallaxDepth`.
-
-### Warsztat Steam
-- Przeglądanie, wyszukiwanie i filtrowanie według klasyfikacji treści, typu i tagów gatunku, z sortowaniem Popularne teraz / Najnowsze / Najpopularniejsze / Najczęściej subskrybowane oraz numerowanymi stronami.
-- Okna podglądu z przyciskami ustawiania tapety, odtwarzania i głośności, oparte na buforze o ograniczonym rozmiarze; zastosowane podglądy trafiają do biblioteki bez ponownego pobierania.
-- Integracja z SteamCMD z automatycznym wykrywaniem, logowaniem hasłem, kodem Steam Guard lub zapisaną sesją, osobną kartą Pobrane, kolejką pobierania z możliwością ponawiania i postępem na żywo.
-- Zaznaczanie wielu elementów i zakresów, zbiorcze pobieranie i usuwanie wymagające potwierdzenia, zapamiętywanie identyfikatorów pobranych elementów oraz sortowanie według `Data pobrania`.
-
-### Biblioteka i ustawienia
-- Import z folderów, z pakietów `.zip` lub przez przeciąganie i upuszczanie.
-- Konfigurowalne miejsce przechowywania tapet z migracją istniejącej biblioteki.
-- Menu ostatnich tapet na pasku menu.
-- Ustawienia wydajności — jakość, antyaliasing, przetwarzanie końcowe oraz zachowanie odtwarzania po utracie aktywności.
-- Diagnostyka — ścieżka dołączonych zasobów, wersje bibliotek wbudowanego kompilatora shaderów i statystyki bufora shaderów.
-
-</details>
-
-<details>
-<summary>Wcześniej w wersji 0.8.0</summary>
-
-### Obsługa wielu wyświetlaczy
-Przypisuj różne tapety do poszczególnych podłączonych monitorów i włączaj lub wyłączaj je dla każdego ekranu z osobna.
-- **Panel Ustawienia wyświetlacza** — wizualny układ monitorów przedstawiający wszystkie podłączone ekrany; kliknij, aby wybrać
-- **Tapeta dla każdego ekranu** — każdy wyświetlacz może niezależnie wyświetlać inną tapetę
-- **Przełącznik włączania i wyłączania** — włączaj lub wyłączaj tapetę dla każdego monitora
-- **Automatyczne wykrywanie** — nowe monitory są automatycznie wykrywane i włączane po podłączeniu
-
-### Obsługa wielu biurek
-Tapety są teraz wyświetlane na wszystkich biurkach macOS (Spaces) z ciągłym odtwarzaniem — bez przerw przy przełączaniu biurek.
-
-### Menu ostatnich tapet
-Szybko przełączaj tapety z menu na pasku menu. Ostatnich 10 używanych tapet jest dostępnych jednym kliknięciem.
-
-### Ustawienia odtwarzania — poprawione
-Ustawienia odtwarzania w sekcji wydajności (wstrzymanie, wyciszenie lub zatrzymanie, gdy aktywne są inne aplikacje) działają teraz prawidłowo dla wszystkich typów tapet.
-
-### Przeglądarka Warsztatu Steam
-Przeglądaj, wyszukuj i pobieraj tapety bezpośrednio z Warsztatu Steam bez opuszczania aplikacji.
-- **Wyszukiwanie i filtrowanie** — wyszukiwanie według nazwy, filtrowanie według klasyfikacji treści (Dla wszystkich/Wątpliwe/Dla dorosłych), typu (Scena/Wideo/Sieć) i tagów gatunku
-- **Opcje sortowania** — Popularne teraz, Najnowsze, Najpopularniejsze, Najczęściej subskrybowane
-- **Integracja ze steamcmd** — automatyczne pobieranie SteamCMD od Valve przy pierwszej potrzebie (nie jest dołączony); jeśli zostanie znaleziony istniejący steamcmd (Homebrew, Steam lub własna ścieżka), jest używany
-- **Logowanie do Steam** — obsługa uwierzytelniania hasłem, kodem Steam Guard i zapisaną sesją
-- **Pobieranie z postępem** — aktualizacje stanu w czasie rzeczywistym podczas pobierania (uwierzytelnianie, procent pobrania, weryfikacja, kopiowanie)
-- **Bezpieczne ustawienia domyślne** — klasyfikacja treści jest domyślnie ustawiona na „Dla wszystkich”, aby odfiltrować treści dla dorosłych
-
-### Import plików zip
-Importuj pakiety tapet bezpośrednio z plików `.zip` — bez wcześniejszego ręcznego rozpakowywania. Działa za pomocą polecenia Plik > Importuj oraz przeciągania i upuszczania.
-
-### Zaznaczanie wielu elementów i zbiorcze anulowanie subskrypcji
-Kliknij z klawiszem Cmd, aby zaznaczyć wiele tapet, a następnie kliknij prawym przyciskiem, aby zbiorczo anulować ich subskrypcję.
-
-### Wydzielone miejsce przechowywania tapet
-Tapety są teraz przechowywane w katalogu `~/Documents/Open Wallpaper Engine/` zamiast bezpośrednio w katalogu Dokumenty, co zapobiega tapetom z „błędem” po sklonowaniu repozytorium na nowym komputerze.
-
-</details>
-
-<details>
-<summary>Pierwsze zmiany względem oryginalnego projektu</summary>
-
-### Tapety internetowe — poprawione szare/puste renderowanie
-Tapety oparte na WebGL były renderowane jako szare prostokąty, ponieważ `WKWebView` blokował dostęp do plików lokalnych z teksturami i zasobami.
-
-**Poprawka:** Włączono `allowFileAccessFromFileURLs` i `allowUniversalAccessFromFileURLs` w konfiguracji WKWebView, dzięki czemu shadery WebGL mogą wczytywać lokalne pliki tekstur.
-
-### Tapety typu scena — zaimplementowane od podstaw
-Tapety typu scena (najczęstszy typ w Warsztacie Steam) w ogóle nie były zaimplementowane — wyświetlały jedynie „Hello, World!”.
-
-**Nowa implementacja obejmuje:**
-- **Parser PKG** — odczytuje format archiwów PKGV programu Wallpaper Engine, aby wyodrębnić scene.json, modele, materiały i tekstury
-- **Parser TEX** — odczytuje kontenery tekstur TEXV0005, wyodrębnia osadzone dane obrazów JPEG/PNG i odczytuje mipmapy DXT1/DXT3/DXT5
-- **Dekoder Scene JSON** — analizuje plik scene.json z elastycznym dekodowaniem, które obsługuje polimorficzne pola programu Wallpaper Engine (wartości mogą być typami prostymi lub obiektami `{"script":..,"value":..}`)
-- **Renderer Metal** — renderuje warstwy obrazów sceny z kompozycją tekstur na GPU i podstawą pod przyszłe efekty shaderów
-- **Dekodowanie DXT na GPU** — rozpakowuje tekstury DXT1 (TEXI 7), DXT3 (TEXI 6) i DXT5 (TEXI 4) za pomocą shadera obliczeniowego Metal podczas wczytywania sceny
-- **Cząsteczki sprite’ów** — renderuje typowe emitery sprite’ów `sphererandom` z losowym czasem życia, rozmiarem, prędkością, wartością alfa, kolorem, obrotem, prędkością kątową, grawitacją, oporem i zanikaniem alfa
-- **Zaawansowane cząsteczki** — obsługuje obrót, zmienność koloru, turbulencje, statyczne i powiązane z kursorem punkty kontrolne, połączone segmenty liny, ślady oraz animację klatek z arkuszy sprite’ów `.tex-json`
-- **Animacja TEXS** — dekoduje osie czasu TEXS0001/0002/0003, w tym prostokąty klatek w pojedynczym atlasie i sekwencje tekstur z wielu obrazów
-- **Osie czasu sceny** — interpoluje klatki kluczowe wartości alfa, punktu początkowego, skali i kątów obiektów z szybkością 60 FPS
-- **Środowisko uruchomieniowe SceneScript** — wykonuje skrypty właściwości w postaci wyrażeń i `export function update(value)` na podstawie dźwięku systemowego z ScreenCaptureKit. Czas `thisScene`, `thisLayer.value`, `engine`, kursor wejściowy, `audio(low, high)`, rzeczywiste `fft(index)`, wyszukiwanie właściwości i trwałe zmienne globalne sterują przekształceniami obrazów, wartością alfa i szybkością emisji cząsteczek.
-- **Trwały cykl życia SceneScript** — ponownie wykorzystuje konteksty skryptów dla każdej warstwy, wywołuje `init()` raz, a `update()` w kolejnych klatkach ze wspólnym stanem `dt`, klatki, myszy, przycisków, modyfikatorów, kursora, dźwięku, FFT, właściwości i warstw.
-- **Skryptowe operatory cząsteczek** — obsługuje skrypty szybkości emisji cząsteczek, oporu ruchu i czasu zanikania alfa, z elastycznymi liczbowymi i tekstowymi polami cząsteczek.
-- **Śledzenie myszy i paralaksa** — stosuje przesunięcie względem kursora i opcjonalne skalowanie perspektywiczne do warstw z metadanymi `parallaxDepth` zdefiniowanymi przez autora; cząsteczki powiązane z kursorem korzystają z tego samego kursora w przestrzeni sceny.
-- **Skryptowe właściwości wizualne** — obsługuje skryptową jasność i kolor RGB obiektów, stałe efektów materiałów, skalarne i wektorowe przekształcenia oraz nadpisywanie progów efektów.
-- **Właściwości użytkownika** — udostępnia na pasku bocznym sceny udokumentowane ustawienia projektu w postaci suwaków, pól wyboru, list rozwijanych, pól tekstowych i kolorów oraz przekazuje wartości liczbowe i logiczne do SceneScript
-- **Wbudowane efekty scen** — wykonuje w rendererze Metal zdefiniowane przez autora wpisy grafu efektów `pulse`, `shake`, `iris` i `waterwaves`
-- **Semantyczne efekty materiałów** — odwzorowuje typowe stałe materiałów i skrypty jasności, kontrastu, nasycenia, ekspozycji, gammy, odcienia, progu bloom, bloom i rozmycia na natywne efekty Metal
-- **Tłumaczenie shaderów GLSL** — konwertuje spakowane shadery GLSL programu Wallpaper Engine na SPIR-V i MSL podczas wczytywania za pomocą wbudowanych w aplikację bibliotek glslang i SPIRV-Cross; przetłumaczone warianty są buforowane w katalogu `~/Library/Caches/com.winddog.wallpaper-engine/shader-variants`
-- **Zastępczy podgląd** — używa pliku preview.jpg/png/gif, gdy nie można wyodrębnić tekstur
-
-### Import — poprawiony import folderów
-Panel importu prawidłowo obsługuje teraz zarówno pojedyncze foldery tapet, jak i katalogi nadrzędne zawierające wiele tapet.
-
-</details>
-
 ## Obecne ograniczenia
 
 - **Tapety typu aplikacja** — tapety `type: "application"` nie są obsługiwane i nie zostaną uruchomione.
-- **Niezaimplementowane funkcje SceneScript** — `effect.executeMaterialFunction()`, `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `getVideoTexture()`, `engine.openUserShortcut()` jeszcze nic nie robią.
+- **Niezaimplementowane funkcje SceneScript** — `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `transformAttachmentToTexture()`, `getVideoTexture()` jeszcze nic nie robią.
 - **Zgodność SceneScript** — nie każda zastrzeżona nazwa zdarzenia, wywołanie zwrotne wejścia, przypadek brzegowy cyklu życia ani dokładna semantyka czasu jest odtworzona.
 - **Rzadkie funkcje cząsteczek** — Kształty emiterów inne niż kula, prostopadłościan i obraz warstwy oraz renderery po pierwszym w systemie nie są obsługiwane.
 - **Wymagane zasoby Wallpaper Engine** — Sceny potrzebują zasobów z Twojej kopii Wallpaper Engine (Ustawienia → Zasoby); bez nich działają tylko tapety wideo i internetowe.
@@ -261,6 +135,7 @@ Panel importu prawidłowo obsługuje teraz zarówno pojedyncze foldery tapet, ja
 - **Niektóre miniatury JPEG** — niewielka liczba plików TEXB w formacie 1 zawiera niestandardowe dane JPEG, których macOS nie potrafi zdekodować.
 - **Zakres ustawień wydajności** — opcje jakości, antyaliasingu i przetwarzania końcowego są przeznaczone dla tapet typu scena i mają ograniczony wpływ na tapety wideo i internetowe.
 - **Funkcje dźwięku wymagają uprawnienia** — bez uprawnienia Nagrywanie ekranu i dźwięku systemowego wizualizatory dźwięku i SceneScript reagujący na dźwięk otrzymują ciszę.
+- **Nie porównano bezpośrednio z Wallpaper Engine** – Wallpaper Engine nie działa w systemie macOS, więc działanie opiera się na własnych plikach i shaderach Wallpaper Engine; niektóre przypadki brzegowe (osie czasu, oświetlenie, wyjście HDR) nie są potwierdzone.
 
 ## Obsługiwane typy tapet
 
@@ -278,73 +153,36 @@ Panel importu prawidłowo obsługuje teraz zarówno pojedyncze foldery tapet, ja
 | Scena — modele 3D / rigging / puppet warp | Działa |
 | Aplikacja | Nieobsługiwane |
 
-## Wymagania
-
-### Wymagane
-- **macOS 14.0 lub nowszy** (Sonoma). Wymagają go zarówno przechwytywanie dźwięku przez ScreenCaptureKit, jak i renderowanie scen w Metal.
-
-### Opcjonalne — potrzebne do określonych funkcji
-
-| Funkcja | Wymaganie | Instalacja |
-|---------|-------------|---------|
-| Przeglądanie i pobieranie z Warsztatu Steam | `steamcmd` | Automatycznie (opcjonalnie: `brew install steamcmd`) |
-| Wizualizatory dźwięku i SceneScript reagujący na dźwięk | Uprawnienie Nagrywanie ekranu i dźwięku systemowego | Ustawienia → Uprawnienia |
-
-#### Shadery
-
-Wallpaper Engine dostarcza swoje efekty w postaci GLSL. Są one tłumaczone na Metal (GLSL → SPIR-V → MSL) przez biblioteki glslang i SPIRV-Cross wbudowane w aplikację (`Vendor/ShaderToolchain`) przy pierwszym użyciu przez tapetę, a następnie buforowane na dysku. Nie trzeba niczego instalować. Shader, którego tłumaczenie zawiesiło aplikację lub dwukrotnie spowodowało jej awarię, jest pomijany przy kolejnych uruchomieniach, a wszystkie pozostałe shadery są nadal tłumaczone.
-
-#### Zasoby Wallpaper Engine
-
-Sceny korzystają ze wspólnych efektów, materiałów, shaderów, czcionek i środowiska uruchomieniowego SceneScript z Twojej kopii Wallpaper Engine w Steam; aplikacja ich nie zawiera. Zainstaluj je w *Ustawienia → Zasoby*: aplikacja pobiera Twoją kopię przez steamcmd (konto musi posiadać Wallpaper Engine), zachowuje tylko zasoby i domyślne tapety, a resztę usuwa. Możesz też wybrać istniejący folder Wallpaper Engine. Tapety wideo i sieciowe działają bez nich.
-
-## Kompilowanie ze źródeł
-
-### Wymagania wstępne
-- macOS >= 14.0
-- Xcode >= 26.3 (macOS 26 SDK)
-- Narzędzia wiersza poleceń Xcode
-
-### Kroki
-```sh
-git clone https://github.com/deepratna-awale/open-wallpaper-engine-mac.git
-cd wallpaper-engine-mac
-open "OpenWallpaperEngine.xcodeproj"
-```
-
-W Xcode zmień certyfikat podpisywania na własny lub wybierz „Sign to Run Locally”, a następnie naciśnij `Cmd + R`, aby skompilować i uruchomić aplikację.
-
-Pierwsza kompilacja ze źródeł pobiera pakiet Swift Sparkle. Wersje zbudowane ze źródeł nie sprawdzają aktualizacji.
-
-## Użycie
-
-### Przeglądanie i pobieranie z Warsztatu Steam
-
-1. Nie trzeba nic instalować: przy pierwszej potrzebie aplikacja pobiera w tle SteamCMD od Valve (z serwerów Valve, nie jest dołączony). Homebrew (`brew install steamcmd`) jest opcjonalny; jeśli zostanie znaleziony istniejący steamcmd (Homebrew, Steam lub wskazany przez Ciebie), jest używany
-2. Przejdź na kartę **Warsztat** i zaloguj się na swoje konto Steam (konto musi mieć Wallpaper Engine)
-3. Po wyświetleniu monitu lub w *Ustawienia → Ogólne* wprowadź [klucz Steam Web API](https://steamcommunity.com/dev/apikey). Jest on weryfikowany w Steam i przechowywany w pęku kluczy; hasło do Steam nigdy nie jest zapisywane (steamcmd korzysta z własnej zapisanej sesji)
-4. Wyszukaj i przefiltruj tapety, a następnie kliknij **Pobierz** przy dowolnej z nich
-
-### Import z plików lokalnych
-
-- **Folder:** Plik > Importuj z folderu — wybierz foldery tapet zawierające `project.json`
-- **Zip:** Plik > Importuj lub przeciągnij i upuść plik `.zip` zawierający pakiety tapet
-- **Ręcznie:** skopiuj foldery tapet bezpośrednio do `~/Documents/Open Wallpaper Engine/`
-
 ## Prywatność
 
 Wszystko, co zapisuje Open Wallpaper Engine, zostaje na Twoim Macu: ustawienia, biblioteka, pamięć podręczna i logowanie SteamCMD. Open Wallpaper Engine nie ma serwera i nie zbiera żadnych danych ani statystyk. Łączy się z Valve (ze Steam, gdy korzystasz z Warsztatu lub instalujesz zasoby, oraz z serwerem Valve, aby pobrać SteamCMD) i z GitHubem, aby sprawdzać aktualizacje aplikacji (appcast w GitHub Pages) i pobierać je z GitHub Releases, bez wysyłania jakichkolwiek danych osobowych. Sprawdzanie aktualizacji można wyłączyć w Ustawienia › Ogólne. Tapety internetowe mogą wczytywać własne treści online. Twoje hasło Steam i kod Steam Guard trafiają bezpośrednio do SteamCMD i nigdy nie są zapisywane, rejestrowane ani wysyłane nigdzie indziej; zapamiętywana jest tylko nazwa konta, aby ponownie użyć zapisanego logowania SteamCMD.
 
 ## Struktura projektu
 
-- `OpenWallpaperEngine/Services/SceneParsers/` — parsery i modele PKG, TEX/TEXS i scene.json
-- `OpenWallpaperEngine/Services/SceneEffects/` — dynamiczny katalog efektów i zakresy parametrów efektów zdefiniowane przez autorów
+- `OpenWallpaperEngine/Scene/Format/` — parsery i modele PKG, TEX/TEXS i scene.json
 - `OpenWallpaperEngine/Scene/Shaders/` — tłumaczenie GLSL → SPIR-V → MSL (`ShaderVariant.swift`, `InProcessShaderCompiler.swift`), buforowanie i archiwum potoków
 - `Vendor/ShaderToolchain/` — źródła glslang i SPIRV-Cross, wbudowywane w aplikację jako lokalny pakiet
-- `OpenWallpaperEngine/Scene/Scripting/AudioReactiveScriptEngine.swift` — środowisko uruchomieniowe SceneScript i powiązania dźwięku/FFT
+- `OpenWallpaperEngine/Scene/Scripting/` — środowisko uruchomieniowe SceneScript i powiązania dźwięku/FFT
 - `OpenWallpaperEngine/Audio/AudioLevelTap.swift` — przechwytywanie dźwięku systemowego za pomocą ScreenCaptureKit
 - `OpenWallpaperEngine/Scene/Rendering/SceneMetalRenderer.swift`, `SceneShaders.metal` — renderer scen Metal i biblioteka shaderów
 - `OpenWallpaperEngine/Workshop/SteamCmdService.swift`, `WorkshopAPIService.swift`, `WorkshopViewModel.swift` — przeglądanie Warsztatu Steam i pobieranie
 - `OpenWallpaperEngine/Library/WallpaperDirectory.swift`, `ZipImporter.swift`, `WallpaperPackageConverter.swift` — przechowywanie biblioteki, import i konwersja pakietów
 - `Scripts/fill-assets-cache.sh` — narzędzie dla programistów: kopiuje zasoby instalacji Wallpaper Engine do lokalnego folderu lub pamięci podręcznej magazynu tapet
 - `Scripts/scene-api-coverage.py` — raportuje, których interfejsów API SceneScript używają zainstalowane tapety w porównaniu z tym, co zostało zaimplementowane
+
+## Powiązane projekty
+
+- **[Open Wallpaper Engine for Linux](https://github.com/Unayung/simple-linux-wallpaperengine-gui)** — graficzny interfejs w PyQt6 dla [linux-wallpaperengine](https://github.com/Almamu/linux-wallpaperengine) z integracją z Warsztatem Steam i interfejsem przeniesionym z tej wersji dla macOS.
+
+## Podziękowania
+
+Ten projekt powstał na bazie pracy następujących osób:
+
+- **[MrWindDog](https://github.com/MrWindDog)** — opiekun nadrzędnego forka [wallpaper-engine-mac](https://github.com/MrWindDog/wallpaper-engine-mac); dodał nowe funkcje i dopracował interfejs
+- **[Haren Chen](https://github.com/haren724)** — twórca oryginalnego projektu [open-wallpaper-engine-mac](https://github.com/haren724/open-wallpaper-engine-mac); zbudował podstawową architekturę aplikacji (SwiftUI, odtwarzanie tapet wideo, system importu, interfejs playlist)
+- **1ris_W** — tłumaczenie na język chiński
+- **[Klaus Zhu](https://github.com/klauszhu1105)** — oryginalny projekt logo
+- **[Chen Chia Yang](https://github.com/Unayung)** — renderowanie tapet typu scena, poprawki tapet internetowych, integracja z Warsztatem Steam, obsługa wielu wyświetlaczy, import plików zip
+- **[Deepratna Awale](https://github.com/deepratna-awale)** — renderer scen i potok efektów w Metal, tłumaczenie shaderów GLSL→MSL i ich buforowanie, środowisko uruchomieniowe SceneScript, renderowanie reagujące na dźwięk, przebudowa Warsztatu i pobierania, ustawienia rozmieszczenia i wydajności, przeprojektowanie logo
+
+Projekt jest udostępniany na licencji [GPL-3.0](../../LICENSE), tak samo jak projekt oryginalny.
