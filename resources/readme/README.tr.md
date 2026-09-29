@@ -126,7 +126,7 @@ Kaynaktan ilk derleme Sparkle Swift paketini indirir. Kaynaktan derlenen sürüm
 
 ## Mevcut Sınırlamalar
 
-- **Uygulanmamış SceneScript işlevleri** — `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `transformAttachmentToTexture()`, `getVideoTexture()` henüz hiçbir şey yapmaz.
+- **Uygulanmamış SceneScript işlevleri** — `getVideoTexture()` henüz hiçbir şey yapmaz.
 - **SceneScript uyumluluğu** — Tescilli olay adlarının, giriş geri çağırmalarının, yaşam döngüsü uç durumlarının veya tam zamanlama anlamlarının tümü yeniden üretilmemiştir.
 - **Nadir parçacık özellikleri** — Bir sistemin ilkinden sonraki işleyicileri desteklenmez.
 - **WebM videoları** — WebM (VP8/VP9) WebKit üzerinden oynatılır, bu yüzden müzik senkronizasyonu efektleri ona uygulanmaz.

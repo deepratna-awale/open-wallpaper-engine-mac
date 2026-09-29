@@ -126,7 +126,7 @@ Xcode에서 서명 인증서를 본인의 인증서로 변경하거나 'Sign to 
 
 ## 현재 제한 사항
 
-- **구현되지 않은 SceneScript 함수** — `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `transformAttachmentToTexture()`, `getVideoTexture()`는 아직 아무 작업도 하지 않습니다.
+- **구현되지 않은 SceneScript 함수** — `getVideoTexture()`는 아직 아무 작업도 하지 않습니다.
 - **SceneScript 호환성** — 모든 독점 이벤트 이름, 입력 콜백, 수명 주기의 예외 상황, 정확한 타이밍 의미가 재현되지는 않습니다.
 - **드문 파티클 기능** — 시스템의 첫 번째 이후 렌더러는 지원되지 않습니다.
 - **WebM 비디오** — WebM(VP8/VP9)은 WebKit으로 재생되므로 음악 동기화 효과가 적용되지 않습니다.

@@ -11,6 +11,9 @@ extension SceneScriptCommandRing.Opcode {
     static let objectSort = Self(rawValue: 402)
     /// target slot; strings [field, value].
     static let objectSetString = Self(rawValue: 403)
+    /// `ILayer.setParent`: target slot; numbers [] (no parent) or [parent slot]; strings [] or
+    /// [attachment name].
+    static let objectSetParent = Self(rawValue: 404)
     /// target slot; numbers [effect, material or -1, components…]; strings [name].
     static let materialSetProperty = Self(rawValue: 410)
     /// target slot; numbers [effect]; strings [name].
@@ -58,6 +61,7 @@ extension SceneScriptCommandRing.Opcode {
     /// Every object-model opcode with its JS name, for `__rt.objects.OP`.
     static let objectModelOpcodes: [String: Self] = [
         "create": .objectCreate, "destroy": .objectDestroy, "sort": .objectSort, "setString": .objectSetString,
+        "setParent": .objectSetParent,
         "setMaterialProperty": .materialSetProperty, "executeMaterialFunction": .materialExecuteFunction,
         "setMaterialConstant": .materialSetConstant,
         "soundPlay": .soundPlay, "soundPause": .soundPause, "soundStop": .soundStop,

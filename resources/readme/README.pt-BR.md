@@ -126,7 +126,7 @@ A primeira compilação a partir do código-fonte baixa o pacote Swift Sparkle. 
 
 ## Limitações Atuais
 
-- **Funções do SceneScript não implementadas** — `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `transformAttachmentToTexture()`, `getVideoTexture()` ainda não fazem nada.
+- **Funções do SceneScript não implementadas** — `getVideoTexture()` ainda não faz nada.
 - **Paridade do SceneScript** — Nem todos os nomes de eventos proprietários, callbacks de entrada, casos extremos do ciclo de vida ou semânticas exatas de temporização são reproduzidos.
 - **Recursos de partículas raros** — Renderizadores após o primeiro de um sistema não são suportados.
 - **Vídeos WebM** — WebM (VP8/VP9) é reproduzido pelo WebKit, então os efeitos de sincronização com a música não se aplicam.

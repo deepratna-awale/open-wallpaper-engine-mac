@@ -90,6 +90,18 @@ final class SceneCameraLayersTests: XCTestCase {
         Self.assertClose(camera.pose.eye, SIMD3(12, 0, 0))
     }
 
+    /// `ILayer.setParent` reaches the camera layers' copy of the parent graph.
+    func testReparentingMovesTheCamera() throws {
+        let parent = Self.local(origin: SIMD3(10, 0, 0), angles: SIMD3(0, .pi / 2, 0))
+        let hierarchy = Self.transforms(["p": (parent, nil), "cam": (Self.local(origin: SIMD3(0, 0, 2)), nil)])
+        let layers = SceneCameraLayers([try Self.layer("cam", order: 0)], transforms: hierarchy, values: SpatialProperties())
+        Self.assertClose(try XCTUnwrap(layers.update(Self.input())).pose.eye, SIMD3(0, 0, 2))
+        layers.setParent("cam", to: "p", attachment: nil)
+        Self.assertClose(try XCTUnwrap(layers.update(Self.input())).pose.eye, SIMD3(12, 0, 0))
+        layers.setParent("cam", to: nil, attachment: nil)
+        Self.assertClose(try XCTUnwrap(layers.update(Self.input())).pose.eye, SIMD3(0, 0, 2))
+    }
+
     // MARK: - Paths
 
     /// "sequential": each finished path hands over to the next visible one, wrapping. A path's

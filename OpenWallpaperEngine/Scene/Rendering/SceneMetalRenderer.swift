@@ -239,6 +239,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private typealias ScriptModel = (model: SceneModelObject, node: SceneTransformHierarchy3D.Node, motion: SceneObjectMotion)
     /// Layers scripts destroyed while they were still being built.
     private var destroyedScriptLayers = Set<String>()
+    /// Parents scripts set (`ILayer.setParent`), by object id, kept across content rebuilds like
+    /// `scriptLayers`: the parent's id (nil: a root) and the attachment it hangs from.
+    private var scriptParents: [String: (parent: String?, attachment: String?)] = [:]
     /// `emitParticles` counts waiting for their system's next step, by object id.
     private var pendingEmits: [String: Int] = [:]
     /// How many particle systems are drawn (tests, diagnostics).
@@ -712,8 +715,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                     self.scriptParticles.removeAll()
                     self.scriptSounds.removeAll()
                     self.scriptModels.removeAll()
+                    self.scriptParents.removeAll()
                 }
                 for (id, created) in self.scriptModels { self.addScriptModel(id, created) }
+                for (id, parent) in self.scriptParents { self.reparent(id, to: parent.parent, attachment: parent.attachment) }
                 for (id, created) in self.scriptParticles {
                     self.particleSystems += created.systems
                     self.objectMotions[id] = created.motion
@@ -755,8 +760,13 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             case .create(let id, let object):
                 timelines.addObject(object, id: id)
                 buildScriptLayer(String(id), object: object)
+            case let .setParent(id, parentID, attachment):
+                let key = String(id)
+                scriptParents[key] = (parentID.map(String.init), attachment)
+                reparent(key, to: parentID.map(String.init), attachment: attachment)
             case .destroy(let id):
                 let key = String(id)
+                scriptParents.removeValue(forKey: key)
                 let createdParticles = scriptParticles.removeValue(forKey: key)
                 let createdSound = scriptSounds.removeValue(forKey: id)
                 let createdModel = scriptModels.removeValue(forKey: key)
@@ -915,8 +925,27 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         spatial.models.removeAll { $0.id == id }
         spatial.models.append(created.model)
         spatial.transforms.insert(id, node: created.node)
+        if let parent = scriptParents[id] { spatial.transforms.setParent(id, to: parent.parent, attachment: parent.attachment) }
         objectMotions[id] = created.motion
         models?.add(created.model)
+    }
+
+    /// `ILayer.setParent` in every parent graph the renderer composes worlds with, and in the
+    /// visibility chain (a hidden parent hides its children).
+    private func reparent(_ id: String, to parent: String?, attachment: String?) {
+        transforms.setParent(id, to: parent, attachment: attachment)
+        spatial.transforms.setParent(id, to: parent, attachment: attachment)
+        cameraTransforms.setParent(id, to: parent, attachment: attachment)
+        cameraRig.setParent(id, to: parent, attachment: attachment)
+        scripts.setParent(parent, for: id)
+        // The analysis worked out lineages and bounds under the old parents; without this, idle
+        // skipping could keep the old pose on screen.
+        if let analysis = layerAnalysis?.reparented(nodes: transforms.nodes, motions: objectMotions) {
+            layerAnalysis = analysis
+            if audioCaptureLease == nil, Self.needsAudio(analysis, particles: particleSystems.map(\.configuration)) {
+                audioCaptureLease = WallpaperServices.shared.acquireAudioCapture()
+            }
+        }
     }
 
     /// Puts `layers` in draw order (the scene's, or the one scripts set) with each layer's
