@@ -44,12 +44,19 @@ final class WebCompatPatchesTests: XCTestCase {
     }
 
     func testSchemeHandlerStaysInsideTheWallpaperFolder() throws {
-        let directory = URL(fileURLWithPath: "/tmp/owe-web/123")
+        // Only files that exist are served.
+        let directory = FileManager.default.temporaryDirectory.appending(path: "owe-web-\(UUID().uuidString)/123")
+        for file in ["js/index.min.js", "my files/a b.js"] {
+            let url = directory.appending(path: file)
+            try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try Data().write(to: url)
+        }
+        defer { try? FileManager.default.removeItem(at: directory.deletingLastPathComponent()) } // scratch cleanup
         let url = try XCTUnwrap(WebWallpaperSchemeHandler.url(forRelativePath: "js/index.min.js"))
         XCTAssertEqual(url.absoluteString, "owe-wallpaper://local/js/index.min.js")
         let target = try XCTUnwrap(WebWallpaperSchemeHandler.fileURL(for: url, in: directory))
         XCTAssertEqual(target.relativePath, "js/index.min.js")
-        XCTAssertEqual(target.url.path, "/tmp/owe-web/123/js/index.min.js")
+        XCTAssertEqual(target.url.lastPathComponent, "index.min.js")
         XCTAssertNil(WebWallpaperSchemeHandler.fileURL(for: URL(string: "owe-wallpaper://local/../../etc/passwd")!, in: directory))
         let spaced = try XCTUnwrap(WebWallpaperSchemeHandler.url(forRelativePath: "my files/a b.js"))
         XCTAssertEqual(WebWallpaperSchemeHandler.fileURL(for: spaced, in: directory)?.relativePath, "my files/a b.js")
