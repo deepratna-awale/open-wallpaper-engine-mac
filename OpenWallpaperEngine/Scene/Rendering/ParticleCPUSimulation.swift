@@ -116,8 +116,14 @@ final class ParticleSystemRuntime {
     var spawnedThisStep: [Particle] = []
     var diedThisStep: [Particle] = []
 
+    /// For a renderer after a system's first (`SceneMetalParticleSystem.additionalRenderers`): the
+    /// system whose particles it draws. It has no simulation of its own; each frame it draws what
+    /// that system's step left (`followSimulation`).
+    private(set) weak var simulation: ParticleSystemRuntime?
+
     init(texture: MTLTexture, configuration: SceneMetalParticleSystem, seed: UInt32 = 0,
-         fallbackTexture: MTLTexture? = nil) {
+         fallbackTexture: MTLTexture? = nil, simulation: ParticleSystemRuntime? = nil) {
+        self.simulation = simulation
         self.texture = texture
         self.fallbackTexture = fallbackTexture ?? texture
         self.configuration = configuration
@@ -436,9 +442,10 @@ enum ParticleCPUSimulation {
         if dies { particle.age = particle.lifetime }
         // Only the ropetrail renderer reads history, and it wants samples spread over the
         // renderer's `length` in seconds rather than one per frame.
-        if configuration.rendererName == "ropetrail" {
-            let historyLimit = max(configuration.trailSegments, 1)
-            let interval = max(configuration.trailLength, 0.001) / Float(historyLimit)
+        let history = configuration.trailHistory
+        if history.kept {
+            let historyLimit = max(history.segments, 1)
+            let interval = max(history.length, 0.001) / Float(historyLimit)
             particle.historyTimer += inputs.deltaTime
             if particle.historyTimer >= interval || particle.history.isEmpty {
                 particle.historyTimer = 0
@@ -454,6 +461,31 @@ enum ParticleCPUSimulation {
 }
 
 extension ParticleSystemRuntime {
+    /// Each system followed by a draw of each of its renderers after the first
+    /// (`SceneMetalParticleSystem.additionalRenderers`), in authored order: WE draws every renderer
+    /// of a system from its one simulation. A system with one renderer is left as it is.
+    static func addingRendererDraws(_ systems: [ParticleSystemRuntime]) -> [ParticleSystemRuntime] {
+        systems.flatMap { system -> [ParticleSystemRuntime] in
+            [system] + system.configuration.additionalRenderers.map { renderer in
+                ParticleSystemRuntime(texture: system.texture, configuration: system.configuration.drawing(renderer),
+                                      seed: system.seed, fallbackTexture: system.fallbackTexture, simulation: system)
+            }
+        }
+    }
+
+    /// Takes the particles and draw state `simulation`'s step left this frame, with this
+    /// renderer's orientation.
+    func followSimulation() {
+        guard let simulation else { return }
+        particles = simulation.particles
+        elapsedTime = simulation.elapsedTime
+        frameIndex = simulation.frameIndex
+        died = simulation.died
+        ropeFrame = simulation.ropeFrame
+        drawLinear = simulation.drawLinear
+        spriteLinear = configuration.orientation.spriteLinear(linear: drawLinear)
+    }
+
     /// The factor on a trail's or rope's size (`ParticleFrameInputs.drawSizeScale`): the area scale
     /// of `drawLinear`, which WE's trail and rope shaders apply along directions of their own.
     /// Sprites take `drawLinear` whole and keep 1.

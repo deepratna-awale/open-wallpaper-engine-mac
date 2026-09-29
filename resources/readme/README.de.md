@@ -126,10 +126,8 @@ Beim ersten Build aus dem Quellcode wird das Swift-Paket Sparkle geladen. Aus de
 
 ## Aktuelle Einschränkungen
 
-- **SceneScript-Platzhalter** – `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `transformAttachmentToTexture()`, `getVideoTexture()` tun noch nichts.
+- **SceneScript-Platzhalter** – `getVideoTexture()` tut noch nichts.
 - **SceneScript-Parität** – Nicht jeder proprietäre Ereignisname, jeder Eingabe-Callback, jeder Sonderfall im Lebenszyklus und jede exakte Timing-Semantik wird nachgebildet.
-- **Seltene Partikelfunktionen** – Emitterformen außer Kugel, Box und Ebenenbild sowie weitere Renderer nach dem ersten eines Systems werden nicht unterstützt.
-- **Einige JPEG-Miniaturen** – Einige wenige Dateien im Format TEXB 1 enthalten nicht standardkonforme JPEG-Daten, die macOS nicht decodieren kann.
 - **Audiofunktionen erfordern eine Berechtigung** – Ohne die Berechtigung „Aufnahme von Bildschirm & Systemaudio“ erhalten Audio-Visualisierungen und audioreaktives SceneScript nur Stille.
 
 ## Unterstützte Hintergrundbildtypen

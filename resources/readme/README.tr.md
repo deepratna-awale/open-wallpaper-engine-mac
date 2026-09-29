@@ -126,10 +126,8 @@ Kaynaktan ilk derleme Sparkle Swift paketini indirir. Kaynaktan derlenen sürüm
 
 ## Mevcut Sınırlamalar
 
-- **Uygulanmamış SceneScript işlevleri** — `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `transformAttachmentToTexture()`, `getVideoTexture()` henüz hiçbir şey yapmaz.
+- **Uygulanmamış SceneScript işlevleri** — `getVideoTexture()` henüz hiçbir şey yapmaz.
 - **SceneScript uyumluluğu** — Tescilli olay adlarının, giriş geri çağırmalarının, yaşam döngüsü uç durumlarının veya tam zamanlama anlamlarının tümü yeniden üretilmemiştir.
-- **Nadir parçacık özellikleri** — Küre, kutu ve katman görüntüsü dışındaki yayıcı şekilleri ile bir sistemin ilkinden sonraki işleyicileri desteklenmez.
-- **Bazı JPEG küçük resimleri** — Az sayıda TEXB biçim 1 dosyası, macOS’in çözemediği standart dışı JPEG verileri içerir.
 - **Ses özellikleri izin gerektirir** — Ekran ve Sistem Sesi Kaydı izni olmadan ses görselleştiricileri ve sese duyarlı SceneScript yalnızca sessizlik alır.
 
 ## Desteklenen Duvar Kâğıdı Türleri

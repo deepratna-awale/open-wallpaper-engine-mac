@@ -382,8 +382,8 @@ final class SceneModelRenderer: SceneModelDrawing {
 
     /// A mesh's buffers. A script's model data may index past its vertices (`createModelData`
     /// takes any index, `applyData` may shrink the vertices under them), and Metal doesn't define
-    /// such a fetch; D3D11, WE's API, reads zeros there, so the vertices are padded with zeros up
-    /// to the largest index drawn.
+    /// such a fetch; D3D11, WE's API, reads zeros there, so such indices name one zero vertex
+    /// added after the vertices (`makeMeshBuffers`).
     private func makeBuffers(_ mesh: SceneModelPlan.Mesh, of plan: SceneModelPlan, vertices: Data, indices: Data,
                              indexCount: Int) -> MeshBuffers? {
         guard !vertices.isEmpty, !indices.isEmpty else { return nil }
@@ -396,42 +396,75 @@ final class SceneModelRenderer: SceneModelDrawing {
             largestIndices[key, default: [:]][mesh.index] = (indices, indexCount, largest)
         }
         return Self.makeMeshBuffers(device: device, format: mesh.format, vertices: vertices, indices: indices,
-                                    largest: largest)
+                                    uint32: mesh.usesUInt32Indices, largest: largest)
     }
 
-    /// A mesh's buffers from its bytes, the vertices zero-padded up to the largest index drawn
+    /// A mesh's buffers from its bytes, indices past the vertices sent to one zero vertex
     /// (`makeBuffers`). Any thread.
     static func makeMeshBuffers(device: MTLDevice, format: MDLVertexFormat, vertices: Data, indices: Data, uint32: Bool,
                                 indexCount: Int) -> MeshBuffers? {
         guard !vertices.isEmpty, !indices.isEmpty else { return nil }
-        return makeMeshBuffers(device: device, format: format, vertices: vertices, indices: indices,
+        return makeMeshBuffers(device: device, format: format, vertices: vertices, indices: indices, uint32: uint32,
                                largest: largestIndex(indices, uint32: uint32, count: indexCount))
     }
 
     private static func makeMeshBuffers(device: MTLDevice, format: MDLVertexFormat, vertices: Data, indices: Data,
-                                        largest: Int?) -> MeshBuffers? {
+                                        uint32: Bool, largest: Int?) -> MeshBuffers? {
         let stride = format.stride
-        let needed = stride > 0 ? (largest.map { ($0 + 1) * stride } ?? 0) : 0
+        let vertexCount = stride > 0 ? vertices.count / stride : 0
+        // Indices past the vertices are sent to one zero vertex right after them, so the buffer
+        // grows by one vertex whatever the indices say.
+        let outOfRange = stride > 0 && (largest.map { $0 >= vertexCount } ?? false)
+        var indices = indices
+        if outOfRange {
+            OWELog.debug(.scene, "Model mesh indexes up to \(largest ?? 0) with \(vertexCount) vertices; "
+                         + "indices past them read a zero vertex")
+            indices = clampedIndices(indices, uint32: uint32, to: vertexCount)
+        }
+        let zeroFrom = outOfRange ? vertexCount * stride : vertices.count
+        let length = outOfRange ? max(vertices.count, (vertexCount + 1) * stride) : vertices.count
         guard let indexBuffer = indices.withUnsafeBytes({ device.makeBuffer(bytes: $0.baseAddress!, length: $0.count) })
         else { return nil }
         if let streams = SceneModelVertexStreams(format), stride > 0 {
-            var padded = vertices
-            if needed > padded.count { padded.append(Data(count: needed - padded.count)) }
+            var padded = vertices.prefix(zeroFrom)
+            if length > padded.count { padded.append(Data(count: length - padded.count)) }
             let count = padded.count / stride
             guard count > 0, let positions = device.makeBuffer(length: count * streams.positionStride),
                   let attributes = device.makeBuffer(length: count * streams.attributeStride) else { return nil }
             padded.withUnsafeBytes { streams.split($0, positions: positions.contents(), attributes: attributes.contents()) }
             return MeshBuffers(vertices: positions, attributes: attributes, indices: indexBuffer)
         }
-        let length = max(vertices.count, needed)
         guard let vertexBuffer = device.makeBuffer(length: length, options: .storageModeShared) else { return nil }
         // Only the vertices are copied; the padding is cleared explicitly (Metal doesn't document zero-filled buffers).
-        vertices.withUnsafeBytes { vertexBuffer.contents().copyMemory(from: $0.baseAddress!, byteCount: $0.count) }
-        if length > vertices.count {
-            (vertexBuffer.contents() + vertices.count).initializeMemory(as: UInt8.self, repeating: 0,
-                                                                       count: length - vertices.count)
+        vertices.prefix(zeroFrom).withUnsafeBytes {
+            guard let base = $0.baseAddress else { return }
+            vertexBuffer.contents().copyMemory(from: base, byteCount: $0.count)
+        }
+        if length > zeroFrom {
+            (vertexBuffer.contents() + zeroFrom).initializeMemory(as: UInt8.self, repeating: 0, count: length - zeroFrom)
         }
         return MeshBuffers(vertices: vertexBuffer, indices: indexBuffer)
+    }
+
+    /// `indices` with every value of `vertexCount` or more replaced by `vertexCount`.
+    static func clampedIndices(_ indices: Data, uint32: Bool, to vertexCount: Int) -> Data {
+        var clamped = indices
+        clamped.withUnsafeMutableBytes { raw in
+            if uint32 {
+                let limit = UInt32(clamping: vertexCount)
+                for offset in Swift.stride(from: 0, to: raw.count - 3, by: 4) {
+                    let value = UInt32(littleEndian: raw.loadUnaligned(fromByteOffset: offset, as: UInt32.self))
+                    if value > limit { raw.storeBytes(of: limit.littleEndian, toByteOffset: offset, as: UInt32.self) }
+                }
+            } else {
+                let limit = UInt16(clamping: vertexCount)
+                for offset in Swift.stride(from: 0, to: raw.count - 1, by: 2) {
+                    let value = UInt16(littleEndian: raw.loadUnaligned(fromByteOffset: offset, as: UInt16.self))
+                    if value > limit { raw.storeBytes(of: limit.littleEndian, toByteOffset: offset, as: UInt16.self) }
+                }
+            }
+        }
+        return clamped
     }
 
     /// The largest of the first `count` indices (fewer when the list is shorter); nil without any.

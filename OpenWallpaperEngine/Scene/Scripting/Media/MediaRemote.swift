@@ -8,6 +8,8 @@ struct MediaRemote: NowPlayingFramework {
     typealias Unregister = @convention(c) () -> Void
     typealias GetNowPlayingInfo = @convention(c) (DispatchQueue, @escaping @convention(block) (NSDictionary?) -> Void) -> Void
     typealias GetIsPlaying = @convention(c) (DispatchQueue, @escaping @convention(block) (Bool) -> Void) -> Void
+    typealias GetNowPlayingClient = @convention(c) (DispatchQueue, @escaping @convention(block) (AnyObject?) -> Void) -> Void
+    typealias GetClientBundleIdentifier = @convention(c) (AnyObject) -> Unmanaged<CFString>?
 
     /// The now-playing dictionary's keys (the constants' values are their names).
     enum Key {
@@ -22,6 +24,12 @@ struct MediaRemote: NowPlayingFramework {
         static let timestamp = "kMRMediaRemoteNowPlayingInfoTimestamp"
         static let playbackRate = "kMRMediaRemoteNowPlayingInfoPlaybackRate"
         static let artworkData = "kMRMediaRemoteNowPlayingInfoArtworkData"
+        /// Set with artwork the player has but hasn't sent yet.
+        static let artworkIdentifier = "kMRMediaRemoteNowPlayingInfoArtworkIdentifier"
+        static let artworkMIMEType = "kMRMediaRemoteNowPlayingInfoArtworkMIMEType"
+        /// Not MediaRemote's: the bundle id of the app playing an item without artwork of its own,
+        /// added by this struct and by `nowPlayingAdapter.pl` (`MacMediaSessionSource` shows its icon).
+        static let playerBundleIdentifier = "playerBundleIdentifier"
     }
 
     static let path = "/System/Library/PrivateFrameworks/MediaRemote.framework/MediaRemote"
@@ -35,6 +43,9 @@ struct MediaRemote: NowPlayingFramework {
     private let unregisterFunction: Unregister
     private let getNowPlayingInfo: GetNowPlayingInfo
     private let getIsPlaying: GetIsPlaying
+    /// The playing app's client and its bundle ids (its parent app's first); nil when missing.
+    private let getNowPlayingClient: GetNowPlayingClient?
+    private let clientBundleIdentifiers: [GetClientBundleIdentifier]
     let notificationNames: [Notification.Name]
 
     func register(on queue: DispatchQueue) {
@@ -46,7 +57,19 @@ struct MediaRemote: NowPlayingFramework {
     }
 
     func nowPlayingInfo(on queue: DispatchQueue, _ handler: @escaping ([String: Any]) -> Void) {
-        getNowPlayingInfo(queue) { dictionary in handler((dictionary as? [String: Any]) ?? [:]) }
+        getNowPlayingInfo(queue) { [self] dictionary in
+            let info = (dictionary as? [String: Any]) ?? [:]
+            let hasArtwork = [Key.artworkData, Key.artworkIdentifier, Key.artworkMIMEType].contains { info[$0] != nil }
+            guard !info.isEmpty, !hasArtwork, let getNowPlayingClient else { return handler(info) }
+            getNowPlayingClient(queue) { [self] client in
+                var info = info
+                if let client, let player = clientBundleIdentifiers.lazy
+                    .compactMap({ $0(client)?.takeUnretainedValue() as String? }).first(where: { !$0.isEmpty }) {
+                    info[Key.playerBundleIdentifier] = player
+                }
+                handler(info)
+            }
+        }
     }
 
     func isPlaying(on queue: DispatchQueue, _ handler: @escaping (Bool) -> Void) {
@@ -75,7 +98,11 @@ struct MediaRemote: NowPlayingFramework {
             let value = pointer.assumingMemoryBound(to: CFString?.self).pointee
             return Notification.Name(value.map { $0 as String } ?? name)
         }
+        let bundleIdentifiers = ["MRNowPlayingClientGetParentAppBundleIdentifier", "MRNowPlayingClientGetBundleIdentifier"]
+            .compactMap { symbol($0, as: GetClientBundleIdentifier.self) }
         return MediaRemote(registerFunction: register, unregisterFunction: unregister, getNowPlayingInfo: getInfo,
-                           getIsPlaying: getIsPlaying, notificationNames: names)
+                           getIsPlaying: getIsPlaying,
+                           getNowPlayingClient: symbol("MRMediaRemoteGetNowPlayingClient", as: GetNowPlayingClient.self),
+                           clientBundleIdentifiers: bundleIdentifiers, notificationNames: names)
     }
 }

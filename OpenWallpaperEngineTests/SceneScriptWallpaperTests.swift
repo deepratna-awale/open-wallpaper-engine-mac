@@ -118,6 +118,26 @@ final class SceneScriptWallpaperTests: XCTestCase {
         XCTAssertNil(wallpaper.takePrepared(id), "taken once")
     }
 
+    /// `ILayer.setParent` reaches the renderer as a render event with scene ids, and `getParent`
+    /// answers the new parent at once.
+    func testSetParentBecomesARenderEvent() throws {
+        let script = "export function update(value) { if (shared.done) return value; shared.done = true; "
+            + "thisLayer.setParent(2); shared.parent = thisLayer.getParent().id; thisScene.getLayer('Object 2').setParent(); "
+            + "return value; }"
+        let wallpaper = try make(objects: [object(id: 1, fields: #""origin": {"script": "\#(script)", "value": "0 0 0"}"#),
+                                           object(id: 2, fields: #""parent": 3"#), object(id: 3, fields: #""origin": "0 0 0""#)])
+        var input = SceneScriptFrameInput()
+        input.deltaTime = 1.0 / 60
+        wallpaper.submit(input)
+        wallpaper.waitUntilIdle()
+        let events = wallpaper.take().events.compactMap { event -> String? in
+            guard case let .setParent(id, parentID, attachment) = event else { return nil }
+            return "\(id)>\(parentID.map(String.init) ?? "nil")\(attachment.map { "@" + $0 } ?? "")"
+        }
+        XCTAssertEqual(events, ["1>2", "2>nil"])
+        XCTAssertEqual(try shared(wallpaper, "parent"), 2)
+    }
+
     /// test-risks S11's clone stress test: a layer created and destroyed every frame for 1000
     /// frames leaves the scene as it was (every create has its destroy; slots are reused).
     func testCreatingAndDestroyingALayerEveryFrameStaysFlat() throws {
@@ -135,7 +155,7 @@ final class SceneScriptWallpaperTests: XCTestCase {
                 switch event {
                 case .create(let id, _): created.insert(id)
                 case .destroy(let id): destroyed.insert(id)
-                case .emit, .sound, .animation, .textureAnimation, .rig: break
+                case .emit, .sound, .animation, .textureAnimation, .rig, .setParent: break
                 }
             }
         }

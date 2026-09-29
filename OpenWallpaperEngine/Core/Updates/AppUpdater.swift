@@ -52,7 +52,7 @@ final class AppUpdater: NSObject, ObservableObject {
         }
         shaderPrewarmer = UpdateShaderPrewarmer.standard(
             bundleIdentifier: Bundle.main.bundleIdentifier ?? AppStorageLocation.realBundleIdentifier)
-        let controller = SPUStandardUpdaterController(startingUpdater: false, updaterDelegate: self, userDriverDelegate: nil)
+        let controller = SPUStandardUpdaterController(startingUpdater: false, updaterDelegate: self, userDriverDelegate: self)
         self.controller = controller
         let updater: SPUUpdater = controller.updater
         observations = [
@@ -214,5 +214,12 @@ extension AppUpdater: SPUUpdaterDelegate {
                              immediateInstallationBlock immediateInstallHandler: @escaping () -> Void) -> Bool {
         MainActor.assumeIsolated { holdPendingInstall(immediateInstallHandler) }
         return true
+    }
+}
+
+extension AppUpdater: SPUStandardUserDriverDelegate {
+    /// Names versions by their release label: every pre-release shares `CFBundleShortVersionString`.
+    nonisolated func standardUserDriverRequestsVersionDisplayer() -> (any SUVersionDisplay)? {
+        UpdateVersionDisplay(installedLabel: AppVersion.label(infoDictionary: Bundle.main.infoDictionary ?? [:]))
     }
 }
