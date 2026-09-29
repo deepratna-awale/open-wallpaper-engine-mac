@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Loading a scene wallpaper** shows a full-resolution picture of the scene's own frame instead of its low-resolution Workshop preview, then crossfades to the live scene as before. The picture is taken when a wallpaper is downloaded or imported, and refreshed once per session while a wallpaper runs (and after its properties change), for each display size. It is stored in the Caches folder, capped in size, and removed with the wallpaper. The Workshop preview is still shown until a wallpaper has one.
+
 ### Fixed
 
 - **Settings › Assets › Update from Steam** no longer downloads Wallpaper Engine again when the assets are current: it first reads the public build from SteamCMD's app info and reports "up to date" when it matches the installed build and the files are there. If the check fails (offline, not logged in), nothing is downloaded. **Re-download** downloads regardless, to repair a damaged copy.

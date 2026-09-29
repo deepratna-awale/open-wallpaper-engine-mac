@@ -8,6 +8,8 @@ struct SceneWallpaperEnvironment {
     weak var wallpapers: WallpaperViewModel?
     let settings: GlobalSettingsViewModel
     let scriptServices: SceneScriptServices?
+    /// This launch's loading snapshots (`SceneLoadingSnapshotSession`); nil takes none.
+    var loadingSnapshots: SceneLoadingSnapshotSession? = nil
 }
 
 /// One scene (or Metal video) wallpaper, running once for every display that shows it
@@ -49,6 +51,11 @@ final class SceneWallpaperInstance {
     private var scriptsNotice: SafeRestartNotice?
     private var cursorMonitors: [Any] = []
     private var powerObserver: UUID?
+    /// Refreshes the scene's loading snapshots; nil for a video or without a session.
+    private let snapshotCapture: SceneLoadingSnapshotCapture?
+
+    /// Where the displays find the picture to show while the scene loads; nil for a video.
+    var loadingSnapshotStore: SceneLoadingSnapshotStore? { snapshotCapture == nil ? nil : environment.loadingSnapshots?.store }
 
     /// `screenID` is the display that starts it; its scripts keep their per-display storage there.
     /// `properties` is the store of user properties it runs with (`WallpaperInstanceKey.properties`).
@@ -64,7 +71,12 @@ final class SceneWallpaperInstance {
         if renderer == nil {
             OWELog.error(.scene, "\(wallpaper.project.title): Metal renderer unavailable; the wallpaper can't be drawn")
         }
-        renderLoop = SceneRenderLoop(renderer: renderer, name: "OWE render \(wallpaper.project.title)")
+        let isScene = wallpaper.project.type.caseInsensitiveCompare("scene") == .orderedSame
+        snapshotCapture = isScene ? environment.loadingSnapshots.map {
+            SceneLoadingSnapshotCapture(wallpaperDirectory: wallpaper.wallpaperDirectory, session: $0)
+        } : nil
+        renderLoop = SceneRenderLoop(renderer: renderer, name: "OWE render \(wallpaper.project.title)",
+                                     snapshots: snapshotCapture)
         // Set up before any frame; from here on only the render thread touches the renderer.
         configureRenderer(renderer)
         observeChanges()
@@ -300,6 +312,8 @@ final class SceneWallpaperInstance {
                 // reads the property itself.
                 let changed = Set(keys)
                 self.renderLoop.perform { $0.scripts.userPropertiesDidChange(changed) }
+                // The picture changes: the loading snapshots follow once it has shown a while.
+                self.snapshotCapture?.rearm()
                 self.wakePacing(.slow)
                 let impact = self.viewModel.impact(of: keys)
                 guard impact > .none else { return }

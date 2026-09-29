@@ -52,11 +52,17 @@ final class SceneRenderLoop {
     private var pacedRate = 0
     /// The clock eased to a stop during the last draw: the displays stop once it is over.
     private var playbackStopped = false
+    /// Refreshes the scene's loading snapshots; nil when it has none (a video).
+    private let snapshots: SceneLoadingSnapshotCapture?
+    /// When a draw first had content to show, and when to next ask `snapshots` to capture.
+    private var contentSince: CFTimeInterval?
+    private var nextSnapshotCheck: CFTimeInterval = 0
 
     /// Main: makes the thread. `renderer` is handed to it and never touched from main again.
-    init(renderer: SceneMetalRenderer?, name: String) {
+    init(renderer: SceneMetalRenderer?, name: String, snapshots: SceneLoadingSnapshotCapture? = nil) {
         thread = SceneRenderThread(name: name)
         self.renderer = renderer
+        self.snapshots = snapshots
         guard let renderer else { return }
         renderer.performOnRenderThread = { [thread] block in thread.perform(block) }
         renderer.onPlaybackStopped = { [weak self] in self?.playbackStopped = true }
@@ -143,6 +149,7 @@ final class SceneRenderLoop {
         }
         guard displays.count > 1 else {
             renderer.draw(in: view)
+            captureSnapshotIfDue(view, renderer: renderer, rendersFrame: true)
             return renderer.hasContent
         }
         let now = CACurrentMediaTime()
@@ -154,7 +161,34 @@ final class SceneRenderLoop {
         guard displays[id]?.presentedFrame != renderer.encodedFrames else { return renderer.hasContent }
         displays[id]?.presentedFrame = renderer.encodedFrames
         renderer.present(in: view)
+        captureSnapshotIfDue(view, renderer: renderer, rendersFrame: false)
         return renderer.hasContent
+    }
+
+    /// Once the scene has shown its content for a while, copies what `view`'s display shows into
+    /// its loading snapshot (`SceneLoadingSnapshotCapture`), at most once a second per scene and
+    /// once per display size and session. With one display the scene draws onto the drawable, so
+    /// `rendersFrame` renders one extra frame to copy from, freed right after; the readback and
+    /// encoding run off this thread.
+    private func captureSnapshotIfDue(_ view: MTKView, renderer: SceneMetalRenderer, rendersFrame: Bool) {
+        guard let snapshots, renderer.hasContent else { return }
+        let now = CACurrentMediaTime()
+        guard let contentSince else {
+            self.contentSince = now
+            return
+        }
+        guard now >= nextSnapshotCheck else { return }
+        nextSnapshotCheck = now + 1
+        let viewport = SceneViewport(view)
+        let pixelSize = SIMD2(Int(viewport.drawableSize.x), Int(viewport.drawableSize.y))
+        guard pixelSize.x > 0, pixelSize.y > 0,
+              snapshots.claim(pixelSize: pixelSize, contentSince: contentSince, now: now) else { return }
+        if rendersFrame { renderer.renderShared([viewport]) }
+        let started = renderer.captureSharedFrame(pixelSize: pixelSize, pixelsPerPoint: viewport.pixelsPerPoint) {
+            snapshots.save($0)
+        }
+        if rendersFrame { renderer.releaseSharedFrame() }
+        if !started { OWELog.debug(.scene, "Loading snapshot: no frame to capture at \(pixelSize.x)×\(pixelSize.y)") }
     }
 
     /// Something that changes the picture happened: tick at `demand`'s rate from the next refresh.

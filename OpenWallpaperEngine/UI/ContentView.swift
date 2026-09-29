@@ -94,7 +94,7 @@ struct ContentView: View {
             if let url = viewModel.hoveredWallpaper?.wallpaperDirectory {
                 Button("Delete Immediately", role: .destructive) {
                     if (try? FileManager.default.removeItem(at: url)) != nil {
-                        DownloadedWallpaperIndex.shared.remove(directory: url)
+                        viewModel.forgetDeletedWallpaper(at: url)
                     }
                     wallpaperViewModel.removeWallpaperFromAllScreens(directory: url)
                     viewModel.hoveredWallpaper = nil
@@ -102,7 +102,7 @@ struct ContentView: View {
                 }
                 Button("Move to Trash") {
                     if (try? FileManager.default.trashItem(at: url, resultingItemURL: nil)) != nil {
-                        DownloadedWallpaperIndex.shared.remove(directory: url)
+                        viewModel.forgetDeletedWallpaper(at: url)
                     }
                     wallpaperViewModel.removeWallpaperFromAllScreens(directory: url)
                     viewModel.hoveredWallpaper = nil
@@ -120,7 +120,7 @@ struct ContentView: View {
             Button("Delete All \(viewModel.selectedWallpapers.count) Immediately", role: .destructive) {
                 for url in viewModel.selectedWallpapers {
                     if (try? FileManager.default.removeItem(at: url)) != nil {
-                        DownloadedWallpaperIndex.shared.remove(directory: url)
+                        viewModel.forgetDeletedWallpaper(at: url)
                     }
                     wallpaperViewModel.removeWallpaperFromAllScreens(directory: url)
                 }
@@ -130,7 +130,7 @@ struct ContentView: View {
             Button("Move All \(viewModel.selectedWallpapers.count) to Trash") {
                 for url in viewModel.selectedWallpapers {
                     if (try? FileManager.default.trashItem(at: url, resultingItemURL: nil)) != nil {
-                        DownloadedWallpaperIndex.shared.remove(directory: url)
+                        viewModel.forgetDeletedWallpaper(at: url)
                     }
                     wallpaperViewModel.removeWallpaperFromAllScreens(directory: url)
                 }

@@ -24,7 +24,10 @@ final class SceneWallpaperPresenter: NSObject, MTKViewDelegate {
         renderLoop = lease.instance.renderLoop
         // A display joining a scene already drawn needs no preview.
         if !lease.instance.hasContent {
-            placeholder = ScenePreviewPlaceholder(in: view, wallpaperDirectory: lease.instance.viewModel.currentWallpaper.wallpaperDirectory)
+            // The view isn't in its window yet: its display is the one `screenID` names.
+            let screen = view.window?.screen ?? NSScreen.screens.first { WallpaperViewModel.screenId(for: $0) == screenID }
+            placeholder = ScenePreviewPlaceholder(in: view, wallpaperDirectory: lease.instance.viewModel.currentWallpaper.wallpaperDirectory,
+                                                  screen: screen, snapshots: lease.instance.loadingSnapshotStore)
         }
         lease.instance.attach(self, view: view, screenID: screenID)
     }
@@ -57,9 +60,11 @@ final class SceneWallpaperPresenter: NSObject, MTKViewDelegate {
     }
 }
 
-/// A scene wallpaper's preview image over its view while the scene loads, crossfaded out once the
+/// A picture of a scene wallpaper over its view while the scene loads, crossfaded out once the
 /// live scene draws (WE shows a wallpaper's preview while it loads too), so setting a wallpaper
-/// never shows an empty desktop. The image is decoded off the main thread, at the view's size.
+/// never shows an empty desktop: the scene's own loading snapshot for this display
+/// (`SceneLoadingSnapshotStore`, the nearest size scaled when none matches), else its Workshop
+/// preview. The image is looked up and decoded off the main thread, at the display's size.
 @MainActor
 final class ScenePreviewPlaceholder {
     static let fadeDuration: CFTimeInterval = 0.25
@@ -68,7 +73,7 @@ final class ScenePreviewPlaceholder {
     let layer = CALayer()
     private(set) var isFading = false
 
-    init(in view: NSView, wallpaperDirectory: URL) {
+    init(in view: NSView, wallpaperDirectory: URL, screen: NSScreen? = nil, snapshots: SceneLoadingSnapshotStore? = nil) {
         view.wantsLayer = true
         layer.frame = view.bounds
         layer.autoresizingMask = [.layerWidthSizable, .layerHeightSizable]
@@ -76,10 +81,14 @@ final class ScenePreviewPlaceholder {
         layer.masksToBounds = true
         layer.zPosition = 1
         view.layer?.addSublayer(layer)
-        let screen = view.window?.screen ?? NSScreen.main
-        let maxPixels = Int((screen.map { max($0.frame.width, $0.frame.height) * $0.backingScaleFactor }) ?? 3840)
+        let screen = screen ?? view.window?.screen ?? NSScreen.main
+        let pixelSize = screen.map { SIMD2(Int($0.frame.width * $0.backingScaleFactor), Int($0.frame.height * $0.backingScaleFactor)) }
+            ?? SIMD2(3840, 2160)
+        let maxPixels = max(pixelSize.x, pixelSize.y)
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let image = Self.previewImage(in: wallpaperDirectory, maxPixels: maxPixels)
+            let snapshot = snapshots?.bestSnapshot(forWallpaperAt: wallpaperDirectory, pixelSize: pixelSize)
+            let image = snapshot.flatMap { Self.image(at: $0, maxPixels: maxPixels) }
+                ?? Self.previewImage(in: wallpaperDirectory, maxPixels: maxPixels)
             DispatchQueue.main.async {
                 MainActor.assumeIsolated {
                     guard let self, !self.isFading, let image else { return }
@@ -92,15 +101,19 @@ final class ScenePreviewPlaceholder {
     /// The wallpaper's preview, downsampled to `maxPixels` on its longer side (a GIF's first frame).
     nonisolated static func previewImage(in directory: URL, maxPixels: Int) -> CGImage? {
         for name in previewNames {
-            let url = directory.appending(path: name)
-            guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { continue }
-            let options: [CFString: Any] = [kCGImageSourceCreateThumbnailFromImageAlways: true,
-                                            kCGImageSourceCreateThumbnailWithTransform: true,
-                                            kCGImageSourceShouldCacheImmediately: true,
-                                            kCGImageSourceThumbnailMaxPixelSize: max(1, maxPixels)]
-            if let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) { return image }
+            if let image = image(at: directory.appending(path: name), maxPixels: maxPixels) { return image }
         }
         return nil
+    }
+
+    /// The image at `url` (a GIF's first frame), downsampled to `maxPixels` on its longer side.
+    nonisolated static func image(at url: URL, maxPixels: Int) -> CGImage? {
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
+        let options: [CFString: Any] = [kCGImageSourceCreateThumbnailFromImageAlways: true,
+                                        kCGImageSourceCreateThumbnailWithTransform: true,
+                                        kCGImageSourceShouldCacheImmediately: true,
+                                        kCGImageSourceThumbnailMaxPixelSize: max(1, maxPixels)]
+        return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
     }
 
     /// Crossfades to the live scene underneath, then removes the preview.

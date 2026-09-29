@@ -23,7 +23,8 @@ struct SceneWallpaperView: NSViewRepresentable {
         let wallpaper = wallpaperViewModel.wallpaper(for: screenId)
         let environment = SceneWallpaperEnvironment(wallpapers: wallpaperViewModel,
                                                     settings: AppDelegate.shared.globalSettingsViewModel,
-                                                    scriptServices: AppDelegate.shared.sceneScriptServices)
+                                                    scriptServices: AppDelegate.shared.sceneScriptServices,
+                                                    loadingSnapshots: wallpaperViewModel.loadingSnapshots)
         let screenId = screenId
         let key = wallpaperViewModel.instanceKey(for: screenId)
         let lease = SceneWallpaperPresenter.Lease(wallpaperViewModel.sceneInstances, key: key) {
