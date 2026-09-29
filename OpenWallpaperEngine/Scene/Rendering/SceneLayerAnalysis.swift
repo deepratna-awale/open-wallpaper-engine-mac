@@ -147,6 +147,9 @@ final class SceneLayerAnalysis {
     /// This frame's result, by layer index.
     private(set) var dirty: [Bool]
     private(set) var dirtyCount = 0
+    /// This frame changed as a whole (`update`'s scene-wide case): the picture changes even when the
+    /// scene has no layers (particles only), e.g. once a compiling pipeline lands.
+    private(set) var sceneWideDirty = true
     /// The inputs that changed this frame, across the dirty layers' dependencies.
     private(set) var changed: SceneLayerDependencies = []
     /// Frames `update` has run.
@@ -193,7 +196,7 @@ final class SceneLayerAnalysis {
         return dirty[index]
     }
 
-    var anyDirty: Bool { dirtyCount > 0 }
+    var anyDirty: Bool { dirtyCount > 0 || sceneWideDirty }
 
     /// This frame's coverage: the static bounds unless something that moves the layer is live.
     func coverage(at index: Int) -> SceneLayerCoverage {
@@ -244,6 +247,7 @@ final class SceneLayerAnalysis {
         }
         if global.contains(.inspector) { sceneWide = true }
         forceAll = false
+        sceneWideDirty = sceneWide
         changed = sceneWide ? SceneLayerDependencies(rawValue: ~0) : global
 
         var count = 0
