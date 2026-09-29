@@ -94,7 +94,10 @@ final class ScenePostProcessTests: XCTestCase {
     /// Every CI scene drawn at its own size with the composite skipped equals, byte for byte (colour;
     /// the desktop ignores alpha), the frame drawn through the composite, wherever two composited
     /// renders agree with each other (random particles don't); through a view and a shared frame.
+    /// About 10 min in Debug, so it runs nightly and locally (`OWE_SLOW_TESTS=1`), not on every PR.
     func testTheCompositeSkipEqualsTheCompositeOnCIScenes() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["OWE_SLOW_TESTS"] == "1",
+                          "slow test: set OWE_SLOW_TESTS=1")
         let root = Fixtures.url("Scenes")
         var skipped = 0, compared = 0
         for name in try FileManager.default.contentsOfDirectory(atPath: root.path).sorted() where name != "scripted-hang" {
