@@ -1,0 +1,27 @@
+import Foundation
+
+/// Why a preset could not be saved, renamed or imported.
+enum WallpaperPresetError: LocalizedError, Equatable {
+    case emptyName
+    case duplicateName(String)
+    case notFound
+    case notAPresetFile
+    case otherWallpaper
+
+    var errorDescription: String? {
+        switch self {
+        case .emptyName:
+            return String(localized: "A preset needs a name.", comment: "Error when saving or renaming a wallpaper preset without a name")
+        case .duplicateName(let name):
+            return String(localized: "A preset named “\(name)” already exists.",
+                          comment: "Error when renaming a wallpaper preset to a name another preset has; the name")
+        case .notFound:
+            return String(localized: "The preset no longer exists.", comment: "Error when acting on a wallpaper preset that was deleted meanwhile")
+        case .notAPresetFile:
+            return String(localized: "The file is not a wallpaper preset.", comment: "Error when importing a file that is not an exported wallpaper preset")
+        case .otherWallpaper:
+            return String(localized: "The preset was made for a different wallpaper.",
+                          comment: "Error when importing a wallpaper preset exported from another wallpaper")
+        }
+    }
+}
