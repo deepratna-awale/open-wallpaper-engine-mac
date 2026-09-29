@@ -254,6 +254,15 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         guard muted != isMuted else { return }
         isMuted = muted
         if let webView { WebPageAudio.setMuted(muted, on: webView) }
+        applySchedulingPolicy()
+    }
+
+    /// What WebKit does with the page while its window is covered: a muted page is suspended (no
+    /// JS, timers or frames), an audible one only throttled, because a suspended page falls silent
+    /// and Wallpaper Engine keeps a covered wallpaper's sound. The heartbeat gate and the audio
+    /// timer already expect nothing from a covered window (`WebHeartbeatGate.windowVisible`).
+    func applySchedulingPolicy() {
+        webView?.configuration.preferences.inactiveSchedulingPolicy = isMuted ? .suspend : .throttle
     }
 
     /// Whether the playback rules pause this display's page: its media is suspended and the page

@@ -34,6 +34,7 @@ struct WebWallpaperView: NSViewRepresentable {
         let nsView = WKWebView(frame: .zero, configuration: configuration)
         nsView.navigationDelegate = viewModel
         viewModel.webView = nsView
+        viewModel.applySchedulingPolicy()
         Self.loadWallpaper(nsView, viewModel: viewModel)
         return nsView
     }
