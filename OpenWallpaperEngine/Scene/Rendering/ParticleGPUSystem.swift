@@ -252,6 +252,21 @@ final class ParticleGPUSystem {
         return boidsMemberBuffer
     }
 
+    private var ropeOrderBuffer: MTLBuffer?
+
+    /// `particleRopeOrder`'s slots and capacity.
+    var ropeOrderSizes: SIMD2<UInt32> { SIMD2(UInt32(max(slots, 1)), UInt32(capacity)) }
+
+    /// An instanced rope's strand order (starts and lengths per instance, sorted indices and
+    /// places), large enough for the current capacity; nil when it can't be allocated.
+    func ropeOrder() -> MTLBuffer? {
+        let bytes = (max(slots, 1) * 2 + capacity * 2) * 4
+        if let ropeOrderBuffer, ropeOrderBuffer.length >= bytes { return ropeOrderBuffer }
+        ropeOrderBuffer = device.makeBuffer(length: max(bytes, 16), options: .storageModePrivate)
+        ropeOrderBuffer?.label = "Particle rope order"
+        return ropeOrderBuffer
+    }
+
     /// Sizes the event scratch for a parent holding up to `parentCapacity` particles. False when
     /// a buffer can't be allocated.
     func reserveEvents(parentCapacity: Int) -> Bool {
