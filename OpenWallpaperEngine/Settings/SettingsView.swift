@@ -52,7 +52,7 @@ struct SettingsView: View {
             footer
                 .padding(20)
         }
-        .frame(minWidth: 560)
+        .frame(minWidth: SettingsTab.toolbarFittingWidth)
         .frostedWindowBackground()
         .onChange(of: navigation.focusesSearch) { _, focuses in
             if focuses {

@@ -153,6 +153,11 @@ final class SceneRendererScripts {
         return true
     }
 
+    /// `ILayer.setParent`: object `id`'s visibility follows `parent` (nil: its own alone).
+    func setParent(_ parent: String?, for id: String) {
+        parents[id] = parent
+    }
+
     /// Records the base `visible` of an object scripts created.
     func setBaseVisibility(_ visible: Bool, for id: String) {
         baseVisibility[id] = visible

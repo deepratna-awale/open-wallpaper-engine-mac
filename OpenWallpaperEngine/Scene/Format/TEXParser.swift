@@ -4,21 +4,12 @@
 //
 //  Parse Wallpaper Engine TEXV texture container files.
 //  Structure: TEXV0005 > TEXI (metadata) > TEXB (image data).
-//  Currently supports JPEG (format 0) extraction only.
 //
 
 import Cocoa
 import Compression
 import Foundation
 import AVFoundation
-
-struct TEXMetadata {
-    let format: UInt32
-    let width: UInt32
-    let height: UInt32
-    let textureWidth: UInt32  // power-of-2 padded
-    let textureHeight: UInt32
-}
 
 struct TEXAnimatedImages {
     let images: [NSImage]
@@ -78,6 +69,56 @@ class TEXParser {
         self.data = data
     }
 
+    /// The largest mipmap side read (Metal's texture limit).
+    static let maxSide = 16_384
+    /// The largest buffer an LZ4-compressed mipmap decodes into.
+    static let maxDecompressedSize = 512 << 20
+
+    static func isValidSize(width: Int, height: Int) -> Bool {
+        width > 0 && height > 0 && width <= maxSide && height <= maxSide
+    }
+
+    /// `width × height × bytesPerPixel`, or nil when it overflows.
+    static func byteCount(width: Int, height: Int, bytesPerPixel: Int) -> Int? {
+        let pixels = width.multipliedReportingOverflow(by: height)
+        guard !pixels.overflow else { return nil }
+        let bytes = pixels.partialValue.multipliedReportingOverflow(by: bytesPerPixel)
+        return bytes.overflow ? nil : bytes.partialValue
+    }
+
+    /// The bytes of a block-compressed mipmap (4×4 blocks, rounded up), or nil when it overflows.
+    static func blockByteCount(width: Int, height: Int, format: UInt32) -> Int? {
+        guard width >= 0, height >= 0 else { return nil }
+        return byteCount(width: (width + 3) / 4, height: (height + 3) / 4,
+                         bytesPerPixel: TEXCompressedTexture.bytesPerBlock(format: format))
+    }
+
+    /// The most bytes a mipmap of `format` at `width × height` holds; nil when the format's size
+    /// doesn't follow from its dimensions (format 0 also carries image and video files).
+    static func expectedMipmapSize(format: UInt32, width: Int, height: Int) -> Int? {
+        switch format {
+        case 4, 6, 7, 12: return blockByteCount(width: width, height: height, format: format)
+        case 9: return byteCount(width: width, height: height, bytesPerPixel: 1)
+        case 2, 8, 11: return byteCount(width: width, height: height, bytesPerPixel: 2)
+        case 1: return byteCount(width: width, height: height, bytesPerPixel: 3)
+        case 10, 13: return byteCount(width: width, height: height, bytesPerPixel: 4)
+        case 15: return byteCount(width: width, height: height, bytesPerPixel: 6)
+        case 14: return byteCount(width: width, height: height, bytesPerPixel: 8)
+        default: return nil
+        }
+    }
+
+    /// The largest size an LZ4 mipmap may declare: its expected size, what `compressedSize` bytes
+    /// can expand to (LZ4 at most 255×), and `maxDecompressedSize`.
+    static func lz4OutputLimit(compressedSize: Int, format: UInt32, width: Int, height: Int) -> Int {
+        let expansion = compressedSize.multipliedReportingOverflow(by: 255)
+        var limit = min(maxDecompressedSize, expansion.overflow ? Int.max : expansion.partialValue)
+        if let expected = expectedMipmapSize(format: format, width: width, height: height) {
+            limit = min(limit, expected)
+        }
+        return limit
+    }
+
     /// `reduction` is WE's texture reduction (`TextureReduction`): with 2, an image stored with more
     /// than one mipmap loads from its second, as WE's loader skips the first (`wallpaper64.exe`
     /// 0x14015d3fd); the frame rects, in the first mipmap's pixels, scale with it.
@@ -125,7 +166,8 @@ class TEXParser {
                     guard readV4ConditionalPreamble(from: bytes, cursor: &cursor) else { return nil }
                 }
                 guard let width = readUInt32(from: bytes, cursor: &cursor),
-                      let height = readUInt32(from: bytes, cursor: &cursor) else { return nil }
+                      let height = readUInt32(from: bytes, cursor: &cursor),
+                      Self.isValidSize(width: Int(width), height: Int(height)) else { return nil }
                 let compression: UInt32
                 let uncompressedSize: Int
                 if version == 1 {
@@ -153,7 +195,8 @@ class TEXParser {
         guard let sheet = TEXSpriteFrames.parse(bytes, cursor: &cursor), !sheet.isEmpty else { return nil }
         let images = imagePayloads.compactMap { item -> NSImage? in
             let payload = item.compression == 0 ? item.stored
-                : item.compression == 1 ? decompressLZ4(item.stored, uncompressedSize: item.uncompressedSize) : []
+                : item.compression == 1 ? decompressLZ4(item.stored, uncompressedSize: item.uncompressedSize,
+                                                        format: format, width: item.width, height: item.height) : []
             if format == 4 || format == 6 || format == 7 {
                 return decodeDXT(payload, format: format, width: item.width, height: item.height,
                                  visibleWidth: min(Int(imageWidth), item.width), visibleHeight: min(Int(imageHeight), item.height))
@@ -239,18 +282,17 @@ class TEXParser {
         if compression == 0 {
             mipmapData = storedData
         } else if compression == 1, uncompressedSize > 0 {
-            mipmapData = decompressLZ4(storedData, uncompressedSize: uncompressedSize)
+            mipmapData = decompressLZ4(storedData, uncompressedSize: uncompressedSize,
+                                       format: format, width: width, height: height)
         } else {
             return nil
         }
 
         let textureWidth = Int(width)
         let textureHeight = Int(height)
-        guard textureWidth > 0, textureHeight > 0, textureWidth <= 16_384, textureHeight <= 16_384 else {
-            return nil
-        }
-        let expectedSize = ((textureWidth + 3) / 4) * ((textureHeight + 3) / 4) * (format == 7 ? 8 : 16)
-        guard mipmapData.count >= expectedSize else { return nil }
+        guard Self.isValidSize(width: textureWidth, height: textureHeight),
+              let expectedSize = Self.blockByteCount(width: textureWidth, height: textureHeight, format: format),
+              mipmapData.count >= expectedSize else { return nil }
         // A zero or oversized header size means "no crop": the whole allocation is content. A
         // later mipmap holds the image at its own scale (halved per level).
         let contentWidth = imageWidth > 0 ? min(TextureReduction.mipmapSide(Int(imageWidth), level: loaded), textureWidth) : textureWidth
@@ -278,13 +320,13 @@ class TEXParser {
             if mipmap.compression == 0 {
                 bytes = mipmap.stored
             } else if mipmap.compression == 1, mipmap.uncompressedSize > 0 {
-                bytes = decompressLZ4(mipmap.stored, uncompressedSize: mipmap.uncompressedSize)
+                bytes = decompressLZ4(mipmap.stored, uncompressedSize: mipmap.uncompressedSize,
+                                      format: format, width: mipmap.width, height: mipmap.height)
             } else {
                 break
             }
-            let size = TextureCompressor.blockCount(width: mipmap.width, height: mipmap.height)
-                * TEXCompressedTexture.bytesPerBlock(format: format)
-            guard bytes.count >= size else { break }
+            guard let size = Self.blockByteCount(width: mipmap.width, height: mipmap.height, format: format),
+                  bytes.count >= size else { break }
             levels.append(Data(bytes[0..<size]))
             if mipmap.width == 1, mipmap.height == 1 { break }
         }
@@ -340,20 +382,6 @@ class TEXParser {
         return nil
     }
 
-    /// Extract raw JPEG/PNG data without creating NSImage
-    func extractImageData() -> Data? {
-        guard let texbRange = findSection("TEXB") else { return nil }
-        let texbData = data[texbRange]
-
-        if let jpegOffset = findJPEGMagic(in: texbData) {
-            return Data(texbData[jpegOffset...])
-        }
-        if let pngOffset = findPNGMagic(in: texbData) {
-            return Data(texbData[pngOffset...])
-        }
-        return nil
-    }
-
     // MARK: - Private
 
     private func extractContainerImage(reduction: Int) -> NSImage? {
@@ -404,7 +432,8 @@ class TEXParser {
         let loaded = usesConditionalMipmapLayout ? 0
             : TextureReduction.loadedMipmap(reduction: reduction, mipmapCount: Int(mipmapCount))
         guard let mipmap = readMipmap(at: loaded, version: version, cursor: &cursor) else { return nil }
-        let mipmapWidth = UInt32(mipmap.width), mipmapHeight = UInt32(mipmap.height)
+        let width = mipmap.width, height = mipmap.height
+        guard Self.isValidSize(width: width, height: height) else { return nil }
         let compression = mipmap.compression, uncompressedSize = mipmap.uncompressedSize
         let storedData = mipmap.stored
         // The image's own size at the loaded mipmap's scale.
@@ -414,30 +443,26 @@ class TEXParser {
         if compression == 0 {
             mipmapData = storedData
         } else if compression == 1, uncompressedSize > 0 {
-            mipmapData = decompressLZ4(storedData, uncompressedSize: uncompressedSize)
+            mipmapData = decompressLZ4(storedData, uncompressedSize: uncompressedSize,
+                                       format: format, width: width, height: height)
         } else {
             return nil
         }
 
+        let visibleWidth = min(visibleImageWidth, width)
+        let visibleHeight = min(visibleImageHeight, height)
         switch format {
         case 4, 6, 7:
-            let width = Int(mipmapWidth)
-            let height = Int(mipmapHeight)
-            guard width > 0, height > 0, width <= 16_384, height <= 16_384 else { return nil }
-            let visibleWidth = min(visibleImageWidth, width)
-            let visibleHeight = min(visibleImageHeight, height)
             return decodeDXT(mipmapData, format: format, width: width, height: height,
                              visibleWidth: visibleWidth, visibleHeight: visibleHeight)
         default:
-            let visibleWidth = min(visibleImageWidth, Int(mipmapWidth))
-            let visibleHeight = min(visibleImageHeight, Int(mipmapHeight))
-            if let image = rawChannelImage(mipmapData, format: format, width: Int(mipmapWidth), height: Int(mipmapHeight),
+            if let image = rawChannelImage(mipmapData, format: format, width: width, height: height,
                                            visibleWidth: visibleWidth, visibleHeight: visibleHeight) {
                 return image
             }
             return NSImage(data: Data(mipmapData))
                 ?? posterImage(fromVideoData: Data(mipmapData))
-                ?? rawRGBAImage(mipmapData, width: Int(mipmapWidth), height: Int(mipmapHeight),
+                ?? rawRGBAImage(mipmapData, width: width, height: height,
                                 visibleWidth: visibleWidth, visibleHeight: visibleHeight)
         }
     }
@@ -445,11 +470,18 @@ class TEXParser {
     /// Decodes RG88 (two-channel) and R8 (single-channel) raw mipmaps; nil for any other format.
     private func rawChannelImage(_ bytes: [UInt8], format: UInt32, width: Int, height: Int,
                                  visibleWidth: Int, visibleHeight: Int) -> NSImage? {
+        guard Self.isValidSize(width: width, height: height), visibleWidth <= width, visibleHeight <= height,
+              let pixelCount = Self.byteCount(width: width, height: height, bytesPerPixel: 1),
+              let rgbaCount = Self.byteCount(width: width, height: height, bytesPerPixel: 4) else { return nil }
+        /// Whether `bytes` holds every pixel at `bytesPerPixel`.
+        func holds(_ bytesPerPixel: Int) -> Bool {
+            Self.byteCount(width: width, height: height, bytesPerPixel: bytesPerPixel).map { bytes.count >= $0 } ?? false
+        }
         switch format {
         case 1:
-            guard bytes.count >= width * height * 3 else { return nil }
-            var rgba = [UInt8](repeating: 255, count: width * height * 4)
-            for pixel in 0..<(width * height) {
+            guard holds(3) else { return nil }
+            var rgba = [UInt8](repeating: 255, count: rgbaCount)
+            for pixel in 0..<pixelCount {
                 rgba[pixel * 4] = bytes[pixel * 3]
                 rgba[pixel * 4 + 1] = bytes[pixel * 3 + 1]
                 rgba[pixel * 4 + 2] = bytes[pixel * 3 + 2]
@@ -457,9 +489,9 @@ class TEXParser {
             return rawRGBAImage(rgba, width: width, height: height,
                                 visibleWidth: visibleWidth, visibleHeight: visibleHeight)
         case 2:
-            guard bytes.count >= width * height * 2 else { return nil }
-            var rgba = [UInt8](repeating: 255, count: width * height * 4)
-            for pixel in 0..<(width * height) {
+            guard holds(2) else { return nil }
+            var rgba = [UInt8](repeating: 255, count: rgbaCount)
+            for pixel in 0..<pixelCount {
                 let offset = pixel * 2
                 let packed = UInt16(bytes[offset]) | UInt16(bytes[offset + 1]) << 8
                 rgba[pixel * 4] = UInt8((packed >> 11) * 255 / 31)
@@ -469,7 +501,7 @@ class TEXParser {
             return rawRGBAImage(rgba, width: width, height: height,
                                 visibleWidth: visibleWidth, visibleHeight: visibleHeight)
         case 8:
-            guard bytes.count >= width * height * 2 else { return nil }
+            guard holds(2) else { return nil }
             // As a two-channel texture samples in WE: (r, g, 0, 1), which an `.rg8Unorm` texture
             // returns. Shaders that read RG88 as luminance and alpha convert it by `TEX<n>FORMAT`
             // (`ConvertTexture0Format`'s `.rrrg`); normal maps (`DecompressNormal`) and flow maps
@@ -478,16 +510,16 @@ class TEXParser {
                                         width: visibleWidth, height: visibleHeight)
         case 9:
             guard width > 0, height > 0, visibleWidth > 0, visibleHeight > 0,
-                  bytes.count >= width * height else { return nil }
+                  holds(1) else { return nil }
             // As a one-channel texture samples in WE: (r, 0, 0, 1), which an `.r8Unorm` texture
             // returns. Opacity masks and depth maps read `.r`; particle shaders turn an R8 albedo
             // into (1, 1, 1, r) by `TEX<n>FORMAT` (`ConvertTexture0Format`).
             return TEXRawImageRep.image(bytes: bytes, channels: .r, rowPixels: width,
                                         width: visibleWidth, height: visibleHeight)
         case 10:
-            guard bytes.count >= width * height * 4 else { return nil }
-            var rgba = [UInt8](repeating: 255, count: width * height * 4)
-            for pixel in 0..<(width * height) {
+            guard holds(4) else { return nil }
+            var rgba = [UInt8](repeating: 255, count: rgbaCount)
+            for pixel in 0..<pixelCount {
                 let offset = pixel * 4
                 let red = Self.halfToFloat(UInt16(bytes[offset]) | UInt16(bytes[offset + 1]) << 8)
                 let green = Self.halfToFloat(UInt16(bytes[offset + 2]) | UInt16(bytes[offset + 3]) << 8)
@@ -498,9 +530,9 @@ class TEXParser {
             return rawRGBAImage(rgba, width: width, height: height,
                                 visibleWidth: visibleWidth, visibleHeight: visibleHeight)
         case 11:
-            guard bytes.count >= width * height * 2 else { return nil }
-            var rgba = [UInt8](repeating: 255, count: width * height * 4)
-            for pixel in 0..<(width * height) {
+            guard holds(2) else { return nil }
+            var rgba = [UInt8](repeating: 255, count: rgbaCount)
+            for pixel in 0..<pixelCount {
                 let offset = pixel * 2
                 let value = Self.halfToFloat(UInt16(bytes[offset]) | UInt16(bytes[offset + 1]) << 8)
                 let channel = Self.floatToByte(value)
@@ -509,9 +541,9 @@ class TEXParser {
             return rawRGBAImage(rgba, width: width, height: height,
                                 visibleWidth: visibleWidth, visibleHeight: visibleHeight)
         case 13:
-            guard bytes.count >= width * height * 4 else { return nil }
-            var rgba = [UInt8](repeating: 255, count: width * height * 4)
-            for pixel in 0..<(width * height) {
+            guard holds(4) else { return nil }
+            var rgba = [UInt8](repeating: 255, count: rgbaCount)
+            for pixel in 0..<pixelCount {
                 let offset = pixel * 4
                 let packed = UInt32(bytes[offset]) | UInt32(bytes[offset + 1]) << 8
                     | UInt32(bytes[offset + 2]) << 16 | UInt32(bytes[offset + 3]) << 24
@@ -523,13 +555,13 @@ class TEXParser {
             return rawRGBAImage(rgba, width: width, height: height,
                                 visibleWidth: visibleWidth, visibleHeight: visibleHeight)
         case 14:
-            guard bytes.count >= width * height * 8 else { return nil }
+            guard holds(8) else { return nil }
             return float16RGBAImage(bytes, width: width, height: height,
                                          visibleWidth: visibleWidth, visibleHeight: visibleHeight)
         case 15:
-            guard bytes.count >= width * height * 6 else { return nil }
-            var rgba = [UInt8](repeating: 255, count: width * height * 4)
-            for pixel in 0..<(width * height) {
+            guard holds(6) else { return nil }
+            var rgba = [UInt8](repeating: 255, count: rgbaCount)
+            for pixel in 0..<pixelCount {
                 let offset = pixel * 6
                 for component in 0..<3 {
                     let value = Self.halfToFloat(UInt16(bytes[offset + component * 2])
@@ -551,8 +583,12 @@ class TEXParser {
 
     private func float16RGBAImage(_ bytes: [UInt8], width: Int, height: Int,
                                          visibleWidth: Int, visibleHeight: Int) -> NSImage? {
-        var rgba = [UInt8](repeating: 255, count: width * height * 4)
-        for pixel in 0..<(width * height) {
+        guard let pixelCount = Self.byteCount(width: width, height: height, bytesPerPixel: 1),
+              let rgbaCount = Self.byteCount(width: width, height: height, bytesPerPixel: 4),
+              let needed = Self.byteCount(width: width, height: height, bytesPerPixel: 8),
+              bytes.count >= needed else { return nil }
+        var rgba = [UInt8](repeating: 255, count: rgbaCount)
+        for pixel in 0..<pixelCount {
             let offset = pixel * 8
             for component in 0..<4 {
                 let value = Self.halfToFloat(UInt16(bytes[offset + component * 2])
@@ -576,7 +612,9 @@ class TEXParser {
     /// Decodes an uncompressed RGBA8888 mipmap (TEXI format 0); these carry no image container header.
     private func rawRGBAImage(_ bytes: [UInt8], width: Int, height: Int,
                               visibleWidth: Int, visibleHeight: Int) -> NSImage? {
-        guard width > 0, height > 0, bytes.count >= width * height * 4 else { return nil }
+        guard Self.isValidSize(width: width, height: height), visibleWidth <= width, visibleHeight <= height,
+              let needed = Self.byteCount(width: width, height: height, bytesPerPixel: 4),
+              bytes.count >= needed else { return nil }
         return TEXRawImageRep.image(bytes: bytes, channels: .rgba, rowPixels: width,
                                     width: visibleWidth, height: visibleHeight)
     }
@@ -620,9 +658,16 @@ class TEXParser {
     }
 
     /// Wallpaper Engine stores raw LZ4 blocks, which the Compression framework decodes with a
-    /// SIMD implementation. The hand-rolled decoder stays as a fallback for anything it rejects.
-    private func decompressLZ4(_ input: [UInt8], uncompressedSize: Int) -> [UInt8] {
+    /// SIMD implementation. The hand-rolled decoder stays as a fallback for anything it rejects,
+    /// decoding into the same buffer. A declared size over `lz4OutputLimit` is refused.
+    private func decompressLZ4(_ input: [UInt8], uncompressedSize: Int, format: UInt32, width: Int, height: Int) -> [UInt8] {
         guard uncompressedSize > 0, !input.isEmpty else { return [] }
+        let limit = Self.lz4OutputLimit(compressedSize: input.count, format: format, width: width, height: height)
+        guard uncompressedSize <= limit else {
+            OWELog.error(.texture, "TEX mipmap declares \(uncompressedSize) decompressed bytes, over its \(limit)-byte limit "
+                         + "(\(width)x\(height), format \(format), \(input.count) compressed bytes)")
+            return []
+        }
         var output = [UInt8](repeating: 0, count: uncompressedSize)
         let written = input.withUnsafeBufferPointer { source -> Int in
             guard let sourceBase = source.baseAddress else { return 0 }
@@ -634,12 +679,12 @@ class TEXParser {
             }
         }
         if written == uncompressedSize { return output }
-        return decompressLZ4Scalar(input, uncompressedSize: uncompressedSize)
+        return Self.decompressLZ4Scalar(input, into: &output) ? output : []
     }
 
-    private func decompressLZ4Scalar(_ input: [UInt8], uncompressedSize: Int) -> [UInt8] {
-        guard uncompressedSize > 0 else { return [] }
-        var output = [UInt8](repeating: 0, count: uncompressedSize)
+    /// Decodes `input` into all of `output`; false when it doesn't fill it exactly.
+    private static func decompressLZ4Scalar(_ input: [UInt8], into output: inout [UInt8]) -> Bool {
+        guard !output.isEmpty else { return false }
         var source = 0
         var destination = 0
 
@@ -662,7 +707,7 @@ class TEXParser {
 
             guard let literalLength = readLength(Int(token >> 4)),
                   literalLength <= input.count - source,
-                  literalLength <= output.count - destination else { return [] }
+                  literalLength <= output.count - destination else { return false }
             if literalLength > 0 {
                 output.replaceSubrange(destination..<(destination + literalLength),
                                        with: input[source..<(source + literalLength)])
@@ -671,29 +716,32 @@ class TEXParser {
             }
 
             if source == input.count { break }
-            guard source + 2 <= input.count else { return [] }
+            guard source + 2 <= input.count else { return false }
             let offset = Int(input[source]) | (Int(input[source + 1]) << 8)
             source += 2
             guard offset > 0, offset <= destination,
                   let matchLength = readLength(Int(token & 0x0F)).map({ $0 + 4 }),
-                  matchLength <= output.count - destination else { return [] }
+                  matchLength <= output.count - destination else { return false }
             for _ in 0..<matchLength {
                 output[destination] = output[destination - offset]
                 destination += 1
             }
         }
 
-        return destination == uncompressedSize ? output : []
+        return destination == output.count
     }
 
     private func decodeDXT(_ input: [UInt8], format: UInt32, width: Int, height: Int,
                            visibleWidth: Int, visibleHeight: Int) -> NSImage? {
-        let bytesPerBlock = format == 7 ? 8 : 16
+        guard Self.isValidSize(width: width, height: height), visibleWidth <= width, visibleHeight <= height,
+              let needed = Self.blockByteCount(width: width, height: height, format: format),
+              input.count >= needed,
+              let pixelBytes = Self.byteCount(width: width, height: height, bytesPerPixel: 4) else { return nil }
+        let bytesPerBlock = TEXCompressedTexture.bytesPerBlock(format: format)
         let blockColumns = (width + 3) / 4
         let blockRows = (height + 3) / 4
-        guard input.count >= blockColumns * blockRows * bytesPerBlock else { return nil }
 
-        var pixels = [UInt8](repeating: 0, count: width * height * 4)
+        var pixels = [UInt8](repeating: 0, count: pixelBytes)
         for blockY in 0..<blockRows {
             for blockX in 0..<blockColumns {
                 let offset = (blockY * blockColumns + blockX) * bytesPerBlock
@@ -799,7 +847,8 @@ class TEXParser {
                             cursor: inout Int) -> (width: Int, height: Int, compression: UInt32, uncompressedSize: Int, stored: [UInt8])? {
         for current in 0...level {
             guard let width = readUInt32(from: bytes, cursor: &cursor),
-                  let height = readUInt32(from: bytes, cursor: &cursor) else { return nil }
+                  let height = readUInt32(from: bytes, cursor: &cursor),
+                  Self.isValidSize(width: Int(width), height: Int(height)) else { return nil }
             var compression: UInt32 = 0
             var uncompressedSize = 0
             if version != 1 {
@@ -830,113 +879,5 @@ class TEXParser {
         defer { cursor += 4 }
         return UInt32(bytes[cursor]) | (UInt32(bytes[cursor + 1]) << 8)
             | (UInt32(bytes[cursor + 2]) << 16) | (UInt32(bytes[cursor + 3]) << 24)
-    }
-
-    /// Read TEXI metadata section: format, flags, width, height, textureWidth, textureHeight
-    private func readTEXIMetadata() -> TEXMetadata? {
-        guard let texiMagic = "TEXI".data(using: .ascii) else { return nil }
-        var i = data.startIndex
-        while i + 4 <= data.endIndex {
-            if data[i..<i+4] == texiMagic {
-                // Skip past "TEXIxxxx\0" (null-terminated name with version)
-                var j = i + 4
-                while j < data.endIndex && data[j] != 0 { j += 1 }
-                j += 1 // skip null byte
-                guard j + 24 <= data.endIndex else { return nil }
-                func u32(_ off: Int) -> UInt32 {
-                    UInt32(data[j+off]) | (UInt32(data[j+off+1]) << 8)
-                    | (UInt32(data[j+off+2]) << 16) | (UInt32(data[j+off+3]) << 24)
-                }
-                return TEXMetadata(format: u32(0), width: u32(8), height: u32(12),
-                                   textureWidth: u32(16), textureHeight: u32(20))
-            }
-            i += 1
-        }
-        return nil
-    }
-
-    /// Read the TEXB format field (first uint32 after the null-terminated section name).
-    /// Format 1 = image-extractable, Format 2 = DXT5, etc.
-    private func readTEXBFormat() -> Int {
-        guard let texbMagic = "TEXB".data(using: .ascii) else { return -1 }
-        var i = data.startIndex
-        while i + 4 <= data.endIndex {
-            if data[i..<i+4] == texbMagic {
-                // Skip past "TEXBxxxx\0" (null-terminated name with version)
-                var j = i + 4
-                while j < data.endIndex && data[j] != 0 { j += 1 }
-                j += 1 // skip null byte
-                guard j + 4 <= data.endIndex else { return -1 }
-                return Int(UInt32(data[j])
-                    | (UInt32(data[j+1]) << 8)
-                    | (UInt32(data[j+2]) << 16)
-                    | (UInt32(data[j+3]) << 24))
-            }
-            i += 1
-        }
-        return -1
-    }
-
-    /// Find a named section (e.g. "TEXI", "TEXB") in the TEX data
-    private func findSection(_ name: String) -> Range<Data.Index>? {
-        guard let nameData = name.data(using: .ascii) else { return nil }
-        let nameLen = nameData.count
-
-        var i = data.startIndex
-        while i + nameLen + 4 <= data.endIndex {
-            if data[i..<i+nameLen] == nameData {
-                // Section found — next 4 bytes after name are section length
-                let lenStart = i + nameLen
-                guard lenStart + 4 <= data.endIndex else { return nil }
-                let sectionLen = UInt32(data[lenStart])
-                    | (UInt32(data[lenStart+1]) << 8)
-                    | (UInt32(data[lenStart+2]) << 16)
-                    | (UInt32(data[lenStart+3]) << 24)
-                let contentStart = lenStart + 4
-                let contentEnd = contentStart + Int(sectionLen)
-                guard contentEnd <= data.endIndex else {
-                    return contentStart..<data.endIndex
-                }
-                return contentStart..<contentEnd
-            }
-            i += 1
-        }
-        return nil
-    }
-
-    /// Find JPEG end marker (FFD9) scanning from a given start position
-    private func findJPEGEnd(in slice: Data, from start: Data.Index) -> Data.Index? {
-        var i = start
-        while i + 1 < slice.endIndex {
-            if slice[i] == 0xFF && slice[i+1] == 0xD9 {
-                return i + 1  // Include the D9 byte
-            }
-            i += 1
-        }
-        return nil
-    }
-
-    private func findJPEGMagic(in slice: Data) -> Data.Index? {
-        var i = slice.startIndex
-        while i + 1 < slice.endIndex {
-            if slice[i] == 0xFF && slice[i+1] == 0xD8 {
-                return i
-            }
-            i += 1
-        }
-        return nil
-    }
-
-    private func findPNGMagic(in slice: Data) -> Data.Index? {
-        let pngMagic: [UInt8] = [0x89, 0x50, 0x4E, 0x47]
-        var i = slice.startIndex
-        while i + 3 < slice.endIndex {
-            if slice[i] == pngMagic[0] && slice[i+1] == pngMagic[1]
-                && slice[i+2] == pngMagic[2] && slice[i+3] == pngMagic[3] {
-                return i
-            }
-            i += 1
-        }
-        return nil
     }
 }

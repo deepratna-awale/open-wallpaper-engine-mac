@@ -21,13 +21,20 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     }
     
     weak var webView: WKWebView?
-    /// Serves wallpapers that WE patches (`assets/zcompat/web`) with the patches applied.
+    /// Serves the wallpaper's folder, with WE's patches (`assets/zcompat/web`) applied.
     let schemeHandler = WebWallpaperSchemeHandler()
 
     /// WE's compatibility patches for the current wallpaper, if it has any.
     var compatPatches: WebCompatPatches? {
-        let id = SceneWallpaperViewModel.workshopId(of: currentWallpaper)
-        return WebCompatPatches(workshopId: id, assetsDirectory: WallpaperEngineAssets.directory)
+        WebCompatPatches(workshopId: Self.compatWorkshopId(of: currentWallpaper),
+                         assetsDirectory: WallpaperEngineAssets.directory)
+    }
+
+    /// The Workshop id that picks a wallpaper's zcompat entry: the numeric name Steam gives the
+    /// item's folder. project.json's `workshopid` is the author's own text, so it doesn't choose.
+    static func compatWorkshopId(of wallpaper: WEWallpaper) -> String? {
+        let folder = wallpaper.wallpaperDirectory.standardizedFileURL.lastPathComponent
+        return !folder.isEmpty && folder.allSatisfy({ $0.isASCII && $0.isNumber }) ? folder : nil
     }
     /// Receives the page's frame intervals and heartbeats (a page that stops beating is hung).
     weak var renderWatchdog: RenderWatchdog?

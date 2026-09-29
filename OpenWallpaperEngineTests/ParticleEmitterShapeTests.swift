@@ -65,4 +65,37 @@ final class ParticleEmitterShapeTests: XCTestCase {
             XCTAssertGreaterThan(simd_dot(simd_normalize(particle.velocity), simd_normalize(offset)), 0.999)
         }
     }
+
+    /// `boxrandom` (0x1401b9520): each axis between `distancemin` and `distancemax` from the
+    /// centre, on a random side, `sign` forcing a side.
+    func testBoxSpawnsInsideItsShell() throws {
+        var system = ParticleTestSystem()
+        system.emissionRate = 0
+        system.instantaneous = 300
+        system.minimumVelocity = .zero
+        system.maximumVelocity = .zero
+        var configuration = system.configuration
+        configuration.emitter.kind = .box
+        configuration.emitter.directions = SIMD3(1, 1, 0)
+        configuration.emitter.distanceMinimum = SIMD3(10, 5, 0)
+        configuration.emitter.distanceMaximum = SIMD3(60, 30, 0)
+        configuration.emitter.sign = SIMD3(-1, 0, 0)
+        configuration.emitter.appliesSign = true
+        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
+        let texture = try XCTUnwrap(device.makeTexture(descriptor: .texture2DDescriptor(
+            pixelFormat: .rgba8Unorm, width: 1, height: 1, mipmapped: false)))
+        let runtime = ParticleSystemRuntime(texture: texture, configuration: configuration, seed: 9)
+        ParticleCPUSimulation.step(runtime, inputs: ParticleFrameInputs.advance(runtime, deltaTime: 0, cursor: .zero))
+        XCTAssertEqual(runtime.particles.count, 300)
+        var sides = Set<Bool>()
+        for particle in runtime.particles {
+            let offset = particle.position - system.origin
+            XCTAssertLessThanOrEqual(offset.x, -10 + 1e-3, "sign forces x negative, beyond distancemin")
+            XCTAssertGreaterThanOrEqual(offset.x, -60 - 1e-3)
+            XCTAssertGreaterThanOrEqual(abs(offset.y), 5 - 1e-3)
+            XCTAssertLessThanOrEqual(abs(offset.y), 30 + 1e-3)
+            sides.insert(offset.y > 0)
+        }
+        XCTAssertEqual(sides.count, 2, "an unsigned axis spawns on both sides")
+    }
 }

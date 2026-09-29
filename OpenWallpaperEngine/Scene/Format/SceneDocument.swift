@@ -45,8 +45,9 @@ enum SceneChangeImpact: Int, Comparable {
         if key.hasSuffix("_musicSync") || key.hasSuffix("_musicAmount") { return .none }
 
         if key.hasPrefix("_owe_scene_object_") {
-            // Visibility is resolved while building content; JSON/origin edits are baked in decodeScene.
-            return key.hasSuffix("_visible") ? .rebuildContent : .reloadScene
+            // Visibility and material blending are resolved while building content; JSON/origin
+            // edits are baked in decodeScene.
+            return key.hasSuffix("_visible") || key.hasSuffix("_blending") ? .rebuildContent : .reloadScene
         }
         if key.hasPrefix("_owe_scene_asset_") { return .reloadScene }
 
@@ -81,6 +82,12 @@ enum SceneChangeImpact: Int, Comparable {
 
 func sceneObjectVisibilityKey(objectID: Int) -> String {
     "_owe_scene_object_\(objectID)_visible"
+}
+
+/// The Scene Inspector's material blending for an object's image or particle system
+/// (`WEMaterialBlending`), in place of its material's first pass's.
+func sceneObjectBlendingKey(objectID: Int) -> String {
+    "_owe_scene_object_\(objectID)_blending"
 }
 
 // MARK: - Top-level Scene

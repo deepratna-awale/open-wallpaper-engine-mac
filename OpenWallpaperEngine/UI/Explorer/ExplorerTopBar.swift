@@ -82,13 +82,7 @@ struct ExplorerTopBar: ViewModifier {
                     .help(viewModel.sortingSequence == .increase
                           ? "Sorted ascending. Click to sort descending."
                           : "Sorted descending. Click to sort ascending.")
-                    Picker("Sort By", selection: $viewModel.sortingBy) {
-                        ForEach(WEWallpaperSortingMethod.allCases) { method in
-                            Text(method.displayName).tag(method)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    .help("Sort By")
+                    SortByMenu(selection: $viewModel.sortingBy)
                 }
             }
     }

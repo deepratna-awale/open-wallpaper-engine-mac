@@ -1119,7 +1119,7 @@ class SceneWallpaperViewModel: ObservableObject {
             translator: translator,
             readFile: { [weak self] path in self?.assetData(named: path, wallpaperDir: wallpaperDir) },
             loadTexture: { [weak self] name, path in self?.loadMetalTexture(named: name, materialDir: path, wallpaperDir: wallpaperDir) },
-            sceneEngineCombos: sceneEngineCombos)
+            sceneEngineCombos: sceneEngineCombos, blending: blendingOverride(for: object))
         do {
             return try builder.build(materialPath: materialPath, colorBlendMode: object.colorBlendMode,
                                      clampUVs: object.clampuvs, prelit: prelit)
@@ -1137,7 +1137,7 @@ class SceneWallpaperViewModel: ObservableObject {
             translator: translator,
             readFile: { [weak self] path in self?.assetData(named: path, wallpaperDir: wallpaperDir) },
             loadTexture: { [weak self] name, path in self?.loadMetalTexture(named: name, materialDir: path, wallpaperDir: wallpaperDir) },
-            sceneEngineCombos: sceneEngineCombos)
+            sceneEngineCombos: sceneEngineCombos, blending: blendingOverride(for: object))
         do {
             return try builder.buildBlendComposite(colorBlendMode: mode)
         } catch {
@@ -1486,6 +1486,18 @@ class SceneWallpaperViewModel: ObservableObject {
         WallpaperServices.shared.userPropertyString(name, wallpaper: propertyStoreKey)
     }
 
+    /// The Scene Inspector's blending for the object's material (`sceneObjectBlendingKey`); nil
+    /// when it has none, or one its kind of layer doesn't draw with, which keeps the material's.
+    private func blendingOverride(for object: WESceneObject) -> WEMaterialBlending? {
+        guard let objectID = object.id, let value = userProperty(sceneObjectBlendingKey(objectID: objectID)) else { return nil }
+        let supported = object.particle != nil ? WEMaterialBlending.particleSystem : WEMaterialBlending.imageLayer
+        guard let blending = WEMaterialBlending(authored: value), supported.contains(blending) else {
+            OWELog.error(.scene, "Object \(objectID) keeps its material's blending: \"\(value)\" isn't one it draws with")
+            return nil
+        }
+        return blending
+    }
+
     private func isObjectVisible(_ object: WESceneObject) -> Bool {
         let objectID = object.id ?? -1
         let overrideKey = sceneObjectVisibilityKey(objectID: objectID)
@@ -1667,8 +1679,11 @@ class SceneWallpaperViewModel: ObservableObject {
                                           sceneSize: SIMD2<Float>, pixelUnits: Bool,
                                           wallpaperDir: URL) -> SceneMetalParticleSystem? {
         guard let materialPath = particleSystem.material,
-              let material: WEMaterial = loadJSON(path: materialPath, wallpaperDir: wallpaperDir),
+              var material: WEMaterial = loadJSON(path: materialPath, wallpaperDir: wallpaperDir),
               let textureName = material.passes?.first?.textures?.first ?? nil else { return nil }
+        // The object's blending is its own system's; the children it spawns keep their materials'.
+        let blending = particlePath == object.particle ? blendingOverride(for: object) : nil
+        if let blending { material.passes?[0].blending = blending.rawValue }
         guard let source = loadMetalTexture(named: textureName, materialDir: materialPath, wallpaperDir: wallpaperDir,
                                             colour: true) else {
             OWELog.error(.scene, "\(wallpaperDir.lastPathComponent): particle \(particlePath) (object \(object.id ?? -1)): "
@@ -1680,8 +1695,8 @@ class SceneWallpaperViewModel: ObservableObject {
 
         let particleRenderer = particleSystem.renderer?.first
         let materialPlan = buildParticleMaterial(materialPath, particleSystem: particleSystem, renderer: particleRenderer,
-                                                 source: source, spriteSheet: spriteSheet, object: object,
-                                                 wallpaperDir: wallpaperDir)
+                                                 source: source, spriteSheet: spriteSheet, blending: blending,
+                                                 object: object, wallpaperDir: wallpaperDir)
         var system = ParticleSystemBuilder.build(particlePath, particleSystem: particleSystem, object: object,
                                                  world: world, overrides: overrides, sceneSize: sceneSize,
                                                  source: source, spriteSheet: spriteSheet, material: material,
@@ -1691,6 +1706,12 @@ class SceneWallpaperViewModel: ObservableObject {
             assetData(named: $0, wallpaperDir: wallpaperDir)
         }
         system.fallbackSource = ParticleFallbackTexture.converted(source, format: albedo.flatMap(TEXImageFormat.init(texData:)))
+        // WE draws every renderer of the system from its one simulation, each through the material
+        // with that renderer's combos.
+        ParticleSystemBuilder.addRenderers(to: &system, particleSystem: particleSystem) { renderer in
+            buildParticleMaterial(materialPath, particleSystem: particleSystem, renderer: renderer, source: source,
+                                  spriteSheet: spriteSheet, object: object, wallpaperDir: wallpaperDir)
+        }
         return system
     }
 
@@ -1698,14 +1719,14 @@ class SceneWallpaperViewModel: ObservableObject {
     /// keeps the built-in particle draw.
     private func buildParticleMaterial(_ materialPath: String, particleSystem: WEParticleSystem,
                                        renderer: WEParticleRenderer?, source: SceneMetalTextureSource,
-                                       spriteSheet: SpriteSheet?, object: WESceneObject,
+                                       spriteSheet: SpriteSheet?, blending: WEMaterialBlending?, object: WESceneObject,
                                        wallpaperDir: URL) -> ParticleMaterialPlan? {
         guard let translator = effectTranslator else { return nil }
         let builder = ParticleMaterialPlanBuilder(
             translator: translator,
             readFile: { [weak self] path in self?.assetData(named: path, wallpaperDir: wallpaperDir) },
             loadTexture: { [weak self] name, path in self?.loadMetalTexture(named: name, materialDir: path, wallpaperDir: wallpaperDir) },
-            sceneEngineCombos: sceneEngineCombos)
+            sceneEngineCombos: sceneEngineCombos, blending: blending)
         do {
             return try builder.build(materialPath: materialPath, renderer: renderer, flags: particleSystem.flags ?? 0,
                                      baseTexture: source, spriteSheet: spriteSheet)

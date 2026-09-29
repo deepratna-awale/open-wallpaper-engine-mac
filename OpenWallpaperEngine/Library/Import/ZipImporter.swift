@@ -1,10 +1,11 @@
 import Foundation
 
 enum ZipImporter {
-    /// Extracts a zip file and copies any wallpaper folders (containing project.json) to the wallpapers directory.
-    /// Returns the number of wallpapers successfully imported.
+    /// Extracts a zip file and copies any wallpaper folders (containing project.json) to
+    /// `destination`, the wallpapers directory unless given. Symbolic links in the archive are
+    /// removed before anything is copied. Returns the number of wallpapers imported.
     @discardableResult
-    static func importZip(at zipURL: URL) -> Int {
+    static func importZip(at zipURL: URL, into destination: URL? = nil) -> Int {
         let fm = FileManager.default
         let tempDir = fm.temporaryDirectory.appending(path: UUID().uuidString)
 
@@ -25,17 +26,23 @@ enum ZipImporter {
             OWELog.error(.importer, "ditto exited with status \(process.terminationStatus)")
             return 0
         }
+        do {
+            try ImportedFolderLinks.removeLinks(in: tempDir)
+        } catch {
+            OWELog.error(.importer, "Can't import \(zipURL.lastPathComponent): removing its symbolic links failed: \(error)")
+            return 0
+        }
 
         // Find wallpaper folders inside extracted content
         let wallpaperURLs = findWallpaperFolders(in: tempDir)
-        let dest = fm.wallpapersDirectory
+        let dest = destination ?? fm.wallpapersDirectory
         var imported = 0
 
         for url in wallpaperURLs {
             let target = dest.appending(path: url.lastPathComponent)
             if !fm.fileExists(atPath: target.path) {
                 do {
-                    try fm.copyItem(at: url, to: target)
+                    try ImportedFolderLinks.copyWithoutLinks(from: url, to: target)
                     DispatchQueue.global(qos: .utility).async {
                         WallpaperPackageConverter.convertIfNeeded(wallpaperDirectory: target)
                     }
@@ -49,46 +56,37 @@ enum ZipImporter {
         return imported
     }
 
-    /// Recursively searches for directories containing project.json, up to 3 levels deep.
-    private static func findWallpaperFolders(in directory: URL) -> [URL] {
+    /// Whether `url` is a real folder (not a symbolic link to one) holding a project.json.
+    private static func isWallpaperFolder(_ url: URL) -> Bool {
         let fm = FileManager.default
-        var results: [URL] = []
+        var isDir: ObjCBool = false
+        return !ContainedPath.isSymbolicLink(url)
+            && fm.fileExists(atPath: url.path, isDirectory: &isDir) && isDir.boolValue
+            && fm.fileExists(atPath: url.appending(path: "project.json").path)
+    }
 
-        // Check if this directory itself is a wallpaper
-        if fm.fileExists(atPath: directory.appending(path: "project.json").path) {
-            return [directory]
-        }
+    /// Searches for wallpaper folders: `directory` itself, its children, or its grandchildren
+    /// (a zip may have a wrapper folder). Folders that are symbolic links are skipped.
+    static func findWallpaperFolders(in directory: URL) -> [URL] {
+        let fm = FileManager.default
+        if isWallpaperFolder(directory) { return [directory] }
 
-        // Check immediate children
         guard let children = try? fm.contentsOfDirectory(
             at: directory, includingPropertiesForKeys: [.isDirectoryKey],
             options: .skipsHiddenFiles
         ) else { return [] }
 
-        for child in children {
-            var isDir: ObjCBool = false
-            guard fm.fileExists(atPath: child.path, isDirectory: &isDir), isDir.boolValue else { continue }
-
-            if fm.fileExists(atPath: child.appending(path: "project.json").path) {
+        var results: [URL] = []
+        for child in children where !ContainedPath.isSymbolicLink(child) {
+            if isWallpaperFolder(child) {
                 results.append(child)
-            } else {
-                // One more level deep (zip may have a wrapper folder)
-                if let grandchildren = try? fm.contentsOfDirectory(
-                    at: child, includingPropertiesForKeys: [.isDirectoryKey],
-                    options: .skipsHiddenFiles
-                ) {
-                    for grandchild in grandchildren {
-                        var isSubDir: ObjCBool = false
-                        if fm.fileExists(atPath: grandchild.path, isDirectory: &isSubDir),
-                           isSubDir.boolValue,
-                           fm.fileExists(atPath: grandchild.appending(path: "project.json").path) {
-                            results.append(grandchild)
-                        }
-                    }
-                }
+            } else if let grandchildren = try? fm.contentsOfDirectory(
+                at: child, includingPropertiesForKeys: [.isDirectoryKey],
+                options: .skipsHiddenFiles
+            ) {
+                results.append(contentsOf: grandchildren.filter(isWallpaperFolder))
             }
         }
-
         return results
     }
 }

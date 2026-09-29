@@ -85,4 +85,22 @@ final class DesktopSnapshotCacheTests: XCTestCase {
         cache.trashLegacySnapshots { trashed.append($0.lastPathComponent) }
         XCTAssertEqual(trashed.sorted(), ["staticWP_-566.tiff", "staticWP_619.tiff"])
     }
+
+    /// An isolated copy leaves the user's desktop picture alone unless a test asks for it.
+    func testIsolationLeavesTheDesktopPictureAlone() {
+        XCTAssertFalse(DesktopSnapshotCache.mayChangeDesktopPicture, "the test host is an isolated copy")
+        XCTAssertTrue(DesktopSnapshotCache.allowsDesktopPicture(isIsolated: false, environment: [:]))
+        XCTAssertFalse(DesktopSnapshotCache.allowsDesktopPicture(isIsolated: true, environment: [:]))
+        XCTAssertFalse(DesktopSnapshotCache.allowsDesktopPicture(isIsolated: true, environment: ["OWE_ALLOW_DESKTOP_PICTURE": "0"]))
+        XCTAssertTrue(DesktopSnapshotCache.allowsDesktopPicture(isIsolated: true, environment: ["OWE_ALLOW_DESKTOP_PICTURE": "1"]))
+    }
+
+    /// Another copy's snapshot (an isolated run's) is never taken for the user's own picture.
+    func testAnyCopysSnapshotCounts() {
+        let real = DesktopSnapshotCache(cachesDirectory: root)
+        let isolated = DesktopSnapshotCache(cachesDirectory: root.appending(path: "Open Wallpaper Engine (isolated limtest)"))
+        XCTAssertTrue(real.isSnapshot(isolated.url(display: 2, slot: 1)))
+        XCTAssertTrue(isolated.isSnapshot(real.url(display: 2, slot: 0)))
+        XCTAssertFalse(real.isSnapshot(root.appending(path: "Pictures/DesktopSnapshots/x.jpg")))
+    }
 }

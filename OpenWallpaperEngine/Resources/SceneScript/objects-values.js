@@ -1,5 +1,5 @@
 'use strict';
-// SceneScript object model, part 1 of 5 (docs/scenescript-plan.md WP7): the `__rt.objects`
+// SceneScript object model, part 1 of 6 (docs/scenescript-plan.md WP7): the `__rt.objects`
 // namespace, value conversion, generated accessors over the shared tables, and the registry of
 // WE members that are explicit stubs here. SceneScriptObjectModel.swift installed
 // `__rt.native.objects` (tables, field lists, opcodes, native functions) before this file runs.

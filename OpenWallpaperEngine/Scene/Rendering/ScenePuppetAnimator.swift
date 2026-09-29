@@ -61,8 +61,8 @@ final class ScenePuppetAnimator {
         self.morphRig = morphRig
         morphs = (morphRig?.targetCounts ?? []).map(SceneMorphWeights.init(count:))
         stack = SceneAnimationLayerStack(skeleton: skeleton, clips: clips, model: model, rootMotion: rootMotion)
-        locals = skeleton.bindLocal
-        worlds = skeleton.bindWorld
+        locals = skeleton.restLocal
+        worlds = skeleton.restWorld
         pose = .bind(boneCount: skeleton.boneCount)
         for (position, authored) in layers.enumerated() {
             guard let id = authored.animation, let clip = stack.clipIndex(id: id) else {

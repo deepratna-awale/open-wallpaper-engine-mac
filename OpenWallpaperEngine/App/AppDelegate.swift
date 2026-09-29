@@ -278,7 +278,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         safeRestart.applicationWillTerminate()
         updater.stopShaderPrewarm()
-        if let wallpaper = UserDefaults.app.url(forKey: "OSWallpaper") {
+        if DesktopSnapshotCache.mayChangeDesktopPicture, let wallpaper = UserDefaults.app.url(forKey: "OSWallpaper") {
             for screen in NSScreen.screens {
                 try? NSWorkspace.shared.setDesktopImageURL(wallpaper, for: screen)
             }
@@ -363,11 +363,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 // MARK: Set Settings Window
     func setSettingsWindow() {
         self.settingsWindow = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 480, height: 300),
+            contentRect: NSRect(x: 0, y: 0, width: SettingsTab.toolbarFittingWidth, height: 560),
             styleMask: [.titled, .closable, .resizable, .fullSizeContentView],
             backing: .buffered, defer: false)
         self.settingsWindow.title = String(localized: "Settings")
         self.settingsWindow.isReleasedWhenClosed = false
+        self.settingsWindow.contentMinSize = NSSize(width: SettingsTab.toolbarFittingWidth, height: 400)
         self.settingsWindow.toolbarStyle = .preference
         
         self.settingsWindow.delegate = self
@@ -529,7 +530,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     
     func saveCurrentWallpaper() {
-        guard let mainScreen = NSScreen.main else { return }
+        guard DesktopSnapshotCache.mayChangeDesktopPicture, let mainScreen = NSScreen.main else { return }
         var wallpaper: URL {
             var osWallpaper: URL { NSWorkspace.shared.desktopImageURL(for: mainScreen)! }
             if let wallpaper = UserDefaults.app.url(forKey: "OSWallpaper") {

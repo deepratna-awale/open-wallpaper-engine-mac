@@ -12,6 +12,14 @@ final class SceneRenderThread: @unchecked Sendable {
         var runLoop: RunLoop?
         var stopped = false
         let ready = DispatchSemaphore(value: 0)
+        /// Signalled once the run loop has returned for good.
+        let exited = DispatchSemaphore(value: 0)
+    }
+
+    /// Holds a `sync` body while the render thread runs it; emptied before the caller resumes, so
+    /// the block the run loop still holds keeps no reference to the body.
+    private final class Pending: @unchecked Sendable {
+        var run: (() -> Void)?
     }
 
     private let thread: Thread
@@ -32,6 +40,7 @@ final class SceneRenderThread: @unchecked Sendable {
                     autoreleasepool { _ = RunLoop.current.run(mode: .default, before: .distantFuture) }
                 }
             }
+            state.exited.signal()
         }
         thread.name = name
         thread.qualityOfService = .userInteractive
@@ -58,8 +67,14 @@ final class SceneRenderThread: @unchecked Sendable {
         var result: T?
         let done = DispatchSemaphore(value: 0)
         withoutActuallyEscaping(body) { body in
+            // The run loop releases a block only after it returns, which can be after `done` lets
+            // this thread go on: the block must not hold `body` then (`withoutActuallyEscaping`
+            // traps if it is still referenced when its scope ends).
+            let pending = Pending()
+            pending.run = { result = body() }
             perform {
-                result = body()
+                pending.run?()
+                pending.run = nil
                 done.signal()
             }
             done.wait()
@@ -67,12 +82,20 @@ final class SceneRenderThread: @unchecked Sendable {
         return result!
     }
 
-    /// Ends the thread once the blocks already sent have run.
+    /// Ends the thread once the blocks already sent have run, and waits for it to end, so nothing
+    /// it drives (display links, frames) outlives its owner. From the render thread itself it only
+    /// asks the run loop to stop.
     func stop() {
         let state = state
         perform {
             state.stopped = true
             CFRunLoopStop(CFRunLoopGetCurrent())
+        }
+        guard !isCurrent else { return }
+        // A frame in flight waits at most for a drawable (a second); the bound only keeps a wedged
+        // thread from hanging its owner.
+        if state.exited.wait(timeout: .now() + 5) == .timedOut {
+            OWELog.error(.scene, "\(thread.name ?? "render thread") did not stop within 5 s")
         }
     }
 }

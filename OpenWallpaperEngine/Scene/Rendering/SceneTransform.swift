@@ -149,7 +149,7 @@ struct SceneQuadGeometry: Equatable {
 /// so a child's world transform can be rebuilt each frame from its ancestors'.
 struct SceneTransformHierarchy {
     struct Node {
-        let parentID: String?
+        var parentID: String?
         let local: SceneLocalTransform
         /// `parallaxDepth` x y; WE's default is 1 1 (`WESceneObject.parallaxDepthValue`).
         let parallaxDepth: SIMD2<Float>
@@ -190,6 +190,18 @@ struct SceneTransformHierarchy {
     /// Fullscreen layers fill the scene whatever their parent is.
     mutating func makeRoot(_ id: String, local: SceneLocalTransform) {
         nodes[id] = Node(parentID: nil, local: local, parallaxDepth: nodes[id]?.parallaxDepth ?? SIMD2(1, 1))
+    }
+
+    /// `ILayer.setParent`: hangs `id` from `parent` (nil makes it a root), from the attachment
+    /// named `attachment` of the parent's rig when given. An object without a node (one a script
+    /// created) gets one, whose own transform is its live one; so does a parent without one.
+    mutating func setParent(_ id: String, to parent: String?, attachment: String?) {
+        guard parent != nil || nodes[id] != nil else { return }
+        if let parent, nodes[parent] == nil { nodes[parent] = Node(parentID: nil, local: .identity) }
+        var node = nodes[id] ?? Node(parentID: nil, local: .identity)
+        node.parentID = parent
+        node.attachment = parent == nil ? nil : attachment
+        nodes[id] = node
     }
 
     /// `id`'s topmost ancestor, or `id` itself when it has no parent. Cycles stop the walk.
