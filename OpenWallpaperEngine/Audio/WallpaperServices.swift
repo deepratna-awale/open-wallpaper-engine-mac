@@ -76,6 +76,12 @@ final class WallpaperServices {
 
     // MARK: - Audio
 
+    /// Holds system audio capture on while the lease lives (`AudioCaptureDemand`). Every consumer
+    /// of the level or spectrum takes one: capture is off while nothing holds one.
+    func acquireAudioCapture() -> AudioCaptureLease {
+        audioCapture.demand.acquire()
+    }
+
     var audioLevel: Double {
         if let level = propertyService.frameAudioLevel { return level }
         OWEFrameMetrics.countLockAcquisition()

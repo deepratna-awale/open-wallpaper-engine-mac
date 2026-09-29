@@ -223,6 +223,8 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
 
     /// Whether the page registered an audio listener; the timer runs only while it can be seen.
     private var audioRegistered = false
+    /// Keeps system audio capture on while the audio delivery runs.
+    private var audioCaptureLease: AudioCaptureLease?
 
     /// Runs the 30 Hz delivery only while the page is registered, playing and visible: a paused,
     /// covered or sleeping page would drop the values, so the timer and its IPC stop too.
@@ -230,9 +232,11 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         guard audioRegistered, heartbeatGate.expectsHeartbeats else {
             audioTimer?.invalidate()
             audioTimer = nil
+            audioCaptureLease = nil
             return
         }
         guard audioTimer == nil else { return }
+        audioCaptureLease = WallpaperServices.shared.acquireAudioCapture()
         let clock = audioClock ?? WallpaperServices.shared.makeAudioSpectrumClock(publishes: false)
         audioClock = clock
         // WE delivers 64 left and 64 right values to web listeners 30 times a second.
