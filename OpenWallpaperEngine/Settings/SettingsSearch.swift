@@ -86,6 +86,8 @@ struct SettingsSearch {
             entry("Restart after crashing", .optimizations, SettingsAnchor.rendering),
             entry("Optimise textures", .optimizations, SettingsAnchor.rendering),
             entry("Cheaper shadows", .optimizations, SettingsAnchor.rendering),
+            entry("Render web wallpapers at standard resolution", .optimizations, SettingsAnchor.rendering),
+            entry("Draw large glowing particles at half resolution", .optimizations, SettingsAnchor.rendering),
 
             entry("Wallpaper Engine Assets", .assets, SettingsAnchor.assets),
             entry("SteamCMD", .assets, SettingsAnchor.steamCmd),
@@ -101,6 +103,7 @@ struct SettingsSearch {
             entry("Report a Security Issue", .privacy, SettingsAnchor.security),
 
             entry("Screen & System Audio Recording", .permissions, SettingsAnchor.permissions),
+            entry("System Audio Recording", .permissions, SettingsAnchor.permissions),
             entry("Audio Visualizers", .permissions, SettingsAnchor.permissions),
 
             entry("Shader Cache", .diagnostics, SettingsAnchor.diagnostics),
@@ -112,7 +115,7 @@ struct SettingsSearch {
             entry("Depth Map Generation", .plugins, SettingsAnchor.plugins),
 
             entry("Credits", .about, nil),
-        ]
+        ] + AppShortcut.all.map { entry($0.title, .general, SettingsAnchor.shortcuts) }
     }()
 
     /// The entries whose title (in the app's language, or in English) contains every word of

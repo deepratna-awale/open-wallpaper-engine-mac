@@ -113,7 +113,7 @@ class GlobalSettingsViewModel: ObservableObject {
     
     func didChangeAdjustMenuBarTint(_ newValue: Bool) {
         if newValue != true {
-            if let wallpaper = UserDefaults.app.url(forKey: "OSWallpaper") {
+            if DesktopSnapshotCache.mayChangeDesktopPicture, let wallpaper = UserDefaults.app.url(forKey: "OSWallpaper") {
                 try? NSWorkspace.shared.setDesktopImageURL(wallpaper, for: .main!)
             }
         } else {

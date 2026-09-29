@@ -149,7 +149,12 @@ class ContentViewModel: ObservableObject, DropDelegate {
 //    }
     
     /// Re-reads only the wallpapers that changed on disk.
-    private let library = InstalledLibraryCache()
+    private let library: InstalledLibraryCache = {
+        let cache = InstalledLibraryCache()
+        // Downloads and imports are prepared in the background for a warm first show.
+        cache.onArrival = { LibraryPreparationScheduler.shared.prepare($0) }
+        return cache
+    }()
     /// `sortedWallpapers` for the current update: the Installed tab reads it many times per redraw
     /// (grid, page count, pagination, selection). Cleared whenever this model changes, when
     /// favourites or stored filters and sorting change, and after the current main-queue turn, so a
@@ -463,11 +468,12 @@ class ContentViewModel: ObservableObject, DropDelegate {
                     return
                 }
                 DispatchQueue.main.async {
-                    try? FileManager.default.copyItem(
-                        at: url,
-                        to: FileManager.default.wallpapersDirectory
-                            .appending(path: url.lastPathComponent)
-                    )
+                    let destination = FileManager.default.wallpapersDirectory.appending(path: url.lastPathComponent)
+                    do {
+                        try ImportedFolderLinks.copyWithoutLinks(from: url, to: destination)
+                    } catch {
+                        OWELog.error(.importer, "Can't import dropped folder \(url.path): \(error)")
+                    }
                 }
             } else if wallpaper.isRegularFile, url.pathExtension.lowercased() == "zip" {
                 DispatchQueue.main.async {

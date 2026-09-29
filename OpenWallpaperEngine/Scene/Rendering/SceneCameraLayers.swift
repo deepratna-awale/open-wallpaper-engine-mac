@@ -138,7 +138,7 @@ final class SceneCameraLayers {
     }
 
     private let layers: [Layer]
-    private let transforms: SceneTransformHierarchy3D
+    private var transforms: SceneTransformHierarchy3D
 
     /// `transforms` holds every object's authored transform and parent (`SceneSpatialContent.transforms`).
     /// `seed` seeds the random queues; WE's differ on every load (MG1), so the default is random.
@@ -151,6 +151,11 @@ final class SceneCameraLayers {
     }
 
     var isEmpty: Bool { layers.isEmpty }
+
+    /// `ILayer.setParent`: a camera layer (or an ancestor) follows its new parent.
+    func setParent(_ id: String, to parent: String?, attachment: String?) {
+        transforms.setParent(id, to: parent, attachment: attachment)
+    }
 
     /// Plays every visible layer's paths, then returns the active layer's camera; nil when no
     /// camera layer is visible.

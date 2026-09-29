@@ -25,7 +25,7 @@ final class WallpaperServices {
         propertyService = SceneUserPropertyService(audioLevel: { capture.audioLevel })
     }
 
-    /// Starts capture if Screen Recording was granted since the last check. Never prompts, so it is
+    /// Starts capture if a capture permission was granted since the last check. Never prompts, so it is
     /// safe to call whenever the app activates or the Permissions page appears.
     @MainActor
     func recheckCapturePermission() {
@@ -75,6 +75,12 @@ final class WallpaperServices {
     }
 
     // MARK: - Audio
+
+    /// Holds system audio capture on while the lease lives (`AudioCaptureDemand`). Every consumer
+    /// of the level or spectrum takes one: capture is off while nothing holds one.
+    func acquireAudioCapture() -> AudioCaptureLease {
+        audioCapture.demand.acquire()
+    }
 
     var audioLevel: Double {
         if let level = propertyService.frameAudioLevel { return level }

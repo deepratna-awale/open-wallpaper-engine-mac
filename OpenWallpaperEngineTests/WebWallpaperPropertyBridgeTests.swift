@@ -68,3 +68,12 @@ final class WebWallpaperPropertyBridgeTests: XCTestCase {
         XCTAssertTrue(WebWallpaperPropertyBridge.bootstrapScript.contains("window.___wpxRAF"))
     }
 }
+
+final class WebPageScaleTests: XCTestCase {
+    /// Only an opted-in Retina display is overridden to 1; otherwise WebKit keeps the window's scale.
+    func testScaleFactorOverridesOnlyOptedInRetina() {
+        XCTAssertEqual(WebPageScale.scaleFactor(standardResolution: true, backingScale: 2), 1)
+        XCTAssertEqual(WebPageScale.scaleFactor(standardResolution: true, backingScale: 1), 0)
+        XCTAssertEqual(WebPageScale.scaleFactor(standardResolution: false, backingScale: 2), 0)
+    }
+}

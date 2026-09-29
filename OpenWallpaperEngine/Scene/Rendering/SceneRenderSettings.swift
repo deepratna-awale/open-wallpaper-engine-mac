@@ -21,6 +21,9 @@ struct SceneRenderSettings: Equatable {
     /// "Optimise textures" (`TexturePreparation`): colour images load as prepared BC7 textures.
     /// Off without settings, so a settings-less renderer draws the images as they are.
     var optimiseTextures = false
+    /// Large additive particle systems of a scene without depth draw into a half-resolution target
+    /// that is added back in their place: a quarter of their fragments, softer edges. Off by default.
+    var reducedResolutionParticles = false
     /// The scene target's pixels per display point.
     var renderResolution = GSRenderResolution.native
     /// Draw as WE does (`full`, what a settings-less renderer does) or no more than the display shows.
@@ -41,6 +44,7 @@ struct SceneRenderSettings: Equatable {
         sceneDetail = settings.sceneDetail
         antiAliasing = settings.antiAliasing
         optimiseTextures = settings.optimiseTextures
+        reducedResolutionParticles = settings.reducedResolutionParticles
     }
 
     /// The scene pass's sample count on `device`: the setting's, or the most below it the GPU

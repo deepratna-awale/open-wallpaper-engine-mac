@@ -1,11 +1,25 @@
 # Contributing
 
-Read [`docs/architecture.md`](docs/architecture.md) first. It explains the module layout and what goes where. This file holds the rules for changing the code. They exist because each of them was broken once and hid a real bug (see [`docs/progress-snapshot.md`](docs/progress-snapshot.md)).
+This is the one contributor guide; `.github/` links here. Read [`docs/architecture.md`](docs/architecture.md) first for the module layout. The goal is to run every Wallpaper Engine wallpaper except the `application` type, following WE's own behaviour ([`docs/roadmap.md`](docs/roadmap.md) has the order of work).
+
+## Quick start
+
+```sh
+git clone https://github.com/deepratna-awale/open-wallpaper-engine-mac.git
+cd open-wallpaper-engine-mac
+open OpenWallpaperEngine.xcodeproj        # Xcode 26.3 or newer, scheme OpenWallpaperEngine
+Scripts/fetch-we-assets.sh                # WE assets for scenes and the asset tests (see below)
+xcodebuild test -project OpenWallpaperEngine.xcodeproj -scheme OpenWallpaperEngine -destination 'platform=macOS'
+```
+
+- **Quick tests:** the command above. Asset-dependent tests skip without assets.
+- **Asset tests:** add `TEST_RUNNER_OWE_ASSETS=~/Library/Caches/owe-we-assets` (or any WE install).
+- **Slow tests:** add `TEST_RUNNER_OWE_SLOW_TESTS=1`. The [nightly workflow](.github/workflows/nightly.yml) runs them with the assets every night.
 
 ## Building
 
 - Open `OpenWallpaperEngine.xcodeproj`, scheme **OpenWallpaperEngine**, macOS 14+ (Xcode 26.3 or newer; CI and release use 26.3).
-- **Debug builds sign with *Apple Development*.** macOS ties the Screen Recording grant (needed for audio-reactive features) to the signature, and ad-hoc signing loses it on every rebuild.
+- **Debug builds sign with *Apple Development*.** macOS ties the audio-capture grant (System Audio Recording, or Screen Recording before macOS 14.2; needed for audio-reactive features) to the signature, and ad-hoc signing loses it on every rebuild.
   - If you aren't on the project's team, set your own team in *Signing & Capabilities* and don't commit that change.
 - **Shaders:** WE shaders are translated in process by the glslang and SPIRV-Cross libraries linked into the app (`Vendor/ShaderToolchain`). You don't need to install anything.
 - **WE assets:** none are in the repository or the app. The app reads them from a WE install the user chose, or from the cache Settings › Assets fills from the user's Steam copy (`<Wallpaper Storage>/.owe-assets`). For development, `Scripts/fetch-we-assets.sh` downloads them from Steam with the CI account (credentials in your login Keychain, see [docs/ci-assets.md](docs/ci-assets.md)), or `Scripts/fill-assets-cache.sh <WE install> <folder>` copies them from a WE install on disk.
@@ -29,7 +43,6 @@ There is **one type per file** unless the types are tiny and private to it. A fi
 1. **Implement WE's behaviour, not a look-alike.**
    - Don't add native approximations of WE effects, invented parameter names, or remapped ranges.
    - Don't add special cases keyed on a layer, effect, file or property *name* (`"cloud"`, `"clock"`, `"snow"`…). If a wallpaper renders wrong, find the missing general feature.
-   - The existing heuristics are listed in the progress snapshot (§B8) and are being removed.
 2. **Fail loudly.**
    - Don't use `try?` on file IO, decoding, shader translation or pipeline creation. Use `do/catch` and log the error once, with the wallpaper, layer, effect and reason.
    - `try?` is fine for genuinely optional lookups, and a comment should say so.
@@ -51,7 +64,7 @@ There is **one type per file** unless the types are tiny and private to it. A fi
 ## Debugging
 
 - Read the app's logs with `/usr/bin/log` (a shell `log` alias or function may shadow it), e.g. `/usr/bin/log show --last 10m --predicate 'process == "Open Wallpaper Engine"'`.
-- Shaders the translator rejects are written to `/tmp/owe-failed-shaders` for inspection.
+- Shaders the translator rejects are written to `~/Library/Caches/com.winddog.wallpaper-engine/FailedShaders` for inspection (an isolated copy uses `~/Library/Caches/Open Wallpaper Engine (isolated <tag>)/com.winddog.wallpaper-engine/FailedShaders`). The folder is readable only by you (`0700`, files `0600`).
 
 ## Tests
 
@@ -60,15 +73,28 @@ There is **one type per file** unless the types are tiny and private to it. A fi
 - **Known gaps** are asserted with `XCTExpectFailure("<snapshot id>: …")`. It's strict, so fixing a gap makes its test fail until you delete the expectation.
 - **Tests never touch the user's state.** The test host is the app, so under XCTest `AppStorageLocation` switches to the defaults suite `com.winddog.wallpaper-engine.isolated.tests`, `Open Wallpaper Engine (isolated tests)` under Application Support and Caches, and isolated keychain services. `AppStorageIsolationTests` guards this. Tests never read the user's assets either: the asset-dependent tests use `OWE_ASSETS=<assets folder or WE install>` (`TEST_RUNNER_OWE_ASSETS` through `xcodebuild`) and skip without it, as on CI. A test that needs them starts with `_ = try Fixtures.assets()`.
 - **Launch development copies isolated.** Every build shares the bundle id, so an agent or script that launches a copy of the app (screenshots, smoke runs) must set `OWE_ISOLATED_STATE=<tag>` in its environment or pass `-OWEIsolatedState <tag>`, e.g. `OWE_ISOLATED_STATE=shots "<build>/Open Wallpaper Engine.app/Contents/MacOS/Open Wallpaper Engine" -CustomWallpapersDirectory <library>`. Launch arguments (`-Key value`) still override defaults in the isolated suite. Never launch a dev copy against the real domain: it overwrites the user's playlists, per-screen wallpapers and safe-restart sentinel.
-- **Before pushing,** run `TEST_RUNNER_OWE_SLOW_TESTS=1 TEST_RUNNER_OWE_ASSETS=<assets folder> xcodebuild test -project OpenWallpaperEngine.xcodeproj -scheme OpenWallpaperEngine`, so the asset-dependent tests run too. With the fetched cache that's `Scripts/fetch-we-assets.sh && TEST_RUNNER_OWE_ASSETS=~/Library/Caches/owe-we-assets xcodebuild test …`. CI (`.github/workflows/ci.yml`) runs the suite twice: without assets for every PR, where they skip, and with assets fetched from Steam for pushes and same-repository PRs ([docs/ci-assets.md](docs/ci-assets.md)). Tests slower than about a minute skip unless `OWE_SLOW_TESTS=1`; the nightly workflow (`.github/workflows/nightly.yml`) runs them.
+- **Before pushing,** run `TEST_RUNNER_OWE_SLOW_TESTS=1 TEST_RUNNER_OWE_ASSETS=<assets folder> xcodebuild test -project OpenWallpaperEngine.xcodeproj -scheme OpenWallpaperEngine`, so the asset-dependent tests run too. With the fetched cache that's `Scripts/fetch-we-assets.sh && TEST_RUNNER_OWE_ASSETS=~/Library/Caches/owe-we-assets xcodebuild test …`. CI (`.github/workflows/ci.yml`) runs the suite without assets for every PR, where the asset tests skip. The asset tests run on CI only on `main` and nightly, with assets fetched from Steam and cached only as an encrypted archive whose key (`OWE_ASSET_CACHE_KEY`) lives in the `steam-ci` environment; a PR or fork can restore the file but can't read it ([docs/ci-assets.md](docs/ci-assets.md)), so run them locally with `OWE_ASSETS` before you open a PR. Tests slower than about a minute skip unless `OWE_SLOW_TESTS=1`; the nightly workflow (`.github/workflows/nightly.yml`) runs them.
 
 ## Commits and PRs
 
 - Use [Conventional Commits](https://www.conventionalcommits.org/): `fix:`, `feat:`, `perf:`, `refactor:`, `build:`, `docs:`, `test:`.
 - Keep commits small and single-purpose. File moves and renames go in their own commit with no logic changes, so review and `git log --follow` stay useful. Asset or vendor drops never share a commit with code.
-- The PR description says what changed, why, and how it was verified.
+- Branch from `main` as `<your-name>/<topic>` and open the PR against `main`.
+- Performance work goes in one PR per wallpaper type (scene, video, web), and an optimisation stays only if it measurably wins.
+- No per-wallpaper hacks: fixes must follow WE's behaviour for every wallpaper (rule 1).
+- The PR description says what changed, why, and how it was verified ([template](.github/pull_request_template.md)).
+
+## Reporting bugs
+
+Use the [issue templates](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/new/choose). A good report has the wallpaper's Workshop ID or link, its type, the macOS and Open Wallpaper Engine versions, and the logs from the time of the problem:
+
+```sh
+/usr/bin/log show --last 10m --predicate 'process == "Open Wallpaper Engine"' > owe.log
+```
+
+Security problems go privately through the repository's Security tab ([SECURITY.md](SECURITY.md)).
 
 ## Changing the project file
 
-- New files: once the project uses folder-synced groups (Phase 1), putting a file in the right folder is enough. Until then, add it through Xcode.
+- New files: the project uses folder-synced groups, so putting a file in the right folder is enough.
 - Never add Wallpaper Engine files to the repository, the app or `Tests/Fixtures`: tests get them from `OWE_ASSETS`, and fixtures are written for the project.

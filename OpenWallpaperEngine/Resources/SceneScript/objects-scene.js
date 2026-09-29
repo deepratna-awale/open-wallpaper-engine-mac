@@ -1,5 +1,5 @@
 'use strict';
-// SceneScript object model, part 5 of 5: `thisScene` (IScene), the layer registry in draw order,
+// SceneScript object model, part 6 of 6: `thisScene` (IScene), the layer registry in draw order,
 // `thisLayer`/`thisObject` for each script (`__rt.hooks.scope`), and the deferred structure changes.
 // Builds the scene's layers from the records SceneScriptObjectModel placed at install.
 (function (global) {

@@ -47,6 +47,33 @@ enum SettingsTab: Int, CaseIterable, Identifiable {
         }
     }
 
+    /// `title` in the language `identifier` names.
+    func title(in identifier: String) -> String {
+        var title = title
+        title.locale = Locale(identifier: identifier)
+        return String(localized: title)
+    }
+
+    /// The settings window's width at which every tab's toolbar item shows with no overflow
+    /// chevron, in the app's widest language, so switching languages never hides a tab. Each
+    /// item takes its label's width (at least the icon's) plus the toolbar's item padding.
+    static let toolbarFittingWidth: CGFloat = {
+        let font = NSFont.systemFont(ofSize: NSFont.smallSystemFontSize)
+        let languages = Bundle.main.localizations.filter { $0 != "Base" }
+        let widest = languages.map { language in
+            allCases.reduce(CGFloat(0)) { total, tab in
+                let label = (tab.title(in: language) as NSString).size(withAttributes: [.font: font]).width
+                return total + max(ceil(label), toolbarIconWidth) + toolbarItemPadding
+            }
+        }.max() ?? 0
+        return max(toolbarMinimumWidth, widest + toolbarMargins)
+    }()
+
+    private static let toolbarIconWidth: CGFloat = 32
+    private static let toolbarItemPadding: CGFloat = 24
+    private static let toolbarMargins: CGFloat = 60
+    private static let toolbarMinimumWidth: CGFloat = 720
+
     /// The global settings this tab shows, for "Restore Defaults" and the changed-from-default dots.
     /// A setting belongs to one tab. Settings stored outside `GlobalSettings` (Sparkle's, the
     /// plugins') are reset by `SettingsTabReset`.
@@ -69,7 +96,9 @@ enum SettingsTab: Int, CaseIterable, Identifiable {
                     SettingField(\.audioOutput), SettingField(\.reloadWhenChangingOutputDevice),
                     SettingField(\.mediaIntegration), SettingField(\.processPiority),
                     SettingField(\.pauseOnVRAMExhausted), SettingField(\.restartAfterCrashing),
-                    SettingField(\.optimiseTextures), SettingField(\.cheaperShadows)]
+                    SettingField(\.optimiseTextures), SettingField(\.cheaperShadows),
+                    SettingField(\.webStandardResolution),
+                    SettingField(\.reducedResolutionParticles)]
         case .diagnostics:
             return [SettingField(\.logLevel)]
         case .assets, .updates, .privacy, .permissions, .plugins, .about:

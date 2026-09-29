@@ -84,6 +84,12 @@ final class VideoTextureStream {
         appliedAudioRate = nil
     }
 
+    /// Whether a frame newer than the one last handed out is ready now (nothing is consumed): a
+    /// frame without one shows the same picture, so the renderer can skip it.
+    var hasNewFrame: Bool {
+        latestTexture == nil || output.hasNewPixelBuffer(forItemTime: output.itemTime(forHostTime: CACurrentMediaTime()))
+    }
+
     /// The frame for the current host time, or the previous one when no new frame is ready.
     func currentTexture() -> MTLTexture? {
         let itemTime = output.itemTime(forHostTime: CACurrentMediaTime())

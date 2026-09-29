@@ -39,6 +39,13 @@ extension SceneViewport {
     /// when it is on the view's display. On the main thread, like every draw.
     init(_ view: MTKView, drawableSize: SIMD2<Float>? = nil) {
         self.drawableSize = drawableSize ?? SIMD2(Float(view.drawableSize.width), Float(view.drawableSize.height))
+        // A view drawn on a render thread is read through its main-thread snapshot.
+        if let snapshot = SceneViewSnapshots.snapshot(of: view) {
+            pointSize = snapshot.pointSize
+            frameRateLimit = snapshot.frameRateLimit
+            cursor = snapshot.cursor(at: NSEvent.mouseLocation)
+            return
+        }
         pointSize = SIMD2(Float(view.bounds.width), Float(view.bounds.height))
         frameRateLimit = view.preferredFramesPerSecond
         cursor = nil

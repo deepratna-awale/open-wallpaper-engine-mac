@@ -116,19 +116,11 @@ class SceneWallpaperViewModel: ObservableObject {
     /// The loaded wallpaper's Workshop id, which bounds the zcompat fixes.
     private var loadedProjectId: String?
 
-    /// Decoded textures are identical for every screen showing the same wallpaper, so they live in
-    /// one process-wide cache. NSCache lets the system reclaim them under pressure rather than
-    /// holding a full decoded copy per display.
-    private final class TextureBox {
-        let source: SceneMetalTextureSource
-        init(_ source: SceneMetalTextureSource) { self.source = source }
-    }
-
-    private static let sharedTextureCache: NSCache<NSString, TextureBox> = {
-        let cache = NSCache<NSString, TextureBox>()
-        cache.countLimit = 512
-        return cache
-    }()
+    /// The textures decoded by the build in progress, so every layer, clone and effect that names
+    /// the same file shares one image (and the renderer one upload). Emptied when the build ends:
+    /// once the renderer uploaded them, the only copy of the pixels is on the GPU, and the next
+    /// build loads the files again. Guarded by `sceneLock`, which every build holds.
+    private var buildTextures: [String: SceneMetalTextureSource] = [:]
 
     /// Every screen showing the same wallpaper parses the identical PKG index and scene.json.
     /// PKGParser is immutable after init and WEScene is a value type, so both are safe to share.
@@ -157,11 +149,6 @@ class SceneWallpaperViewModel: ObservableObject {
         parseCache.removeAll()
     }
 
-    /// Forgets the decoded textures, so the next load reads them again (tests).
-    static func dropSharedTextures() {
-        sharedTextureCache.removeAllObjects()
-    }
-
     private static func storeParse(_ entry: ParsedScene, for directory: URL) {
         parseCacheLock.lock()
         defer { parseCacheLock.unlock() }
@@ -174,17 +161,24 @@ class SceneWallpaperViewModel: ObservableObject {
         parseCache[directory.path] = entry
     }
 
-    private func textureCacheKey(_ key: String) -> NSString {
-        "\(loadedWallpaperDirectory?.path ?? currentWallpaper.wallpaperDirectory.path)|\(key)" as NSString
-    }
-
     private func cachedTexture(_ key: String) -> SceneMetalTextureSource? {
-        Self.sharedTextureCache.object(forKey: textureCacheKey(key))?.source
+        sceneLock.lock()
+        defer { sceneLock.unlock() }
+        return buildTextures[key]
     }
 
     private func cacheTexture(_ source: SceneMetalTextureSource, for key: String) -> SceneMetalTextureSource {
-        Self.sharedTextureCache.setObject(TextureBox(source), forKey: textureCacheKey(key))
+        sceneLock.lock()
+        defer { sceneLock.unlock() }
+        buildTextures[key] = source
         return source
+    }
+
+    /// Ends a build: the content now holds the only CPU copies, which the renderer drops once uploaded.
+    private func endBuildTextures() {
+        sceneLock.lock()
+        defer { sceneLock.unlock() }
+        buildTextures.removeAll()
     }
     private var registeredFontNames: [String: String] = [:]
 
@@ -354,8 +348,11 @@ class SceneWallpaperViewModel: ObservableObject {
         } else if FileManager.default.fileExists(atPath: looseSceneURL.path(percentEncoded: false)) {
             // Loose files (no .pkg)
             do {
-                let data = try Data(contentsOf: looseSceneURL)
-                (read.scene, read.document) = try decodeScene(data, edits: request.edits)
+                if let data = try AssetPathResolver.data(sceneFile, in: dir) {
+                    (read.scene, read.document) = try decodeScene(data, edits: request.edits)
+                } else {
+                    Self.log("Loose \(sceneFile) is not a usable file inside the wallpaper folder")
+                }
             } catch {
                 Self.log("Failed to parse loose \(sceneFile): \(error)")
             }
@@ -474,22 +471,37 @@ class SceneWallpaperViewModel: ObservableObject {
 
     /// The user properties the content is built from: every `"user"` binding of the document
     /// except inside script sites (their scripts get the change through `applyUserProperties` and
-    /// the binding, docs/scenescript-plan.md WP8) and `scriptproperties`.
+    /// the binding, docs/scenescript-plan.md WP8), `scriptproperties`, and the object fields the
+    /// renderer re-resolves every frame (`SceneLiveBindingSites`), which a change reaches without a rebuild.
     static func contentUserProperties(in document: SceneJSON) -> Set<String> {
         var names = Set<String>()
-        func walk(_ value: SceneJSON) {
+        func walk(_ value: SceneJSON, liveSites: Bool = false) {
             switch value {
             case .object(let fields):
                 if case .string(let script)? = fields["script"], !script.isEmpty { return }
                 if let user = SceneScriptUserReference(fields["user"]) { names.insert(user.name) }
-                for (key, field) in fields where key != "scriptproperties" { walk(field) }
+                for (key, field) in fields where key != "scriptproperties" {
+                    if liveSites, SceneLiveBindingSites.isLive(key, of: fields) { continue }
+                    walk(field)
+                }
             case .array(let values):
-                values.forEach(walk)
+                values.forEach { walk($0) }
             default:
                 break
             }
         }
-        walk(document)
+        // Only the scene's own objects have live sites; everything else is walked as before.
+        guard case .object(let root) = document else {
+            walk(document)
+            return names
+        }
+        for (key, field) in root where key != "scriptproperties" {
+            if key == "objects", case .array(let objects) = field {
+                objects.forEach { walk($0, liveSites: true) }
+            } else {
+                walk(field)
+            }
+        }
         return names
     }
 
@@ -601,6 +613,7 @@ class SceneWallpaperViewModel: ObservableObject {
         }
         let signpost = OWESignpost.begin(OWESignpost.scene, "metalContent")
         defer { signpost.end() }
+        defer { endBuildTextures() }
         guard let authoredScene = loadedScene, let wallpaperDir = loadedWallpaperDirectory else { return nil }
         // Content is built from what the user properties say; a property change rebuilds it.
         let valueContext = userValueContext
@@ -683,8 +696,9 @@ class SceneWallpaperViewModel: ObservableObject {
             if !content.spatial.cameraPaths.isEmpty {
                 content.cameraFade = engineChain("WE's camera fade", wallpaperDir: wallpaperDir, SceneCameraFade.build)
             }
-            cachedContent = content
-            cachedContentRevision = revision
+            // Not kept: it holds every decoded image, which the renderer drops once uploaded. The
+            // instance asks again only after the revision changed, which rebuilds it anyway.
+            cachedContent = nil
             return content
         }
         guard let preview = loadPreviewImage(wallpaperDir: wallpaperDir) else { return nil }
@@ -781,23 +795,26 @@ class SceneWallpaperViewModel: ObservableObject {
         guard let loadedDocument else { return nil }
         let storeKey = propertyStoreKey
         let modelData = SceneScriptModelDataStore()
+        // Keyed on the install folder, not project.json (SceneScriptStorageKey); the key used before.
+        let previousKey = loadedProjectId ?? Self.localWallpaperID(wallpaperDir)
         return SceneScriptSceneContent(
-            wallpaperID: loadedProjectId ?? Self.localWallpaperID(wallpaperDir),
+            wallpaperID: SceneScriptStorageKey.key(forWallpaperDirectory: wallpaperDir),
             document: loadedDocument.document, documentSignature: loadedDocument.signature,
             project: loadedProject,
             userValues: { WallpaperServices.shared.userProperties(wallpaper: storeKey) },
             file: { [weak self] path in self?.scriptFile(path, wallpaperDir: wallpaperDir) },
             modelData: modelData,
+            legacyStorageID: SceneScriptStorageKey.legacyKeyToAdopt(previousKey: previousKey,
+                                                                    wallpaperDirectory: wallpaperDir),
             makeLayer: { [weak self] json in
                 self?.buildScriptLayer(json, wallpaperDir: wallpaperDir, sceneSize: sceneSize, modelData: modelData)
             })
     }
 
-    /// A stable id for a wallpaper without a Workshop id: its directory's hash (scripts' ids and
-    /// `localStorage` are keyed on it).
+    /// A stable id for a wallpaper without a Workshop id: its directory's hash (timelines are keyed
+    /// on it; `localStorage` uses `SceneScriptStorageKey`).
     static func localWallpaperID(_ directory: URL) -> String {
-        let digest = SHA256.hash(data: Data(directory.standardizedFileURL.path.utf8))
-        return "local-" + digest.prefix(8).map { String(format: "%02x", $0) }.joined()
+        SceneScriptStorageKey.localKey(forWallpaperDirectory: directory)
     }
 
     /// A file for the scripts (`createLayer` assets, texture animations). Called on a script
@@ -814,6 +831,7 @@ class SceneWallpaperViewModel: ObservableObject {
                                   modelData: SceneScriptModelDataStore) -> SceneScriptCreatedObject? {
         sceneLock.lock()
         defer { sceneLock.unlock() }
+        defer { endBuildTextures() }
         let object: WESceneObject
         do {
             let data = try JSONSerialization.data(withJSONObject: SceneJSON.object(json).foundationObject)
@@ -1107,7 +1125,7 @@ class SceneWallpaperViewModel: ObservableObject {
             translator: translator,
             readFile: { [weak self] path in self?.assetData(named: path, wallpaperDir: wallpaperDir) },
             loadTexture: { [weak self] name, path in self?.loadMetalTexture(named: name, materialDir: path, wallpaperDir: wallpaperDir) },
-            sceneEngineCombos: sceneEngineCombos)
+            sceneEngineCombos: sceneEngineCombos, blending: blendingOverride(for: object))
         do {
             return try builder.build(materialPath: materialPath, colorBlendMode: object.colorBlendMode,
                                      clampUVs: object.clampuvs, prelit: prelit)
@@ -1125,7 +1143,7 @@ class SceneWallpaperViewModel: ObservableObject {
             translator: translator,
             readFile: { [weak self] path in self?.assetData(named: path, wallpaperDir: wallpaperDir) },
             loadTexture: { [weak self] name, path in self?.loadMetalTexture(named: name, materialDir: path, wallpaperDir: wallpaperDir) },
-            sceneEngineCombos: sceneEngineCombos)
+            sceneEngineCombos: sceneEngineCombos, blending: blendingOverride(for: object))
         do {
             return try builder.buildBlendComposite(colorBlendMode: mode)
         } catch {
@@ -1361,7 +1379,14 @@ class SceneWallpaperViewModel: ObservableObject {
         }
         if let directory = loadedWallpaperDirectory {
             for candidate in [normalized, (normalized as NSString).lastPathComponent] {
-                if let data = try? Data(contentsOf: directory.appending(path: candidate)) {
+                let data: Data?
+                do {
+                    data = try AssetPathResolver.data(candidate, in: directory)
+                } catch {
+                    OWELog.error(.scene, "Failed to read font \(candidate): \(error)")
+                    continue
+                }
+                if let data {
                     assetDataCache[path] = data
                     return data
                 }
@@ -1472,6 +1497,18 @@ class SceneWallpaperViewModel: ObservableObject {
     /// This wallpaper's current value of a user property.
     func userProperty(_ name: String) -> String? {
         WallpaperServices.shared.userPropertyString(name, wallpaper: propertyStoreKey)
+    }
+
+    /// The Scene Inspector's blending for the object's material (`sceneObjectBlendingKey`); nil
+    /// when it has none, or one its kind of layer doesn't draw with, which keeps the material's.
+    private func blendingOverride(for object: WESceneObject) -> WEMaterialBlending? {
+        guard let objectID = object.id, let value = userProperty(sceneObjectBlendingKey(objectID: objectID)) else { return nil }
+        let supported = object.particle != nil ? WEMaterialBlending.particleSystem : WEMaterialBlending.imageLayer
+        guard let blending = WEMaterialBlending(authored: value), supported.contains(blending) else {
+            OWELog.error(.scene, "Object \(objectID) keeps its material's blending: \"\(value)\" isn't one it draws with")
+            return nil
+        }
+        return blending
     }
 
     private func isObjectVisible(_ object: WESceneObject) -> Bool {
@@ -1655,8 +1692,11 @@ class SceneWallpaperViewModel: ObservableObject {
                                           sceneSize: SIMD2<Float>, pixelUnits: Bool,
                                           wallpaperDir: URL) -> SceneMetalParticleSystem? {
         guard let materialPath = particleSystem.material,
-              let material: WEMaterial = loadJSON(path: materialPath, wallpaperDir: wallpaperDir),
+              var material: WEMaterial = loadJSON(path: materialPath, wallpaperDir: wallpaperDir),
               let textureName = material.passes?.first?.textures?.first ?? nil else { return nil }
+        // The object's blending is its own system's; the children it spawns keep their materials'.
+        let blending = particlePath == object.particle ? blendingOverride(for: object) : nil
+        if let blending { material.passes?[0].blending = blending.rawValue }
         guard let source = loadMetalTexture(named: textureName, materialDir: materialPath, wallpaperDir: wallpaperDir,
                                             colour: true) else {
             OWELog.error(.scene, "\(wallpaperDir.lastPathComponent): particle \(particlePath) (object \(object.id ?? -1)): "
@@ -1668,8 +1708,8 @@ class SceneWallpaperViewModel: ObservableObject {
 
         let particleRenderer = particleSystem.renderer?.first
         let materialPlan = buildParticleMaterial(materialPath, particleSystem: particleSystem, renderer: particleRenderer,
-                                                 source: source, spriteSheet: spriteSheet, object: object,
-                                                 wallpaperDir: wallpaperDir)
+                                                 source: source, spriteSheet: spriteSheet, blending: blending,
+                                                 object: object, wallpaperDir: wallpaperDir)
         var system = ParticleSystemBuilder.build(particlePath, particleSystem: particleSystem, object: object,
                                                  world: world, overrides: overrides, sceneSize: sceneSize,
                                                  source: source, spriteSheet: spriteSheet, material: material,
@@ -1679,6 +1719,12 @@ class SceneWallpaperViewModel: ObservableObject {
             assetData(named: $0, wallpaperDir: wallpaperDir)
         }
         system.fallbackSource = ParticleFallbackTexture.converted(source, format: albedo.flatMap(TEXImageFormat.init(texData:)))
+        // WE draws every renderer of the system from its one simulation, each through the material
+        // with that renderer's combos.
+        ParticleSystemBuilder.addRenderers(to: &system, particleSystem: particleSystem) { renderer in
+            buildParticleMaterial(materialPath, particleSystem: particleSystem, renderer: renderer, source: source,
+                                  spriteSheet: spriteSheet, blending: blending, object: object, wallpaperDir: wallpaperDir)
+        }
         return system
     }
 
@@ -1686,14 +1732,14 @@ class SceneWallpaperViewModel: ObservableObject {
     /// keeps the built-in particle draw.
     private func buildParticleMaterial(_ materialPath: String, particleSystem: WEParticleSystem,
                                        renderer: WEParticleRenderer?, source: SceneMetalTextureSource,
-                                       spriteSheet: SpriteSheet?, object: WESceneObject,
+                                       spriteSheet: SpriteSheet?, blending: WEMaterialBlending?, object: WESceneObject,
                                        wallpaperDir: URL) -> ParticleMaterialPlan? {
         guard let translator = effectTranslator else { return nil }
         let builder = ParticleMaterialPlanBuilder(
             translator: translator,
             readFile: { [weak self] path in self?.assetData(named: path, wallpaperDir: wallpaperDir) },
             loadTexture: { [weak self] name, path in self?.loadMetalTexture(named: name, materialDir: path, wallpaperDir: wallpaperDir) },
-            sceneEngineCombos: sceneEngineCombos)
+            sceneEngineCombos: sceneEngineCombos, blending: blending)
         do {
             return try builder.build(materialPath: materialPath, renderer: renderer, flags: particleSystem.flags ?? 0,
                                      baseTexture: source, spriteSheet: spriteSheet)
@@ -1759,10 +1805,14 @@ class SceneWallpaperViewModel: ObservableObject {
 
     /// A file of the wallpaper itself: its package, its folder, or a Workshop item it references.
     private func wallpaperData(named path: String, wallpaperDir: URL) -> Data? {
+        if let data = pkgParser?.extractFile(named: path) { return data }
         // A missing loose file is an ordinary miss: the next source is tried.
-        pkgParser?.extractFile(named: path)
-            ?? (try? Data(contentsOf: wallpaperDir.appending(path: path)))
-            ?? workshopAssets.data(for: path)
+        do {
+            if let data = try AssetPathResolver.data(path, in: wallpaperDir) { return data }
+        } catch {
+            OWELog.error(.scene, "Failed to read \(path) in \(wallpaperDir.path): \(error)")
+        }
+        return workshopAssets.data(for: path)
     }
 
     /// The project's Workshop id: `workshopid` in project.json, else a numeric folder name
@@ -1791,7 +1841,7 @@ class SceneWallpaperViewModel: ObservableObject {
         }
         guard let candidate = WallpaperEngineAssets.locate(relativePaths, in: assetsDirectories) else { return nil }
         do {
-            let data = try Data(contentsOf: candidate)
+            let data = try AssetPathResolver.readRegularFile(at: candidate)
             Self.logDetail("Using shared asset '\(candidate.path)'")
             return data
         } catch {

@@ -90,7 +90,7 @@ struct SceneTextEffects: Equatable {
         let shift = values.dropShadowOffset / atlasPerPixel
         var rgba = [UInt8](repeating: 0, count: width * height * 4)
         func atlasDistance(_ x: Float, _ y: Float) -> Float {
-            let ix = min(max(Int(x.rounded()), 0), width - 1), iy = min(max(Int(y.rounded()), 0), height - 1)
+            let ix = Int(saturating: x.rounded(), in: 0...max(width - 1, 0)), iy = Int(saturating: y.rounded(), in: 0...max(height - 1, 0))
             let d = distances[iy * width + ix] * atlasPerPixel
             return min(max(d, -Self.distanceRange / 2), Self.distanceRange / 2)
         }

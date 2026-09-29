@@ -67,7 +67,8 @@ final class ShaderVariantTranslator {
     private let lock = NSLock()
     private var memory: [String: TranslatedShaderVariant] = [:]
 
-    static let defaultFailureDirectory = URL(fileURLWithPath: "/tmp/owe-failed-shaders", isDirectory: true)
+    /// `FailedShaderDump.defaultDirectory`: a folder in the user's Caches only they can read.
+    static var defaultFailureDirectory: URL { FailedShaderDump.defaultDirectory }
 
     init(compiler: ShaderCompiler, cacheDirectory: URL? = ShaderVariantTranslator.defaultCacheDirectory,
          failureDirectory: URL? = ShaderVariantTranslator.defaultFailureDirectory) {
@@ -254,14 +255,13 @@ final class ShaderVariantTranslator {
         guard let failureDirectory else { return }
         let suffix = "." + source.stage.rawValue
         let name = source.path.replacingOccurrences(of: "/", with: "_") + (source.path.hasSuffix(suffix) ? "" : suffix)
-        let url = failureDirectory.appending(path: name)
         let trailer = "\(error)".split(separator: "\n").map { "// \($0)" }.joined(separator: "\n")
         do {
-            try FileManager.default.createDirectory(at: failureDirectory, withIntermediateDirectories: true)
-            try (text + (text.hasSuffix("\n") ? "" : "\n") + trailer + "\n").write(to: url, atomically: true, encoding: .utf8)
+            let url = try FailedShaderDump(directory: failureDirectory)
+                .write(text + (text.hasSuffix("\n") ? "" : "\n") + trailer + "\n", named: name)
             OWELog.error(.shader, "Shader \(source.path) failed to translate; its source is at \(url.path)")
         } catch {
-            OWELog.error(.shader, "Could not write the failed shader \(url.path): \(error)")
+            OWELog.error(.shader, "Could not write the failed shader \(name) to \(failureDirectory.path): \(error)")
         }
     }
 

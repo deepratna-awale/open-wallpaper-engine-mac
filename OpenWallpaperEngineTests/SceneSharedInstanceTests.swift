@@ -116,26 +116,29 @@ final class SceneSharedInstanceTests: XCTestCase {
         XCTAssertEqual(made, 1)
         XCTAssertEqual(instance.displayCount, 2)
         let renderer = try XCTUnwrap(instance.renderer)
-        leftView.isPaused = true
-        rightView.isPaused = true
+        // The renderer lives on the instance's render thread: the test reaches it there.
+        let thread = instance.renderLoop.thread
 
         let deadline = Date().addingTimeInterval(30)
-        while (!renderer.hasContent || renderer.scripts.wallpaper == nil), Date() < deadline {
+        while !thread.sync({ renderer.hasContent && renderer.scripts.wallpaper != nil }), Date() < deadline {
             RunLoop.main.run(until: Date().addingTimeInterval(0.01))
         }
-        let runtime = try XCTUnwrap(renderer.scripts.wallpaper, "the scene's scripts run")
+        let runtime = try XCTUnwrap(thread.sync { renderer.scripts.wallpaper }, "the scene's scripts run")
         var renders = 0
-        renderer.frameTimeObserver = { _ in renders += 1 }
+        thread.sync { renderer.frameTimeObserver = { _ in renders += 1 } }
         let framesBefore = runtime.frameTiming.frames
+        let loop = instance.renderLoop
         for _ in 0..<5 {
-            instance.draw(left, in: leftView)
-            instance.draw(right, in: rightView)
-            renderer.lastPresentCommandBuffer?.waitUntilCompleted()
+            thread.sync {
+                loop.draw(ObjectIdentifier(left), in: leftView)
+                loop.draw(ObjectIdentifier(right), in: rightView)
+                renderer.lastPresentCommandBuffer?.waitUntilCompleted()
+            }
             runtime.waitUntilIdle()
         }
-        XCTAssertEqual(renders, 5, "the driving display renders; the other presents")
+        XCTAssertEqual(thread.sync { renders }, 5, "the driving display renders; the other presents")
         XCTAssertEqual(runtime.frameTiming.frames - framesBefore, 5, "one script frame per frame")
-        XCTAssertIdentical(renderer.scripts.wallpaper, runtime, "one runtime for both displays")
+        XCTAssertIdentical(thread.sync { renderer.scripts.wallpaper }, runtime, "one runtime for both displays")
     }
 
     /// The AVKit path: two displays of one video share its player, so its sound plays once.

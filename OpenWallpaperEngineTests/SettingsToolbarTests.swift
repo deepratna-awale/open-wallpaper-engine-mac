@@ -29,4 +29,11 @@ final class SettingsToolbarTests: XCTestCase {
         XCTAssertTrue(SettingsSearch.results(for: "   ").isEmpty)
         XCTAssertTrue(SettingsSearch.results(for: "zzzz-no-such-setting").isEmpty)
     }
+
+    /// A shortcut's name finds the Keyboard Shortcuts section, which opens for it.
+    func testSearchFindsAShortcut() {
+        let results = SettingsSearch.results(for: "import wallpaper from folder", locale: Locale(identifier: "en"))
+        XCTAssertEqual(results.first?.tab, .general)
+        XCTAssertEqual(results.first?.anchor, SettingsAnchor.shortcuts)
+    }
 }

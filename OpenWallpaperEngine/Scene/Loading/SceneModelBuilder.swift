@@ -74,7 +74,8 @@ struct SceneModelBuilder {
             guard let material = cache[key] ?? nil else { continue }
             meshes.append(SceneModelPlan.Mesh(index: index, material: material, format: mesh.format,
                                               vertexData: mesh.vertexData, indexData: mesh.indexData,
-                                              usesUInt32Indices: mesh.usesUInt32Indices, indexCount: mesh.indexCount))
+                                              usesUInt32Indices: mesh.usesUInt32Indices, indexCount: mesh.indexCount,
+                                              bounds: key.combos.skinning || key.combos.morphing ? nil : mesh.bounds))
         }
         guard !meshes.isEmpty else {
             OWELog.error(.scene, "\(wallpaperName): model \(path) has no mesh that draws")

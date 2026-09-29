@@ -72,7 +72,11 @@ struct SceneShaderCompat {
               let file = entry.files.first(where: { $0.caseInsensitiveCompare(fileName) == .orderedSame }) else { return nil }
         let url = entry.directory.appending(path: file)
         do {
-            return try Data(contentsOf: url)
+            guard let data = try AssetPathResolver.data(file, in: entry.directory) else {
+                OWELog.error(.scene, "zcompat shader \(url.path) is not a usable file in its entry")
+                return nil
+            }
+            return data
         } catch {
             OWELog.error(.scene, "Failed to read zcompat shader \(url.path): \(error)")
             return nil

@@ -23,57 +23,71 @@ struct WebWallpaperView: NSViewRepresentable {
     }
 
     func makeNSView(context: Context) -> WKWebView {
-        let configuration = WKWebViewConfiguration()
-        Self.enableFileAccess(on: configuration)
-        configuration.allowsAirPlayForMediaPlayback = true
-        configuration.mediaTypesRequiringUserActionForPlayback = []
+        let configuration = Self.makeConfiguration()
         viewModel.installBridge(on: configuration.userContentController)
         configuration.setURLSchemeHandler(viewModel.schemeHandler, forURLScheme: WebWallpaperSchemeHandler.scheme)
         viewModel.renderWatchdog = wallpaperViewModel.renderWatchdog
+        // The related page only lends its process; this page's configuration stays its own.
+        let pageURL = Self.pageURL(of: viewModel.currentWallpaper)
+        wallpaperViewModel.webProcessGroup.relate(configuration, to: pageURL)
 
         let nsView = WKWebView(frame: .zero, configuration: configuration)
+        wallpaperViewModel.webProcessGroup.register(nsView, for: pageURL)
         nsView.navigationDelegate = viewModel
         viewModel.webView = nsView
+        viewModel.applySchedulingPolicy()
         Self.loadWallpaper(nsView, viewModel: viewModel)
         return nsView
     }
 
-    /// Load wallpaper — uses loadHTMLString for URL-based wallpapers (YouTube/Vimeo)
-    /// so the origin isn't file://, or loadFileURL for local wallpapers.
-    private static func loadWallpaper(_ webView: WKWebView, viewModel: WebWallpaperViewModel) {
-        viewModel.pageWillLoad()
-        let fileUrl = viewModel.fileUrl
-        // Check if the HTML contains a redirect/embed to an external URL
-        if let html = try? String(contentsOf: fileUrl, encoding: .utf8),
-           html.contains("youtube.com") || html.contains("vimeo.com") {
-            // Load as HTML string with https origin so YouTube/Vimeo embeds work
-            webView.loadHTMLString(html, baseURL: URL(string: "https://localhost"))
-        } else if let patches = viewModel.compatPatches,
-                  let url = WebWallpaperSchemeHandler.url(forRelativePath: viewModel.currentWallpaper.project.file) {
-            OWELog.info(.web, "Serving \(viewModel.currentWallpaper.project.title) with WE's compatibility patches")
-            viewModel.schemeHandler.directory = viewModel.readAccessURL
-            viewModel.schemeHandler.patches = patches
-            webView.load(URLRequest(url: url))
-        } else {
-            webView.loadFileURL(fileUrl, allowingReadAccessTo: viewModel.readAccessURL)
-        }
+    static func pageURL(of wallpaper: WEWallpaper) -> URL {
+        wallpaper.wallpaperDirectory.appending(path: wallpaper.project.file)
     }
 
-    /// Enable file:// cross-origin access for WebGL wallpapers.
-    /// Tries multiple private WebKit key variants, catching ObjC exceptions for each.
-    private static func enableFileAccess(on configuration: WKWebViewConfiguration) {
-        let prefs = configuration.preferences
+    /// The page's configuration before the wallpaper's own parts are added. Local files are
+    /// served by `WebWallpaperSchemeHandler`, so no file-URL access preference is changed.
+    static func makeConfiguration() -> WKWebViewConfiguration {
+        let configuration = WKWebViewConfiguration()
+        configuration.allowsAirPlayForMediaPlayback = true
+        configuration.mediaTypesRequiringUserActionForPlayback = []
+        return configuration
+    }
 
-        // Key variants across macOS versions
-        let fileAccessKeys = ["allowFileAccessFromFileURLs", "_allowFileAccessFromFileURLs"]
-        let universalAccessKeys = ["allowUniversalAccessFromFileURLs", "_allowUniversalAccessFromFileURLs"]
+    /// How a wallpaper's page is loaded.
+    enum PageLoad: Equatable {
+        /// A page embedding a remote player (YouTube/Vimeo), loaded as a string with an https
+        /// origin so the embed accepts it.
+        case remoteEmbed(html: String)
+        /// A local page, served from the wallpaper folder by `WebWallpaperSchemeHandler`.
+        case scheme(URL)
+    }
 
-        for key in fileAccessKeys {
-            if ObjCExceptionCatcher.performSafe({ prefs.setValue(true, forKey: key) }) { break }
+    static func pageLoad(pageFile: URL, relativePath: String) -> PageLoad? {
+        // A page that can't be read here is still requested, and the handler answers it with a 404.
+        if let html = try? String(contentsOf: pageFile, encoding: .utf8),
+           html.contains("youtube.com") || html.contains("vimeo.com") {
+            return .remoteEmbed(html: html)
         }
+        return WebWallpaperSchemeHandler.url(forRelativePath: relativePath).map(PageLoad.scheme)
+    }
 
-        for key in universalAccessKeys {
-            if ObjCExceptionCatcher.performSafe({ prefs.setValue(true, forKey: key) }) { break }
+    private static func loadWallpaper(_ webView: WKWebView, viewModel: WebWallpaperViewModel) {
+        viewModel.pageWillLoad()
+        let wallpaper = viewModel.currentWallpaper
+        switch pageLoad(pageFile: viewModel.fileUrl, relativePath: wallpaper.project.file) {
+        case .remoteEmbed(let html):
+            viewModel.schemeHandler.directory = nil
+            webView.loadHTMLString(html, baseURL: URL(string: "https://localhost"))
+        case .scheme(let url):
+            let patches = viewModel.compatPatches
+            if patches != nil {
+                OWELog.info(.web, "Serving \(wallpaper.project.title) with WE's compatibility patches")
+            }
+            viewModel.schemeHandler.directory = viewModel.readAccessURL
+            viewModel.schemeHandler.patches = patches ?? WebCompatPatches(actions: [])
+            webView.load(URLRequest(url: url))
+        case nil:
+            OWELog.error(.web, "Can't load web wallpaper \(wallpaper.project.title): invalid page path \(wallpaper.project.file)")
         }
     }
 
@@ -83,10 +97,14 @@ struct WebWallpaperView: NSViewRepresentable {
 
         if selectedWallpaper.wallpaperDirectory.appending(path: selectedWallpaper.project.file) != currentWallpaper.wallpaperDirectory.appending(path: currentWallpaper.project.file) {
             viewModel.currentWallpaper = selectedWallpaper
+            // The process was chosen at creation; only later pages of the new wallpaper join this one.
+            wallpaperViewModel.webProcessGroup.register(nsView, for: Self.pageURL(of: selectedWallpaper))
             viewModel.stopAudio()
             Self.loadWallpaper(nsView, viewModel: viewModel)
         }
         applyPlacement(wallpaperViewModel.wallpaperPlacement, to: nsView)
+        WebPageScale.apply(standardResolution: AppDelegate.shared.globalSettingsViewModel.settings.webStandardResolution,
+                           to: nsView)
         // A page per display, so only the one on the wallpaper's audible display plays sound. The
         // playback rules pause each display's page on its own, and silence the wallpaper only when
         // every display showing it is muted, paused or stopped.
@@ -108,5 +126,26 @@ struct WebWallpaperView: NSViewRepresentable {
         }
         let javascript = "document.documentElement.style.width='100%';document.documentElement.style.height='100%';document.body.style.margin='0';document.body.style.width='100%';document.body.style.height='100%';document.querySelectorAll('video,img,canvas').forEach(function(element){element.style.width='100%';element.style.height='100%';element.style.objectFit='\(objectFit)';});"
         webView.evaluateJavaScript(javascript, completionHandler: nil)
+    }
+}
+
+/// "Render web wallpapers at standard resolution": on a Retina display the page renders with a
+/// device scale factor of 1, so a page that sizes its canvas by `devicePixelRatio` draws a quarter
+/// of the pixels. WebKit's `_overrideDeviceScaleFactor` (0 = the window's own) has no public
+/// equivalent; where it is missing the page keeps its full resolution.
+enum WebPageScale {
+    private static let setOverride = NSSelectorFromString("_setOverrideDeviceScaleFactor:")
+
+    static func scaleFactor(standardResolution: Bool, backingScale: CGFloat) -> CGFloat {
+        standardResolution && backingScale > 1 ? 1 : 0
+    }
+
+    static func apply(standardResolution: Bool, to webView: WKWebView) {
+        let backingScale = webView.window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 1
+        let factor = scaleFactor(standardResolution: standardResolution, backingScale: backingScale)
+        guard webView.responds(to: setOverride), let method = webView.method(for: setOverride) else { return }
+        typealias SetOverride = @convention(c) (AnyObject, Selector, CGFloat) -> Void
+        if (webView.value(forKey: "_overrideDeviceScaleFactor") as? CGFloat) == factor { return }
+        unsafeBitCast(method, to: SetOverride.self)(webView, setOverride, factor)
     }
 }

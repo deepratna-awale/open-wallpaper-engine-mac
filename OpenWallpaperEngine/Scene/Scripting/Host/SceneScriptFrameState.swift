@@ -161,6 +161,9 @@ enum SceneScriptRenderEvent {
     case create(id: Int, object: [String: SceneJSON])
     /// `thisScene.destroyLayer`: stop drawing it and free its GPU state after the frame.
     case destroy(id: Int)
+    /// `ILayer.setParent`: object `id` now hangs from `parentID` (nil: a root), from the parent's
+    /// attachment named `attachment` when set.
+    case setParent(id: Int, parentID: Int?, attachment: String?)
     /// `IParticleSystem.emitParticles(count)`.
     case emit(id: Int, count: Int?)
     /// `ISoundLayer.play()`, `pause()`, `stop()`.

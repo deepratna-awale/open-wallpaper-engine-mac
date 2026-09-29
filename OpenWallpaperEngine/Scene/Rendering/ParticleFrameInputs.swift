@@ -245,7 +245,9 @@ struct ParticleFrameInputs {
         // The particle budget thins the system as the `count` override does: its maximum, and
         // through the count its emitters' rates.
         overrides.count *= configuration.budgetScale
-        maximum = max(Int((Float(configuration.maximumParticleCount) * overrides.count).rounded()), 0)
+        // Saturating: a huge or non-finite override stays a bound instead of stopping the process.
+        maximum = Int(saturating: (Float(configuration.maximumParticleCount) * overrides.count).rounded(),
+                      in: 0...Int(UInt32.max))
         // Negative multipliers would invert the ranges; WE treats them as 0.
         spawnScale = SIMD4(overrides.size, max(overrides.alpha, 0), max(overrides.lifetime, 0), overrides.speed)
         colorScale = overrides.tint * overrides.brightness

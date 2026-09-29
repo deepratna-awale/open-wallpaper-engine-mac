@@ -1,5 +1,5 @@
 'use strict';
-// SceneScript object model, part 4 of 5: `ILayer` and its kinds as live classes over the object
+// SceneScript object model, part 4 of 6: `ILayer` and its kinds as live classes over the object
 // table. `ILayer` is the union of every kind (lib.sceneScript.d.ts), so every layer has every
 // member; one that does not apply to the layer's kind is inert. Numeric members are generated from
 // SceneScriptObjectField's list; strings live on the object and reach the renderer as commands.
@@ -212,14 +212,12 @@
         });
     }
 
-    // Members WE has that need engine features this app lacks yet (runtime parenting, object-space
-    // rotation, video textures). A puppet image's animation layers, bones, bone physics, blend
-    // shapes and attachments are below.
+    // A member WE has that needs an engine feature this app lacks yet: an image layer's video
+    // texture plays as its poster frame only, so there is no playback for `IVideoTexture` to
+    // control. A puppet image's animation layers, bones, bone physics, blend shapes and
+    // attachments are below; parenting and orientation are in objects-transforms.js.
     const none = function () { return null; };
     const P = Layer.prototype;
-    [['rotateObjectSpace'], ['lookAt'], ['lookAtYaw'], ['setParent']]
-        .forEach(function (s) { objects.stub(P, 'ILayer', s[0], s[1]); });
-    objects.stub(P, 'IEffectLayer', 'transformAttachmentToTexture', function () { return objects.mat3(); });
     objects.stub(P, 'IImageLayer', 'getVideoTexture', none);
 
     // MARK: puppet and model rigs (docs/models-plan.md §2.8, §4.3 P2 and M6)
@@ -719,6 +717,11 @@
         if (attachment === undefined || attachment.bone >= rigOf(layer).bones.length) return undefined;
         return multiply(rigMatrix(rigOf(layer), attachment.bone, RL.boneWorld), attachment.matrix);
     }
+    // For objects-transforms.js: a layer's rig, and an attachment's world matrix (undefined when
+    // the layer has no such attachment).
+    objects.rigOf = rigOf;
+    objects.attachmentWorld = attachmentMatrix;
+    objects.multiplyMat4 = multiply;
     objects.defineMethod(P, 'getAttachmentIndex', function (name) {
         const rig = rigOf(this);
         if (!rig) return -1;

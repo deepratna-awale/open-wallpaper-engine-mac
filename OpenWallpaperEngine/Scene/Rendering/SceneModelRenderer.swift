@@ -56,8 +56,20 @@ final class SceneModelRenderer: SceneModelDrawing {
     private var replacedPlans: [ObjectIdentifier: SceneModelPlan] = [:]
 
     struct MeshBuffers {
+        /// The positions when the mesh's vertices are split (`SceneModelVertexStreams`), else the
+        /// interleaved vertices.
         let vertices: MTLBuffer
+        /// The other attributes of split vertices; nil when they are one stream.
+        var attributes: MTLBuffer? = nil
         let indices: MTLBuffer
+
+        var allocatedSize: Int { vertices.allocatedSize + (attributes?.allocatedSize ?? 0) + indices.allocatedSize }
+
+        /// Binds the vertex streams the mesh's pipelines read (`vertexDescriptor`).
+        func bindVertices(to encoder: MTLRenderCommandEncoder) {
+            encoder.setVertexBuffer(vertices, offset: 0, index: SceneModelRenderer.meshBuffer)
+            if let attributes { encoder.setVertexBuffer(attributes, offset: 0, index: SceneModelRenderer.meshAttributesBuffer) }
+        }
     }
 
     /// The layers whose image the content's models sample (`SceneModelDraw.layerComposite`).
@@ -80,7 +92,7 @@ final class SceneModelRenderer: SceneModelDrawing {
     /// Bytes of the meshes' buffers (diagnostics).
     var allocatedBytes: Int {
         buffers.values.reduce(0) { total, meshes in
-            meshes.reduce(total) { $0 + ($1.map { $0.vertices.allocatedSize + $0.indices.allocatedSize } ?? 0) }
+            meshes.reduce(total) { $0 + ($1.map { $0.allocatedSize } ?? 0) }
         }
     }
 
@@ -159,7 +171,8 @@ final class SceneModelRenderer: SceneModelDrawing {
         let plan = currentPlan(authored, objectID: model.id)
         // WE poses a visible model every frame, culled or not (0x14021c480).
         let bones = advance(model, plan: plan, frame: draw.frame, values: draw.values)
-        guard frustum(draw.camera.viewProjection).contains(SceneModelCulling.Sphere(plan.bounds, world: draw.world)) else {
+        let viewFrustum = frustum(draw.camera.viewProjection)
+        guard viewFrustum.contains(SceneModelCulling.Sphere(plan.bounds, world: draw.world)) else {
             modelsCulled += 1
             culledModels.insert(model.id)
             return
@@ -170,6 +183,8 @@ final class SceneModelRenderer: SceneModelDrawing {
         let placement = draw.placement
         var drew = false
         for (index, mesh) in plan.meshes.enumerated() {
+            // A mesh wholly outside the view draws nothing (its triangles are all clipped).
+            if let bounds = mesh.bounds, !viewFrustum.contains(SceneModelCulling.Sphere(bounds, world: draw.world)) { continue }
             guard let buffers = meshBuffers[index], mesh.material.pass.variant != nil,
                   let pipeline = pipeline(for: mesh, pixelFormat: draw.pixelFormat, sampleCount: draw.sampleCount,
                                           depthFormat: depthFormat),
@@ -201,7 +216,7 @@ final class SceneModelRenderer: SceneModelDrawing {
             }
             // The planar reflection's mirror flips every triangle's winding (WE flips its cull mode).
             encoder.setFrontFacing(draw.mirrored ? .clockwise : Self.frontFacing)
-            encoder.setVertexBuffer(buffers.vertices, offset: 0, index: Self.meshBuffer)
+            buffers.bindVertices(to: encoder)
             encoder.setVertexBuffer(zeroAttributes, offset: 0, index: EffectGraphRenderer.zeroBuffer)
             for entry in bound {
                 encoder.setFragmentTexture(entry.texture, index: entry.slot)
@@ -337,9 +352,9 @@ final class SceneModelRenderer: SceneModelDrawing {
         let key = ObjectIdentifier(plan)
         if let source = plan.geometry { refreshGeometry(plan, from: source) }
         if let existing = buffers[key] { return existing }
-        let made = plan.meshes.map { mesh -> MeshBuffers? in
-            makeBuffers(mesh, of: plan, vertices: mesh.vertexData, indices: mesh.indexData, indexCount: mesh.indexCount)
-        }
+        // Made on the content's background load already (`SceneModelPlan.upload`); only a plan
+        // that load didn't see (a script's) uploads here.
+        let made = plan.upload(device: device)
         buffers[key] = made
         return made
     }
@@ -367,8 +382,8 @@ final class SceneModelRenderer: SceneModelDrawing {
 
     /// A mesh's buffers. A script's model data may index past its vertices (`createModelData`
     /// takes any index, `applyData` may shrink the vertices under them), and Metal doesn't define
-    /// such a fetch; D3D11, WE's API, reads zeros there, so the vertices are padded with zeros up
-    /// to the largest index drawn.
+    /// such a fetch; D3D11, WE's API, reads zeros there, so such indices name one zero vertex
+    /// added after the vertices (`makeMeshBuffers`).
     private func makeBuffers(_ mesh: SceneModelPlan.Mesh, of plan: SceneModelPlan, vertices: Data, indices: Data,
                              indexCount: Int) -> MeshBuffers? {
         guard !vertices.isEmpty, !indices.isEmpty else { return nil }
@@ -380,14 +395,76 @@ final class SceneModelRenderer: SceneModelDrawing {
             largest = Self.largestIndex(indices, uint32: mesh.usesUInt32Indices, count: indexCount)
             largestIndices[key, default: [:]][mesh.index] = (indices, indexCount, largest)
         }
-        let stride = mesh.format.stride
-        let needed = stride > 0 ? (largest.map { ($0 + 1) * stride } ?? 0) : 0
-        var padded = vertices
-        if needed > padded.count { padded.append(Data(count: needed - padded.count)) }
-        guard let vertexBuffer = padded.withUnsafeBytes({ device.makeBuffer(bytes: $0.baseAddress!, length: $0.count) }),
-              let indexBuffer = indices.withUnsafeBytes({ device.makeBuffer(bytes: $0.baseAddress!, length: $0.count) })
+        return Self.makeMeshBuffers(device: device, format: mesh.format, vertices: vertices, indices: indices,
+                                    uint32: mesh.usesUInt32Indices, largest: largest)
+    }
+
+    /// A mesh's buffers from its bytes, indices past the vertices sent to one zero vertex
+    /// (`makeBuffers`). Any thread.
+    static func makeMeshBuffers(device: MTLDevice, format: MDLVertexFormat, vertices: Data, indices: Data, uint32: Bool,
+                                indexCount: Int) -> MeshBuffers? {
+        guard !vertices.isEmpty, !indices.isEmpty else { return nil }
+        return makeMeshBuffers(device: device, format: format, vertices: vertices, indices: indices, uint32: uint32,
+                               largest: largestIndex(indices, uint32: uint32, count: indexCount))
+    }
+
+    private static func makeMeshBuffers(device: MTLDevice, format: MDLVertexFormat, vertices: Data, indices: Data,
+                                        uint32: Bool, largest: Int?) -> MeshBuffers? {
+        let stride = format.stride
+        let vertexCount = stride > 0 ? vertices.count / stride : 0
+        // Indices past the vertices are sent to one zero vertex right after them, so the buffer
+        // grows by one vertex whatever the indices say.
+        let outOfRange = stride > 0 && (largest.map { $0 >= vertexCount } ?? false)
+        var indices = indices
+        if outOfRange {
+            OWELog.debug(.scene, "Model mesh indexes up to \(largest ?? 0) with \(vertexCount) vertices; "
+                         + "indices past them read a zero vertex")
+            indices = clampedIndices(indices, uint32: uint32, to: vertexCount)
+        }
+        let zeroFrom = outOfRange ? vertexCount * stride : vertices.count
+        let length = outOfRange ? max(vertices.count, (vertexCount + 1) * stride) : vertices.count
+        guard let indexBuffer = indices.withUnsafeBytes({ device.makeBuffer(bytes: $0.baseAddress!, length: $0.count) })
         else { return nil }
+        if let streams = SceneModelVertexStreams(format), stride > 0 {
+            var padded = vertices.prefix(zeroFrom)
+            if length > padded.count { padded.append(Data(count: length - padded.count)) }
+            let count = padded.count / stride
+            guard count > 0, let positions = device.makeBuffer(length: count * streams.positionStride),
+                  let attributes = device.makeBuffer(length: count * streams.attributeStride) else { return nil }
+            padded.withUnsafeBytes { streams.split($0, positions: positions.contents(), attributes: attributes.contents()) }
+            return MeshBuffers(vertices: positions, attributes: attributes, indices: indexBuffer)
+        }
+        guard let vertexBuffer = device.makeBuffer(length: length, options: .storageModeShared) else { return nil }
+        // Only the vertices are copied; the padding is cleared explicitly (Metal doesn't document zero-filled buffers).
+        vertices.prefix(zeroFrom).withUnsafeBytes {
+            guard let base = $0.baseAddress else { return }
+            vertexBuffer.contents().copyMemory(from: base, byteCount: $0.count)
+        }
+        if length > zeroFrom {
+            (vertexBuffer.contents() + zeroFrom).initializeMemory(as: UInt8.self, repeating: 0, count: length - zeroFrom)
+        }
         return MeshBuffers(vertices: vertexBuffer, indices: indexBuffer)
+    }
+
+    /// `indices` with every value of `vertexCount` or more replaced by `vertexCount`.
+    static func clampedIndices(_ indices: Data, uint32: Bool, to vertexCount: Int) -> Data {
+        var clamped = indices
+        clamped.withUnsafeMutableBytes { raw in
+            if uint32 {
+                let limit = UInt32(clamping: vertexCount)
+                for offset in Swift.stride(from: 0, to: raw.count - 3, by: 4) {
+                    let value = UInt32(littleEndian: raw.loadUnaligned(fromByteOffset: offset, as: UInt32.self))
+                    if value > limit { raw.storeBytes(of: limit.littleEndian, toByteOffset: offset, as: UInt32.self) }
+                }
+            } else {
+                let limit = UInt16(clamping: vertexCount)
+                for offset in Swift.stride(from: 0, to: raw.count - 1, by: 2) {
+                    let value = UInt16(littleEndian: raw.loadUnaligned(fromByteOffset: offset, as: UInt16.self))
+                    if value > limit { raw.storeBytes(of: limit.littleEndian, toByteOffset: offset, as: UInt16.self) }
+                }
+            }
+        }
+        return clamped
     }
 
     /// The largest of the first `count` indices (fewer when the list is shorter); nil without any.
@@ -472,8 +549,10 @@ final class SceneModelRenderer: SceneModelDrawing {
 
     // MARK: - Pipelines
 
-    /// The mesh's interleaved vertices.
+    /// The mesh's positions, or its interleaved vertices when they are one stream.
     static let meshBuffer = EffectGraphRenderer.positionBuffer
+    /// The mesh's other attributes when its vertices are split (`SceneModelVertexStreams`).
+    static let meshAttributesBuffer = 27
 
     static func pipelineKey(_ mesh: SceneModelPlan.Mesh, pixelFormat: MTLPixelFormat, sampleCount: Int,
                             depthFormat: MTLPixelFormat) -> String {
@@ -575,15 +654,23 @@ final class SceneModelRenderer: SceneModelDrawing {
         let descriptor = MTLVertexDescriptor()
         var names: [Int: [String]] = [:]
         for (name, location) in attributes { names[location, default: []].append(name) }
-        var usesZero = false
+        var usesZero = false, usesAttributes = false, usesMesh = false
+        let streams = SceneModelVertexStreams(format)
         for input in function.vertexAttributes ?? [] where input.isActive {
             let element = descriptor.attributes[input.attributeIndex]!
             let isInteger = [.uint, .uint2, .uint3, .uint4, .int, .int2, .int3, .int4].contains(input.attributeType)
             if let attribute = meshAttribute(for: names[input.attributeIndex] ?? [], in: format),
                let offset = format.offset(of: attribute) {
                 element.format = ScenePuppetRenderer.vertexFormat(attribute)
-                element.offset = offset
-                element.bufferIndex = meshBuffer
+                if let streams, let location = streams.location(of: attribute, in: format) {
+                    element.offset = location.offset
+                    element.bufferIndex = location.stream == 0 ? meshBuffer : meshAttributesBuffer
+                    if location.stream == 1 { usesAttributes = true } else { usesMesh = true }
+                } else {
+                    element.offset = offset
+                    element.bufferIndex = meshBuffer
+                    usesMesh = true
+                }
             } else {
                 element.format = isInteger ? .uint4 : .float4
                 element.offset = 0
@@ -591,7 +678,10 @@ final class SceneModelRenderer: SceneModelDrawing {
                 usesZero = true
             }
         }
-        descriptor.layouts[meshBuffer].stride = format.stride
+        // Metal refuses a layout no attribute reads (a stage that reads only the attribute stream
+        // or zeros), so each buffer's layout is set only when used.
+        if usesMesh { descriptor.layouts[meshBuffer].stride = streams?.positionStride ?? format.stride }
+        if let streams, usesAttributes { descriptor.layouts[meshAttributesBuffer].stride = streams.attributeStride }
         if usesZero {
             descriptor.layouts[EffectGraphRenderer.zeroBuffer].stride = 16
             descriptor.layouts[EffectGraphRenderer.zeroBuffer].stepFunction = .constant

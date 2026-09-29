@@ -32,8 +32,8 @@ struct SceneSpatialContent: Equatable {
     func sortOrder(of id: String) -> Int {
         guard let value = renderValues[id]?[.sortorder].flatMap(Self.literal) else { return 0 }
         switch value {
-        case .number(let number): return number.isFinite ? Int(number) : 0
-        case .string(let text): return Int(text) ?? Int(Double(text) ?? 0)
+        case .number(let number): return number.isFinite ? Int(saturating: number) : 0
+        case .string(let text): return Int(text) ?? Double(text).map { $0.isFinite ? Int(saturating: $0) : 0 } ?? 0
         case .bool(let flag): return flag ? 1 : 0
         case .object: return 0
         }

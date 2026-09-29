@@ -13,7 +13,7 @@ enum ParticlePrewarm {
     static func steps(startTime: Float, maximum: Int) -> [Float] {
         guard startTime > 0, startTime.isFinite else { return [] }
         let step: Float = maximum >= 500 ? 0.2 : 0.05
-        let count = Int((startTime / step).rounded(.up))
-        return Array(repeating: step, count: min(count, 10_000))
+        let count = Int(saturating: (startTime / step).rounded(.up), in: 0...10_000)
+        return Array(repeating: step, count: count)
     }
 }

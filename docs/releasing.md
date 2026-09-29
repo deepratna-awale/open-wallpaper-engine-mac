@@ -244,7 +244,7 @@ A pre-release's files carry its label: `OpenWallpaperEngine-1.1.0-beta.1.zip`.
 
 `OpenWallpaperEngine/OpenWallpaperEngine.entitlements`: not sandboxed,
 `cs.allow-jit` (JavaScriptCore in SceneScript), network client, user-selected files,
-Downloads read-only. Metal, WebKit (out of process), ScreenCaptureKit audio (a TCC prompt,
+Downloads read-only. Metal, WebKit (out of process), system audio capture (a TCC prompt,
 not an entitlement) and running `/usr/bin/perl` with the bundled `nowPlayingAdapter.pl`
 (a resource, not an executable) need nothing more under the hardened runtime.
 

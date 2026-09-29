@@ -11,42 +11,58 @@ Open Wallpaper Engine 是一款免费、开源的 macOS 播放器，可播放 Wa
 
 **Wiki：** 指南和文档见 [Wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)。
 
-## 相关项目
+## 系统要求
 
-- **[Open Wallpaper Engine for Linux](https://github.com/Unayung/simple-linux-wallpaperengine-gui)** — 适用于 [linux-wallpaperengine](https://github.com/Almamu/linux-wallpaperengine) 的 PyQt6 图形界面，其 Steam 创意工坊集成与 UI 设计移植自本 macOS 版本。
+### 必需
+- **macOS 14.0 或更高版本**（Sonoma）。ScreenCaptureKit 音频捕获和 Metal 场景渲染都依赖于此。
 
-## 致谢
+### 可选 — 特定功能所需
 
-本项目建立在以下贡献者的工作之上：
+| 功能 | 要求 | 安装 |
+|---------|-------------|---------|
+| 浏览／下载 Steam 创意工坊内容 | `steamcmd` | 自动（可选：`brew install steamcmd`） |
+| 音频可视化与音频响应的 SceneScript | 系统录音权限（macOS 14.2 之前为录屏与系统录音） | 设置 → 权限 |
 
-- **[MrWindDog](https://github.com/MrWindDog)** — 上游 [wallpaper-engine-mac](https://github.com/MrWindDog/wallpaper-engine-mac) 分支的维护者，添加了新功能并改进了 UI
-- **[Haren Chen](https://github.com/haren724)** — [open-wallpaper-engine-mac](https://github.com/haren724/open-wallpaper-engine-mac) 的原作者，构建了 App 的核心架构（SwiftUI、视频墙纸播放、导入系统、播放列表 UI）
-- **1ris_W** — 中文 i18n 翻译
-- **[Klaus Zhu](https://github.com/klauszhu1105)** — 原始标志设计
-- **[Chen Chia Yang](https://github.com/Unayung)** — 场景墙纸渲染、网页墙纸修复、Steam 创意工坊集成、多显示器支持、zip 导入
-- **[Deepratna Awale](https://github.com/deepratna-awale)** — Metal 场景渲染器与效果管线、GLSL→MSL 着色器转换与缓存、SceneScript 运行时、音频响应渲染、创意工坊／下载功能全面改进、摆放与性能设置、标志重新设计
+#### 着色器
 
-与原项目相同，本项目采用 [GPL-3.0](../../LICENSE) 许可证。
+Wallpaper Engine 以 GLSL 形式提供其效果。当墙纸首次使用这些效果时，它们会由内置于 App 中的 glslang 和 SPIRV-Cross（`Vendor/ShaderToolchain`）转换为 Metal（GLSL → SPIR-V → MSL），随后缓存到磁盘上。无需安装任何内容。如果某个着色器在转换时导致 App 挂起或两次崩溃，之后启动时会跳过它，其他着色器仍会照常转换。
 
-## 从 0.8.1 到 1.0.0
+#### Wallpaper Engine 素材
 
-### 起点
+场景使用你在 Steam 上的 Wallpaper Engine 副本中的共享效果、材质、着色器、字体和 SceneScript 运行时；App 不附带这些资源。请在“设置 → 资源”中安装：App 会用 steamcmd 下载你的副本（该账户必须拥有 Wallpaper Engine），仅保留资源和默认墙纸，其余部分会被删除。你也可以选择现有的 Wallpaper Engine 文件夹。视频和网页墙纸无需这些资源即可使用。
 
-本分支基于上游 0.8.1（提交 `aa29a89e`，2026 年 3 月）。0.8.1 可以播放视频和网页壁纸，支持多显示器和多桌面、播放列表、最近壁纸菜单、zip 和文件夹导入，以及通过 Homebrew 的 SteamCMD 下载的 Steam 创意工坊浏览器。场景使用 SpriteKit 从 PKG 和 TEX 文件绘制：支持带位置、着色和混合模式的图像图层，遇到 DXT 纹理时回退到预览图。Wallpaper Engine 着色器和效果、粒子、精灵与时间轴动画、相机视差、音频响应脚本、3D 模型、木偶、光照和 SceneScript 均不受支持。
+## 从源代码构建
 
-### 新增内容
+### 前提条件
+- macOS >= 14.0
+- Xcode >= 26.3（macOS 26 SDK）
+- Xcode Command Line Tools
 
-此后，1,118 个提交新增了：
+### 步骤
+```sh
+git clone https://github.com/deepratna-awale/open-wallpaper-engine-mac.git
+cd open-wallpaper-engine-mac
+open "OpenWallpaperEngine.xcodeproj"
+```
 
-- **渲染：** 全新的 Metal 场景渲染器，在进程内转换并缓存 Wallpaper Engine 着色器，以及效果、泛光和 HDR。
-- **场景内容：** 在 GPU 上模拟的粒子；3D 模型、带骨骼动画的木偶和光照。
-- **行为：** SceneScript 运行时、属性时间轴、音频响应视觉效果和空间音频。
-- **显示器与创意工坊：** 按显示器设置的规则、重新设计的创意工坊浏览器和下载，以及更多导入方式。Wallpaper Engine 的资源来自用户自己的 Steam 副本，不随应用捆绑。
-- **应用：** 设置助手、自动安装 SteamCMD、Sparkle 更新、Liquid Glass 界面和 15 种语言。
-- **质量：** 约 1,900 个测试、使用 Wallpaper Engine 资源运行测试的 CI，以及签名并公证的发布版本。
-- **文档：** 项目网站和 Wiki。
+在 Xcode 中，将签名证书更改为你自己的证书或选择“Sign to Run Locally”，然后按下 `Cmd + R` 进行构建并运行。
 
-完整列表见 [1.0.0 支持的功能](#100-支持的功能)，指南见 [Wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)。
+从源代码首次构建时会获取 Sparkle Swift 包。从源代码构建的版本不会检查更新。
+
+## 使用方法
+
+### 从 Steam 创意工坊浏览与下载
+
+1. 无需安装：首次需要时，App 会在后台自动下载 Valve 的 SteamCMD（从 Valve 下载，不随 App 附带）。Homebrew（`brew install steamcmd`）为可选；如找到已有的 steamcmd（Homebrew、Steam 或你指定的）则直接使用
+2. 切换到 **创意工坊** 标签页，并使用 Steam 账户登录（必须拥有 Wallpaper Engine）
+3. 在出现提示时，或在 *设置 → 通用* 中输入 [Steam Web API 密钥](https://steamcommunity.com/dev/apikey)。密钥会经过 Steam 验证并保存在你的钥匙串中；你的 Steam 密码永远不会被存储（steamcmd 会复用它自己的缓存会话）
+4. 搜索、筛选，然后在任意墙纸上点按 **下载**
+
+### 从本地文件导入
+
+- **文件夹：** 文件 > 导入 > 来自文件夹的墙纸 — 选择包含 `project.json` 的墙纸文件夹
+- **zip：** 文件 > 导入，或拖放包含墙纸包的 `.zip` 文件
+- **手动：** 将墙纸文件夹直接拷贝到 `~/Documents/Open Wallpaper Engine/`
 
 ## 1.0.0 支持的功能
 
@@ -108,159 +124,9 @@ Open Wallpaper Engine 是一款免费、开源的 macOS 播放器，可播放 Wa
 - **15 种新语言**：德语、法语、西班牙语、巴西葡萄牙语、意大利语、日语、韩语、简体中文和繁体中文、俄语、波兰语、土耳其语、乌克兰语、阿拉伯语和印地语，可在设置的语言选择器中选择。
 - 全新的 App 图标，以及跟随菜单栏外观变化的菜单栏图标。
 
-<details>
-<summary>0.8.1 版本支持的功能</summary>
-
-### 墙纸播放
-- **场景墙纸**使用 Metal 原生渲染，支持图像图层、变换、关键帧时间线、深度排序以及 `scene.json` 中的相机／投影数据。
-- **视频墙纸**（`.mp4`、`.webm`）支持播放速率、音量、音视频速度联动，以及可选的随音乐同步缩放／倾斜／饱和度。
-- **网页墙纸**（HTML/WebGL）启用了本地文件访问，使 WebGL 纹理和素材能够正确载入，并支持外部嵌入内容（YouTube/Vimeo）。
-- **摆放模式** — 充满屏幕、适合于屏幕、居中、拉伸以充满屏幕、缩放。
-- **多显示器** — 每台显示器使用不同的墙纸、按屏幕启用／停用、可视化的显示器布局，以及自动检测新连接的显示器。
-- **多桌面（Spaces）** — 在所有桌面上连续播放，并提供 `所有桌面` 分配选项。
-- **播放规则** — 其他 App 成为焦点时保持运行、静音、暂停或停止；在睡眠／唤醒和切换桌面时行为正确。
-
-### 场景格式支持
-- **PKG 解析器**，用于 Wallpaper Engine `PKGV` 归档（scene.json、材质、纹理、着色器）。
-- **TEX 解析器**，用于 `TEXV0005` 容器：内嵌的 JPEG/PNG，以及带 mipmap 的 DXT1/DXT3/DXT5，后者通过 Metal 计算着色器在 GPU 上解码。
-- **TEXS 精灵时间线**（0001/0002/0003），包括单图集帧矩形和多图像序列。
-- **灵活的 scene.json 解码**，可处理 Wallpaper Engine 的多态字段（普通值或 `{"script":…,"value":…}`）。
-- 无法提取纹理时**回退到预览图** `preview.jpg/png/gif`。
-
-### 效果与着色器
-- **约 48 种原生 Metal 效果**，涵盖扭曲、模糊（标准／精确／径向／运动）、泛光、上帝光与光束、水波／涟漪／焦散／流动、云与雾、胶片颗粒、故障／VHS、色差、颜色键控、变换／倾斜／旋转／漩涡／透视、反射、折射、光泽／微光／闪粉、边缘检测等。
-- **音频响应效果** — 脉冲、音频条、随音频同步的色相偏移，以及由实时系统音频频谱数据驱动的超空间跳跃效果。
-- **语义材质效果** — 将亮度、对比度、饱和度、曝光、伽马、色相、泛光阈值、泛光和模糊映射为原生 Metal 渲染通道。
-- **GLSL → SPIR-V → MSL 转换**在载入时由链接到 App 中的 glslang 和 SPIRV-Cross 完成，支持 COMBO 宏定义、include 解析以及 Metal 缓冲区槽位重新编号。
-- **预编译着色器缓存** — 转换后的 `.metal`、编译后的 `.metallib` 以及 `.reflection.json` 附属文件缓存在 `.open-wallpaper-engine/shaders` 下；通过哈希校验，只有发生变化的着色器才会重新转换，并在后台编译，因此不会阻塞渲染。
-- **动态效果目录**，读取自 Wallpaper Engine 的 `assets/effects/*/effect.json` 清单，包括多通道效果和通过反射获得的 uniform 绑定。
-- **效果遮罩**（每个图层最多 4 张遮罩纹理）、加法混合与 Alpha 混合，以及池化的渲染目标系统。
-
-### 粒子
-- 精灵发射器，可随机化寿命、大小、速度、颜色、旋转、角速度、重力、阻力和 Alpha 淡变。
-- 高级行为 — 湍流、吸引子、涡旋与 boid 群体运动、静态控制点与跟随光标的控制点、相连的绳索段，以及带 Alpha／大小淡变的拖尾。
-- 通过 `.tex-json` 序列实现精灵表帧动画。
-- 用于发射速率、阻力和 Alpha 淡变时间的脚本化算子。
-
-### SceneScript 运行时
-- 每个图层持久保留的脚本上下文，`init()` 只调用一次，`update(value)` 每帧调用。
-- 全局对象：`thisScene`、`thisLayer`、`engine`、`input`、`audio(low, high)`、基于真实数据的 `fft(index)`、`setTimeout`/`setInterval`，以及持久保留的脚本全局变量。
-- 完整的 `Vec2`/`Vec3`/`Vec4`/`Mat3`/`Mat4` 数学库，以及 `WEMath`、`WEVector` 和 `WEColor` 辅助工具。
-- 从 `assets/scripts/jsmodules` 和 `jsclasses` 载入的 Wallpaper Engine 运行时 JS 模块。
-- 光标事件（`cursorMove`/`Down`/`Up`/`Click`/`Enter`/`Leave`）和 `resizeScreen`。
-- 脚本可以控制图层的 Alpha、原点、大小、缩放、角度、亮度／颜色、材质常量、效果阈值和粒子速率。
-- 去重后的脚本异常日志，并附带重复次数。
-
-### 音频
-- 通过 ScreenCaptureKit 捕获系统音频，提供平滑处理的 16 频段频谱、波形以及低音／中音／高音电平。
-- 按属性的**音乐同步** — 任何用户属性都可以按可配置的幅度随音频电平调制。
-
-### 用户属性与检查器
-- 滑块、复选框、组合框、文本和颜色等项目设置显示在场景边栏中，实时生效，并可从 SceneScript 中读取。
-- 针对设置了 `parallaxDepth` 的图层提供鼠标跟踪与视差。
-
-### Steam 创意工坊
-- 可按内容分级、类型和风格标签浏览、搜索和筛选，支持热门／最新／最受欢迎／订阅最多排序以及带页码的分页。
-- 预览窗口提供设为墙纸、播放和音量控制，并使用有容量上限的缓存；已应用的预览会直接移入资源库，无需重新下载。
-- SteamCMD 集成：自动检测、密码／Steam 令牌／缓存会话登录、专用的“下载”标签页、可排队并可重试的下载，以及实时进度。
-- 多选、范围选择、经确认后执行的批量下载和删除、持久保存已下载的 ID，以及按 `下载日期` 排序。
-
-### 资源库与设置
-- 可从文件夹、`.zip` 包或通过拖放导入。
-- 可配置墙纸存储位置，并可迁移现有资源库。
-- 状态栏中的“最近使用的墙纸”菜单。
-- 性能设置 — 质量、抗锯齿、后处理，以及失去焦点时的播放行为。
-- 诊断 — 内置素材的路径、内置着色器编译器的库版本以及着色器缓存统计信息。
-
-</details>
-
-<details>
-<summary>0.8.0 及更早版本</summary>
-
-### 多显示器支持
-可为每台已连接的显示器分配不同的墙纸，并按屏幕启用或停用。
-- **“显示器设置”面板** — 以可视化布局显示所有已连接的屏幕，点按即可选择
-- **按屏幕设置墙纸** — 每台显示器可以独立显示不同的墙纸
-- **启用／停用开关** — 可按显示器开启或关闭墙纸
-- **自动检测** — 连接新显示器时会自动检测并启用
-
-### 多桌面支持
-墙纸现在会显示在所有 macOS 桌面（Spaces）上并连续播放，切换桌面时不会中断。
-
-### “最近使用的墙纸”菜单
-可从状态栏菜单快速切换墙纸。最近使用的 10 张墙纸会列在其中，点按一次即可切换。
-
-### 播放设置 — 已修复
-性能播放设置（其他 App 成为焦点时暂停／静音／停止）现已对所有类型的墙纸正常工作。
-
-### Steam 创意工坊浏览器
-无需离开 App，即可直接浏览、搜索和下载 Steam 创意工坊中的墙纸。
-- **搜索与筛选** — 按名称搜索，按内容分级（所有人／有争议／成人）、类型（场景／视频／网页）和风格标签筛选
-- **排序选项** — 热门、最新、最受欢迎、订阅最多
-- **steamcmd 集成** — 首次需要时自动下载 Valve 的 SteamCMD（不随 App 附带）；如找到已有的 steamcmd（Homebrew、Steam 或自定路径）则直接使用
-- **Steam 登录** — 支持密码、Steam 令牌和缓存会话认证
-- **显示下载进度** — 下载期间实时更新状态（正在认证、下载百分比、正在验证、正在拷贝）
-- **安全的默认设置** — 内容分级默认为“所有人”，以过滤成人内容
-
-### zip 导入
-可直接从 `.zip` 文件导入墙纸包，无需先手动解压。支持通过“文件”>“导入”和拖放操作使用。
-
-### 多选与批量取消订阅
-按住 Cmd 键点按以选择多张墙纸，然后右键点按即可批量取消订阅。
-
-### 墙纸存储隔离
-墙纸现在存储在 `~/Documents/Open Wallpaper Engine/` 中，而不是直接存放在“文稿”目录下，避免在新电脑上克隆仓库时出现“error”墙纸。
-
-</details>
-
-<details>
-<summary>相对于原项目的早期改动</summary>
-
-### 网页墙纸 — 修复灰色／空白渲染
-基于 WebGL 的墙纸会渲染为灰色矩形，原因是 `WKWebView` 阻止了对纹理和素材的本地文件访问。
-
-**修复：** 在 WKWebView 配置中启用 `allowFileAccessFromFileURLs` 和 `allowUniversalAccessFromFileURLs`，使 WebGL 着色器能够载入本地纹理文件。
-
-### 场景墙纸 — 从零实现
-场景墙纸（Steam 创意工坊中最常见的类型）此前完全没有实现，只会显示“Hello, World!”。
-
-**新实现包括：**
-- **PKG 解析器** — 读取 Wallpaper Engine 的 PKGV 归档格式，提取 scene.json、模型、材质和纹理
-- **TEX 解析器** — 读取 TEXV0005 纹理容器，提取内嵌的 JPEG/PNG 图像数据，并读取 DXT1/DXT3/DXT5 mipmap
-- **Scene JSON 解码器** — 以灵活的解码方式解析 scene.json，可处理 Wallpaper Engine 的多态字段（值可以是普通类型，也可以是 `{"script":..,"value":..}` 对象）
-- **Metal 渲染器** — 通过 GPU 纹理合成渲染场景图像图层，并为今后的着色器效果奠定基础
-- **GPU DXT 解码** — 在场景载入时通过 Metal 计算着色器展开 DXT1（TEXI 7）、DXT3（TEXI 6）和 DXT5（TEXI 4）纹理
-- **精灵粒子** — 渲染常见的 `sphererandom` 精灵发射器，可随机化寿命、大小、速度、Alpha、颜色、旋转、角速度、重力、阻力和 Alpha 淡变
-- **高级粒子** — 支持旋转、颜色变化、湍流、静态控制点与跟随光标的控制点、相连的绳索段、拖尾以及 `.tex-json` 精灵表帧动画
-- **TEXS 动画** — 解码 TEXS0001/0002/0003 时间线，包括单图集帧矩形和多图像纹理序列
-- **场景时间线** — 以 60 FPS 对对象的 Alpha、原点、缩放和角度关键帧进行插值
-- **SceneScript 运行时** — 基于 ScreenCaptureKit 系统音频求值表达式和 `export function update(value)` 属性脚本。`thisScene` 计时、`thisLayer.value`、`engine`、输入光标、`audio(low, high)`、基于真实数据的 `fft(index)`、属性查询和持久保留的全局变量共同驱动图像变换、Alpha 和粒子发射速率。
-- **持久的 SceneScript 生命周期** — 复用每个图层的脚本上下文，只调用一次 `init()`，并在各帧中调用 `update()`，同时共享 `dt`、帧、鼠标、按钮、修饰键、光标、音频、FFT、属性和图层状态。
-- **脚本化粒子算子** — 支持用于粒子发射速率、运动阻力和 Alpha 淡变时间的脚本，并可灵活处理数值／字符串类型的粒子字段。
-- **鼠标跟踪与视差** — 对带有 `parallaxDepth` 元数据的图层应用相对于光标的平移和可选的透视缩放；跟随光标的粒子使用同一个场景空间光标。
-- **脚本化视觉属性** — 支持通过脚本设置对象亮度／RGB 颜色、材质效果常量、标量／向量变换以及效果阈值覆盖。
-- **用户属性** — 在场景边栏中显示文档所述的滑块、复选框、组合框、文本和颜色项目设置，并使数值和布尔值可供 SceneScript 使用
-- **内建场景效果** — 在 Metal 渲染器中执行作者设置的 `pulse`、`shake`、`iris` 和 `waterwaves` 效果图条目
-- **语义材质效果** — 将亮度、对比度、饱和度、曝光、伽马、色相、泛光阈值、泛光和模糊的常见材质常量与脚本映射为原生 Metal 效果
-- **GLSL 着色器转换** — 在载入时通过链接到 App 中的 glslang 和 SPIRV-Cross，将打包的 Wallpaper Engine GLSL 着色器转换为 SPIR-V 和 MSL；转换后的变体缓存在 `~/Library/Caches/com.winddog.wallpaper-engine/shader-variants` 下
-- **回退到预览图** — 无法提取纹理时回退到 preview.jpg/png/gif
-
-### 导入 — 修复文件夹导入
-导入面板现在可以正确处理单个墙纸文件夹以及包含多个墙纸的父目录。
-
-</details>
-
 ## 当前限制
 
-- **应用程序墙纸** — 不支持 `type: "application"` 墙纸，此类墙纸不会运行。
-- **尚未实现的 SceneScript 函数** — `effect.executeMaterialFunction()`, `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `getVideoTexture()`, `engine.openUserShortcut()` 目前不执行任何操作。
-- **SceneScript 一致性** — 并未完全重现所有专有事件名称、输入回调、生命周期边界情况或精确的计时语义。
-- **少见的粒子功能** — 不支持球体、盒体和图层图像以外的发射器形状，也不支持系统中第一个之后的渲染器。
-- **需要 Wallpaper Engine 资源** — 场景需要你自己的 Wallpaper Engine 副本中的资源（“设置 → 资源”）；没有这些资源时只能播放视频和网页墙纸。
-- **WebM 视频** — WebM（VP8/VP9）通过 WebKit 播放，因此音乐同步效果不适用于它。
-- **部分 JPEG 缩略图** — 少量 TEXB 格式 1 文件包含 macOS 无法解码的非标准 JPEG 数据。
-- **性能设置的适用范围** — 质量、抗锯齿和后处理选项是为场景墙纸设计的，对视频墙纸和网页墙纸的作用有限。
-- **音频功能需要权限** — 未授予录屏权限时，音频可视化和音频响应的 SceneScript 只会收到静音。
+- **尚未实现的 SceneScript 函数** — `getVideoTexture()` 目前不执行任何操作。
 
 ## 支持的墙纸类型
 
@@ -278,73 +144,36 @@ Open Wallpaper Engine 是一款免费、开源的 macOS 播放器，可播放 Wa
 | 场景 — 3D 模型／骨骼绑定／木偶变形 | 可用 |
 | 应用程序 | 不支持 |
 
-## 系统要求
-
-### 必需
-- **macOS 14.0 或更高版本**（Sonoma）。ScreenCaptureKit 音频捕获和 Metal 场景渲染都依赖于此。
-
-### 可选 — 特定功能所需
-
-| 功能 | 要求 | 安装 |
-|---------|-------------|---------|
-| 浏览／下载 Steam 创意工坊内容 | `steamcmd` | 自动（可选：`brew install steamcmd`） |
-| 音频可视化与音频响应的 SceneScript | 录屏权限 | 设置 → 权限 |
-
-#### 着色器
-
-Wallpaper Engine 以 GLSL 形式提供其效果。当墙纸首次使用这些效果时，它们会由内置于 App 中的 glslang 和 SPIRV-Cross（`Vendor/ShaderToolchain`）转换为 Metal（GLSL → SPIR-V → MSL），随后缓存到磁盘上。无需安装任何内容。如果某个着色器在转换时导致 App 挂起或两次崩溃，之后启动时会跳过它，其他着色器仍会照常转换。
-
-#### Wallpaper Engine 素材
-
-场景使用你在 Steam 上的 Wallpaper Engine 副本中的共享效果、材质、着色器、字体和 SceneScript 运行时；App 不附带这些资源。请在“设置 → 资源”中安装：App 会用 steamcmd 下载你的副本（该账户必须拥有 Wallpaper Engine），仅保留资源和默认墙纸，其余部分会被删除。你也可以选择现有的 Wallpaper Engine 文件夹。视频和网页墙纸无需这些资源即可使用。
-
-## 从源代码构建
-
-### 前提条件
-- macOS >= 14.0
-- Xcode >= 26.3（macOS 26 SDK）
-- Xcode Command Line Tools
-
-### 步骤
-```sh
-git clone https://github.com/deepratna-awale/open-wallpaper-engine-mac.git
-cd wallpaper-engine-mac
-open "OpenWallpaperEngine.xcodeproj"
-```
-
-在 Xcode 中，将签名证书更改为你自己的证书或选择“Sign to Run Locally”，然后按下 `Cmd + R` 进行构建并运行。
-
-从源代码首次构建时会获取 Sparkle Swift 包。从源代码构建的版本不会检查更新。
-
-## 使用方法
-
-### 从 Steam 创意工坊浏览与下载
-
-1. 无需安装：首次需要时，App 会在后台自动下载 Valve 的 SteamCMD（从 Valve 下载，不随 App 附带）。Homebrew（`brew install steamcmd`）为可选；如找到已有的 steamcmd（Homebrew、Steam 或你指定的）则直接使用
-2. 切换到 **创意工坊** 标签页，并使用 Steam 账户登录（必须拥有 Wallpaper Engine）
-3. 在出现提示时，或在 *设置 → 通用* 中输入 [Steam Web API 密钥](https://steamcommunity.com/dev/apikey)。密钥会经过 Steam 验证并保存在你的钥匙串中；你的 Steam 密码永远不会被存储（steamcmd 会复用它自己的缓存会话）
-4. 搜索、筛选，然后在任意墙纸上点按 **下载**
-
-### 从本地文件导入
-
-- **文件夹：** 文件 > 导入 > 来自文件夹的墙纸 — 选择包含 `project.json` 的墙纸文件夹
-- **zip：** 文件 > 导入，或拖放包含墙纸包的 `.zip` 文件
-- **手动：** 将墙纸文件夹直接拷贝到 `~/Documents/Open Wallpaper Engine/`
-
 ## 隐私
 
 Open Wallpaper Engine 保存的所有内容都留在你的 Mac 上：你的设置、资源库、缓存以及 SteamCMD 的登录信息。Open Wallpaper Engine 没有服务器，不收集任何数据或分析信息。它会与 Valve 通信（使用创意工坊或安装素材时连接 Steam，下载 SteamCMD 时连接 Valve 的服务器），并连接 GitHub 检查 App 更新（GitHub Pages 上的 appcast）以及从 GitHub Releases 下载更新，不发送任何个人数据。可在“设置 › 通用”中关闭更新检查。网页壁纸可能会加载自己的在线内容。你的 Steam 密码和 Steam Guard 验证码直接交给 SteamCMD，绝不会被存储、记录或发送到其他任何地方；只会记住你的账户名，以便重用 SteamCMD 已保存的登录。
 
 ## 项目结构
 
-- `OpenWallpaperEngine/Services/SceneParsers/` — PKG、TEX/TEXS 和 scene.json 的解析器与模型
-- `OpenWallpaperEngine/Services/SceneEffects/` — 动态效果目录以及作者设置的效果参数范围
+- `OpenWallpaperEngine/Scene/Format/` — PKG、TEX/TEXS 和 scene.json 的解析器与模型
 - `OpenWallpaperEngine/Scene/Shaders/` — GLSL → SPIR-V → MSL 转换（`ShaderVariant.swift`、`InProcessShaderCompiler.swift`）、缓存和管线归档
 - `Vendor/ShaderToolchain/` — glslang 和 SPIRV-Cross 源代码，作为本地包构建到 App 中
-- `OpenWallpaperEngine/Scene/Scripting/AudioReactiveScriptEngine.swift` — SceneScript 运行时以及音频／FFT 绑定
+- `OpenWallpaperEngine/Scene/Scripting/` — SceneScript 运行时以及音频／FFT 绑定
 - `OpenWallpaperEngine/Audio/AudioLevelTap.swift` — ScreenCaptureKit 系统音频捕获
 - `OpenWallpaperEngine/Scene/Rendering/SceneMetalRenderer.swift`、`SceneShaders.metal` — Metal 场景渲染器与着色器库
 - `OpenWallpaperEngine/Workshop/SteamCmdService.swift`、`WorkshopAPIService.swift`、`WorkshopViewModel.swift` — Steam 创意工坊浏览与下载
 - `OpenWallpaperEngine/Library/WallpaperDirectory.swift`、`ZipImporter.swift`、`WallpaperPackageConverter.swift` — 资源库存储、导入和包转换
 - `Scripts/fill-assets-cache.sh` — 开发辅助工具：将 Wallpaper Engine 安装中的资源拷贝到本地文件夹或墙纸存储位置的缓存
 - `Scripts/scene-api-coverage.py` — 报告已安装的墙纸使用了哪些 SceneScript API，并与已实现的 API 进行对比
+
+## 相关项目
+
+- **[Open Wallpaper Engine for Linux](https://github.com/Unayung/simple-linux-wallpaperengine-gui)** — 适用于 [linux-wallpaperengine](https://github.com/Almamu/linux-wallpaperengine) 的 PyQt6 图形界面，其 Steam 创意工坊集成与 UI 设计移植自本 macOS 版本。
+
+## 致谢
+
+本项目建立在以下贡献者的工作之上：
+
+- **[MrWindDog](https://github.com/MrWindDog)** — 上游 [wallpaper-engine-mac](https://github.com/MrWindDog/wallpaper-engine-mac) 分支的维护者，添加了新功能并改进了 UI
+- **[Haren Chen](https://github.com/haren724)** — [open-wallpaper-engine-mac](https://github.com/haren724/open-wallpaper-engine-mac) 的原作者，构建了 App 的核心架构（SwiftUI、视频墙纸播放、导入系统、播放列表 UI）
+- **1ris_W** — 中文 i18n 翻译
+- **[Klaus Zhu](https://github.com/klauszhu1105)** — 原始标志设计
+- **[Chen Chia Yang](https://github.com/Unayung)** — 场景墙纸渲染、网页墙纸修复、Steam 创意工坊集成、多显示器支持、zip 导入
+- **[Deepratna Awale](https://github.com/deepratna-awale)** — Metal 场景渲染器与效果管线、GLSL→MSL 着色器转换与缓存、SceneScript 运行时、音频响应渲染、创意工坊／下载功能全面改进、摆放与性能设置、标志重新设计
+
+与原项目相同，本项目采用 [GPL-3.0](../../LICENSE) 许可证。

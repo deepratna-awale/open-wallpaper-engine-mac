@@ -79,11 +79,15 @@ extension AppDelegate {
             DispatchQueue.main.async {
                 for url in wallpaperURLs {
                     let dest = docsDir.appending(path: url.lastPathComponent)
-                    if !fm.fileExists(atPath: dest.path) {
-                        try? fm.copyItem(at: url, to: dest)
-                        DispatchQueue.global(qos: .utility).async {
-                            WallpaperPackageConverter.convertIfNeeded(wallpaperDirectory: dest)
-                        }
+                    guard !fm.fileExists(atPath: dest.path) else { continue }
+                    do {
+                        try ImportedFolderLinks.copyWithoutLinks(from: url, to: dest)
+                    } catch {
+                        OWELog.error(.importer, "Can't import \(url.path): \(error)")
+                        continue
+                    }
+                    DispatchQueue.global(qos: .utility).async {
+                        WallpaperPackageConverter.convertIfNeeded(wallpaperDirectory: dest)
                     }
                 }
                 for url in zipURLs {

@@ -42,6 +42,15 @@ kernel void particleFinish(device uint *control [[buffer(0)]],
     }
 }
 
+/// A renderer after a system's first (`ParticleSystemRuntime.simulation`) draws the particles the
+/// system's step left: that step's counters and dispatch arguments into its own control block,
+/// before its own draw arguments and records are written.
+kernel void particleFollowControl(device const uint *simulation [[buffer(0)]],
+                                  device uint *control [[buffer(1)]],
+                                  uint gid [[thread_position_in_grid]]) {
+    if (gid < cMaterialDraw) control[gid] = simulation[gid];
+}
+
 /// `ParticleRecordWriter.writeSprites`: one particle's record.
 static SpriteRecord spriteRecord(ParticleState particle, constant ParticleParameters &p, constant ParticleFrame &f) {
     SpriteRecord record;
@@ -65,14 +74,47 @@ kernel void particleWriteSprites(device const ParticleState *particles [[buffer(
     records[gid] = spriteRecord(particles[gid], p, f);
 }
 
+/// `ParticleRopeStrands` for an instanced system, in O(n): a stable counting sort of the particle
+/// indices by instance. `order` holds each instance's first place (`slots` words), its length
+/// (`slots`), the sorted indices (`capacity`), then each particle's place in its strand. One thread,
+/// since the sort must keep spawn order within an instance.
+kernel void particleRopeOrder(device const ParticleState *particles [[buffer(0)]],
+                              device uint *order [[buffer(1)]],
+                              device const uint *control [[buffer(2)]],
+                              constant uint2 &sizes [[buffer(3)]],
+                              uint gid [[thread_position_in_grid]]) {
+    if (gid != 0) return;
+    const uint count = control[cCount];
+    const uint slots = max(sizes.x, 1u);
+    device uint *starts = order;
+    device uint *lengths = order + slots;
+    device uint *sorted = order + slots * 2;
+    device uint *rank = sorted + sizes.y;
+    for (uint s = 0; s < slots; ++s) lengths[s] = 0;
+    for (uint i = 0; i < count; ++i) {
+        const uint s = min(uint(particles[i].trail.z), slots - 1);
+        rank[i] = lengths[s];
+        lengths[s] += 1;
+    }
+    uint running = 0;
+    for (uint s = 0; s < slots; ++s) {
+        starts[s] = running;
+        running += lengths[s];
+    }
+    for (uint i = 0; i < count; ++i) {
+        const uint s = min(uint(particles[i].trail.z), slots - 1);
+        sorted[starts[s] + rank[i]] = i;
+    }
+}
+
 /// `ParticleRopeStrands` for particle `gid`: the next and previous particle of its strand (`count`
 /// for none), its place on the strand, the strand's length and its oldest particle. A system without
-/// instances is one strand; an instanced one has one per instance, which a scan over the particles
-/// finds.
+/// instances is one strand; an instanced one has one per instance, read from `particleRopeOrder`'s
+/// `order` (`sizes`: slots, capacity).
 struct RopeNeighbours { uint next, previous, index, length, oldest; };
 
 static RopeNeighbours ropeNeighbours(device const ParticleState *particles, uint count, uint gid,
-                                     constant ParticleParameters &p) {
+                                     constant ParticleParameters &p, device const uint *order, uint2 sizes) {
     RopeNeighbours n;
     if (!(p.counts.y & kInstanced)) {
         n.next = gid + 1 < count ? gid + 1 : count;
@@ -82,19 +124,15 @@ static RopeNeighbours ropeNeighbours(device const ParticleState *particles, uint
         n.oldest = 0;
         return n;
     }
-    const float strand = particles[gid].trail.z;
-    n.next = count;
-    n.previous = count;
-    n.index = 0;
-    n.length = 0;
-    n.oldest = gid;
-    for (uint j = 0; j < count; ++j) {
-        if (particles[j].trail.z != strand) continue;
-        if (n.length == 0) n.oldest = j;
-        n.length += 1;
-        if (j < gid) { n.index += 1; n.previous = j; }
-        if (j > gid && n.next == count) n.next = j;
-    }
+    const uint slots = max(sizes.x, 1u);
+    const uint s = min(uint(particles[gid].trail.z), slots - 1);
+    device const uint *sorted = order + slots * 2;
+    const uint start = order[s];
+    n.length = order[slots + s];
+    n.index = sorted[sizes.y + gid];
+    n.next = n.index + 1 < n.length ? sorted[start + n.index + 1] : count;
+    n.previous = n.index > 0 ? sorted[start + n.index - 1] : count;
+    n.oldest = sorted[start];
     return n;
 }
 
@@ -123,10 +161,12 @@ kernel void particleWriteRope(device const ParticleState *particles [[buffer(0)]
                               device const uint *control [[buffer(2)]],
                               constant ParticleParameters &p [[buffer(3)]],
                               constant ParticleFrame &f [[buffer(4)]],
+                              device const uint *order [[buffer(5)]],
+                              constant uint2 &orderSizes [[buffer(6)]],
                               uint gid [[thread_position_in_grid]]) {
     const uint count = control[cCount];
     if (gid + 1 >= count) return;
-    const RopeNeighbours n = ropeNeighbours(particles, count, gid, p);
+    const RopeNeighbours n = ropeNeighbours(particles, count, gid, p, order, orderSizes);
     if (n.next == count) {
         records[gid] = RopeRecord{};
         return;
@@ -134,7 +174,7 @@ kernel void particleWriteRope(device const ParticleState *particles [[buffer(0)]
     const ParticleState start = particles[gid];
     const ParticleState end = particles[n.next];
     const float2 previous = particles[n.previous < count ? n.previous : gid].positionVelocity.xy;
-    const RopeNeighbours after = ropeNeighbours(particles, count, n.next, p);
+    const RopeNeighbours after = ropeNeighbours(particles, count, n.next, p, order, orderSizes);
     const float2 next = particles[after.next < count ? after.next : n.next].positionVelocity.xy;
     const float2 layout = ropeLayout(n.length, particles[n.oldest].life.x, control[cDied], p, f);
     RopeRecord record;
@@ -283,16 +323,18 @@ kernel void particleWriteFallbackRope(device const ParticleState *particles [[bu
                                       device const uint *control [[buffer(2)]],
                                       constant ParticleParameters &p [[buffer(3)]],
                                       constant ParticleFrame &f [[buffer(4)]],
-                                      uint gid [[thread_position_in_grid]]) {
+                                      device const uint *order [[buffer(5)]],
+                              constant uint2 &orderSizes [[buffer(6)]],
+                              uint gid [[thread_position_in_grid]]) {
     const uint count = control[cCount];
     if (gid + 1 >= count) return;
     const uint subdivision = uint(p.trail.z);
-    const RopeNeighbours n = ropeNeighbours(particles, count, gid, p);
+    const RopeNeighbours n = ropeNeighbours(particles, count, gid, p, order, orderSizes);
     if (n.next == count) {
         for (uint step = 0; step < subdivision; ++step) instances[gid * subdivision + step] = emptyInstance(f);
         return;
     }
-    const RopeNeighbours after = ropeNeighbours(particles, count, n.next, p);
+    const RopeNeighbours after = ropeNeighbours(particles, count, n.next, p, order, orderSizes);
     const ParticleState previous = particles[n.previous < count ? n.previous : gid];
     const ParticleState start = particles[gid];
     const ParticleState end = particles[n.next];

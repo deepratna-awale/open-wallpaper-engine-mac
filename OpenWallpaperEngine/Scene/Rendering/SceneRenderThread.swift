@@ -1,0 +1,101 @@
+import Foundation
+
+/// A thread with its own run loop that one scene instance renders on: its displays' links tick
+/// there, and every access to the instance's renderer is a block sent to it (`perform`). The main
+/// thread only handles UI, windows and displays, so a stall there doesn't delay a frame.
+///
+/// The whole run loop runs inside `ThreadGuards.renderFrame`, so the thread guards see this thread
+/// as the render thread for anything it runs.
+final class SceneRenderThread: @unchecked Sendable {
+    /// Written once by the thread before `init` returns; read-only afterwards.
+    private final class State: @unchecked Sendable {
+        var runLoop: RunLoop?
+        var stopped = false
+        let ready = DispatchSemaphore(value: 0)
+        /// Signalled once the run loop has returned for good.
+        let exited = DispatchSemaphore(value: 0)
+    }
+
+    /// Holds a `sync` body while the render thread runs it; emptied before the caller resumes, so
+    /// the block the run loop still holds keeps no reference to the body.
+    private final class Pending: @unchecked Sendable {
+        var run: (() -> Void)?
+    }
+
+    private let thread: Thread
+    private let state: State
+    /// The thread's run loop. Only the render thread adds sources to it (`RunLoop` isn't thread-safe).
+    private let cfRunLoop: CFRunLoop
+
+    init(name: String) {
+        let state = State()
+        self.state = state
+        thread = Thread {
+            ThreadGuards.renderFrame {
+                state.runLoop = RunLoop.current
+                // A port keeps the run loop running while no display link is attached.
+                RunLoop.current.add(NSMachPort(), forMode: .default)
+                state.ready.signal()
+                while !state.stopped {
+                    autoreleasepool { _ = RunLoop.current.run(mode: .default, before: .distantFuture) }
+                }
+            }
+            state.exited.signal()
+        }
+        thread.name = name
+        thread.qualityOfService = .userInteractive
+        thread.start()
+        state.ready.wait()
+        cfRunLoop = state.runLoop!.getCFRunLoop()
+    }
+
+    var isCurrent: Bool { Thread.current == thread }
+
+    /// The render thread's run loop; only use it from the render thread.
+    var runLoop: RunLoop { state.runLoop! }
+
+    /// Thread boundary: runs `block` on the render thread, after the blocks sent before it.
+    func perform(_ block: @escaping () -> Void) {
+        CFRunLoopPerformBlock(cfRunLoop, CFRunLoopMode.defaultMode.rawValue, block)
+        CFRunLoopWakeUp(cfRunLoop)
+    }
+
+    /// Runs `body` on the render thread and waits for it. For tests and teardown only: the main
+    /// thread must never wait on a frame in normal running.
+    func sync<T>(_ body: () -> T) -> T {
+        if isCurrent { return body() }
+        var result: T?
+        let done = DispatchSemaphore(value: 0)
+        withoutActuallyEscaping(body) { body in
+            // The run loop releases a block only after it returns, which can be after `done` lets
+            // this thread go on: the block must not hold `body` then (`withoutActuallyEscaping`
+            // traps if it is still referenced when its scope ends).
+            let pending = Pending()
+            pending.run = { result = body() }
+            perform {
+                pending.run?()
+                pending.run = nil
+                done.signal()
+            }
+            done.wait()
+        }
+        return result!
+    }
+
+    /// Ends the thread once the blocks already sent have run, and waits for it to end, so nothing
+    /// it drives (display links, frames) outlives its owner. From the render thread itself it only
+    /// asks the run loop to stop.
+    func stop() {
+        let state = state
+        perform {
+            state.stopped = true
+            CFRunLoopStop(CFRunLoopGetCurrent())
+        }
+        guard !isCurrent else { return }
+        // A frame in flight waits at most for a drawable (a second); the bound only keeps a wedged
+        // thread from hanging its owner.
+        if state.exited.wait(timeout: .now() + 5) == .timedOut {
+            OWELog.error(.scene, "\(thread.name ?? "render thread") did not stop within 5 s")
+        }
+    }
+}

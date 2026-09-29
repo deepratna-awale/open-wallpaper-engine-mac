@@ -25,6 +25,9 @@ enum WallpaperPackageConverter {
         /// ever removing the archived original.
         var verifiedAt: Date?
         var verifiedObjectCount: Int?
+        /// Entries under `…/workshop/<id>/`, which are not extracted: those paths are where the
+        /// dependency resolver links other Workshop items in. Kept so the references still count.
+        var dependencyEntries: [String]?
     }
 
     static func manifestURL(in wallpaperDirectory: URL) -> URL {
@@ -64,25 +67,41 @@ enum WallpaperPackageConverter {
 
         var extracted: [String] = []
         var warnings: [String] = []
+        var dependencyEntries: [String] = []
+        guard let root = ContainedPath.canonical(wallpaperDirectory) else {
+            OWELog.error(.importer, "Convert: can't resolve \(wallpaperDirectory.path)")
+            return nil
+        }
+        let rootURL = URL(fileURLWithPath: root, isDirectory: true)
 
         for entry in parser.fileList {
             guard let relativePath = sanitizedRelativePath(entry) else {
                 warnings.append("Skipped unsafe entry path: \(entry)")
                 continue
             }
+            guard !isUnderWorkshopItem(relativePath) else {
+                OWELog.info(.importer, "Convert: not extracting \(entry); workshop/<id>/ paths hold linked dependencies")
+                dependencyEntries.append(relativePath)
+                continue
+            }
             guard let data = parser.extractFile(named: entry) else {
                 warnings.append("Missing data for entry: \(entry)")
                 continue
             }
-            let destination = wallpaperDirectory.appending(path: relativePath)
-            // Re-check after resolving symlinks and "." segments so nothing escapes the directory.
-            guard destination.standardizedFileURL.path.hasPrefix(wallpaperDirectory.standardizedFileURL.path) else {
-                warnings.append("Skipped escaping entry path: \(entry)")
-                continue
-            }
+            let destination = rootURL.appending(path: relativePath)
             do {
+                // Entries are written inside the folder only, never through a symbolic link.
+                guard ContainedPath.hasNoLinks(below: rootURL, relativePath: relativePath) else {
+                    warnings.append("Skipped entry under a symbolic link: \(entry)")
+                    continue
+                }
                 try FileManager.default.createDirectory(at: destination.deletingLastPathComponent(),
                                                         withIntermediateDirectories: true)
+                guard let parent = ContainedPath.canonical(destination.deletingLastPathComponent()),
+                      ContainedPath.isInside(parent, root: root) else {
+                    warnings.append("Skipped escaping entry path: \(entry)")
+                    continue
+                }
                 try data.write(to: destination, options: .atomic)
                 // A clean extraction is the only thing gating removal of the original, so prove
                 // each file landed byte-for-byte instead of trusting the write.
@@ -107,7 +126,9 @@ enum WallpaperPackageConverter {
 
         let sourceFolder = wallpaperDirectory.appending(path: sourceFolderName)
         var sourceRetained = packageURL == archivedPackageURL
-        if !sourceRetained {
+        if !sourceRetained, !ContainedPath.hasNoLinks(below: wallpaperDirectory, relativePath: sourceFolderName) {
+            warnings.append("Could not archive \(packageName): \(sourceFolderName) is a symbolic link")
+        } else if !sourceRetained {
             do {
                 try FileManager.default.createDirectory(at: sourceFolder, withIntermediateDirectories: true)
                 let archived = sourceFolder.appending(path: packageName)
@@ -125,7 +146,10 @@ enum WallpaperPackageConverter {
                                 sourceRetained: sourceRetained,
                                 extractedFiles: extracted,
                                 warnings: warnings,
-                                convertedAt: Date())
+                                convertedAt: Date(),
+                                verifiedAt: nil,
+                                verifiedObjectCount: nil,
+                                dependencyEntries: dependencyEntries.isEmpty ? nil : dependencyEntries)
         write(manifest, to: wallpaperDirectory)
 
         OWELog.info(.importer, "Converted \(wallpaperDirectory.lastPathComponent): \(extracted.count) files, \(warnings.count) warnings")
@@ -230,6 +254,18 @@ enum WallpaperPackageConverter {
         guard let data = try? Data(contentsOf: wallpaperDirectory.appending(path: "project.json")),
               let project = try? JSONDecoder().decode(WEProject.self, from: data) else { return nil }
         return project.file.lowercased().hasSuffix(".json") ? project.file : nil
+    }
+
+    /// Whether `path` (a sanitized entry path) lies in a `workshop/<digits>` folder, where the
+    /// dependency resolver links other Workshop items. Backslashes count as separators.
+    static func isUnderWorkshopItem(_ path: String) -> Bool {
+        let components = path.replacingOccurrences(of: "\\", with: "/").split(separator: "/")
+        guard components.count >= 2 else { return false }
+        for index in 0..<(components.count - 1) where components[index].lowercased() == "workshop" {
+            let id = components[index + 1]
+            if !id.isEmpty, id.allSatisfy({ $0 >= "0" && $0 <= "9" }) { return true }
+        }
+        return false
     }
 
     /// PKG entries are authored on Windows and are untrusted input, so reject anything absolute or

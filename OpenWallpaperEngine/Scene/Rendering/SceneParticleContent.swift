@@ -6,7 +6,7 @@ import CryptoKit
 /// (`ParticleProgram`: initializers and operators in authored order), control points and renderer.
 /// `ParticleSystemBuilder` makes it from the particle json with WE's defaults.
 struct SceneMetalParticleSystem {
-    let source: SceneMetalTextureSource
+    var source: SceneMetalTextureSource
     /// Index of the object in scene.json; systems draw between layers in that order.
     var order = 0
     /// The emitter's scene position at load. With `emitterLinear` it is the emitter object's
@@ -20,10 +20,11 @@ struct SceneMetalParticleSystem {
     var program = ParticleProgram()
     /// The system's eight control points, by index.
     var controlPoints: [ParticleControlPoint] = ParticleControlPoint.defaults
-    let rendererName: String
+    /// The first renderer's name (`additionalRenderers` has the others).
+    var rendererName: String
     /// The trail renderers' `length`: seconds of history a `ropetrail` keeps; the `spritetrail`
     /// shader's stretch per unit of speed (`ParticleMaterialPlanBuilder.trailLengths`).
-    let trailLength: Float
+    var trailLength: Float
     /// `spritetrail`'s `maxlength` and `minlength`: the stretch's limits.
     var trailLengthLimits = SIMD2<Float>(10, 0)
     /// The renderer's `orientation`, `axis` and `flags`: the axes its sprites and ribbons face along.
@@ -31,11 +32,11 @@ struct SceneMetalParticleSystem {
     /// A rope's `uvscale`, `uvsmoothing` and `uvscrolling`.
     var ropeUV = ParticleRopeUV()
     /// `ropetrail`'s `segments`: samples of history per particle.
-    let trailSegments: Int
+    var trailSegments: Int
     /// `subdivision`: spline points per rope segment (the `TRAILSUBDIVISION` combo).
-    let ropeSubdivision: Int
-    let fadeTrailAlpha: Bool
-    let fadeTrailSize: Bool
+    var ropeSubdivision: Int
+    var fadeTrailAlpha: Bool
+    var fadeTrailSize: Bool
     let spriteSheet: SpriteSheet?
     let animationMode: String
     let sequenceMultiplier: Float
@@ -95,6 +96,42 @@ struct SceneMetalParticleSystem {
     /// The objects the `collisionmodel` operators collide with, by the operator's dependency
     /// index (`ParticleCollision.Shape.model`, the object's `collisionmodel` dependencies).
     var collisionModels: [Int: String] = [:]
+    /// The system's renderers after the first, in authored order. WE draws every renderer from the
+    /// one simulation; the renderer draws each from this system's particles
+    /// (`ParticleSystemRuntime.simulation`).
+    var additionalRenderers: [ParticleRendererDraw] = []
+    /// The history the simulation keeps when a renderer after the first is the `ropetrail`, or
+    /// when this is such a renderer's draw; nil takes it from the system's own renderer.
+    var sharedHistory: ParticleTrailHistory? = nil
+
+    /// The trail history the simulation keeps (`ParticleTrailHistory`).
+    var trailHistory: ParticleTrailHistory {
+        sharedHistory ?? ParticleTrailHistory(kept: rendererName == "ropetrail", length: trailLength, segments: trailSegments)
+    }
+
+    /// The system as `renderer` draws it: the same system with that renderer's fields and
+    /// material, and the history the simulation keeps.
+    func drawing(_ renderer: ParticleRendererDraw) -> SceneMetalParticleSystem {
+        var system = self
+        system.sharedHistory = trailHistory
+        system.additionalRenderers = []
+        system.apply(renderer)
+        system.material = renderer.material
+        return system
+    }
+
+    /// Takes `renderer`'s fields (not its material).
+    mutating func apply(_ renderer: ParticleRendererDraw) {
+        rendererName = renderer.name
+        trailLength = renderer.trailLength
+        trailLengthLimits = renderer.trailLengthLimits
+        trailSegments = renderer.trailSegments
+        ropeSubdivision = renderer.ropeSubdivision
+        fadeTrailAlpha = renderer.fadeTrailAlpha
+        fadeTrailSize = renderer.fadeTrailSize
+        orientation = renderer.orientation
+        ropeUV = renderer.ropeUV
+    }
 
     /// Runs as instances (`ParticleChildLink`).
     var isInstanced: Bool { link?.instanced == true }
@@ -198,8 +235,10 @@ extension SpriteSheet {
     /// A `.tex-json` `spritesheetsequences` entry's grid: `frames` frames of `frameSize` pixels,
     /// row by row across a texture of `textureSize` pixels (`SceneMetalTextureSource.sheetPixelSize`).
     init(frames: Int, frameSize: SIMD2<Double>, duration: Float, textureSize: SIMD2<Double>) {
-        let columns = max(1, min(frames, Int((textureSize.x / frameSize.x).rounded())))
-        let authoredRows = max(1, Int((textureSize.y / frameSize.y).rounded()))
+        // Saturating: a zero or non-finite frame size from the file gives a one-cell grid axis
+        // rather than stopping the process.
+        let columns = max(1, min(frames, Int(saturating: (textureSize.x / frameSize.x).rounded())))
+        let authoredRows = max(1, Int(saturating: (textureSize.y / frameSize.y).rounded()))
         let rows = max(authoredRows, Int(ceil(Double(frames) / Double(columns))))
         self.init(columns: columns, rows: rows, frames: frames, duration: duration)
     }

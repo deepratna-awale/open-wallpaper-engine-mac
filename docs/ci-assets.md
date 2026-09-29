@@ -56,11 +56,36 @@ in Actions it masks them.
 
 - **`build-and-test`** runs the suite without assets, for every push and PR, forks included.
   The asset-gated tests skip. This is the fast signal.
-- **`asset-tests`** runs the same suite with `TEST_RUNNER_OWE_ASSETS` set. It runs for pushes
-  and for PRs from this repository only, because fork PRs get no secrets. It restores
-  `actions/cache` key `we-assets-<build id>`, falling back to the latest `we-assets-*`. On a
-  miss it runs the fetch, which only fetches the delta after a fallback restore, and the cache
-  saves the result. The assets are never uploaded as artifacts.
+- **`asset-tests`** runs the same suite with `TEST_RUNNER_OWE_ASSETS` set. It runs on pushes
+  to `main` and on manual runs from `main` only, never for pull requests. The Steam secrets live
+  in the `steam-ci` environment, which only `main` can use. The nightly workflow uses the same
+  environment. Neither job uploads the assets as artifacts.
+
+### Encrypted asset cache
+
+Both `steam-ci` jobs cache the assets only as ciphertext, keyed `we-assets-enc-<buildid>` (the
+Steam build id, digits only):
+
+- **Hit:** `actions/cache/restore` fetches the one encrypted file, and the job decrypts it with
+  `openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000` and untars it into the assets folder. If
+  decryption fails (a wrong or rotated key), the job downloads the assets from Steam instead.
+- **Miss:** the job downloads the assets, then streams `tar` straight into
+  `openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt`. No plaintext archive is written. Only
+  pushes and manual runs on `main` save the encrypted file with `actions/cache/save`.
+- **No key:** when `OWE_ASSET_CACHE_KEY` is empty, or the build id couldn't be read, the cache is
+  skipped and the assets are downloaded.
+
+The key is the `OWE_ASSET_CACHE_KEY` secret in the `steam-ci` environment. Only the steps that
+decrypt or encrypt get it, through `-pass env:`, so it is never on a command line or in the log.
+The cache itself holds nothing but ciphertext: a pull request or a fork can restore the file, but
+without the key it can't read it. To set or rotate the key (a rotation just makes the next run
+download and re-save):
+
+```sh
+openssl rand -base64 48 | gh secret set OWE_ASSET_CACHE_KEY --env steam-ci
+```
+
+Contributors run the asset tests locally with `OWE_ASSETS` (see Local use).
 
 `OWE_LIBRARY` stays unset in both jobs, so the library-gated tests skip.
 
@@ -102,4 +127,4 @@ one.
 | 6 | the account doesn't own Wallpaper Engine | add the licence to the account |
 | 7 | the download failed, or the result has no `assets/shaders` | rerun; see DepotDownloader's log |
 | 8 | DepotDownloader couldn't be downloaded, or its checksum didn't match | check the network; on a version bump, update the pinned hashes |
-| 9 | `--build-id` couldn't read the build | `api.steamcmd.net` is down; CI then uses a one-off cache key |
+| 9 | `--build-id` couldn't read the build | `api.steamcmd.net` is down or returned something other than a number; the download still runs |

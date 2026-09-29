@@ -21,13 +21,20 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     }
     
     weak var webView: WKWebView?
-    /// Serves wallpapers that WE patches (`assets/zcompat/web`) with the patches applied.
+    /// Serves the wallpaper's folder, with WE's patches (`assets/zcompat/web`) applied.
     let schemeHandler = WebWallpaperSchemeHandler()
 
     /// WE's compatibility patches for the current wallpaper, if it has any.
     var compatPatches: WebCompatPatches? {
-        let id = SceneWallpaperViewModel.workshopId(of: currentWallpaper)
-        return WebCompatPatches(workshopId: id, assetsDirectory: WallpaperEngineAssets.directory)
+        WebCompatPatches(workshopId: Self.compatWorkshopId(of: currentWallpaper),
+                         assetsDirectory: WallpaperEngineAssets.directory)
+    }
+
+    /// The Workshop id that picks a wallpaper's zcompat entry: the numeric name Steam gives the
+    /// item's folder. project.json's `workshopid` is the author's own text, so it doesn't choose.
+    static func compatWorkshopId(of wallpaper: WEWallpaper) -> String? {
+        let folder = wallpaper.wallpaperDirectory.standardizedFileURL.lastPathComponent
+        return !folder.isEmpty && folder.allSatisfy({ $0.isASCII && $0.isNumber }) ? folder : nil
     }
     /// Receives the page's frame intervals and heartbeats (a page that stops beating is hung).
     weak var renderWatchdog: RenderWatchdog?
@@ -223,6 +230,8 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
 
     /// Whether the page registered an audio listener; the timer runs only while it can be seen.
     private var audioRegistered = false
+    /// Keeps system audio capture on while the audio delivery runs.
+    private var audioCaptureLease: AudioCaptureLease?
 
     /// Runs the 30 Hz delivery only while the page is registered, playing and visible: a paused,
     /// covered or sleeping page would drop the values, so the timer and its IPC stop too.
@@ -230,9 +239,11 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         guard audioRegistered, heartbeatGate.expectsHeartbeats else {
             audioTimer?.invalidate()
             audioTimer = nil
+            audioCaptureLease = nil
             return
         }
         guard audioTimer == nil else { return }
+        audioCaptureLease = WallpaperServices.shared.acquireAudioCapture()
         let clock = audioClock ?? WallpaperServices.shared.makeAudioSpectrumClock(publishes: false)
         audioClock = clock
         // WE delivers 64 left and 64 right values to web listeners 30 times a second.
@@ -254,6 +265,15 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         guard muted != isMuted else { return }
         isMuted = muted
         if let webView { WebPageAudio.setMuted(muted, on: webView) }
+        applySchedulingPolicy()
+    }
+
+    /// What WebKit does with the page while its window is covered: a muted page is suspended (no
+    /// JS, timers or frames), an audible one only throttled, because a suspended page falls silent
+    /// and Wallpaper Engine keeps a covered wallpaper's sound. The heartbeat gate and the audio
+    /// timer already expect nothing from a covered window (`WebHeartbeatGate.windowVisible`).
+    func applySchedulingPolicy() {
+        webView?.configuration.preferences.inactiveSchedulingPolicy = isMuted ? .suspend : .throttle
     }
 
     /// Whether the playback rules pause this display's page: its media is suspended and the page

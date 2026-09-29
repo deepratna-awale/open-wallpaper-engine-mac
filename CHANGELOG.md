@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Settings › Assets › Update from Steam** no longer downloads Wallpaper Engine again when the assets are current: it first reads the public build from SteamCMD's app info and reports "up to date" when it matches the installed build and the files are there. If the check fails (offline, not logged in), nothing is downloaded. **Re-download** downloads regardless, to repair a damaged copy.
+
 ## [1.0.0]
 
 ### Highlights

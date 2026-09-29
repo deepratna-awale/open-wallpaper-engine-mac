@@ -18,7 +18,8 @@ extension SceneScriptHost {
 
 /// Which wallpaper instance a runtime belongs to.
 struct SceneScriptIdentity: Hashable {
-    /// The Workshop id, or a stable hash of the wallpaper directory for local wallpapers.
+    /// The Steam folder id, or a stable hash of the wallpaper directory for other folders
+    /// (`SceneScriptStorageKey`); never project.json's `workshopid`.
     var wallpaperID: String
     /// The display the instance renders on (`localStorage` `'screen'` scope).
     var screenID: String

@@ -180,8 +180,9 @@ final class SceneSoundLayers {
             self.stepFade(min(max(seconds, SceneClock.minimumFrameDelta), SceneClock.maximumFrameDelta))
         }
         fadeTimer = timer
-        // Default-mode timers stall while menus track; the fade must finish regardless.
-        RunLoop.main.add(timer, forMode: .common)
+        // On the owner's run loop (the renderer's render thread), so the fade and the frames step
+        // the same state on one thread. Common modes: default-mode timers stall while menus track.
+        RunLoop.current.add(timer, forMode: .common)
     }
 
     /// A drawn frame's step of the fade: `frameSeconds` is its wall step, clamped as the scene

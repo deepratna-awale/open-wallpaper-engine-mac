@@ -6,6 +6,60 @@
         <description>Open Wallpaper Engine updates. Items are added by .github/workflows/appcast.yml when a release is published.</description>
         <language>en</language>
         <item>
+            <title>1.0.0-beta.3</title>
+            <pubDate>Tue, 29 Sep 2026 12:38:51 +0000</pubDate>
+            <sparkle:version>4</sparkle:version>
+            <sparkle:shortVersionString>1.0.0-beta.3</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.3/OpenWallpaperEngine-1.0.0-beta.3.zip" length="76127109" type="application/octet-stream" sparkle:edSignature="lCAggJe1x11vw0I7MavVkPfWuXrsNp1y6lpDmv7gWrHJ+jeE1+259UcLbnzRS4xB2l19XMAvT8LGALnKCof+Bg==" />
+            <sparkle:deltas>
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.3/OpenWallpaperEngine-1.0.0-beta.3-from-2.delta" sparkle:deltaFrom="2" length="2684082" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="TLaPoV77AgtvVIwHCJfqGCLNjhrLVr0kWFk+mR9MbpGFS9MLyKnojw5iP8d4oaNO62OZVsi4ds0/OmQUYa/5CQ==" />
+                <enclosure url="https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/download/v1.0.0-beta.3/OpenWallpaperEngine-1.0.0-beta.3-from-1.delta" sparkle:deltaFrom="1" length="2708850" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="976464" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="99Sb9B2B6n22Z2FNRdg0JXWCbFKVR66LnEyWmlts7hw9alC1fhwT5o3hZYZ3MswadK+4a0EIPdKEqBDayPGHDw==" />
+            </sparkle:deltas>
+            <sparkle:channel>beta</sparkle:channel>
+            <sparkle:fullReleaseNotesLink>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.3</sparkle:fullReleaseNotesLink>
+            <link>https://github.com/deepratna-awale/open-wallpaper-engine-mac/releases/tag/v1.0.0-beta.3</link>
+            <description>&lt;p dir="auto"&gt;A performance release: wallpapers use less GPU, memory and battery, and a still wallpaper uses almost none.&lt;/p&gt;
+&lt;h2 dir="auto"&gt;Faster and lighter&lt;/h2&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;&lt;strong&gt;Idle wallpapers stop drawing.&lt;/strong&gt; A scene with nothing changing draws no frames, and the frame rate follows what's moving.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Quality ↔ Efficiency slider&lt;/strong&gt; (Settings › Performance) sets frame-rate caps and effect detail. Low Power Mode and heat move it toward efficiency.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Video wallpapers draw only when there's a new frame.&lt;/strong&gt; A 4K test video went from 180 to 24 frames in 3 s, using 91% less GPU time.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Texture compression&lt;/strong&gt; (Settings › Optimizations, on by default): wallpaper images use about a third of the GPU memory, and loading can be faster.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Less memory:&lt;/strong&gt; decoded images are dropped after upload, two screen buffers instead of three at 60 fps or less, and 3D meshes are no longer kept in RAM after upload.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Covered or sleeping displays stop drawing.&lt;/strong&gt; Covered, muted web wallpapers are suspended.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Audio capture runs only while a wallpaper needs it.&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Particles and 3D:&lt;/strong&gt; empty particle systems are skipped, rope particles are cheaper, 3D models are culled per mesh, and unchanged puppets skip re-posing.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Text&lt;/strong&gt; (clocks, scores) is drawn off the render thread.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Moving a property slider&lt;/strong&gt; for position, scale, rotation, colour or opacity updates live, without reloading the scene.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;New downloads are prepared in the background&lt;/strong&gt;, so they open faster the first time.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 dir="auto"&gt;Web wallpapers&lt;/h2&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;Pausing now pauses the page's scripts, animations, video and audio, as in Wallpaper Engine.&lt;/li&gt;
+&lt;li&gt;Pages receive your FPS setting.&lt;/li&gt;
+&lt;li&gt;Optional: render web wallpapers at standard resolution on Retina displays (Settings › Optimizations, off by default).&lt;/li&gt;
+&lt;li&gt;Displays showing the same web wallpaper share one web process.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 dir="auto"&gt;Settings, legal and more&lt;/h2&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;Settings reorganised into ten tabs, with search, export and import, and per-tab reset.&lt;/li&gt;
+&lt;li&gt;Mac keyboard shortcuts, and a new Playback menu.&lt;/li&gt;
+&lt;li&gt;Terms of Use and Privacy Policy, shown once in the setup assistant.&lt;/li&gt;
+&lt;li&gt;The app checks for updates at launch.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 dir="auto"&gt;Fixes&lt;/h2&gt;
+&lt;ul dir="auto"&gt;
+&lt;li&gt;Background texture compression no longer uses every CPU core; it runs gently in the background.&lt;/li&gt;
+&lt;li&gt;A wallpaper could stay unlit when a shader finished compiling between frames.&lt;/li&gt;
+&lt;li&gt;A script-created layer now draws in the frame that created it.&lt;/li&gt;
+&lt;li&gt;Web wallpapers no longer get silent audio.&lt;/li&gt;
+&lt;li&gt;Video no longer keeps the display awake, and AVKit videos loop.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 dir="auto"&gt;Checked in tests, not yet widely in the app&lt;/h2&gt;
+&lt;p dir="auto"&gt;Web pause, FPS and suspension; the shared web process; hidden-display freezing; background preparation. Please report anything odd.&lt;/p&gt;</description>
+        </item>
+        <item>
             <title>1.0.0-beta.2</title>
             <pubDate>Mon, 28 Sep 2026 10:10:16 +0000</pubDate>
             <sparkle:version>2</sparkle:version>

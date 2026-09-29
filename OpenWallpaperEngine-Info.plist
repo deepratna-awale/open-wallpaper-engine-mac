@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSAudioCaptureUsageDescription</key>
+	<string>Open Wallpaper Engine reads the audio your Mac is playing to drive audio visualizers and audio-reactive wallpapers. Nothing is recorded or sent anywhere.</string>
 	<key>OWEVersionLabel</key>
 	<string>$(OWE_VERSION_LABEL)</string>
 	<key>SUAllowsAutomaticUpdates</key>
@@ -16,18 +18,5 @@
 	<string>https://deepratna-awale.github.io/open-wallpaper-engine-mac/appcast.xml</string>
 	<key>SUPublicEDKey</key>
 	<string>$(SPARKLE_PUBLIC_ED_KEY)</string>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSExceptionDomains</key>
-		<dict>
-			<key>New Exception Domain</key>
-			<dict>
-				<key>NSExceptionAllowsInsecureHTTPLoads</key>
-				<true/>
-				<key>NSIncludesSubdomains</key>
-				<true/>
-			</dict>
-		</dict>
-	</dict>
 </dict>
 </plist>

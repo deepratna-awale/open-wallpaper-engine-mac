@@ -86,9 +86,25 @@ enum SceneDisplayOutput: Equatable {
     /// and flag. The standard output restores the layer only where EDR had changed it, so a view
     /// that never showed EDR is left exactly as it was. On the view's thread (the main one).
     func apply(to view: MTKView, standard: MTLPixelFormat) {
+        // A view drawn on a render thread: only its layer is set up there (Core Animation allows
+        // any thread); the view's own format follows on the main thread.
+        if let snapshot = SceneViewSnapshots.snapshot(of: view) {
+            guard let layer = snapshot.layer else { return }
+            let format = pixelFormat(standard: standard)
+            if layer.pixelFormat != format {
+                layer.pixelFormat = format
+                DispatchQueue.main.async { if view.colorPixelFormat != format { view.colorPixelFormat = format } }
+            }
+            apply(to: layer)
+            return
+        }
         let format = pixelFormat(standard: standard)
         if view.colorPixelFormat != format { view.colorPixelFormat = format }
         guard let layer = view.layer as? CAMetalLayer else { return }
+        apply(to: layer)
+    }
+
+    private func apply(to layer: CAMetalLayer) {
         if isExtended {
             if !layer.wantsExtendedDynamicRangeContent { layer.wantsExtendedDynamicRangeContent = true }
             if layer.colorspace?.name != Self.extendedColorSpace?.name { layer.colorspace = Self.extendedColorSpace }

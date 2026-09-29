@@ -136,8 +136,8 @@ struct SceneTextLayout {
     /// the glyphs are rasterised at the size they are shown at instead of being upscaled. Each
     /// glyph is drawn at its whole-unit pen position, as WE's glyph quads are.
     func rasterize(font: NSFont, color: NSColor, pixelsPerUnit: CGFloat) -> CGImage? {
-        let width = max(1, Int(ceil(CGFloat(boxSize.x) * pixelsPerUnit)))
-        let height = max(1, Int(ceil(CGFloat(boxSize.y) * pixelsPerUnit)))
+        let width = Int(saturating: ceil(CGFloat(boxSize.x) * pixelsPerUnit), in: 1...Int.max)
+        let height = Int(saturating: ceil(CGFloat(boxSize.y) * pixelsPerUnit), in: 1...Int.max)
         guard let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
                                       space: CGColorSpace(name: CGColorSpace.sRGB)!,
                                       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }

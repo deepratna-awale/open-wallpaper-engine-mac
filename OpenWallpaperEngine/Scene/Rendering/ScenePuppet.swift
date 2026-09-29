@@ -121,6 +121,11 @@ final class ScenePuppetPlan {
         guard let mesh = model.meshes.first, mesh.vertexCount > 0, mesh.indexCount > 0 else {
             throw ScenePuppetError.unsupported("\(rigPath) has no mesh")
         }
+        // Every index drawn must name one of the mesh's vertices, so the draws read inside its buffer.
+        if let largest = SceneModelRenderer.largestIndex(mesh.indexData, uint32: mesh.usesUInt32Indices, count: mesh.indexCount),
+           largest >= mesh.vertexCount {
+            throw ScenePuppetError.unsupported("\(rigPath) indexes vertex \(largest) of its \(mesh.vertexCount)")
+        }
         guard let skeleton = model.skeleton, !skeleton.bones.isEmpty else {
             throw ScenePuppetError.unsupported("\(rigPath) has no skeleton")
         }
@@ -140,6 +145,11 @@ final class ScenePuppetPlan {
             throw ScenePuppetError.unsupported("a sprite-sheet albedo")
         case .video:
             throw ScenePuppetError.unsupported("a video albedo")
+        case let .uploaded(info):
+            // Plans are made from loaded content; an uploaded image keeps the sizes they read.
+            let sheet = info.sheetPixelSize ?? SIMD2<Double>(info.pixelSize)
+            texture = SIMD2(Int(sheet.x), Int(sheet.y))
+            content = SIMD2(Int(info.pixelSize.x), Int(info.pixelSize.y))
         }
         guard content.x > 0, content.y > 0, texture.x >= content.x, texture.y >= content.y else {
             throw ScenePuppetError.unsupported("an empty texture")
@@ -514,7 +524,7 @@ final class ScenePuppetRenderer {
         pass.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 0)
         pass.colorAttachments[0].storeAction = .store
         guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { return nil }
-        let content = contentSize.map { SIMD2(Int($0.x.rounded()), Int($0.y.rounded())) } ?? SIMD2(texture.width, texture.height)
+        let content = contentSize.map { SIMD2(Int(saturating: $0.x.rounded()), Int(saturating: $0.y.rounded())) } ?? SIMD2(texture.width, texture.height)
         struct Uniforms {
             var projection: simd_float4x4
             var uvScale: SIMD2<Float>
@@ -751,7 +761,7 @@ final class ScenePuppetRenderer {
                                  format: MDLVertexFormat) -> MTLVertexDescriptor {
         let descriptor = MTLVertexDescriptor()
         let names = Dictionary(attributes.map { ($0.value, $0.key) }, uniquingKeysWith: { a, _ in a })
-        var usesZero = false
+        var usesZero = false, usesMesh = false
         for input in function.vertexAttributes ?? [] where input.isActive {
             let element = descriptor.attributes[input.attributeIndex]!
             let isInteger = [.uint, .uint2, .uint3, .uint4, .int, .int2, .int3, .int4].contains(input.attributeType)
@@ -760,6 +770,7 @@ final class ScenePuppetRenderer {
                 element.format = vertexFormat(attribute)
                 element.offset = offset
                 element.bufferIndex = meshBuffer
+                usesMesh = true
             } else {
                 element.format = isInteger ? .uint4 : .float4
                 element.offset = 0
@@ -767,7 +778,8 @@ final class ScenePuppetRenderer {
                 usesZero = true
             }
         }
-        descriptor.layouts[meshBuffer].stride = format.stride
+        // Metal refuses a layout no attribute reads, so it is set only when one does.
+        if usesMesh { descriptor.layouts[meshBuffer].stride = format.stride }
         if usesZero {
             descriptor.layouts[EffectGraphRenderer.zeroBuffer].stride = 16
             descriptor.layouts[EffectGraphRenderer.zeroBuffer].stepFunction = .constant

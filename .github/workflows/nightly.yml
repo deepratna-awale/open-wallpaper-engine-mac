@@ -13,10 +13,13 @@ jobs:
   slow-tests:
     runs-on: macos-26
     timeout-minutes: 120
+    # The Steam secrets live in this environment, which only main can use.
+    environment: steam-ci
     env:
       WE_ASSETS: ${{ github.workspace }}/../we-assets
+      WE_ASSETS_ENC: ${{ github.workspace }}/../we-assets.tar.enc
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - uses: ./.github/actions/select-xcode
 
@@ -24,25 +27,80 @@ jobs:
         id: build
         run: |
           id=$(Scripts/fetch-we-assets.sh --build-id || true)
-          echo "id=${id:-unknown-${{ github.run_id }}}" >> "$GITHUB_OUTPUT"
+          [[ "$id" =~ ^[0-9]+$ ]] || id=unknown
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+          echo "Wallpaper Engine build: $id" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Restore the assets
+      # The assets are cached only as an AES-256 archive. The key lives in the steam-ci
+      # environment; without it the cache is skipped and the assets are downloaded.
+      - name: Check the asset cache key
+        id: cachekey
+        env:
+          OWE_ASSET_CACHE_KEY: ${{ secrets.OWE_ASSET_CACHE_KEY }}
+          BUILD_ID: ${{ steps.build.outputs.id }}
+        run: |
+          if [[ -n "$OWE_ASSET_CACHE_KEY" && "$BUILD_ID" =~ ^[0-9]+$ ]]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Asset cache skipped (no key or no build id)." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Restore the encrypted assets
         id: cache
-        uses: actions/cache@v4
+        if: steps.cachekey.outputs.enabled == 'true'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: ${{ env.WE_ASSETS }}
-          key: we-assets-${{ steps.build.outputs.id }}
-          restore-keys: we-assets-
+          path: ${{ env.WE_ASSETS_ENC }}
+          key: we-assets-enc-${{ steps.build.outputs.id }}
+
+      - name: Decrypt the assets
+        id: decrypt
+        if: steps.cache.outputs.cache-hit == 'true'
+        env:
+          OWE_ASSET_CACHE_KEY: ${{ secrets.OWE_ASSET_CACHE_KEY }}
+        run: |
+          set -o pipefail
+          rm -rf "$WE_ASSETS" && mkdir -p "$WE_ASSETS"
+          if openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass env:OWE_ASSET_CACHE_KEY -in "$WE_ASSETS_ENC" \
+              | tar -x -C "$WE_ASSETS" -f - && [[ -d "$WE_ASSETS/assets/shaders" ]]; then
+            echo "restored=true" >> "$GITHUB_OUTPUT"
+          else
+            rm -rf "$WE_ASSETS"
+            echo "::warning::Could not decrypt the cached assets; downloading them instead."
+          fi
+          rm -f "$WE_ASSETS_ENC"
 
       - name: Fetch the assets
-        if: steps.cache.outputs.cache-hit != 'true'
+        if: steps.decrypt.outputs.restored != 'true'
         timeout-minutes: 20
         env:
           OWE_CI_STEAM_USER: ${{ secrets.OWE_CI_STEAM_USER }}
           OWE_CI_STEAM_PASSWORD: ${{ secrets.OWE_CI_STEAM_PASSWORD }}
           OWE_CI_STEAM_SHARED_SECRET: ${{ secrets.OWE_CI_STEAM_SHARED_SECRET }}
           OWE_TOOLS_DIR: ${{ runner.temp }}/owe-tools
-        run: Scripts/fetch-we-assets.sh "$WE_ASSETS"
+        run: Scripts/fetch-we-assets.sh --force "$WE_ASSETS"
+
+      # Only main saves. tar streams straight into openssl, so no plaintext archive is ever
+      # written; only the ciphertext file is saved.
+      - name: Encrypt the assets
+        id: encrypt
+        if: steps.cachekey.outputs.enabled == 'true' && steps.cache.outputs.cache-hit != 'true' && github.ref == 'refs/heads/main'
+        env:
+          OWE_ASSET_CACHE_KEY: ${{ secrets.OWE_ASSET_CACHE_KEY }}
+        run: |
+          set -o pipefail
+          rm -f "$WE_ASSETS_ENC"
+          tar -C "$WE_ASSETS" -cf - . \
+            | openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:OWE_ASSET_CACHE_KEY -out "$WE_ASSETS_ENC"
+          echo "done=true" >> "$GITHUB_OUTPUT"
+
+      - name: Save the encrypted assets
+        if: steps.encrypt.outputs.done == 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.WE_ASSETS_ENC }}
+          key: we-assets-enc-${{ steps.build.outputs.id }}
 
       - name: Build and test, slow tests included
         env:
@@ -61,7 +119,7 @@ jobs:
 
       - name: Upload log
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: xcodebuild-log-nightly
           path: xcodebuild.log

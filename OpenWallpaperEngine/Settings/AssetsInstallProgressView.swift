@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// The assets install as it runs: download progress, the copy, or why it failed; nothing when
-/// idle. Used by Settings › Assets and the setup assistant.
+/// The assets install as it runs: download progress, the copy, or why it failed; when idle, only
+/// the last update check that found nothing to download. Used by Settings › Assets and the setup assistant.
 struct AssetsInstallProgressView: View {
     @ObservedObject var assets: WallpaperEngineAssetsService
     /// Where "Log In" goes after a failure for want of a Steam login; the Workshop tab by default.
@@ -10,7 +10,11 @@ struct AssetsInstallProgressView: View {
     var body: some View {
         switch assets.phase {
         case .idle:
-            EmptyView()
+            if let notice = assets.notice {
+                Label(notice, systemImage: "checkmark.circle.fill")
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
+            }
         case .downloading(let text, let progress):
             VStack(alignment: .leading, spacing: 6) {
                 if let progress {

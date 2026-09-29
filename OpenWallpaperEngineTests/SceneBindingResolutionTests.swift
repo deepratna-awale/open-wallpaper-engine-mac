@@ -68,6 +68,24 @@ final class SceneBindingResolutionTests: XCTestCase {
         XCTAssertEqual(base.rotation, 0.5, "angles isn't bound")
     }
 
+    /// A channel that is 0 at build has no ratio; with no rebuild it must still follow the property.
+    func testZeroChannelAtBuildStillUpdatesLive() throws {
+        let object = try loadScene().objects[0]
+        let built = PropertyContext(properties: ["color": "0 1 1", "mode": "1"])
+        let bindings = SceneLayerBindings(object: object, builtWith: built)
+        let layer = SceneMetalLayer(id: "1", name: "Tinted", source: .image(NSImage()), position: .zero,
+                                    size: SIMD2(200, 200), scale: SIMD2(1, 1),
+                                    opacity: 0, brightness: 1, color: SIMD4(0, 1, 1, 1), text: nil, parallaxDepth: .zero,
+                                    perspective: false, rotation: 0,
+                                    effects: SceneMaterialEffects(brightness: 1, contrast: 1, saturation: 1, bloom: 0, blur: 0,
+                                                                  exposure: 0, gamma: 1, hue: 0, bloomThreshold: 0.7,
+                                                                  transformAngle: 0, transformOffset: .zero,
+                                                                  transformScale: SIMD2(1, 1)))
+        let base = bindings.baseValues(for: layer, in: PropertyContext(properties: ["color": "0.6 1 1", "mode": "2"]))
+        XCTAssertEqual(base.color.x, 0.6, accuracy: 1e-5)
+        XCTAssertEqual(base.opacity, 1, accuracy: 1e-5)
+    }
+
     func testParticleOverridesResolveBindings() throws {
         let object = try loadScene().objects[2]
         let defaults = SceneParticleOverrides(object.instanceoverride, in: PropertyContext())

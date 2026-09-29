@@ -374,7 +374,7 @@ struct WEInstanceOverride: Decodable {
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: AnyCodingKey.self)
         id = c.decodeLogged(SceneRawValue.self, forKey: AnyCodingKey(stringValue: "id"), userInfo: decoder.userInfo)?
-            .literalDouble.map { Int($0) }
+            .literalDouble.map { Int(saturating: $0) }
         for field in SceneInstanceOverrideField.allCases {
             if let raw = c.decodeLogged(SceneRawValue.self, forKey: AnyCodingKey(stringValue: field.rawValue),
                                         userInfo: decoder.userInfo) {

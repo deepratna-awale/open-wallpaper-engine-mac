@@ -13,6 +13,11 @@ struct ParticleFamilyBuilder {
     /// Where a failure is reported, with the object it belongs to.
     let report: (String) -> Void
 
+    /// Bounds for malformed files only, far above any authored family: a list that names the same
+    /// child many times at every level would otherwise grow the family exponentially.
+    static let maximumDepth = 16
+    static let maximumMembers = 4096
+
     /// The family of the system at `path`, the root first. `world` is the root emitter's authored
     /// world transform.
     func family(_ path: String, world: SceneAffineTransform,
@@ -39,6 +44,14 @@ struct ParticleFamilyBuilder {
         let index = family.count
         family.append(system)
         for child in children {
+            guard family.count < Self.maximumMembers else {
+                report("particle system \(path)'s family reached \(Self.maximumMembers) systems; its remaining children are skipped")
+                break
+            }
+            guard ancestors.count + 1 < Self.maximumDepth else {
+                report("particle system \(path) is nested \(Self.maximumDepth) levels deep; its children are skipped")
+                break
+            }
             guard let name = child.name, !name.isEmpty else { continue }
             guard !ancestors.contains(name), name != path else {
                 report("particle system \(path) lists its own ancestor \(name) as a child; skipped")
