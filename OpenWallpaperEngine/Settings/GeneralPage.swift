@@ -92,9 +92,11 @@ struct GeneralPage: SettingsPage {
 }
 
 /// Every shortcut of the menu bar, grouped by menu (`AppShortcut.all`).
-/// Collapsed until the user opens it; the choice is remembered.
+/// Collapsed until the user opens it; the choice is remembered. A search result for a shortcut
+/// (`SettingsAnchor.shortcuts`) opens it, so the match shows.
 struct KeyboardShortcutsSection: View {
     @AppStorage("ShowsKeyboardShortcuts", store: .app) private var isExpanded = false
+    @EnvironmentObject private var navigation: SettingsNavigation
 
     var body: some View {
         Section {
@@ -105,6 +107,7 @@ struct KeyboardShortcutsSection: View {
                         Text(menu.title)
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         ForEach(shortcuts) { shortcut in
                             HStack {
                                 Text(shortcut.title)
@@ -119,8 +122,14 @@ struct KeyboardShortcutsSection: View {
             } label: {
                 Label("Keyboard Shortcuts", systemImage: "keyboard")
             }
+            .onAppear { expandIfSearched(navigation.highlight) }
+            .onChange(of: navigation.highlight) { _, anchor in expandIfSearched(anchor) }
         } footer: {
             Text("The same shortcuts are shown in the menus. You can change them in System Settings › Keyboard › Keyboard Shortcuts › App Shortcuts.")
         }
+    }
+
+    private func expandIfSearched(_ anchor: String?) {
+        if anchor == SettingsAnchor.shortcuts { isExpanded = true }
     }
 }
