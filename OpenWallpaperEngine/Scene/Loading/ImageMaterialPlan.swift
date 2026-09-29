@@ -114,6 +114,9 @@ struct ImageMaterialPlanBuilder {
     let loadTexture: (_ name: String, _ materialPath: String) -> SceneMetalTextureSource?
     /// The combos WE's engine lays over every material of the scene (`SceneEngineCombos`).
     var sceneEngineCombos = SceneEngineCombos()
+    /// The layer's blending in place of its material's first pass's (the Scene Inspector's,
+    /// `sceneObjectBlendingKey`); nil keeps the material's.
+    var blending: WEMaterialBlending?
 
     /// nil when the material has no image to draw: no texture in slot 0 (solid layers' `flat`) or a
     /// render target there (composition layers), which keep their own paths.
@@ -177,7 +180,8 @@ struct ImageMaterialPlanBuilder {
         } catch {
             throw ImageMaterialPlanError.invalid(materialPath, error)
         }
-        guard let materialPass = material.passes.first else { throw ImageMaterialPlanError.missing("\(materialPath) passes") }
+        guard var materialPass = material.passes.first else { throw ImageMaterialPlanError.missing("\(materialPath) passes") }
+        if let blending { materialPass.blending = blending.rawValue }
         let image = materialPass.textures.first ?? nil
         if listsItsImage, image == nil || image!.hasPrefix("_rt_") {
             // Such a layer keeps its own draw, which has no scene blend: say so rather than drop it quietly.

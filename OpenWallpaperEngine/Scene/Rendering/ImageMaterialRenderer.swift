@@ -560,6 +560,22 @@ final class ImageMaterialRenderer {
         return true
     }
 
+    /// The image material's blend state for its pass's `blending`: alpha-to-coverage (WE's blend
+    /// byte 3) takes coverage from the shader's alpha (`ALPHATOCOVERAGE`) without blending; the
+    /// rest blend as `EffectGraphRenderer.blendMode` says.
+    static func applyBlending(_ blending: String, to descriptor: MTLRenderPipelineDescriptor) {
+        if blending.lowercased() == WEMaterialBlending.alphaToCoverage.rawValue {
+            descriptor.isAlphaToCoverageEnabled = true
+        } else if let blend = EffectGraphRenderer.blendMode(blending) {
+            let attachment = descriptor.colorAttachments[0]!
+            attachment.isBlendingEnabled = true
+            attachment.sourceRGBBlendFactor = blend.source
+            attachment.sourceAlphaBlendFactor = blend.source
+            attachment.destinationRGBBlendFactor = blend.destination
+            attachment.destinationAlphaBlendFactor = blend.destination
+        }
+    }
+
     private func compile(_ variant: TranslatedShaderVariant, blending: String, material: String, pixelFormat: MTLPixelFormat,
                          sampleCount: Int, depthFormat: MTLPixelFormat, key: String) {
         pipelineLock.withLock { _ = pending.insert(key) }
@@ -580,17 +596,7 @@ final class ImageMaterialRenderer {
                 descriptor.colorAttachments[0].pixelFormat = pixelFormat
                 descriptor.rasterSampleCount = sampleCount
                 descriptor.depthAttachmentPixelFormat = depthFormat
-                if blending.lowercased() == "alphatocoverage" {
-                    // WE's blend byte 3: coverage from the shader's alpha (`ALPHATOCOVERAGE`), no blending.
-                    descriptor.isAlphaToCoverageEnabled = true
-                } else if let blend = EffectGraphRenderer.blendMode(blending) {
-                    let attachment = descriptor.colorAttachments[0]!
-                    attachment.isBlendingEnabled = true
-                    attachment.sourceRGBBlendFactor = blend.source
-                    attachment.sourceAlphaBlendFactor = blend.source
-                    attachment.destinationRGBBlendFactor = blend.destination
-                    attachment.destinationAlphaBlendFactor = blend.destination
-                }
+                Self.applyBlending(blending, to: descriptor)
                 descriptor.vertexDescriptor = EffectGraphRenderer.vertexDescriptor(for: vertex)
                 result = try EffectGraphRenderer.makePipeline(descriptor, device: device, archive: archive, key: key)
             } catch {
