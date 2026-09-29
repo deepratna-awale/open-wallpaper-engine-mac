@@ -154,13 +154,13 @@ These are listed in `SceneScriptCorpusReplayTests.expectedFailures`, with reason
 
 ## Expanded corpus (2026-09-26)
 
-The corpus was re-extracted with the newly downloaded wallpapers: 1370 index entries, 65 wallpapers and 1239 sites in the replay. On HEAD `9c92f10` the new wallpapers gave 19 findings. One was a harness gap, 17 are WE's behaviour or follow from what the wallpaper lacks (RF3 among them, since resolved), and one is our known gap.
+The corpus was re-extracted with the newly downloaded wallpapers: 1370 index entries, 65 wallpapers and 1239 sites in the replay. On HEAD `9c92f10` the new wallpapers gave 19 findings. One was a harness gap, 16 are WE's behaviour or follow from what the wallpaper lacks, one (RF3) was ours and is resolved, and one is our known gap.
 
 | wallpaper | sites | load ms | mean ms/frame | p50 | p99 | CPU p50 | commands | created | stubs used | findings |
 |---|---|---|---|---|---|---|---|---|---|---|
 | owe/2079954552 | 1 | 17.46 | 0.040 | 0.036 | 0.078 | 0.036 | 126 | 63 | - | ok |
 | owe/2276071817 | 2 | 18.19 | 0.081 | 0.075 | 0.133 | 0.074 | 128 | 63 | - | ok |
-| owe/2321732083 | 3 | 22.82 | 0.058 | 0.047 | 0.125 | 0.046 | 150 | 8 | - | exception 1 (WE too, RF3) |
+| owe/2321732083 | 3 | 22.82 | 0.058 | 0.047 | 0.125 | 0.046 | 150 | 8 | - | exception 1 (RF3, since resolved) |
 | owe/2350874185 | 16 | 25.64 | 0.062 | 0.040 | 0.290 | 0.040 | 0 | 0 | - | change 3 (WE too) |
 | owe/2499516781 | 33 | 39.38 | 0.084 | 0.067 | 0.220 | 0.066 | 1760 | 7 | - | ok |
 | owe/2515150033 | 2 | 0.92 | 0.053 | 0.048 | 0.102 | 0.048 | 0 | 0 | - | ok |
@@ -188,9 +188,10 @@ The corpus was re-extracted with the newly downloaded wallpapers: 1370 index ent
 
 ### Resolved: RF3. `getAnimation(name)` for an unnamed timeline
 
-- **`9029e263e6d9`** (2321732083): `ship.getAnimation('origin').play()` in a timer throws, because none of the three ships' `origin` timelines has `options.name`. The script also calls it on layers it creates from `getInitialLayerConfig`.
+- **`9029e263e6d9`** (2321732083): `ship.getAnimation('origin').play()` in a timer threw, because none of the three ships' `origin` timelines has `options.name`. The script also calls it on layers it creates from `getInitialLayerConfig`.
 - **WE's parse** (`wallpaper64.exe` `0x1401a52f6`…`0x1401a5343`) sets the animation's name string (offset `0x68`, initialised empty) only when `options.name` is a string. The editor (`ui/dist/scripts/scripts.js`, `saveAnimationOptions`) deletes an empty name. So these animations are unnamed in WE too.
-- **WE's lookup doesn't fall back to the property name.** A capture of 2321732083 in WE 2.8.0.42 on Windows shows the puppet static: `getAnimation('origin')` finds nothing there either, and the ships don't fly. Our `getAnimation`, which matches only `options.name`, is WE's behaviour and stays; the finding is expected, as WE's.
+- **WE's lookup finds them by their property.** The capture of 2321732083 in WE 2.8.0.42 (`tools/peer/2321732083/default/clip.mp4`, 10–15 s after load) shows the white cars of `shipleft` crossing from the left, which only that `play()` starts; the samurai also moves there. An earlier reading of that capture called the puppet static and the ships absent: the puppet was ours (P-EFX below), and the cars are small. `getAnimation(name)` on a layer, an effect or a material now takes the animation of that `options.name`, else the one on the property of that key (`objects.resolveAnimation`); the finding is gone. `thisScene.getAnimation(name)` still matches names only [?: WE's host search for it isn't traced].
+- **P-EFX (renderer, not scripts):** the samurai stood still in ours because it is a puppet with effects (`pulse`, `blend`): its mesh redraws its image into the same texture every frame, and the effect chain's kept output and base pass were keyed by that texture alone, so they kept the first pose. The image's drawing now has a version (`ScenePuppetRenderer.albedoVersion`) that the chain keys on too.
 
 ### WE's behaviour, or what the wallpaper lacks
 
