@@ -683,6 +683,54 @@ private final class SceneInspectorModel: ObservableObject {
         saveObjectJSON(prettyJSON(object), item: items[index])
     }
 
+    /// The material blendings a layer offers: its kind's (`WEMaterialBlending`); none for a layer
+    /// without a material of its own.
+    static func blendingOptions(for item: SceneInspectorItem) -> [WEMaterialBlending] {
+        guard !item.isSynthetic, item.materialPath != nil, Int(item.id) != nil else { return [] }
+        switch item.kind {
+        case "Image": return WEMaterialBlending.imageLayer
+        case "Particle": return WEMaterialBlending.particleSystem
+        default: return []
+        }
+    }
+
+    /// The blending of the layer's material as the scene loads it: its first pass's, with the
+    /// material's own edit (`saveAssetJSON`) when it has one.
+    func authoredBlending(for item: SceneInspectorItem) -> WEMaterialBlending {
+        let particle = item.kind == "Particle"
+        let raw = item.materialPath.flatMap { storedValues["_owe_scene_asset_\($0)_json"] } ?? item.rawMaterial
+        guard let data = raw?.data(using: .utf8),
+              let material = try? JSONSerialization.jsonObject(with: data) as? [String: Any], // no material: its default
+              let pass = (material["passes"] as? [[String: Any]])?.first else {
+            return WEMaterialBlending.authored(nil, particle: particle)
+        }
+        return WEMaterialBlending.authored(pass["blending"] as? String, particle: particle)
+    }
+
+    /// The blending the layer draws with: the one set here, else its material's.
+    func materialBlending(for item: SceneInspectorItem) -> WEMaterialBlending {
+        guard let objectID = Int(item.id),
+              let value = storedValues[sceneObjectBlendingKey(objectID: objectID)],
+              let blending = WEMaterialBlending(authored: value),
+              Self.blendingOptions(for: item).contains(blending) else { return authoredBlending(for: item) }
+        return blending
+    }
+
+    /// Draws the layer's material with `blending`, applied live (the content is rebuilt, the
+    /// scene isn't reloaded) and saved with the other edits.
+    func setMaterialBlending(_ blending: WEMaterialBlending, for item: SceneInspectorItem) {
+        guard let objectID = Int(item.id), Self.blendingOptions(for: item).contains(blending) else { return }
+        var values = storedValues
+        values[sceneObjectBlendingKey(objectID: objectID)] = blending.rawValue
+        persist(values)
+    }
+
+    /// Back to the material's own blending. It is stored rather than removed: the running
+    /// wallpaper keeps a key its store no longer has until it reloads.
+    func resetMaterialBlending(for item: SceneInspectorItem) {
+        setMaterialBlending(authoredBlending(for: item), for: item)
+    }
+
     /// WE's blend modes as its editor lists them (`WEImageBlendModes`), with WE's labels.
     lazy var blendModeCombo: SceneInspectorEffectCombo = {
         let labels = WallpaperEngineLabels.load()
@@ -1331,6 +1379,9 @@ struct SceneInspectorView: View {
                 if item.kind == "Image" {
                     blendModePicker(for: item)
                 }
+                if !SceneInspectorModel.blendingOptions(for: item).isEmpty {
+                    materialBlendingPicker(for: item)
+                }
             } else {
                 Text("Select an object to resize it.")
                     .font(.caption)
@@ -1349,6 +1400,32 @@ struct SceneInspectorView: View {
                     ForEach(group.options, id: \.value) { option in Text(option.title).tag(option.value) }
                 }
             }
+        }
+    }
+
+    /// The blending the layer's material draws with, of those its kind of layer draws
+    /// (`WEMaterialBlending`), and a reset to its material's own.
+    private func materialBlendingPicker(for item: SceneInspectorItem) -> some View {
+        HStack {
+            Picker("Blending", selection: Binding(get: { model.materialBlending(for: item) },
+                                                  set: { model.setMaterialBlending($0, for: item) })) {
+                ForEach(SceneInspectorModel.blendingOptions(for: item), id: \.self) { blending in
+                    Self.title(of: blending).tag(blending)
+                }
+            }
+            Button("Reset") { model.resetMaterialBlending(for: item) }
+                .buttonStyle(.link)
+                .font(.caption)
+                .disabled(model.materialBlending(for: item) == model.authoredBlending(for: item))
+        }
+    }
+
+    private static func title(of blending: WEMaterialBlending) -> Text {
+        switch blending {
+        case .normal: Text("Normal")
+        case .translucent: Text("Translucent")
+        case .additive: Text("Additive")
+        case .alphaToCoverage: Text("Alpha to Coverage")
         }
     }
 
