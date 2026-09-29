@@ -45,16 +45,18 @@ final class SceneRenderThreadTests: XCTestCase {
     }
 
     /// A render loop drawing one on-screen view, its frames recorded in `frames`.
-    private func startLoop(_ frames: Frames) throws -> SceneRenderLoop {
+    /// `prepare` sets the renderer up before the render thread takes it.
+    private func startLoop(_ frames: Frames, prepare: (SceneMetalRenderer) throws -> Void = { _ in }) throws -> SceneRenderLoop {
         let screen = try XCTUnwrap(NSScreen.main, "needs a display")
         let renderer = try XCTUnwrap(SceneMetalRenderer(pixelFormat: .bgra8Unorm))
         renderer.frameTimeObserver = { _ in frames.record() }
+        try prepare(renderer)
         let loop = SceneRenderLoop(renderer: renderer, name: "test render")
         self.loop = loop
         let window = NSWindow(contentRect: CGRect(x: screen.frame.minX, y: screen.frame.minY, width: 64, height: 64),
                               styleMask: .borderless, backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
-        let view = MTKView(frame: CGRect(x: 0, y: 0, width: 64, height: 64))
+        let view = SceneRenderLoop.makeView(frame: CGRect(x: 0, y: 0, width: 64, height: 64))
         renderer.configure(view)
         let delegate = Delegate(loop: loop)
         self.delegate = delegate
@@ -80,9 +82,58 @@ final class SceneRenderThreadTests: XCTestCase {
         func draw(in view: MTKView) { loop.draw(ObjectIdentifier(self), in: view) }
     }
 
-    private func waitForFrames(_ frames: Frames, atLeast count: Int, timeout: TimeInterval = 5) {
+    private func waitForFrames(_ frames: Frames, atLeast count: Int, timeout: TimeInterval = 5,
+                               onMain: () -> Void = {}) {
         let deadline = Date().addingTimeInterval(timeout)
-        while frames.count < count, Date() < deadline { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
+        while frames.count < count, Date() < deadline {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.01))
+            onMain()
+        }
+    }
+
+    /// Thread-guard hits, recorded from any thread.
+    private final class Violations: @unchecked Sendable {
+        private let lock = NSLock()
+        private var all: [ThreadGuards.Violation] = []
+        func record(_ violation: ThreadGuards.Violation) { lock.withLock { all.append(violation) } }
+        var list: [ThreadGuards.Violation] { lock.withLock { all } }
+    }
+
+    /// Startup with WE's MSAA ×2: the scene pass's multisampled pipelines are made on first use,
+    /// so a frame drawn on the main thread beside the render thread's raced to make them. The
+    /// view's own timer never runs, and a stray main-thread draw is dropped and reported.
+    func testStartupWithMSAADrawsOnlyOnTheRenderThread() throws {
+        _ = try Fixtures.assets()
+        let directory = Fixtures.url("Scenes/msaa")
+        defer { Fixtures.removeStoredSettings(for: directory) }
+        let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/msaa/project.json"))
+        let content = try XCTUnwrap(SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
+        let violations = Violations()
+        let previous = ThreadGuards.setHandler { violations.record($0) }
+        defer { ThreadGuards.setHandler(previous) }
+        let frames = Frames()
+        _ = try startLoop(frames) { renderer in
+            renderer.renderSettings.antiAliasing = .msaa_x2
+            renderer.setPlacement(.stretch)
+            renderer.setContent(content)
+        }
+        let view = try XCTUnwrap(window?.contentView as? MTKView)
+        XCTAssertTrue(view.isPaused, "the view's own timer never draws")
+        waitForFrames(frames, atLeast: 20, timeout: 30)
+        XCTAssertGreaterThanOrEqual(frames.count, 20, "the display link draws")
+        XCTAssertTrue(frames.allOffMain, "every frame draws off the main thread")
+        #if DEBUG
+        XCTAssertEqual(violations.list, [], "startup draws only on the render thread")
+        #endif
+
+        // A stray main-thread draw while the link draws: dropped, and a guard hit in debug.
+        let before = frames.count
+        waitForFrames(frames, atLeast: before + 20, timeout: 10) { view.draw() }
+        XCTAssertTrue(frames.allOffMain, "no frame drew on the main thread")
+        #if DEBUG
+        XCTAssertTrue(violations.list.contains { $0.kind == .offRenderThread && $0.what == "A scene view's draw" })
+        XCTAssertFalse(violations.list.contains { $0.what.contains("scene frame") }, "the renderer never ran it")
+        #endif
     }
 
     func testDrawRunsOffTheMainThread() throws {
@@ -106,6 +157,24 @@ final class SceneRenderThreadTests: XCTestCase {
         Thread.sleep(forTimeInterval: 0.5)
         let end = CACurrentMediaTime()
         XCTAssertGreaterThanOrEqual(frames.count(between: start, and: end), 3, "frames kept coming while main stalled")
+    }
+
+    /// The scene pass's MSAA pipelines are made once, whichever threads ask for them at once.
+    func testMSAAPipelinesAreMadeOnceUnderConcurrentAccess() throws {
+        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
+        let library = try XCTUnwrap(device.makeDefaultLibrary())
+        let pipelines = try SceneLayerPipelines(
+            device: device, vertex: try XCTUnwrap(library.makeFunction(name: "sceneVertex")),
+            fragment: try XCTUnwrap(library.makeFunction(name: "sceneFragment")),
+            copyFragment: try XCTUnwrap(library.makeFunction(name: "sceneCopyFragment")), formats: [.bgra8Unorm])
+        let lock = NSLock()
+        var made: [ObjectIdentifier] = []
+        DispatchQueue.concurrentPerform(iterations: 8) { _ in
+            let normal = pipelines.pipelines(for: .bgra8Unorm, sampleCount: 2)?.normal
+            lock.withLock { made.append(normal.map { ObjectIdentifier($0 as AnyObject) } ?? ObjectIdentifier(NSNull())) }
+        }
+        XCTAssertEqual(made.count, 8)
+        XCTAssertEqual(Set(made).count, 1, "one set of ×2 pipelines")
     }
 
     /// A view the render thread drew is read directly again once it's detached: its snapshot,
