@@ -1,4 +1,5 @@
 import Metal
+import os
 
 /// Runs particle systems on the GPU (`ParticleSimulation.metal`): one compute pass per frame
 /// steps every system and writes its draw records and indirect draw arguments, so neither the
@@ -22,6 +23,11 @@ final class ParticleGPUSimulator {
     }
 
     static let threadgroupSize = 256
+
+    /// Frames encoded, and the latest one whose command buffer has completed (its control words,
+    /// `completedCount` among them, are final).
+    private var serial: UInt64 = 0
+    private let completedSerial = OSAllocatedUnfairLock(initialState: UInt64(0))
 
     private let device: MTLDevice
     private let age, begin, emit, simulate, scanBlocks, scanBlockSums, compact, finish: MTLComputePipelineState
@@ -84,6 +90,8 @@ final class ParticleGPUSimulator {
     func encode(_ requests: [Request], sceneSize: SIMD2<Float>, targetSize: SIMD2<Float>,
                 commandBuffer: MTLCommandBuffer) {
         guard !requests.isEmpty else { return }
+        let requests = skippingEmpty(requests, commandBuffer: commandBuffer)
+        guard !requests.isEmpty else { return }
         var blit: MTLBlitCommandEncoder?
         for request in requests {
             guard let gpu = state(for: request.system) else { continue }
@@ -133,6 +141,32 @@ final class ParticleGPUSimulator {
             }
         }
         encoder.endEncoding()
+    }
+
+    /// Drops the steps of systems that are provably empty: nothing alive when a frame at or after
+    /// their last step that could hold or add particles completed, and this step adds none (every
+    /// emitter at rate 0 with no burst, no clear). Their last step wrote zero draw arguments, so
+    /// they stay drawn as empty. A child (spawned by its parent's events) or a parent (its events
+    /// feed children) always steps. Any emission wakes the system the same frame.
+    private func skippingEmpty(_ requests: [Request], commandBuffer: MTLCommandBuffer) -> [Request] {
+        serial &+= 1
+        let frame = serial
+        let completed = completedSerial.withLock { $0 }
+        commandBuffer.addCompletedHandler { [completedSerial] _ in
+            completedSerial.withLock { $0 = max($0, frame) }
+        }
+        let parents = Set(requests.compactMap { $0.system.parent.map(ObjectIdentifier.init) })
+        return requests.filter { request in
+            let system = request.system
+            guard let gpu = system.gpu, system.parent == nil, !system.configuration.isInstanced,
+                  !parents.contains(ObjectIdentifier(system)) else { return true }
+            let adds = request.inputs.clears || request.inputs.emitters.contains { $0.rate > 0 || $0.burst > 0 }
+            guard !adds, let live = gpu.lastLiveSerial else {
+                gpu.lastLiveSerial = frame
+                return true
+            }
+            return !(gpu.isReady && live <= completed && gpu.completedCount == 0)
+        }
     }
 
     /// The dispatches of a system's step, in order; each reads what the ones before it wrote.

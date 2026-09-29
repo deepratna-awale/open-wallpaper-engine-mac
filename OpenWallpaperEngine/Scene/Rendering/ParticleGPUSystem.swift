@@ -81,6 +81,9 @@ final class ParticleGPUSystem {
     /// grow draws nothing.
     var isReady = false
     var reportedFailure = false
+    /// The simulator's frame serial of the last step that could hold or add particles (nil before
+    /// the first step); once that frame has completed with no particle alive the system is empty.
+    var lastLiveSerial: UInt64?
 
     init?(device: MTLDevice, configuration: SceneMetalParticleSystem, seed: UInt32) {
         var values = ParticleGPUParameters(configuration, seed: seed)
