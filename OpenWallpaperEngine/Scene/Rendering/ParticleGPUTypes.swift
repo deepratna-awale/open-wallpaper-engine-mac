@@ -200,12 +200,15 @@ struct ParticleGPUParameters {
 
     init(_ c: SceneMetalParticleSystem, seed: UInt32) {
         var flags: Flag = []
-        let historyLimit = max(c.trailSegments, 1)
-        if c.rendererName == "ropetrail" { flags.insert(.history) }
+        // The history is the simulation's (a `ropetrail` among the system's renderers); the rest is
+        // the renderer's.
+        let history = c.trailHistory
+        let historyLimit = max(history.segments, 1)
+        if history.kept { flags.insert(.history) }
         if c.ropeUV.smoothing { flags.insert(.ropeSmoothing) }
         if c.ropeUV.scrolling { flags.insert(.ropeScrolling) }
         let fades: Float = (c.fadeTrailAlpha ? 1 : 0) + (c.fadeTrailSize ? 2 : 0)
-        trail = SIMD4(max(c.trailLength, 0.001) / Float(historyLimit), c.trailLength, Float(max(c.ropeSubdivision, 1)), fades)
+        trail = SIMD4(max(history.length, 0.001) / Float(historyLimit), c.trailLength, Float(max(c.ropeSubdivision, 1)), fades)
         trailLimits = SIMD4(c.trailLengthLimits.x, c.trailLengthLimits.y, 0, 0)
         if let sheet = c.spriteSheet {
             flags.insert(.spriteSheet)

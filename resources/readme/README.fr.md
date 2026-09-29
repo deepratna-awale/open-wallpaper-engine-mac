@@ -128,7 +128,6 @@ La première compilation depuis les sources télécharge le paquet Swift Sparkle
 
 - **Fonctions SceneScript non implémentées** — `getVideoTexture()` ne fait encore rien.
 - **Parité SceneScript** — Les noms d’événements propriétaires, les rappels d’entrée, les cas limites du cycle de vie et la sémantique exacte du minutage ne sont pas tous reproduits.
-- **Fonctions de particules rares** — Les moteurs de rendu après le premier d’un système ne sont pas pris en charge.
 - **Vidéos WebM** — Le WebM (VP8/VP9) est lu par WebKit ; les effets de synchronisation musicale ne s’y appliquent donc pas.
 - **Les fonctionnalités audio nécessitent une autorisation** — Sans l’autorisation Enregistrement de l’écran et des sons du système, les visualiseurs audio et les scripts SceneScript réactifs au son ne reçoivent que du silence.
 

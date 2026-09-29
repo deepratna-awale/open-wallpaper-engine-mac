@@ -25,8 +25,7 @@ enum ParticleSystemBuilder {
         }
         // Emitter rate: 10 a second (0x1401b8e59). Without an emitter nothing spawns.
         let rate = emitter.map { Float($0.rate ?? 10) } ?? 0
-        let rendererName = renderer?.name ?? "sprite"
-        let trail = ParticleRendererDefaults(renderer)
+        let draw = rendererDraw(renderer, particleSystem: particleSystem)
         // The built-in draw imitates refraction with faint, thin sprites; WE's shader refracts
         // with the particle's own alpha.
         let refractAmount: Double? = materialPlan != nil ? nil
@@ -36,15 +35,14 @@ enum ParticleSystemBuilder {
             source: source, origin: world.translation, emissionRate: max(rate, 0),
             // No default: a system without `maxcount` holds nothing.
             maximumParticleCount: max(particleSystem.maxcount ?? 0, 0),
-            rendererName: rendererName, trailLength: trail.length, trailSegments: trail.segments,
-            ropeSubdivision: trail.subdivision, fadeTrailAlpha: renderer?.fadealpha ?? false,
-            fadeTrailSize: renderer?.fadesize ?? false, spriteSheet: spriteSheet,
+            rendererName: draw.name, trailLength: draw.trailLength, trailSegments: draw.trailSegments,
+            ropeSubdivision: draw.ropeSubdivision, fadeTrailAlpha: draw.fadeTrailAlpha,
+            fadeTrailSize: draw.fadeTrailSize, spriteSheet: spriteSheet,
             animationMode: particleSystem.animationmode ?? "sequence",
             sequenceMultiplier: Float(particleSystem.sequencemultiplier ?? 1),
             opacityMultiplier: opacityMultiplier, refractive: refractAmount != nil,
             blending: material.passes?.first?.blending?.lowercased() ?? "translucent")
-        system.trailLengthLimits = SIMD2(trail.maximumLength, trail.minimumLength)
-        system.orientation = ParticleOrientation(renderer)
+        system.apply(draw)
         system.objectID = object.id.map(String.init)
         system.emitterLinear = world.linear
         system.worldSpace = particleSystem.isWorldSpace
@@ -77,8 +75,6 @@ enum ParticleSystemBuilder {
             imageIndex += 1
         }
         system.controlPoints = controlPoints(particleSystem.controlpoint ?? [])
-        system.ropeUV = ParticleRopeUV(renderer, rate: ropeRate(emitters),
-                                       lifetime: ropeLifetime(particleSystem.initializer ?? []))
         // A `collisionmodel` operator's dependency index is its place in the same list of linked
         // slots the `layerimage` emitters were numbered in, parsed before the operators
         // (system+0x1b0: 0x1401c6fba, 0x1401cfdf0).
@@ -94,6 +90,38 @@ enum ParticleSystemBuilder {
                 ParticleInitializerBuilder.make($0, defaults: defaults, path: particlePath)
             })
         return system
+    }
+
+    /// A renderer's fields with WE's defaults (`sprite` without one); its material is the caller's.
+    static func rendererDraw(_ renderer: WEParticleRenderer?, particleSystem: WEParticleSystem) -> ParticleRendererDraw {
+        let trail = ParticleRendererDefaults(renderer)
+        // The emitters WE registers (`registeredEmitters`, without its log).
+        let emitters = (particleSystem.emitter ?? []).filter { supportedEmitters.contains($0.name?.lowercased() ?? "") }
+        return ParticleRendererDraw(
+            name: renderer?.name ?? "sprite", trailLength: trail.length,
+            trailLengthLimits: SIMD2(trail.maximumLength, trail.minimumLength), trailSegments: trail.segments,
+            ropeSubdivision: trail.subdivision, fadeTrailAlpha: renderer?.fadealpha ?? false,
+            fadeTrailSize: renderer?.fadesize ?? false, orientation: ParticleOrientation(renderer),
+            ropeUV: ParticleRopeUV(renderer, rate: ropeRate(emitters),
+                                   lifetime: ropeLifetime(particleSystem.initializer ?? [])))
+    }
+
+    /// Adds the system's renderers after the first (`SceneMetalParticleSystem.additionalRenderers`),
+    /// each with the material `material` makes for it. WE draws every renderer of a system, in
+    /// authored order, from its one simulation. When the first isn't a `ropetrail` and a later one
+    /// is, the simulation keeps that renderer's trail history.
+    static func addRenderers(to system: inout SceneMetalParticleSystem, particleSystem: WEParticleSystem,
+                             material: (WEParticleRenderer) -> ParticleMaterialPlan?) {
+        let renderers = Array((particleSystem.renderer ?? []).dropFirst())
+        guard !renderers.isEmpty else { return }
+        system.additionalRenderers = renderers.map { renderer in
+            var draw = rendererDraw(renderer, particleSystem: particleSystem)
+            draw.material = material(renderer)
+            return draw
+        }
+        if !system.trailHistory.kept, let trail = system.additionalRenderers.first(where: { $0.name == "ropetrail" }) {
+            system.sharedHistory = ParticleTrailHistory(kept: true, length: trail.trailLength, segments: trail.trailSegments)
+        }
     }
 
     /// The emitters `wallpaper64.exe` registers: its parser compares each element's `name`,
