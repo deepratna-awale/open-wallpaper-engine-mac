@@ -390,6 +390,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// ticks the displays at its rate; an idle frame returns before anything is encoded.
     var framePacing = FramePacing()
     /// Off with `OWE_IDLE_SKIP=0` (comparisons): every frame is drawn, the rate still adapts.
+    /// Bumped when a video layer has a new frame (`SceneLayerFrameInputs.videoRevision`).
+    private var videoRevision: UInt64 = 0
+    private var analysedTime: Double = 0
     var skipsIdleFrames = ProcessInfo.processInfo.environment["OWE_IDLE_SKIP"] != "0"
     /// Frames encoded so far: a shared scene's displays present only a new one.
     private(set) var encodedFrames: UInt64 = 0
@@ -3140,6 +3143,13 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         inputs.cameraShake = motion.cameraShake
         inputs.audio = effectFrame.audio
         inputs.audioLevel = motion.audioLevel
+        // System textures (now-playing artwork) keep following the clock; a video only its frames.
+        if mediaTextures != nil && effectFrame.time != analysedTime
+            || layers.contains(where: { if case let .video(stream) = $0.layer.source { stream.hasNewFrame } else { false } }) {
+            videoRevision &+= 1
+        }
+        analysedTime = effectFrame.time
+        inputs.videoRevision = videoRevision
         inputs.userPropertiesRevision = WallpaperServices.shared.propertyService.revision
         inputs.scripts = scripts.state
         inputs.animatedSites = animations?.sites ?? []

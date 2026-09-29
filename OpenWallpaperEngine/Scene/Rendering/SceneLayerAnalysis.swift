@@ -76,6 +76,8 @@ struct SceneLayerFrameInputs {
     var cameraShake = SIMD3<Float>.zero
     var audio = AudioSpectrumSnapshot.silent
     var audioLevel: Double = 0
+    /// Bumped whenever a video or system texture may show a new picture (a decoded video frame).
+    var videoRevision: UInt64 = 0
     /// Bumped whenever any user property of the running wallpapers changes.
     var userPropertiesRevision: UInt64 = 0
     /// Bumped by a live Inspector edit that isn't a content rebuild.
@@ -226,7 +228,8 @@ final class SceneLayerAnalysis {
         var global: SceneLayerDependencies = []
         if let last = previous {
             let timeAdvanced = inputs.time != last.time
-            if timeAdvanced { global.formUnion([.time, .video, .particles]) }
+            if timeAdvanced { global.formUnion([.time, .particles]) }
+            if inputs.videoRevision != last.videoRevision { global.insert(.video) }
             if inputs.pointer != last.pointer { global.insert(.cursor) }
             if inputs.parallax != last.parallax || inputs.parallaxActive != last.parallaxActive { global.insert(.parallax) }
             if inputs.shake != last.shake || inputs.cameraShake != last.cameraShake { global.insert(.shake) }
@@ -410,7 +413,8 @@ extension SceneLayerAnalysis {
     static func dependencies(of layer: SceneMetalLayer) -> SceneLayerDependencies {
         var deps: SceneLayerDependencies = []
         switch layer.source {
-        case .video: deps.formUnion([.video, .time])
+        // A video changes with its decoded frames (`videoRevision`), not with every clock tick.
+        case .video: deps.insert(.video)
         case .animated: deps.insert(.time)
         case .image, .dxt: break
         }
