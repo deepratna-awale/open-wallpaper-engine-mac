@@ -126,7 +126,6 @@ Al compilar desde el código fuente, la primera compilación descarga el paquete
 
 ## Limitaciones actuales
 
-- **Fondos de pantalla de aplicación**: los fondos de pantalla con `type: "application"` no son compatibles y no se ejecutan.
 - **Funciones de SceneScript sin implementar**: `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `transformAttachmentToTexture()`, `getVideoTexture()` todavía no hacen nada.
 - **Paridad con SceneScript**: no se reproducen todos los nombres de eventos propietarios, callbacks de entrada, casos límite del ciclo de vida ni la semántica exacta de temporización.
 - **Funciones de partículas poco comunes**: no se admiten formas de emisor distintas de esfera, caja e imagen de capa, ni los renderizadores posteriores al primero de un sistema.

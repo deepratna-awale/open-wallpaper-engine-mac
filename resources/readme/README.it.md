@@ -126,7 +126,6 @@ La prima compilazione dal codice sorgente scarica il pacchetto Swift Sparkle. Le
 
 ## Limitazioni attuali
 
-- **Sfondi di tipo applicazione**: gli sfondi `type: "application"` non sono supportati e non vengono eseguiti.
 - **Funzioni SceneScript non implementate**: `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `transformAttachmentToTexture()`, `getVideoTexture()` non fanno ancora nulla.
 - **Parità di SceneScript**: non vengono riprodotti tutti i nomi di eventi proprietari, i callback di input, i casi limite del ciclo di vita o l’esatta semantica delle tempistiche.
 - **Funzioni particellari rare**: le forme di emettitore diverse da sfera, box e immagine del livello e i renderer successivi al primo di un sistema non sono supportati.
