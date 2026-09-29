@@ -1,3 +1,4 @@
+import Foundation
 import Metal
 
 /// The pipelines the scene pass draws with natively (a layer's quad blended normally or
@@ -37,8 +38,10 @@ final class SceneLayerPipelines {
     private let fallback: Pipelines
     private let device: MTLDevice
     private let functions: Functions
-    /// Made on first use, by the render thread only; nil for one that failed (logged once).
+    /// Made on first use, on the render thread; nil for one that failed (logged once). Behind
+    /// `variantsLock`, so a frame drawn on another thread can't corrupt it.
     private var variants: [Variant: Pipelines?] = [:]
+    private let variantsLock = NSLock()
 
     /// The pipelines for each of `formats`, the first of which `pipelines(for:)` falls back to.
     /// `placedVertex` is `sceneVertex3D`. Throws when one can't be made.
@@ -66,11 +69,13 @@ final class SceneLayerPipelines {
 
     /// The pipelines drawing into a `sampleCount`-sample target of `format` with a `depthFormat`
     /// depth attachment (`.invalid`: none); nil when they can't be made (the caller draws
-    /// single-sampled). Call on the render thread.
+    /// single-sampled). Called on the render thread; safe from any.
     func pipelines(for format: MTLPixelFormat, sampleCount: Int,
                    depthFormat: MTLPixelFormat = .invalid) -> Pipelines? {
         guard sampleCount > 1 || depthFormat != .invalid else { return pipelines(for: format) }
         let key = Variant(format: format, sampleCount: max(sampleCount, 1), depthFormat: depthFormat)
+        variantsLock.lock()
+        defer { variantsLock.unlock() }
         if let known = variants[key] { return known }
         do {
             let made = try Self.make(device: device, functions: functions, variant: key)

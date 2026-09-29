@@ -186,6 +186,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// Runs `block` on the thread that owns this renderer's state (thread boundary): content and
     /// script objects prepared in the background land through it. The main queue by default, for a
     /// renderer drawn by its view's own timer; a scene instance's renderer uses its render thread.
+    /// A render loop owns this renderer (`SceneRenderLoop`): a frame anywhere but its render
+    /// thread is a thread-guard hit. Without one (tests, prewarm) the thread drawing it counts as
+    /// the render thread while it draws. Set once, before the first frame.
+    var drawsOnRenderThreadOnly = false
     var performOnRenderThread: (@escaping () -> Void) -> Void = { DispatchQueue.main.async(execute: $0) }
     /// The paused clock has eased to a stop.
     var hasStoppedPlayback: Bool { clock.hasStopped }
@@ -453,6 +457,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         self.init(pixelFormat: view.colorPixelFormat, particleSimulation: particleSimulation,
                   scriptServices: scriptServices, screenID: screenID, pipelineArchiveDirectory: pipelineArchiveDirectory)
         configure(view)
+        // Drawn by the view's own timer, on the main thread.
+        view.isPaused = false
         view.delegate = self
     }
 
@@ -526,8 +532,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         sounds.locate = { [weak self] id in self?.soundWorldPosition(id) }
     }
 
-    /// Sets `view` up to show this renderer's frames: on its device, drawn by the view's own timer.
-    /// Its delegate is whoever draws it: this renderer, or a shared scene's presenter.
+    /// Sets `view` up to show this renderer's frames, on its device. It leaves the view's own timer
+    /// as it is: a scene instance's view stays paused, drawn only by its link on the render thread
+    /// (`SceneRenderLoop`). Its delegate is whoever draws it: this renderer, or a shared scene's presenter.
     func configure(_ view: MTKView) {
         view.device = device
         view.colorPixelFormat = pixelFormat
@@ -536,7 +543,6 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // does, and the desktop shows colour only.
         view.layer?.isOpaque = true
         view.enableSetNeedsDisplay = false
-        view.isPaused = false
     }
 
     /// Drops what can be rebuilt under memory pressure: free pooled targets, cached text other than
@@ -987,6 +993,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     /// Renders a frame for `view` alone and presents it there.
     func draw(in view: MTKView) {
+        if drawsOnRenderThreadOnly { ThreadGuards.assertRenderThread("A scene frame") }
         ThreadGuards.renderFrame { renderFrame(.view(view)) }
     }
 
@@ -996,6 +1003,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// resolution scripts see.
     func renderShared(_ viewports: [SceneViewport]) {
         guard !viewports.isEmpty else { return }
+        if drawsOnRenderThreadOnly { ThreadGuards.assertRenderThread("A shared scene frame") }
         ThreadGuards.renderFrame { renderFrame(.shared(viewports)) }
     }
 

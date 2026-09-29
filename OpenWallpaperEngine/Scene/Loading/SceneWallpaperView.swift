@@ -19,7 +19,7 @@ struct SceneWallpaperView: NSViewRepresentable {
     func makeCoordinator() -> SceneWallpaperPresenter { SceneWallpaperPresenter() }
 
     func makeNSView(context: Context) -> MTKView {
-        let view = MTKView(frame: .zero)
+        let view = SceneRenderLoop.makeView()
         let wallpaper = wallpaperViewModel.wallpaper(for: screenId)
         let environment = SceneWallpaperEnvironment(wallpapers: wallpaperViewModel,
                                                     settings: AppDelegate.shared.globalSettingsViewModel,

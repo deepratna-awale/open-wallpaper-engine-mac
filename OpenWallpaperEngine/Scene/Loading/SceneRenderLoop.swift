@@ -65,6 +65,7 @@ final class SceneRenderLoop {
         self.snapshots = snapshots
         guard let renderer else { return }
         renderer.performOnRenderThread = { [thread] block in thread.perform(block) }
+        renderer.drawsOnRenderThreadOnly = true
         renderer.onPlaybackStopped = { [weak self] in self?.playbackStopped = true }
     }
 
@@ -77,6 +78,16 @@ final class SceneRenderLoop {
     }
 
     // MARK: - Displays (main entry points)
+
+    /// Main: a view for `attach`, its own timer stopped from the start. An `MTKView` starts its
+    /// timer when it is made and draws from it on the main thread; one tick left over while the
+    /// render thread already draws would draw the scene on both.
+    static func makeView(frame: CGRect = .zero) -> MTKView {
+        let view = MTKView(frame: frame)
+        view.isPaused = true
+        view.enableSetNeedsDisplay = false
+        return view
+    }
 
     /// Main: `view` shows the scene from now on, drawn by its own display link (which follows it
     /// across screens) on the render thread. The view's own timer is stopped.
@@ -138,6 +149,12 @@ final class SceneRenderLoop {
     @discardableResult
     func draw(_ id: ObjectIdentifier, in view: MTKView) -> Bool {
         guard let renderer else { return false }
+        // Only the link draws: a draw from anywhere else (the view's own timer, a resize) would
+        // run a frame beside the render thread's. Dropped; the next tick draws.
+        guard thread.isCurrent else {
+            ThreadGuards.assertRenderThread("A scene view's draw")
+            return false
+        }
         requestSnapshot(id, of: view)
         defer {
             if playbackStopped {
