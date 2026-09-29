@@ -1,4 +1,5 @@
 import Foundation
+import Metal
 import simd
 
 /// A model object's `.mdl` ready to draw (docs/models-plan.md §2.6, §4.3 M5): each mesh with the
@@ -12,13 +13,86 @@ final class SceneModelPlan {
         let index: Int
         let material: ModelMaterialPlan
         let format: MDLVertexFormat
-        let vertexData: Data
-        let indexData: Data
         let usesUInt32Indices: Bool
         let indexCount: Int
         /// The mesh's own box (`MDLV` ≥ 17), for culling it apart from the model's; nil when
         /// unknown or when its vertices move in the shader (skinning, morphs), so the box can't hold them.
         var bounds: MDLBounds? = nil
+        /// The vertex and index bytes; after the upload (`SceneModelPlan.upload`) they read the
+        /// GPU buffers' shared storage instead of a second CPU copy.
+        fileprivate let bytes: MeshBytes
+
+        var vertexData: Data { bytes.vertices }
+        var indexData: Data { bytes.indices }
+
+        init(index: Int, material: ModelMaterialPlan, format: MDLVertexFormat, vertexData: Data, indexData: Data,
+             usesUInt32Indices: Bool, indexCount: Int, bounds: MDLBounds? = nil) {
+            self.index = index
+            self.material = material
+            self.format = format
+            self.usesUInt32Indices = usesUInt32Indices
+            self.indexCount = indexCount
+            self.bounds = bounds
+            bytes = MeshBytes(vertices: vertexData, indices: indexData)
+        }
+    }
+
+    /// A mesh's bytes, swapped once for views of its GPU buffers. Guarded by the plan's `uploadLock`.
+    fileprivate final class MeshBytes {
+        private let lock = NSLock()
+        private var storedVertices: Data
+        private var storedIndices: Data
+        init(vertices: Data, indices: Data) {
+            storedVertices = vertices
+            storedIndices = indices
+        }
+        var vertices: Data { lock.withLock { storedVertices } }
+        var indices: Data { lock.withLock { storedIndices } }
+        func replace(vertices: Data, indices: Data) {
+            lock.withLock {
+                storedVertices = vertices
+                storedIndices = indices
+            }
+        }
+    }
+
+    /// The meshes' GPU buffers, made once (`upload`), in `meshes` order. Owned by `uploadLock`.
+    private let uploadLock = NSLock()
+    private var uploaded: [SceneModelRenderer.MeshBuffers?]?
+
+    /// The meshes' GPU buffers, made on the first call (the content's background load, so the
+    /// first frame has nothing to upload) and shared after. Once made, each mesh's bytes read
+    /// the buffers' shared storage and the loaded copy is released (the buffers live as long as
+    /// the plan, so a later reader still sees the same bytes). Any thread.
+    func upload(device: MTLDevice) -> [SceneModelRenderer.MeshBuffers?] {
+        uploadLock.lock()
+        defer { uploadLock.unlock() }
+        if let uploaded { return uploaded }
+        let made = meshes.map { mesh -> SceneModelRenderer.MeshBuffers? in
+            let vertices = mesh.vertexData, indices = mesh.indexData
+            guard let buffers = SceneModelRenderer.makeMeshBuffers(device: device, format: mesh.format,
+                                                                   vertices: vertices, indices: indices,
+                                                                   uint32: mesh.usesUInt32Indices,
+                                                                   indexCount: mesh.indexCount)
+            else { return nil }
+            // Split streams don't hold the interleaved bytes; that mesh keeps its loaded vertices.
+            mesh.bytes.replace(vertices: buffers.attributes == nil ? Self.view(of: buffers.vertices, count: vertices.count)
+                                                                   : vertices,
+                               indices: Self.view(of: buffers.indices, count: indices.count))
+            return buffers
+        }
+        uploaded = made
+        return made
+    }
+
+    /// `count` bytes of `buffer`'s shared storage, keeping the buffer alive while the data is.
+    private static func view(of buffer: MTLBuffer, count: Int) -> Data {
+        guard buffer.storageMode == .shared, count <= buffer.length else {
+            return Data(bytes: buffer.contents(), count: min(count, buffer.length))
+        }
+        return Data(bytesNoCopy: buffer.contents(), count: count, deallocator: .custom { _, _ in
+            withExtendedLifetime(buffer) {}
+        })
     }
 
     /// The `.mdl` path, for logging.
