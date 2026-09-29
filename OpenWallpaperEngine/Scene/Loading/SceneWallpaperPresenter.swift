@@ -8,8 +8,12 @@ final class SceneWallpaperPresenter: NSObject, MTKViewDelegate {
     typealias Lease = WallpaperInstanceLease<WallpaperInstanceKey, SceneWallpaperInstance>
 
     private var lease: Lease?
-    /// The wallpaper's preview, shown until the live scene draws.
+    /// The preview, shown until the live scene draws. Main thread.
     private(set) var placeholder: ScenePreviewPlaceholder?
+    /// The instance's render side, set in `show` before the view's link starts; read by `draw(in:)`.
+    private var renderLoop: SceneRenderLoop?
+    /// Render thread: the live scene's first frame was drawn and the preview told to go.
+    private var shownContent = false
 
     @MainActor var instance: SceneWallpaperInstance? { lease?.instance }
 
@@ -17,8 +21,9 @@ final class SceneWallpaperPresenter: NSObject, MTKViewDelegate {
     @MainActor
     func show(_ lease: Lease, in view: MTKView, screenID: String) {
         self.lease = lease
+        renderLoop = lease.instance.renderLoop
         // A display joining a scene already drawn needs no preview.
-        if lease.instance.renderer?.hasContent != true {
+        if !lease.instance.hasContent {
             placeholder = ScenePreviewPlaceholder(in: view, wallpaperDirectory: lease.instance.viewModel.currentWallpaper.wallpaperDirectory)
         }
         lease.instance.attach(self, view: view, screenID: screenID)
@@ -37,15 +42,16 @@ final class SceneWallpaperPresenter: NSObject, MTKViewDelegate {
 
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {}
 
+    /// Render thread: the view's display link draws it there (`SceneRenderLoop`).
     func draw(in view: MTKView) {
-        // MTKView draws on the main thread.
-        MainActor.assumeIsolated {
-            guard let instance = lease?.instance else { return }
-            instance.draw(self, in: view)
-            // The live scene drew its first frame: crossfade to it.
-            if let placeholder, instance.renderer?.hasContent == true {
-                placeholder.fadeOut()
-                self.placeholder = nil
+        guard let renderLoop, renderLoop.draw(ObjectIdentifier(self), in: view), !shownContent else { return }
+        shownContent = true
+        // Thread boundary: the live scene drew its first frame; crossfade to it on the main thread.
+        DispatchQueue.main.async { [weak self] in
+            MainActor.assumeIsolated {
+                self?.instance?.hasContent = true
+                self?.placeholder?.fadeOut()
+                self?.placeholder = nil
             }
         }
     }
