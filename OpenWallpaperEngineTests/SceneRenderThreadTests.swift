@@ -107,4 +107,19 @@ final class SceneRenderThreadTests: XCTestCase {
         let end = CACurrentMediaTime()
         XCTAssertGreaterThanOrEqual(frames.count(between: start, and: end), 3, "frames kept coming while main stalled")
     }
+
+    /// A view the render thread drew is read directly again once it's detached: its snapshot,
+    /// which holds a cursor and screen position, doesn't outlive the display.
+    func testShutdownDropsTheViewsSnapshot() throws {
+        let loop = try startLoop(Frames())
+        let view = try XCTUnwrap(window?.contentView as? MTKView)
+        XCTAssertNotNil(SceneViewSnapshots.snapshot(of: view))
+        loop.shutdown()
+        self.loop = nil
+        let deadline = Date().addingTimeInterval(2)
+        while SceneViewSnapshots.snapshot(of: view) != nil, Date() < deadline {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.01))
+        }
+        XCTAssertNil(SceneViewSnapshots.snapshot(of: view))
+    }
 }

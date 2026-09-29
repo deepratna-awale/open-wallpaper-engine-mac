@@ -22,10 +22,15 @@ struct SceneViewSnapshot {
 }
 
 /// The snapshots of the views a render thread draws (`SceneRenderLoop`). A view without one is
-/// drawn on the main thread and read directly. Thread-safe.
+/// drawn on the main thread and read directly. Keyed by the view, which each entry holds weakly:
+/// a released view's entry never answers for a new view that reuses its address. Thread-safe.
 enum SceneViewSnapshots {
+    private struct Entry {
+        weak var view: MTKView?
+        var snapshot: SceneViewSnapshot
+    }
     private static let lock = NSLock()
-    private static var snapshots: [ObjectIdentifier: SceneViewSnapshot] = [:]
+    private static var entries: [ObjectIdentifier: Entry] = [:]
 
     /// Main: takes `view`'s state now.
     static func refresh(_ view: MTKView) {
@@ -39,14 +44,21 @@ enum SceneViewSnapshots {
             snapshot.headroom = SceneDisplayHeadroom(screen: screen)
         }
         snapshot.layer = view.layer as? CAMetalLayer
-        lock.withLock { snapshots[ObjectIdentifier(view)] = snapshot }
+        lock.withLock {
+            entries = entries.filter { $0.value.view != nil }
+            entries[ObjectIdentifier(view)] = Entry(view: view, snapshot: snapshot)
+        }
     }
 
-    static func remove(_ id: ObjectIdentifier) {
-        lock.withLock { snapshots[id] = nil }
+    /// `view` is no longer drawn on a render thread.
+    static func remove(_ view: MTKView) {
+        lock.withLock { entries[ObjectIdentifier(view)] = nil }
     }
 
     static func snapshot(of view: MTKView) -> SceneViewSnapshot? {
-        lock.withLock { snapshots[ObjectIdentifier(view)] }
+        lock.withLock {
+            guard let entry = entries[ObjectIdentifier(view)], entry.view === view else { return nil }
+            return entry.snapshot
+        }
     }
 }

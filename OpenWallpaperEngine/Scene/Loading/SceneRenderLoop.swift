@@ -92,7 +92,7 @@ final class SceneRenderLoop {
     /// Main: stops drawing `id`'s view.
     func detach(_ id: ObjectIdentifier) {
         thread.perform { [self] in
-            SceneViewSnapshots.remove(id)
+            if let view = displays[id]?.view { SceneViewSnapshots.remove(view) }
             displays[id]?.link.invalidate()
             displays[id] = nil
             displayOrder.removeAll { $0 == id }
@@ -111,9 +111,9 @@ final class SceneRenderLoop {
     /// Main: stops the links and the thread once the work already sent has run.
     func shutdown() {
         thread.perform { [self] in
-            for (id, display) in displays {
+            for display in displays.values {
                 display.link.invalidate()
-                SceneViewSnapshots.remove(id)
+                if let view = display.view { SceneViewSnapshots.remove(view) }
             }
             displays.removeAll()
             displayOrder.removeAll()
@@ -212,7 +212,8 @@ final class SceneRenderLoop {
             if let view = display.view {
                 DispatchQueue.main.async {
                     if view.preferredFramesPerSecond != rate { view.preferredFramesPerSecond = rate }
-                    SceneViewSnapshots.refresh(view)
+                    // A view detached meanwhile is drawn on the main thread again: no snapshot.
+                    if SceneViewSnapshots.snapshot(of: view) != nil { SceneViewSnapshots.refresh(view) }
                 }
             }
         }
