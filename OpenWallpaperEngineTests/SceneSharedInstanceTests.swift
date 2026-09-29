@@ -80,6 +80,53 @@ final class SceneSharedInstanceTests: XCTestCase {
         renderer.releaseContent()
     }
 
+    /// A loading snapshot is the shared frame as a display of its size shows it: one 64×64 scene
+    /// fitted onto 128×64 pixels, letterboxed like `present(in:)`, read back into an image.
+    func testLoadingSnapshotCopiesTheFrameAsTheDisplayShowsIt() throws {
+        let renderer = try XCTUnwrap(SceneMetalRenderer(pixelFormat: .bgra8Unorm))
+        renderer.setPlacement(.fit)
+        var layer = SceneMetalLayer(
+            id: "1", name: "halves", source: .image(try Self.halves()), position: SIMD2(40, 32),
+            size: SIMD2(128, 64), scale: SIMD2(1, 1), opacity: 1, brightness: 1, color: SIMD4(repeating: 1),
+            text: nil, parallaxDepth: .zero, perspective: false, rotation: 0, effects: .identity)
+        layer.order = 0
+        renderer.setContent(SceneMetalContent(
+            size: SIMD2(64, 64), layers: [layer], particleSystems: [],
+            bloom: SceneBloomSettings(enabled: false, strength: 0, threshold: 0.7, tint: SIMD3(repeating: 1))))
+        let deadline = Date().addingTimeInterval(10)
+        while !renderer.hasContent, Date() < deadline { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
+        defer { renderer.releaseContent() }
+
+        XCTAssertFalse(renderer.captureSharedFrame(pixelSize: SIMD2(128, 64), pixelsPerPoint: 1) { _ in },
+                       "nothing to copy before a shared frame")
+        renderer.renderShared([SceneViewport(drawableSize: SIMD2(128, 64), pointSize: SIMD2(128, 64), cursor: nil, frameRateLimit: 30)])
+        let captured = expectation(description: "captured")
+        nonisolated(unsafe) var image: CGImage?  // Written once by the completion, read after the wait.
+        XCTAssertTrue(renderer.captureSharedFrame(pixelSize: SIMD2(128, 64), pixelsPerPoint: 1) {
+            image = $0
+            captured.fulfill()
+        })
+        wait(for: [captured], timeout: 10)
+        renderer.releaseSharedFrame()
+        XCTAssertNil(renderer.sharedFrame)
+
+        let snapshot = try XCTUnwrap(image)
+        XCTAssertEqual(snapshot.width, 128)
+        XCTAssertEqual(snapshot.height, 64)
+        let context = try XCTUnwrap(CGContext(data: nil, width: 128, height: 64, bitsPerComponent: 8, bytesPerRow: 128 * 4,
+                                              space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                              bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue))
+        context.draw(snapshot, in: CGRect(x: 0, y: 0, width: 128, height: 64))
+        let pixels = try XCTUnwrap(context.data).assumingMemoryBound(to: UInt8.self)
+        let row = 32
+        let seam = (0..<128).first { x in
+            let index = (row * 128 + x) * 4
+            return pixels[index + 1] > 128 && pixels[index] < 128
+        }
+        XCTAssertEqual(seam, 32 + 40, "fitted: centred with 32 black columns each side")
+        XCTAssertLessThan(pixels[(row * 128 + 10) * 4], 16, "letterbox is black")
+    }
+
     /// Two displays drawing a scripted scene every frame: one script runtime, one script frame and
     /// one render per frame, and the scene's one set of sound layers.
     func testTwoDisplaysStepTheScriptsOncePerFrame() throws {

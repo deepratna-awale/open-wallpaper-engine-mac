@@ -60,10 +60,10 @@ struct RenderTextureFrame {
 }
 
 final class SceneMetalRenderer: NSObject, MTKViewDelegate {
-    private let device: MTLDevice
+    let device: MTLDevice
     /// The drawables' format, which the layer and copy pipelines draw in.
-    private let pixelFormat: MTLPixelFormat
-    private let commandQueue: MTLCommandQueue
+    let pixelFormat: MTLPixelFormat
+    let commandQueue: MTLCommandQueue
     /// The scene pass's own pipelines, in the scene target's format (`SceneLayerPipelines`).
     private let layerPipelines: SceneLayerPipelines
     private var renderPipeline: MTLRenderPipelineState { scenePassPipelines.normal }
@@ -1014,16 +1014,46 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let size = SIMD2<Float>(Float(drawable.texture.width), Float(drawable.texture.height))
         let pointWidth = SceneViewSnapshots.snapshot(of: view).map { CGFloat($0.pointSize.x) } ?? view.bounds.width
         let pixelsPerPoint = pointWidth > 0 ? size.x / Float(pointWidth) : 1
-        var uniform = layerUniform(position: sceneSize / 2, size: sceneSize, opacity: 1, drawableSize: size,
-                                   placement: placement, pixelsPerPoint: pixelsPerPoint)
-        encoder.setRenderPipelineState(extended ? layerPipelines.pipelines(for: frame.pixelFormat).copy : copyPipeline)
-        encoder.setVertexBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
-        encoder.setFragmentTexture(frame, index: 0)
-        encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
+        encodePlaced(frame, onto: encoder, size: size, pixelsPerPoint: pixelsPerPoint,
+                     pipeline: extended ? layerPipelines.pipelines(for: frame.pixelFormat).copy : copyPipeline)
         encoder.endEncoding()
         commandBuffer.present(drawable)
         commandBuffer.commit()
         lastPresentCommandBuffer = commandBuffer
+    }
+
+    /// Draws `frame` onto a `size`-pixel target at the user's placement, as a display shows it.
+    private func encodePlaced(_ frame: MTLTexture, onto encoder: MTLRenderCommandEncoder, size: SIMD2<Float>,
+                              pixelsPerPoint: Float, pipeline: MTLRenderPipelineState) {
+        var uniform = layerUniform(position: sceneSize / 2, size: sceneSize, opacity: 1, drawableSize: size,
+                                   placement: placement, pixelsPerPoint: pixelsPerPoint)
+        encoder.setRenderPipelineState(pipeline)
+        encoder.setVertexBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
+        encoder.setFragmentTexture(frame, index: 0)
+        encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
+    }
+
+    /// Draws the latest shared frame (`renderShared`) into `target`, in the drawables' format, as
+    /// `present(in:)` shows it on a display of that size (a loading snapshot). False without one.
+    func encodeSharedFrame(into target: MTLTexture, pixelsPerPoint: Float, commandBuffer: MTLCommandBuffer) -> Bool {
+        guard let frame = sharedFrame, target.pixelFormat == pixelFormat else { return false }
+        let pass = MTLRenderPassDescriptor()
+        pass.colorAttachments[0].texture = target
+        pass.colorAttachments[0].loadAction = .clear
+        pass.colorAttachments[0].clearColor = SceneFrameDestination.clearColor
+        pass.colorAttachments[0].storeAction = .store
+        guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { return false }
+        encodePlaced(frame, onto: encoder, size: SIMD2(Float(target.width), Float(target.height)),
+                     pixelsPerPoint: pixelsPerPoint, pipeline: copyPipeline)
+        encoder.endEncoding()
+        return true
+    }
+
+    /// Frees the shared frame: a scene on one display draws straight onto its drawable and only
+    /// rendered one for a loading snapshot. The GPU keeps what in-flight work still reads.
+    func releaseSharedFrame() {
+        sharedFrame = nil
+        sharedFrameTarget = nil
     }
 
     /// Where a frame goes: one view's drawable, or a shared scene's finished frame.
