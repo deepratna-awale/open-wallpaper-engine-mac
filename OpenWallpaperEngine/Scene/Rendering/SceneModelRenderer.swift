@@ -403,8 +403,12 @@ final class SceneModelRenderer: SceneModelDrawing {
         guard let vertexBuffer = device.makeBuffer(length: length, options: .storageModeShared),
               let indexBuffer = indices.withUnsafeBytes({ device.makeBuffer(bytes: $0.baseAddress!, length: $0.count) })
         else { return nil }
-        // New shared buffers are zero-filled; only the vertices are copied, the padding stays zero.
+        // Only the vertices are copied; the padding is cleared explicitly (Metal doesn't document zero-filled buffers).
         vertices.withUnsafeBytes { vertexBuffer.contents().copyMemory(from: $0.baseAddress!, byteCount: $0.count) }
+        if length > vertices.count {
+            (vertexBuffer.contents() + vertices.count).initializeMemory(as: UInt8.self, repeating: 0,
+                                                                       count: length - vertices.count)
+        }
         return MeshBuffers(vertices: vertexBuffer, indices: indexBuffer)
     }
 
