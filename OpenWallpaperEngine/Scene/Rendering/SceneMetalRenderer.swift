@@ -134,9 +134,19 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var effectAssetTextures: [String: MTLTexture] = [:]
     /// Each decoded image's upload, by the image: layers, clones, particle systems and effect
     /// assets that load the same image (the loader hands them one `NSImage`) share one texture.
-    /// Holds the image so its identifier isn't reused; cleared with the content.
-    private var uploadedImages: [ObjectIdentifier: (image: NSImage, frames: [RenderTextureFrame])] = [:]
+    /// Keyed weakly by the image itself, so an entry goes with the last copy of the image and the
+    /// renderer never keeps the pixels alive; cleared with the content.
+    private let uploadedImages = NSMapTable<NSImage, UploadedFrames>(
+        keyOptions: [.weakMemory, .objectPointerPersonality], valueOptions: .strongMemory)
+    private final class UploadedFrames {
+        let frames: [RenderTextureFrame]
+        init(_ frames: [RenderTextureFrame]) { self.frames = frames }
+    }
     private let uploadedImagesLock = NSLock()
+    /// Particle textures with their mip chains (`ParticleTextureMipmaps`), by the uploaded texture
+    /// they were made from, which each entry holds so its identifier isn't reused. Under
+    /// `uploadedImagesLock`; cleared with the content.
+    private var particleMipmaps: [ObjectIdentifier: (source: MTLTexture, chained: MTLTexture)] = [:]
     /// Animated asset textures' sprite frames, by the same key.
     private var effectAssetFrames: [String: [RenderTextureFrame]] = [:]
     /// Textureless layers' effect inputs (`solidEffectInput`), by layer id; once per content.
@@ -386,10 +396,15 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// Per-layer dependencies, coverage, class and this frame's dirty state
     /// (docs/efficiency-plan-2d.md WP1-A); built with the content, off the main thread.
     private(set) var layerAnalysis: SceneLayerAnalysis?
+    /// Keeps system audio capture on while the content reacts to audio (`needsAudio`).
+    private var audioCaptureLease: AudioCaptureLease?
     /// Adaptive rate and idle skipping (`FramePacing`, WP2-C): the instance sets its limits and
     /// ticks the displays at its rate; an idle frame returns before anything is encoded.
     var framePacing = FramePacing()
     /// Off with `OWE_IDLE_SKIP=0` (comparisons): every frame is drawn, the rate still adapts.
+    /// Bumped when a video layer has a new frame (`SceneLayerFrameInputs.videoRevision`).
+    private var videoRevision: UInt64 = 0
+    private var analysedTime: Double = 0
     var skipsIdleFrames = ProcessInfo.processInfo.environment["OWE_IDLE_SKIP"] != "0"
     /// Frames encoded so far: a shared scene's displays present only a new one.
     private(set) var encodedFrames: UInt64 = 0
@@ -398,6 +413,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var analysedShape: (layers: Int, target: SIMD2<Float>) = (0, .zero)
     /// A pipeline was compiling last frame: the frame after one lands changes too.
     private var analysedWarmUp = true
+    /// `pipelinesLanded` as the last analysed frame saw it.
+    private var analysedLanded = 0
     /// The blur-like buffer divisor (1, 2, 4) over the slider's (`OWE_BLUR_DIVISOR` for comparisons).
     var blurDivisorOverride = ProcessInfo.processInfo.environment["OWE_BLUR_DIVISOR"].flatMap(Int.init)
     private func effectResolution(of layerID: String) -> EffectResolutionPolicy {
@@ -557,6 +574,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
         guard let content else {
             layerAnalysis = nil
+            audioCaptureLease = nil
             layers = []
             particleSystems = []
             objectMotions = [:]
@@ -594,7 +612,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 || layer.weEffects.contains { $0.passes.contains { !$0.systemTextures.isEmpty } }
         }
         if bindsSystemTexture, let media = scripts.services?.media {
-            mediaTextures = SceneMediaTextures(source: media)
+            mediaTextures = SceneMediaTextures(source: media, device: device)
         }
         contentQueue.async { [weak self] in
             guard let self, self.isCurrentContentGeneration(generation) else { return }
@@ -608,7 +626,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             }
             let preparedLayers: [PreparedLayer] = zip(built, content.layers).compactMap { frames, layer in
                 guard let frames, !frames.isEmpty else { return nil }
-                return PreparedLayer(frames: frames, layer: layer)
+                return PreparedLayer(frames: frames, layer: Self.droppingPixels(layer))
             }
             let imageSources = Dictionary(preparedLayers.compactMap { entry -> (String, ParticleEmitterImagePoints.Source)? in
                 guard let frame = entry.frames.first else { return nil }
@@ -621,8 +639,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 var system = system
                 ParticleEmitterImagePoints.fill(&system.emitterImages, sources: imageSources, device: self.device,
                                                 queue: self.commandQueue, cache: &imagePoints)
-                guard let texture = self.makeTextureFrames(from: system.source)?.first?.texture else { return nil }
+                guard let texture = self.particleTexture(from: system.source, spriteSheet: system.spriteSheet != nil) else { return nil }
                 let fallback = system.fallbackSource.flatMap { self.makeTextureFrames(from: $0)?.first?.texture }
+                Self.dropPixels(&system)
                 // Seeded by position in the scene, so a wallpaper's particles replay the same way.
                 let seed = UInt32(index) &+ self.particleSeed &* 0x9E37_79B9
                 return ParticleSystemRuntime(texture: texture, configuration: system, seed: ParticleRandom.pcg(seed),
@@ -631,6 +650,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             ParticleSystemRuntime.linkFamilies(runtimes)
             let preparedParticleSystems = runtimes.compactMap { $0 }
             guard self.isCurrentContentGeneration(generation) else { return }
+            // The models' meshes go to the GPU here, off the render thread, so the first frame
+            // drawing them has nothing to upload.
+            for model in content.spatial.models { _ = model.plan?.upload(device: self.device) }
             let analysis = SceneLayerAnalysis.make(content: content)
             DispatchQueue.main.async { [weak self] in
                 guard let self, self.isCurrentContentGeneration(generation) else { return }
@@ -648,6 +670,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 self.postProcess.setContent(content)
                 self.particleSystems = preparedParticleSystems
                 self.layerAnalysis = analysis
+                let needsAudio = Self.needsAudio(analysis, particles: preparedParticleSystems.map(\.configuration))
+                if needsAudio != (self.audioCaptureLease != nil) {
+                    self.audioCaptureLease = needsAudio ? WallpaperServices.shared.acquireAudioCapture() : nil
+                }
                 self.framePacing.changesOnItsOwn = FramePacing.changesOnItsOwn(
                     analysis, particles: !preparedParticleSystems.isEmpty, cameraShake: content.camera.shake)
                 self.framePacing.wake(.interactive, at: self.wallTime())
@@ -846,14 +872,15 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         case .layer(var layer):
             layer.order = Int.max
             guard let frames = makeTextureFrames(from: layer.source), !frames.isEmpty else { return nil }
-            return .layer(PreparedLayer(frames: frames, layer: layer))
+            return .layer(PreparedLayer(frames: frames, layer: Self.droppingPixels(layer)))
         case .particles(let systems, let motion):
             // Above every authored object, like WE's createLayer; the scripts' order places it.
             let runtimes: [ParticleSystemRuntime?] = systems.enumerated().map { index, system in
                 var system = system
                 system.order = Int(Int32.max)
-                guard let texture = makeTextureFrames(from: system.source)?.first?.texture else { return nil }
+                guard let texture = particleTexture(from: system.source, spriteSheet: system.spriteSheet != nil) else { return nil }
                 let fallback = system.fallbackSource.flatMap { makeTextureFrames(from: $0)?.first?.texture }
+                Self.dropPixels(&system)
                 let seed = UInt32(truncatingIfNeeded: (Int(id) ?? 0) &* 31 &+ index)
                 return ParticleSystemRuntime(texture: texture, configuration: system, seed: ParticleRandom.pcg(seed),
                                              fallbackTexture: fallback)
@@ -866,6 +893,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         case let .model(model, node, motion):
             var model = model
             model.id = id
+            _ = model.plan?.upload(device: device)
             return .model(model, node: node, motion: motion)
         }
     }
@@ -1122,6 +1150,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let renderDrawable = SceneRenderResolution.drawableSize(viewports, resolution: renderSettings.renderResolution)
         renderPixelsPerUnit = SceneRenderResolution.pixelsPerUnit(sceneSize: sceneSize, drawableSize: renderDrawable,
                                                                   matchDisplay: renderSettings.sceneDetail == .matchDisplay)
+        // A scene that is one plain video draws it at exactly the display's density, so a target the
+        // size of the drawable lets the video draw straight into it in one pass (S2), not into a
+        // larger target resampled again by the composite.
+        if let exact = videoOnlyPixelsPerUnit(renderDrawable) { renderPixelsPerUnit = exact }
         // A scene matched to a smaller display is drawn below full detail: what its buffers stand for.
         fullDetailScale = SceneRenderResolution.pixelsPerUnit(sceneSize: sceneSize, drawableSize: renderDrawable) / renderPixelsPerUnit
         // A content drawn in HDR draws into RGBA16F (docs/lighting-plan.md §2.6).
@@ -1422,12 +1454,54 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             while nextParticleBatch < particleBatches.count, sequence.batchKeys[nextParticleBatch] < order {
                 let batch = particleBatches[nextParticleBatch]
                 nextParticleBatch += 1
+                if batch.material, drawsReducedResolution(batch.system) {
+                    // A run of large additive systems draws at half resolution and is added back
+                    // in its place (`SceneRenderSettings.reducedResolutionParticles`); addition
+                    // commutes, so a system whose half-resolution pipeline still compiles draws
+                    // at full resolution right after.
+                    var group = [batch.system]
+                    while nextParticleBatch < particleBatches.count, sequence.batchKeys[nextParticleBatch] < order,
+                          particleBatches[nextParticleBatch].material,
+                          drawsReducedResolution(particleBatches[nextParticleBatch].system) {
+                        group.append(particleBatches[nextParticleBatch].system)
+                        nextParticleBatch += 1
+                    }
+                    func context(_ system: ParticleSystemRuntime) -> ParticleMaterialRenderer.DrawContext {
+                        .init(sceneSize: sceneSize, frame: effectFrame, values: timelines.values,
+                              assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
+                              mipMappedFrameBuffer: mipMappedTarget, shadowAtlas: frameShadowAtlas,
+                              placement: particlePlacement(system, camera: effectFrame.camera))
+                    }
+                    endScenePass(encoder, resumes: true)
+                    let reduced = drawReducedResolution(group, scene: sceneTexture, commandBuffer: commandBuffer, context: context)
+                    guard let resumed = resumeScenePass(on: sceneTexture, commandBuffer: commandBuffer) else { return false }
+                    encoder = resumed
+                    if let half = reduced.target {
+                        var uniform = layerUniform(position: sceneSize / 2, size: sceneSize, opacity: 1,
+                                                   drawableSize: SIMD2(Float(sceneTexture.width), Float(sceneTexture.height)),
+                                                   placement: .stretch)
+                        encoder.setRenderPipelineState(scenePassPipelines.addCopy)
+                        encoder.setVertexBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
+                        encoder.setFragmentTexture(half, index: 0)
+                        encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
+                    }
+                    for system in reduced.left {
+                        particleMaterials?.draw(system, encoder: encoder, commandBuffer: commandBuffer, context: context(system))
+                    }
+                    drew = true
+                    continue
+                }
                 if batch.material {
                     var snapshot: MTLTexture?
+                    let placement = particlePlacement(batch.system, camera: effectFrame.camera)
                     if particleMaterials?.readsSceneSnapshot(batch.system) == true {
-                        // Refraction reads the scene drawn up to this system (`_rt_FullFrameBuffer`).
+                        // Refraction reads the scene drawn up to this system (`_rt_FullFrameBuffer`):
+                        // only around its particles when that is known, else all of it.
                         endScenePass(encoder, resumes: true)
-                        snapshot = sceneSnapshot(of: sceneTexture, commandBuffer: commandBuffer)
+                        let pixels = SIMD2(sceneTexture.width, sceneTexture.height)
+                        let needed = placement != nil ? nil
+                            : particleMaterials?.sceneSnapshotRect(batch.system, sceneSize: sceneSize, targetSize: pixels)
+                        snapshot = sceneSnapshot(of: sceneTexture, commandBuffer: commandBuffer, needing: needed)
                         guard let resumed = resumeScenePass(on: sceneTexture, commandBuffer: commandBuffer) else { return false }
                         encoder = resumed
                     }
@@ -1436,7 +1510,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                         values: timelines.values,
                         assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
                         sceneSnapshot: snapshot, mipMappedFrameBuffer: mipMappedTarget, shadowAtlas: frameShadowAtlas,
-                        depth: frameDepth, placement: particlePlacement(batch.system, camera: effectFrame.camera)))
+                        depth: frameDepth, placement: placement))
                     drew = true
                     continue
                 }
@@ -2447,6 +2521,46 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         return nil
     }
 
+    /// Systems below this many live particles keep drawing at full resolution: the pass split of a
+    /// reduced-resolution draw costs more than it saves on a few sprites.
+    static let reducedResolutionParticleMinimum = 256
+
+    /// Whether `system` draws at half resolution this frame (`SceneRenderSettings.reducedResolutionParticles`):
+    /// a large additive material system of a scene without depth, not reading the scene.
+    private func drawsReducedResolution(_ system: ParticleSystemRuntime) -> Bool {
+        guard renderSettings.reducedResolutionParticles, frameDepth == nil,
+              system.configuration.material?.blending.lowercased() == "additive",
+              particleMaterials?.readsSceneSnapshot(system) == false else { return false }
+        return (system.gpu?.completedCount ?? system.particles.count) >= Self.reducedResolutionParticleMinimum
+    }
+
+    /// Draws `systems` additively into a cleared half-resolution target, returned to be added onto
+    /// the scene; `left` are the systems whose pipeline for it isn't ready (or all, without a target).
+    private func drawReducedResolution(_ systems: [ParticleSystemRuntime], scene: MTLTexture, commandBuffer: MTLCommandBuffer,
+                                       context: (ParticleSystemRuntime) -> ParticleMaterialRenderer.DrawContext)
+        -> (target: MTLTexture?, left: [ParticleSystemRuntime]) {
+        var avoiding = [scene]
+        if let sceneCopy { avoiding.append(sceneCopy) }
+        guard let particleMaterials,
+              let target = renderTargetPool.texture(width: max(scene.width / 2, 1), height: max(scene.height / 2, 1),
+                                                    pixelFormat: scene.pixelFormat, avoiding: avoiding) else { return (nil, systems) }
+        let pass = MTLRenderPassDescriptor()
+        pass.colorAttachments[0].texture = target
+        pass.colorAttachments[0].loadAction = .clear
+        pass.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 0)
+        pass.colorAttachments[0].storeAction = .store
+        guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { return (nil, systems) }
+        encoder.label = "Reduced-resolution particles"
+        var left: [ParticleSystemRuntime] = []
+        for system in systems where !particleMaterials.draw(system, alsoInto: target.pixelFormat, sampleCount: 1,
+                                                            depthFormat: .invalid, encoder: encoder,
+                                                            commandBuffer: commandBuffer, context: context(system)) {
+            left.append(system)
+        }
+        encoder.endEncoding()
+        return (left.count < systems.count ? target : nil, left)
+    }
+
     /// Steps a system whose object is hidden (`ParticleFrameInputs.hidden`): the one step that
     /// clears it runs on whichever simulation holds it; nothing is drawn.
     private func stepHiddenParticles(_ system: ParticleSystemRuntime, deltaTime: Float, pixelFormat: MTLPixelFormat) {
@@ -3123,9 +3237,27 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                             transformScaleY: 1)
     }
 
-    private var pipelinesCompiling: Bool {
+    /// Compiles landed so far in the layer, effect and particle renderers.
+    private var pipelinesLanded: Int {
+        (effectGraph?.pipelinesLanded ?? 0) &+ (imageMaterials?.pipelinesLanded ?? 0) &+ (particleMaterials?.pipelinesLanded ?? 0)
+    }
+
+    /// Whether any pipeline is still compiling off the render thread.
+    var pipelinesCompiling: Bool {
         hasPendingEffectPipelines || imageMaterials?.hasPendingPipelines == true
             || particleMaterials?.hasPendingPipelines == true
+    }
+
+    /// The unquantised pixels per unit that sizes the scene target to `drawable` when the scene is
+    /// a single effect-less video filling it at the same aspect; nil otherwise.
+    private func videoOnlyPixelsPerUnit(_ drawable: SIMD2<Float>) -> Float? {
+        guard layers.count == 1, case .video = layers[0].layer.source, layers[0].layer.weEffects.isEmpty,
+              particleSystems.isEmpty, spatial.models.isEmpty, !scripts.isRunning,
+              sceneSize.x > 0, sceneSize.y > 0, drawable.x > 0, drawable.y > 0 else { return nil }
+        let exact = drawable.x / sceneSize.x
+        guard abs(sceneSize.y * exact - drawable.y) < 0.5,
+              max(drawable.x, drawable.y) <= SceneRenderResolution.maximumTextureDimension else { return nil }
+        return exact
     }
 
     /// Hands this frame's inputs to the layer analysis, which marks the layers they change dirty.
@@ -3140,15 +3272,25 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         inputs.cameraShake = motion.cameraShake
         inputs.audio = effectFrame.audio
         inputs.audioLevel = motion.audioLevel
+        // System textures (now-playing artwork) keep following the clock; a video only its frames.
+        if mediaTextures != nil && effectFrame.time != analysedTime
+            || layers.contains(where: { if case let .video(stream) = $0.layer.source { stream.hasNewFrame } else { false } }) {
+            videoRevision &+= 1
+        }
+        analysedTime = effectFrame.time
+        inputs.videoRevision = videoRevision
         inputs.userPropertiesRevision = WallpaperServices.shared.propertyService.revision
         inputs.scripts = scripts.state
         inputs.animatedSites = animations?.sites ?? []
         let shape = (layers: layers.count, target: drawableSize)
         // A layer, effect or post-process whose pipeline is still compiling draws another way until
         // it lands; nothing the analysis tracks says when.
+        // A compile can also start and land between two frames, unseen by `warming`.
         let warming = pipelinesCompiling
+        let landed = pipelinesLanded
         inputs.sceneChanged = shape.layers != analysedShape.layers || shape.target != analysedShape.target
-            || warming || analysedWarmUp || textRaster.hasFinished
+            || warming || analysedWarmUp || landed != analysedLanded || textRaster.hasFinished
+        analysedLanded = landed
         analysedShape = shape
         analysedWarmUp = warming
         layerAnalysis.update(inputs)
@@ -3186,22 +3328,41 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     private func clearUploadedImages() {
         uploadedImagesLock.lock()
-        uploadedImages.removeAll()
+        uploadedImages.removeAllObjects()
+        particleMipmaps.removeAll()
         uploadedImagesLock.unlock()
+    }
+
+    /// A particle system's texture 0 with its mip chain; systems that share a texture share it.
+    /// A sprite sheet keeps the levels its file stores: a generated chain would bleed its cells
+    /// into each other at the small levels.
+    private func particleTexture(from source: SceneMetalTextureSource, spriteSheet: Bool) -> MTLTexture? {
+        guard let texture = makeTextureFrames(from: source)?.first?.texture else { return nil }
+        guard !spriteSheet, ParticleTextureMipmaps.needsChain(texture) else { return texture }
+        let key = ObjectIdentifier(texture)
+        uploadedImagesLock.lock()
+        let cached = particleMipmaps[key]?.chained
+        uploadedImagesLock.unlock()
+        if let cached { return cached }
+        let chained = ParticleTextureMipmaps.mipmapped(texture, device: device, queue: commandQueue)
+        uploadedImagesLock.lock()
+        defer { uploadedImagesLock.unlock() }
+        if let raced = particleMipmaps[key]?.chained { return raced }
+        particleMipmaps[key] = (texture, chained)
+        return chained
     }
 
     private func makeTextureFrames(from source: SceneMetalTextureSource) -> [RenderTextureFrame]? {
         guard case let .image(image) = source else { return uploadTextureFrames(from: source) }
-        let key = ObjectIdentifier(image)
         uploadedImagesLock.lock()
-        let cached = uploadedImages[key]?.frames
+        let cached = uploadedImages.object(forKey: image)?.frames
         uploadedImagesLock.unlock()
         if let cached { return cached }
         guard let frames = uploadTextureFrames(from: source) else { return nil }
         uploadedImagesLock.lock()
         defer { uploadedImagesLock.unlock() }
-        if let raced = uploadedImages[key]?.frames { return raced }
-        uploadedImages[key] = (image, frames)
+        if let raced = uploadedImages.object(forKey: image)?.frames { return raced }
+        uploadedImages.setObject(UploadedFrames(frames), forKey: image)
         return frames
     }
 
@@ -3260,6 +3421,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                           uvAxisX: SIMD2<Float>(frame.width, frame.widthY) / atlasSize,
                                           uvAxisY: SIMD2<Float>(frame.heightX, frame.height) / atlasSize)
             }
+        case .uploaded:
+            // Its pixels were dropped after its first upload; a new upload loads the file again.
+            OWELog.error(.scene, "An uploaded image was handed back for upload without its pixels")
+            return nil
         }
     }
 
@@ -3313,7 +3478,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     /// A system texture's image now; nil without one (or without script services).
     private func systemTexture(_ kind: SceneSystemTexture) -> MTLTexture? {
-        mediaTextures?.texture(kind, loader: textureLoader, device: device)
+        mediaTextures?.texture(kind)
     }
 
     private func spriteSheetUV(for particle: Particle,

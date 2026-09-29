@@ -263,15 +263,17 @@ final class ImageMaterialPrelightingTests: XCTestCase {
             return bytes
         }
         // Until every pipeline is ready the layer draws natively (or its effects take it unlit);
-        // then two frames in a row agree.
+        // then two frames in a row agree. Time spent compiling doesn't count (it varies with load).
         var last: [UInt8] = []
-        let deadline = Date().addingTimeInterval(30)
-        while Date() < deadline {
+        var settleFrames = 600
+        let hardDeadline = Date().addingTimeInterval(600)
+        while settleFrames > 0, Date() < hardDeadline {
             RunLoop.main.run(until: Date().addingTimeInterval(0.05))
             renderer.draw(in: view)
             renderer.lastCommandBuffer?.waitUntilCompleted()
+            if !renderer.pipelinesCompiling { settleFrames -= 1 }
             let now = pixels()
-            if now == last, renderer.imageMaterialDraws > 0,
+            if now == last, !renderer.pipelinesCompiling, renderer.imageMaterialDraws > 0,
                effects.isEmpty || renderer.imageMaterialPrelitDraws > 0 { break }
             last = now
         }

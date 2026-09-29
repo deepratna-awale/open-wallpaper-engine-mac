@@ -26,6 +26,12 @@ final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate {
         },
         start: { [weak self] in self?.startSystemAudioCapture() })
 
+    /// The consumers that need audio now. Capture runs only while there is one, and stops
+    /// `idleGrace` seconds after the last one goes.
+    let demand = AudioCaptureDemand(schedule: { delay, work in
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
+    })
+
     override init() {
         super.init()
         // Unit tests run ad-hoc signed with this bundle id; a capture request from them is denied
@@ -37,8 +43,11 @@ final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate {
     @MainActor
     private func setUpSystemAudioCapture() {
         observeCaptureInterruptions()
+        demand.observe { [weak self] active in
+            MainActor.assumeIsolated { self?.demandDidChange(active: active) }
+        }
         if permissionGate.canCapture() {
-            restartScheduler.requestRestart()
+            if demand.isDemanded { restartScheduler.requestRestart() }
         } else {
             OWELog.info(.audio, "Screen Recording permission not granted; system audio capture is off.")
             if permissionGate.shouldAlertMissingPermission() {
@@ -83,12 +92,42 @@ final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate {
         guard permissionGate.becameGranted() else { return }
         OWELog.info(.audio, "Screen Recording permission granted; starting system audio capture.")
         restartScheduler.reset()
-        restartScheduler.requestRestart()
+        if demand.isDemanded { restartScheduler.requestRestart() }
+    }
+
+    /// Starts capture when the first consumer arrives and stops it once the last one has been
+    /// gone for the demand's grace period.
+    @MainActor
+    private func demandDidChange(active: Bool) {
+        guard active else { return stopSystemAudioCapture() }
+        captureLock.lock()
+        let running = stream != nil
+        captureLock.unlock()
+        guard !running else { return }
+        restartSystemAudioCapture(reason: "a wallpaper needs audio")
+    }
+
+    /// Stops the stream and cancels any queued start; the next demand starts a new one.
+    @MainActor
+    private func stopSystemAudioCapture() {
+        restartScheduler.reset()
+        captureLock.lock()
+        let current = stream
+        stream = nil
+        captureLock.unlock()
+        resetAudioLevels()
+        guard let current else { return }
+        OWELog.info(.audio, "No wallpaper needs audio; stopping ScreenCaptureKit audio capture.")
+        Task {
+            do { try await current.stopCapture() } catch {
+                OWELog.debug(.audio, "Stopping capture stream failed: \(error.localizedDescription)")
+            }
+        }
     }
 
     @MainActor
     private func restartSystemAudioCapture(reason: String) {
-        guard permissionGate.canCapture() else { return }
+        guard demand.isDemanded, permissionGate.canCapture() else { return }
         OWELog.info(.audio, "Restarting ScreenCaptureKit audio capture: \(reason).")
         restartScheduler.requestRestart()
     }
@@ -132,6 +171,8 @@ final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate {
             let success = await self?.createAndStartStream() ?? false
             await MainActor.run { [weak self] in
                 guard let self else { return }
+                // The last consumer left while the stream was starting.
+                if success, !self.demand.isDemanded { self.stopSystemAudioCapture() }
                 if self.restartScheduler.finished(success: success) {
                     OWELog.error(.audio, "Giving up on ScreenCaptureKit audio capture after \(self.restartScheduler.maxFailures) failed attempts; it restarts on the next wake, display change or permission change.")
                 }

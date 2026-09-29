@@ -1,7 +1,7 @@
 import simd
 
 /// A layer's user-bound transform and colour values, re-resolved every frame so a changed user
-/// property shows immediately (before the content rebuild it also triggers lands).
+/// property shows immediately. Sites applied here alone need no content rebuild (`SceneLiveBindingSites`).
 ///
 /// Each binding stores the value the layer was built with. Per frame the renderer applies the
 /// change since then: origin and angles as an offset, scale/colour/alpha/brightness as a ratio.

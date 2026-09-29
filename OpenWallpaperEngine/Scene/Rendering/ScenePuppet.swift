@@ -140,6 +140,11 @@ final class ScenePuppetPlan {
             throw ScenePuppetError.unsupported("a sprite-sheet albedo")
         case .video:
             throw ScenePuppetError.unsupported("a video albedo")
+        case let .uploaded(info):
+            // Plans are made from loaded content; an uploaded image keeps the sizes they read.
+            let sheet = info.sheetPixelSize ?? SIMD2<Double>(info.pixelSize)
+            texture = SIMD2(Int(sheet.x), Int(sheet.y))
+            content = SIMD2(Int(info.pixelSize.x), Int(info.pixelSize.y))
         }
         guard content.x > 0, content.y > 0, texture.x >= content.x, texture.y >= content.y else {
             throw ScenePuppetError.unsupported("an empty texture")

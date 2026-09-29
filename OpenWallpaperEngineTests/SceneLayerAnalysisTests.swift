@@ -205,7 +205,7 @@ final class SceneLayerAnalysisTests: XCTestCase {
             let base = SceneLayerFrameInputs()
             let mutations: [(SceneLayerDependencies, (inout SceneLayerFrameInputs, SceneLayerAnalysis.Layer) -> Void)] = [
                 (.time, { inputs, _ in inputs.time += 1 }),
-                (.video, { inputs, _ in inputs.time += 1 }),
+                (.video, { inputs, _ in inputs.videoRevision += 1 }),
                 (.cursor, { inputs, _ in inputs.pointer += 0.1 }),
                 (.parallax, { inputs, _ in inputs.parallax += 0.1 }),
                 (.shake, { inputs, _ in inputs.shake += 1 }),

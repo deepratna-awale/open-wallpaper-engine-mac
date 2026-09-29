@@ -18,7 +18,7 @@ enum ParticleFallbackTexture {
             let images = animation.images.compactMap(convert)
             guard images.count == animation.images.count else { return nil }
             return .animated(TEXAnimatedImages(images: images, frames: animation.frames))
-        case .dxt, .video:
+        case .dxt, .video, .uploaded:
             return nil
         }
     }
