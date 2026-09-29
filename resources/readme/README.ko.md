@@ -126,7 +126,6 @@ Xcode에서 서명 인증서를 본인의 인증서로 변경하거나 'Sign to 
 
 ## 현재 제한 사항
 
-- **응용 프로그램 배경화면** — `type: "application"` 배경화면은 지원되지 않으며 실행되지 않습니다.
 - **구현되지 않은 SceneScript 함수** — `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `transformAttachmentToTexture()`, `getVideoTexture()`는 아직 아무 작업도 하지 않습니다.
 - **SceneScript 호환성** — 모든 독점 이벤트 이름, 입력 콜백, 수명 주기의 예외 상황, 정확한 타이밍 의미가 재현되지는 않습니다.
 - **드문 파티클 기능** — 구, 상자, 레이어 이미지 외의 이미터 모양과 시스템의 첫 번째 이후 렌더러는 지원되지 않습니다.

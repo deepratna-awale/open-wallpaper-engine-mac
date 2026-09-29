@@ -126,7 +126,6 @@ Pierwsza kompilacja ze źródeł pobiera pakiet Swift Sparkle. Wersje zbudowane 
 
 ## Obecne ograniczenia
 
-- **Tapety typu aplikacja** — tapety `type: "application"` nie są obsługiwane i nie zostaną uruchomione.
 - **Niezaimplementowane funkcje SceneScript** — `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `transformAttachmentToTexture()`, `getVideoTexture()` jeszcze nic nie robią.
 - **Zgodność SceneScript** — nie każda zastrzeżona nazwa zdarzenia, wywołanie zwrotne wejścia, przypadek brzegowy cyklu życia ani dokładna semantyka czasu jest odtworzona.
 - **Rzadkie funkcje cząsteczek** — Kształty emiterów inne niż kula, prostopadłościan i obraz warstwy oraz renderery po pierwszym w systemie nie są obsługiwane.

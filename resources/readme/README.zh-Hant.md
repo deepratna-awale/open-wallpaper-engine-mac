@@ -126,7 +126,6 @@ open "OpenWallpaperEngine.xcodeproj"
 
 ## 目前的限制
 
-- **應用程式背景圖片** — 不支援 `type: "application"` 背景圖片，此類背景圖片將無法執行。
 - **尚未實作的 SceneScript 函式** — `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `transformAttachmentToTexture()`, `getVideoTexture()` 目前不執行任何動作。
 - **SceneScript 一致性** — 並未完整重現所有專有事件名稱、輸入回呼、生命週期的邊界情況或精確的計時語意。
 - **少見的粒子功能** — 不支援球體、盒體與圖層影像以外的發射器形狀，也不支援系統中第一個之後的渲染器。

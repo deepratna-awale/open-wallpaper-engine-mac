@@ -126,7 +126,6 @@ Building from source fetches the Sparkle Swift package on first build. Builds fr
 
 ## Current Limitations
 
-- **Application wallpapers** — `type: "application"` wallpapers are not supported and will not run.
 - **SceneScript stubs** — `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `transformAttachmentToTexture()`, `getVideoTexture()` do nothing yet.
 - **SceneScript parity** — Not every proprietary event name, input callback, lifecycle edge case, or exact timing semantic is reproduced.
 - **Rare particle features** — Emitter shapes other than sphere, box and layer image, and renderers after a system's first, are not supported.
