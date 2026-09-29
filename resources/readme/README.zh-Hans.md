@@ -127,7 +127,6 @@ open "OpenWallpaperEngine.xcodeproj"
 ## 当前限制
 
 - **尚未实现的 SceneScript 函数** — `getVideoTexture()` 目前不执行任何操作。
-- **WebM 视频** — WebM（VP8/VP9）通过 WebKit 播放，因此音乐同步效果不适用于它。
 
 ## 支持的墙纸类型
 

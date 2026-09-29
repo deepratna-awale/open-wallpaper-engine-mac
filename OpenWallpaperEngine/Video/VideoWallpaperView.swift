@@ -75,21 +75,12 @@ struct AudioReactiveVideoWallpaperView: View {
 
     var body: some View {
         TimelineView(.animation) { _ in
-            let wallpaper = wallpaperViewModel.wallpaper(for: screenId)
+            let effect = VideoMusicSyncEffect(wallpaperViewModel.wallpaper(for: screenId))
             let audioLevel = viewModel.musicSyncLevel
-            let zoom = VideoMusicSyncSettings.bool(wallpaper, "zoomEnabled")
-                ? 1 + audioLevel * VideoMusicSyncSettings.double(wallpaper, "zoomAmount", default: 0.08)
-                : 1
-            let tilt = VideoMusicSyncSettings.bool(wallpaper, "tiltEnabled")
-                ? audioLevel * VideoMusicSyncSettings.double(wallpaper, "tiltAmount", default: 3)
-                : 0
-            let saturation = VideoMusicSyncSettings.bool(wallpaper, "saturationEnabled")
-                ? 1 + audioLevel * VideoMusicSyncSettings.double(wallpaper, "saturationAmount", default: 0.6)
-                : 1
             VideoWallpaperView(wallpaperViewModel: wallpaperViewModel, viewModel: viewModel, screenId: screenId)
-                .scaleEffect(max(0.1, zoom))
-                .rotationEffect(.degrees(tilt))
-                .saturation(max(0, saturation))
+                .scaleEffect(effect.zoom(at: audioLevel))
+                .rotationEffect(.degrees(effect.tilt(at: audioLevel)))
+                .saturation(effect.saturation(at: audioLevel))
                 .onChange(of: audioLevel) { _, newValue in
                     NotificationCenter.default.post(name: .videoMusicSyncAudioLevelDidChange,
                                                     object: nil,

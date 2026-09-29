@@ -127,7 +127,6 @@ Pierwsza kompilacja ze źródeł pobiera pakiet Swift Sparkle. Wersje zbudowane 
 ## Obecne ograniczenia
 
 - **Niezaimplementowane funkcje SceneScript** — `getVideoTexture()` jeszcze nic nie robi.
-- **Filmy WebM** — WebM (VP8/VP9) jest odtwarzany przez WebKit, więc efekty synchronizacji z muzyką nie działają.
 
 ## Obsługiwane typy tapet
 

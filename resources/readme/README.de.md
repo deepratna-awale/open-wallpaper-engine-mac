@@ -127,7 +127,6 @@ Beim ersten Build aus dem Quellcode wird das Swift-Paket Sparkle geladen. Aus de
 ## Aktuelle Einschränkungen
 
 - **SceneScript-Platzhalter** – `getVideoTexture()` tut noch nichts.
-- **WebM-Videos** – WebM (VP8/VP9) läuft über WebKit, daher wirken Musiksynchronisations-Effekte darauf nicht.
 
 ## Unterstützte Hintergrundbildtypen
 

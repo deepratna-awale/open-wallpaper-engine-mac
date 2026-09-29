@@ -127,7 +127,6 @@ Building from source fetches the Sparkle Swift package on first build. Builds fr
 ## Current Limitations
 
 - **SceneScript stubs** — `getVideoTexture()` does nothing yet.
-- **WebM videos** — WebM (VP8/VP9) plays through WebKit, so music-sync effects don't apply to it.
 
 ## Supported Wallpaper Types
 

@@ -127,7 +127,6 @@ A primeira compilação a partir do código-fonte baixa o pacote Swift Sparkle. 
 ## Limitações Atuais
 
 - **Funções do SceneScript não implementadas** — `getVideoTexture()` ainda não faz nada.
-- **Vídeos WebM** — WebM (VP8/VP9) é reproduzido pelo WebKit, então os efeitos de sincronização com a música não se aplicam.
 
 ## Tipos de Imagem de Fundo Suportados
 

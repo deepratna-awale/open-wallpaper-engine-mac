@@ -127,7 +127,6 @@ Al compilar desde el código fuente, la primera compilación descarga el paquete
 ## Limitaciones actuales
 
 - **Funciones de SceneScript sin implementar**: `getVideoTexture()` todavía no hace nada.
-- **Vídeos WebM**: el formato WebM (VP8/VP9) se reproduce a través de WebKit, por lo que los efectos de sincronización con la música no se aplican.
 
 ## Tipos de fondos de pantalla compatibles
 

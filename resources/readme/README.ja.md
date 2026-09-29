@@ -127,7 +127,6 @@ Xcode で署名証明書を自分のものに変更するか「Sign to Run Local
 ## 現在の制限事項
 
 - **SceneScript の未実装関数** — `getVideoTexture()` はまだ何もしません。
-- **WebM ビデオ** — WebM（VP8/VP9）は WebKit で再生されるため、音楽同期エフェクトは適用されません。
 
 ## 対応している壁紙の種類
 

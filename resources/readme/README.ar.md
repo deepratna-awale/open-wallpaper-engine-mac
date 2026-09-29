@@ -129,7 +129,6 @@ open "OpenWallpaperEngine.xcodeproj"
 ## القيود الحالية
 
 - **دوال SceneScript غير المنفَّذة** — `getVideoTexture()` لا تفعل شيئًا بعد.
-- **مقاطع WebM** — يُشغَّل WebM (VP8/VP9) عبر WebKit، لذا لا تنطبق عليه تأثيرات المزامنة مع الموسيقى.
 
 ## أنواع خلفيات الشاشة المدعومة
 

@@ -8,9 +8,11 @@ import WebKit
 
 /// A video wallpaper AVFoundation can't decode (`WebKitVideoPlayer.handles`) on one display: a
 /// page per display, like a web wallpaper, paused by that display's playback rule and heard only
-/// on the wallpaper's audible display.
+/// on the wallpaper's audible display, and moved by its music sync like the AVKit path.
 struct WebKitVideoWallpaperView: NSViewRepresentable {
     @ObservedObject var wallpaperViewModel: WallpaperViewModel
+    /// Redraws the view when a music-sync control changes.
+    @ObservedObject var musicSyncStore = VideoMusicSyncStore.shared
     let screenId: String
 
     func makeCoordinator() -> Coordinator { Coordinator() }
@@ -20,11 +22,14 @@ struct WebKitVideoWallpaperView: NSViewRepresentable {
         let player = WebKitVideoPlayer(url: wallpaper.mediaURL, readAccess: wallpaper.wallpaperDirectory)
         context.coordinator.player = player
         player.state = state(for: wallpaper)
+        player.musicSync = VideoMusicSyncEffect(wallpaper)
         return player.webView
     }
 
     func updateNSView(_ nsView: WKWebView, context: Context) {
-        context.coordinator.player?.state = state(for: wallpaperViewModel.wallpaper(for: screenId))
+        let wallpaper = wallpaperViewModel.wallpaper(for: screenId)
+        context.coordinator.player?.state = state(for: wallpaper)
+        context.coordinator.player?.musicSync = VideoMusicSyncEffect(wallpaper)
     }
 
     static func dismantleNSView(_ nsView: WKWebView, coordinator: Coordinator) {

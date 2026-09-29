@@ -11,7 +11,7 @@ The snapshot below (2026-09-25) is kept as it was written; most of its TL;DR has
 - **Audio** follows WE's spectrum and sound layers (spatial sound included); capture restarts after sleep. Now Playing reaches scenes and web wallpapers.
 - **Wallpaper instances** are shared across displays: a scene loads, scripts and renders once.
 - **Assets:** WE's effects, materials, shaders, models, particles, scripts and fonts no longer ship in the repo or the app (`Vendor/we-assets` is gone). Settings › Assets installs them from the user's own Steam copy with SteamCMD into `<Wallpaper Storage>/.owe-assets`, or reads a chosen WE folder. Tests read them from `OWE_ASSETS`.
-- **Video:** WebM (VP8/VP9) plays through WebKit; music-sync effects don't apply to it.
+- **Video:** WebM (VP8/VP9) plays through WebKit; music sync styles and paces its `<video>` from the system audio level.
 - **Open:** the roadmap's remaining gaps (area 8 items 18–21, 23 and 24; the shader-compiler helper process) and the open points in the plans that need WE ground truth. Paths and file names in the sections below predate the reorganization (`docs/architecture.md` has the current layout).
 
 - **Date:** 2026-09-25
