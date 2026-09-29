@@ -23,6 +23,10 @@ final class InstalledLibraryCache {
     }
 
     private var entries: [URL: Entry] = [:]
+    /// Whether a pass has listed the folder: wallpapers that appear after it are arrivals.
+    private var listedOnce = false
+    /// Called with each wallpaper that appears after the first pass (a download or an import).
+    var onArrival: (WEWallpaper) -> Void = { _ in }
 
     /// The listed wallpapers in `directory`, in folder order, without `dependencyIds`.
     func wallpapers(in directory: URL, hiding dependencyIds: Set<String>) -> [WEWallpaper] {
@@ -40,11 +44,14 @@ final class InstalledLibraryCache {
         for folder in folders {
             seen.insert(folder)
             guard !dependencyIds.contains(folder.lastPathComponent) else { continue }
+            let arrived = listedOnce && entries[folder] == nil
             if let wallpaper = entry(for: folder).wallpaper {
                 result.append(wallpaper)
+                if arrived { onArrival(wallpaper) }
             }
         }
         entries = entries.filter { seen.contains($0.key) }
+        listedOnce = true
         return result
     }
 
