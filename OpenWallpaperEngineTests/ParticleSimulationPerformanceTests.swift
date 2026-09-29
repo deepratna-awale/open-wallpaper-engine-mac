@@ -38,7 +38,10 @@ final class ParticleSimulationPerformanceTests: XCTestCase {
         return system
     }
 
+    /// About 80 s in Debug, so it runs nightly and locally (`OWE_SLOW_TESTS=1`), not on every PR.
     func testSimulationCost() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["OWE_SLOW_TESTS"] == "1",
+                          "slow test: set OWE_SLOW_TESTS=1")
         var report: [String] = []
         for count in [1_000, 10_000, 100_000] {
             report.append(try measure("typical", typical(count), count: count))

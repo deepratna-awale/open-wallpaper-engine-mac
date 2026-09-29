@@ -1,0 +1,67 @@
+name: Nightly
+
+# The whole suite, slow tests included (OWE_SLOW_TESTS=1), with the WE assets.
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  slow-tests:
+    runs-on: macos-26
+    timeout-minutes: 120
+    env:
+      WE_ASSETS: ${{ github.workspace }}/../we-assets
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/select-xcode
+
+      - name: Read the Wallpaper Engine build
+        id: build
+        run: |
+          id=$(Scripts/fetch-we-assets.sh --build-id || true)
+          echo "id=${id:-unknown-${{ github.run_id }}}" >> "$GITHUB_OUTPUT"
+
+      - name: Restore the assets
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.WE_ASSETS }}
+          key: we-assets-${{ steps.build.outputs.id }}
+          restore-keys: we-assets-
+
+      - name: Fetch the assets
+        if: steps.cache.outputs.cache-hit != 'true'
+        timeout-minutes: 20
+        env:
+          OWE_CI_STEAM_USER: ${{ secrets.OWE_CI_STEAM_USER }}
+          OWE_CI_STEAM_PASSWORD: ${{ secrets.OWE_CI_STEAM_PASSWORD }}
+          OWE_CI_STEAM_SHARED_SECRET: ${{ secrets.OWE_CI_STEAM_SHARED_SECRET }}
+          OWE_TOOLS_DIR: ${{ runner.temp }}/owe-tools
+        run: Scripts/fetch-we-assets.sh "$WE_ASSETS"
+
+      - name: Build and test, slow tests included
+        env:
+          TEST_RUNNER_OWE_ASSETS: ${{ env.WE_ASSETS }}
+          TEST_RUNNER_OWE_SLOW_TESTS: '1'
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project OpenWallpaperEngine.xcodeproj \
+            -scheme OpenWallpaperEngine \
+            -configuration Debug \
+            -destination 'platform=macOS' \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee xcodebuild.log
+
+      - name: Upload log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-log-nightly
+          path: xcodebuild.log

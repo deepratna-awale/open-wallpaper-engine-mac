@@ -5,7 +5,7 @@ on:
     branches: [main]
   pull_request:
 
-# Both jobs only read the repository (and the Actions cache, which needs no token scope).
+# Every job only reads the repository (and the Actions cache and artifacts, which need no token scope).
 permissions:
   contents: read
 
@@ -13,23 +13,92 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  XCODEBUILD_FLAGS: >-
+    -project OpenWallpaperEngine.xcodeproj
+    -scheme OpenWallpaperEngine
+    -configuration Debug
+    -destination platform=macOS
+    -derivedDataPath build/DerivedData
+    -clonedSourcePackagesDirPath build/SourcePackages
+    CODE_SIGNING_ALLOWED=NO
+    COMPILER_INDEX_STORE_ENABLE=NO
+  # Tests over about a minute skip unless OWE_SLOW_TESTS=1; nightly.yml runs them.
+  TEST_FLAGS: >-
+    -parallel-testing-enabled YES
+    -parallel-testing-worker-count 3
+
 jobs:
-  build-and-test:
+  # Builds the app and the test bundle once; both test jobs run that build without recompiling.
+  build:
     runs-on: macos-26
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use the supported Xcode
-        # Xcode 26.3 (macOS 26 SDK, which Liquid Glass needs), the oldest the project supports and
-        # the one release builds with. The runner is macOS 26: actool on macOS 15 crashes compiling
-        # the layered AppIcon.icon (its icon renderer needs macOS 26 frameworks).
+      - id: xcode
+        uses: ./.github/actions/select-xcode
+
+      - name: Restore the Swift packages
+        uses: actions/cache@v4
+        with:
+          path: build/SourcePackages
+          key: spm-${{ steps.xcode.outputs.version }}-${{ hashFiles('OpenWallpaperEngine.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+
+      - name: Restore the build
+        # An exact hit is a build of these very sources: it is used as is. A partial hit still
+        # saves rebuilding the packages.
+        id: dd
+        uses: actions/cache@v4
+        with:
+          path: build/DerivedData
+          key: dd-${{ steps.xcode.outputs.version }}-${{ hashFiles('OpenWallpaperEngine.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-${{ hashFiles('OpenWallpaperEngine/**', 'OpenWallpaperEngineTests/**', 'OpenWallpaperEngine.xcodeproj/**', 'OpenWallpaperEngine-Info.plist', 'Vendor/**') }}
+          restore-keys: |
+            dd-${{ steps.xcode.outputs.version }}-${{ hashFiles('OpenWallpaperEngine.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-
+
+      - name: Build for testing
+        if: steps.dd.outputs.cache-hit != 'true'
         run: |
-          X=/Applications/Xcode_26.3.app
-          [[ -d $X ]] || X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | head -1)
-          [[ -n "$X" && -d "$X" ]] || { echo "::error::no Xcode 26 on the runner"; exit 1; }
-          sudo xcode-select -s "$X"
-          xcodebuild -version
+          set -o pipefail
+          xcodebuild build-for-testing $XCODEBUILD_FLAGS | tee xcodebuild.log
+
+      - name: Check for deployment target mismatches
+        # A library built for a newer macOS than the app's deployment target links, and then
+        # fails to load on that older macOS.
+        if: steps.dd.outputs.cache-hit != 'true'
+        run: |
+          if grep -E "was built for newer (macOS|macosx) version" xcodebuild.log; then
+            echo "::error::a linked library targets a newer macOS than the app"; exit 1
+          fi
+
+      - name: Check glslang and SPIRV-Cross for symbol clashes
+        run: Scripts/check-toolchain-symbols.sh build/DerivedData
+
+      - name: Pack the test build
+        run: tar -C build/DerivedData -czf products.tgz Build/Products
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: products
+          path: products.tgz
+          retention-days: 1
+          compression-level: 0
+
+      - name: Upload log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-log
+          path: xcodebuild.log
+
+  build-and-test:
+    needs: build
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/select-xcode
 
       - name: Test the release scripts
         run: |
@@ -39,40 +108,31 @@ jobs:
           python3 Scripts/test_steam_totp.py
           for f in Scripts/release/*.sh Scripts/*.sh; do bash -n "$f"; done
 
-      - name: Build and test
+      - uses: actions/download-artifact@v4
+        with:
+          name: products
+
+      - name: Test
         run: |
           set -o pipefail
-          xcodebuild test \
-            -project OpenWallpaperEngine.xcodeproj \
-            -scheme OpenWallpaperEngine \
-            -configuration Debug \
-            -destination 'platform=macOS' \
-            -derivedDataPath build/DerivedData \
-            CODE_SIGNING_ALLOWED=NO \
-            | tee xcodebuild.log
-
-      - name: Check for deployment target mismatches
-        # A library built for a newer macOS than the app's deployment target links, and then
-        # fails to load on that older macOS.
-        run: |
-          if grep -E "was built for newer (macOS|macosx) version" xcodebuild.log; then
-            echo "::error::a linked library targets a newer macOS than the app"; exit 1
-          fi
-
-      - name: Check glslang and SPIRV-Cross for symbol clashes
-        run: Scripts/check-toolchain-symbols.sh build/DerivedData
+          mkdir -p build/DerivedData && tar -C build/DerivedData -xzf products.tgz
+          xcodebuild test-without-building $TEST_FLAGS \
+            -xctestrun "$(ls build/DerivedData/Build/Products/*.xctestrun | head -1)" \
+            -destination platform=macOS | tee xcodebuild.log
 
       - name: Upload log
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: xcodebuild-log
+          name: xcodebuild-test-log
           path: xcodebuild.log
 
   # The same suite with Wallpaper Engine's built-in assets, so the asset-gated tests run. The assets
-  # come from the CI Steam account (docs/ci-assets.md), cached per WE build. A separate job so the
-  # no-asset job above stays the fast PR signal; fork PRs get no secrets and skip it.
+  # come from the CI Steam account (docs/ci-assets.md), cached per WE build. Fork PRs get no secrets
+  # and skip it; a PR that touches only docs, the site, the wiki or strings passes it without testing
+  # (the check still reports, since branch protection requires it).
   asset-tests:
+    needs: build
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: macos-26
     timeout-minutes: 60
@@ -80,21 +140,35 @@ jobs:
       WE_ASSETS: ${{ github.workspace }}/../we-assets
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
-      - name: Use the supported Xcode
+      - name: Check what changed
+        id: changes
         run: |
-          X=/Applications/Xcode_26.3.app
-          [[ -d $X ]] || X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | head -1)
-          [[ -n "$X" && -d "$X" ]] || { echo "::error::no Xcode 26 on the runner"; exit 1; }
-          sudo xcode-select -s "$X"
+          run=true
+          if [[ "${{ github.event_name }}" == pull_request ]]; then
+            # The checkout is the merge commit; its first parent is the base.
+            files=$(git diff --name-only HEAD^1 HEAD)
+            if [[ -n "$files" ]] && ! grep -vqE '^(docs/|site/|wiki/|[^/]+\.md$|.*Localizable\.(strings|xcstrings)$)' <<<"$files"; then
+              run=false
+              echo "Only docs, site, wiki or strings changed: the asset tests are skipped."
+            fi
+          fi
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+
+      - if: steps.changes.outputs.run == 'true'
+        uses: ./.github/actions/select-xcode
 
       - name: Read the Wallpaper Engine build
+        if: steps.changes.outputs.run == 'true'
         id: build
         run: |
           id=$(Scripts/fetch-we-assets.sh --build-id || true)
           echo "id=${id:-unknown-${{ github.run_id }}}" >> "$GITHUB_OUTPUT"
 
       - name: Restore the assets
+        if: steps.changes.outputs.run == 'true'
         id: cache
         uses: actions/cache@v4
         with:
@@ -103,7 +177,7 @@ jobs:
           restore-keys: we-assets-
 
       - name: Fetch the assets
-        if: steps.cache.outputs.cache-hit != 'true'
+        if: steps.changes.outputs.run == 'true' && steps.cache.outputs.cache-hit != 'true'
         timeout-minutes: 20
         env:
           OWE_CI_STEAM_USER: ${{ secrets.OWE_CI_STEAM_USER }}
@@ -112,20 +186,22 @@ jobs:
           OWE_TOOLS_DIR: ${{ runner.temp }}/owe-tools
         run: Scripts/fetch-we-assets.sh "$WE_ASSETS"
 
-      - name: Build and test with the assets
+      - if: steps.changes.outputs.run == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: products
+
+      - name: Test with the assets
+        if: steps.changes.outputs.run == 'true'
         # OWE_LIBRARY stays unset: the library-gated tests skip.
         env:
           TEST_RUNNER_OWE_ASSETS: ${{ env.WE_ASSETS }}
         run: |
           set -o pipefail
-          xcodebuild test \
-            -project OpenWallpaperEngine.xcodeproj \
-            -scheme OpenWallpaperEngine \
-            -configuration Debug \
-            -destination 'platform=macOS' \
-            -derivedDataPath build/DerivedData \
-            CODE_SIGNING_ALLOWED=NO \
-            | tee xcodebuild.log
+          mkdir -p build/DerivedData && tar -C build/DerivedData -xzf products.tgz
+          xcodebuild test-without-building $TEST_FLAGS \
+            -xctestrun "$(ls build/DerivedData/Build/Products/*.xctestrun | head -1)" \
+            -destination platform=macOS | tee xcodebuild.log
 
       - name: Upload log
         # The log only; never the assets.
