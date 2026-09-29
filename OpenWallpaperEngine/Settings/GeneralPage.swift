@@ -86,46 +86,54 @@ struct GeneralPage: SettingsPage {
             .settingsAnchor(SettingsAnchor.setup)
             // MARK: Keyboard Shortcuts
             KeyboardShortcutsSection()
-                .settingsAnchor(SettingsAnchor.shortcuts)
         }
     }
 }
 
-/// Every shortcut of the menu bar, grouped by menu (`AppShortcut.all`).
-/// Collapsed until the user opens it; the choice is remembered. A search result for a shortcut
-/// (`SettingsAnchor.shortcuts`) opens it, so the match shows.
+/// Every shortcut of the menu bar (`AppShortcut.all`), laid out like System Settings: a
+/// disclosure row, then, while it is open, one grouped section per menu whose rows show
+/// the action and its keys as key caps. Collapsed until the user opens it; the choice is
+/// remembered. A search result for a shortcut (`SettingsAnchor.shortcuts`) opens it.
 struct KeyboardShortcutsSection: View {
     @AppStorage("ShowsKeyboardShortcuts", store: .app) private var isExpanded = false
     @EnvironmentObject private var navigation: SettingsNavigation
 
     var body: some View {
         Section {
-            DisclosureGroup(isExpanded: $isExpanded) {
-                VStack(alignment: .leading, spacing: 0) {
-                    ForEach(Array(groups.enumerated()), id: \.element.menu) { index, group in
-                        Text(group.menu.title)
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                            .padding(.top, index == 0 ? 6 : 16)
-                            .padding(.bottom, 4)
-                        ForEach(group.shortcuts) { shortcut in
-                            HStack {
-                                Text(shortcut.title)
-                                Spacer(minLength: 12)
-                                ShortcutKeyCap(symbols: shortcut.symbols)
-                            }
-                            .padding(.vertical, 2.5)
-                        }
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) { isExpanded.toggle() }
             } label: {
-                Label("Keyboard Shortcuts", systemImage: "keyboard")
+                HStack {
+                    Label("Keyboard Shortcuts", systemImage: "keyboard")
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                }
+                .contentShape(Rectangle())
             }
-            .onAppear { expandIfSearched(navigation.highlight) }
-            .onChange(of: navigation.highlight) { _, anchor in expandIfSearched(anchor) }
+            .buttonStyle(.plain)
         } footer: {
             Text("The same shortcuts are shown in the menus. You can change them in System Settings › Keyboard › Keyboard Shortcuts › App Shortcuts.")
+        }
+        .settingsAnchor(SettingsAnchor.shortcuts)
+        .onAppear { expandIfSearched(navigation.highlight) }
+        .onChange(of: navigation.highlight) { _, anchor in expandIfSearched(anchor) }
+        if isExpanded {
+            ForEach(groups, id: \.menu) { group in
+                Section {
+                    ForEach(group.shortcuts) { shortcut in
+                        LabeledContent {
+                            ShortcutKeyCaps(keys: shortcut.keys)
+                        } label: {
+                            Text(shortcut.title)
+                        }
+                    }
+                } header: {
+                    Text(group.menu.title)
+                }
+            }
         }
     }
 
@@ -142,16 +150,22 @@ struct KeyboardShortcutsSection: View {
     }
 }
 
-/// A shortcut's key symbols as a small key cap, in the style of the settings search field.
-private struct ShortcutKeyCap: View {
-    let symbols: String
+/// A shortcut's keys, one small key cap each (⌥ ⌘ U), as System Settings draws them.
+private struct ShortcutKeyCaps: View {
+    let keys: [String]
 
     var body: some View {
-        Text(verbatim: symbols)
-            .font(.callout.monospaced())
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 7)
-            .padding(.vertical, 2)
-            .background(.quaternary.opacity(0.6), in: RoundedRectangle(cornerRadius: 6))
+        HStack(spacing: 3) {
+            ForEach(Array(keys.enumerated()), id: \.offset) { _, key in
+                Text(verbatim: key)
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .frame(minWidth: 20, minHeight: 20)
+                    .padding(.horizontal, key.count > 1 ? 4 : 0)
+                    .background(.quaternary.opacity(0.8), in: RoundedRectangle(cornerRadius: 5, style: .continuous))
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(verbatim: keys.joined()))
     }
 }
