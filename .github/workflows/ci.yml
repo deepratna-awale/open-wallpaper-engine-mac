@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 # Every job only reads the repository (and the Actions cache and artifacts, which need no token scope).
 permissions:
@@ -38,13 +39,13 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - id: xcode
         uses: ./.github/actions/select-xcode
 
       - name: Restore the Swift packages
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: build/SourcePackages
           key: spm-${{ steps.xcode.outputs.version }}-${{ hashFiles('OpenWallpaperEngine.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
@@ -53,7 +54,7 @@ jobs:
         # An exact hit is a build of these very sources: it is used as is. A partial hit still
         # saves rebuilding the packages.
         id: dd
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: build/DerivedData
           key: dd-${{ steps.xcode.outputs.version }}-${{ hashFiles('OpenWallpaperEngine.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-${{ hashFiles('OpenWallpaperEngine/**', 'OpenWallpaperEngineTests/**', 'OpenWallpaperEngine.xcodeproj/**', 'OpenWallpaperEngine-Info.plist', 'Vendor/**') }}
@@ -81,7 +82,7 @@ jobs:
       - name: Pack the test build
         run: tar -C build/DerivedData -czf products.tgz Build/Products
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: products
           path: products.tgz
@@ -90,7 +91,7 @@ jobs:
 
       - name: Upload log
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: xcodebuild-log
           path: xcodebuild.log
@@ -100,7 +101,7 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - uses: ./.github/actions/select-xcode
 
@@ -112,7 +113,7 @@ jobs:
           python3 Scripts/test_steam_totp.py
           for f in Scripts/release/*.sh Scripts/*.sh; do bash -n "$f"; done
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: products
 
@@ -130,77 +131,51 @@ jobs:
 
       - name: Upload log
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: xcodebuild-test-log
           path: xcodebuild.log
 
   # The same suite with Wallpaper Engine's built-in assets, so the asset-gated tests run. The assets
-  # come from the CI Steam account (docs/ci-assets.md), cached per WE build. Fork PRs get no secrets
-  # and skip it; a PR that touches only docs, the site, the wiki or strings passes it without testing
-  # (the check still reports, since branch protection requires it).
+  # come from the CI Steam account (docs/ci-assets.md) and are downloaded fresh on every run; they
+  # are never cached or uploaded. It runs on pushes to main and on manual runs from main only, never
+  # for pull requests: the Steam secrets live in the steam-ci environment, which only main can use.
+  # Contributors run the asset tests locally with OWE_ASSETS (CONTRIBUTING.md).
   asset-tests:
     needs: build
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     runs-on: macos-26
     timeout-minutes: 60
+    environment: steam-ci
     env:
       WE_ASSETS: ${{ github.workspace }}/../we-assets
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - name: Check what changed
-        id: changes
-        run: |
-          run=true
-          if [[ "${{ github.event_name }}" == pull_request ]]; then
-            # The checkout is the merge commit; its first parent is the base.
-            files=$(git diff --name-only HEAD^1 HEAD)
-            if [[ -n "$files" ]] && ! grep -vqE '^(docs/|site/|wiki/|[^/]+\.md$|.*Localizable\.(strings|xcstrings)$)' <<<"$files"; then
-              run=false
-              echo "Only docs, site, wiki or strings changed: the asset tests are skipped."
-            fi
-          fi
-          echo "run=$run" >> "$GITHUB_OUTPUT"
-
-      - if: steps.changes.outputs.run == 'true'
-        uses: ./.github/actions/select-xcode
+      - uses: ./.github/actions/select-xcode
 
       - name: Read the Wallpaper Engine build
-        if: steps.changes.outputs.run == 'true'
         id: build
         run: |
           id=$(Scripts/fetch-we-assets.sh --build-id || true)
-          echo "id=${id:-unknown-${{ github.run_id }}}" >> "$GITHUB_OUTPUT"
-
-      - name: Restore the assets
-        if: steps.changes.outputs.run == 'true'
-        id: cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.WE_ASSETS }}
-          key: we-assets-${{ steps.build.outputs.id }}
-          restore-keys: we-assets-
+          [[ "$id" =~ ^[0-9]+$ ]] || id=unknown
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+          echo "Wallpaper Engine build: $id" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Fetch the assets
-        if: steps.changes.outputs.run == 'true' && steps.cache.outputs.cache-hit != 'true'
         timeout-minutes: 20
         env:
           OWE_CI_STEAM_USER: ${{ secrets.OWE_CI_STEAM_USER }}
           OWE_CI_STEAM_PASSWORD: ${{ secrets.OWE_CI_STEAM_PASSWORD }}
           OWE_CI_STEAM_SHARED_SECRET: ${{ secrets.OWE_CI_STEAM_SHARED_SECRET }}
           OWE_TOOLS_DIR: ${{ runner.temp }}/owe-tools
-        run: Scripts/fetch-we-assets.sh "$WE_ASSETS"
+        run: Scripts/fetch-we-assets.sh --force "$WE_ASSETS"
 
-      - if: steps.changes.outputs.run == 'true'
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: products
 
       - name: Test with the assets
-        if: steps.changes.outputs.run == 'true'
         # OWE_LIBRARY stays unset: the library-gated tests skip.
         env:
           TEST_RUNNER_OWE_ASSETS: ${{ env.WE_ASSETS }}
@@ -218,7 +193,7 @@ jobs:
       - name: Upload log
         # The log only; never the assets.
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: xcodebuild-log-assets
           path: xcodebuild.log

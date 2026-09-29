@@ -56,11 +56,13 @@ in Actions it masks them.
 
 - **`build-and-test`** runs the suite without assets, for every push and PR, forks included.
   The asset-gated tests skip. This is the fast signal.
-- **`asset-tests`** runs the same suite with `TEST_RUNNER_OWE_ASSETS` set. It runs for pushes
-  and for PRs from this repository only, because fork PRs get no secrets. It restores
-  `actions/cache` key `we-assets-<build id>`, falling back to the latest `we-assets-*`. On a
-  miss it runs the fetch, which only fetches the delta after a fallback restore, and the cache
-  saves the result. The assets are never uploaded as artifacts.
+- **`asset-tests`** runs the same suite with `TEST_RUNNER_OWE_ASSETS` set. It runs on pushes
+  to `main` and on manual runs from `main` only, never for pull requests. The Steam secrets live
+  in the `steam-ci` environment, which only `main` can use. The assets are downloaded fresh on
+  every run; they are never cached in Actions or uploaded as artifacts. The nightly workflow
+  uses the same environment.
+
+Contributors run the asset tests locally with `OWE_ASSETS` (see Local use).
 
 `OWE_LIBRARY` stays unset in both jobs, so the library-gated tests skip.
 
@@ -102,4 +104,4 @@ one.
 | 6 | the account doesn't own Wallpaper Engine | add the licence to the account |
 | 7 | the download failed, or the result has no `assets/shaders` | rerun; see DepotDownloader's log |
 | 8 | DepotDownloader couldn't be downloaded, or its checksum didn't match | check the network; on a version bump, update the pinned hashes |
-| 9 | `--build-id` couldn't read the build | `api.steamcmd.net` is down; CI then uses a one-off cache key |
+| 9 | `--build-id` couldn't read the build | `api.steamcmd.net` is down or returned something other than a number; the download still runs |
