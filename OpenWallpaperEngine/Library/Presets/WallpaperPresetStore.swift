@@ -87,15 +87,21 @@ struct WallpaperPresetStore {
     func importData(_ data: Data) throws -> WallpaperPreset {
         let transfer = try WallpaperPresetTransfer.decode(data)
         guard transfer.wallpaper == identity.rawValue else { throw WallpaperPresetError.otherWallpaper }
+        return try add(name: transfer.preset.name, values: transfer.preset.values, created: transfer.preset.created)
+    }
+
+    /// Adds `values` as a new preset `name`, renamed "Name 2", "Name 3"… when the name is taken.
+    @discardableResult
+    func add(name: String, values: [String: String], created: Date = Date()) throws -> WallpaperPreset {
         var presets = try presets()
-        let base = try Self.validated(transfer.preset.name)
+        let base = try Self.validated(name)
         var name = base
         var suffix = 2
         while presets.contains(where: { Self.sameName($0.name, name) }) {
             name = "\(base) \(suffix)"
             suffix += 1
         }
-        let preset = WallpaperPreset(name: name, created: transfer.preset.created, values: transfer.preset.values)
+        let preset = WallpaperPreset(name: name, created: created, values: values)
         presets.append(preset)
         try write(presets)
         return preset

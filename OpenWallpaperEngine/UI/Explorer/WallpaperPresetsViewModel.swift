@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 
 /// "Your Presets" for the wallpaper the Details panel shows, over the property stores it edits
@@ -71,11 +72,102 @@ final class WallpaperPresetsViewModel: ObservableObject {
         }
     }
 
+    /// Imports an exported preset, or a Share JSON file from Wallpaper Engine (named after the file).
     func importFile(at url: URL) {
         perform("import a preset from \(url.path)") {
-            try store.importData(Data(contentsOf: url))
+            let data = try Data(contentsOf: url)
+            do {
+                try store.importData(data)
+            } catch WallpaperPresetError.notAPresetFile {
+                try addShareJSON(String(decoding: data, as: UTF8.self), name: url.deletingPathExtension().lastPathComponent)
+            }
             presets = try store.presets()
         }
+    }
+
+    // MARK: Wallpaper Engine's Share JSON
+
+    /// The wallpaper's property definitions, which give Share JSON its value types.
+    private lazy var definitions = WallpaperEngineShareJSON.definitions(in: targets.directory)
+
+    /// `preset` in Wallpaper Engine's Share JSON format (its properties, key → value).
+    func shareJSON(_ preset: WallpaperPreset) -> Data? {
+        var data: Data?
+        perform("encode preset \(preset.name) for sharing") {
+            data = try WallpaperEngineShareJSON.encode(preset.values, definitions: definitions)
+        }
+        return data
+    }
+
+    /// A Share JSON file of `preset` in a temporary folder, for the share sheet.
+    func shareJSONFile(_ preset: WallpaperPreset) -> URL? {
+        guard let data = shareJSON(preset) else { return nil }
+        var url: URL?
+        perform("write preset \(preset.name) for sharing") {
+            let folder = FileManager.default.temporaryDirectory.appending(path: "owe-share-\(UUID().uuidString)", directoryHint: .isDirectory)
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            let file = folder.appending(path: suggestedFileName(for: preset))
+            try data.write(to: file, options: .atomic)
+            url = file
+        }
+        return url
+    }
+
+    /// Puts `preset`'s Share JSON on the clipboard, as text Wallpaper Engine's Share JSON takes.
+    func copyJSON(_ preset: WallpaperPreset) {
+        guard let data = shareJSON(preset) else { return }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(String(decoding: data, as: UTF8.self), forType: .string)
+    }
+
+    /// Adds the Share JSON on the clipboard (plain or as Wallpaper Engine's Copy leaves it) as a preset.
+    func pasteJSON() {
+        perform("paste a preset") {
+            guard let text = NSPasteboard.general.string(forType: .string) else { throw WallpaperPresetError.notAPresetFile }
+            try addShareJSON(text, name: String(localized: "Pasted Preset", comment: "Name of a wallpaper preset made from pasted Share JSON"))
+            presets = try store.presets()
+        }
+    }
+
+    private func addShareJSON(_ text: String, name: String) throws {
+        let values = WallpaperEngineShareJSON.values(from: try WallpaperEngineShareJSON.decode(text), definitions: definitions)
+        guard !values.isEmpty else { throw WallpaperPresetError.noMatchingProperties }
+        try store.add(name: name, values: values)
+    }
+
+    // MARK: All wallpapers
+
+    /// Applies `preset`'s values to the installed wallpapers with matching properties; nil on failure.
+    func applyToAll(_ preset: WallpaperPreset, mode: WallpaperPresetBulkApply.Mode) -> WallpaperPresetBulkApply.Result? {
+        var result: WallpaperPresetBulkApply.Result?
+        perform("apply preset \(preset.name) to all wallpapers") {
+            guard let current = try store.presets().first(where: { $0.id == preset.id }) else {
+                throw WallpaperPresetError.notFound
+            }
+            let bulk = WallpaperPresetBulkApply(values: current.values, sourceDefinitions: definitions, sourceIdentity: targets.identity)
+            let installed = InstalledLibrary.wallpapers(in: FileManager.default.wallpapersDirectory, hiding: [])
+            let applied = bulk.apply(to: installed, mode: mode)
+            OWELog.info(.library, "Applied preset \(current.name) of \(title) to \(applied.applied) wallpapers (\(applied.keptCustomized) customized kept, \(applied.withoutMatch) without matching properties)")
+            result = applied
+        }
+        return result
+    }
+
+    /// Imports the presets and saved values of a Wallpaper Engine config.json; nil on failure.
+    func importWallpaperEngineConfig(at url: URL) -> WallpaperEngineConfigImport.Summary? {
+        var summary: WallpaperEngineConfigImport.Summary?
+        perform("import the config.json at \(url.path)") {
+            let entries = try WallpaperEngineConfigImport.entries(in: Data(contentsOf: url))
+            let installed = InstalledLibrary.wallpapers(in: FileManager.default.wallpapersDirectory, hiding: [])
+            let imported = try WallpaperEngineConfigImport.importEntries(
+                entries, installed: installed,
+                savedValuesName: String(localized: "Wallpaper Engine Settings",
+                                        comment: "Name of a preset made from the property values saved in Wallpaper Engine's config.json"))
+            OWELog.info(.library, "Imported \(imported.presets) presets for \(imported.wallpapers) wallpapers from Wallpaper Engine's config.json; \(imported.notInstalled) not installed")
+            summary = imported
+            presets = try store.presets()
+        }
+        return summary
     }
 
     private func perform(_ action: String, _ body: () throws -> Void) {

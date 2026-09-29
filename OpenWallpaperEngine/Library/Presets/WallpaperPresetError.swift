@@ -7,6 +7,9 @@ enum WallpaperPresetError: LocalizedError, Equatable {
     case notFound
     case notAPresetFile
     case otherWallpaper
+    case notAConfigFile
+    /// Pasted text or a file with none of this wallpaper's properties in it.
+    case noMatchingProperties
 
     var errorDescription: String? {
         switch self {
@@ -22,6 +25,12 @@ enum WallpaperPresetError: LocalizedError, Equatable {
         case .otherWallpaper:
             return String(localized: "The preset was made for a different wallpaper.",
                           comment: "Error when importing a wallpaper preset exported from another wallpaper")
+        case .notAConfigFile:
+            return String(localized: "The file is not a Wallpaper Engine config.json.",
+                          comment: "Error when importing presets from a file that is not Wallpaper Engine's config.json")
+        case .noMatchingProperties:
+            return String(localized: "None of this wallpaper's properties are in it.",
+                          comment: "Error when pasted or imported preset JSON sets no property of the shown wallpaper")
         }
     }
 }
