@@ -25,6 +25,9 @@ struct ParticleMaterialPlanBuilder {
     let loadTexture: (_ name: String, _ materialPath: String) -> SceneMetalTextureSource?
     /// The combos WE's engine lays over every material of the scene (`SceneEngineCombos`).
     var sceneEngineCombos = SceneEngineCombos()
+    /// The system's blending in place of its material's first pass's (the Scene Inspector's,
+    /// `sceneObjectBlendingKey`); nil keeps the material's.
+    var blending: WEMaterialBlending?
 
     /// `baseTexture` is texture 0 as the system already loaded it; `spriteSheet` is set when it
     /// is a sheet. `flags` are the particle system's `flags`.
@@ -37,7 +40,8 @@ struct ParticleMaterialPlanBuilder {
         } catch {
             throw ParticleMaterialPlanError.invalid(materialPath, error)
         }
-        guard let pass = material.passes.first else { throw ParticleMaterialPlanError.missing("\(materialPath) passes") }
+        guard var pass = material.passes.first else { throw ParticleMaterialPlanError.missing("\(materialPath) passes") }
+        if let blending { pass.blending = blending.rawValue }
 
         let rendererName = renderer?.name?.lowercased() ?? "sprite"
         let format: ParticleVertexFormat = rendererName.hasPrefix("rope") ? .rope : .sprite
