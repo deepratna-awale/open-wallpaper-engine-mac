@@ -1,6 +1,20 @@
 # Contributing
 
-Read [`docs/architecture.md`](docs/architecture.md) first. It explains the module layout and what goes where. This file holds the rules for changing the code. They exist because each of them was broken once and hid a real bug (see [`docs/progress-snapshot.md`](docs/progress-snapshot.md)).
+This is the one contributor guide; `.github/` links here. Read [`docs/architecture.md`](docs/architecture.md) first for the module layout. The goal is to run every Wallpaper Engine wallpaper except the `application` type, following WE's own behaviour ([`docs/roadmap.md`](docs/roadmap.md) has the order of work).
+
+## Quick start
+
+```sh
+git clone https://github.com/deepratna-awale/open-wallpaper-engine-mac.git
+cd open-wallpaper-engine-mac
+open OpenWallpaperEngine.xcodeproj        # Xcode 26.3 or newer, scheme OpenWallpaperEngine
+Scripts/fetch-we-assets.sh                # WE assets for scenes and the asset tests (see below)
+xcodebuild test -project OpenWallpaperEngine.xcodeproj -scheme OpenWallpaperEngine -destination 'platform=macOS'
+```
+
+- **Quick tests:** the command above. Asset-dependent tests skip without assets.
+- **Asset tests:** add `TEST_RUNNER_OWE_ASSETS=~/Library/Caches/owe-we-assets` (or any WE install).
+- **Slow tests:** add `TEST_RUNNER_OWE_SLOW_TESTS=1`. The [nightly workflow](.github/workflows/nightly.yml) runs them with the assets every night.
 
 ## Building
 
@@ -29,7 +43,6 @@ There is **one type per file** unless the types are tiny and private to it. A fi
 1. **Implement WE's behaviour, not a look-alike.**
    - Don't add native approximations of WE effects, invented parameter names, or remapped ranges.
    - Don't add special cases keyed on a layer, effect, file or property *name* (`"cloud"`, `"clock"`, `"snow"`…). If a wallpaper renders wrong, find the missing general feature.
-   - The existing heuristics are listed in the progress snapshot (§B8) and are being removed.
 2. **Fail loudly.**
    - Don't use `try?` on file IO, decoding, shader translation or pipeline creation. Use `do/catch` and log the error once, with the wallpaper, layer, effect and reason.
    - `try?` is fine for genuinely optional lookups, and a comment should say so.
@@ -66,9 +79,22 @@ There is **one type per file** unless the types are tiny and private to it. A fi
 
 - Use [Conventional Commits](https://www.conventionalcommits.org/): `fix:`, `feat:`, `perf:`, `refactor:`, `build:`, `docs:`, `test:`.
 - Keep commits small and single-purpose. File moves and renames go in their own commit with no logic changes, so review and `git log --follow` stay useful. Asset or vendor drops never share a commit with code.
-- The PR description says what changed, why, and how it was verified.
+- Branch from `main` as `<your-name>/<topic>` and open the PR against `main`.
+- Performance work goes in one PR per wallpaper type (scene, video, web), and an optimisation stays only if it measurably wins.
+- No per-wallpaper hacks: fixes must follow WE's behaviour for every wallpaper (rule 1).
+- The PR description says what changed, why, and how it was verified ([template](.github/pull_request_template.md)).
+
+## Reporting bugs
+
+Use the [issue templates](https://github.com/deepratna-awale/open-wallpaper-engine-mac/issues/new/choose). A good report has the wallpaper's Workshop ID or link, its type, the macOS and Open Wallpaper Engine versions, and the logs from the time of the problem:
+
+```sh
+/usr/bin/log show --last 10m --predicate 'process == "Open Wallpaper Engine"' > owe.log
+```
+
+Security problems go privately through the repository's Security tab ([SECURITY.md](SECURITY.md)).
 
 ## Changing the project file
 
-- New files: once the project uses folder-synced groups (Phase 1), putting a file in the right folder is enough. Until then, add it through Xcode.
+- New files: the project uses folder-synced groups, so putting a file in the right folder is enough.
 - Never add Wallpaper Engine files to the repository, the app or `Tests/Fixtures`: tests get them from `OWE_ASSETS`, and fixtures are written for the project.
