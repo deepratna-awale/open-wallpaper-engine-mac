@@ -474,22 +474,37 @@ class SceneWallpaperViewModel: ObservableObject {
 
     /// The user properties the content is built from: every `"user"` binding of the document
     /// except inside script sites (their scripts get the change through `applyUserProperties` and
-    /// the binding, docs/scenescript-plan.md WP8) and `scriptproperties`.
+    /// the binding, docs/scenescript-plan.md WP8), `scriptproperties`, and the object fields the
+    /// renderer re-resolves every frame (`SceneLiveBindingSites`), which a change reaches without a rebuild.
     static func contentUserProperties(in document: SceneJSON) -> Set<String> {
         var names = Set<String>()
-        func walk(_ value: SceneJSON) {
+        func walk(_ value: SceneJSON, liveSites: Bool = false) {
             switch value {
             case .object(let fields):
                 if case .string(let script)? = fields["script"], !script.isEmpty { return }
                 if let user = SceneScriptUserReference(fields["user"]) { names.insert(user.name) }
-                for (key, field) in fields where key != "scriptproperties" { walk(field) }
+                for (key, field) in fields where key != "scriptproperties" {
+                    if liveSites, SceneLiveBindingSites.isLive(key, of: fields) { continue }
+                    walk(field)
+                }
             case .array(let values):
-                values.forEach(walk)
+                values.forEach { walk($0) }
             default:
                 break
             }
         }
-        walk(document)
+        // Only the scene's own objects have live sites; everything else is walked as before.
+        guard case .object(let root) = document else {
+            walk(document)
+            return names
+        }
+        for (key, field) in root where key != "scriptproperties" {
+            if key == "objects", case .array(let objects) = field {
+                objects.forEach { walk($0, liveSites: true) }
+            } else {
+                walk(field)
+            }
+        }
         return names
     }
 
