@@ -21,7 +21,7 @@ Open Wallpaper Engine 是一款免费、开源的 macOS 播放器，可播放 Wa
 | 功能 | 要求 | 安装 |
 |---------|-------------|---------|
 | 浏览／下载 Steam 创意工坊内容 | `steamcmd` | 自动（可选：`brew install steamcmd`） |
-| 音频可视化与音频响应的 SceneScript | 录屏权限 | 设置 → 权限 |
+| 音频可视化与音频响应的 SceneScript | 系统录音权限（macOS 14.2 之前为录屏与系统录音） | 设置 → 权限 |
 
 #### 着色器
 
@@ -131,7 +131,6 @@ open "OpenWallpaperEngine.xcodeproj"
 - **少见的粒子功能** — 不支持球体、盒体和图层图像以外的发射器形状，也不支持系统中第一个之后的渲染器。
 - **WebM 视频** — WebM（VP8/VP9）通过 WebKit 播放，因此音乐同步效果不适用于它。
 - **部分 JPEG 缩略图** — 少量 TEXB 格式 1 文件包含 macOS 无法解码的非标准 JPEG 数据。
-- **音频功能需要权限** — 未授予录屏权限时，音频可视化和音频响应的 SceneScript 只会收到静音。
 
 ## 支持的墙纸类型
 

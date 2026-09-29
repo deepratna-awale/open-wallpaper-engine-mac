@@ -21,7 +21,7 @@ Open Wallpaper Engine è un player gratuito e open source per macOS che riproduc
 | Funzionalità | Requisito | Installazione |
 |---------|-------------|---------|
 | Sfogliare / scaricare dallo Steam Workshop | `steamcmd` | Automatico (facoltativo: `brew install steamcmd`) |
-| Visualizzatori audio e SceneScript reattivo all’audio | Autorizzazione Registrazione schermo e audio di sistema | Impostazioni → Autorizzazioni |
+| Visualizzatori audio e SceneScript reattivo all’audio | Autorizzazione Registrazione audio di sistema (prima di macOS 14.2: Registrazione schermo e audio di sistema) | Impostazioni → Autorizzazioni |
 
 #### Shader
 
@@ -131,7 +131,6 @@ La prima compilazione dal codice sorgente scarica il pacchetto Swift Sparkle. Le
 - **Funzioni particellari rare**: le forme di emettitore diverse da sfera, box e immagine del livello e i renderer successivi al primo di un sistema non sono supportati.
 - **Video WebM**: i WebM (VP8/VP9) vengono riprodotti tramite WebKit, quindi gli effetti di sincronizzazione musicale non si applicano.
 - **Alcune miniature JPEG**: un piccolo numero di file TEXB di formato 1 contiene dati JPEG non standard che macOS non riesce a decodificare.
-- **Le funzionalità audio richiedono un’autorizzazione**: senza l’autorizzazione Registrazione schermo e audio di sistema, i visualizzatori audio e SceneScript reattivo all’audio ricevono solo silenzio.
 
 ## Tipi di sfondo supportati
 
