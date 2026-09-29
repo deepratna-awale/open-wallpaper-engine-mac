@@ -30,7 +30,7 @@ env:
   # Timing and frame-timed render classes flake under three workers' CPU/GPU contention;
   # the parallel run skips them and a serial run follows.
   SERIAL_CLASSES: >-
-    TimelineCostTests TimelineRenderTests ImageMaterialPrelightingTests SceneScriptRenderTests ParticleEmitterTimingTests ParticleSimulationPerformanceTests SceneFrameBenchmarkTests SceneDisplayOutputTests SceneHDRRenderTests SceneBloomRenderTests FramePacingTests
+    TimelineCostTests TimelineRenderTests ImageMaterialPrelightingTests SceneScriptRenderTests ParticleEmitterTimingTests ParticleSimulationPerformanceTests SceneFrameBenchmarkTests SceneDisplayOutputTests SceneHDRRenderTests SceneBloomRenderTests FramePacingTests ScenePostProcessTests
 
 jobs:
   # Builds the app and the test bundle once; both test jobs run that build without recompiling.
