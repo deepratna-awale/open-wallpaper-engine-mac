@@ -160,9 +160,9 @@ struct UserPropertySliderFormat: Equatable {
     /// The stored string: integers without a decimal point so scripts reading them see "30".
     func storedString(_ value: Double) -> String {
         let snapped = snap(value)
-        if !fraction { return String(Int(snapped)) }
+        if !fraction { return String(Int(saturating: snapped)) }
         // Remove float noise from the step multiplication (0.1 * 3 = 0.30000000000000004).
-        let decimals = max(0, min(10, Int((-log10(effectiveStep)).rounded(.up)) + 1))
+        let decimals = Int(saturating: (-log10(effectiveStep)).rounded(.up), in: -1...9) + 1
         let factor = pow(10, Double(decimals))
         return String((snapped * factor).rounded() / factor)
     }

@@ -663,7 +663,7 @@ private final class SceneInspectorModel: ObservableObject {
     private static func originString(_ origin: SIMD3<Double>) -> String {
         let components: [Double] = [origin.x, origin.y, origin.z]
         let parts: [String] = components.map { value -> String in
-            value.rounded() == value ? String(Int(value)) : String(value)
+            value.rounded() == value && abs(value) < 1e15 ? String(Int(value)) : String(value)
         }
         return parts.joined(separator: " ")
     }

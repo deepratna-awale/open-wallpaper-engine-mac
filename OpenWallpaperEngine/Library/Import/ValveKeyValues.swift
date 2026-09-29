@@ -30,6 +30,7 @@ enum ValveKeyValues {
         case unexpectedCloseBrace(line: Int)
         case missingValue(key: String, line: Int)
         case unterminatedBlock(key: String)
+        case nestedTooDeeply(line: Int)
 
         var errorDescription: String? {
             switch self {
@@ -37,9 +38,15 @@ enum ValveKeyValues {
             case .unexpectedCloseBrace(let line): return "unexpected } on line \(line)"
             case .missingValue(let key, let line): return "\"\(key)\" has no value on line \(line)"
             case .unterminatedBlock(let key): return "the block \"\(key)\" isn't closed"
+            case .nestedTooDeeply(let line):
+                return "blocks are nested more than \(ValveKeyValues.maximumDepth) deep on line \(line)"
             }
         }
     }
+
+    /// The deepest block nesting read. Steam's files nest a handful of levels; this only bounds
+    /// malformed input, which fails with `ParseError.nestedTooDeeply` instead of exhausting the stack.
+    static let maximumDepth = 256
 
     /// The top-level entries of a KeyValues text.
     static func parse(_ text: String) throws -> [Entry] {
@@ -65,6 +72,7 @@ enum ValveKeyValues {
         let scalars: [Unicode.Scalar]
         var index = 0
         var line = 1
+        var depth = 0
 
         init(scalars: [Unicode.Scalar]) {
             self.scalars = scalars
@@ -84,7 +92,7 @@ enum ValveKeyValues {
                     return result
                 case .open:
                     // A block without a key: keep its entries under an empty key.
-                    result.append(Entry(key: "", value: .object(try entries(closedBy: ""))))
+                    result.append(Entry(key: "", value: try nestedBlock(closedBy: "")))
                 case .text(let key):
                     let keyLine = line
                     guard let valueToken = try nextToken() else { throw ParseError.missingValue(key: key, line: keyLine) }
@@ -92,12 +100,20 @@ enum ValveKeyValues {
                     case .text(let value):
                         result.append(Entry(key: key, value: .string(value)))
                     case .open:
-                        result.append(Entry(key: key, value: .object(try entries(closedBy: key))))
+                        result.append(Entry(key: key, value: try nestedBlock(closedBy: key)))
                     case .close:
                         throw ParseError.missingValue(key: key, line: keyLine)
                     }
                 }
             }
+        }
+
+        /// The entries of a block just opened, one level deeper.
+        private mutating func nestedBlock(closedBy key: String) throws -> Value {
+            guard depth < ValveKeyValues.maximumDepth else { throw ParseError.nestedTooDeeply(line: line) }
+            depth += 1
+            defer { depth -= 1 }
+            return .object(try entries(closedBy: key))
         }
 
         /// The next token, skipping whitespace, comments and `[conditions]`.

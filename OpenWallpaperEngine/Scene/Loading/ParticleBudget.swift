@@ -28,7 +28,16 @@ enum ParticleBudget {
         var perInstance = max(Double(system.maximumParticleCount) * Double(max(overrides.count, 0)), 0).rounded()
         if let sustained = sustained(by: system, overrides: overrides) { perInstance = min(perInstance, sustained) }
         let instances = system.isInstanced ? Double(max(system.link?.maximumInstances ?? 0, 0)) : 1
-        return Int(min(perInstance * instances, Double(Int.max / 2)))
+        // Saturating: a NaN product counts as no particles, an infinite one as the most there can be.
+        return Int(saturating: perInstance * instances, in: 0...Int.max / 2)
+    }
+
+    /// The sum of `capacities`, saturating at `Int.max` instead of overflowing.
+    static func total(_ capacities: [Int]) -> Int {
+        capacities.reduce(0) { sum, capacity in
+            let (result, overflow) = sum.addingReportingOverflow(max(capacity, 0))
+            return overflow ? Int.max : result
+        }
     }
 
     /// The most particles `system`'s emitters keep alive: each emitter's rate (times the `count`
@@ -64,7 +73,7 @@ enum ParticleBudget {
     /// nil, with every system untouched, when they already fit or there is no budget.
     @discardableResult
     static func apply(_ budget: Int?, to systems: inout [SceneMetalParticleSystem]) -> Report? {
-        let authored = systems.reduce(0) { $0 + capacity(of: $1) }
+        let authored = total(systems.map { capacity(of: $0) })
         let factor = scale(authored: authored, budget: budget)
         guard factor < 1, let budget else { return nil }
         for index in systems.indices { systems[index].budgetScale = factor }

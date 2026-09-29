@@ -235,8 +235,10 @@ extension SpriteSheet {
     /// A `.tex-json` `spritesheetsequences` entry's grid: `frames` frames of `frameSize` pixels,
     /// row by row across a texture of `textureSize` pixels (`SceneMetalTextureSource.sheetPixelSize`).
     init(frames: Int, frameSize: SIMD2<Double>, duration: Float, textureSize: SIMD2<Double>) {
-        let columns = max(1, min(frames, Int((textureSize.x / frameSize.x).rounded())))
-        let authoredRows = max(1, Int((textureSize.y / frameSize.y).rounded()))
+        // Saturating: a zero or non-finite frame size from the file gives a one-cell grid axis
+        // rather than stopping the process.
+        let columns = max(1, min(frames, Int(saturating: (textureSize.x / frameSize.x).rounded())))
+        let authoredRows = max(1, Int(saturating: (textureSize.y / frameSize.y).rounded()))
         let rows = max(authoredRows, Int(ceil(Double(frames) / Double(columns))))
         self.init(columns: columns, rows: rows, frames: frames, duration: duration)
     }

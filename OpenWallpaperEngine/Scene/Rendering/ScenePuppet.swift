@@ -524,7 +524,7 @@ final class ScenePuppetRenderer {
         pass.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 0)
         pass.colorAttachments[0].storeAction = .store
         guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { return nil }
-        let content = contentSize.map { SIMD2(Int($0.x.rounded()), Int($0.y.rounded())) } ?? SIMD2(texture.width, texture.height)
+        let content = contentSize.map { SIMD2(Int(saturating: $0.x.rounded()), Int(saturating: $0.y.rounded())) } ?? SIMD2(texture.width, texture.height)
         struct Uniforms {
             var projection: simd_float4x4
             var uvScale: SIMD2<Float>
