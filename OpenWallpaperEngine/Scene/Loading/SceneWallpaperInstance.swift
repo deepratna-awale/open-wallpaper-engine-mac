@@ -145,6 +145,13 @@ final class SceneWallpaperInstance {
         }
     }
 
+    /// Drawables a wallpaper's layer may have in flight. Up to 60 fps a frame has a whole refresh
+    /// to finish, so two are enough and the third's memory (a full-screen texture) is saved; faster
+    /// pacing keeps three so the GPU never waits on the display.
+    nonisolated static func maximumDrawableCount(forRate rate: Int) -> Int {
+        rate <= 60 ? 2 : 3
+    }
+
     // MARK: - Updates
 
     /// Follows the app's controls: a rebuilt content, the placement, playback, the sound's gain, the
@@ -164,6 +171,7 @@ final class SceneWallpaperInstance {
         var playback = SceneRenderLoop.Playback()
         for (id, display) in displays {
             guard let view = display.view else { continue }
+            SceneViewSnapshots.refresh(view)
             let hidden = view.window.map { !$0.occlusionState.contains(.visible) } ?? false
             playback.displays[id] = SceneRenderLoop.DisplayState(plays: wallpapers.playback(onScreen: display.screenID).rendersFrames,
                                                                  hidden: hidden, refresh: Self.refreshRate(of: view))

@@ -77,6 +77,8 @@ final class ParticleGPUSystem {
     /// Live particles can't exceed this: emission so far, bounded by the maximum. The CPU tracks
     /// it without reading the GPU, so buffers grow before a step can overflow them.
     private(set) var upperBound = 0
+    /// Each emitter's `instantaneous` burst, which any instance may fire on its own clock.
+    private let instanceBursts: [Int]
     /// This frame's buffers are in place (`ParticleGPUSimulator.encode`); a system that can't
     /// grow draws nothing.
     var isReady = false
@@ -111,6 +113,7 @@ final class ParticleGPUSystem {
         self.emitterParameters = emitterParameters
         self.emitterStates = emitterStates
         emitterCount = emitters.count
+        instanceBursts = configuration.emitters.map { max($0.instantaneous, 0) }
         if pointList.isEmpty {
             imagePoints = nil
         } else {
@@ -171,28 +174,52 @@ final class ParticleGPUSystem {
     func reserve(for inputs: ParticleFrameInputs, blit: () -> MTLBlitCommandEncoder?) -> Bool {
         // Every instance may hold the system's maximum.
         maximumCount = max(inputs.maximum, 0) * slots
-        // A step holds last step's particles (the ones that die aging are compacted away at its
-        // end) and its spawns. The carried remainder is below 1 at the start of a step, so it
-        // spawns at most ⌊rate·Δt⌋ + 1 particles plus its burst.
-        // Each emitter carries its own remainder.
-        let spawns = inputs.emitters.reduce(0.0) { total, emitter in
-            total + (Double(max(emitter.rate, 0)) * Double(inputs.deltaTime)).rounded(.down) + 1 + Double(max(emitter.burst, 0))
-        }
-        let stepSpawns = Int(min(spawns, Double(maximumCount)))
+        let stepSpawns = Self.stepSpawns(inputs, instanceBursts: instances != nil ? instanceBursts : nil,
+                                         slots: slots, maximumCount: maximumCount)
         let held = upperBound
-        if inputs.clears {
-            upperBound = 0
-        } else {
-            upperBound = Int(min(Double(upperBound) + Double(stepSpawns), Double(maximumCount)))
-            // Any instance may start this step, so an instanced system holds its whole budget.
-            if instances != nil { upperBound = maximumCount }
+        upperBound = inputs.clears ? 0 : Int(min(Double(upperBound) + Double(stepSpawns), Double(maximumCount)))
+        let plan = Self.capacityPlan(held: held, stepSpawns: stepSpawns, maximumCount: maximumCount, capacity: capacity)
+        guard plan.grows || particles == nil else { return true }
+        return grow(to: plan.capacity, blit: blit)
+    }
+
+    /// The most particles one step can add. A step holds last step's particles (the ones that
+    /// die aging are compacted away at its end) and its spawns. The carried remainder is below 1
+    /// at the start of a step, so an emitter spawns at most ⌊rate·Δt⌋ + 1 particles plus its
+    /// burst. An instanced system's instances (`instanceBursts` non-nil) each emit on their own
+    /// clock and may each fire their emitters' `instantaneous` bursts this step
+    /// (`particleInstanceStep`), so each counts that bound; each instance stays within the
+    /// per-instance maximum, so the whole stays within `maximumCount`.
+    static func stepSpawns(_ inputs: ParticleFrameInputs, instanceBursts: [Int]?, slots: Int, maximumCount: Int) -> Int {
+        let deltaTime = Double(inputs.deltaTime)
+        func rateBound(_ emitter: ParticleEmitterStep) -> Double {
+            (Double(max(emitter.rate, 0)) * deltaTime).rounded(.down) + 1
         }
-        let needed = instances != nil ? maximumCount * 2 : min(held + stepSpawns, maximumCount + stepSpawns)
-        guard needed > capacity || particles == nil else { return true }
-        let grown = max(needed, capacity * 2, 256)
-        let limit = instances != nil ? maximumCount * 2 : maximumCount + stepSpawns
-        let newCapacity = maximumCount > 0 ? min(grown, max(limit, 1)) : 256
-        return grow(to: newCapacity, blit: blit)
+        let spawns: Double
+        if let instanceBursts {
+            let count = max(instanceBursts.count, inputs.emitters.count)
+            let perInstance = (0..<count).reduce(0.0) { total, index in
+                let emitter = index < inputs.emitters.count ? inputs.emitters[index] : ParticleEmitterStep()
+                let burst = max(index < instanceBursts.count ? instanceBursts[index] : 0, emitter.burst, emitter.instantaneous, 0)
+                return total + rateBound(emitter) + Double(burst)
+            }
+            spawns = perInstance * Double(max(slots, 1))
+        } else {
+            spawns = inputs.emitters.reduce(0.0) { $0 + rateBound($1) + Double(max($1.burst, 0)) }
+        }
+        return Int(min(spawns, Double(maximumCount)))
+    }
+
+    /// Whether the state buffers grow this step, and to what. They grow a step early (when the
+    /// step after this one could overflow them), doubling, so a growing system reallocates
+    /// rarely and never past what a step can hold (`maximumCount + stepSpawns`).
+    static func capacityPlan(held: Int, stepSpawns: Int, maximumCount: Int, capacity: Int) -> (grows: Bool, capacity: Int) {
+        let needed = min(held + stepSpawns, maximumCount + stepSpawns)
+        let limit = maximumCount + stepSpawns
+        let ahead = min(needed + stepSpawns, limit)
+        guard ahead > capacity || capacity == 0 else { return (false, capacity) }
+        let grown = max(ahead, capacity * 2, 256)
+        return (true, maximumCount > 0 ? min(grown, max(limit, 1)) : 256)
     }
 
     private func grow(to newCapacity: Int, blit: () -> MTLBlitCommandEncoder?) -> Bool {
@@ -250,6 +277,21 @@ final class ParticleGPUSystem {
         boidsMemberBuffer = device.makeBuffer(length: max(bytes, 16), options: .storageModePrivate)
         boidsMemberBuffer?.label = "Particle boids slice"
         return boidsMemberBuffer
+    }
+
+    private var ropeOrderBuffer: MTLBuffer?
+
+    /// `particleRopeOrder`'s slots and capacity.
+    var ropeOrderSizes: SIMD2<UInt32> { SIMD2(UInt32(max(slots, 1)), UInt32(capacity)) }
+
+    /// An instanced rope's strand order (starts and lengths per instance, sorted indices and
+    /// places), large enough for the current capacity; nil when it can't be allocated.
+    func ropeOrder() -> MTLBuffer? {
+        let bytes = (max(slots, 1) * 2 + capacity * 2) * 4
+        if let ropeOrderBuffer, ropeOrderBuffer.length >= bytes { return ropeOrderBuffer }
+        ropeOrderBuffer = device.makeBuffer(length: max(bytes, 16), options: .storageModePrivate)
+        ropeOrderBuffer?.label = "Particle rope order"
+        return ropeOrderBuffer
     }
 
     /// Sizes the event scratch for a parent holding up to `parentCapacity` particles. False when

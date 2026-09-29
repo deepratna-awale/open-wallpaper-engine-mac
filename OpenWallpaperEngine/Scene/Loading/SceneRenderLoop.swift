@@ -36,6 +36,8 @@ final class SceneRenderLoop {
         var presentedFrame: UInt64 = .max
         /// The rate its link ticks at (a divisor of its refresh rate).
         var rate = 0
+        /// When the main thread last refreshed its snapshot (`SceneViewSnapshots`).
+        var snapshotRequested: CFTimeInterval = 0
     }
 
     let thread: SceneRenderThread
@@ -76,6 +78,7 @@ final class SceneRenderLoop {
         let link = view.displayLink(target: SceneDisplayTicker(view: view), selector: #selector(SceneDisplayTicker.tick(_:)))
         view.isPaused = true
         view.enableSetNeedsDisplay = false
+        SceneViewSnapshots.refresh(view)
         thread.perform { [self] in
             link.isPaused = true
             link.add(to: thread.runLoop, forMode: .default)
@@ -89,6 +92,7 @@ final class SceneRenderLoop {
     /// Main: stops drawing `id`'s view.
     func detach(_ id: ObjectIdentifier) {
         thread.perform { [self] in
+            SceneViewSnapshots.remove(id)
             displays[id]?.link.invalidate()
             displays[id] = nil
             displayOrder.removeAll { $0 == id }
@@ -107,7 +111,10 @@ final class SceneRenderLoop {
     /// Main: stops the links and the thread once the work already sent has run.
     func shutdown() {
         thread.perform { [self] in
-            for display in displays.values { display.link.invalidate() }
+            for (id, display) in displays {
+                display.link.invalidate()
+                SceneViewSnapshots.remove(id)
+            }
             displays.removeAll()
             displayOrder.removeAll()
         }
@@ -124,6 +131,7 @@ final class SceneRenderLoop {
     @discardableResult
     func draw(_ id: ObjectIdentifier, in view: MTKView) -> Bool {
         guard let renderer else { return false }
+        requestSnapshot(id, of: view)
         defer {
             if playbackStopped {
                 playbackStopped = false
@@ -194,13 +202,33 @@ final class SceneRenderLoop {
             displays[id]?.rate = rate
             let value = Float(rate)
             display.link.preferredFrameRateRange = CAFrameRateRange(minimum: value, maximum: value, preferred: value)
+            let count = SceneWallpaperInstance.maximumDrawableCount(forRate: rate)
+            if let layer = display.view.flatMap({ SceneViewSnapshots.snapshot(of: $0)?.layer }),
+               layer.maximumDrawableCount != count {
+                layer.maximumDrawableCount = count
+            }
             // Thread boundary: the view's rate is main-thread state; frames read it as their limit
-            // (`SceneViewport.frameRateLimit`).
+            // through its snapshot (`SceneViewport.frameRateLimit`).
             if let view = display.view {
-                DispatchQueue.main.async { if view.preferredFramesPerSecond != rate { view.preferredFramesPerSecond = rate } }
+                DispatchQueue.main.async {
+                    if view.preferredFramesPerSecond != rate { view.preferredFramesPerSecond = rate }
+                    SceneViewSnapshots.refresh(view)
+                }
             }
         }
         schedule.setFrameRate(display.frozen ? 0 : min(rate, refresh), of: id)
+    }
+
+    /// Asks the main thread to retake `view`'s snapshot twice a second, so a moved window, a
+    /// resize or a headroom change reaches the frames without the render thread reading AppKit.
+    private func requestSnapshot(_ id: ObjectIdentifier, of view: MTKView) {
+        let now = CACurrentMediaTime()
+        guard let display = displays[id], now - display.snapshotRequested >= 0.5 else { return }
+        displays[id]?.snapshotRequested = now
+        DispatchQueue.main.async { [weak view] in
+            guard let view, SceneViewSnapshots.snapshot(of: view) != nil else { return }
+            SceneViewSnapshots.refresh(view)
+        }
     }
 
     /// The displays as the frame needs them, the driving one first; views not yet laid out, and

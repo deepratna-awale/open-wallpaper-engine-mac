@@ -366,7 +366,6 @@ final class TexturePreparationLibraryTests: XCTestCase {
 
     private func load(_ wallpaper: WEWallpaper, optimise: Bool) throws -> (content: SceneMetalContent, seconds: Double) {
         SceneWallpaperViewModel.dropSharedParses()
-        SceneWallpaperViewModel.dropSharedTextures()
         var settings = SceneRenderSettings()
         settings.particleBudget = .unlimited
         settings.optimiseTextures = optimise

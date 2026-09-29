@@ -33,6 +33,9 @@ final class MacMediaSessionSource: MediaSessionSource {
     private var info: [String: Any] = [:]
     private var isPlaying = false
     private var artwork: Artwork?
+    /// The artwork bytes `artwork` was made from: the same bytes again (every publish while a
+    /// track plays) reuse it without hashing them.
+    private var artworkData: Data?
     /// WE's "Media integration support" setting.
     private var integrationEnabled = true
     private var observers: [NSObjectProtocol] = []
@@ -179,12 +182,17 @@ final class MacMediaSessionSource: MediaSessionSource {
     private func artworkColors() -> Artwork? {
         guard let data = info[MediaRemote.Key.artworkData] as? Data, !data.isEmpty else {
             artwork = nil
+            artworkData = nil
             return nil
         }
+        if let artwork, let artworkData, Self.sameStorage(artworkData, data) { return artwork }
         var hasher = Hasher()
         hasher.combine(data)
         let key = hasher.finalize()
-        if let artwork, artwork.key == key { return artwork }
+        if let artwork, artwork.key == key {
+            artworkData = data
+            return artwork
+        }
         var colors: ArtworkPalette.Colors?
         var png: Data?
         if let source = CGImageSourceCreateWithData(data as CFData, nil),
@@ -195,7 +203,15 @@ final class MacMediaSessionSource: MediaSessionSource {
             OWELog.error(.script, "Now-playing artwork (\(data.count) bytes) could not be decoded; thumbnail colours are unavailable")
         }
         artwork = (key, colors, png)
+        artworkData = data
         return artwork
+    }
+
+    /// The two are the same bytes in memory (the now-playing info handed back unchanged).
+    static func sameStorage(_ a: Data, _ b: Data) -> Bool {
+        guard a.count == b.count else { return false }
+        let first = a.withUnsafeBytes { $0.baseAddress }, second = b.withUnsafeBytes { $0.baseAddress }
+        return first != nil && first == second
     }
 
     /// The artwork as PNG: the original when it is one, else re-encoded (WE hands web wallpapers PNG).

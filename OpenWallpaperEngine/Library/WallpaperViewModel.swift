@@ -112,6 +112,8 @@ class WallpaperViewModel: ObservableObject {
     var keepWorkshopPreview: ((WEWallpaper) throws -> WEWallpaper?)?
     /// Receives wallpaper frame times. Set by `SafeRestart`.
     var renderWatchdog: RenderWatchdog?
+    /// Lets the displays that show the same web wallpaper share one WebContent process.
+    let webProcessGroup = WebProcessGroup()
     /// The scenes (and Metal videos) running on this model's displays, one per wallpaper however
     /// many displays show it (docs/architecture.md "Wallpaper instances").
     let sceneInstances = WallpaperInstanceRegistry<WallpaperInstanceKey, SceneWallpaperInstance>(teardown: { $0.shutdown() })
