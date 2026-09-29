@@ -51,7 +51,7 @@ struct ParticleEmitterTiming: Equatable {
     /// The per-period limit this frame, for a `count` override of `countScale`; nil without one.
     func periodLimit(countScale: Float) -> Int? {
         guard periodic, maximumPerPeriod > 0 else { return nil }
-        return max(Int((Float(maximumPerPeriod) * countScale).rounded()), 0)
+        return Int(saturating: (Float(maximumPerPeriod) * countScale).rounded(), in: 0...Int(UInt32.max))
     }
 }
 

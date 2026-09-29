@@ -118,8 +118,8 @@ final class SceneEffectDetail {
     /// The copy's size for an image of `imageSize` at `scale`: rounded up, at least 1.
     static func copySize(_ imageSize: SIMD2<Int>, scale: Float) -> SIMD2<Int> {
         guard scale < 1 else { return imageSize }
-        return SIMD2(max(Int((Float(imageSize.x) * scale).rounded(.up)), 1),
-                     max(Int((Float(imageSize.y) * scale).rounded(.up)), 1))
+        return SIMD2(Int(saturating: (Float(imageSize.x) * scale).rounded(.up), in: 1...Int.max),
+                     Int(saturating: (Float(imageSize.y) * scale).rounded(.up), in: 1...Int.max))
     }
 
     /// The image layer `layerID`'s effects run on this frame, for `image` shown `footprint` pixels

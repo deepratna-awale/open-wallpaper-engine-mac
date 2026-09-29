@@ -234,7 +234,7 @@ final class ShaderVariantCacheTests: XCTestCase {
     }
 
     /// The source a compiler step rejected lands in the failure directory (CONTRIBUTING.md's
-    /// `/tmp/owe-failed-shaders`), with the error after it so its line numbers still match.
+    /// `FailedShaders` folder in Caches), with the error after it so its line numbers still match.
     func testRejectedSourceIsWrittenForInspection() throws {
         let failures = temporaryDirectory("failed-shaders")
         let translator = ShaderVariantTranslator(compiler: InProcessShaderCompiler(), cacheDirectory: nil,
@@ -251,7 +251,7 @@ final class ShaderVariantCacheTests: XCTestCase {
         let source = try XCTUnwrap(lines.firstIndex { $0.contains("nope()") })
         let error = try XCTUnwrap(lines.lastIndex { $0.hasPrefix("// ") && $0.contains("nope") })
         XCTAssertLessThan(source, error, "the error follows the source")
-        XCTAssertEqual(ShaderVariantTranslator.defaultFailureDirectory.path, "/tmp/owe-failed-shaders")
+        XCTAssertEqual(ShaderVariantTranslator.defaultFailureDirectory, FailedShaderDump.defaultDirectory)
     }
 
     /// Malformed WE sources (truncated, garbled) fail with an error; none may abort the app.

@@ -64,7 +64,7 @@ There is **one type per file** unless the types are tiny and private to it. A fi
 ## Debugging
 
 - Read the app's logs with `/usr/bin/log` (a shell `log` alias or function may shadow it), e.g. `/usr/bin/log show --last 10m --predicate 'process == "Open Wallpaper Engine"'`.
-- Shaders the translator rejects are written to `/tmp/owe-failed-shaders` for inspection.
+- Shaders the translator rejects are written to `~/Library/Caches/com.winddog.wallpaper-engine/FailedShaders` for inspection (an isolated copy uses `~/Library/Caches/Open Wallpaper Engine (isolated <tag>)/com.winddog.wallpaper-engine/FailedShaders`). The folder is readable only by you (`0700`, files `0600`).
 
 ## Tests
 

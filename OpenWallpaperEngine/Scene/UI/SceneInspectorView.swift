@@ -118,7 +118,8 @@ private final class SceneInspectorModel: ObservableObject {
         package = try? PKGParser(url: packageURL)
 
         func data(_ path: String) -> Data? {
-            package?.extractFile(named: path) ?? (try? Data(contentsOf: directory.appending(path: path)))
+            // Optional: the inspector shows an unreadable file as a missing one.
+            package?.extractFile(named: path) ?? (try? AssetPathResolver.data(path, in: directory))
         }
         func rawJSON(_ path: String) -> String? {
             guard let data = data(path),
@@ -662,7 +663,7 @@ private final class SceneInspectorModel: ObservableObject {
     private static func originString(_ origin: SIMD3<Double>) -> String {
         let components: [Double] = [origin.x, origin.y, origin.z]
         let parts: [String] = components.map { value -> String in
-            value.rounded() == value ? String(Int(value)) : String(value)
+            value.rounded() == value && abs(value) < 1e15 ? String(Int(value)) : String(value)
         }
         return parts.joined(separator: " ")
     }
@@ -827,7 +828,8 @@ private final class SceneInspectorModel: ObservableObject {
     }
 
     private func data(_ path: String) -> Data? {
-        package?.extractFile(named: path) ?? (try? Data(contentsOf: directory.appending(path: path)))
+        // Optional: the inspector shows an unreadable file as a missing one.
+        package?.extractFile(named: path) ?? (try? AssetPathResolver.data(path, in: directory))
     }
 
     private func prettyJSON(_ json: Any) -> String {

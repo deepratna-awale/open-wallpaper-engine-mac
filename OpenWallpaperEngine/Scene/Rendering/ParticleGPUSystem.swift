@@ -181,7 +181,8 @@ final class ParticleGPUSystem {
     /// particles with `blit` (made on demand). False when a buffer can't be allocated.
     func reserve(for inputs: ParticleFrameInputs, blit: () -> MTLBlitCommandEncoder?) -> Bool {
         // Every instance may hold the system's maximum.
-        maximumCount = max(inputs.maximum, 0) * slots
+        let (product, overflow) = max(inputs.maximum, 0).multipliedReportingOverflow(by: max(slots, 0))
+        maximumCount = overflow ? Int.max : product
         let stepSpawns = Self.stepSpawns(inputs, instanceBursts: instances != nil ? instanceBursts : nil,
                                          slots: slots, maximumCount: maximumCount)
         let held = upperBound

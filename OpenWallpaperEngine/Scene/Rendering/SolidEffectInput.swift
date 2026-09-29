@@ -8,7 +8,7 @@ enum SolidEffectInput {
     static func size(_ layerSize: SIMD2<Float>) -> SIMD2<Int> {
         func side(_ value: Float) -> Int {
             guard value.isFinite else { return 1 }
-            return max(1, Int(value.rounded(.toNearestOrAwayFromZero)))
+            return Int(saturating: value.rounded(.toNearestOrAwayFromZero), in: 1...Int.max)
         }
         return SIMD2(side(layerSize.x), side(layerSize.y))
     }

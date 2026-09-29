@@ -59,8 +59,7 @@ struct SceneSoundContentBuilder {
     private func locate(_ path: String) -> URL? {
         let normalized = path.replacingOccurrences(of: "\\", with: "/")
         if let data = packagedData(path) ?? packagedData(normalized) { return cached(data, entry: normalized) }
-        let loose = wallpaperDirectory.appending(path: normalized)
-        if FileManager.default.fileExists(atPath: loose.path) { return loose }
+        if let loose = AssetPathResolver.fileURL(normalized, in: wallpaperDirectory) { return loose }
         if let url = workshopURL(normalized) { return url }
         if let data = workshopData(normalized) { return cached(data, entry: normalized) }
         return WallpaperEngineAssets.locate([normalized], in: WallpaperEngineAssets.searchDirectories)

@@ -88,12 +88,12 @@ struct WorkshopAssetResolver {
         itemDirectory(for: workshopId) != nil
     }
 
-    /// The loose file a workshop path points to, if the item stores it unpacked.
+    /// The loose file a workshop path points to, if the item stores it unpacked. It must lie
+    /// inside that item's own folder (`AssetPathResolver`).
     func url(for path: String) -> URL? {
         guard let reference = Self.reference(in: path), let item = itemDirectory(for: reference.workshopId) else { return nil }
         for candidate in reference.candidatePaths {
-            let url = item.appending(path: candidate)
-            if FileManager.default.fileExists(atPath: url.path) { return url }
+            if let url = AssetPathResolver.fileURL(candidate, in: item) { return url }
         }
         return nil
     }
@@ -102,7 +102,7 @@ struct WorkshopAssetResolver {
     func data(for path: String) -> Data? {
         if let url = url(for: path) {
             do {
-                return try Data(contentsOf: url)
+                return try AssetPathResolver.readRegularFile(at: url)
             } catch {
                 OWELog.error(.workshop, "Failed to read workshop asset \(url.path): \(error)")
                 return nil

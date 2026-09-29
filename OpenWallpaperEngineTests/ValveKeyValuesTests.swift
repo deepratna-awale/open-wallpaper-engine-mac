@@ -54,6 +54,20 @@ final class ValveKeyValuesTests: XCTestCase {
         XCTAssertEqual(root["empty"]?.string, "")
     }
 
+    func testNestingIsBoundedWithAnError() throws {
+        let limit = ValveKeyValues.maximumDepth
+        let deepest = String(repeating: "k {\n", count: limit) + String(repeating: "}\n", count: limit)
+        var value = try XCTUnwrap(ValveKeyValues.parse(deepest)["k"])
+        for _ in 1..<limit { value = try XCTUnwrap(value["k"]) }
+        XCTAssertEqual(value.entries, [])
+
+        let tooDeep = String(repeating: "k {\n", count: limit + 1) + String(repeating: "}\n", count: limit + 1)
+        XCTAssertThrowsError(try ValveKeyValues.parse(tooDeep)) {
+            XCTAssertEqual($0 as? ValveKeyValues.ParseError, .nestedTooDeeply(line: limit + 1))
+        }
+        XCTAssertThrowsError(try ValveKeyValues.parse(String(repeating: "{", count: 100_000)))
+    }
+
     func testMalformedTextThrowsWithTheLine() {
         XCTAssertThrowsError(try ValveKeyValues.parse("\"a\" {\n\"b\" \"c\"\n")) {
             XCTAssertEqual($0 as? ValveKeyValues.ParseError, .unterminatedBlock(key: "a"))

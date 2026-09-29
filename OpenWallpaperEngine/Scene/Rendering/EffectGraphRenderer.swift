@@ -1180,7 +1180,8 @@ final class EffectGraphRenderer {
             w *= factor
             h *= factor
         }
-        return SIMD2(max(Int(w.rounded()), 1), max(Int(h.rounded()), 1))
+        // Saturating: a zero-sized layer or an extreme `fit` gives a 1-pixel side, not a stop.
+        return SIMD2(Int(saturating: w.rounded(), in: 1...Int.max), Int(saturating: h.rounded(), in: 1...Int.max))
     }
 
     /// `frameBuffer` is WE's frame-buffer class format, which `rgba_backbuffer` and

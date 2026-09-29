@@ -3554,11 +3554,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         case "randomframe":
             frame = particle.spriteFrame % sheet.frames
         case "once":
-            frame = min(Int((particle.age / particle.lifetime) * Float(sheet.frames) * configuration.sequenceMultiplier), sheet.frames - 1)
+            frame = min(Int(saturating: (particle.age / particle.lifetime) * Float(sheet.frames) * configuration.sequenceMultiplier),
+                        sheet.frames - 1)
         default:
             // Over the particle's life, times `sequencemultiplier` (`ParticleRecordWriter.spritePhase`).
             let cycle = particle.age / max(particle.lifetime, 0.0001) * configuration.sequenceMultiplier
-            frame = min(Int((cycle - cycle.rounded(.down)) * Float(sheet.frames)), sheet.frames - 1)
+            frame = Int(saturating: (cycle - cycle.rounded(.down)) * Float(sheet.frames), in: 0...(sheet.frames - 1))
         }
         let column = frame % sheet.columns
         let row = frame / sheet.columns

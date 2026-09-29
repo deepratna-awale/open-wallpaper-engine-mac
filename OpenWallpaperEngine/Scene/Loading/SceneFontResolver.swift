@@ -74,12 +74,10 @@ struct SceneFontResolver {
         let normalized = path.replacingOccurrences(of: "\\", with: "/")
         if WorkshopAssetResolver.reference(in: normalized) == nil {
             for root in assetDirectories {
-                let url = root.appending(path: normalized)
-                guard FileManager.default.fileExists(atPath: url.path) else { continue }
                 do {
-                    return .data(try Data(contentsOf: url), .weAssets)
+                    if let data = try AssetPathResolver.data(normalized, in: root) { return .data(data, .weAssets) }
                 } catch {
-                    OWELog.error(.scene, "Failed to read font \(url.path): \(error)")
+                    OWELog.error(.scene, "Failed to read font \(normalized) in \(root.path): \(error)")
                 }
             }
         } else if let data = workshop.data(for: normalized) {
