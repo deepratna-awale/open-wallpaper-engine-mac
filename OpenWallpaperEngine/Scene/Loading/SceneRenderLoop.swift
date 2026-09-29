@@ -108,7 +108,8 @@ final class SceneRenderLoop {
         }
     }
 
-    /// Main: stops the links and the thread once the work already sent has run.
+    /// Main: stops the links and the thread once the work already sent has run, and returns once
+    /// the thread has ended: no frame runs after it.
     func shutdown() {
         thread.perform { [self] in
             for display in displays.values {
