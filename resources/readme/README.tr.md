@@ -11,42 +11,58 @@ Open Wallpaper Engine, Wallpaper Engine duvar kâğıtlarını (sahne, video ve 
 
 **Wiki:** kılavuzlar ve belgeler [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki)’de.
 
-## İlgili Projeler
+## Gereksinimler
 
-- **[Open Wallpaper Engine for Linux](https://github.com/Unayung/simple-linux-wallpaperengine-gui)** — [linux-wallpaperengine](https://github.com/Almamu/linux-wallpaperengine) için Steam Atölyesi entegrasyonuna sahip, arayüz tasarımı bu macOS sürümünden aktarılmış bir PyQt6 grafik arayüzü.
+### Gerekli
+- **macOS 14.0 veya sonrası** (Sonoma). ScreenCaptureKit ile ses yakalama ve Metal ile sahne işleme bu sürüme bağlıdır.
 
-## Katkıda Bulunanlar
+### İsteğe bağlı — belirli özellikler için gereklidir
 
-Bu proje aşağıdaki kişilerin çalışmaları üzerine inşa edilmiştir:
+| Özellik | Gereksinim | Kurulum |
+|---------|-------------|---------|
+| Steam Atölyesi’ne göz atma / Steam Atölyesi’nden indirme | `steamcmd` | Otomatik (isteğe bağlı: `brew install steamcmd`) |
+| Ses görselleştiricileri ve sese duyarlı SceneScript | Ekran ve Sistem Sesi Kaydı izni | Ayarlar → İzinler |
 
-- **[MrWindDog](https://github.com/MrWindDog)** — Üst kaynak [wallpaper-engine-mac](https://github.com/MrWindDog/wallpaper-engine-mac) çatalının bakımcısı; yeni özellikler ve arayüz iyileştirmeleri ekledi
-- **[Haren Chen](https://github.com/haren724)** — [open-wallpaper-engine-mac](https://github.com/haren724/open-wallpaper-engine-mac)’in asıl yaratıcısı; uygulamanın temel mimarisini oluşturdu (SwiftUI, video duvar kâğıdı oynatma, içe aktarma sistemi, çalma listesi arayüzü)
-- **1ris_W** — Çince yerelleştirme çevirisi
-- **[Klaus Zhu](https://github.com/klauszhu1105)** — Özgün logo tasarımı
-- **[Chen Chia Yang](https://github.com/Unayung)** — Sahne duvar kâğıdı işleme, web duvar kâğıdı düzeltmeleri, Steam Atölyesi entegrasyonu, çoklu ekran desteği, zip içe aktarma
-- **[Deepratna Awale](https://github.com/deepratna-awale)** — Metal sahne işleyicisi ve efekt ardışık düzeni, GLSL→MSL gölgelendirici çevirisi ve önbelleğe alma, SceneScript çalışma zamanı, sese duyarlı işleme, Atölye ve İndirilenler bölümlerinin yenilenmesi, yerleşim ve performans ayarları, logo yeniden tasarımı
+#### Gölgelendiriciler
 
-Orijinal projeyle aynı şekilde [GPL-3.0](../../LICENSE) lisansı altında lisanslanmıştır.
+Wallpaper Engine efektlerini GLSL olarak sunar. Bu efektler, bir duvar kâğıdı onları ilk kez kullandığında uygulamaya yerleşik glslang ve SPIRV-Cross (`Vendor/ShaderToolchain`) tarafından Metal’e (GLSL → SPIR-V → MSL) çevrilir ve ardından diskte önbelleğe alınır. Hiçbir şey kurmanız gerekmez. Çevirisi uygulamayı kilitleyen veya iki kez çökerten bir gölgelendirici sonraki açılışlarda atlanır; diğer tüm gölgelendiriciler çevrilmeye devam eder.
 
-## 0.8.1'den 1.0.0'a
+#### Wallpaper Engine varlıkları
 
-### Başlangıç noktası
+Sahneler, Steam’deki kendi Wallpaper Engine kopyanızdaki paylaşılan efektleri, malzemeleri, gölgelendiricileri, fontları ve SceneScript çalışma zamanını kullanır; uygulama bunları içermez. Bunları *Ayarlar → Varlıklar*’dan yükleyin: uygulama kopyanızı steamcmd ile indirir (hesabın Wallpaper Engine’e sahip olması gerekir), yalnızca varlıkları ve varsayılan duvar kâğıtlarını tutar, gerisini siler. Mevcut bir Wallpaper Engine klasörünü de seçebilirsiniz. Video ve web duvar kâğıtları onlarsız çalışır.
 
-Bu fork, üst projenin 0.8.1 sürümünden (commit `aa29a89e`, Mart 2026) başlar. 0.8.1 video ve web duvar kâğıtlarını oynatıyor; çoklu ekran ve çoklu masaüstü desteği, oynatma listeleri, son kullanılan duvar kâğıtları menüsü, zip ve klasör içe aktarma ile Homebrew'un SteamCMD'si üzerinden indiren bir Steam Atölyesi tarayıcısı sunuyordu. Sahneler PKG ve TEX dosyalarından SpriteKit ile çiziliyordu: konum, renk tonu ve karışım modlarına sahip görüntü katmanları; DXT dokularında ise önizleme görseline geri dönülüyordu. Wallpaper Engine gölgelendiricileri ve efektleri, parçacıklar, sprite ve zaman çizelgesi animasyonları, kamera paralaksı, sese duyarlı betikler, 3D modeller, kuklalar, aydınlatma ve SceneScript desteklenmiyordu.
+## Kaynaktan Derleme
 
-### Eklenenler
+### Ön koşullar
+- macOS >= 14.0
+- Xcode >= 26.3 (macOS 26 SDK)
+- Xcode Komut Satırı Araçları
 
-O zamandan bu yana 1.118 commit şunları ekledi:
+### Adımlar
+```sh
+git clone https://github.com/deepratna-awale/open-wallpaper-engine-mac.git
+cd open-wallpaper-engine-mac
+open "OpenWallpaperEngine.xcodeproj"
+```
 
-- **İşleme:** Wallpaper Engine gölgelendiricilerini süreç içinde çevirip önbelleğe alan yeni bir Metal sahne işleyicisi, efektler, bloom ve HDR.
-- **Sahne içeriği:** GPU'da simüle edilen parçacıklar; 3D modeller, iskelet animasyonlu kuklalar ve aydınlatma.
-- **Davranış:** bir SceneScript çalışma ortamı, özellik zaman çizelgeleri, sese duyarlı görseller ve uzamsal ses.
-- **Ekranlar ve Atölye:** ekran başına kurallar, yenilenen Atölye tarayıcısı ve indirmeleri, daha fazla içe aktarma yolu. Wallpaper Engine varlıkları kullanıcının kendi Steam kopyasından alınır; hiçbiri pakete dahil değildir.
-- **Uygulama:** bir kurulum asistanı, otomatik SteamCMD kurulumu, Sparkle güncellemeleri, Liquid Glass arayüzü ve 15 dil.
-- **Kalite:** yaklaşık 1.900 testlik bir test paketi, bunları Wallpaper Engine varlıklarıyla çalıştıran CI ve imzalı, noter onaylı sürümler.
-- **Belgeler:** bir proje web sitesi ve wiki.
+Xcode’da imzalama sertifikasını kendi sertifikanızla değiştirin veya “Sign to Run Locally” seçeneğini belirleyin, ardından derleyip çalıştırmak için `Cmd + R` tuşlarına basın.
 
-Tam liste [1.0.0 Sürümünün Destekledikleri](#100-sürümünün-destekledikleri) bölümünde, kılavuzlar [wiki](https://github.com/deepratna-awale/open-wallpaper-engine-mac/wiki) içinde.
+Kaynaktan ilk derleme Sparkle Swift paketini indirir. Kaynaktan derlenen sürümler güncelleme denetlemez.
+
+## Kullanım
+
+### Steam Atölyesi’ne Göz Atma ve Steam Atölyesi’nden İndirme
+
+1. Kurulacak bir şey yok: uygulama, Valve’ın SteamCMD’sini ilk gerektiğinde arka planda indirir (Valve’dan, uygulamayla birlikte gelmez). Homebrew (`brew install steamcmd`) isteğe bağlıdır; mevcut bir steamcmd (Homebrew, Steam veya sizin seçtiğiniz) bulunursa o kullanılır
+2. **Atölye** sekmesine geçin ve Steam hesabınızla giriş yapın (hesabın Wallpaper Engine’e sahip olması gerekir)
+3. İstendiğinde veya *Ayarlar → Genel* bölümünde bir [Steam Web API anahtarı](https://steamcommunity.com/dev/apikey) girin. Anahtar Steam ile doğrulanır ve anahtar zincirinizde saklanır; Steam parolanız hiçbir zaman kaydedilmez (steamcmd kendi önbelleğe alınmış oturumunu yeniden kullanır)
+4. Arayın, filtreleyin ve istediğiniz duvar kâğıdında **İndir**’e tıklayın
+
+### Yerel Dosyalardan İçe Aktarma
+
+- **Klasör:** Dosya > Klasörden İçe Aktar — `project.json` içeren duvar kâğıdı klasörlerini seçin
+- **Zip:** Dosya > İçe Aktar’ı kullanın veya duvar kâğıdı paketleri içeren bir `.zip` dosyasını sürükleyip bırakın
+- **Elle:** Duvar kâğıdı klasörlerini doğrudan `~/Documents/Open Wallpaper Engine/` içine kopyalayın
 
 ## 1.0.0 Sürümünün Destekledikleri
 
@@ -108,158 +124,13 @@ Tam liste [1.0.0 Sürümünün Destekledikleri](#100-sürümünün-destekledikle
 - **15 yeni dil**: Almanca, Fransızca, İspanyolca, Brezilya Portekizcesi, İtalyanca, Japonca, Korece, Basitleştirilmiş ve Geleneksel Çince, Rusça, Lehçe, Türkçe, Ukraynaca, Arapça ve Hintçe; Ayarlar’daki dil seçiciden seçilebilir.
 - Yeni bir uygulama simgesi ve menü çubuğunun görünümüne uyan bir menü çubuğu simgesi.
 
-<details>
-<summary>Önceki sürüm 0.8.1’deki yenilikler</summary>
-
-### Duvar kâğıdı oynatma
-- **Sahne duvar kâğıtları** Metal ile yerel olarak işlenir — görüntü katmanları, dönüşümler, ana kare zaman çizelgeleri, derinlik sıralaması ve `scene.json` dosyasındaki kamera/projeksiyon verileri.
-- **Video duvar kâğıtları** (`.mp4`, `.webm`); oynatma hızı, ses düzeyi, ses/görüntü hızı bağlantısı ve isteğe bağlı müzikle eşitlenmiş yakınlaştırma/eğme/doygunluk desteğiyle.
-- **Web duvar kâğıtları** (HTML/WebGL); WebGL dokularının ve varlıklarının doğru yüklenmesi için yerel dosya erişimi etkinleştirilmiş olarak, ayrıca harici yerleştirmelerle (YouTube/Vimeo).
-- **Yerleşim modları** — Ekranı Doldur, Ekrana Sığdır, Ortala, Ekranı Dolduracak Şekilde Büyüt, Yakınlaştır.
-- **Çoklu ekran** — her monitör için farklı duvar kâğıdı, ekran başına etkinleştirme/devre dışı bırakma, görsel monitör yerleşimi ve yeni bağlanan ekranların otomatik algılanması.
-- **Çoklu masaüstü (Spaces)** — `Tüm Masaüstleri` atama seçeneği de dahil olmak üzere tüm masaüstlerinde kesintisiz oynatma.
-- **Oynatma kuralları** — başka bir uygulama etkinken çalışmaya devam etme, sesi kapatma, duraklatma veya durdurma; uyku/uyanma ve masaüstü geçişlerinde doğru davranış.
-
-### Sahne biçimi desteği
-- Wallpaper Engine `PKGV` arşivleri için **PKG ayrıştırıcı** (scene.json, malzemeler, dokular, gölgelendiriciler).
-- `TEXV0005` kapsayıcıları için **TEX ayrıştırıcı**: gömülü JPEG/PNG ve bir Metal hesaplama gölgelendiricisiyle GPU’da çözülen, mipmap’li DXT1/DXT3/DXT5.
-- Tek atlas kare dikdörtgenleri ve çok görüntülü diziler de dahil olmak üzere **TEXS hareketli grafik zaman çizelgeleri** (0001/0002/0003).
-- Wallpaper Engine’in çok biçimli alanlarını (düz değerler veya `{"script":…,"value":…}`) işleyen **esnek scene.json çözümleme**.
-- Dokular çıkarılamadığında `preview.jpg/png/gif` dosyasına **önizleme geri dönüşü**.
-
-### Efektler ve gölgelendiriciler
-- Bozulma, bulanıklık (standart/hassas/radyal/hareket), bloom, tanrı ışınları ve ışık huzmeleri, su dalgaları/halkaları/kostikleri/akışı, bulutlar ve sis, film greni, glitch/VHS, renk sapması, renk anahtarı, dönüştürme/eğme/döndürme/girdap/perspektif, yansıma, kırılma, parlama/ışıltı/simli parıltı, kenar algılama ve daha fazlasını kapsayan **yaklaşık 48 yerel Metal efekti**.
-- **Sese duyarlı efektler** — canlı sistem sesi spektrum verileriyle yönlendirilen nabız, ses çubukları, sesle eşitlenmiş ton kaydırma ve hyperdrive.
-- **Anlamsal malzeme efektleri** — parlaklık, karşıtlık, doygunluk, pozlama, gama, ton, bloom eşiği, bloom ve bulanıklık, yerel Metal geçişlerine eşlenir.
-- Uygulamaya bağlanmış glslang ve SPIRV-Cross ile yükleme sırasında **GLSL → SPIR-V → MSL çevirisi**; COMBO tanımları, include çözümlemesi ve Metal arabellek yuvası yeniden numaralandırması dahil.
-- **Önceden derlenmiş gölgelendirici önbelleği** — çevrilmiş `.metal`, derlenmiş `.metallib` ve `.reflection.json` yardımcı dosyaları `.open-wallpaper-engine/shaders` altında önbelleğe alınır; karma denetimi sayesinde yalnızca değişen gölgelendiriciler yeniden çevrilir ve derleme arka planda yapıldığından işleme hiçbir zaman engellenmez.
-- Çok geçişli efektler ve yansıtılan uniform bağlamaları da dahil olmak üzere Wallpaper Engine `assets/effects/*/effect.json` bildirimlerinden okunan **dinamik efekt kataloğu**.
-- **Efekt maskeleme** (katman başına en fazla 4 maske dokusu), toplamalı ve alfa karıştırma ve havuzlanmış bir işleme hedefi sistemi.
-
-### Parçacıklar
-- Rastgele yaşam süresi, boyut, hız, renk, döndürme, açısal hız, yerçekimi, sürükleme ve alfa solmasına sahip hareketli grafik yayıcıları.
-- Gelişmiş davranış — türbülans, çekiciler, girdap ve boid hareketi, statik ve imlece bağlı kontrol noktaları, bağlantılı halat parçaları ve alfa/boyut solmalı izler.
-- `.tex-json` dizileriyle hareketli grafik sayfası kare animasyonu.
-- Yayma hızı, sürükleme ve alfa solması zamanlaması için betikli operatörler.
-
-### SceneScript çalışma zamanı
-- `init()` bir kez, `update(value)` her karede çağrılan, katman başına kalıcı betik bağlamları.
-- Global öğeler: `thisScene`, `thisLayer`, `engine`, `input`, `audio(low, high)`, gerçek `fft(index)`, `setTimeout`/`setInterval` ve kalıcı betik global öğeleri.
-- Eksiksiz `Vec2`/`Vec3`/`Vec4`/`Mat3`/`Mat4` matematik kitaplığı ile `WEMath`, `WEVector` ve `WEColor` yardımcıları.
-- `assets/scripts/jsmodules` ve `jsclasses` konumlarından yüklenen Wallpaper Engine çalışma zamanı JS modülleri.
-- İmleç olayları (`cursorMove`/`Down`/`Up`/`Click`/`Enter`/`Leave`) ve `resizeScreen`.
-- Betikler katman alfasını, orijinini, boyutunu, ölçeğini, açılarını, parlaklığını/rengini, malzeme sabitlerini, efekt eşiklerini ve parçacık hızlarını denetleyebilir.
-- Tekrar sayılarıyla birlikte, yinelenenleri ayıklanmış betik istisnası günlükleme.
-
-### Ses
-- Yumuşatılmış 16 bantlı bir spektrum, dalga biçimi ve bas/orta/tiz düzeylerini besleyen, ScreenCaptureKit ile sistem sesi yakalama.
-- Özellik başına **müzik eşitleme** — herhangi bir kullanıcı özelliği, ayarlanabilir bir miktarla ses düzeyine göre değiştirilebilir.
-
-### Kullanıcı özellikleri ve denetçi
-- Sahne kenar çubuğunda gösterilen, anında uygulanan ve SceneScript’ten okunabilen kaydırıcı, onay kutusu, açılır liste, metin ve renk proje ayarları.
-- Yazarı tarafından `parallaxDepth` tanımlanmış katmanlar için fare izleme ve paralaks.
-
-### Steam Atölyesi
-- İçerik derecelendirmesine, türe ve tür etiketlerine göre göz atma, arama ve filtreleme; Popüler / En Yeni / En Popüler / En Çok Abone Olunan sıralaması ve numaralı sayfalama.
-- Sınırlı boyutlu bir önbellekle desteklenen; duvar kâğıdını ayarlama, oynatma ve ses düzeyi denetimlerine sahip önizleme pencereleri. Uygulanan önizlemeler yeniden indirilmeden arşive taşınır.
-- Otomatik algılama, parola / Steam Guard / önbelleğe alınmış oturumla giriş, ayrı bir İndirilenler sekmesi, sıraya alınan ve yeniden denenebilen indirmeler ve canlı ilerleme durumuyla SteamCMD entegrasyonu.
-- Çoklu seçim, aralık seçimi, onaya bağlı toplu indirme ve silme, kalıcı olarak kaydedilen indirilmiş kimlikler ve `İndirilme Tarihi` sıralaması.
-
-### Arşiv ve ayarlar
-- Klasörlerden, `.zip` paketlerinden veya sürükleyip bırakarak içe aktarma.
-- Mevcut arşivin taşınmasıyla birlikte yapılandırılabilir duvar kâğıdı depolama konumu.
-- Menü çubuğunda son kullanılan duvar kâğıtları menüsü.
-- Performans ayarları — kalite, kenar yumuşatma, son işleme ve odak kaybında oynatma davranışı.
-- Tanılar — paketlenmiş varlıkların yolu, yerleşik gölgelendirici derleyicisinin kitaplık sürümleri ve gölgelendirici önbelleği istatistikleri.
-
-</details>
-
-<details>
-<summary>Önceki sürüm 0.8.0’daki yenilikler</summary>
-
-### Çoklu Ekran Desteği
-Bağlı her monitöre farklı duvar kâğıtları atayın ve bunları ekran başına etkinleştirin veya devre dışı bırakın.
-- **Ekran Ayarları paneli** — Bağlı tüm ekranları gösteren görsel monitör yerleşimi; seçmek için tıklayın
-- **Ekran başına duvar kâğıdı** — Her ekran bağımsız olarak farklı bir duvar kâğıdı gösterebilir
-- **Etkinleştirme/devre dışı bırakma anahtarı** — Duvar kâğıdını monitör başına açın veya kapatın
-- **Otomatik algılama** — Yeni monitörler bağlandığında otomatik olarak algılanır ve etkinleştirilir
-
-### Çoklu Masaüstü Desteği
-Duvar kâğıtları artık tüm macOS masaüstlerinde (Spaces) kesintisiz oynatılır — masaüstleri arasında geçiş yaparken kesinti olmaz.
-
-### Son Kullanılan Duvar Kâğıtları Menüsü
-Menü çubuğundaki menüden duvar kâğıtlarını hızla değiştirin. Kullandığınız son 10 duvar kâğıdı tek tıklamayla erişim için listelenir.
-
-### Oynatma Ayarları — Düzeltildi
-Performans bölümündeki oynatma ayarları (başka uygulamalar etkinken duraklatma/sesi kapatma/durdurma) artık tüm duvar kâğıdı türlerinde doğru çalışır.
-
-### Steam Atölyesi Tarayıcısı
-Uygulamadan çıkmadan duvar kâğıtlarına doğrudan Steam Atölyesi’nden göz atın, arayın ve indirin.
-- **Arama ve filtreleme** — Ada göre arama; içerik derecelendirmesine (Herkes/Şüpheli/Yetişkin), türe (Sahne/Video/Web) ve tür etiketlerine göre filtreleme
-- **Sıralama seçenekleri** — Popüler, En Yeni, En Popüler, En Çok Abone Olunan
-- **steamcmd entegrasyonu** — Valve’ın SteamCMD’sini ilk gerektiğinde otomatik olarak indirir (uygulamayla birlikte gelmez); mevcut bir steamcmd (Homebrew, Steam veya özel yol) bulunursa onu kullanır
-- **Steam girişi** — Parola, Steam Guard ve önbelleğe alınmış oturumla kimlik doğrulamayı destekler
-- **İlerleme durumuyla indirme** — İndirme sırasında gerçek zamanlı durum güncellemeleri (kimlik doğrulama, indirme yüzdesi, doğrulama, kopyalama)
-- **Güvenli varsayılanlar** — Yetişkin içeriği filtrelemek için içerik derecelendirmesi varsayılan olarak “Herkes” şeklindedir
-
-### Zip İçe Aktarma
-Duvar kâğıdı paketlerini doğrudan `.zip` dosyalarından içe aktarın — önce elle arşivden çıkarmanıza gerek yoktur. Dosya > İçe Aktar ile ve sürükleyip bırakarak çalışır.
-
-### Çoklu Seçim ve Toplu Abonelikten Çıkma
-Birden fazla duvar kâğıdı seçmek için Cmd tuşuna basılı tutarak tıklayın, ardından toplu olarak abonelikten çıkmak için sağ tıklayın.
-
-### Duvar Kâğıdı Depolamasının Ayrılması
-Duvar kâğıtları artık doğrudan Belgeler dizini yerine `~/Documents/Open Wallpaper Engine/` içinde saklanır; böylece depo yeni bir bilgisayarda klonlandığında “hatalı” duvar kâğıtları oluşmaz.
-
-</details>
-
-<details>
-<summary>Özgün projeye göre ilk değişiklikler</summary>
-
-### Web Duvar Kâğıtları — Gri/boş görüntü sorunu düzeltildi
-`WKWebView`, dokular ve varlıklar için yerel dosya erişimini engellediğinden WebGL tabanlı duvar kâğıtları gri dikdörtgenler olarak görüntüleniyordu.
-
-**Düzeltme:** WKWebView yapılandırmasında `allowFileAccessFromFileURLs` ve `allowUniversalAccessFromFileURLs` etkinleştirildi; böylece WebGL gölgelendiricileri yerel doku dosyalarını yükleyebilir.
-
-### Sahne Duvar Kâğıtları — Sıfırdan uygulandı
-Sahne duvar kâğıtları (Steam Atölyesi’ndeki en yaygın tür) hiç uygulanmamıştı — yalnızca “Hello, World!” gösteriyordu.
-
-**Yeni uygulama şunları içerir:**
-- **PKG ayrıştırıcı** — scene.json, modeller, malzemeler ve dokuları çıkarmak için Wallpaper Engine’in PKGV arşiv biçimini okur
-- **TEX ayrıştırıcı** — TEXV0005 doku kapsayıcılarını okur, gömülü JPEG/PNG görüntü verilerini çıkarır ve DXT1/DXT3/DXT5 mipmap’lerini okur
-- **Scene JSON çözücü** — scene.json dosyasını, Wallpaper Engine’in çok biçimli alanlarını (değerler düz türler veya `{"script":..,"value":..}` nesneleri olabilir) işleyen esnek bir çözümlemeyle ayrıştırır
-- **Metal işleyicisi** — Sahne görüntü katmanlarını GPU doku birleştirmesiyle işler ve gelecekteki gölgelendirici efektleri için bir temel sağlar
-- **GPU’da DXT çözme** — Sahne yüklenirken DXT1 (TEXI 7), DXT3 (TEXI 6) ve DXT5 (TEXI 4) dokularını bir Metal hesaplama gölgelendiricisiyle açar
-- **Hareketli grafik parçacıkları** — Yaygın `sphererandom` hareketli grafik yayıcılarını rastgele yaşam süresi, boyut, hız, alfa, renk, döndürme, açısal hız, yerçekimi, sürükleme ve alfa solmalarıyla işler
-- **Gelişmiş parçacıklar** — Döndürme, renk çeşitliliği, türbülans, statik ve imlece bağlı kontrol noktaları, bağlantılı halat parçaları, izler ve `.tex-json` hareketli grafik sayfası kare animasyonunu destekler
-- **TEXS animasyonu** — Tek atlas kare dikdörtgenleri ve çok görüntülü doku dizileri de dahil olmak üzere TEXS0001/0002/0003 zaman çizelgelerini çözer
-- **Sahne zaman çizelgeleri** — Nesne alfası, orijini, ölçeği ve açıları ana karelerini 60 FPS’de ara değerlerle hesaplar
-- **SceneScript çalışma zamanı** — İfade ve `export function update(value)` özellik betiklerini ScreenCaptureKit sistem sesine göre değerlendirir. `thisScene` zamanlaması, `thisLayer.value`, `engine`, giriş imleci, `audio(low, high)`, gerçek `fft(index)`, özellik araması ve kalıcı global öğeler; görüntü dönüşümlerini, alfayı ve parçacık yayma hızlarını yönlendirir.
-- **Kalıcı SceneScript yaşam döngüsü** — Katman başına betik bağlamlarını yeniden kullanır, `init()` işlevini bir kez çağırır ve `update()` işlevini paylaşılan `dt`, kare, fare, düğme, değiştirici tuş, imleç, ses, FFT, özellik ve katman durumuyla kareler boyunca çağırır.
-- **Betikli parçacık operatörleri** — Esnek sayısal/dize parçacık alanlarıyla birlikte parçacık yayma hızı, hareket sürüklemesi ve alfa solması zamanlaması betiklerini destekler.
-- **Fare izleme ve paralaks** — Yazarı tarafından `parallaxDepth` meta verisi tanımlanmış katmanlara imlece göreli öteleme ve isteğe bağlı perspektif ölçekleme uygular; imlece bağlı parçacıklar aynı sahne uzayı imlecini kullanır.
-- **Betikli görsel özellikler** — Betikli nesne parlaklığını/RGB rengini, malzeme efekti sabitlerini, skaler/vektör dönüşümleri ve efekt eşiği geçersiz kılmalarını destekler.
-- **Kullanıcı özellikleri** — Belgelenmiş kaydırıcı, onay kutusu, açılır liste, metin ve renk proje ayarlarını sahne kenar çubuğunda gösterir ve sayısal ve boole değerlerini SceneScript’in kullanımına sunar
-- **Yerleşik sahne efektleri** — Yazarı tarafından tanımlanmış `pulse`, `shake`, `iris` ve `waterwaves` efekt grafiği girdilerini Metal işleyicisinde yürütür
-- **Anlamsal malzeme efektleri** — Parlaklık, karşıtlık, doygunluk, pozlama, gama, ton, bloom eşiği, bloom ve bulanıklık için yaygın malzeme sabitlerini ve betiklerini yerel Metal efektlerine eşler
-- **GLSL gölgelendirici çevirisi** — Paketlenmiş Wallpaper Engine GLSL gölgelendiricilerini, uygulamaya bağlanmış glslang ve SPIRV-Cross ile yükleme sırasında SPIR-V ve MSL’ye dönüştürür; çevrilmiş varyantlar `~/Library/Caches/com.winddog.wallpaper-engine/shader-variants` altında önbelleğe alınır
-- **Önizleme geri dönüşü** — Dokular çıkarılamadığında preview.jpg/png/gif dosyasına geri döner
-
-### İçe Aktarma — Klasör içe aktarma düzeltildi
-İçe aktarma paneli artık hem tek tek duvar kâğıdı klasörlerini hem de birden fazla duvar kâğıdı içeren üst dizinleri doğru şekilde işler.
-
-</details>
-
 ## Mevcut Sınırlamalar
 
-- **Uygulama duvar kâğıtları** — `type: "application"` duvar kâğıtları desteklenmez ve çalışmaz.
-- **Uygulanmamış SceneScript işlevleri** — `effect.executeMaterialFunction()`, `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `getVideoTexture()`, `engine.openUserShortcut()` henüz hiçbir şey yapmaz.
+- **Uygulanmamış SceneScript işlevleri** — `setParent()`, `lookAt()`, `lookAtYaw()`, `rotateObjectSpace()`, `transformAttachmentToTexture()`, `getVideoTexture()` henüz hiçbir şey yapmaz.
 - **SceneScript uyumluluğu** — Tescilli olay adlarının, giriş geri çağırmalarının, yaşam döngüsü uç durumlarının veya tam zamanlama anlamlarının tümü yeniden üretilmemiştir.
 - **Nadir parçacık özellikleri** — Küre, kutu ve katman görüntüsü dışındaki yayıcı şekilleri ile bir sistemin ilkinden sonraki işleyicileri desteklenmez.
-- **Wallpaper Engine varlıkları gerekir** — Sahneler kendi Wallpaper Engine kopyanızdaki varlıklara ihtiyaç duyar (Ayarlar → Varlıklar); bunlar olmadan yalnızca video ve web duvar kâğıtları oynar.
 - **WebM videoları** — WebM (VP8/VP9) WebKit üzerinden oynatılır, bu yüzden müzik senkronizasyonu efektleri ona uygulanmaz.
 - **Bazı JPEG küçük resimleri** — Az sayıda TEXB biçim 1 dosyası, macOS’in çözemediği standart dışı JPEG verileri içerir.
-- **Performans ayarlarının kapsamı** — Kalite, kenar yumuşatma ve son işleme seçenekleri sahne duvar kâğıtları için tasarlanmıştır ve video ile web duvar kâğıtları üzerinde sınırlı etkiye sahiptir.
 - **Ses özellikleri izin gerektirir** — Ekran ve Sistem Sesi Kaydı izni olmadan ses görselleştiricileri ve sese duyarlı SceneScript yalnızca sessizlik alır.
 
 ## Desteklenen Duvar Kâğıdı Türleri
@@ -278,73 +149,36 @@ Sahne duvar kâğıtları (Steam Atölyesi’ndeki en yaygın tür) hiç uygulan
 | Sahne — 3B modeller / iskelet donatımı / kukla bükme | Çalışıyor |
 | Uygulama | Desteklenmiyor |
 
-## Gereksinimler
-
-### Gerekli
-- **macOS 14.0 veya sonrası** (Sonoma). ScreenCaptureKit ile ses yakalama ve Metal ile sahne işleme bu sürüme bağlıdır.
-
-### İsteğe bağlı — belirli özellikler için gereklidir
-
-| Özellik | Gereksinim | Kurulum |
-|---------|-------------|---------|
-| Steam Atölyesi’ne göz atma / Steam Atölyesi’nden indirme | `steamcmd` | Otomatik (isteğe bağlı: `brew install steamcmd`) |
-| Ses görselleştiricileri ve sese duyarlı SceneScript | Ekran ve Sistem Sesi Kaydı izni | Ayarlar → İzinler |
-
-#### Gölgelendiriciler
-
-Wallpaper Engine efektlerini GLSL olarak sunar. Bu efektler, bir duvar kâğıdı onları ilk kez kullandığında uygulamaya yerleşik glslang ve SPIRV-Cross (`Vendor/ShaderToolchain`) tarafından Metal’e (GLSL → SPIR-V → MSL) çevrilir ve ardından diskte önbelleğe alınır. Hiçbir şey kurmanız gerekmez. Çevirisi uygulamayı kilitleyen veya iki kez çökerten bir gölgelendirici sonraki açılışlarda atlanır; diğer tüm gölgelendiriciler çevrilmeye devam eder.
-
-#### Wallpaper Engine varlıkları
-
-Sahneler, Steam’deki kendi Wallpaper Engine kopyanızdaki paylaşılan efektleri, malzemeleri, gölgelendiricileri, fontları ve SceneScript çalışma zamanını kullanır; uygulama bunları içermez. Bunları *Ayarlar → Varlıklar*’dan yükleyin: uygulama kopyanızı steamcmd ile indirir (hesabın Wallpaper Engine’e sahip olması gerekir), yalnızca varlıkları ve varsayılan duvar kâğıtlarını tutar, gerisini siler. Mevcut bir Wallpaper Engine klasörünü de seçebilirsiniz. Video ve web duvar kâğıtları onlarsız çalışır.
-
-## Kaynaktan Derleme
-
-### Ön koşullar
-- macOS >= 14.0
-- Xcode >= 26.3 (macOS 26 SDK)
-- Xcode Komut Satırı Araçları
-
-### Adımlar
-```sh
-git clone https://github.com/deepratna-awale/open-wallpaper-engine-mac.git
-cd wallpaper-engine-mac
-open "OpenWallpaperEngine.xcodeproj"
-```
-
-Xcode’da imzalama sertifikasını kendi sertifikanızla değiştirin veya “Sign to Run Locally” seçeneğini belirleyin, ardından derleyip çalıştırmak için `Cmd + R` tuşlarına basın.
-
-Kaynaktan ilk derleme Sparkle Swift paketini indirir. Kaynaktan derlenen sürümler güncelleme denetlemez.
-
-## Kullanım
-
-### Steam Atölyesi’ne Göz Atma ve Steam Atölyesi’nden İndirme
-
-1. Kurulacak bir şey yok: uygulama, Valve’ın SteamCMD’sini ilk gerektiğinde arka planda indirir (Valve’dan, uygulamayla birlikte gelmez). Homebrew (`brew install steamcmd`) isteğe bağlıdır; mevcut bir steamcmd (Homebrew, Steam veya sizin seçtiğiniz) bulunursa o kullanılır
-2. **Atölye** sekmesine geçin ve Steam hesabınızla giriş yapın (hesabın Wallpaper Engine’e sahip olması gerekir)
-3. İstendiğinde veya *Ayarlar → Genel* bölümünde bir [Steam Web API anahtarı](https://steamcommunity.com/dev/apikey) girin. Anahtar Steam ile doğrulanır ve anahtar zincirinizde saklanır; Steam parolanız hiçbir zaman kaydedilmez (steamcmd kendi önbelleğe alınmış oturumunu yeniden kullanır)
-4. Arayın, filtreleyin ve istediğiniz duvar kâğıdında **İndir**’e tıklayın
-
-### Yerel Dosyalardan İçe Aktarma
-
-- **Klasör:** Dosya > Klasörden İçe Aktar — `project.json` içeren duvar kâğıdı klasörlerini seçin
-- **Zip:** Dosya > İçe Aktar’ı kullanın veya duvar kâğıdı paketleri içeren bir `.zip` dosyasını sürükleyip bırakın
-- **Elle:** Duvar kâğıdı klasörlerini doğrudan `~/Documents/Open Wallpaper Engine/` içine kopyalayın
-
 ## Gizlilik
 
 Open Wallpaper Engine’in kaydettiği her şey Mac’inizde kalır: ayarlarınız, kitaplığınız, önbellek ve SteamCMD oturum bilgisi. Open Wallpaper Engine’in sunucusu yoktur ve hiçbir veri ya analiz toplamaz. Valve ile (Atölye’yi kullandığınızda veya varlıkları yüklediğinizde Steam ile, SteamCMD’yi indirmek için de Valve’ın sunucusuyla) ve uygulama güncellemelerini denetlemek (GitHub Pages’teki appcast) ve bunları GitHub Releases’ten indirmek için GitHub ile iletişim kurar; hiçbir kişisel veri gönderilmez. Güncelleme denetimi Ayarlar › Genel’den kapatılabilir. Web duvar kâğıtları kendi çevrimiçi içeriklerini yükleyebilir. Steam parolanız ve Steam Guard kodunuz doğrudan SteamCMD’ye gider; hiçbir zaman saklanmaz, günlüğe kaydedilmez veya başka bir yere gönderilmez. SteamCMD’nin kayıtlı oturumunu yeniden kullanmak için yalnızca hesap adınız hatırlanır.
 
 ## Proje Yapısı
 
-- `OpenWallpaperEngine/Services/SceneParsers/` — PKG, TEX/TEXS ve scene.json ayrıştırıcıları ve modelleri
-- `OpenWallpaperEngine/Services/SceneEffects/` — dinamik efekt kataloğu ve yazarı tarafından tanımlanan efekt parametresi aralıkları
+- `OpenWallpaperEngine/Scene/Format/` — PKG, TEX/TEXS ve scene.json ayrıştırıcıları ve modelleri
 - `OpenWallpaperEngine/Scene/Shaders/` — GLSL → SPIR-V → MSL çevirisi (`ShaderVariant.swift`, `InProcessShaderCompiler.swift`), önbelleğe alma ve ardışık düzen arşivi
 - `Vendor/ShaderToolchain/` — uygulamaya yerel bir paket olarak derlenen glslang ve SPIRV-Cross kaynakları
-- `OpenWallpaperEngine/Scene/Scripting/AudioReactiveScriptEngine.swift` — SceneScript çalışma zamanı ve ses/FFT bağlamaları
+- `OpenWallpaperEngine/Scene/Scripting/` — SceneScript çalışma zamanı ve ses/FFT bağlamaları
 - `OpenWallpaperEngine/Audio/AudioLevelTap.swift` — ScreenCaptureKit ile sistem sesi yakalama
 - `OpenWallpaperEngine/Scene/Rendering/SceneMetalRenderer.swift`, `SceneShaders.metal` — Metal sahne işleyicisi ve gölgelendirici kitaplığı
 - `OpenWallpaperEngine/Workshop/SteamCmdService.swift`, `WorkshopAPIService.swift`, `WorkshopViewModel.swift` — Steam Atölyesi’ne göz atma ve indirmeler
 - `OpenWallpaperEngine/Library/WallpaperDirectory.swift`, `ZipImporter.swift`, `WallpaperPackageConverter.swift` — arşiv depolama, içe aktarma ve paket dönüştürme
 - `Scripts/fill-assets-cache.sh` — geliştirme yardımcısı: bir Wallpaper Engine kurulumunun varlıklarını yerel bir klasöre veya Duvar Kâğıdı Deposu önbelleğine kopyalar
 - `Scripts/scene-api-coverage.py` — kurulu duvar kâğıtlarının hangi SceneScript API’lerini kullandığını ve bunlardan hangilerinin uygulandığını raporlar
+
+## İlgili Projeler
+
+- **[Open Wallpaper Engine for Linux](https://github.com/Unayung/simple-linux-wallpaperengine-gui)** — [linux-wallpaperengine](https://github.com/Almamu/linux-wallpaperengine) için Steam Atölyesi entegrasyonuna sahip, arayüz tasarımı bu macOS sürümünden aktarılmış bir PyQt6 grafik arayüzü.
+
+## Katkıda Bulunanlar
+
+Bu proje aşağıdaki kişilerin çalışmaları üzerine inşa edilmiştir:
+
+- **[MrWindDog](https://github.com/MrWindDog)** — Üst kaynak [wallpaper-engine-mac](https://github.com/MrWindDog/wallpaper-engine-mac) çatalının bakımcısı; yeni özellikler ve arayüz iyileştirmeleri ekledi
+- **[Haren Chen](https://github.com/haren724)** — [open-wallpaper-engine-mac](https://github.com/haren724/open-wallpaper-engine-mac)’in asıl yaratıcısı; uygulamanın temel mimarisini oluşturdu (SwiftUI, video duvar kâğıdı oynatma, içe aktarma sistemi, çalma listesi arayüzü)
+- **1ris_W** — Çince yerelleştirme çevirisi
+- **[Klaus Zhu](https://github.com/klauszhu1105)** — Özgün logo tasarımı
+- **[Chen Chia Yang](https://github.com/Unayung)** — Sahne duvar kâğıdı işleme, web duvar kâğıdı düzeltmeleri, Steam Atölyesi entegrasyonu, çoklu ekran desteği, zip içe aktarma
+- **[Deepratna Awale](https://github.com/deepratna-awale)** — Metal sahne işleyicisi ve efekt ardışık düzeni, GLSL→MSL gölgelendirici çevirisi ve önbelleğe alma, SceneScript çalışma zamanı, sese duyarlı işleme, Atölye ve İndirilenler bölümlerinin yenilenmesi, yerleşim ve performans ayarları, logo yeniden tasarımı
+
+Orijinal projeyle aynı şekilde [GPL-3.0](../../LICENSE) lisansı altında lisanslanmıştır.
