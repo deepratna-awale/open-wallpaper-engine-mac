@@ -416,7 +416,7 @@ extension SceneLayerAnalysis {
         // A video changes with its decoded frames (`videoRevision`), not with every clock tick.
         case .video: deps.insert(.video)
         case .animated: deps.insert(.time)
-        case .image, .dxt: break
+        case .image, .dxt, .uploaded: break
         }
         if layer.textureKey != nil || layer.puppet != nil { deps.insert(.time) }
         if layer.musicSync != nil { deps.insert(.audio) }

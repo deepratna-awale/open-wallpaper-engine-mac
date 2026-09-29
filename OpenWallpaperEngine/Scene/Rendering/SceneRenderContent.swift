@@ -8,6 +8,9 @@ enum SceneMetalTextureSource {
     case animated(TEXAnimatedImages)
     /// Frames arrive from AVFoundation each frame rather than being decoded up front.
     case video(VideoTextureStream)
+    /// A decoded image already on the GPU: only its sizes are kept, so the renderer's copy of the
+    /// content holds no pixels (`uploaded`). Anything that uploads again loads the file again.
+    case uploaded(SceneUploadedTexture)
 
     /// The image's own size in texels when it is smaller than the texture it is uploaded into
     /// (`g_TextureNResolution.zw`). Decoded images are already cropped to their content, so
@@ -16,6 +19,8 @@ enum SceneMetalTextureSource {
         switch self {
         case let .dxt(texture):
             return SIMD2(Float(texture.contentWidth), Float(texture.contentHeight))
+        case let .uploaded(info):
+            return info.contentSize
         case .image, .animated, .video:
             return nil
         }
@@ -29,6 +34,7 @@ enum SceneMetalTextureSource {
         case let .dxt(texture): return SIMD2(Float(texture.contentWidth), Float(texture.contentHeight))
         case let .animated(animation): return animation.images.first.map(Self.pixelSize(of:)) ?? .zero
         case let .video(stream): return stream.frameSize
+        case let .uploaded(info): return info.pixelSize
         }
     }
 
@@ -36,8 +42,22 @@ enum SceneMetalTextureSource {
     /// `size`, e.g. by `thisScene.createLayer('models/x.json')`): a sprite sheet's frame, the
     /// first `TEXS` frame's edges, not the atlas it is packed in; any other image's own size.
     var unsizedLayerSize: SIMD2<Float> {
+        if case let .uploaded(info) = self { return info.unsizedLayerSize }
         guard case let .animated(animation) = self, let frame = animation.frames.first else { return pixelSize }
         return SIMD2(simd_length(SIMD2(frame.width, frame.widthY)), simd_length(SIMD2(frame.heightX, frame.height)))
+    }
+
+    /// What is kept once the pixels are on the GPU: decoded images and block-compressed data give
+    /// way to their sizes; a video stays, since its frames keep arriving.
+    var uploaded: SceneMetalTextureSource {
+        switch self {
+        case .image, .dxt, .animated:
+            return .uploaded(SceneUploadedTexture(pixelSize: pixelSize, contentSize: contentSize,
+                                                  unsizedLayerSize: unsizedLayerSize,
+                                                  sheetPixelSize: sheetPixelSize))
+        case .video, .uploaded:
+            return self
+        }
     }
 
     /// The texture's pixels that a `.tex-json` sprite-sheet frame size is measured in: the whole
@@ -48,6 +68,7 @@ enum SceneMetalTextureSource {
         let size: SIMD2<Float>
         switch self {
         case let .dxt(texture): size = SIMD2(Float(texture.width), Float(texture.height))
+        case let .uploaded(info): return info.sheetPixelSize
         case .image, .animated, .video: size = pixelSize
         }
         return size.x > 0 && size.y > 0 ? SIMD2<Double>(size) : nil
@@ -62,10 +83,19 @@ enum SceneMetalTextureSource {
     }
 }
 
+/// The sizes of an image `SceneMetalTextureSource.uploaded` stands for.
+struct SceneUploadedTexture: Equatable {
+    let pixelSize: SIMD2<Float>
+    let contentSize: SIMD2<Float>?
+    let unsizedLayerSize: SIMD2<Float>
+    let sheetPixelSize: SIMD2<Double>?
+}
+
 struct SceneMetalLayer {
     let id: String
     let name: String
-    let source: SceneMetalTextureSource
+    /// Replaced by its sizes (`SceneMetalTextureSource.uploaded`) once the renderer uploaded it.
+    var source: SceneMetalTextureSource
     /// `origin`, relative to the parent object (see `SceneMetalContent.transforms`).
     let position: SIMD2<Float>
     let size: SIMD2<Float>
