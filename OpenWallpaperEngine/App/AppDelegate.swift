@@ -357,11 +357,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 // MARK: Set Settings Window
     func setSettingsWindow() {
         self.settingsWindow = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 480, height: 300),
+            contentRect: NSRect(x: 0, y: 0, width: SettingsTab.toolbarFittingWidth, height: 560),
             styleMask: [.titled, .closable, .resizable, .fullSizeContentView],
             backing: .buffered, defer: false)
         self.settingsWindow.title = String(localized: "Settings")
         self.settingsWindow.isReleasedWhenClosed = false
+        self.settingsWindow.contentMinSize = NSSize(width: SettingsTab.toolbarFittingWidth, height: 400)
         self.settingsWindow.toolbarStyle = .preference
         
         self.settingsWindow.delegate = self
