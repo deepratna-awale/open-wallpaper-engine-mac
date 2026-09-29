@@ -27,7 +27,7 @@ final class WallpaperPresetsViewModel: ObservableObject {
     /// Saves the shown display's properties, with its Scene Inspector edits, as `name`.
     func saveCurrent(named name: String) {
         perform("save preset \(name)") {
-            try store.save(name: name, values: targets.storedValues)
+            try store.save(name: name, values: currentValues)
             presets = try store.presets()
         }
     }
@@ -83,6 +83,13 @@ final class WallpaperPresetsViewModel: ObservableObject {
             }
             presets = try store.presets()
         }
+    }
+
+    /// The shown display's properties as they are: the saved values over the project's defaults,
+    /// so a wallpaper never edited still saves (and shares) every property, as WE's Save does.
+    private var currentValues: [String: String] {
+        definitions.filter { $0.value.type != "usershortcut" }.mapValues(\.defaultValue)
+            .merging(targets.storedValues) { _, stored in stored }
     }
 
     // MARK: Wallpaper Engine's Share JSON
