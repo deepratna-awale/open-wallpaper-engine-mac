@@ -92,28 +92,33 @@ struct GeneralPage: SettingsPage {
 }
 
 /// Every shortcut of the menu bar, grouped by menu (`AppShortcut.all`).
+/// Collapsed until the user opens it; the choice is remembered.
 struct KeyboardShortcutsSection: View {
+    @AppStorage("ShowsKeyboardShortcuts", store: .app) private var isExpanded = false
+
     var body: some View {
         Section {
-            ForEach(AppShortcut.Menu.allCases, id: \.self) { menu in
-                let shortcuts = AppShortcut.all.filter { $0.menu == menu }
-                if !shortcuts.isEmpty {
-                    Text(menu.title)
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                    ForEach(shortcuts) { shortcut in
-                        HStack {
-                            Text(shortcut.title)
-                            Spacer()
-                            Text(verbatim: shortcut.symbols)
-                                .font(.body.monospaced())
-                                .foregroundStyle(.secondary)
+            DisclosureGroup(isExpanded: $isExpanded) {
+                ForEach(AppShortcut.Menu.allCases, id: \.self) { menu in
+                    let shortcuts = AppShortcut.all.filter { $0.menu == menu }
+                    if !shortcuts.isEmpty {
+                        Text(menu.title)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                        ForEach(shortcuts) { shortcut in
+                            HStack {
+                                Text(shortcut.title)
+                                Spacer()
+                                Text(verbatim: shortcut.symbols)
+                                    .font(.body.monospaced())
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                     }
                 }
+            } label: {
+                Label("Keyboard Shortcuts", systemImage: "keyboard")
             }
-        } header: {
-            Label("Keyboard Shortcuts", systemImage: "keyboard")
         } footer: {
             Text("The same shortcuts are shown in the menus. You can change them in System Settings › Keyboard › Keyboard Shortcuts › App Shortcuts.")
         }
