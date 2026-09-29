@@ -3,6 +3,8 @@ import Darwin
 
 /// The app's helper runs, handled in `main.swift` before any app lifecycle starts:
 /// - `--print-shader-cache-key` prints this build's `ShaderCacheKey` as one line of JSON;
+/// - `--prepare-wallpapers <folders>` prepares arrived scenes the same way, and writes their
+///   loading snapshots (`SceneLoadingSnapshotStore`);
 /// - `--prewarm-shaders` compiles the shown and recent wallpapers into the shader caches
 ///   (`ShaderPrewarm`) with no UI, no Dock icon, no wallpaper windows, status item, audio capture
 ///   or asset installs, at background priority.
@@ -49,7 +51,11 @@ enum ShaderPrewarmCommand {
                 .compactMap { InstalledLibrary.wallpaper(at: URL(filePath: $0, directoryHint: .isDirectory), hiding: []) }
                 .filter { $0.project.type.caseInsensitiveCompare("scene") == .orderedSame }
                 .map { ShaderPrewarmTargets.Target(wallpaper: $0, display: display) }
-            report = ShaderPrewarm(defaults: .app).run(targets)
+            var prepare = ShaderPrewarm(defaults: .app)
+            // The picture shown while the wallpaper loads, at each display's size.
+            prepare.loadingSnapshots = .current
+            prepare.snapshotDisplays = displays.values.sorted { $0.drawableSize.x * $0.drawableSize.y > $1.drawableSize.x * $1.drawableSize.y }
+            report = prepare.run(targets)
             // The texture blobs the loads scheduled.
             var idle = false
             PreparationPool.shared.whenIdle { idle = true }

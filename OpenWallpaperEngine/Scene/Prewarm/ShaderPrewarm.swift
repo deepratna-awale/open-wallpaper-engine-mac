@@ -1,3 +1,4 @@
+import CoreGraphics
 import Metal
 import simd
 
@@ -29,6 +30,12 @@ struct ShaderPrewarm {
     /// Frames drawn per wallpaper before it counts as compiled once no pipeline is pending.
     var minimumFrames = 6
     var timeoutPerWallpaper: TimeInterval = 90
+    /// A prepare run's loading snapshots (`SceneLoadingSnapshotStore`): once a scene has compiled
+    /// and drawn for `snapshotSceneTime`, one frame per distinct size of `snapshotDisplays` is
+    /// read back and stored. Nil writes none.
+    var loadingSnapshots: SceneLoadingSnapshotStore?
+    var snapshotDisplays: [ShaderPrewarmTargets.Display] = []
+    var snapshotSceneTime: TimeInterval = 1
 
     init(defaults: UserDefaults,
          variantCacheDirectory: URL? = ShaderVariantTranslator.defaultCacheDirectory,
@@ -91,6 +98,7 @@ struct ShaderPrewarm {
         }
         defer { renderer.releaseContent() }
         renderer.renderSettings = renderSettings
+        renderer.setPlacement(Self.placement(from: defaults))
         renderer.sounds.setTargetGain(0)
         renderer.setContent(content)
         let deadline = Date().addingTimeInterval(timeoutPerWallpaper)
@@ -99,6 +107,7 @@ struct ShaderPrewarm {
             OWELog.error(.shader, "Shader prewarm: \(name) never got its content")
             return false
         }
+        let contentStarted = Date()
         let viewport = SceneViewport(drawableSize: target.display.drawableSize, pointSize: target.display.pointSize,
                                      cursor: nil, frameRateLimit: 30)
         var frames = 0
@@ -117,7 +126,51 @@ struct ShaderPrewarm {
             settledFrames = renderer.hasPendingEffectPipelines ? 0 : settledFrames + 1
         }
         OWELog.debug(.shader, "Shader prewarm: \(name) compiled in \(frames) frames")
+        writeLoadingSnapshots(renderer, wallpaperDirectory: target.wallpaper.wallpaperDirectory, viewport: viewport,
+                              contentStarted: contentStarted, deadline: deadline)
         return true
+    }
+
+    /// Draws on until the scene has run `snapshotSceneTime` (intros and particles settle), then
+    /// reads back one frame per display size into `loadingSnapshots`.
+    private func writeLoadingSnapshots(_ renderer: SceneMetalRenderer, wallpaperDirectory: URL, viewport: SceneViewport,
+                                       contentStarted: Date, deadline: Date) {
+        guard let store = loadingSnapshots, !snapshotDisplays.isEmpty,
+              let contentKey = SceneLoadingSnapshotStore.contentKey(for: wallpaperDirectory) else { return }
+        let name = wallpaperDirectory.lastPathComponent
+        while Date().timeIntervalSince(contentStarted) < snapshotSceneTime, Date() < deadline {
+            renderer.renderShared([viewport])
+            renderer.lastCommandBuffer?.waitUntilCompleted()
+            RunLoop.main.run(until: Date().addingTimeInterval(1.0 / 30))
+        }
+        var sizes = Set<SIMD2<Int>>()
+        for display in snapshotDisplays {
+            let pixelSize = SIMD2(Int(display.drawableSize.x), Int(display.drawableSize.y))
+            guard sizes.insert(pixelSize).inserted else { continue }
+            let displayViewport = SceneViewport(drawableSize: display.drawableSize, pointSize: display.pointSize,
+                                                cursor: nil, frameRateLimit: 30)
+            renderer.renderShared([displayViewport])
+            let capture = SnapshotCapture()
+            guard renderer.captureSharedFrame(pixelSize: pixelSize, pixelsPerPoint: displayViewport.pixelsPerPoint,
+                                              completion: { capture.finish($0) }) else {
+                OWELog.error(.shader, "Loading snapshot: \(name) had no frame to capture")
+                continue
+            }
+            guard capture.done.wait(timeout: .now() + 10) == .success, let image = capture.image else {
+                OWELog.error(.shader, "Loading snapshot: \(name)'s \(pixelSize.x)×\(pixelSize.y) capture failed")
+                continue
+            }
+            do {
+                try store.write(image, forWallpaperAt: wallpaperDirectory, contentKey: contentKey)
+            } catch {
+                OWELog.error(.shader, "Loading snapshot: \(name)'s \(pixelSize.x)×\(pixelSize.y) snapshot not saved: \(error)")
+            }
+        }
+    }
+
+    /// The user's placement, which the snapshots are composited with as a display shows them.
+    private static func placement(from defaults: UserDefaults) -> WallpaperPlacement {
+        defaults.string(forKey: "WallpaperPlacement").flatMap(WallpaperPlacement.init(rawValue:)) ?? .fill
     }
 
     private static func globalSettings(from defaults: UserDefaults) -> GlobalSettings {
@@ -141,5 +194,17 @@ struct ShaderPrewarm {
             count += 1
         }
         return count
+    }
+}
+
+/// One capture's result, handed over from the Metal thread that completes it: `done` orders the
+/// write of `image` before the waiting thread reads it.
+private final class SnapshotCapture: @unchecked Sendable {
+    let done = DispatchSemaphore(value: 0)
+    private(set) var image: CGImage?
+
+    func finish(_ image: CGImage?) {
+        self.image = image
+        done.signal()
     }
 }
