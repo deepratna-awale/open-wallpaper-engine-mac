@@ -14,19 +14,17 @@ enum ParticleSystemBuilder {
                       source: SceneMetalTextureSource, spriteSheet: SpriteSheet?, material: WEMaterial,
                       materialPlan: ParticleMaterialPlan?, pixelUnits: Bool = true) -> SceneMetalParticleSystem {
         let renderer = particleSystem.renderer?.first
-        let emitter = particleSystem.emitter?.first
+        let emitters = Self.registeredEmitters(particleSystem.emitter ?? [], path: particlePath)
+        let emitter = emitters.first
         let defaults = ParticleDefaults(pixelUnits: pixelUnits)
-        for name in (particleSystem.emitter ?? []).compactMap(\.name) where !Self.supportedEmitters.contains(name.lowercased()) {
-            OWELog.error(.scene, "Particle system \(particlePath): emitter \(name) isn't supported; it emits as sphererandom")
-        }
-        for flags in (particleSystem.emitter ?? []).filter({ $0.name?.lowercased() == "layerimage" }).compactMap(\.flags)
+        for flags in emitters.filter({ $0.name?.lowercased() == "layerimage" }).compactMap(\.flags)
         where flags & 0x60000 != 0 {
             // 0x20000 samples the layer again every second (0x140238d4f); 0x40000 moves the points
             // with a puppet-warped layer's bones (0x1402397d3).
             OWELog.error(.scene, "Particle system \(particlePath): layerimage flags \(String(flags, radix: 16)) (resampling, puppet bones) aren't supported")
         }
-        // Emitter rate: 10 a second (0x1401b8e59).
-        let rate = Float(emitter?.rate ?? 10)
+        // Emitter rate: 10 a second (0x1401b8e59). Without an emitter nothing spawns.
+        let rate = emitter.map { Float($0.rate ?? 10) } ?? 0
         let draw = rendererDraw(renderer, particleSystem: particleSystem)
         // The built-in draw imitates refraction with faint, thin sprites; WE's shader refracts
         // with the particle's own alpha.
@@ -65,7 +63,7 @@ enum ParticleSystemBuilder {
             system.rateAudio = ParticleAudioResponse(emitter)
         }
         // WE runs every emitter, each with its own rate, burst and timing (0x1402378a0).
-        system.extraEmitters = (particleSystem.emitter ?? []).dropFirst().map { authored in
+        system.extraEmitters = emitters.dropFirst().map { authored in
             ParticleEmitter(shape: emitterShape(authored, defaults: defaults), rate: max(Float(authored.rate ?? 10), 0),
                             instantaneous: max(authored.instantaneous ?? 0, 0),
                             timing: ParticleEmitterTiming(authored), audio: ParticleAudioResponse(authored))
@@ -97,12 +95,14 @@ enum ParticleSystemBuilder {
     /// A renderer's fields with WE's defaults (`sprite` without one); its material is the caller's.
     static func rendererDraw(_ renderer: WEParticleRenderer?, particleSystem: WEParticleSystem) -> ParticleRendererDraw {
         let trail = ParticleRendererDefaults(renderer)
+        // The emitters WE registers (`registeredEmitters`, without its log).
+        let emitters = (particleSystem.emitter ?? []).filter { supportedEmitters.contains($0.name?.lowercased() ?? "") }
         return ParticleRendererDraw(
             name: renderer?.name ?? "sprite", trailLength: trail.length,
             trailLengthLimits: SIMD2(trail.maximumLength, trail.minimumLength), trailSegments: trail.segments,
             ropeSubdivision: trail.subdivision, fadeTrailAlpha: renderer?.fadealpha ?? false,
             fadeTrailSize: renderer?.fadesize ?? false, orientation: ParticleOrientation(renderer),
-            ropeUV: ParticleRopeUV(renderer, rate: ropeRate(particleSystem.emitter ?? []),
+            ropeUV: ParticleRopeUV(renderer, rate: ropeRate(emitters),
                                    lifetime: ropeLifetime(particleSystem.initializer ?? [])))
     }
 
@@ -124,8 +124,23 @@ enum ParticleSystemBuilder {
         }
     }
 
-    /// The emitters `wallpaper64.exe` registers.
+    /// The emitters `wallpaper64.exe` registers: its parser compares each element's `name`,
+    /// ignoring case, with these three and knows no other shape (0x1401c5c75, 0x1401c6390,
+    /// 0x1401c6add).
     static let supportedEmitters: Set<String> = ["sphererandom", "boxrandom", "layerimage"]
+
+    /// The authored emitters WE builds, in order. An element whose `name` is missing or isn't one
+    /// of `supportedEmitters` is skipped (the parser jumps to the next element, 0x1401c6fdf): it
+    /// neither spawns nor counts as the system's first emitter.
+    static func registeredEmitters(_ authored: [WEParticleEmitter], path: String) -> [WEParticleEmitter] {
+        authored.filter { emitter in
+            guard let name = emitter.name?.lowercased(), supportedEmitters.contains(name) else {
+                OWELog.info(.scene, "Particle system \(path): emitter \(emitter.name ?? "without a name") isn't one of WE's; skipped as WE does")
+                return false
+            }
+            return true
+        }
+    }
 
     /// The emitter's shape (sphere defaults 0x1401b9100, box 0x1401b9520; shared fields 0x1401b8df0).
     static func emitterShape(_ emitter: WEParticleEmitter, defaults: ParticleDefaults) -> ParticleEmitterShape {
