@@ -90,12 +90,14 @@
 
     // MARK: orientation
 
-    // `lookAt(center, up?)`: the basis of `lookAtRH` (0x14019d920: f = normalize(center − eye),
-    // s = normalize(f × up), u = s × f) as the rows (s, u, −f), as WE writes a camera layer's
-    // angles back from its path (0x1401f31f2; SceneWorldMatrix.lookAtAngles): the layer's local −z
-    // then points at `center`. The eye is the layer's `origin`, so `center` is in its parent's
-    // space [I: the member's eye is the object's own origin, as the camera path's is]. A centre on
-    // the eye, or an up along the view, leaves the angles as they are.
+    // `lookAt(center, up?)` (0x1401dfc00; `lookAtYaw` 0x1401dfe30): the basis of `lookAtRH`
+    // (0x14019d920: f = normalize(target − eye), s = normalize(f × up), u = s × f) as the rows
+    // (s, u, −f), extracted as WE writes a camera layer's angles back from its path (0x1401f31f2;
+    // SceneWorldMatrix.lookAtAngles). The eye is the layer's `origin` (+0x128), so `center` is in
+    // its parent's space. WE aims a camera (object type 8, vtable +0x60) at `center`, so its −z
+    // points there; any other object at the mirror image eye − (center − eye) (0x1401dfcc5), so
+    // its +z, the side an image shows, points at `center`. A centre on the eye, or an up along
+    // the view, leaves the angles as they are.
     function lookAt(layer, center, up, yawOnly) {
         const c = vector(center);
         if (c === undefined || layer._dead) return;
@@ -111,6 +113,7 @@
             const along = dot(direction, axis);
             direction = [direction[0] - along * axis[0], direction[1] - along * axis[1], direction[2] - along * axis[2]];
         }
+        if (layer._record.kind !== 'camera') direction = [-direction[0], -direction[1], -direction[2]];
         const f = normalized(direction);
         if (f === undefined) return;
         const s = normalized(cross(f, u));

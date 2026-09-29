@@ -57,16 +57,19 @@ final class SceneScriptLayerTransformTests: XCTestCase {
         XCTAssertEqual(string(f, "angles(group)"), "90,0,90", "no vector: nothing")
     }
 
-    /// The camera path's basis (0x14019d920 → 0x1401f31f2): the layer's local −z points at the
-    /// centre; `lookAtYaw` drops the part along `up`.
+    /// The camera path's basis (0x14019d920 → 0x1401f31f2): a layer's local +z points at the
+    /// centre (WE aims it at the mirror image, 0x1401dfcc5), a camera's −z; `lookAtYaw` drops the
+    /// part along `up`.
     func testLookAtAndLookAtYaw() throws {
         _ = try Fixtures.assets()
         let f = try fixture()
-        f.evaluate("group.origin = new Vec3(0, 0, 0); group.lookAt(new Vec3(0, 5, -5));")
-        XCTAssertEqual(string(f, "angles(group)"), "45,0,0", "pitched up 45°")
-        f.evaluate("group.lookAtYaw(new Vec3(0, 5, -5));")
+        f.evaluate("group.origin = new Vec3(0, 0, 0); group.lookAt(new Vec3(0, -5, 5));")
+        XCTAssertEqual(string(f, "angles(group)"), "45,0,0", "+z down and forward: pitched up 45°")
+        f.evaluate("group.lookAtYaw(new Vec3(0, -5, 5));")
         XCTAssertEqual(string(f, "angles(group)"), "0,0,0", "upright: the heading alone")
-        f.evaluate("group.lookAtYaw(new Vec3(5, 5, 0));")
+        f.evaluate("group._record.kind = 'camera'; group.lookAt(new Vec3(0, 5, -5)); group._record.kind = 'group';")
+        XCTAssertEqual(string(f, "angles(group)"), "45,0,0", "a camera's −z points at the centre")
+        f.evaluate("group.lookAtYaw(new Vec3(-5, 5, 0));")
         XCTAssertEqual(string(f, "var m = group.angles; Math.round(m.y)"), "-90", "a heading along +x")
         // Relative to the layer's origin; a centre on the eye or an up along the view changes nothing.
         f.evaluate("""
@@ -74,7 +77,7 @@ final class SceneScriptLayerTransformTests: XCTestCase {
             group.lookAt(new Vec3(10, 0, 0)); group.lookAt(new Vec3(10, 5, 0), new Vec3(0, 1, 0)); group.lookAt();
             """)
         XCTAssertEqual(string(f, "angles(group)"), "0,0,0")
-        f.evaluate("group.lookAt(new Vec3(10, 5, -5), new Vec3(0, 1, 0));")
+        f.evaluate("group.lookAt(new Vec3(10, -5, 5), new Vec3(0, 1, 0));")
         XCTAssertEqual(string(f, "angles(group)"), "45,0,0")
     }
 
