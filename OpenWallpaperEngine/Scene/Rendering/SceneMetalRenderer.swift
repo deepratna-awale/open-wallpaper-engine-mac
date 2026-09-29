@@ -1125,6 +1125,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let renderDrawable = SceneRenderResolution.drawableSize(viewports, resolution: renderSettings.renderResolution)
         renderPixelsPerUnit = SceneRenderResolution.pixelsPerUnit(sceneSize: sceneSize, drawableSize: renderDrawable,
                                                                   matchDisplay: renderSettings.sceneDetail == .matchDisplay)
+        // A scene that is one plain video draws it at exactly the display's density, so a target the
+        // size of the drawable lets the video draw straight into it in one pass (S2), not into a
+        // larger target resampled again by the composite.
+        if let exact = videoOnlyPixelsPerUnit(renderDrawable) { renderPixelsPerUnit = exact }
         // A scene matched to a smaller display is drawn below full detail: what its buffers stand for.
         fullDetailScale = SceneRenderResolution.pixelsPerUnit(sceneSize: sceneSize, drawableSize: renderDrawable) / renderPixelsPerUnit
         // A content drawn in HDR draws into RGBA16F (docs/lighting-plan.md §2.6).
@@ -3129,6 +3133,18 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var pipelinesCompiling: Bool {
         hasPendingEffectPipelines || imageMaterials?.hasPendingPipelines == true
             || particleMaterials?.hasPendingPipelines == true
+    }
+
+    /// The unquantised pixels per unit that sizes the scene target to `drawable` when the scene is
+    /// a single effect-less video filling it at the same aspect; nil otherwise.
+    private func videoOnlyPixelsPerUnit(_ drawable: SIMD2<Float>) -> Float? {
+        guard layers.count == 1, case .video = layers[0].layer.source, layers[0].layer.weEffects.isEmpty,
+              particleSystems.isEmpty, spatial.models.isEmpty, !scripts.isRunning,
+              sceneSize.x > 0, sceneSize.y > 0, drawable.x > 0, drawable.y > 0 else { return nil }
+        let exact = drawable.x / sceneSize.x
+        guard abs(sceneSize.y * exact - drawable.y) < 0.5,
+              max(drawable.x, drawable.y) <= SceneRenderResolution.maximumTextureDimension else { return nil }
+        return exact
     }
 
     /// Hands this frame's inputs to the layer analysis, which marks the layers they change dirty.
