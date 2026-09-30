@@ -87,7 +87,7 @@ extension AppDelegate {
                         continue
                     }
                     DispatchQueue.global(qos: .utility).async {
-                        WallpaperPackageConverter.convertIfNeeded(wallpaperDirectory: dest)
+                        WallpaperPreparation.prepare(wallpaperDirectory: dest)
                     }
                 }
                 for url in zipURLs {

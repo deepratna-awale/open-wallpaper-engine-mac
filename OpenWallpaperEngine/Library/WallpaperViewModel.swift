@@ -363,6 +363,9 @@ class WallpaperViewModel: ObservableObject {
                     try fileManager.copyItem(at: url, to: destination.appending(path: fileName))
                     if let previewData { try previewData.write(to: destination.appending(path: "preview.jpg"), options: .atomic) }
                     try JSONEncoder().encode(project).write(to: destination.appending(path: "project.json"), options: .atomic)
+                    DispatchQueue.global(qos: .utility).async {
+                        WallpaperPreparation.prepareVideo(wallpaperDirectory: destination)
+                    }
                 } catch {
                     OWELog.error(.importer, "Failed to import video: \(error.localizedDescription)")
                 }

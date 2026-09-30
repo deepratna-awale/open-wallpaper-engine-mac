@@ -719,7 +719,9 @@ class SceneWallpaperViewModel: ObservableObject {
     /// Wallpaper Engine's own `scenes/videoplayer` does.
     private func videoContent() -> SceneMetalContent? {
         guard let device = MTLCreateSystemDefaultDevice() else { return nil }
-        let url = currentWallpaper.mediaURL
+        // Runs on the content queue: a video AVFoundation refuses as it is plays from its repaired
+        // copy, made here on first play when the import didn't make it.
+        let url = videoStream == nil ? RepairedVideoCache.current.playableURL(for: currentWallpaper.mediaURL) : currentWallpaper.mediaURL
         let stream = videoStream ?? VideoTextureStream(url: url, device: device)
         guard let stream else {
             OWELog.error(.scene, "Could not open video \(url.lastPathComponent) for Metal playback")
