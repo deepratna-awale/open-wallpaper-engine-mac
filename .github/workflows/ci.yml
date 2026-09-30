@@ -187,8 +187,10 @@ jobs:
           Scripts/ci-run-tests.sh "$XCTESTRUN" build/classes.txt build/results
 
       - name: List the failing tests
+        # Parallel runs print only "failed" per test; the result bundles hold the assertion text.
+        # It goes to the log and the job summary.
         if: failure()
-        run: python3 Scripts/ci-test-summary.py build/results/parallel.xcresult build/results/serial.xcresult >> "$GITHUB_STEP_SUMMARY"
+        run: python3 Scripts/ci-test-summary.py build/results/parallel.xcresult build/results/serial.xcresult | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Upload the results
         if: failure()
@@ -294,8 +296,9 @@ jobs:
           Scripts/ci-run-tests.sh "$XCTESTRUN" build/classes.txt build/results
 
       - name: List the failing tests
+        # To the log and the job summary.
         if: failure()
-        run: python3 Scripts/ci-test-summary.py build/results/parallel.xcresult build/results/serial.xcresult >> "$GITHUB_STEP_SUMMARY"
+        run: python3 Scripts/ci-test-summary.py build/results/parallel.xcresult build/results/serial.xcresult | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Upload the results
         # The log and the result bundles only; never the assets.

@@ -14,8 +14,8 @@
 # within one. Class patterns are shell-style (`Web*`); `@name` expands a group from `groups`.
 # `always` lists the classes that run whenever any class runs.
 #
-# `serial` lists the classes that flake under three parallel workers' CPU/GPU contention (timing
-# and frame-timed render classes). Every shard runs its parallel part first without them, then
+# `serial` lists the classes that flake under three parallel workers' CPU/GPU contention (timing,
+# frame-timed render and heavy GPU simulation classes). Every shard runs its parallel part first without them, then
 # runs its own serial classes one at a time.
 
 serial:
@@ -25,6 +25,7 @@ serial:
   - SceneScriptRenderTests
   - ParticleEmitterTimingTests
   - ParticleSimulationPerformanceTests
+  - ParticleSimulationParityTests
   - SceneFrameBenchmarkTests
   - SceneDisplayOutputTests
   - SceneHDRRenderTests
