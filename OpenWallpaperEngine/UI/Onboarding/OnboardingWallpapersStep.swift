@@ -45,7 +45,7 @@ final class OnboardingImports: ObservableObject {
         for folder in folders {
             DownloadedWallpaperIndex.shared.insert(folder.lastPathComponent)
             DispatchQueue.global(qos: .utility).async {
-                WallpaperPackageConverter.convertIfNeeded(wallpaperDirectory: folder)
+                WallpaperPreparation.prepare(wallpaperDirectory: folder)
             }
             AppDelegate.shared.workshopDependencies.ensureDependencies(ofItemAt: folder)
         }

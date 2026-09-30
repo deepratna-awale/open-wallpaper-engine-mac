@@ -88,5 +88,26 @@ struct AudioReactiveVideoWallpaperView: View {
                 }
                 .clipped()
         }
+        .overlay { VideoPreparationOverlay(viewModel: viewModel) }
+    }
+}
+
+/// "Preparing video…" while the video's playable copy is made (`RepairedVideoCache`).
+private struct VideoPreparationOverlay: View {
+    @ObservedObject var viewModel: VideoWallpaperViewModel
+
+    var body: some View {
+        if viewModel.isPreparingVideo {
+            ZStack {
+                Color.black
+                VStack(spacing: 10) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text("Preparing video…")
+                }
+                .foregroundStyle(.white.opacity(0.75))
+            }
+            .ignoresSafeArea()
+        }
     }
 }

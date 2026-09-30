@@ -439,7 +439,7 @@ class SteamCmdService: ObservableObject {
         let isNew = outcome.isNewInstall
         if isNew {
             DispatchQueue.global(qos: .utility).async {
-                WallpaperPackageConverter.convertIfNeeded(wallpaperDirectory: destination)
+                WallpaperPreparation.prepare(wallpaperDirectory: destination)
             }
         }
         if asDependency {
@@ -544,7 +544,7 @@ class SteamCmdService: ObservableObject {
         let destination = outcome.directory
         if outcome.isNewInstall {
             DispatchQueue.global(qos: .utility).async {
-                WallpaperPackageConverter.convertIfNeeded(wallpaperDirectory: destination)
+                WallpaperPreparation.prepare(wallpaperDirectory: destination)
             }
         }
         dependencyIndex.recordUserDownload(workshopId)

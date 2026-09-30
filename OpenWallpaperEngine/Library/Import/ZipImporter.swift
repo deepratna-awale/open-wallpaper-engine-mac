@@ -44,7 +44,7 @@ enum ZipImporter {
                 do {
                     try ImportedFolderLinks.copyWithoutLinks(from: url, to: target)
                     DispatchQueue.global(qos: .utility).async {
-                        WallpaperPackageConverter.convertIfNeeded(wallpaperDirectory: target)
+                        WallpaperPreparation.prepare(wallpaperDirectory: target)
                     }
                     imported += 1
                 } catch {
