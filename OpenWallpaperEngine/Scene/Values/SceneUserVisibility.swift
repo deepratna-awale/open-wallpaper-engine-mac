@@ -16,8 +16,9 @@ struct SceneUserVisibility: Equatable {
         func isShown(_ userProperty: (String) -> String?) -> Bool {
             guard let property else { return visible != false }
             guard let selected = userProperty(property) else { return visible != false }
-            if let condition { return SceneUserVisibility.normalizeVariant(condition) == SceneUserVisibility.normalizeVariant(selected) }
-            return selected.caseInsensitiveCompare("true") == .orderedSame || selected == "1"
+            // The binding's own resolution (`UserPropertyValueConversion`), as its parser reads it.
+            let value = UserPropertyValueConversion.siteValue(selected, condition: condition, default: .bool(visible != false))
+            return value == .bool(true)
         }
     }
 

@@ -42,6 +42,7 @@ class SceneWallpaperViewModel: ObservableObject {
     private var loadedTextureReductionSize: SIMD2<Float>?
     private var loadedContentUserProperties = Set<String>()
     private var loadedEditingContentUserProperties = Set<String>()
+    private var loadedBindingTable = UserPropertyBindingTable()
     /// The newest load; an older one that finishes later is dropped.
     private var loadGeneration = 0
     private var loadJob: PreparationPool.Job?
@@ -104,6 +105,9 @@ class SceneWallpaperViewModel: ObservableObject {
     /// `contentUserProperties` while the user edits properties (`ScenePropertyEditing`): fewer
     /// sites need a rebuild then (`SceneLiveBindingSites`).
     var editingContentUserProperties: Set<String> { stateLock.withLock { loadedEditingContentUserProperties } }
+    /// Every user-property binding of the loaded scene and the documents its build read; every
+    /// bound value the build decodes is resolved through it.
+    var bindingTable: UserPropertyBindingTable { stateLock.withLock { loadedBindingTable } }
     /// The loaded scene has SceneScripts.
     private var hasScriptSites = false
     private var loadedWallpaperDirectory: URL?
@@ -265,6 +269,7 @@ class SceneWallpaperViewModel: ObservableObject {
         var source = "parsed"
         var contentUserProperties = Set<String>()
         var editingContentUserProperties = Set<String>()
+        var bindingTable = UserPropertyBindingTable()
         var hasScriptSites = false
     }
 
@@ -368,6 +373,7 @@ class SceneWallpaperViewModel: ObservableObject {
                                         document: read.document), for: dir)
         }
         if let document = read.document {
+            read.bindingTable.record(.scene, json: document)
             read.contentUserProperties = Self.contentUserProperties(in: document)
             read.editingContentUserProperties = Self.contentUserProperties(in: document, editing: true)
             read.hasScriptSites = !SceneScriptSiteBuilder(wallpaperID: "").sites(in: document).isEmpty
@@ -431,6 +437,7 @@ class SceneWallpaperViewModel: ObservableObject {
         stateLock.withLock {
             loadedContentUserProperties = read.contentUserProperties
             loadedEditingContentUserProperties = read.editingContentUserProperties
+            loadedBindingTable = read.bindingTable
             loadedTextureReductionSize = TextureReduction.orthographicSize(of: scene)
         }
         bumpRevision()
@@ -652,11 +659,10 @@ class SceneWallpaperViewModel: ObservableObject {
         defer { signpost.end() }
         defer { endBuildTextures() }
         guard let authoredScene = loadedScene, let wallpaperDir = loadedWallpaperDirectory else { return nil }
-        // Content is built from what the user properties say; a property change rebuilds it.
+        // Content is built from what the user properties say (`bindingTable`).
         let valueContext = userValueContext
-        var scene = authoredScene
-        scene.objects = SceneObjectIdentity.assigningFallbackIDs(
-            authoredScene.objects.map { $0.resolvingUserBindings(in: valueContext) })
+        var scene = resolvedScene(authoredScene)
+        scene.objects = SceneObjectIdentity.assigningFallbackIDs(scene.objects)
         let sceneSize = metalSceneSize(for: scene)
         if scene.general.projection == .orthographicAuto { Self.centreFirstImage(of: &scene, sceneSize: sceneSize) }
         let bloom = bloomSettings(for: scene.general)
@@ -671,16 +677,20 @@ class SceneWallpaperViewModel: ObservableObject {
         let authoredTransforms = SceneTransformHierarchy(objects: scene.objects, sceneSize: sceneSize)
         // WE draws objects in scene.json order; both lists carry that index so the renderer can interleave them.
         let layers: [SceneMetalLayer] = scene.objects.enumerated().compactMap { index, object in
-            var layer = buildLayer(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize, context: valueContext)
+            var layer = bindingTable.building(.object(object.id ?? index)) {
+                buildLayer(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize, context: valueContext)
+            }
             layer?.order = index
             return layer
         }
         var particleSystems: [SceneMetalParticleSystem] = []
         for (index, object) in scene.objects.enumerated() {
             let base = particleSystems.count
-            for var system in buildParticleFamily(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
-                                                  pixelUnits: Self.particlesUsePixelUnits(scene),
-                                                  transforms: authoredTransforms) {
+            let family = bindingTable.building(.object(object.id ?? index)) {
+                buildParticleFamily(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
+                                    pixelUnits: Self.particlesUsePixelUnits(scene), transforms: authoredTransforms)
+            }
+            for var system in family {
                 system.order = index
                 system.link?.parentIndex += base
                 particleSystems.append(system)
@@ -870,16 +880,15 @@ class SceneWallpaperViewModel: ObservableObject {
         sceneLock.lock()
         defer { sceneLock.unlock() }
         defer { endBuildTextures() }
-        let object: WESceneObject
+        let context = userValueContext
+        let resolved: WESceneObject
         do {
-            let data = try JSONSerialization.data(withJSONObject: SceneJSON.object(json).foundationObject)
-            object = try JSONDecoder().decode(WESceneObject.self, from: data)
+            resolved = try UserPropertyBindingTable.decode(
+                WESceneObject.self, from: UserPropertyBindingTable.resolving(.object(json), properties: userProperty))
         } catch {
             OWELog.error(.script, "createLayer: the object can't be decoded: \(error)")
             return nil
         }
-        let context = userValueContext
-        let resolved = object.resolvingUserBindings(in: context)
         if resolved.particle != nil {
             var systems = buildParticleFamily(resolved, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
                                               pixelUnits: loadedScene.map(Self.particlesUsePixelUnits) ?? true,
@@ -945,6 +954,18 @@ class SceneWallpaperViewModel: ObservableObject {
     }
 
     /// Resolves user-bound values against this wallpaper's properties.
+    /// The loaded scene with its user bindings resolved (`UserPropertyBindingTable.resolvedScene`);
+    /// the authored scene, logged, when the resolved document can't be decoded.
+    private func resolvedScene(_ authored: WEScene) -> WEScene {
+        guard let document = loadedDocument?.document else { return authored }
+        do {
+            return try bindingTable.resolvedScene(authored, document: document, properties: userProperty)
+        } catch {
+            OWELog.error(.scene, "\(currentWallpaper.project.title): scene.json can't be decoded with its user properties: \(error)")
+            return authored
+        }
+    }
+
     private var userValueContext: LiveSceneValueContext {
         LiveSceneValueContext(wallpaper: propertyStoreKey)
     }
@@ -1491,7 +1512,10 @@ class SceneWallpaperViewModel: ObservableObject {
                 self?.loadMetalTexture(named: name, materialDir: materialPath, wallpaperDir: wallpaperDir)
             },
             sceneEngineCombos: sceneEngineCombos,
-            readWallpaperFile: { [weak self] path in self?.wallpaperData(named: path, wallpaperDir: wallpaperDir) })
+            readWallpaperFile: { [weak self] path in
+                guard let self, let data = self.wallpaperData(named: path, wallpaperDir: wallpaperDir) else { return nil }
+                return self.bindingTable.resolvedData(data, path: path, properties: self.userProperty)
+            })
         builder.objectCombos = objectCombos
         var plans: [SceneEffectPlan] = []
         var handled = Set<Int>()
@@ -1788,14 +1812,22 @@ class SceneWallpaperViewModel: ObservableObject {
         let data: Data
         if let values = UserDefaults.app.dictionary(forKey: storageKey) as? [String: String],
            let override = values[overrideKey], let overrideData = override.data(using: .utf8) {
-            data = overrideData
+            data = bindingTable.resolvedData(overrideData, path: path, properties: userProperty)
         } else {
             data = original
         }
         return try? JSONDecoder().decode(T.self, from: data)
     }
 
+    /// The file at `path` as the build reads it: a JSON document with its user bindings resolved
+    /// and recorded (`bindingTable`), any other file as it is.
     private func assetData(named path: String, wallpaperDir: URL) -> Data? {
+        rawAssetData(named: path, wallpaperDir: wallpaperDir).map {
+            bindingTable.resolvedData($0, path: path, properties: userProperty)
+        }
+    }
+
+    private func rawAssetData(named path: String, wallpaperDir: URL) -> Data? {
         if let cached = assetDataCache[path] { return cached }
         // WE's fixed copy of a broken Workshop shader replaces the one the wallpaper ships.
         if let fixed = shaderCompat?.replacement(forShaderPath: path, projectId: loadedProjectId) {

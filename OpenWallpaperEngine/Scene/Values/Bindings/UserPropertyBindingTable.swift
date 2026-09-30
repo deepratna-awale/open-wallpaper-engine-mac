@@ -73,6 +73,11 @@ final class UserPropertyBindingTable {
         lock.withLock { bindingsByDocument.values.flatMap { $0.filter { $0.name == name } } }
     }
 
+    /// Whether `document` binds anything.
+    func hasBindings(in document: UserPropertyBindingDocument) -> Bool {
+        lock.withLock { !(bindingsByDocument[document] ?? []).isEmpty }
+    }
+
     /// Every user property some binding reads.
     var propertyNames: Set<String> {
         lock.withLock { Set(bindingsByDocument.values.flatMap { $0.map(\.name) }) }
@@ -96,7 +101,13 @@ final class UserPropertyBindingTable {
     /// `binding`'s value: the property converted to the site's type, else the authored value.
     static func value(of binding: UserPropertyBinding, properties: (String) -> String?) -> SceneJSON {
         guard let text = properties(binding.name) else { return binding.defaultValue ?? .null }
-        return UserPropertyValueConversion.siteValue(text, condition: binding.condition, default: binding.defaultValue)
+        let value = UserPropertyValueConversion.siteValue(text, condition: binding.condition, default: binding.defaultValue)
+        // A scalar property (a slider) bound to a scale or colour sets every axis or channel.
+        guard binding.target == .objectField(.scale) || binding.target == .objectField(.color),
+              case .string(let resolved) = value, let scalar = ShaderValue(string: resolved), scalar.components.count == 1,
+              case .string(let authored)? = binding.defaultValue,
+              let width = ShaderValue(string: authored)?.components.count, width > 1 else { return value }
+        return .string(Array(repeating: resolved.trimmingCharacters(in: .whitespaces), count: width).joined(separator: " "))
     }
 
     /// `json` (the document recorded as `document`) with every bound `value` replaced by its

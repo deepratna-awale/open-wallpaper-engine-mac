@@ -120,7 +120,9 @@ final class UserPropertyBindingTableTests: XCTestCase {
     func testValueConversion() {
         typealias C = UserPropertyValueConversion
         XCTAssertEqual(C.siteValue("2", condition: "2.0", default: .bool(false)), .bool(true))
-        XCTAssertEqual(C.siteValue("Two", condition: "two", default: .bool(true)), .bool(false))
+        XCTAssertEqual(C.siteValue("Two", condition: "two", default: .bool(false)), .bool(true), "a combo option, loosely")
+        XCTAssertEqual(C.siteValue("Two", condition: "three", default: .bool(true)), .bool(false))
+        XCTAssertEqual(C.siteValue("2", condition: "2", default: .number(0)), .number(1), "in the authored type")
         XCTAssertEqual(C.siteValue("false", condition: nil, default: .bool(true)), .bool(false))
         XCTAssertEqual(C.siteValue("0.25", condition: nil, default: .number(1)), .number(0.25))
         XCTAssertEqual(C.siteValue("true", condition: nil, default: .number(0)), .number(1))

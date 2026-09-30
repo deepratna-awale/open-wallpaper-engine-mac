@@ -9,7 +9,15 @@ enum UserPropertyValueConversion {
     /// the type of the site's authored `value`. A property whose text has no meaning in that type
     /// (a non-numeric combo value bound to a number) leaves the authored value.
     static func siteValue(_ text: String, condition: String?, default authored: SceneJSON?) -> SceneJSON {
-        if let condition { return .bool(matches(text, condition)) }
+        if let condition {
+            // The flag, in the authored value's type (an `alpha` of 1 bound this way is 1 or 0).
+            let flag = matches(text, condition)
+            switch authored {
+            case .number?: return .number(flag ? 1 : 0)
+            case .string?: return .string(flag ? "1" : "0")
+            default: return .bool(flag)
+            }
+        }
         switch authored {
         case .bool?:
             if let flag = flag(text) { return .bool(flag) }
@@ -52,13 +60,13 @@ enum UserPropertyValueConversion {
         }
     }
 
-    /// WE condition compare: numeric when both sides are numbers ("1" == "1.0"), else string
-    /// equality.
+    /// WE condition compare: numeric when both sides are numbers ("1" == "1.0"), else the combo
+    /// option's letters and digits, ignoring case ("Two" == "two").
     static func matches(_ property: String, _ condition: String) -> Bool {
         let lhs = property.trimmingCharacters(in: .whitespaces)
         let rhs = condition.trimmingCharacters(in: .whitespaces)
         if let a = ShaderValue(string: lhs), let b = ShaderValue(string: rhs) { return a == b }
-        return lhs == rhs
+        return SceneUserVisibility.normalizeVariant(lhs) == SceneUserVisibility.normalizeVariant(rhs)
     }
 
     /// "true"/"false" (any case) and numbers (non-zero is true); nil for anything else.
