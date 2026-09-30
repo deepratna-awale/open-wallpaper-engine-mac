@@ -183,6 +183,13 @@ jobs:
             || { tail -40 build/enumeration.log; exit 1; }
           python3 Scripts/ci-test-plan.py check --enumeration build/enumeration.json
 
+      # Only the fixtures' shaders (the project's own) are translated here, so the cache is plain.
+      - id: shadercache
+        uses: ./.github/actions/shader-cache
+        with:
+          mode: restore
+          xcode-version: ${{ steps.xcode.outputs.version }}
+
       - name: Test
         env:
           SELECTION: ${{ needs.plan.outputs.selection }}
@@ -205,6 +212,14 @@ jobs:
           name: test-durations-${{ matrix.shard }}
           path: build/durations.csv
           retention-days: 30
+
+      # One shard saves, on main, what the run translated and compiled.
+      - uses: ./.github/actions/shader-cache
+        if: success() && matrix.shard == 1 && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        with:
+          mode: save
+          xcode-version: ${{ steps.xcode.outputs.version }}
+          skip: ${{ steps.shadercache.outputs.hit }}
 
       - name: List the failing tests
         # Parallel runs print only "failed" per test; the result bundles hold the assertion text.
@@ -311,6 +326,14 @@ jobs:
           echo "XCTESTRUN=${runs[0]}" >> "$GITHUB_ENV"
           python3 Scripts/ci-test-summary.py --env >> "$GITHUB_STEP_SUMMARY"
 
+      # Encrypted: here the cache holds MSL translated from Wallpaper Engine's shaders.
+      - id: shadercache
+        uses: ./.github/actions/shader-cache
+        with:
+          mode: restore
+          xcode-version: ${{ steps.xcode.outputs.version }}
+          encryption-key: ${{ secrets.OWE_ASSET_CACHE_KEY }}
+
       - name: Test with the assets
         # OWE_LIBRARY stays unset: the library-gated tests skip.
         env:
@@ -335,6 +358,14 @@ jobs:
           name: test-durations-assets-${{ matrix.shard }}
           path: build/durations.csv
           retention-days: 30
+
+      - uses: ./.github/actions/shader-cache
+        if: success() && matrix.shard == 1
+        with:
+          mode: save
+          xcode-version: ${{ steps.xcode.outputs.version }}
+          encryption-key: ${{ secrets.OWE_ASSET_CACHE_KEY }}
+          skip: ${{ steps.shadercache.outputs.hit }}
 
       - name: List the failing tests
         # To the log and the job summary.

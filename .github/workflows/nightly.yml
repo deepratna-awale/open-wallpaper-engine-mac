@@ -37,6 +37,14 @@ jobs:
       - name: Print the runner
         run: python3 Scripts/ci-test-summary.py --env >> "$GITHUB_STEP_SUMMARY"
 
+      # Encrypted: the cache holds MSL translated from Wallpaper Engine's shaders.
+      - id: shadercache
+        uses: ./.github/actions/shader-cache
+        with:
+          mode: restore
+          xcode-version: ${{ steps.xcode.outputs.version }}
+          encryption-key: ${{ secrets.OWE_ASSET_CACHE_KEY }}
+
       - name: Build and test, slow tests included
         # A failing test is retried once; a test that fails both times fails the run.
         env:
@@ -73,6 +81,14 @@ jobs:
           name: test-durations-nightly
           path: build/durations.csv
           retention-days: 30
+
+      - uses: ./.github/actions/shader-cache
+        if: success() && github.ref == 'refs/heads/main'
+        with:
+          mode: save
+          xcode-version: ${{ steps.xcode.outputs.version }}
+          encryption-key: ${{ secrets.OWE_ASSET_CACHE_KEY }}
+          skip: ${{ steps.shadercache.outputs.hit }}
 
       - name: List the failing tests
         if: failure()
