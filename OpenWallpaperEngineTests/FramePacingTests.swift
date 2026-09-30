@@ -155,6 +155,42 @@ final class FramePacingTests: XCTestCase {
         XCTAssertEqual(QualityEfficiency(stop: -1).stop, 1)
     }
 
+    /// Each preset sets a frame rate with its stop: Low 15, Medium 30, High 60, Ultra the display's
+    /// refresh; and no preset's stop caps smooth motion below its own rate.
+    @MainActor
+    func testPresetsSetTheFrameRate() {
+        let viewModel = GlobalSettingsViewModel()
+        let refresh = 180
+        for (preset, fps, rate) in [(GSQuality.low, 15.0, 15), (.medium, 30, 30), (.high, 60, 60), (.ultra, GlobalSettings.unlimitedFPS, refresh)] {
+            viewModel.settings.fpsSetByUser = true
+            viewModel.setQuality(preset)
+            XCTAssertEqual(viewModel.settings.fps, fps, "\(preset)")
+            XCTAssertFalse(viewModel.settings.fpsSetByUser, "\(preset)")
+            XCTAssertEqual(viewModel.settings.qualityEfficiency, QualityEfficiency(preset: preset).stop, "\(preset)")
+            var pacing = FramePacing()
+            pacing.limits = FramePacing.Limits(viewModel.settings, power: PowerPolicy(PowerState()))
+            XCTAssertEqual(FramePacing.cadence(pacing.rate(for: .smooth), refreshRate: refresh), rate, "\(preset)")
+            XCTAssertEqual(FramePacing.cadence(pacing.rate(for: .interactive), refreshRate: refresh), rate, "\(preset)")
+        }
+    }
+
+    /// An FPS the user set themselves wins over the stop's smooth-motion cap, unless power moves the stop.
+    func testTheUsersOwnFrameRateWinsOverTheStop() {
+        var settings = GlobalSettings()
+        settings.qualityEfficiency = 4
+        settings.fps = 90
+        var pacing = FramePacing()
+        pacing.limits = FramePacing.Limits(settings, power: PowerPolicy(PowerState()))
+        XCTAssertEqual(pacing.rate(for: .smooth), 30, "a preset's or the default rate: the stop caps it")
+        settings.fpsSetByUser = true
+        pacing.limits = FramePacing.Limits(settings, power: PowerPolicy(PowerState()))
+        XCTAssertEqual(pacing.rate(for: .smooth), 90)
+        pacing.limits = FramePacing.Limits(settings, power: PowerPolicy(PowerState(lowPowerMode: true)))
+        XCTAssertEqual(pacing.rate(for: .smooth), 30)
+        let decoded = try? JSONDecoder().decode(GlobalSettings.self, from: JSONEncoder().encode(settings))
+        XCTAssertEqual(decoded?.fpsSetByUser, true)
+    }
+
     func testThermalStateAndLowPowerModeMoveTheEffectiveStop() {
         var settings = GlobalSettings()
         settings.fps = 120

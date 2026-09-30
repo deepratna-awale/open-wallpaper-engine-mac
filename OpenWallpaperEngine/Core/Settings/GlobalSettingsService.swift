@@ -143,33 +143,31 @@ class GlobalSettingsViewModel: ObservableObject {
         self.settings.shadows = quality.shadows
         self.settings.volumetrics = quality.volumetrics
         self.settings.qualityEfficiency = QualityEfficiency(preset: quality).stop
+        self.settings.fps = quality.fps
+        self.settings.fpsSetByUser = false
         switch quality {
         case .low:
             self.settings.antiAliasing = .none
             self.settings.postProcessing = .disabled
             self.settings.textureResolution = .highQuality
-            self.settings.fps = 10
             self.settings.reflections = false
             self.settings.particleBudget = .low
         case .medium:
             self.settings.antiAliasing = .none
             self.settings.postProcessing = .enabled
             self.settings.textureResolution = .highQuality
-            self.settings.fps = 15
             self.settings.reflections = true
             self.settings.particleBudget = .medium
         case .high:
             self.settings.antiAliasing = .msaa_x2
             self.settings.postProcessing = .enabled
             self.settings.textureResolution = .highQuality
-            self.settings.fps = 25
             self.settings.reflections = true
             self.settings.particleBudget = .high
         case .ultra:
             self.settings.antiAliasing = .msaa_x2
             self.settings.postProcessing = .ultra
             self.settings.textureResolution = .highQuality
-            self.settings.fps = 30
             self.settings.reflections = true
             self.settings.particleBudget = .unlimited
         }

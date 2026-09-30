@@ -140,6 +140,8 @@ struct FramePacing: Equatable {
         /// WE's FPS setting.
         var userLimit = 30
         var policy = QualityEfficiency()
+        /// The user set `userLimit` themselves: smooth motion runs at it, past the stop's cap.
+        var userLimitWins = false
         /// The power policy's cap (N10: 30 at `.critical`), nil for none.
         var powerCap: Int?
     }
@@ -227,7 +229,7 @@ struct FramePacing: Equatable {
         var rate: Int
         switch demand {
         case .interactive: rate = user
-        case .smooth: rate = min(user, limits.policy.smoothRateCap ?? user)
+        case .smooth: rate = limits.userLimitWins ? user : min(user, limits.policy.smoothRateCap ?? user)
         case .slow: rate = min(user, limits.policy.slowRate)
         case .idle: rate = min(user, changesOnItsOwn ? limits.policy.slowRate : Self.eventOnlyProbeRate)
         }
@@ -247,11 +249,16 @@ struct FramePacing: Equatable {
 }
 
 extension FramePacing.Limits {
+    /// The display's refresh bounds an unlimited FPS setting (`cadence`); this stands for it.
+    static let unlimitedRate = 1000
+
     /// The user's FPS setting and slider stop, moved towards efficiency by thermal state and Low
-    /// Power Mode (N10: `PowerPolicy.effectiveStop`, and 30 fps at `.critical`).
+    /// Power Mode (N10: `PowerPolicy.effectiveStop`, and 30 fps at `.critical`). An FPS the user
+    /// set themselves wins over the stop's smooth-motion cap unless power moves the stop.
     init(_ settings: GlobalSettings, power: PowerPolicy) {
-        self.init(userLimit: Int(settings.fps.rounded()),
+        self.init(userLimit: settings.fps >= GlobalSettings.unlimitedFPS ? Self.unlimitedRate : Int(settings.fps.rounded()),
                   policy: QualityEfficiency(stop: power.effectiveStop(settings.qualityEfficiency)),
+                  userLimitWins: settings.fpsSetByUser && power.efficiencySteps == 0,
                   powerCap: power.frameRateCap)
     }
 }

@@ -175,7 +175,7 @@ struct PerformancePage: SettingsPage {
                                     ? "High FPS may slow down your Mac! We're serious, this is too much 🔥."
                                     : "High FPS may slow down your Mac!")
                     Spacer()
-                    NumericSliderInput(value: $viewModel.settings.fps, range: 10...120,
+                    NumericSliderInput(value: fps, range: 10...GlobalSettings.unlimitedFPS,
                                        defaultValue: 30, step: 1, fractionDigits: 0,
                                        sliderWidth: 150, fieldWidth: 44)
                 }
@@ -219,6 +219,15 @@ struct PerformancePage: SettingsPage {
     }
 
     /// The slider's stop as the `Slider` reads it.
+    /// The FPS slider: a rate set here is the user's own and wins over the slider stop's cap.
+    private var fps: Binding<Double> {
+        Binding(get: { viewModel.settings.fps },
+                set: {
+                    viewModel.settings.fps = $0
+                    viewModel.settings.fpsSetByUser = true
+                })
+    }
+
     private var qualityEfficiency: Binding<Double> {
         Binding(get: { Double(viewModel.settings.qualityEfficiency) },
                 set: { viewModel.settings.qualityEfficiency = QualityEfficiency(stop: Int($0.rounded())).stop })
