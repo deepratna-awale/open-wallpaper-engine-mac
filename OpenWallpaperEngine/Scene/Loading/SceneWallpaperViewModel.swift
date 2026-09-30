@@ -40,8 +40,7 @@ class SceneWallpaperViewModel: ObservableObject {
     /// The settings `setRenderSettings` last gave; the next content build takes them.
     private var pendingRenderSettings = SceneRenderSettings()
     private var loadedTextureReductionSize: SIMD2<Float>?
-    private var loadedContentUserProperties = Set<String>()
-    private var loadedEditingContentUserProperties = Set<String>()
+    private var loadedBindingTable = UserPropertyBindingTable()
     /// The newest load; an older one that finishes later is dropped.
     private var loadGeneration = 0
     private var loadJob: PreparationPool.Job?
@@ -76,6 +75,10 @@ class SceneWallpaperViewModel: ObservableObject {
     /// The factor the particle budget put on the scene's systems (`ParticleBudget`); systems
     /// scripts create later are thinned by it too.
     private var particleBudgetScale: Float = 1
+    /// The particles each object's systems hold as authored (`ParticleBudget.capacity`), by object
+    /// id, as the last content build made them: an object rebuilt alone is thinned by the scene's
+    /// factor while that stays the same.
+    private var particleCapacities: [Int: Int] = [:]
     /// The budget scaling last logged, so a rebuild of the same scene doesn't log it again.
     private var loggedParticleBudget: (directory: URL, report: ParticleBudget.Report)?
     /// Retained for video wallpapers rendered through the scene pipeline.
@@ -98,12 +101,9 @@ class SceneWallpaperViewModel: ObservableObject {
     private var loadedDocument: (document: SceneJSON, signature: String)?
     /// The loaded wallpaper's project.json, which declares its user properties.
     private var loadedProject: SceneJSON?
-    /// User properties the built content reads (layer visibility, bound values outside scripts):
-    /// changing any other only reaches the scripts (`applyUserProperties`), without a rebuild.
-    var contentUserProperties: Set<String> { stateLock.withLock { loadedContentUserProperties } }
-    /// `contentUserProperties` while the user edits properties (`ScenePropertyEditing`): fewer
-    /// sites need a rebuild then (`SceneLiveBindingSites`).
-    var editingContentUserProperties: Set<String> { stateLock.withLock { loadedEditingContentUserProperties } }
+    /// Every user-property binding of the loaded scene and the documents its build read; every
+    /// bound value the build decodes is resolved through it.
+    var bindingTable: UserPropertyBindingTable { stateLock.withLock { loadedBindingTable } }
     /// The loaded scene has SceneScripts.
     private var hasScriptSites = false
     private var loadedWallpaperDirectory: URL?
@@ -263,8 +263,7 @@ class SceneWallpaperViewModel: ObservableObject {
         var document: SceneJSON?
         var project: SceneJSON?
         var source = "parsed"
-        var contentUserProperties = Set<String>()
-        var editingContentUserProperties = Set<String>()
+        var bindingTable = UserPropertyBindingTable()
         var hasScriptSites = false
     }
 
@@ -372,8 +371,7 @@ class SceneWallpaperViewModel: ObservableObject {
                                         document: read.document), for: dir)
         }
         if let document = read.document {
-            read.contentUserProperties = Self.contentUserProperties(in: document)
-            read.editingContentUserProperties = Self.contentUserProperties(in: document, editing: true)
+            read.bindingTable.record(.scene, json: document)
             read.hasScriptSites = !SceneScriptSiteBuilder(wallpaperID: "").sites(in: document).isEmpty
         }
         read.project = Self.project(in: dir)
@@ -433,8 +431,7 @@ class SceneWallpaperViewModel: ObservableObject {
         hasScriptSites = read.hasScriptSites
         loadedWallpaperDirectory = dir
         stateLock.withLock {
-            loadedContentUserProperties = read.contentUserProperties
-            loadedEditingContentUserProperties = read.editingContentUserProperties
+            loadedBindingTable = read.bindingTable
             loadedTextureReductionSize = TextureReduction.orthographicSize(of: scene)
         }
         bumpRevision()
@@ -480,80 +477,16 @@ class SceneWallpaperViewModel: ObservableObject {
         }
     }
 
-    /// The user properties the content is built from: every `"user"` binding of the document
-    /// except inside script sites (their scripts get the change through `applyUserProperties` and
-    /// the binding, docs/scenescript-plan.md WP8), `scriptproperties`, and the object fields the
-    /// renderer applies without a rebuild (`SceneLiveBindingSites`).
-    /// `editing` leaves out the sites also live while the user edits properties.
-    static func contentUserProperties(in document: SceneJSON, editing: Bool = false) -> Set<String> {
-        var names = Set<String>()
-        func walk(_ value: SceneJSON, liveSites: Bool = false) {
-            switch value {
-            case .object(let fields):
-                if case .string(let script)? = fields["script"], !script.isEmpty { return }
-                if let user = SceneScriptUserReference(fields["user"]) { names.insert(user.name) }
-                for (key, field) in fields where key != "scriptproperties" {
-                    if liveSites, SceneLiveBindingSites.isLive(key, of: fields, editing: editing) { continue }
-                    if liveSites, editing {
-                        if key == "effects", case .array(let effects) = field {
-                            effects.forEach(walkEffect)
-                            continue
-                        }
-                        if key == "instanceoverride", fields["particle"] != nil, case .object(let overrides) = field {
-                            for (name, value) in overrides where !SceneLiveBindingSites.isLiveInstanceOverride(name) { walk(value) }
-                            continue
-                        }
-                    }
-                    walk(field)
-                }
-            case .array(let values):
-                values.forEach { walk($0) }
-            default:
-                break
-            }
-        }
-        // An entry of an object's `effects`: its visibility and its passes' constants are live.
-        func walkEffect(_ effect: SceneJSON) {
-            guard case .object(let fields) = effect else { return walk(effect) }
-            for (key, field) in fields where !SceneLiveBindingSites.liveEffectFields.contains(key) {
-                guard key == "passes", case .array(let passes) = field else {
-                    walk(field)
-                    continue
-                }
-                for pass in passes {
-                    guard case .object(let passFields) = pass else {
-                        walk(pass)
-                        continue
-                    }
-                    for (passKey, value) in passFields where !SceneLiveBindingSites.livePassFields.contains(passKey) { walk(value) }
-                }
-            }
-        }
-        // Only the scene's own objects have live sites; everything else is walked as before.
-        guard case .object(let root) = document else {
-            walk(document)
-            return names
-        }
-        for (key, field) in root where key != "scriptproperties" {
-            if key == "objects", case .array(let objects) = field {
-                objects.forEach { walk($0, liveSites: true) }
-            } else {
-                walk(field)
-            }
-        }
-        return names
+    /// What changing user properties `keys` needs (`SceneBindingUpdate`), from the bindings the
+    /// loaded scene and the documents its build read declare.
+    func bindingUpdate(for keys: [String]) -> SceneBindingUpdate {
+        SceneBindingUpdate(keys: keys, table: bindingTable)
     }
 
-    /// How much of the scene a user property change invalidates. A declared property no built
-    /// content reads (only scripts do) changes nothing here: the renderer hands it to the scripts.
-    /// `editing`: while the user edits properties, which applies more of them live.
-    func impact(of keys: [String], editing: Bool = false) -> SceneChangeImpact {
-        let content = editing ? editingContentUserProperties : contentUserProperties
-        return keys.reduce(.none) { impact, key in
-            let own = SceneChangeImpact.impact(of: key)
-            guard own == .rebuildContent, !key.hasPrefix("_owe_") else { return max(impact, own) }
-            return max(impact, content.contains(key) ? .rebuildContent : .none)
-        }
+    /// How much of the whole scene a change of `keys` invalidates: only the app's own keys and
+    /// scene-wide structural bindings rebuild it (`bindingUpdate(for:)`).
+    func impact(of keys: [String]) -> SceneChangeImpact {
+        bindingUpdate(for: keys).impact
     }
 
     /// The settings identity of the wallpaper in `directory`, resolved (and old path keys moved)
@@ -660,11 +593,10 @@ class SceneWallpaperViewModel: ObservableObject {
         defer { signpost.end() }
         defer { endBuildTextures() }
         guard let authoredScene = loadedScene, let wallpaperDir = loadedWallpaperDirectory else { return nil }
-        // Content is built from what the user properties say; a property change rebuilds it.
+        // Content is built from what the user properties say (`bindingTable`).
         let valueContext = userValueContext
-        var scene = authoredScene
-        scene.objects = SceneObjectIdentity.assigningFallbackIDs(
-            authoredScene.objects.map { $0.resolvingUserBindings(in: valueContext) })
+        var scene = resolvedScene(authoredScene)
+        scene.objects = SceneObjectIdentity.assigningFallbackIDs(scene.objects)
         let sceneSize = metalSceneSize(for: scene)
         if scene.general.projection == .orthographicAuto { Self.centreFirstImage(of: &scene, sceneSize: sceneSize) }
         let bloom = bloomSettings(for: scene.general)
@@ -679,21 +611,29 @@ class SceneWallpaperViewModel: ObservableObject {
         let authoredTransforms = SceneTransformHierarchy(objects: scene.objects, sceneSize: sceneSize)
         // WE draws objects in scene.json order; both lists carry that index so the renderer can interleave them.
         let layers: [SceneMetalLayer] = scene.objects.enumerated().compactMap { index, object in
-            var layer = buildLayer(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize, context: valueContext)
+            var layer = bindingTable.building(.object(object.id ?? index)) {
+                buildLayer(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize, context: valueContext)
+            }
             layer?.order = index
             return layer
         }
         var particleSystems: [SceneMetalParticleSystem] = []
         for (index, object) in scene.objects.enumerated() {
             let base = particleSystems.count
-            for var system in buildParticleFamily(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
-                                                  pixelUnits: Self.particlesUsePixelUnits(scene),
-                                                  transforms: authoredTransforms) {
+            let family = bindingTable.building(.object(object.id ?? index)) {
+                buildParticleFamily(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
+                                    pixelUnits: Self.particlesUsePixelUnits(scene), transforms: authoredTransforms)
+            }
+            for var system in family {
                 system.order = index
                 system.link?.parentIndex += base
                 particleSystems.append(system)
             }
         }
+        particleCapacities = Dictionary(particleSystems.map { system in
+            (system.order < scene.objects.count ? scene.objects[system.order].id ?? system.order : system.order,
+             ParticleBudget.capacity(of: system))
+        }, uniquingKeysWith: +)
         applyParticleBudget(to: &particleSystems, wallpaperDir: wallpaperDir)
         // A scene of scripts alone (groups whose scripts create layers) runs too, and so does one
         // of models alone (the default project arsenal).
@@ -757,6 +697,79 @@ class SceneWallpaperViewModel: ObservableObject {
                 effects: .identity,
             )], particleSystems: [],
             bloom: SceneBloomSettings(enabled: false, strength: 0, threshold: 0.7, tint: SIMD3<Float>(repeating: 1)))
+    }
+
+    // MARK: - Objects rebuilt alone
+
+    /// Rebuilds objects `ids` off the render and main threads, on the content queue, and delivers
+    /// them on the main queue (`rebuildObjects`); nil when they can't be rebuilt alone.
+    func rebuildObjectsAsync(_ ids: Set<Int>, completion: @escaping (SceneObjectReplacement?) -> Void) {
+        contentQueue.async { [weak self] in
+            let replacement = self?.rebuildObjects(ids)
+            DispatchQueue.main.async { completion(replacement) }
+        }
+    }
+
+    /// Objects `ids` built again with the current user properties, for the renderer to swap in
+    /// (`SceneObjectReplacement`): the layers and particle systems of image, text, shape and
+    /// particle objects. Nil, for a whole-content rebuild instead, when one is anything else (a
+    /// light, sound, model or camera, which the scene's own stages hold), isn't in the scene,
+    /// builds nothing, emits from another layer's image, or changes the scene's particle budget
+    /// factor. Takes the scene lock.
+    func rebuildObjects(_ ids: Set<Int>) -> SceneObjectReplacement? {
+        sceneLock.lock()
+        defer { sceneLock.unlock() }
+        defer { endBuildTextures() }
+        guard !ids.isEmpty, let authoredScene = loadedScene, let wallpaperDir = loadedWallpaperDirectory,
+              !Self.isVideoType(currentWallpaper.project.type) else { return nil }
+        let valueContext = userValueContext
+        var scene = resolvedScene(authoredScene)
+        scene.objects = SceneObjectIdentity.assigningFallbackIDs(scene.objects)
+        let sceneSize = metalSceneSize(for: scene)
+        if scene.general.projection == .orthographicAuto { Self.centreFirstImage(of: &scene, sceneSize: sceneSize) }
+        let authoredTransforms = SceneTransformHierarchy(objects: scene.objects, sceneSize: sceneSize)
+        var layers: [SceneMetalLayer] = []
+        var particleSystems: [SceneMetalParticleSystem] = []
+        var capacities = particleCapacities
+        for id in ids.sorted() {
+            guard let index = scene.objects.firstIndex(where: { $0.id == id }) else { return nil }
+            let object = scene.objects[index]
+            guard object.light == nil, object.sound == nil, object.model == nil, object.cameraLayer == nil else { return nil }
+            var layer = bindingTable.building(.object(id)) {
+                buildLayer(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize, context: valueContext)
+            }
+            layer?.order = index
+            let family = bindingTable.building(.object(id)) {
+                buildParticleFamily(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
+                                    pixelUnits: Self.particlesUsePixelUnits(scene), transforms: authoredTransforms)
+            }
+            guard layer != nil || !family.isEmpty, !family.contains(where: { !$0.emitterImages.isEmpty }) else { return nil }
+            if let layer { layers.append(layer) }
+            let base = particleSystems.count
+            for var system in family {
+                system.order = index
+                system.link?.parentIndex += base
+                particleSystems.append(system)
+            }
+            capacities[id] = family.isEmpty ? nil : family.reduce(0) { $0 + ParticleBudget.capacity(of: $1) }
+        }
+        let limit = renderSettings.particleBudget.limit
+        let scale = ParticleBudget.scale(authored: ParticleBudget.total(Array(capacities.values)), budget: limit)
+        guard particleSystems.isEmpty || scale == particleBudgetScale else { return nil }
+        particleCapacities = capacities
+        for index in particleSystems.indices { particleSystems[index].budgetScale = particleBudgetScale }
+        var transforms = authoredTransforms
+        for layer in layers where layer.fillsScene {
+            transforms.makeRoot(layer.id, local: SceneLocalTransform(origin: layer.position, scale: layer.scale, angle: layer.rotation))
+        }
+        let rebuilt = scene.objects.filter { $0.id.map(ids.contains) ?? false }
+        var content = SceneMetalContent(size: sceneSize, layers: layers, particleSystems: particleSystems,
+                                        bloom: bloomSettings(for: scene.general), transforms: transforms,
+                                        camera: SceneCameraEffects(scene.general, in: valueContext),
+                                        clearColor: scene.general.clearColor(in: valueContext), wallpaperKey: propertyStoreKey)
+        content.motions = objectMotions(rebuilt, besides: layers, sceneSize: sceneSize, context: valueContext)
+        content.engineCombos = sceneEngineCombos
+        return SceneObjectReplacement(objectIDs: Set(ids.map(String.init)), content: content)
     }
 
     // MARK: - Video as a scene
@@ -880,16 +893,15 @@ class SceneWallpaperViewModel: ObservableObject {
         sceneLock.lock()
         defer { sceneLock.unlock() }
         defer { endBuildTextures() }
-        let object: WESceneObject
+        let context = userValueContext
+        let resolved: WESceneObject
         do {
-            let data = try JSONSerialization.data(withJSONObject: SceneJSON.object(json).foundationObject)
-            object = try JSONDecoder().decode(WESceneObject.self, from: data)
+            resolved = try UserPropertyBindingTable.decode(
+                WESceneObject.self, from: UserPropertyBindingTable.resolving(.object(json), properties: userProperty))
         } catch {
             OWELog.error(.script, "createLayer: the object can't be decoded: \(error)")
             return nil
         }
-        let context = userValueContext
-        let resolved = object.resolvingUserBindings(in: context)
         if resolved.particle != nil {
             var systems = buildParticleFamily(resolved, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
                                               pixelUnits: loadedScene.map(Self.particlesUsePixelUnits) ?? true,
@@ -955,6 +967,18 @@ class SceneWallpaperViewModel: ObservableObject {
     }
 
     /// Resolves user-bound values against this wallpaper's properties.
+    /// The loaded scene with its user bindings resolved (`UserPropertyBindingTable.resolvedScene`);
+    /// the authored scene, logged, when the resolved document can't be decoded.
+    private func resolvedScene(_ authored: WEScene) -> WEScene {
+        guard let document = loadedDocument?.document else { return authored }
+        do {
+            return try bindingTable.resolvedScene(authored, document: document, properties: userProperty)
+        } catch {
+            OWELog.error(.scene, "\(currentWallpaper.project.title): scene.json can't be decoded with its user properties: \(error)")
+            return authored
+        }
+    }
+
     private var userValueContext: LiveSceneValueContext {
         LiveSceneValueContext(wallpaper: propertyStoreKey)
     }
@@ -1232,6 +1256,8 @@ class SceneWallpaperViewModel: ObservableObject {
         layer.weEffects = buildEffectPlans(object.effects ?? [], objectID: object.id ?? -1, wallpaperDir: wallpaperDir).plans
         layer.alignment = object.alignment
         layer.solidFill = SIMD4(Float(color.0), Float(color.1), Float(color.2), 1)
+        // The colour is the image: a bound colour rebuilds the layer.
+        bindingTable.baked(.objectField(.color), of: .object(object.id ?? -1))
         return layer
     }
 
@@ -1505,7 +1531,10 @@ class SceneWallpaperViewModel: ObservableObject {
                 self?.loadMetalTexture(named: name, materialDir: materialPath, wallpaperDir: wallpaperDir)
             },
             sceneEngineCombos: sceneEngineCombos,
-            readWallpaperFile: { [weak self] path in self?.wallpaperData(named: path, wallpaperDir: wallpaperDir) })
+            readWallpaperFile: { [weak self] path in
+                guard let self, let data = self.wallpaperData(named: path, wallpaperDir: wallpaperDir) else { return nil }
+                return self.bindingTable.resolvedData(data, path: path, properties: self.userProperty)
+            })
         builder.objectCombos = objectCombos
         var plans: [SceneEffectPlan] = []
         var handled = Set<Int>()
@@ -1817,14 +1846,22 @@ class SceneWallpaperViewModel: ObservableObject {
         let data: Data
         if let values = UserDefaults.app.dictionary(forKey: storageKey) as? [String: String],
            let override = values[overrideKey], let overrideData = override.data(using: .utf8) {
-            data = overrideData
+            data = bindingTable.resolvedData(overrideData, path: path, properties: userProperty)
         } else {
             data = original
         }
         return try? JSONDecoder().decode(T.self, from: data)
     }
 
+    /// The file at `path` as the build reads it: a JSON document with its user bindings resolved
+    /// and recorded (`bindingTable`), any other file as it is.
     private func assetData(named path: String, wallpaperDir: URL) -> Data? {
+        rawAssetData(named: path, wallpaperDir: wallpaperDir).map {
+            bindingTable.resolvedData($0, path: path, properties: userProperty)
+        }
+    }
+
+    private func rawAssetData(named path: String, wallpaperDir: URL) -> Data? {
         if let cached = assetDataCache[path] { return cached }
         // WE's fixed copy of a broken Workshop shader replaces the one the wallpaper ships.
         if let fixed = shaderCompat?.replacement(forShaderPath: path, projectId: loadedProjectId) {

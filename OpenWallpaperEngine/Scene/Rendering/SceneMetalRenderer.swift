@@ -299,6 +299,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     }
     /// Script-created layers still being built (tests wait for them).
     private(set) var pendingScriptLayers = 0
+    /// Rebuilt objects (`replaceObjects`) being prepared.
+    private(set) var pendingReplacements = 0
     /// The last `setContent` has been applied (its layers and scripts are in place).
     private(set) var hasContent = false
     /// Which object each authored scene index is, for the draw order scripts set.
@@ -312,6 +314,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var wallpaperKey = ""
     /// What the objects' and effects' visibility follows (`SceneMetalContent.userVisibility`).
     private var userVisibility = SceneUserVisibility()
+    /// Each object's binding revision (`SceneBindingRevisions`), bumped by property changes.
+    private(set) var bindingRevisions = SceneBindingRevisions()
+    /// Layers' base values (`baseValues`) by layer id, per binding revision.
+    private var baseValueCaches: [String: SceneBindingCache<SceneLayerBaseValues>] = [:]
     private var placement: WallpaperPlacement = .fill
     /// Drawable pixels per view point (the backing scale), refreshed every frame.
     private var drawablePixelsPerPoint: Float = 1
@@ -580,9 +586,17 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// User properties `names` changed: the scripts get `applyUserProperties`. With
     /// `applyVisibility` (while the user edits properties) objects and effects follow their
     /// user-bound `visible` at once, without a content rebuild (`SceneLiveBindingSites`).
-    func userPropertiesDidChange(_ names: Set<String>, applyVisibility: Bool) {
+    /// User properties `names` changed: the scripts get them (`applyUserProperties`), the owners of
+    /// the bindings that read them (`UserPropertyBindingTable.changes(for:)`) move to a new binding
+    /// revision, which every cache baking a bound value keys on, and the visibility is taken again.
+    /// Structural changes arrive separately, as rebuilt objects (`replaceObjects`).
+    func userPropertiesDidChange(_ names: Set<String>, owners: Set<UserPropertyBindingOwner>) {
         scripts.userPropertiesDidChange(names)
-        if applyVisibility { applyUserVisibility() }
+        guard !owners.isEmpty else { return }
+        bindingRevisions.bump(owners)
+        refreshParticleRevisions()
+        applyUserVisibility()
+        framePacing.wake(.interactive, at: wallTime())
     }
 
     /// Resolves the content's visibility against the current user properties (`SceneUserVisibility`).
@@ -599,6 +613,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     }
 
     func setContent(_ content: SceneMetalContent?) {
+        baseValueCaches.removeAll()
         effectAssetTextures.removeAll()
         clearUploadedImages()
         effectAssetFrames.removeAll()
@@ -843,6 +858,79 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             // once it has finished (`releaseFinishedEffectState`).
             deferredReleases.enqueue(removed, after: lastCommandBuffer)
         }
+    }
+
+    /// Swaps in objects rebuilt after a structural user-property change (`SceneObjectReplacement`):
+    /// their textures are uploaded and their particle systems made off the render thread, then
+    /// their layers and systems replace the old ones between two frames. The old ones' effect,
+    /// material and puppet state is released (targets go to the spare list, which later passes on
+    /// the queue are ordered after), and the rest of the scene keeps running. Dropped when the
+    /// content changed meanwhile: that content was built with the change.
+    func replaceObjects(_ replacement: SceneObjectReplacement) {
+        let generation = currentContentGeneration
+        let content = replacement.content
+        pendingReplacements += 1
+        contentQueue.async { [weak self] in
+            guard let self else { return }
+            var prepared: [PreparedLayer] = []
+            var systems: [ParticleSystemRuntime] = []
+            var analysis: SceneLayerAnalysis?
+            if self.isCurrentContentGeneration(generation) {
+                prepared = content.layers.compactMap { layer in
+                    guard let frames = self.makeTextureFrames(from: layer.source), !frames.isEmpty else { return nil }
+                    return PreparedLayer(frames: frames, layer: Self.droppingPixels(layer))
+                }
+                let runtimes: [ParticleSystemRuntime?] = content.particleSystems.map { system in
+                    var system = system
+                    guard let texture = self.particleTexture(from: system.source, spriteSheet: system.spriteSheet != nil) else { return nil }
+                    let fallback = system.fallbackSource.flatMap { self.makeTextureFrames(from: $0)?.first?.texture }
+                    Self.dropPixels(&system)
+                    // Seeded by position in the scene, as the whole content's systems are.
+                    let seed = UInt32(truncatingIfNeeded: system.order) &+ self.particleSeed &* 0x9E37_79B9
+                    return ParticleSystemRuntime(texture: texture, configuration: system, seed: ParticleRandom.pcg(seed),
+                                                 fallbackTexture: fallback)
+                }
+                ParticleSystemRuntime.linkFamilies(runtimes)
+                systems = ParticleSystemRuntime.addingRendererDraws(runtimes.compactMap { $0 })
+                analysis = SceneLayerAnalysis.make(content: content)
+            }
+            // Thread boundary: content queue → render thread.
+            self.performOnRenderThread { [weak self] in
+                guard let self else { return }
+                self.pendingReplacements -= 1
+                guard self.isCurrentContentGeneration(generation), let analysis else { return }
+                self.install(replacement.objectIDs, layers: prepared, systems: systems, motions: content.motions,
+                             analysis: analysis)
+            }
+        }
+    }
+
+    private func install(_ ids: Set<String>, layers prepared: [PreparedLayer], systems: [ParticleSystemRuntime],
+                         motions: [String: SceneObjectMotion], analysis: SceneLayerAnalysis) {
+        layers.removeAll { ids.contains($0.layer.id) }
+        particleSystems.removeAll { particleObjectID($0).map(ids.contains) ?? false }
+        for id in ids {
+            effectGraph?.releaseLayer(id)
+            imageMaterials?.releaseLayer(id)
+            puppets?.releaseLayer(id)
+            puppetAlbedos.removeValue(forKey: id)
+            puppetAnimators.removeValue(forKey: id)
+            puppetWarps.removeValue(forKey: id)
+            puppetCanvases.removeValue(forKey: id)
+            textRasterScales.removeValue(forKey: id)
+            lastTextSizes.removeValue(forKey: id)
+            baseValueCaches.removeValue(forKey: id)
+            if let motion = motions[id] { objectMotions[id] = motion }
+        }
+        textFrameCache.removeAll()
+        particleSystems += systems
+        layers += prepared
+        for entry in prepared { registerTextureAnimation(entry) }
+        layerAnalysis = layerAnalysis?.replacing(ids, with: analysis) ?? analysis
+        bindingRevisions.bump(Set(ids.compactMap { Int($0).map(UserPropertyBindingOwner.object) }))
+        refreshParticleRevisions()
+        orderLayers()
+        framePacing.wake(.interactive, at: wallTime())
     }
 
     // MARK: - Timelines
@@ -2585,11 +2673,36 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     }
 
     /// A layer's authored values moved by its user bindings: the base that animations and scripts
-    /// start from.
+    /// start from. Kept per binding revision (`SceneBindingRevisions`) unless a bound property
+    /// follows the music.
     private func baseValues(_ entry: PreparedLayer) -> SceneLayerBaseValues {
-        entry.layer.bindings.isEmpty
-            ? SceneLayerBaseValues(entry.layer)
-            : entry.layer.bindings.baseValues(for: entry.layer, in: LiveSceneValueContext())
+        let bindings = entry.layer.bindings
+        guard !bindings.isEmpty else { return SceneLayerBaseValues(entry.layer) }
+        let context = LiveSceneValueContext()
+        if bindings.properties.contains(where: context.isMusicSynced) {
+            return bindings.baseValues(for: entry.layer, in: context)
+        }
+        let id = entry.layer.id
+        let revision = bindingRevisions.revision(of: id)
+        var cache = baseValueCaches[id] ?? SceneBindingCache()
+        let reused = cache.revision == revision
+        let values = cache.value(at: revision) { bindings.baseValues(for: entry.layer, in: context) }
+        if reused { bindingRevisions.noteReuse(of: id, cachedAt: cache.revision ?? revision) } else { baseValueCaches[id] = cache }
+        return values
+    }
+
+    /// Hands every particle system its object's binding revision, which its kept overrides key on.
+    private func refreshParticleRevisions() {
+        for system in particleSystems {
+            system.bindingRevision = particleObjectID(system).map(bindingRevisions.revision(of:)) ?? 0
+        }
+    }
+
+    /// The value context of object `id`'s draw this frame: the timelines' values at its binding revision.
+    private func values(of id: String) -> LiveSceneValueContext {
+        var values = timelines.values
+        values.bindingRevision = bindingRevisions.revision(of: id)
+        return values
     }
 
     private func evaluatedLocal(_ entry: PreparedLayer) -> SceneLocalTransform {
@@ -2861,7 +2974,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             color: SIMD3(draw.color.x, draw.color.y, draw.color.z), alpha: draw.opacity, brightness: draw.brightness,
             texture: texture, contentSize: entry.layer.source.contentSize, uvOrigin: .zero,
             uvAxisX: SIMD2(1, 0), uvAxisY: SIMD2(0, 1), sceneSnapshot: nil, mipMappedFrameBuffer: mipMappedTarget,
-            shadowAtlas: frameShadowAtlas, frame: frame, values: timelines.values,
+            shadowAtlas: frameShadowAtlas, frame: frame, values: values(of: entry.layer.id),
             assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
             assetSprite: { [unowned self] key, source in self.effectAssetSprite(key: key, source: source) },
             placement: draw.placement)
@@ -2872,7 +2985,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                frame: BuiltinFrameContext) -> EffectGraphRenderer.Context {
         var context = EffectGraphRenderer.Context(
             frame: frame,
-            values: timelines.values,
+            values: values(of: entry.layer.id),
             assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
             sceneSnapshot: snapshot,
             // The scripted/animated values the layer is drawn with this frame, not the authored ones
@@ -3067,7 +3180,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             layerID: entry.layer.id, quad: draw.quad, sceneSize: sceneSize, color: SIMD3(repeating: 1), alpha: 1,
             brightness: 1, texture: input, contentSize: entry.layer.source.contentSize, uvOrigin: .zero,
             uvAxisX: SIMD2(1, 0), uvAxisY: SIMD2(0, 1), sceneSnapshot: snapshot, mipMappedFrameBuffer: mipMappedTarget,
-            shadowAtlas: frameShadowAtlas, frame: frame, values: timelines.values,
+            shadowAtlas: frameShadowAtlas, frame: frame, values: values(of: entry.layer.id),
             assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
             assetSprite: { [unowned self] key, source in self.effectAssetSprite(key: key, source: source) }),
             // The layer's effect buffers' format: RGBA16F in HDR (docs/lighting-plan.md §2.3, §2.6).

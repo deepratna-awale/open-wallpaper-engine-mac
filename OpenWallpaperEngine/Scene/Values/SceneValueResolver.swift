@@ -33,14 +33,9 @@ enum SceneValueResolver {
         }
     }
 
-    /// WE condition compare: numeric when both sides are numbers ("1" == "1.0"), else string equality.
+    /// WE condition compare (`UserPropertyValueConversion.matches`).
     static func matches(_ property: String, _ condition: String) -> Bool {
-        let lhs = property.trimmingCharacters(in: .whitespaces)
-        let rhs = condition.trimmingCharacters(in: .whitespaces)
-        if let a = ShaderValue(string: lhs), let b = ShaderValue(string: rhs) {
-            return a == b
-        }
-        return lhs == rhs
+        UserPropertyValueConversion.matches(property, condition)
     }
 }
 

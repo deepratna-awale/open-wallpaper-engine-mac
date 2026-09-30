@@ -1,11 +1,10 @@
 import simd
 
 extension WESceneGeneral {
-    /// A bindable `general` field resolved against the user properties; nil when not authored.
+    /// A bindable `general` field as authored, its user binding already resolved by
+    /// `UserPropertyBindingTable`; nil when not authored.
     func value(_ field: SceneGeneralValueField, in context: SceneValueContext) -> ShaderValue? {
-        guard let raw = values[field] else { return nil }
-        if let source = raw.userBindingSource { return SceneValueResolver.resolve(source, in: context) }
-        return raw.literalString.flatMap(ShaderValue.init(string:))
+        values[field]?.literalString.flatMap(ShaderValue.init(string:))
     }
 
     /// `general.clearcolor`: what WE clears the scene target to each frame, as authored (no

@@ -89,6 +89,8 @@ final class EffectGraphRenderer {
         let alpha: Float
         /// `Context.scriptRevision`: script-set visibility or constants changed.
         let scriptRevision: Int
+        /// The layer's binding revision (`SceneBindingRevisions`): a user property it binds changed.
+        var bindingRevision: UInt64? = nil
         /// The chain's live-bound constants this frame (timelines, user properties), in pass
         /// order: a paused or finished timeline's chain is reused like a static one (TF4).
         let dynamicValues: [Float]
@@ -96,6 +98,7 @@ final class EffectGraphRenderer {
         func matches(_ other: StaticChainKey) -> Bool {
             input === other.input && inputVersion == other.inputVersion
                 && color == other.color && alpha == other.alpha && scriptRevision == other.scriptRevision
+                && bindingRevision == other.bindingRevision
                 && dynamicValues == other.dynamicValues
         }
     }
@@ -391,10 +394,12 @@ final class EffectGraphRenderer {
         }
         let staticKey = StaticChainKey(input: input, inputVersion: context.inputVersion,
                                        color: context.layerColor, alpha: context.layerAlpha,
-                                       scriptRevision: context.scriptRevision, dynamicValues: dynamicValues)
+                                       scriptRevision: context.scriptRevision,
+                                       bindingRevision: context.values.bindingRevision, dynamicValues: dynamicValues)
         let prefixKey = prefix > 0
             ? StaticChainKey(input: input, inputVersion: context.inputVersion, color: context.layerColor,
                              alpha: context.layerAlpha, scriptRevision: context.scriptRevision,
+                             bindingRevision: context.values.bindingRevision,
                              dynamicValues: Array(dynamicValues.prefix(prefixValueCount)))
             : nil
         // A scene snapshot, or the last frame's copy, keeps its texture identity while its contents
@@ -1239,6 +1244,8 @@ final class UniformProgram {
     let isReusable: Bool
     let needsTextureInfo: Bool
     private let dynamic: [(member: UniformMember, constant: ShaderConstantResolver.DynamicConstant)]
+    /// The user-bound dynamic constants, kept per binding revision.
+    private var userConstants = SceneUserConstantCache()
     /// Members scripts can set, by the lower-cased scene.json key they answer to.
     private let scriptTargets: [String: [(member: UniformMember, binding: ShaderConstantResolver.ScriptBinding)]]
     /// Built-ins that only depend on the pass's targets and textures: written when those change.
@@ -1336,9 +1343,9 @@ final class UniformProgram {
 
     /// Appends the live-bound constants' values this frame, as `update` writes them.
     func appendDynamicValues(to values: inout [Float], values context: SceneValueContext) {
-        for (_, constant) in dynamic {
-            values += ShaderConstantResolver.shape(SceneValueResolver.resolve(constant.source, in: context),
-                                                   count: constant.count, isInt: constant.isInt).components
+        userConstants.begin(dynamic.map(\.constant), in: context)
+        for (index, (_, constant)) in dynamic.enumerated() {
+            values += userConstants.value(index, of: constant, in: context).components
         }
     }
 
@@ -1355,10 +1362,9 @@ final class UniformProgram {
     }
 
     func update(frame: BuiltinFrameContext, pass: BuiltinPassContext, values: SceneValueContext) {
-        for (member, constant) in dynamic {
-            let value = ShaderConstantResolver.shape(SceneValueResolver.resolve(constant.source, in: values),
-                                                     count: constant.count, isInt: constant.isInt)
-            UniformWriter.write(value.components, member: member, into: &bytes)
+        userConstants.begin(dynamic.map(\.constant), in: values)
+        for (index, (member, constant)) in dynamic.enumerated() {
+            UniformWriter.write(userConstants.value(index, of: constant, in: values).components, member: member, into: &bytes)
         }
         write(frameBuiltins, frame: frame, pass: pass)
         // Name lookups are string work; do them only when the targets actually change.

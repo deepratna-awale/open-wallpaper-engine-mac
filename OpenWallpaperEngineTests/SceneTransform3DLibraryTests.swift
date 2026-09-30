@@ -71,8 +71,7 @@ final class SceneTransform3DLibraryTests: XCTestCase {
             case .orthographic(let width, let height): size = SIMD2(Float(width), Float(height))
             case .orthographicAuto: size = SIMD2(1920, 1080)
             }
-            decoded.objects = SceneObjectIdentity.assigningFallbackIDs(
-                decoded.objects.map { $0.resolvingUserBindings(in: NoProperties()) })
+            decoded.objects = SceneObjectIdentity.assigningFallbackIDs(decoded.objects)
             let flat = SceneTransformHierarchy(objects: decoded.objects, sceneSize: size)
             let deep = SceneTransformHierarchy3D(objects: decoded.objects, rootOrigin: SIMD3(size / 2, 0))
             for (index, object) in decoded.objects.enumerated() {

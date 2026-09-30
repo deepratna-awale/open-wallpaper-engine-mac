@@ -12,8 +12,8 @@ private struct LightPropertyContext: SceneValueContext {
 /// from the library survey (One piece girls' tube, Hinata's spot, Moon's points, arsenal's and
 /// demon_core's legacy points) under Hinata's `general`.
 final class SceneLightDecodeTests: XCTestCase {
-    private func scene() throws -> WEScene {
-        try decodeTolerant(WEScene.self, from: Fixtures.data("Scenes/lights/scene.json"))
+    private func scene(_ properties: [String: String] = [:]) throws -> WEScene {
+        try BoundDocument.decode(WEScene.self, from: Fixtures.data("Scenes/lights/scene.json"), properties: properties)
     }
 
     private func light(_ id: Int, in scene: WEScene, context: SceneValueContext = LightPropertyContext()) throws -> SceneLight {
@@ -115,7 +115,7 @@ final class SceneLightDecodeTests: XCTestCase {
         let authored = try light(901, in: scene)
         XCTAssertEqual(authored.intensity, 3, "no property: the authored value")
         assertEqual(authored.color, SIMD3(1, 0, 0))
-        let bound = try light(901, in: scene, context: LightPropertyContext(properties: ["lamp": "7.5", "lampcolor": "0.5"]))
+        let bound = try light(901, in: try self.scene(["lamp": "7.5", "lampcolor": "0.5"]))
         XCTAssertEqual(bound.intensity, 7.5)
         assertEqual(bound.color, SIMD3(repeating: 0.5), "a scalar sets every channel")
     }
@@ -175,9 +175,13 @@ final class SceneLightDecodeTests: XCTestCase {
 
     /// One piece girls: bloom bound to a user property, a reddish ambient and a tube budget.
     func testUserBoundBloomAndReddishAmbient() throws {
-        let general = try decodeTolerant(WEScene.self, from: Fixtures.data("Scenes/lights/general-3270035750.json")).general
+        func bound(_ properties: [String: String] = [:]) throws -> WESceneGeneral {
+            try BoundDocument.decode(WEScene.self, from: Fixtures.data("Scenes/lights/general-3270035750.json"),
+                                     properties: properties).general
+        }
+        let general = try bound()
         XCTAssertTrue(SceneBloomSettings(general, in: LightPropertyContext()).enabled)
-        XCTAssertFalse(SceneBloomSettings(general, in: LightPropertyContext(properties: ["resplandorradiance": "false"])).enabled)
+        XCTAssertFalse(SceneBloomSettings(try bound(["resplandorradiance": "false"]), in: LightPropertyContext()).enabled)
         XCTAssertFalse(SceneBloomSettings(general, in: LightPropertyContext()).hdr.enabled)
         assertEqual(SceneLightingSettings(general, in: LightPropertyContext()).ambient, SIMD3(0.29412, 0.13333, 0.13333))
         XCTAssertEqual(general.lightconfig, WELightConfig(tube: 4))

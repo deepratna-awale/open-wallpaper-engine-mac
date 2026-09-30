@@ -26,30 +26,3 @@ extension ShaderValue {
         components.map { SceneJSON.number(Double($0)).scalarString ?? "0" }.joined(separator: " ")
     }
 }
-
-extension WESceneObject {
-    /// This object with every user-bound field replaced by the property's current value, so
-    /// content built from it shows what the properties say. Script- and animation-driven fields
-    /// keep their literal; the renderer evaluates those each frame.
-    func resolvingUserBindings(in context: SceneValueContext) -> WESceneObject {
-        var object = self
-        for (field, raw) in values {
-            guard let source = raw.userBindingSource else { continue }
-            let value = field.resolve(source, in: context)
-            switch field {
-            case .origin: object.origin = value.sceneString
-            case .scale: object.scale = value.sceneString
-            case .angles: object.angles = value.sceneString
-            case .color: object.color = value.sceneString
-            case .size: object.size = value.sceneString
-            case .alpha: object.alpha = Double(value.float)
-            case .brightness: object.brightness = Double(value.float)
-            case .pointsize: object.pointsize = Double(value.float)
-            }
-        }
-        if let name = textUserProperty, let text = context.userProperty(name) {
-            object.textValue = text
-        }
-        return object
-    }
-}
