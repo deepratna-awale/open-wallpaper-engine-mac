@@ -184,7 +184,9 @@ final class ShaderVariantTranslator {
             store(key, cached, persist: false)
             return cached
         }
-        let translated = try translate(vertex: vertex, fragment: fragment, combos: combos)
+        let translated = try OWEPhaseTiming.measure(.shaderTranslate) {
+            try translate(vertex: vertex, fragment: fragment, combos: combos)
+        }
         store(key, translated, persist: true)
         return translated
     }

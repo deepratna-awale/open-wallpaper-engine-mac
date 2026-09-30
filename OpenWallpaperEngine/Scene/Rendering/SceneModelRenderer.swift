@@ -619,8 +619,7 @@ final class SceneModelRenderer: SceneModelDrawing {
     static func pipelineDescriptor(_ variant: TranslatedShaderVariant, format: MDLVertexFormat, blending: String,
                                    pixelFormat: MTLPixelFormat, sampleCount: Int, depthFormat: MTLPixelFormat,
                                    device: MTLDevice) throws -> MTLRenderPipelineDescriptor {
-        let vertexLibrary = try device.makeLibrary(source: variant.vertexMSL, options: nil)
-        let fragmentLibrary = try device.makeLibrary(source: variant.fragmentMSL, options: nil)
+        let (vertexLibrary, fragmentLibrary) = try variant.makeLibraries(device: device)
         guard let vertex = vertexLibrary.makeFunction(name: "main0"),
               let fragment = fragmentLibrary.makeFunction(name: "main0") else {
             throw ShaderCompilerError.failed(step: "metal", output: "entry point main0 missing")
