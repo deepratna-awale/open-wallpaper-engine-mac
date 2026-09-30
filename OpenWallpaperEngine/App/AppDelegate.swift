@@ -298,7 +298,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 // MARK: - misc methods
     @objc func openSettingsWindow() {
         NSApp.activate(ignoringOtherApps: true)
-        self.settingsWindow.center()
         self.settingsWindow.makeKeyAndOrderFront(nil)
     }
     
@@ -361,16 +360,21 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
 // MARK: Set Settings Window
-    func setSettingsWindow() {
-        self.settingsWindow = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: SettingsTab.toolbarFittingWidth, height: 560),
+    /// The bare settings window: resizable to any width, with no minimum width.
+    static func makeSettingsWindow() -> NSWindow {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: SettingsTab.toolbarFittingWidth(), height: 560),
             styleMask: [.titled, .closable, .resizable, .fullSizeContentView],
             backing: .buffered, defer: false)
-        self.settingsWindow.title = String(localized: "Settings")
-        self.settingsWindow.isReleasedWhenClosed = false
-        self.settingsWindow.contentMinSize = NSSize(width: SettingsTab.toolbarFittingWidth, height: 400)
-        self.settingsWindow.toolbarStyle = .preference
-        
+        window.title = String(localized: "Settings")
+        window.isReleasedWhenClosed = false
+        window.toolbarStyle = .preference
+        return window
+    }
+
+    func setSettingsWindow() {
+        self.settingsWindow = Self.makeSettingsWindow()
+
         self.settingsWindow.delegate = self
         
         let toolbar = NSToolbar(identifier: "SettingsToolbar")
@@ -383,6 +387,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         self.settingsWindow.contentView = NSHostingView(rootView: SettingsView()
             .environmentObject(self.globalSettingsViewModel)
             .environmentObject(settingsNavigation))
+
+        // A saved frame is the size and place the user left the window at; only the first open
+        // gets the computed size. The frame autosaves into UserDefaults.standard, which an
+        // isolated copy must not write.
+        let autosaveName = "SettingsWindow"
+        let isIsolated = AppStorageLocation.current.isIsolated
+        let restored = !isIsolated && self.settingsWindow.setFrameUsingName(autosaveName)
+        if !isIsolated { self.settingsWindow.setFrameAutosaveName(autosaveName) }
+        if !restored, let screen = self.settingsWindow.screen ?? NSScreen.main {
+            let size = SettingsTab.initialWindowSize(visibleFrame: screen.visibleFrame)
+            self.settingsWindow.setFrame(NSRect(origin: .zero, size: size), display: false)
+            self.settingsWindow.center()
+        }
     }
     
 // MARK: Set Wallpaper Windows - One per screen
