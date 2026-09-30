@@ -358,6 +358,9 @@ struct SceneUserPropertiesView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .onChange(of: resetRequest) { _, _ in model.resetToDefaults() }
+        // While the panel shows, edits apply live (`ScenePropertyEditing`).
+        .onAppear { WallpaperServices.shared.propertyEditing.begin() }
+        .onDisappear { WallpaperServices.shared.propertyEditing.end() }
     }
 
 

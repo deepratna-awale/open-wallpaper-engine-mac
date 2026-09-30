@@ -240,6 +240,9 @@ struct SceneMetalContent {
     /// Every object's own `visible` before scripts (authored, user-bound or the app's toggle), by
     /// id. Hidden objects are built anyway: scripts can show them (plan §4.3).
     var visibility: [String: Bool] = [:]
+    /// What `visibility` and the effects' `visible` follow, which the renderer takes again when a
+    /// user property changes (`SceneUserVisibility`).
+    var userVisibility = SceneUserVisibility()
     /// The id of each object of scene.json, in scene order.
     var objectIDs: [Int] = []
     /// The scene's SceneScripts; nil when it has none.

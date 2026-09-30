@@ -310,6 +310,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var cameraParallax = SceneCameraParallax(sceneSize: SIMD2<Float>(1920, 1080))
     /// Whose user properties this renderer's frames read (see `SceneMetalContent.wallpaperKey`).
     private var wallpaperKey = ""
+    /// What the objects' and effects' visibility follows (`SceneMetalContent.userVisibility`).
+    private var userVisibility = SceneUserVisibility()
     private var placement: WallpaperPlacement = .fill
     /// Drawable pixels per view point (the backing scale), refreshed every frame.
     private var drawablePixelsPerPoint: Float = 1
@@ -438,6 +440,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var analysedWarmUp = true
     /// `pipelinesLanded` as the last analysed frame saw it.
     private var analysedLanded = 0
+    /// `scripts.userVisibilityRevision` the analysis last saw.
+    private var analysedUserVisibility = 0
     /// The blur-like buffer divisor (1, 2, 4) over the slider's (`OWE_BLUR_DIVISOR` for comparisons).
     var blurDivisorOverride = ProcessInfo.processInfo.environment["OWE_BLUR_DIVISOR"].flatMap(Int.init)
     private func effectResolution(of layerID: String) -> EffectResolutionPolicy {
@@ -571,6 +575,22 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             clearUploadedImages()
         }
         OWELog.info(.scene, "Memory pressure (\(level)): freed \((before - renderTargetPool.residentBytes) >> 20) MB of pooled targets")
+    }
+
+    /// User properties `names` changed: the scripts get `applyUserProperties`. With
+    /// `applyVisibility` (while the user edits properties) objects and effects follow their
+    /// user-bound `visible` at once, without a content rebuild (`SceneLiveBindingSites`).
+    func userPropertiesDidChange(_ names: Set<String>, applyVisibility: Bool) {
+        scripts.userPropertiesDidChange(names)
+        if applyVisibility { applyUserVisibility() }
+    }
+
+    /// Resolves the content's visibility against the current user properties (`SceneUserVisibility`).
+    private func applyUserVisibility() {
+        guard !userVisibility.sites.isEmpty else { return }
+        let key = wallpaperKey
+        let resolved = userVisibility.resolve { WallpaperServices.shared.userPropertyString($0, wallpaper: key) }
+        scripts.applyUserVisibility(objects: resolved.objects, effects: resolved.effects)
     }
 
     /// Drops every prepared layer, releasing any video stream those layers hold.
@@ -718,6 +738,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 let running = self.scripts.wallpaper
                 self.scripts.setContent(content.scripts, visibility: content.visibility,
                                         parents: content.transforms.nodes.compactMapValues(\.parentID))
+                self.userVisibility = content.userVisibility
+                // A property changed while the content was being built shows in it at once.
+                self.applyUserVisibility()
                 self.timelines.setTimelines(content.timelines,
                                             restart: self.scripts.wallpaper != nil && self.scripts.wallpaper !== running)
                 if self.scripts.wallpaper == nil || self.scripts.wallpaper !== running {
@@ -3421,6 +3444,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let landed = pipelinesLanded
         inputs.sceneChanged = shape.layers != analysedShape.layers || shape.target != analysedShape.target
             || warming || analysedWarmUp || landed != analysedLanded || textRaster.hasFinished
+            || scripts.userVisibilityRevision != analysedUserVisibility
+        analysedUserVisibility = scripts.userVisibilityRevision
         analysedLanded = landed
         analysedShape = shape
         analysedWarmUp = warming

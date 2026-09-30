@@ -48,6 +48,9 @@ final class SceneWallpaperInstance {
     private var cancellables = Set<AnyCancellable>()
     private var pendingImpact: SceneChangeImpact = .none
     private var pendingUpdate: DispatchWorkItem?
+    /// A property change was applied live while the user edited properties, where it would have
+    /// rebuilt the content otherwise: the content is rebuilt once editing ends.
+    private var appliedLive = false
     private var scriptsNotice: SafeRestartNotice?
     private var cursorMonitors: [Any] = []
     private var powerObserver: UUID?
@@ -309,15 +312,27 @@ final class SceneWallpaperInstance {
                 // Another wallpaper's, or another display's, properties.
                 guard let self, store == nil || store == self.viewModel.propertyStoreKey else { return }
                 // Scripts get every change (`applyUserProperties`); content is rebuilt only when it
-                // reads the property itself.
+                // reads the property itself. While the user edits properties more kinds apply live
+                // (`SceneLiveBindingSites`), visibility among them.
                 let changed = Set(keys)
-                self.renderLoop.perform { $0.scripts.userPropertiesDidChange(changed) }
+                let editing = WallpaperServices.shared.propertyEditing.isActive
+                self.renderLoop.perform { $0.userPropertiesDidChange(changed, applyVisibility: editing) }
                 // The picture changes: the loading snapshots follow once it has shown a while.
                 self.snapshotCapture?.rearm()
                 self.wakePacing(.slow)
-                let impact = self.viewModel.impact(of: keys)
+                let impact = self.viewModel.impact(of: keys, editing: editing)
+                if editing, impact < self.viewModel.impact(of: keys) { self.appliedLive = true }
                 guard impact > .none else { return }
                 self.scheduleSceneUpdate(impact)
+            }
+        })
+        // Editing ended: a content that took changes live is rebuilt once, in the background, to
+        // exactly what a fresh load of the current properties draws.
+        observers.append(center.addObserver(forName: .scenePropertyEditingDidChange, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self, !WallpaperServices.shared.propertyEditing.isActive, self.appliedLive else { return }
+                self.appliedLive = false
+                self.scheduleSceneUpdate(.rebuildContent)
             }
         })
         observers.append(center.addObserver(forName: .workshopDependenciesDidInstall, object: nil, queue: .main) { [weak self] notification in

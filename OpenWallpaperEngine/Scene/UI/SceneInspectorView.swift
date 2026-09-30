@@ -869,6 +869,8 @@ extension AppDelegate {
     func showSceneInspector(for wallpaper: WEWallpaper, scopes: [WallpaperPropertyScope] = [.shared]) {
         if let sceneInspectorWindow {
             sceneInspectorWindow.contentView = Self.sceneInspectorContent(wallpaper, scopes)
+            // A closed inspector (kept, not released) edits again.
+            if !sceneInspectorWindow.isVisible { WallpaperServices.shared.propertyEditing.begin() }
             sceneInspectorWindow.makeKeyAndOrderFront(nil)
             return
         }
@@ -882,6 +884,13 @@ extension AppDelegate {
         window.isReleasedWhenClosed = false
         window.contentView = Self.sceneInspectorContent(wallpaper, scopes)
         window.center()
+        // The inspector edits properties while it is open (`ScenePropertyEditing`). The window is
+        // kept for the app's life, and so is this observer.
+        WallpaperServices.shared.propertyEditing.begin()
+        _ = NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: window,
+                                                   queue: .main) { _ in
+            MainActor.assumeIsolated { WallpaperServices.shared.propertyEditing.end() }
+        }
         window.makeKeyAndOrderFront(nil)
         sceneInspectorWindow = window
     }
