@@ -52,18 +52,32 @@ in Actions it masks them.
 
 ## CI
 
-`.github/workflows/ci.yml` has two jobs:
+`.github/workflows/ci.yml` builds the test bundle once and runs it in shards, split by test
+class (`Scripts/ci-test-plan.py`):
 
-- **`build-and-test`** runs the suite without assets, for every push and PR, forks included.
-  The asset-gated tests skip. This is the fast signal.
-- **`asset-tests`** runs the same suite with `TEST_RUNNER_OWE_ASSETS` set. It runs on pushes
-  to `main` and on manual runs from `main` only, never for pull requests. The Steam secrets live
-  in the `steam-ci` environment, which only `main` can use. The nightly workflow uses the same
-  environment. Neither job uploads the assets as artifacts.
+- **`build-and-test`** runs the suite without assets, for every push and PR, forks included, in
+  three shards (`build-and-test (1/3)`…). The asset-gated tests skip. This is the fast signal. A
+  final job named `build-and-test`, the required check, passes only when every shard passed. On
+  a pull request only the test classes the changed files select run (`.github/test-map.yml`).
+- **`asset-tests`** runs every test class with `TEST_RUNNER_OWE_ASSETS` set, in four shards,
+  and a final `asset-tests` job passes only when all four passed. It runs on pushes to `main`
+  and on manual runs from `main` only, never for pull requests. The Steam secrets live in the
+  `steam-ci` environment, which only `main` can use. The nightly workflow uses the same
+  environment. No job uploads the assets as artifacts.
+
+The `asset-cache` job runs first and makes sure the encrypted cache (below) holds the current
+build, so the four shards restore it instead of each logging in to Steam. Without
+`OWE_ASSET_CACHE_KEY` every shard downloads the assets itself, four logins at once, which Steam
+may rate limit: set the key. The steps live in `.github/actions/we-assets`, shared with the
+nightly workflow.
+
+Failing tests are retried once, and a test that fails both times fails the job. On a failure the
+job summary lists each failing test with its message and file:line, and the `.xcresult` bundles
+and the log are uploaded for 7 days (`test-results-*`).
 
 ### Encrypted asset cache
 
-Both `steam-ci` jobs cache the assets only as ciphertext, keyed `we-assets-enc-<buildid>` (the
+The `steam-ci` jobs cache the assets only as ciphertext, keyed `we-assets-enc-<buildid>` (the
 Steam build id, digits only):
 
 - **Hit:** `actions/cache/restore` fetches the one encrypted file, and the job decrypts it with
@@ -108,6 +122,9 @@ Scripts/fetch-we-assets.sh                      # refreshes the default folder
 TEST_RUNNER_OWE_ASSETS=~/Library/Caches/owe-we-assets \
   xcodebuild test -project OpenWallpaperEngine.xcodeproj -scheme OpenWallpaperEngine -destination 'platform=macOS'
 ```
+
+`OWE_ASSETS=~/Library/Caches/owe-we-assets Scripts/ci-local.sh` runs the whole suite with them
+the way CI does (CONTRIBUTING.md).
 
 To refresh, run the script again. It does nothing until Steam publishes a new build. To start
 over, use `--force` or delete the folder. To remove the credentials, run
