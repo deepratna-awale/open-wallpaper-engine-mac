@@ -173,7 +173,7 @@ struct ParticleFrameInputs {
         inputs.motion = motion(of: system, to: world)
         let time = Double(system.elapsedTime)
         let context = values ?? LiveSceneValueContext()
-        let overrides = inputs.applyOverrides(configuration, values: context, scripted: scripted)
+        let overrides = inputs.applyOverrides(system, values: context, scripted: scripted)
         let emitters = configuration.emitters
         inputs.emitters = emitters.map { emitter in
             var step = ParticleEmitterStep()
@@ -236,10 +236,16 @@ struct ParticleFrameInputs {
 
     /// The system's instance overrides this frame, less the parts its flags switch off; bound to
     /// user properties, they resolve again, and scripts' values replace them.
-    private mutating func applyOverrides(_ configuration: SceneMetalParticleSystem, values: SceneValueContext,
+    private mutating func applyOverrides(_ system: ParticleSystemRuntime, values: SceneValueContext,
                                          scripted: SceneScriptInstanceOverrides?) -> SceneParticleOverrides {
-        let authored = configuration.liveOverrides.map {
-            SceneParticleOverrides($0, in: values, object: configuration.objectID.flatMap { Int($0) })
+        let configuration = system.configuration
+        let authored = configuration.liveOverrides.map { live in
+            let resolve = { SceneParticleOverrides(live, in: values, object: configuration.objectID.flatMap { Int($0) }) }
+            // Kept per binding revision unless something changes it every frame.
+            let perFrame = live.values.values.contains {
+                $0.animation != nil || $0.userPropertyName.map(values.isMusicSynced) == true
+            }
+            return perFrame ? resolve() : system.liveOverrides.value(at: system.bindingRevision, resolve)
         } ?? configuration.overrides
         var overrides = (scripted?.applied(to: authored) ?? authored).ignoring(configuration.ignoredOverrides)
         // The particle budget thins the system as the `count` override does: its maximum, and

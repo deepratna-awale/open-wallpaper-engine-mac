@@ -16,6 +16,9 @@ struct SceneLayerBindings {
 
     var isEmpty: Bool { fields.isEmpty }
 
+    /// The user properties the bindings read.
+    var properties: Set<String> { Set(fields.values.compactMap(\.source.boundUserProperty)) }
+
     init() {}
 
     /// Bindings for `object`'s user-bound transform/colour fields; `context` is what the layer was built with.

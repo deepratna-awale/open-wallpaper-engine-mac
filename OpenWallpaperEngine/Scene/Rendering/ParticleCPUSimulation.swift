@@ -56,6 +56,12 @@ final class ParticleSystemRuntime {
     var hiddenSteps: UInt32 = 0
     /// Its particles were removed since its object was hidden: WE clears a hidden system once.
     var clearedWhileHidden = false
+    /// Its object's binding revision (`SceneBindingRevisions`), which the renderer sets when a
+    /// user property its overrides bind changes.
+    var bindingRevision: UInt64 = 0
+    /// Its user-bound `instanceoverride` (`SceneMetalParticleSystem.liveOverrides`) resolved at
+    /// `bindingRevision`, unless a timeline animates it or a bound property follows the music.
+    var liveOverrides = SceneBindingCache<SceneParticleOverrides>()
     /// The next particle's serial number: particles spawned so far.
     var nextSerial: UInt32 = 0
     /// The serial of the first spawn of the current emission period: the `mapsequence…`
