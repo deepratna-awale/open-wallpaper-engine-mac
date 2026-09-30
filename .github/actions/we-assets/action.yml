@@ -1,0 +1,118 @@
+name: Wallpaper Engine assets
+description: >-
+  Restores Wallpaper Engine's built-in assets into $WE_ASSETS from the encrypted cache, or
+  downloads them from Steam with the CI account (docs/ci-assets.md). Only for jobs in the
+  steam-ci environment. The assets are never uploaded; the cache holds only ciphertext.
+inputs:
+  cache-key:
+    description: The OWE_ASSET_CACHE_KEY secret; empty skips the cache
+    required: false
+    default: ''
+  steam-user:
+    description: The OWE_CI_STEAM_USER secret
+    required: true
+  steam-password:
+    description: The OWE_CI_STEAM_PASSWORD secret
+    required: true
+  steam-shared-secret:
+    description: The OWE_CI_STEAM_SHARED_SECRET secret
+    required: true
+  save:
+    description: "'true' saves the encrypted assets on a cache miss (main only)"
+    required: false
+    default: 'false'
+  prime:
+    description: "'true' only makes sure the cache holds this build: a hit restores nothing"
+    required: false
+    default: 'false'
+runs:
+  using: composite
+  steps:
+    - name: Read the Wallpaper Engine build
+      id: build
+      shell: bash
+      run: |
+        id=$(Scripts/fetch-we-assets.sh --build-id || true)
+        [[ "$id" =~ ^[0-9]+$ ]] || id=unknown
+        echo "id=$id" >> "$GITHUB_OUTPUT"
+        echo "Wallpaper Engine build: $id" >> "$GITHUB_STEP_SUMMARY"
+
+    # The assets are cached only as an AES-256 archive. The key lives in the steam-ci
+    # environment; without it the cache is skipped and the assets are downloaded.
+    - name: Check the asset cache key
+      id: cachekey
+      shell: bash
+      env:
+        OWE_ASSET_CACHE_KEY: ${{ inputs.cache-key }}
+        BUILD_ID: ${{ steps.build.outputs.id }}
+      run: |
+        if [[ -n "$OWE_ASSET_CACHE_KEY" && "$BUILD_ID" =~ ^[0-9]+$ ]]; then
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "enabled=false" >> "$GITHUB_OUTPUT"
+          echo "Asset cache skipped (no key or no build id)." >> "$GITHUB_STEP_SUMMARY"
+        fi
+
+    - name: Restore the encrypted assets
+      id: cache
+      if: steps.cachekey.outputs.enabled == 'true'
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ env.WE_ASSETS_ENC }}
+        key: we-assets-enc-${{ steps.build.outputs.id }}
+        lookup-only: ${{ inputs.prime }}
+
+    - name: Decrypt the assets
+      id: decrypt
+      if: steps.cache.outputs.cache-hit == 'true' && inputs.prime != 'true'
+      shell: bash
+      env:
+        OWE_ASSET_CACHE_KEY: ${{ inputs.cache-key }}
+      run: |
+        set -o pipefail
+        rm -rf "$WE_ASSETS" && mkdir -p "$WE_ASSETS"
+        if openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass env:OWE_ASSET_CACHE_KEY -in "$WE_ASSETS_ENC" \
+            | tar -x -C "$WE_ASSETS" -f - && [[ -d "$WE_ASSETS/assets/shaders" ]]; then
+          echo "restored=true" >> "$GITHUB_OUTPUT"
+        else
+          rm -rf "$WE_ASSETS"
+          echo "::warning::Could not decrypt the cached assets; downloading them instead."
+        fi
+        rm -f "$WE_ASSETS_ENC"
+
+    - name: Fetch the assets
+      id: fetch
+      # When priming, only a miss that can be saved downloads.
+      if: steps.decrypt.outputs.restored != 'true' && (inputs.prime != 'true' || (steps.cachekey.outputs.enabled == 'true' && steps.cache.outputs.cache-hit != 'true'))
+      shell: bash
+      env:
+        OWE_CI_STEAM_USER: ${{ inputs.steam-user }}
+        OWE_CI_STEAM_PASSWORD: ${{ inputs.steam-password }}
+        OWE_CI_STEAM_SHARED_SECRET: ${{ inputs.steam-shared-secret }}
+        OWE_TOOLS_DIR: ${{ runner.temp }}/owe-tools
+      run: |
+        # A composite step has no timeout of its own; the download gets 20 minutes.
+        perl -e 'alarm shift; exec @ARGV' 1200 Scripts/fetch-we-assets.sh --force "$WE_ASSETS"
+        echo "done=true" >> "$GITHUB_OUTPUT"
+
+    # Only main saves. tar streams straight into openssl, so no plaintext archive is ever
+    # written; only the ciphertext file is saved.
+    - name: Encrypt the assets
+      id: encrypt
+      if: inputs.save == 'true' && steps.fetch.outputs.done == 'true' && steps.cachekey.outputs.enabled == 'true' && steps.cache.outputs.cache-hit != 'true' && github.ref == 'refs/heads/main'
+      shell: bash
+      env:
+        OWE_ASSET_CACHE_KEY: ${{ inputs.cache-key }}
+      run: |
+        set -o pipefail
+        rm -f "$WE_ASSETS_ENC"
+        tar -C "$WE_ASSETS" -cf - . \
+          | openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:OWE_ASSET_CACHE_KEY -out "$WE_ASSETS_ENC"
+        echo "done=true" >> "$GITHUB_OUTPUT"
+
+    - name: Save the encrypted assets
+      if: steps.encrypt.outputs.done == 'true'
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ env.WE_ASSETS_ENC }}
+        key: we-assets-enc-${{ steps.build.outputs.id }}
