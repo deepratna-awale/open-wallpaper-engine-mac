@@ -228,18 +228,23 @@ jobs:
   #
   # asset-cache makes sure the encrypted cache holds the current build, so the four shards restore
   # it rather than each logging in to Steam.
+  # It is the only job that logs in to Steam (with retries); the shards only restore, and fail
+  # if they can't.
   asset-cache:
     if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     runs-on: macos-26
-    timeout-minutes: 30
+    timeout-minutes: 40
     environment: steam-ci
+    outputs:
+      build-id: ${{ steps.assets.outputs.build-id }}
     env:
       WE_ASSETS: ${{ github.workspace }}/../we-assets
       WE_ASSETS_ENC: ${{ github.workspace }}/../we-assets.tar.enc
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - uses: ./.github/actions/we-assets
+      - id: assets
+        uses: ./.github/actions/we-assets
         with:
           cache-key: ${{ secrets.OWE_ASSET_CACHE_KEY }}
           steam-user: ${{ secrets.OWE_CI_STEAM_USER }}
@@ -265,14 +270,15 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - uses: ./.github/actions/select-xcode
+      - id: xcode
+        uses: ./.github/actions/select-xcode
 
+      # Restore only, the build asset-cache saved: the shards never log in to Steam.
       - uses: ./.github/actions/we-assets
         with:
           cache-key: ${{ secrets.OWE_ASSET_CACHE_KEY }}
-          steam-user: ${{ secrets.OWE_CI_STEAM_USER }}
-          steam-password: ${{ secrets.OWE_CI_STEAM_PASSWORD }}
-          steam-shared-secret: ${{ secrets.OWE_CI_STEAM_SHARED_SECRET }}
+          build-id: ${{ needs.asset-cache.outputs.build-id }}
+          download: 'false'
 
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
