@@ -138,6 +138,56 @@ final class UserPropertyBindingTableTests: XCTestCase {
         XCTAssertEqual(C.scriptValue("2", type: "combo", declared: .number(1)), .number(2))
     }
 
+    private struct Properties: SceneValueContext {
+        var values: [String: String] = [:]
+        func userProperty(_ name: String) -> String? { values[name] }
+    }
+
+    /// Particle overrides (`colorn` among them), a timeline's base and a script's properties follow
+    /// their property, live as a fresh load does.
+    func testParticleTimelineAndScriptSitesFollowTheirProperties() throws {
+        let json = #"""
+        {"camera": {"center": "0 0 -1", "eye": "0 0 0", "up": "0 1 0"}, "general": {},
+         "objects": [
+          {"id": 3, "particle": "particles/p.json",
+           "instanceoverride": {"colorn": {"user": "sparkcolor", "value": "1 0 0"}, "count": {"user": "sparks", "value": 1}}},
+          {"id": 4, "image": "models/a.json",
+           "alpha": {"user": "fade", "value": 1, "animation": {"c0": [], "options": {"fps": 30, "length": 60, "mode": "loop"}}}},
+          {"id": 5, "image": "models/a.json",
+           "origin": {"script": "export function update(v) { return v; }",
+                      "scriptproperties": {"speed": {"user": "speed", "value": 2}}, "value": "0 0 0"}}
+        ]}
+        """#
+        let (table, document) = try self.table(json)
+        let values = ["sparkcolor": "0 0 1", "sparks": "3", "fade": "0.5", "speed": "5"]
+        let scene = try UserPropertyBindingTable.decode(
+            WEScene.self, from: table.resolvedDocument(document, document: .scene, properties: { values[$0] }))
+
+        let fresh = SceneParticleOverrides(scene.objects[0].instanceoverride, in: Properties())
+        XCTAssertEqual(fresh.tint, SIMD3(0, 0, 1), "colorn follows its property")
+        XCTAssertEqual(fresh.count, 3)
+        let authored = try UserPropertyBindingTable.decode(WEScene.self, from: document).objects[0].instanceoverride
+        let live = SceneParticleOverrides(authored, in: Properties(values: values))
+        XCTAssertEqual(live.tint, fresh.tint, "the live overrides draw what a fresh load does")
+        XCTAssertEqual(try binding(table, "objects/0/instanceoverride/colorn").dependency, .object)
+        XCTAssertEqual(try binding(table, "objects/0/instanceoverride/count").dependency, .structural)
+
+        let timeline = try binding(table, "objects/1/alpha")
+        XCTAssertEqual(timeline.dependency, .object)
+        XCTAssertFalse(timeline.collapses, "the timeline keeps running over the bound value")
+        XCTAssertEqual(scene.objects[1].values[.alpha]?.literalDouble, 0.5)
+        XCTAssertNotNil(scene.objects[1].values[.alpha]?.animation)
+
+        let script = try binding(table, "objects/2/origin/scriptproperties/speed")
+        XCTAssertEqual(script.dependency, .object)
+        XCTAssertEqual(script.owner, .object(5))
+        guard case .object(let root) = table.resolvedDocument(document, document: .scene, properties: { values[$0] }),
+              case .array(let objects)? = root["objects"], case .object(let object) = objects[2],
+              case .object(let origin)? = object["origin"], case .object(let properties)? = origin["scriptproperties"],
+              case .object(let speed)? = properties["speed"] else { return XCTFail("shape") }
+        XCTAssertEqual(speed["value"], .number(5), "the script reads its property's value")
+    }
+
     /// Scripts read the properties through the same conversion as the bindings.
     func testScriptsReadTheConvertedValues() throws {
         let project = try JSONDecoder().decode(SceneJSON.self, from: Data(#"""
