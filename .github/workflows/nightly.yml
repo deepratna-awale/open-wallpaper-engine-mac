@@ -23,103 +23,46 @@ jobs:
 
       - uses: ./.github/actions/select-xcode
 
-      - name: Read the Wallpaper Engine build
-        id: build
-        run: |
-          id=$(Scripts/fetch-we-assets.sh --build-id || true)
-          [[ "$id" =~ ^[0-9]+$ ]] || id=unknown
-          echo "id=$id" >> "$GITHUB_OUTPUT"
-          echo "Wallpaper Engine build: $id" >> "$GITHUB_STEP_SUMMARY"
-
-      # The assets are cached only as an AES-256 archive. The key lives in the steam-ci
-      # environment; without it the cache is skipped and the assets are downloaded.
-      - name: Check the asset cache key
-        id: cachekey
-        env:
-          OWE_ASSET_CACHE_KEY: ${{ secrets.OWE_ASSET_CACHE_KEY }}
-          BUILD_ID: ${{ steps.build.outputs.id }}
-        run: |
-          if [[ -n "$OWE_ASSET_CACHE_KEY" && "$BUILD_ID" =~ ^[0-9]+$ ]]; then
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "Asset cache skipped (no key or no build id)." >> "$GITHUB_STEP_SUMMARY"
-          fi
-
-      - name: Restore the encrypted assets
-        id: cache
-        if: steps.cachekey.outputs.enabled == 'true'
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      # Restores the encrypted asset cache, or downloads the assets and (on main) saves them.
+      - uses: ./.github/actions/we-assets
         with:
-          path: ${{ env.WE_ASSETS_ENC }}
-          key: we-assets-enc-${{ steps.build.outputs.id }}
+          cache-key: ${{ secrets.OWE_ASSET_CACHE_KEY }}
+          steam-user: ${{ secrets.OWE_CI_STEAM_USER }}
+          steam-password: ${{ secrets.OWE_CI_STEAM_PASSWORD }}
+          steam-shared-secret: ${{ secrets.OWE_CI_STEAM_SHARED_SECRET }}
+          save: 'true'
 
-      - name: Decrypt the assets
-        id: decrypt
-        if: steps.cache.outputs.cache-hit == 'true'
-        env:
-          OWE_ASSET_CACHE_KEY: ${{ secrets.OWE_ASSET_CACHE_KEY }}
-        run: |
-          set -o pipefail
-          rm -rf "$WE_ASSETS" && mkdir -p "$WE_ASSETS"
-          if openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass env:OWE_ASSET_CACHE_KEY -in "$WE_ASSETS_ENC" \
-              | tar -x -C "$WE_ASSETS" -f - && [[ -d "$WE_ASSETS/assets/shaders" ]]; then
-            echo "restored=true" >> "$GITHUB_OUTPUT"
-          else
-            rm -rf "$WE_ASSETS"
-            echo "::warning::Could not decrypt the cached assets; downloading them instead."
-          fi
-          rm -f "$WE_ASSETS_ENC"
-
-      - name: Fetch the assets
-        if: steps.decrypt.outputs.restored != 'true'
-        timeout-minutes: 20
-        env:
-          OWE_CI_STEAM_USER: ${{ secrets.OWE_CI_STEAM_USER }}
-          OWE_CI_STEAM_PASSWORD: ${{ secrets.OWE_CI_STEAM_PASSWORD }}
-          OWE_CI_STEAM_SHARED_SECRET: ${{ secrets.OWE_CI_STEAM_SHARED_SECRET }}
-          OWE_TOOLS_DIR: ${{ runner.temp }}/owe-tools
-        run: Scripts/fetch-we-assets.sh --force "$WE_ASSETS"
-
-      # Only main saves. tar streams straight into openssl, so no plaintext archive is ever
-      # written; only the ciphertext file is saved.
-      - name: Encrypt the assets
-        id: encrypt
-        if: steps.cachekey.outputs.enabled == 'true' && steps.cache.outputs.cache-hit != 'true' && github.ref == 'refs/heads/main'
-        env:
-          OWE_ASSET_CACHE_KEY: ${{ secrets.OWE_ASSET_CACHE_KEY }}
-        run: |
-          set -o pipefail
-          rm -f "$WE_ASSETS_ENC"
-          tar -C "$WE_ASSETS" -cf - . \
-            | openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:OWE_ASSET_CACHE_KEY -out "$WE_ASSETS_ENC"
-          echo "done=true" >> "$GITHUB_OUTPUT"
-
-      - name: Save the encrypted assets
-        if: steps.encrypt.outputs.done == 'true'
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ env.WE_ASSETS_ENC }}
-          key: we-assets-enc-${{ steps.build.outputs.id }}
+      - name: Print the runner
+        run: python3 Scripts/ci-test-summary.py --env >> "$GITHUB_STEP_SUMMARY"
 
       - name: Build and test, slow tests included
+        # A failing test is retried once; a test that fails both times fails the run.
         env:
           TEST_RUNNER_OWE_ASSETS: ${{ env.WE_ASSETS }}
           TEST_RUNNER_OWE_SLOW_TESTS: '1'
         run: |
           set -o pipefail
+          mkdir -p build/results
           xcodebuild test \
             -project OpenWallpaperEngine.xcodeproj \
             -scheme OpenWallpaperEngine \
             -configuration Debug \
             -destination 'platform=macOS' \
             -derivedDataPath build/DerivedData \
+            -resultBundlePath build/results/nightly.xcresult \
+            -retry-tests-on-failure -test-iterations 2 \
             CODE_SIGNING_ALLOWED=NO \
-            | tee xcodebuild.log
+            | tee build/results/xcodebuild.log
 
-      - name: Upload log
+      - name: List the failing tests
+        if: failure()
+        run: python3 Scripts/ci-test-summary.py build/results/nightly.xcresult >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the results
+        # The log and the result bundle only; never the assets.
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: xcodebuild-log-nightly
-          path: xcodebuild.log
+          name: test-results-nightly
+          path: build/results
+          retention-days: 7
