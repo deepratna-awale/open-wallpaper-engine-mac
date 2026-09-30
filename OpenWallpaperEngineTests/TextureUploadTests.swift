@@ -25,30 +25,32 @@ final class TextureUploadTests: XCTestCase {
 
     /// RGBA bytes of any 8-bit colour texture (BGRA ones are swizzled back).
     static func read(_ texture: MTLTexture, device: MTLDevice) throws -> [UInt8] {
-        let queue = try XCTUnwrap(device.makeCommandQueue())
-        let rowBytes = texture.width * 4
-        let buffer = try XCTUnwrap(device.makeBuffer(length: rowBytes * texture.height, options: .storageModeShared))
-        let commands = try XCTUnwrap(queue.makeCommandBuffer())
-        let blit = try XCTUnwrap(commands.makeBlitCommandEncoder())
-        blit.copy(from: texture, sourceSlice: 0, sourceLevel: 0, sourceOrigin: MTLOrigin(x: 0, y: 0, z: 0),
-                  sourceSize: MTLSize(width: texture.width, height: texture.height, depth: 1), to: buffer,
-                  destinationOffset: 0, destinationBytesPerRow: rowBytes, destinationBytesPerImage: rowBytes * texture.height)
-        blit.endEncoding()
-        commands.commit()
-        commands.waitUntilCompleted()
-        var bytes = [UInt8](UnsafeBufferPointer(start: buffer.contents().assumingMemoryBound(to: UInt8.self), count: buffer.length))
-        if texture.pixelFormat == .bgra8Unorm {
-            // vImage, not a Swift loop: the reference renderers read dozens of 1080p frames a scene
-            // and a per-pixel loop in a Debug build costs ~150 ms a frame.
-            let map: [UInt8] = [2, 1, 0, 3]
-            let error = bytes.withUnsafeMutableBytes { (raw: UnsafeMutableRawBufferPointer) -> vImage_Error in
-                var image = vImage_Buffer(data: raw.baseAddress, height: vImagePixelCount(texture.height),
-                                          width: vImagePixelCount(texture.width), rowBytes: rowBytes)
-                return vImagePermuteChannels_ARGB8888(&image, &image, map, vImage_Flags(kvImageNoFlags))
+        try OWEPhaseTiming.measure(.readback) {
+            let queue = try XCTUnwrap(device.makeCommandQueue())
+            let rowBytes = texture.width * 4
+            let buffer = try XCTUnwrap(device.makeBuffer(length: rowBytes * texture.height, options: .storageModeShared))
+            let commands = try XCTUnwrap(queue.makeCommandBuffer())
+            let blit = try XCTUnwrap(commands.makeBlitCommandEncoder())
+            blit.copy(from: texture, sourceSlice: 0, sourceLevel: 0, sourceOrigin: MTLOrigin(x: 0, y: 0, z: 0),
+                      sourceSize: MTLSize(width: texture.width, height: texture.height, depth: 1), to: buffer,
+                      destinationOffset: 0, destinationBytesPerRow: rowBytes, destinationBytesPerImage: rowBytes * texture.height)
+            blit.endEncoding()
+            commands.commit()
+            commands.waitUntilCompleted()
+            var bytes = [UInt8](UnsafeBufferPointer(start: buffer.contents().assumingMemoryBound(to: UInt8.self), count: buffer.length))
+            if texture.pixelFormat == .bgra8Unorm {
+                // vImage, not a Swift loop: the reference renderers read dozens of 1080p frames a scene
+                // and a per-pixel loop in a Debug build costs ~150 ms a frame.
+                let map: [UInt8] = [2, 1, 0, 3]
+                let error = bytes.withUnsafeMutableBytes { (raw: UnsafeMutableRawBufferPointer) -> vImage_Error in
+                    var image = vImage_Buffer(data: raw.baseAddress, height: vImagePixelCount(texture.height),
+                                              width: vImagePixelCount(texture.width), rowBytes: rowBytes)
+                    return vImagePermuteChannels_ARGB8888(&image, &image, map, vImage_Flags(kvImageNoFlags))
+                }
+                XCTAssertEqual(error, kvImageNoError, "swizzling BGRA to RGBA")
             }
-            XCTAssertEqual(error, kvImageNoError, "swizzling BGRA to RGBA")
+            return bytes
         }
-        return bytes
     }
 
     private func image(_ pixels: [UInt8], width: Int, alpha: CGImageAlphaInfo,

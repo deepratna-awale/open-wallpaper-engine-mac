@@ -47,6 +47,7 @@ all:
   - "Vendor/**"
   - "OpenWallpaperEngine-Info.plist"
   - "Scripts/ci-*"
+  - "Scripts/test-build-settings.txt"
   - "Tests/**"
   - "OpenWallpaperEngineTests/Support/**"
 

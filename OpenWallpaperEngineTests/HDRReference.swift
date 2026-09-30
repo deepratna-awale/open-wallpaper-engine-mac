@@ -230,22 +230,24 @@ enum HDRReference {
 
     /// An RGBA16F texture's pixels.
     static func read(_ texture: MTLTexture, device: MTLDevice) throws -> Image {
-        let queue = try XCTUnwrap(device.makeCommandQueue())
-        let rowBytes = texture.width * 8
-        let buffer = try XCTUnwrap(device.makeBuffer(length: rowBytes * texture.height, options: .storageModeShared))
-        let commands = try XCTUnwrap(queue.makeCommandBuffer())
-        let blit = try XCTUnwrap(commands.makeBlitCommandEncoder())
-        blit.copy(from: texture, sourceSlice: 0, sourceLevel: 0, sourceOrigin: MTLOrigin(x: 0, y: 0, z: 0),
-                  sourceSize: MTLSize(width: texture.width, height: texture.height, depth: 1), to: buffer,
-                  destinationOffset: 0, destinationBytesPerRow: rowBytes, destinationBytesPerImage: rowBytes * texture.height)
-        blit.endEncoding()
-        commands.commit()
-        commands.waitUntilCompleted()
-        let count = texture.width * texture.height * 4
-        let values = floats(Array(UnsafeBufferPointer(start: buffer.contents().assumingMemoryBound(to: UInt16.self), count: count)))
-        return Image(width: texture.width, height: texture.height) { x, y in
-            let i = (y * texture.width + x) * 4
-            return SIMD3(values[i], values[i + 1], values[i + 2])
+        try OWEPhaseTiming.measure(.readback) {
+            let queue = try XCTUnwrap(device.makeCommandQueue())
+            let rowBytes = texture.width * 8
+            let buffer = try XCTUnwrap(device.makeBuffer(length: rowBytes * texture.height, options: .storageModeShared))
+            let commands = try XCTUnwrap(queue.makeCommandBuffer())
+            let blit = try XCTUnwrap(commands.makeBlitCommandEncoder())
+            blit.copy(from: texture, sourceSlice: 0, sourceLevel: 0, sourceOrigin: MTLOrigin(x: 0, y: 0, z: 0),
+                      sourceSize: MTLSize(width: texture.width, height: texture.height, depth: 1), to: buffer,
+                      destinationOffset: 0, destinationBytesPerRow: rowBytes, destinationBytesPerImage: rowBytes * texture.height)
+            blit.endEncoding()
+            commands.commit()
+            commands.waitUntilCompleted()
+            let count = texture.width * texture.height * 4
+            let values = floats(Array(UnsafeBufferPointer(start: buffer.contents().assumingMemoryBound(to: UInt16.self), count: count)))
+            return Image(width: texture.width, height: texture.height) { x, y in
+                let i = (y * texture.width + x) * 4
+                return SIMD3(values[i], values[i + 1], values[i + 2])
+            }
         }
     }
 }

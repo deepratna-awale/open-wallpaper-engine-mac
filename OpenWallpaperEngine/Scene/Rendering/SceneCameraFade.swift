@@ -90,8 +90,7 @@ final class SceneCameraFade {
         if let pipeline = pipelines[format] { return pipeline }
         guard !failedFormats.contains(format) else { return nil }
         do {
-            let vertexLibrary = try device.makeLibrary(source: variant.vertexMSL, options: nil)
-            let fragmentLibrary = try device.makeLibrary(source: variant.fragmentMSL, options: nil)
+            let (vertexLibrary, fragmentLibrary) = try variant.makeLibraries(device: device)
             guard let vertex = vertexLibrary.makeFunction(name: "main0"),
                   let fragment = fragmentLibrary.makeFunction(name: "main0") else {
                 throw ShaderCompilerError.failed(step: "metal", output: "entry point main0 missing")

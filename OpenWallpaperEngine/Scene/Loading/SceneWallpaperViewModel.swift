@@ -314,6 +314,10 @@ class SceneWallpaperViewModel: ObservableObject {
     /// Reads `wallpaper`'s scene: the in-memory parse, else the scene file itself. Touches no loaded state, so
     /// it runs without the scene lock; nil when `isCurrent` says a newer load took over.
     private func readScene(_ wallpaper: WEWallpaper, isCurrent: () -> Bool) -> SceneRead? {
+        OWEPhaseTiming.measure(.sceneLoad) { readSceneUntimed(wallpaper, isCurrent: isCurrent) }
+    }
+
+    private func readSceneUntimed(_ wallpaper: WEWallpaper, isCurrent: () -> Bool) -> SceneRead? {
         let signpost = OWESignpost.begin(OWESignpost.scene, "loadScene")
         defer { signpost.end() }
         OWEFrameMetrics.countSceneReload()
@@ -633,6 +637,10 @@ class SceneWallpaperViewModel: ObservableObject {
     }
 
     func metalContent() -> SceneMetalContent? {
+        OWEPhaseTiming.measure(.sceneLoad) { metalContentUntimed() }
+    }
+
+    private func metalContentUntimed() -> SceneMetalContent? {
         sceneLock.lock()
         defer { sceneLock.unlock() }
         let revision = metalRevision
@@ -1103,6 +1111,10 @@ class SceneWallpaperViewModel: ObservableObject {
     /// Plans are kept by `.mdl` and skin for the content's life, so a script's clones share their
     /// original's (and its GPU buffers).
     private func buildModels(_ models: [SceneModelObject], wallpaperDir: URL) -> [SceneModelObject] {
+        OWEPhaseTiming.measure(.particlesModels) { buildModelsUntimed(models, wallpaperDir: wallpaperDir) }
+    }
+
+    private func buildModelsUntimed(_ models: [SceneModelObject], wallpaperDir: URL) -> [SceneModelObject] {
         guard !models.isEmpty, let translator = effectTranslator else { return models }
         let known = models.map { object -> SceneModelObject in
             var object = object
@@ -1577,6 +1589,13 @@ class SceneWallpaperViewModel: ObservableObject {
     /// normal maps, anything a material reads as data) loads as stored.
     private func loadMetalTexture(named name: String, materialDir: String, wallpaperDir: URL,
                                   colour: Bool = false) -> SceneMetalTextureSource? {
+        OWEPhaseTiming.measure(.texture) {
+            loadMetalTextureUntimed(named: name, materialDir: materialDir, wallpaperDir: wallpaperDir, colour: colour)
+        }
+    }
+
+    private func loadMetalTextureUntimed(named name: String, materialDir: String, wallpaperDir: URL,
+                                         colour: Bool) -> SceneMetalTextureSource? {
         // WE's texture reduction loads a smaller mipmap (`TextureReduction`), cached apart.
         let reduction = renderSettings.textureReduction
         let optimise = colour && renderSettings.optimiseTextures && TexturePreparation.deviceSupportsBC7
@@ -1671,6 +1690,14 @@ class SceneWallpaperViewModel: ObservableObject {
 
     private func buildParticleFamily(_ object: WESceneObject, wallpaperDir: URL, sceneSize: SIMD2<Float>, pixelUnits: Bool,
                                      transforms: SceneTransformHierarchy) -> [SceneMetalParticleSystem] {
+        OWEPhaseTiming.measure(.particlesModels) {
+            buildParticleFamilyUntimed(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize, pixelUnits: pixelUnits,
+                                       transforms: transforms)
+        }
+    }
+
+    private func buildParticleFamilyUntimed(_ object: WESceneObject, wallpaperDir: URL, sceneSize: SIMD2<Float>,
+                                            pixelUnits: Bool, transforms: SceneTransformHierarchy) -> [SceneMetalParticleSystem] {
         guard let particlePath = object.particle else { return [] }
         // The emitter's full world transform: its own and its parents' origin, scale and angle.
         let world = object.id.map { transforms.world(of: String($0)) }

@@ -728,8 +728,7 @@ final class EffectGraphRenderer {
         compileQueue.async { [weak self] in
             let result: MTLRenderPipelineState?
             do {
-                let vertexLibrary = try device.makeLibrary(source: variant.vertexMSL, options: nil)
-                let fragmentLibrary = try device.makeLibrary(source: variant.fragmentMSL, options: nil)
+                let (vertexLibrary, fragmentLibrary) = try variant.makeLibraries(device: device)
                 guard let vertex = vertexLibrary.makeFunction(name: "main0"),
                       let fragment = fragmentLibrary.makeFunction(name: "main0") else {
                     throw ShaderCompilerError.failed(step: "metal", output: "entry point main0 missing")
@@ -766,6 +765,13 @@ final class EffectGraphRenderer {
     /// Takes the pipeline from the archive when it has it; otherwise compiles it and adds it.
     static func makePipeline(_ descriptor: MTLRenderPipelineDescriptor, device: MTLDevice,
                              archive: EffectPipelineArchive?, key: String) throws -> MTLRenderPipelineState {
+        try OWEPhaseTiming.measure(.pipeline) {
+            try makePipelineUntimed(descriptor, device: device, archive: archive, key: key)
+        }
+    }
+
+    private static func makePipelineUntimed(_ descriptor: MTLRenderPipelineDescriptor, device: MTLDevice,
+                                            archive: EffectPipelineArchive?, key: String) throws -> MTLRenderPipelineState {
         guard let archive else { return try device.makeRenderPipelineState(descriptor: descriptor) }
         let archives = archive.archives
         if !archives.isEmpty {
