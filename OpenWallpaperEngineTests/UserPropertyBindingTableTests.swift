@@ -136,6 +136,26 @@ final class UserPropertyBindingTableTests: XCTestCase {
         XCTAssertEqual(C.scriptValue("2", type: "combo", declared: .number(1)), .number(2))
     }
 
+    /// Scripts read the properties through the same conversion as the bindings.
+    func testScriptsReadTheConvertedValues() throws {
+        let project = try JSONDecoder().decode(SceneJSON.self, from: Data(#"""
+            {"general": {"properties": {
+              "on": {"type": "bool", "value": false}, "level": {"type": "slider", "value": 0},
+              "ink": {"type": "color", "value": "0 0 0"}, "mode": {"type": "combo", "value": 1},
+              "caption": {"type": "textinput", "value": ""}}}}
+            """#.utf8))
+        var properties = SceneScriptUserProperties(project: project)
+        let stored = ["on": "true", "level": "0.25", "ink": "1 0.5 0", "mode": "2", "caption": "Hello"]
+        properties.setStoredValues(stored)
+        XCTAssertEqual(properties.value(of: "on"), .bool(true))
+        XCTAssertEqual(properties.value(of: "level"), .number(0.25))
+        XCTAssertEqual(properties.value(of: "ink"), .string("1 0.5 0"))
+        XCTAssertEqual(properties.value(of: "mode"), .number(2))
+        XCTAssertEqual(properties.value(of: "caption"), .string("Hello"))
+        let payload = properties.payload(only: ["ink"])
+        XCTAssertEqual((payload["ink"] as? [String: Any])?["type"] as? String, "color", "the runtime makes it a Vec3")
+    }
+
     /// For any recorded binding, resolving with another value of its property changes what the
     /// table hands the parsers.
     func testEveryRecordedBindingFollowsItsProperty() throws {

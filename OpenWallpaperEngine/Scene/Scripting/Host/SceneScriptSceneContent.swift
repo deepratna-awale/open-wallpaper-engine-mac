@@ -39,25 +39,12 @@ struct SceneScriptSceneContent {
 extension SceneScriptUserProperties {
     /// Takes the property store's values (WE's text forms: "true", "0.5", "1 0 0", a combo's value)
     /// in the JSON type project.json declares each property with, so scripts get booleans, numbers
-    /// and text as WE hands them.
+    /// and text as WE hands them: the conversion every binding uses (`UserPropertyValueConversion`),
+    /// so `applyUserProperties`, `engine.userProperties` and the bound values agree.
     mutating func setStoredValues(_ stored: [String: String]) {
         for (name, property) in properties {
             guard let text = stored[name] else { continue }
-            set(name, to: Self.value(text, type: property.type, declared: property.value))
-        }
-    }
-
-    private static func value(_ text: String, type: String, declared: SceneJSON) -> SceneJSON {
-        switch type {
-        case "bool":
-            return .bool(text.caseInsensitiveCompare("true") == .orderedSame || text == "1")
-        case "slider":
-            return Double(text).map(SceneJSON.number) ?? declared
-        default:
-            // Combos keep their options' type; colours and text stay text.
-            if case .number = declared, let number = Double(text) { return .number(number) }
-            if case .bool = declared { return .bool(text.caseInsensitiveCompare("true") == .orderedSame || text == "1") }
-            return .string(text)
+            set(name, to: UserPropertyValueConversion.scriptValue(text, type: property.type, declared: property.value))
         }
     }
 }
