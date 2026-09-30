@@ -44,11 +44,15 @@
     // shortcuts {isbound, commandtype, file}, everything else its value. `engine.userProperties`
     // keeps every property's current converted value; each call converts separately, so a script
     // that changes the object it was given can't change `engine.userProperties`.
+    // Without WE's prelude (no assets directory) there is no converter: scripts get the raw
+    // objects, as when the conversion throws (runtime.js), and `engine.userProperties` stays empty.
     const userProperties = {};
     rt.hooks.userProperties = function (properties) {
+        const internal = global._Internal;
+        if (!internal || typeof internal.convertUserProperties !== 'function') return properties;
         const json = JSON.stringify(properties === undefined || properties === null ? {} : properties);
-        Object.assign(userProperties, global._Internal.convertUserProperties(json));
-        return global._Internal.convertUserProperties(json);
+        Object.assign(userProperties, internal.convertUserProperties(json));
+        return internal.convertUserProperties(json);
     };
 
     // MARK: engine
