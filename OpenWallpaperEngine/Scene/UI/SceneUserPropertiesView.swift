@@ -23,7 +23,7 @@ private func sceneUserPropertyTitle(_ raw: String, labels: WallpaperEngineLabels
     return words.isEmpty ? trimmed : words.joined(separator: " ")
 }
 
-private struct SceneUserProperty: Identifiable {
+struct SceneUserProperty: Identifiable {
     let id: String
     let title: String
     let type: String
@@ -46,14 +46,14 @@ private struct SceneUserProperty: Identifiable {
     }
 }
 
-private struct SceneTextControl: Identifiable {
+struct SceneTextControl: Identifiable {
     let id: String
     let title: String
     let font: String
     let size: Double
 }
 
-private final class SceneUserPropertiesModel: ObservableObject {
+final class SceneUserPropertiesModel: ObservableObject {
     @Published var properties: [SceneUserProperty] = []
     @Published var values: [String: String] = [:]
     @Published var textObjects: [SceneTextControl] = []
@@ -78,7 +78,7 @@ private final class SceneUserPropertiesModel: ObservableObject {
         values[id] = value
         NotificationCenter.default.post(name: .wallpaperUserPropertyChanged, object: wallpaperPath,
                                         userInfo: ["key": id, "value": value, "stores": targets.runtimeKeys])
-        targets.publish(values)
+        targets.publish(values, defaults: defaultValues)
         pendingSave?.cancel()
         let snapshot = values
         let work = DispatchWorkItem { [targets] in targets.save(snapshot) }
@@ -93,7 +93,7 @@ private final class SceneUserPropertiesModel: ObservableObject {
     func resetToDefaults() {
         pendingSave?.cancel()
         pendingSave = nil
-        let defaults = Dictionary(properties.map { ($0.id, $0.defaultValue) }) { first, _ in first }
+        let defaults = defaultValues
         let previous = values
         values = targets.reset(to: defaults)
         // Web pages take a change key by key (WE's `applyUserProperties`).
@@ -200,7 +200,12 @@ private final class SceneUserPropertiesModel: ObservableObject {
         for property in properties where values[property.id] == nil {
             values[property.id] = property.defaultValue
         }
-        targets.publish(values)
+        targets.publish(values, defaults: defaultValues)
+    }
+
+    /// Each shown property's default: what a wallpaper takes while its store lacks the key.
+    private var defaultValues: [String: String] {
+        Dictionary(properties.map { ($0.id, $0.defaultValue) }) { first, _ in first }
     }
 
     /// WE's own image filter and colour options, which its UI adds to every wallpaper's
