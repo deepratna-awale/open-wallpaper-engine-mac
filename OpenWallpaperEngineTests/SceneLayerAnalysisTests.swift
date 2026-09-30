@@ -188,6 +188,45 @@ final class SceneLayerAnalysisTests: XCTestCase {
         XCTAssertEqual(SceneLayerAnalysis.classify(text).0, .text)
     }
 
+    /// Each frame input, changed alone, reports its dependency kind, and a layer that depends on it
+    /// is dirtied: the quick tier's cover for `testEachDependencyKindDirtiesItsLayersOnCIScenes`.
+    func testEachInputChangedAloneReportsItsDependencyKind() {
+        // Every layer depends on shake and the inspector.
+        let analysis = Self.analyse(Self.content([Self.layer("1")]))
+        let mutations: [(SceneLayerDependencies, (inout SceneLayerFrameInputs) -> Void)] = [
+            (.time, { $0.time += 1 }),
+            (.video, { $0.videoRevision += 1 }),
+            (.cursor, { $0.pointer += 0.1 }),
+            (.parallax, { $0.parallax += 0.1 }),
+            (.parallax, { $0.parallaxActive.toggle() }),
+            (.shake, { $0.shake += 1 }),
+            (.shake, { $0.cameraShake += 1 }),
+            (.audio, { $0.audioLevel += 0.5 }),
+            (.userProperties, { $0.userPropertiesRevision += 1 }),
+            (.inspector, { $0.inspectorRevision += 1 }),
+        ]
+        for (kind, mutate) in mutations {
+            let settled = SceneLayerFrameInputs()
+            analysis.update(settled)
+            analysis.update(settled)
+            let settledCount: Int = analysis.dirtyCount
+            XCTAssertEqual(settledCount, 0, "\(kind): unchanged inputs leave the layer clean")
+            var changed = settled
+            mutate(&changed)
+            analysis.update(changed)
+            let reported: SceneLayerDependencies = analysis.changed
+            XCTAssertTrue(reported.contains(kind), "\(kind) changed but wasn't reported")
+            if kind != .inspector {
+                let sceneWide: Bool = analysis.sceneWideDirty
+                XCTAssertFalse(sceneWide, "\(kind) alone isn't scene-wide")
+            }
+            if kind == .shake || kind == .inspector {
+                let isDirty: Bool = analysis.isDirty("1")
+                XCTAssertTrue(isDirty, "\(kind) changed but the layer that depends on it stayed clean")
+            }
+        }
+    }
+
     func testUpdateCostFor200Layers() {
         let layers = (0..<200).map { Self.layer(String($0 + 1), order: $0) }
         let analysis = Self.analyse(Self.content(layers))
@@ -227,7 +266,10 @@ final class SceneLayerAnalysisTests: XCTestCase {
     }
 
     /// Every dependency kind, changed alone, dirties every layer that depends on it.
+    /// About 60 s in Debug, so it runs nightly and locally (`OWE_SLOW_TESTS=1`), not on every PR;
+    /// `testEachInputChangedAloneReportsItsDependencyKind` covers each kind on every PR.
     func testEachDependencyKindDirtiesItsLayersOnCIScenes() throws {
+        try SlowTests.require()
         var checked = 0
         for name in Self.ciScenes {
             let scene = try SceneFrameHarness(directory: Fixtures.url("Scenes/\(name)"))
