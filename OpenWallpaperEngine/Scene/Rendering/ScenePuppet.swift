@@ -11,7 +11,10 @@ import simd
 /// orthographic over the image's pixels. The layer then goes on as an ordinary image layer whose
 /// image is that target: its effects, its prelighting (docs/lighting-plan.md §2.3) and its own
 /// draw through its material read it. In the bind pose (every bone the identity) the target is the
-/// picture the mesh assembles; M6/P2 pose the bones (`ScenePuppetPose`).
+/// picture the mesh assembles; M6/P2 pose the bones (`ScenePuppetPose`). A layer with effects
+/// draws its bind pose there: its effects run in that layout, where their masks are painted (an
+/// atlas rig's parts where the texture keeps them), and the posed mesh lays their output out
+/// (`warp`) for the layer's draw, as WE draws a layer's effect output through its geometry.
 ///
 /// The mesh is the rig's first mesh, the only one WE reads (0x14020aeb9). Its vertices are in the
 /// image's pixels, y up, centred on the image (every library rig: `(uv − ½) · size` with v flipped,
@@ -504,9 +507,11 @@ final class ScenePuppetRenderer {
     /// the layer's quad drawn with its image and these textures laid out through the mesh is that
     /// draw for a flat layer. The coordinates are the mesh's, scaled to the image's share of its
     /// padded texture, for every texture, as WE's copy of the mesh has them. nil when the mesh
-    /// has no plain position, blend indices, weights or texture coordinate.
+    /// has no plain position, blend indices, weights or texture coordinate. `redraw`: `texture`'s
+    /// contents change from frame to frame (a puppet's effect output), so it is laid out again.
     func warp(_ plan: ScenePuppetPlan, layerID: String, key: String, texture: MTLTexture, contentSize: SIMD2<Float>?,
-              pose: ScenePuppetPose, canvas: ScenePuppetCanvas? = nil, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
+              pose: ScenePuppetPose, canvas: ScenePuppetCanvas? = nil, redraw: Bool = false,
+              commandBuffer: MTLCommandBuffer) -> MTLTexture? {
         guard let state = layers[layerID], state.plan === plan else { return nil }
         let format = plan.format
         guard let position = MDLVertexAttribute.named("a_Position").flatMap(format.offset(of:)),
@@ -527,7 +532,7 @@ final class ScenePuppetRenderer {
             warps[layerID, default: [:]][key] = warp
         }
         let source = ObjectIdentifier(texture)
-        if warp.drawnPose == pose, warp.drawnSource == source, warp.drawnCanvas == canvas { return warp.target }
+        if !redraw, warp.drawnPose == pose, warp.drawnSource == source, warp.drawnCanvas == canvas { return warp.target }
 
         let pass = MTLRenderPassDescriptor()
         pass.colorAttachments[0].texture = warp.target

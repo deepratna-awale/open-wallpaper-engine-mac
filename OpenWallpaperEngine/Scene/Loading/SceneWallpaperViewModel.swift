@@ -41,6 +41,7 @@ class SceneWallpaperViewModel: ObservableObject {
     private var pendingRenderSettings = SceneRenderSettings()
     private var loadedTextureReductionSize: SIMD2<Float>?
     private var loadedContentUserProperties = Set<String>()
+    private var loadedEditingContentUserProperties = Set<String>()
     /// The newest load; an older one that finishes later is dropped.
     private var loadGeneration = 0
     private var loadJob: PreparationPool.Job?
@@ -100,6 +101,9 @@ class SceneWallpaperViewModel: ObservableObject {
     /// User properties the built content reads (layer visibility, bound values outside scripts):
     /// changing any other only reaches the scripts (`applyUserProperties`), without a rebuild.
     var contentUserProperties: Set<String> { stateLock.withLock { loadedContentUserProperties } }
+    /// `contentUserProperties` while the user edits properties (`ScenePropertyEditing`): fewer
+    /// sites need a rebuild then (`SceneLiveBindingSites`).
+    var editingContentUserProperties: Set<String> { stateLock.withLock { loadedEditingContentUserProperties } }
     /// The loaded scene has SceneScripts.
     private var hasScriptSites = false
     private var loadedWallpaperDirectory: URL?
@@ -260,6 +264,7 @@ class SceneWallpaperViewModel: ObservableObject {
         var project: SceneJSON?
         var source = "parsed"
         var contentUserProperties = Set<String>()
+        var editingContentUserProperties = Set<String>()
         var hasScriptSites = false
     }
 
@@ -364,6 +369,7 @@ class SceneWallpaperViewModel: ObservableObject {
         }
         if let document = read.document {
             read.contentUserProperties = Self.contentUserProperties(in: document)
+            read.editingContentUserProperties = Self.contentUserProperties(in: document, editing: true)
             read.hasScriptSites = !SceneScriptSiteBuilder(wallpaperID: "").sites(in: document).isEmpty
         }
         read.project = Self.project(in: dir)
@@ -424,6 +430,7 @@ class SceneWallpaperViewModel: ObservableObject {
         loadedWallpaperDirectory = dir
         stateLock.withLock {
             loadedContentUserProperties = read.contentUserProperties
+            loadedEditingContentUserProperties = read.editingContentUserProperties
             loadedTextureReductionSize = TextureReduction.orthographicSize(of: scene)
         }
         bumpRevision()
@@ -472,8 +479,9 @@ class SceneWallpaperViewModel: ObservableObject {
     /// The user properties the content is built from: every `"user"` binding of the document
     /// except inside script sites (their scripts get the change through `applyUserProperties` and
     /// the binding, docs/scenescript-plan.md WP8), `scriptproperties`, and the object fields the
-    /// renderer re-resolves every frame (`SceneLiveBindingSites`), which a change reaches without a rebuild.
-    static func contentUserProperties(in document: SceneJSON) -> Set<String> {
+    /// renderer applies without a rebuild (`SceneLiveBindingSites`).
+    /// `editing` leaves out the sites also live while the user edits properties.
+    static func contentUserProperties(in document: SceneJSON, editing: Bool = false) -> Set<String> {
         var names = Set<String>()
         func walk(_ value: SceneJSON, liveSites: Bool = false) {
             switch value {
@@ -481,13 +489,40 @@ class SceneWallpaperViewModel: ObservableObject {
                 if case .string(let script)? = fields["script"], !script.isEmpty { return }
                 if let user = SceneScriptUserReference(fields["user"]) { names.insert(user.name) }
                 for (key, field) in fields where key != "scriptproperties" {
-                    if liveSites, SceneLiveBindingSites.isLive(key, of: fields) { continue }
+                    if liveSites, SceneLiveBindingSites.isLive(key, of: fields, editing: editing) { continue }
+                    if liveSites, editing {
+                        if key == "effects", case .array(let effects) = field {
+                            effects.forEach(walkEffect)
+                            continue
+                        }
+                        if key == "instanceoverride", fields["particle"] != nil, case .object(let overrides) = field {
+                            for (name, value) in overrides where !SceneLiveBindingSites.isLiveInstanceOverride(name) { walk(value) }
+                            continue
+                        }
+                    }
                     walk(field)
                 }
             case .array(let values):
                 values.forEach { walk($0) }
             default:
                 break
+            }
+        }
+        // An entry of an object's `effects`: its visibility and its passes' constants are live.
+        func walkEffect(_ effect: SceneJSON) {
+            guard case .object(let fields) = effect else { return walk(effect) }
+            for (key, field) in fields where !SceneLiveBindingSites.liveEffectFields.contains(key) {
+                guard key == "passes", case .array(let passes) = field else {
+                    walk(field)
+                    continue
+                }
+                for pass in passes {
+                    guard case .object(let passFields) = pass else {
+                        walk(pass)
+                        continue
+                    }
+                    for (passKey, value) in passFields where !SceneLiveBindingSites.livePassFields.contains(passKey) { walk(value) }
+                }
             }
         }
         // Only the scene's own objects have live sites; everything else is walked as before.
@@ -507,11 +542,13 @@ class SceneWallpaperViewModel: ObservableObject {
 
     /// How much of the scene a user property change invalidates. A declared property no built
     /// content reads (only scripts do) changes nothing here: the renderer hands it to the scripts.
-    func impact(of keys: [String]) -> SceneChangeImpact {
-        keys.reduce(.none) { impact, key in
+    /// `editing`: while the user edits properties, which applies more of them live.
+    func impact(of keys: [String], editing: Bool = false) -> SceneChangeImpact {
+        let content = editing ? editingContentUserProperties : contentUserProperties
+        return keys.reduce(.none) { impact, key in
             let own = SceneChangeImpact.impact(of: key)
             guard own == .rebuildContent, !key.hasPrefix("_owe_") else { return max(impact, own) }
-            return max(impact, contentUserProperties.contains(key) ? .rebuildContent : .none)
+            return max(impact, content.contains(key) ? .rebuildContent : .none)
         }
     }
 
@@ -665,6 +702,7 @@ class SceneWallpaperViewModel: ObservableObject {
                                             wallpaperKey: propertyStoreKey)
             content.motions = objectMotions(scene.objects, besides: layers, sceneSize: sceneSize, context: valueContext)
             content.visibility = visibility
+            content.userVisibility = SceneUserVisibility(objects: scene.objects)
             content.objectIDs = scene.objects.map { $0.id ?? -1 }
             content.spatial = SceneSpatialContentBuilder(
                 readFile: { self.assetData(named: $0, wallpaperDir: wallpaperDir) },
@@ -1512,26 +1550,7 @@ class SceneWallpaperViewModel: ObservableObject {
     }
 
     private func isObjectVisible(_ object: WESceneObject) -> Bool {
-        let objectID = object.id ?? -1
-        let overrideKey = sceneObjectVisibilityKey(objectID: objectID)
-        if let override = userProperty(overrideKey) {
-            return override != "false"
-        }
-        if object.textValue != nil {
-            if userProperty("_owe_text_\(objectID)_enabled") == "false" {
-                return false
-            }
-        }
-        if let property = object.visibleUserProperty {
-            guard let selectedValue = userProperty(property) else {
-                return object.visible != false
-            }
-            if let condition = object.visibleCondition {
-                return normalizeVariant(condition) == normalizeVariant(selectedValue)
-            }
-            return selectedValue.caseInsensitiveCompare("true") == .orderedSame || selectedValue == "1"
-        }
-        return object.visible != false
+        SceneUserVisibility.Site(object).isShown(userProperty)
     }
 
     private func isEffectVisible(_ effect: WEObjectEffect) -> Bool {
@@ -1541,22 +1560,8 @@ class SceneWallpaperViewModel: ObservableObject {
     /// An effect bound to a user property follows it; with the property missing it keeps its
     /// authored `visible` (default true), as objects do.
     static func isEffectVisible(_ effect: WEObjectEffect, userProperty: (String) -> String?) -> Bool {
-        if let property = effect.visibleUserProperty {
-            guard let selectedValue = userProperty(property) else { return effect.visible != false }
-            if let condition = effect.visibleCondition {
-                return normalizeVariant(condition) == normalizeVariant(selectedValue)
-            }
-            return selectedValue.caseInsensitiveCompare("true") == .orderedSame || selectedValue == "1"
-        }
-        return effect.visible != false
-    }
-
-    private func normalizeVariant(_ value: String) -> String {
-        Self.normalizeVariant(value)
-    }
-
-    private static func normalizeVariant(_ value: String) -> String {
-        value.lowercased().filter { $0.isLetter || $0.isNumber }
+        SceneUserVisibility.Gate(visible: effect.visible, condition: effect.visibleCondition,
+                                 property: effect.visibleUserProperty).isShown(userProperty)
     }
 
     /// An object's `parallaxDepth` (WE's 1 1 when absent), as the layer carries it.
