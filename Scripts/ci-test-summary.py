@@ -18,7 +18,9 @@ import sys
 import urllib.parse
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-NAME_LOCATION_RE = re.compile(r"^(?P<file>[^:\s][^:]*\.swift):(?P<line>\d+): (?P<message>.*)$", re.S)
+MAX_MESSAGES = 10
+MAX_MESSAGE_LENGTH = 400
+NAME_LOCATION_RE =re.compile(r"^(?P<file>[^:\s][^:]*\.swift):(?P<line>\d+): (?P<message>.*)$", re.S)
 
 
 def run(args):
@@ -127,6 +129,11 @@ def from_legacy(bundle):
     return sorted(by_test.items()), []
 
 
+def one_line(msg):
+    msg = " ".join(msg.split())
+    return msg if len(msg) <= MAX_MESSAGE_LENGTH else msg[:MAX_MESSAGE_LENGTH] + " …"
+
+
 def env_line(text):
     macos = (run(["sw_vers", "-productVersion"]) or "?").strip()
     build = (run(["sw_vers", "-buildVersion"]) or "?").strip()
@@ -161,14 +168,17 @@ def main():
                 out.append(f"### {name}: {len(items)} {title}")
                 out.append("")
             for ident, msgs in items:
+                # A sweep test can fail with thousands of messages; the bundle keeps them all.
+                more = len(msgs) - MAX_MESSAGES
+                msgs = [(loc, one_line(msg)) for loc, msg in msgs[:MAX_MESSAGES]]
+                msgs += [("", f"… and {more} more")] if more > 0 else []
+                msgs = msgs or [("", "(no message)")]
                 if text:
                     out.append(f"  {ident}")
-                    out += [f"      {loc + ': ' if loc else ''}{msg}" for loc, msg in msgs] or ["      (no message)"]
+                    out += [f"      {loc + ': ' if loc else ''}{msg}" for loc, msg in msgs]
                 else:
                     out.append(f"- **{ident}**")
-                    for loc, msg in msgs or [("", "(no message)")]:
-                        msg = " ".join(msg.split()).replace("`", "'")
-                        out.append(f"  - {'`' + loc + '` ' if loc else ''}{msg}")
+                    out += [f"  - {'`' + loc + '` ' if loc else ''}{msg.replace('`', "'")}" for loc, msg in msgs]
             out.append("")
     print("\n".join(out))
 
