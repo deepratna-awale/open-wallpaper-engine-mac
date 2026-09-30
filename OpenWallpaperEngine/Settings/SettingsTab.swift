@@ -47,32 +47,35 @@ enum SettingsTab: Int, CaseIterable, Identifiable {
         }
     }
 
-    /// `title` in the language `identifier` names.
-    func title(in identifier: String) -> String {
-        var title = title
-        title.locale = Locale(identifier: identifier)
-        return String(localized: title)
+    /// The width of this tab's item in the preference-style toolbar: its label plus the item's
+    /// padding, and never narrower than the item's minimum. Items sit edge to edge.
+    static func toolbarItemWidth(label: String) -> CGFloat {
+        let font = NSFont.systemFont(ofSize: NSFont.smallSystemFontSize)
+        let width = (label as NSString).size(withAttributes: [.font: font]).width
+        return max(width + toolbarItemPadding, toolbarItemMinimumWidth)
     }
 
-    /// The settings window's width at which every tab's toolbar item shows with no overflow
-    /// chevron, in the app's widest language, so switching languages never hides a tab. Each
-    /// item takes its label's width (at least the icon's) plus the toolbar's item padding.
-    static let toolbarFittingWidth: CGFloat = {
-        let font = NSFont.systemFont(ofSize: NSFont.smallSystemFontSize)
-        let languages = Bundle.main.localizations.filter { $0 != "Base" }
-        let widest = languages.map { language in
-            allCases.reduce(CGFloat(0)) { total, tab in
-                let label = (tab.title(in: language) as NSString).size(withAttributes: [.font: font]).width
-                return total + max(ceil(label), toolbarIconWidth) + toolbarItemPadding
-            }
-        }.max() ?? 0
-        return max(toolbarMinimumWidth, widest + toolbarMargins)
-    }()
+    /// The labels the toolbar shows, in the app's current language.
+    static var toolbarLabels: [String] { allCases.map { String(localized: $0.title) } }
 
-    private static let toolbarIconWidth: CGFloat = 32
-    private static let toolbarItemPadding: CGFloat = 24
-    private static let toolbarMargins: CGFloat = 60
-    private static let toolbarMinimumWidth: CGFloat = 720
+    /// The narrowest window at which every tab's toolbar item shows with no overflow chevron in
+    /// the current language: the items' widths plus the toolbar's leading and trailing margins
+    /// (which include the room the toolbar keeps before it overflows).
+    static func toolbarFittingWidth(labels: [String] = toolbarLabels) -> CGFloat {
+        ceil(labels.reduce(0) { $0 + toolbarItemWidth(label: $1) } + toolbarMargins)
+    }
+
+    /// The settings window's size when it first opens, with no saved frame: just wide enough
+    /// for the toolbar (capped at the screen) and 80% of the screen's visible height.
+    static func initialWindowSize(visibleFrame: NSRect, labels: [String] = toolbarLabels) -> NSSize {
+        NSSize(width: min(toolbarFittingWidth(labels: labels), visibleFrame.width),
+               height: visibleFrame.height * 0.8)
+    }
+
+    // Measured on the preference-style toolbar: an item is its label plus 12.5 pt, at least 55 pt.
+    private static let toolbarItemPadding: CGFloat = 12.5
+    private static let toolbarItemMinimumWidth: CGFloat = 55
+    private static let toolbarMargins: CGFloat = 41
 
     /// The global settings this tab shows, for "Restore Defaults" and the changed-from-default dots.
     /// A setting belongs to one tab. Settings stored outside `GlobalSettings` (Sparkle's, the
