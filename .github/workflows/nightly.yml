@@ -42,6 +42,7 @@ jobs:
         env:
           TEST_RUNNER_OWE_ASSETS: ${{ env.WE_ASSETS }}
           TEST_RUNNER_OWE_SLOW_TESTS: '1'
+          TEST_RUNNER_OWE_TEST_PHASES: ${{ github.workspace }}/build/results/phases
         run: |
           set -o pipefail
           mkdir -p build/results
@@ -57,6 +58,21 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             "${OPTIMISE[@]}" \
             | tee build/results/xcodebuild.log
+
+      - name: List the test durations
+        if: ${{ !cancelled() }}
+        run: |
+          python3 Scripts/ci-test-durations.py --phases build/results/phases --csv build/durations.csv \
+            build/results/nightly.xcresult >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the test durations
+        # Test names and times only.
+        if: ${{ !cancelled() && hashFiles('build/durations.csv') != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test-durations-nightly
+          path: build/durations.csv
+          retention-days: 30
 
       - name: List the failing tests
         if: failure()

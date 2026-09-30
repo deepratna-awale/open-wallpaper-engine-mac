@@ -4,7 +4,9 @@
 #   2. then the serial classes of .github/test-map.yml one at a time.
 # A failing test is retried once (-retry-tests-on-failure -test-iterations 2); a test that fails
 # both times fails the run. Both parts run even if the first fails. Each part writes a result
-# bundle to the results folder, and all output goes to <results>/xcodebuild.log as well.
+# bundle to the results folder, and all output goes to <results>/xcodebuild.log as well. Each
+# test's time per phase (scene load, shader translate, render, …) goes to <results>/phases, for
+# Scripts/ci-test-durations.py (TEST_RUNNER_OWE_TEST_PHASES= turns that off).
 #
 # Usage: Scripts/ci-run-tests.sh <xctestrun> <classes file> <results folder>
 # The environment passes through: TEST_RUNNER_OWE_ASSETS, TEST_RUNNER_OWE_SLOW_TESTS, …
@@ -18,8 +20,15 @@ XCTESTRUN=$1 CLASSES=$2 RESULTS=$3
 HERE=$(cd "$(dirname "$0")" && pwd)
 
 mkdir -p "$RESULTS"
+RESULTS=$(cd "$RESULTS" && pwd)
 LOG="$RESULTS/xcodebuild.log"
 : > "$LOG"
+if [[ -z "${TEST_RUNNER_OWE_TEST_PHASES+set}" ]]; then
+  export TEST_RUNNER_OWE_TEST_PHASES="$RESULTS/phases"
+fi
+if [[ -n "$TEST_RUNNER_OWE_TEST_PHASES" ]]; then
+  mkdir -p "$TEST_RUNNER_OWE_TEST_PHASES" && rm -f "$TEST_RUNNER_OWE_TEST_PHASES"/phases-*.jsonl
+fi
 
 SERIAL=" $(python3 "$HERE/ci-test-plan.py" serial | tr '\n' ' ') "
 PARALLEL_ONLY=() SERIAL_ONLY=()

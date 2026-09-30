@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # The local gate: builds the test build and runs the whole suite the way CI does (every test
 # class, parallel then serial, failing tests retried once), then prints the failures with their
-# messages. A PR should pass it before merging; CI is the safety net. The test build is
-# optimised (Scripts/test-build-settings.txt), as on CI.
+# messages and the 25 slowest tests with where their time went. A PR should pass it before
+# merging; CI is the safety net. The test build is optimised (Scripts/test-build-settings.txt),
+# as on CI.
 #
 #   Scripts/ci-local.sh                         the suite; the asset-gated tests skip
 #   OWE_ASSETS=<assets folder> Scripts/ci-local.sh
@@ -10,7 +11,8 @@
 #   OWE_SLOW_TESTS=1 Scripts/ci-local.sh        with the slow tests, as the nightly runs them
 #   Scripts/ci-local.sh --no-build              reuses the last test build
 #
-# The build and the results go to build/ci-local (OWE_CI_LOCAL_DIR to change it).
+# The build and the results go to build/ci-local (OWE_CI_LOCAL_DIR to change it); every test's
+# duration and phase times go to <that>/results/durations.csv.
 set -uo pipefail
 
 cd "$(dirname "$0")/.." || exit 1
@@ -19,7 +21,7 @@ BUILD=1
 for arg in "$@"; do
   case "$arg" in
     --no-build) BUILD=0 ;;
-    -h|--help) sed -n '2,14p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,15p' "$0"; exit 0 ;;
     *) echo "unknown argument: $arg" >&2; exit 2 ;;
   esac
 done
@@ -61,6 +63,10 @@ echo "Output: $OUT/results/xcodebuild.log"
 Scripts/ci-run-tests.sh "$XCTESTRUN" "$OUT/classes.txt" "$OUT/results" > /dev/null
 status=$?
 
+echo
+python3 Scripts/ci-test-durations.py --text --phases "$OUT/results/phases" --csv "$OUT/results/durations.csv" \
+  "$OUT/results/parallel.xcresult" "$OUT/results/serial.xcresult"
+echo "Every test's duration: $OUT/results/durations.csv"
 echo
 python3 Scripts/ci-test-summary.py --text --env "$OUT/results/parallel.xcresult" "$OUT/results/serial.xcresult"
 if (( status == 0 )); then

@@ -192,6 +192,20 @@ jobs:
           echo "Shard $SHARD: $(wc -l < build/classes.txt | tr -d ' ') test classes" >> "$GITHUB_STEP_SUMMARY"
           Scripts/ci-run-tests.sh "$XCTESTRUN" build/classes.txt build/results
 
+      - name: List the test durations
+        if: ${{ !cancelled() }}
+        run: |
+          python3 Scripts/ci-test-durations.py --phases build/results/phases --csv build/durations.csv \
+            build/results/parallel.xcresult build/results/serial.xcresult >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the test durations
+        if: ${{ !cancelled() && hashFiles('build/durations.csv') != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test-durations-${{ matrix.shard }}
+          path: build/durations.csv
+          retention-days: 30
+
       - name: List the failing tests
         # Parallel runs print only "failed" per test; the result bundles hold the assertion text.
         # It goes to the log and the job summary.
@@ -306,6 +320,21 @@ jobs:
           python3 Scripts/ci-test-plan.py shard --index "$SHARD" --count 4 --select all > build/classes.txt
           echo "Shard $SHARD: $(wc -l < build/classes.txt | tr -d ' ') test classes" >> "$GITHUB_STEP_SUMMARY"
           Scripts/ci-run-tests.sh "$XCTESTRUN" build/classes.txt build/results
+
+      - name: List the test durations
+        if: ${{ !cancelled() }}
+        run: |
+          python3 Scripts/ci-test-durations.py --phases build/results/phases --csv build/durations.csv \
+            build/results/parallel.xcresult build/results/serial.xcresult >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the test durations
+        # Test names and times only.
+        if: ${{ !cancelled() && hashFiles('build/durations.csv') != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test-durations-assets-${{ matrix.shard }}
+          path: build/durations.csv
+          retention-days: 30
 
       - name: List the failing tests
         # To the log and the job summary.
