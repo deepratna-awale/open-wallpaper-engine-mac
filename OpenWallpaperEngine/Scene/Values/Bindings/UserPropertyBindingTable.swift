@@ -118,7 +118,8 @@ final class UserPropertyBindingTable {
         var resolved = json
         for binding in bindings {
             if case .userShaderValue = binding.target { continue }
-            resolved.setBoundValue(Self.value(of: binding, properties: properties), at: binding.site.path.components[...])
+            resolved.setBoundValue(Self.value(of: binding, properties: properties), at: binding.site.path.components[...],
+                                   replacing: binding.collapses)
         }
         return resolved
     }
@@ -178,7 +179,9 @@ final class UserPropertyBindingTable {
                                                      defaultValue: fields["value"],
                                                      site: UserPropertyBindingSite(document: document, path: path),
                                                      target: classified.target, dependency: classified.dependency,
-                                                     owner: classified.owner))
+                                                     owner: classified.owner,
+                                                     collapses: classified.dependency == .structural && fields["value"] != nil
+                                                        && Set(fields.keys).isSubset(of: ["user", "value"])))
                 }
                 if case .object(let entries)? = fields["usershadervalues"] {
                     let constants: [String: SceneJSON]
@@ -229,10 +232,14 @@ final class UserPropertyBindingTable {
 }
 
 extension SceneJSON {
-    /// Sets `value` of the object at `path`, keeping its other keys (`user`, `script`, `animation`).
-    mutating func setBoundValue(_ value: SceneJSON, at path: ArraySlice<UserPropertyBindingPath.Component>) {
+    /// Sets `value` of the object at `path`, keeping its other keys (`user`, `script`, `animation`);
+    /// with `replacing`, puts `value` in the object's place.
+    mutating func setBoundValue(_ value: SceneJSON, at path: ArraySlice<UserPropertyBindingPath.Component>,
+                                replacing: Bool = false) {
         guard let first = path.first else {
-            if case .object(var fields) = self {
+            if replacing {
+                self = value
+            } else if case .object(var fields) = self {
                 fields["value"] = value
                 self = .object(fields)
             }
@@ -241,12 +248,12 @@ extension SceneJSON {
         switch (first, self) {
         case (.key(let key), .object(var fields)):
             guard var child = fields[key] else { return }
-            child.setBoundValue(value, at: path.dropFirst())
+            child.setBoundValue(value, at: path.dropFirst(), replacing: replacing)
             fields[key] = child
             self = .object(fields)
         case (.index(let index), .array(var values)):
             guard values.indices.contains(index) else { return }
-            values[index].setBoundValue(value, at: path.dropFirst())
+            values[index].setBoundValue(value, at: path.dropFirst(), replacing: replacing)
             self = .array(values)
         default:
             return

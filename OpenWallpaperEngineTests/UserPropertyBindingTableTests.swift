@@ -99,11 +99,13 @@ final class UserPropertyBindingTableTests: XCTestCase {
         let decoded = try JSONDecoder().decode(SceneJSON.self, from: resolved)
         guard case .object(let root) = decoded, case .array(let passes)? = root["passes"],
               case .object(let pass) = passes[0], case .object(let combos)? = pass["combos"],
-              case .object(let lighting)? = combos["LIGHTING"], case .object(let constants)? = pass["constantshadervalues"],
+              case .object(let constants)? = pass["constantshadervalues"],
               case .object(let tint)? = constants["tint"] else { return XCTFail("shape: \(decoded)") }
-        XCTAssertEqual(lighting["value"], .number(1), "a combo is resolved for its parser")
-        XCTAssertEqual(lighting["user"], .string("lit"), "and keeps its binding")
+        XCTAssertEqual(combos["LIGHTING"], .number(1), "a structural site is the bare value its parser reads")
         XCTAssertEqual(tint["value"], .string("0 0.5 1"))
+        XCTAssertEqual(tint["user"], .string("tint"), "a live site keeps its binding")
+        let decodedMaterial = try JSONDecoder().decode(MaterialDocument.self, from: resolved)
+        XCTAssertEqual(decodedMaterial.passes.first?.combos["LIGHTING"], 1, "no parser drops a bound combo")
         XCTAssertEqual(table.changes(for: ["lit"]), [.object(7): .structural, .object(9): .structural])
         XCTAssertEqual(table.changes(for: ["tint"]), [.object(7): .uniform, .object(9): .uniform])
     }

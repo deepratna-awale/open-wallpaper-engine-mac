@@ -20,6 +20,11 @@ struct UserPropertyBinding: Equatable {
     let dependency: UserPropertyBindingDependency
     /// The scene object (or the scene) whose state the value belongs to.
     let owner: UserPropertyBindingOwner
+    /// The resolved document holds the bare value in place of the binding object: a structural
+    /// site with nothing but `user` and `value`, which no live path reads, so every parser reads
+    /// it as a plain value of its type (a combo as an int, a size as a string). Other sites keep
+    /// the object, `value` resolved, for the paths that follow the binding.
+    var collapses = false
 }
 
 /// Where a bound value is: a document and a JSON path inside it.
