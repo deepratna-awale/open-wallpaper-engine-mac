@@ -6,6 +6,18 @@ import Metal
 
 enum GSQuality {
     case low, medium, high, ultra
+
+    /// The frame rate the preset sets (`GlobalSettings.fps`): Ultra draws at the display's refresh.
+    /// WE's own presets set 10, 15, 25 and 30 (`getQualityPreset`, `ui/dist/scripts/scripts.js`);
+    /// these follow the Mac's faster displays.
+    var fps: Double {
+        switch self {
+        case .low: return 15
+        case .medium: return 30
+        case .high: return 60
+        case .ultra: return GlobalSettings.unlimitedFPS
+        }
+    }
 }
 
 /// A playback rule's action (Settings › Performance › Playback). With several displays, WE
@@ -190,6 +202,9 @@ enum GSLogLevel: String, CaseIterable, Identifiable, Codable {
 }
 
 struct GlobalSettings: Codable, Equatable {
+    /// The FPS setting's top: no limit but the display's refresh.
+    static let unlimitedFPS: Double = 240
+
     
     // MARK: Playback
     var otherApplicationFocused = GSPlayback.keepRunning
@@ -219,7 +234,12 @@ struct GlobalSettings: Codable, Equatable {
     /// "Cheaper shadows" (on by default): shadow maps at half WE's size, smoothed by the
     /// comparison filter (`SceneShadowAtlas.mapSize`).
     var cheaperShadows = true
+    /// WE's FPS setting: the most frames a second a scene draws. `unlimitedFPS` (the Ultra
+    /// preset's, the slider's top) draws at the display's refresh.
     var fps: Double = 30
+    /// The user moved the FPS slider themselves rather than through a quality preset: their rate
+    /// then wins over the Quality↔Efficiency stop's cap on smooth motion (`FramePacing.Limits`).
+    var fpsSetByUser = false
     /// The Quality↔Efficiency slider's stop (`QualityEfficiency`): 1 quality … 5 efficiency.
     var qualityEfficiency = QualityEfficiency.defaultStop
     /// The particle budget per scene (`ParticleBudget`).
@@ -281,7 +301,7 @@ struct GlobalSettings: Codable, Equatable {
     enum CodingKeys: String, CodingKey {
         case otherApplicationFocused, otherApplicationMaximized, otherApplicationFullscreen, otherApplicationPlayingAudio
         case displayAsleep
-        case laptopOnBattery, textureResolution, shadows, volumetrics, fps, particleBudget, optimiseTextures
+        case laptopOnBattery, textureResolution, shadows, volumetrics, fps, fpsSetByUser, particleBudget, optimiseTextures
         case webStandardResolution, reducedResolutionParticles
         case qualityEfficiency
         case antiAliasing = "msaa"
@@ -325,6 +345,7 @@ extension GlobalSettings {
         read(.shadows, &shadows)
         read(.volumetrics, &volumetrics)
         read(.fps, &fps)
+        read(.fpsSetByUser, &fpsSetByUser)
         read(.qualityEfficiency, &qualityEfficiency)
         qualityEfficiency = QualityEfficiency(stop: qualityEfficiency).stop
         read(.particleBudget, &particleBudget)

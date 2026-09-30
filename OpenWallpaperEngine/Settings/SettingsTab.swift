@@ -91,7 +91,7 @@ enum SettingsTab: Int, CaseIterable, Identifiable {
                     SettingField(\.displayAsleep), SettingField(\.laptopOnBattery),
                     SettingField(\.antiAliasing), SettingField(\.postProcessing), SettingField(\.textureResolution),
                     SettingField(\.sceneDetail), SettingField(\.renderResolution), SettingField(\.shadows),
-                    SettingField(\.volumetrics), SettingField(\.fps), SettingField(\.qualityEfficiency),
+                    SettingField(\.volumetrics), SettingField(\.fps), SettingField(\.fpsSetByUser), SettingField(\.qualityEfficiency),
                     SettingField(\.particleBudget),
                     SettingField(\.reflections)]
         case .optimizations:
