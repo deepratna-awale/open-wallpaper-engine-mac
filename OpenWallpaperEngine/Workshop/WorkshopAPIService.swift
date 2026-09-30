@@ -275,6 +275,25 @@ class WorkshopAPIService {
         return ids.compactMap { items[$0] }
     }
 
+    /// Whether each of `ids` can still be downloaded (keyless GetPublishedFileDetails, in Steam's
+    /// batch size). Ids the response leaves out are missing from the result.
+    func availability(of ids: [String]) async throws -> [String: WorkshopItemAvailability] {
+        var result: [String: WorkshopItemAvailability] = [:]
+        var start = 0
+        while start < ids.count {
+            let batch = Array(ids[start..<min(start + WorkshopCollection.detailsBatchSize, ids.count)])
+            var request = URLRequest(url: WorkshopItemAvailability.detailsURL)
+            request.httpMethod = "POST"
+            request.httpBody = WorkshopItemAvailability.detailsBody(ids: batch)
+            request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+            let (data, response) = try await send(request)
+            guard response.statusCode == 200 else { throw WorkshopAPIError.httpError(response.statusCode) }
+            result.merge(try WorkshopItemAvailability.parse(data)) { _, new in new }
+            start += WorkshopCollection.detailsBatchSize
+        }
+        return result
+    }
+
     /// The account's subscribed Wallpaper Engine items (GetUserFiles `type=mysubscriptions`, with
     /// the user's Web API key). An account with none, or a private one, answers `.empty`.
     func getSubscribedItemIDs(steamID: String) async throws -> WorkshopSubscriptions.Outcome {
