@@ -283,7 +283,9 @@ struct WallpaperPreview: SubviewOfContentView {
                                         .disabled(wallpaperViewModel.arePlaybackRatesLinked)
                                 }
                             case "scene":
-                                MissingWorkshopDependenciesBanner(steamCmd: viewModel.steamCmd, wallpaper: wallpaperViewModel.displayedWallpaper)
+                                MissingWorkshopDependenciesBanner(steamCmd: viewModel.steamCmd,
+                                                                  dependencies: AppDelegate.shared.workshopDependencies,
+                                                                  wallpaper: wallpaperViewModel.displayedWallpaper)
                                     .id(wallpaperViewModel.displayedWallpaper.wallpaperDirectory)
                                 if wallpaperHasSceneAudio(wallpaperViewModel.displayedWallpaper) {
                                     sceneMusicControls(for: wallpaperViewModel.displayedWallpaper)
@@ -520,35 +522,52 @@ struct WallpaperPreview: SubviewOfContentView {
 }
 
 /// Shows when a scene wallpaper references effects/materials that live in another Steam Workshop
-/// item that isn't installed locally, and lets the user download + link them in.
+/// item that isn't installed locally, and lets the user download + link them in. Items that were
+/// removed, made private or belong to another app are named with the reason and a link to their
+/// Workshop page; the wallpaper plays without them.
 private struct MissingWorkshopDependenciesBanner: View {
     @ObservedObject var steamCmd: SteamCmdService
+    @ObservedObject var dependencies: WorkshopDependencyService
     let wallpaper: WEWallpaper
 
     @State private var missingIds: [String] = []
+
+    private var unavailableIds: [String] { missingIds.filter { dependencies.unavailableReason(for: $0) != nil } }
+    private var downloadableIds: [String] { missingIds.filter { dependencies.unavailableReason(for: $0) == nil } }
 
     var body: some View {
         Group {
             if !missingIds.isEmpty {
                 GroupBox {
                     VStack(alignment: .leading, spacing: 6) {
-                        Label("This wallpaper needs \(missingIds.count) other Workshop items to render correctly.",
-                              systemImage: "shippingbox")
-                            .font(.footnote)
-                        ForEach(missingIds, id: \.self) { workshopId in
-                            HStack {
-                                Text(workshopId).font(.footnote).foregroundStyle(.secondary)
-                                Spacer()
-                                statusView(for: workshopId)
-                            }
+                        if !downloadableIds.isEmpty {
+                            Label("This wallpaper needs \(downloadableIds.count) other Workshop items to render correctly.",
+                                  systemImage: "shippingbox")
+                                .font(.footnote)
                         }
-                        if !steamCmd.isInstalled || !steamCmd.isLoggedIn {
+                        if !unavailableIds.isEmpty {
+                            Label("\(unavailableIds.count) required Workshop items are unavailable",
+                                  systemImage: "exclamationmark.triangle")
+                                .font(.footnote)
+                        }
+                        ForEach(missingIds, id: \.self) { workshopId in
+                            row(for: workshopId)
+                        }
+                        if !unavailableIds.isEmpty {
+                            Button("Retry") {
+                                dependencies.retry(Set(unavailableIds), forItemAt: wallpaper.wallpaperDirectory)
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                        if downloadableIds.isEmpty {
+                            // Nothing left to download.
+                        } else if !steamCmd.isInstalled || !steamCmd.isLoggedIn {
                             Text("Log in on the Workshop tab to download these.")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         } else {
                             Button("Download All") {
-                                for workshopId in missingIds {
+                                for workshopId in downloadableIds {
                                     steamCmd.downloadWorkshopItem(workshopId: workshopId, asDependency: true)
                                 }
                             }
@@ -566,6 +585,28 @@ private struct MissingWorkshopDependenciesBanner: View {
                 WorkshopDependencyResolver.linkInstalledDependencies(for: wallpaper)
             }
             refresh()
+        }
+    }
+
+    @ViewBuilder
+    private func row(for workshopId: String) -> some View {
+        if let reason = dependencies.unavailableReason(for: workshopId) {
+            VStack(alignment: .leading, spacing: 2) {
+                HStack {
+                    Text(workshopId).font(.footnote).foregroundStyle(.secondary)
+                    Spacer()
+                    if let page = WorkshopItemAvailability.workshopPageURL(for: workshopId) {
+                        Link("Open in Workshop", destination: page).font(.caption)
+                    }
+                }
+                Text(reason.message).font(.caption).foregroundStyle(.secondary)
+            }
+        } else {
+            HStack {
+                Text(workshopId).font(.footnote).foregroundStyle(.secondary)
+                Spacer()
+                statusView(for: workshopId)
+            }
         }
     }
 

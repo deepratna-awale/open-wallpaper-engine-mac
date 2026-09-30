@@ -44,6 +44,10 @@ class SteamCmdService: ObservableObject {
     /// on the main queue.
     let itemInstalled = PassthroughSubject<URL, Never>()
 
+    /// Ids steamcmd reported as `File Not Found` (removed or private), on the main queue before
+    /// the download's completion runs.
+    let itemUnavailable = PassthroughSubject<String, Never>()
+
     /// Fires on the main queue after each successful login: with a password, the Terminal login's
     /// cached session, or the session restored at launch.
     let loginSucceeded = PassthroughSubject<Void, Never>()
@@ -404,6 +408,9 @@ class SteamCmdService: ObservableObject {
 
         let downloaded = WorkshopItemInstaller.contentDirectory(inSteamCmdRoot: staging, workshopId: workshopId)
         guard FileManager.default.fileExists(atPath: downloaded.path) else {
+            if WorkshopItemAvailability.steamCmdReportsNotFound(run.output) {
+                throw DownloadError.itemUnavailable(.removedOrPrivate)
+            }
             throw DownloadError.steamCmdFailed(Self.failureMessage(output: run.output, exitCode: run.exitCode))
         }
         DispatchQueue.main.async {
@@ -424,6 +431,7 @@ class SteamCmdService: ObservableObject {
         case .failure(let error):
             OWELog.error(.workshop, "Workshop item \(workshopId) didn't download: \(error.localizedDescription)")
             downloadProgress[workshopId] = .failed(error.localizedDescription)
+            if case DownloadError.itemUnavailable = error { itemUnavailable.send(workshopId) }
             onCompleted?(nil)
             return
         }
@@ -673,10 +681,13 @@ class SteamCmdService: ObservableObject {
 
 private enum DownloadError: LocalizedError {
     case steamCmdFailed(String)
+    /// steamcmd said `File Not Found`: the item was removed or made private.
+    case itemUnavailable(WorkshopItemAvailability.Reason)
 
     var errorDescription: String? {
         switch self {
         case .steamCmdFailed(let message): return message
+        case .itemUnavailable(let reason): return reason.message
         }
     }
 }

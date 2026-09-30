@@ -87,6 +87,21 @@ final class WorkshopStorageTests: XCTestCase {
         return folder
     }
 
+    /// A dependency service on the test storage whose Steam check answers `availability`
+    /// (nothing by default, as when Steam leaves the ids out).
+    @MainActor
+    private func makeDependencyService(
+        availability: @escaping WorkshopDependencyService.AvailabilityCheck = { _ in [:] },
+        now: @escaping () -> Date = Date.init
+    ) -> WorkshopDependencyService {
+        let storage = storage!
+        return WorkshopDependencyService(
+            steamCmd: service,
+            makeResolver: { WorkshopAssetResolver(roots: [storage.url]) },
+            store: UnavailableWorkshopItemStore(fileURL: root.appending(path: "UnavailableWorkshopItems.json"), now: now),
+            checkAvailability: availability)
+    }
+
     // MARK: - Downloads
 
     @MainActor
@@ -106,9 +121,7 @@ final class WorkshopStorageTests: XCTestCase {
     @MainActor
     func testDependencyDownloadGoesIntoStorageHiddenAndResolvable() async throws {
         let wallpaper = try makeWallpaper("1000000001", in: storage.url, referencing: "2000000002")
-        let storage = storage!
-        let dependencies = WorkshopDependencyService(steamCmd: service,
-                                                     makeResolver: { WorkshopAssetResolver(roots: [storage.url]) })
+        let dependencies = makeDependencyService()
 
         dependencies.ensureDependencies(ofItemAt: wallpaper)
         try await waitUntil("the dependency is installed") { dependencies.states["2000000002"] == .installed }
@@ -119,6 +132,90 @@ final class WorkshopStorageTests: XCTestCase {
         XCTAssertEqual(listed(in: storage.url), ["1000000001"], "a dependency-only item stays out of Installed")
         XCTAssertEqual(WorkshopAssetResolver(roots: [storage.url]).itemDirectory(for: "2000000002")?.standardizedFileURL,
                        storage.url.appending(path: "2000000002").standardizedFileURL)
+    }
+
+    /// A dependency Steam reports removed is never handed to steamcmd, is remembered for the next
+    /// load, and the wallpaper still loads: its assets resolve as missing and nothing waits on it.
+    @MainActor
+    func testUnavailableDependencyIsSkippedAndTheWallpaperStillLoads() async throws {
+        let wallpaper = try makeWallpaper("1000000001", in: storage.url, referencing: "9000000009")
+        var reloads = 0
+        let observer = NotificationCenter.default.addObserver(forName: .workshopDependenciesDidInstall, object: nil,
+                                                              queue: .main) { _ in reloads += 1 }
+        defer { NotificationCenter.default.removeObserver(observer) }
+        let dependencies = makeDependencyService(availability: { _ in ["9000000009": .unavailable(.removedOrPrivate)] })
+
+        dependencies.ensureDependencies(ofItemAt: wallpaper)
+        try await waitUntil("the dependency is unavailable") {
+            dependencies.states["9000000009"] == .itemUnavailable(.removedOrPrivate)
+        }
+
+        XCTAssertTrue(steamCmd.installDirectories.isEmpty, "steamcmd isn't asked for a removed item")
+        XCTAssertTrue(dependencies.pending.isEmpty)
+        XCTAssertEqual(dependencies.unavailableReason(for: "9000000009"), .removedOrPrivate)
+        XCTAssertEqual(reloads, 0)
+        // Loading: the reference resolves as missing and no link is made.
+        let resolver = WorkshopAssetResolver(roots: [storage.url])
+        WorkshopDependencyResolver.linkInstalledDependencies(inItemAt: wallpaper, resolver: resolver)
+        XCTAssertNil(resolver.url(for: "effects/workshop/9000000009/glow/effect.json"))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: wallpaper.appending(path: "effects/workshop").path))
+
+        // A later load skips it without asking Steam.
+        let later = makeDependencyService(availability: { ids in
+            XCTFail("asked Steam again for \(ids)")
+            return [:]
+        })
+        later.ensureDependencies(ofItemAt: wallpaper)
+        try await waitUntil("the skipped dependency is reported") {
+            later.states["9000000009"] == .itemUnavailable(.removedOrPrivate)
+        }
+        XCTAssertTrue(steamCmd.installDirectories.isEmpty)
+    }
+
+    /// steamcmd's `File Not Found` reads as a removed item, with the clear message, and is remembered.
+    @MainActor
+    func testSteamCmdFileNotFoundMarksTheDependencyUnavailable() async throws {
+        let wallpaper = try makeWallpaper("1000000001", in: storage.url, referencing: "9000000009")
+        let dependencies = makeDependencyService()
+
+        dependencies.ensureDependencies(ofItemAt: wallpaper)
+        try await waitUntil("the dependency is unavailable") {
+            dependencies.states["9000000009"] == .itemUnavailable(.removedOrPrivate)
+        }
+
+        XCTAssertEqual(service.downloadProgress["9000000009"],
+                       .failed(WorkshopItemAvailability.Reason.removedOrPrivate.message))
+        XCTAssertTrue(dependencies.pending.isEmpty)
+        XCTAssertEqual(makeDependencyService().unavailableReason(for: "9000000009"), .removedOrPrivate)
+    }
+
+    /// When Steam can't be reached the dependency is downloaded as before.
+    @MainActor
+    func testOfflineCheckFallsBackToDownloading() async throws {
+        let wallpaper = try makeWallpaper("1000000001", in: storage.url, referencing: "2000000002")
+        let dependencies = makeDependencyService(availability: { _ in throw WorkshopAPIError.requestFailed })
+
+        dependencies.ensureDependencies(ofItemAt: wallpaper)
+        try await waitUntil("the dependency is installed") { dependencies.states["2000000002"] == .installed }
+    }
+
+    /// Retry forgets the item and checks it again; an item back on Steam downloads.
+    @MainActor
+    func testRetryChecksAnUnavailableDependencyAgain() async throws {
+        let wallpaper = try makeWallpaper("1000000001", in: storage.url, referencing: "2000000002")
+        var removed = true
+        let dependencies = makeDependencyService(availability: { _ in
+            removed ? ["2000000002": .unavailable(.otherApp)] : ["2000000002": .available]
+        })
+        dependencies.ensureDependencies(ofItemAt: wallpaper)
+        try await waitUntil("the dependency is unavailable") {
+            dependencies.states["2000000002"] == .itemUnavailable(.otherApp)
+        }
+
+        removed = false
+        dependencies.retry(["2000000002"], forItemAt: wallpaper)
+        try await waitUntil("the dependency is installed") { dependencies.states["2000000002"] == .installed }
+        XCTAssertNil(dependencies.unavailableReason(for: "2000000002"))
     }
 
     @MainActor
@@ -142,7 +239,8 @@ final class WorkshopStorageTests: XCTestCase {
         guard case .failed(let message) = service.downloadProgress["9999999999"] else {
             return XCTFail("expected a failure, got \(String(describing: service.downloadProgress["9999999999"]))")
         }
-        XCTAssertTrue(message.contains("ERROR"), message)
+        // steamcmd's `File Not Found` is shown as what it means.
+        XCTAssertEqual(message, WorkshopItemAvailability.Reason.removedOrPrivate.message)
         XCTAssertEqual(try children(of: storage.url), [])
     }
 
