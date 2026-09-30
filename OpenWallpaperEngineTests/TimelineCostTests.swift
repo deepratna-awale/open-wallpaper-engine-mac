@@ -54,8 +54,7 @@ final class TimelineCostTests: XCTestCase {
     /// `origin` mirror): the steady cost grows with the count, not with the length of the channels.
     /// A Debug timing bound that CI's slower runners overshoot, so it runs nightly and locally.
     func testManyTimelinesCostLittlePerFrame() throws {
-        try XCTSkipUnless(ProcessInfo.processInfo.environment["OWE_SLOW_TESTS"] == "1",
-                          "slow test: set OWE_SLOW_TESTS=1")
+        try SlowTests.require()
         var lines: [String] = []
         for count in [20, 128, 1000] {
             let frame = Frame(document: Self.syntheticScene(layers: count / 2))
