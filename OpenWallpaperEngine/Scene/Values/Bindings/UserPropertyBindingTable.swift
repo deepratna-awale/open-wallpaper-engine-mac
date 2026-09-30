@@ -149,6 +149,23 @@ final class UserPropertyBindingTable {
         }
     }
 
+    /// The build of `owner` baked `target` into a resource (a solid layer's colour is its image):
+    /// its bindings become structural, so a change rebuilds the object.
+    func baked(_ target: UserPropertyBindingTarget, of owner: UserPropertyBindingOwner) {
+        lock.withLock {
+            guard var bindings = bindingsByDocument[.scene] else { return }
+            for index in bindings.indices where bindings[index].owner == owner && bindings[index].target == target
+                && bindings[index].dependency < .structural {
+                let binding = bindings[index]
+                bindings[index] = UserPropertyBinding(name: binding.name, condition: binding.condition,
+                                                      defaultValue: binding.defaultValue, site: binding.site,
+                                                      target: binding.target, dependency: .structural, owner: binding.owner,
+                                                      collapses: binding.collapses)
+            }
+            bindingsByDocument[.scene] = bindings
+        }
+    }
+
     // MARK: - Changes
 
     /// What changing the properties `names` invalidates: per owner, the heaviest class of the

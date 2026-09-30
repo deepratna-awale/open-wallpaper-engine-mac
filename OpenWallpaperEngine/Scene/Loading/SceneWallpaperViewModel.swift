@@ -1242,6 +1242,8 @@ class SceneWallpaperViewModel: ObservableObject {
         layer.weEffects = buildEffectPlans(object.effects ?? [], objectID: object.id ?? -1, wallpaperDir: wallpaperDir).plans
         layer.alignment = object.alignment
         layer.solidFill = SIMD4(Float(color.0), Float(color.1), Float(color.2), 1)
+        // The colour is the image: a bound colour rebuilds the layer.
+        bindingTable.baked(.objectField(.color), of: .object(object.id ?? -1))
         return layer
     }
 
