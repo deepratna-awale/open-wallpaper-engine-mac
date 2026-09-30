@@ -66,10 +66,12 @@ class (`Scripts/ci-test-plan.py`):
   environment. No job uploads the assets as artifacts.
 
 The `asset-cache` job runs first and makes sure the encrypted cache (below) holds the current
-build, so the four shards restore it instead of each logging in to Steam. Without
-`OWE_ASSET_CACHE_KEY` every shard downloads the assets itself, four logins at once, which Steam
-may rate limit: set the key. The steps live in `.github/actions/we-assets`, shared with the
-nightly workflow.
+build: on a miss it downloads the assets (three attempts, 30 s and 2 min apart), encrypts and
+saves them, and then checks that the entry is there. It is the only job that logs in to Steam.
+The four shards restore that build (`download: 'false'`) and fail with an error if they can't;
+they never log in themselves, since concurrent logins of one account fail. Without
+`OWE_ASSET_CACHE_KEY` the asset jobs fail: set the key. The steps live in
+`.github/actions/we-assets`, shared with the nightly workflow, which downloads on a miss itself.
 
 Failing tests are retried once, and a test that fails both times fails the job. On a failure the
 job summary lists each failing test with its message and file:line, and the `.xcresult` bundles
@@ -82,12 +84,20 @@ Steam build id, digits only):
 
 - **Hit:** `actions/cache/restore` fetches the one encrypted file, and the job decrypts it with
   `openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000` and untars it into the assets folder. If
-  decryption fails (a wrong or rotated key), the job downloads the assets from Steam instead.
+  decryption fails (a wrong or rotated key), the nightly downloads the assets from Steam
+  instead; an asset shard fails.
 - **Miss:** the job downloads the assets, then streams `tar` straight into
   `openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt`. No plaintext archive is written. Only
-  pushes and manual runs on `main` save the encrypted file with `actions/cache/save`.
-- **No key:** when `OWE_ASSET_CACHE_KEY` is empty, or the build id couldn't be read, the cache is
-  skipped and the assets are downloaded.
+  pushes and manual runs on `main` save the encrypted file with `actions/cache/save`. The cache
+  paths are made absolute first: `actions/cache` refuses a path with `..` in it, and then only
+  warns and saves nothing.
+- **No key:** when `OWE_ASSET_CACHE_KEY` is empty, or the build id couldn't be read, the nightly
+  skips the cache and downloads the assets; `asset-cache` and the asset shards fail.
+
+The asset jobs and the nightly also keep their shader-variant translations and Metal pipeline
+archive between runs (`.github/actions/shader-cache`). Those hold MSL translated from Wallpaper
+Engine's shaders, so they are cached the same way: one archive, encrypted with
+`OWE_ASSET_CACHE_KEY`, never plaintext.
 
 The key is the `OWE_ASSET_CACHE_KEY` secret in the `steam-ci` environment. Only the steps that
 decrypt or encrypt get it, through `-pass env:`, so it is never on a command line or in the log.
