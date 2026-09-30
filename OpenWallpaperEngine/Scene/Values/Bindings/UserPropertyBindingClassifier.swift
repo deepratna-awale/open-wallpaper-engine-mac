@@ -90,7 +90,7 @@ enum UserPropertyBindingClassifier {
             guard rest == 0, let value = SceneObjectValueField(rawValue: field) else {
                 return result(.other(path.description), .structural)
             }
-            let live = SceneLiveBindingSites.isLive(field, of: object, editing: true)
+            let live = SceneLiveBindingSites.isLive(field, of: object)
             return result(.objectField(value), live ? .object : .structural)
         }
     }

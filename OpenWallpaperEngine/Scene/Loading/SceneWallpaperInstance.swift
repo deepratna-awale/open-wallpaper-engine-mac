@@ -48,9 +48,12 @@ final class SceneWallpaperInstance {
     private var cancellables = Set<AnyCancellable>()
     private var pendingImpact: SceneChangeImpact = .none
     private var pendingUpdate: DispatchWorkItem?
-    /// A property change was applied live while the user edited properties, where it would have
-    /// rebuilt the content otherwise: the content is rebuilt once editing ends.
+    /// A property change was applied while the user edited properties: the content is rebuilt once
+    /// editing ends, to exactly what a fresh load draws.
     private var appliedLive = false
+    /// Objects a structural property change rebuilds alone, and the pending rebuild.
+    private var pendingObjects = Set<Int>()
+    private var pendingObjectRebuild: DispatchWorkItem?
     private var scriptsNotice: SafeRestartNotice?
     private var cursorMonitors: [Any] = []
     private var powerObserver: UUID?
@@ -92,6 +95,8 @@ final class SceneWallpaperInstance {
     func shutdown() {
         pendingUpdate?.cancel()
         pendingUpdate = nil
+        pendingObjectRebuild?.cancel()
+        pendingObjectRebuild = nil
         for observer in observers { NotificationCenter.default.removeObserver(observer) }
         observers.removeAll()
         for monitor in cursorMonitors { NSEvent.removeMonitor(monitor) }
@@ -311,23 +316,24 @@ final class SceneWallpaperInstance {
             MainActor.assumeIsolated {
                 // Another wallpaper's, or another display's, properties.
                 guard let self, store == nil || store == self.viewModel.propertyStoreKey else { return }
-                // Scripts get every change (`applyUserProperties`); content is rebuilt only when it
-                // reads the property itself. While the user edits properties more kinds apply live
-                // (`SceneLiveBindingSites`), visibility among them.
+                // Scripts get every change (`applyUserProperties`). The bindings that read the
+                // properties (`UserPropertyBindingTable`) decide the rest: uniform and object values
+                // apply in place under a new binding revision, a structural change rebuilds only its
+                // object, and only the app's own keys and scene-wide structure rebuild the content.
                 let changed = Set(keys)
-                let editing = WallpaperServices.shared.propertyEditing.isActive
-                self.renderLoop.perform { $0.userPropertiesDidChange(changed, applyVisibility: editing) }
+                let update = self.viewModel.bindingUpdate(for: keys)
+                self.renderLoop.perform { $0.userPropertiesDidChange(changed, owners: update.owners) }
                 // The picture changes: the loading snapshots follow once it has shown a while.
                 self.snapshotCapture?.rearm()
                 self.wakePacing(.slow)
-                let impact = self.viewModel.impact(of: keys, editing: editing)
-                if editing, impact < self.viewModel.impact(of: keys) { self.appliedLive = true }
-                guard impact > .none else { return }
-                self.scheduleSceneUpdate(impact)
+                if WallpaperServices.shared.propertyEditing.isActive, !update.isEmpty { self.appliedLive = true }
+                if !update.rebuild.isEmpty { self.scheduleObjectRebuild(update.rebuild) }
+                guard update.impact > .none else { return }
+                self.scheduleSceneUpdate(update.impact)
             }
         })
-        // Editing ended: a content that took changes live is rebuilt once, in the background, to
-        // exactly what a fresh load of the current properties draws.
+        // Editing ended: a content that took changes while editing is rebuilt once, in the
+        // background, to exactly what a fresh load of the current properties draws (the reconcile).
         observers.append(center.addObserver(forName: .scenePropertyEditingDidChange, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated {
                 guard let self, !WallpaperServices.shared.propertyEditing.isActive, self.appliedLive else { return }
@@ -402,6 +408,33 @@ final class SceneWallpaperInstance {
             }
         }
         pendingUpdate = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12, execute: work)
+    }
+
+    /// Coalesces a burst of structural property changes into one rebuild of the objects they touch,
+    /// built on the content queue and swapped in by the renderer (`SceneObjectReplacement`). A
+    /// whole-content update pending or landing meanwhile builds them too; objects that can't be
+    /// rebuilt alone rebuild the content.
+    private func scheduleObjectRebuild(_ ids: Set<Int>) {
+        pendingObjects.formUnion(ids)
+        pendingObjectRebuild?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                let ids = self.pendingObjects
+                self.pendingObjects.removeAll()
+                guard self.pendingImpact == .none, !ids.isEmpty else { return }
+                let revision = self.viewModel.metalRevision
+                self.viewModel.rebuildObjectsAsync(ids) { [weak self] replacement in
+                    MainActor.assumeIsolated {
+                        guard let self, self.viewModel.metalRevision == revision else { return }
+                        guard let replacement else { return self.scheduleSceneUpdate(.rebuildContent) }
+                        self.renderLoop.perform { $0.replaceObjects(replacement) }
+                    }
+                }
+            }
+        }
+        pendingObjectRebuild = work
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.12, execute: work)
     }
 

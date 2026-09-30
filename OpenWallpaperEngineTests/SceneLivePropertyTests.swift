@@ -2,36 +2,11 @@ import XCTest
 import MetalKit
 @testable import OpenWallpaperEngine
 
-/// While the user edits properties (`ScenePropertyEditing`), effect constants, visibility, text and
-/// particle colours apply without a content rebuild; otherwise they rebuild as before. Ending the
-/// editing rebuilds once, to exactly what a fresh load draws. Showing the properties with nothing
-/// changed changes nothing.
+/// Effect constants, visibility, text and particle colours apply without a content rebuild, while
+/// the user edits properties (`ScenePropertyEditing`) and after. Ending the editing rebuilds once,
+/// to exactly what a fresh load draws. Showing the properties with nothing changed changes nothing.
 @MainActor
 final class SceneLivePropertyTests: XCTestCase {
-    private func contentProperties(_ json: String, editing: Bool) throws -> Set<String> {
-        let document = try JSONDecoder().decode(SceneJSON.self, from: Data(json.utf8))
-        return SceneWallpaperViewModel.contentUserProperties(in: document, editing: editing)
-    }
-
-    func testEditingAppliesVisibilityConstantsAndColoursLive() throws {
-        let scene = #"""
-        {"objects": [
-          {"id": 1, "image": "models/a.json", "visible": {"user": "show", "value": true},
-           "effects": [{"file": "e.json", "visible": {"user": "fx", "value": true},
-                        "passes": [{"combos": {"MODE": {"user": "mode", "value": 1}},
-                                    "constantshadervalues": {"speed": {"user": "speed", "value": 1}}}]}]},
-          {"id": 2, "text": {"value": "hi"}, "color": {"user": "textcolour", "value": "1 1 1"}},
-          {"id": 3, "particle": "particles/p.json",
-           "instanceoverride": {"colorn": {"user": "tint", "value": "1 0 0"}, "count": {"user": "amount", "value": 1}}},
-          {"id": 4, "image": "models/b.json", "size": {"user": "size", "value": "10 10"}}
-        ]}
-        """#
-        XCTAssertEqual(try contentProperties(scene, editing: false),
-                       ["show", "fx", "mode", "speed", "textcolour", "tint", "amount", "size"])
-        // The particle budget is estimated from `count`, combos select shaders, sizes are built.
-        XCTAssertEqual(try contentProperties(scene, editing: true), ["mode", "amount", "size"])
-    }
-
     func testUserVisibilityFollowsTheProperties() throws {
         let json = #"""
         [{"id": 1, "visible": {"user": "show", "value": true},
@@ -141,13 +116,12 @@ final class SceneLivePropertyTests: XCTestCase {
         XCTAssertEqual(pixels.rgb(32, 32), SIMD3(255, 0, 255), "red set over the blue fill")
         XCTAssertEqual(pixels.rgb(96, 40), SIMD3(0, 0, 0), "the green layer is hidden")
 
-        fixture.change(["red": "0.5"], editing: true)
-        XCTAssertEqual(fixture.model.impact(of: ["red"], editing: true), .none)
-        XCTAssertEqual(fixture.model.impact(of: ["red"]), .rebuildContent)
+        fixture.change(["red": "0.5"])
+        XCTAssertEqual(fixture.model.impact(of: ["red"]), .none)
         pixels = try fixture.render { abs(Int($0.rgb(32, 32).x) - 128) < 4 }
         XCTAssertEqual(Int(pixels.rgb(32, 32).x), 128, accuracy: 3, "a constant is live")
 
-        fixture.change(["showeffect": "false", "layer": "2"], editing: true)
+        fixture.change(["showeffect": "false", "layer": "2"])
         pixels = try fixture.render { $0.rgb(32, 32).x == 0 }
         XCTAssertEqual(pixels.rgb(32, 32), SIMD3(0, 0, 255), "the effect is hidden")
         XCTAssertEqual(pixels.rgb(96, 40), SIMD3(0, 255, 0), "the green layer shows")
@@ -168,20 +142,17 @@ final class SceneLivePropertyTests: XCTestCase {
         XCTAssertEqual(try fresh.render { $0.rgb(96, 40).y > 200 }.bytes, reconciled.bytes)
     }
 
-    /// With no window editing properties nothing applies live: the change waits for its rebuild.
-    func testWithoutEditingAChangeWaitsForItsRebuild() throws {
+    /// With no window editing properties a change applies the same way, without a rebuild.
+    func testWithoutEditingAChangeAppliesInPlace() throws {
         _ = try Fixtures.assets()
         let fixture = try LiveFixture()
         defer { fixture.close() }
-        let built = try fixture.render { $0.rgb(32, 32).x > 200 }
-        fixture.change(["showeffect": "false", "layer": "2"], editing: false)
-        XCTAssertEqual(fixture.model.impact(of: ["showeffect", "layer"]), .rebuildContent)
-        XCTAssertEqual(try fixture.render(frames: 5).bytes, built.bytes)
-        fixture.model.invalidateContent()
-        fixture.renderer.releaseContent()
-        fixture.renderer.setContent(try XCTUnwrap(fixture.model.metalContent()))
-        let rebuilt = try fixture.render { $0.rgb(96, 40).y > 200 && $0.rgb(32, 32).x == 0 }
-        XCTAssertEqual(rebuilt.rgb(32, 32), SIMD3(0, 0, 255))
+        _ = try fixture.render { $0.rgb(32, 32).x > 200 }
+        fixture.change(["showeffect": "false", "layer": "2"])
+        XCTAssertEqual(fixture.model.impact(of: ["showeffect", "layer"]), .none)
+        let live = try fixture.render { $0.rgb(96, 40).y > 200 && $0.rgb(32, 32).x == 0 }
+        XCTAssertEqual(live.rgb(32, 32), SIMD3(0, 0, 255))
+        XCTAssertEqual(fixture.renderer.bindingRevisions.staleReuses, 0)
     }
 
     private final class LiveFixture {
@@ -218,10 +189,14 @@ final class SceneLivePropertyTests: XCTestCase {
         }
 
         /// Sets `values` in the running store and hands the renderer the change, as the wallpaper
-        /// instance does.
-        func change(_ values: [String: String], editing: Bool) {
+        /// instance does; a structural change swaps in its rebuilt objects.
+        func change(_ values: [String: String]) {
             WallpaperServices.shared.setUserProperties(values, wallpaper: key, replacing: false)
-            renderer.userPropertiesDidChange(Set(values.keys), applyVisibility: editing)
+            let update = model.bindingUpdate(for: Array(values.keys))
+            renderer.userPropertiesDidChange(Set(values.keys), owners: update.owners)
+            if !update.rebuild.isEmpty, let replacement = model.rebuildObjects(update.rebuild) {
+                renderer.replaceObjects(replacement)
+            }
         }
 
         /// Draws `frames` frames, then more until `ready` holds (at most 60 s), and returns the last.
