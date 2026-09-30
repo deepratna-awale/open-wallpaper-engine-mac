@@ -1,6 +1,7 @@
 name: Nightly
 
-# The whole suite, slow tests included (OWE_SLOW_TESTS=1), with the WE assets.
+# The whole suite, the slow tier included (OWE_SLOW_TESTS=1), with the WE assets, from an
+# optimised Debug build (Scripts/test-build-settings.txt).
 on:
   schedule:
     - cron: '17 3 * * *'
@@ -21,7 +22,8 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - uses: ./.github/actions/select-xcode
+      - id: xcode
+        uses: ./.github/actions/select-xcode
 
       # Restores the encrypted asset cache, or downloads the assets and (on main) saves them.
       - uses: ./.github/actions/we-assets
@@ -43,6 +45,7 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p build/results
+          read -ra OPTIMISE < Scripts/test-build-settings.txt
           xcodebuild test \
             -project OpenWallpaperEngine.xcodeproj \
             -scheme OpenWallpaperEngine \
@@ -52,6 +55,7 @@ jobs:
             -resultBundlePath build/results/nightly.xcresult \
             -retry-tests-on-failure -test-iterations 2 \
             CODE_SIGNING_ALLOWED=NO \
+            "${OPTIMISE[@]}" \
             | tee build/results/xcodebuild.log
 
       - name: List the failing tests

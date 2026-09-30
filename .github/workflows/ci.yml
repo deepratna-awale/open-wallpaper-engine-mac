@@ -24,7 +24,10 @@ env:
     -clonedSourcePackagesDirPath build/SourcePackages
     CODE_SIGNING_ALLOWED=NO
     COMPILER_INDEX_STORE_ENABLE=NO
-  # Tests over about a minute skip unless OWE_SLOW_TESTS=1; nightly.yml runs them.
+  # The slow tier (tests over about a minute, SlowTests.swift) skips unless OWE_SLOW_TESTS=1;
+  # nightly.yml and Scripts/ci-local.sh run it. The test build is optimised
+  # (Scripts/test-build-settings.txt) but stays a Debug build: DEBUG code, signing and @testable
+  # imports are as before.
   # Scripts/ci-test-plan.py lists the test classes and splits them into shards; .github/test-map.yml
   # holds the serial classes and what a pull request's changed files select.
   # Scripts/ci-run-tests.sh runs a shard (parallel classes, then serial ones, failures retried
@@ -90,16 +93,18 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: build/DerivedData
-          key: dd-${{ steps.xcode.outputs.version }}-${{ hashFiles('OpenWallpaperEngine.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-${{ hashFiles('OpenWallpaperEngine/**', 'OpenWallpaperEngineTests/**', 'OpenWallpaperEngine.xcodeproj/**', 'OpenWallpaperEngine-Info.plist', 'Vendor/**') }}
+          # dd-opt: optimised builds, keyed on their settings too, never mixed with unoptimised ones.
+          key: dd-opt-${{ steps.xcode.outputs.version }}-${{ hashFiles('Scripts/test-build-settings.txt') }}-${{ hashFiles('OpenWallpaperEngine.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-${{ hashFiles('OpenWallpaperEngine/**', 'OpenWallpaperEngineTests/**', 'OpenWallpaperEngine.xcodeproj/**', 'OpenWallpaperEngine-Info.plist', 'Vendor/**') }}
           restore-keys: |
-            dd-${{ steps.xcode.outputs.version }}-${{ hashFiles('OpenWallpaperEngine.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-
+            dd-opt-${{ steps.xcode.outputs.version }}-${{ hashFiles('Scripts/test-build-settings.txt') }}-${{ hashFiles('OpenWallpaperEngine.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-
 
       - name: Build for testing
         if: steps.dd.outputs.cache-hit != 'true'
         run: |
           set -o pipefail
+          read -ra OPTIMISE < Scripts/test-build-settings.txt
           # shellcheck disable=SC2086 # the flags split into words on purpose
-          xcodebuild build-for-testing $XCODEBUILD_FLAGS | tee xcodebuild.log
+          xcodebuild build-for-testing $XCODEBUILD_FLAGS "${OPTIMISE[@]}" | tee xcodebuild.log
 
       - name: Check for deployment target mismatches
         # A library built for a newer macOS than the app's deployment target links, and then
@@ -145,7 +150,8 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - uses: ./.github/actions/select-xcode
+      - id: xcode
+        uses: ./.github/actions/select-xcode
 
       - name: Test the release scripts
         if: matrix.shard == 1

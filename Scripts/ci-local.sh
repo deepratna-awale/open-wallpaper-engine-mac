@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # The local gate: builds the test build and runs the whole suite the way CI does (every test
 # class, parallel then serial, failing tests retried once), then prints the failures with their
-# messages. A PR should pass it before merging; CI is the safety net.
+# messages. A PR should pass it before merging; CI is the safety net. The test build is
+# optimised (Scripts/test-build-settings.txt), as on CI.
 #
 #   Scripts/ci-local.sh                         the suite; the asset-gated tests skip
 #   OWE_ASSETS=<assets folder> Scripts/ci-local.sh
@@ -18,7 +19,7 @@ BUILD=1
 for arg in "$@"; do
   case "$arg" in
     --no-build) BUILD=0 ;;
-    -h|--help) sed -n '2,13p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,14p' "$0"; exit 0 ;;
     *) echo "unknown argument: $arg" >&2; exit 2 ;;
   esac
 done
@@ -32,6 +33,7 @@ mkdir -p "$OUT"
 
 if (( BUILD )); then
   echo "Building for testing into $OUT/DerivedData…"
+  read -ra OPTIMISE < Scripts/test-build-settings.txt
   if ! xcodebuild build-for-testing \
       -project OpenWallpaperEngine.xcodeproj \
       -scheme OpenWallpaperEngine \
@@ -39,7 +41,8 @@ if (( BUILD )); then
       -destination platform=macOS \
       -derivedDataPath "$OUT/DerivedData" \
       CODE_SIGNING_ALLOWED=NO \
-      COMPILER_INDEX_STORE_ENABLE=NO > "$OUT/build.log" 2>&1; then
+      COMPILER_INDEX_STORE_ENABLE=NO \
+      "${OPTIMISE[@]}" > "$OUT/build.log" 2>&1; then
     grep -E "error:" "$OUT/build.log" | sort -u | head -40
     echo "Build failed; the full log is $OUT/build.log" >&2
     exit 1
