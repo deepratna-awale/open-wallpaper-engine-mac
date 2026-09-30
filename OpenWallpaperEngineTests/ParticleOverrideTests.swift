@@ -41,6 +41,8 @@ final class ParticleOverrideTests: XCTestCase {
         XCTAssertEqual(defaults.maximum, 500)
         XCTAssertEqual(defaults.spawnScale, SIMD4(2, 0.5, 3, 2))
         XCTAssertEqual(defaults.colorScale, SIMD3(2, 1, 0.5))
+        // A change moves the system's binding revision, as `SceneBindingUpdate` does in the renderer.
+        runtime.bindingRevision += 1
         let changed = ParticleFrameInputs.advance(runtime, deltaTime: 1 / 60, cursor: .zero, values: Properties(values: [
             "amount": "0.25", "flakesize": "4", "tint": "0 1 0"]))
         XCTAssertEqual(changed.emissionRate, 25, accuracy: 1e-4)
