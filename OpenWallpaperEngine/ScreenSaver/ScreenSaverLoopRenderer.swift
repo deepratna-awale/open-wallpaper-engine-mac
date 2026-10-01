@@ -197,16 +197,23 @@ struct ScreenSaverLoopRenderer {
         }
         guard let writer = HEVCWriter(url: partial, pixelSize: pixelSize, frameRate: frameRate) else { return false }
         let fade: Int = { if case .crossfade(let frames) = seam { return frames }; return 0 }()
+        // With a crossfade the video starts `fade` frames in: its last frames fade into the scene's
+        // first `fade` frames, and it wraps to the frame that follows them, so the motion runs on
+        // through the seam instead of replaying the first frames.
         var head: [CGImage] = []
         var reference: ScreenSaverFrameSignature?
-        for index in 0..<frames {
+        for rendered in 0..<(frames + fade) {
             guard let image = nextFrame(session, frameRate: frameRate) else {
-                OWELog.error(.app, "Screen saver: \(name)'s frame \(index) couldn't be read back")
+                OWELog.error(.app, "Screen saver: \(name)'s frame \(rendered) couldn't be read back")
                 writer.cancel()
                 return false
             }
-            if index == 0, verify { reference = ScreenSaverFrameSignature(image) }
-            if index < fade { head.append(image) }
+            if rendered == 0, verify { reference = ScreenSaverFrameSignature(image) }
+            if rendered < fade {
+                head.append(image)
+                continue
+            }
+            let index = rendered - fade
             let weight = ScreenSaverSeamFinder.crossfadeWeight(index: index, loopFrames: frames, fade: fade)
             let overlay = weight > 0 ? head[index - (frames - fade)] : nil
             guard writer.append(image, overlay: overlay, weight: weight, frame: index) else {

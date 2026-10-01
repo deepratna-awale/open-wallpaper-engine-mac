@@ -51,9 +51,10 @@ enum ScreenSaverSeamFinder {
         return Decision(frames: best, seam: seam(difference: differences[best], frameRate: frameRate, loopFrames: best))
     }
 
-    /// The weight of frame `index - (loopFrames - fade)` (one of the first frames) blended over
-    /// frame `index` of a loop of `loopFrames` frames fading over `fade`: 0 before the fade, rising
-    /// to just under 1 on the last frame, so the next frame (frame 0) completes it.
+    /// The weight of the scene's frame `index - (loopFrames - fade)` (one of the first `fade`
+    /// frames, which the video skips) blended over the video's frame `index` of a loop of
+    /// `loopFrames` frames fading over `fade`: 0 before the fade, rising to just under 1 on the
+    /// last frame, so the next frame (the scene's frame `fade`, the video's first) completes it.
     static func crossfadeWeight(index: Int, loopFrames: Int, fade: Int) -> Double {
         let start = loopFrames - fade
         guard fade > 0, index >= start, index < loopFrames else { return 0 }
