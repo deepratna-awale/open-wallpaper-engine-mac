@@ -29,9 +29,22 @@ final class ThreadGuardTestObserver: NSObject, XCTestObservation {
         testCase.addTeardownBlock { [weak testCase] in
             guard let testCase else { return }
             for violation in ThreadGuards.store.takePending() {
+                guard Self.fails(violation) else {
+                    print("Thread guard, from the test's own main-thread setup: " + violation.message(frames: 2))
+                    continue
+                }
                 testCase.record(Self.issue(for: violation))
             }
         }
+    }
+
+    /// Test bodies run on the main thread and load fixtures there synchronously (`metalContent()`,
+    /// texture and shader preparation), work the app does off it; so a main-thread violation fails
+    /// a test only with `OWE_STRICT_THREAD_GUARDS=1`. Render-thread violations always fail it.
+    static let strictMainThread = ProcessInfo.processInfo.environment["OWE_STRICT_THREAD_GUARDS"] == "1"
+
+    static func fails(_ violation: ThreadGuards.Violation) -> Bool {
+        violation.kind != .onMainThread || strictMainThread
     }
 
     static func issue(for violation: ThreadGuards.Violation) -> XCTIssue {
