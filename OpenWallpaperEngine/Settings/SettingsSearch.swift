@@ -25,6 +25,7 @@ enum SettingsAnchor {
     static let security = "security"
     static let permissions = "permissions"
     static let diagnostics = "diagnostics"
+    static let threadGuards = "threadguards"
     static let developer = "developer"
     static let reset = "reset"
     static let plugins = "plugins"
