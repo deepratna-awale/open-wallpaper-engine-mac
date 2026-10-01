@@ -54,6 +54,7 @@ struct SettingsSearch {
             entry("Appearance", .general, SettingsAnchor.appearance),
             entry("Theme", .general, SettingsAnchor.appearance),
             entry("Adjust Menu Bar Color", .general, SettingsAnchor.macOS),
+            entry("Show Wallpaper on Lock Screen", .general, SettingsAnchor.macOS),
             entry("Run Setup Again…", .general, SettingsAnchor.setup),
             entry("Keyboard Shortcuts", .general, SettingsAnchor.shortcuts),
 
@@ -112,6 +113,7 @@ struct SettingsSearch {
             entry("Reset Config", .diagnostics, SettingsAnchor.reset),
 
             entry("Animated Thumbnails", .plugins, SettingsAnchor.plugins),
+            entry("Screen Saver", .plugins, SettingsAnchor.plugins),
             entry("Depth Map Generation", .plugins, SettingsAnchor.plugins),
 
             entry("Credits", .about, nil),

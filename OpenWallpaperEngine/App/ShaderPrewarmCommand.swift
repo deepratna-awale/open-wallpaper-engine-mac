@@ -16,9 +16,39 @@ enum ShaderPrewarmCommand {
     static let prewarmArgument = "--prewarm-shaders"
     static let prepareArgument = "--prepare-wallpapers"
 
+    /// `--render-screensaver-loop <folder> <width>x<height> <points width>x<points height> <output>`
+    /// renders a scene's loop video for the screen saver (`ScreenSaverLoopRenderer`).
+    static let screenSaverArgument = "--render-screensaver-loop"
+
     static func isHelperRun(arguments: [String]) -> Bool {
         arguments.contains(printKeyArgument) || arguments.contains(prewarmArgument)
-            || arguments.contains(prepareArgument)
+            || arguments.contains(prepareArgument) || arguments.contains(screenSaverArgument)
+    }
+
+    /// `<width>x<height>` as numbers, nil otherwise.
+    static func size(_ text: String) -> SIMD2<Int>? {
+        let parts = text.split(separator: "x").compactMap { Int($0) }
+        guard parts.count == 2, parts[0] > 0, parts[1] > 0 else { return nil }
+        return SIMD2(parts[0], parts[1])
+    }
+
+    @MainActor
+    private static func renderScreenSaverLoop(_ arguments: ArraySlice<String>) -> Int32 {
+        let values = Array(arguments)
+        guard values.count >= 4, let pixels = size(values[1]), let points = size(values[2]),
+              let wallpaper = InstalledLibrary.wallpaper(at: URL(filePath: values[0], directoryHint: .isDirectory), hiding: []),
+              wallpaper.project.type.caseInsensitiveCompare("scene") == .orderedSame else {
+            OWELog.error(.app, "Screen saver: bad loop arguments \(values)")
+            return 2
+        }
+        let scratch = FileManager.default.temporaryDirectory
+            .appending(path: "owe-screensaver-\(ProcessInfo.processInfo.processIdentifier)", directoryHint: .isDirectory)
+        defer { try? FileManager.default.removeItem(at: scratch) } // Optional: a scratch folder.
+        let renderer = ScreenSaverLoopRenderer(wallpaper: wallpaper, pixelSize: pixels,
+                                               pointSize: SIMD2(Float(points.x), Float(points.y)),
+                                               output: URL(filePath: values[3], directoryHint: .notDirectory),
+                                               defaults: .app, scratchDirectory: scratch)
+        return renderer.run() ? 0 : 1
     }
 
     /// Runs the helper `arguments` ask for and returns its exit status, or nil for a normal launch.
@@ -33,6 +63,12 @@ enum ShaderPrewarmCommand {
                 OWELog.error(.app, "Can't encode the shader cache key: \(error)")
                 return 1
             }
+        }
+        if let index = arguments.firstIndex(of: screenSaverArgument) {
+            defer { AppStorageLocation.current.discardReadOnlyScratch() }
+            setpriority(PRIO_PROCESS, 0, 10)
+            NSApplication.shared.setActivationPolicy(.prohibited)
+            return renderScreenSaverLoop(arguments[(index + 1)...])
         }
         let prepareIndex = arguments.firstIndex(of: prepareArgument)
         guard arguments.contains(prewarmArgument) || prepareIndex != nil else { return nil }
