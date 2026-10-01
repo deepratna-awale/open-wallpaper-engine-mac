@@ -69,3 +69,12 @@ fragment float4 scenePuppetWarpFragment(ScenePuppetWarpOut in [[stage_in]],
                                         sampler smp [[sampler(0)]]) {
     return source.sample(smp, in.uv);
 }
+
+// `scenePuppetWarpFragment` premultiplied, for a warp composited like the albedo's mesh draw: a
+// puppet's effect output, whose parts the posed mesh lays over each other.
+fragment float4 scenePuppetWarpPremultipliedFragment(ScenePuppetWarpOut in [[stage_in]],
+                                                     texture2d<float> source [[texture(0)]],
+                                                     sampler smp [[sampler(0)]]) {
+    float4 color = source.sample(smp, in.uv);
+    return float4(color.rgb * color.a, color.a);
+}
