@@ -21,7 +21,7 @@ final class SceneRenderSettingsContentTests: XCTestCase {
         model.setRenderSettings(settings)
         settings.postProcessing = .enabled
         model.setRenderSettings(settings)
-        settings.renderResolution = settings.renderResolution == .native ? .desktop : .native
+        settings.renderResolution = settings.renderResolution == .display ? .full : .display
         settings.sceneDetail = settings.sceneDetail == .full ? .matchDisplay : .full
         model.setRenderSettings(settings)
         XCTAssertEqual(model.metalRevision, start, "reflection, the bloom gate, resolution and detail apply per frame")
