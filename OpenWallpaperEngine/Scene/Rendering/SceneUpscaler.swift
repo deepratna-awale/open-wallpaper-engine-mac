@@ -121,7 +121,7 @@ final class SceneUpscaler: @unchecked Sendable {
             }
         }
         if entry == nil {
-            OWELog.error(.render, "MetalFX can't scale \(key.input.x)×\(key.input.y) to \(key.output.x)×\(key.output.y); the frame is scaled bilinearly")
+            OWELog.error(.scene, "MetalFX can't scale \(key.input.x)×\(key.input.y) to \(key.output.x)×\(key.output.y); the frame is scaled bilinearly")
         }
         lock.lock()
         pending.remove(key)
