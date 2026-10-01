@@ -18,18 +18,21 @@ struct ScreenSaverManifest: Codable, Equatable {
     var revision = ScreenSaverManifest.revision
     var videos: [Video] = []
 
-    /// The folder the videos and the manifest live in, given a home folder: the Application
-    /// Support folder of the system's screen saver host (`legacyScreenSaver`), whose sandbox lets a
-    /// third-party saver read only its own container. The saver, running in that container, sees
-    /// the same folder as its own Application Support.
+    /// The folder the videos and the manifest live in, given the user's home folder: OWE's own
+    /// Application Support. The app can't write into the screen saver host's (`legacyScreenSaver`)
+    /// container (macOS protects other apps' containers), but that host's sandbox may read any
+    /// path (`files.absolute-path.read-only: /`), so the saver reads the videos where the app writes them.
     static func sharedFolder(home: URL) -> URL {
-        home.appending(path: "Library/Containers/com.apple.ScreenSaver.Engine.legacyScreenSaver/Data/Library/Application Support/Open Wallpaper Engine/ScreenSaver",
-                       directoryHint: .isDirectory)
+        home.appending(path: "Library/Application Support/Open Wallpaper Engine/ScreenSaver", directoryHint: .isDirectory)
     }
 
-    /// The folder as the saver sees it from inside the container.
-    static func folderInsideContainer(applicationSupport: URL) -> URL {
-        applicationSupport.appending(path: "Open Wallpaper Engine/ScreenSaver", directoryHint: .isDirectory)
+    /// The user's real home folder. Inside the saver's sandbox `homeDirectoryForCurrentUser` is the
+    /// host's container, so the saver asks the user database.
+    static var userHome: URL {
+        if let entry = getpwuid(getuid()), let dir = entry.pointee.pw_dir {
+            return URL(filePath: String(cString: dir), directoryHint: .isDirectory)
+        }
+        return FileManager.default.homeDirectoryForCurrentUser
     }
 
     /// The video for a view of `pixels`: the same size, else the same aspect and the nearest

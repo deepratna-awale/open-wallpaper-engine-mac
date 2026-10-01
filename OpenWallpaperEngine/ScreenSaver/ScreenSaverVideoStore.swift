@@ -3,10 +3,9 @@ import Foundation
 
 /// Where the screen saver's loop videos live and what they are called.
 ///
-/// **Path.** macOS runs third-party savers inside `legacyScreenSaver`, whose sandbox lets a saver
-/// read its own bundle and that host's container only. The videos therefore go in
-/// `~/Library/Containers/com.apple.ScreenSaver.Engine.legacyScreenSaver/Data/Library/Application Support/Open Wallpaper Engine/ScreenSaver`
-/// (`ScreenSaverManifest.sharedFolder`), which the saver sees as its own Application Support.
+/// **Path.** The videos go in `~/Library/Application Support/Open Wallpaper Engine/ScreenSaver`
+/// (`ScreenSaverManifest.sharedFolder`). macOS stops the app writing into the screen saver host's
+/// container, but the host (`legacyScreenSaver`) may read any path, so the saver reads them there.
 /// An isolated copy (`AppStorageLocation`) writes under its own support folder instead, where no
 /// saver looks, so a test or development run never changes what the user's saver plays.
 ///
@@ -23,7 +22,7 @@ struct ScreenSaverVideoStore: Sendable {
     let directory: URL
 
     static var current: ScreenSaverVideoStore {
-        ScreenSaverVideoStore(location: .current, home: FileManager.default.homeDirectoryForCurrentUser)
+        ScreenSaverVideoStore(location: .current, home: ScreenSaverManifest.userHome)
     }
 
     init(directory: URL) { self.directory = directory }

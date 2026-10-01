@@ -50,10 +50,7 @@ final class OWESaverView: ScreenSaverView {
 
     /// The manifest's video for this view's pixel size.
     private func videoURL() -> URL? {
-        guard let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
-            return nil
-        }
-        let folder = ScreenSaverManifest.folderInsideContainer(applicationSupport: support)
+        let folder = ScreenSaverManifest.sharedFolder(home: ScreenSaverManifest.userHome)
         guard let data = try? Data(contentsOf: folder.appending(path: ScreenSaverManifest.fileName)),
               let manifest = try? JSONDecoder().decode(ScreenSaverManifest.self, from: data),
               manifest.revision == ScreenSaverManifest.revision else { return nil } // No video yet: stay black.

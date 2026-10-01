@@ -132,22 +132,20 @@ final class ScreenSaverStorageTests: XCTestCase {
     func testIsolatedCopiesWriteWhereNoSaverReads() throws {
         let home = URL(filePath: "/Users/someone", directoryHint: .isDirectory)
         let isolated = ScreenSaverVideoStore(location: AppStorageLocation(isolationTag: "screensaver-test"), home: home)
-        XCTAssertFalse(isolated.directory.path.contains("Containers"))
+        XCTAssertFalse(isolated.directory.path.hasPrefix(ScreenSaverManifest.sharedFolder(home: home).path))
         XCTAssertTrue(isolated.directory.path.contains("isolated screensaver-test"))
         let user = ScreenSaverVideoStore(location: AppStorageLocation(isolationTag: nil), home: home)
         XCTAssertEqual(user.directory, ScreenSaverManifest.sharedFolder(home: home))
         XCTAssertTrue(user.directory.path.hasPrefix(
-            "/Users/someone/Library/Containers/com.apple.ScreenSaver.Engine.legacyScreenSaver/Data/Library/Application Support"))
+            "/Users/someone/Library/Application Support/Open Wallpaper Engine/ScreenSaver"))
         // The test host itself is isolated.
-        XCTAssertFalse(ScreenSaverVideoStore.current.directory.path.contains("Containers"))
+        XCTAssertNotEqual(ScreenSaverVideoStore.current.directory, ScreenSaverManifest.sharedFolder(home: ScreenSaverManifest.userHome))
     }
 
-    func testSaverSeesTheSameFolderFromInsideItsContainer() {
-        let home = URL(filePath: "/Users/someone", directoryHint: .isDirectory)
-        let containerSupport = URL(filePath: "/Users/someone/Library/Containers/com.apple.ScreenSaver.Engine.legacyScreenSaver/Data/Library/Application Support",
-                                   directoryHint: .isDirectory)
-        XCTAssertEqual(ScreenSaverManifest.folderInsideContainer(applicationSupport: containerSupport).standardizedFileURL,
-                       ScreenSaverManifest.sharedFolder(home: home).standardizedFileURL)
+    func testSaverReadsTheRealHomeNotItsContainer() {
+        XCTAssertFalse(ScreenSaverManifest.userHome.path.contains("/Library/Containers/"))
+        XCTAssertEqual(ScreenSaverManifest.userHome.standardizedFileURL,
+                       URL(filePath: NSHomeDirectoryForUser(NSUserName()) ?? "", directoryHint: .isDirectory).standardizedFileURL)
     }
 
     func testInstallerNeverTouchesTheUsersSaversWhenIsolated() throws {
