@@ -618,11 +618,13 @@ class SceneWallpaperViewModel: ObservableObject {
             return layer
         }
         var particleSystems: [SceneMetalParticleSystem] = []
+        let particleTiming = ParticleBuildTiming()
         for (index, object) in scene.objects.enumerated() {
             let base = particleSystems.count
             let family = bindingTable.building(.object(object.id ?? index)) {
                 buildParticleFamily(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
-                                    pixelUnits: Self.particlesUsePixelUnits(scene), transforms: authoredTransforms)
+                                    pixelUnits: Self.particlesUsePixelUnits(scene), transforms: authoredTransforms,
+                                    timing: particleTiming)
             }
             for var system in family {
                 system.order = index
@@ -630,6 +632,7 @@ class SceneWallpaperViewModel: ObservableObject {
                 particleSystems.append(system)
             }
         }
+        logParticleBuildTiming(particleTiming, wallpaperDir: wallpaperDir)
         particleCapacities = Dictionary(particleSystems.map { system in
             (system.order < scene.objects.count ? scene.objects[system.order].id ?? system.order : system.order,
              ParticleBudget.capacity(of: system))
@@ -731,6 +734,8 @@ class SceneWallpaperViewModel: ObservableObject {
         var layers: [SceneMetalLayer] = []
         var particleSystems: [SceneMetalParticleSystem] = []
         var capacities = particleCapacities
+        let particleTiming = ParticleBuildTiming()
+        defer { logParticleBuildTiming(particleTiming, wallpaperDir: wallpaperDir) }
         for id in ids.sorted() {
             guard let index = scene.objects.firstIndex(where: { $0.id == id }) else { return nil }
             let object = scene.objects[index]
@@ -741,7 +746,8 @@ class SceneWallpaperViewModel: ObservableObject {
             layer?.order = index
             let family = bindingTable.building(.object(id)) {
                 buildParticleFamily(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
-                                    pixelUnits: Self.particlesUsePixelUnits(scene), transforms: authoredTransforms)
+                                    pixelUnits: Self.particlesUsePixelUnits(scene), transforms: authoredTransforms,
+                                    timing: particleTiming)
             }
             guard layer != nil || !family.isEmpty, !family.contains(where: { !$0.emitterImages.isEmpty }) else { return nil }
             if let layer { layers.append(layer) }
@@ -905,7 +911,8 @@ class SceneWallpaperViewModel: ObservableObject {
         if resolved.particle != nil {
             var systems = buildParticleFamily(resolved, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
                                               pixelUnits: loadedScene.map(Self.particlesUsePixelUnits) ?? true,
-                                              transforms: SceneTransformHierarchy(objects: [resolved], sceneSize: sceneSize))
+                                              transforms: SceneTransformHierarchy(objects: [resolved], sceneSize: sceneSize),
+                                              timing: ParticleBuildTiming())
             guard !systems.isEmpty else { return nil }
             // The scene's factor, or the family's own if it alone exceeds the budget.
             let own = ParticleBudget.scale(authored: systems.reduce(0) { $0 + ParticleBudget.capacity(of: $1) },
@@ -1718,15 +1725,17 @@ class SceneWallpaperViewModel: ObservableObject {
     }
 
     private func buildParticleFamily(_ object: WESceneObject, wallpaperDir: URL, sceneSize: SIMD2<Float>, pixelUnits: Bool,
-                                     transforms: SceneTransformHierarchy) -> [SceneMetalParticleSystem] {
+                                     transforms: SceneTransformHierarchy,
+                                     timing: ParticleBuildTiming) -> [SceneMetalParticleSystem] {
         OWEPhaseTiming.measure(.particlesModels) {
             buildParticleFamilyUntimed(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize, pixelUnits: pixelUnits,
-                                       transforms: transforms)
+                                       transforms: transforms, timing: timing)
         }
     }
 
     private func buildParticleFamilyUntimed(_ object: WESceneObject, wallpaperDir: URL, sceneSize: SIMD2<Float>,
-                                            pixelUnits: Bool, transforms: SceneTransformHierarchy) -> [SceneMetalParticleSystem] {
+                                            pixelUnits: Bool, transforms: SceneTransformHierarchy,
+                                            timing: ParticleBuildTiming) -> [SceneMetalParticleSystem] {
         guard let particlePath = object.particle else { return [] }
         // The emitter's full world transform: its own and its parents' origin, scale and angle.
         let world = object.id.map { transforms.world(of: String($0)) }
@@ -1736,7 +1745,7 @@ class SceneWallpaperViewModel: ObservableObject {
             build: { [weak self] path, system, world, overrides in
                 self?.buildMetalParticleSystem(path, particleSystem: system, object: object, world: world,
                                                overrides: overrides, sceneSize: sceneSize, pixelUnits: pixelUnits,
-                                               wallpaperDir: wallpaperDir)
+                                               wallpaperDir: wallpaperDir, timing: timing)
             },
             report: { message in OWELog.error(.scene, "Particle object \(object.id ?? -1): \(message)") })
         var family = builder.family(particlePath, world: world,
@@ -1750,43 +1759,88 @@ class SceneWallpaperViewModel: ObservableObject {
         return family
     }
 
+    /// Logs where a build's particle systems spent their time (`ParticleBuildTiming`).
+    private func logParticleBuildTiming(_ timing: ParticleBuildTiming, wallpaperDir: URL) {
+        guard let summary = timing.summary else { return }
+        Self.logDetail("\(wallpaperDir.lastPathComponent): \(summary)")
+    }
+
     private func buildMetalParticleSystem(_ particlePath: String, particleSystem: WEParticleSystem, object: WESceneObject,
                                           world: SceneAffineTransform, overrides: SceneParticleOverrides,
-                                          sceneSize: SIMD2<Float>, pixelUnits: Bool,
-                                          wallpaperDir: URL) -> SceneMetalParticleSystem? {
-        guard let materialPath = particleSystem.material,
-              var material: WEMaterial = loadJSON(path: materialPath, wallpaperDir: wallpaperDir),
-              let textureName = material.passes?.first?.textures?.first ?? nil else { return nil }
+                                          sceneSize: SIMD2<Float>, pixelUnits: Bool, wallpaperDir: URL,
+                                          timing: ParticleBuildTiming) -> SceneMetalParticleSystem? {
+        guard let materialPath = particleSystem.material else { return nil }
         // The object's blending is its own system's; the children it spawns keep their materials'.
         let blending = particlePath == object.particle ? blendingOverride(for: object) : nil
+        guard let parts = buildSharedParticleParts(particlePath, materialPath: materialPath, particleSystem: particleSystem,
+                                                   blending: blending, object: object, wallpaperDir: wallpaperDir,
+                                                   timing: timing) else { return nil }
+        timing.countBuilt()
+        return makeParticleSystem(particlePath, parts: parts, particleSystem: particleSystem, object: object, world: world,
+                                  overrides: overrides, sceneSize: sceneSize, pixelUnits: pixelUnits, timing: timing)
+    }
+
+    /// What every copy of a particle definition with the same material and blending draws with:
+    /// the material, texture 0, its sprite sheet, each renderer's material plan and the built-in
+    /// draw's texture. Nil when the system can't draw (no material or texture).
+    private func buildSharedParticleParts(_ particlePath: String, materialPath: String, particleSystem: WEParticleSystem,
+                                          blending: WEMaterialBlending?, object: WESceneObject, wallpaperDir: URL,
+                                          timing: ParticleBuildTiming) -> ParticleSharedParts? {
+        guard var material: WEMaterial = timing.measure(.materialDocument, {
+                  loadJSON(path: materialPath, wallpaperDir: wallpaperDir)
+              }),
+              let textureName = material.passes?.first?.textures?.first ?? nil else { return nil }
         if let blending { material.passes?[0].blending = blending.rawValue }
-        guard let source = loadMetalTexture(named: textureName, materialDir: materialPath, wallpaperDir: wallpaperDir,
-                                            colour: true) else {
+        guard let source = timing.measure(.texture, {
+            loadMetalTexture(named: textureName, materialDir: materialPath, wallpaperDir: wallpaperDir, colour: true)
+        }) else {
             OWELog.error(.scene, "\(wallpaperDir.lastPathComponent): particle \(particlePath) (object \(object.id ?? -1)): "
                          + "texture \(textureName) of \(materialPath) not found")
             return nil
         }
-        let spriteSheet = loadSpriteSheet(named: textureName, materialDir: materialPath,
-                          wallpaperDir: wallpaperDir, source: source)
-
-        let particleRenderer = particleSystem.renderer?.first
-        let materialPlan = buildParticleMaterial(materialPath, particleSystem: particleSystem, renderer: particleRenderer,
-                                                 source: source, spriteSheet: spriteSheet, blending: blending,
-                                                 object: object, wallpaperDir: wallpaperDir)
-        var system = ParticleSystemBuilder.build(particlePath, particleSystem: particleSystem, object: object,
-                                                 world: world, overrides: overrides, sceneSize: sceneSize,
-                                                 source: source, spriteSheet: spriteSheet, material: material,
-                                                 materialPlan: materialPlan, pixelUnits: pixelUnits)
-        system.material = materialPlan
-        let albedo = ParticleMaterialPlanBuilder.textureHeader(named: textureName, materialPath: materialPath) {
-            assetData(named: $0, wallpaperDir: wallpaperDir)
+        let spriteSheet = timing.measure(.spriteSheet) {
+            loadSpriteSheet(named: textureName, materialDir: materialPath, wallpaperDir: wallpaperDir, source: source)
         }
-        system.fallbackSource = ParticleFallbackTexture.converted(source, format: albedo.flatMap(TEXImageFormat.init(texData:)))
+        let renderers = particleSystem.renderer ?? []
+        let materialPlan = timing.measure(.materialPlan) {
+            buildParticleMaterial(materialPath, particleSystem: particleSystem, renderer: renderers.first, source: source,
+                                  spriteSheet: spriteSheet, blending: blending, object: object, wallpaperDir: wallpaperDir)
+        }
+        let fallbackSource = timing.measure(.fallbackTexture) { () -> SceneMetalTextureSource? in
+            let albedo = ParticleMaterialPlanBuilder.textureHeader(named: textureName, materialPath: materialPath) {
+                assetData(named: $0, wallpaperDir: wallpaperDir)
+            }
+            return ParticleFallbackTexture.converted(source, format: albedo.flatMap(TEXImageFormat.init(texData:)))
+        }
         // WE draws every renderer of the system from its one simulation, each through the material
         // with that renderer's combos.
-        ParticleSystemBuilder.addRenderers(to: &system, particleSystem: particleSystem) { renderer in
-            buildParticleMaterial(materialPath, particleSystem: particleSystem, renderer: renderer, source: source,
-                                  spriteSheet: spriteSheet, blending: blending, object: object, wallpaperDir: wallpaperDir)
+        let rendererMaterials = timing.measure(.extraRenderers) {
+            renderers.dropFirst().map { renderer in
+                buildParticleMaterial(materialPath, particleSystem: particleSystem, renderer: renderer, source: source,
+                                      spriteSheet: spriteSheet, blending: blending, object: object,
+                                      wallpaperDir: wallpaperDir)
+            }
+        }
+        return ParticleSharedParts(material: material, source: source, spriteSheet: spriteSheet, materialPlan: materialPlan,
+                                   fallbackSource: fallbackSource, rendererMaterials: rendererMaterials)
+    }
+
+    /// One copy's system: its own transform, overrides and object over the shared `parts`.
+    private func makeParticleSystem(_ particlePath: String, parts: ParticleSharedParts, particleSystem: WEParticleSystem,
+                                    object: WESceneObject, world: SceneAffineTransform, overrides: SceneParticleOverrides,
+                                    sceneSize: SIMD2<Float>, pixelUnits: Bool,
+                                    timing: ParticleBuildTiming) -> SceneMetalParticleSystem {
+        var system = timing.measure(.system) {
+            ParticleSystemBuilder.build(particlePath, particleSystem: particleSystem, object: object, world: world,
+                                        overrides: overrides, sceneSize: sceneSize, source: parts.source,
+                                        spriteSheet: parts.spriteSheet, material: parts.material,
+                                        materialPlan: parts.materialPlan, pixelUnits: pixelUnits)
+        }
+        system.material = parts.materialPlan
+        system.fallbackSource = parts.fallbackSource
+        var rendererMaterials = parts.rendererMaterials.makeIterator()
+        ParticleSystemBuilder.addRenderers(to: &system, particleSystem: particleSystem) { _ in
+            rendererMaterials.next() ?? nil
         }
         return system
     }
