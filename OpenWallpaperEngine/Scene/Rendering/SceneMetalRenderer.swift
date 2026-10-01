@@ -268,11 +268,15 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// posed mesh lays out after them (`posedEffectOutput`); the layer's pose otherwise.
     func puppetImagePose(ofLayer id: String) -> ScenePuppetPose? {
         guard let pose = puppetPose(ofLayer: id) else { return nil }
-        let hasEffects = layers.first { $0.layer.id == id }.map { !$0.layer.weEffects.isEmpty } ?? false
-        return hasEffects ? .bind(boneCount: pose.bones.count) : pose
+        return puppetHasEffects(id) ? .bind(boneCount: pose.bones.count) : pose
     }
-    /// What of a puppet's mesh space its image covers, when not the image's rect (tests, diagnostics).
-    func puppetCanvas(ofLayer id: String) -> ScenePuppetCanvas? { puppetCanvases[id] }
+    /// What of a puppet's mesh space `puppetImage(ofLayer:)` covers, when not the image's rect
+    /// (tests, diagnostics): a layer with effects draws its bind pose into the image's rect, and
+    /// only the posed layout of their output covers the canvas.
+    func puppetCanvas(ofLayer id: String) -> ScenePuppetCanvas? { puppetHasEffects(id) ? nil : puppetCanvases[id] }
+    private func puppetHasEffects(_ id: String) -> Bool {
+        layers.first { $0.layer.id == id }.map { !$0.layer.weEffects.isEmpty } ?? false
+    }
     /// Effect passes encoded so far, for tests.
     var effectPassesEncoded: Int { effectGraph?.passesEncoded ?? 0 }
     /// Whether an effect pipeline is still compiling (shader prewarm waits for them).
