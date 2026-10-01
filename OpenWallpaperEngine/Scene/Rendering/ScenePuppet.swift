@@ -141,8 +141,13 @@ final class ScenePuppetPlan {
             content = SIMD2(compressed.contentWidth, compressed.contentHeight)
         case let .image(image):
             let size = SceneMetalTextureSource.pixelSize(of: image)
-            texture = SIMD2(Int(size.x), Int(size.y))
-            content = texture
+            content = SIMD2(Int(size.x), Int(size.y))
+            // A raw .tex image is uploaded as its padded allocation.
+            if let raw = TEXRawImageRep.of(image), raw.isPadded {
+                texture = SIMD2(raw.rowPixels, raw.allocationRows)
+            } else {
+                texture = content
+            }
         case .animated:
             // WE prelights a sprite-sheet puppet through its `SPRITESHEET` albedo copy (0x14020a27e).
             throw ScenePuppetError.unsupported("a sprite-sheet albedo")
