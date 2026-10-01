@@ -94,6 +94,17 @@ enum ThreadGuards {
             return first
         }
 
+        /// Counts a repeat at a call site already on record when nothing collects the violations
+        /// themselves (no capture, no per-test list), so the stack isn't symbolicated again on
+        /// every frame. False when the violation is to be recorded in full.
+        func countRepeat(id: String, at date: Date) -> Bool {
+            lock.lock(); defer { lock.unlock() }
+            guard captures.isEmpty, !collectsPending, sitesByID[id] != nil else { return false }
+            sitesByID[id]?.count += 1
+            sitesByID[id]?.last = date
+            return true
+        }
+
         /// Turns on the per-test list `takePending` drains (the test observer does).
         func collectPending() { lock.withLock { collectsPending = true } }
 
@@ -182,6 +193,7 @@ enum ThreadGuards {
 
     @inline(never)
     private static func report(_ kind: Violation.Kind, _ what: String, _ file: StaticString, _ line: UInt) {
+        if store.countRepeat(id: "\(kind.rawValue)|\(file):\(line)", at: Date()) { return }
         // Drop this frame and the check that called it (the mangled `ThreadGuards` enum).
         let stack = Thread.callStackSymbols.dropFirst().drop { $0.contains(ownSymbol) }
         let violation = Violation(kind: kind, what: what, file: "\(file)", line: line, thread: currentThreadName(),
