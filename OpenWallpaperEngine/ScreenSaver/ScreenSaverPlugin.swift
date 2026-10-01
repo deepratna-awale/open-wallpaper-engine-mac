@@ -70,8 +70,7 @@ final class ScreenSaverPlugin {
         }
         if !wasEnabled {
             Self.fileQueue.async {
-                guard installer.install() else { return }
-                Task { @MainActor in installer.openSettings() }
+                installer.install()
             }
         }
         guard let wallpaper else { return }

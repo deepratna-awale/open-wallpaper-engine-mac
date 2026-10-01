@@ -77,9 +77,9 @@ final class LockScreenPictureTests: XCTestCase {
 
     func testSettingDefaultsOnAndDecodesWhenMissing() throws {
         XCTAssertTrue(GlobalSettings().lockScreenPicture)
-        XCTAssertFalse(GlobalSettings().screenSaver)
+        XCTAssertTrue(GlobalSettings().screenSaver)
         let decoded = try JSONDecoder().decode(GlobalSettings.self, from: Data("{}".utf8))
         XCTAssertTrue(decoded.lockScreenPicture)
-        XCTAssertFalse(decoded.screenSaver)
+        XCTAssertTrue(decoded.screenSaver)
     }
 }

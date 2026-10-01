@@ -267,8 +267,8 @@ struct GlobalSettings: Codable, Equatable {
     /// loading snapshot (`LockScreenPicture`). On by default; off puts the user's pictures back.
     var lockScreenPicture = true
     /// Settings › Plugins › Screen Saver: the current scene's loop video plays as the screen saver
-    /// (`ScreenSaverPlugin`). Off by default.
-    var screenSaver = false
+    /// (`ScreenSaverPlugin`). On by default: the saver is installed for the user to pick.
+    var screenSaver = true
     
     // MARK: Appearance
     var appearance = GSAppearance.followSystem
