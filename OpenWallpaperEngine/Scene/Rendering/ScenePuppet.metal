@@ -69,3 +69,13 @@ fragment float4 scenePuppetWarpFragment(ScenePuppetWarpOut in [[stage_in]],
                                         sampler smp [[sampler(0)]]) {
     return source.sample(smp, in.uv);
 }
+
+// The same, premultiplied, for a blended material's warp (`ScenePuppetRenderer.warp`, `blended`):
+// overlapping triangles composite "over" in a float scratch target, which
+// `scenePuppetUnpremultiply` then writes back straight.
+fragment float4 scenePuppetWarpPremultipliedFragment(ScenePuppetWarpOut in [[stage_in]],
+                                                     texture2d<float> source [[texture(0)]],
+                                                     sampler smp [[sampler(0)]]) {
+    float4 color = source.sample(smp, in.uv);
+    return float4(color.rgb * color.a, color.a);
+}

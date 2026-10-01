@@ -236,6 +236,36 @@ final class ScenePuppetTests: XCTestCase {
         }
     }
 
+    /// A puppet with effects: their output, laid out by the posed mesh (`warp`, `blended`), keeps
+    /// the material's "over" where parts overlap. A part transparent where another lies over it
+    /// (the Katana rig's face under its hair strands, 3238423642) must not erase the part drawn
+    /// before it; unblended, the clear half replaced the red one.
+    func testABlendedWarpCompositesOverlappingPartsOver() throws {
+        // Texture: left half opaque red, right half clear. The clear part is drawn second.
+        var bytes = [UInt8](repeating: 0, count: 8 * 4 * 4)
+        for y in 0..<4 {
+            for x in 0..<4 { bytes.replaceSubrange((y * 8 + x) * 4..<(y * 8 + x) * 4 + 4, with: [255, 0, 0, 255]) }
+        }
+        let texture = try Self.texture(Picture(width: 8, height: 4, pixels: bytes), device: device)
+        let mesh = Self.mesh(quads: [(SIMD4(-4, 2, 4, -2), SIMD4(0.1, 0.1, 0.4, 0.9)), (SIMD4(-4, 2, 4, -2), SIMD4(0.6, 0.1, 0.9, 0.9))])
+        let plan = try plan(mesh, bones: 1, size: SIMD2(8, 4))
+        _ = try draw(plan, texture: texture, pose: .bind(boneCount: 1))
+        func warped(blended: Bool) throws -> [UInt8] {
+            let commands = try XCTUnwrap(queue.makeCommandBuffer())
+            let output = try XCTUnwrap(renderer.warp(plan, layerID: "puppet", key: "_effects", texture: texture, contentSize: nil,
+                                                     pose: .bind(boneCount: 1), redraw: true, blended: blended,
+                                                     commandBuffer: commands))
+            commands.commit()
+            commands.waitUntilCompleted()
+            return try ScenePuppetTestSupport.rgba8(output, device: device)
+        }
+        let over = try warped(blended: true)
+        for index in stride(from: 0, to: over.count, by: 4) {
+            XCTAssertEqual(Array(over[index..<index + 4]), [255, 0, 0, 255], "texel \(index / 4)")
+        }
+        XCTAssertEqual(try warped(blended: false)[3], 0, "unblended, the later part replaces")
+    }
+
     /// A padded texture (a `.tex` whose image sits in a larger allocation): the target keeps the
     /// texture's layout, the image drawn into its top-left content texels and the padding clear.
     func testAPaddedImageKeepsItsTextureLayout() throws {
