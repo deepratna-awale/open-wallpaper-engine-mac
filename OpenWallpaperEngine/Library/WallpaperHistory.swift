@@ -8,6 +8,10 @@ struct WallpaperHistory: Codable, Equatable {
 
     private(set) var stacks: [String: [WEWallpaper]] = [:]
 
+    static func == (lhs: WallpaperHistory, rhs: WallpaperHistory) -> Bool {
+        lhs.stacks.mapValues { $0.map(\.wallpaperDirectory) } == rhs.stacks.mapValues { $0.map(\.wallpaperDirectory) }
+    }
+
     /// Records `wallpaper` as set on `screenId`. Setting the wallpaper already on top does nothing.
     mutating func push(_ wallpaper: WEWallpaper, for screenId: String) {
         guard wallpaper.project != .invalid else { return }
