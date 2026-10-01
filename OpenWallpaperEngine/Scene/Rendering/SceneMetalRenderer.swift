@@ -160,6 +160,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var clock = SceneClock()
     /// Test harnesses: while true the scene clock stands still (`SceneClock.hold`). The app never sets it.
     var holdsClock = false
+    /// The renderer draws the screen saver's loop video (`ScreenSaverLoopRenderer`): scripts see
+    /// `engine.isScreensaver()` true. Set before the first frame.
+    var rendersScreenSaver = false
     /// The frames drawn (`BuiltinFrameContext.serial`).
     private var frameSerial: UInt64 = 0
     /// The wall clock `clock` follows (tests step it).
@@ -2192,7 +2195,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         input.environment = SceneScriptEngineEnvironment(
             screenResolution: SIMD2(Double(drawableSize.x), Double(drawableSize.y)),
             canvasSize: SIMD2(Double(sceneSize.x), Double(sceneSize.y)), placement: placement,
-            pixelsPerPoint: Double(drawablePixelsPerPoint))
+            pixelsPerPoint: Double(drawablePixelsPerPoint), isScreensaver: rendersScreenSaver)
         input.input = SceneScriptInput(cursorScreenPosition: cursorScreenPixels(viewports), cursorLeftDown: leftDown)
         input.cursorScenePosition = cursor.position
         input.shakeOffset = lastCameraMotion?.shake ?? .zero
