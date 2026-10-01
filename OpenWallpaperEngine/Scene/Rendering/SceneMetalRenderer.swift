@@ -163,6 +163,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// The renderer draws the screen saver's loop video (`ScreenSaverLoopRenderer`): scripts see
     /// `engine.isScreensaver()` true. Set before the first frame.
     var rendersScreenSaver = false
+    /// While true the scene's clock text layers (`SceneClockLayers`) draw nothing: set for the
+    /// screen saver's loop video and while capturing the loading snapshot the lock screen shows.
+    var hidesClockLayers = false
+    /// The current content's clock text layers.
+    private(set) var clockLayerIDs: Set<String> = []
     /// The frames drawn (`BuiltinFrameContext.serial`).
     private var frameSerial: UInt64 = 0
     /// The wall clock `clock` follows (tests step it).
@@ -616,6 +621,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     }
 
     func setContent(_ content: SceneMetalContent?) {
+        clockLayerIDs = content?.scripts.map { SceneClockLayers.ids(in: $0.document) } ?? []
         baseValueCaches.removeAll()
         effectAssetTextures.removeAll()
         clearUploadedImages()
@@ -1461,6 +1467,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             // Hidden layers keep their transforms (scripts and hit tests read them) but draw nothing,
             // except into the image a model or another layer samples (`_rt_imageLayerComposite_<id>_a`).
             let visible = scripts.isVisible(entry.layer.id)
+                && !(hidesClockLayers && clockLayerIDs.contains(entry.layer.id))
             let isCompositeSource = compositeOrder.sources.contains(entry.layer.id)
                 || models?.compositeLayerIDs.contains(entry.layer.id) == true
             guard visible || isCompositeSource else { continue }

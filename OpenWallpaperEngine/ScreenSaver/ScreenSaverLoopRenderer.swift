@@ -113,6 +113,7 @@ struct ScreenSaverLoopRenderer {
         }
         let startTime: CFTimeInterval = 1000
         renderer.rendersScreenSaver = true
+        renderer.hidesClockLayers = true
         renderer.renderSettings = renderSettings
         renderer.sounds.setTargetGain(0)
         renderer.audioSpectrumFrame = { _ in .silent }
