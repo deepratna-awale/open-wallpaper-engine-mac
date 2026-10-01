@@ -21812,101 +21812,6 @@
         }
       }
     },
-    "Desktop (1 pixel per point)" : {
-      "comment" : "Render resolution: one pixel per screen point, as a non-Retina display draws; not the macOS Desktop",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "دقة منخفضة (بكسل واحد لكل نقطة)"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Niedrige Auflösung (1 Pixel pro Punkt)"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Baja resolución (1 píxel por punto)"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Basse résolution (1 pixel par point)"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "निम्न रिज़ोल्यूशन (1 पिक्सेल प्रति पॉइंट)"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bassa risoluzione (1 pixel per punto)"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "低解像度（1ポイントあたり1ピクセル）"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "저해상도(포인트당 1픽셀)"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Niska rozdzielczość (1 piksel na punkt)"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Baixa Resolução (1 pixel por ponto)"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Низкое разрешение (1 пиксель на точку)"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Düşük Çözünürlük (nokta başına 1 piksel)"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Низька роздільність (1 піксель на пункт)"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "低分辨率（每点 1 像素）"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "低解析度（每點 1 像素）"
-          }
-        }
-      }
-    },
     "Details" : {
       "localizations" : {
         "ar" : {
@@ -51810,194 +51715,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "名稱"
-          }
-        }
-      }
-    },
-    "Native" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "أصلي"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nativ"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nativa"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Native"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "नेटिव"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nativa"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ネイティブ"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "네이티브"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Natywna"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nativa"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Исходное"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yerel"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Власна"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "原生"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "原生"
-          }
-        }
-      }
-    },
-    "Native draws at the display's full pixel count. Desktop draws one pixel per point (half the width and height on a Retina display) and scales the frame up, for a quarter of the work." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يرسم الخيار «أصلي» بكامل عدد وحدات البكسل في شاشة العرض. أما الخيار «دقة منخفضة» فيرسم بكسلًا واحدًا لكل نقطة (نصف العرض والارتفاع على شاشة Retina) ثم يكبّر الإطار، مقابل ربع الجهد."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "„Nativ“ zeichnet mit der vollen Pixelanzahl des Displays. „Niedrige Auflösung“ zeichnet ein Pixel pro Punkt (halbe Breite und Höhe auf einem Retina-Display) und skaliert das Bild hoch – bei einem Viertel des Aufwands."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nativa dibuja con todos los píxeles de la pantalla. Baja resolución dibuja un píxel por punto (la mitad de ancho y de alto en una pantalla Retina) y amplía el fotograma, con una cuarta parte del trabajo."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "« Native » dessine avec tous les pixels du moniteur. « Basse résolution » dessine un pixel par point (la moitié de la largeur et de la hauteur sur un écran Retina) puis agrandit l’image, pour un quart du travail."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "नेटिव डिस्प्ले के सभी पिक्सेल पर बनाता है. निम्न रिज़ोल्यूशन हर पॉइंट पर एक पिक्सेल बनाता है (Retina डिस्प्ले पर आधी चौड़ाई और ऊँचाई) और फ़्रेम को बड़ा करता है, जिससे काम एक-चौथाई रह जाता है."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "“Nativa” disegna con tutti i pixel dello schermo. “Bassa risoluzione” disegna un pixel per punto (metà larghezza e metà altezza su uno schermo Retina) e ingrandisce il fotogramma, con un quarto del lavoro."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "「ネイティブ」はディスプレイのフルピクセル数で描画します。「低解像度」は1ポイントあたり1ピクセル（Retinaディスプレイでは幅と高さが半分）で描画してフレームを拡大するため、処理量は4分の1になります。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "네이티브는 디스플레이의 전체 픽셀 수로 그립니다. 저해상도은 포인트당 1픽셀로 그린 다음(Retina 디스플레이에서는 너비와 높이가 절반) 프레임을 확대하므로 작업량이 4분의 1입니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "„Natywna” rysuje w pełnej liczbie pikseli wyświetlacza. „Niska rozdzielczość” rysuje jeden piksel na punkt (połowa szerokości i wysokości na wyświetlaczu Retina) i powiększa klatkę, co wymaga czterokrotnie mniej pracy."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nativa desenha com a contagem total de pixels da tela. Baixa Resolução desenha um pixel por ponto (metade da largura e da altura em uma tela Retina) e amplia o quadro, com um quarto do trabalho."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "«Исходное» рисует с полным числом пикселей дисплея. «Низкое разрешение» рисует один пиксель на точку (половина ширины и высоты на дисплее Retina) и масштабирует кадр — вчетверо меньше работы."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yerel, ekranın tam piksel sayısında çizer. Düşük Çözünürlük, nokta başına bir piksel çizer (Retina ekranda genişlik ve yüksekliğin yarısı) ve kareyi büyütür; iş yükü dörtte birine iner."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "«Власна» малює з повною кількістю пікселів дисплея. «Низька роздільність» малює один піксель на пункт (половина ширини й висоти на дисплеї Retina) і збільшує кадр — це вчетверо менше роботи."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "“原生”以显示器的全部像素绘制。“低分辨率”以每点 1 像素绘制（在 Retina 显示器上为宽度和高度的一半）并放大画面，工作量仅为四分之一。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "「原生」會以顯示器的完整像素數繪製。「低解析度」會以每點一個像素繪製（在 Retina 顯示器上為一半的寬度和高度），再將畫面放大，工作量只有四分之一。"
           }
         }
       }
@@ -109845,6 +109562,761 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "即使資源已是最新，也從 Steam 重新下載，以修復損毀的副本。"
+          }
+        }
+      }
+    },
+    "Display" : {
+      "comment" : "Render resolution: the display's own pixels",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "شاشة العرض"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Display"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pantalla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moniteur"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "डिस्प्ले"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schermo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ディスプレイ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "디스플레이"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyświetlacz"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tela"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дисплей"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekran"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дисплей"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示器"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顯示器"
+          }
+        }
+      }
+    },
+    "Full" : {
+      "comment" : "Render resolution: the wallpaper's authored size",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "كامل"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voll"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Complet"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पूर्ण"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フル"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "전체"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pełne"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Полная"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tam"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повна"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完整"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完整"
+          }
+        }
+      }
+    },
+    "Off" : {
+      "comment" : "Upscaling: none",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إيقاف"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desactivado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Désactivé"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बंद"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disattivato"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オフ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "끔"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyłączone"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desativado"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выкл."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapalı"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вимк."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "關閉"
+          }
+        }
+      }
+    },
+    "MetalFX" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFX"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFX"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFX"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFX"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFX"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFX"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFX"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFX"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFX"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFX"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFX"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFX"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFX"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFX"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFX"
+          }
+        }
+      }
+    },
+    "Upscaling" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الترقية"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hochskalierung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escalado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mise à l’échelle"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपस्केलिंग"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upscaling"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アップスケーリング"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "업스케일링"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skalowanie w górę"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upscaling"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Масштабирование"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ölçek büyütme"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Масштабування"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "放大"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "放大"
+          }
+        }
+      }
+    },
+    "Render Scale" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مقياس العرض"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renderskalierung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escala de renderizado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Échelle de rendu"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रेंडर स्केल"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scala di rendering"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "レンダリングスケール"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "렌더링 배율"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skala renderowania"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escala de renderização"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Масштаб отрисовки"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İşleme ölçeği"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Масштаб відтворення"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "渲染比例"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "渲染比例"
+          }
+        }
+      }
+    },
+    "Display draws at the display's pixels, one for one. Full draws at the wallpaper's own size and scales it to fit the display." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يرسم خيار شاشة العرض بوحدات بكسل شاشة العرض، واحدًا لواحد. ويرسم خيار كامل بحجم الخلفية نفسه ويغيّر حجمه ليلائم شاشة العرض."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Display zeichnet in den Pixeln des Displays, eins zu eins. Voll zeichnet in der Größe des Hintergrundbilds und skaliert sie passend auf das Display."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pantalla dibuja con los píxeles de la pantalla, uno a uno. Completo dibuja al tamaño propio del fondo de pantalla y lo escala para ajustarlo a la pantalla."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moniteur dessine avec les pixels du moniteur, un pour un. Complet dessine à la taille propre du fond d’écran et l’adapte au moniteur."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "डिस्प्ले, डिस्प्ले के पिक्सेल पर एक-से-एक ड्रॉ करता है। पूर्ण वॉलपेपर के अपने आकार पर ड्रॉ करता है और उसे डिस्प्ले में फ़िट करता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schermo disegna con i pixel dello schermo, uno a uno. Completo disegna alla dimensione propria dello sfondo e la adatta allo schermo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ディスプレイはディスプレイのピクセルに1対1で描画します。フルは壁紙本来のサイズで描画し、ディスプレイに合わせて拡大縮小します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "디스플레이는 디스플레이의 픽셀에 1:1로 그립니다. 전체는 배경화면 본래 크기로 그린 다음 디스플레이에 맞게 조절합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyświetlacz rysuje w pikselach wyświetlacza, jeden do jednego. Pełne rysuje w rozmiarze tapety i skaluje ją do wyświetlacza."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tela desenha nos pixels da tela, um para um. Completo desenha no tamanho próprio do papel de parede e o ajusta à tela."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дисплей рисует в пикселях дисплея, один к одному. Полная рисует в собственном размере обоев и масштабирует их по дисплею."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekran, ekranın piksellerinde bire bir çizer. Tam, duvar kâğıdının kendi boyutunda çizer ve ekrana sığacak şekilde ölçekler."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дисплей малює в пікселях дисплея, один до одного. Повна малює у власному розмірі шпалер і масштабує їх під дисплей."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示器按显示器的像素一比一绘制。完整按墙纸本身的大小绘制，并缩放以适合显示器。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顯示器按顯示器的像素一比一繪製。完整按背景圖片本身的大小繪製，並縮放以符合顯示器。"
+          }
+        }
+      }
+    },
+    "MetalFX draws the scene at the render scale and scales it up to full size, for less work. Where MetalFX isn't available, or for HDR, the frame is scaled smoothly instead." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يرسم MetalFX المشهد بمقياس العرض ثم يكبّره إلى الحجم الكامل، لتقليل العمل. وحيث لا يتوفر MetalFX، أو مع HDR، يُكبَّر الإطار بسلاسة بدلًا من ذلك."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFX zeichnet die Szene in der Renderskalierung und skaliert sie auf volle Größe hoch, für weniger Aufwand. Wo MetalFX nicht verfügbar ist oder bei HDR wird das Bild stattdessen weich skaliert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFX dibuja la escena a la escala de renderizado y la amplía al tamaño completo, con menos trabajo. Donde MetalFX no está disponible, o con HDR, el fotograma se escala de forma suave."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFX dessine la scène à l’échelle de rendu et l’agrandit à sa taille complète, pour moins de travail. Là où MetalFX n’est pas disponible, ou en HDR, l’image est agrandie de façon lissée."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFX दृश्य को रेंडर स्केल पर ड्रॉ करता है और उसे पूर्ण आकार तक बढ़ाता है, जिससे काम कम होता है। जहाँ MetalFX उपलब्ध नहीं है, या HDR में, फ़्रेम को सहज रूप से बढ़ाया जाता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFX disegna la scena alla scala di rendering e la ingrandisce alla dimensione piena, con meno lavoro. Dove MetalFX non è disponibile, o in HDR, il fotogramma viene ingrandito in modo uniforme."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFXはシーンをレンダリングスケールで描画してフルサイズに拡大し、負荷を減らします。MetalFXを使用できない場合やHDRでは、フレームを滑らかに拡大します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFX는 장면을 렌더링 배율로 그린 다음 전체 크기로 확대하여 작업량을 줄입니다. MetalFX를 사용할 수 없거나 HDR에서는 프레임을 부드럽게 확대합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFX rysuje scenę w skali renderowania i skaluje ją do pełnego rozmiaru, przy mniejszym nakładzie pracy. Gdy MetalFX jest niedostępny lub przy HDR, klatka jest skalowana płynnie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O MetalFX desenha a cena na escala de renderização e a amplia para o tamanho completo, com menos trabalho. Onde o MetalFX não está disponível, ou em HDR, o quadro é ampliado de forma suave."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFX рисует сцену в масштабе отрисовки и увеличивает её до полного размера, снижая нагрузку. Если MetalFX недоступен или при HDR кадр увеличивается сглаженно."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFX sahneyi işleme ölçeğinde çizer ve daha az iş için tam boyuta büyütür. MetalFX kullanılamadığında veya HDR’de kare yumuşak biçimde büyütülür."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFX малює сцену в масштабі відтворення і збільшує її до повного розміру, зменшуючи навантаження. Якщо MetalFX недоступний або для HDR, кадр збільшується згладжено."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFX 以渲染比例绘制场景并放大到完整大小，以减少工作量。在 MetalFX 不可用或使用 HDR 时，会平滑地放大画面。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MetalFX 以渲染比例繪製場景並放大到完整大小，以減少工作量。在無法使用 MetalFX 或使用 HDR 時，會平滑地放大畫面。"
           }
         }
       }

@@ -126,7 +126,7 @@ final class WECursorCaptureTests: XCTestCase {
         settings.particleBudget = .unlimited
         settings.textureReduction = 1
         settings.sceneDetail = .full
-        settings.renderResolution = .native
+        settings.renderResolution = .display
         settings.antiAliasing = .msaa_x2
         let storage = FileManager.default.temporaryDirectory.appending(path: "owe-cursor-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: storage) } // Scratch storage; a leftover is harmless.

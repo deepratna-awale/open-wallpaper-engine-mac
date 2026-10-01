@@ -90,7 +90,8 @@ enum SettingsTab: Int, CaseIterable, Identifiable {
                     SettingField(\.otherApplicationFullscreen), SettingField(\.otherApplicationPlayingAudio),
                     SettingField(\.displayAsleep), SettingField(\.laptopOnBattery),
                     SettingField(\.antiAliasing), SettingField(\.postProcessing), SettingField(\.textureResolution),
-                    SettingField(\.sceneDetail), SettingField(\.renderResolution), SettingField(\.shadows),
+                    SettingField(\.sceneDetail), SettingField(\.renderResolution), SettingField(\.upscaling),
+                    SettingField(\.renderScale), SettingField(\.shadows),
                     SettingField(\.volumetrics), SettingField(\.fps), SettingField(\.fpsSetByUser), SettingField(\.qualityEfficiency),
                     SettingField(\.particleBudget),
                     SettingField(\.reflections)]

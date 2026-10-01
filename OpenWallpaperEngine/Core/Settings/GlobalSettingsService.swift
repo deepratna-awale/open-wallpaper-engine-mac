@@ -145,6 +145,7 @@ class GlobalSettingsViewModel: ObservableObject {
         self.settings.qualityEfficiency = QualityEfficiency(preset: quality).stop
         self.settings.fps = quality.fps
         self.settings.fpsSetByUser = false
+        self.settings.applyResolutionPreset(quality)
         switch quality {
         case .low:
             self.settings.antiAliasing = .none

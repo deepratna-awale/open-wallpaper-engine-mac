@@ -43,7 +43,7 @@ final class ScenePuppetReferenceTests: XCTestCase {
             settings.particleBudget = .unlimited
             settings.textureReduction = 1
             settings.sceneDetail = .full
-            settings.renderResolution = .native
+            settings.renderResolution = .display
             let size = WEReferenceRenderer.size
             let center = SIMD2(Double(size.x) / 2, Double(size.y) / 2)
             let renderer = WEReferenceRenderer(directory: directory, project: project, settings: settings, storage: storage)
@@ -98,7 +98,7 @@ final class ScenePuppetReferenceTests: XCTestCase {
             settings.particleBudget = .unlimited
             settings.textureReduction = 1
             settings.sceneDetail = .full
-            settings.renderResolution = .native
+            settings.renderResolution = .display
             let size = WEReferenceRenderer.size
             let center = SIMD2(Double(size.x) / 2, Double(size.y) / 2)
             let renderer = WEReferenceRenderer(directory: directory, project: project, settings: settings, storage: storage)

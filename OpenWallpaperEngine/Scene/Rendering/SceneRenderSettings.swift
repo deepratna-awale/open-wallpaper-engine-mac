@@ -24,8 +24,11 @@ struct SceneRenderSettings: Equatable {
     /// Large additive particle systems of a scene without depth draw into a half-resolution target
     /// that is added back in their place: a quarter of their fragments, softer edges. Off by default.
     var reducedResolutionParticles = false
-    /// The scene target's pixels per display point.
-    var renderResolution = GSRenderResolution.native
+    /// What the scene target is sized for: the displays' pixels or the scene's authored size.
+    var renderResolution = GSRenderResolution.display
+    /// Draw the scene at `renderScale` of its target and scale it up (`SceneUpscaler`).
+    var upscaling = GSUpscaling.off
+    var renderScale = GSRenderScale.percent75
     /// Draw as WE does (`full`, what a settings-less renderer does) or no more than the display shows.
     var sceneDetail = GSSceneDetail.full
     /// WE's `msaa`: the scene pass's samples per pixel.
@@ -42,10 +45,15 @@ struct SceneRenderSettings: Equatable {
         particleBudget = settings.particleBudget
         renderResolution = settings.renderResolution
         sceneDetail = settings.sceneDetail
+        upscaling = settings.upscaling
+        renderScale = settings.renderScale
         antiAliasing = settings.antiAliasing
         optimiseTextures = settings.optimiseTextures
         reducedResolutionParticles = settings.reducedResolutionParticles
     }
+
+    /// The share of each side of the scene target that is drawn: 1 without upscaling.
+    var drawnScale: Float { upscaling == .off ? 1 : renderScale.factor }
 
     /// The scene pass's sample count on `device`: the setting's, or the most below it the GPU
     /// supports (1 always is).
