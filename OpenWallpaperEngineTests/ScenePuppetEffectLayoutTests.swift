@@ -52,7 +52,7 @@ final class ScenePuppetEffectLayoutTests: XCTestCase {
         let texture = try ScenePuppetTests.texture(image, device: setup.device)
         let commands = try XCTUnwrap(setup.queue.makeCommandBuffer())
         let warped = try XCTUnwrap(setup.renderer.warp(plan, layerID: "p", key: "_effects", texture: texture, contentSize: nil,
-                                                       pose: .bind(boneCount: 1), redraw: true, composited: true,
+                                                       pose: .bind(boneCount: 1), redraw: true, blended: true,
                                                        commandBuffer: commands))
         commands.commit()
         commands.waitUntilCompleted()

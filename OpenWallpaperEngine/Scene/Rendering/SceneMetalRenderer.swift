@@ -268,11 +268,15 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// posed mesh lays out after them (`posedEffectOutput`); the layer's pose otherwise.
     func puppetImagePose(ofLayer id: String) -> ScenePuppetPose? {
         guard let pose = puppetPose(ofLayer: id) else { return nil }
-        let hasEffects = layers.first { $0.layer.id == id }.map { !$0.layer.weEffects.isEmpty } ?? false
-        return hasEffects ? .bind(boneCount: pose.bones.count) : pose
+        return puppetHasEffects(id) ? .bind(boneCount: pose.bones.count) : pose
     }
-    /// What of a puppet's mesh space its image covers, when not the image's rect (tests, diagnostics).
-    func puppetCanvas(ofLayer id: String) -> ScenePuppetCanvas? { puppetCanvases[id] }
+    /// What of a puppet's mesh space `puppetImage(ofLayer:)` covers, when not the image's rect
+    /// (tests, diagnostics): a layer with effects draws its bind pose into the image's rect, and
+    /// only the posed layout of their output covers the canvas.
+    func puppetCanvas(ofLayer id: String) -> ScenePuppetCanvas? { puppetHasEffects(id) ? nil : puppetCanvases[id] }
+    private func puppetHasEffects(_ id: String) -> Bool {
+        layers.first { $0.layer.id == id }.map { !$0.layer.weEffects.isEmpty } ?? false
+    }
     /// Effect passes encoded so far, for tests.
     var effectPassesEncoded: Int { effectGraph?.passesEncoded ?? 0 }
     /// Whether an effect pipeline is still compiling (shader prewarm waits for them).
@@ -3041,9 +3045,16 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // Through a camera, the quad is as large as its projection.
         if let placement = draw.placement {
             guard let density = placement.pixelsPerUnit(targetSize: SIMD2<Float>(sceneRenderTargetSize)) else { return nil }
-            return placement.size * density / shown
+            return placement.size * imageShareOfQuad(entry) * density / shown
         }
-        return draw.quad.extent * renderPixelsPerUnit / shown
+        return draw.quad.extent * imageShareOfQuad(entry) * renderPixelsPerUnit / shown
+    }
+
+    /// The share of a layer's quad its image covers: less than 1 where a puppet's quad grew to its
+    /// posed bounds (`ScenePuppetCanvas`), so its effects keep running at the image's density.
+    private func imageShareOfQuad(_ entry: PreparedLayer) -> SIMD2<Float> {
+        guard let puppet = entry.layer.puppet, let canvas = puppetCanvases[entry.layer.id] else { return SIMD2(1, 1) }
+        return ScenePuppetCanvas.imageShare(imageSize: puppet.imageSize, canvas: canvas)
     }
 
     /// Draws a puppet layer's mesh into its image (`puppetAlbedos`), posed by its animation layers
@@ -3054,11 +3065,13 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         guard let puppets, let source = entry.frames.first?.texture else { return }
         // Posed this frame by `advanceRigs`, before the scripts ran.
         let animator = puppetAnimator(entry.layer.id, puppet)
-        // Without effects WE draws the mesh in the scene (docs/models-plan.md §2.13): nothing clips
-        // it at the image's rect, so the image covers the posed mesh and the quad grows with it.
-        // With effects (or as the image another layer samples) the mesh stays in the image.
+        // WE draws the posed mesh in the scene (docs/models-plan.md §2.13), with effects or without:
+        // nothing clips it at the image's rect, so what the posed mesh draws into covers its posed
+        // bounds and the quad grows with it. Without effects that is the image itself; with them,
+        // the posed layout of their output (`posedEffectOutput`). As the image another layer
+        // samples, the mesh stays in the image.
         let direct = entry.layer.weEffects.isEmpty && !compositeSource
-        let canvas = direct ? puppets.canvas(puppet, layerID: entry.layer.id, pose: animator.pose) : nil
+        let canvas = compositeSource ? nil : puppets.canvas(puppet, layerID: entry.layer.id, pose: animator.pose)
         puppetCanvases[entry.layer.id] = canvas
         // With effects the mesh draws its bind pose, the image as its texture lays it out: that is
         // where the effects' masks are painted, and the posed mesh then lays their output out
@@ -3077,7 +3090,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             layerID: entry.layer.id, source: source, pose: pose, frame: frame,
             values: timelines.values,
             assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
-            canvas: canvas),
+            canvas: direct ? canvas : nil),
             commandBuffer: commandBuffer)
         // Without effects WE draws the mesh in the scene through the layer's material, sampling
         // every texture at the mesh's coordinates: the quad draws with them laid out likewise.
@@ -3094,7 +3107,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     /// A puppet's effect output (in its image's bind layout, `drawPuppet`) laid out by the posed
     /// mesh, which the layer then draws: WE draws a layer with effects through its geometry, the
-    /// skinned mesh for a puppet. Anything else, or while the mesh can't be drawn, as it is.
+    /// skinned mesh for a puppet, its triangles blended over each other by the layer's material. Anything else, or while the mesh can't be drawn, as it is.
     private func posedEffectOutput(_ output: MTLTexture?, of entry: PreparedLayer, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
         guard let output, let puppet = entry.layer.puppet, let puppets, let animator = puppetAnimators[entry.layer.id],
               let source = entry.frames.first?.texture, source.width > 0, source.height > 0 else { return output }
@@ -3102,7 +3115,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let share = SIMD2(Float(puppet.contentPixels.x) / Float(source.width), Float(puppet.contentPixels.y) / Float(source.height))
         let content = SIMD2(Float(output.width), Float(output.height)) * simd_min(share, SIMD2(repeating: 1))
         return puppets.warp(puppet, layerID: entry.layer.id, key: "_effects", texture: output, contentSize: content,
-                            pose: animator.pose, redraw: true, composited: true, commandBuffer: commandBuffer) ?? output
+                            pose: animator.pose, canvas: puppetCanvases[entry.layer.id], redraw: true, blended: true,
+                            commandBuffer: commandBuffer) ?? output
     }
 
     /// A script's call on a puppet's layers or bones. `setBoneTransform`'s matrix is in the scene;
