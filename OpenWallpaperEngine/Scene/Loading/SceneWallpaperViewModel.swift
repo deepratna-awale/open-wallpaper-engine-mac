@@ -104,6 +104,9 @@ class SceneWallpaperViewModel: ObservableObject {
     /// Every user-property binding of the loaded scene and the documents its build read; every
     /// bound value the build decodes is resolved through it.
     var bindingTable: UserPropertyBindingTable { stateLock.withLock { loadedBindingTable } }
+    /// Copies of a particle definition share its built parts within one build
+    /// (`ParticleDefinitionCache`); false builds every copy in full (tests compare the two).
+    var sharesParticleDefinitions = true
     /// The loaded scene has SceneScripts.
     private var hasScriptSites = false
     private var loadedWallpaperDirectory: URL?
@@ -618,13 +621,13 @@ class SceneWallpaperViewModel: ObservableObject {
             return layer
         }
         var particleSystems: [SceneMetalParticleSystem] = []
-        let particleTiming = ParticleBuildTiming()
+        let particleCache = ParticleDefinitionCache(sharesParts: sharesParticleDefinitions)
         for (index, object) in scene.objects.enumerated() {
             let base = particleSystems.count
             let family = bindingTable.building(.object(object.id ?? index)) {
                 buildParticleFamily(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
                                     pixelUnits: Self.particlesUsePixelUnits(scene), transforms: authoredTransforms,
-                                    timing: particleTiming)
+                                    cache: particleCache)
             }
             for var system in family {
                 system.order = index
@@ -632,7 +635,7 @@ class SceneWallpaperViewModel: ObservableObject {
                 particleSystems.append(system)
             }
         }
-        logParticleBuildTiming(particleTiming, wallpaperDir: wallpaperDir)
+        logParticleBuildTiming(particleCache.timing, wallpaperDir: wallpaperDir)
         particleCapacities = Dictionary(particleSystems.map { system in
             (system.order < scene.objects.count ? scene.objects[system.order].id ?? system.order : system.order,
              ParticleBudget.capacity(of: system))
@@ -734,8 +737,8 @@ class SceneWallpaperViewModel: ObservableObject {
         var layers: [SceneMetalLayer] = []
         var particleSystems: [SceneMetalParticleSystem] = []
         var capacities = particleCapacities
-        let particleTiming = ParticleBuildTiming()
-        defer { logParticleBuildTiming(particleTiming, wallpaperDir: wallpaperDir) }
+        let particleCache = ParticleDefinitionCache(sharesParts: sharesParticleDefinitions)
+        defer { logParticleBuildTiming(particleCache.timing, wallpaperDir: wallpaperDir) }
         for id in ids.sorted() {
             guard let index = scene.objects.firstIndex(where: { $0.id == id }) else { return nil }
             let object = scene.objects[index]
@@ -747,7 +750,7 @@ class SceneWallpaperViewModel: ObservableObject {
             let family = bindingTable.building(.object(id)) {
                 buildParticleFamily(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
                                     pixelUnits: Self.particlesUsePixelUnits(scene), transforms: authoredTransforms,
-                                    timing: particleTiming)
+                                    cache: particleCache)
             }
             guard layer != nil || !family.isEmpty, !family.contains(where: { !$0.emitterImages.isEmpty }) else { return nil }
             if let layer { layers.append(layer) }
@@ -912,7 +915,7 @@ class SceneWallpaperViewModel: ObservableObject {
             var systems = buildParticleFamily(resolved, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
                                               pixelUnits: loadedScene.map(Self.particlesUsePixelUnits) ?? true,
                                               transforms: SceneTransformHierarchy(objects: [resolved], sceneSize: sceneSize),
-                                              timing: ParticleBuildTiming())
+                                              cache: ParticleDefinitionCache(sharesParts: sharesParticleDefinitions))
             guard !systems.isEmpty else { return nil }
             // The scene's factor, or the family's own if it alone exceeds the budget.
             let own = ParticleBudget.scale(authored: systems.reduce(0) { $0 + ParticleBudget.capacity(of: $1) },
@@ -1726,16 +1729,16 @@ class SceneWallpaperViewModel: ObservableObject {
 
     private func buildParticleFamily(_ object: WESceneObject, wallpaperDir: URL, sceneSize: SIMD2<Float>, pixelUnits: Bool,
                                      transforms: SceneTransformHierarchy,
-                                     timing: ParticleBuildTiming) -> [SceneMetalParticleSystem] {
+                                     cache: ParticleDefinitionCache) -> [SceneMetalParticleSystem] {
         OWEPhaseTiming.measure(.particlesModels) {
             buildParticleFamilyUntimed(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize, pixelUnits: pixelUnits,
-                                       transforms: transforms, timing: timing)
+                                       transforms: transforms, cache: cache)
         }
     }
 
     private func buildParticleFamilyUntimed(_ object: WESceneObject, wallpaperDir: URL, sceneSize: SIMD2<Float>,
                                             pixelUnits: Bool, transforms: SceneTransformHierarchy,
-                                            timing: ParticleBuildTiming) -> [SceneMetalParticleSystem] {
+                                            cache: ParticleDefinitionCache) -> [SceneMetalParticleSystem] {
         guard let particlePath = object.particle else { return [] }
         // The emitter's full world transform: its own and its parents' origin, scale and angle.
         let world = object.id.map { transforms.world(of: String($0)) }
@@ -1745,7 +1748,7 @@ class SceneWallpaperViewModel: ObservableObject {
             build: { [weak self] path, system, world, overrides in
                 self?.buildMetalParticleSystem(path, particleSystem: system, object: object, world: world,
                                                overrides: overrides, sceneSize: sceneSize, pixelUnits: pixelUnits,
-                                               wallpaperDir: wallpaperDir, timing: timing)
+                                               wallpaperDir: wallpaperDir, cache: cache)
             },
             report: { message in OWELog.error(.scene, "Particle object \(object.id ?? -1): \(message)") })
         var family = builder.family(particlePath, world: world,
@@ -1768,16 +1771,25 @@ class SceneWallpaperViewModel: ObservableObject {
     private func buildMetalParticleSystem(_ particlePath: String, particleSystem: WEParticleSystem, object: WESceneObject,
                                           world: SceneAffineTransform, overrides: SceneParticleOverrides,
                                           sceneSize: SIMD2<Float>, pixelUnits: Bool, wallpaperDir: URL,
-                                          timing: ParticleBuildTiming) -> SceneMetalParticleSystem? {
+                                          cache: ParticleDefinitionCache) -> SceneMetalParticleSystem? {
         guard let materialPath = particleSystem.material else { return nil }
         // The object's blending is its own system's; the children it spawns keep their materials'.
         let blending = particlePath == object.particle ? blendingOverride(for: object) : nil
-        guard let parts = buildSharedParticleParts(particlePath, materialPath: materialPath, particleSystem: particleSystem,
-                                                   blending: blending, object: object, wallpaperDir: wallpaperDir,
-                                                   timing: timing) else { return nil }
-        timing.countBuilt()
+        // Every copy of a definition shares what its definition, material and blending decide;
+        // the rest is the copy's own.
+        let key = ParticleDefinitionCache.Key(particlePath: particlePath, materialPath: materialPath,
+                                              blending: blending?.rawValue)
+        let table = bindingTable
+        guard let parts = cache.parts(for: key, noteReads: { table.noteReads($0) }, build: {
+            table.capturingReads {
+                buildSharedParticleParts(particlePath, materialPath: materialPath, particleSystem: particleSystem,
+                                         blending: blending, object: object, wallpaperDir: wallpaperDir,
+                                         timing: cache.timing)
+            }
+        }) else { return nil }
         return makeParticleSystem(particlePath, parts: parts, particleSystem: particleSystem, object: object, world: world,
-                                  overrides: overrides, sceneSize: sceneSize, pixelUnits: pixelUnits, timing: timing)
+                                  overrides: overrides, sceneSize: sceneSize, pixelUnits: pixelUnits,
+                                  timing: cache.timing)
     }
 
     /// What every copy of a particle definition with the same material and blending draws with:
