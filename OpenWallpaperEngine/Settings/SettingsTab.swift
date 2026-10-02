@@ -84,13 +84,14 @@ enum SettingsTab: Int, CaseIterable, Identifiable {
         switch self {
         case .general:
             return [SettingField(\.autoStart), SettingField(\.language), SettingField(\.appearance),
-                    SettingField(\.adjustMenuBarTint)]
+                    SettingField(\.adjustMenuBarTint), SettingField(\.lockScreenPicture)]
         case .performance:
             return [SettingField(\.otherApplicationFocused), SettingField(\.otherApplicationMaximized),
                     SettingField(\.otherApplicationFullscreen), SettingField(\.otherApplicationPlayingAudio),
                     SettingField(\.displayAsleep), SettingField(\.laptopOnBattery),
                     SettingField(\.antiAliasing), SettingField(\.postProcessing), SettingField(\.textureResolution),
-                    SettingField(\.sceneDetail), SettingField(\.renderResolution), SettingField(\.shadows),
+                    SettingField(\.sceneDetail), SettingField(\.renderResolution), SettingField(\.upscaling),
+                    SettingField(\.renderScale), SettingField(\.shadows),
                     SettingField(\.volumetrics), SettingField(\.fps), SettingField(\.fpsSetByUser), SettingField(\.qualityEfficiency),
                     SettingField(\.particleBudget),
                     SettingField(\.reflections)]
@@ -104,7 +105,9 @@ enum SettingsTab: Int, CaseIterable, Identifiable {
                     SettingField(\.reducedResolutionParticles)]
         case .diagnostics:
             return [SettingField(\.logLevel)]
-        case .assets, .updates, .privacy, .permissions, .plugins, .about:
+        case .plugins:
+            return [SettingField(\.screenSaver)]
+        case .assets, .updates, .privacy, .permissions, .about:
             return []
         }
     }
