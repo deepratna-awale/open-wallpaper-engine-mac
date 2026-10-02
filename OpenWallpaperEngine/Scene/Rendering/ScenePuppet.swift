@@ -92,11 +92,15 @@ final class ScenePuppetPlan {
                     weightsOf[k] = float(base + weights + 4 * k)
                     bonesOf[k] = UInt32(littleEndian: raw.loadUnaligned(fromByteOffset: base + indices + 4 * k, as: UInt32.self))
                 }
-                let skinned = Self.skin(p, weights: weightsOf, bones: bonesOf, pose: pose)
-                let point = SIMD2(skinned.x, skinned.y)
-                guard point.x.isFinite, point.y.isFinite else { continue }
-                low = simd_min(low, point)
-                high = simd_max(high, point)
+                // The material's own skinning draws the image (weights as stored) and the warp
+                // stage lays effect output out (renormalised): the bounds hold both.
+                for skinned in [Self.skin(p, weights: weightsOf, bones: bonesOf, pose: pose),
+                                Self.skin(p, weights: weightsOf, bones: bonesOf, pose: pose, renormalised: false)] {
+                    let point = SIMD2(skinned.x, skinned.y)
+                    guard point.x.isFinite, point.y.isFinite else { continue }
+                    low = simd_min(low, point)
+                    high = simd_max(high, point)
+                }
             }
         }
         return low.x <= high.x ? (low, high) : nil
@@ -105,7 +109,9 @@ final class ScenePuppetPlan {
     /// `p` skinned by `pose` as the warp stage skins it (ScenePuppet.metal): Σ wᵢ · bones[iᵢ] · p
     /// over the bones the pose holds, renormalised so the weights used sum to 1 (vertices shared by
     /// two parts land together); a vertex with no usable weight stays at `p`.
-    static func skin(_ p: SIMD4<Float>, weights: SIMD4<Float>, bones: SIMD4<UInt32>, pose: ScenePuppetPose) -> SIMD4<Float> {
+    /// Not `renormalised`: Σ wᵢ · bones[iᵢ] · p as stored, as the material's vertex stage skins.
+    static func skin(_ p: SIMD4<Float>, weights: SIMD4<Float>, bones: SIMD4<UInt32>, pose: ScenePuppetPose,
+                     renormalised: Bool = true) -> SIMD4<Float> {
         var skinned = SIMD4<Float>.zero
         var total: Float = 0
         for k in 0..<4 {
@@ -114,6 +120,7 @@ final class ScenePuppetPlan {
             skinned += weights[k] * (pose.bones[bone] * p)
             total += weights[k]
         }
+        guard renormalised else { return skinned }
         return total > 0 ? skinned / total : p
     }
 
@@ -295,6 +302,8 @@ final class ScenePuppetRenderer {
     private let unpremultiply: MTLComputePipelineState
     /// Lays another image-space texture out like the posed mesh (`warp`).
     private let warpPipeline: MTLRenderPipelineState
+    /// `warpPipeline` premultiplied and blended "over", into the scratch target (`warp`'s `blended`).
+    private let blendedWarpPipeline: MTLRenderPipelineState
     private let clampSampler: MTLSamplerState
     private let repeatSampler: MTLSamplerState
     private let zeroAttributes: MTLBuffer
@@ -382,13 +391,23 @@ final class ScenePuppetRenderer {
             guard let library = device.makeDefaultLibrary(),
                   let function = library.makeFunction(name: "scenePuppetUnpremultiply"),
                   let warpVertex = library.makeFunction(name: "scenePuppetWarpVertex"),
-                  let warpFragment = library.makeFunction(name: "scenePuppetWarpFragment") else { return nil }
+                  let warpFragment = library.makeFunction(name: "scenePuppetWarpFragment"),
+                  let blendedFragment = library.makeFunction(name: "scenePuppetWarpPremultipliedFragment") else { return nil }
             unpremultiply = try device.makeComputePipelineState(function: function)
             let warp = MTLRenderPipelineDescriptor()
             warp.vertexFunction = warpVertex
             warp.fragmentFunction = warpFragment
             warp.colorAttachments[0].pixelFormat = Self.warpFormat
             warpPipeline = try device.makeRenderPipelineState(descriptor: warp)
+            warp.fragmentFunction = blendedFragment
+            warp.colorAttachments[0].pixelFormat = Self.scratchFormat
+            let attachment = warp.colorAttachments[0]!
+            attachment.isBlendingEnabled = true
+            attachment.sourceRGBBlendFactor = .one
+            attachment.sourceAlphaBlendFactor = .one
+            attachment.destinationRGBBlendFactor = .oneMinusSourceAlpha
+            attachment.destinationAlphaBlendFactor = .oneMinusSourceAlpha
+            blendedWarpPipeline = try device.makeRenderPipelineState(descriptor: warp)
         } catch {
             OWELog.error(.scene, "The puppet albedo pipeline failed: \(error)")
             return nil
@@ -527,8 +546,12 @@ final class ScenePuppetRenderer {
     /// padded texture, for every texture, as WE's copy of the mesh has them. nil when the mesh
     /// has no plain position, blend indices, weights or texture coordinate. `redraw`: `texture`'s
     /// contents change from frame to frame (a puppet's effect output), so it is laid out again.
+    /// `blended`: the triangles composite over each other as the layer's material draws them
+    /// (`applyBlending`): the image a translucent puppet's effects made, whose parts overlap (a
+    /// strand of hair over a face the texture leaves empty under it). Otherwise later triangles
+    /// replace earlier ones, as data textures (normal maps, masks) want.
     func warp(_ plan: ScenePuppetPlan, layerID: String, key: String, texture: MTLTexture, contentSize: SIMD2<Float>?,
-              pose: ScenePuppetPose, canvas: ScenePuppetCanvas? = nil, redraw: Bool = false,
+              pose: ScenePuppetPose, canvas: ScenePuppetCanvas? = nil, redraw: Bool = false, blended: Bool = false,
               commandBuffer: MTLCommandBuffer) -> MTLTexture? {
         guard let state = layers[layerID], state.plan === plan else { return nil }
         let format = plan.format
@@ -543,7 +566,7 @@ final class ScenePuppetRenderer {
         } else {
             let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: Self.warpFormat, width: texture.width,
                                                                       height: texture.height, mipmapped: false)
-            descriptor.usage = [.renderTarget, .shaderRead]
+            descriptor.usage = [.renderTarget, .shaderRead, .shaderWrite]
             descriptor.storageMode = .private
             guard let target = device.makeTexture(descriptor: descriptor) else { return nil }
             warp = WarpState(target: target)
@@ -552,13 +575,17 @@ final class ScenePuppetRenderer {
         let source = ObjectIdentifier(texture)
         if !redraw, warp.drawnPose == pose, warp.drawnSource == source, warp.drawnCanvas == canvas { return warp.target }
 
+        let blends = blended && EffectGraphRenderer.blendMode(plan.material.pass.blending) != nil
+        let content = contentSize.map { SIMD2(Int(saturating: $0.x.rounded()), Int(saturating: $0.y.rounded())) } ?? SIMD2(texture.width, texture.height)
+        let extent = SIMD2(min(content.x, texture.width), min(content.y, texture.height))
+        let scratch = blends ? scratchTexture(covering: extent) : nil
+        if blends, scratch == nil { return nil }
         let pass = MTLRenderPassDescriptor()
-        pass.colorAttachments[0].texture = warp.target
+        pass.colorAttachments[0].texture = scratch ?? warp.target
         pass.colorAttachments[0].loadAction = .clear
         pass.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 0)
         pass.colorAttachments[0].storeAction = .store
         guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { return nil }
-        let content = contentSize.map { SIMD2(Int(saturating: $0.x.rounded()), Int(saturating: $0.y.rounded())) } ?? SIMD2(texture.width, texture.height)
         struct Uniforms {
             var projection: simd_float4x4
             var uvScale: SIMD2<Float>
@@ -569,9 +596,9 @@ final class ScenePuppetRenderer {
                                 weightsOffset: UInt32(weights), texCoordOffset: UInt32(texCoord),
                                 stride: UInt32(format.stride), boneCount: UInt32(pose.bones.count))
         let bones = pose.bones.isEmpty ? [matrix_identity_float4x4] : pose.bones
-        encoder.setRenderPipelineState(warpPipeline)
-        encoder.setViewport(MTLViewport(originX: 0, originY: 0, width: Double(min(content.x, texture.width)),
-                                        height: Double(min(content.y, texture.height)), znear: 0, zfar: 1))
+        encoder.setRenderPipelineState(blends ? blendedWarpPipeline : warpPipeline)
+        encoder.setViewport(MTLViewport(originX: 0, originY: 0, width: Double(extent.x), height: Double(extent.y),
+                                        znear: 0, zfar: 1))
         encoder.setCullMode(plan.material.cullsBackFaces ? .back : .none)
         encoder.setFrontFacing(.clockwise)
         encoder.setVertexBuffer(state.vertices, offset: 0, index: 0)
@@ -587,6 +614,17 @@ final class ScenePuppetRenderer {
                                       indexType: plan.usesUInt32Indices ? .uint32 : .uint16,
                                       indexBuffer: state.indices, indexBufferOffset: 0)
         encoder.endEncoding()
+        if let scratch {
+            guard let compute = commandBuffer.makeComputeCommandEncoder() else { return nil }
+            compute.setComputePipelineState(unpremultiply)
+            compute.setTexture(scratch, index: 0)
+            compute.setTexture(warp.target, index: 1)
+            var bounds = SIMD2(UInt32(extent.x), UInt32(extent.y))
+            compute.setBytes(&bounds, length: MemoryLayout<SIMD2<UInt32>>.stride, index: 0)
+            compute.dispatchThreadgroups(MTLSize(width: (warp.target.width + 15) / 16, height: (warp.target.height + 15) / 16, depth: 1),
+                                         threadsPerThreadgroup: MTLSize(width: 16, height: 16, depth: 1))
+            compute.endEncoding()
+        }
         warp.drawnPose = pose
         warp.drawnSource = source
         warp.drawnCanvas = canvas

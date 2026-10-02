@@ -3142,7 +3142,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     /// A puppet's effect output (in its image's bind layout, `drawPuppet`) laid out by the posed
     /// mesh, which the layer then draws: WE draws a layer with effects through its geometry, the
-    /// skinned mesh for a puppet. Anything else, or while the mesh can't be drawn, as it is.
+    /// skinned mesh for a puppet, its triangles blended over each other by the layer's material. Anything else, or while the mesh can't be drawn, as it is.
     private func posedEffectOutput(_ output: MTLTexture?, of entry: PreparedLayer, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
         guard let output, let puppet = entry.layer.puppet, let puppets, let animator = puppetAnimators[entry.layer.id],
               let source = entry.frames.first?.texture, source.width > 0, source.height > 0 else { return output }
@@ -3150,7 +3150,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let share = SIMD2(Float(puppet.contentPixels.x) / Float(source.width), Float(puppet.contentPixels.y) / Float(source.height))
         let content = SIMD2(Float(output.width), Float(output.height)) * simd_min(share, SIMD2(repeating: 1))
         return puppets.warp(puppet, layerID: entry.layer.id, key: "_effects", texture: output, contentSize: content,
-                            pose: animator.pose, canvas: puppetCanvases[entry.layer.id], redraw: true,
+                            pose: animator.pose, canvas: puppetCanvases[entry.layer.id], redraw: true, blended: true,
                             commandBuffer: commandBuffer) ?? output
     }
 
