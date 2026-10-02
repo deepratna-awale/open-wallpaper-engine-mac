@@ -102,7 +102,8 @@ final class SceneDetailEquivalenceTests: XCTestCase {
         for part in mode.split(separator: "+") {
             switch part {
             case "match": settings.sceneDetail = .matchDisplay
-            case "desktop": settings.renderResolution = .display
+            case "desktop", "display": settings.renderResolution = .display
+            case "retina": settings.renderResolution = .retina
             case "half": settings.textureReduction = 2
             default: XCTFail("unknown mode \(part)")
             }

@@ -138,18 +138,21 @@ enum GSTextureResolutionQuality: String, CaseIterable, Identifiable, Codable {
 }
 
 /// What the scene target is sized for (`SceneRenderResolution`): `display` draws at the
-/// displays' backing pixels, 1:1; `full` draws at the wallpaper's authored size and scales that
-/// onto the display with WE's placement. Settings saved with the earlier "Native" and points-based
-/// "Desktop" choices read as `display` (`init(storedValue:)`).
+/// displays' size in points (a 2× display's looks-like size, a quarter of its pixels) and the
+/// composite scales the frame up to the backing pixels; `retina` draws at the backing pixels, 1:1;
+/// `full` draws at the wallpaper's authored size and scales that onto the display with WE's
+/// placement. Earlier stored values: "native" reads as `retina`, "desktop" as `display`
+/// (`init(storedValue:)`).
 enum GSRenderResolution: String, CaseIterable, Identifiable, Codable {
     var id: Self { self }
-    case display, full
+    case display, retina, full
 
     /// The choice a stored value means, including the values earlier versions wrote; nil for an
     /// unknown value.
     init?(storedValue value: String) {
         switch value {
-        case "display", "native", "desktop": self = .display
+        case "display", "desktop": self = .display
+        case "retina", "native": self = .retina
         case "full": self = .full
         default: return nil
         }

@@ -72178,6 +72178,101 @@
         }
       }
     },
+    "Retina" : {
+      "comment" : "Render resolution: the display's native backing pixels",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retina"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retina"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retina"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retina"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retina"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retina"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retina"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retina"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retina"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retina"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retina"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retina"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retina"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retina"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retina"
+          }
+        }
+      }
+    },
     "Retro" : {
       "comment" : "Workshop genre tag",
       "localizations" : {
@@ -109567,7 +109662,7 @@
       }
     },
     "Display" : {
-      "comment" : "Render resolution: the display's own pixels",
+      "comment" : "Render resolution: the display's size in points",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -110133,96 +110228,96 @@
         }
       }
     },
-    "Display draws at the display's pixels, one for one. Full draws at the wallpaper's own size and scales it to fit the display." : {
+    "Display draws at the display's size in points and scales the frame up to the screen, a quarter of the pixels on a Retina display. Retina draws at the display's native pixels, one for one. Full draws at the wallpaper's own size and scales it to fit the display." : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يرسم خيار شاشة العرض بوحدات بكسل شاشة العرض، واحدًا لواحد. ويرسم خيار كامل بحجم الخلفية نفسه ويغيّر حجمه ليلائم شاشة العرض."
+            "value" : "يرسم خيار شاشة العرض بحجم شاشة العرض بالنقاط ثم يكبّر الإطار إلى الشاشة، أي ربع وحدات البكسل على شاشة Retina. ويرسم خيار Retina بوحدات بكسل شاشة العرض الأصلية، واحدًا لواحد. ويرسم خيار كامل بحجم الخلفية نفسه ويغيّر حجمه ليلائم شاشة العرض."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Display zeichnet in den Pixeln des Displays, eins zu eins. Voll zeichnet in der Größe des Hintergrundbilds und skaliert sie passend auf das Display."
+            "value" : "Display zeichnet in der Größe des Displays in Punkten und skaliert das Bild auf den Bildschirm hoch, ein Viertel der Pixel auf einem Retina-Display. Retina zeichnet in den nativen Pixeln des Displays, eins zu eins. Voll zeichnet in der Größe des Hintergrundbilds und skaliert sie passend auf das Display."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pantalla dibuja con los píxeles de la pantalla, uno a uno. Completo dibuja al tamaño propio del fondo de pantalla y lo escala para ajustarlo a la pantalla."
+            "value" : "Pantalla dibuja al tamaño de la pantalla en puntos y escala la imagen a la pantalla, una cuarta parte de los píxeles en una pantalla Retina. Retina dibuja con los píxeles nativos de la pantalla, uno a uno. Completo dibuja al tamaño propio del fondo de pantalla y lo escala para ajustarlo a la pantalla."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Moniteur dessine avec les pixels du moniteur, un pour un. Complet dessine à la taille propre du fond d’écran et l’adapte au moniteur."
+            "value" : "Moniteur dessine à la taille du moniteur en points et agrandit l’image à l’écran, un quart des pixels sur un écran Retina. Retina dessine avec les pixels natifs du moniteur, un pour un. Complet dessine à la taille propre du fond d’écran et l’adapte au moniteur."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "डिस्प्ले, डिस्प्ले के पिक्सेल पर एक-से-एक ड्रॉ करता है। पूर्ण वॉलपेपर के अपने आकार पर ड्रॉ करता है और उसे डिस्प्ले में फ़िट करता है।"
+            "value" : "डिस्प्ले, डिस्प्ले के पॉइंट आकार पर ड्रॉ करता है और फ़्रेम को स्क्रीन तक बड़ा करता है, Retina डिस्प्ले पर एक-चौथाई पिक्सेल। Retina डिस्प्ले के मूल पिक्सेल पर एक-से-एक ड्रॉ करता है। पूर्ण वॉलपेपर के अपने आकार पर ड्रॉ करता है और उसे डिस्प्ले में फ़िट करता है।"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Schermo disegna con i pixel dello schermo, uno a uno. Completo disegna alla dimensione propria dello sfondo e la adatta allo schermo."
+            "value" : "Schermo disegna alla dimensione dello schermo in punti e ingrandisce l’immagine sullo schermo, un quarto dei pixel su uno schermo Retina. Retina disegna con i pixel nativi dello schermo, uno a uno. Completo disegna alla dimensione propria dello sfondo e la adatta allo schermo."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ディスプレイはディスプレイのピクセルに1対1で描画します。フルは壁紙本来のサイズで描画し、ディスプレイに合わせて拡大縮小します。"
+            "value" : "ディスプレイはディスプレイのポイントサイズで描画し、画面に合わせて拡大します（Retinaディスプレイではピクセル数が4分の1）。Retinaはディスプレイのネイティブピクセルに1対1で描画します。フルは壁紙本来のサイズで描画し、ディスプレイに合わせて拡大縮小します。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "디스플레이는 디스플레이의 픽셀에 1:1로 그립니다. 전체는 배경화면 본래 크기로 그린 다음 디스플레이에 맞게 조절합니다."
+            "value" : "디스플레이는 디스플레이의 포인트 크기로 그린 다음 화면에 맞게 확대합니다(Retina 디스플레이에서 픽셀의 4분의 1). Retina는 디스플레이의 기본 픽셀에 1:1로 그립니다. 전체는 배경화면 본래 크기로 그린 다음 디스플레이에 맞게 조절합니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wyświetlacz rysuje w pikselach wyświetlacza, jeden do jednego. Pełne rysuje w rozmiarze tapety i skaluje ją do wyświetlacza."
+            "value" : "Wyświetlacz rysuje w rozmiarze wyświetlacza w punktach i skaluje obraz w górę do ekranu, jedna czwarta pikseli na wyświetlaczu Retina. Retina rysuje w natywnych pikselach wyświetlacza, jeden do jednego. Pełne rysuje w rozmiarze tapety i skaluje ją do wyświetlacza."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tela desenha nos pixels da tela, um para um. Completo desenha no tamanho próprio do papel de parede e o ajusta à tela."
+            "value" : "Tela desenha no tamanho da tela em pontos e amplia a imagem para a tela, um quarto dos pixels em uma tela Retina. Retina desenha nos pixels nativos da tela, um para um. Completo desenha no tamanho próprio do papel de parede e o ajusta à tela."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Дисплей рисует в пикселях дисплея, один к одному. Полная рисует в собственном размере обоев и масштабирует их по дисплею."
+            "value" : "Дисплей рисует в размере дисплея в точках и масштабирует кадр до экрана, четверть пикселей на дисплее Retina. Retina рисует в собственных пикселях дисплея, один к одному. Полная рисует в собственном размере обоев и масштабирует их по дисплею."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ekran, ekranın piksellerinde bire bir çizer. Tam, duvar kâğıdının kendi boyutunda çizer ve ekrana sığacak şekilde ölçekler."
+            "value" : "Ekran, ekranın nokta cinsinden boyutunda çizer ve kareyi ekrana büyütür; Retina ekranda piksellerin dörtte biri. Retina, ekranın yerel piksellerinde bire bir çizer. Tam, duvar kâğıdının kendi boyutunda çizer ve ekrana sığacak şekilde ölçekler."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Дисплей малює в пікселях дисплея, один до одного. Повна малює у власному розмірі шпалер і масштабує їх під дисплей."
+            "value" : "Дисплей малює в розмірі дисплея в точках і масштабує кадр до екрана, чверть пікселів на дисплеї Retina. Retina малює в рідних пікселях дисплея, один до одного. Повна малює у власному розмірі шпалер і масштабує їх під дисплей."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "显示器按显示器的像素一比一绘制。完整按墙纸本身的大小绘制，并缩放以适合显示器。"
+            "value" : "显示器按显示器的点尺寸绘制，再将画面放大到屏幕，在 Retina 显示器上只需四分之一的像素。Retina 按显示器的原生像素一比一绘制。完整按墙纸本身的大小绘制，并缩放以适合显示器。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "顯示器按顯示器的像素一比一繪製。完整按背景圖片本身的大小繪製，並縮放以符合顯示器。"
+            "value" : "顯示器按顯示器的點尺寸繪製，再將畫面放大至螢幕，在 Retina 顯示器上只需四分之一的像素。Retina 按顯示器的原生像素一比一繪製。完整按背景圖片本身的大小繪製，並縮放以符合顯示器。"
           }
         }
       }

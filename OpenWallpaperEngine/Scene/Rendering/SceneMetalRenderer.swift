@@ -2208,15 +2208,18 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private func submitScriptFrame(viewports: [SceneViewport],
                                    cursor: (position: SIMD2<Float>, onDisplay: Bool), leftDown: Bool,
                                    animationEvents: [SceneAnimationEvent]) {
-        let drawableSize = viewports[0].drawableSize
+        // The screen the scene is drawn for: its points under Render Resolution "Display".
+        let toScreen = scriptScreenScale(viewports[0])
+        let drawableSize = viewports[0].drawableSize * toScreen
         var input = SceneScriptFrameInput()
         input.deltaTime = clock.delta
         timelines.describe(into: &input, events: animationEvents)
         input.environment = SceneScriptEngineEnvironment(
             screenResolution: SIMD2(Double(drawableSize.x), Double(drawableSize.y)),
             canvasSize: SIMD2(Double(sceneSize.x), Double(sceneSize.y)), placement: placement,
-            pixelsPerPoint: Double(drawablePixelsPerPoint))
-        input.input = SceneScriptInput(cursorScreenPosition: cursorScreenPixels(viewports), cursorLeftDown: leftDown)
+            pixelsPerPoint: Double(drawablePixelsPerPoint * toScreen))
+        input.input = SceneScriptInput(cursorScreenPosition: cursorScreenPixels(viewports) * Double(toScreen),
+                                       cursorLeftDown: leftDown)
         input.cursorScenePosition = cursor.position
         input.shakeOffset = lastCameraMotion?.shake ?? .zero
         if let parallax = lastCameraMotion?.parallax {
@@ -2267,6 +2270,13 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     /// The cursor in display pixels from the top-left of the wallpaper's view on the display it is
     /// on (`input.cursorScreenPosition`); where it was last seen while it is on none of them.
+    /// Screen pixels the scripts see per drawable pixel: 1 / pixels per point when the scene is
+    /// drawn at the display's points (`GSRenderResolution.display`), else 1.
+    private func scriptScreenScale(_ viewport: SceneViewport) -> Float {
+        guard renderSettings.renderResolution == .display, viewport.pixelsPerPoint > 0 else { return 1 }
+        return 1 / viewport.pixelsPerPoint
+    }
+
     private func cursorScreenPixels(_ viewports: [SceneViewport]) -> SIMD2<Double> {
         guard let pixels = viewports.lazy.compactMap(\.cursorScreenPixels).first else { return lastCursorScreenPixels }
         lastCursorScreenPixels = pixels

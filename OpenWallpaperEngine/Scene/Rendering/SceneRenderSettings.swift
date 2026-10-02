@@ -24,8 +24,9 @@ struct SceneRenderSettings: Equatable {
     /// Large additive particle systems of a scene without depth draw into a half-resolution target
     /// that is added back in their place: a quarter of their fragments, softer edges. Off by default.
     var reducedResolutionParticles = false
-    /// What the scene target is sized for: the displays' pixels or the scene's authored size.
-    var renderResolution = GSRenderResolution.display
+    /// What the scene target is sized for: the displays' points or pixels, or the scene's authored
+    /// size. A settings-less renderer draws at the backing pixels, as WE does.
+    var renderResolution = GSRenderResolution.retina
     /// Draw the scene at `renderScale` of its target and scale it up (`SceneUpscaler`).
     var upscaling = GSUpscaling.off
     var renderScale = GSRenderScale.percent75

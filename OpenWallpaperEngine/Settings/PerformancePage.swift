@@ -145,11 +145,12 @@ struct PerformancePage: SettingsPage {
                 .changedFromDefault(viewModel.isChanged(\.sceneDetail))
                 .help("Match Display draws no more detail than the display shows: a scene larger than the display is drawn at the display's size, and each layer's effects at the size the layer appears on screen. Full draws every effect at its texture's full size, as Wallpaper Engine does.")
                 Picker("Render Resolution", selection: $viewModel.settings.renderResolution) {
-                    Text("Display", comment: "Render resolution: the display's own pixels").tag(GSRenderResolution.display)
+                    Text("Display", comment: "Render resolution: the display's size in points").tag(GSRenderResolution.display)
+                    Text("Retina", comment: "Render resolution: the display's native backing pixels").tag(GSRenderResolution.retina)
                     Text("Full", comment: "Render resolution: the wallpaper's authored size").tag(GSRenderResolution.full)
                 }
                 .changedFromDefault(viewModel.isChanged(\.renderResolution))
-                .help("Display draws at the display's pixels, one for one. Full draws at the wallpaper's own size and scales it to fit the display.")
+                .help("Display draws at the display's size in points and scales the frame up to the screen, a quarter of the pixels on a Retina display. Retina draws at the display's native pixels, one for one. Full draws at the wallpaper's own size and scales it to fit the display.")
                 Picker("Upscaling", selection: $viewModel.settings.upscaling) {
                     Text("Off", comment: "Upscaling: none").tag(GSUpscaling.off)
                     Text("MetalFX").tag(GSUpscaling.metalFX)

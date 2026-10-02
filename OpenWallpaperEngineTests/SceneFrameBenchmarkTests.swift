@@ -76,7 +76,7 @@ final class SceneFrameBenchmarkTests: XCTestCase {
 
     /// The render settings `OWE_SCENE_BENCH_MODES` asks for, by name (comma separated): `half` (WE's
     /// texture reduction), `match` (scene detail matched to the display), `authored` (render
-    /// resolution Full: the scene's authored size), `metalfx50` (drawn at 50% and upscaled), `textures` ("Optimise textures" on: BC7 colour images, `TexturePreparation`), and `+`
+    /// resolution Full: the scene's authored size), `display` (render resolution Display: the display's points), `metalfx50` (drawn at 50% and upscaled), `textures` ("Optimise textures" on: BC7 colour images, `TexturePreparation`), and `+`
     /// joins them (`match+metalfx50`). With the variable set, only these and `full` are drawn.
     /// `OWE_SCENE_BENCH_TEXTURES=1` adds the `textures` row to the default variants, so the rows
     /// show the setting off (`full`) and on.
@@ -89,6 +89,7 @@ final class SceneFrameBenchmarkTests: XCTestCase {
                 case "half": settings.textureReduction = 2
                 case "match": settings.sceneDetail = .matchDisplay
                 case "authored": settings.renderResolution = .full
+                case "display": settings.renderResolution = .display
                 case "metalfx50":
                     settings.upscaling = .metalFX
                     settings.renderScale = .percent50

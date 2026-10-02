@@ -108,7 +108,7 @@ final class WEEffectGalleryTests: XCTestCase {
         settings.particleBudget = .unlimited
         settings.textureReduction = 1
         settings.sceneDetail = .full
-        settings.renderResolution = .display
+        settings.renderResolution = .retina
         settings.antiAliasing = .msaa_x2
         var renderer = WEReferenceRenderer(directory: directory, project: project, settings: settings,
                                            storage: scratch.appending(path: "storage-\(directory.lastPathComponent)"))

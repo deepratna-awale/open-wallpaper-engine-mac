@@ -32,14 +32,16 @@ enum SceneRenderResolution {
         return quantized > fitsTexture ? max(1, (fitsTexture * 8).rounded(.down) / 8) : quantized
     }
 
-    /// The size, in pixels, a scene target is sized for: the largest of `viewports`' backing
-    /// pixels for `GSRenderResolution.display` (so a scene matched to its display gets one target
-    /// pixel per display pixel, never scaled twice), or the scene's authored size for `full`
-    /// (placed onto each display by the final composite, as WE places it).
+    /// The size, in pixels, a scene target is sized for: the largest of `viewports`' sizes in
+    /// points for `GSRenderResolution.display` (one target pixel per point, scaled up to the
+    /// backing pixels by the final composite), their backing pixels for `retina` (one target pixel
+    /// per display pixel, never scaled twice), or the scene's authored size for `full` (placed onto
+    /// each display by the final composite, as WE places it).
     static func drawableSize(_ viewports: [SceneViewport], resolution: GSRenderResolution,
                              sceneSize: SIMD2<Float>) -> SIMD2<Float> {
         switch resolution {
-        case .display: return SceneViewport.largestDrawable(viewports)
+        case .display: return SceneViewport.largestPointSize(viewports)
+        case .retina: return SceneViewport.largestDrawable(viewports)
         case .full: return simd_max(sceneSize, SIMD2(1, 1))
         }
     }
