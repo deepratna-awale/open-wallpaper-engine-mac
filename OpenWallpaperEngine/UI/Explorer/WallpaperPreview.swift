@@ -60,12 +60,14 @@ struct WallpaperPreview: SubviewOfContentView {
         switch screenSaver.status(for: wallpaperViewModel.displayedWallpaper) {
         case .available:
             screenSaverRow(String(localized: "Screen Saver Available",
-                                  comment: "Details panel: a screen saver loop video of this wallpaper is ready")) {
+                                  comment: "Details panel: a screen saver loop video of this wallpaper is ready"),
+                           showsSettings: true) {
                 Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
             }
         case .rendering:
             screenSaverRow(String(localized: "Rendering Screen Saver",
-                                  comment: "Details panel: the screen saver loop video of this wallpaper is being made")) {
+                                  comment: "Details panel: the screen saver loop video of this wallpaper is being made"),
+                           showsSettings: true) {
                 ProgressView().controlSize(.small).progressViewStyle(.circular)
             }
         case .notEligible:
@@ -80,7 +82,26 @@ struct WallpaperPreview: SubviewOfContentView {
         }
     }
 
-    private func screenSaverRow(_ text: String, @ViewBuilder icon: () -> some View) -> some View {
+    private func screenSaverRow(_ text: String, showsSettings: Bool = false,
+                                @ViewBuilder icon: () -> some View) -> some View {
+        HStack(spacing: 6) {
+            screenSaverStatus(text, icon: icon)
+            if showsSettings {
+                let title = String(localized: "Open Screen Saver Settings",
+                                   comment: "Details panel: opens System Settings where the screen saver is chosen")
+                Button {
+                    ScreenSaverInstaller.current.openSettings()
+                } label: {
+                    Image(systemName: "gearshape")
+                }
+                .buttonStyle(.borderless)
+                .help(title)
+                .accessibilityLabel(title)
+            }
+        }
+    }
+
+    private func screenSaverStatus(_ text: String, @ViewBuilder icon: () -> some View) -> some View {
         HStack(spacing: 6) {
             icon()
                 .frame(width: 16, height: 16)
