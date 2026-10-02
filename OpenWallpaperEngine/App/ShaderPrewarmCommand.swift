@@ -16,9 +16,12 @@ enum ShaderPrewarmCommand {
     static let prewarmArgument = "--prewarm-shaders"
     static let prepareArgument = "--prepare-wallpapers"
 
-    /// `--render-screensaver-loop <folder> <width>x<height> <points width>x<points height> <output>`
-    /// renders a scene's loop video for the screen saver (`ScreenSaverLoopRenderer`).
+    /// `--render-screensaver-loop <folder> <width>x<height> <points width>x<points height> <output> [<properties JSON>]`
+    /// renders a scene's loop video for the screen saver (`ScreenSaverLoopRenderer`), or records a
+    /// web wallpaper's or WebM video's (`ScreenSaverWebLoopRecorder`, with the user properties).
+    /// Exits 0 when the video is written, `pageDidNotLoadStatus` when a page didn't load, 1 otherwise.
     static let screenSaverArgument = "--render-screensaver-loop"
+    static let pageDidNotLoadStatus: Int32 = 3
 
     static func isHelperRun(arguments: [String]) -> Bool {
         arguments.contains(printKeyArgument) || arguments.contains(prewarmArgument)
@@ -37,16 +40,28 @@ enum ShaderPrewarmCommand {
         let values = Array(arguments)
         guard values.count >= 4, let pixels = size(values[1]), let points = size(values[2]),
               let wallpaper = InstalledLibrary.wallpaper(at: URL(filePath: values[0], directoryHint: .isDirectory), hiding: []),
-              wallpaper.project.type.caseInsensitiveCompare("scene") == .orderedSame else {
+              ScreenSaverPlugin.isEligible(wallpaper) else {
             OWELog.error(.app, "Screen saver: bad loop arguments \(values)")
             return 2
+        }
+        let output = URL(filePath: values[3], directoryHint: .notDirectory)
+        if ScreenSaverWebLoopRecorder.records(wallpaper) {
+            let properties = values.count > 4 ? ScreenSaverPlugin.decodeProperties(values[4]) : [:]
+            let settings = ScreenSaverLoopRenderer.globalSettings(from: .app)
+            let recorder = ScreenSaverWebLoopRecorder(wallpaper: wallpaper, pixelSize: pixels, pointSize: points,
+                                                      output: output, properties: properties, fps: Int(settings.fps))
+            switch recorder.run() {
+            case .recorded: return 0
+            case .pageDidNotLoad: return pageDidNotLoadStatus
+            case .failed: return 1
+            }
         }
         let scratch = FileManager.default.temporaryDirectory
             .appending(path: "owe-screensaver-\(ProcessInfo.processInfo.processIdentifier)", directoryHint: .isDirectory)
         defer { try? FileManager.default.removeItem(at: scratch) } // Optional: a scratch folder.
         let renderer = ScreenSaverLoopRenderer(wallpaper: wallpaper, pixelSize: pixels,
                                                pointSize: SIMD2(Float(points.x), Float(points.y)),
-                                               output: URL(filePath: values[3], directoryHint: .notDirectory),
+                                               output: output,
                                                defaults: .app, scratchDirectory: scratch)
         return renderer.run() ? 0 : 1
     }

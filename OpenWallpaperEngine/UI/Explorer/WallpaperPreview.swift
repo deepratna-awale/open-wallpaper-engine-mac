@@ -75,8 +75,15 @@ struct WallpaperPreview: SubviewOfContentView {
                                   comment: "Details panel: no screen saver is made from this wallpaper")) {
                 Image(systemName: "xmark.circle.fill").foregroundStyle(.red)
             }
-            .help(String(localized: "Screen savers are made from scene wallpapers",
-                         comment: "Details panel: why a video, web or application wallpaper has no screen saver"))
+            .help(String(localized: "Screen savers are made from scene, web and WebM video wallpapers",
+                         comment: "Details panel: why an application or other video wallpaper has no screen saver"))
+        case .notAvailable(.pageDidNotLoad):
+            screenSaverRow(String(localized: "Screen Saver Not Available",
+                                  comment: "Details panel: no screen saver is made from this wallpaper")) {
+                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.yellow)
+            }
+            .help(String(localized: "The wallpaper's page didn't load, so no screen saver was recorded",
+                         comment: "Details panel: why a web or WebM video wallpaper has no screen saver"))
         case nil:
             EmptyView()
         }

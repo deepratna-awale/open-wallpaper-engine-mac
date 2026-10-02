@@ -4,8 +4,9 @@ import XCTest
 final class ScreenSaverStatusTests: XCTestCase {
     private typealias Plugin = ScreenSaverPlugin
 
-    private func wallpaper(type: String, directory: URL = URL(fileURLWithPath: "/tmp/owe-status-test")) -> WEWallpaper {
-        WEWallpaper(using: WEProject(file: "scene.json", preview: "p.jpg", title: "t", type: type), where: directory)
+    private func wallpaper(type: String, file: String = "scene.json",
+                           directory: URL = URL(fileURLWithPath: "/tmp/owe-status-test")) -> WEWallpaper {
+        WEWallpaper(using: WEProject(file: file, preview: "p.jpg", title: "t", type: type), where: directory)
     }
 
     private func key(for wallpaper: WEWallpaper) -> Plugin.StatusKey {
@@ -15,21 +16,36 @@ final class ScreenSaverStatusTests: XCTestCase {
 
     // MARK: Eligibility
 
-    func testOnlyValidScenesAreEligible() {
+    func testScenesWebPagesAndWebMVideosAreEligible() {
         XCTAssertTrue(Plugin.isEligible(wallpaper(type: "scene")))
         XCTAssertTrue(Plugin.isEligible(wallpaper(type: "Scene")))
-        XCTAssertFalse(Plugin.isEligible(wallpaper(type: "video")))
-        XCTAssertFalse(Plugin.isEligible(wallpaper(type: "web")))
-        XCTAssertFalse(Plugin.isEligible(wallpaper(type: "application")))
+        XCTAssertTrue(Plugin.isEligible(wallpaper(type: "web", file: "index.html")))
+        XCTAssertTrue(Plugin.isEligible(wallpaper(type: "video", file: "clip.webm")))
+        XCTAssertFalse(Plugin.isEligible(wallpaper(type: "video", file: "clip.mp4")))
+        XCTAssertFalse(Plugin.isEligible(wallpaper(type: "application", file: "app.exe")))
         XCTAssertFalse(Plugin.isEligible(WEWallpaper(using: .invalid, where: URL(fileURLWithPath: "/tmp/x"))))
     }
 
     func testTargetsFollowEligibility() {
         let screens = [(pixels: SIMD2(3840, 2160), points: SIMD2(1920, 1080))]
-        for type in ["video", "web", "application"] {
+        for type in ["video", "application"] {
             XCTAssertTrue(Plugin.targets(for: wallpaper(type: type), screens: screens, properties: [:]).isEmpty, type)
         }
-        XCTAssertNil(Plugin.statusKey(for: wallpaper(type: "web"), properties: [:]))
+        XCTAssertNil(Plugin.statusKey(for: wallpaper(type: "application"), properties: [:]))
+    }
+
+    func testWebTargetsCarryTheirProperties() throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: "owe-status-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try Data("<html></html>".utf8).write(to: directory.appending(path: "index.html"))
+        let web = wallpaper(type: "web", file: "index.html", directory: directory)
+        let screens = [(pixels: SIMD2(3840, 2160), points: SIMD2(1920, 1080))]
+        let target = try XCTUnwrap(Plugin.targets(for: web, screens: screens, properties: ["a": "1"]).first)
+        XCTAssertEqual(target.pixelSize, SIMD2(1920, 1080), "Render Resolution Display records the points")
+        XCTAssertEqual(target.properties, ["a": "1"])
+        XCTAssertEqual(Plugin.decodeProperties(Plugin.encodeProperties(["a": "1", "b": "x y"])), ["a": "1", "b": "x y"])
+        XCTAssertEqual(Plugin.decodeProperties("not json"), [:])
     }
 
     func testStatusKeyMatchesTheStoreName() throws {
@@ -55,11 +71,26 @@ final class ScreenSaverStatusTests: XCTestCase {
     }
 
     func testNotEligibleTypesSayNotAvailable() {
-        for type in ["video", "web", "application"] {
+        for type in ["video", "application"] {
             XCTAssertEqual(Plugin.status(for: wallpaper(type: type), enabled: true, statuses: [:]), .notEligible, type)
         }
         XCTAssertEqual(Plugin.status(for: WEWallpaper(using: .invalid, where: URL(fileURLWithPath: "/tmp/x")),
                                      enabled: true, statuses: [:]), .notEligible)
+    }
+
+    func testFinishedJobStatus() {
+        XCTAssertEqual(Plugin.finishedStatus(allRendered: true, pageDidNotLoad: false), .available)
+        XCTAssertEqual(Plugin.finishedStatus(allRendered: false, pageDidNotLoad: true), .notAvailable(.pageDidNotLoad))
+        XCTAssertNil(Plugin.finishedStatus(allRendered: false, pageDidNotLoad: false), "another failure shows nothing")
+    }
+
+    func testRenderingThenNotAvailableForAPageThatDidNotLoad() {
+        let web = wallpaper(type: "web", file: "index.html")
+        XCTAssertEqual(Plugin.status(for: web, enabled: true, statuses: [key(for: web): .rendering]), .rendering)
+        let failed = Plugin.finishedStatus(allRendered: false, pageDidNotLoad: true).map { [key(for: web): $0] } ?? [:]
+        XCTAssertEqual(Plugin.status(for: web, enabled: true, statuses: failed), .notAvailable(.pageDidNotLoad))
+        let done = Plugin.finishedStatus(allRendered: true, pageDidNotLoad: false).map { [key(for: web): $0] } ?? [:]
+        XCTAssertEqual(Plugin.status(for: web, enabled: true, statuses: done), .available)
     }
 
     func testNoStatusWhenDisabled() {
@@ -80,7 +111,7 @@ final class ScreenSaverStatusTests: XCTestCase {
     func testANewPluginHasNoStatus() {
         let plugin = ScreenSaverPlugin(pool: PreparationPool(maxWorkers: 1),
                                        store: ScreenSaverVideoStore(directory: FileManager.default.temporaryDirectory),
-                                       runner: { _, _, _ in false })
+                                       runner: { _, _, _ in .failed })
         XCTAssertFalse(plugin.isEnabled)
         XCTAssertNil(plugin.status(for: wallpaper(type: "scene")))
     }

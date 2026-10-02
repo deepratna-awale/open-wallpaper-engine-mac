@@ -1,8 +1,9 @@
 import AppKit
 import Combine
 
-/// Settings › Plugins › Screen Saver. While on, the current scene wallpaper's loop video is
-/// rendered for each display size (`ScreenSaverLoopRenderer`, in the app's helper run) and the
+/// Settings › Plugins › Screen Saver. While on, the current wallpaper's loop video is rendered for
+/// each display size (`ScreenSaverLoopRenderer` for a scene, `ScreenSaverWebLoopRecorder` for a
+/// web wallpaper or WebM video, in the app's helper run) and the
 /// bundled saver plays it; off stops rendering and removes the saver and the videos.
 ///
 /// - Renders run as `.library` jobs on the `PreparationPool`, so they wait while the power policy
@@ -21,6 +22,20 @@ final class ScreenSaverPlugin: ObservableObject {
         case rendering
         /// Not a wallpaper loops are made from (`isEligible`).
         case notEligible
+        /// An eligible wallpaper whose loop couldn't be made, and why.
+        case notAvailable(Reason)
+    }
+
+    enum Reason: Equatable {
+        /// The web page (or WebKit video) didn't load in the recorder.
+        case pageDidNotLoad
+    }
+
+    /// How one helper run ended.
+    enum RunResult: Equatable {
+        case rendered
+        case failed
+        case pageDidNotLoad
     }
 
     /// A wallpaper's videos, keyed as the store names them.
@@ -34,9 +49,11 @@ final class ScreenSaverPlugin: ObservableObject {
         var pixelSize: SIMD2<Int>
         var pointSize: SIMD2<Int>
         var fileName: String
+        /// The user properties a web page is recorded with (scenes read their own).
+        var properties: [String: String] = [:]
     }
 
-    typealias Runner = @Sendable (_ wallpaper: URL, _ target: Target, _ output: URL) -> Bool
+    typealias Runner = @Sendable (_ wallpaper: URL, _ target: Target, _ output: URL) -> RunResult
 
     private let pool: PreparationPool
     private let store: ScreenSaverVideoStore
@@ -61,10 +78,30 @@ final class ScreenSaverPlugin: ObservableObject {
         if pool === PreparationPool.shared { _ = LibraryPreparationScheduler.shared }
     }
 
-    /// Whether loops are made from `wallpaper`: valid scene wallpapers only. `targets(for:)` and
-    /// the Details pane both ask this.
+    /// Whether loops are made from `wallpaper`: valid scene and web wallpapers, and WebM videos
+    /// (which play through WebKit); never application wallpapers. `targets(for:)` and the Details
+    /// pane both ask this.
     nonisolated static func isEligible(_ wallpaper: WEWallpaper) -> Bool {
-        wallpaper.project != .invalid && wallpaper.project.type.caseInsensitiveCompare("scene") == .orderedSame
+        guard wallpaper.project != .invalid else { return false }
+        return wallpaper.project.type.caseInsensitiveCompare("scene") == .orderedSame
+            || ScreenSaverWebLoopRecorder.records(wallpaper)
+    }
+
+    /// The status a finished job leaves: available when every video exists, not available when a
+    /// page didn't load, and nothing for another failure (logged by the runner).
+    nonisolated static func finishedStatus(allRendered: Bool, pageDidNotLoad: Bool) -> Status? {
+        if allRendered { return .available }
+        return pageDidNotLoad ? .notAvailable(.pageDidNotLoad) : nil
+    }
+
+    /// The properties as the helper's last argument, and back.
+    nonisolated static func encodeProperties(_ properties: [String: String]) -> String {
+        guard let data = try? JSONSerialization.data(withJSONObject: properties, options: [.sortedKeys]) else { return "{}" }
+        return String(decoding: data, as: UTF8.self)
+    }
+
+    nonisolated static func decodeProperties(_ text: String) -> [String: String] {
+        (try? JSONSerialization.jsonObject(with: Data(text.utf8))) as? [String: String] ?? [:]
     }
 
     /// The store key of `wallpaper`'s videos now; nil when it isn't eligible or can't be read.
@@ -103,7 +140,8 @@ final class ScreenSaverPlugin: ObservableObject {
               let points = screens.map(\.points).max(by: { $0.x * $0.y < $1.x * $1.y }) else { return [] }
         return [Target(pixelSize: largest, pointSize: points,
                        fileName: ScreenSaverVideoStore.fileName(wallpaperKey: wallpaperKey, contentKey: contentKey,
-                                                                propertyHash: hash, pixelSize: largest))]
+                                                                propertyHash: hash, pixelSize: largest),
+                       properties: properties)]
     }
 
     /// The plugin's setting or the shown wallpaper changed.
@@ -149,26 +187,28 @@ final class ScreenSaverPlugin: ObservableObject {
         if let key, !targets.isEmpty { statuses = [key: ready ? .available : .rendering] }
         publish(targets, generation: generation)
         let runner = runner, store = store
-        // One render at a time: each is a full scene render and encode.
+        // One render at a time: each is a full scene render (or page recording) and encode.
         let job = pool.submit(priority: .library) { [weak self] job in
+            var pageDidNotLoad = false
             for target in targets {
                 guard !job.isCancelled else { return }
                 guard !store.exists(fileName: target.fileName) else { continue }
                 let output = store.url(fileName: target.fileName)
-                guard runner(wallpaper, target, output) else { continue }
+                let result = runner(wallpaper, target, output)
+                if result == .pageDidNotLoad { pageDidNotLoad = true }
+                guard result == .rendered else { continue }
                 Task { @MainActor in self?.publish(targets, generation: generation) }
             }
-            // Done: available if every video exists, otherwise a render failed (logged by the
-            // runner) and there is nothing to show.
-            let finished = targets.allSatisfy { store.exists(fileName: $0.fileName) }
-            Task { @MainActor in self?.finish(key, available: finished, generation: generation) }
+            let status = Self.finishedStatus(allRendered: targets.allSatisfy { store.exists(fileName: $0.fileName) },
+                                             pageDidNotLoad: pageDidNotLoad)
+            Task { @MainActor in self?.finish(key, status: status, generation: generation) }
         }
         jobs.append(job)
     }
 
-    private func finish(_ key: StatusKey?, available: Bool, generation: Int) {
+    private func finish(_ key: StatusKey?, status: Status?, generation: Int) {
         guard generation == self.generation, let key else { return }
-        statuses = available ? [key: .available] : [:]
+        statuses = status.map { [key: $0] } ?? [:]
     }
 
     /// Lists the targets' videos that exist in the manifest and removes every other video.
@@ -189,13 +229,13 @@ final class ScreenSaverPlugin: ObservableObject {
 
     /// Runs this app's executable with `--render-screensaver-loop`, in this process's isolated
     /// state, at background priority, and waits for it.
-    nonisolated static func runHelper(_ wallpaper: URL, _ target: Target, _ output: URL) -> Bool {
-        guard let executable = AppRelauncher.helperExecutable else { return false }
+    nonisolated static func runHelper(_ wallpaper: URL, _ target: Target, _ output: URL) -> RunResult {
+        guard let executable = AppRelauncher.helperExecutable else { return .failed }
         let process = Process()
         process.executableURL = executable
         process.arguments = [ShaderPrewarmCommand.screenSaverArgument, wallpaper.path(percentEncoded: false),
                              "\(target.pixelSize.x)x\(target.pixelSize.y)", "\(target.pointSize.x)x\(target.pointSize.y)",
-                             output.path(percentEncoded: false)]
+                             output.path(percentEncoded: false), encodeProperties(target.properties)]
         var environment = ProcessInfo.processInfo.environment
         if let tag = AppStorageLocation.current.isolationTag { environment[AppStorageLocation.environmentKey] = tag }
         process.environment = environment
@@ -206,13 +246,17 @@ final class ScreenSaverPlugin: ObservableObject {
             try process.run()
         } catch {
             OWELog.error(.app, "Screen saver: can't start the loop render: \(error)")
-            return false
+            return .failed
         }
         process.waitUntilExit()
+        if process.terminationStatus == ShaderPrewarmCommand.pageDidNotLoadStatus {
+            OWELog.error(.app, "Screen saver: \(wallpaper.lastPathComponent)'s page didn't load for its loop")
+            return .pageDidNotLoad
+        }
         guard process.terminationStatus == 0 else {
             OWELog.error(.app, "Screen saver: the loop render of \(wallpaper.lastPathComponent) failed (\(process.terminationStatus))")
-            return false
+            return .failed
         }
-        return true
+        return .rendered
     }
 }

@@ -86843,96 +86843,97 @@
         }
       }
     },
-    "Screen savers are made from scene wallpapers" : {
+    "Screen savers are made from scene, web and WebM video wallpapers" : {
+      "comment" : "Details panel: why an application or other video wallpaper has no screen saver",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "تُنشأ شاشات التوقف من خلفيات المشهد"
+            "value" : "تُنشأ شاشات التوقف من خلفيات المشهد والويب وفيديو WebM"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bildschirmschoner werden aus Szene-Hintergrundbildern erstellt"
+            "value" : "Bildschirmschoner werden aus Szene-, Web- und WebM-Video-Hintergrundbildern erstellt"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Los salvapantallas se crean a partir de fondos de pantalla de escena"
+            "value" : "Los salvapantallas se crean a partir de fondos de pantalla de escena, web y vídeo WebM"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Les économiseurs d'écran sont créés à partir des fonds d’écran de scène"
+            "value" : "Les économiseurs d'écran sont créés à partir des fonds d’écran de scène, web et vidéo WebM"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "स्क्रीन सेवर सीन वॉलपेपर से बनते हैं"
+            "value" : "स्क्रीन सेवर सीन, वेब और WebM वीडियो वॉलपेपर से बनते हैं"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "I salvaschermi sono creati dagli sfondi scena"
+            "value" : "I salvaschermi sono creati dagli sfondi scena, web e video WebM"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "スクリーンセーバはシーン壁紙から作成されます"
+            "value" : "スクリーンセーバはシーン、Web、WebM動画の壁紙から作成されます"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "화면 보호기는 장면 배경화면으로 만들어집니다"
+            "value" : "화면 보호기는 장면, 웹, WebM 동영상 배경화면으로 만들어집니다"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wygaszacze ekranu powstają z tapet typu scena"
+            "value" : "Wygaszacze ekranu powstają z tapet typu scena, web i wideo WebM"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Protetores de tela são criados a partir de imagens de fundo de cena"
+            "value" : "Protetores de tela são criados a partir de imagens de fundo de cena, web e vídeo WebM"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Заставки создаются из обоев-сцен"
+            "value" : "Заставки создаются из обоев-сцен, веб-обоев и видео WebM"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ekran koruyucular sahne duvar kâğıtlarından oluşturulur"
+            "value" : "Ekran koruyucular sahne, web ve WebM video duvar kâğıtlarından oluşturulur"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Заставки створюються зі шпалер-сцен"
+            "value" : "Заставки створюються зі шпалер-сцен, веб-шпалер і відео WebM"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "屏幕保护程序由场景墙纸生成"
+            "value" : "屏幕保护程序由场景、网页和 WebM 视频墙纸生成"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "螢幕保護程式由場景背景圖片製作"
+            "value" : "螢幕保護程式由場景、網頁和 WebM 影片背景圖片製作"
           }
         }
       }
@@ -103084,6 +103085,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "所選的檔案夾不含任何背景圖片。"
+          }
+        }
+      }
+    },
+    "The wallpaper's page didn't load, so no screen saver was recorded" : {
+      "comment" : "Details panel: why a web or WebM video wallpaper has no screen saver",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لم يتم تحميل صفحة الخلفية، لذا لم تُسجَّل شاشة توقف"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Seite des Hintergrundbilds wurde nicht geladen, daher wurde kein Bildschirmschoner aufgenommen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La página del fondo de pantalla no se cargó, así que no se grabó ningún salvapantallas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La page du fond d’écran ne s’est pas chargée, aucun économiseur d'écran n’a donc été enregistré"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वॉलपेपर का पेज लोड नहीं हुआ, इसलिए कोई स्क्रीन सेवर रिकॉर्ड नहीं हुआ"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La pagina dello sfondo non si è caricata, quindi non è stato registrato alcun salvaschermo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "壁紙のページが読み込まれなかったため、スクリーンセーバは記録されませんでした"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배경화면 페이지가 로드되지 않아 화면 보호기를 녹화하지 못했습니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strona tapety się nie wczytała, więc nie nagrano wygaszacza ekranu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A página da imagem de fundo não carregou, então nenhum protetor de tela foi gravado"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Страница обоев не загрузилась, поэтому заставка не записана"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duvar kâğıdının sayfası yüklenmedi, bu yüzden ekran koruyucu kaydedilmedi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сторінка шпалер не завантажилася, тому заставку не записано"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "墙纸的页面未能加载，因此未录制屏幕保护程序"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "背景圖片的頁面未能載入，因此未錄製螢幕保護程式"
           }
         }
       }
