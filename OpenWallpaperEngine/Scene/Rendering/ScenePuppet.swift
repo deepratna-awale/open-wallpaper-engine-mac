@@ -87,22 +87,34 @@ final class ScenePuppetPlan {
             for vertex in 0..<count {
                 let base = vertex * stride
                 let p = SIMD4<Float>(float(base + position), float(base + position + 4), float(base + position + 8), 1)
-                var skinned = SIMD4<Float>.zero
-                var weighted = false
+                var weightsOf = SIMD4<Float>.zero, bonesOf = SIMD4<UInt32>.zero
                 for k in 0..<4 {
-                    let weight = float(base + weights + 4 * k)
-                    let bone = Int(UInt32(littleEndian: raw.loadUnaligned(fromByteOffset: base + indices + 4 * k, as: UInt32.self)))
-                    guard weight != 0, bone < pose.bones.count else { continue }
-                    skinned += weight * (pose.bones[bone] * p)
-                    weighted = true
+                    weightsOf[k] = float(base + weights + 4 * k)
+                    bonesOf[k] = UInt32(littleEndian: raw.loadUnaligned(fromByteOffset: base + indices + 4 * k, as: UInt32.self))
                 }
-                let point = weighted ? SIMD2(skinned.x, skinned.y) : SIMD2(p.x, p.y)
+                let skinned = Self.skin(p, weights: weightsOf, bones: bonesOf, pose: pose)
+                let point = SIMD2(skinned.x, skinned.y)
                 guard point.x.isFinite, point.y.isFinite else { continue }
                 low = simd_min(low, point)
                 high = simd_max(high, point)
             }
         }
         return low.x <= high.x ? (low, high) : nil
+    }
+
+    /// `p` skinned by `pose` as the warp stage skins it (ScenePuppet.metal): Σ wᵢ · bones[iᵢ] · p
+    /// over the bones the pose holds, renormalised so the weights used sum to 1 (vertices shared by
+    /// two parts land together); a vertex with no usable weight stays at `p`.
+    static func skin(_ p: SIMD4<Float>, weights: SIMD4<Float>, bones: SIMD4<UInt32>, pose: ScenePuppetPose) -> SIMD4<Float> {
+        var skinned = SIMD4<Float>.zero
+        var total: Float = 0
+        for k in 0..<4 {
+            let bone = Int(bones[k])
+            guard weights[k] > 0, bone < pose.bones.count else { continue }
+            skinned += weights[k] * (pose.bones[bone] * p)
+            total += weights[k]
+        }
+        return total > 0 ? skinned / total : p
     }
 
     /// The animator that poses this rig from the image's animation layers.
@@ -202,10 +214,10 @@ enum ScenePuppetError: Error, CustomStringConvertible {
 }
 
 /// The rect of the mesh's space (the image's pixels, centred, y up) a puppet's albedo target
-/// covers. WE draws a puppet without effects in the scene through its mesh (docs/models-plan.md
-/// §2.13), so vertices a pose moves past the image's rect still draw; with effects the mesh goes
-/// into the image-sized buffer the effects start from, which clips it at the image. The canvas of
-/// a layer without effects covers the posed mesh as well as the image; the layer's quad grows to
+/// covers. WE draws a puppet in the scene through its mesh (docs/models-plan.md §2.13), so
+/// vertices a pose moves past the image's rect still draw; with effects the bind-pose mesh goes
+/// into the image-sized buffer the effects start from, and the posed mesh lays their output out
+/// over the canvas. The canvas covers the posed mesh as well as the image; the layer's quad grows to
 /// it, and every texture laid out through the mesh keeps its layout (the canvas in the image's
 /// texels).
 struct ScenePuppetCanvas: Equatable {
@@ -215,6 +227,12 @@ struct ScenePuppetCanvas: Equatable {
     static func image(_ size: SIMD2<Float>) -> ScenePuppetCanvas { ScenePuppetCanvas(min: -size / 2, max: size / 2) }
 
     var size: SIMD2<Float> { max - min }
+
+    /// The share of `canvas` an image of `imageSize` covers, per axis (1 for the image's rect).
+    static func imageShare(imageSize: SIMD2<Float>, canvas: ScenePuppetCanvas) -> SIMD2<Float> {
+        let size = canvas.size
+        return SIMD2(size.x > 0 ? Swift.min(1, imageSize.x / size.x) : 1, size.y > 0 ? Swift.min(1, imageSize.y / size.y) : 1)
+    }
     var center: SIMD2<Float> { (min + max) / 2 }
 
     /// The image's rect grown to cover `bounds`, each side in steps of an eighth of the image (so
