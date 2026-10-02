@@ -66,8 +66,11 @@ struct SceneSoundContentBuilder {
     /// A packaged file's copy in the caches, named by the wallpaper, entry and content so every
     /// screen and launch reuses it and an updated package gets a fresh copy.
     private func cached(_ data: Data, entry: String) -> URL? {
+        // The package's modification date stands for the entry's: a changed package gets a new copy.
+        let package = wallpaperDirectory.appending(path: "scene.pkg")
+        let modified = (try? package.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate
         let destination = cacheDirectory.appending(path: Self.cacheName(entry: entry, wallpaperDirectory: wallpaperDirectory,
-                                                                        data: data))
+                                                                        size: data.count, modified: modified))
         let files = FileManager.default
         if files.fileExists(atPath: destination.path) {
             // The modification date is the LRU's last use.
@@ -87,15 +90,13 @@ struct SceneSoundContentBuilder {
 
     /// The audio cache's size cap; the least recently used copies go first.
     static let cacheByteLimit = 512 << 20
-    /// Bytes up to this size are hashed into the key; larger entries key by their size.
-    static let hashedContentLimit = 8 << 20
 
     /// A packaged entry's cache file name: stable across launches (`hashValue` is seeded per
     /// process), distinct per wallpaper since entry paths repeat across packages, and per content
-    /// (the bytes' SHA-256 when small, else their size), as `SceneLoadingSnapshotStore.contentKey`.
-    static func cacheName(entry: String, wallpaperDirectory: URL?, data: Data) -> String {
-        let content = data.count <= hashedContentLimit ? hex(data) : "size"
-        let key = "\(wallpaperDirectory?.standardizedFileURL.path ?? "")|\(entry)|\(data.count)|\(content)"
+    /// (its size and its package's modification date), as `SceneLoadingSnapshotStore.contentKey`.
+    static func cacheName(entry: String, wallpaperDirectory: URL?, size: Int, modified: Date?) -> String {
+        let stamp = modified?.timeIntervalSinceReferenceDate ?? 0
+        let key = "\(wallpaperDirectory?.standardizedFileURL.path ?? "")|\(entry)|\(size)|\(stamp)"
         return "\(hex(Data(key.utf8))).\(URL(fileURLWithPath: entry).pathExtension)"
     }
 

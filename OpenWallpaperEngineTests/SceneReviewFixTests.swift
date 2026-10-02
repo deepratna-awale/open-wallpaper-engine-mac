@@ -9,17 +9,17 @@ final class SceneReviewFixTests: XCTestCase {
 
     func testSceneAudioCacheNameIsStableAndPerWallpaper() {
         let a = URL(fileURLWithPath: "/w/a"), b = URL(fileURLWithPath: "/w/b")
-        let bytes = Data([1, 2, 3])
-        let name = SceneSoundContentBuilder.cacheName(entry: "sounds/music.mp3", wallpaperDirectory: a, data: bytes)
-        XCTAssertEqual(name, SceneSoundContentBuilder.cacheName(entry: "sounds/music.mp3", wallpaperDirectory: a, data: bytes))
-        XCTAssertNotEqual(name, SceneSoundContentBuilder.cacheName(entry: "sounds/music.mp3", wallpaperDirectory: b, data: bytes))
+        let day = Date(timeIntervalSinceReferenceDate: 86_400)
+        let name = SceneSoundContentBuilder.cacheName(entry: "sounds/music.mp3", wallpaperDirectory: a, size: 3, modified: day)
+        XCTAssertEqual(name, SceneSoundContentBuilder.cacheName(entry: "sounds/music.mp3", wallpaperDirectory: a, size: 3, modified: day))
+        XCTAssertNotEqual(name, SceneSoundContentBuilder.cacheName(entry: "sounds/music.mp3", wallpaperDirectory: b, size: 3, modified: day))
         XCTAssertNotEqual(name, SceneSoundContentBuilder.cacheName(entry: "sounds/music.mp3", wallpaperDirectory: a,
-                                                                   data: Data([1, 2, 4])), "an updated package gets a new copy")
+                                                                   size: 3, modified: day.addingTimeInterval(1))), "an updated package gets a new copy")
         XCTAssertTrue(name.hasSuffix(".mp3"))
         XCTAssertEqual(name.count, 64 + 4, "SHA256 hex plus extension")
         // Deterministic and seed-free: a fixed input gives a fixed name, so it can't come from `hashValue`.
-        XCTAssertEqual(SceneSoundContentBuilder.cacheName(entry: "a.ogg", wallpaperDirectory: nil, data: Data()),
-                       SceneSoundContentBuilder.cacheName(entry: "a.ogg", wallpaperDirectory: nil, data: Data()))
+        XCTAssertEqual(SceneSoundContentBuilder.cacheName(entry: "a.ogg", wallpaperDirectory: nil, size: 0, modified: nil),
+                       SceneSoundContentBuilder.cacheName(entry: "a.ogg", wallpaperDirectory: nil, size: 0, modified: nil))
         XCTAssertTrue(SceneSoundContentBuilder.isCurrentCacheName(name))
         XCTAssertFalse(SceneSoundContentBuilder.isCurrentCacheName("-4611686018427387904.mp3"))
     }
