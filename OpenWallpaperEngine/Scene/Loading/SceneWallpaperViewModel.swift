@@ -1078,6 +1078,9 @@ class SceneWallpaperViewModel: ObservableObject {
         } else if let sizeString = object.size {
             let value = sizeString.parseVector2()
             size = SIMD2<Float>(Float(value.0), Float(value.1))
+        } else if let declared = model.declaredSize {
+            // The model's own size (WE's templates), not its first texture's.
+            size = declared
         } else {
             // In pixels, and for a .tex the image's own size, not the padded allocation around it;
             // for a sprite sheet one frame's.
@@ -1658,9 +1661,12 @@ class SceneWallpaperViewModel: ObservableObject {
             if let texture = parser.extractCompressedTexture(reduction: reduction) {
                 return cacheTexture(.dxt(texture), for: cacheKey)
             }
-            let mipmaps = optimise ? parser.firstImageMipmapCount() ?? 1 : 1
+            // A padded raw image keeps its allocation (`TEXRawImageRep.makeAllocationTexture`); a
+            // prepared texture holds only the image.
+            let prepares = optimise && !parser.isPaddedRawImage()
+            let mipmaps = prepares ? parser.firstImageMipmapCount() ?? 1 : 1
             let level = TextureReduction.loadedMipmap(reduction: reduction, mipmapCount: mipmaps)
-            let preparedKey = optimise ? TexturePreparation.key(texData: data, level: level) : nil
+            let preparedKey = prepares ? TexturePreparation.key(texData: data, level: level) : nil
             if let preparedKey, let prepared = TexturePreparation.cachedTexture(key: preparedKey) {
                 return cacheTexture(.dxt(prepared), for: cacheKey)
             }

@@ -3707,12 +3707,14 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         switch source {
         case let .image(image):
             if let raw = TEXRawImageRep.of(image) {
-                guard let texture = raw.makeTexture(device: device) else {
+                // Its allocation, padding and all, as a block-compressed .tex (`contentUVExtent`).
+                guard let texture = raw.makeAllocationTexture(device: device) else {
                     OWELog.error(.scene, "Could not upload a \(raw.pixelsWide)×\(raw.pixelsHigh) .tex image")
                     return nil
                 }
+                let crop = raw.isPadded ? raw.contentUVExtent : SIMD2<Float>(1, 1)
                 return [RenderTextureFrame(texture: texture, duration: .greatestFiniteMagnitude,
-                                           uvOrigin: .zero, uvAxisX: SIMD2<Float>(1, 0), uvAxisY: SIMD2<Float>(0, 1))]
+                                           uvOrigin: .zero, uvAxisX: SIMD2<Float>(crop.x, 0), uvAxisY: SIMD2<Float>(0, crop.y))]
             }
             guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
             let texture: MTLTexture
