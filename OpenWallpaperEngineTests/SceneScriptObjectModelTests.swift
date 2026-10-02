@@ -465,21 +465,18 @@ final class SceneScriptObjectModelTests: XCTestCase {
 
     private static func components(_ vector: SIMD3<Float>) -> [Float] { [vector.x, vector.y, vector.z] }
 
-    func testStubsAreInertAndLoggedOnce() throws {
+    func testNoMemberIsAStub() throws {
         _ = try Fixtures.assets()
         let f = try fixture()
         XCTAssertEqual(f.evaluate("""
             var bg = thisScene.getLayer(0);
-            [bg.getVideoTexture(), bg.getVideoTexture(), bg.resetBonePhysicsSimulation()].join()
-            """)?.toString(), ",,")
-        XCTAssertEqual(f.model.unsupportedMembers, ["IImageLayer.getVideoTexture"],
-                       "bone physics is supported: a layer without a rig ignores it")
+            [bg.getVideoTexture(), bg.resetBonePhysicsSimulation()].join()
+            """)?.toString(), ",", "a picture has no video texture; a layer without a rig ignores bone physics")
+        XCTAssertEqual(f.model.unsupportedMembers, [])
         // A layer without a rig answers the bone and attachment API as WE does for one: nothing.
         XCTAssertEqual(f.evaluate("[bg.getBoneCount(), bg.getAnimationLayer(0), bg.getAttachmentMatrix('a') instanceof Mat4].join()")?
             .toString(), "0,,true")
-        XCTAssertEqual(f.evaluate("__rt.objects.UNSUPPORTED.has('ILayer.lookAt')")?.toBool(), false,
-                       "orientation and parenting are implemented (SceneScriptLayerTransformTests)")
-        XCTAssertEqual(f.evaluate("Array.from(__rt.objects.UNSUPPORTED).join()")?.toString(), "IImageLayer.getVideoTexture")
+        XCTAssertEqual(f.evaluate("Array.from(__rt.objects.UNSUPPORTED).join()")?.toString(), "")
     }
 
     // MARK: - Bindings

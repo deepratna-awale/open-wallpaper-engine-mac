@@ -866,6 +866,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 pendingEmits[String(id), default: 0] += count ?? 1
             case .sound(let id, let playback):
                 sounds.perform(playback, on: id)
+            case .video(let id, let command):
+                let key = String(id)
+                for entry in layers where entry.layer.id == key {
+                    if case let .video(stream) = entry.layer.source { stream.perform(command) }
+                }
             case let .animation(site, time, flags, rate, frame):
                 timelines.restore(site, time: time, flags: flags, rate: rate, seenAt: frame)
             case let .textureAnimation(id, control, frame):
@@ -2256,6 +2261,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 visible: scripts.baseVisible(entry.layer.id),
                 size: lastTextSizes[entry.layer.id] ?? layerBaseSize(entry),
                 world: worldTransform(entry), animated: animation?.fields ?? SceneScriptOwnedFields())
+            if case let .video(stream) = entry.layer.source {
+                input.objects[id]?.playing = stream.isPlaying
+                input.objects[id]?.videoTime = stream.currentSeconds
+            }
         }
         for (key, objectMotion) in objectMotions {
             guard let id = Int(key) else { continue }

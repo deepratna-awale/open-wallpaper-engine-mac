@@ -124,10 +124,6 @@ A primeira compilação a partir do código-fonte baixa o pacote Swift Sparkle. 
 - **15 novos idiomas**: alemão, francês, espanhol, português do Brasil, italiano, japonês, coreano, chinês simplificado e tradicional, russo, polonês, turco, ucraniano, árabe e hindi, escolhidos no seletor de idioma dos ajustes.
 - Um novo ícone do app e um ícone da barra de menus que acompanha a aparência da barra de menus.
 
-## Limitações Atuais
-
-- **Funções do SceneScript não implementadas** — `getVideoTexture()` ainda não faz nada.
-
 ## Tipos de Imagem de Fundo Suportados
 
 | Tipo | Status |
