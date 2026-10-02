@@ -26,11 +26,16 @@ final class OutputDeviceChangeMonitorTests: XCTestCase {
             pending.append((now + delay, work))
         }
 
+        /// Runs due work in time order, at its own time, so work it schedules lands inside the
+        /// same advance when due.
         func advance(by seconds: TimeInterval) {
-            now += seconds
-            while let index = pending.firstIndex(where: { $0.0 <= now }) {
-                pending.remove(at: index).1()
+            let end = now + seconds
+            while let next = pending.enumerated().filter({ $0.element.0 <= end }).min(by: { $0.element.0 < $1.element.0 }) {
+                pending.remove(at: next.offset)
+                now = max(now, next.element.0)
+                next.element.1()
             }
+            now = end
         }
     }
 
