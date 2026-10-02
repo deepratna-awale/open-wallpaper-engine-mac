@@ -152,7 +152,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         restartCapture: { MainActor.assumeIsolated { WallpaperServices.shared.audioCapture.outputDeviceDidChange() } },
         reloadWallpapers: { [weak self] in MainActor.assumeIsolated { self?.rebuildWallpaperWindows() } })
     /// Settings › Performance › Playback, per display (`App/Playback`).
-    private lazy var displayPlaybackMonitor = makeDisplayPlaybackMonitor()
+    private(set) lazy var displayPlaybackMonitor = makeDisplayPlaybackMonitor()
+    /// Advanced › "Pause when VRAM is exhausted", fed to `displayPlaybackMonitor`.
+    private(set) lazy var videoMemoryWatch = makeVideoMemoryWatch()
+    private var videoMemorySettingCancellable: AnyCancellable?
     
     var importOpenPanel: NSOpenPanel!
     
@@ -249,6 +252,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         updater.willRelaunch = { [unowned self] in self.captureUpdateRelaunchState().save(to: .app) }
         updater.start()
         displayPlaybackMonitor.start(settings: globalSettingsViewModel.$settings)
+        videoMemorySettingCancellable = globalSettingsViewModel.$settings
+            .map(\.pauseOnVRAMExhausted)
+            .removeDuplicates()
+            .sink { [weak self] enabled in MainActor.assumeIsolated { self?.videoMemoryWatch.setEnabled(enabled) } }
 
         // After an update relaunch, what was open before; otherwise the setup assistant if due.
         if !restoreUpdateRelaunchState(),

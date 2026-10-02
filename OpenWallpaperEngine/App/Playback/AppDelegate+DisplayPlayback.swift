@@ -16,6 +16,13 @@ extension AppDelegate {
         }
     }
 
+    /// Advanced › "Pause when VRAM is exhausted": pauses every display through the playback rules.
+    func makeVideoMemoryWatch() -> VideoMemoryWatch {
+        VideoMemoryWatch(device: .system()) { [weak self] exhausted in
+            self?.displayPlaybackMonitor.setVideoMemoryExhausted(exhausted)
+        }
+    }
+
     /// Hands each display's playback to its wallpaper, and hides the windows of stopped displays.
     private func applyDisplayPlayback(_ states: [String: DisplayPlayback]) {
         wallpaperViewModel.displayPlayback = states

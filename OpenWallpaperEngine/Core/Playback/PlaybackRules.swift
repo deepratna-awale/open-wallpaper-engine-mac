@@ -8,6 +8,8 @@ struct SystemPlaybackConditions: Equatable {
     var displaysAsleep = false
     /// The Mac runs on its battery ("Laptop on battery").
     var onBattery = false
+    /// Video memory ran out with "Pause when VRAM is exhausted" on (`VideoMemoryWatch`).
+    var videoMemoryExhausted = false
 }
 
 /// Settings › Performance › Playback, evaluated for each display, as WE does with several
@@ -60,6 +62,7 @@ struct PlaybackRules: Equatable {
         if system.otherApplicationPlayingAudio { everywhere = max(everywhere, DisplayPlayback(playingAudio)) }
         if system.displaysAsleep { everywhere = max(everywhere, DisplayPlayback(displayAsleep)) }
         if system.onBattery { everywhere = max(everywhere, DisplayPlayback(onBattery)) }
+        if system.videoMemoryExhausted { everywhere = max(everywhere, .pause) }
 
         var local: [String: DisplayPlayback] = [:]
         for display in displays {

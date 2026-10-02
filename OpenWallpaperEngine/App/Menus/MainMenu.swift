@@ -83,6 +83,7 @@ extension AppDelegate {
 
         let playbackMenu = submenu(String(localized: "Playback"), [
             item(.pauseResume, #selector(togglePauseWallpapers)),
+            plain("Paused: video memory is full", #selector(videoMemoryPauseNotice)),
             item(.muteUnmute, #selector(toggleMuteWallpapers)),
             .separator(),
             item(.nextWallpaper, #selector(nextWallpaper)),
@@ -181,9 +182,13 @@ extension AppDelegate: NSMenuItemValidation {
         case #selector(checkForUpdates):
             return updater.canCheckForUpdates
         case #selector(togglePauseWallpapers):
-            menuItem.title = wallpaperViewModel.playRate == 0
+            menuItem.title = wallpaperViewModel.playRate == 0 || videoMemoryWatch.exhausted
                 ? String(localized: "Resume Wallpapers") : String(localized: "Pause Wallpapers")
             return true
+        case #selector(videoMemoryPauseNotice):
+            // Shown, disabled, while "Pause when VRAM is exhausted" holds the wallpapers.
+            menuItem.isHidden = !videoMemoryWatch.exhausted
+            return false
         case #selector(toggleMuteWallpapers):
             menuItem.title = wallpaperViewModel.playVolume == 0 ? String(localized: "Unmute") : String(localized: "Mute")
             return true
