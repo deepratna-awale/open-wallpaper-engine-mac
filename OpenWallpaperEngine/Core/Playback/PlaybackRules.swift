@@ -9,8 +9,9 @@ struct SystemPlaybackConditions: Equatable {
     /// The Mac runs on its battery ("Laptop on battery").
     var onBattery = false
     /// The bundle identifiers of the running applications, for the application rules.
-    var runningApplications: Set<String> = [],
-            videoMemoryExhausted: inputs.videoMemoryExhausted)
+    var runningApplications: Set<String> = []
+    /// Video memory ran out with "Pause when VRAM is exhausted" on (`VideoMemoryWatch`).
+    var videoMemoryExhausted = false
 }
 
 /// Settings › Performance › Playback, evaluated for each display, as WE does with several
