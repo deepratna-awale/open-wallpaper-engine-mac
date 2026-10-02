@@ -89,7 +89,7 @@ struct SettingsView: View {
         case .updates: UpdatesPage(updater: AppDelegate.shared.updater)
         case .privacy: PrivacyPage()
         case .permissions: PermissionsPage(globalSettings: viewModel)
-        case .diagnostics: DiagnosticsPage(globalSettings: viewModel)
+        case .diagnostics: DiagnosticsPage(globalSettings: viewModel, onReset: { preferencesRevision += 1 })
         case .plugins: PluginsPage(globalSettings: viewModel)
         case .about: AboutUsView()
         }

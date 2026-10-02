@@ -114,8 +114,21 @@ enum WallpaperStorage {
         return moved
     }
 
-    static func resetToDefault() {
-        UserDefaults.app.removeObject(forKey: customPathKey)
+    /// Goes back to the default folder. Returns whether the folder changed, so the caller
+    /// refreshes the library and its index as after choosing a folder.
+    @discardableResult
+    static func resetToDefault(defaults: UserDefaults = .app) -> Bool {
+        let before = folder(defaults: defaults)
+        defaults.removeObject(forKey: customPathKey)
+        return folder(defaults: defaults) != before
+    }
+
+    /// The storage folder `defaults` names.
+    static func folder(defaults: UserDefaults) -> URL {
+        if let customPath = defaults.string(forKey: customPathKey), !customPath.isEmpty {
+            return URL(fileURLWithPath: customPath, isDirectory: true).standardizedFileURL
+        }
+        return defaultDirectory.standardizedFileURL
     }
 }
 
