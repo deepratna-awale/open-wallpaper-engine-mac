@@ -460,6 +460,8 @@ final class ScenePuppetRenderer {
 
     /// Whether the layer's mesh has been drawn into its image (the pipeline was ready).
     func hasDrawn(_ layerID: String) -> Bool { layers[layerID]?.drawnPose != nil }
+    /// Whether `warp` has laid `key`'s texture out for the layer (tests, diagnostics).
+    func hasLaidOut(_ layerID: String, key: String) -> Bool { warps[layerID]?[key]?.drawnPose != nil }
 
     /// Which drawing the layer's image holds: a new value each time `albedo` redraws it. The image
     /// is redrawn into the same texture, so caches keyed by the texture (a layer's kept effect

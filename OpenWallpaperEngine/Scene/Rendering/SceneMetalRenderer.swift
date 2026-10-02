@@ -262,6 +262,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
               let source = layers.first(where: { $0.layer.id == id })?.frames.first?.texture else { return nil }
         return (source, image)
     }
+    /// Whether the posed mesh has laid a puppet layer's effect output out (tests, diagnostics). A
+    /// rig that rearranges an atlas runs its effects on its texture and draws no image of its own.
+    func puppetLaidOutEffects(ofLayer id: String) -> Bool { puppets?.hasLaidOut(id, key: "_effects") == true }
     /// A puppet layer's pose as its image was last drawn (tests, diagnostics).
     func puppetPose(ofLayer id: String) -> ScenePuppetPose? { puppetAnimators[id]?.pose }
     /// The pose `puppetImage(ofLayer:)` holds: the bind pose for a layer with effects, which the
