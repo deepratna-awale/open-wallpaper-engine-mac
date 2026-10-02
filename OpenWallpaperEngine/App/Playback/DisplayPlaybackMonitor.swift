@@ -28,6 +28,8 @@ final class DisplayPlaybackMonitor {
     private let apply: ([String: DisplayPlayback]) -> Void
     private(set) var rules = PlaybackRules()
     private(set) var displaysAsleep = false
+    /// Video memory ran out (`VideoMemoryWatch`, only while its setting is on).
+    private(set) var videoMemoryExhausted = false
     /// The last states handed to `apply`.
     private(set) var states: [String: DisplayPlayback]?
     private var evaluationPending = false
@@ -86,6 +88,12 @@ final class DisplayPlaybackMonitor {
         evaluate()
     }
 
+    func setVideoMemoryExhausted(_ exhausted: Bool) {
+        guard exhausted != videoMemoryExhausted else { return }
+        videoMemoryExhausted = exhausted
+        evaluate()
+    }
+
     /// Evaluates soon, once for a burst of events.
     func setNeedsEvaluation() {
         guard !evaluationPending else { return }
@@ -104,7 +112,8 @@ final class DisplayPlaybackMonitor {
         let inputs = Inputs(rules: rules, displays: sources.displays(), frontmostPID: sources.frontmostPID(),
                             ignoresWebKitAudio: rules.watchesAudio && sources.showsWebWallpaper(),
                             displaysAsleep: displaysAsleep,
-                            applications: rules.watchesApplications ? sources.applications() : [:])
+                            applications: rules.watchesApplications ? sources.applications() : [:],
+                            videoMemoryExhausted: videoMemoryExhausted)
         shared.set(inputs: inputs)
         generation &+= 1
         let generation = generation
@@ -143,7 +152,8 @@ final class DisplayPlaybackMonitor {
             otherApplicationPlayingAudio: rules.watchesAudio && sources.otherApplicationPlayingAudio(inputs.ignoresWebKitAudio),
             displaysAsleep: inputs.displaysAsleep,
             onBattery: rules.watchesPower && sources.onBattery(),
-            runningApplications: Set(inputs.applications.values))
+            runningApplications: Set(inputs.applications.values,
+            videoMemoryExhausted: inputs.videoMemoryExhausted)
         return rules.playback(displays: inputs.displays.map(\.id), conditions: conditions, system: system)
     }
 
@@ -169,6 +179,7 @@ final class DisplayPlaybackMonitor {
         /// The running applications' bundle identifiers by process, read while an application
         /// rule is on.
         var applications: [pid_t: String] = [:]
+        var videoMemoryExhausted = false
 
         /// Whether the answer needs a read that is too slow for the main thread.
         var needsScan: Bool {

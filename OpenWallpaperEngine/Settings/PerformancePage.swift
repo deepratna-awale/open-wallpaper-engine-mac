@@ -231,7 +231,7 @@ struct PerformancePage: SettingsPage {
                 .changedFromDefault(viewModel.isChanged(\.reflections))
             } header: {
                 Label("Quality", systemImage: "memorychip.fill")
-                Text("These settings are designed for scene wallpapers and may not work as expected for other types.")
+                Text("These settings are for scene wallpapers. FPS and Render Resolution apply to web wallpapers too.")
             }
             .settingsAnchor(SettingsAnchor.quality)
         }

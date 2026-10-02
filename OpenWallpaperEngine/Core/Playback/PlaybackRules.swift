@@ -9,7 +9,8 @@ struct SystemPlaybackConditions: Equatable {
     /// The Mac runs on its battery ("Laptop on battery").
     var onBattery = false
     /// The bundle identifiers of the running applications, for the application rules.
-    var runningApplications: Set<String> = []
+    var runningApplications: Set<String> = [],
+            videoMemoryExhausted: inputs.videoMemoryExhausted)
 }
 
 /// Settings › Performance › Playback, evaluated for each display, as WE does with several
@@ -82,6 +83,7 @@ struct PlaybackRules: Equatable {
         for rule in applicationRules where rule.condition == .running && system.runningApplications.contains(rule.bundleIdentifier) {
             everywhere = max(everywhere, DisplayPlayback(rule.action))
         }
+        if system.videoMemoryExhausted { everywhere = max(everywhere, .pause) }
 
         var local: [String: DisplayPlayback] = [:]
         for display in displays {

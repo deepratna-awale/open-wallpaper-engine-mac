@@ -198,12 +198,8 @@ final class PreparationPool: @unchecked Sendable {
 
     private func start(_ jobs: [Job]) {
         for job in jobs {
-            let qos: DispatchQoS.QoSClass
-            switch job.priority {
-            case .settingWallpaper: qos = .userInitiated
-            case .currentWallpaper: qos = .utility
-            case .library: qos = .background
-            }
+            // Settings › Process Priority (`ProcessPriority`).
+            let qos = ProcessPriority.current.preparationQoS(job.priority)
             DispatchQueue.global(qos: qos).async { [self] in
                 ThreadGuards.assertBackground("PreparationPool job")
                 if !job.isCancelled { job.work(job) } else { job.onCancel?() }
