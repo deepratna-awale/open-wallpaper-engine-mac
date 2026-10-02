@@ -89,6 +89,7 @@ struct DiagnosticsPage: SettingsPage {
                     Text("Verbose").tag(GSLogLevel.verbose)
                 }
                 .changedFromDefault(viewModel.isChanged(\.logLevel))
+                .help("How much the app writes to the macOS log. Verbose adds debug messages and frame timings; None and Errors Only both log errors.")
             } header: {
                 Label("Developer", systemImage: "number")
             }
@@ -108,6 +109,7 @@ struct DiagnosticsPage: SettingsPage {
                     }
                     .tint(Color.red)
                     .glassButtonStyle(.prominent)
+                    .help("Puts the General, Performance, Optimizations, Diagnostics and Screen Saver settings back to their defaults. Your wallpapers and library aren't touched.")
                 }
             } header: {
                 Label("Reset", systemImage: "exclamationmark.triangle.fill")

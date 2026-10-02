@@ -39,6 +39,7 @@ struct PerformancePage: SettingsPage {
                     pauseOptions(viewModel.settings.otherApplicationFocused)
                 }
                 .changedFromDefault(viewModel.isChanged(\.otherApplicationFocused))
+                .help("What wallpapers do while another app's window is active. Pause per Display pauses only the display that window is on; Pause All pauses every display.")
 
                 Picker("Other Application Maximized:", selection: $viewModel.settings.otherApplicationMaximized) {
                     Text("Keep Running").tag(GSPlayback.keepRunning)
@@ -47,6 +48,7 @@ struct PerformancePage: SettingsPage {
                     Text("Stop (free memory)").tag(GSPlayback.stop)
                 }
                 .changedFromDefault(viewModel.isChanged(\.otherApplicationMaximized))
+                .help("What wallpapers do while another app's window fills their display. Stop (free memory) hides the wallpaper to free its memory.")
 
                 Picker("Other Application Fullscreen:", selection: $viewModel.settings.otherApplicationFullscreen) {
                     Text("Keep Running").tag(GSPlayback.keepRunning)
@@ -55,6 +57,7 @@ struct PerformancePage: SettingsPage {
                     Text("Stop (free memory)").tag(GSPlayback.stop)
                 }
                 .changedFromDefault(viewModel.isChanged(\.otherApplicationFullscreen))
+                .help("What wallpapers do while another app is in full screen on their display. Pause and Stop save the work of drawing a wallpaper no one can see.")
                 
                 Picker("Other Application Playing Audio:", selection: $viewModel.settings.otherApplicationPlayingAudio) {
                     Text("Keep Running").tag(GSPlayback.keepRunning)
@@ -62,6 +65,7 @@ struct PerformancePage: SettingsPage {
                     Text("Pause").tag(GSPlayback.pause)
                 }
                 .changedFromDefault(viewModel.isChanged(\.otherApplicationPlayingAudio))
+                .help("What wallpapers do while another app plays sound, on every display. Mute silences only the wallpapers' own sound.")
                 
                 Picker("Display asleep", selection: $viewModel.settings.displayAsleep) {
                     Text("Keep Running").tag(GSPlayback.keepRunning)
@@ -69,6 +73,7 @@ struct PerformancePage: SettingsPage {
                     Text("Stop (free memory)").tag(GSPlayback.stop)
                 }
                 .changedFromDefault(viewModel.isChanged(\.displayAsleep))
+                .help("What wallpapers do while the displays sleep. Pause keeps the last frame; Stop (free memory) also hides the wallpaper to free its memory.")
                 
                 Picker("Laptop on battery", selection: $viewModel.settings.laptopOnBattery) {
                     Text("Keep Running").tag(GSPlayback.keepRunning)
@@ -76,6 +81,7 @@ struct PerformancePage: SettingsPage {
                     Text("Stop (free memory)").tag(GSPlayback.stop)
                 }
                 .changedFromDefault(viewModel.isChanged(\.laptopOnBattery))
+                .help("What wallpapers do while your Mac runs on battery. Pause or Stop saves the most battery.")
                 
                 HStack {
                     Text("Application Rules")
@@ -88,6 +94,7 @@ struct PerformancePage: SettingsPage {
                     .glassButtonStyle(.prominent)
                 }
                 .changedFromDefault(viewModel.isChanged(\.applicationRules))
+                .help("Choose what wallpapers do while specific apps are running or in front, such as pausing during a game.")
                 .sheet(isPresented: $isEditingApplicationRules) {
                     ApplicationRulesSheet(rules: $viewModel.settings.applicationRules)
                 }
@@ -106,7 +113,7 @@ struct PerformancePage: SettingsPage {
                     }
                     .fixedSize()
                 }
-                .help("Apply a quality preset to the settings below")
+                .help("Sets the quality settings below, the frame rate and the Quality ↔ Efficiency slider in one step. Low also turns on MetalFX upscaling from half size.")
                 Picker(selection: $viewModel.settings.antiAliasing) {
                     Text("None").tag(GSAntiAliasingQuality.none)
                     Text("MSAA x2").tag(GSAntiAliasingQuality.msaa_x2)
@@ -118,6 +125,7 @@ struct PerformancePage: SettingsPage {
                                  help: "×8 MSAA is only recommended for powerful high-end desktop graphics cards.")
                 }
                 .changedFromDefault(viewModel.isChanged(\.antiAliasing))
+                .help("Smooths jagged edges in scenes by sampling each pixel 2, 4 or 8 times (MSAA). More samples cost more GPU time and memory; None by default.")
                 Picker(selection: $viewModel.settings.postProcessing) {
                     Text("Disabled").tag(GSPostProcessingQuality.disabled)
                     Text("Enabled").tag(GSPostProcessingQuality.enabled)
@@ -131,6 +139,7 @@ struct PerformancePage: SettingsPage {
                                  help: "Ultra mode adds HDR bloom to supported wallpapers and is only recommended for powerful high-end desktop graphics cards.")
                 }
                 .changedFromDefault(viewModel.isChanged(\.postProcessing))
+                .help("Disabled turns bloom off in scenes. Ultra lets scenes made for HDR draw their bloom in HDR, and Ultra (Display HDR) also sends HDR to the display.")
                 .onAppear {
                     let kept = DisplayHDRSupport.coerced(viewModel.settings.postProcessing, available: displayHDR)
                     if kept != viewModel.settings.postProcessing { viewModel.settings.postProcessing = kept }
@@ -154,7 +163,7 @@ struct PerformancePage: SettingsPage {
                     Text("Full", comment: "Render resolution: the wallpaper's authored size").tag(GSRenderResolution.full)
                 }
                 .changedFromDefault(viewModel.isChanged(\.renderResolution))
-                .help("Display draws at the display's size in points and scales the frame up to the screen, a quarter of the pixels on a Retina display. Retina draws at the display's native pixels, one for one. Full draws at the wallpaper's own size and scales it to fit the display.")
+                .help("Display, the default, renders at the display's size in points (a quarter of the pixels on Retina) and scales up; web wallpapers then draw at standard resolution too. Retina renders the native pixels one for one, and Full renders the wallpaper's authored size scaled to fit.")
                 Picker("Upscaling", selection: $viewModel.settings.upscaling) {
                     Text("Off", comment: "Upscaling: none").tag(GSUpscaling.off)
                     Text("MetalFX").tag(GSUpscaling.metalFX)
@@ -168,6 +177,7 @@ struct PerformancePage: SettingsPage {
                         }
                     }
                     .changedFromDefault(viewModel.isChanged(\.renderScale))
+                    .help("How large scenes render before MetalFX upscales them, per side. Lower is faster and softer.")
                 }
                 Picker("Shadows", selection: $viewModel.settings.shadows) {
                     Text("Disabled").tag(GSLightingQuality.disabled)
@@ -199,6 +209,7 @@ struct PerformancePage: SettingsPage {
                                        sliderWidth: 150, fieldWidth: 44)
                 }
                 .changedFromDefault(viewModel.isChanged(\.fps))
+                .help("The most frames per second scene and web wallpapers draw; 240 means no limit. Higher rates use more GPU and battery.")
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Quality ↔ Efficiency")
                     Slider(value: qualityEfficiency, in: Double(QualityEfficiency.stops.lowerBound)...Double(QualityEfficiency.stops.upperBound),
@@ -212,7 +223,7 @@ struct PerformancePage: SettingsPage {
                     .labelsHidden()
                 }
                 .changedFromDefault(viewModel.isChanged(\.qualityEfficiency))
-                .help("Toward Efficiency, motion is drawn at a lower frame rate and blurs at a lower resolution. A wallpaper that isn't changing isn't redrawn. A hot Mac, or one saving power, moves further toward Efficiency.")
+                .help("Toward Efficiency, scenes cap smooth motion at 60 and then 30 fps, redraw slow changes less often, and draw blurs and glows at half or quarter size. A scene that isn't changing isn't redrawn, and a hot Mac or Low Power Mode moves further toward Efficiency.")
                 Picker("Particle Budget", selection: $viewModel.settings.particleBudget) {
                     Text("Low (10,000)").tag(GSParticleBudget.low)
                     Text("Medium (25,000)").tag(GSParticleBudget.medium)
@@ -229,6 +240,7 @@ struct PerformancePage: SettingsPage {
                         .labelsHidden()
                 }
                 .changedFromDefault(viewModel.isChanged(\.reflections))
+                .help("Lets scenes draw their reflection effects, such as water or glass. Off skips that work in scenes that use them.")
             } header: {
                 Label("Quality", systemImage: "memorychip.fill")
                 Text("These settings are for scene wallpapers. FPS and Render Resolution apply to web wallpapers too.")

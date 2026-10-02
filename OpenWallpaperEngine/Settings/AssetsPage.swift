@@ -130,17 +130,21 @@ struct AssetsPage: SettingsPage {
                 } else {
                     Button(status.info == nil ? "Install from Steam" : "Update from Steam") { assets.installFromSteam() }
                         .glassButtonStyle(.prominent)
+                        .help("Downloads your Wallpaper Engine copy with SteamCMD and keeps only its assets and default wallpapers. Needs a Steam login that owns Wallpaper Engine.")
                     if status.info != nil {
                         Button("Re-download") { assets.installFromSteam(force: true) }
                             .help("Downloads the assets from Steam again even when they're up to date, to repair a damaged copy.")
                     }
                 }
                 Button("Choose Folder…") { chooseFolder() }
+                    .help("Uses the assets of a Wallpaper Engine folder already on this Mac, read in place instead of downloaded.")
                 if status.chosenFolder != nil {
                     Button("Stop Using Folder") { assets.forgetChosenFolder() }
+                        .help("Stops reading assets from the chosen folder; downloaded assets are used if there are any. The folder itself isn't changed.")
                 }
                 if status.info != nil || status.resolution?.source == .cache {
                     Button("Remove…") { confirmsRemoval = true }
+                        .help("Removes the downloaded assets, and optionally the default wallpapers, to free disk space. Scenes won't render until you install them again.")
                 }
             }
             Spacer()

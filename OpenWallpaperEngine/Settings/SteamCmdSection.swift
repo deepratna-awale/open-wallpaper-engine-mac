@@ -28,17 +28,21 @@ struct SteamCmdSection: View {
                 }
             }
             Toggle("Install SteamCMD automatically", isOn: $installsAutomatically)
+                .help("Downloads SteamCMD from Valve when no copy is found. Workshop downloads and the assets install need it.")
             Toggle("Install Wallpaper Engine assets automatically after signing in", isOn: $installsAssetsAutomatically)
+                .help("After you sign in to Steam, downloads the Wallpaper Engine assets if none are installed or chosen.")
             if installer.isBusy || steamCmd.steamCmdPath == nil {
                 SteamCmdSetupView(installer: installer)
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else if usesOwnCopy {
                 HStack {
                     Button("Reinstall") { installer.install() }
+                        .help("Downloads SteamCMD from Valve again, replacing the app's copy.")
                     Button("Show in Finder") {
                         NSWorkspace.shared.activateFileViewerSelecting([installer.executable])
                     }
                     Button("Remove", role: .destructive) { remove() }
+                        .help("Moves the app's SteamCMD to the Trash. Workshop downloads won't work until SteamCMD is installed again.")
                     Spacer()
                 }
             }
