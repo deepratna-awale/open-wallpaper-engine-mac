@@ -6,13 +6,13 @@
 import Cocoa
 import SwiftUI
 
-/// A small floating panel that says a wallpaper was stopped, with Retry and Dismiss. It does not
+/// A small floating panel with a message, Dismiss and an optional Retry. It does not
 /// take focus or block anything, unlike an alert.
 @MainActor
 final class SafeRestartNotice {
     private let panel: NSPanel
 
-    init(message: String, onRetry: @escaping () -> Void, onDismiss: @escaping () -> Void) {
+    init(message: String, onRetry: (() -> Void)?, onDismiss: @escaping () -> Void) {
         panel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 380, height: 120),
                         styleMask: [.titled, .nonactivatingPanel, .utilityWindow, .fullSizeContentView],
                         backing: .buffered, defer: false)
@@ -64,7 +64,7 @@ final class SafeRestartNotice {
 
 private struct NoticeView: View {
     let message: String
-    let onRetry: () -> Void
+    let onRetry: (() -> Void)?
     let onDismiss: () -> Void
 
     var body: some View {
@@ -80,8 +80,10 @@ private struct NoticeView: View {
                 Spacer()
                 // Not glass buttons: the panel is already glass on macOS 26.
                 Button("Dismiss", action: onDismiss)
-                Button("Retry", action: onRetry)
-                    .buttonStyle(.borderedProminent)
+                if let onRetry {
+                    Button("Retry", action: onRetry)
+                        .buttonStyle(.borderedProminent)
+                }
             }
         }
         .padding(16)
