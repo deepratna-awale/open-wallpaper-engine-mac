@@ -199,6 +199,9 @@ struct SceneScriptSceneDescriber {
         }
         if kind == .image, case .string(let image)? = json["image"] {
             description.textureAnimation = textureAnimation(model: image)
+            description.videoDuration = videoDuration(model: image)
+            // A video texture plays from the start (`IVideoTexture.isPlaying()`).
+            if description.videoDuration != nil { description.values[.playing] = [1] }
             description.rig = rig(model: image, animationLayers: json["animationlayers"])
         }
         if kind == .model, case .string(let model)? = json["model"] {
@@ -303,6 +306,21 @@ struct SceneScriptSceneDescriber {
     /// The spritesheet animation of an image's texture: model JSON → material → first texture's
     /// `.tex`, whose `TEXS` block lists the frames and their durations. Nil for a still texture.
     func textureAnimation(model path: String) -> SceneScriptAnimationDescription? {
+        guard let tex = firstTexture(model: path) else { return nil }
+        guard let frames = TEXSpriteFrames.durations(Array(tex)), !frames.isEmpty else { return nil }
+        let duration = frames.reduce(0, +)
+        return SceneScriptAnimationDescription(name: "", fps: duration > 0 ? Double(frames.count) / duration : 0,
+                                               frameCount: frames.count, duration: duration, playing: true)
+    }
+
+    /// The length of an image's video texture (its MP4's `mvhd`); nil for a picture.
+    func videoDuration(model path: String) -> Double? {
+        guard let tex = firstTexture(model: path), let video = TEXParser(data: tex).extractVideoData() else { return nil }
+        return MP4Duration.seconds(of: video) ?? 0
+    }
+
+    /// The `.tex` of an image's texture: model JSON → material → first texture.
+    private func firstTexture(model path: String) -> Data? {
         guard let modelData = file(path),
               case .object(let model)? = try? decodeTolerant(SceneJSON.self, from: modelData),
               case .string(let materialPath)? = model["material"],
@@ -311,13 +329,10 @@ struct SceneScriptSceneDescriber {
               case .array(let passes)? = material["passes"], case .object(let pass)? = passes.first,
               case .array(let textures)? = pass["textures"], case .string(let texture)? = textures.first,
               let tex = file("materials/\(texture).tex") else {
-            // Optional: models without a material or a texture file have no texture animation.
+            // Optional: models without a material or a texture file have no texture.
             return nil
         }
-        guard let frames = TEXSpriteFrames.durations(Array(tex)), !frames.isEmpty else { return nil }
-        let duration = frames.reduce(0, +)
-        return SceneScriptAnimationDescription(name: "", fps: duration > 0 ? Double(frames.count) / duration : 0,
-                                               frameCount: frames.count, duration: duration, playing: true)
+        return tex
     }
 
     /// `value` as compact JSON text; nil when it cannot be encoded.

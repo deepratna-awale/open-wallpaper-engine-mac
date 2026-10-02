@@ -124,10 +124,6 @@ Building from source fetches the Sparkle Swift package on first build. Builds fr
 - **15 new languages**: German, French, Spanish, Brazilian Portuguese, Italian, Japanese, Korean, Simplified and Traditional Chinese, Russian, Polish, Turkish, Ukrainian, Arabic and Hindi, chosen from the Language picker in Settings.
 - A new app icon, and a menu bar icon that follows the menu bar's appearance.
 
-## Current Limitations
-
-- **SceneScript stubs** — `getVideoTexture()` does nothing yet.
-
 ## Supported Wallpaper Types
 
 | Type | Status |

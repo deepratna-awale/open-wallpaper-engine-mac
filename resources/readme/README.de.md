@@ -124,10 +124,6 @@ Beim ersten Build aus dem Quellcode wird das Swift-Paket Sparkle geladen. Aus de
 - **15 neue Sprachen**: Deutsch, Französisch, Spanisch, brasilianisches Portugiesisch, Italienisch, Japanisch, Koreanisch, vereinfachtes und traditionelles Chinesisch, Russisch, Polnisch, Türkisch, Ukrainisch, Arabisch und Hindi, auswählbar über die Sprachauswahl in den Einstellungen.
 - Ein neues App-Symbol und ein Menüleistensymbol, das sich dem Erscheinungsbild der Menüleiste anpasst.
 
-## Aktuelle Einschränkungen
-
-- **SceneScript-Platzhalter** – `getVideoTexture()` tut noch nichts.
-
 ## Unterstützte Hintergrundbildtypen
 
 | Typ | Status |

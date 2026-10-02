@@ -383,6 +383,53 @@ class SteamCmdService: ObservableObject {
         }
     }
 
+    /// Downloads a Workshop item again only to restore the package a converted bundle was made from:
+    /// the package goes into `<wallpaperDirectory>/.owe-source/`, the live files stay untouched.
+    /// Runs after other downloads at background priority; `completion` runs on the main queue.
+    func fetchArchivedPackage(workshopId: String, packageName: String, into wallpaperDirectory: URL,
+                              completion: @escaping (Bool) -> Void) {
+        guard let cmdPath = steamCmdPath, isLoggedIn,
+              !packageName.contains("/"), !packageName.contains("\\"), !packageName.hasPrefix(".") else {
+            return completion(false)
+        }
+        downloadQueue.async(qos: .background) { [weak self] in
+            guard let self else { return }
+            let landed: Bool
+            do {
+                let storage = try self.storageDirectory()
+                let staging = WorkshopItemInstaller.stagingDirectory(in: storage)
+                defer { WorkshopItemInstaller.removeStaging(staging) }
+                try FileManager.default.createDirectory(at: staging, withIntermediateDirectories: true)
+                let script = try Self.workshopDownloadScript(installDirectory: staging, username: self.steamUsername,
+                                                             workshopId: workshopId, validate: true)
+                let run = self.runner.run(executable: URL(fileURLWithPath: cmdPath), script: script, timeout: nil)
+                OWELog.info(.workshop, "steamcmd package refresh [\(workshopId)] exit=\(run.exitCode)")
+                let package = WorkshopItemInstaller.contentDirectory(inSteamCmdRoot: staging, workshopId: workshopId)
+                    .appending(path: packageName)
+                guard FileManager.default.fileExists(atPath: package.path(percentEncoded: false)) else {
+                    throw DownloadError.steamCmdFailed(Self.failureMessage(output: run.output, exitCode: run.exitCode))
+                }
+                guard ContainedPath.hasNoLinks(below: wallpaperDirectory,
+                                               relativePath: WallpaperPackageConverter.sourceFolderName) else {
+                    throw DownloadError.steamCmdFailed("\(WallpaperPackageConverter.sourceFolderName) is a symbolic link")
+                }
+                let folder = wallpaperDirectory.appending(path: WallpaperPackageConverter.sourceFolderName)
+                try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+                // Copied beside the destination, then renamed in: a half-copied package never counts.
+                let incoming = folder.appending(path: ".incoming-" + UUID().uuidString)
+                try FileManager.default.copyItem(at: package, to: incoming)
+                let destination = folder.appending(path: packageName)
+                try? FileManager.default.removeItem(at: destination)
+                try FileManager.default.moveItem(at: incoming, to: destination)
+                landed = true
+            } catch {
+                OWELog.error(.workshop, "Workshop item \(workshopId) package refresh failed: \(error.localizedDescription)")
+                landed = false
+            }
+            DispatchQueue.main.async { completion(landed) }
+        }
+    }
+
     /// Runs steamcmd into a staging folder inside the storage folder and moves the finished item to
     /// `<storage>/<id>`. Call on `downloadQueue`: downloads share the one staging folder.
     private func downloadIntoStorage(_ workshopId: String, steamCmd: URL) throws -> WorkshopItemInstaller.Outcome {

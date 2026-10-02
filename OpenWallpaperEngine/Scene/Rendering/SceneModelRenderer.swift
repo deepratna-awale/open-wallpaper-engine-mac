@@ -172,7 +172,7 @@ final class SceneModelRenderer: SceneModelDrawing {
         // WE poses a visible model every frame, culled or not (0x14021c480).
         let bones = advance(model, plan: plan, frame: draw.frame, values: draw.values)
         let viewFrustum = frustum(draw.camera.viewProjection)
-        guard viewFrustum.contains(SceneModelCulling.Sphere(plan.bounds, world: draw.world)) else {
+        guard viewFrustum.contains(SceneModelCulling.Sphere(plan.cullBounds, world: draw.world)) else {
             modelsCulled += 1
             culledModels.insert(model.id)
             return

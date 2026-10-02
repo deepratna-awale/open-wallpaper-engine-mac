@@ -179,6 +179,9 @@ struct ContentView: View {
                 .frame(width: 520, height: 450)
                 .presentationBackground(.regularMaterial)
         }
+        .overlay(alignment: .bottomTrailing) {
+            if ThreadGuards.isDevBuild { ThreadGuardIndicator() }
+        }
         .frame(minWidth: 1000, minHeight: 640, idealHeight: 800)
     }
 

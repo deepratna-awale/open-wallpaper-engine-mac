@@ -124,10 +124,6 @@ Pierwsza kompilacja ze źródeł pobiera pakiet Swift Sparkle. Wersje zbudowane 
 - **15 nowych języków**: niemiecki, francuski, hiszpański, portugalski (Brazylia), włoski, japoński, koreański, chiński uproszczony i tradycyjny, rosyjski, polski, turecki, ukraiński, arabski i hindi, do wyboru w ustawieniach języka.
 - Nowa ikona aplikacji i ikona na pasku menu, która dopasowuje się do wyglądu paska menu.
 
-## Obecne ograniczenia
-
-- **Niezaimplementowane funkcje SceneScript** — `getVideoTexture()` jeszcze nic nie robi.
-
 ## Obsługiwane typy tapet
 
 | Typ | Stan |
