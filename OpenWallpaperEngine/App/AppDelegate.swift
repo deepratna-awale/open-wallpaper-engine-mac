@@ -111,6 +111,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     lazy var mediaSession = MacMediaSessionSource()
     /// What every scene's SceneScripts share: WE's prelude, `localStorage`, the one media session and
     /// the desktop's left clicks.
+    /// Settings › Plugins › Screen Saver: the loop videos and the bundled saver.
+    lazy var screenSaver = ScreenSaverPlugin()
     lazy var sceneScriptServices: SceneScriptServices = {
         if !SceneScriptJIT.isEnabled {
             OWELog.info(.script, "JavaScriptCore runs without its JIT (no \(SceneScriptJIT.entitlement)): scripts run several times slower")
@@ -318,8 +320,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         safeRestart.applicationWillTerminate()
         updater.stopShaderPrewarm()
+        // The lock-screen pictures go back to each display's own picture, the rest to the one saved
+        // at launch.
+        LockScreenPicture.restore(synchronously: true)
         if DesktopSnapshotCache.mayChangeDesktopPicture, let wallpaper = UserDefaults.app.url(forKey: "OSWallpaper") {
-            for screen in NSScreen.screens {
+            for screen in NSScreen.screens
+            where NSWorkspace.shared.desktopImageURL(for: screen).map(DesktopSnapshotCache.current.isSnapshot) ?? true {
                 try? NSWorkspace.shared.setDesktopImageURL(wallpaper, for: screen)
             }
         }
@@ -603,6 +609,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     
     func setPlacehoderWallpaper(with wallpaper: WEWallpaper) {
+        let settings = globalSettingsViewModel.settings
+        screenSaver.update(enabled: settings.screenSaver, wallpaper: wallpaper)
+        if settings.lockScreenPicture { LockScreenPicture.apply(wallpaper) }
         switch wallpaper.project.type {
         case "video":
             let asset = AVAsset(url: wallpaper.wallpaperDirectory.appending(component: wallpaper.project.file))

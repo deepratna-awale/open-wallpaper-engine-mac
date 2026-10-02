@@ -33,6 +33,7 @@ final class SafeRestart: ObservableObject {
     private var sessionCancellable: AnyCancellable?
     private var pending: (suspects: [SafeRestartLedger.Suspect], reason: Reason)?
     private var notice: SafeRestartNotice?
+    private var terminationSignal: DispatchSourceSignal?
 
     init(store: SafeRestartStore = SafeRestartStore(), watchdog: RenderWatchdog = RenderWatchdog()) {
         self.store = store
@@ -68,6 +69,13 @@ final class SafeRestart: ObservableObject {
         // A sudden-terminated app never hears `applicationWillTerminate`, which would leave the
         // sentinel set after a normal logout.
         ProcessInfo.processInfo.disableSuddenTermination()
+        // SIGTERM (`kill`, launchd) asks the app to quit, not a crash: quit through AppKit so the
+        // sentinel is cleared, instead of dying and having the wallpapers held back next launch.
+        signal(SIGTERM, SIG_IGN)
+        let source = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)
+        source.setEventHandler { NSApplication.shared.terminate(nil) }
+        source.resume()
+        terminationSignal = source
     }
 
     /// Call once the app has finished launching.

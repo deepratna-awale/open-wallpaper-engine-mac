@@ -20,6 +20,7 @@ final class TestPhaseTimer: NSObject, XCTestObservation {
     override init() {
         output = Self.openOutput()
         super.init()
+        ThreadGuardTestObserver.register()
         guard output != nil else { return }
         OWEPhaseTiming.setEnabled(true)
         XCTestObservationCenter.shared.addTestObserver(self)

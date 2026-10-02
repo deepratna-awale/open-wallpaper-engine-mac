@@ -32,7 +32,10 @@ final class UserPropertyBindingTable {
         let found = Self.bindings(in: json, document: document)
         lock.withLock {
             bindingsByDocument[document] = found
-            if case .asset(let path) = document { assetOwners[path, default: []].insert(building ?? .scene) }
+            if case .asset(let path) = document {
+                assetOwners[path, default: []].insert(building ?? .scene)
+                capturedReads?.insert(path)
+            }
         }
     }
 
@@ -58,7 +61,36 @@ final class UserPropertyBindingTable {
 
     /// Links an asset document read earlier (a cached read) to the object being built.
     private func noteRead(_ path: String) {
-        lock.withLock { assetOwners[path, default: []].insert(building ?? .scene) }
+        lock.withLock {
+            assetOwners[path, default: []].insert(building ?? .scene)
+            capturedReads?.insert(path)
+        }
+    }
+
+    /// The asset documents `capturingReads` saw read (guarded by `lock`).
+    private var capturedReads: Set<String>?
+
+    /// Runs `body` and returns the asset documents it read, so a build that reuses what `body`
+    /// built can link them to its own object (`noteReads`).
+    func capturingReads<T>(_ body: () -> T) -> (T, Set<String>) {
+        let outer = lock.withLock { () -> Set<String>? in
+            defer { capturedReads = [] }
+            return capturedReads
+        }
+        let result = body()
+        let reads = lock.withLock { () -> Set<String> in
+            let reads = capturedReads ?? []
+            // A capture inside another one: the outer one saw these reads too.
+            capturedReads = outer.map { $0.union(reads) }
+            return reads
+        }
+        return (result, reads)
+    }
+
+    /// Links asset documents an earlier build read (`capturingReads`) to the object being built,
+    /// as reading them again would.
+    func noteReads(_ paths: Set<String>) {
+        for path in paths { noteRead(path) }
     }
 
     // MARK: - Reading
