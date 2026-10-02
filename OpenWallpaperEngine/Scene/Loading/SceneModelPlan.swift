@@ -18,6 +18,8 @@ final class SceneModelPlan {
         /// The mesh's own box (`MDLV` ≥ 17), for culling it apart from the model's; nil when
         /// unknown or when its vertices move in the shader (skinning, morphs), so the box can't hold them.
         var bounds: MDLBounds? = nil
+        /// Whether its vertices move in the shader (skinning, morphs), past any box the file stores.
+        var deforms = false
         /// The vertex and index bytes; after the upload (`SceneModelPlan.upload`) they read the
         /// GPU buffers' shared storage instead of a second CPU copy.
         fileprivate let bytes: MeshBytes
@@ -26,13 +28,14 @@ final class SceneModelPlan {
         var indexData: Data { bytes.indices }
 
         init(index: Int, material: ModelMaterialPlan, format: MDLVertexFormat, vertexData: Data, indexData: Data,
-             usesUInt32Indices: Bool, indexCount: Int, bounds: MDLBounds? = nil) {
+             usesUInt32Indices: Bool, indexCount: Int, bounds: MDLBounds? = nil, deforms: Bool = false) {
             self.index = index
             self.material = material
             self.format = format
             self.usesUInt32Indices = usesUInt32Indices
             self.indexCount = indexCount
             self.bounds = bounds
+            self.deforms = deforms
             bytes = MeshBytes(vertices: vertexData, indices: indexData)
         }
     }
@@ -102,6 +105,11 @@ final class SceneModelPlan {
     let meshes: [Mesh]
     /// The model's box (the union of its meshes', or unbounded; `MDLModel.bounds`).
     let bounds: MDLBounds
+    /// The box the whole model (and its shadow caster) is culled by: `bounds`, or unbounded when a
+    /// mesh deforms. A pose draws a skinned or morphed mesh past the rest-pose box the file stores,
+    /// so, as its own mesh test already skips it, that box can't cull the model either: a limb
+    /// swung into view would vanish while the rest box stays outside it.
+    var cullBounds: MDLBounds { meshes.contains(where: \.deforms) ? .unbounded : bounds }
     let skeleton: MDLSkeleton?
     let clips: [MDLAnimation]
     let attachments: [MDLAttachment]
