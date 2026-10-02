@@ -1648,6 +1648,11 @@ class SceneWallpaperViewModel: ObservableObject {
             if let texture = parser.extractCompressedTexture(reduction: reduction) {
                 return cacheTexture(.dxt(texture), for: cacheKey)
             }
+            // A video texture plays (`IVideoTexture`); its poster frame stays the fallback.
+            if let video = parser.extractVideoData(), let device = MTLCreateSystemDefaultDevice(),
+               let stream = VideoTextureStream.embedded(mp4: video, device: device) {
+                return cacheTexture(.video(stream), for: cacheKey)
+            }
             let mipmaps = optimise ? parser.firstImageMipmapCount() ?? 1 : 1
             let level = TextureReduction.loadedMipmap(reduction: reduction, mipmapCount: mipmaps)
             let preparedKey = optimise ? TexturePreparation.key(texData: data, level: level) : nil

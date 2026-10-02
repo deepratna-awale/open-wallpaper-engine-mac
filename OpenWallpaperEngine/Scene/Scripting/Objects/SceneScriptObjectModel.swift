@@ -248,6 +248,8 @@ final class SceneScriptObjectModel: SceneScriptRuntimeExtension {
             guard let number = numbers.first, let name = command.strings.first,
                   let effect = SceneScriptNumber.index(number, in: 0...Self.maximumIndex) else { return nil }
             return .executeMaterialFunction(slot: target, effect: effect, name: name)
+        case .videoTexture:
+            return SceneVideoTextureCommand(numbers: numbers).map { .video(slot: target, $0) }
         case .soundPlay: return .sound(slot: target, .play)
         case .soundPause: return .sound(slot: target, .pause)
         case .soundStop: return .sound(slot: target, .stop)

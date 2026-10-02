@@ -212,13 +212,97 @@
         });
     }
 
-    // A member WE has that needs an engine feature this app lacks yet: an image layer's video
-    // texture plays as its poster frame only, so there is no playback for `IVideoTexture` to
-    // control. A puppet image's animation layers, bones, bone physics, blend shapes and
-    // attachments are below; parenting and orientation are in objects-transforms.js.
-    const none = function () { return null; };
+    // A puppet image's animation layers, bones, bone physics, blend shapes and attachments are
+    // below; parenting and orientation are in objects-transforms.js.
     const P = Layer.prototype;
-    objects.stub(P, 'IImageLayer', 'getVideoTexture', none);
+
+    // MARK: IVideoTexture
+    //
+    // An image whose texture is a video (a TEXB0004 MP4 payload) has `record.video` {duration}.
+    // The texture starts playing and looping, as WE's video textures do. The clock here advances
+    // with the frame's delta so `getCurrentTime`, `isPlaying` and the ended callbacks answer at
+    // once; every call also reaches the layer's player as an `OP.videoTexture` command
+    // [action (play 0, pause 1, stop 2, seek 3, rate 4, loop 5), value?].
+    const videoTextures = [];
+    class VideoTexture {
+        constructor(owner, duration) {
+            Object.defineProperty(this, '_owner', { value: owner });
+            Object.defineProperty(this, '_duration', { value: duration });
+            Object.defineProperty(this, '_state', { value: { time: 0, rate: 1, loop: true, playing: true } });
+            Object.defineProperty(this, '_ended', { value: [] });
+        }
+        get duration() { return this._duration; }
+        set duration(value) {}
+        get rate() { return this._state.rate; }
+        set rate(value) {
+            if (typeof value !== 'number' || !isFinite(value)) return;
+            this._state.rate = Math.max(0, value);
+            this._command(4, this._state.rate);
+        }
+        get loop() { return this._state.loop; }
+        set loop(value) {
+            this._state.loop = !!value;
+            this._command(5, this._state.loop ? 1 : 0);
+        }
+        // A finished video restarts from 0.
+        play() {
+            const state = this._state;
+            if (!state.loop && state.time >= this._duration) state.time = 0;
+            state.playing = true;
+            this._command(0);
+        }
+        pause() { this._state.playing = false; this._command(1); }
+        stop() { this._state.playing = false; this._state.time = 0; this._command(2); }
+        isPlaying() { return this._state.playing; }
+        getCurrentTime() { return this._state.time; }
+        setCurrentTime(time) {
+            if (typeof time !== 'number' || !isFinite(time)) return;
+            this._state.time = Math.max(0, Math.min(time, this._duration));
+            this._command(3, this._state.time);
+        }
+        addEndedCallback(callback) {
+            if (typeof callback === 'function') this._ended.push(callback);
+        }
+    }
+    objects.defineMethod(VideoTexture.prototype, '_command', function (action, value) {
+        if (this._owner._dead) return;
+        objects.push(OP.videoTexture, this._owner._slot, value === undefined ? [action] : [action, value]);
+    });
+    // One frame of the clock: the end is reached once per pass; a looping video wraps, any other
+    // stops at its end. Ended callbacks run before `update`, as an animation layer's do.
+    objects.defineMethod(VideoTexture.prototype, '_advance', function (dt) {
+        const state = this._state, duration = this._duration;
+        if (!state.playing || this._owner._dead || !(duration > 0) || !(dt > 0)) return;
+        state.time += dt * state.rate;
+        if (state.time < duration) return;
+        if (state.loop) {
+            state.time %= duration;
+        } else {
+            state.time = duration;
+            state.playing = false;
+        }
+        for (let c = 0; c < this._ended.length; c++) {
+            try {
+                this._ended[c].call(this);
+            } catch (error) {
+                rt.reportError(null, 'IVideoTexture ended callback', error);
+            }
+        }
+    });
+    rt.addPhaseHandler('animations', function (dt) {
+        for (let i = 0; i < videoTextures.length; i++) videoTextures[i]._advance(dt);
+    });
+
+    // The image's video texture, or null when its texture is not a video.
+    objects.defineMethod(P, 'getVideoTexture', function () {
+        const video = this._record.video;
+        if (video === null || video === undefined) return null;
+        if (!this._videoTexture) {
+            Object.defineProperty(this, '_videoTexture', { value: new VideoTexture(this, Number(video.duration) || 0) });
+            videoTextures.push(this._videoTexture);
+        }
+        return this._videoTexture;
+    });
 
     // MARK: puppet and model rigs (docs/models-plan.md §2.8, §4.3 P2 and M6)
     //
@@ -788,7 +872,10 @@
 
     objects.makeLayer = function (record) {
         const LayerClass = CLASSES[record.kind] || Layer;
-        return new LayerClass(record);
+        const layer = new LayerClass(record);
+        // A video texture plays from the layer's start, so its clock starts with the layer.
+        if (record.video) layer.getVideoTexture();
+        return layer;
     };
 
     // Detaches a destroyed layer: it keeps its last values; writes and commands do nothing.
@@ -798,6 +885,8 @@
         objects.detach(layer, stride);
         objects.forgetAnimations(layer._record.animations);
         if (layer._record.textureAnimation) objects.forgetAnimations([layer._record.textureAnimation]);
+        const video = videoTextures.indexOf(layer._videoTexture);
+        if (video >= 0) videoTextures.splice(video, 1);
     };
 
     objects.Layer = Layer;

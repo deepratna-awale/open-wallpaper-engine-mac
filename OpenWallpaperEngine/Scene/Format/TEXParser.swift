@@ -384,8 +384,46 @@ class TEXParser {
 
     // MARK: - Private
 
+    /// The MP4 file a video texture stores as its image (WE plays these as `IVideoTexture`), or nil
+    /// when the container holds a picture.
+    func extractVideoData() -> Data? {
+        guard let payload = firstImagePayload(reduction: 1) else { return nil }
+        let data = payload.data
+        guard data.count > 12, data[4..<8].elementsEqual("ftyp".utf8) else { return nil }
+        return Data(data)
+    }
+
+    private struct ImagePayload {
+        let format: UInt32
+        let data: [UInt8]
+        let width: Int, height: Int
+        let visibleWidth: Int, visibleHeight: Int
+    }
+
     private func extractContainerImage(reduction: Int) -> NSImage? {
         ThreadGuards.assertBackground("TEXParser.extractContainerImage")
+        guard let payload = firstImagePayload(reduction: reduction) else { return nil }
+        let format = payload.format, mipmapData = payload.data
+        let width = payload.width, height = payload.height
+        let visibleWidth = payload.visibleWidth, visibleHeight = payload.visibleHeight
+        switch format {
+        case 4, 6, 7:
+            return decodeDXT(mipmapData, format: format, width: width, height: height,
+                             visibleWidth: visibleWidth, visibleHeight: visibleHeight)
+        default:
+            if let image = rawChannelImage(mipmapData, format: format, width: width, height: height,
+                                           visibleWidth: visibleWidth, visibleHeight: visibleHeight) {
+                return image
+            }
+            return NSImage(data: Data(mipmapData))
+                ?? posterImage(fromVideoData: Data(mipmapData))
+                ?? rawRGBAImage(mipmapData, width: width, height: height,
+                                visibleWidth: visibleWidth, visibleHeight: visibleHeight)
+        }
+    }
+
+    /// The first image's loaded mipmap, decompressed, with its sizes.
+    private func firstImagePayload(reduction: Int) -> ImagePayload? {
         var cursor = 0
 
         guard readNullTerminatedString(from: bytes, cursor: &cursor) == "TEXV0005",
@@ -449,22 +487,8 @@ class TEXParser {
             return nil
         }
 
-        let visibleWidth = min(visibleImageWidth, width)
-        let visibleHeight = min(visibleImageHeight, height)
-        switch format {
-        case 4, 6, 7:
-            return decodeDXT(mipmapData, format: format, width: width, height: height,
-                             visibleWidth: visibleWidth, visibleHeight: visibleHeight)
-        default:
-            if let image = rawChannelImage(mipmapData, format: format, width: width, height: height,
-                                           visibleWidth: visibleWidth, visibleHeight: visibleHeight) {
-                return image
-            }
-            return NSImage(data: Data(mipmapData))
-                ?? posterImage(fromVideoData: Data(mipmapData))
-                ?? rawRGBAImage(mipmapData, width: width, height: height,
-                                visibleWidth: visibleWidth, visibleHeight: visibleHeight)
-        }
+        return ImagePayload(format: format, data: mipmapData, width: width, height: height,
+                            visibleWidth: min(visibleImageWidth, width), visibleHeight: min(visibleImageHeight, height))
     }
 
     /// Decodes RG88 (two-channel) and R8 (single-channel) raw mipmaps; nil for any other format.

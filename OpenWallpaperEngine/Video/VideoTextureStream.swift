@@ -1,4 +1,5 @@
 import AVFoundation
+import CryptoKit
 import CoreVideo
 import Metal
 import QuartzCore
@@ -29,6 +30,13 @@ final class VideoTextureStream {
     private var retainedTexture: CVMetalTexture?
     private var latestTexture: MTLTexture?
     private var observers: [NSObjectProtocol] = []
+
+    /// Whether the end restarts playback (`IVideoTexture.loop`); a video that doesn't loop holds
+    /// its last frame.
+    private(set) var loops = true
+    /// `IVideoTexture.rate` of an embedded video texture, with `isPlaying`.
+    private var scriptRate: Float = 1
+    private var scriptPlaying = true
 
     private var appliedVideoRate: Float?
     private var appliedAudioRate: Float?
@@ -61,7 +69,7 @@ final class VideoTextureStream {
         for observed in [item, audioItem] {
             observers.append(NotificationCenter.default.addObserver(
                 forName: .AVPlayerItemDidPlayToEndTime, object: observed, queue: .main
-            ) { [weak self] _ in self?.restart() })
+            ) { [weak self] _ in self?.reachedEnd() })
         }
     }
 
@@ -158,6 +166,44 @@ final class VideoTextureStream {
         audioPlayer.rate = rate
     }
 
+    private func reachedEnd() {
+        if loops { restart() } else { player.pause(); audioPlayer.pause(); scriptPlaying = false; appliedVideoRate = nil }
+    }
+
+    // MARK: - Video textures in scenes
+
+    /// A scene image's video texture: muted (WE's video textures are pictures), playing and
+    /// looping from the start. Scripts drive it through `perform(_:)`.
+    static func embedded(mp4 data: Data, device: MTLDevice) -> VideoTextureStream? {
+        guard let url = EmbeddedVideoFiles.url(for: data) else { return nil }
+        guard let stream = VideoTextureStream(url: url, device: device) else { return nil }
+        stream.setAudio(enabled: false, volume: 0)
+        stream.setVideoRate(1)
+        return stream
+    }
+
+    /// An `IVideoTexture` call.
+    func perform(_ command: SceneVideoTextureCommand) {
+        switch command {
+        case .play:
+            if !loops, let item = player.currentItem, item.currentTime() >= item.duration { player.seek(to: .zero) }
+            scriptPlaying = true
+        case .pause:
+            scriptPlaying = false
+        case .stop:
+            scriptPlaying = false
+            player.seek(to: .zero)
+        case .seek(let seconds):
+            player.seek(to: CMTime(seconds: seconds, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero)
+        case .rate(let rate):
+            scriptRate = rate
+        case .loop(let value):
+            loops = value
+        }
+        appliedVideoRate = nil
+        setVideoRate(scriptPlaying ? scriptRate : 0)
+    }
+
     func restart() {
         player.seek(to: .zero)
         audioPlayer.seek(to: .zero)
@@ -172,4 +218,24 @@ final class VideoTextureStream {
 private final class HeldVideoFrame: @unchecked Sendable {
     let texture: CVMetalTexture
     init(_ texture: CVMetalTexture) { self.texture = texture }
+}
+
+/// The MP4 files of scene video textures, written once per content into the caches folder so
+/// AVFoundation can open them by URL.
+enum EmbeddedVideoFiles {
+    static func url(for data: Data) -> URL? {
+        let digest = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+        let folder = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("VideoTextures", isDirectory: true)
+        let url = folder.appendingPathComponent(digest).appendingPathExtension("mp4")
+        if FileManager.default.fileExists(atPath: url.path) { return url }
+        do {
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            try data.write(to: url, options: .atomic)
+            return url
+        } catch {
+            OWELog.error(.scene, "Could not write a video texture: \(error)")
+            return nil
+        }
+    }
 }

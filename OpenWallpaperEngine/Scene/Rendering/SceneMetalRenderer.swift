@@ -845,6 +845,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 pendingEmits[String(id), default: 0] += count ?? 1
             case .sound(let id, let playback):
                 sounds.perform(playback, on: id)
+            case .video(let id, let command):
+                let key = String(id)
+                for entry in layers where entry.layer.id == key {
+                    if case let .video(stream) = entry.layer.source { stream.perform(command) }
+                }
             case let .animation(site, time, flags, rate, frame):
                 timelines.restore(site, time: time, flags: flags, rate: rate, seenAt: frame)
             case let .textureAnimation(id, control, frame):
