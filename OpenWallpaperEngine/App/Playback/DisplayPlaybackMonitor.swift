@@ -152,7 +152,7 @@ final class DisplayPlaybackMonitor {
             otherApplicationPlayingAudio: rules.watchesAudio && sources.otherApplicationPlayingAudio(inputs.ignoresWebKitAudio),
             displaysAsleep: inputs.displaysAsleep,
             onBattery: rules.watchesPower && sources.onBattery(),
-            runningApplications: Set(inputs.applications.values,
+            runningApplications: Set(inputs.applications.values),
             videoMemoryExhausted: inputs.videoMemoryExhausted)
         return rules.playback(displays: inputs.displays.map(\.id), conditions: conditions, system: system)
     }
