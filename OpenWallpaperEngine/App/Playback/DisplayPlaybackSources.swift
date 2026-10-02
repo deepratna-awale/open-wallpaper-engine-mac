@@ -20,6 +20,8 @@ struct DisplayPlaybackSources: @unchecked Sendable {
     /// Another application plays sound; the argument leaves WebKit's helper processes out.
     var otherApplicationPlayingAudio: (_ ignoringWebKit: Bool) -> Bool
     var onBattery: () -> Bool
+    /// The running applications' bundle identifiers by process (Application Rules). Main thread.
+    var applications: () -> [pid_t: String] = { [:] }
 }
 
 extension DisplayPlaybackSources {
@@ -42,7 +44,15 @@ extension DisplayPlaybackSources {
             ownPID: ownPID,
             showsWebWallpaper: { MainActor.assumeIsolated { showsWebWallpaper() } },
             otherApplicationPlayingAudio: { audio.isPlaying(ignoringWebKit: $0) },
-            onBattery: { PowerSource.isOnBattery() })
+            onBattery: { PowerSource.isOnBattery() },
+            applications: {
+                var applications: [pid_t: String] = [:]
+                for app in NSWorkspace.shared.runningApplications where app.processIdentifier != ownPID {
+                    // Optional: a process without a bundle can't be named by a rule.
+                    if let bundleIdentifier = app.bundleIdentifier { applications[app.processIdentifier] = bundleIdentifier }
+                }
+                return applications
+            })
     }
 }
 
