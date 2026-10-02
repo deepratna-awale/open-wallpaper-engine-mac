@@ -4,9 +4,16 @@ import SwiftUI
 /// told apart from assets or a compiler that never loaded.
 struct DiagnosticsPage: SettingsPage {
     @ObservedObject var viewModel: GlobalSettingsViewModel
+    /// Called after "Reset Config", so views of preferences outside `GlobalSettings` redraw.
+    var onReset: () -> Void = {}
 
     init(globalSettings: GlobalSettingsViewModel) {
+        self.init(globalSettings: globalSettings, onReset: {})
+    }
+
+    init(globalSettings: GlobalSettingsViewModel, onReset: @escaping () -> Void) {
         self.viewModel = globalSettings
+        self.onReset = onReset
     }
 
     @State private var shaderCounts = DiagnosticsPage.shaderCacheCounts()
@@ -82,6 +89,7 @@ struct DiagnosticsPage: SettingsPage {
                     Text("Verbose").tag(GSLogLevel.verbose)
                 }
                 .changedFromDefault(viewModel.isChanged(\.logLevel))
+                .help("How much the app writes to the macOS log. Verbose adds debug messages and frame timings; None and Errors Only both log errors.")
             } header: {
                 Label("Developer", systemImage: "number")
             }
@@ -93,12 +101,15 @@ struct DiagnosticsPage: SettingsPage {
                     Text("Reset Config")
                     Spacer()
                     Button {
-                        viewModel.settings = GlobalSettings()
+                        SettingsTabReset.resetAll(viewModel: viewModel, defaults: .app,
+                                                  updater: AppDelegate.shared.updater)
+                        onReset()
                     } label: {
                         Text("Reset").frame(minWidth: 100)
                     }
                     .tint(Color.red)
                     .glassButtonStyle(.prominent)
+                    .help("Puts the General, Performance, Optimizations, Diagnostics and Screen Saver settings back to their defaults. Your wallpapers and library aren't touched.")
                 }
             } header: {
                 Label("Reset", systemImage: "exclamationmark.triangle.fill")

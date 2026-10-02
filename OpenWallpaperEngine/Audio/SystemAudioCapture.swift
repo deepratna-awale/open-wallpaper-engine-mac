@@ -140,6 +140,13 @@ final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate {
         Task { await Self.stop(current) }
     }
 
+    /// The default output device changed (`OutputDeviceChangeMonitor`): a new capture follows it.
+    @MainActor
+    func outputDeviceDidChange() {
+        guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
+        restartSystemAudioCapture(reason: "the default output device changed")
+    }
+
     @MainActor
     private func restartSystemAudioCapture(reason: String) {
         guard demand.isDemanded, permissionGate.canCapture() else { return }

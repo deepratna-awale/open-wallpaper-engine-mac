@@ -11,6 +11,12 @@ import Cocoa
 // loops.
 SceneScriptJIT.configurePollingTraps()
 
+// The crash watcher (Settings › Restart after crashing) only waits on the app: no JavaScriptCore,
+// no app lifecycle.
+if let status = CrashWatcher.runIfRequested(arguments: ProcessInfo.processInfo.arguments) {
+	exit(status)
+}
+
 MainActor.assumeIsolated {
 	// A helper run (`ShaderPrewarmCommand`) does its work and exits before the app's lifecycle
 	// starts: no delegate, no windows, no playback.
