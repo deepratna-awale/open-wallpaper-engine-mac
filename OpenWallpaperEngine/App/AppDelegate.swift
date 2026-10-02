@@ -111,6 +111,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     lazy var mediaSession = MacMediaSessionSource()
     /// What every scene's SceneScripts share: WE's prelude, `localStorage`, the one media session and
     /// the desktop's left clicks.
+    /// Settings › Plugins › Screen Saver: the loop videos and the bundled saver.
+    lazy var screenSaver = ScreenSaverPlugin()
     lazy var sceneScriptServices: SceneScriptServices = {
         if !SceneScriptJIT.isEnabled {
             OWELog.info(.script, "JavaScriptCore runs without its JIT (no \(SceneScriptJIT.entitlement)): scripts run several times slower")
@@ -156,6 +158,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             for wallpaper in wallpapers.values {
                 self?.workshopDependencies.ensureDependencies(for: wallpaper)
             }
+            // After the change is applied, so the old wallpaper counts as no longer shown.
+            DispatchQueue.main.async { self?.staleBundleRefresher?.shownWallpapersChanged() }
         }
 
         // New or removed assets: scripts, the library (default wallpapers) and every scene reload.
@@ -256,9 +260,42 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             if UserDefaults.app.bool(forKey: "ReclaimOriginalPackages") {
                 WallpaperPackageConverter.reclaimEligibleSources()
             }
+            // Bundles left on an older conversion with no package to redo it from.
+            let stale = StaleBundleScanner.scan(storage: FileManager.default.wallpapersDirectory)
+            guard !stale.isEmpty else { return }
+            // Later, so the cached SteamCMD login restored at launch has had its turn.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 30) { [weak self] in
+                self?.refreshStaleBundles(stale)
+            }
         }
     }
     
+    private var staleBundleRefresher: StaleBundleRefresher?
+    private var staleBundleNotice: SafeRestartNotice?
+
+    private func refreshStaleBundles(_ stale: [StaleBundle]) {
+        let refresher = StaleBundleRefresher(
+            downloader: contentViewModel.steamCmd,
+            isShown: { [weak self] directory in
+                self?.wallpaperViewModel.wallpapers.values.contains {
+                    $0.wallpaperDirectory.standardizedFileURL == directory.standardizedFileURL
+                } ?? false
+            },
+            notify: { [weak self] titles in
+                guard let self else { return }
+                self.staleBundleNotice?.close()
+                self.staleBundleNotice = SafeRestartNotice(
+                    message: StaleBundleRefresher.noticeMessage(for: titles), onRetry: nil,
+                    onDismiss: { [weak self] in
+                        self?.staleBundleNotice?.close()
+                        self?.staleBundleNotice = nil
+                    })
+                self.staleBundleNotice?.show()
+            })
+        staleBundleRefresher = refresher
+        refresher.run(stale)
+    }
+
     func applicationDidBecomeActive(_ notification: Notification) {
         contentViewModel.isApplicationActive = true
         // Picks up a steamcmd installed meanwhile, e.g. with Homebrew.
@@ -283,8 +320,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         safeRestart.applicationWillTerminate()
         updater.stopShaderPrewarm()
+        // The lock-screen pictures go back to each display's own picture, the rest to the one saved
+        // at launch.
+        LockScreenPicture.restore(synchronously: true)
         if DesktopSnapshotCache.mayChangeDesktopPicture, let wallpaper = UserDefaults.app.url(forKey: "OSWallpaper") {
-            for screen in NSScreen.screens {
+            for screen in NSScreen.screens
+            where NSWorkspace.shared.desktopImageURL(for: screen).map(DesktopSnapshotCache.current.isSnapshot) ?? true {
                 try? NSWorkspace.shared.setDesktopImageURL(wallpaper, for: screen)
             }
         }
@@ -568,6 +609,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     
     func setPlacehoderWallpaper(with wallpaper: WEWallpaper) {
+        let settings = globalSettingsViewModel.settings
+        screenSaver.update(enabled: settings.screenSaver, wallpaper: wallpaper)
+        if settings.lockScreenPicture { LockScreenPicture.apply(wallpaper) }
         switch wallpaper.project.type {
         case "video":
             let asset = AVAsset(url: wallpaper.wallpaperDirectory.appending(component: wallpaper.project.file))

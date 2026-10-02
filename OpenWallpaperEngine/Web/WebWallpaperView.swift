@@ -103,7 +103,9 @@ struct WebWallpaperView: NSViewRepresentable {
             Self.loadWallpaper(nsView, viewModel: viewModel)
         }
         applyPlacement(wallpaperViewModel.wallpaperPlacement, to: nsView)
-        WebPageScale.apply(standardResolution: AppDelegate.shared.globalSettingsViewModel.settings.webStandardResolution,
+        let settings = AppDelegate.shared.globalSettingsViewModel.settings
+        // Render Resolution "Display" draws pages at the display's points too, as scenes are drawn.
+        WebPageScale.apply(standardResolution: settings.webStandardResolution || settings.renderResolution == .display,
                            to: nsView)
         // A page per display, so only the one on the wallpaper's audible display plays sound. The
         // playback rules pause each display's page on its own, and silence the wallpaper only when

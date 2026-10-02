@@ -10,6 +10,17 @@ struct WEModel: Codable {
     var solidlayer: Bool?
     var material: String?    // path to material JSON
     var puppet: String?      // path to a Puppet Warp rig (.mdl): its mesh draws the image (`ScenePuppetPlan`)
+    /// The image's size, in scene units, in models without `autosize` (WE's templates: `width` and
+    /// `height` beside the material). An object without a `size` takes it rather than its first
+    /// texture's, which a material such as `flowimage` fills with a small flow mask.
+    var width: Double?
+    var height: Double?
+
+    /// `width` × `height` when both are positive.
+    var declaredSize: SIMD2<Float>? {
+        guard let width, let height, width > 0, height > 0 else { return nil }
+        return SIMD2(Float(width), Float(height))
+    }
 }
 
 /// The first pass of an image layer's or particle system's own material, as the layer builder

@@ -333,6 +333,32 @@ class TEXParser {
         return levels
     }
 
+    /// Whether the first image is stored raw (no FreeImage container) inside an allocation larger
+    /// than the image: it is uploaded padded (`TEXRawImageRep.makeAllocationTexture`), so it isn't
+    /// replaced by a cropped prepared texture (`TexturePreparation`).
+    func isPaddedRawImage() -> Bool {
+        var cursor = 0
+        guard readNullTerminatedString(from: bytes, cursor: &cursor) == "TEXV0005",
+              readNullTerminatedString(from: bytes, cursor: &cursor) == "TEXI0001",
+              let format = readUInt32(from: bytes, cursor: &cursor), ![UInt32(4), 6, 7].contains(format),
+              readUInt32(from: bytes, cursor: &cursor) != nil,
+              let textureWidth = readUInt32(from: bytes, cursor: &cursor),
+              let textureHeight = readUInt32(from: bytes, cursor: &cursor),
+              let imageWidth = readUInt32(from: bytes, cursor: &cursor),
+              let imageHeight = readUInt32(from: bytes, cursor: &cursor),
+              readUInt32(from: bytes, cursor: &cursor) != nil,
+              let container = readNullTerminatedString(from: bytes, cursor: &cursor),
+              readUInt32(from: bytes, cursor: &cursor) != nil else { return false }
+        let padded = imageWidth > 0 && imageHeight > 0 && (textureWidth > imageWidth || textureHeight > imageHeight)
+        switch container {
+        case "TEXB0001", "TEXB0002": return padded
+        case "TEXB0003", "TEXB0004":
+            // FreeImage format -1: the mipmaps are raw texels, not an embedded PNG or JPEG.
+            return padded && readUInt32(from: bytes, cursor: &cursor) == UInt32.max
+        default: return false
+        }
+    }
+
     /// How many mipmaps the first image stores (1 for a video's conditional layout, which loads
     /// whole); nil for a file that isn't a TEX container.
     func firstImageMipmapCount() -> Int? {

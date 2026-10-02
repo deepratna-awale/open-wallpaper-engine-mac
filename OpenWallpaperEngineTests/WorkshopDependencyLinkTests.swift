@@ -103,17 +103,7 @@ final class WorkshopDependencyLinkTests: XCTestCase {
         XCTAssertFalse(ContainedPath.isSymbolicLink(linkPath))
     }
 
-    func testWorkshopItemPaths() {
-        XCTAssertTrue(WallpaperPackageConverter.isUnderWorkshopItem("materials/workshop/2000000002/a.json"))
-        XCTAssertTrue(WallpaperPackageConverter.isUnderWorkshopItem("workshop/2000000002/a.json"))
-        XCTAssertTrue(WallpaperPackageConverter.isUnderWorkshopItem("effects\\Workshop\\123\\e\\effect.json"))
-        XCTAssertTrue(WallpaperPackageConverter.isUnderWorkshopItem("materials/workshop/123"))
-        XCTAssertFalse(WallpaperPackageConverter.isUnderWorkshopItem("materials/workshop/pack/a.json"))
-        XCTAssertFalse(WallpaperPackageConverter.isUnderWorkshopItem("materials/workshop"))
-        XCTAssertFalse(WallpaperPackageConverter.isUnderWorkshopItem("materials/123/a.json"))
-    }
-
-    func testConverterLeavesWorkshopItemPathsToTheResolver() throws {
+    func testConverterExtractsBundledWorkshopItemFiles() throws {
         try package([("scene.json", Data("{}".utf8)),
                      ("materials/a.json", Data("{}".utf8)),
                      ("materials/workshop/2000000002/b.json", Data("{}".utf8)),
@@ -121,11 +111,14 @@ final class WorkshopDependencyLinkTests: XCTestCase {
             .write(to: wallpaper.appending(path: "scene.pkg"))
 
         let manifest = try XCTUnwrap(WallpaperPackageConverter.convertIfNeeded(wallpaperDirectory: wallpaper))
-        XCTAssertEqual(manifest.extractedFiles.sorted(), ["materials/a.json", "scene.json"])
+        // Wallpaper Engine reads the asset-pack files the package bundles, so they are extracted.
+        XCTAssertEqual(manifest.extractedFiles.sorted(),
+                       ["effects/workshop/3000000003/e/effect.json", "materials/a.json",
+                        "materials/workshop/2000000002/b.json", "scene.json"])
         XCTAssertEqual(manifest.warnings, [])
-        XCTAssertEqual(manifest.dependencyEntries?.count, 2)
-        XCTAssertFalse(fm.fileExists(atPath: wallpaper.appending(path: "materials/workshop").path))
-        XCTAssertFalse(fm.fileExists(atPath: wallpaper.appending(path: "effects").path))
+        XCTAssertEqual(manifest.dependencyEntries, [])
+        XCTAssertTrue(fm.fileExists(atPath: wallpaper.appending(path: "materials/workshop/2000000002/b.json").path))
+        XCTAssertTrue(fm.fileExists(atPath: wallpaper.appending(path: "effects/workshop/3000000003/e/effect.json").path))
         XCTAssertEqual(WorkshopDependencyResolver.referencedWorkshopIds(inItemAt: wallpaper), ["2000000002", "3000000003"])
     }
 }

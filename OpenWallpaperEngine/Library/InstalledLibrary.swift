@@ -30,6 +30,10 @@ enum InstalledLibrary {
     /// unreadable is still listed, as an invalid entry the user can see and delete.
     static func wallpaper(at folder: URL, hiding dependencyIds: Set<String>) -> WEWallpaper? {
         guard !dependencyIds.contains(folder.lastPathComponent) else { return nil }
+        // A wallpaper is a folder: a stray file in the library (a log, a crash or profile dump) isn't one.
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: folder.path(percentEncoded: false), isDirectory: &isDirectory),
+              isDirectory.boolValue else { return nil }
         // A folder without project.json is shown as invalid below, so a failed read is expected.
         guard let data = try? Data(contentsOf: folder.appending(path: "project.json")) else {
             return WEWallpaper(using: .invalid, where: folder)
