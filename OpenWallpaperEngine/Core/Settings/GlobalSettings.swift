@@ -354,9 +354,11 @@ struct GlobalSettings: Codable, Equatable {
     var videoFramework = GSVideoFramework.preferred
     
     // MARK: Advanced
-    var processPiority = GSProcessPiority.normal // Not putting in use
+    /// WE's process priority (`ProcessPriority`): the app's nice value and its threads' QoS.
+    var processPiority = GSProcessPiority.normal
     var pauseOnVRAMExhausted = false // Not putting in use
-    var restartAfterCrashing = false // Not putting in use
+    /// Reopens the app after a crash (`CrashWatcher`, `CrashRelaunchPolicy`). Off by default.
+    var restartAfterCrashing = false
     
     // MARK: Developer
     var logLevel = GSLogLevel.none
