@@ -355,7 +355,7 @@ struct GlobalSettings: Codable, Equatable {
     
     // MARK: Advanced
     var processPiority = GSProcessPiority.normal // Not putting in use
-    var pauseOnVRAMExhausted = false // Not putting in use
+    var pauseOnVRAMExhausted = false
     var restartAfterCrashing = false // Not putting in use
     
     // MARK: Developer

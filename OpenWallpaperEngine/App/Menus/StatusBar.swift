@@ -21,6 +21,7 @@ extension AppDelegate {
     }
 
     @objc func resume() {
+        videoMemoryWatch.userResumed()
         self.wallpaperViewModel.playRate = self.wallpaperViewModel.lastPlayRate == 0 ? 1 : self.wallpaperViewModel.lastPlayRate
     }
 

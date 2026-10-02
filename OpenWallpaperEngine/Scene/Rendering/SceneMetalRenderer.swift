@@ -1919,6 +1919,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // A video frame's pixel buffer returns to the decoder's pool once released; hold each one
         // this frame sampled until the GPU is done reading it.
         for entry in layers { if case let .video(stream) = entry.layer.source { stream.holdCurrentFrame(until: commandBuffer) } }
+        // "Pause when VRAM is exhausted" (`VideoMemoryWatch`): a frame that ran out of memory.
+        commandBuffer.addCompletedHandler { buffer in
+            guard buffer.status == .error, VideoMemoryWatch.isOutOfMemory(buffer.error) else { return }
+            NotificationCenter.default.post(name: .videoMemoryCommandBufferFailed, object: nil)
+        }
         commandBuffer.commit()
         lastCommandBuffer = commandBuffer
     }
