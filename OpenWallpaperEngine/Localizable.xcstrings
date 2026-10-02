@@ -112848,6 +112848,194 @@
           }
         }
       }
+    },
+    "Below Normal lets other apps go first: Open Wallpaper Engine runs at a lower CPU priority, and wallpapers may drop frames while the Mac is busy." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تتيح «أقل من العادي» للتطبيقات الأخرى أن تتقدم: يعمل Open Wallpaper Engine بأولوية أقل للمعالج، وقد تفقد خلفيات الشاشة بعض الإطارات عندما يكون الـ Mac مشغولًا."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Niedriger als normal“ lässt anderen Apps den Vortritt: Open Wallpaper Engine läuft mit niedrigerer CPU-Priorität, und Hintergrundbilder können Bilder auslassen, während der Mac ausgelastet ist."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Inferior a normal» deja pasar primero a otras apps: Open Wallpaper Engine se ejecuta con menor prioridad de CPU y los fondos de pantalla pueden perder fotogramas mientras el Mac está ocupado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "« Inférieure à la normale » laisse passer les autres apps en premier : Open Wallpaper Engine s’exécute avec une priorité processeur plus basse, et les fonds d’écran peuvent perdre des images quand le Mac est occupé."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“सामान्य से कम” अन्य ऐप्स को पहले चलने देता है: Open Wallpaper Engine कम CPU प्राथमिकता पर चलता है, और Mac व्यस्त होने पर वॉलपेपर कुछ फ़्रेम छोड़ सकते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Inferiore al normale» lascia passare prima le altre app: Open Wallpaper Engine viene eseguito con una priorità CPU più bassa e gli sfondi possono perdere fotogrammi mentre il Mac è occupato."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「通常以下」では他のアプリが優先されます。Open Wallpaper Engine は低い CPU 優先度で動作し、Mac の負荷が高いときは壁紙のフレームが落ちることがあります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘보통 이하’를 선택하면 다른 앱이 먼저 실행됩니다. Open Wallpaper Engine이 낮은 CPU 우선순위로 실행되며, Mac이 바쁠 때 배경화면의 프레임이 떨어질 수 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Poniżej normalnego” przepuszcza inne aplikacje: Open Wallpaper Engine działa z niższym priorytetem CPU, a tapety mogą gubić klatki, gdy Mac jest zajęty."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Abaixo do Normal” deixa outros apps passarem na frente: o Open Wallpaper Engine roda com prioridade de CPU menor, e os papéis de parede podem perder quadros enquanto o Mac está ocupado."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Ниже среднего» пропускает вперёд другие приложения: Open Wallpaper Engine работает с более низким приоритетом ЦП, и обои могут пропускать кадры, пока Mac занят."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Normalin Altında”, diğer uygulamalara öncelik verir: Open Wallpaper Engine daha düşük CPU önceliğiyle çalışır ve Mac meşgulken duvar kâğıtlarında kare atlanabilir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Нижче звичайного» пропускає вперед інші програми: Open Wallpaper Engine працює з нижчим пріоритетом ЦП, і шпалери можуть пропускати кадри, поки Mac зайнятий."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“低于正常”会让其他 App 优先：Open Wallpaper Engine 以较低的 CPU 优先级运行，Mac 繁忙时墙纸可能会掉帧。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「低於正常」會讓其他 App 優先：Open Wallpaper Engine 以較低的 CPU 優先順序執行，Mac 忙碌時背景圖片可能會掉格。"
+          }
+        }
+      }
+    },
+    "Opens Open Wallpaper Engine again if it crashes, at most 3 times in 5 minutes. The wallpaper that was showing stays off until you retry it." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يفتح Open Wallpaper Engine مرة أخرى إذا تعطل، بحد أقصى 3 مرات خلال 5 دقائق. تبقى خلفية الشاشة التي كانت معروضة متوقفة حتى تعيد المحاولة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet Open Wallpaper Engine erneut, wenn es abstürzt, höchstens 3-mal in 5 Minuten. Das angezeigte Hintergrundbild bleibt aus, bis Sie es erneut versuchen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vuelve a abrir Open Wallpaper Engine si falla, como máximo 3 veces en 5 minutos. El fondo de pantalla que se mostraba sigue desactivado hasta que lo vuelvas a intentar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rouvre Open Wallpaper Engine s’il plante, au plus 3 fois en 5 minutes. Le fond d’écran qui était affiché reste arrêté jusqu’à ce que vous réessayiez."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "क्रैश होने पर Open Wallpaper Engine को फिर से खोलता है, 5 मिनट में अधिकतम 3 बार। जो वॉलपेपर दिख रहा था, वह तब तक बंद रहता है जब तक आप फिर से कोशिश नहीं करते।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riapre Open Wallpaper Engine se si arresta in modo anomalo, al massimo 3 volte in 5 minuti. Lo sfondo che era visualizzato resta disattivato finché non riprovi."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine がクラッシュしたときに再度開きます（5 分間に最大 3 回）。表示していた壁紙は、再試行するまでオフのままです。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine이 충돌하면 다시 엽니다. 5분 동안 최대 3회까지입니다. 표시 중이던 배경화면은 다시 시도할 때까지 꺼진 상태로 유지됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otwiera ponownie Open Wallpaper Engine po awarii, najwyżej 3 razy w ciągu 5 minut. Wyświetlana tapeta pozostaje wyłączona, dopóki nie spróbujesz ponownie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre o Open Wallpaper Engine de novo se ele falhar, no máximo 3 vezes em 5 minutos. O papel de parede que estava sendo exibido fica desligado até você tentar de novo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Снова открывает Open Wallpaper Engine после сбоя, не более 3 раз за 5 минут. Обои, которые были на экране, остаются выключенными, пока вы не повторите попытку."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine çökerse onu yeniden açar, 5 dakikada en fazla 3 kez. Gösterilen duvar kâğıdı, siz yeniden deneyene kadar kapalı kalır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знову відкриває Open Wallpaper Engine після збою, не більше 3 разів за 5 хвилин. Шпалери, які були на екрані, залишаються вимкненими, доки ви не повторите спробу."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 崩溃时会重新打开，5 分钟内最多 3 次。之前显示的墙纸会保持关闭，直到你重试。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 當機時會重新開啟，5 分鐘內最多 3 次。先前顯示的背景圖片會維持關閉，直到你重試。"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

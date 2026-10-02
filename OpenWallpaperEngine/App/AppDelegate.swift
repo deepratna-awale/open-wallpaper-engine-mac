@@ -102,6 +102,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// The settings window's tab and the setting a link or search result opens.
     let settingsNavigation = SettingsNavigation()
     lazy var safeRestart = SafeRestart()
+    lazy var crashWatcher = CrashWatcher()
+    private var processPriorityCancellable: AnyCancellable?
+    private var crashWatcherCancellable: AnyCancellable?
     /// Hides the Dock icon while no window is open (`DockPresence`).
     let dockPresence = DockPresence()
     /// Sparkle, off in builds without an update signing key (`Core/Updates`).
@@ -198,6 +201,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         // Before the wallpaper windows exist, so a wallpaper behind an unclean exit never loads.
         safeRestart.attach(to: wallpaperViewModel)
+
+        // Settings › Process Priority: at launch, before any render thread starts, and on change.
+        processPriorityCancellable = globalSettingsViewModel.$settings.map(\.processPiority).removeDuplicates()
+            .sink { ProcessPriority.apply($0) }
+        // Settings › Restart after crashing: the watcher that reopens the app after a crash.
+        crashWatcherCancellable = globalSettingsViewModel.$settings.map(\.restartAfterCrashing).removeDuplicates()
+            .sink { [weak self] enabled in self?.crashWatcher.update(enabled: enabled) }
 
         // 创建设置视窗
         setSettingsWindow()
@@ -337,6 +347,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     
     func applicationWillTerminate(_ notification: Notification) {
         safeRestart.applicationWillTerminate()
+        crashWatcher.applicationWillTerminate()
         updater.stopShaderPrewarm()
         // The lock-screen pictures go back to each display's own picture, the rest to the one saved
         // at launch.

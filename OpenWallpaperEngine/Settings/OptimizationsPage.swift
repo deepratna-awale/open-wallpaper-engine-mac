@@ -118,10 +118,12 @@ struct OptimizationsPage: SettingsPage {
                     Text("Below Normal").tag(GSProcessPiority.belowNormal)
                 }
                 .changedFromDefault(viewModel.isChanged(\.processPiority))
+                .help("Below Normal lets other apps go first: Open Wallpaper Engine runs at a lower CPU priority, and wallpapers may drop frames while the Mac is busy.")
                 Toggle("Pause when VRAM is exhausted", isOn: $viewModel.settings.pauseOnVRAMExhausted)
                     .changedFromDefault(viewModel.isChanged(\.pauseOnVRAMExhausted))
                 Toggle("Restart after crashing", isOn: $viewModel.settings.restartAfterCrashing)
                     .changedFromDefault(viewModel.isChanged(\.restartAfterCrashing))
+                    .help("Opens Open Wallpaper Engine again if it crashes, at most 3 times in 5 minutes. The wallpaper that was showing stays off until you retry it.")
             } header: {
                 Label("Rendering", systemImage: "wrench.and.screwdriver.fill")
             }
