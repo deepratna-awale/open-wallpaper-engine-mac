@@ -275,6 +275,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
               let source = layers.first(where: { $0.layer.id == id })?.frames.first?.texture else { return nil }
         return (source, image)
     }
+    /// Whether the posed mesh has laid a puppet layer's effect output out (tests, diagnostics). A
+    /// rig that rearranges an atlas runs its effects on its texture and draws no image of its own.
+    func puppetLaidOutEffects(ofLayer id: String) -> Bool { puppets?.hasLaidOut(id, key: "_effects") == true }
     /// A puppet layer's pose as its image was last drawn (tests, diagnostics).
     func puppetPose(ofLayer id: String) -> ScenePuppetPose? { puppetAnimators[id]?.pose }
     /// The pose `puppetImage(ofLayer:)` holds: the bind pose for a layer with effects, which the
@@ -3117,9 +3120,17 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let canvas = compositeSource ? nil : puppets.canvas(puppet, layerID: entry.layer.id, pose: animator.pose)
         puppetCanvases[entry.layer.id] = canvas
         // With effects the mesh draws its bind pose, the image as its texture lays it out: that is
-        // where the effects' masks are painted (an atlas rig's parts included), and the posed mesh
-        // then lays their output out (`posedEffectOutput`), as WE draws the layer's geometry last.
+        // where the effects' masks are painted, and the posed mesh then lays their output out
+        // (`posedEffectOutput`), as WE draws the layer's geometry last.
         let pose = entry.layer.weEffects.isEmpty ? animator.pose : ScenePuppetPose.bind(boneCount: animator.pose.bones.count)
+        // A rig that rearranges an atlas: the editor paints the effects' masks over its texture as
+        // stored, where its parts don't overlap, so the effects read the texture itself and the
+        // posed mesh lays their output out by its texture coordinates.
+        if !entry.layer.weEffects.isEmpty, !puppet.bindPoseIsTextureLayout {
+            puppets.prepareLayer(puppet, layerID: entry.layer.id)
+            puppetAlbedos[entry.layer.id] = nil
+            return
+        }
 
         puppetAlbedos[entry.layer.id] = puppets.albedo(puppet, ScenePuppetRenderer.Draw(
             layerID: entry.layer.id, source: source, pose: pose, frame: frame,

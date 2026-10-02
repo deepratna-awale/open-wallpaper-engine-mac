@@ -47,6 +47,9 @@ final class ScenePuppetPlan {
     /// The first mesh's blend shapes (`MDMP`) and flags: its "morph_<n>" texture and uniforms.
     let morphs: MDLMorphTargets?
     let meshFlags: UInt32
+    /// Whether every vertex sits where its texture coordinate puts it in the image
+    /// (`isTextureLayout`): then the bind pose is the texture as stored.
+    let bindPoseIsTextureLayout: Bool
 
     var boneCount: Int { combos.boneCount }
 
@@ -69,6 +72,28 @@ final class ScenePuppetPlan {
         self.attachments = attachments
         self.morphs = morphs
         meshFlags = mesh.flags
+        bindPoseIsTextureLayout = Self.isTextureLayout(mesh.vertexData, format: mesh.format, imageSize: imageSize)
+    }
+
+    /// Whether every vertex of `vertexData` (texture coordinates unscaled) is at `(uv − ½)·size`,
+    /// v flipped, within a pixel: the rig's bind pose is its texture's layout. A rig that
+    /// rearranges an atlas assembles its parts elsewhere. True without positions or coordinates.
+    static func isTextureLayout(_ vertexData: Data, format: MDLVertexFormat, imageSize: SIMD2<Float>) -> Bool {
+        guard let position = MDLVertexAttribute.named("a_Position").flatMap(format.offset(of:)),
+              let texCoord = MDLVertexAttribute.all[7...9].lazy.compactMap(format.offset(of:)).first else { return true }
+        let stride = format.stride
+        let count = stride > 0 ? vertexData.count / stride : 0
+        return vertexData.withUnsafeBytes { raw in
+            func float(_ at: Int) -> Float { Float(bitPattern: UInt32(littleEndian: raw.loadUnaligned(fromByteOffset: at, as: UInt32.self))) }
+            for vertex in 0..<count {
+                let base = vertex * stride
+                let point = SIMD2(float(base + position), float(base + position + 4))
+                let uv = SIMD2(float(base + texCoord), float(base + texCoord + 4))
+                let expected = SIMD2((uv.x - 0.5) * imageSize.x, (0.5 - uv.y) * imageSize.y)
+                if simd_reduce_max(simd_abs(point - expected)) > 1 { return false }
+            }
+            return true
+        }
     }
 
     /// The mesh posed by `pose` (skinned as the vertex stage skins it; blend shapes left out), its
@@ -435,6 +460,8 @@ final class ScenePuppetRenderer {
 
     /// Whether the layer's mesh has been drawn into its image (the pipeline was ready).
     func hasDrawn(_ layerID: String) -> Bool { layers[layerID]?.drawnPose != nil }
+    /// Whether `warp` has laid `key`'s texture out for the layer (tests, diagnostics).
+    func hasLaidOut(_ layerID: String, key: String) -> Bool { warps[layerID]?[key]?.drawnPose != nil }
 
     /// Which drawing the layer's image holds: a new value each time `albedo` redraws it. The image
     /// is redrawn into the same texture, so caches keyed by the texture (a layer's kept effect
@@ -481,6 +508,11 @@ final class ScenePuppetRenderer {
         state.canvas = canvas
         return canvas
     }
+
+    /// Makes the layer's state without drawing its image, for a layer whose effects read its
+    /// texture as stored (`warp` lays their output out). False when it can't be made.
+    @discardableResult
+    func prepareLayer(_ plan: ScenePuppetPlan, layerID: String) -> Bool { layerState(plan, layerID: layerID) != nil }
 
     private func layerState(_ plan: ScenePuppetPlan, layerID: String) -> LayerState? {
         if let existing = layers[layerID], existing.plan === plan { return existing }
