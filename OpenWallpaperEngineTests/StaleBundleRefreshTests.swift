@@ -86,10 +86,37 @@ final class StaleBundleRefreshTests: XCTestCase {
                        WallpaperPackageConverter.converterVersion)
     }
 
-    func testMissingFieldCountsAsAffected() throws {
+    private func reference(_ path: String, in directory: URL) throws {
+        let materials = directory.appending(path: "materials")
+        try fm.createDirectory(at: materials, withIntermediateDirectories: true)
+        try Data(#"{"passes":[{"textures":["\#(path)"]}]}"#.utf8).write(to: materials.appending(path: "m.json"))
+    }
+
+    func testResolvedReferencesAreStamped() throws {
         let directory = try bundle("1000000005", version: old, archived: false, dependencyEntries: nil)
-        XCTAssertEqual(StaleBundleScanner.scan(storage: root).map(\.directory.lastPathComponent), ["1000000005"])
+        try reference("workshop/2000000002/a", in: directory)
+        let linked = root.appending(path: "dep/a.tex")
+        try fm.createDirectory(at: linked.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data().write(to: linked)
+        try fm.createDirectory(at: directory.appending(path: "materials/workshop"), withIntermediateDirectories: true)
+        try fm.createSymbolicLink(at: directory.appending(path: "materials/workshop/2000000002"),
+                                  withDestinationURL: linked.deletingLastPathComponent())
+        XCTAssertEqual(StaleBundleScanner.scan(storage: root), [])
+        XCTAssertEqual(WallpaperPackageConverter.manifest(in: directory)?.converterVersion,
+                       WallpaperPackageConverter.converterVersion)
+    }
+
+    func testUnresolvedReferenceIsQueued() throws {
+        let directory = try bundle("1000000006", version: old, archived: false, dependencyEntries: nil)
+        try reference(#"workshop\\2000000002\\missing"#, in: directory)
+        XCTAssertEqual(StaleBundleScanner.scan(storage: root).map(\.directory.lastPathComponent), ["1000000006"])
         XCTAssertEqual(WallpaperPackageConverter.manifest(in: directory)?.converterVersion, old)
+    }
+
+    func testEmptyRecordedFieldSkipsTheScan() throws {
+        let directory = try bundle("1000000007", version: old, archived: false, dependencyEntries: [])
+        try reference("workshop/2000000002/missing", in: directory)
+        XCTAssertEqual(StaleBundleScanner.scan(storage: root), [])
     }
 
     func testLocalImportHasNoWorkshopId() throws {

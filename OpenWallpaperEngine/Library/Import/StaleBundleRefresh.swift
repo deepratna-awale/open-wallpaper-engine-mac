@@ -31,7 +31,7 @@ enum StaleBundleScanner {
         guard !fileManager.fileExists(atPath: live.path(percentEncoded: false)),
               !fileManager.fileExists(atPath: archived.path(percentEncoded: false)) else { return nil }
         // Nothing a newer version changes: the bundle is already what it would produce.
-        guard WallpaperPackageConverter.isAffectedByNewerVersions(manifest) else {
+        guard WallpaperPackageConverter.isAffectedByNewerVersions(manifest, directory: directory) else {
             WallpaperPackageConverter.stampCurrent(in: directory)
             return nil
         }

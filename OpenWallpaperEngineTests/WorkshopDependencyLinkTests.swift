@@ -116,7 +116,7 @@ final class WorkshopDependencyLinkTests: XCTestCase {
                        ["effects/workshop/3000000003/e/effect.json", "materials/a.json",
                         "materials/workshop/2000000002/b.json", "scene.json"])
         XCTAssertEqual(manifest.warnings, [])
-        XCTAssertNil(manifest.dependencyEntries)
+        XCTAssertEqual(manifest.dependencyEntries, [])
         XCTAssertTrue(fm.fileExists(atPath: wallpaper.appending(path: "materials/workshop/2000000002/b.json").path))
         XCTAssertTrue(fm.fileExists(atPath: wallpaper.appending(path: "effects/workshop/3000000003/e/effect.json").path))
         XCTAssertEqual(WorkshopDependencyResolver.referencedWorkshopIds(inItemAt: wallpaper), ["2000000002", "3000000003"])
