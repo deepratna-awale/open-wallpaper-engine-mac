@@ -264,7 +264,6 @@ struct WallpaperPreview: SubviewOfContentView {
                             .help("Scene Inspector", shortcut: .sceneInspector)
                         }
                     }
-                    screenSaverStatusRow
                     // MARK: Properties
                     CollapsibleSection(title: "Properties") {
                         VStack(alignment: .leading, spacing: 16) {
@@ -338,6 +337,7 @@ struct WallpaperPreview: SubviewOfContentView {
                             default:
                                 EmptyView()
                             }
+                            screenSaverStatusRow
                         }
                     }
                     SceneUserPropertiesView(wallpaper: wallpaperViewModel.displayedWallpaper,
