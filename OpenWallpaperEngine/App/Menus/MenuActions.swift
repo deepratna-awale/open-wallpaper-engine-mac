@@ -13,12 +13,14 @@ extension AppDelegate {
         if wallpaperViewModel.playVolume == 0 { unmute() } else { mute() }
     }
 
-    @objc func nextPlaylistWallpaper() {
-        wallpaperViewModel.nextPlaylistWallpaper()
+    /// The next playlist wallpaper, or a random one from the Installed list as shown.
+    @objc func nextWallpaper() {
+        wallpaperViewModel.stepToNextWallpaper(shown: contentViewModel.autoRefreshWallpapers)
     }
 
-    @objc func previousPlaylistWallpaper() {
-        wallpaperViewModel.previousPlaylistWallpaper()
+    /// The previous playlist wallpaper, or the display's previous one.
+    @objc func previousWallpaper() {
+        wallpaperViewModel.stepToPreviousWallpaper()
     }
 
     @objc func showSceneInspectorForDisplayedWallpaper() {
