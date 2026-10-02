@@ -51,6 +51,9 @@ final class ScreenSaverPlugin: ObservableObject {
     /// Bumped on every change: a finished render for an older one doesn't touch the manifest.
     private var generation = 0
     private var jobs: [PreparationPool.Job] = []
+    /// The shown video wallpaper's manifest entry, rewritten when its playback speed changes.
+    private var currentVideo: (fileName: String, size: SIMD2<Int>, rate: Float)?
+    private var rateSubscription: AnyCancellable?
     private static let fileQueue = DispatchQueue(label: "OWE.ScreenSaverPlugin", qos: .utility)
 
     init(pool: PreparationPool = .shared, store: ScreenSaverVideoStore = .current,
@@ -122,6 +125,7 @@ final class ScreenSaverPlugin: ObservableObject {
         jobs.forEach { $0.cancel() }
         jobs = []
         statuses = [:]
+        currentVideo = nil
         let wasEnabled = isEnabled
         isEnabled = enabled
         let store = store, installer = installer
@@ -147,6 +151,7 @@ final class ScreenSaverPlugin: ObservableObject {
         if ScreenSaverVideoSource.isEligible(wallpaper) {
             let viewModel = AppDelegate.shared.wallpaperViewModel
             let speed = viewModel.playRate > 0 ? viewModel.playRate : viewModel.lastPlayRate
+            observeSpeed(of: viewModel)
             scheduleVideo(wallpaper, rate: speed, generation: generation)
             return
         }
@@ -189,6 +194,15 @@ final class ScreenSaverPlugin: ObservableObject {
         Self.fileQueue.async { [weak self] in
             guard let key = Self.statusKey(for: wallpaper, properties: [:]) else { return }
             let source = wallpaper.mediaURL
+            // The codec first (cached per file version): an unsupported one says so at once.
+            guard ScreenSaverVideoSource.hasPlayableTrack(source) else {
+                Task { @MainActor in
+                    guard let self, generation == self.generation else { return }
+                    self.statuses = [key: .notEligible]
+                    self.publishVideoManifest(ScreenSaverManifest())
+                }
+                return
+            }
             let fileName = ScreenSaverVideoSource.fileName(key: key, source: source)
             let destination = store.url(fileName: fileName)
             let outcome: ScreenSaverVideoSource.Outcome = store.exists(fileName: fileName)
@@ -206,19 +220,45 @@ final class ScreenSaverPlugin: ObservableObject {
                     manifest = ScreenSaverManifest()
                 case (.ready, let size?):
                     self.statuses = [key: .available]
+                    self.currentVideo = (fileName, size, rate)
                     manifest = Self.videoManifest(fileName: fileName, size: size, rate: rate)
                 default:
                     self.statuses = [:]
                     manifest = ScreenSaverManifest()
                 }
-                Self.fileQueue.async {
-                    do { try store.writeManifest(manifest) } catch {
-                        OWELog.error(.app, "Screen saver: can't write the manifest: \(error)")
-                    }
-                    store.retain(Set(manifest.videos.map(\.file)))
-                }
+                self.publishVideoManifest(manifest)
             }
         }
+    }
+
+    private func publishVideoManifest(_ manifest: ScreenSaverManifest) {
+        let store = store
+        Self.fileQueue.async {
+            do { try store.writeManifest(manifest) } catch {
+                OWELog.error(.app, "Screen saver: can't write the manifest: \(error)")
+            }
+            store.retain(Set(manifest.videos.map(\.file)))
+        }
+    }
+
+    /// Follows the playback speed: a settled change (pause excluded) rewrites the shown video's
+    /// manifest entry. Nothing is rendered or linked again.
+    private func observeSpeed(of viewModel: WallpaperViewModel) {
+        guard rateSubscription == nil else { return }
+        rateSubscription = viewModel.$playRate
+            .filter { $0 > 0 }
+            .debounce(for: .milliseconds(500), scheduler: DispatchQueue.main)
+            .removeDuplicates()
+            .sink { [weak self] rate in
+                MainActor.assumeIsolated { self?.speedDidChange(rate) }
+            }
+    }
+
+    private func speedDidChange(_ rate: Float) {
+        guard isEnabled, var video = currentVideo, abs(video.rate - rate) > 0.001 else { return }
+        video.rate = rate
+        currentVideo = video
+        publishVideoManifest(Self.videoManifest(fileName: video.fileName, size: video.size, rate: rate))
     }
 
     /// The manifest for a video wallpaper: one entry at its track's size, with the playback speed

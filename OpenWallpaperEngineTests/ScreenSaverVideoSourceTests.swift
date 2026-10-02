@@ -109,6 +109,19 @@ final class ScreenSaverVideoSourceTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: destination.path(percentEncoded: false)))
     }
 
+    func testCodecCheckUpFront() throws {
+        XCTAssertTrue(ScreenSaverVideoSource.hasPlayableTrack(try mp4(entryType: "hev1", name: "a.mp4")))
+        let vp9 = try mp4(entryType: "vp09", name: "b.mp4")
+        XCTAssertFalse(ScreenSaverVideoSource.hasPlayableTrack(vp9))
+        XCTAssertFalse(ScreenSaverVideoSource.hasPlayableTrack(vp9), "cached")
+        // A new version of the same file is read again.
+        _ = try mp4(entryType: "avc1", name: "b.mp4")
+        try FileManager.default.setAttributes([.modificationDate: Date(timeIntervalSinceNow: 60)],
+                                              ofItemAtPath: vp9.path(percentEncoded: false))
+        XCTAssertTrue(ScreenSaverVideoSource.hasPlayableTrack(vp9))
+        XCTAssertFalse(ScreenSaverVideoSource.hasPlayableTrack(root.appending(path: "missing.mp4")))
+    }
+
     func testUnreadableFileIsUnsupported() throws {
         let source = root.appending(path: "broken.mp4")
         try Data("not a movie".utf8).write(to: source)

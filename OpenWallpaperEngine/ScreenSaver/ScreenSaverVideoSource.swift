@@ -1,5 +1,6 @@
 import AVFoundation
 import Foundation
+import os
 
 /// A video wallpaper's screen saver: its own video file, played by the saver as it is, with no
 /// render. The file goes in the saver's folder (`ScreenSaverVideoStore`) as a hard link to the
@@ -31,6 +32,22 @@ enum ScreenSaverVideoSource {
     /// Whether the file needs the in-band → out-of-band repair before AVFoundation plays it.
     static func needsRepair(sampleEntryTypes: [String]) -> Bool {
         sampleEntryTypes.contains { VideoSampleEntryRepair.repairedTypes[$0] != nil }
+    }
+
+    private static let codecCache = OSAllocatedUnfairLock(initialState: [String: Bool]())
+
+    /// Whether `source` has an H.264/HEVC track: reads `moov` only, once per file version (path,
+    /// size, modification date). Never call it on the main thread.
+    static func hasPlayableTrack(_ source: URL) -> Bool {
+        let path = source.standardizedFileURL.path(percentEncoded: false)
+        guard let attributes = try? FileManager.default.attributesOfItem(atPath: path) else { return false }
+        let size = (attributes[.size] as? NSNumber)?.int64Value ?? 0
+        let modified = (attributes[.modificationDate] as? Date)?.timeIntervalSince1970 ?? 0
+        let key = "\(path)|\(size)|\(modified)"
+        if let cached = codecCache.withLock({ $0[key] }) { return cached }
+        let playable = (try? VideoSampleEntryRepair.sampleEntryTypes(source)).map { isPlayable(sampleEntryTypes: $0) } ?? false
+        codecCache.withLock { $0[key] = playable }
+        return playable
     }
 
     /// The store's name for `source` of the wallpaper keyed `key`: the wallpaper and its content,
