@@ -268,6 +268,27 @@ final class ModelRenderTests: XCTestCase {
             .contains(SceneModelCulling.Sphere(.unbounded, world: matrix_identity_float4x4)), "a model without bounds")
     }
 
+    /// A skinned or morphed mesh draws where its pose puts it, so the model's rest-pose box
+    /// can't cull it (or its shadow): with its box wholly off view it still draws; a rigid one
+    /// with the same box culls.
+    func testDeformingModelIsNotCulledByItsRestBox() throws {
+        let cube = try plan()
+        let source = cube.meshes[0]
+        func model(deforms: Bool) -> SceneModelPlan {
+            SceneModelPlan(path: "posed.mdl", meshes: [SceneModelPlan.Mesh(
+                index: 0, material: source.material, format: source.format, vertexData: source.vertexData,
+                indexData: source.indexData, usesUInt32Indices: false, indexCount: source.indexCount,
+                deforms: deforms)], bounds: cube.bounds, skeleton: nil)
+        }
+        let frustum = SceneModelCulling.Frustum(Self.camera(eye: SIMD3(0, 0, 5)).viewProjection)
+        var world = matrix_identity_float4x4
+        world.columns.3 = SIMD4(50, 0, 0, 1)
+        XCTAssertEqual(model(deforms: false).cullBounds, cube.bounds)
+        XCTAssertFalse(frustum.contains(SceneModelCulling.Sphere(model(deforms: false).cullBounds, world: world)))
+        XCTAssertTrue(frustum.contains(SceneModelCulling.Sphere(model(deforms: true).cullBounds, world: world)),
+                      "a posed model isn't culled at its rest box")
+    }
+
     /// MT5: a triangle list indexing past its vertices (a script's model data may) reads zeros
     /// there, as D3D11 does: those indices name one zero vertex after the vertices, so the buffer
     /// never grows with the index.
