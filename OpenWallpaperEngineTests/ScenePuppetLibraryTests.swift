@@ -116,11 +116,18 @@ final class ScenePuppetLibraryTests: XCTestCase {
             RunLoop.main.run(until: Date().addingTimeInterval(0.005))
             return try renderer.sharedFrame.map { try TextureUploadTests.read($0, device: device) }
         }
+        // The content lands in the background and the scene's clock starts then: frames drawn before
+        // it don't count, so the posed time (and her blink's phase with it) is the same every run.
+        let landing = Date().addingTimeInterval(60)
+        while !renderer.hasContent, Date() < landing { _ = try frame() }
+        XCTAssertTrue(renderer.hasContent, "the content never landed")
         // Posed: her head leaves the texture's corner for her neck as her layers play.
         for _ in 0..<90 {
             now += 1.0 / 30
             _ = try frame()
         }
+        // The first frame after the content landed starts the clock; each later one is a step.
+        XCTAssertEqual(renderer.sceneTime, 89.0 / 30, accuracy: 1e-6, "the clock ran only from the content's landing")
         // Settled, the clock held: every pipeline compiled, two frames alike.
         renderer.holdsClock = true
         var before: [UInt8]?
