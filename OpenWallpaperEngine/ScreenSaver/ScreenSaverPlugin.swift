@@ -3,7 +3,9 @@ import Combine
 
 /// Settings › Plugins › Screen Saver. While on, the current scene wallpaper's loop video is
 /// rendered for each display size (`ScreenSaverLoopRenderer`, in the app's helper run) and the
-/// bundled saver plays it; off stops rendering and removes the saver and the videos.
+/// bundled saver plays it; a video wallpaper's own file is linked (or repaired) for the saver
+/// instead, with no render (`ScreenSaverVideoSource`). Off stops rendering and removes the saver
+/// and the videos.
 ///
 /// - Renders run as `.library` jobs on the `PreparationPool`, so they wait while the power policy
 ///   says no (battery, heat), one at a time, each in a helper process at background priority.
@@ -17,7 +19,7 @@ final class ScreenSaverPlugin: ObservableObject {
     enum Status: Equatable {
         /// Every display's video for the current content and properties is in the store.
         case available
-        /// A render job for it is queued or running.
+        /// A render job for it is queued or running (for a video wallpaper: its repair).
         case rendering
         /// Not a wallpaper loops are made from (`isEligible`).
         case notEligible
@@ -61,9 +63,15 @@ final class ScreenSaverPlugin: ObservableObject {
         if pool === PreparationPool.shared { _ = LibraryPreparationScheduler.shared }
     }
 
-    /// Whether loops are made from `wallpaper`: valid scene wallpapers only. `targets(for:)` and
-    /// the Details pane both ask this.
+    /// Whether the saver plays `wallpaper`: valid scene wallpapers (a rendered loop), and video
+    /// wallpapers in a container AVFoundation plays (their own file; the codec is checked when
+    /// the file is prepared, `ScreenSaverVideoSource`). WebM isn't: the desktop plays it through
+    /// WebKit. `targets(for:)` and the Details pane both ask this.
     nonisolated static func isEligible(_ wallpaper: WEWallpaper) -> Bool {
+        isScene(wallpaper) || ScreenSaverVideoSource.isEligible(wallpaper)
+    }
+
+    nonisolated static func isScene(_ wallpaper: WEWallpaper) -> Bool {
         wallpaper.project != .invalid && wallpaper.project.type.caseInsensitiveCompare("scene") == .orderedSame
     }
 
@@ -72,7 +80,9 @@ final class ScreenSaverPlugin: ObservableObject {
         guard isEligible(wallpaper),
               let contentKey = SceneLoadingSnapshotStore.contentKey(for: wallpaper.wallpaperDirectory) else { return nil }
         return StatusKey(wallpaperKey: SceneLoadingSnapshotStore.wallpaperKey(for: wallpaper.wallpaperDirectory),
-                         contentKey: contentKey, propertyHash: ScreenSaverVideoStore.propertyHash(properties))
+                         contentKey: contentKey,
+                         // A video plays as it is: its user properties don't change the file.
+                         propertyHash: ScreenSaverVideoStore.propertyHash(isScene(wallpaper) ? properties : [:]))
     }
 
     /// What to show for `wallpaper`: nil while the plugin is off, or for an eligible wallpaper
@@ -92,7 +102,7 @@ final class ScreenSaverPlugin: ObservableObject {
     /// The video names `wallpaper` needs on `screens`; empty for anything but a scene.
     nonisolated static func targets(for wallpaper: WEWallpaper, screens: [(pixels: SIMD2<Int>, points: SIMD2<Int>)],
                         properties: [String: String], resolution: GSRenderResolution = .display) -> [Target] {
-        guard let key = statusKey(for: wallpaper, properties: properties) else { return [] }
+        guard isScene(wallpaper), let key = statusKey(for: wallpaper, properties: properties) else { return [] }
         let wallpaperKey = key.wallpaperKey, contentKey = key.contentKey, hash = key.propertyHash
         // One video at the largest display's size, which every display plays scaled to fill: one
         // render and one file. Its sharpness follows Render Resolution like the live wallpaper:
@@ -134,6 +144,12 @@ final class ScreenSaverPlugin: ObservableObject {
         let generation = generation
         let directory = wallpaper.wallpaperDirectory
         let resolution = AppDelegate.shared.globalSettingsViewModel.settings.renderResolution
+        if ScreenSaverVideoSource.isEligible(wallpaper) {
+            let viewModel = AppDelegate.shared.wallpaperViewModel
+            let speed = viewModel.playRate > 0 ? viewModel.playRate : viewModel.lastPlayRate
+            scheduleVideo(wallpaper, rate: speed, generation: generation)
+            return
+        }
         Self.fileQueue.async { [weak self] in
             let targets = Self.targets(for: wallpaper, screens: screens, properties: properties, resolution: resolution)
             let key = Self.statusKey(for: wallpaper, properties: properties)
@@ -164,6 +180,57 @@ final class ScreenSaverPlugin: ObservableObject {
             Task { @MainActor in self?.finish(key, available: finished, generation: generation) }
         }
         jobs.append(job)
+    }
+
+    /// A video wallpaper: links (or repairs) its file into the store and lists it in the manifest
+    /// at its video track's size, played at `rate`.
+    private func scheduleVideo(_ wallpaper: WEWallpaper, rate: Float, generation: Int) {
+        let store = store
+        Self.fileQueue.async { [weak self] in
+            guard let key = Self.statusKey(for: wallpaper, properties: [:]) else { return }
+            let source = wallpaper.mediaURL
+            let fileName = ScreenSaverVideoSource.fileName(key: key, source: source)
+            let destination = store.url(fileName: fileName)
+            let outcome: ScreenSaverVideoSource.Outcome = store.exists(fileName: fileName)
+                ? .ready(repaired: false)
+                : ScreenSaverVideoSource.prepare(source, at: destination) {
+                    Task { @MainActor in self?.setStatus(.rendering, for: key, generation: generation) }
+                }
+            let size: SIMD2<Int>? = if case .ready = outcome { ScreenSaverVideoSource.displaySize(of: destination) } else { nil }
+            Task { @MainActor in
+                guard let self, generation == self.generation else { return }
+                let manifest: ScreenSaverManifest
+                switch (outcome, size) {
+                case (.unsupported, _):
+                    self.statuses = [key: .notEligible]
+                    manifest = ScreenSaverManifest()
+                case (.ready, let size?):
+                    self.statuses = [key: .available]
+                    manifest = Self.videoManifest(fileName: fileName, size: size, rate: rate)
+                default:
+                    self.statuses = [:]
+                    manifest = ScreenSaverManifest()
+                }
+                Self.fileQueue.async {
+                    do { try store.writeManifest(manifest) } catch {
+                        OWELog.error(.app, "Screen saver: can't write the manifest: \(error)")
+                    }
+                    store.retain(Set(manifest.videos.map(\.file)))
+                }
+            }
+        }
+    }
+
+    /// The manifest for a video wallpaper: one entry at its track's size, with the playback speed
+    /// when it isn't 1 (the saver is always muted and always loops).
+    nonisolated static func videoManifest(fileName: String, size: SIMD2<Int>, rate: Float) -> ScreenSaverManifest {
+        let rate: Float? = rate > 0 && abs(rate - 1) > 0.001 ? rate : nil
+        return ScreenSaverManifest(videos: [ScreenSaverManifest.Video(file: fileName, width: size.x, height: size.y, rate: rate)])
+    }
+
+    private func setStatus(_ status: Status, for key: StatusKey, generation: Int) {
+        guard generation == self.generation else { return }
+        statuses = [key: status]
     }
 
     private func finish(_ key: StatusKey?, available: Bool, generation: Int) {
