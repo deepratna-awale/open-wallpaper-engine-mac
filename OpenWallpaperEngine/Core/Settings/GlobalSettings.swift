@@ -273,6 +273,8 @@ struct GlobalSettings: Codable, Equatable {
     var otherApplicationPlayingAudio = GSPlayback.keepRunning
     var displayAsleep = GSPlayback.keepRunning
     var laptopOnBattery = GSPlayback.keepRunning
+    /// Settings › Performance › Application Rules (`ApplicationRule`), in the order listed.
+    var applicationRules: [ApplicationRule] = []
     
     // MARK: Quality
     /// WE's default is none (`config.json` `"msaa": "none"`).
@@ -375,7 +377,7 @@ struct GlobalSettings: Codable, Equatable {
     /// are left behind.
     enum CodingKeys: String, CodingKey {
         case otherApplicationFocused, otherApplicationMaximized, otherApplicationFullscreen, otherApplicationPlayingAudio
-        case displayAsleep
+        case displayAsleep, applicationRules
         case laptopOnBattery, textureResolution, shadows, volumetrics, fps, fpsSetByUser, particleBudget, optimiseTextures
         case webStandardResolution, reducedResolutionParticles
         case qualityEfficiency
@@ -418,6 +420,9 @@ extension GlobalSettings {
         read(.otherApplicationPlayingAudio, &otherApplicationPlayingAudio)
         read(.displayAsleep, &displayAsleep)
         read(.laptopOnBattery, &laptopOnBattery)
+        var ruleList = ApplicationRuleList()
+        read(.applicationRules, &ruleList)
+        applicationRules = ruleList.rules
         read(.antiAliasing, &antiAliasing)
         read(.postProcessing, &postProcessing)
         read(.textureResolution, &textureResolution)

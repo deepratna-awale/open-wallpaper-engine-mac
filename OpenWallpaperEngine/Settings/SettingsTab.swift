@@ -88,7 +88,7 @@ enum SettingsTab: Int, CaseIterable, Identifiable {
         case .performance:
             return [SettingField(\.otherApplicationFocused), SettingField(\.otherApplicationMaximized),
                     SettingField(\.otherApplicationFullscreen), SettingField(\.otherApplicationPlayingAudio),
-                    SettingField(\.displayAsleep), SettingField(\.laptopOnBattery),
+                    SettingField(\.displayAsleep), SettingField(\.laptopOnBattery), SettingField(\.applicationRules),
                     SettingField(\.antiAliasing), SettingField(\.postProcessing), SettingField(\.textureResolution),
                     SettingField(\.sceneDetail), SettingField(\.renderResolution), SettingField(\.upscaling),
                     SettingField(\.renderScale), SettingField(\.shadows),

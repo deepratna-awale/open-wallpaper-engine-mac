@@ -11,6 +11,7 @@ struct PerformancePage: SettingsPage {
     @ObservedObject var viewModel: GlobalSettingsViewModel
     /// A display can show HDR, so "Ultra (Display HDR)" is offered (`DisplayHDRSupport`).
     private let displayHDR = DisplayHDRSupport.isAvailable()
+    @State private var isEditingApplicationRules = false
     
     init(globalSettings viewModel: GlobalSettingsViewModel) {
         self.viewModel = viewModel
@@ -80,12 +81,15 @@ struct PerformancePage: SettingsPage {
                     Text("Application Rules")
                     Spacer()
                     Button {
-                        
+                        isEditingApplicationRules = true
                     } label: {
                         Text("Edit").frame(minWidth: 100)
                     }
                     .glassButtonStyle(.prominent)
-                    .disabled(true)
+                }
+                .changedFromDefault(viewModel.isChanged(\.applicationRules))
+                .sheet(isPresented: $isEditingApplicationRules) {
+                    ApplicationRulesSheet(rules: $viewModel.settings.applicationRules)
                 }
             } header: {
                 Label("Playback", systemImage: "play.fill")
