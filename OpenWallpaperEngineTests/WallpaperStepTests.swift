@@ -131,8 +131,9 @@ final class WallpaperStepTests: XCTestCase {
         return (model, items)
     }
 
-    func testASelectedPlaylistIsSteppedEvenWhenNotRotating() {
-        let (model, _) = playlistModel(rotating: false)
+    func testShowingAPlaylistItemStepsThroughThePlaylistWhenNotRotating() {
+        let (model, items) = playlistModel(rotating: false)
+        model.setWallpaper(items[0], for: model.selectedScreenIds)
         XCTAssertTrue(model.stepsThroughPlaylist)
         let shown = [wallpaper("library"), wallpaper("other")]
         model.stepToNextWallpaper(shown: shown, random: { $0.lowerBound })
@@ -141,6 +142,16 @@ final class WallpaperStepTests: XCTestCase {
         XCTAssertEqual(model.currentWallpaper.project.title, "p2")
         model.stepToPreviousWallpaper()
         XCTAssertEqual(model.currentWallpaper.project.title, "p1")
+    }
+
+    func testShowingAWallpaperOutsideThePlaylistUsesRandomAndHistory() {
+        let (model, _) = playlistModel(rotating: false)
+        XCTAssertFalse(model.stepsThroughPlaylist)
+        let (library, other) = (wallpaper("library"), wallpaper("other"))
+        model.stepToNextWallpaper(shown: [library, other], random: { $0.lowerBound })
+        XCTAssertEqual(model.currentWallpaper.project.title, "other")
+        model.stepToPreviousWallpaper()
+        XCTAssertEqual(model.currentWallpaper.project.title, "library")
     }
 
     func testMenuStepsMatchThePlaylistButtons() {

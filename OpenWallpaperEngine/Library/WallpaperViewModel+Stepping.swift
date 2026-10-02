@@ -4,10 +4,13 @@ import Foundation
 /// it; otherwise Next picks a random wallpaper from the list the library shows and Previous goes
 /// back through the display's history. Both act on the selected displays, like the playlist.
 extension WallpaperViewModel {
-    /// Whether Next and Previous step through the active playlist: whenever one is selected,
-    /// rotating automatically or not, exactly as the playlist view's own Previous and Next do.
+    /// Whether Next and Previous step through the active playlist: while it rotates, or while a
+    /// selected display shows one of its items. Otherwise they pick randomly and walk history.
     var stepsThroughPlaylist: Bool {
-        activePlaylist?.items.isEmpty == false
+        guard let playlist = activePlaylist, !playlist.items.isEmpty else { return false }
+        if playlistEnabled { return true }
+        let directories = Set(playlist.items.map(\.wallpaper.wallpaperDirectory))
+        return selectedScreenIds.contains { directories.contains(wallpaper(for: $0).wallpaperDirectory) }
     }
 
     func canStepToNextWallpaper(shown: [WEWallpaper]) -> Bool {
