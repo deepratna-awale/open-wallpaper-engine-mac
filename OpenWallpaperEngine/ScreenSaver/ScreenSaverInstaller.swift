@@ -2,14 +2,25 @@ import AppKit
 
 /// Installs the bundled screen saver (`Contents/Resources/Open Wallpaper Engine.saver`) into
 /// `~/Library/Screen Savers` and removes it again. It never selects the saver: macOS keeps that
-/// choice in the user's settings, so OWE only opens the Screen Saver settings for the user to
-/// pick it.
+/// choice in the user's settings, so OWE only opens the settings that hold the screen savers
+/// (`settingsURL`) for the user to pick it.
 ///
 /// An isolated copy (`AppStorageLocation`) never installs or removes it: the saver belongs to the
 /// user's session, like the desktop picture (`DesktopSnapshotCache.allowsDesktopPicture`).
 struct ScreenSaverInstaller {
     static let saverName = "Open Wallpaper Engine.saver"
-    static let settingsURL = URL(string: "x-apple.systempreferences:com.apple.ScreenSaver-Settings.extension")!
+    /// System Settings' screen saver choice: its own pane where macOS still has one, else the
+    /// Wallpaper pane, which holds the screen savers on newer macOS (no `ScreenSaver.appex`).
+    static var settingsURL: URL {
+        settingsURL(hasScreenSaverPane: FileManager.default.fileExists(
+            atPath: "/System/Library/ExtensionKit/Extensions/ScreenSaver.appex"))
+    }
+
+    static func settingsURL(hasScreenSaverPane: Bool) -> URL {
+        URL(string: hasScreenSaverPane
+            ? "x-apple.systempreferences:com.apple.ScreenSaver-Settings.extension"
+            : "x-apple.systempreferences:com.apple.Wallpaper-Settings.extension")!
+    }
 
     let bundledSaver: URL?
     let saversDirectory: URL
