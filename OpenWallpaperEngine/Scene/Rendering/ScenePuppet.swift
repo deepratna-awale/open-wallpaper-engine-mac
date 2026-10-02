@@ -92,11 +92,15 @@ final class ScenePuppetPlan {
                     weightsOf[k] = float(base + weights + 4 * k)
                     bonesOf[k] = UInt32(littleEndian: raw.loadUnaligned(fromByteOffset: base + indices + 4 * k, as: UInt32.self))
                 }
-                let skinned = Self.skin(p, weights: weightsOf, bones: bonesOf, pose: pose)
-                let point = SIMD2(skinned.x, skinned.y)
-                guard point.x.isFinite, point.y.isFinite else { continue }
-                low = simd_min(low, point)
-                high = simd_max(high, point)
+                // The material's own skinning draws the image (weights as stored) and the warp
+                // stage lays effect output out (renormalised): the bounds hold both.
+                for skinned in [Self.skin(p, weights: weightsOf, bones: bonesOf, pose: pose),
+                                Self.skin(p, weights: weightsOf, bones: bonesOf, pose: pose, renormalised: false)] {
+                    let point = SIMD2(skinned.x, skinned.y)
+                    guard point.x.isFinite, point.y.isFinite else { continue }
+                    low = simd_min(low, point)
+                    high = simd_max(high, point)
+                }
             }
         }
         return low.x <= high.x ? (low, high) : nil
@@ -105,7 +109,9 @@ final class ScenePuppetPlan {
     /// `p` skinned by `pose` as the warp stage skins it (ScenePuppet.metal): Σ wᵢ · bones[iᵢ] · p
     /// over the bones the pose holds, renormalised so the weights used sum to 1 (vertices shared by
     /// two parts land together); a vertex with no usable weight stays at `p`.
-    static func skin(_ p: SIMD4<Float>, weights: SIMD4<Float>, bones: SIMD4<UInt32>, pose: ScenePuppetPose) -> SIMD4<Float> {
+    /// Not `renormalised`: Σ wᵢ · bones[iᵢ] · p as stored, as the material's vertex stage skins.
+    static func skin(_ p: SIMD4<Float>, weights: SIMD4<Float>, bones: SIMD4<UInt32>, pose: ScenePuppetPose,
+                     renormalised: Bool = true) -> SIMD4<Float> {
         var skinned = SIMD4<Float>.zero
         var total: Float = 0
         for k in 0..<4 {
@@ -114,6 +120,7 @@ final class ScenePuppetPlan {
             skinned += weights[k] * (pose.bones[bone] * p)
             total += weights[k]
         }
+        guard renormalised else { return skinned }
         return total > 0 ? skinned / total : p
     }
 
