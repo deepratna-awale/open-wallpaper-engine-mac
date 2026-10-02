@@ -124,10 +124,6 @@ Kaynaktan ilk derleme Sparkle Swift paketini indirir. Kaynaktan derlenen sürüm
 - **15 yeni dil**: Almanca, Fransızca, İspanyolca, Brezilya Portekizcesi, İtalyanca, Japonca, Korece, Basitleştirilmiş ve Geleneksel Çince, Rusça, Lehçe, Türkçe, Ukraynaca, Arapça ve Hintçe; Ayarlar’daki dil seçiciden seçilebilir.
 - Yeni bir uygulama simgesi ve menü çubuğunun görünümüne uyan bir menü çubuğu simgesi.
 
-## Mevcut Sınırlamalar
-
-- **Uygulanmamış SceneScript işlevleri** — `getVideoTexture()` henüz hiçbir şey yapmaz.
-
 ## Desteklenen Duvar Kâğıdı Türleri
 
 | Tür | Durum |
