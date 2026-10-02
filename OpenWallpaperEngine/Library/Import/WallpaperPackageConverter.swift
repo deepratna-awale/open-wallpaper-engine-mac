@@ -8,7 +8,7 @@ import Foundation
 /// archive is moved into `.owe-source/` rather than deleted; reclaiming that space is a separate,
 /// explicit step because the converter is not yet lossless for every Wallpaper Engine feature.
 enum WallpaperPackageConverter {
-    static let converterVersion = 2
+    static let converterVersion = 3
 
     static let manifestName = ".owe-bundle.json"
     static let sourceFolderName = ".owe-source"
@@ -25,8 +25,8 @@ enum WallpaperPackageConverter {
         /// ever removing the archived original.
         var verifiedAt: Date?
         var verifiedObjectCount: Int?
-        /// Entries under `…/workshop/<id>/`, which are not extracted: those paths are where the
-        /// dependency resolver links other Workshop items in. Kept so the references still count.
+        /// Version 2 only: entries under `…/workshop/<id>/` it did not extract. Since version 3 they
+        /// are extracted like any other entry (Wallpaper Engine reads them from the package).
         var dependencyEntries: [String]?
     }
 
@@ -67,7 +67,6 @@ enum WallpaperPackageConverter {
 
         var extracted: [String] = []
         var warnings: [String] = []
-        var dependencyEntries: [String] = []
         guard let root = ContainedPath.canonical(wallpaperDirectory) else {
             OWELog.error(.importer, "Convert: can't resolve \(wallpaperDirectory.path)")
             return nil
@@ -79,11 +78,9 @@ enum WallpaperPackageConverter {
                 warnings.append("Skipped unsafe entry path: \(entry)")
                 continue
             }
-            guard !isUnderWorkshopItem(relativePath) else {
-                OWELog.info(.importer, "Convert: not extracting \(entry); workshop/<id>/ paths hold linked dependencies")
-                dependencyEntries.append(relativePath)
-                continue
-            }
+            // Entries under `workshop/<id>/` are the asset-pack files the wallpaper uses, bundled by
+            // the editor. Wallpaper Engine reads them from the package before the installed item,
+            // so they are extracted too; the dependency resolver keeps a real folder it finds there.
             guard let data = parser.extractFile(named: entry) else {
                 warnings.append("Missing data for entry: \(entry)")
                 continue
@@ -149,7 +146,7 @@ enum WallpaperPackageConverter {
                                 convertedAt: Date(),
                                 verifiedAt: nil,
                                 verifiedObjectCount: nil,
-                                dependencyEntries: dependencyEntries.isEmpty ? nil : dependencyEntries)
+                                dependencyEntries: nil)
         write(manifest, to: wallpaperDirectory)
 
         OWELog.info(.importer, "Converted \(wallpaperDirectory.lastPathComponent): \(extracted.count) files, \(warnings.count) warnings")
@@ -254,18 +251,6 @@ enum WallpaperPackageConverter {
         guard let data = try? Data(contentsOf: wallpaperDirectory.appending(path: "project.json")),
               let project = try? JSONDecoder().decode(WEProject.self, from: data) else { return nil }
         return project.file.lowercased().hasSuffix(".json") ? project.file : nil
-    }
-
-    /// Whether `path` (a sanitized entry path) lies in a `workshop/<digits>` folder, where the
-    /// dependency resolver links other Workshop items. Backslashes count as separators.
-    static func isUnderWorkshopItem(_ path: String) -> Bool {
-        let components = path.replacingOccurrences(of: "\\", with: "/").split(separator: "/")
-        guard components.count >= 2 else { return false }
-        for index in 0..<(components.count - 1) where components[index].lowercased() == "workshop" {
-            let id = components[index + 1]
-            if !id.isEmpty, id.allSatisfy({ $0 >= "0" && $0 <= "9" }) { return true }
-        }
-        return false
     }
 
     /// PKG entries are authored on Windows and are untrusted input, so reject anything absolute or
