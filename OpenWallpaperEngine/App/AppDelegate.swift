@@ -102,6 +102,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// The settings window's tab and the setting a link or search result opens.
     let settingsNavigation = SettingsNavigation()
     lazy var safeRestart = SafeRestart()
+    /// Hides the Dock icon while no window is open (`DockPresence`).
+    let dockPresence = DockPresence()
     /// Sparkle, off in builds without an update signing key (`Core/Updates`).
     lazy var updater = AppUpdater(configuration: .main)
     /// The system's now-playing session, one for the process (MediaRemote registers per process):
@@ -239,6 +241,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             self.mainWindowController.window.center()
             self.mainWindowController.window.makeKeyAndOrderFront(nil)
         }
+
+        // Launched into the menu bar only, the Dock icon goes until a window opens.
+        dockPresence.start()
 
         // Workshop downloads need SteamCMD; set it up from Valve in the background when it's missing.
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
