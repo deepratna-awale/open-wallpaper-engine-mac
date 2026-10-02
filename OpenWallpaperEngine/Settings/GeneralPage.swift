@@ -67,6 +67,9 @@ struct GeneralPage: SettingsPage {
             Section {
                 Toggle("Adjust Menu Bar Color", isOn: $viewModel.settings.adjustMenuBarTint)
                     .changedFromDefault(viewModel.isChanged(\.adjustMenuBarTint))
+                Toggle("Show Wallpaper on Lock Screen", isOn: $viewModel.settings.lockScreenPicture)
+                    .changedFromDefault(viewModel.isChanged(\.lockScreenPicture))
+                    .help("Sets each display's desktop picture to the scene wallpaper's snapshot, so the lock screen shows it. Turning it off restores your own pictures.")
             } header: {
                 Label("macOS", systemImage: "apple.logo")
             }

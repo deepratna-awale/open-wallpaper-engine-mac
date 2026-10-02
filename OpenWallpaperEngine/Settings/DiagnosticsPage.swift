@@ -10,6 +10,7 @@ struct DiagnosticsPage: SettingsPage {
     }
 
     @State private var shaderCounts = DiagnosticsPage.shaderCacheCounts()
+    @ObservedObject private var threadGuards = ThreadGuardMonitor.shared
 
     var body: some View {
         SettingsForm {
@@ -42,6 +43,36 @@ struct DiagnosticsPage: SettingsPage {
                 Text("WE shaders are translated per combination of options the first time a scene uses them, then reused.")
             }
             .settingsAnchor(SettingsAnchor.diagnostics)
+
+            if ThreadGuards.isDevBuild {
+                Section {
+                    if threadGuards.sites.isEmpty {
+                        Text("No violations")
+                            .foregroundStyle(.secondary)
+                    }
+                    ForEach(threadGuards.sites) { site in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(verbatim: site.first.summary)
+                            Text(verbatim: "\(site.first.file):\(site.first.line) · \(site.first.thread) · ×\(site.count)")
+                                .font(.caption.monospaced())
+                                .foregroundStyle(.secondary)
+                            Text(verbatim: site.first.stack.prefix(4).joined(separator: "\n"))
+                                .font(.caption2.monospaced())
+                                .foregroundStyle(.tertiary)
+                                .lineLimit(4)
+                        }
+                        .textSelection(.enabled)
+                    }
+                    if !threadGuards.sites.isEmpty {
+                        Button("Clear") { threadGuards.clear() }
+                    }
+                } header: {
+                    Label("Thread Guards", systemImage: "exclamationmark.triangle")
+                } footer: {
+                    Text("Heavy work that ran on the main or render thread, and frame work that ran off the render thread. Development builds only.")
+                }
+                .settingsAnchor(SettingsAnchor.threadGuards)
+            }
 
             // MARK: Developer
             Section {

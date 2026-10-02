@@ -2,7 +2,7 @@
 
 Open Wallpaper Engine for macOS plays Wallpaper Engine (WE) wallpapers: **scene**, **video** and **web**. The `application` type is out of scope. The goal is to run *any* WE wallpaper, including arbitrary Workshop scenes with custom effects, shaders and SceneScripts. So the scene engine implements WE's actual formats and semantics, not per-wallpaper approximations.
 
-This document describes the target structure and the rules for what goes where. [`docs/reorg-plan.md`](reorg-plan.md) lists the steps from today's layout to this one. [`docs/progress-snapshot.md`](progress-snapshot.md) records how complete each feature is.
+This document describes the target structure and the rules for what goes where. [`docs/reorg-plan.md`](reorg-plan.md) lists the steps from today's layout to this one. [`docs/progress-snapshot.md`](progress-snapshot.md) records how complete each feature is. [`docs/optimizations.md`](optimizations.md) records what was tried to make wallpapers cheaper, what shipped and what was rejected.
 
 ## Big picture
 
@@ -100,6 +100,15 @@ A wallpaper runs **once**, however many displays show it with the same user prop
 - **Web:** a `WKWebView` can't be in two windows, so each display keeps its page. Only the page on the wallpaper's audible display plays sound; the others are muted (`WebPageAudio`).
 - **Sound** (`WallpaperAudioRouting`): each running wallpaper plays its sound once; a web wallpaper's from its audible display (the main display when it shows it, else the lowest display id), and a wallpaper running as several instances (different properties) from the instance on that display. Different wallpapers on different displays each play theirs. Settings → Audio Output silences all of them; volume and mute (the status menu) apply to all.
 - **The watchdog** gets one frame time per rendered frame of an instance, not one per display.
+
+## Lock screen and screen saver
+
+- **Lock screen** (`App/LockScreenPicture`, Settings › General › "Show Wallpaper on Lock Screen", on by default). When a scene wallpaper is set, each display's system desktop picture becomes that scene's loading snapshot (`SceneLoadingSnapshotStore`, nothing new is captured), copied to `<Caches>/Open Wallpaper Engine/DesktopSnapshots/lock-<display>-<a|b>.<heic|jpg>`. The picture each display showed first is recorded per display and put back when the setting is turned off or the app quits. The menu bar tint's pictures (`DesktopSnapshotCache`) stay for video and web wallpapers; turning the tint off leaves a lock-screen picture alone.
+- **Screen saver** (`ScreenSaver/`, Settings › Plugins › Screen Saver, off by default). While on, the current scene's loop video is rendered for each display's pixel size by the helper run `--render-screensaver-loop` (`ScreenSaverLoopRenderer`): a `.library` job on the `PreparationPool` under the power policy, in its own process at background priority, HEVC through `AVAssetWriter`, scripts seeing `engine.isScreensaver()` true.
+  - **Loop length.** With only periodic motion (timelines, sprite sheets; no particles or scripts) the loop is the least common multiple of the periods, at most 60 s, a whole number of frames, and frame N is checked against frame 0 (`ScreenSaverLoopLength`). Otherwise up to 60 s is rendered and the loop ends before the frame most like frame 0 after 5 s, compared at 64×36 (`ScreenSaverSeamFinder`), with a 0.25 s crossfade when that seam is still visible.
+  - **Storage.** macOS runs third-party savers sandboxed in `legacyScreenSaver`, which can read only its own container, so the videos and `current.json` (`ScreenSaverManifest`) go in `~/Library/Containers/com.apple.ScreenSaver.Engine.legacyScreenSaver/Data/Library/Application Support/Open Wallpaper Engine/ScreenSaver`. Each video is named by wallpaper and content, a hash of its user properties, the pixel size and `ScreenSaverVideoStore.revision`; anything the manifest no longer lists is removed.
+  - **Saver.** The `OpenWallpaperEngineSaver` target (`OWESaverView`: a `ScreenSaverView` with an `AVPlayerLayer` and `AVPlayerLooper`) is embedded in the app and copied to `~/Library/Screen Savers`; the app then opens the Screen Saver settings for the user to choose it and changes no system setting itself. Turning the plugin off stops rendering and removes the saver and the videos.
+- **Isolation.** An isolated copy never sets the desktop picture, installs or removes the saver, or writes where the saver reads (its videos go under its own support folder).
 
 ## Invariants
 

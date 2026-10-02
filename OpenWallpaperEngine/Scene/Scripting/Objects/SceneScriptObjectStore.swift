@@ -202,6 +202,7 @@ final class SceneScriptObjectStore {
             "parentID": description.parentID.map { $0 as Any } ?? NSNull(), "strings": strings,
             "effects": effectRecords, "textureAnimation": textureAnimation, "animations": animationRecords,
             "config": description.initialConfigurationJSON.map { $0 as Any } ?? NSNull(), "rig": rig,
+            "video": description.videoDuration.map { ["duration": $0] as Any } ?? NSNull(),
         ]
     }
 

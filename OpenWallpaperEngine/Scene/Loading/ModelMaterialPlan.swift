@@ -105,7 +105,7 @@ struct ModelMaterialPlanBuilder {
         if material.passes.count > 1 {
             OWELog.info(.scene, "Model material \(materialPath) has \(material.passes.count) passes; its first is drawn")
         }
-        let loader = ShaderSourceLoader(readFile: readFile)
+        let loader = ShaderSourceLoader(readFile: readFile, memo: translator.sources)
         let vertex = try loader.load(materialPass.shader, stage: .vertex)
         let fragment = try loader.load(materialPass.shader, stage: .fragment)
         let images = ImageMaterialPlanBuilder(translator: translator, readFile: readFile, loadTexture: loadTexture,
@@ -211,7 +211,7 @@ struct ModelMaterialPlanBuilder {
         }
         guard let utilPass = util.passes.first else { throw ModelMaterialPlanError.missing("\(Self.shadowCasterMaterial) passes") }
         let shader = Self.shadowPassShader(in: source.fragment.text) ?? Self.shadowPassShader(in: source.vertex.text) ?? utilPass.shader
-        let loader = ShaderSourceLoader(readFile: readFile)
+        let loader = ShaderSourceLoader(readFile: readFile, memo: translator.sources)
         let vertex = try loader.load(shader, stage: .vertex)
         let fragment = try loader.load(shader, stage: .fragment)
         var inherited: [String: Int] = [:]

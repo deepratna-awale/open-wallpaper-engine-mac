@@ -64,6 +64,9 @@ final class ShaderVariantTranslator {
     /// Where the source a compiler step rejected is written, one file per shader and stage: the
     /// compiler's line numbers refer to it, not to the WE file. nil writes nothing.
     let failureDirectory: URL?
+    /// Parsed stages and folded geometry stages, shared by every material planned through this
+    /// translator (`ShaderSourceMemo`).
+    let sources = ShaderSourceMemo()
     private let lock = NSLock()
     private var memory: [String: TranslatedShaderVariant] = [:]
 

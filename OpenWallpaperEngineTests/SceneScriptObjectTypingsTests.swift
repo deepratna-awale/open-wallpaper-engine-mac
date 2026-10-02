@@ -25,6 +25,7 @@ final class SceneScriptObjectTypingsTests: XCTestCase {
         "IEffect": ["effect"],
         "IMaterial": ["material"],
         "ITextureAnimation": ["image.getTextureAnimation()"],
+        "IVideoTexture": ["image.getVideoTexture()"],
         "IAnimationLayer": ["image.getAnimationLayer(0)"],
         "IAnimation": ["image.getAnimation('timeline')"],
         "IScene": ["thisScene"],
@@ -37,9 +38,7 @@ final class SceneScriptObjectTypingsTests: XCTestCase {
 
     /// Interfaces whose objects need engine features this app lacks yet; the members that hand them
     /// out are stubs.
-    private static let unreachable: [String: String] = [
-        "IVideoTexture": "IImageLayer.getVideoTexture",
-    ]
+    private static let unreachable: [String: String] = [:]
 
     private func members() throws -> [String: [String]] {
         let data = try Fixtures.data("SceneScript/object-model-members.json")
@@ -58,7 +57,8 @@ final class SceneScriptObjectTypingsTests: XCTestCase {
                 animations: kind == .image ? [.init(name: "timeline", fps: 30, frameCount: 30, duration: 1)] : [],
                 textureAnimation: kind == .image ? .init(name: "", fps: 8, frameCount: 8, duration: 1) : nil)
             // The image is a puppet, so its animation layers (`IAnimationLayer`) are reachable.
-            if kind == .image { object.rig = SceneScriptRigTests.rig }
+            // and its texture is a video (`IVideoTexture`).
+            if kind == .image { object.rig = SceneScriptRigTests.rig; object.videoDuration = 1 }
             return object
         }
         let f = try SceneScriptObjectFixture(FakeSceneScriptObjectHost(scene: SceneScriptSceneDescription(objects: objects)))
@@ -119,7 +119,7 @@ final class SceneScriptObjectTypingsTests: XCTestCase {
         // Every stub that was called logged itself once.
         let logged = Set(f.model.unsupportedMembers.map { String($0.split(separator: ".").last ?? "") })
         XCTAssertEqual(stubs.subtracting(logged), [])
-        XCTAssertFalse(stubs.isEmpty)
+        XCTAssertTrue(stubs.isEmpty, "\(stubs)")
     }
 
     func testFixtureMatchesTheTypings() throws {

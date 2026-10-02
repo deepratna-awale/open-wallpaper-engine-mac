@@ -137,9 +137,12 @@ enum ShaderSourceError: Error, CustomStringConvertible {
 struct ShaderSourceLoader {
     /// Reads a path relative to an asset root; the first root that has it wins.
     let readFile: (String) -> Data?
+    /// Shares the parse of a text loaded before (`ShaderSourceMemo`); nil parses every load.
+    let memo: ShaderSourceMemo?
 
-    init(readFile: @escaping (String) -> Data?) {
+    init(readFile: @escaping (String) -> Data?, memo: ShaderSourceMemo? = nil) {
         self.readFile = readFile
+        self.memo = memo
     }
 
     init(roots: [URL]) {
@@ -161,6 +164,7 @@ struct ShaderSourceLoader {
         let expanded = try Self.inlineIncludes(in: text, path: file) { name in
             try read(candidates: ["shaders/\(name)", name], label: name)
         }
+        if let memo { return memo.source(stage: stage, path: file, text: expanded) }
         return ShaderSource(stage: stage, path: file, text: expanded,
                             combos: Self.parseCombos(expanded), uniforms: Self.parseUniforms(expanded))
     }
