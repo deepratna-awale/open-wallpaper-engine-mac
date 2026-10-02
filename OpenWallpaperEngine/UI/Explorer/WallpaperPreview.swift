@@ -22,6 +22,8 @@ struct WallpaperPreview: SubviewOfContentView {
     /// after their bindings write.
     @ObservedObject private var musicSync = VideoMusicSyncStore.shared
     @ObservedObject private var favorites = FavoritesStore.shared
+    /// Re-renders the screen saver row as loop renders start and finish.
+    @ObservedObject private var screenSaver = AppDelegate.shared.screenSaver
     @State var isTagsHovered = false
     /// Counts the confirmed Resets; `SceneUserPropertiesView` resets on each change.
     @State private var propertyResets = 0
@@ -52,6 +54,69 @@ struct WallpaperPreview: SubviewOfContentView {
         return ByteCountFormatter.string(fromByteCount: Int64(sizeBytes), countStyle: .file)
     }
     
+    /// The selected wallpaper's loop video: ready, rendering or not made for this type. Nothing
+    /// while the plugin is off or an eligible wallpaper has no loop yet.
+    @ViewBuilder private var screenSaverStatusRow: some View {
+        switch screenSaver.status(for: wallpaperViewModel.displayedWallpaper) {
+        case .available:
+            screenSaverRow(String(localized: "Screen Saver Available",
+                                  comment: "Details panel: a screen saver loop video of this wallpaper is ready"),
+                           showsSettings: true) {
+                Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+            }
+        case .rendering:
+            screenSaverRow(String(localized: "Rendering Screen Saver",
+                                  comment: "Details panel: the screen saver loop video of this wallpaper is being made"),
+                           showsSettings: true) {
+                ProgressView().controlSize(.small).progressViewStyle(.circular)
+            }
+        case .notEligible:
+            screenSaverRow(String(localized: "Screen Saver Not Available",
+                                  comment: "Details panel: no screen saver is made from this wallpaper")) {
+                Image(systemName: "xmark.circle.fill").foregroundStyle(.red)
+            }
+            .help(String(localized: "Screen savers are made from scene wallpapers",
+                         comment: "Details panel: why a video, web or application wallpaper has no screen saver"))
+        case nil:
+            EmptyView()
+        }
+    }
+
+    private func screenSaverRow(_ text: String, showsSettings: Bool = false,
+                                @ViewBuilder icon: () -> some View) -> some View {
+        HStack(spacing: 6) {
+            screenSaverStatus(text, icon: icon)
+            if showsSettings {
+                let title = String(localized: "Open Screen Saver Settings",
+                                   comment: "Details panel: opens System Settings where the screen saver is chosen")
+                Button {
+                    ScreenSaverInstaller.current.openSettings()
+                } label: {
+                    Image(systemName: "gearshape")
+                }
+                .buttonStyle(.borderless)
+                .help(title)
+                .accessibilityLabel(title)
+            }
+        }
+    }
+
+    private func screenSaverStatus(_ text: String, @ViewBuilder icon: () -> some View) -> some View {
+        HStack(spacing: 6) {
+            icon()
+                .frame(width: 16, height: 16)
+                .accessibilityHidden(true)
+            Text(text)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(String(localized: "Screen Saver"))
+        .accessibilityValue(text)
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Pinned outside the ScrollView so it stays put while the details scroll.
@@ -293,6 +358,7 @@ struct WallpaperPreview: SubviewOfContentView {
                             default:
                                 EmptyView()
                             }
+                            screenSaverStatusRow
                         }
                     }
                     SceneUserPropertiesView(wallpaper: wallpaperViewModel.displayedWallpaper,
