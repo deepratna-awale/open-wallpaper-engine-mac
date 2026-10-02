@@ -49,6 +49,7 @@ The detailed 2D plan, its baseline and its audit are in [`efficiency-plan-2d.md`
 | Change | Measured | Source |
 |---|---|---|
 | Particle definition cache: copies of one definition share its built parts | Load: rain (1444077782) 1.33–1.51 → 0.47 s; Katana (3238423642) 6.9–7.1 → 1.6 s. Material plan step on rain 1399 → 395 ms | PR #76 |
+| Material-plan shader memo: parsed stages and folded geometry reused across plans | Particle material-plan time per load, first / reload: Katana 754 → 313 / 674 → 171 ms, Sylvanas (1464416607) 163 → 44 / 160 → 39 ms, rain 320 → 76 / 319 → 70 ms, Lonely Cat (3299228616) 172 → 44 / 173 → 39 ms (helped by the memo already holding rain's shaders). Katana's content build about 1.8 → 1.0 s on first load. Shader variant keys byte-identical | PR #87 body and comment |
 | Shadow CPU cost (3D models plan, optimisation O) | 3657770939 45–63 → 13.5–17 ms, 3734636606 65–72 → 28.5–32 ms (Debug); output byte-identical | dd-decisions log, 3D models plan |
 | Cheaper shadows: maps at half size, depth-only casters | Not measured as numbers | PR #54 |
 | Empty systems skip GPU steps, O(n) rope neighbours, refraction copies only its rect, particle mip chains, instanced systems sized from spawn bound | Not measured as numbers | PRs #15, #17, #23 |
@@ -86,4 +87,3 @@ The detailed 2D plan, its baseline and its audit are in [`efficiency-plan-2d.md`
 | Change | State | Source |
 |---|---|---|
 | MetalFX upscaling (Off or MetalFX at 50/67/75 %) | Small, noisy gain: Katana fastest frame 25.9 → 21.9 ms, median about 53 ms both; Cyberpunk Samurai 2.1 → 3.2 ms (a cheap scene gains nothing). To be re-measured after point-size rendering | PR #73 |
-| Material-plan shader memo (parsed stages and folded geometry reused across plans) | Pending measurement; kept only if Katana's material-plan time moves measurably | PR #87 |
