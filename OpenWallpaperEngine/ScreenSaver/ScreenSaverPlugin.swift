@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 
 /// Settings › Plugins › Screen Saver. While on, the current scene wallpaper's loop video is
 /// rendered for each display size (`ScreenSaverLoopRenderer`, in the app's helper run) and the
@@ -11,7 +12,24 @@ import AppKit
 /// - Only the user's own copy installs the saver and writes where it reads
 ///   (`ScreenSaverInstaller.mayInstall`, `ScreenSaverVideoStore`'s isolated folder).
 @MainActor
-final class ScreenSaverPlugin {
+final class ScreenSaverPlugin: ObservableObject {
+    /// What the Details pane says about a wallpaper's loop video.
+    enum Status: Equatable {
+        /// Every display's video for the current content and properties is in the store.
+        case available
+        /// A render job for it is queued or running.
+        case rendering
+        /// Not a wallpaper loops are made from (`isEligible`).
+        case notEligible
+    }
+
+    /// A wallpaper's videos, keyed as the store names them.
+    struct StatusKey: Hashable {
+        var wallpaperKey: String
+        var contentKey: String
+        var propertyHash: String
+    }
+
     struct Target: Equatable {
         var pixelSize: SIMD2<Int>
         var pointSize: SIMD2<Int>
@@ -24,7 +42,10 @@ final class ScreenSaverPlugin {
     private let store: ScreenSaverVideoStore
     private let installer: ScreenSaverInstaller
     private let runner: Runner
-    private var enabled = false
+    @Published private(set) var isEnabled = false
+    /// The shown wallpaper's status, for its current content and properties only; a failed or
+    /// cancelled render leaves no entry.
+    @Published private(set) var statuses: [StatusKey: Status] = [:]
     /// Bumped on every change: a finished render for an older one doesn't touch the manifest.
     private var generation = 0
     private var jobs: [PreparationPool.Job] = []
@@ -40,13 +61,39 @@ final class ScreenSaverPlugin {
         if pool === PreparationPool.shared { _ = LibraryPreparationScheduler.shared }
     }
 
+    /// Whether loops are made from `wallpaper`: valid scene wallpapers only. `targets(for:)` and
+    /// the Details pane both ask this.
+    nonisolated static func isEligible(_ wallpaper: WEWallpaper) -> Bool {
+        wallpaper.project != .invalid && wallpaper.project.type.caseInsensitiveCompare("scene") == .orderedSame
+    }
+
+    /// The store key of `wallpaper`'s videos now; nil when it isn't eligible or can't be read.
+    nonisolated static func statusKey(for wallpaper: WEWallpaper, properties: [String: String]) -> StatusKey? {
+        guard isEligible(wallpaper),
+              let contentKey = SceneLoadingSnapshotStore.contentKey(for: wallpaper.wallpaperDirectory) else { return nil }
+        return StatusKey(wallpaperKey: SceneLoadingSnapshotStore.wallpaperKey(for: wallpaper.wallpaperDirectory),
+                         contentKey: contentKey, propertyHash: ScreenSaverVideoStore.propertyHash(properties))
+    }
+
+    /// What to show for `wallpaper`: nil while the plugin is off, or for an eligible wallpaper
+    /// with no finished or pending loop.
+    nonisolated static func status(for wallpaper: WEWallpaper, enabled: Bool,
+                                   statuses: [StatusKey: Status]) -> Status? {
+        guard enabled else { return nil }
+        guard isEligible(wallpaper) else { return .notEligible }
+        let wallpaperKey = SceneLoadingSnapshotStore.wallpaperKey(for: wallpaper.wallpaperDirectory)
+        return statuses.first { $0.key.wallpaperKey == wallpaperKey }?.value
+    }
+
+    func status(for wallpaper: WEWallpaper) -> Status? {
+        Self.status(for: wallpaper, enabled: isEnabled, statuses: statuses)
+    }
+
     /// The video names `wallpaper` needs on `screens`; empty for anything but a scene.
     nonisolated static func targets(for wallpaper: WEWallpaper, screens: [(pixels: SIMD2<Int>, points: SIMD2<Int>)],
                         properties: [String: String]) -> [Target] {
-        guard wallpaper.project.type.caseInsensitiveCompare("scene") == .orderedSame,
-              let contentKey = SceneLoadingSnapshotStore.contentKey(for: wallpaper.wallpaperDirectory) else { return [] }
-        let wallpaperKey = SceneLoadingSnapshotStore.wallpaperKey(for: wallpaper.wallpaperDirectory)
-        let hash = ScreenSaverVideoStore.propertyHash(properties)
+        guard let key = statusKey(for: wallpaper, properties: properties) else { return [] }
+        let wallpaperKey = key.wallpaperKey, contentKey = key.contentKey, hash = key.propertyHash
         // One video per display size in points (what the desktop looks like, e.g. 1920×1080 on a
         // 4K panel at 2×): a screen saver plays it scaled to the display, so rendering every
         // backing pixel would cost several times the work and storage for no visible gain.
@@ -64,8 +111,9 @@ final class ScreenSaverPlugin {
         generation += 1
         jobs.forEach { $0.cancel() }
         jobs = []
-        let wasEnabled = self.enabled
-        self.enabled = enabled
+        statuses = [:]
+        let wasEnabled = isEnabled
+        isEnabled = enabled
         let store = store, installer = installer
         guard enabled else {
             if wasEnabled { Self.fileQueue.async { installer.uninstall(); store.removeAll() } }
@@ -87,12 +135,17 @@ final class ScreenSaverPlugin {
         let directory = wallpaper.wallpaperDirectory
         Self.fileQueue.async { [weak self] in
             let targets = Self.targets(for: wallpaper, screens: screens, properties: properties)
-            Task { @MainActor in self?.schedule(targets, wallpaper: directory, generation: generation) }
+            let key = Self.statusKey(for: wallpaper, properties: properties)
+            let ready = targets.allSatisfy { store.exists(fileName: $0.fileName) }
+            Task { @MainActor in
+                self?.schedule(targets, key: key, ready: ready, wallpaper: directory, generation: generation)
+            }
         }
     }
 
-    private func schedule(_ targets: [Target], wallpaper: URL, generation: Int) {
+    private func schedule(_ targets: [Target], key: StatusKey?, ready: Bool, wallpaper: URL, generation: Int) {
         guard generation == self.generation else { return }
+        if let key, !targets.isEmpty { statuses = [key: ready ? .available : .rendering] }
         publish(targets, generation: generation)
         let runner = runner, store = store
         // One render at a time: each is a full scene render and encode.
@@ -104,8 +157,17 @@ final class ScreenSaverPlugin {
                 guard runner(wallpaper, target, output) else { continue }
                 Task { @MainActor in self?.publish(targets, generation: generation) }
             }
+            // Done: available if every video exists, otherwise a render failed (logged by the
+            // runner) and there is nothing to show.
+            let finished = targets.allSatisfy { store.exists(fileName: $0.fileName) }
+            Task { @MainActor in self?.finish(key, available: finished, generation: generation) }
         }
         jobs.append(job)
+    }
+
+    private func finish(_ key: StatusKey?, available: Bool, generation: Int) {
+        guard generation == self.generation, let key else { return }
+        statuses = available ? [key: .available] : [:]
     }
 
     /// Lists the targets' videos that exist in the manifest and removes every other video.
