@@ -390,6 +390,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var sceneSampleCount = 1
     /// This frame's prelit images (`prelit`), by layer id.
     private var prelitImages: [String: MTLTexture] = [:]
+    /// Animated layers' current frames, cut out of their atlases for their effects (`effectInput`).
+    private lazy var spriteFrameInputs = SceneSpriteFrameInputs(device: device)
+    /// This frame's cut-out frame versions (`SceneSpriteFrameInputs.Input.version`), by layer id.
+    private var spriteFrameVersions: [String: UInt64] = [:]
     /// A shared scene's finished frame, the scene target's size (`sharedFrame`).
     private var sharedFrameTarget: MTLTexture?
     private var sceneRenderTargetSize = SIMD2<Int>.zero
@@ -644,6 +648,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         particleMaterials?.releaseAll()
         imageMaterials?.releaseAll()
         puppets?.releaseAll()
+        spriteFrameInputs.releaseAll()
         puppetAlbedos.removeAll()
         puppetAnimators.removeAll()
         puppetWarps.removeAll()
@@ -939,6 +944,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             effectGraph?.releaseLayer(id)
             imageMaterials?.releaseLayer(id)
             puppets?.releaseLayer(id)
+            spriteFrameInputs.releaseLayer(id)
             puppetAlbedos.removeValue(forKey: id)
             puppetAnimators.removeValue(forKey: id)
             puppetWarps.removeValue(forKey: id)
@@ -1126,6 +1132,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             effectGraph?.releaseLayer(id)
             imageMaterials?.releaseLayer(id)
             puppets?.releaseLayer(id)
+            spriteFrameInputs.releaseLayer(id)
             puppetAlbedos.removeValue(forKey: id)
             puppetAnimators.removeValue(forKey: id)
             puppetWarps.removeValue(forKey: id)
@@ -1418,6 +1425,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             && clickReader.isDown(scripts.services?.clicks?.state ?? DesktopClickMonitor.State())
         releaseFinishedEffectState()
         prelitImages.removeAll(keepingCapacity: true)
+        spriteFrameVersions.removeAll(keepingCapacity: true)
         beginTransformFrame()
         advanceRigs()
         if scripts.isRunning {
@@ -1532,7 +1540,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             if runsInScene { continue }
             if !entry.layer.weEffects.isEmpty {
                 let input = solidEffectInput(entry.layer, commandBuffer: commandBuffer)
-                    ?? (textFrames[layerIndex]?.frame ?? textureFrame(for: entry)).texture
+                    ?? effectInput(entry, image: textFrames[layerIndex]?.frame ?? textureFrame(for: entry), commandBuffer: commandBuffer)
                 drawnLastPasses[layerIndex] = visible ? runEffectsDrawingLastPass(
                     entry, draw: draw, input: input, compositeSource: isCompositeSource, sceneFormat: sceneTexture.pixelFormat,
                     frame: effectFrame, commandBuffer: commandBuffer) : nil
@@ -1841,7 +1849,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                     ? snapshot.flatMap { sceneRegion(of: $0, under: draw.quad, placement: draw.placement, reducedFor: entry.layer,
                                                      commandBuffer: commandBuffer) }
                     : solidEffectInput(entry.layer, commandBuffer: commandBuffer)
-                        ?? (textFrames[layerIndex]?.frame ?? textureFrame(for: entry)).texture
+                        ?? effectInput(entry, image: textFrames[layerIndex]?.frame ?? textureFrame(for: entry),
+                                       commandBuffer: commandBuffer)
                 dynamicTextures[layerIndex] = posedEffectOutput(input.flatMap {
                     runEffects(entry, draw: draw, input: $0, snapshot: snapshot, frame: effectFrame, commandBuffer: commandBuffer)
                 }, of: entry, commandBuffer: commandBuffer)
@@ -2011,10 +2020,16 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// none or its material can't draw this frame. `image` is its texture frame (its text raster
     /// for a text layer), `effectOutput` what its effects made this frame, `snapshot` the scene
     /// under it for a material that reads it. Leaves `target.pipelines.normal` set.
-    private func encodeLayer(_ entry: PreparedLayer, _ draw: LayerDraw, image textureFrame: RenderTextureFrame,
+    private func encodeLayer(_ entry: PreparedLayer, _ draw: LayerDraw, image: RenderTextureFrame,
                              effectOutput: MTLTexture?, drawnLastPass: EffectGraphRenderer.DrawnLastPass? = nil,
                              snapshot layerSnapshot: MTLTexture?, frame: BuiltinFrameContext,
                              target: LayerTarget, encoder: MTLRenderCommandEncoder, commandBuffer: MTLCommandBuffer) {
+        // Effects that started from the frame cut out of the atlas (`effectInput`) made one frame:
+        // the layer draws their output whole.
+        let textureFrame = effectOutput != nil && spriteFrameVersions[entry.layer.id] != nil
+            ? RenderTextureFrame(texture: image.texture, duration: image.duration, uvOrigin: .zero,
+                                 uvAxisX: SIMD2(1, 0), uvAxisY: SIMD2(0, 1))
+            : image
         // The effects' last pass draws the layer: through its quad, with its material's blending and
         // depth state (`runEffectsDrawingLastPass`).
         if let drawnLastPass, let effectGraph, let plan = entry.layer.imageMaterial {
@@ -3025,6 +3040,15 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             depthFormat: frameDepth == nil ? .invalid : SceneDepthStates.format)
     }
 
+    /// What a layer's effects start from: its image, or for a sprite sheet its current frame cut out
+    /// of the atlas, as WE's base pass draws it into the layer's buffer (`SceneSpriteFrameInputs`).
+    private func effectInput(_ entry: PreparedLayer, image: RenderTextureFrame, commandBuffer: MTLCommandBuffer) -> MTLTexture {
+        guard entry.layer.puppet == nil, let cut = spriteFrameInputs.input(image, layerID: entry.layer.id, commandBuffer: commandBuffer)
+        else { return image.texture }
+        spriteFrameVersions[entry.layer.id] = cut.version
+        return cut.texture
+    }
+
     /// A layer's material draw of `texture` this frame (`ImageMaterialRenderer.Draw`), as `encodeLayer` makes it.
     private func materialDraw(_ entry: PreparedLayer, _ draw: LayerDraw, texture: MTLTexture,
                               frame: BuiltinFrameContext) -> ImageMaterialRenderer.Draw {
@@ -3071,6 +3095,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // A puppet's mesh redraws its image into the same texture as it moves: without the
         // drawing's version, the chain's kept output and base pass would hold the first pose.
         if entry.layer.puppet != nil { context.inputVersion = puppets?.albedoVersion(entry.layer.id) ?? 0 }
+        // A sprite sheet's frames are cut into the same texture as it plays.
+        if let version = spriteFrameVersions[entry.layer.id] { context.inputVersion = version }
         if renderSettings.sceneDetail == .matchDisplay {
             context.footprint = effectFootprint(entry, draw: draw, input: input)
             // Scene regions are drawn at the scene target's density, below full detail when the
