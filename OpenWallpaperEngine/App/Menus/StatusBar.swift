@@ -116,6 +116,7 @@ extension AppDelegate {
             .separator(),
             item("Mute", "speaker.slash.fill", #selector(toggleMuteWallpapers), .muteUnmute),
             item("Pause", "pause.fill", #selector(togglePauseWallpapers), .pauseResume),
+            item("Paused: video memory is full", "memorychip", #selector(videoMemoryPauseNotice)),
             item("Next Wallpaper", "forward.fill", #selector(nextWallpaper), .nextWallpaper),
             item("Previous Wallpaper", "backward.fill", #selector(previousWallpaper), .previousWallpaper),
             item("Quit", "power", #selector(NSApplication.terminate(_:)), .quit),
