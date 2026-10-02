@@ -31,7 +31,7 @@ enum OWELog {
         .app, .library, .web, .settings, .ui
     ].map { ($0, Logger(subsystem: "com.winddog.wallpaper-engine", category: $0.rawValue)) })
 
-    /// Debug builds never rise above `.info`, so lifecycle diagnostics stay visible during development.
+    /// Before the Log Level is applied, debug builds log lifecycle diagnostics (`.info`) too.
     nonisolated(unsafe) static var minimumSeverity: Severity = {
         #if DEBUG
         return .info
@@ -40,18 +40,25 @@ enum OWELog {
         #endif
     }()
 
-    static func apply(logLevel: GSLogLevel) {
-        let requested: Severity
+    /// The lowest severity a log level lets through: None logs nothing, Errors Only only errors,
+    /// Verbose everything. The system's own faults still reach the unified log.
+    static func threshold(for logLevel: GSLogLevel) -> Severity {
         switch logLevel {
-        case .none: requested = .error
-        case .error: requested = .error
-        case .verbose: requested = .debug
+        case .none: return .silent
+        case .error: return .error
+        case .verbose: return .debug
         }
-        #if DEBUG
-        minimumSeverity = min(requested, .info)
-        #else
-        minimumSeverity = requested
-        #endif
+    }
+
+    /// Whether a message of `severity` is logged at `logLevel`.
+    static func logs(_ severity: Severity, at logLevel: GSLogLevel) -> Bool {
+        severity != .silent && severity >= threshold(for: logLevel)
+    }
+
+    /// Applies the user's Log Level. Until it is applied (early launch), debug builds log from
+    /// `.info` and release builds errors.
+    static func apply(logLevel: GSLogLevel) {
+        minimumSeverity = threshold(for: logLevel)
         OWEFrameMetrics.isReportingEnabled = (logLevel == .verbose) || OWEFrameMetrics.defaultsEnabled
     }
 
@@ -70,7 +77,7 @@ enum OWELog {
     private static func emit(_ severity: Severity,
                              _ category: Category,
                              _ message: () -> String) {
-        guard severity >= minimumSeverity, let logger = loggers[category] else { return }
+        guard severity != .silent, severity >= minimumSeverity, let logger = loggers[category] else { return }
         // Public: these messages carry paths and effect names, which the unified log would
         // otherwise redact to <private> and make useless for diagnosing a wallpaper.
         let text = message()

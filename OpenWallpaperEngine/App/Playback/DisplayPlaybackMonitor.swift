@@ -26,6 +26,8 @@ final class DisplayPlaybackMonitor {
     private let apply: ([String: DisplayPlayback]) -> Void
     private(set) var rules = PlaybackRules()
     private(set) var displaysAsleep = false
+    /// Video memory ran out (`VideoMemoryWatch`, only while its setting is on).
+    private(set) var videoMemoryExhausted = false
     /// The last states handed to `apply`.
     private(set) var states: [String: DisplayPlayback]?
     private var evaluationPending = false
@@ -84,6 +86,12 @@ final class DisplayPlaybackMonitor {
         evaluate()
     }
 
+    func setVideoMemoryExhausted(_ exhausted: Bool) {
+        guard exhausted != videoMemoryExhausted else { return }
+        videoMemoryExhausted = exhausted
+        evaluate()
+    }
+
     /// Evaluates soon, once for a burst of events.
     func setNeedsEvaluation() {
         guard !evaluationPending else { return }
@@ -101,7 +109,7 @@ final class DisplayPlaybackMonitor {
     func evaluate() {
         let inputs = Inputs(rules: rules, displays: sources.displays(), frontmostPID: sources.frontmostPID(),
                             ignoresWebKitAudio: rules.watchesAudio && sources.showsWebWallpaper(),
-                            displaysAsleep: displaysAsleep)
+                            displaysAsleep: displaysAsleep, videoMemoryExhausted: videoMemoryExhausted)
         shared.set(inputs: inputs)
         generation &+= 1
         let generation = generation
@@ -138,7 +146,8 @@ final class DisplayPlaybackMonitor {
         let system = SystemPlaybackConditions(
             otherApplicationPlayingAudio: rules.watchesAudio && sources.otherApplicationPlayingAudio(inputs.ignoresWebKitAudio),
             displaysAsleep: inputs.displaysAsleep,
-            onBattery: rules.watchesPower && sources.onBattery())
+            onBattery: rules.watchesPower && sources.onBattery(),
+            videoMemoryExhausted: inputs.videoMemoryExhausted)
         return rules.playback(displays: inputs.displays.map(\.id), conditions: conditions, system: system)
     }
 
@@ -161,6 +170,7 @@ final class DisplayPlaybackMonitor {
         var frontmostPID: pid_t?
         var ignoresWebKitAudio: Bool
         var displaysAsleep: Bool
+        var videoMemoryExhausted = false
 
         /// Whether the answer needs a read that is too slow for the main thread.
         var needsScan: Bool { rules.watchesWindows || rules.watchesAudio || rules.watchesPower }
