@@ -89,7 +89,8 @@ struct OptimizationsPage: SettingsPage {
                 .changedFromDefault(viewModel.isChanged(\.audioOutput))
                 Toggle(isOn: $viewModel.settings.reloadWhenChangingOutputDevice) {
                     Text("Reload when changing output device")
-                }.disabled(true)
+                }
+                .changedFromDefault(viewModel.isChanged(\.reloadWhenChangingOutputDevice))
                 Toggle("Media integration support", isOn: $viewModel.settings.mediaIntegration)
                     .changedFromDefault(viewModel.isChanged(\.mediaIntegration))
             } header: {
