@@ -11,8 +11,8 @@ struct StaleBundle: Equatable {
 }
 
 enum StaleBundleScanner {
-    /// Bundles in `storage` older than the current converter with no package to re-convert from,
-    /// in folder-name order. Reads only each folder's manifest and project; call off the main thread.
+    /// Bundles in `storage` older than the current converter with no package to re-convert from
+    /// and changed by a newer version, in folder-name order; unaffected ones are stamped current. Reads only each folder's manifest and project; call off the main thread.
     static func scan(storage: URL, fileManager: FileManager = .default) -> [StaleBundle] {
         guard let entries = try? fileManager.contentsOfDirectory(at: storage,
                                                                  includingPropertiesForKeys: [.isDirectoryKey],
@@ -30,6 +30,11 @@ enum StaleBundleScanner {
         let archived = directory.appending(path: WallpaperPackageConverter.sourceFolderName).appending(path: packageName)
         guard !fileManager.fileExists(atPath: live.path(percentEncoded: false)),
               !fileManager.fileExists(atPath: archived.path(percentEncoded: false)) else { return nil }
+        // Nothing a newer version changes: the bundle is already what it would produce.
+        guard WallpaperPackageConverter.isAffectedByNewerVersions(manifest) else {
+            WallpaperPackageConverter.stampCurrent(in: directory)
+            return nil
+        }
         let project = (try? Data(contentsOf: directory.appending(path: "project.json")))
             .flatMap { try? JSONDecoder().decode(WEProject.self, from: $0) }
         let id = project?.workshopid?.rawValue ?? directory.lastPathComponent

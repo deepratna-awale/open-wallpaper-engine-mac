@@ -32,7 +32,8 @@ final class StaleBundleRefreshTests: XCTestCase {
 
     /// A converted bundle at `name`, made by `version`, optionally with its archived package.
     @discardableResult
-    private func bundle(_ name: String, version: Int, archived: Bool, title: String? = nil) throws -> URL {
+    private func bundle(_ name: String, version: Int, archived: Bool, title: String? = nil,
+                        dependencyEntries: [String]? = ["materials/workshop/2000000002/a.tex"]) throws -> URL {
         let directory = root.appending(path: name)
         try fm.createDirectory(at: directory, withIntermediateDirectories: true)
         try Data(#"{"file":"scene.json","title":"\#(title ?? name)","type":"scene"}"#.utf8)
@@ -46,7 +47,7 @@ final class StaleBundleRefreshTests: XCTestCase {
         let manifest = WallpaperPackageConverter.Manifest(
             converterVersion: version, sourcePackage: "scene.pkg", sourceHash: "", sourceRetained: archived,
             extractedFiles: ["scene.json"], warnings: [], convertedAt: Date(), verifiedAt: nil,
-            verifiedObjectCount: nil, dependencyEntries: nil)
+            verifiedObjectCount: nil, dependencyEntries: dependencyEntries)
         try JSONEncoder().encode(manifest).write(to: WallpaperPackageConverter.manifestURL(in: directory))
         return directory
     }
@@ -76,6 +77,19 @@ final class StaleBundleRefreshTests: XCTestCase {
     func testCurrentBundleIsLeftAlone() throws {
         try bundle("1000000003", version: WallpaperPackageConverter.converterVersion, archived: false)
         XCTAssertEqual(StaleBundleScanner.scan(storage: root), [])
+    }
+
+    func testUnaffectedBundleIsStampedCurrentAndNotQueued() throws {
+        let directory = try bundle("1000000004", version: old, archived: false, dependencyEntries: [])
+        XCTAssertEqual(StaleBundleScanner.scan(storage: root), [])
+        XCTAssertEqual(WallpaperPackageConverter.manifest(in: directory)?.converterVersion,
+                       WallpaperPackageConverter.converterVersion)
+    }
+
+    func testMissingFieldCountsAsAffected() throws {
+        let directory = try bundle("1000000005", version: old, archived: false, dependencyEntries: nil)
+        XCTAssertEqual(StaleBundleScanner.scan(storage: root).map(\.directory.lastPathComponent), ["1000000005"])
+        XCTAssertEqual(WallpaperPackageConverter.manifest(in: directory)?.converterVersion, old)
     }
 
     func testLocalImportHasNoWorkshopId() throws {

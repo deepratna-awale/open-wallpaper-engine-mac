@@ -10,6 +10,30 @@ import Foundation
 enum WallpaperPackageConverter {
     static let converterVersion = 3
 
+    /// For each converter version, which bundles made by an earlier version it changes. A stale
+    /// bundle no newer rule matches is only stamped current. `nil` means the manifest lacks what
+    /// the rule needs, which counts as affected. Add an entry with every bump.
+    static let versionRules: [Int: (Manifest) -> Bool?] = [
+        // Version 3 extracts the `workshop/<id>/` asset-pack files version 2 left in the package.
+        3: { manifest in manifest.dependencyEntries.map { !$0.isEmpty } },
+    ]
+
+    /// Whether any version after the bundle's own changes what this one would produce.
+    static func isAffectedByNewerVersions(_ manifest: Manifest) -> Bool {
+        guard manifest.converterVersion < converterVersion else { return false }
+        return ((manifest.converterVersion + 1)...converterVersion).contains { version in
+            guard let rule = versionRules[version] else { return true }
+            return rule(manifest) ?? true
+        }
+    }
+
+    /// Records the bundle as made by the current version without converting it again.
+    static func stampCurrent(in wallpaperDirectory: URL) {
+        guard var current = manifest(in: wallpaperDirectory) else { return }
+        current.converterVersion = converterVersion
+        write(current, to: wallpaperDirectory)
+    }
+
     static let manifestName = ".owe-bundle.json"
     static let sourceFolderName = ".owe-source"
 
