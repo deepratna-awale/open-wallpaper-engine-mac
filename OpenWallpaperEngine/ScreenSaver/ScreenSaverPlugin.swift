@@ -47,12 +47,15 @@ final class ScreenSaverPlugin {
               let contentKey = SceneLoadingSnapshotStore.contentKey(for: wallpaper.wallpaperDirectory) else { return [] }
         let wallpaperKey = SceneLoadingSnapshotStore.wallpaperKey(for: wallpaper.wallpaperDirectory)
         let hash = ScreenSaverVideoStore.propertyHash(properties)
+        // One video per display size in points (what the desktop looks like, e.g. 1920×1080 on a
+        // 4K panel at 2×): a screen saver plays it scaled to the display, so rendering every
+        // backing pixel would cost several times the work and storage for no visible gain.
         var seen = Set<SIMD2<Int>>()
         return screens.compactMap { screen in
-            guard seen.insert(screen.pixels).inserted else { return nil }
-            return Target(pixelSize: screen.pixels, pointSize: screen.points,
+            guard seen.insert(screen.points).inserted else { return nil }
+            return Target(pixelSize: screen.points, pointSize: screen.points,
                           fileName: ScreenSaverVideoStore.fileName(wallpaperKey: wallpaperKey, contentKey: contentKey,
-                                                                   propertyHash: hash, pixelSize: screen.pixels))
+                                                                   propertyHash: hash, pixelSize: screen.points))
         }
     }
 
@@ -92,15 +95,17 @@ final class ScreenSaverPlugin {
         guard generation == self.generation else { return }
         publish(targets, generation: generation)
         let runner = runner, store = store
-        for target in targets {
-            let job = pool.submit(priority: .library) { [weak self] job in
-                guard !job.isCancelled, !store.exists(fileName: target.fileName) else { return }
+        // One render at a time: each is a full scene render and encode.
+        let job = pool.submit(priority: .library) { [weak self] job in
+            for target in targets {
+                guard !job.isCancelled else { return }
+                guard !store.exists(fileName: target.fileName) else { continue }
                 let output = store.url(fileName: target.fileName)
-                guard runner(wallpaper, target, output) else { return }
+                guard runner(wallpaper, target, output) else { continue }
                 Task { @MainActor in self?.publish(targets, generation: generation) }
             }
-            jobs.append(job)
         }
+        jobs.append(job)
     }
 
     /// Lists the targets' videos that exist in the manifest and removes every other video.
