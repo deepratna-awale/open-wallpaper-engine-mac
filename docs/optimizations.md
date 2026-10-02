@@ -75,11 +75,11 @@ The detailed 2D plan, its baseline and its audit are in [`efficiency-plan-2d.md`
 
 ## Settings and storage decisions
 
-- **Render resolution.** Display renders at the display's point size; Retina (native pixels) is opt-in; Full is the authored size. Scenes authored above 1080p save little unless scene detail is Match Display. PR #73.
+- **Render resolution.** Display renders at the display's point size; Retina (native pixels) is opt-in; Full is the authored size. On an M4 at 3840×2160 (2×), Retina → Display: rain 45.3 → 26.2 ms GPU median (−42 %), GPU memory 713 → 473 MB. Scenes authored above 1080p save little unless scene detail is Match Display (2b 4K 18.2 → 17.6 ms, Fantasy Woman 9.0 → 8.9 ms). PR #73 comment.
 - **Screen saver loops.** One video per unique display point size (not backing pixels), rendered one at a time in a background job. Loop length is the exact LCM of the timeline and sprite-sheet periods, capped at 60 s; otherwise the best perceptual match to frame 0 after 5 s, with a 0.25 s crossfade if the seam still shows. PR #72, commit e7e2ee5e.
-- **Package storage.** Extracted files and the `.pkg` hold the same bytes, so keeping both would double the size. Originals are deleted after conversion when that setting is on.
-- **Re-download on a converter bump.** Only bundles that a bump affects are re-downloaded (a per-version rule), one at a time at background priority. PR #84.
-- **Thread guards in release builds.** Kept; a passing check costs a few nanoseconds, so no change is needed. PRs #75, #86.
+- **Package storage.** Extracted files and the `.pkg` hold the same bytes, so keeping both would double the size. On a 69-wallpaper library: .pkg 1,045.9 MB vs loose files 1,045.7 MB of data; loose files cost 12 MB (+1.1 %) more on disk from 4 KB blocks (PR #88 comment). Originals are deleted after conversion when that setting is on.
+- **Re-download on a converter bump.** Only bundles that a bump affects are re-downloaded (a per-version rule), one at a time at background priority. On a real library, 21 of 68 stale bundles were queued instead of all 68 (about 1 GB). PR #84 comment.
+- **Thread guards in release builds.** Kept: on an M4 (-O), a passing check costs 2.61 ns and the renderFrame wrapper 6.71 ns, about 10 ns per frame, so no change is needed. PR #86 comment; PR #75.
 
 ## Pending
 
