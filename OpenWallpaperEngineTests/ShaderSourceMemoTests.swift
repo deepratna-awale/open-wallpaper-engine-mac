@@ -26,8 +26,10 @@ final class ShaderSourceMemoTests: XCTestCase {
                 XCTAssertEqual(source.path, plain.path)
                 XCTAssertEqual(source.text, plain.text)
                 XCTAssertEqual(source.combos, plain.combos)
-                XCTAssertEqual(source.uniforms.map { "\($0.type) \($0.name) \($0.arrayCount ?? 1) \($0.annotation)" },
-                               plain.uniforms.map { "\($0.type) \($0.name) \($0.arrayCount ?? 1) \($0.annotation)" })
+                XCTAssertEqual(source.uniforms.map { "\($0.type) \($0.name) \($0.arrayCount ?? 1)" },
+                               plain.uniforms.map { "\($0.type) \($0.name) \($0.arrayCount ?? 1)" })
+                XCTAssertEqual(source.uniforms.map { $0.annotation as NSDictionary },
+                               plain.uniforms.map { $0.annotation as NSDictionary })
                 XCTAssertEqual(source.preludeAnalysis.identifiers, plain.preludeAnalysis.identifiers)
             }
         }
