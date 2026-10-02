@@ -47,16 +47,14 @@ final class ScreenSaverPlugin {
               let contentKey = SceneLoadingSnapshotStore.contentKey(for: wallpaper.wallpaperDirectory) else { return [] }
         let wallpaperKey = SceneLoadingSnapshotStore.wallpaperKey(for: wallpaper.wallpaperDirectory)
         let hash = ScreenSaverVideoStore.propertyHash(properties)
-        // One video per display size in points (what the desktop looks like, e.g. 1920×1080 on a
-        // 4K panel at 2×): a screen saver plays it scaled to the display, so rendering every
-        // backing pixel would cost several times the work and storage for no visible gain.
-        var seen = Set<SIMD2<Int>>()
-        return screens.compactMap { screen in
-            guard seen.insert(screen.points).inserted else { return nil }
-            return Target(pixelSize: screen.points, pointSize: screen.points,
-                          fileName: ScreenSaverVideoStore.fileName(wallpaperKey: wallpaperKey, contentKey: contentKey,
-                                                                   propertyHash: hash, pixelSize: screen.points))
-        }
+        // One video at the largest display's size in points (what the desktop looks like, e.g.
+        // 1920×1080 on a 4K panel at 2×), which every display plays scaled to fill: one render
+        // and one file, and rendering backing pixels would cost several times as much for no
+        // visible gain.
+        guard let largest = screens.map(\.points).max(by: { $0.x * $0.y < $1.x * $1.y }) else { return [] }
+        return [Target(pixelSize: largest, pointSize: largest,
+                       fileName: ScreenSaverVideoStore.fileName(wallpaperKey: wallpaperKey, contentKey: contentKey,
+                                                                propertyHash: hash, pixelSize: largest))]
     }
 
     /// The plugin's setting or the shown wallpaper changed.

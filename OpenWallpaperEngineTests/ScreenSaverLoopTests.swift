@@ -196,4 +196,20 @@ final class ScreenSaverStorageTests: XCTestCase {
         XCTAssertNil(ShaderPrewarmCommand.size("3840"))
         XCTAssertNil(ShaderPrewarmCommand.size("0x10"))
     }
+
+    func testOneLoopAtTheLargestDisplaysPointSize() throws {
+        let folder = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try Data("{}".utf8).write(to: folder.appending(path: "scene.json"))
+        let wallpaper = WEWallpaper(using: WEProject(file: "scene.json", title: "Loop", type: "scene"), where: folder)
+        let targets = ScreenSaverPlugin.targets(
+            for: wallpaper,
+            screens: [(pixels: SIMD2(3840, 2160), points: SIMD2(1920, 1080)),
+                      (pixels: SIMD2(2560, 1600), points: SIMD2(2560, 1600)),
+                      (pixels: SIMD2(1920, 1080), points: SIMD2(1920, 1080))],
+            properties: [:])
+        XCTAssertEqual(targets.map(\.pixelSize), [SIMD2(2560, 1600)], "one video, at the largest display's points")
+        XCTAssertEqual(targets.first?.pointSize, SIMD2(2560, 1600))
+    }
 }
