@@ -160,6 +160,14 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var clock = SceneClock()
     /// Test harnesses: while true the scene clock stands still (`SceneClock.hold`). The app never sets it.
     var holdsClock = false
+    /// The renderer draws the screen saver's loop video (`ScreenSaverLoopRenderer`): scripts see
+    /// `engine.isScreensaver()` true. Set before the first frame.
+    var rendersScreenSaver = false
+    /// While true the scene's clock text layers (`SceneClockLayers`) draw nothing: set for the
+    /// screen saver's loop video and while capturing the loading snapshot the lock screen shows.
+    var hidesClockLayers = false
+    /// The current content's clock text layers.
+    private(set) var clockLayerIDs: Set<String> = []
     /// The frames drawn (`BuiltinFrameContext.serial`).
     private var frameSerial: UInt64 = 0
     /// The wall clock `clock` follows (tests step it).
@@ -617,6 +625,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     }
 
     func setContent(_ content: SceneMetalContent?) {
+        clockLayerIDs = content?.scripts.map { SceneClockLayers.ids(in: $0.document) } ?? []
         baseValueCaches.removeAll()
         effectAssetTextures.removeAll()
         clearUploadedImages()
@@ -1462,6 +1471,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             // Hidden layers keep their transforms (scripts and hit tests read them) but draw nothing,
             // except into the image a model or another layer samples (`_rt_imageLayerComposite_<id>_a`).
             let visible = scripts.isVisible(entry.layer.id)
+                && !(hidesClockLayers && clockLayerIDs.contains(entry.layer.id))
             let isCompositeSource = compositeOrder.sources.contains(entry.layer.id)
                 || models?.compositeLayerIDs.contains(entry.layer.id) == true
             guard visible || isCompositeSource else { continue }
@@ -2196,7 +2206,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         input.environment = SceneScriptEngineEnvironment(
             screenResolution: SIMD2(Double(drawableSize.x), Double(drawableSize.y)),
             canvasSize: SIMD2(Double(sceneSize.x), Double(sceneSize.y)), placement: placement,
-            pixelsPerPoint: Double(drawablePixelsPerPoint))
+            pixelsPerPoint: Double(drawablePixelsPerPoint), isScreensaver: rendersScreenSaver)
         input.input = SceneScriptInput(cursorScreenPosition: cursorScreenPixels(viewports), cursorLeftDown: leftDown)
         input.cursorScenePosition = cursor.position
         input.shakeOffset = lastCameraMotion?.shake ?? .zero

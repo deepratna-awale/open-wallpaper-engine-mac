@@ -109848,6 +109848,476 @@
           }
         }
       }
+    },
+    "Show Wallpaper on Lock Screen" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عرض الخلفية على شاشة القفل"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hintergrundbild auf dem Sperrbildschirm zeigen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar el fondo de pantalla en la pantalla bloqueada"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher le fond d'écran sur l'écran verrouillé"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लॉक स्क्रीन पर वॉलपेपर दिखाएँ"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra lo sfondo nella schermata di blocco"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ロック画面に壁紙を表示"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "잠금 화면에 배경화면 표시"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokazuj tapetę na ekranie blokady"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar Papel de Parede na Tela Bloqueada"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показывать обои на экране блокировки"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duvar Kâğıdını Kilit Ekranında Göster"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показувати шпалери на екрані блокування"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在锁定屏幕上显示壁纸"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在鎖定畫面上顯示桌布"
+          }
+        }
+      }
+    },
+    "Sets each display's desktop picture to the scene wallpaper's snapshot, so the lock screen shows it. Turning it off restores your own pictures." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يضبط صورة سطح المكتب لكل شاشة على لقطة خلفية المشهد، لتظهر على شاشة القفل. إيقافه يعيد صورك الخاصة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setzt das Schreibtischbild jedes Displays auf einen Schnappschuss des Szenen-Hintergrundbilds, damit der Sperrbildschirm ihn zeigt. Ausschalten stellt deine eigenen Bilder wieder her."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usa una instantánea del fondo de pantalla de escena como imagen de escritorio de cada pantalla, para que la pantalla bloqueada la muestre. Al desactivarlo se restauran tus imágenes."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remplace l'image de bureau de chaque écran par un instantané du fond d'écran de scène, pour que l'écran verrouillé l'affiche. Le désactiver rétablit vos propres images."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "हर डिस्प्ले की डेस्कटॉप तस्वीर को सीन वॉलपेपर के स्नैपशॉट पर सेट करता है, ताकि लॉक स्क्रीन उसे दिखाए। बंद करने पर आपकी अपनी तस्वीरें वापस आ जाती हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imposta come immagine della scrivania di ogni schermo un'istantanea dello sfondo scena, così la schermata di blocco la mostra. Disattivandolo tornano le tue immagini."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "各ディスプレイのデスクトップピクチャをシーン壁紙のスナップショットにして、ロック画面に表示します。オフにすると元のピクチャに戻ります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "각 디스플레이의 데스크탑 사진을 장면 배경화면의 스냅샷으로 설정해 잠금 화면에 표시합니다. 끄면 원래 사진으로 돌아갑니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ustawia obraz biurka każdego ekranu na migawkę tapety sceny, aby pokazywał ją ekran blokady. Wyłączenie przywraca Twoje obrazy."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Define a imagem da mesa de cada tela como um instantâneo do papel de parede de cena, para que a tela bloqueada o mostre. Desativar restaura suas próprias imagens."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ставит снимок обоев-сцены картинкой рабочего стола на каждом дисплее, чтобы его показывал экран блокировки. При выключении возвращаются ваши картинки."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Her ekranın masaüstü resmini sahne duvar kâğıdının anlık görüntüsü yapar, böylece kilit ekranı onu gösterir. Kapatmak kendi resimlerinizi geri getirir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Робить знімок шпалер-сцени зображенням робочого столу на кожному дисплеї, щоб його показував екран блокування. Вимкнення повертає ваші зображення."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将每个显示器的桌面图片设为场景壁纸的快照，让锁定屏幕显示它。关闭后会恢复你自己的图片。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將每個顯示器的桌面圖片設為場景桌布的快照，讓鎖定畫面顯示它。關閉後會還原你自己的圖片。"
+          }
+        }
+      }
+    },
+    "Screen Saver" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "شاشة التوقف"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirmschoner"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salvapantallas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Économiseur d'écran"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्क्रीन सेवर"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salvaschermo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スクリーンセーバ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면 보호기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wygaszacz ekranu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protetor de Tela"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заставка"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekran Koruyucu"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заставка"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "屏幕保护程序"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "螢幕保護程式"
+          }
+        }
+      }
+    },
+    "Renders a seamless loop of the current scene wallpaper in the background and installs a screen saver that plays it. Choose Open Wallpaper Engine in Screen Saver settings to use it. Turning it off removes the screen saver and its videos." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يصيّر حلقة سلسة من خلفية المشهد الحالية في الخلفية ويثبّت شاشة توقف تعرضها. اختر Open Wallpaper Engine في إعدادات شاشة التوقف لاستخدامها. إيقافه يزيل شاشة التوقف ومقاطع الفيديو الخاصة بها."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rendert im Hintergrund eine nahtlose Schleife des aktuellen Szenen-Hintergrundbilds und installiert einen Bildschirmschoner, der sie abspielt. Wähle Open Wallpaper Engine in den Bildschirmschoner-Einstellungen, um ihn zu nutzen. Ausschalten entfernt den Bildschirmschoner und seine Videos."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renderiza en segundo plano un bucle continuo del fondo de pantalla de escena actual e instala un salvapantallas que lo reproduce. Elige Open Wallpaper Engine en los ajustes del salvapantallas para usarlo. Al desactivarlo se eliminan el salvapantallas y sus vídeos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calcule en arrière-plan une boucle sans raccord du fond d'écran de scène actuel et installe un économiseur d'écran qui la lit. Choisissez Open Wallpaper Engine dans les réglages de l'économiseur d'écran pour l'utiliser. Le désactiver supprime l'économiseur et ses vidéos."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मौजूदा सीन वॉलपेपर का एक सहज लूप बैकग्राउंड में रेंडर करता है और उसे चलाने वाला स्क्रीन सेवर इंस्टॉल करता है। इसे इस्तेमाल करने के लिए स्क्रीन सेवर सेटिंग्स में Open Wallpaper Engine चुनें। बंद करने पर स्क्रीन सेवर और उसके वीडियो हट जाते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esegue in background il rendering di un loop continuo dello sfondo scena attuale e installa un salvaschermo che lo riproduce. Scegli Open Wallpaper Engine nelle impostazioni del salvaschermo per usarlo. Disattivandolo vengono rimossi il salvaschermo e i suoi video."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在のシーン壁紙の継ぎ目のないループをバックグラウンドでレンダリングし、それを再生するスクリーンセーバをインストールします。使うにはスクリーンセーバ設定で Open Wallpaper Engine を選択してください。オフにするとスクリーンセーバとそのビデオが削除されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 장면 배경화면의 끊김 없는 루프를 백그라운드에서 렌더링하고 이를 재생하는 화면 보호기를 설치합니다. 사용하려면 화면 보호기 설정에서 Open Wallpaper Engine을 선택하세요. 끄면 화면 보호기와 비디오가 제거됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renderuje w tle płynną pętlę bieżącej tapety sceny i instaluje wygaszacz ekranu, który ją odtwarza. Aby go używać, wybierz Open Wallpaper Engine w ustawieniach wygaszacza ekranu. Wyłączenie usuwa wygaszacz i jego filmy."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renderiza em segundo plano um loop contínuo do papel de parede de cena atual e instala um protetor de tela que o reproduz. Escolha Open Wallpaper Engine nos ajustes do Protetor de Tela para usá-lo. Desativar remove o protetor de tela e seus vídeos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В фоне рендерит бесшовную петлю текущих обоев-сцены и устанавливает заставку, которая её воспроизводит. Чтобы использовать её, выберите Open Wallpaper Engine в настройках заставки. При выключении заставка и её видео удаляются."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geçerli sahne duvar kâğıdının kesintisiz bir döngüsünü arka planda işler ve onu oynatan bir ekran koruyucu yükler. Kullanmak için Ekran Koruyucu ayarlarında Open Wallpaper Engine’i seçin. Kapatmak ekran koruyucuyu ve videolarını kaldırır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У фоні рендерить безшовну петлю поточних шпалер-сцени та встановлює заставку, що її відтворює. Щоб користуватися нею, виберіть Open Wallpaper Engine у параметрах заставки. Вимкнення видаляє заставку та її відео."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在后台渲染当前场景壁纸的无缝循环，并安装播放它的屏幕保护程序。要使用它，请在屏幕保护程序设置中选择 Open Wallpaper Engine。关闭后会移除屏幕保护程序及其视频。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在背景算繪目前場景桌布的無縫循環，並安裝播放它的螢幕保護程式。若要使用，請在螢幕保護程式設定中選擇 Open Wallpaper Engine。關閉後會移除螢幕保護程式及其影片。"
+          }
+        }
+      }
+    },
+    "Open Screen Saver Settings…" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فتح إعدادات شاشة التوقف…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirmschoner-Einstellungen öffnen …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir ajustes del salvapantallas…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir les réglages de l'économiseur d'écran…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्क्रीन सेवर सेटिंग्स खोलें…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri le impostazioni del salvaschermo…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スクリーンセーバ設定を開く…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면 보호기 설정 열기…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otwórz ustawienia wygaszacza ekranu…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir Ajustes do Protetor de Tela…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть настройки заставки…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekran Koruyucu Ayarlarını Aç…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити параметри заставки…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开屏幕保护程序设置…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打開螢幕保護程式設定…"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

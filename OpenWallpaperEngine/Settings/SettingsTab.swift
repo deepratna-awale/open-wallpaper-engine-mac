@@ -84,7 +84,7 @@ enum SettingsTab: Int, CaseIterable, Identifiable {
         switch self {
         case .general:
             return [SettingField(\.autoStart), SettingField(\.language), SettingField(\.appearance),
-                    SettingField(\.adjustMenuBarTint)]
+                    SettingField(\.adjustMenuBarTint), SettingField(\.lockScreenPicture)]
         case .performance:
             return [SettingField(\.otherApplicationFocused), SettingField(\.otherApplicationMaximized),
                     SettingField(\.otherApplicationFullscreen), SettingField(\.otherApplicationPlayingAudio),
@@ -104,7 +104,9 @@ enum SettingsTab: Int, CaseIterable, Identifiable {
                     SettingField(\.reducedResolutionParticles)]
         case .diagnostics:
             return [SettingField(\.logLevel)]
-        case .assets, .updates, .privacy, .permissions, .plugins, .about:
+        case .plugins:
+            return [SettingField(\.screenSaver)]
+        case .assets, .updates, .privacy, .permissions, .about:
             return []
         }
     }
