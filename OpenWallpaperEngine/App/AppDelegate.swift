@@ -143,6 +143,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var audioOutputCancellable: AnyCancellable?
     private var syncPropertiesCancellable: AnyCancellable?
     private var mediaIntegrationCancellable: AnyCancellable?
+    /// Follows the default output device: capture always restarts, wallpapers reload when the
+    /// setting is on. `rebuildWallpaperWindows` is the same reload an asset change uses.
+    private lazy var outputDeviceMonitor = OutputDeviceChangeMonitor(
+        source: CoreAudioOutputDeviceSource(),
+        schedule: { delay, work in DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work) },
+        reloadEnabled: { [weak self] in self?.globalSettingsViewModel.settings.reloadWhenChangingOutputDevice ?? false },
+        restartCapture: { MainActor.assumeIsolated { WallpaperServices.shared.audioCapture.outputDeviceDidChange() } },
+        reloadWallpapers: { [weak self] in MainActor.assumeIsolated { self?.rebuildWallpaperWindows() } })
     /// Settings › Performance › Playback, per display (`App/Playback`).
     private lazy var displayPlaybackMonitor = makeDisplayPlaybackMonitor()
     
@@ -181,6 +189,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Settings → General → Media integration support: whether wallpapers hear Now Playing.
         mediaIntegrationCancellable = globalSettingsViewModel.$settings.map(\.mediaIntegration).removeDuplicates()
             .sink { [weak self] enabled in self?.mediaSession.setIntegrationEnabled(enabled) }
+
+        // Settings → Audio → Reload when changing output device (`OutputDeviceChangeMonitor`).
+        outputDeviceMonitor.start()
 
         // Before the wallpaper windows exist, so a wallpaper behind an unclean exit never loads.
         safeRestart.attach(to: wallpaperViewModel)

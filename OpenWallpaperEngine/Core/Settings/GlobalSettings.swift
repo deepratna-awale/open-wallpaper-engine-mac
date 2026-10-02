@@ -348,7 +348,9 @@ struct GlobalSettings: Codable, Equatable {
     /// WE's "Media integration support" (`mediaintegration`, on by default): wallpapers hear the
     /// system's Now Playing session (`MacMediaSessionSource`).
     var mediaIntegration = true
-    var reloadWhenChangingOutputDevice = true // Not putting in use
+    /// WE's "Reload when changing output device": the running wallpapers reload when the default
+    /// output device changes (`OutputDeviceChangeMonitor`). Capture follows the device either way.
+    var reloadWhenChangingOutputDevice = true
     
     // MARK: Video
     var videoFramework = GSVideoFramework.preferred
