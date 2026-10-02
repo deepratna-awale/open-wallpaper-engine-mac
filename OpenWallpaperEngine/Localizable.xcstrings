@@ -18891,6 +18891,101 @@
         }
       }
     },
+    "Couldn't update %@ to the latest conversion. They keep working as before, and Open Wallpaper Engine will try again next launch." : {
+      "comment" : "Notice after launch; names is a list of wallpaper titles",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذّر تحديث %@ إلى أحدث تحويل. ستظل تعمل كما كانت، وسيحاول Open Wallpaper Engine مجددًا عند التشغيل التالي."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ konnte nicht auf die neueste Konvertierung aktualisiert werden. Sie funktionieren weiter wie bisher; Open Wallpaper Engine versucht es beim nächsten Start erneut."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo actualizar %@ a la conversión más reciente. Siguen funcionando como antes y Open Wallpaper Engine lo volverá a intentar en el próximo inicio."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de mettre à jour %@ vers la dernière conversion. Ils continuent de fonctionner comme avant, et Open Wallpaper Engine réessaiera au prochain lancement."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ को नवीनतम रूपांतरण में अपडेट नहीं किया जा सका। ये पहले की तरह काम करते रहेंगे, और Open Wallpaper Engine अगली बार शुरू होने पर फिर से कोशिश करेगा।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile aggiornare %@ all'ultima conversione. Continuano a funzionare come prima e Open Wallpaper Engine riproverà al prossimo avvio."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ を最新の変換に更新できませんでした。これまでどおり動作し、Open Wallpaper Engine は次回の起動時に再試行します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@을(를) 최신 변환으로 업데이트할 수 없습니다. 이전처럼 계속 작동하며, Open Wallpaper Engine이 다음 실행 시 다시 시도합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie udało się zaktualizować %@ do najnowszej konwersji. Działają jak dotąd, a Open Wallpaper Engine spróbuje ponownie przy następnym uruchomieniu."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível atualizar %@ para a conversão mais recente. Eles continuam funcionando como antes, e o Open Wallpaper Engine tentará novamente na próxima abertura."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось обновить %@ до последней конвертации. Они продолжат работать как раньше, а Open Wallpaper Engine попробует снова при следующем запуске."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ en son dönüştürmeye güncellenemedi. Eskisi gibi çalışmaya devam ediyorlar; Open Wallpaper Engine bir sonraki açılışta yeniden deneyecek."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося оновити %@ до останньої конвертації. Вони працюватимуть як раніше, а Open Wallpaper Engine спробує знову під час наступного запуску."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法将 %@ 更新到最新转换。它们会照常运行，Open Wallpaper Engine 将在下次启动时重试。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法將 %@ 更新至最新轉換。它們會照常運作，Open Wallpaper Engine 將在下次啟動時重試。"
+          }
+        }
+      }
+    },
     "Create a playlist" : {
       "localizations" : {
         "ar" : {
