@@ -12,8 +12,11 @@ struct SceneSoundContentBuilder {
     /// The file's bytes inside the wallpaper's package, if it has one.
     var packagedData: (String) -> Data?
     var workshopURL: (String) -> URL?
-    var workshopData: (String) -> Data?
+    /// A dependency path's bytes and the file they come from (`WorkshopAssetResolver.located`).
+    var workshopData: (String) -> (data: Data, source: URL?)?
     var cacheDirectory = Self.defaultCacheDirectory
+    /// The wallpaper's `.pkg` that `packagedData` reads, which keys its cached copies.
+    var packageURL: URL?
 
     static var defaultCacheDirectory: URL {
         AppStorageLocation.current.cachesDirectory
@@ -56,21 +59,22 @@ struct SceneSoundContentBuilder {
 
     private func locate(_ path: String) -> URL? {
         let normalized = path.replacingOccurrences(of: "\\", with: "/")
-        if let data = packagedData(path) ?? packagedData(normalized) { return cached(data, entry: normalized) }
+        if let data = packagedData(path) ?? packagedData(normalized) {
+            return cached(data, entry: normalized, source: packageURL)
+        }
         if let loose = AssetPathResolver.fileURL(normalized, in: wallpaperDirectory) { return loose }
         if let url = workshopURL(normalized) { return url }
-        if let data = workshopData(normalized) { return cached(data, entry: normalized) }
+        if let found = workshopData(normalized) {
+            return cached(found.data, entry: normalized, source: found.source)
+        }
         return WallpaperEngineAssets.locate([normalized], in: WallpaperEngineAssets.searchDirectories)
     }
 
     /// A packaged file's copy in the caches, named by the wallpaper, entry and content so every
     /// screen and launch reuses it and an updated package gets a fresh copy.
-    private func cached(_ data: Data, entry: String) -> URL? {
-        // The package's modification date stands for the entry's: a changed package gets a new copy.
-        let package = wallpaperDirectory.appending(path: "scene.pkg")
-        let modified = (try? package.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate
+    private func cached(_ data: Data, entry: String, source: URL?) -> URL? {
         let destination = cacheDirectory.appending(path: Self.cacheName(entry: entry, wallpaperDirectory: wallpaperDirectory,
-                                                                        size: data.count, modified: modified))
+                                                                        source: source, fallbackSize: data.count))
         let files = FileManager.default
         if files.fileExists(atPath: destination.path) {
             // The modification date is the LRU's last use.
@@ -93,7 +97,14 @@ struct SceneSoundContentBuilder {
 
     /// A packaged entry's cache file name: stable across launches (`hashValue` is seeded per
     /// process), distinct per wallpaper since entry paths repeat across packages, and per content
-    /// (its size and its package's modification date), as `SceneLoadingSnapshotStore.contentKey`.
+    /// (the size and modification date of the file its bytes come from: the `.pkg`, a loose file
+    /// or a dependency's resolved file), as `SceneLoadingSnapshotStore.contentKey`.
+    static func cacheName(entry: String, wallpaperDirectory: URL?, source: URL?, fallbackSize: Int) -> String {
+        let values = try? source?.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey])
+        return cacheName(entry: entry, wallpaperDirectory: wallpaperDirectory, size: values?.fileSize ?? fallbackSize,
+                         modified: values?.contentModificationDate)
+    }
+
     static func cacheName(entry: String, wallpaperDirectory: URL?, size: Int, modified: Date?) -> String {
         let stamp = modified?.timeIntervalSinceReferenceDate ?? 0
         let key = "\(wallpaperDirectory?.standardizedFileURL.path ?? "")|\(entry)|\(size)|\(stamp)"

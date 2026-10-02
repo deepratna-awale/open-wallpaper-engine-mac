@@ -24,6 +24,29 @@ final class SceneReviewFixTests: XCTestCase {
         XCTAssertFalse(SceneSoundContentBuilder.isCurrentCacheName("-4611686018427387904.mp3"))
     }
 
+    func testSceneAudioCacheNameFollowsALooseSourceFile() throws {
+        // A converted wallpaper has no scene.pkg: its key comes from the file the bytes are read from.
+        let dir = FileManager.default.temporaryDirectory.appending(path: "owe-audio-src-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let source = dir.appending(path: "music.mp3")
+        try Data(count: 10).write(to: source)
+        try FileManager.default.setAttributes([.modificationDate: Date(timeIntervalSinceReferenceDate: 1000)],
+                                              ofItemAtPath: source.path)
+        let name = { SceneSoundContentBuilder.cacheName(entry: "sounds/music.mp3", wallpaperDirectory: dir,
+                                                        source: source, fallbackSize: 0) }
+        let first = name()
+        XCTAssertEqual(first, name(), "an unchanged file keeps its copy")
+        try FileManager.default.setAttributes([.modificationDate: Date(timeIntervalSinceReferenceDate: 2000)],
+                                              ofItemAtPath: source.path)
+        XCTAssertNotEqual(first, name(), "a touched file gets a new copy")
+        let touched = name()
+        try Data(count: 11).write(to: source)
+        try FileManager.default.setAttributes([.modificationDate: Date(timeIntervalSinceReferenceDate: 2000)],
+                                              ofItemAtPath: source.path)
+        XCTAssertNotEqual(touched, name(), "a resized file gets a new copy")
+    }
+
     func testSceneAudioCacheDropsOldNamesOnceAndKeepsUnderItsCap() throws {
         let dir = FileManager.default.temporaryDirectory.appending(path: "owe-audio-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
