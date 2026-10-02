@@ -273,6 +273,8 @@ struct GlobalSettings: Codable, Equatable {
     var otherApplicationPlayingAudio = GSPlayback.keepRunning
     var displayAsleep = GSPlayback.keepRunning
     var laptopOnBattery = GSPlayback.keepRunning
+    /// Settings › Performance › Application Rules (`ApplicationRule`), in the order listed.
+    var applicationRules: [ApplicationRule] = []
     
     // MARK: Quality
     /// WE's default is none (`config.json` `"msaa": "none"`).
@@ -348,18 +350,23 @@ struct GlobalSettings: Codable, Equatable {
     /// WE's "Media integration support" (`mediaintegration`, on by default): wallpapers hear the
     /// system's Now Playing session (`MacMediaSessionSource`).
     var mediaIntegration = true
-    var reloadWhenChangingOutputDevice = true // Not putting in use
+    /// WE's "Reload when changing output device": the running wallpapers reload when the default
+    /// output device changes (`OutputDeviceChangeMonitor`). Capture follows the device either way.
+    var reloadWhenChangingOutputDevice = true
     
     // MARK: Video
     var videoFramework = GSVideoFramework.preferred
     
     // MARK: Advanced
-    var processPiority = GSProcessPiority.normal // Not putting in use
-    var pauseOnVRAMExhausted = false // Not putting in use
-    var restartAfterCrashing = false // Not putting in use
+    /// WE's process priority (`ProcessPriority`): the app's nice value and its threads' QoS.
+    var processPiority = GSProcessPiority.normal
+    /// Pauses playback while the GPU's video memory is exhausted (`VideoMemoryWatch`).
+    var pauseOnVRAMExhausted = false
+    /// Reopens the app after a crash (`CrashWatcher`, `CrashRelaunchPolicy`). Off by default.
+    var restartAfterCrashing = false
     
     // MARK: Developer
-    var logLevel = GSLogLevel.none
+    var logLevel = GSLogLevel.error
     
     // MARK: Misc
     var autoRefresh = true
@@ -370,7 +377,7 @@ struct GlobalSettings: Codable, Equatable {
     /// are left behind.
     enum CodingKeys: String, CodingKey {
         case otherApplicationFocused, otherApplicationMaximized, otherApplicationFullscreen, otherApplicationPlayingAudio
-        case displayAsleep
+        case displayAsleep, applicationRules
         case laptopOnBattery, textureResolution, shadows, volumetrics, fps, fpsSetByUser, particleBudget, optimiseTextures
         case webStandardResolution, reducedResolutionParticles
         case qualityEfficiency
@@ -381,7 +388,10 @@ struct GlobalSettings: Codable, Equatable {
         case autoStart, safeMode, language, adjustMenuBarTint, appearance, audioOutput
         case lockScreenPicture, screenSaver
         case reloadWhenChangingOutputDevice, videoFramework, processPiority, pauseOnVRAMExhausted
-        case restartAfterCrashing, logLevel, autoRefresh
+        case restartAfterCrashing, autoRefresh
+        /// Moved when Errors Only became the default: the old `logLevel` key can't tell the old
+        /// default (None) from a chosen None.
+        case logLevel = "logLevelChoice"
         case syncPropertiesAcrossDisplays
         case mediaIntegration
         case cheaperShadows
@@ -389,6 +399,9 @@ struct GlobalSettings: Codable, Equatable {
 }
 
 extension GlobalSettings {
+    /// Keys settings were saved under before, read once to carry the user's choice over.
+    private enum LegacyKeys: String, CodingKey { case logLevel }
+
     /// Reads each stored setting on its own: a key that is missing (a setting added since the
     /// settings were saved) or unreadable keeps its default, and the others are kept.
     init(from decoder: Decoder) throws {
@@ -407,6 +420,9 @@ extension GlobalSettings {
         read(.otherApplicationPlayingAudio, &otherApplicationPlayingAudio)
         read(.displayAsleep, &displayAsleep)
         read(.laptopOnBattery, &laptopOnBattery)
+        var ruleList = ApplicationRuleList()
+        read(.applicationRules, &ruleList)
+        applicationRules = ruleList.rules
         read(.antiAliasing, &antiAliasing)
         read(.postProcessing, &postProcessing)
         read(.textureResolution, &textureResolution)
@@ -438,7 +454,14 @@ extension GlobalSettings {
         read(.processPiority, &processPiority)
         read(.pauseOnVRAMExhausted, &pauseOnVRAMExhausted)
         read(.restartAfterCrashing, &restartAfterCrashing)
-        read(.logLevel, &logLevel)
+        if container.contains(.logLevel) {
+            read(.logLevel, &logLevel)
+        } else if let legacy = try? decoder.container(keyedBy: LegacyKeys.self),
+                  let stored = try? legacy.decodeIfPresent(GSLogLevel.self, forKey: .logLevel),
+                  stored != .none {
+            // A stored None was the old default, so it becomes the new one, Errors Only.
+            logLevel = stored
+        }
         read(.autoRefresh, &autoRefresh)
         read(.syncPropertiesAcrossDisplays, &syncPropertiesAcrossDisplays)
         read(.mediaIntegration, &mediaIntegration)

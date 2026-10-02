@@ -28,7 +28,8 @@ struct WallpaperStorageSection: View {
             }
             if WallpaperStorage.usesCustomDirectory {
                 Button("Use Default Location") {
-                    WallpaperStorage.resetToDefault()
+                    if WallpaperStorage.resetToDefault() { libraryFolderDidChange() }
+                    storageError = nil
                 }
                 .help("Goes back to the default storage folder. Wallpapers in the current folder stay where they are.")
             }
@@ -73,6 +74,12 @@ struct WallpaperStorageSection: View {
         }
     }
 
+    /// The Installed library and the downloaded-wallpaper index follow the new folder.
+    private func libraryFolderDidChange() {
+        DownloadedWallpaperIndex.shared.reloadFromLibrary()
+        AppDelegate.shared.contentViewModel.refresh()
+    }
+
     private func setStorageDirectory(moveExisting: Bool) {
         guard let directory = pendingStorageDirectory else { return }
         do {
@@ -83,8 +90,7 @@ struct WallpaperStorageSection: View {
                     to: migration.destination
                 )
             }
-            DownloadedWallpaperIndex.shared.reloadFromLibrary()
-            AppDelegate.shared.contentViewModel.refresh()
+            libraryFolderDidChange()
             storageError = nil
         } catch {
             storageError = error.localizedDescription

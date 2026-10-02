@@ -94,8 +94,9 @@ struct OptimizationsPage: SettingsPage {
                 .help("Plays the wallpapers' own sound. Off silences every wallpaper.")
                 Toggle(isOn: $viewModel.settings.reloadWhenChangingOutputDevice) {
                     Text("Reload when changing output device")
-                }.disabled(true)
-                .help("This setting has no effect yet.")
+                }
+                .changedFromDefault(viewModel.isChanged(\.reloadWhenChangingOutputDevice))
+                .help("Reloads the wallpapers and their audio when you switch the sound output, such as to headphones or another speaker.")
                 Toggle("Media integration support", isOn: $viewModel.settings.mediaIntegration)
                     .changedFromDefault(viewModel.isChanged(\.mediaIntegration))
                     .help("Lets wallpapers show the title, artist and album cover of what's playing now. Off hides it from every wallpaper.")
@@ -124,13 +125,13 @@ struct OptimizationsPage: SettingsPage {
                     Text("Below Normal").tag(GSProcessPiority.belowNormal)
                 }
                 .changedFromDefault(viewModel.isChanged(\.processPiority))
-                .help("This setting has no effect yet.")
+                .help("Below Normal lets other apps go first: Open Wallpaper Engine runs at a lower CPU priority, and wallpapers may drop frames while the Mac is busy.")
                 Toggle("Pause when VRAM is exhausted", isOn: $viewModel.settings.pauseOnVRAMExhausted)
                     .changedFromDefault(viewModel.isChanged(\.pauseOnVRAMExhausted))
-                    .help("This setting has no effect yet.")
+                    .help("Pauses every wallpaper while the GPU runs out of video memory, and resumes them when memory frees up.")
                 Toggle("Restart after crashing", isOn: $viewModel.settings.restartAfterCrashing)
                     .changedFromDefault(viewModel.isChanged(\.restartAfterCrashing))
-                    .help("This setting has no effect yet.")
+                    .help("Opens Open Wallpaper Engine again if it crashes, at most 3 times in 5 minutes. The wallpaper that was showing stays off until you retry it.")
             } header: {
                 Label("Rendering", systemImage: "wrench.and.screwdriver.fill")
             }

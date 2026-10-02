@@ -11,6 +11,7 @@ struct PerformancePage: SettingsPage {
     @ObservedObject var viewModel: GlobalSettingsViewModel
     /// A display can show HDR, so "Ultra (Display HDR)" is offered (`DisplayHDRSupport`).
     private let displayHDR = DisplayHDRSupport.isAvailable()
+    @State private var isEditingApplicationRules = false
     
     init(globalSettings viewModel: GlobalSettingsViewModel) {
         self.viewModel = viewModel
@@ -86,13 +87,16 @@ struct PerformancePage: SettingsPage {
                     Text("Application Rules")
                     Spacer()
                     Button {
-                        
+                        isEditingApplicationRules = true
                     } label: {
                         Text("Edit").frame(minWidth: 100)
                     }
                     .glassButtonStyle(.prominent)
-                    .disabled(true)
-                    .help("This setting has no effect yet.")
+                }
+                .changedFromDefault(viewModel.isChanged(\.applicationRules))
+                .help("Choose what wallpapers do while specific apps are running or in front, such as pausing during a game.")
+                .sheet(isPresented: $isEditingApplicationRules) {
+                    ApplicationRulesSheet(rules: $viewModel.settings.applicationRules)
                 }
             } header: {
                 Label("Playback", systemImage: "play.fill")
@@ -239,7 +243,7 @@ struct PerformancePage: SettingsPage {
                 .help("Lets scenes draw their reflection effects, such as water or glass. Off skips that work in scenes that use them.")
             } header: {
                 Label("Quality", systemImage: "memorychip.fill")
-                Text("These settings are designed for scene wallpapers and may not work as expected for other types.")
+                Text("These settings are for scene wallpapers. FPS and Render Resolution apply to web wallpapers too.")
             }
             .settingsAnchor(SettingsAnchor.quality)
         }

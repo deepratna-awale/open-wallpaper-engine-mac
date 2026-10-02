@@ -102,6 +102,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// The settings window's tab and the setting a link or search result opens.
     let settingsNavigation = SettingsNavigation()
     lazy var safeRestart = SafeRestart()
+    lazy var crashWatcher = CrashWatcher()
+    private var processPriorityCancellable: AnyCancellable?
+    private var crashWatcherCancellable: AnyCancellable?
     /// Hides the Dock icon while no window is open (`DockPresence`).
     let dockPresence = DockPresence()
     /// Sparkle, off in builds without an update signing key (`Core/Updates`).
@@ -143,8 +146,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var audioOutputCancellable: AnyCancellable?
     private var syncPropertiesCancellable: AnyCancellable?
     private var mediaIntegrationCancellable: AnyCancellable?
+    /// Follows the default output device: capture always restarts, wallpapers reload when the
+    /// setting is on. `rebuildWallpaperWindows` is the same reload an asset change uses.
+    private lazy var outputDeviceMonitor = OutputDeviceChangeMonitor(
+        source: CoreAudioOutputDeviceSource(),
+        schedule: { delay, work in DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work) },
+        reloadEnabled: { [weak self] in self?.globalSettingsViewModel.settings.reloadWhenChangingOutputDevice ?? false },
+        restartCapture: { MainActor.assumeIsolated { WallpaperServices.shared.audioCapture.outputDeviceDidChange() } },
+        reloadWallpapers: { [weak self] in MainActor.assumeIsolated { self?.rebuildWallpaperWindows() } })
     /// Settings › Performance › Playback, per display (`App/Playback`).
-    private lazy var displayPlaybackMonitor = makeDisplayPlaybackMonitor()
+    private(set) lazy var displayPlaybackMonitor = makeDisplayPlaybackMonitor()
+    /// Advanced › "Pause when VRAM is exhausted", fed to `displayPlaybackMonitor`.
+    private(set) lazy var videoMemoryWatch = makeVideoMemoryWatch()
+    private var videoMemorySettingCancellable: AnyCancellable?
     
     var importOpenPanel: NSOpenPanel!
     
@@ -172,18 +186,28 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         wallpaperViewModel.keepWorkshopPreview = { [steamCmd = contentViewModel.steamCmd] in try steamCmd.keepPreview($0) }
 
-        // Settings → Audio Output silences every wallpaper (`WallpaperAudioRouting`).
+        // Settings › Optimizations › Audio Output silences every wallpaper (`WallpaperAudioRouting`).
         audioOutputCancellable = globalSettingsViewModel.$settings.map(\.audioOutput).removeDuplicates()
             .sink { [weak self] enabled in self?.wallpaperViewModel.audioOutputEnabled = enabled }
-        // Settings → General: one set of user properties for every display, or each display's own.
+        // Settings › Optimizations: one set of user properties for every display, or each display's own.
         syncPropertiesCancellable = globalSettingsViewModel.$settings.map(\.syncPropertiesAcrossDisplays).removeDuplicates()
             .sink { [weak self] synced in self?.wallpaperViewModel.syncsPropertiesAcrossDisplays = synced }
-        // Settings → General → Media integration support: whether wallpapers hear Now Playing.
+        // Settings › Optimizations › Media integration support: whether wallpapers hear Now Playing.
         mediaIntegrationCancellable = globalSettingsViewModel.$settings.map(\.mediaIntegration).removeDuplicates()
             .sink { [weak self] enabled in self?.mediaSession.setIntegrationEnabled(enabled) }
 
+        // Settings → Audio → Reload when changing output device (`OutputDeviceChangeMonitor`).
+        outputDeviceMonitor.start()
+
         // Before the wallpaper windows exist, so a wallpaper behind an unclean exit never loads.
         safeRestart.attach(to: wallpaperViewModel)
+
+        // Settings › Process Priority: at launch, before any render thread starts, and on change.
+        processPriorityCancellable = globalSettingsViewModel.$settings.map(\.processPiority).removeDuplicates()
+            .sink { ProcessPriority.apply($0) }
+        // Settings › Restart after crashing: the watcher that reopens the app after a crash.
+        crashWatcherCancellable = globalSettingsViewModel.$settings.map(\.restartAfterCrashing).removeDuplicates()
+            .sink { [weak self] enabled in self?.crashWatcher.update(enabled: enabled) }
 
         // 创建设置视窗
         setSettingsWindow()
@@ -238,6 +262,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         updater.willRelaunch = { [unowned self] in self.captureUpdateRelaunchState().save(to: .app) }
         updater.start()
         displayPlaybackMonitor.start(settings: globalSettingsViewModel.$settings)
+        videoMemorySettingCancellable = globalSettingsViewModel.$settings
+            .map(\.pauseOnVRAMExhausted)
+            .removeDuplicates()
+            .sink { [weak self] enabled in MainActor.assumeIsolated { self?.videoMemoryWatch.setEnabled(enabled) } }
 
         // After an update relaunch, what was open before; otherwise the setup assistant if due.
         if !restoreUpdateRelaunchState(),
@@ -319,6 +347,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     
     func applicationWillTerminate(_ notification: Notification) {
         safeRestart.applicationWillTerminate()
+        crashWatcher.applicationWillTerminate()
         updater.stopShaderPrewarm()
         // The lock-screen pictures go back to each display's own picture, the rest to the one saved
         // at launch.
