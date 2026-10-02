@@ -180,13 +180,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         wallpaperViewModel.keepWorkshopPreview = { [steamCmd = contentViewModel.steamCmd] in try steamCmd.keepPreview($0) }
 
-        // Settings → Audio Output silences every wallpaper (`WallpaperAudioRouting`).
+        // Settings › Optimizations › Audio Output silences every wallpaper (`WallpaperAudioRouting`).
         audioOutputCancellable = globalSettingsViewModel.$settings.map(\.audioOutput).removeDuplicates()
             .sink { [weak self] enabled in self?.wallpaperViewModel.audioOutputEnabled = enabled }
-        // Settings → General: one set of user properties for every display, or each display's own.
+        // Settings › Optimizations: one set of user properties for every display, or each display's own.
         syncPropertiesCancellable = globalSettingsViewModel.$settings.map(\.syncPropertiesAcrossDisplays).removeDuplicates()
             .sink { [weak self] synced in self?.wallpaperViewModel.syncsPropertiesAcrossDisplays = synced }
-        // Settings → General → Media integration support: whether wallpapers hear Now Playing.
+        // Settings › Optimizations › Media integration support: whether wallpapers hear Now Playing.
         mediaIntegrationCancellable = globalSettingsViewModel.$settings.map(\.mediaIntegration).removeDuplicates()
             .sink { [weak self] enabled in self?.mediaSession.setIntegrationEnabled(enabled) }
 
