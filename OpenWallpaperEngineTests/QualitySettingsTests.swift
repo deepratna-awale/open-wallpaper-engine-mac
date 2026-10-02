@@ -18,6 +18,8 @@ final class QualitySettingsTests: XCTestCase {
         drawn.sceneDetail = .matchDisplay
         drawn.optimiseTextures = true
         drawn.cheaperShadows = true
+        // #73: the app renders at the display's point size by default (`GSRenderResolution.display`).
+        drawn.renderResolution = .display
         XCTAssertEqual(SceneRenderSettings(settings), drawn)
         XCTAssertEqual(GSLightingQuality.allCases.map(\.level), [0, 1, 2, 3, 4])
         XCTAssertTrue(GSPostProcessingQuality.enabled.allowsBloom)

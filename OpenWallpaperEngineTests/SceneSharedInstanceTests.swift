@@ -20,7 +20,10 @@ final class SceneSharedInstanceTests: XCTestCase {
     }
 
     private func view(_ width: Int, _ height: Int, device: MTLDevice) -> MTKView {
-        let view = MTKView(frame: CGRect(x: 0, y: 0, width: width, height: height), device: device)
+        // Made as the app makes its scene views: the view's own timer stopped from the start, so
+        // only the render thread draws (an unpaused `MTKView` draws on main before `show`).
+        let view = SceneRenderLoop.makeView(frame: CGRect(x: 0, y: 0, width: width, height: height))
+        view.device = device
         view.colorPixelFormat = .bgra8Unorm
         view.autoResizeDrawable = false
         view.drawableSize = CGSize(width: width, height: height)
