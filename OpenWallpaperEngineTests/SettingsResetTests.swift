@@ -95,6 +95,22 @@ final class SettingsResetTests: XCTestCase {
         XCTAssertNotEqual(OWELog.threshold(for: .none), OWELog.threshold(for: .error))
     }
 
+    /// Errors Only is the default; the old key's None (the old default) migrates to it, other
+    /// old choices stay, and a None saved under the new key stays None.
+    func testLogLevelDefaultAndMigration() throws {
+        XCTAssertEqual(GlobalSettings().logLevel, .error)
+        func decode(_ json: String) throws -> GlobalSettings {
+            try JSONDecoder().decode(GlobalSettings.self, from: Data(json.utf8))
+        }
+        XCTAssertEqual(try decode(#"{"logLevel":"none"}"#).logLevel, .error)
+        XCTAssertEqual(try decode(#"{"logLevel":"verbose"}"#).logLevel, .verbose)
+        XCTAssertEqual(try decode("{}").logLevel, .error)
+        var chosen = GlobalSettings()
+        chosen.logLevel = .none
+        let saved = try JSONDecoder().decode(GlobalSettings.self, from: JSONEncoder().encode(chosen))
+        XCTAssertEqual(saved.logLevel, .none)
+    }
+
     func testUseDefaultLocationReportsAChange() {
         XCTAssertFalse(WallpaperStorage.resetToDefault(defaults: defaults), "already the default")
         defaults.set("/tmp/owe-custom-storage", forKey: "CustomWallpapersDirectory")
