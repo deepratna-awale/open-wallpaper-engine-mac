@@ -191,7 +191,7 @@ struct ImageMaterialPlanBuilder {
             return nil
         }
 
-        let loader = ShaderSourceLoader(readFile: readFile)
+        let loader = ShaderSourceLoader(readFile: readFile, memo: translator.sources)
         let vertex = try loader.load(materialPass.shader, stage: .vertex)
         let fragment = try loader.load(materialPass.shader, stage: .fragment)
 

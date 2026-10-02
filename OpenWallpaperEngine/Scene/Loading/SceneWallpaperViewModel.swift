@@ -79,6 +79,9 @@ class SceneWallpaperViewModel: ObservableObject {
     /// id, as the last content build made them: an object rebuilt alone is thinned by the scene's
     /// factor while that stays the same.
     private var particleCapacities: [Int: Int] = [:]
+    /// Time spent planning particle materials (`buildParticleMaterial`) since the content build
+    /// began, and the plans made, for its load log line.
+    private var particleMaterialPlanTime: (nanoseconds: UInt64, plans: Int) = (0, 0)
     /// The budget scaling last logged, so a rebuild of the same scene doesn't log it again.
     private var loggedParticleBudget: (directory: URL, report: ParticleBudget.Report)?
     /// Retained for video wallpapers rendered through the scene pipeline.
@@ -625,6 +628,8 @@ class SceneWallpaperViewModel: ObservableObject {
             return layer
         }
         var particleSystems: [SceneMetalParticleSystem] = []
+        particleMaterialPlanTime = (0, 0)
+        let memoBefore = effectTranslator?.sources.counts
         let particleCache = ParticleDefinitionCache(sharesParts: sharesParticleDefinitions)
         for (index, object) in scene.objects.enumerated() {
             let base = particleSystems.count
@@ -639,6 +644,7 @@ class SceneWallpaperViewModel: ObservableObject {
                 particleSystems.append(system)
             }
         }
+        logParticleMaterialPlanTime(wallpaperDir: wallpaperDir, memoBefore: memoBefore)
         logParticleBuildTiming(particleCache.timing, wallpaperDir: wallpaperDir)
         particleCapacities = Dictionary(particleSystems.map { system in
             (system.order < scene.objects.count ? scene.objects[system.order].id ?? system.order : system.order,
@@ -1892,6 +1898,11 @@ class SceneWallpaperViewModel: ObservableObject {
                                        spriteSheet: SpriteSheet?, blending: WEMaterialBlending?, object: WESceneObject,
                                        wallpaperDir: URL) -> ParticleMaterialPlan? {
         guard let translator = effectTranslator else { return nil }
+        let start = DispatchTime.now().uptimeNanoseconds
+        defer {
+            particleMaterialPlanTime.nanoseconds += DispatchTime.now().uptimeNanoseconds - start
+            particleMaterialPlanTime.plans += 1
+        }
         let builder = ParticleMaterialPlanBuilder(
             translator: translator,
             readFile: { [weak self] path in self?.assetData(named: path, wallpaperDir: wallpaperDir) },
@@ -1904,6 +1915,18 @@ class SceneWallpaperViewModel: ObservableObject {
             OWELog.error(.scene, "Particle system \(object.id ?? -1) uses the built-in draw, material \(materialPath): \(error)")
             return nil
         }
+    }
+
+    /// One line: the content build's particle material plans and their time, and how many
+    /// shader parses and geometry folds came from the translator's memo (`ShaderSourceMemo`).
+    private func logParticleMaterialPlanTime(wallpaperDir: URL, memoBefore: (hits: Int, misses: Int)?) {
+        guard particleMaterialPlanTime.plans > 0 else { return }
+        let memo = effectTranslator.map { translator -> String in
+            let now = translator.sources.counts
+            return ", shader memo \(now.hits - (memoBefore?.hits ?? 0)) hits, \(now.misses - (memoBefore?.misses ?? 0)) misses"
+        } ?? ""
+        Self.logDetail(String(format: "%@: particle material plans: %d in %.1f ms", wallpaperDir.lastPathComponent,
+                              particleMaterialPlanTime.plans, Double(particleMaterialPlanTime.nanoseconds) / 1e6) + memo)
     }
 
     private func loadSpriteSheet(named name: String, materialDir: String, wallpaperDir: URL,

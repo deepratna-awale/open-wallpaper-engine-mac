@@ -177,16 +177,17 @@ struct ParticleMaterialPlanBuilder {
                        pass: MaterialPass, materialPath: String,
                        engineCombos: [String: Int], baseTexture: SceneMetalTextureSource) throws -> ParticleMaterialPlan.Stage {
         let reader = readFile
+        let memo = translator.sources
         // Rewritten vertex stages are served to the loader under names of their own; the variant
         // cache keys on the text, so they never collide with the authored stage.
         func synthetic(_ path: String, _ text: String) throws -> ShaderSource {
             let data = Data(text.utf8)
-            return try ShaderSourceLoader(readFile: { $0 == path ? data : reader($0) }).load(path, stage: .vertex)
+            return try ShaderSourceLoader(readFile: { $0 == path ? data : reader($0) }, memo: memo).load(path, stage: .vertex)
         }
-        let fragment = try ShaderSourceLoader(readFile: reader).load(shader, stage: .fragment)
+        let fragment = try ShaderSourceLoader(readFile: reader, memo: memo).load(shader, stage: .fragment)
         // What the stages declare (combos, uniforms and their material keys), before any rewrite.
         let declarations = try geometry.map { try synthetic("shaders/\(shader)+declarations.vert", $0.declarations) }
-            ?? ShaderSourceLoader(readFile: reader).load(shader, stage: .vertex)
+            ?? ShaderSourceLoader(readFile: reader, memo: memo).load(shader, stage: .vertex)
 
         var inputs: [Int: SceneEffectTextureInput] = [0: .asset(key: "\(materialPath)|particle0", source: baseTexture)]
         for (slot, name) in pass.textures.enumerated() where slot > 0 {
@@ -198,7 +199,7 @@ struct ParticleMaterialPlanBuilder {
         let vertex: ShaderSource
         let stageGeometry: ParticleMaterialPlan.Stage.Geometry
         if let geometry {
-            let emulation = try GeometryShaderEmulation.make(geometry, combos: combos, compiler: translator.compiler)
+            let emulation = try memo.geometryEmulation(geometry, combos: combos, compiler: translator.compiler)
             vertex = try synthetic("shaders/\(shader)+geom.vert", emulation.vertexText)
             stageGeometry = .emulated(vertexCount: try emulation.vertexCountPerInstance(combos: combos),
                                       restartsStrips: emulation.restartsStrips)
