@@ -81,6 +81,11 @@ class WallpaperViewModel: ObservableObject {
 
     @Published var recentWallpapers: [WEWallpaper] = []
 
+    /// Each display's wallpapers, for Previous Wallpaper outside a playlist.
+    @Published var wallpaperHistory = WallpaperHistory() {
+        didSet { if persistsWallpapers { wallpaperHistory.save(to: .app) } }
+    }
+
     @Published var playlists: [WallpaperPlaylist] = [] {
         didSet { savePlaylists() }
     }
@@ -243,12 +248,14 @@ class WallpaperViewModel: ObservableObject {
 
     /// Set wallpaper for a specific screen.
     func setWallpaper(_ wallpaper: WEWallpaper, for screenId: String) {
-        wallpapers[screenId] = wallpaper
-        addToRecents(wallpaper)
+        setWallpaper(wallpaper, for: [screenId])
     }
 
     func setWallpaper(_ wallpaper: WEWallpaper, for screenIds: Set<String>) {
         for screenId in screenIds {
+            // The outgoing one too: it may have been restored at launch rather than set.
+            wallpaperHistory.push(self.wallpaper(for: screenId), for: screenId)
+            wallpaperHistory.push(wallpaper, for: screenId)
             wallpapers[screenId] = wallpaper
         }
         addToRecents(wallpaper)
@@ -871,6 +878,7 @@ class WallpaperViewModel: ObservableObject {
 
         // Load recent wallpapers
         loadRecents()
+        wallpaperHistory = WallpaperHistory.load(from: .app)
         restartPlaylistTimer()
         refreshInstanceKeys()
     }

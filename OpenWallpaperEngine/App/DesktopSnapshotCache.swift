@@ -133,7 +133,8 @@ struct DesktopSnapshotCache {
     func removeAll() {
         guard let files = try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil,
                                                                        options: .skipsHiddenFiles) else { return }
-        for file in files where file.pathExtension == "jpg" && file.lastPathComponent.hasPrefix("desktop-") {
+        for file in files where (file.pathExtension == "jpg" && file.lastPathComponent.hasPrefix("desktop-"))
+            || file.lastPathComponent.hasPrefix(LockScreenPicture.prefix) {
             try? FileManager.default.removeItem(at: file)
         }
     }

@@ -6,13 +6,6 @@ import XCTest
 /// the main thread never waits on the key, the cache read, the parse or the content build, a newer
 /// load cancels an older one, and the display shows the preview until the live scene draws.
 final class SceneBackgroundLoadTests: XCTestCase {
-    private final class Hits: @unchecked Sendable {
-        private let lock = NSLock()
-        private var list: [ThreadGuards.Violation] = []
-        func add(_ violation: ThreadGuards.Violation) { lock.withLock { list.append(violation) } }
-        var all: [ThreadGuards.Violation] { lock.withLock { list } }
-    }
-
     private var restorePool: PreparationPool?
 
     override func tearDown() {
@@ -57,9 +50,6 @@ final class SceneBackgroundLoadTests: XCTestCase {
         defer { Fixtures.removeStoredSettings(for: directory) }
         let wallpaper = try wallpaper(directory)
         SceneWallpaperViewModel.dropSharedParses()
-        let hits = Hits()
-        let previous = ThreadGuards.setHandler { hits.add($0) }
-        defer { ThreadGuards.setHandler(previous) }
         let watchdog = HangWatchdog(pingInterval: 0.005, mainThreshold: 0.1)
         watchdog.start()
 
@@ -75,8 +65,7 @@ final class SceneBackgroundLoadTests: XCTestCase {
         XCTAssertEqual(revision, 1)
         let content = try XCTUnwrap(built ?? nil, "no content")
         XCTAssertFalse(content.layers.isEmpty)
-        let onMain = hits.all.filter { $0.kind == .onMainThread }
-        XCTAssertEqual(onMain, [], onMain.map { "\($0.what) at \($0.file):\($0.line)" }.joined(separator: "\n"))
+        // A thread guard hit fails the test through `ThreadGuardTestObserver`.
     }
 
     /// A load superseded before it ran never commits: only the newest wallpaper loads.
