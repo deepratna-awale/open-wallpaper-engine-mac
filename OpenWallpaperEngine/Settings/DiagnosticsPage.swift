@@ -7,7 +7,11 @@ struct DiagnosticsPage: SettingsPage {
     /// Called after "Reset Config", so views of preferences outside `GlobalSettings` redraw.
     var onReset: () -> Void = {}
 
-    init(globalSettings: GlobalSettingsViewModel, onReset: @escaping () -> Void = {}) {
+    init(globalSettings: GlobalSettingsViewModel) {
+        self.init(globalSettings: globalSettings, onReset: {})
+    }
+
+    init(globalSettings: GlobalSettingsViewModel, onReset: @escaping () -> Void) {
         self.viewModel = globalSettings
         self.onReset = onReset
     }
