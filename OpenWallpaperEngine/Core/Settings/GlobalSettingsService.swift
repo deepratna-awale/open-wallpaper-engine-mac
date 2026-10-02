@@ -107,10 +107,12 @@ class GlobalSettingsViewModel: ObservableObject {
 
         self.didChangeScreenSaverCancellable =
         self.$settings
-            .map { $0.screenSaver }
+            .map { [$0.screenSaver as AnyHashable, $0.renderResolution] }
             .removeDuplicates()
             .dropFirst()
-            .sink { enabled in
+            .sink { [weak self] _ in
+                guard let enabled = self?.settings.screenSaver else { return }
+                // The loop follows Render Resolution, so a change re-renders it.
                 AppDelegate.shared.screenSaver.update(enabled: enabled,
                                                       wallpaper: AppDelegate.shared.wallpaperViewModel.currentWallpaper)
             }
