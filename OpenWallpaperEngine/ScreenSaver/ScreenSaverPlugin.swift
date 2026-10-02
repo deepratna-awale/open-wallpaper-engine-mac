@@ -91,15 +91,17 @@ final class ScreenSaverPlugin: ObservableObject {
 
     /// The video names `wallpaper` needs on `screens`; empty for anything but a scene.
     nonisolated static func targets(for wallpaper: WEWallpaper, screens: [(pixels: SIMD2<Int>, points: SIMD2<Int>)],
-                        properties: [String: String]) -> [Target] {
+                        properties: [String: String], resolution: GSRenderResolution = .display) -> [Target] {
         guard let key = statusKey(for: wallpaper, properties: properties) else { return [] }
         let wallpaperKey = key.wallpaperKey, contentKey = key.contentKey, hash = key.propertyHash
-        // One video at the largest display's size in points (what the desktop looks like, e.g.
-        // 1920×1080 on a 4K panel at 2×), which every display plays scaled to fill: one render
-        // and one file, and rendering backing pixels would cost several times as much for no
-        // visible gain.
-        guard let largest = screens.map(\.points).max(by: { $0.x * $0.y < $1.x * $1.y }) else { return [] }
-        return [Target(pixelSize: largest, pointSize: largest,
+        // One video at the largest display's size, which every display plays scaled to fill: one
+        // render and one file. Its sharpness follows Render Resolution like the live wallpaper:
+        // Display renders the size in points (1920×1080 on a 4K panel at 2×); Retina and Full
+        // render the backing pixels, at several times the render time and storage.
+        let sizes = screens.map { resolution == .display ? $0.points : $0.pixels }
+        guard let largest = sizes.max(by: { $0.x * $0.y < $1.x * $1.y }),
+              let points = screens.map(\.points).max(by: { $0.x * $0.y < $1.x * $1.y }) else { return [] }
+        return [Target(pixelSize: largest, pointSize: points,
                        fileName: ScreenSaverVideoStore.fileName(wallpaperKey: wallpaperKey, contentKey: contentKey,
                                                                 propertyHash: hash, pixelSize: largest))]
     }
@@ -131,8 +133,9 @@ final class ScreenSaverPlugin: ObservableObject {
             wallpaper: WallpaperPropertyScope.shared.runtimeKey(directory: wallpaper.wallpaperDirectory))
         let generation = generation
         let directory = wallpaper.wallpaperDirectory
+        let resolution = AppDelegate.shared.globalSettingsViewModel.settings.renderResolution
         Self.fileQueue.async { [weak self] in
-            let targets = Self.targets(for: wallpaper, screens: screens, properties: properties)
+            let targets = Self.targets(for: wallpaper, screens: screens, properties: properties, resolution: resolution)
             let key = Self.statusKey(for: wallpaper, properties: properties)
             let ready = targets.allSatisfy { store.exists(fileName: $0.fileName) }
             Task { @MainActor in

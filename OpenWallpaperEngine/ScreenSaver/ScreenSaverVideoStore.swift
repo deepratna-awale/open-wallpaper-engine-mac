@@ -16,7 +16,7 @@ import Foundation
 /// every video the manifest no longer lists.
 struct ScreenSaverVideoStore: Sendable {
     /// Bump whenever the rendered video changes (loop rules, encoding, what is drawn).
-    static let revision = 1
+    static let revision = 2
     static let fileExtension = "mov"
 
     let directory: URL

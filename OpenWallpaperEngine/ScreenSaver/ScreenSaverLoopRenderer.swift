@@ -278,6 +278,8 @@ private final class FrameCapture: @unchecked Sendable {
 
 /// An HEVC `.mov` written frame by frame from `CGImage`s.
 private final class HEVCWriter {
+    /// HEVC encoder quality (0…1) for the loop video.
+    static let quality: Double = 0.95
     private let writer: AVAssetWriter
     private let input: AVAssetWriterInput
     private let adaptor: AVAssetWriterInputPixelBufferAdaptor
@@ -291,12 +293,13 @@ private final class HEVCWriter {
             OWELog.error(.app, "Screen saver: can't create the video writer: \(error)")
             return nil
         }
-        let bitsPerSecond = Double(pixelSize.x * pixelSize.y * frameRate) * 0.07
+        // Constant quality, not a bitrate: rain, particles and glow need several times the bits
+        // of a calm scene (a fixed 0.07 bit per pixel smeared them), and a still scene stays small.
         input = AVAssetWriterInput(mediaType: .video, outputSettings: [
             AVVideoCodecKey: AVVideoCodecType.hevc,
             AVVideoWidthKey: pixelSize.x,
             AVVideoHeightKey: pixelSize.y,
-            AVVideoCompressionPropertiesKey: [AVVideoAverageBitRateKey: Int(bitsPerSecond),
+            AVVideoCompressionPropertiesKey: [AVVideoQualityKey: Self.quality,
                                               AVVideoExpectedSourceFrameRateKey: frameRate],
         ])
         input.expectsMediaDataInRealTime = false
