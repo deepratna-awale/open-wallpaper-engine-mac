@@ -97814,96 +97814,96 @@
         }
       }
     },
-    "These settings are designed for scene wallpapers and may not work as expected for other types." : {
+    "These settings are for scene wallpapers. FPS and Render Resolution apply to web wallpapers too." : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "صُممت هذه الإعدادات لخلفيات المشاهد، وقد لا تعمل كما هو متوقع مع الأنواع الأخرى."
+            "value" : "هذه الإعدادات لخلفيات المشاهد. ينطبق معدل الإطارات (FPS) ودقة الرسم على خلفيات الويب أيضًا."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Diese Einstellungen sind für Szenen-Hintergrundbilder gedacht und funktionieren bei anderen Arten möglicherweise nicht wie erwartet."
+            "value" : "Diese Einstellungen gelten für Szenen-Hintergrundbilder. FPS und Renderauflösung gelten auch für Web-Hintergrundbilder."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Estos ajustes están pensados para fondos de pantalla de escena y puede que no funcionen como se espera con otros tipos."
+            "value" : "Estos ajustes son para fondos de pantalla de escena. FPS y Resolución de renderizado también se aplican a los fondos de pantalla web."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ces réglages sont conçus pour les fonds d’écran de type scène et peuvent ne pas fonctionner comme prévu avec les autres types."
+            "value" : "Ces réglages concernent les fonds d’écran de scène. FPS et Résolution de rendu s’appliquent aussi aux fonds d’écran web."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ये सेटिंग सीन वॉलपेपर के लिए बनाई गई हैं और हो सकता है कि दूसरे प्रकारों के लिए उम्मीद के मुताबिक काम न करें."
+            "value" : "ये सेटिंग्स सीन वॉलपेपर के लिए हैं। FPS और रेंडर रिज़ोल्यूशन वेब वॉलपेपर पर भी लागू होते हैं।"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Queste impostazioni sono pensate per gli sfondi di tipo scena e potrebbero non funzionare come previsto con altri tipi."
+            "value" : "Queste impostazioni sono per gli sfondi di scena. FPS e Risoluzione di rendering valgono anche per gli sfondi web."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "これらの設定はシーン壁紙向けに設計されているため、ほかのタイプでは期待どおりに動作しない場合があります。"
+            "value" : "これらの設定はシーン壁紙用です。FPS とレンダリング解像度は Web 壁紙にも適用されます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "이 설정은 장면 배경화면용으로 설계되었으며 다른 유형에서는 예상대로 작동하지 않을 수 있습니다."
+            "value" : "이 설정은 장면 배경화면용입니다. FPS와 렌더링 해상도는 웹 배경화면에도 적용됩니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Te ustawienia są przeznaczone dla tapet typu scena i w przypadku innych typów mogą nie działać zgodnie z oczekiwaniami."
+            "value" : "Te ustawienia dotyczą tapet scen. FPS i Rozdzielczość renderowania dotyczą też tapet internetowych."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Estes ajustes foram criados para imagens de fundo de cena e podem não funcionar como esperado em outros tipos."
+            "value" : "Estes ajustes são para papéis de parede de cena. FPS e Resolução de Renderização também se aplicam a papéis de parede web."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Эти настройки рассчитаны на обои-сцены и могут работать неправильно с другими типами."
+            "value" : "Эти настройки предназначены для обоев-сцен. FPS и разрешение рендеринга действуют и на веб-обои."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bu ayarlar sahne duvar kâğıtları için tasarlanmıştır ve diğer türlerde beklendiği gibi çalışmayabilir."
+            "value" : "Bu ayarlar sahne duvar kâğıtları içindir. FPS ve İşleme Çözünürlüğü web duvar kâğıtlarına da uygulanır."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ці налаштування призначені для шпалер-сцен і можуть працювати не так, як очікується, для інших типів."
+            "value" : "Ці налаштування призначені для шпалер-сцен. FPS і роздільність рендерингу діють і на вебшпалери."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "这些设置专为场景墙纸设计，用于其他类型时可能无法按预期工作。"
+            "value" : "这些设置适用于场景壁纸。帧速率和渲染分辨率也适用于网页壁纸。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "這些設定專為場景背景圖片設計，其他類型可能無法如預期運作。"
+            "value" : "這些設定適用於場景桌布。FPS 與渲染解析度也適用於網頁桌布。"
           }
         }
       }
