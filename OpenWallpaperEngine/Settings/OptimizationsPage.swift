@@ -29,6 +29,7 @@ struct OptimizationsPage: SettingsPage {
             Section {
                 Toggle("Remove original packages after conversion", isOn: $reclaimOriginalPackages)
                     .changedFromDefault(reclaimOriginalPackages)
+                    .help("Deletes a wallpaper's original package once it has converted and rendered cleanly, to save disk space. If a later converter update changes a Workshop wallpaper, it's downloaded again; a local import isn't updated.")
                 HStack {
                     Text(reclaimableDescription)
                         .foregroundStyle(.secondary)
@@ -46,6 +47,7 @@ struct OptimizationsPage: SettingsPage {
                         }
                     }
                     .disabled(isReclaiming || reclaimableBytes == 0)
+                    .help("Deletes the originals that are ready now, without waiting for the next launch.")
                 }
                 if let reclaimedCount {
                     Text("Removed \(reclaimedCount) original packages.")
@@ -62,6 +64,7 @@ struct OptimizationsPage: SettingsPage {
             Section {
                 Toggle("Sync properties across displays", isOn: $viewModel.settings.syncPropertiesAcrossDisplays)
                     .changedFromDefault(viewModel.isChanged(\.syncPropertiesAcrossDisplays))
+                    .help("On, one set of user properties applies to a wallpaper on every display. Off, each display keeps its own, as in Wallpaper Engine.")
             } header: {
                 Label("Displays", systemImage: "display.2")
             } footer: {
@@ -75,6 +78,7 @@ struct OptimizationsPage: SettingsPage {
                     Text("Metal (effects apply to video)").tag(GSVideoFramework.metal)
                 }
                 .changedFromDefault(viewModel.isChanged(\.videoFramework))
+                .help("AVKit plays videos with Apple's player. Metal draws them through the scene renderer so their effects apply; it needs the Wallpaper Engine assets, and without them videos play through AVKit.")
             } header: {
                 Label("Video", systemImage: "film")
             } footer: {
@@ -87,11 +91,14 @@ struct OptimizationsPage: SettingsPage {
                     Text("Audio Output")
                 }
                 .changedFromDefault(viewModel.isChanged(\.audioOutput))
+                .help("Plays the wallpapers' own sound. Off silences every wallpaper.")
                 Toggle(isOn: $viewModel.settings.reloadWhenChangingOutputDevice) {
                     Text("Reload when changing output device")
                 }.disabled(true)
+                .help("This setting has no effect yet.")
                 Toggle("Media integration support", isOn: $viewModel.settings.mediaIntegration)
                     .changedFromDefault(viewModel.isChanged(\.mediaIntegration))
+                    .help("Lets wallpapers show the title, artist and album cover of what's playing now. Off hides it from every wallpaper.")
             } header: {
                 Label("Audio", systemImage: "speaker.3.fill")
             } footer: {
@@ -108,7 +115,7 @@ struct OptimizationsPage: SettingsPage {
                     .help("Draws shadow maps at half size, a quarter of the shadow work; the edges stay soft. Off draws them as Wallpaper Engine does.")
                 Toggle("Render web wallpapers at standard resolution", isOn: $viewModel.settings.webStandardResolution)
                     .changedFromDefault(viewModel.isChanged(\.webStandardResolution))
-                    .help("On Retina displays, web wallpapers draw a quarter of the pixels. They look softer and use less GPU.")
+                    .help("Under the Retina or Full render resolution, draws web wallpapers at standard resolution, a quarter of the pixels on Retina, for less GPU. Under Display they already draw this way.")
                 Toggle("Draw large glowing particles at half resolution", isOn: $viewModel.settings.reducedResolutionParticles)
                     .changedFromDefault(viewModel.isChanged(\.reducedResolutionParticles))
                     .help("Large additive particle effects in 2D scenes, like glows and light haze, draw a quarter of the pixels. Their edges look softer and they use less GPU.")
@@ -117,10 +124,13 @@ struct OptimizationsPage: SettingsPage {
                     Text("Below Normal").tag(GSProcessPiority.belowNormal)
                 }
                 .changedFromDefault(viewModel.isChanged(\.processPiority))
+                .help("This setting has no effect yet.")
                 Toggle("Pause when VRAM is exhausted", isOn: $viewModel.settings.pauseOnVRAMExhausted)
                     .changedFromDefault(viewModel.isChanged(\.pauseOnVRAMExhausted))
+                    .help("This setting has no effect yet.")
                 Toggle("Restart after crashing", isOn: $viewModel.settings.restartAfterCrashing)
                     .changedFromDefault(viewModel.isChanged(\.restartAfterCrashing))
+                    .help("This setting has no effect yet.")
             } header: {
                 Label("Rendering", systemImage: "wrench.and.screwdriver.fill")
             }

@@ -47,12 +47,15 @@ struct PermissionsPage: SettingsPage {
             PermissionHelper.grantAudioCaptureAccess { refresh() }
         }
         .disabled(hasAudioCapturePermission)
+        .help("Asks macOS for the permission audio visualizers need. If it was denied before, opens System Settings instead.")
         Button("Open Privacy Settings") {
             PermissionHelper.openAudioCaptureSettings()
         }
+        .help("Opens Privacy & Security in System Settings, at this permission.")
         Button("Recheck") {
             refresh()
         }
+        .help("Reads the permission again and starts audio capture if it's now allowed.")
     }
 
     /// Never prompts: only re-reads the grant and starts capture if it was newly granted.
