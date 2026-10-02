@@ -19,6 +19,9 @@ final class ImageMaterialRenderer {
     /// `_rt_shadowAtlas`'s comparison sampler (`SceneShadowAtlas.makeSampler`).
     private let shadowSampler: MTLSamplerState
     private let repeatSampler: MTLSamplerState
+    /// A zero texel: `_alias_lightCookie` without a packed cookie spot (WE's alias is empty, which
+    /// D3D reads as zeros).
+    private let zeroTexture: MTLTexture
     /// Uniform blocks over 4 KB. Render thread only (see `SceneUniformArena`).
     let uniformArena: SceneUniformArena
 
@@ -107,6 +110,12 @@ final class ImageMaterialRenderer {
         }
         guard let clamp = sampler(.clampToEdge), let wrap = sampler(.repeat),
               let shadow = SceneShadowAtlas.makeSampler(device: device) else { return nil }
+        let zeroDescriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm, width: 1, height: 1, mipmapped: false)
+        zeroDescriptor.usage = .shaderRead
+        guard let zeroTexel = device.makeTexture(descriptor: zeroDescriptor) else { return nil }
+        zeroTexel.replace(region: MTLRegionMake2D(0, 0, 1, 1), mipmapLevel: 0, withBytes: [UInt8](repeating: 0, count: 4),
+                          bytesPerRow: 4)
+        zeroTexture = zeroTexel
         clampSampler = clamp
         shadowSampler = shadow
         repeatSampler = wrap
@@ -435,6 +444,13 @@ final class ImageMaterialRenderer {
             case .fbo(SceneShadowAtlas.name):
                 guard let atlas = draw.shadowAtlas else { return nil }
                 textureInfo.append((slot, atlas, shadowSampler, nil, nil))
+            case .fbo(SceneLightCookie.name):
+                // The last packed cookie spot's texture, else the zero texel.
+                if let cookie = draw.frame.lighting.cookie, let texture = draw.assetTexture(cookie.key, cookie.source) {
+                    textureInfo.append((slot, texture, clampSampler, cookie.source.contentSize, nil))
+                } else {
+                    textureInfo.append((slot, zeroTexture, clampSampler, nil, nil))
+                }
             case .fbo:
                 return nil
             }
