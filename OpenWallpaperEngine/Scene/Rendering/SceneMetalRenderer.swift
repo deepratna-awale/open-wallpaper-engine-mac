@@ -412,9 +412,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private let textRaster: SceneTextRasterQueue
     /// Changed strings still rasterising or waiting for a frame to take them (for tests).
     var pendingTextRasters: Int { textRaster.inFlight }
-    /// The finest raster scale each text layer has needed, so an animated scale doesn't
-    /// re-rasterise at every step (see `SceneTextRasterScale.retained`).
-    private var textRasterScales: [String: Float] = [:]
+    /// Each text layer's raster scale: quantised and retained while it animates, exact once it
+    /// settles (`SceneTextRasterScale.Tracker`).
+    private var textRasterScales: [String: SceneTextRasterScale.Tracker] = [:]
     /// Parent graph of the current content; layer origins are relative to their parents.
     private var transforms = SceneTransformHierarchy.empty
     /// Each layer's local transform, evaluated once per frame so a parent's scripts run once
@@ -3552,9 +3552,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             ?? WallpaperServices.shared.userPropertyValue("_owe_text_\(layerID)_size", fallback: Float(text.pointSize))
         let bold = WallpaperServices.shared.userPropertyString("_owe_text_\(layerID)_bold") == "true"
         let italic = WallpaperServices.shared.userPropertyString("_owe_text_\(layerID)_italic") == "true"
-        let rasterScale = SceneTextRasterScale.retained(SceneTextRasterScale.quantized(pixelsPerUnit),
-                                                        previous: textRasterScales[stateKey])
-        textRasterScales[stateKey] = rasterScale
+        let rasterScale = textRasterScales[stateKey, default: SceneTextRasterScale.Tracker()].scale(for: pixelsPerUnit)
         let cacheKey = "\(stateKey)|\(value)|\(boxSize.x)|\(boxSize.y)|\(fontName)|\(sizeValue)|\(bold)|\(italic)|\(rasterScale)"
             + "|\(text.horizontalAlignment ?? "")|\(text.verticalAlignment ?? "")"
             + (fill.map { "|\($0)" } ?? "")

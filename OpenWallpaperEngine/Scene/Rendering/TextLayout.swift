@@ -311,6 +311,35 @@ enum SceneTextRasterScale {
         max(pixelsPerUnit, previous ?? 0)
     }
 
+    /// Frames a layer's density must hold still before it gets an exact raster.
+    static let settleFrames = 30
+
+    /// A text layer's raster scale over time: while its density animates, the retained quantised
+    /// step (`quantized`, `retained`), so a scaling clock reuses a few rasters drawn scaled on the
+    /// GPU; once it has held still for `settleFrames`, the exact density, so text at rest is sharp.
+    struct Tracker {
+        private(set) var retained: Float?
+        private var last: Float?
+        private var stillFrames = 0
+
+        mutating func scale(for pixelsPerUnit: Float) -> Float {
+            if let last, abs(pixelsPerUnit - last) <= max(abs(last), 1e-6) * 1e-4 {
+                stillFrames += 1
+            } else {
+                stillFrames = 0
+            }
+            last = pixelsPerUnit
+            if stillFrames >= SceneTextRasterScale.settleFrames, pixelsPerUnit.isFinite, pixelsPerUnit > 0 {
+                // The next animation starts over from where this one rests.
+                retained = SceneTextRasterScale.quantized(pixelsPerUnit)
+                return pixelsPerUnit
+            }
+            let scale = SceneTextRasterScale.retained(SceneTextRasterScale.quantized(pixelsPerUnit), previous: retained)
+            retained = scale
+            return scale
+        }
+    }
+
     static func clamped(_ pixelsPerUnit: Float, boxSize: SIMD2<Float>) -> Float {
         let largest = max(boxSize.x, boxSize.y, 1)
         return max(min(pixelsPerUnit, maxTextureDimension / largest), 1 / largest)
