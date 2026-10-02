@@ -116,11 +116,18 @@ final class ScenePuppetLibraryTests: XCTestCase {
             RunLoop.main.run(until: Date().addingTimeInterval(0.005))
             return try renderer.sharedFrame.map { try TextureUploadTests.read($0, device: device) }
         }
+        // The content lands in the background and the scene's clock starts then: frames drawn before
+        // it don't count, so the posed time (and her blink's phase with it) is the same every run.
+        let landing = Date().addingTimeInterval(60)
+        while !renderer.hasContent, Date() < landing { _ = try frame() }
+        XCTAssertTrue(renderer.hasContent, "the content never landed")
         // Posed: her head leaves the texture's corner for her neck as her layers play.
         for _ in 0..<90 {
             now += 1.0 / 30
             _ = try frame()
         }
+        // The first frame after the content landed starts the clock; each later one is a step.
+        XCTAssertEqual(renderer.sceneTime, 89.0 / 30, accuracy: 1e-6, "the clock ran only from the content's landing")
         // Settled, the clock held: every pipeline compiled, two frames alike.
         renderer.holdsClock = true
         var before: [UInt8]?
@@ -135,6 +142,9 @@ final class ScenePuppetLibraryTests: XCTestCase {
         } while Date() < deadline
         let shown = try XCTUnwrap(before)
         WallpaperServices.shared.setUserProperties(["eyesglowingcolor": "0 1 0"], wallpaper: model.propertyStoreKey, replacing: false)
+        // The change reaches the renderer as the wallpaper instance hands it on: the bindings that
+        // read the property take it under a new revision (`SceneWallpaperInstance`).
+        renderer.userPropertiesDidChange(["eyesglowingcolor"], owners: model.bindingUpdate(for: ["eyesglowingcolor"]).owners)
         let tinted = try XCTUnwrap(try frame())
         // Her eye, on her face at the frame's right of centre (the frame is the scene's target).
         let width = try XCTUnwrap(renderer.sharedFrame).width
@@ -156,6 +166,10 @@ final class ScenePuppetLibraryTests: XCTestCase {
         var content = try XCTUnwrap(model.metalContent(), "\(item.id): no content")
         defer { Fixtures.removeStoredSettings(for: item.directory) }
         var plans: [String: ScenePuppetPlan] = [:]
+        // A rig that rearranges an atlas and has effects runs them on its texture as stored, where
+        // their masks are painted, and its posed mesh lays their output out: it draws no image of
+        // its own for the oracle, only that layout.
+        var atlases: Set<String> = []
         for id in item.layers {
             guard let layer = content.layers.first(where: { $0.id == id }) else {
                 XCTFail("\(item.id) layer \(id): not in the content")
@@ -176,10 +190,18 @@ final class ScenePuppetLibraryTests: XCTestCase {
                     (0..<4).allSatisfy { column[$0].isFinite }
                 }
             }, "\(item.id) \(id): a finite pose")
-            plans[id] = plan
+            if !plan.bindPoseIsTextureLayout, !layer.weEffects.isEmpty {
+                atlases.insert(id)
+            } else {
+                plans[id] = plan
+            }
             // Hidden puppets (a user property's variant) are drawn too, for the check.
             content.visibility[id] = true
         }
+
+        // The renderer resolves user-bound visibility again as it takes the content; with no user
+        // values that is what `visibility` already holds, except the hidden puppets shown above.
+        content.userVisibility = SceneUserVisibility()
 
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let view = MTKView(frame: CGRect(x: 0, y: 0, width: 320, height: 180), device: device)
@@ -206,10 +228,15 @@ final class ScenePuppetLibraryTests: XCTestCase {
         // The clock stands still until every mesh has drawn (how long that takes depends on which
         // pipelines earlier tests compiled), then runs a fixed second: every run checks the same pose.
         deadline = Date().addingTimeInterval(90)
-        while plans.keys.contains(where: { renderer.puppetImage(ofLayer: $0) == nil }), Date() < deadline { frame() }
+        while plans.keys.contains(where: { renderer.puppetImage(ofLayer: $0) == nil })
+                || atlases.contains(where: { !renderer.puppetLaidOutEffects(ofLayer: $0) }), Date() < deadline { frame() }
         for _ in 0..<30 {
             now += 1.0 / 30
             frame()
+        }
+        for id in atlases.sorted() {
+            XCTAssertNil(renderer.puppetImage(ofLayer: id), "\(item.id) layer \(id): an atlas rig with effects draws no image")
+            XCTAssertTrue(renderer.puppetLaidOutEffects(ofLayer: id), "\(item.id) layer \(id): its effect output was never posed")
         }
 
         var lines = ""
