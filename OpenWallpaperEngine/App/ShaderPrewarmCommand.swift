@@ -68,6 +68,7 @@ enum ShaderPrewarmCommand {
             defer { AppStorageLocation.current.discardReadOnlyScratch() }
             setpriority(PRIO_PROCESS, 0, 10)
             NSApplication.shared.setActivationPolicy(.prohibited)
+            exitWithParent()
             return renderScreenSaverLoop(arguments[(index + 1)...])
         }
         let prepareIndex = arguments.firstIndex(of: prepareArgument)
@@ -77,6 +78,7 @@ enum ShaderPrewarmCommand {
         // service. No Dock icon or menu bar: an app that is never activated.
         setpriority(PRIO_PROCESS, 0, 10)
         NSApplication.shared.setActivationPolicy(.prohibited)
+        exitWithParent()
         OWELog.info(.app, "Shader prewarm started (pid \(ProcessInfo.processInfo.processIdentifier))")
         let report: ShaderPrewarm.Report
         if let prepareIndex {
@@ -100,5 +102,18 @@ enum ShaderPrewarmCommand {
             report = ShaderPrewarm(defaults: .app).run()
         }
         return report.wallpapers > 0 && report.failed == report.wallpapers ? 1 : 0
+    }
+
+    /// A helper run exists only for the app that started it: when that app quits or dies, the
+    /// helper stops too instead of running on alone.
+    private static var parentWatch: DispatchSourceProcess?
+
+    private static func exitWithParent() {
+        let parent = getppid()
+        guard parent > 1 else { exit(0) } // Already orphaned.
+        let source = DispatchSource.makeProcessSource(identifier: parent, eventMask: .exit, queue: .global(qos: .utility))
+        source.setEventHandler { exit(0) }
+        source.resume()
+        parentWatch = source
     }
 }
