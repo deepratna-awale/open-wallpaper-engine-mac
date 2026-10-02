@@ -68,6 +68,8 @@ final class ShaderVariantCacheTests: XCTestCase {
         10: "cc9c735c67b115ac936d80245638bbf7b1b98d1a9e2b5a996917b81c3bd7067a",
         // Half colour outputs (11) are gone again: the output is revision 10's.
         12: "cc9c735c67b115ac936d80245638bbf7b1b98d1a9e2b5a996917b81c3bd7067a",
+        // Uniform blocks sized to their Metal struct (13): the MSL is revision 12's.
+        13: "cc9c735c67b115ac936d80245638bbf7b1b98d1a9e2b5a996917b81c3bd7067a",
     ]
 
     /// Fails when translated output changes without a `revision` bump, which would let users keep
