@@ -56,11 +56,13 @@ final class SceneScriptObjectTable {
         static let innercone = 86
         static let outercone = 87
         static let controlpoint = 88
-        static let stride = 92         // 91 used, padded to a multiple of 4
+        /// An image's video texture time in seconds, renderer-written (`IVideoTexture`).
+        static let videoTime = 91
+        static let stride = 92
 
         /// The offsets as the JS side reads them (`__rt.table.layout`).
         static var javaScriptObject: [String: Int] {
-            var layout = ["worldMatrix": worldMatrix, "stride": stride]
+            var layout = ["worldMatrix": worldMatrix, "videoTime": videoTime, "stride": stride]
             for field in SceneScriptObjectField.allCases { layout[field.rawValue] = field.offset }
             return layout
         }

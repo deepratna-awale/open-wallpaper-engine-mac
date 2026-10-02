@@ -219,16 +219,17 @@
     // MARK: IVideoTexture
     //
     // An image whose texture is a video (a TEXB0004 MP4 payload) has `record.video` {duration}.
-    // The texture starts playing and looping, as WE's video textures do. The clock here advances
-    // with the frame's delta so `getCurrentTime`, `isPlaying` and the ended callbacks answer at
-    // once; every call also reaches the layer's player as an `OP.videoTexture` command
-    // [action (play 0, pause 1, stop 2, seek 3, rate 4, loop 5), value?].
+    // The texture starts playing and looping, as WE's video textures do. Its time and playing
+    // state are the player's, which the renderer writes into the layer's row (`videoTime`,
+    // `playing`) before every frame; a call changes them here at once, so a script reads back what
+    // it did, and reaches the player as an `OP.videoTexture` command [action (play 0, pause 1,
+    // stop 2, seek 3, rate 4, loop 5), value?].
     const videoTextures = [];
     class VideoTexture {
         constructor(owner, duration) {
             Object.defineProperty(this, '_owner', { value: owner });
             Object.defineProperty(this, '_duration', { value: duration });
-            Object.defineProperty(this, '_state', { value: { time: 0, rate: 1, loop: true, playing: true } });
+            Object.defineProperty(this, '_state', { value: { rate: 1, loop: true, seen: 0, seeked: false } });
             Object.defineProperty(this, '_ended', { value: [] });
         }
         get duration() { return this._duration; }
@@ -246,41 +247,47 @@
         }
         // A finished video restarts from 0.
         play() {
-            const state = this._state;
-            if (!state.loop && state.time >= this._duration) state.time = 0;
-            state.playing = true;
+            if (!this._state.loop && this.getCurrentTime() >= this._duration) this._setTime(0);
+            this._setPlaying(true);
             this._command(0);
         }
-        pause() { this._state.playing = false; this._command(1); }
-        stop() { this._state.playing = false; this._state.time = 0; this._command(2); }
-        isPlaying() { return this._state.playing; }
-        getCurrentTime() { return this._state.time; }
+        pause() { this._setPlaying(false); this._command(1); }
+        stop() { this._setPlaying(false); this._setTime(0); this._command(2); }
+        isPlaying() { return this._owner._t[this._owner._base + table.layout.playing] !== 0; }
+        getCurrentTime() { return this._owner._t[this._owner._base + table.layout.videoTime]; }
         setCurrentTime(time) {
             if (typeof time !== 'number' || !isFinite(time)) return;
-            this._state.time = Math.max(0, Math.min(time, this._duration));
-            this._command(3, this._state.time);
+            this._setTime(Math.max(0, Math.min(time, this._duration)));
+            this._command(3, this.getCurrentTime());
         }
         addEndedCallback(callback) {
             if (typeof callback === 'function') this._ended.push(callback);
         }
     }
+    objects.defineMethod(VideoTexture.prototype, '_setTime', function (time) {
+        this._owner._t[this._owner._base + table.layout.videoTime] = time;
+        this._state.seeked = true;
+    });
+    objects.defineMethod(VideoTexture.prototype, '_setPlaying', function (playing) {
+        this._owner._t[this._owner._base + table.layout.playing] = playing ? 1 : 0;
+    });
     objects.defineMethod(VideoTexture.prototype, '_command', function (action, value) {
         if (this._owner._dead) return;
         objects.push(OP.videoTexture, this._owner._slot, value === undefined ? [action] : [action, value]);
     });
-    // One frame of the clock: the end is reached once per pass; a looping video wraps, any other
-    // stops at its end. Ended callbacks run before `update`, as an animation layer's do.
-    objects.defineMethod(VideoTexture.prototype, '_advance', function (dt) {
-        const state = this._state, duration = this._duration;
-        if (!state.playing || this._owner._dead || !(duration > 0) || !(dt > 0)) return;
-        state.time += dt * state.rate;
-        if (state.time < duration) return;
-        if (state.loop) {
-            state.time %= duration;
-        } else {
-            state.time = duration;
-            state.playing = false;
-        }
+    // Once per frame, on the player's time: the end was reached when a looping video's time went
+    // back without a seek, or one that doesn't loop stopped at its end. Ended callbacks run before
+    // `update`, as an animation layer's do.
+    objects.defineMethod(VideoTexture.prototype, '_check', function () {
+        if (this._owner._dead) return;
+        const state = this._state, time = this.getCurrentTime(), previous = state.seen;
+        const seeked = state.seeked;
+        state.seen = time;
+        state.seeked = false;
+        if (seeked) return;
+        const ended = state.loop ? time < previous
+            : !this.isPlaying() && time >= this._duration - 1e-3 && previous < this._duration - 1e-3;
+        if (!ended) return;
         for (let c = 0; c < this._ended.length; c++) {
             try {
                 this._ended[c].call(this);
@@ -289,8 +296,8 @@
             }
         }
     });
-    rt.addPhaseHandler('animations', function (dt) {
-        for (let i = 0; i < videoTextures.length; i++) videoTextures[i]._advance(dt);
+    rt.addPhaseHandler('animations', function () {
+        for (let i = 0; i < videoTextures.length; i++) videoTextures[i]._check();
     });
 
     // The image's video texture, or null when its texture is not a video.

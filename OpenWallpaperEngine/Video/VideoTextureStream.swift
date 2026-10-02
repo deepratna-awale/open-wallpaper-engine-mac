@@ -37,6 +37,7 @@ final class VideoTextureStream {
     /// `IVideoTexture.rate` of an embedded video texture, with `isPlaying`.
     private var scriptRate: Float = 1
     private var scriptPlaying = true
+    private var hostRate: Float = 1
 
     private var appliedVideoRate: Float?
     private var appliedAudioRate: Float?
@@ -182,6 +183,22 @@ final class VideoTextureStream {
         return stream
     }
 
+    /// `IVideoTexture.isPlaying()`: what scripts asked, whether or not the wallpaper is paused.
+    var isPlaying: Bool { scriptPlaying }
+    /// The player's time, in seconds (`IVideoTexture.getCurrentTime()`).
+    var currentSeconds: Float {
+        let seconds = player.currentTime().seconds
+        return seconds.isFinite ? Float(seconds) : 0
+    }
+
+    /// The wallpaper's own rate: 0 while it is paused, covered or frozen, so the decoder stops
+    /// the way a video wallpaper's does; scripts' rate and pause apply on top.
+    func setHostRate(_ rate: Float) {
+        guard rate != hostRate else { return }
+        hostRate = rate
+        setVideoRate(scriptPlaying ? scriptRate * hostRate : 0)
+    }
+
     /// An `IVideoTexture` call.
     func perform(_ command: SceneVideoTextureCommand) {
         switch command {
@@ -201,7 +218,7 @@ final class VideoTextureStream {
             loops = value
         }
         appliedVideoRate = nil
-        setVideoRate(scriptPlaying ? scriptRate : 0)
+        setVideoRate(scriptPlaying ? scriptRate * hostRate : 0)
     }
 
     func restart() {

@@ -2218,6 +2218,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 visible: scripts.baseVisible(entry.layer.id),
                 size: lastTextSizes[entry.layer.id] ?? layerBaseSize(entry),
                 world: worldTransform(entry), animated: animation?.fields ?? SceneScriptOwnedFields())
+            if case let .video(stream) = entry.layer.source {
+                input.objects[id]?.playing = stream.isPlaying
+                input.objects[id]?.videoTime = stream.currentSeconds
+            }
         }
         for (key, objectMotion) in objectMotions {
             guard let id = Int(key) else { continue }

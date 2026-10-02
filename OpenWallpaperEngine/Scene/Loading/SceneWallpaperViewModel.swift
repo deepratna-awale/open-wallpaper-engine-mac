@@ -83,6 +83,10 @@ class SceneWallpaperViewModel: ObservableObject {
     private var loggedParticleBudget: (directory: URL, report: ParticleBudget.Report)?
     /// Retained for video wallpapers rendered through the scene pipeline.
     private var videoStream: VideoTextureStream?
+    /// Scene images' video textures, which follow the wallpaper's playback (`setEmbeddedVideoRate`).
+    private let embeddedVideoStreams = NSHashTable<VideoTextureStream>.weakObjects()
+    private var embeddedVideoRate: Float = 1
+    private let embeddedVideoLock = NSLock()
     private var builtVideoFrameSize: SIMD2<Float>?
 
     /// Builds the render content off the main thread and delivers it on the main queue. While a
@@ -816,6 +820,15 @@ class SceneWallpaperViewModel: ObservableObject {
         return SceneMetalContent(size: sceneSize, layers: [layer], particleSystems: [],
                                  bloom: SceneBloomSettings(enabled: false, strength: 0, threshold: 0.7,
                                                            tint: SIMD3<Float>(repeating: 1)))
+    }
+
+    /// Plays or pauses every scene image's video texture with the wallpaper: 0 while it is
+    /// paused, covered or frozen, so their decoders stop as a video wallpaper's does.
+    func setEmbeddedVideoRate(_ rate: Float) {
+        embeddedVideoLock.withLock {
+            embeddedVideoRate = rate
+            for stream in embeddedVideoStreams.allObjects { stream.setHostRate(rate) }
+        }
     }
 
     /// Drives playback for the Metal video path; the AVKit path owns its own players.
@@ -1651,6 +1664,10 @@ class SceneWallpaperViewModel: ObservableObject {
             // A video texture plays (`IVideoTexture`); its poster frame stays the fallback.
             if let video = parser.extractVideoData(), let device = MTLCreateSystemDefaultDevice(),
                let stream = VideoTextureStream.embedded(mp4: video, device: device) {
+                embeddedVideoLock.withLock {
+                    embeddedVideoStreams.add(stream)
+                    stream.setHostRate(embeddedVideoRate)
+                }
                 return cacheTexture(.video(stream), for: cacheKey)
             }
             let mipmaps = optimise ? parser.firstImageMipmapCount() ?? 1 : 1

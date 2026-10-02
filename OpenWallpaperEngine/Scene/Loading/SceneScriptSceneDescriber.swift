@@ -200,6 +200,8 @@ struct SceneScriptSceneDescriber {
         if kind == .image, case .string(let image)? = json["image"] {
             description.textureAnimation = textureAnimation(model: image)
             description.videoDuration = videoDuration(model: image)
+            // A video texture plays from the start (`IVideoTexture.isPlaying()`).
+            if description.videoDuration != nil { description.values[.playing] = [1] }
             description.rig = rig(model: image, animationLayers: json["animationlayers"])
         }
         if kind == .model, case .string(let model)? = json["model"] {

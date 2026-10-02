@@ -1,4 +1,6 @@
+import AVFoundation
 import JavaScriptCore
+import Metal
 import XCTest
 import simd
 @testable import OpenWallpaperEngine
@@ -9,6 +11,7 @@ final class SceneScriptVideoTextureTests: XCTestCase {
     private func scene() -> SceneScriptSceneDescription {
         var background = SceneScriptObjectDescription.make(.image, id: 1, name: "background")
         background.videoDuration = 2
+        background.values[.playing] = [1]
         let clock = SceneScriptObjectDescription.make(.text, id: 2, name: "clock", parentID: 1)
         let group = SceneScriptObjectDescription.make(.group, id: 5, name: "group")
         var puppet = SceneScriptObjectDescription.make(.image, id: 6, name: "puppet")
@@ -48,21 +51,36 @@ final class SceneScriptVideoTextureTests: XCTestCase {
         }
     }
 
-    func testVideoTextureClockAndCallbacks() throws {
+    /// The renderer's write of the player's state into the layer's row before a frame.
+    private func player(_ f: SceneScriptObjectFixture, time: Float, playing: Bool) throws {
+        let slot = try XCTUnwrap(f.model.slot(forObjectID: 1))
+        f.store.table.values[slot * SceneScriptObjectTable.Layout.stride + SceneScriptObjectTable.Layout.videoTime] = time
+        f.store.table.values[slot * SceneScriptObjectTable.Layout.stride + SceneScriptObjectField.playing.offset] = playing ? 1 : 0
+        f.runtime.frame(deltaTime: 1.0 / 30)
+    }
+
+    /// The clock is the player's: time and playing come from the renderer, so they can't drift.
+    func testVideoTextureClockIsThePlayersAndCallbacksFollowIt() throws {
         _ = try Fixtures.assets()
         let f = try fixture()
         f.evaluate("""
             var video = thisScene.getLayer('background').getVideoTexture(), ends = 0;
             video.addEndedCallback(function () { ends += 1; });
             """)
-        for _ in 0..<90 { f.runtime.frame(deltaTime: 1.0 / 30) }
-        XCTAssertEqual(Double(string(f, "video.getCurrentTime()") ?? "") ?? -1, 1, accuracy: 1e-3, "looped once in 3 s")
-        XCTAssertEqual(string(f, "[ends, video.isPlaying()].join()"), "1,true")
+        try player(f, time: 0.5, playing: true)
+        try player(f, time: 1.9, playing: true)
+        XCTAssertEqual(string(f, "[video.getCurrentTime(), ends].join()"), "1.899999976158142,0")
+        try player(f, time: 0.2, playing: true)
+        XCTAssertEqual(string(f, "[ends, video.isPlaying()].join()"), "1,true", "a loop's wrap is its end")
+        f.evaluate("video.setCurrentTime(0.1);")
+        XCTAssertEqual(string(f, "Math.round(video.getCurrentTime() * 10)"), "1", "a seek reads back at once")
+        try player(f, time: 0.1, playing: true)
+        XCTAssertEqual(string(f, "ends"), "1", "and is no end")
 
-        f.evaluate("video.loop = false; video.rate = 2;")
-        for _ in 0..<30 { f.runtime.frame(deltaTime: 1.0 / 30) }
-        XCTAssertEqual(string(f, "[ends, video.isPlaying(), video.getCurrentTime()].join()"), "2,false,2",
-                       "a video that doesn't loop holds its end")
+        f.evaluate("video.loop = false;")
+        try player(f, time: 1.5, playing: true)
+        try player(f, time: 2, playing: false)
+        XCTAssertEqual(string(f, "[ends, video.isPlaying()].join()"), "2,false", "a video that doesn't loop holds its end")
         f.evaluate("video.play();")
         XCTAssertEqual(string(f, "[video.isPlaying(), video.getCurrentTime()].join()"), "true,0", "and restarts on play")
     }
@@ -88,6 +106,52 @@ final class SceneScriptVideoTextureTests: XCTestCase {
         XCTAssertNil(SceneVideoTextureCommand(numbers: [3]))
         XCTAssertNil(SceneVideoTextureCommand(numbers: [9]))
         XCTAssertNil(SceneVideoTextureCommand(numbers: [4, .nan]))
+    }
+
+    /// An embedded video decodes only while the wallpaper plays (host rate) and the script wants it.
+    func testEmbeddedVideoFollowsTheWallpapersPlayback() throws {
+        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
+        let stream = try XCTUnwrap(VideoTextureStream.embedded(mp4: try Self.movie(), device: device))
+        XCTAssertEqual(stream.player.rate, 1, "plays from the start")
+        stream.setHostRate(0)
+        XCTAssertEqual(stream.player.rate, 0, "paused, covered or frozen: the decoder stops")
+        stream.setHostRate(1)
+        XCTAssertEqual(stream.player.rate, 1)
+        stream.perform(.pause)
+        stream.setHostRate(1)
+        XCTAssertEqual(stream.player.rate, 0, "a script's pause holds")
+        XCTAssertFalse(stream.isPlaying)
+        stream.perform(.rate(0.5))
+        stream.perform(.play)
+        stream.setHostRate(2)
+        XCTAssertEqual(stream.player.rate, 1, "the script's rate times the wallpaper's")
+        stream.stop()
+    }
+
+    /// A one-second 16×16 H.264 movie.
+    static func movie() throws -> Data {
+        let url = FileManager.default.temporaryDirectory.appending(path: "owe-video-\(UUID().uuidString).mp4")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let writer = try AVAssetWriter(outputURL: url, fileType: .mp4)
+        let input = AVAssetWriterInput(mediaType: .video, outputSettings: [
+            AVVideoCodecKey: AVVideoCodecType.h264, AVVideoWidthKey: 16, AVVideoHeightKey: 16])
+        let adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: input, sourcePixelBufferAttributes: [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+            kCVPixelBufferWidthKey as String: 16, kCVPixelBufferHeightKey as String: 16])
+        writer.add(input)
+        XCTAssertTrue(writer.startWriting())
+        writer.startSession(atSourceTime: .zero)
+        for frame in 0..<10 {
+            while !input.isReadyForMoreMediaData { Thread.sleep(forTimeInterval: 0.01) }
+            var buffer: CVPixelBuffer?
+            CVPixelBufferCreate(nil, 16, 16, kCVPixelFormatType_32BGRA, nil, &buffer)
+            adaptor.append(try XCTUnwrap(buffer), withPresentationTime: CMTime(value: CMTimeValue(frame), timescale: 10))
+        }
+        input.markAsFinished()
+        let done = DispatchSemaphore(value: 0)
+        writer.finishWriting { done.signal() }
+        done.wait()
+        return try Data(contentsOf: url)
     }
 
     /// The length a video texture reports comes from its MP4's `mvhd` (version 0 and 1).
