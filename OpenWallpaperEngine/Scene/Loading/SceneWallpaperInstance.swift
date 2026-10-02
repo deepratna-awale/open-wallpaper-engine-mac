@@ -197,6 +197,9 @@ final class SceneWallpaperInstance {
                                                                  hidden: hidden, refresh: Self.refreshRate(of: view))
         }
         playback.paused = wallpapers.playRate == 0 || !playback.displays.values.contains { $0.plays }
+        // Scene video textures decode only while some display shows the wallpaper playing.
+        let shown = playback.displays.values.contains { $0.plays && !$0.hidden }
+        viewModel.setEmbeddedVideoRate(playback.paused || !shown ? 0 : wallpapers.playRate)
         let placement = wallpapers.wallpaperPlacement
         let gain = soundGain
         let limits = FramePacing.Limits(environment.settings.settings, power: PowerPolicyMonitor.shared.policy)

@@ -100,6 +100,34 @@ final class TEXRawImageRep: NSImageRep, @unchecked Sendable {
         cgImage
     }
 
+    /// The rows the stored mipmap holds: the .tex allocation's height (at least the image's).
+    var allocationRows: Int { max(pixelsHigh, bytes.count / (rowPixels * channels.rawValue)) }
+
+    /// Whether the .tex allocation is larger than the image (a padded, power-of-two texture).
+    var isPadded: Bool { rowPixels > pixelsWide || allocationRows > pixelsHigh }
+
+    /// The image's share of the allocation, in UV units: (1, 1) when it fills it.
+    var contentUVExtent: SIMD2<Float> {
+        SIMD2(Float(pixelsWide) / Float(rowPixels), Float(pixelsHigh) / Float(allocationRows))
+    }
+
+    /// A shader-read texture of the whole allocation, the image in its top-left texels, as WE
+    /// uploads a .tex and as a block-compressed one is uploaded here: a material that samples this
+    /// texture and others at the same coordinates finds each image where WE does.
+    func makeAllocationTexture(device: MTLDevice) -> MTLTexture? {
+        guard isPadded else { return makeTexture(device: device) }
+        let rows = allocationRows
+        let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: channels.pixelFormat, width: rowPixels,
+                                                                  height: rows, mipmapped: false)
+        descriptor.usage = [.shaderRead]
+        guard let texture = device.makeTexture(descriptor: descriptor) else { return nil }
+        bytes.withUnsafeBytes { raw in
+            texture.replace(region: MTLRegionMake2D(0, 0, rowPixels, rows), mipmapLevel: 0,
+                            withBytes: raw.baseAddress!, bytesPerRow: rowPixels * channels.rawValue)
+        }
+        return texture
+    }
+
     /// A shader-read texture of the visible pixels in their own channels.
     func makeTexture(device: MTLDevice) -> MTLTexture? {
         let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: channels.pixelFormat, width: pixelsWide,

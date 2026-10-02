@@ -107,6 +107,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// matched to a display smaller than it, `GSSceneDetail.matchDisplay`): the size effects on
     /// scene regions and text, and the bloom, stand for.
     private var fullDetailScale: Float = 1
+    /// Scales a scene drawn at the render scale up to its target (`GSUpscaling`).
+    private lazy var upscaler = SceneUpscaler(device: device)
+    /// This frame is drawn below its target size and scaled up after the scene pass, so it
+    /// can't be drawn straight into the output.
+    private var drawsAtRenderScale = false
     /// Bumped for every prelit image an effect chain starts from (`runEffects`).
     private var prelitVersion: UInt64 = 0
     /// Times the effect passes when set (profiling; `EffectPassTimer`).
@@ -160,6 +165,14 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var clock = SceneClock()
     /// Test harnesses: while true the scene clock stands still (`SceneClock.hold`). The app never sets it.
     var holdsClock = false
+    /// The renderer draws the screen saver's loop video (`ScreenSaverLoopRenderer`): scripts see
+    /// `engine.isScreensaver()` true. Set before the first frame.
+    var rendersScreenSaver = false
+    /// While true the scene's clock text layers (`SceneClockLayers`) draw nothing: set for the
+    /// screen saver's loop video and while capturing the loading snapshot the lock screen shows.
+    var hidesClockLayers = false
+    /// The current content's clock text layers.
+    private(set) var clockLayerIDs: Set<String> = []
     /// The frames drawn (`BuiltinFrameContext.serial`).
     private var frameSerial: UInt64 = 0
     /// The wall clock `clock` follows (tests step it).
@@ -262,17 +275,24 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
               let source = layers.first(where: { $0.layer.id == id })?.frames.first?.texture else { return nil }
         return (source, image)
     }
+    /// Whether the posed mesh has laid a puppet layer's effect output out (tests, diagnostics). A
+    /// rig that rearranges an atlas runs its effects on its texture and draws no image of its own.
+    func puppetLaidOutEffects(ofLayer id: String) -> Bool { puppets?.hasLaidOut(id, key: "_effects") == true }
     /// A puppet layer's pose as its image was last drawn (tests, diagnostics).
     func puppetPose(ofLayer id: String) -> ScenePuppetPose? { puppetAnimators[id]?.pose }
     /// The pose `puppetImage(ofLayer:)` holds: the bind pose for a layer with effects, which the
     /// posed mesh lays out after them (`posedEffectOutput`); the layer's pose otherwise.
     func puppetImagePose(ofLayer id: String) -> ScenePuppetPose? {
         guard let pose = puppetPose(ofLayer: id) else { return nil }
-        let hasEffects = layers.first { $0.layer.id == id }.map { !$0.layer.weEffects.isEmpty } ?? false
-        return hasEffects ? .bind(boneCount: pose.bones.count) : pose
+        return puppetHasEffects(id) ? .bind(boneCount: pose.bones.count) : pose
     }
-    /// What of a puppet's mesh space its image covers, when not the image's rect (tests, diagnostics).
-    func puppetCanvas(ofLayer id: String) -> ScenePuppetCanvas? { puppetCanvases[id] }
+    /// What of a puppet's mesh space `puppetImage(ofLayer:)` covers, when not the image's rect
+    /// (tests, diagnostics): a layer with effects draws its bind pose into the image's rect, and
+    /// only the posed layout of their output covers the canvas.
+    func puppetCanvas(ofLayer id: String) -> ScenePuppetCanvas? { puppetHasEffects(id) ? nil : puppetCanvases[id] }
+    private func puppetHasEffects(_ id: String) -> Bool {
+        layers.first { $0.layer.id == id }.map { !$0.layer.weEffects.isEmpty } ?? false
+    }
     /// Effect passes encoded so far, for tests.
     var effectPassesEncoded: Int { effectGraph?.passesEncoded ?? 0 }
     /// Whether an effect pipeline is still compiling (shader prewarm waits for them).
@@ -613,6 +633,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     }
 
     func setContent(_ content: SceneMetalContent?) {
+        clockLayerIDs = content?.scripts.map { SceneClockLayers.ids(in: $0.document) } ?? []
         baseValueCaches.removeAll()
         effectAssetTextures.removeAll()
         clearUploadedImages()
@@ -845,6 +866,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 pendingEmits[String(id), default: 0] += count ?? 1
             case .sound(let id, let playback):
                 sounds.perform(playback, on: id)
+            case .video(let id, let command):
+                let key = String(id)
+                for entry in layers where entry.layer.id == key {
+                    if case let .video(stream) = entry.layer.source { stream.perform(command) }
+                }
             case let .animation(site, time, flags, rate, frame):
                 timelines.restore(site, time: time, flags: flags, rate: rate, seenAt: frame)
             case let .textureAnimation(id, control, frame):
@@ -1271,7 +1297,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private func frameTargets(_ output: FrameOutput, destination: SceneFrameDestination, format: MTLPixelFormat,
                               size: SIMD2<Int>, frame: BuiltinFrameContext) -> FrameTargets? {
         let outputSize = SIMD2<Float>(Float(size.x), Float(size.y))
-        let passesThrough = skipsIdentityComposite && !postProcess.drawsHDR && format == destination.pixelFormat
+        let passesThrough = skipsIdentityComposite && !drawsAtRenderScale && !postProcess.drawsHDR && format == destination.pixelFormat
             && postProcess.passesThrough(
                 bloom: liveBloom(), extras: appExtras(), settings: renderSettings, colorCorrection: colorCorrection(),
                 display: displayOutput, sceneSize: size, outputSize: size,
@@ -1348,13 +1374,22 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let viewports = destination.viewports
         drawablePixelsPerPoint = viewports[0].pixelsPerPoint
         // The largest target any display needs, so each shows the scene at its own density.
-        let renderDrawable = SceneRenderResolution.drawableSize(viewports, resolution: renderSettings.renderResolution)
+        let renderDrawable = SceneRenderResolution.drawableSize(viewports, resolution: renderSettings.renderResolution,
+                                                                sceneSize: sceneSize)
         renderPixelsPerUnit = SceneRenderResolution.pixelsPerUnit(sceneSize: sceneSize, drawableSize: renderDrawable,
                                                                   matchDisplay: renderSettings.sceneDetail == .matchDisplay)
+        // The target the frame is upscaled to when drawn at the render scale (`GSUpscaling`).
+        var upscaledTargetSize: SIMD2<Int>?
         // A scene that is one plain video draws it at exactly the display's density, so a target the
         // size of the drawable lets the video draw straight into it in one pass (S2), not into a
         // larger target resampled again by the composite.
-        if let exact = videoOnlyPixelsPerUnit(renderDrawable) { renderPixelsPerUnit = exact }
+        if let exact = videoOnlyPixelsPerUnit(renderDrawable) {
+            renderPixelsPerUnit = exact
+        } else if renderSettings.drawnScale < 1 {
+            upscaledTargetSize = SceneRenderResolution.targetSize(sceneSize: sceneSize, pixelsPerUnit: renderPixelsPerUnit)
+            renderPixelsPerUnit = SceneRenderResolution.drawnPixelsPerUnit(renderPixelsPerUnit, scale: renderSettings.drawnScale)
+        }
+        drawsAtRenderScale = upscaledTargetSize != nil
         // A scene matched to a smaller display is drawn below full detail: what its buffers stand for.
         fullDetailScale = SceneRenderResolution.pixelsPerUnit(sceneSize: sceneSize, drawableSize: renderDrawable) / renderPixelsPerUnit
         // A content drawn in HDR draws into RGBA16F (docs/lighting-plan.md §2.6).
@@ -1458,6 +1493,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             // Hidden layers keep their transforms (scripts and hit tests read them) but draw nothing,
             // except into the image a model or another layer samples (`_rt_imageLayerComposite_<id>_a`).
             let visible = scripts.isVisible(entry.layer.id)
+                && !(hidesClockLayers && clockLayerIDs.contains(entry.layer.id))
             let isCompositeSource = compositeOrder.sources.contains(entry.layer.id)
                 || models?.compositeLayerIDs.contains(entry.layer.id) == true
             guard visible || isCompositeSource else { continue }
@@ -1842,19 +1878,28 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         stageContext.shadowAtlas = frameShadowAtlas
         for stage in frameStages { stage.encode(stageContext) }
         // The drawable (F1: taken now, after the frame's work is encoded) or the shared frame.
-        let (descriptor, drawable) = targets.output ?? lateOutput(output, matching: sceneTexture)
+        // Drawn at the render scale: scaled up to the full target before the post-process.
+        var postScene: MTLTexture = sceneTexture
+        var postFullDetailScale = fullDetailScale
+        if let upscaledTargetSize, !targets.sceneIsOutput,
+           upscaler.path(settings: renderSettings, format: sceneTexture.pixelFormat) == .metalFX,
+           let upscaled = upscaler.upscale(sceneTexture, to: upscaledTargetSize, commandBuffer: commandBuffer) {
+            postScene = upscaled
+            postFullDetailScale = fullDetailScale * Float(sceneTexture.width) / Float(max(upscaled.width, 1))
+        }
+        let (descriptor, drawable) = targets.output ?? lateOutput(output, matching: postScene)
         if let descriptor {
             // What the post-process composites onto: the drawable, or the shared frame.
             let realDrawableSize = SIMD2<Float>(Float(descriptor.colorAttachments[0].texture?.width ?? sceneTexture.width),
                                                 Float(descriptor.colorAttachments[0].texture?.height ?? sceneTexture.height))
             // The scene-resolution target goes onto the real drawable, placement applied exactly once.
             postProcess.encode(ScenePostProcess.Frame(
-                scene: sceneTexture, output: descriptor, commandBuffer: commandBuffer,
+                scene: postScene, output: descriptor, commandBuffer: commandBuffer,
                 placement: layerUniform(position: sceneSize / 2, size: sceneSize, opacity: 1, drawableSize: realDrawableSize,
                                         placement: destination.placement),
                 bloom: liveBloom(), extras: appExtras(), settings: renderSettings,
                 colorCorrection: colorCorrection(),
-                effects: effectGraph, builtins: effectFrame, values: timelines.values, fullDetailScale: fullDetailScale,
+                effects: effectGraph, builtins: effectFrame, values: timelines.values, fullDetailScale: postFullDetailScale,
                 display: displayOutput, sceneIsOutput: targets.sceneIsOutput))
             if let drawable {
                 commandBuffer.present(drawable)
@@ -2185,15 +2230,18 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private func submitScriptFrame(viewports: [SceneViewport],
                                    cursor: (position: SIMD2<Float>, onDisplay: Bool), leftDown: Bool,
                                    animationEvents: [SceneAnimationEvent]) {
-        let drawableSize = viewports[0].drawableSize
+        // The screen the scene is drawn for: its points under Render Resolution "Display".
+        let toScreen = scriptScreenScale(viewports[0])
+        let drawableSize = viewports[0].drawableSize * toScreen
         var input = SceneScriptFrameInput()
         input.deltaTime = clock.delta
         timelines.describe(into: &input, events: animationEvents)
         input.environment = SceneScriptEngineEnvironment(
             screenResolution: SIMD2(Double(drawableSize.x), Double(drawableSize.y)),
             canvasSize: SIMD2(Double(sceneSize.x), Double(sceneSize.y)), placement: placement,
-            pixelsPerPoint: Double(drawablePixelsPerPoint))
-        input.input = SceneScriptInput(cursorScreenPosition: cursorScreenPixels(viewports), cursorLeftDown: leftDown)
+            pixelsPerPoint: Double(drawablePixelsPerPoint * toScreen), isScreensaver: rendersScreenSaver)
+        input.input = SceneScriptInput(cursorScreenPosition: cursorScreenPixels(viewports) * Double(toScreen),
+                                       cursorLeftDown: leftDown)
         input.cursorScenePosition = cursor.position
         input.shakeOffset = lastCameraMotion?.shake ?? .zero
         if let parallax = lastCameraMotion?.parallax {
@@ -2213,6 +2261,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 visible: scripts.baseVisible(entry.layer.id),
                 size: lastTextSizes[entry.layer.id] ?? layerBaseSize(entry),
                 world: worldTransform(entry), animated: animation?.fields ?? SceneScriptOwnedFields())
+            if case let .video(stream) = entry.layer.source {
+                input.objects[id]?.playing = stream.isPlaying
+                input.objects[id]?.videoTime = stream.currentSeconds
+            }
         }
         for (key, objectMotion) in objectMotions {
             guard let id = Int(key) else { continue }
@@ -2244,6 +2296,13 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     /// The cursor in display pixels from the top-left of the wallpaper's view on the display it is
     /// on (`input.cursorScreenPosition`); where it was last seen while it is on none of them.
+    /// Screen pixels the scripts see per drawable pixel: 1 / pixels per point when the scene is
+    /// drawn at the display's points (`GSRenderResolution.display`), else 1.
+    private func scriptScreenScale(_ viewport: SceneViewport) -> Float {
+        guard renderSettings.renderResolution == .display, viewport.pixelsPerPoint > 0 else { return 1 }
+        return 1 / viewport.pixelsPerPoint
+    }
+
     private func cursorScreenPixels(_ viewports: [SceneViewport]) -> SIMD2<Double> {
         guard let pixels = viewports.lazy.compactMap(\.cursorScreenPixels).first else { return lastCursorScreenPixels }
         lastCursorScreenPixels = pixels
@@ -3041,9 +3100,16 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // Through a camera, the quad is as large as its projection.
         if let placement = draw.placement {
             guard let density = placement.pixelsPerUnit(targetSize: SIMD2<Float>(sceneRenderTargetSize)) else { return nil }
-            return placement.size * density / shown
+            return placement.size * imageShareOfQuad(entry) * density / shown
         }
-        return draw.quad.extent * renderPixelsPerUnit / shown
+        return draw.quad.extent * imageShareOfQuad(entry) * renderPixelsPerUnit / shown
+    }
+
+    /// The share of a layer's quad its image covers: less than 1 where a puppet's quad grew to its
+    /// posed bounds (`ScenePuppetCanvas`), so its effects keep running at the image's density.
+    private func imageShareOfQuad(_ entry: PreparedLayer) -> SIMD2<Float> {
+        guard let puppet = entry.layer.puppet, let canvas = puppetCanvases[entry.layer.id] else { return SIMD2(1, 1) }
+        return ScenePuppetCanvas.imageShare(imageSize: puppet.imageSize, canvas: canvas)
     }
 
     /// Draws a puppet layer's mesh into its image (`puppetAlbedos`), posed by its animation layers
@@ -3054,22 +3120,32 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         guard let puppets, let source = entry.frames.first?.texture else { return }
         // Posed this frame by `advanceRigs`, before the scripts ran.
         let animator = puppetAnimator(entry.layer.id, puppet)
-        // Without effects WE draws the mesh in the scene (docs/models-plan.md §2.13): nothing clips
-        // it at the image's rect, so the image covers the posed mesh and the quad grows with it.
-        // With effects (or as the image another layer samples) the mesh stays in the image.
+        // WE draws the posed mesh in the scene (docs/models-plan.md §2.13), with effects or without:
+        // nothing clips it at the image's rect, so what the posed mesh draws into covers its posed
+        // bounds and the quad grows with it. Without effects that is the image itself; with them,
+        // the posed layout of their output (`posedEffectOutput`). As the image another layer
+        // samples, the mesh stays in the image.
         let direct = entry.layer.weEffects.isEmpty && !compositeSource
-        let canvas = direct ? puppets.canvas(puppet, layerID: entry.layer.id, pose: animator.pose) : nil
+        let canvas = compositeSource ? nil : puppets.canvas(puppet, layerID: entry.layer.id, pose: animator.pose)
         puppetCanvases[entry.layer.id] = canvas
         // With effects the mesh draws its bind pose, the image as its texture lays it out: that is
-        // where the effects' masks are painted (an atlas rig's parts included), and the posed mesh
-        // then lays their output out (`posedEffectOutput`), as WE draws the layer's geometry last.
+        // where the effects' masks are painted, and the posed mesh then lays their output out
+        // (`posedEffectOutput`), as WE draws the layer's geometry last.
         let pose = entry.layer.weEffects.isEmpty ? animator.pose : ScenePuppetPose.bind(boneCount: animator.pose.bones.count)
+        // A rig that rearranges an atlas: the editor paints the effects' masks over its texture as
+        // stored, where its parts don't overlap, so the effects read the texture itself and the
+        // posed mesh lays their output out by its texture coordinates.
+        if !entry.layer.weEffects.isEmpty, !puppet.bindPoseIsTextureLayout {
+            puppets.prepareLayer(puppet, layerID: entry.layer.id)
+            puppetAlbedos[entry.layer.id] = nil
+            return
+        }
 
         puppetAlbedos[entry.layer.id] = puppets.albedo(puppet, ScenePuppetRenderer.Draw(
             layerID: entry.layer.id, source: source, pose: pose, frame: frame,
             values: timelines.values,
             assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
-            canvas: canvas),
+            canvas: direct ? canvas : nil),
             commandBuffer: commandBuffer)
         // Without effects WE draws the mesh in the scene through the layer's material, sampling
         // every texture at the mesh's coordinates: the quad draws with them laid out likewise.
@@ -3086,7 +3162,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
 
     /// A puppet's effect output (in its image's bind layout, `drawPuppet`) laid out by the posed
     /// mesh, which the layer then draws: WE draws a layer with effects through its geometry, the
-    /// skinned mesh for a puppet. Anything else, or while the mesh can't be drawn, as it is.
+    /// skinned mesh for a puppet, its triangles blended over each other by the layer's material. Anything else, or while the mesh can't be drawn, as it is.
     private func posedEffectOutput(_ output: MTLTexture?, of entry: PreparedLayer, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
         guard let output, let puppet = entry.layer.puppet, let puppets, let animator = puppetAnimators[entry.layer.id],
               let source = entry.frames.first?.texture, source.width > 0, source.height > 0 else { return output }
@@ -3094,7 +3170,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let share = SIMD2(Float(puppet.contentPixels.x) / Float(source.width), Float(puppet.contentPixels.y) / Float(source.height))
         let content = SIMD2(Float(output.width), Float(output.height)) * simd_min(share, SIMD2(repeating: 1))
         return puppets.warp(puppet, layerID: entry.layer.id, key: "_effects", texture: output, contentSize: content,
-                            pose: animator.pose, redraw: true, commandBuffer: commandBuffer) ?? output
+                            pose: animator.pose, canvas: puppetCanvases[entry.layer.id], redraw: true, blended: true,
+                            commandBuffer: commandBuffer) ?? output
     }
 
     /// A script's call on a puppet's layers or bones. `setBoneTransform`'s matrix is in the scene;
@@ -3639,12 +3716,14 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         switch source {
         case let .image(image):
             if let raw = TEXRawImageRep.of(image) {
-                guard let texture = raw.makeTexture(device: device) else {
+                // Its allocation, padding and all, as a block-compressed .tex (`contentUVExtent`).
+                guard let texture = raw.makeAllocationTexture(device: device) else {
                     OWELog.error(.scene, "Could not upload a \(raw.pixelsWide)×\(raw.pixelsHigh) .tex image")
                     return nil
                 }
+                let crop = raw.isPadded ? raw.contentUVExtent : SIMD2<Float>(1, 1)
                 return [RenderTextureFrame(texture: texture, duration: .greatestFiniteMagnitude,
-                                           uvOrigin: .zero, uvAxisX: SIMD2<Float>(1, 0), uvAxisY: SIMD2<Float>(0, 1))]
+                                           uvOrigin: .zero, uvAxisX: SIMD2<Float>(crop.x, 0), uvAxisY: SIMD2<Float>(0, crop.y))]
             }
             guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
             let texture: MTLTexture

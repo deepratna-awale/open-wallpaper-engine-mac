@@ -124,10 +124,6 @@ Al compilar desde el código fuente, la primera compilación descarga el paquete
 - **15 idiomas nuevos**: alemán, francés, español, portugués de Brasil, italiano, japonés, coreano, chino simplificado y tradicional, ruso, polaco, turco, ucraniano, árabe e hindi, que se eligen en el selector de idioma de los ajustes.
 - Un nuevo icono de la app y un icono de la barra de menús que sigue el aspecto de la barra de menús.
 
-## Limitaciones actuales
-
-- **Funciones de SceneScript sin implementar**: `getVideoTexture()` todavía no hace nada.
-
 ## Tipos de fondos de pantalla compatibles
 
 | Tipo | Estado |

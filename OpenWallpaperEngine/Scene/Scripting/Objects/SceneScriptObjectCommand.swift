@@ -38,6 +38,32 @@ enum SceneScriptObjectCommand: Equatable {
     case animation(SceneScriptAnimationReference, AnimationAction)
     /// A puppet image's animation-layer or bone call (`SceneScriptRigCommand`).
     case rig(slot: Int, SceneScriptRigCommand)
+    /// An `IVideoTexture` call on the image in `slot`.
+    case video(slot: Int, SceneVideoTextureCommand)
+}
+
+/// What a script asked of an image's video texture (`IVideoTexture`).
+enum SceneVideoTextureCommand: Equatable {
+    case play, pause, stop
+    /// `setCurrentTime`, in seconds.
+    case seek(Double)
+    case rate(Float)
+    case loop(Bool)
+
+    /// The command ring's form: [action, value?].
+    init?(numbers: [Float]) {
+        guard let action = numbers.first else { return nil }
+        let value = numbers.count > 1 && numbers[1].isFinite ? Double(numbers[1]) : nil
+        switch action {
+        case 0: self = .play
+        case 1: self = .pause
+        case 2: self = .stop
+        case 3: guard let value else { return nil }; self = .seek(max(0, value))
+        case 4: guard let value else { return nil }; self = .rate(Float(max(0, min(value, 1e3))))
+        case 5: guard let value else { return nil }; self = .loop(value != 0)
+        default: return nil
+        }
+    }
 }
 
 /// Which animation a command is for: an animation of the object in `slot` (or of the scene when

@@ -187,7 +187,7 @@ struct SceneEffectPlanBuilder {
                                instance: WEObjectEffectPass?, fbos: [EffectFBO], overrides: (String) -> SceneEffectOverride?,
                                animationSite: ((String) -> SceneAnimationSite)? = nil,
                                shaderReader: @escaping (String) -> Data?, effectDirectory: String = "") throws -> SceneEffectPassPlan? {
-        let loader = ShaderSourceLoader(readFile: shaderReader)
+        let loader = ShaderSourceLoader(readFile: shaderReader, memo: translator.sources)
         let vertex = try loader.load(materialPass.shader, stage: .vertex)
         let fragment = try loader.load(materialPass.shader, stage: .fragment)
 

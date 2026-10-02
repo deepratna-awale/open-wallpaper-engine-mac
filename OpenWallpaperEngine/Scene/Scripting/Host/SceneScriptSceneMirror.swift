@@ -165,6 +165,9 @@ final class SceneScriptSceneMirror: SceneScriptObjectHost {
         case .sound(let slot, let playback):
             guard let id = objects[slot]?.id else { return }
             events.append(.sound(id: id, playback))
+        case .video(let slot, let command):
+            guard let id = objects[slot]?.id else { return }
+            events.append(.video(id: id, command))
         case .particles(let slot, let playback):
             update(slot) { $0.playback = playback }
         case .emitParticles(let slot, let count):
