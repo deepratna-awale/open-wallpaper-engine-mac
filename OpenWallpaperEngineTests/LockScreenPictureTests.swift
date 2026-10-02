@@ -1,4 +1,5 @@
 import XCTest
+import CoreGraphics
 @testable import OpenWallpaperEngine
 
 final class LockScreenPictureTests: XCTestCase {
@@ -81,5 +82,52 @@ final class LockScreenPictureTests: XCTestCase {
         let decoded = try JSONDecoder().decode(GlobalSettings.self, from: Data("{}".utf8))
         XCTAssertTrue(decoded.lockScreenPicture)
         XCTAssertTrue(decoded.screenSaver)
+    }
+
+    // MARK: A new snapshot
+
+    private let shown = URL(filePath: "/Wallpapers/431960/shown", directoryHint: .isDirectory)
+    private let other = URL(filePath: "/Wallpapers/431960/other", directoryHint: .isDirectory)
+
+    private func refreshed(savedFor directory: URL, isOn: Bool = true, mayChange: Bool = true) -> [Int] {
+        let showing: [Int: URL] = [1: shown, 2: other, 3: shown]
+        return LockScreenPicture.screensToRefresh(savedFor: directory, screens: [1, 2, 3, 4],
+                                                  shownDirectory: { showing[$0] }, isOn: isOn, mayChange: mayChange)
+    }
+
+    func testASnapshotOfTheShownWallpaperRefreshesTheDisplaysShowingIt() {
+        XCTAssertEqual(refreshed(savedFor: shown), [1, 3])
+        XCTAssertEqual(refreshed(savedFor: URL(filePath: "/Wallpapers/431960/other/../shown")), [1, 3])
+    }
+
+    func testASnapshotOfAWallpaperNoLongerShownChangesNothing() {
+        XCTAssertTrue(refreshed(savedFor: URL(filePath: "/Wallpapers/431960/gone")).isEmpty)
+    }
+
+    func testNothingChangesWithTheSettingOffOrWhenIsolated() {
+        XCTAssertTrue(refreshed(savedFor: shown, isOn: false).isEmpty)
+        XCTAssertTrue(refreshed(savedFor: shown, mayChange: false).isEmpty)
+    }
+
+    func testEverySavedSnapshotIsReportedIncludingAfterAPropertyChange() throws {
+        let wallpaper = caches.appending(path: "Library/123456", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: wallpaper, withIntermediateDirectories: true)
+        try Data(#"{"type":"scene","file":"scene.json"}"#.utf8).write(to: wallpaper.appending(path: "project.json"))
+        try Data("{}".utf8).write(to: wallpaper.appending(path: "scene.json"))
+        let context = try XCTUnwrap(CGContext(data: nil, width: 32, height: 18, bitsPerComponent: 8, bytesPerRow: 0,
+                                              space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                              bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue))
+        let image = try XCTUnwrap(context.makeImage())
+        let session = SceneLoadingSnapshotSession(store: SceneLoadingSnapshotStore(cachesDirectory: caches))
+        let saved = expectation(description: "saved twice")
+        saved.expectedFulfillmentCount = 2
+        let capture = SceneLoadingSnapshotCapture(wallpaperDirectory: wallpaper, session: session, now: 0) {
+            XCTAssertEqual($0, wallpaper)
+            saved.fulfill()
+        }
+        capture.save(image)
+        capture.rearm(now: 10)
+        capture.save(image)
+        wait(for: [saved], timeout: 10)
     }
 }

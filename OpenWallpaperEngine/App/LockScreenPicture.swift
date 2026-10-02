@@ -3,8 +3,9 @@ import AppKit
 /// Sets each display's system desktop picture to the scene wallpaper's full-resolution loading
 /// snapshot (`SceneLoadingSnapshotStore`), so the lock screen, which shows the desktop picture,
 /// shows the wallpaper. Nothing new is captured: a display with no snapshot yet keeps its picture
-/// until the running scene writes one (`SceneLoadingSnapshotCapture`) and the wallpaper is set
-/// again.
+/// until the running scene writes one (`SceneLoadingSnapshotCapture`), which then shows on every
+/// display still showing that wallpaper (`snapshotSaved`), as does a new one after the user's
+/// properties change.
 ///
 /// - **Files.** The snapshot is copied into OWE's desktop-picture folder (`DesktopSnapshotCache`)
 ///   as `lock-<display>-<a|b>.<heic|jpg>`, alternating like the menu bar tint's pictures (macOS
@@ -151,6 +152,34 @@ struct LockScreenPicture: @unchecked Sendable { // UserDefaults is thread-safe; 
                     }
                 }
             }
+        }
+    }
+
+    /// The screens whose picture should become the snapshot just saved for the wallpaper at
+    /// `directory`: those still showing that wallpaper, when the setting is on and this copy may
+    /// change the desktop picture.
+    static func screensToRefresh<Screen>(savedFor directory: URL, screens: [Screen],
+                                         shownDirectory: (Screen) -> URL?,
+                                         isOn: Bool, mayChange: Bool) -> [Screen] {
+        guard isOn, mayChange else { return [] }
+        let saved = directory.standardizedFileURL.path
+        return screens.filter { shownDirectory($0)?.standardizedFileURL.path == saved }
+    }
+
+    /// A running scene saved a loading snapshot of the wallpaper at `directory`
+    /// (`SceneLoadingSnapshotCapture`): shows it on the displays still showing that wallpaper.
+    /// Called off the main thread; the work is queued there.
+    static func snapshotSaved(wallpaperDirectory directory: URL) {
+        Task { @MainActor in
+            let app = AppDelegate.shared
+            let model = app.wallpaperViewModel
+            let screens = screensToRefresh(
+                savedFor: directory, screens: NSScreen.screens,
+                shownDirectory: { model.wallpaper(for: WallpaperViewModel.screenId(for: $0)).wallpaperDirectory },
+                isOn: app.globalSettingsViewModel.settings.lockScreenPicture,
+                mayChange: DesktopSnapshotCache.mayChangeDesktopPicture)
+            guard let first = screens.first else { return }
+            apply(model.wallpaper(for: WallpaperViewModel.screenId(for: first)), screens: screens)
         }
     }
 
