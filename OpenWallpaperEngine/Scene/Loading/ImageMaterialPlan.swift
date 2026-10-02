@@ -339,6 +339,8 @@ struct ImageMaterialPlanBuilder {
         if name == SceneMipMappedFrameBuffer.name { return .mipMappedFrameBuffer }
         // The frame's shadow atlas (`ImageMaterialRenderer.Draw.shadowAtlas`).
         if name == SceneShadowAtlas.name { return .fbo(name) }
+        // The scene's light cookie this frame (genericimage4's `g_Texture7`; `frame.lighting.cookie`).
+        if name == SceneLightCookie.name { return .fbo(name) }
         if name.hasPrefix("_rt_") || name.hasPrefix("_alias_") {
             throw ImageMaterialPlanError.unsupported("render target \(name)")
         }
