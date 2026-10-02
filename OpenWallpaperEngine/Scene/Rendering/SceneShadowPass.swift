@@ -321,7 +321,7 @@ final class SceneShadowPass {
                                   hasChangingTexture: bound.contains { $0.changes },
                                   sphere: mesh.bounds.map { SceneModelCulling.Sphere($0, world: caster.world) }))
         }
-        return PreparedCaster(sphere: SceneModelCulling.Sphere(plan.bounds, world: caster.world), draws: draws)
+        return PreparedCaster(sphere: SceneModelCulling.Sphere(plan.cullBounds, world: caster.world), draws: draws)
     }
 
     /// Encodes a frame's recorded commands.

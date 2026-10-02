@@ -52,7 +52,7 @@ final class SceneShapeObjectTests: XCTestCase {
         let project = try decodeTolerant(WEProject.self, from: data)
         var settings = SceneRenderSettings()
         settings.textureReduction = 1
-        settings.renderResolution = .native
+        settings.renderResolution = .retina
         let renderer = WEReferenceRenderer(directory: directory, project: project, settings: settings,
                                            storage: scratch.appending(path: "storage"))
         defer { Fixtures.removeStoredSettings(for: directory) }
@@ -110,7 +110,7 @@ final class SceneShapeObjectTests: XCTestCase {
         let project = try decodeTolerant(WEProject.self, from: data)
         var settings = SceneRenderSettings()
         settings.textureReduction = 1
-        settings.renderResolution = .native
+        settings.renderResolution = .retina
         let renderer = WEReferenceRenderer(directory: directory, project: project, settings: settings,
                                            storage: scratch.appending(path: "storage"))
         defer { Fixtures.removeStoredSettings(for: directory) }

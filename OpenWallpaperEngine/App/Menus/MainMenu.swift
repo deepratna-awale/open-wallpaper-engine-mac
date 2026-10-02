@@ -85,8 +85,8 @@ extension AppDelegate {
             item(.pauseResume, #selector(togglePauseWallpapers)),
             item(.muteUnmute, #selector(toggleMuteWallpapers)),
             .separator(),
-            item(.nextWallpaper, #selector(nextPlaylistWallpaper)),
-            item(.previousWallpaper, #selector(previousPlaylistWallpaper)),
+            item(.nextWallpaper, #selector(nextWallpaper)),
+            item(.previousWallpaper, #selector(previousWallpaper)),
         ])
 
         let windowMenu = submenu(String(localized: "Window"), tag: MainMenuTag.window, [
@@ -155,6 +155,26 @@ extension NSMenuItem {
     }
 }
 
+extension AppDelegate {
+    /// Next and Previous say whether they step through the playlist or pick from the library.
+    static func labelStepItem(_ item: NSMenuItem, next: Bool, inPlaylist: Bool) {
+        switch (next, inPlaylist) {
+        case (true, true):
+            item.title = String(localized: "Next Wallpaper in Playlist")
+            item.toolTip = nil
+        case (false, true):
+            item.title = String(localized: "Previous Wallpaper in Playlist")
+            item.toolTip = nil
+        case (true, false):
+            item.title = String(localized: "Next Wallpaper")
+            item.toolTip = String(localized: "Shows a random wallpaper from the Installed list as it is filtered and sorted.")
+        case (false, false):
+            item.title = String(localized: "Previous Wallpaper")
+            item.toolTip = String(localized: "Goes back to the wallpaper this display showed before.")
+        }
+    }
+}
+
 extension AppDelegate: NSMenuItemValidation {
     func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
         switch menuItem.action {
@@ -167,8 +187,12 @@ extension AppDelegate: NSMenuItemValidation {
         case #selector(toggleMuteWallpapers):
             menuItem.title = wallpaperViewModel.playVolume == 0 ? String(localized: "Unmute") : String(localized: "Mute")
             return true
-        case #selector(nextPlaylistWallpaper), #selector(previousPlaylistWallpaper):
-            return wallpaperViewModel.activePlaylist?.items.isEmpty == false
+        case #selector(nextWallpaper):
+            Self.labelStepItem(menuItem, next: true, inPlaylist: wallpaperViewModel.stepsThroughPlaylist)
+            return wallpaperViewModel.canStepToNextWallpaper(shown: contentViewModel.autoRefreshWallpapers)
+        case #selector(previousWallpaper):
+            Self.labelStepItem(menuItem, next: false, inPlaylist: wallpaperViewModel.stepsThroughPlaylist)
+            return wallpaperViewModel.canStepToPreviousWallpaper
         default:
             return true
         }

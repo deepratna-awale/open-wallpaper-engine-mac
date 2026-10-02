@@ -200,6 +200,96 @@ final class ScenePuppetTests: XCTestCase {
         XCTAssertEqual(kept, 255)
     }
 
+    /// With effects, the effects run on the bind-pose image and the posed mesh lays their output
+    /// out (`posedEffectOutput`) over the same canvas a layer without effects grows to: a part
+    /// posed past the image's rect still draws, and the effects keep the image's density.
+    func testEffectOutputPosedPastTheImageIsNotClipped() throws {
+        let output = Self.picture(width: 32, height: 16, opaque: true)
+        let mesh = Self.mesh(quads: [(SIMD4(-16, 8, 0, -8), SIMD4(0, 0, 0.5, 1)), (SIMD4(0, 8, 16, -8), SIMD4(0.5, 0, 1, 1))],
+                             bones: [0, 1])
+        let plan = try plan(mesh, bones: 2, size: SIMD2(32, 16))
+        var pose = ScenePuppetPose.bind(boneCount: 2)
+        pose.bones[1] = Self.translation(SIMD3(15, 0, 0))
+        let canvas = renderer.canvas(plan, layerID: "puppet", pose: pose)
+        XCTAssertEqual(canvas, ScenePuppetCanvas(min: SIMD2(-16, -8), max: SIMD2(32, 8)))
+        XCTAssertEqual(ScenePuppetCanvas.imageShare(imageSize: SIMD2(32, 16), canvas: canvas), SIMD2(32.0 / 48, 1))
+        XCTAssertEqual(ScenePuppetCanvas.imageShare(imageSize: SIMD2(32, 16), canvas: .image(SIMD2(32, 16))), SIMD2(1, 1))
+
+        let texture = try Self.texture(output, device: device)
+        func alphas(_ canvas: ScenePuppetCanvas?) throws -> (moved: UInt8, gap: UInt8, kept: UInt8) {
+            let commands = try XCTUnwrap(queue.makeCommandBuffer())
+            let warped = try XCTUnwrap(renderer.warp(plan, layerID: "puppet", key: "_effects", texture: texture,
+                                                     contentSize: nil, pose: pose, canvas: canvas, redraw: true,
+                                                     commandBuffer: commands))
+            commands.commit()
+            commands.waitUntilCompleted()
+            let pixels = try ScenePuppetTestSupport.rgba8(warped, device: device)
+            func alpha(_ x: Int, _ y: Int) -> UInt8 { pixels[(y * 32 + x) * 4 + 3] }
+            return (alpha(30, 8), alpha(15, 8), alpha(3, 8))
+        }
+        // Canvas x −16…32 over 32 texels: the moved half (15…31) lands on texels 21…31.
+        let posed = try alphas(canvas)
+        XCTAssertEqual(posed.moved, 255, "the part posed past the image draws")
+        XCTAssertEqual(posed.gap, 0)
+        XCTAssertEqual(posed.kept, 255)
+    }
+
+    /// Two parts of an atlas, a transparent gutter between them in the texture, meeting edge to
+    /// edge in the mesh and posed together: their shared edge stays opaque. Sampling the effect
+    /// output bilinearly faded both parts' edge texels against the gutter, and the background
+    /// showed through the seam.
+    func testPartsSharingAnEdgeLeaveNoGapWhenPosed() throws {
+        // Texels 0…13 part A (red), 14…17 the gutter, 18…31 part B (blue).
+        var bytes = [UInt8](repeating: 0, count: 32 * 16 * 4)
+        for y in 0..<16 {
+            for x in 0..<32 where x < 14 || x >= 18 {
+                bytes.replaceSubrange((y * 32 + x) * 4..<(y * 32 + x) * 4 + 4, with: x < 14 ? [255, 0, 0, 255] : [0, 0, 255, 255])
+            }
+        }
+        let atlas = Picture(width: 32, height: 16, pixels: bytes)
+        let mesh = Self.mesh(quads: [(SIMD4(-16, 8, 0, -8), SIMD4(0, 0, 14.0 / 32, 1)),
+                                     (SIMD4(0, 8, 16, -8), SIMD4(18.0 / 32, 0, 1, 1))], bones: [0, 1])
+        let plan = try plan(mesh, bones: 2, size: SIMD2(32, 16))
+        var pose = ScenePuppetPose.bind(boneCount: 2)
+        let move = Self.translation(SIMD3(3.5, 1.25, 0))
+        pose.bones = [move, move]
+        let canvas = renderer.canvas(plan, layerID: "puppet", pose: pose)
+        let commands = try XCTUnwrap(queue.makeCommandBuffer())
+        let warped = try XCTUnwrap(renderer.warp(plan, layerID: "puppet", key: "_effects",
+                                                 texture: try Self.texture(atlas, device: device), contentSize: nil,
+                                                 pose: pose, canvas: canvas, redraw: true, commandBuffer: commands))
+        commands.commit()
+        commands.waitUntilCompleted()
+        let pixels = try ScenePuppetTestSupport.rgba8(warped, device: device)
+        // The seam, mesh x = 3.5, in the canvas's texels; every row the parts cover.
+        let seam = Int(((3.5 - canvas.min.x) / canvas.size.x * 32).rounded(.down))
+        let top = Int(((canvas.max.y - (8 + 1.25)) / canvas.size.y * 16).rounded(.up))
+        let bottom = Int(((canvas.max.y - (-8 + 1.25)) / canvas.size.y * 16).rounded(.down))
+        XCTAssertLessThan(top, bottom)
+        for y in top..<bottom {
+            for x in seam - 1...seam + 1 {
+                XCTAssertEqual(pixels[(y * 32 + x) * 4 + 3], 255, "seam open at (\(x), \(y))")
+            }
+        }
+    }
+
+    /// Skinning renormalises the weights over the bones the pose holds, so a vertex shared by two
+    /// parts, whatever its weights' sum, lands where its neighbour's copy does; no usable weight
+    /// leaves it at rest.
+    func testSkinningRenormalisesWeights() {
+        var pose = ScenePuppetPose.bind(boneCount: 2)
+        pose.bones[1] = Self.translation(SIMD3(10, 0, 0))
+        let p = SIMD4<Float>(2, 3, 0, 1)
+        let full = ScenePuppetPlan.skin(p, weights: SIMD4(1, 0, 0, 0), bones: SIMD4(1, 0, 0, 0), pose: pose)
+        let partial = ScenePuppetPlan.skin(p, weights: SIMD4(0.6, 0, 0, 0), bones: SIMD4(1, 0, 0, 0), pose: pose)
+        XCTAssertEqual(full, SIMD4(12, 3, 0, 1))
+        XCTAssertEqual(partial, full)
+        // A bone the pose lacks drops out; the rest renormalise.
+        let missing = ScenePuppetPlan.skin(p, weights: SIMD4(0.5, 0.5, 0, 0), bones: SIMD4(1, 7, 0, 0), pose: pose)
+        XCTAssertEqual(missing, full)
+        XCTAssertEqual(ScenePuppetPlan.skin(p, weights: .zero, bones: .zero, pose: pose), p)
+    }
+
     /// `SKINNING_ALPHA` (mesh flag 0x4) multiplies the texel's alpha by the weighted `g_BonesAlpha`.
     func testSkinningAlphaFadesByTheBonesAlpha() throws {
         let image = Self.picture(width: 16, height: 16, opaque: true)

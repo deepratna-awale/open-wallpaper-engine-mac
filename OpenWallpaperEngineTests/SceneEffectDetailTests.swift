@@ -50,12 +50,12 @@ final class SceneEffectDetailTests: XCTestCase {
     func testSettingsReachTheRenderer() {
         var settings = GlobalSettings()
         XCTAssertEqual(settings.sceneDetail, .matchDisplay, "the app draws no more than the display shows by default")
-        XCTAssertEqual(settings.renderResolution, .native)
+        XCTAssertEqual(settings.renderResolution, .display)
         settings.sceneDetail = .full
-        settings.renderResolution = .desktop
+        settings.renderResolution = .full
         let render = SceneRenderSettings(settings)
         XCTAssertEqual(render.sceneDetail, .full)
-        XCTAssertEqual(render.renderResolution, .desktop)
+        XCTAssertEqual(render.renderResolution, .full)
         XCTAssertEqual(SceneRenderSettings().sceneDetail, .full, "a settings-less renderer draws as WE does")
     }
 

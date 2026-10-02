@@ -200,11 +200,17 @@ final class SceneRenderLoop {
         let pixelSize = SIMD2(Int(viewport.drawableSize.x), Int(viewport.drawableSize.y))
         guard pixelSize.x > 0, pixelSize.y > 0,
               snapshots.claim(pixelSize: pixelSize, contentSince: contentSince, now: now) else { return }
-        if rendersFrame { renderer.renderShared([viewport]) }
+        // The lock screen shows this picture: a frame without the clock, which would show the
+        // capture's time. With one display the extra frame is freed after; with several the
+        // displays' frame is drawn again with the clock.
+        let hidesClock = !renderer.clockLayerIDs.isEmpty
+        if hidesClock { renderer.hidesClockLayers = true }
+        if rendersFrame || hidesClock { renderer.renderShared([viewport]) }
         let started = renderer.captureSharedFrame(pixelSize: pixelSize, pixelsPerPoint: viewport.pixelsPerPoint) {
             snapshots.save($0)
         }
-        if rendersFrame { renderer.releaseSharedFrame() }
+        if hidesClock { renderer.hidesClockLayers = false }
+        if rendersFrame { renderer.releaseSharedFrame() } else if hidesClock { renderer.renderShared([viewport]) }
         if !started { OWELog.debug(.scene, "Loading snapshot: no frame to capture at \(pixelSize.x)×\(pixelSize.y)") }
     }
 
