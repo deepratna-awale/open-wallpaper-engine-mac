@@ -89099,192 +89099,97 @@
         }
       }
     },
-    "Screen savers are made from scene and video wallpapers" : {
-      "comment" : "Details panel: why a web or application wallpaper has no screen saver",
+    "Screen savers are made from scene, web and video wallpapers" : {
+      "comment" : "Details panel: why an application wallpaper has no screen saver",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "تُنشأ شاشات التوقف من خلفيات المشهد والفيديو"
+            "value" : "تُنشأ شاشات التوقف من خلفيات المشهد والويب والفيديو"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bildschirmschoner werden aus Szene- und Video-Hintergrundbildern erstellt"
+            "value" : "Bildschirmschoner werden aus Szene-, Web- und Video-Hintergrundbildern erstellt"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Los salvapantallas se crean a partir de fondos de pantalla de escena y de vídeo"
+            "value" : "Los salvapantallas se crean a partir de fondos de pantalla de escena, web y vídeo"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Les économiseurs d'écran sont créés à partir des fonds d’écran de scène et vidéo"
+            "value" : "Les économiseurs d'écran sont créés à partir des fonds d’écran de scène, web et vidéo"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "स्क्रीन सेवर सीन और वीडियो वॉलपेपर से बनते हैं"
+            "value" : "स्क्रीन सेवर सीन, वेब और वीडियो वॉलपेपर से बनते हैं"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "I salvaschermi sono creati dagli sfondi scena e video"
+            "value" : "I salvaschermi sono creati dagli sfondi scena, web e video"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "スクリーンセーバはシーン壁紙と動画壁紙から作成されます"
+            "value" : "スクリーンセーバはシーン、Web、動画の壁紙から作成されます"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "화면 보호기는 장면 및 동영상 배경화면으로 만들어집니다"
+            "value" : "화면 보호기는 장면, 웹, 동영상 배경화면으로 만들어집니다"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wygaszacze ekranu powstają z tapet typu scena i wideo"
+            "value" : "Wygaszacze ekranu powstają z tapet typu scena, web i wideo"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Protetores de tela são criados a partir de imagens de fundo de cena e de vídeo"
+            "value" : "Protetores de tela são criados a partir de imagens de fundo de cena, web e vídeo"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Заставки создаются из обоев-сцен и видеообоев"
+            "value" : "Заставки создаются из обоев-сцен, веб-обоев и видео"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ekran koruyucular sahne ve video duvar kâğıtlarından oluşturulur"
+            "value" : "Ekran koruyucular sahne, web ve video duvar kâğıtlarından oluşturulur"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Заставки створюються зі шпалер-сцен і відеошпалер"
+            "value" : "Заставки створюються зі шпалер-сцен, веб-шпалер і відео"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "屏幕保护程序由场景墙纸和视频墙纸生成"
+            "value" : "屏幕保护程序由场景、网页和视频墙纸生成"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "螢幕保護程式由場景與影片背景圖片製作"
-          }
-        }
-      }
-    },
-    "Screen savers are made from scene, web and WebM video wallpapers" : {
-      "comment" : "Details panel: why an application or other video wallpaper has no screen saver",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تُنشأ شاشات التوقف من خلفيات المشهد والويب وفيديو WebM"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bildschirmschoner werden aus Szene-, Web- und WebM-Video-Hintergrundbildern erstellt"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Los salvapantallas se crean a partir de fondos de pantalla de escena, web y vídeo WebM"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Les économiseurs d'écran sont créés à partir des fonds d’écran de scène, web et vidéo WebM"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "स्क्रीन सेवर सीन, वेब और WebM वीडियो वॉलपेपर से बनते हैं"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "I salvaschermi sono creati dagli sfondi scena, web e video WebM"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "スクリーンセーバはシーン、Web、WebM動画の壁紙から作成されます"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "화면 보호기는 장면, 웹, WebM 동영상 배경화면으로 만들어집니다"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wygaszacze ekranu powstają z tapet typu scena, web i wideo WebM"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Protetores de tela são criados a partir de imagens de fundo de cena, web e vídeo WebM"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Заставки создаются из обоев-сцен, веб-обоев и видео WebM"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ekran koruyucular sahne, web ve WebM video duvar kâğıtlarından oluşturulur"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Заставки створюються зі шпалер-сцен, веб-шпалер і відео WebM"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "屏幕保护程序由场景、网页和 WebM 视频墙纸生成"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "螢幕保護程式由場景、網頁和 WebM 影片背景圖片製作"
+            "value" : "螢幕保護程式由場景、網頁和影片背景圖片製作"
           }
         }
       }
@@ -106003,97 +105908,97 @@
         }
       }
     },
-    "The screen saver plays MP4 and MOV videos in H.264 or HEVC; WebM plays only on the desktop" : {
-      "comment" : "Details panel: why a video wallpaper (WebM/VP9 or another codec) has no screen saver",
+    "The screen saver plays MP4 and MOV videos in H.264 or HEVC, and records WebM videos" : {
+      "comment" : "Details panel: why a video wallpaper in another codec has no screen saver",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "تشغّل شاشة التوقف مقاطع فيديو MP4 وMOV بترميز H.264 أو HEVC؛ أما WebM فيُشغَّل على سطح المكتب فقط"
+            "value" : "تشغّل شاشة التوقف فيديوهات MP4 وMOV بترميز H.264 أو HEVC، وتسجّل فيديوهات WebM"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Der Bildschirmschoner spielt MP4- und MOV-Videos in H.264 oder HEVC ab; WebM läuft nur auf dem Schreibtisch"
+            "value" : "Der Bildschirmschoner spielt MP4- und MOV-Videos in H.264 oder HEVC ab und zeichnet WebM-Videos auf"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "El salvapantallas reproduce vídeos MP4 y MOV en H.264 o HEVC; WebM solo se reproduce en el escritorio"
+            "value" : "El salvapantallas reproduce vídeos MP4 y MOV en H.264 o HEVC, y graba los vídeos WebM"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "L’économiseur d’écran lit les vidéos MP4 et MOV en H.264 ou HEVC ; le WebM n’est lu que sur le bureau"
+            "value" : "L'économiseur d'écran lit les vidéos MP4 et MOV en H.264 ou HEVC, et enregistre les vidéos WebM"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "स्क्रीन सेवर H.264 या HEVC में MP4 और MOV वीडियो चलाता है; WebM केवल डेस्कटॉप पर चलता है"
+            "value" : "स्क्रीन सेवर H.264 या HEVC में MP4 और MOV वीडियो चलाता है, और WebM वीडियो रिकॉर्ड करता है"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Il salvaschermo riproduce video MP4 e MOV in H.264 o HEVC; WebM si riproduce solo sulla scrivania"
+            "value" : "Il salvaschermo riproduce video MP4 e MOV in H.264 o HEVC e registra i video WebM"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "スクリーンセーバは H.264 または HEVC の MP4 と MOV の動画を再生します。WebM はデスクトップでのみ再生されます"
+            "value" : "スクリーンセーバはH.264またはHEVCのMP4・MOV動画を再生し、WebM動画は録画します"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "화면 보호기는 H.264 또는 HEVC의 MP4 및 MOV 동영상을 재생합니다. WebM은 데스크탑에서만 재생됩니다"
+            "value" : "화면 보호기는 H.264 또는 HEVC의 MP4 및 MOV 동영상을 재생하고 WebM 동영상은 녹화합니다"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wygaszacz ekranu odtwarza filmy MP4 i MOV w H.264 lub HEVC; WebM jest odtwarzany tylko na biurku"
+            "value" : "Wygaszacz ekranu odtwarza filmy MP4 i MOV w H.264 lub HEVC, a filmy WebM nagrywa"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "O protetor de tela reproduz vídeos MP4 e MOV em H.264 ou HEVC; WebM é reproduzido apenas na mesa"
+            "value" : "O protetor de tela reproduz vídeos MP4 e MOV em H.264 ou HEVC e grava vídeos WebM"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Заставка воспроизводит видео MP4 и MOV в H.264 или HEVC; WebM воспроизводится только на рабочем столе"
+            "value" : "Заставка воспроизводит видео MP4 и MOV в H.264 или HEVC, а видео WebM записывает"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ekran koruyucu H.264 veya HEVC biçimindeki MP4 ve MOV videolarını oynatır; WebM yalnızca masaüstünde oynatılır"
+            "value" : "Ekran koruyucu H.264 veya HEVC biçimindeki MP4 ve MOV videoları oynatır, WebM videolarını kaydeder"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Заставка відтворює відео MP4 і MOV у H.264 або HEVC; WebM відтворюється лише на робочому столі"
+            "value" : "Заставка відтворює відео MP4 і MOV у H.264 або HEVC, а відео WebM записує"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "屏幕保护程序播放 H.264 或 HEVC 编码的 MP4 和 MOV 视频；WebM 仅在桌面上播放"
+            "value" : "屏幕保护程序播放 H.264 或 HEVC 编码的 MP4 和 MOV 视频，并录制 WebM 视频"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "螢幕保護程式播放 H.264 或 HEVC 編碼的 MP4 與 MOV 影片；WebM 僅在桌面上播放"
+            "value" : "螢幕保護程式播放 H.264 或 HEVC 編碼的 MP4 和 MOV 影片，並錄製 WebM 影片"
           }
         }
       }

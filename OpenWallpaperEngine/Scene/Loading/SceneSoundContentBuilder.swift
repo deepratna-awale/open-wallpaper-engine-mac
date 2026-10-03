@@ -100,6 +100,9 @@ struct SceneSoundContentBuilder {
     /// (the size and modification date of the file its bytes come from: the `.pkg`, a loose file
     /// or a dependency's resolved file), as `SceneLoadingSnapshotStore.contentKey`.
     static func cacheName(entry: String, wallpaperDirectory: URL?, source: URL?, fallbackSize: Int) -> String {
+        // Fresh values: a URL caches what it read, and the file may have changed since.
+        var source = source
+        source?.removeAllCachedResourceValues()
         let values = try? source?.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey])
         return cacheName(entry: entry, wallpaperDirectory: wallpaperDirectory, size: values?.fileSize ?? fallbackSize,
                          modified: values?.contentModificationDate)
