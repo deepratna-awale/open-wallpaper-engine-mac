@@ -243,7 +243,7 @@ struct ScreenSaverLoopRenderer {
         }
     }
 
-    private static func globalSettings(from defaults: UserDefaults) -> GlobalSettings {
+    static func globalSettings(from defaults: UserDefaults) -> GlobalSettings {
         guard let data = defaults.data(forKey: "GlobalSettings") else { return GlobalSettings() }
         do {
             return try JSONDecoder().decode(GlobalSettings.self, from: data)
@@ -255,7 +255,7 @@ struct ScreenSaverLoopRenderer {
 }
 
 /// No now-playing session: a saver plays without media integration.
-private final class SilentMediaSession: MediaSessionSource {
+final class SilentMediaSession: MediaSessionSource {
     func subscribe(_ update: @escaping (MediaSessionState) -> Void) -> Int {
         update(MediaSessionState())
         return 0
@@ -266,7 +266,7 @@ private final class SilentMediaSession: MediaSessionSource {
 
 /// One capture's result, handed over from the Metal thread that completes it: `done` orders the
 /// write of `image` before the waiting thread reads it.
-private final class FrameCapture: @unchecked Sendable {
+final class FrameCapture: @unchecked Sendable {
     let done = DispatchSemaphore(value: 0)
     private(set) var image: CGImage?
 
@@ -276,8 +276,8 @@ private final class FrameCapture: @unchecked Sendable {
     }
 }
 
-/// An HEVC `.mov` written frame by frame from `CGImage`s.
-private final class HEVCWriter {
+/// An HEVC `.mov` written frame by frame from `CGImage`s (the screen saver's loop, a Live Photo's movie).
+final class HEVCWriter {
     /// HEVC encoder quality (0…1) for the loop video.
     static let quality: Double = 0.95
     private let writer: AVAssetWriter
@@ -286,7 +286,8 @@ private final class HEVCWriter {
     private let pixelSize: SIMD2<Int>
     private let frameRate: Int
 
-    init?(url: URL, pixelSize: SIMD2<Int>, frameRate: Int) {
+    /// `prepare` adds what else the movie holds (metadata, more inputs) before writing starts.
+    init?(url: URL, pixelSize: SIMD2<Int>, frameRate: Int, prepare: (AVAssetWriter) throws -> Void = { _ in }) {
         do {
             writer = try AVAssetWriter(outputURL: url, fileType: .mov)
         } catch {
@@ -315,6 +316,12 @@ private final class HEVCWriter {
             return nil
         }
         writer.add(input)
+        do {
+            try prepare(writer)
+        } catch {
+            OWELog.error(.app, "Can't prepare the video writer: \(error)")
+            return nil
+        }
         guard writer.startWriting() else {
             OWELog.error(.app, "Screen saver: the video writer didn't start: \(String(describing: writer.error))")
             return nil

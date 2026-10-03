@@ -66,6 +66,11 @@ private struct SceneInspectorTexture: Identifiable {
     let image: NSImage
 }
 
+/// What the Scene Inspector shows: the scene's objects, or the iPhone Live Photo preview.
+private enum SceneInspectorMode {
+    case inspector, iPhone
+}
+
 private enum SceneHorizontalSnap {
     case left, center, right
 }
@@ -96,7 +101,7 @@ private final class SceneInspectorModel: ObservableObject {
     @Published var decodedItemID: String?
     @Published var loadingItemID: String?
     private(set) var initiallySelectedID: String?
-    private var sceneSize = SIMD2<Double>(1920, 1080)
+    private(set) var sceneSize = SIMD2<Double>(1920, 1080)
 
     private let directory: URL
     private let package: PKGParser?
@@ -911,6 +916,8 @@ struct SceneInspectorView: View {
     @State private var didCopyPath = false
     @State private var isMovementPresented = true
     @State private var isConfirmingReset = false
+    @State private var mode = SceneInspectorMode.inspector
+    @State private var iPhoneModel: IPhoneLivePhotoModel?
     @FocusState private var isSearchFocused: Bool
     private let wallpaperDirectory: URL
     private let wallpaper: WEWallpaper
@@ -975,12 +982,21 @@ struct SceneInspectorView: View {
             sidebarColumn
                 .navigationSplitViewColumnWidth(min: 240, ideal: Self.sidebarWidth, max: 440)
         } detail: {
-            detailColumn
+            modeDetail
                 .inspector(isPresented: $isMovementPresented) {
-                    movementColumn(for: model.items.first(where: { $0.id == selectedID }))
-                        .inspectorColumnWidth(min: 260, ideal: Self.sidebarWidth, max: 400)
+                    Group {
+                        if mode == .iPhone, let iPhoneModel {
+                            IPhoneLivePhotoControls(model: iPhoneModel, scopes: scopes)
+                        } else {
+                            movementColumn(for: model.items.first(where: { $0.id == selectedID }))
+                        }
+                    }
+                    .inspectorColumnWidth(min: 260, ideal: Self.sidebarWidth, max: 400)
                 }
                 .toolbar {
+                    ToolbarItem(placement: .navigation) {
+                        modePicker
+                    }
                     // Two separate items at the trailing end: on macOS 26 a fixed spacer keeps them
                     // from sharing one glass capsule.
                     if #available(macOS 26, *) {
@@ -1032,6 +1048,37 @@ struct SceneInspectorView: View {
                 .keyboardShortcut("k", modifiers: .command)
                 .hidden()
         }
+    }
+
+    /// The detail column: the selected object, or the iPhone lock screen.
+    @ViewBuilder
+    private var modeDetail: some View {
+        if mode == .iPhone, let iPhoneModel {
+            IPhoneLockScreenPreview(model: iPhoneModel)
+                .navigationTitle(Text("iPhone Live Photo"))
+        } else {
+            detailColumn
+        }
+    }
+
+    /// Inspector or iPhone; only a scene wallpaper can be made into a Live Photo for now.
+    private var modePicker: some View {
+        let eligible = IPhoneLivePhotoModel.isEligible(wallpaper)
+        return Picker("Mode", selection: Binding(get: { mode }, set: { newValue in
+            if newValue == .iPhone, iPhoneModel == nil {
+                iPhoneModel = IPhoneLivePhotoModel(wallpaper: wallpaper, properties: scopes.first ?? .shared,
+                                                   sceneSize: model.sceneSize)
+            }
+            if newValue == .iPhone { isMovementPresented = true }
+            mode = newValue
+        })) {
+            Text("Inspector").tag(SceneInspectorMode.inspector)
+            Text("iPhone").tag(SceneInspectorMode.iPhone)
+        }
+        .pickerStyle(.segmented)
+        .disabled(!eligible)
+        .help(eligible ? Text("Preview the wallpaper as an iPhone lock screen and export it as a Live Photo")
+                       : Text("Only scene wallpapers can be exported to iPhone for now"))
     }
 
     /// ⌘K. macOS 15 focuses a search field through `searchFocused`; macOS 14 has no API for it,
