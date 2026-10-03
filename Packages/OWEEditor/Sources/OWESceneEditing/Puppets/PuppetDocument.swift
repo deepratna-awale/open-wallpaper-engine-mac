@@ -103,11 +103,12 @@ public struct PuppetDocument: Codable, Hashable, Sendable {
 
     /// Adds a bone whose head is at `head` (model space) under `parent`; returns its index.
     @discardableResult
-    public mutating func addBone(named name: String, parent: Int?, head: SIMD2<Float>, angle: Float = 0) -> Int {
+    public mutating func addBone(named name: String, parent: Int?, head: SIMD2<Float>, angle: Float = 0,
+                                 length: Float? = nil) -> Int {
         let parentWorld = parent.map { bindWorlds[$0] } ?? matrix_identity_float4x4
         let world = PuppetMath.matrix(translation: SIMD3(head.x, head.y, 0), euler: SIMD3(0, 0, angle), scale: SIMD3(repeating: 1))
         let local = PuppetTransform(matrix: parentWorld.inverse * world)
-        bones.append(PuppetBone(name: uniqueBoneName(name), parent: parent, local: local))
+        bones.append(PuppetBone(name: uniqueBoneName(name), parent: parent, local: local, length: length))
         for clip in clips.indices { clips[clip].tracks.append(PuppetTrack()) }
         preserved.boneAdded(count: bones.count)
         return bones.count - 1
@@ -537,9 +538,13 @@ public struct PuppetBone: Codable, Hashable, Sendable {
     public var physics: PuppetBonePhysics?
     /// Properties keys the editor doesn't edit (IK), kept as they were.
     public var otherProperties: [String: SceneJSONValue]
+    /// How long the editor draws a bone without children (WE's bones are joints; the length
+    /// only shows the bone and shapes its automatic weights). nil: half its parent's.
+    public var length: Float?
 
     public init(name: String, parent: Int?, local: PuppetTransform, rest: PuppetTransform? = nil, flags: UInt32 = 1,
-                physics: PuppetBonePhysics? = nil, otherProperties: [String: SceneJSONValue] = [:]) {
+                physics: PuppetBonePhysics? = nil, otherProperties: [String: SceneJSONValue] = [:], length: Float? = nil) {
+        self.length = length
         self.name = name
         self.parent = parent
         self.local = local

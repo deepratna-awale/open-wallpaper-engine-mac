@@ -53,6 +53,9 @@ private struct LayerForm: View {
             } else if !layer.effects.isEmpty {
                 effectsSection
             }
+            if layer.kind == .image, let assets = services.puppetAssets {
+                PuppetInspectorSection(session: session, layer: layer, assets: assets)
+            }
             LayerScriptsSection(layer: layer)
             Section {
                 DisclosureGroup(L("Details")) {

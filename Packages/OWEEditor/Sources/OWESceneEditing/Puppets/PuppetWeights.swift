@@ -15,7 +15,12 @@ public enum PuppetAutoWeights {
     /// Each bone as a segment in model space: from its head to its first child's head, or for a
     /// bone without children a stub along its x axis (half its parent's length, else 50 pixels).
     public static func segments(_ document: PuppetDocument) -> [(SIMD2<Float>, SIMD2<Float>)] {
-        let worlds = document.bindWorlds
+        segments(document, worlds: document.bindWorlds)
+    }
+
+    /// The same for a pose's model-space matrices.
+    public static func segments(_ document: PuppetDocument, worlds: [simd_float4x4]) -> [(SIMD2<Float>, SIMD2<Float>)] {
+        guard worlds.count == document.bones.count else { return [] }
         var lengths = [Float](repeating: 0, count: document.bones.count)
         var result: [(SIMD2<Float>, SIMD2<Float>)] = []
         for index in document.bones.indices {
@@ -26,7 +31,7 @@ public enum PuppetAutoWeights {
                 result.append((head, tail))
             } else {
                 let parentLength = document.bones[index].parent.map { lengths[$0] } ?? 0
-                let length = parentLength > 0 ? parentLength * 0.5 : 50
+                let length = document.bones[index].length.flatMap { $0 > 0 ? $0 : nil } ?? (parentLength > 0 ? parentLength * 0.5 : 50)
                 let axis = PuppetMath.transform(SIMD2(1, 0), worlds[index]) - head
                 let direction = simd_length(axis) > 0 ? simd_normalize(axis) : SIMD2<Float>(1, 0)
                 lengths[index] = length

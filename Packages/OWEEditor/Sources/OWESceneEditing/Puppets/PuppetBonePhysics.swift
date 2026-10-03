@@ -94,7 +94,14 @@ public struct PuppetBonePhysics: Codable, Hashable, Sendable {
 
     // MARK: Properties JSON
 
+    /// A vector as WE's "x y z" strings: each number as the shortest text that reads back as the
+    /// same float, so a loaded rig saves back exactly.
     static func vectorString(_ v: SIMD3<Float>) -> String {
+        [v.x, v.y, v.z].map { ($0 + 0).description }.joined(separator: " ")
+    }
+
+    /// The tip as WE's compiler writes it (`"%.5f %.5f %.5f"`, 0x1400b0270).
+    static func tipString(_ v: SIMD3<Float>) -> String {
         String(format: "%.5f %.5f %.5f", Double(v.x), Double(v.y), Double(v.z))
     }
 
@@ -109,7 +116,7 @@ public struct PuppetBonePhysics: Codable, Hashable, Sendable {
             "la": .bool(limitAngles), "lamin": .string(Self.vectorString(minAngles)), "lamax": .string(Self.vectorString(maxAngles)),
             "lt": .bool(limitTorque), "ltmax": .number(Double(maxTorque)), "tm": .number(Double(maxDistance)),
             "s": .number(Double(tipSize)), "a": .string(Self.vectorString(forward)),
-            "tp": .string(Self.vectorString(compiledTip ?? tip(childDistance: childDistance))),
+            "tp": .string(Self.tipString(compiledTip ?? tip(childDistance: childDistance))),
             "rax": .bool(rotationAxes.x), "ray": .bool(rotationAxes.y), "raz": .bool(rotationAxes.z),
             "tax": .bool(translationAxes.x), "tay": .bool(translationAxes.y), "taz": .bool(translationAxes.z),
         ]
