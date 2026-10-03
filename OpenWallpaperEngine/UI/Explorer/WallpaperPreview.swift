@@ -83,6 +83,13 @@ struct WallpaperPreview: SubviewOfContentView {
             }
             .help(String(localized: "The wallpaper's page didn't load, so no screen saver was recorded",
                          comment: "Details panel: why a web or WebM video wallpaper has no screen saver"))
+        case .notAvailable(.doesNotLoop):
+            screenSaverRow(String(localized: "Screen Saver Not Available",
+                                  comment: "Details panel: no screen saver is made from this wallpaper")) {
+                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.yellow)
+            }
+            .help(String(localized: "This page doesn't loop smoothly",
+                         comment: "Details panel: why a web wallpaper has no screen saver: its recording has no seamless loop"))
         case nil:
             EmptyView()
         }
