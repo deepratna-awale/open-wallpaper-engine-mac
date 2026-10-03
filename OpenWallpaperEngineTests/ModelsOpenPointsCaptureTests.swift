@@ -37,6 +37,64 @@ final class ModelsOpenPointsCaptureTests: XCTestCase {
         try assertStill("mo_513_noorigin", noOrigin)
     }
 
+    /// What §5.13 moves: every root object without `origin` in the repository's fixture scenes,
+    /// which sat at the scene's centre before and sits at 0 now, as in WE's capture. None of the
+    /// tests reading these scenes checks where those objects are drawn (the lights, the
+    /// composelayer and the label are decoded or counted, not placed). A change to the list shows
+    /// here first. With the library present (`LibrarySweepTests.libraryRoot`), its orthographic
+    /// scenes' such objects are listed too, as an attachment and in the log, for the impact.
+    func testRootsWithoutOriginInTheFixtureScenes() throws {
+        let found = try Self.rootsWithoutOrigin(under: Fixtures.root, relativeTo: Fixtures.root, orthographicOnly: false)
+        XCTAssertEqual(found, [
+            "Library/installed/3000000003/scene.json #- [none]",
+            "SceneScript/replay/failures/scene.json #3 Label [text]",
+            "Scenes/lights/scene.json #900 [light]",
+            "Scenes/lights/scene.json #901 [light]",
+            "Scenes/multipass/scene.json #1 Layer [image]",
+            "Scenes/scripted-objects/scene.json #2 Tone [sound]",
+            "Timeline/animation-set-scene.json #- Sparks [particle]",
+            "Timeline/animation-set-scene.json #12 Thumbnail [image]",
+            "Workshop/wallpaper/scene.json #- [none]",
+        ], found.joined(separator: "\n"))
+
+        let library = LibrarySweepTests.libraryRoot
+        guard FileManager.default.fileExists(atPath: library.path) else { return }
+        let inLibrary = try Self.rootsWithoutOrigin(under: library, relativeTo: library, orthographicOnly: true)
+        let report = "Orthographic library scenes' roots without origin (now at 0, §5.13): \(inLibrary.count)\n"
+            + inLibrary.joined(separator: "\n")
+        print(report)
+        let attachment = XCTAttachment(string: report)
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
+    /// "path #id name [kinds]" of every root object without `origin` in the `scene.json`-like
+    /// files under `folder` (any JSON with an `objects` array), sorted.
+    private static func rootsWithoutOrigin(under folder: URL, relativeTo base: URL,
+                                           orthographicOnly: Bool) throws -> [String] {
+        let kinds = ["image", "particle", "text", "sound", "light", "model", "shape"]
+        var found: [String] = []
+        let files = FileManager.default.enumerator(at: folder, includingPropertiesForKeys: nil)
+        while let url = files?.nextObject() as? URL {
+            guard url.pathExtension == "json", !orthographicOnly || url.lastPathComponent == "scene.json",
+                  let data = try? Data(contentsOf: url),
+                  let scene = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+                  let objects = scene["objects"] as? [[String: Any]] else { continue }
+            if orthographicOnly {
+                let general = scene["general"] as? [String: Any]
+                guard general?["orthogonalprojection"] != nil, (general?["cameraperspective"] as? Bool) != true else { continue }
+            }
+            let path = String(url.standardizedFileURL.path.dropFirst(base.standardizedFileURL.path.count + 1))
+            for object in objects where object["parent"] == nil && object["origin"] == nil {
+                let id = (object["id"] as? Int).map(String.init) ?? "-"
+                let name = (object["name"] as? String).map { " \($0)" } ?? ""
+                let kind = kinds.filter { object[$0] != nil }
+                found.append("\(path) #\(id)\(name) [\(kind.isEmpty ? "none" : kind.joined(separator: ","))]")
+            }
+        }
+        return found.sorted()
+    }
+
     // MARK: - 5.14 Vectors with fewer than three numbers
 
     /// A missing component is 0, on both paths: a model's `scale` "0.02 0.02" is its "0.02 0.02 0"
@@ -118,6 +176,34 @@ final class ModelsOpenPointsCaptureTests: XCTestCase {
             #"{"id": 3, "parent": 2, "origin": "0 0 4"}"#)).composesInDepth, "a grandparent's tilt counts")
     }
 
+    /// The switch follows the effective tilts: a timeline or script tilting the parent of a child
+    /// with depth turns it on, and back off when the tilt returns to 0 or is scripted away; the
+    /// child's world then follows the capture's composition.
+    func testTheDepthCompositionFollowsLiveTilts() throws {
+        var hierarchy = SceneTransformHierarchy(objects: try imageObjects(
+            #"{"id": 10, "origin": "700 540 0", "scale": "0.85 0.85 1"}"#,
+            #"{"id": 11, "parent": 10, "origin": "500 0 200", "angles": "0 30 0", "scale": "0.5 0.5 1"}"#))
+        XCTAssertFalse(hierarchy.composesInDepth, "untilted as authored")
+        let parent = try XCTUnwrap(hierarchy.nodes["10"]?.local)
+        var tilted = parent
+        tilted.tilt = SIMD2(30, 0)
+        let live: (String) -> SceneLocalTransform? = { $0 == "10" ? tilted : nil }
+        hierarchy.updateComposition(live: live)
+        XCTAssertTrue(hierarchy.composesInDepth, "a live tilt on the ancestor")
+        let child = box(hierarchy.world(of: "11", live: live))
+        assertBox(child, PixelBox(minX: 1091, maxX: 1158, minY: 62, maxY: 622), "the child under the live tilt", accuracy: 4)
+        hierarchy.updateComposition { _ in nil }
+        XCTAssertFalse(hierarchy.composesInDepth, "back to the authored angles")
+
+        // Authored tilted, scripted flat: off.
+        var authored = SceneTransformHierarchy(objects: try imageObjects(
+            #"{"id": 10, "origin": "700 540 0", "angles": "30 0 0", "scale": "0.85 0.85 1"}"#,
+            #"{"id": 11, "parent": 10, "origin": "500 0 200"}"#))
+        XCTAssertTrue(authored.composesInDepth)
+        authored.updateComposition { $0 == "10" ? parent : nil }
+        XCTAssertFalse(authored.composesInDepth)
+    }
+
     // MARK: - 5.17 A mirrored puppet with `cullmode` "normal"
 
     /// The rope puppet at (960, 540) draws at scale 1 1 1 and disappears at −1 1 1: the flip
@@ -159,25 +245,58 @@ final class ModelsOpenPointsCaptureTests: XCTestCase {
     /// 1742 px wide, x 89–1830, and runs off the top and bottom.
     func testOrthographicZoomScalesAboutTheScreenCentre() throws {
         let hierarchy = try SceneTransformHierarchy(objects: imageObjects(#"{"id": 10, "origin": "960 540 0", "scale": "0.85 0.85 1"}"#))
-        let zoom = SceneAffineTransform.orthographicZoom(2, sceneSize: Self.screen)
-        let zoomed = box(zoom * hierarchy.world(of: "10"))
+        let zoom = SceneOrthographicZoom(factor: 2, sceneSize: Self.screen)
+        let zoomed = box(zoom.plane * hierarchy.world(of: "10"))
         assertBox(zoomed, PixelBox(minX: 89, maxX: 1830, minY: 0, maxY: 1031), "zoom 2")
         try assertStill("mo_519_orthozoom2", zoomed)
-        XCTAssertEqual(SceneAffineTransform.orthographicZoom(1, sceneSize: Self.screen), .identity)
+        XCTAssertEqual(SceneOrthographicZoom(factor: 1, sceneSize: Self.screen).plane, .identity)
+        XCTAssertTrue(SceneOrthographicZoom(factor: 0, sceneSize: Self.screen).isNone, "no zoom of 0")
 
-        // The models' camera: WE's projection scaled about its centre lands the same point there.
-        let camera = SceneOrthographicCameraRig(zoom: 2).frameCamera(
-            SceneCameraRigInput(sceneSize: Self.screen, aspect: Self.screen.x / Self.screen.y, time: 0, deltaTime: 0))
-        for point in [SIMD2<Float>(1395.2, 540), SIMD2(524.8, 104.8), SIMD2(960, 540), SIMD2(100, 900)] {
-            let clip = camera.viewProjection * SIMD4(point, 0, 1)
-            let pixel = (SIMD2(clip.x, clip.y) / clip.w + 1) / 2 * Self.screen
-            let planar = zoom.apply(point)
-            XCTAssertEqual(pixel.x, planar.x, accuracy: 1e-2)
-            XCTAssertEqual(pixel.y, planar.y, accuracy: 1e-2)
+        // The models' camera sees the drawn space: a world point lands where WE's zoomed projection
+        // puts it, at the depth it has without the zoom, and the cursor over a drawn point
+        // unprojects to the world point.
+        let input = SceneCameraRigInput(sceneSize: Self.screen, aspect: Self.screen.x / Self.screen.y, time: 0, deltaTime: 0)
+        let camera = SceneOrthographicCameraRig(zoom: 2).frameCamera(input)
+        let weZoomed = zoom.projection(SceneCamera.orthographic(size: Self.screen))
+        for point in [SIMD3<Float>(1395.2, 540, 0), SIMD3(524.8, 104.8, 300), SIMD3(960, 540, -900), SIMD3(100, 900, 50)] {
+            let ours = camera.viewProjection * zoom.space * SIMD4(point, 1)
+            let we = weZoomed * SIMD4(point, 1)
+            XCTAssertEqual(ours.x / ours.w, we.x / we.w, accuracy: 1e-5)
+            XCTAssertEqual(ours.y / ours.w, we.y / we.w, accuracy: 1e-5)
+            XCTAssertEqual(ours.z / ours.w, we.z / we.w, accuracy: 1e-5)
+            let drawn = zoom.plane.apply(SIMD2(point.x, point.y))
+            let pixel = (SIMD2(we.x, we.y) / we.w + 1) / 2 * Self.screen
+            XCTAssertEqual(pixel.x, drawn.x, accuracy: 1e-2)
+            XCTAssertEqual(pixel.y, drawn.y, accuracy: 1e-2)
+            let back = zoom.worldPoint(drawn: drawn)
+            XCTAssertEqual(back.x, point.x, accuracy: 1e-3)
+            XCTAssertEqual(back.y, point.y, accuracy: 1e-3)
         }
-        let unzoomed = SceneOrthographicCameraRig().frameCamera(
-            SceneCameraRigInput(sceneSize: Self.screen, aspect: Self.screen.x / Self.screen.y, time: 0, deltaTime: 0))
-        XCTAssertEqual(unzoomed.projection, SceneCamera.orthographic(size: Self.screen))
+        XCTAssertEqual(camera.eye.z, 2 * SceneCamera.orthographicDepth)
+        XCTAssertEqual(SceneOrthographicCameraRig().frameCamera(input).projection, SceneCamera.orthographic(size: Self.screen))
+        // The camera's own zoom, as a script set it, multiplies `general.zoom`.
+        var scripted = input
+        scripted.scriptCamera = SceneCameraPose(eye: .zero, center: SIMD3(0, 0, -1), up: SIMD3(0, 1, 0), zoom: 1.5)
+        XCTAssertEqual(SceneOrthographicCameraRig.frameZoom(general: 2, input: scripted).factor, 3)
+        XCTAssertEqual(SceneOrthographicCameraRig(zoom: 2).frameCamera(scripted).eye.z, 3 * SceneCamera.orthographicDepth)
+
+        // A click lands on what is drawn under it: `input.cursorWorldPosition` over the zoomed
+        // image's drawn right edge (x 1830 of 1920) is the image's own right edge in the world.
+        var environment = SceneScriptEngineEnvironment(screenResolution: SIMD2(1920, 1080), canvasSize: SIMD2(1920, 1080))
+        environment.zoom = zoom
+        let world = SceneScriptInput(cursorScreenPosition: SIMD2(1830.4, 540)).cursorWorldPosition(in: environment)
+        XCTAssertEqual(world.x, 1395.2, accuracy: 1e-2)
+        XCTAssertEqual(world.y, 540, accuracy: 1e-2)
+
+        // The lights are placed in the drawn space and their distances grow with it.
+        var light = SceneLight(kind: .point)
+        light.radius = 300
+        light.lightSourceSize = 10
+        let scaled = zoom.scaled(light)
+        XCTAssertEqual(scaled.radius, 600)
+        XCTAssertEqual(scaled.lightSourceSize, 20)
+        XCTAssertEqual(scaled.cascadeDistances, light.cascadeDistances * 2)
+        XCTAssertEqual(SceneOrthographicZoom.none.scaled(light), light)
     }
 
     // MARK: - Helpers

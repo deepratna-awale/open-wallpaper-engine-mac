@@ -55,16 +55,6 @@ struct SceneAffineTransform: Equatable {
 
     /// How much one local unit grows along each local axis.
     var axisScale: SIMD2<Float> { SIMD2(simd_length(linear.columns.0), simd_length(linear.columns.1)) }
-
-    /// An orthographic scene's `zoom` as a scene-plane transform: the plane scaled by `zoom` about
-    /// the scene's centre. WE scales its orthographic projection about the screen's centre
-    /// (0x14017fd50), which is the same before `ortho(0, width, 0, height)`; WE 2.8 draws an
-    /// 870 px image at `zoom` 2 1742 px wide about the centre (docs/models-plan.md §5.19).
-    static func orthographicZoom(_ zoom: Float, sceneSize: SIMD2<Float>) -> SceneAffineTransform {
-        guard zoom != 1, zoom.isFinite, zoom > 0 else { return .identity }
-        let centre = sceneSize / 2
-        return SceneAffineTransform(linear: simd_float2x2(diagonal: SIMD2(repeating: zoom)), translation: centre - zoom * centre)
-    }
 }
 
 /// An object's own transform relative to its parent.
@@ -172,9 +162,6 @@ struct SceneTransformHierarchy {
             self.scaleZ = scaleZ
         }
 
-        /// What a tilted ancestor turns into the scene's plane: the node's own tilt, or a depth.
-        var hasDepth: Bool { local.tilt != .zero || originZ != 0 }
-
         /// `own` (this node's live 2D transform) with the node's depth, for the 3D product.
         func local3D(_ own: SceneLocalTransform) -> SceneLocalTransform3D {
             SceneLocalTransform3D(own, originZ: originZ, scaleZ: scaleZ)
@@ -186,22 +173,55 @@ struct SceneTransformHierarchy {
     typealias Attachments = (_ child: String, _ parent: String, _ name: String) -> SceneAffineTransform?
 
     private(set) var nodes: [String: Node] {
-        didSet { composesInDepth = Self.composesInDepth(nodes) }
+        didSet { refreshStructure() }
     }
 
     /// Whether some object with a depth (its own tilt or `origin.z`) hangs below a tilted
     /// ancestor. Worlds are then the orthographic view of the 3D product
     /// (`SceneWorldMatrix.orthographic`), as WE composes them in an orthographic scene too
     /// (docs/models-plan.md §5.16): the product of each level's 2D view drops what the ancestor's
-    /// tilt turns into the plane. Read from the authored tilts and depths; otherwise the two
-    /// products agree and the 2D one is used.
+    /// tilt turns into the plane; otherwise the two products agree and the 2D one is used. Decided
+    /// from the authored tilts when the nodes change, and from the live ones (scripts and
+    /// timelines) by `updateComposition(live:)`.
     private(set) var composesInDepth = false
+    /// Some node has a parent: only then can the products differ.
+    private var hasChildren = false
 
     static let empty = SceneTransformHierarchy(nodes: [:])
 
     init(nodes: [String: Node]) {
         self.nodes = nodes
-        composesInDepth = Self.composesInDepth(nodes)
+        refreshStructure()
+    }
+
+    private mutating func refreshStructure() {
+        hasChildren = nodes.values.contains { $0.parentID != nil }
+        composesInDepth = hasChildren && Self.anyDepthUnderTilt(nodes) { _, node in node.local.tilt }
+    }
+
+    /// Re-decides `composesInDepth` from this frame's tilts: `live` is an object's own transform
+    /// where scripts or timelines set it, nil keeping the authored one. Cheap (a walk up from each
+    /// child, none without children); the view path switches with it, nothing is rebuilt.
+    mutating func updateComposition(live: (String) -> SceneLocalTransform?) {
+        guard hasChildren else { return }
+        let composes = Self.anyDepthUnderTilt(nodes) { id, node in live(id)?.tilt ?? node.local.tilt }
+        if composes != composesInDepth { composesInDepth = composes }
+    }
+
+    /// Whether a child with a depth (its `tilt` or `origin.z`) has an ancestor whose `tilt` isn't 0.
+    private static func anyDepthUnderTilt(_ nodes: [String: Node], tilt: (String, Node) -> SIMD2<Float>) -> Bool {
+        for (id, node) in nodes where node.parentID != nil {
+            guard node.originZ != 0 || tilt(id, node) != .zero else { continue }
+            var next = node.parentID
+            var steps = 0
+            // At most every node once: a cycle stops the walk.
+            while let parentID = next, steps < nodes.count, let parent = nodes[parentID] {
+                if tilt(parentID, parent) != .zero { return true }
+                next = parent.parentID
+                steps += 1
+            }
+        }
+        return false
     }
 
     init(objects: [WESceneObject]) {
@@ -220,19 +240,6 @@ struct SceneTransformHierarchy {
     /// Fullscreen layers fill the scene whatever their parent is.
     mutating func makeRoot(_ id: String, local: SceneLocalTransform) {
         nodes[id] = Node(parentID: nil, local: local, parallaxDepth: nodes[id]?.parallaxDepth ?? SIMD2(1, 1))
-    }
-
-    private static func composesInDepth(_ nodes: [String: Node]) -> Bool {
-        nodes.contains { id, node in
-            guard node.hasDepth else { return false }
-            var visited: Set<String> = [id]
-            var next = node.parentID
-            while let parentID = next, visited.insert(parentID).inserted, let parent = nodes[parentID] {
-                if parent.local.tilt != .zero { return true }
-                next = parent.parentID
-            }
-            return false
-        }
     }
 
     /// `ILayer.setParent`: hangs `id` from `parent` (nil makes it a root), from the attachment
