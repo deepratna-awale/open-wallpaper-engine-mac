@@ -20,6 +20,10 @@ final class SceneRendererAnimations {
     private var sceneSettings: [SceneScriptSceneField: Int] = [:]
     /// Each animated layer's sprite frame this frame, by id (`spriteFrame(object:delta:)`).
     private var spriteFrames: [Int: Int32] = [:]
+    /// The Wallpaper Editor's playhead, in seconds, while its timeline is open: each frame shows
+    /// every timeline there (`SceneAnimationSet.scrub`) instead of advancing it. Kept across
+    /// content rebuilt from the editor's changes.
+    var scrubTime: Float?
 
     /// Drops everything (the content is gone).
     func clear() {
@@ -125,6 +129,11 @@ final class SceneRendererAnimations {
     func advance(by delta: Float) -> [SceneAnimationEvent] {
         spriteFrames.removeAll(keepingCapacity: true)
         guard let set else { return [] }
+        if let scrubTime {
+            set.scrub(to: scrubTime)
+            readObjects()
+            return []
+        }
         let frame = set.advance(by: delta)
         readObjects()
         return frame.events

@@ -45,6 +45,9 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
     private let userPropertyUndo: EditorUserPropertyUndo
     /// The effects, files, fonts and properties the editor offers.
     private let resources: EditorWallpaperResources
+    /// The timeline (docs/editor-plan.md P4) and the canvas it drives.
+    let timeline: SceneTimelineEditor
+    private let timelineCanvas: EditorTimelineCanvas
 
     /// Only scene wallpapers have layers to edit.
     static func canEdit(_ wallpaper: WEWallpaper) -> Bool {
@@ -69,6 +72,8 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         // The canvas is framed to the scene's own aspect, so stretching is exact.
         preview.wallpaperPlacement = .stretch
         self.preview = preview
+        timeline = SceneTimelineEditor(session: session, index: (try? TimelineSceneIndex(sceneData: source.scene)) ?? .empty)
+        timelineCanvas = EditorTimelineCanvas(preview: preview)
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1360, height: 840),
                           styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
                           backing: .buffered, defer: false)
@@ -85,6 +90,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
             SceneEditOverlayFiles.preview(overlay, base: self.session.baseOutline,
                                           wallpaperDirectory: self.wallpaper.wallpaperDirectory)
         }
+        timeline.onCanvasTime = { [weak self] seconds in self?.timelineCanvas.show(seconds) }
         let content = NSHostingView(rootView: WallpaperEditorView(session: session, services: makeServices()))
         content.sizingOptions = [.minSize]
         window.contentView = content
@@ -116,6 +122,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         services.texture = { resources.texture($0) }
         services.fonts = { resources.fonts() }
         services.userPropertyChoices = { resources.userPropertyChoices() }
+        services.timeline = timeline
         return services
     }
 
@@ -161,6 +168,8 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
     }
 
     func windowWillClose(_ notification: Notification) {
+        // The timeline lets go of the canvas's clock (and its playback timer).
+        timeline.isActive = false
         // The canvas's instance stops with its view.
         preview.playRate = 0
         window.contentView = nil

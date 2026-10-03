@@ -57,6 +57,7 @@ extension SceneEditOverlay {
             objects.removeAll { gone.contains(Self.objectID($0)) }
         }
         if let order { objects = Self.ordered(objects, by: order) }
+        timelines?.apply(to: &objects)
         root["objects"] = objects
     }
 
