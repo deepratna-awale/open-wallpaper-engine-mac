@@ -135,7 +135,7 @@ struct ModelMaterialPlanBuilder {
             uniforms: uniforms.map { .init(name: $0.name, glslType: $0.type, arrayCount: $0.arrayCount ?? 1, annotation: $0.annotation) },
             material: materialPass.constantSources(uniforms: uniforms), instance: [:])
 
-        let variant = try translator.variant(vertex: vertex, fragment: fragment, combos: combos)
+        let variant = try translator.variant(vertex: vertex, fragment: fragment, combos: combos, instancing: true)
         // SPIRV-Cross emits only the textures a stage uses; one it doesn't emit needs nothing bound.
         let msl = variant.vertexMSL + variant.fragmentMSL
         let sampled = Set(variant.textureSlots).filter { msl.contains("[[texture(\($0))]]") }
@@ -150,7 +150,7 @@ struct ModelMaterialPlanBuilder {
             throw ModelMaterialPlanError.unsupported("g_Texture\(unbound) has no texture")
         }
         let pass = SceneEffectPassPlan(command: .render,
-                                       variantKey: ShaderVariantTranslator.cacheKey(vertex: vertex, fragment: fragment, combos: combos),
+                                       variantKey: ShaderVariantTranslator.cacheKey(vertex: vertex, fragment: fragment, combos: combos, instancing: true),
                                        variant: variant, blending: materialPass.blending ?? "normal", target: nil,
                                        textures: inputs, constants: constants)
         var clampedSlots = Set<Int>()
@@ -228,7 +228,7 @@ struct ModelMaterialPlanBuilder {
         let constants = ShaderConstantResolver.resolve(
             uniforms: uniforms.map { .init(name: $0.name, glslType: $0.type, arrayCount: $0.arrayCount ?? 1, annotation: $0.annotation) },
             material: source.pass.constantSources(uniforms: uniforms), instance: [:])
-        let variant = try translator.variant(vertex: vertex, fragment: fragment, combos: combos)
+        let variant = try translator.variant(vertex: vertex, fragment: fragment, combos: combos, instancing: true)
         let msl = variant.vertexMSL + variant.fragmentMSL
         let sampled = Set(variant.textureSlots).filter { msl.contains("[[texture(\($0))]]") }
         let morph = Set((vertex.samplers + fragment.samplers).filter { ($0.annotation["material"] as? String) == "morph" }
@@ -238,7 +238,7 @@ struct ModelMaterialPlanBuilder {
             throw ModelMaterialPlanError.unsupported("the shadow variant's g_Texture\(unbound) has no texture")
         }
         let pass = SceneEffectPassPlan(command: .render,
-                                       variantKey: ShaderVariantTranslator.cacheKey(vertex: vertex, fragment: fragment, combos: combos),
+                                       variantKey: ShaderVariantTranslator.cacheKey(vertex: vertex, fragment: fragment, combos: combos, instancing: true),
                                        variant: variant, blending: alphaToCoverage ? "alphatocoverage" : (utilPass.blending ?? "normal"),
                                        target: nil, textures: inputs, constants: constants)
         return ModelMaterialPlan(materialPath: "\(source.materialPath) (shadow: \(shader))", pass: pass,

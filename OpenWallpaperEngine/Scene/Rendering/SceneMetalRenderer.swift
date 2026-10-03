@@ -1813,17 +1813,28 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             reflection: renderSettings.reflection)
         snapshotTracker.reset()
         let targetSize = SIMD2(sceneTexture.width, sceneTexture.height)
+        // Consecutive models with nothing drawn between them (the same particle barrier) draw as
+        // one run, which the model renderer may instance (`SceneModelDrawing.draw(run:)`).
+        var modelRun: (indices: [Int], barrier: Int) = ([], 0)
+        let flushModels = { [unowned self] (encoder: MTLRenderCommandEncoder) in
+            guard !modelRun.indices.isEmpty else { return }
+            self.drawModels(modelRun.indices, frame: effectFrame, pixelFormat: sceneTexture.pixelFormat, encoder: encoder,
+                            commandBuffer: commandBuffer)
+            self.snapshotTracker.sceneDrawn(in: nil)
+            modelRun.indices.removeAll()
+        }
         for (item, barrier) in sequence.items {
+            if case .model(let index) = item, !modelRun.indices.isEmpty, modelRun.barrier == barrier {
+                modelRun.indices.append(index)
+                continue
+            }
+            flushModels(encoder)
             let batchesBefore = nextParticleBatch
             guard drawParticleBatches(before: barrier) else { return }
             // Particles cover no rect we track: the snapshot no longer matches anywhere.
             if nextParticleBatch != batchesBefore { snapshotTracker.sceneDrawn(in: nil) }
             guard case .layer(let layerIndex) = item else {
-                if case .model(let index) = item {
-                    drawModel(index, frame: effectFrame, pixelFormat: sceneTexture.pixelFormat, encoder: encoder,
-                              commandBuffer: commandBuffer)
-                    snapshotTracker.sceneDrawn(in: nil)
-                }
+                if case .model(let index) = item { modelRun = ([index], barrier) }
                 continue
             }
             let entry = layers[layerIndex]
@@ -1877,6 +1888,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                             sampleCount: sceneSampleCount, depth: frameDepth, pipelines: scenePassPipelines),
                         encoder: encoder, commandBuffer: commandBuffer)
         }
+        flushModels(encoder)
         guard drawParticleBatches(before: .max) else { return }
         endScenePass(encoder, resumes: false)
 
@@ -2649,15 +2661,39 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         guard let modelDrawing, spatial.models.indices.contains(index) else { return }
         let model = spatial.models[index]
         guard scripts.isVisible(model.id) else { return }
-        modelDrawing.draw(model, SceneModelDraw(
+        modelDrawing.draw(model, modelDraw(model, frame: frame, pixelFormat: pixelFormat),
+                          encoder: encoder, commandBuffer: commandBuffer)
+        encoder.setRenderPipelineState(renderPipeline)
+    }
+
+    /// Draws consecutive model objects (`indices`, `SceneSpatialContent.models`) of the object
+    /// loop as one run, the hidden ones left out.
+    private func drawModels(_ indices: [Int], frame: BuiltinFrameContext, pixelFormat: MTLPixelFormat,
+                            encoder: MTLRenderCommandEncoder, commandBuffer: MTLCommandBuffer) {
+        guard let modelDrawing else { return }
+        if indices.count == 1, let index = indices.first {
+            drawModel(index, frame: frame, pixelFormat: pixelFormat, encoder: encoder, commandBuffer: commandBuffer)
+            return
+        }
+        let run = indices.compactMap { index -> (model: SceneModelObject, draw: SceneModelDraw)? in
+            guard spatial.models.indices.contains(index) else { return nil }
+            let model = spatial.models[index]
+            guard scripts.isVisible(model.id) else { return nil }
+            return (model, modelDraw(model, frame: frame, pixelFormat: pixelFormat))
+        }
+        guard !run.isEmpty else { return }
+        modelDrawing.draw(run: run, encoder: encoder, commandBuffer: commandBuffer)
+        encoder.setRenderPipelineState(renderPipeline)
+    }
+
+    private func modelDraw(_ model: SceneModelObject, frame: BuiltinFrameContext, pixelFormat: MTLPixelFormat) -> SceneModelDraw {
+        SceneModelDraw(
             world: world3D(model.id, in: spatial.transforms), camera: frame.camera, frame: frame,
             values: timelines.values, pixelFormat: pixelFormat, sampleCount: sceneSampleCount, depth: frameDepth,
             mipMappedFrameBuffer: mipMappedTarget,
             assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
             layerComposite: { [unowned self] id in self.layerComposites[id] }, shadowAtlas: frameShadowAtlas,
-            planarReflection: frameReflection),
-            encoder: encoder, commandBuffer: commandBuffer)
-        encoder.setRenderPipelineState(renderPipeline)
+            planarReflection: frameReflection)
     }
 
     /// This frame's object loop: the layers and models in draw order, each with the barrier below
