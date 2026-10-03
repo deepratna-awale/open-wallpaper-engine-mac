@@ -23,10 +23,15 @@ final class EffectGraphRenderer {
     private lazy var detail = SceneEffectDetail(device: device)
 
     /// Pipelines compile off the render thread: a cold Metal compile costs tens of milliseconds
-    /// per variant, which would otherwise stall frames. Guarded by `pipelineLock`.
-    private let compileQueue = DispatchQueue(label: "owe.effect-pipelines", qos: .userInitiated, attributes: .concurrent)
+    /// per variant, which would otherwise stall frames. At most one per performance core at once.
+    private let compileQueue = BoundedWorkQueue(label: "owe.effect-pipelines", qos: .userInitiated,
+                                                limit: BoundedWorkQueue.performanceCoreCount)
+    /// Compiled pipelines kept for reuse; layers hold the ones they draw with
+    /// (`resolvedPipelines`), so an eviction only costs a recompile (an archive hit) when needed again.
+    static let pipelineCacheCapacity = 1024
     private let pipelineLock = NSLock()
-    private var pipelines: [String: MTLRenderPipelineState] = [:]
+    /// Guarded by `pipelineLock`, like the sets below.
+    private var pipelines = LRUCache<MTLRenderPipelineState>(capacity: EffectGraphRenderer.pipelineCacheCapacity)
     /// Pipelines drawn with since the last `trimMemory` that dropped idle ones.
     private var usedPipelines = Set<String>()
     private var pendingPipelines = Set<String>()
@@ -218,7 +223,7 @@ final class EffectGraphRenderer {
         uniformArena.trim()
         guard dropIdlePipelines else { return }
         pipelineLock.withLock {
-            pipelines = pipelines.filter { usedPipelines.contains($0.key) }
+            pipelines.keep { usedPipelines.contains($0) }
             usedPipelines.removeAll()
         }
     }
@@ -598,7 +603,7 @@ final class EffectGraphRenderer {
         guard let variant = pass.variant else { return nil }
         let key = Self.scenePipelineKey(pass, scene: scene)
         let state: (pipeline: MTLRenderPipelineState?, start: Bool) = pipelineLock.withLock {
-            if let pipeline = pipelines[key] {
+            if let pipeline = pipelines.value(forKey: key) {
                 usedPipelines.insert(key)
                 return (pipeline, false)
             }
@@ -698,8 +703,11 @@ final class EffectGraphRenderer {
                 let key = Self.pipelineKey(pass, format: format)
                 // Checked and claimed in one step, so callers on two threads never both compile it.
                 let state: (done: Bool, start: Bool) = pipelineLock.withLock {
-                    if pipelines[key] != nil { usedPipelines.insert(key) }
-                    if pipelines[key] != nil || failedPipelines.contains(key) { return (true, false) }
+                    if pipelines.value(forKey: key) != nil {
+                        usedPipelines.insert(key)
+                        return (true, false)
+                    }
+                    if failedPipelines.contains(key) { return (true, false) }
                     return (false, pendingPipelines.insert(key).inserted)
                 }
                 if state.done { continue }
@@ -718,7 +726,7 @@ final class EffectGraphRenderer {
         pipelineLock.withLock {
             effects.enumerated().map { effectIndex, effect in
                 effect.passes.enumerated().map { passIndex, pass in
-                    formats[effectIndex][passIndex].flatMap { pipelines[Self.pipelineKey(pass, format: $0)] }
+                    formats[effectIndex][passIndex].flatMap { pipelines.value(forKey: Self.pipelineKey(pass, format: $0)) }
                 }
             }
         }
@@ -739,7 +747,7 @@ final class EffectGraphRenderer {
         compileQueue.async { [weak self] in
             let result: MTLRenderPipelineState?
             do {
-                let (vertexLibrary, fragmentLibrary) = try variant.makeLibraries(device: device)
+                let (vertexLibrary, fragmentLibrary) = try PipelineCompileRetry.run { try variant.makeLibraries(device: device) }
                 guard let vertex = vertexLibrary.makeFunction(name: "main0"),
                       let fragment = fragmentLibrary.makeFunction(name: "main0") else {
                     throw ShaderCompilerError.failed(step: "metal", output: "entry point main0 missing")
@@ -759,7 +767,9 @@ final class EffectGraphRenderer {
                     attachment.destinationAlphaBlendFactor = blend.destination
                 }
                 descriptor.vertexDescriptor = Self.vertexDescriptor(for: vertex)
-                result = try Self.makePipeline(descriptor, device: device, archive: archive, key: key)
+                result = try PipelineCompileRetry.run {
+                    try Self.makePipeline(descriptor, device: device, archive: archive, key: key)
+                }
             } catch {
                 OWELog.error(.shader, "Effect pipeline failed (\(key.prefix(12))): \(error)")
                 result = nil
@@ -768,7 +778,7 @@ final class EffectGraphRenderer {
             self.pipelineLock.withLock {
                 self.pendingPipelines.remove(key)
                 self.landedPipelines &+= 1
-                if let result { self.pipelines[key] = result } else { self.failedPipelines.insert(key) }
+                if let result { self.pipelines.insert(result, forKey: key) } else { self.failedPipelines.insert(key) }
             }
         }
     }
