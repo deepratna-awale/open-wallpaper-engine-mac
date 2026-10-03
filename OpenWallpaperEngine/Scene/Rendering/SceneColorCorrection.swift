@@ -16,6 +16,8 @@ final class SceneColorCorrection {
     static let effectDocument = #"{"passes": [{"material": "materials/util/ccsimple.json"}]}"#
     /// The effect graph's state for the pass's targets.
     static let stateID = "engine:ccsimple"
+    /// The state for its run on the detail patch (`ScenePostProcess.finishDetailPatch`).
+    static let patchStateID = "engine:ccsimple:detail"
     /// The name the plan's LUT slot is planned with; the frame binds the chosen filter's volume.
     static let plannedLUT = "lut/neutral"
 
@@ -128,7 +130,8 @@ final class SceneColorCorrection {
     /// shows as it is).
     func encode(on frame: MTLTexture, settings: SceneColorCorrectionSettings, effects: EffectGraphRenderer,
                 builtins: BuiltinFrameContext, values: SceneValueContext, frameIndex: UInt64,
-                format: MTLPixelFormat = .rgba8Unorm, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
+                format: MTLPixelFormat = .rgba8Unorm, stateID: String = SceneColorCorrection.stateID,
+                commandBuffer: MTLCommandBuffer) -> MTLTexture? {
         guard !settings.isIdentity, let plan = plan(for: settings) else { return nil }
         var lut: MTLTexture?
         if settings.appliesFilter {
@@ -141,6 +144,6 @@ final class SceneColorCorrection {
         context.inputVersion = frameIndex
         context.frameBufferFormat = format
         context.constantWrites = [plan.effectIndex: Self.constants(settings)]
-        return effects.apply([plan], to: frame, layerID: Self.stateID, context: context, commandBuffer: commandBuffer)
+        return effects.apply([plan], to: frame, layerID: stateID, context: context, commandBuffer: commandBuffer)
     }
 }
