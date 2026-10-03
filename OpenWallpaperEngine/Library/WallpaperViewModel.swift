@@ -70,6 +70,8 @@ class WallpaperViewModel: ObservableObject {
 
     @Published var wallpaperPlacement: WallpaperPlacement = .fill {
         didSet {
+            // A preview's placement (the Wallpaper Editor's canvas) isn't the user's setting.
+            guard persistsWallpapers else { return }
             UserDefaults.app.set(wallpaperPlacement.rawValue, forKey: "WallpaperPlacement")
         }
     }

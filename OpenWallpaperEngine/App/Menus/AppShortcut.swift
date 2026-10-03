@@ -13,7 +13,7 @@ struct AppShortcut: Identifiable, Equatable {
         case undo, redo, cut, copy, paste, selectAll, find
         case installed, workshop, downloads, playlists, showFilters, fullScreen
         case pauseResume, muteUnmute, nextWallpaper, previousWallpaper
-        case minimize, wallpaperExplorer, sceneInspector
+        case minimize, wallpaperExplorer, sceneInspector, wallpaperEditor
         case help
     }
 
@@ -103,6 +103,7 @@ struct AppShortcut: Identifiable, Equatable {
         AppShortcut(name: .minimize, title: "Minimize", menu: .window, key: "m", modifiers: .command),
         AppShortcut(name: .wallpaperExplorer, title: "Wallpaper Explorer", menu: .window, key: "1", modifiers: [.command, .shift]),
         AppShortcut(name: .sceneInspector, title: "Scene Inspector", menu: .window, key: "i", modifiers: [.command, .option]),
+        AppShortcut(name: .wallpaperEditor, title: "Wallpaper Editor", menu: .window, key: "e", modifiers: [.command, .option]),
 
         AppShortcut(name: .help, title: "Open Wallpaper Engine Help", menu: .help, key: "?", modifiers: .command),
     ]

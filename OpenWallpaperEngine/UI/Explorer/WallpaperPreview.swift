@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import OWEInspectorKit
 
 struct WallpaperPreview: SubviewOfContentView {
     @ObservedObject var viewModel: ContentViewModel
@@ -83,6 +84,13 @@ struct WallpaperPreview: SubviewOfContentView {
             }
             .help(String(localized: "The wallpaper's page didn't load, so no screen saver was recorded",
                          comment: "Details panel: why a web or WebM video wallpaper has no screen saver"))
+        case .notAvailable(.doesNotLoop):
+            screenSaverRow(String(localized: "Screen Saver Not Available",
+                                  comment: "Details panel: no screen saver is made from this wallpaper")) {
+                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.yellow)
+            }
+            .help(String(localized: "This page doesn't loop smoothly",
+                         comment: "Details panel: why a web wallpaper has no screen saver: its recording has no seamless loop"))
         case nil:
             EmptyView()
         }
@@ -300,6 +308,16 @@ struct WallpaperPreview: SubviewOfContentView {
                             }
                             .glassButtonStyle()
                             .help("Scene Inspector", shortcut: .sceneInspector)
+                            let editable = WallpaperEditorController.canEdit(wallpaperViewModel.displayedWallpaper)
+                            Button {
+                                AppDelegate.shared.showWallpaperEditor(for: wallpaperViewModel.displayedWallpaper)
+                            } label: {
+                                Label("Edit Wallpaper", systemImage: "square.and.pencil")
+                                    .frame(maxWidth: .infinity)
+                            }
+                            .glassButtonStyle()
+                            .disabled(!editable)
+                            .modifier(EditWallpaperHelp(editable: editable))
                         }
                     }
                     // MARK: Properties
@@ -776,6 +794,19 @@ extension URL {
         return try FileManager.default.contentsOfDirectory(at: self, includingPropertiesForKeys: nil).lazy.reduce(0) {
                  (try $1.resourceValues(forKeys: [.totalFileAllocatedSizeKey])
                     .totalFileAllocatedSize ?? 0) + $0
+        }
+    }
+}
+
+/// The Edit Wallpaper button's tooltip: the editor and its shortcut, or why it is unavailable.
+private struct EditWallpaperHelp: ViewModifier {
+    let editable: Bool
+
+    func body(content: Content) -> some View {
+        if editable {
+            content.help("Wallpaper Editor", shortcut: .wallpaperEditor)
+        } else {
+            content.help("Only scene wallpapers can be edited")
         }
     }
 }

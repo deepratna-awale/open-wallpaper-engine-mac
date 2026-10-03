@@ -82,6 +82,8 @@ final class ScreenSaverStatusTests: XCTestCase {
         XCTAssertEqual(Plugin.finishedStatus(allRendered: true, pageDidNotLoad: false), .available)
         XCTAssertEqual(Plugin.finishedStatus(allRendered: false, pageDidNotLoad: true), .notAvailable(.pageDidNotLoad))
         XCTAssertNil(Plugin.finishedStatus(allRendered: false, pageDidNotLoad: false), "another failure shows nothing")
+        XCTAssertEqual(Plugin.finishedStatus(allRendered: false, pageDidNotLoad: false, doesNotLoop: true),
+                       .notAvailable(.doesNotLoop))
     }
 
     func testRenderingThenNotAvailableForAPageThatDidNotLoad() {

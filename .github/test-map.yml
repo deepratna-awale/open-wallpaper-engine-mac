@@ -45,6 +45,7 @@ all:
   - "**/Package.swift"
   - "**/Package.resolved"
   - "Vendor/**"
+  - "Packages/**"
   - "OpenWallpaperEngine-Info.plist"
   - "Scripts/ci-*"
   - "Scripts/test-build-settings.txt"
