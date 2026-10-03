@@ -22,9 +22,25 @@ import simd
 struct SceneCameraParallax: Equatable {
     /// Where the camera's parallax looks, in scene units (y up).
     private(set) var position: SIMD2<Float>
+    /// How much of the parallax applies, 0…1: 1 while it's on. Turning parallax on or off while
+    /// the scene runs eases this instead of snapping the layers (an app choice; WE only reads
+    /// the setting at load). At 1 the formulas are WE's exactly.
+    private(set) var weight: Float
 
-    init(sceneSize: SIMD2<Float>) {
+    init(sceneSize: SIMD2<Float>, enabled: Bool = true) {
         position = sceneSize * 0.5
+        weight = enabled ? 1 : 0
+    }
+
+    /// Whether the parallax still applies this frame (on, or easing out).
+    var isActive: Bool { weight > 0 }
+
+    /// Eases `weight` toward on or off, at WE's undelayed parallax rate (10 per second).
+    mutating func ease(enabled: Bool, deltaTime: Float) {
+        let target: Float = enabled ? 1 : 0
+        let step = min(1, 10 * max(deltaTime, 0))
+        weight += (target - weight) * step
+        if abs(target - weight) < 0.001 { weight = target }
     }
 
     /// Advances one frame. `cursor` is normalised with y up; `eye` is the camera eye's xy after shake.
@@ -42,12 +58,13 @@ struct SceneCameraParallax: Equatable {
 
     /// `g_ParallaxPosition`.
     func shaderPosition(sceneSize: SIMD2<Float>) -> SIMD2<Float> {
-        simd_clamp(position / sceneSize, SIMD2<Float>(repeating: 0), SIMD2<Float>(repeating: 1))
+        let full = simd_clamp(position / sceneSize, SIMD2<Float>(repeating: 0), SIMD2<Float>(repeating: 1))
+        return SIMD2<Float>(repeating: 0.5) + (full - SIMD2<Float>(repeating: 0.5)) * weight
     }
 
     /// How far an object is drawn from where its transform puts it. `origin` and `depth` are
     /// its root object's `origin` and `parallaxDepth`.
     func offset(rootOrigin: SIMD2<Float>, rootDepth: SIMD2<Float>, amount: Float) -> SIMD2<Float> {
-        amount * (rootOrigin - position) * rootDepth
+        weight * amount * (rootOrigin - position) * rootDepth
     }
 }

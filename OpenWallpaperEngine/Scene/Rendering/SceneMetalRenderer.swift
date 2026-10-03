@@ -328,6 +328,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// Which object each authored scene index is, for the draw order scripts set.
     private var objectIDs: [Int] = []
     private var camera = SceneCameraEffects()
+    /// The content's `general`, to resolve `camera` again when a user property bound to it
+    /// changes (`refreshCamera()`); nil keeps the content's.
+    private var cameraGeneral: WESceneGeneral?
     /// `general.clearcolor` (`SceneMetalContent.clearColor`); a script's `thisScene.clearcolor` wins.
     private var clearColor = SceneGeneralDefaults.clearColor
     /// WE's parallax camera position, eased across frames (`SceneCameraParallax`).
@@ -414,9 +417,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private let textRaster: SceneTextRasterQueue
     /// Changed strings still rasterising or waiting for a frame to take them (for tests).
     var pendingTextRasters: Int { textRaster.inFlight }
-    /// The finest raster scale each text layer has needed, so an animated scale doesn't
-    /// re-rasterise at every step (see `SceneTextRasterScale.retained`).
-    private var textRasterScales: [String: Float] = [:]
+    /// Each text layer's raster scale: quantised and retained while it animates, exact once it
+    /// settles (`SceneTextRasterScale.Tracker`).
+    private var textRasterScales: [String: SceneTextRasterScale.Tracker] = [:]
     /// Parent graph of the current content; layer origins are relative to their parents.
     private var transforms = SceneTransformHierarchy.empty
     /// Each layer's local transform, evaluated once per frame so a parent's scripts run once
@@ -619,10 +622,18 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     func userPropertiesDidChange(_ names: Set<String>, owners: Set<UserPropertyBindingOwner>) {
         scripts.userPropertiesDidChange(names)
         guard !owners.isEmpty else { return }
+        if owners.contains(.scene) { refreshCamera() }
         bindingRevisions.bump(owners)
         refreshParticleRevisions()
         applyUserVisibility()
         framePacing.wake(.interactive, at: wallTime())
+    }
+
+    /// Resolves `general.camera…` against the current user properties: a property bound to
+    /// them applies from the next frame, without a content rebuild (`cameraMotion`).
+    private func refreshCamera() {
+        guard let cameraGeneral else { return }
+        camera = SceneCameraEffects(cameraGeneral, in: LiveSceneValueContext(wallpaper: wallpaperKey))
     }
 
     /// Resolves the content's visibility against the current user properties (`SceneUserVisibility`).
@@ -771,8 +782,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 self.objectIDs = content.objectIDs
                 self.wallpaperKey = content.wallpaperKey
                 self.camera = content.camera
+                self.cameraGeneral = content.general
                 self.clearColor = content.clearColor
-                self.cameraParallax = SceneCameraParallax(sceneSize: content.size)
+                self.cameraParallax = SceneCameraParallax(sceneSize: content.size, enabled: Self.parallaxEnabled(content.camera))
                 self.lastCameraMotion = nil
                 self.lastTextSizes.removeAll()
                 self.textFrameCache.removeAll()
@@ -1475,7 +1487,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         effectFrame.textureReductionScale = Float(renderSettings.textureReduction)
         effectFrame.audio = audioSpectrumFrame(SceneClock.rate(rate))
         let motion = cameraMotion(pointer: pointer, time: time, deltaTime: Float(clock.delta))
-        effectFrame.parallax = parallaxEnabled ? cameraParallax.shaderPosition(sceneSize: sceneSize) : SIMD2(0.5, 0.5)
+        effectFrame.parallax = cameraParallax.isActive ? cameraParallax.shaderPosition(sceneSize: sceneSize) : SIMD2(0.5, 0.5)
         // WE's camera eye and forward (ctx+0x68, ctx+0x160). An orthographic scene's camera stays
         // still and the objects move by the shake instead (`SceneFrameLightingInput.cameraShake`).
         effectFrame.camera = cameraRig.frameCamera(cameraRigInput(time: sceneTime, motion: motion))
@@ -2344,7 +2356,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// app's parallax toggle.
     private var parallaxEnabled: Bool {
         if let scripted = scripts.state.scene.flag(.cameraparallax) { return scripted }
-        return camera.parallax || WallpaperServices.shared.userPropertyString("_owe_effect_enabled_parallax") == "true"
+        return Self.parallaxEnabled(camera)
+    }
+
+    /// The scene's `general.cameraparallax` (as resolved) or the app's parallax toggle, before scripts.
+    static func parallaxEnabled(_ camera: SceneCameraEffects) -> Bool {
+        camera.parallax || WallpaperServices.shared.userPropertyString("_owe_effect_enabled_parallax") == "true"
     }
 
     /// WE's camera shake, then its parallax (`SceneCameraShake`, `SceneCameraParallax`), in the
@@ -2360,7 +2377,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                             orthographicHeight: camera.orthographic ? sceneSize.y : nil)
             : .zero
         var parallax: (state: SceneCameraParallax, amount: Float)?
-        if parallaxEnabled {
+        // Read every frame: turning parallax on or off eases in or out (`SceneCameraParallax.weight`).
+        cameraParallax.ease(enabled: parallaxEnabled, deltaTime: deltaTime)
+        if cameraParallax.isActive {
             cameraParallax.update(cursor: pointer, eye: SIMD2(shake.x, shake.y), sceneSize: sceneSize,
                                   influence: sceneSetting(.cameraparallaxmouseinfluence) ?? camera.parallaxMouseInfluence,
                                   delay: sceneSetting(.cameraparallaxdelay) ?? camera.parallaxDelay,
@@ -3563,9 +3582,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             ?? WallpaperServices.shared.userPropertyValue("_owe_text_\(layerID)_size", fallback: Float(text.pointSize))
         let bold = WallpaperServices.shared.userPropertyString("_owe_text_\(layerID)_bold") == "true"
         let italic = WallpaperServices.shared.userPropertyString("_owe_text_\(layerID)_italic") == "true"
-        let rasterScale = SceneTextRasterScale.retained(SceneTextRasterScale.quantized(pixelsPerUnit),
-                                                        previous: textRasterScales[stateKey])
-        textRasterScales[stateKey] = rasterScale
+        let rasterScale = textRasterScales[stateKey, default: SceneTextRasterScale.Tracker()].scale(for: pixelsPerUnit)
         let cacheKey = "\(stateKey)|\(value)|\(boxSize.x)|\(boxSize.y)|\(fontName)|\(sizeValue)|\(bold)|\(italic)|\(rasterScale)"
             + "|\(text.horizontalAlignment ?? "")|\(text.verticalAlignment ?? "")"
             + (fill.map { "|\($0)" } ?? "")

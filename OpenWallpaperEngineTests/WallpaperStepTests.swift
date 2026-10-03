@@ -118,4 +118,81 @@ final class WallpaperStepTests: XCTestCase {
         model.stepToPreviousWallpaper()
         XCTAssertEqual(model.currentWallpaper.project.title, "p0")
     }
+
+    private func playlistModel(rotating: Bool, shuffle: Bool = false, repeats: Bool = true)
+        -> (WallpaperViewModel, [WEWallpaper]) {
+        let items = (0..<3).map { wallpaper("p\($0)") }
+        let model = model(showing: wallpaper("library"))
+        model.playlists = [WallpaperPlaylist(name: "p", items: items.map { WallpaperPlaylistItem(wallpaper: $0) })]
+        model.activePlaylistID = model.playlists[0].id
+        model.playlistShuffle = shuffle
+        model.playlistRepeats = repeats
+        model.playlistEnabled = rotating
+        return (model, items)
+    }
+
+    func testShowingAPlaylistItemStepsThroughThePlaylistWhenNotRotating() {
+        let (model, items) = playlistModel(rotating: false)
+        model.setWallpaper(items[0], for: model.selectedScreenIds)
+        XCTAssertTrue(model.stepsThroughPlaylist)
+        let shown = [wallpaper("library"), wallpaper("other")]
+        model.stepToNextWallpaper(shown: shown, random: { $0.lowerBound })
+        XCTAssertEqual(model.currentWallpaper.project.title, "p1")
+        model.stepToNextWallpaper(shown: shown, random: { $0.lowerBound })
+        XCTAssertEqual(model.currentWallpaper.project.title, "p2")
+        model.stepToPreviousWallpaper()
+        XCTAssertEqual(model.currentWallpaper.project.title, "p1")
+    }
+
+    func testShowingAWallpaperOutsideThePlaylistUsesRandomAndHistory() {
+        let (model, _) = playlistModel(rotating: false)
+        XCTAssertFalse(model.stepsThroughPlaylist)
+        let (library, other) = (wallpaper("library"), wallpaper("other"))
+        model.stepToNextWallpaper(shown: [library, other], random: { $0.lowerBound })
+        XCTAssertEqual(model.currentWallpaper.project.title, "other")
+        model.stepToPreviousWallpaper()
+        XCTAssertEqual(model.currentWallpaper.project.title, "library")
+    }
+
+    func testMenuStepsMatchThePlaylistButtons() {
+        let (menu, _) = playlistModel(rotating: true)
+        let (buttons, _) = playlistModel(rotating: true)
+        for _ in 0..<4 {
+            menu.stepToNextWallpaper(shown: [])
+            buttons.nextPlaylistWallpaper()
+            XCTAssertEqual(menu.currentWallpaper.project.title, buttons.currentWallpaper.project.title)
+        }
+        for _ in 0..<4 {
+            menu.stepToPreviousWallpaper()
+            buttons.previousPlaylistWallpaper()
+            XCTAssertEqual(menu.currentWallpaper.project.title, buttons.currentWallpaper.project.title)
+        }
+    }
+
+    func testPlaylistRepeatWrapsAtTheEnds() {
+        let (model, _) = playlistModel(rotating: true, repeats: true)
+        model.stepToPreviousWallpaper() // 0 -> 2
+        XCTAssertEqual(model.currentWallpaper.project.title, "p2")
+        model.stepToNextWallpaper(shown: []) // 2 -> 0
+        XCTAssertEqual(model.currentWallpaper.project.title, "p0")
+    }
+
+    func testPlaylistWithoutRepeatStopsAtTheEnd() {
+        let (model, _) = playlistModel(rotating: true, repeats: false)
+        model.stepToNextWallpaper(shown: [])
+        model.stepToNextWallpaper(shown: [])
+        XCTAssertEqual(model.currentWallpaper.project.title, "p2")
+        model.stepToNextWallpaper(shown: [wallpaper("library"), wallpaper("other")])
+        XCTAssertEqual(model.currentWallpaper.project.title, "p2")
+        XCTAssertFalse(model.playlistEnabled)
+    }
+
+    func testShuffledPlaylistNextStaysInThePlaylist() {
+        let (model, items) = playlistModel(rotating: true, shuffle: true)
+        let titles = Set(names(items))
+        for _ in 0..<10 {
+            model.stepToNextWallpaper(shown: [wallpaper("library"), wallpaper("other")])
+            XCTAssertTrue(titles.contains(model.currentWallpaper.project.title))
+        }
+    }
 }
