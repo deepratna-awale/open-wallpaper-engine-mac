@@ -93,6 +93,11 @@ struct SceneFrameLightingInput {
     var cameraShake = SIMD2<Float>.zero
     var eyePosition: SIMD3<Float>
     var viewForward: SIMD3<Float>
+    /// An orthographic scene's zoom (`SceneOrthographicZoom`): the layers are drawn in the scene
+    /// scaled by it about its centre, so the lights are placed in that space too and their
+    /// distances (radius, source size, cascades) grow with it, which leaves every light-to-surface
+    /// relation as a camera zoom leaves it. 1 elsewhere.
+    var zoom = SceneOrthographicZoom.none
 }
 
 /// One frame's lighting: the values behind `g_LightAmbientColor`, `g_LightSkylightColor`, the
@@ -126,12 +131,13 @@ struct SceneFrameLighting: Equatable {
             let object = input.live?(built) ?? built
             var world = input.world3D?(object.id) ?? world(parent: input.parentWorld(object.id), local: local, depth: object.depth)
             world.columns.3 -= SIMD4(lowHalf: input.cameraShake, highHalf: .zero)
+            // In the zoom's drawn space, as everything they light is drawn.
             let light = SceneLightPacker.Light(
-                light: object.light, world: world,
+                light: input.zoom.scaled(object.light), world: input.zoom.space * world,
                 localOrigin: SIMD3(local.origin, object.depth.originZ),
                 visible: input.isVisible(object.id), id: object.id)
             objects.append(SceneFrameLightObject(id: object.id, world: light.world, visible: light.visible,
-                                                 light: object.light))
+                                                 light: light.light))
             return light
         }
         lighting.objects = objects

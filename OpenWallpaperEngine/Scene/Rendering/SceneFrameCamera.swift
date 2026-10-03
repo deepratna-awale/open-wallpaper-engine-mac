@@ -81,13 +81,14 @@ enum SceneCameraRigs {
 }
 
 /// An orthographic scene's camera (0x1401891a0 without camera paths): the view from the origin
-/// down −z (identity), `ortho(0, width, 0, height)` over z −2000…2000 scaled about its centre by
-/// `general.zoom` (0x14017fd50, docs/models-plan.md §5.19), and the eye WE reports afterwards,
-/// (width/2, height/2, 2000) (0x140189da0). Camera shake isn't in it: the renderer moves the
+/// down −z (identity), `ortho(0, width, 0, height)` over z −2000…2000, and the eye WE reports
+/// afterwards, (width/2, height/2, 2000) (0x140189da0). WE scales the projection about its centre
+/// by `general.zoom` × the camera's zoom; the app draws the scene in that zoom's drawn space
+/// instead (`SceneOrthographicZoom`, docs/models-plan.md §5.19), which this camera sees over a
+/// depth range and from an eye grown alike. Camera shake isn't in it: the renderer moves the
 /// layers and lights by its negative instead, which leaves every eye-to-object vector as WE's.
-/// The layer pass draws with its own matrix (`ImageMaterialRenderer.viewProjection`) and the
-/// zoom in the plane (`SceneAffineTransform.orthographicZoom`); the models and the volumetrics
-/// draw with this one.
+/// The layer pass draws with its own matrix (`ImageMaterialRenderer.viewProjection`); the models
+/// and the volumetrics draw with this one.
 final class SceneOrthographicCameraRig: SceneCameraRig {
     /// `general.zoom`.
     let zoom: Float
@@ -96,15 +97,16 @@ final class SceneOrthographicCameraRig: SceneCameraRig {
 
     func frameCamera(_ input: SceneCameraRigInput) -> SceneFrameCamera {
         let size = simd_max(input.sceneSize, SIMD2(1, 1))
-        return SceneFrameCamera(projection: Self.projection(size: size, zoom: zoom),
-                                eye: SIMD3(size.x / 2, size.y / 2, SceneCamera.orthographicDepth))
+        let depth = Self.frameZoom(general: zoom, input: input).orthographicDepth
+        return SceneFrameCamera(projection: SceneCamera.orthographic(left: 0, right: size.x, bottom: 0, top: size.y,
+                                                                     near: -depth, far: depth),
+                                eye: SIMD3(size.x / 2, size.y / 2, depth))
     }
 
-    /// `ortho(0, width, 0, height)` with its x and y scaled by `zoom` about the centre.
-    static func projection(size: SIMD2<Float>, zoom: Float) -> simd_float4x4 {
-        let ortho = SceneCamera.orthographic(size: size)
-        guard zoom != 1, zoom.isFinite, zoom > 0 else { return ortho }
-        return simd_float4x4(diagonal: SIMD4(zoom, zoom, 1, 1)) * ortho
+    /// The zoom this frame: `general` × the camera's, as `thisScene.setCameraTransforms` set it
+    /// (1 until a script does).
+    static func frameZoom(general: Float, input: SceneCameraRigInput) -> SceneOrthographicZoom {
+        SceneOrthographicZoom(factor: general * (input.scriptCamera?.zoom ?? 1), sceneSize: input.sceneSize)
     }
 }
 
