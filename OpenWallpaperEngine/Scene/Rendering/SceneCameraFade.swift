@@ -46,10 +46,10 @@ final class SceneCameraFade {
     }
 
     /// Draws the fade over `frame` when `alpha` is above 0 (WE draws none otherwise). `values`
-    /// resolves the bound `tint`.
+    /// resolves the bound `tint`. `records` false leaves `lastFade` as it is (the detail patch's run).
     func encode(on frame: MTLTexture, alpha: Float, builtins: BuiltinFrameContext, values: SceneValueContext,
-                commandBuffer: MTLCommandBuffer) {
-        lastFade = nil
+                records: Bool = true, commandBuffer: MTLCommandBuffer) {
+        if records { lastFade = nil }
         guard alpha > 0, let pipeline = pipeline(for: frame.pixelFormat, device: frame.device),
               let quad = quadBuffer(device: frame.device) else { return }
         let descriptor = MTLRenderPassDescriptor()
@@ -73,7 +73,7 @@ final class SceneCameraFade {
         encoder.setVertexBuffer(quad, offset: 0, index: EffectGraphRenderer.zeroBuffer)
         encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
         encoder.endEncoding()
-        lastFade = (alpha, frame)
+        if records { lastFade = (alpha, frame) }
     }
 
     /// The full-target strip, as the effect graph draws its passes (x, y, z per vertex; the
