@@ -1,0 +1,6 @@
+== owe_inst1 capture K:\DeepWorkspace\wem-images2\tools\peer\requests\rd_grab\cap\we_frame1072.rdc draws 5
+  eid 24 ID3D11DeviceContext::DrawIndexed() idx=36 inst=0
+  eid 42 ID3D11DeviceContext::Draw() idx=3 inst=0
+  eid 55 ID3D11DeviceContext::Draw() idx=3 inst=0
+  eid 68 ID3D11DeviceContext::Draw() idx=3 inst=0
+  eid 82 ID3D11DeviceContext::Draw() idx=3 inst=0

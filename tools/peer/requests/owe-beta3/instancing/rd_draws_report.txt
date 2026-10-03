@@ -1,0 +1,15 @@
+== owe_inst10 capture K:\DeepWorkspace\wem-images2\tools\peer\requests\rd_grab\cap\we_frame2384.rdc draws 14
+  eid 24 ID3D11DeviceContext::DrawIndexed() idx=36 inst=0
+  eid 41 ID3D11DeviceContext::DrawIndexed() idx=36 inst=0
+  eid 58 ID3D11DeviceContext::DrawIndexed() idx=36 inst=0
+  eid 75 ID3D11DeviceContext::DrawIndexed() idx=36 inst=0
+  eid 92 ID3D11DeviceContext::DrawIndexed() idx=36 inst=0
+  eid 109 ID3D11DeviceContext::DrawIndexed() idx=36 inst=0
+  eid 126 ID3D11DeviceContext::DrawIndexed() idx=36 inst=0
+  eid 143 ID3D11DeviceContext::DrawIndexed() idx=36 inst=0
+  eid 160 ID3D11DeviceContext::DrawIndexed() idx=36 inst=0
+  eid 177 ID3D11DeviceContext::DrawIndexed() idx=36 inst=0
+  eid 195 ID3D11DeviceContext::Draw() idx=3 inst=0
+  eid 208 ID3D11DeviceContext::Draw() idx=3 inst=0
+  eid 221 ID3D11DeviceContext::Draw() idx=3 inst=0
+  eid 235 ID3D11DeviceContext::Draw() idx=3 inst=0
