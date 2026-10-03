@@ -14,7 +14,7 @@ final class SceneReviewFixTests: XCTestCase {
         XCTAssertEqual(name, SceneSoundContentBuilder.cacheName(entry: "sounds/music.mp3", wallpaperDirectory: a, size: 3, modified: day))
         XCTAssertNotEqual(name, SceneSoundContentBuilder.cacheName(entry: "sounds/music.mp3", wallpaperDirectory: b, size: 3, modified: day))
         XCTAssertNotEqual(name, SceneSoundContentBuilder.cacheName(entry: "sounds/music.mp3", wallpaperDirectory: a,
-                                                                   size: 3, modified: day.addingTimeInterval(1))), "an updated package gets a new copy")
+                                                                   size: 3, modified: day.addingTimeInterval(1)), "an updated package gets a new copy")
         XCTAssertTrue(name.hasSuffix(".mp3"))
         XCTAssertEqual(name.count, 64 + 4, "SHA256 hex plus extension")
         // Deterministic and seed-free: a fixed input gives a fixed name, so it can't come from `hashValue`.
