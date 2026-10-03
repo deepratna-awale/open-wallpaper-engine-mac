@@ -90,8 +90,9 @@ final class SceneTransform3DTests: XCTestCase {
         XCTAssertEqual(bytes[2], row0.z * 2, accuracy: 1e-6)
     }
 
-    /// Missing fields take WE's defaults (origin 0, scale 1, angles 0); a root without an origin
-    /// takes `rootOrigin` (the 2D path's scene centre), a child 0; `origin.z` and `scale.z` are kept.
+    /// Missing fields take WE's defaults (origin 0, scale 1, angles 0), a root's origin included
+    /// (§5.13); `origin.z` and `scale.z` are kept, and a missing component of an authored vector is
+    /// 0 (§5.14).
     func testAuthoredTransformKeepsDepthAndWEsDefaults() throws {
         let objects = try objects("""
         [{"id": 1, "origin": "1 2 3", "scale": "4 5 6", "angles": "0.1 0.2 0.3"},
@@ -100,11 +101,10 @@ final class SceneTransform3DTests: XCTestCase {
         """)
         let full = SceneLocalTransform3D(object: objects[0])
         XCTAssertEqual(full, SceneLocalTransform3D(origin: SIMD3(1, 2, 3), scale: SIMD3(4, 5, 6), angles: SIMD3(0.1, 0.2, 0.3)))
-        XCTAssertEqual(SceneLocalTransform3D(object: objects[1]), .identity)
-        XCTAssertEqual(SceneLocalTransform3D(object: objects[1], rootOrigin: SIMD3(960, 540, 0)).origin, SIMD3(960, 540, 0))
-        let child = SceneLocalTransform3D(object: objects[2], rootOrigin: SIMD3(960, 540, 0))
+        XCTAssertEqual(SceneLocalTransform3D(object: objects[1]), .identity, "a root without an origin sits at 0")
+        let child = SceneLocalTransform3D(object: objects[2])
         XCTAssertEqual(child.origin, .zero, "a child without an origin sits on its parent")
-        XCTAssertEqual(child.scale, SIMD3(2, 2, 1), "a missing component keeps the default")
+        XCTAssertEqual(child.scale, SIMD3(2, 2, 0), "a missing component is 0")
         XCTAssertEqual(full.planar, SceneLocalTransform(origin: SIMD2(1, 2), scale: SIMD2(4, 5), angle: 0.3,
                                                         tilt: SIMD2(0.1, 0.2)))
     }
@@ -283,7 +283,7 @@ final class SceneTransform3DTests: XCTestCase {
     /// Scripts win over timelines, timelines over the authored node; all three components.
     func testLive3DValuesTakeScriptsThenTimelinesThenAuthored() throws {
         let object = try objects(#"[{"id": 1, "origin": "1 2 3", "scale": "1 1 4", "angles": "0 0 0.5"}]"#)[0]
-        let motion = SceneObjectMotion(object: object, sceneSize: SIMD2(100, 100), bindings: SceneLayerBindings())
+        let motion = SceneObjectMotion(object: object, bindings: SceneLayerBindings())
         let authored = SceneLocalTransform3D(object: object)
         XCTAssertEqual(motion.local3D(authored: authored), authored)
 

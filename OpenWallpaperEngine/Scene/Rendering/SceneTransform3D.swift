@@ -18,13 +18,11 @@ struct SceneLocalTransform3D: Equatable {
     }
 
     /// The authored transform. WE's object constructor defaults `origin` to 0, `scale` to 1 and
-    /// `angles` to 0 (+0x128, +0x134, +0x140). `rootOrigin` is where a root object without an
-    /// `origin` sits: 0 in WE; the orthographic 2D path centres it in the scene
-    /// (`SceneLocalTransform(object:sceneSize:)`), and passing that centre keeps the two paths
-    /// equal. A vector with fewer than three numbers keeps the field's default for the rest [I].
-    init(object: WESceneObject, rootOrigin: SIMD3<Float> = .zero) {
-        let defaultOrigin = object.parent == nil ? rootOrigin : .zero
-        origin = Self.vector(object.origin, default: defaultOrigin)
+    /// `angles` to 0 (+0x128, +0x134, +0x140), a root's `origin` included: an orthographic scene
+    /// draws it on its bottom-left corner (WE 2.8's capture, docs/models-plan.md §5.13). Both paths
+    /// read their transforms here.
+    init(object: WESceneObject) {
+        origin = Self.vector(object.origin, default: .zero)
         scale = Self.vector(object.scale, default: SIMD3(repeating: 1))
         angles = Self.vector(object.angles, default: .zero)
     }
@@ -45,12 +43,14 @@ struct SceneLocalTransform3D: Equatable {
     /// WE's own matrix for this transform (`SceneWorldMatrix.local`).
     var matrix: simd_float4x4 { SceneWorldMatrix.local(self) }
 
-    private static func vector(_ text: String?, default fallback: SIMD3<Float>) -> SIMD3<Float> {
+    /// An authored vector: the field's default when absent; otherwise its numbers, a missing
+    /// component 0 (`String.parseVector3`). WE 2.8's captures (docs/models-plan.md §5.14): a model
+    /// scaled "0.02 0.02" is pixel-identical to "0.02 0.02 0", flattened, and an image's "0.5 0.5"
+    /// draws as "0.5 0.5 1" (a flat quad has no z to scale).
+    static func vector(_ text: String?, default fallback: SIMD3<Float>) -> SIMD3<Float> {
         guard let text else { return fallback }
-        let numbers = text.split(separator: " ").compactMap { Float($0) }
-        var value = fallback
-        for index in 0..<min(numbers.count, 3) { value[index] = numbers[index] }
-        return value
+        let value = text.parseVector3()
+        return SIMD3(Float(value.0), Float(value.1), Float(value.2))
     }
 }
 
@@ -200,11 +200,11 @@ struct SceneTransformHierarchy3D: Equatable {
 
     /// Every object of `objects`, keyed like the 2D hierarchy (`id`, else its index). The
     /// `attachment` is every object's (`WESceneObject.attachment`).
-    init(objects: [WESceneObject], rootOrigin: SIMD3<Float> = .zero) {
+    init(objects: [WESceneObject]) {
         var nodes: [String: Node] = [:]
         for (index, object) in objects.enumerated() {
             nodes[String(object.id ?? index)] = Node(parentID: object.parent.map(String.init),
-                                                     local: SceneLocalTransform3D(object: object, rootOrigin: rootOrigin),
+                                                     local: SceneLocalTransform3D(object: object),
                                                      attachment: object.attachment ?? object.model?.attachment)
         }
         self.nodes = nodes

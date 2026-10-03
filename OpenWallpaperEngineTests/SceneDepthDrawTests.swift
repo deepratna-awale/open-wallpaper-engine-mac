@@ -144,17 +144,18 @@ final class SceneDepthDrawTests: XCTestCase {
         """
         let scene = try decodeTolerant(WEScene.self, from: Data(json.utf8))
         let builder = SceneSpatialContentBuilder(readFile: { _ in nil }, wallpaperName: "test")
-        let spatial = builder.build(scene, context: SpatialProperties(), sceneSize: SIMD2(1920, 1080))
+        let spatial = builder.build(scene, context: SpatialProperties())
         XCTAssertEqual(spatial.sortOrder(of: "1"), 4)
         XCTAssertEqual(spatial.sortOrder(of: "3"), -2)
         XCTAssertEqual(spatial.sortOrder(of: "4"), 0)
         XCTAssertEqual(spatial.depthTest(of: "2"), true)
         XCTAssertEqual(spatial.depthTest(of: "3"), false)
         XCTAssertNil(spatial.depthTest(of: "1"))
-        XCTAssertNil(spatial.perspectiveTransforms, "a perspective scene draws every layer through its camera")
     }
 
-    func testAnOrthographicSceneWithPerspectiveLayersCentresRootsLikeThe2DPath() throws {
+    /// A `perspective` layer of an orthographic scene is placed from the scene's hierarchy, whose
+    /// root without an `origin` sits at 0 as on the 2D path (§5.13).
+    func testAnOrthographicSceneWithPerspectiveLayersPutsRootsAtZeroLikeThe2DPath() throws {
         let json = """
         {"camera":{},"general":{"orthogonalprojection":{"width":1000,"height":500}},"objects":[
          {"id":1,"name":"p","image":"models/a.json","perspective":true},
@@ -162,11 +163,10 @@ final class SceneDepthDrawTests: XCTestCase {
         """
         let scene = try decodeTolerant(WEScene.self, from: Data(json.utf8))
         let spatial = SceneSpatialContentBuilder(readFile: { _ in nil }, wallpaperName: "test")
-            .build(scene, context: SpatialProperties(), sceneSize: SIMD2(1000, 500))
-        let hierarchy = try XCTUnwrap(spatial.perspectiveTransforms)
-        XCTAssertEqual(hierarchy.nodes["1"]?.local.origin, SIMD3(500, 250, 0))
-        XCTAssertEqual(hierarchy.nodes["2"]?.local.origin, SIMD3(10, 20, 30))
-        XCTAssertEqual(spatial.transforms.nodes["1"]?.local.origin, .zero, "WE's own default stays in the scene hierarchy")
+            .build(scene, context: SpatialProperties())
+        XCTAssertEqual(spatial.transforms.nodes["1"]?.local.origin, .zero)
+        XCTAssertEqual(spatial.transforms.nodes["2"]?.local.origin, SIMD3(10, 20, 30))
+        XCTAssertEqual(SceneTransformHierarchy(objects: scene.objects).nodes["1"]?.local.origin, .zero)
     }
 
     // MARK: - Placement

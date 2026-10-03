@@ -124,6 +124,30 @@ final class ScenePuppetTests: XCTestCase {
         assertEqual(pixels, image.pixels, tolerance: 1)
     }
 
+    /// A `cullmode` "normal" puppet (WE 2.8's capture, docs/models-plan.md §5.17): the editor's
+    /// rig faces the viewer and draws, and a layer that mirrors it culls every triangle, as WE
+    /// culls the rope scaled −1 1 1.
+    func testAMirroredLayerCullsANormalCullMesh() throws {
+        let image = Self.picture(width: 64, height: 48, opaque: true)
+        let plan = try plan(Self.gridMesh(size: SIMD2(64, 48), columns: 8, rows: 6), bones: 1, size: SIMD2(64, 48),
+                            material: "depthcull")
+        XCTAssertTrue(plan.material.cullsBackFaces)
+        XCTAssertTrue(renderer.waitUntilReady(plan), "the mesh pipeline compiles")
+        let texture = try Self.texture(image, device: device)
+        func alphas(mirrored: Bool) throws -> [UInt8] {
+            let commands = try XCTUnwrap(queue.makeCommandBuffer())
+            let target = try XCTUnwrap(renderer.albedo(plan, ScenePuppetRenderer.Draw(
+                layerID: "puppet", source: texture, pose: .bind(boneCount: 1), frame: BuiltinFrameContext(),
+                values: EmptySceneValues(), assetTexture: { _, _ in nil }, mirrored: mirrored), commandBuffer: commands))
+            commands.commit()
+            commands.waitUntilCompleted()
+            let pixels = try ScenePuppetTestSupport.rgba8(target, device: device)
+            return stride(from: 3, to: pixels.count, by: 4).map { pixels[$0] }
+        }
+        XCTAssertTrue(try alphas(mirrored: false).allSatisfy { $0 == 255 }, "the rig's triangles face the viewer")
+        XCTAssertTrue(try alphas(mirrored: true).allSatisfy { $0 == 0 }, "mirrored, they are culled")
+    }
+
     /// An atlas: the rig takes the image's halves from the other side of the texture, as the
     /// witcher's (3803167460) takes its parts from a sheet. The bind pose assembles the picture.
     func testTheBindPoseAssemblesAnAtlas() throws {

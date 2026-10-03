@@ -360,6 +360,7 @@ final class ScenePuppetRenderer {
         var drawnPose: ScenePuppetPose?
         var drawnSource: ObjectIdentifier?
         var drawnCanvas: ScenePuppetCanvas?
+        var drawnMirrored = false
 
         init(target: MTLTexture) { self.target = target }
     }
@@ -375,6 +376,7 @@ final class ScenePuppetRenderer {
         var drawnPose: ScenePuppetPose?
         var drawnSource: ObjectIdentifier?
         var drawnCanvas: ScenePuppetCanvas?
+        var drawnMirrored = false
         /// The canvas a layer without effects grows to (`canvas(_:layerID:pose:)`).
         var canvas: ScenePuppetCanvas?
         /// Which drawing `target` holds (`albedoVersion`).
@@ -503,6 +505,37 @@ final class ScenePuppetRenderer {
         let assetTexture: (String, SceneMetalTextureSource) -> MTLTexture?
         /// What of the mesh's space the target covers; nil for the image's rect.
         var canvas: ScenePuppetCanvas? = nil
+        /// Whether the layer shows its image mirrored (`isMirrored`), which flips the mesh's winding.
+        var mirrored = false
+    }
+
+    /// The winding of the mesh's front faces as it is drawn into the layer's image. WE draws the
+    /// mesh in the scene through the object's world, with D3D's `FrontCounterClockwise = FALSE`
+    /// and no compensation for a mirroring world (WE 2.8's capture, docs/models-plan.md §5.17: a
+    /// `cullmode` "normal" puppet scaled −1 1 1 disappears). Here the mesh draws into its image,
+    /// clockwise in front, and the layer then mirrors it, so a mirrored layer culls the other
+    /// winding.
+    static func frontFacing(mirrored: Bool) -> MTLWinding { mirrored ? .counterClockwise : .clockwise }
+
+    /// Whether a layer whose world maps its image's x and y axes to `axisX` and `axisY` on screen
+    /// (y up) shows the image mirrored: a negative scale, or a tilt past a quarter turn.
+    static func isMirrored(axisX: SIMD2<Float>, axisY: SIMD2<Float>) -> Bool {
+        axisX.x * axisY.y - axisX.y * axisY.x < 0
+    }
+
+    /// The same through a 3D camera: the image's axes projected at its origin, `world` mapping the
+    /// image's plane into the scene and `viewProjection` the scene to clip space (y up). Behind the
+    /// camera (w ≤ 0) it isn't mirrored.
+    static func isMirrored(world: simd_float4x4, viewProjection: simd_float4x4) -> Bool {
+        let clip = viewProjection * world
+        func screen(_ point: SIMD4<Float>) -> SIMD2<Float>? {
+            let p = clip * point
+            guard p.w > 0 else { return nil }
+            return SIMD2(p.x, p.y) / p.w
+        }
+        guard let origin = screen(SIMD4(0, 0, 0, 1)), let x = screen(SIMD4(1, 0, 0, 1)),
+              let y = screen(SIMD4(0, 1, 0, 1)) else { return false }
+        return isMirrored(axisX: x - origin, axisY: y - origin)
     }
 
     /// The canvas of a puppet layer without effects posed by `pose`: its image grown to cover the
@@ -543,7 +576,7 @@ final class ScenePuppetRenderer {
         guard let target = state.target else { return nil }
         let source = ObjectIdentifier(draw.source)
         let unchanged = state.drawnPose == draw.pose && state.drawnSource == source && state.drawnCanvas == draw.canvas
-            && plan.material.pass.constants.dynamic.isEmpty
+            && state.drawnMirrored == draw.mirrored && plan.material.pass.constants.dynamic.isEmpty
         if unchanged { return target }
 
         let content = simd_min(plan.contentPixels, size)
@@ -566,6 +599,7 @@ final class ScenePuppetRenderer {
             state.drawnPose = draw.pose
             state.drawnSource = source
             state.drawnCanvas = draw.canvas
+            state.drawnMirrored = draw.mirrored
         }
         return target
     }
@@ -586,10 +620,11 @@ final class ScenePuppetRenderer {
     /// `blended`: the triangles composite over each other as the layer's material draws them
     /// (`applyBlending`): the image a translucent puppet's effects made, whose parts overlap (a
     /// strand of hair over a face the texture leaves empty under it). Otherwise later triangles
-    /// replace earlier ones, as data textures (normal maps, masks) want.
+    /// replace earlier ones, as data textures (normal maps, masks) want. `mirrored`: the layer
+    /// mirrors its image (`Draw.mirrored`).
     func warp(_ plan: ScenePuppetPlan, layerID: String, key: String, texture: MTLTexture, contentSize: SIMD2<Float>?,
               pose: ScenePuppetPose, canvas: ScenePuppetCanvas? = nil, redraw: Bool = false, blended: Bool = false,
-              commandBuffer: MTLCommandBuffer) -> MTLTexture? {
+              mirrored: Bool = false, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
         guard let state = layers[layerID], state.plan === plan else { return nil }
         let format = plan.format
         guard let position = MDLVertexAttribute.named("a_Position").flatMap(format.offset(of:)),
@@ -610,7 +645,8 @@ final class ScenePuppetRenderer {
             warps[layerID, default: [:]][key] = warp
         }
         let source = ObjectIdentifier(texture)
-        if !redraw, warp.drawnPose == pose, warp.drawnSource == source, warp.drawnCanvas == canvas { return warp.target }
+        if !redraw, warp.drawnPose == pose, warp.drawnSource == source, warp.drawnCanvas == canvas,
+           warp.drawnMirrored == mirrored { return warp.target }
 
         let blends = blended && EffectGraphRenderer.blendMode(plan.material.pass.blending) != nil
         let content = contentSize.map { SIMD2(Int(saturating: $0.x.rounded()), Int(saturating: $0.y.rounded())) } ?? SIMD2(texture.width, texture.height)
@@ -637,7 +673,7 @@ final class ScenePuppetRenderer {
         encoder.setViewport(MTLViewport(originX: 0, originY: 0, width: Double(extent.x), height: Double(extent.y),
                                         znear: 0, zfar: 1))
         encoder.setCullMode(plan.material.cullsBackFaces ? .back : .none)
-        encoder.setFrontFacing(.clockwise)
+        encoder.setFrontFacing(Self.frontFacing(mirrored: mirrored))
         encoder.setVertexBuffer(state.vertices, offset: 0, index: 0)
         encoder.setVertexBytes(&uniforms, length: MemoryLayout<Uniforms>.stride, index: 1)
         guard let palette = bones.withUnsafeBytes({ uniformArena.allocate($0, for: commandBuffer) }) else {
@@ -665,6 +701,7 @@ final class ScenePuppetRenderer {
         warp.drawnPose = pose
         warp.drawnSource = source
         warp.drawnCanvas = canvas
+        warp.drawnMirrored = mirrored
         return warp.target
     }
 
@@ -713,8 +750,9 @@ final class ScenePuppetRenderer {
                                         znear: 0, zfar: 1))
         encoder.setScissorRect(MTLScissorRect(x: 0, y: 0, width: content.x, height: content.y))
         encoder.setCullMode(plan.material.cullsBackFaces ? .back : .none)
-        // D3D's default: clockwise triangles face the viewer (FrontCounterClockwise false).
-        encoder.setFrontFacing(.clockwise)
+        // D3D's default: clockwise triangles face the viewer (FrontCounterClockwise false); the
+        // other winding when the layer mirrors the image (`frontFacing(mirrored:)`).
+        encoder.setFrontFacing(Self.frontFacing(mirrored: draw.mirrored))
         encoder.setVertexBuffer(state.vertices, offset: 0, index: Self.meshBuffer)
         encoder.setVertexBuffer(zeroAttributes, offset: 0, index: EffectGraphRenderer.zeroBuffer)
         for entry in bound {

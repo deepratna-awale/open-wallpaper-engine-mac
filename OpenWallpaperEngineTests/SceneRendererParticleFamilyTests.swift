@@ -51,16 +51,15 @@ final class SceneRendererParticleFamilyTests: XCTestCase {
         """#
         let objects = try JSONDecoder().decode([WESceneObject].self, from: Data(text.utf8))
         let document = try JSONDecoder().decode(SceneJSON.self, from: Data(#"{"objects": \#(text)}"#.utf8))
-        let size = SIMD2<Float>(repeating: Float(Self.size))
         var system = dot().configuration
         system.order = 1
         system.objectID = "2"
         var motions: [String: SceneObjectMotion] = [:]
         for object in objects {
-            motions[String(object.id!)] = SceneObjectMotion(object: object, sceneSize: size, bindings: SceneLayerBindings())
+            motions[String(object.id!)] = SceneObjectMotion(object: object, bindings: SceneLayerBindings())
         }
         let pixels = try render(simulation: simulation, systems: [system],
-                                transforms: SceneTransformHierarchy(objects: objects, sceneSize: size), motions: motions,
+                                transforms: SceneTransformHierarchy(objects: objects), motions: motions,
                                 timelines: SceneTimelineSource(wallpaperID: "family", document: document, signature: "1")) {
             Self.isWhite($0, x: 96, y: 64) && Self.isRed($0, x: 32, y: 64)
         }
@@ -78,7 +77,6 @@ final class SceneRendererParticleFamilyTests: XCTestCase {
         let objects = try JSONDecoder().decode([WESceneObject].self, from: Data(#"""
         [{"id": 2, "origin": "40 64 0", "particle": "p.json"}]
         """#.utf8))
-        let size = SIMD2<Float>(repeating: Float(Self.size))
         var dot = dot()
         dot.origin = SIMD2(40, 64)
         var system = dot.configuration
@@ -86,7 +84,7 @@ final class SceneRendererParticleFamilyTests: XCTestCase {
         system.objectID = "2"
         for parallax in [false, true] {
             let pixels = try render(simulation: simulation, systems: [system],
-                                    transforms: SceneTransformHierarchy(objects: objects, sceneSize: size),
+                                    transforms: SceneTransformHierarchy(objects: objects),
                                     parallax: parallax) {
                 parallax ? Self.isWhite($0, x: 17, y: 64) : Self.isWhite($0, x: 50, y: 64)
             }
