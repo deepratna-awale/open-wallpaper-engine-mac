@@ -179,4 +179,12 @@ final class SceneRenderThreadTests: XCTestCase {
         }
         XCTAssertNil(SceneViewSnapshots.snapshot(of: view))
     }
+
+    /// A `sync` sent to a thread that has stopped (its instance shut down) runs on the caller
+    /// instead of waiting forever for a run loop that is gone.
+    func testSyncAfterStopDoesNotHang() {
+        let thread = SceneRenderThread(name: "OWE render test")
+        thread.stop()
+        XCTAssertEqual(thread.sync { 42 }, 42)
+    }
 }
