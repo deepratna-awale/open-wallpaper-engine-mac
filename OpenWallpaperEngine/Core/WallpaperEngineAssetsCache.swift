@@ -4,8 +4,9 @@ import Foundation
 /// (`<storage>/.owe-assets`), taken from a Wallpaper Engine install: the user's Steam copy
 /// downloaded with SteamCMD, or an install folder on disk.
 ///
-/// Only what wallpapers use is kept: the effect manifests (without editor preview art), the GLSL
-/// shaders and shared headers (without Direct3D or editor shaders), materials, models, particles,
+/// Only what wallpapers and the Wallpaper Editor use is kept: the effect manifests (without editor
+/// preview projects), the GLSL shaders and shared headers (without Direct3D or editor shaders),
+/// materials, models, particles, the editor's particle presets (without their preview projects),
 /// the SceneScript runtime, the compatibility patches, the built-in fonts with their licence files,
 /// and the UI strings (`<install>/locale/ui_*.json`, beside `assets`) that translate label keys.
 enum WallpaperEngineAssetsCache {
@@ -37,8 +38,10 @@ enum WallpaperEngineAssetsCache {
         }
     }
 
-    /// The folders copied whole, besides `effects` and `shaders`.
+    /// The folders copied whole, besides `effects`, `presets` and `shaders`.
     static let wholeFolders = ["fonts", "materials", "models", "particles", "scripts", "zcompat"]
+    /// The folders copied without some of their files (`isExcluded`).
+    static let filteredFolders = ["effects", "presets", "shaders"]
     static let infoFileName = ".owe-assets-info.json"
 
     static func infoURL(cache: URL) -> URL { cache.appending(path: infoFileName) }
@@ -64,13 +67,15 @@ enum WallpaperEngineAssetsCache {
         try encoder.encode(info).write(to: infoURL(cache: cache), options: .atomic)
     }
 
-    /// Whether a path relative to `effects/` or `shaders/` is left out.
+    /// Whether a path relative to `effects/`, `presets/` or `shaders/` is left out: an effect's
+    /// or preset's preview projects (`preview/`, `previewdownpour/`), which WE's editor plays and
+    /// this app doesn't (it renders its own previews), and the shaders it doesn't translate.
     static func isExcluded(_ relativePath: String, in folder: String) -> Bool {
         let components = relativePath.split(separator: "/").map { String($0) }
         if components.last == ".DS_Store" { return true }
         let directories = components.dropLast()
         switch folder {
-        case "effects":
+        case "effects", "presets":
             return directories.contains { $0.lowercased().hasPrefix("preview") }
         case "shaders":
             return directories.contains { $0 == "HLSL" || $0 == "editor" }
@@ -92,7 +97,7 @@ enum WallpaperEngineAssetsCache {
         if fileManager.fileExists(atPath: staging.path) { try fileManager.removeItem(at: staging) }
         do {
             var count = 0
-            for folder in ["effects", "shaders"] + wholeFolders {
+            for folder in filteredFolders + wholeFolders {
                 count += try copyTree(assets.appending(path: folder), to: staging.appending(path: folder),
                                       folder: folder, isCancelled: isCancelled, fileManager: fileManager)
             }
