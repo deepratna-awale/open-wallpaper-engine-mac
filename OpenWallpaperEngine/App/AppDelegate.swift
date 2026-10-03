@@ -102,6 +102,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// The settings window's tab and the setting a link or search result opens.
     let settingsNavigation = SettingsNavigation()
     lazy var safeRestart = SafeRestart()
+    /// Each playlist's system-wide shortcut (`App/GlobalShortcuts`).
+    lazy var playlistShortcuts = PlaylistShortcutController(viewModel: wallpaperViewModel)
     lazy var crashWatcher = CrashWatcher()
     private var processPriorityCancellable: AnyCancellable?
     private var crashWatcherCancellable: AnyCancellable?
@@ -273,6 +275,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             self.mainWindowController.window.center()
             self.mainWindowController.window.makeKeyAndOrderFront(nil)
         }
+
+        // Registers the playlists' global shortcuts.
+        _ = playlistShortcuts
 
         // Launched into the menu bar only, the Dock icon goes until a window opens.
         dockPresence.start()
