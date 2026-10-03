@@ -18,8 +18,16 @@ final class SceneRenderThread: @unchecked Sendable {
 
     /// Holds a `sync` body while the render thread runs it; emptied before the caller resumes, so
     /// the block the run loop still holds keeps no reference to the body.
-    private final class Pending: @unchecked Sendable {
+    private final class Pending: @unchecked Sendable { // `lock` owns `run`.
+        private let lock = NSLock()
         var run: (() -> Void)?
+        /// The body, once: whoever takes it first runs it.
+        func take() -> (() -> Void)? {
+            lock.withLock {
+                defer { run = nil }
+                return run
+            }
+        }
     }
 
     private let thread: Thread
@@ -97,11 +105,16 @@ final class SceneRenderThread: @unchecked Sendable {
             let pending = Pending()
             pending.run = { result = body() }
             perform {
-                pending.run?()
-                pending.run = nil
+                pending.take()?()
                 done.signal()
             }
-            done.wait()
+            // A stopped thread never runs the block: once it has ended, nothing else touches what
+            // it owned, so the body runs here rather than wait forever.
+            while done.wait(timeout: .now() + 0.25) == .timedOut {
+                guard thread.isFinished else { continue }
+                pending.take()?()
+                break
+            }
         }
         return result!
     }

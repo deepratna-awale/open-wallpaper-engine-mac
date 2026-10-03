@@ -185,8 +185,8 @@ final class SceneRenderLoop {
     /// Once the scene has shown its content for a while, copies what `view`'s display shows into
     /// its loading snapshot (`SceneLoadingSnapshotCapture`), at most once a second per scene and
     /// once per display size and session. With one display the scene draws onto the drawable, so
-    /// `rendersFrame` renders one extra frame to copy from, freed right after; the readback and
-    /// encoding run off this thread.
+    /// `rendersFrame` redraws the frame to copy from without stepping the scene (`redrawShared`),
+    /// freed right after; the readback and encoding run off this thread.
     private func captureSnapshotIfDue(_ view: MTKView, renderer: SceneMetalRenderer, rendersFrame: Bool) {
         guard let snapshots, renderer.hasContent else { return }
         let now = CACurrentMediaTime()
@@ -205,12 +205,12 @@ final class SceneRenderLoop {
         // displays' frame is drawn again with the clock.
         let hidesClock = !renderer.clockLayerIDs.isEmpty
         if hidesClock { renderer.hidesClockLayers = true }
-        if rendersFrame || hidesClock { renderer.renderShared([viewport]) }
+        if rendersFrame || hidesClock { renderer.redrawShared([viewport]) }
         let started = renderer.captureSharedFrame(pixelSize: pixelSize, pixelsPerPoint: viewport.pixelsPerPoint) {
             snapshots.save($0)
         }
         if hidesClock { renderer.hidesClockLayers = false }
-        if rendersFrame { renderer.releaseSharedFrame() } else if hidesClock { renderer.renderShared([viewport]) }
+        if rendersFrame { renderer.releaseSharedFrame() } else if hidesClock { renderer.redrawShared([viewport]) }
         if !started { OWELog.debug(.scene, "Loading snapshot: no frame to capture at \(pixelSize.x)×\(pixelSize.y)") }
     }
 
