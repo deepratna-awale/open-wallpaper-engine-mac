@@ -46,16 +46,22 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
 
     public var version = SceneEditOverlay.currentVersion
     public var objects: [String: ObjectEdit] = [:]
+    /// Scripts, user-property bindings and the user properties themselves (`SceneAuthoring`);
+    /// nil when none were authored.
+    public var authoring: SceneAuthoring?
 
     public init(objects: [String: ObjectEdit] = [:]) {
         self.objects = objects
     }
 
     /// Nothing to save: no edits and no locked layers.
-    public var isEmpty: Bool { objects.values.allSatisfy(\.isEmpty) }
+    public var isEmpty: Bool { objects.values.allSatisfy(\.isEmpty) && authoring?.isEmpty != false }
 
-    /// Something changes the scene (locks don't).
-    public var hasSceneEdits: Bool { objects.values.contains(where: \.hasSceneEdits) }
+    /// Something changes the scene (locks don't). Authored properties count: they are edits of
+    /// the wallpaper, and Save as Local Wallpaper writes them.
+    public var hasSceneEdits: Bool {
+        objects.values.contains(where: \.hasSceneEdits) || authoring?.isEmpty == false
+    }
 
     // MARK: Reading
 
@@ -125,10 +131,12 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
         return overlay
     }
 
-    /// Names the scene edits (not the locks) for the scene cache key: a parse is only reused for
-    /// the edits it was made with.
+    /// Names the scene edits (not the locks, nor the user properties, which change project.json
+    /// only) for the scene cache key: a parse is only reused for the edits it was made with.
     public var digest: String {
         var sceneEdits = self
+        sceneEdits.authoring?.properties = nil
+        if sceneEdits.authoring?.isEmpty == true { sceneEdits.authoring = nil }
         for (key, edit) in sceneEdits.objects {
             sceneEdits.objects[key]?.locked = nil
             if !edit.hasSceneEdits { sceneEdits.objects[key] = nil }

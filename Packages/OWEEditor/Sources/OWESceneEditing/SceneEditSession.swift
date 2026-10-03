@@ -62,7 +62,7 @@ public final class SceneEditSession: ObservableObject {
 
     /// How the authored field gets its value; a field bound to a user property isn't edited here.
     public func binding(_ field: String, of layerID: Int) -> SceneFieldBinding {
-        SceneFieldBinding(outline.layer(layerID)?.fields[field])
+        SceneFieldBinding(drivenField(SceneFieldPath(components: [field]), of: layerID))
     }
 
     public func isEditable(_ field: String, of layerID: Int) -> Bool {
@@ -191,6 +191,14 @@ public final class SceneEditSession: ObservableObject {
         var next = overlay
         next.setEffectVisible(visible == authored ? nil : visible, effect: effect.id, of: layerID)
         commit(next, actionName: actionName, coalescingKey: nil)
+    }
+
+    /// A change of the overlay made by the editor's authoring (scripts, bindings, user
+    /// properties): one undo step like every edit here.
+    public func editOverlay(actionName: String, coalescingKey: String? = nil, _ change: (inout SceneEditOverlay) -> Void) {
+        var next = overlay
+        change(&next)
+        commit(next, actionName: actionName, coalescingKey: coalescingKey)
     }
 
     /// Drops every scene edit (locks stay: they aren't edits of the wallpaper). Undoable.

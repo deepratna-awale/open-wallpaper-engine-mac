@@ -14,6 +14,9 @@ extension SceneEditOverlay {
     /// Applies the scene edits to a decoded scene.json. An object or effect an edit names that the
     /// scene no longer has is skipped: the wallpaper was updated under the edits.
     public func apply(to root: inout [String: Any]) throws {
+        guard root["objects"] is [[String: Any]] else { throw SceneEditOverlayError.notAScene }
+        // Scripts and bindings first: a value edit of a field they drive is its start value.
+        authoring?.applyDrivers(to: &root)
         guard var objects = root["objects"] as? [[String: Any]] else { throw SceneEditOverlayError.notAScene }
         for index in objects.indices {
             let objectID = (objects[index]["id"] as? NSNumber)?.intValue ?? index
