@@ -10,7 +10,8 @@ import OWESceneEditing
 @MainActor
 final class WallpaperEditorScriptingTests: XCTestCase {
     private static let scene = Data("""
-    {"general": {"orthogonalprojection": {"width": 1920, "height": 1080}},
+    {"camera": {"center": "0 0 -1", "eye": "0 0 0", "up": "0 1 0"},
+     "general": {"orthogonalprojection": {"width": 1920, "height": 1080}},
      "objects": [{"id": 1, "name": "Image", "image": "a.json", "alpha": 0.75,
                   "effects": [{"file": "effects/blur/effect.json", "visible": true}]},
                  {"id": 2, "name": "Clock", "text": "<Clock>", "pointsize": 32}]}
