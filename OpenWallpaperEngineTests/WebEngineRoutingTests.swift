@@ -53,6 +53,14 @@ final class WebEngineRoutingTests: XCTestCase {
         XCTAssertEqual(WebEngineRouting.current(root: root, defaults: defaults), .chromium)
     }
 
+    /// The rule: installed means Chromium, with nothing for the user to switch on.
+    func testTheSwitchDefaultsToOn() throws {
+        XCTAssertNil(defaults.object(forKey: WebEngineRouting.enabledKey))
+        XCTAssertTrue(WebEngineRouting.isEnabled(in: defaults))
+        try install("3.0.0")
+        XCTAssertEqual(WebEngineRouting.current(root: root, defaults: defaults), .chromium)
+    }
+
     func testAnIncompleteInstallRoutesToWebKit() throws {
         try install("1.2.3")
         try FileManager.default.removeItem(at: root.appending(path: "1.2.3/\(ChromiumEnginePackage.manifestName)"))

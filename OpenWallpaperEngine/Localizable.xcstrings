@@ -62888,6 +62888,101 @@
         }
       }
     },
+    "On as soon as the engine is installed: every web wallpaper plays in Chromium. Off: web wallpapers use the system's WebKit." : {
+      "comment" : "Settings › Plugins › Chromium web engine: tooltip of the Use for web wallpapers toggle",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مفعّل بمجرد تثبيت المحرك: يشغّل كل خلفيات الويب في Chromium. عند الإيقاف: تستخدم خلفيات الويب WebKit الخاص بالنظام."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktiv, sobald die Engine installiert ist: spielt alle Web-Hintergründe in Chromium ab. Aus: Web-Hintergründe nutzen das WebKit des Systems."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activado en cuanto se instala el motor: reproduce todos los fondos web en Chromium. Desactivado: los fondos web usan WebKit del sistema."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activé dès l’installation du moteur : affiche tous les fonds d’écran web dans Chromium. Désactivé : les fonds d’écran web utilisent le WebKit du système."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इंजन इंस्टॉल होते ही चालू: हर वेब वॉलपेपर Chromium में चलाता है। बंद होने पर: वेब वॉलपेपर सिस्टम का WebKit उपयोग करते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attivo appena il motore è installato: riproduce tutti gli sfondi web in Chromium. Disattivato: gli sfondi web usano WebKit di sistema."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "エンジンをインストールするとオンになります：すべてのウェブ壁紙を Chromium で再生します。オフの場合、ウェブ壁紙はシステムの WebKit を使用します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "엔진을 설치하면 바로 켜집니다: 모든 웹 배경화면을 Chromium에서 재생합니다. 끄면 웹 배경화면이 시스템의 WebKit을 사용합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Włączone od razu po instalacji silnika: odtwarza wszystkie tapety WWW w Chromium. Wyłączone: tapety WWW korzystają z systemowego WebKit."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ativado assim que o motor é instalado: reproduz todos os papéis de parede web no Chromium. Desativado: os papéis de parede web usam o WebKit do sistema."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Включено сразу после установки движка: воспроизводит все веб-обои в Chromium. Выключено: веб-обои используют системный WebKit."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Motor kurulur kurulmaz açık: tüm web duvar kâğıtlarını Chromium’da oynatır. Kapalıyken web duvar kâğıtları sistemin WebKit’ini kullanır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Увімкнено одразу після встановлення рушія: відтворює всі вебшпалери в Chromium. Вимкнено: вебшпалери використовують системний WebKit."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装引擎后即开启：在 Chromium 中播放所有网页壁纸。关闭时：网页壁纸使用系统的 WebKit。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安裝引擎後即開啟：在 Chromium 中播放所有網頁桌布。關閉時：網頁桌布使用系統的 WebKit。"
+          }
+        }
+      }
+    },
     "On, one set of user properties applies to a wallpaper on every display. Off, each display keeps its own, as in Wallpaper Engine." : {
       "localizations" : {
         "ar" : {
@@ -72223,101 +72318,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在背景圖片瀏覽器中播放動態 GIF 預覽。瀏覽器打開期間會使用較多 CPU。"
-          }
-        }
-      }
-    },
-    "Plays every web wallpaper in Chromium. Off: web wallpapers use the system's WebKit." : {
-      "comment" : "Settings › Plugins › Chromium web engine: tooltip of the Use for web wallpapers toggle",
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يشغّل كل خلفيات الويب في Chromium. عند الإيقاف: تستخدم خلفيات الويب WebKit الخاص بالنظام."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Spielt alle Web-Hintergründe in Chromium ab. Aus: Web-Hintergründe nutzen das WebKit des Systems."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reproduce todos los fondos web en Chromium. Desactivado: los fondos web usan WebKit del sistema."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Affiche tous les fonds d’écran web dans Chromium. Désactivé : les fonds d’écran web utilisent le WebKit du système."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "हर वेब वॉलपेपर Chromium में चलाता है। बंद होने पर: वेब वॉलपेपर सिस्टम का WebKit उपयोग करते हैं।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Riproduce tutti gli sfondi web in Chromium. Disattivato: gli sfondi web usano WebKit di sistema."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "すべてのウェブ壁紙を Chromium で再生します。オフの場合、ウェブ壁紙はシステムの WebKit を使用します。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "모든 웹 배경화면을 Chromium에서 재생합니다. 끄면 웹 배경화면이 시스템의 WebKit을 사용합니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Odtwarza wszystkie tapety WWW w Chromium. Wyłączone: tapety WWW korzystają z systemowego WebKit."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reproduz todos os papéis de parede web no Chromium. Desativado: os papéis de parede web usam o WebKit do sistema."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Воспроизводит все веб-обои в Chromium. Выключено: веб-обои используют системный WebKit."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tüm web duvar kâğıtlarını Chromium’da oynatır. Kapalıyken web duvar kâğıtları sistemin WebKit’ini kullanır."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Відтворює всі вебшпалери в Chromium. Вимкнено: вебшпалери використовують системний WebKit."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在 Chromium 中播放所有网页壁纸。关闭时：网页壁纸使用系统的 WebKit。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在 Chromium 中播放所有網頁桌布。關閉時：網頁桌布使用系統的 WebKit。"
           }
         }
       }

@@ -22,7 +22,7 @@ struct ChromiumEngineSection: View {
                 .fixedSize(horizontal: false, vertical: true)
             if installer.installedVersion != nil {
                 Toggle("Use for web wallpapers", isOn: $usesChromium)
-                    .help("Plays every web wallpaper in Chromium. Off: web wallpapers use the system's WebKit.")
+                    .help("On as soon as the engine is installed: every web wallpaper plays in Chromium. Off: web wallpapers use the system's WebKit.")
                     .onChange(of: usesChromium) {
                         NotificationCenter.default.post(name: .chromiumEngineChanged, object: nil)
                     }
