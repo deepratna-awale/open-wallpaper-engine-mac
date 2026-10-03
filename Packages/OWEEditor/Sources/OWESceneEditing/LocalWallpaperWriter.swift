@@ -63,7 +63,8 @@ public struct LocalWallpaperWriter {
     }
 
     private func copyContents(of source: URL, to destination: URL, skipping packageName: String?) throws {
-        let items = try fileManager.contentsOfDirectory(at: source, includingPropertiesForKeys: [.isSymbolicLinkKey],
+        // The wallpaper's folder itself may be a link into another library; its links inside stay behind.
+        let items = try fileManager.contentsOfDirectory(at: source.resolvingSymlinksInPath(), includingPropertiesForKeys: [.isSymbolicLinkKey],
                                                         options: [.skipsHiddenFiles])
         for item in items where item.lastPathComponent != packageName {
             try copy(item, to: destination.appending(path: item.lastPathComponent))

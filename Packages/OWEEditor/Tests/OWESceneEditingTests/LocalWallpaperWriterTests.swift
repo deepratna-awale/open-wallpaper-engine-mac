@@ -38,6 +38,14 @@ final class LocalWallpaperWriterTests: XCTestCase {
         return files
     }
 
+    func testALinkedWallpaperFolderIsCopied() throws {
+        let linked = root.appending(path: "linked", directoryHint: .notDirectory)
+        try FileManager.default.createSymbolicLink(at: linked, withDestinationURL: source)
+        let folder = try LocalWallpaperWriter().save(.init(directory: linked, sceneFile: "scene.json"), scene: Fixtures.sceneData,
+                                                     title: "Linked", into: library)
+        XCTAssertEqual(Set(try snapshot(folder).keys), ["project.json", "scene.json", "preview.jpg", "materials/rain.tex"])
+    }
+
     func testWritesANewLocalWallpaperWithTheEdits() throws {
         let before = try snapshot(source)
         var overlay = SceneEditOverlay()
