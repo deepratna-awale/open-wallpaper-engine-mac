@@ -22,7 +22,7 @@ xcodebuild test -project OpenWallpaperEngine.xcodeproj -scheme OpenWallpaperEngi
 - Open `OpenWallpaperEngine.xcodeproj`, scheme **OpenWallpaperEngine**, macOS 14+ (Xcode 26.3 or newer; CI and release use 26.3).
 - **Debug builds sign with *Apple Development*.** macOS ties the audio-capture grant (System Audio Recording, or Screen Recording before macOS 14.2; needed for audio-reactive features) to the signature, and ad-hoc signing loses it on every rebuild.
   - If you aren't on the project's team, set your own team in *Signing & Capabilities* and don't commit that change.
-- **Shaders:** WE shaders are translated in process by the glslang and SPIRV-Cross libraries linked into the app (`Vendor/ShaderToolchain`). You don't need to install anything.
+- **Shaders:** WE shaders are translated by the glslang and SPIRV-Cross libraries linked into the app (`Vendor/ShaderToolchain`), run in a helper copy of the app (`--shader-compile-helper`, `HelperShaderCompiler`) so a compiler crash or hang can't take the app down; hosted tests translate in process. You don't need to install anything.
 - **WE assets:** none are in the repository or the app. The app reads them from a WE install the user chose, or from the cache Settings › Assets fills from the user's Steam copy (`<Wallpaper Storage>/.owe-assets`). For development, `Scripts/fetch-we-assets.sh` downloads them from Steam with the CI account (credentials in your login Keychain, see [docs/ci-assets.md](docs/ci-assets.md)), or `Scripts/fill-assets-cache.sh <WE install> <folder>` copies them from a WE install on disk.
 
 ## Where code goes

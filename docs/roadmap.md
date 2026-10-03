@@ -29,7 +29,7 @@ Each step: research → parallel agents by file ownership + tester → fix the t
 6. ~~Area 6 3D models (with particle collisionmodel) → tester → optimise.~~ Done (models-plan T and O, 2026-09-27).
 7. ~~Area 7 Puppet warp → tester → optimise.~~ Done.
 8. Gaps queue, worked in alongside when their files are free:
-   - A shader-compiler helper process (hung compile with no Homebrew fallback).
+   - ~~A shader-compiler helper process (hung compile with no Homebrew fallback).~~ Done: translation runs in a long-lived helper (`HelperShaderCompiler`, `ShaderCompileHelperServer`), restarted and retried once when it dies; a second failure fails the variant into FailedShaders.
    - Music-sync settings keyed by stable identity, not the path.
    - Text with effects, blend modes or emoji through WE's font path.
    - UI: stray line under the seek bar — fixed be620ce (a stepped `Slider` drew a tick mark per step; `NumericSliderInput` now snaps the value instead).
@@ -133,7 +133,7 @@ Ranked; the area each item belongs to is in brackets.
 17. ~~Clear, ambient and skylight colours are decoded but not applied.~~ Done: `general.clearcolor` clears the scene target and the ambient and skylight colours feed `g_LightAmbientColor`/`g_LightSkylightColor` (`SceneFrameLighting`), scripts included. [5]
 18. The sidebar writes to the un-keyed property store, so with two displays an edit can land on the other wallpaper. [4] The Animation Speed is per instance now: the renderer reads it from its own store (`ScenePlaybackSpeed`, `ScenePlaybackEaseTests.testEachInstanceRunsAtItsOwnSpeed`); the sidebar itself writes through `WallpaperPropertyTargets` to the selected displays' stores.
 19. Scene audio cache names use `hashValue` (random per launch), so copies pile up in Caches. [new]
-20. Pipeline compiles are unbounded, with no eviction or retry; the variant cache key ignores toolchain versions; a `TEMPDUMP` debug block is left in. [1]
+20. ~~Pipeline compiles are unbounded, with no eviction or retry; the variant cache key ignores toolchain versions; a `TEMPDUMP` debug block is left in.~~ Done: at most one pipeline compile per performance core (`BoundedWorkQueue`), an LRU pipeline cache (`LRUCache`, 1024 entries), retries with backoff for transient Metal failures (`PipelineCompileRetry`), and the Metal compiler's OS build in the variant key next to the glslang and SPIRV-Cross versions (`ShaderToolchainVersions`); the `TEMPDUMP` block was already gone. Tests: `PipelineCompileBoundsTests`, `HelperShaderCompilerTests`. [1]
 21. The text cache clears completely past 128 entries and thrashes with animated scale. [new]
 22. ~~Script clones share `layer.id` with their source (text and effect state), and effect state is never pruned.~~ Done (WP11): created layers get their own ids and free their state when destroyed. [4]
 23. Objects without an `id`: the hierarchy uses the index, layers use −1, so the parent link is lost. [new]
