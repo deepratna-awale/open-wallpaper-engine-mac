@@ -69,16 +69,16 @@ struct TimelineCurveEditor: View {
 
         func y(_ value: Double) -> Double {
             let span = max(range.upperBound - range.lowerBound, 1e-9)
-            return padding + (range.upperBound - value) / span * max(height - 2 * padding, 1)
+            return Self.padding + (range.upperBound - value) / span * max(height - 2 * Self.padding, 1)
         }
 
         func value(_ y: Double) -> Double {
             let span = max(range.upperBound - range.lowerBound, 1e-9)
-            return range.upperBound - (y - padding) / max(height - 2 * padding, 1) * span
+            return range.upperBound - (y - Self.padding) / max(height - 2 * Self.padding, 1) * span
         }
 
         func valueDelta(_ dy: Double) -> Double {
-            -dy / max(height - 2 * padding, 1) * max(range.upperBound - range.lowerBound, 1e-9)
+            -dy / max(height - 2 * Self.padding, 1) * max(range.upperBound - range.lowerBound, 1e-9)
         }
     }
 

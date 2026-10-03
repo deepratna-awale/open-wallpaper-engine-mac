@@ -103,7 +103,7 @@ final class TimelineClipTests: XCTestCase {
         }
         clip.applyEase(.easeIn, to: [0: [0]])
         XCTAssertEqual(clip.keyframe(channel: 0, frame: 0)?.back, .back)
-        XCTAssertEqual(clip.keyframe(channel: 0, frame: 0)?.front, .none)
+        XCTAssertEqual(clip.keyframe(channel: 0, frame: 0)?.front, TimelineHandle.none)
     }
 
     func testHandleDragsInWEsUnits() throws {

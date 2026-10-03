@@ -37,6 +37,7 @@ final class SceneTimelineEditorTests: XCTestCase {
         XCTAssertFalse(layer1.contains(TimelineFixtures.alpha), "already animated")
         XCTAssertFalse(layer1.contains { $0.key == "noise" }, "a texture isn't a number")
         XCTAssertEqual(editor.index.property(TimelineFixtures.tint)?.channelCount, 3)
+        session.selection = nil
         XCTAssertEqual(editor.duration, 2, "the alpha clip's 60 frames at 30 fps")
     }
 
@@ -187,7 +188,7 @@ final class SceneTimelineEditorTests: XCTestCase {
         editor.removeTrack(TimelineFixtures.alpha, actionName: "Remove Animation")
         XCTAssertNil(editor.clip(TimelineFixtures.alpha))
         XCTAssertEqual(editor.tracks, [])
-        XCTAssertEqual(TimelineFixtures.appliedObject(1, overlay: session.overlay)["alpha"] as? Int, 1)
+        XCTAssertEqual(try TimelineFixtures.appliedObject(1, overlay: session.overlay)["alpha"] as? Int, 1)
 
         let decoded = try SceneEditOverlay.decoded(from: session.overlay.encoded())
         XCTAssertEqual(decoded, session.overlay, "the overlay file keeps timeline edits")
