@@ -90,8 +90,19 @@ class WallpaperViewModel: ObservableObject {
         didSet { savePlaylists() }
     }
     @Published var activePlaylistID: UUID? {
-        didSet { savePlaylistSettings(); restartPlaylistTimer() }
+        didSet {
+            // Each playlist continues where it left off when it becomes active again.
+            if oldValue != activePlaylistID {
+                if let oldValue { playlistPositions[oldValue] = playlistIndex }
+                playlistIndex = activePlaylistID.flatMap { playlistPositions[$0] } ?? 0
+            }
+            savePlaylistSettings(); restartPlaylistTimer()
+        }
     }
+    /// Where each playlist that isn't active stopped, for when it is chosen again.
+    private var playlistPositions: [UUID: Int] = [:]
+    /// The connected displays' ids; a playlist's shortcut starts it on those it last used.
+    var connectedScreenIds: @MainActor () -> Set<String> = { Set(NSScreen.screens.map(WallpaperViewModel.screenId(for:))) }
     @Published var playlistShuffle = false {
         didSet { savePlaylistSettings() }
     }
@@ -548,15 +559,44 @@ class WallpaperViewModel: ObservableObject {
             return
         }
         playlistIndex = next
-        setWallpaper(playlist.items[playlistIndex].wallpaper, for: selectedScreenIds)
+        showPlaylistItem(of: playlist)
         restartPlaylistTimer()
     }
 
     func previousPlaylistWallpaper() {
         guard let playlist = activePlaylist, !playlist.items.isEmpty else { return }
         playlistIndex = (playlistIndex - 1 + playlist.items.count) % playlist.items.count
-        setWallpaper(playlist.items[playlistIndex].wallpaper, for: selectedScreenIds)
+        showPlaylistItem(of: playlist)
         restartPlaylistTimer()
+    }
+
+    /// Shows the playlist's current item on the selected displays (where it is not already
+    /// shown) and remembers those displays as the playlist's.
+    private func showPlaylistItem(of playlist: WallpaperPlaylist) {
+        guard let item = playlist.items[safe: playlistIndex] else { return }
+        let wallpaper = item.wallpaper
+        let targets = selectedScreenIds.filter { self.wallpaper(for: $0).wallpaperDirectory != wallpaper.wallpaperDirectory }
+        if !targets.isEmpty { setWallpaper(wallpaper, for: targets) }
+        let displays = selectedScreenIds.sorted()
+        if let index = playlists.firstIndex(where: { $0.id == playlist.id }), playlists[index].displays != displays {
+            playlists[index].displays = displays
+        }
+    }
+
+    /// A playlist's global shortcut: makes it the active playlist and starts it. Rotate
+    /// automatically turns on and its wallpaper shows (the first, or where it left off) on the
+    /// displays it last used that are connected, else on the selected ones.
+    func startPlaylist(id: UUID) {
+        guard let playlist = playlists.first(where: { $0.id == id }) else { return }
+        activePlaylistID = id
+        let connected = connectedScreenIds()
+        let displays = Set(playlist.displays ?? []).intersection(connected)
+        if !displays.isEmpty { selectedScreenIds = displays }
+        if !playlist.items.isEmpty {
+            if !playlist.items.indices.contains(playlistIndex) { playlistIndex = 0 }
+            showPlaylistItem(of: playlist)
+        }
+        playlistEnabled = true
     }
 
     private func restartPlaylistTimer() {
