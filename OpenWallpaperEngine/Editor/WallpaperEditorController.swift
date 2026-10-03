@@ -150,6 +150,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         services.userPropertyChoices = { resources.userPropertyChoices() }
         services.timeline = timeline
         services.puppetAssets = EditorPuppetAssets.make(for: wallpaper)
+        services.depthMaps = DepthMapPlugin.services(for: wallpaper, resources: resources)
         let assets = particleAssets, directory = wallpaper.wallpaperDirectory
         do {
             services.particles = try ParticleEditorServices.make(
