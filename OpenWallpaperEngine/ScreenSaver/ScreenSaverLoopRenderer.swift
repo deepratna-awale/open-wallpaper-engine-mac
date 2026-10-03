@@ -243,7 +243,7 @@ struct ScreenSaverLoopRenderer {
         }
     }
 
-    private static func globalSettings(from defaults: UserDefaults) -> GlobalSettings {
+    static func globalSettings(from defaults: UserDefaults) -> GlobalSettings {
         guard let data = defaults.data(forKey: "GlobalSettings") else { return GlobalSettings() }
         do {
             return try JSONDecoder().decode(GlobalSettings.self, from: data)
@@ -277,7 +277,7 @@ private final class FrameCapture: @unchecked Sendable {
 }
 
 /// An HEVC `.mov` written frame by frame from `CGImage`s.
-private final class HEVCWriter {
+final class HEVCWriter {
     /// HEVC encoder quality (0…1) for the loop video.
     static let quality: Double = 0.95
     private let writer: AVAssetWriter
@@ -286,7 +286,7 @@ private final class HEVCWriter {
     private let pixelSize: SIMD2<Int>
     private let frameRate: Int
 
-    init?(url: URL, pixelSize: SIMD2<Int>, frameRate: Int) {
+    init?(url: URL, pixelSize: SIMD2<Int>, frameRate: Int, quality: Double = HEVCWriter.quality) {
         do {
             writer = try AVAssetWriter(outputURL: url, fileType: .mov)
         } catch {
@@ -299,7 +299,7 @@ private final class HEVCWriter {
             AVVideoCodecKey: AVVideoCodecType.hevc,
             AVVideoWidthKey: pixelSize.x,
             AVVideoHeightKey: pixelSize.y,
-            AVVideoCompressionPropertiesKey: [AVVideoQualityKey: Self.quality,
+            AVVideoCompressionPropertiesKey: [AVVideoQualityKey: quality,
                                               AVVideoExpectedSourceFrameRateKey: frameRate],
         ])
         input.expectsMediaDataInRealTime = false

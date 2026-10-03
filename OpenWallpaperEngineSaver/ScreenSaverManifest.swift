@@ -13,6 +13,8 @@ struct ScreenSaverManifest: Codable, Equatable {
         var file: String
         var width: Int
         var height: Int
+        /// Playback speed; nil plays at 1. Set for a video wallpaper played at another speed.
+        var rate: Float? = nil
     }
 
     var revision = ScreenSaverManifest.revision
