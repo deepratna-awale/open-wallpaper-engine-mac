@@ -86,7 +86,7 @@ final class ChromiumFeatureAdvisor: ObservableObject {
     private var scans: [String: Task<ChromiumFeatureFinding?, Never>] = [:]
 
     init(store: ChromiumFeatureStore = ChromiumFeatureStore(defaults: .app),
-         engine: @escaping () -> WebEngine = { WebEngineRouter.shared.engine },
+         engine: @escaping () -> WebEngine = { WebEngineRouter.shared.installed ? .chromium : .webKit },
          scanner: @escaping (URL) -> ChromiumFeatureScanner.Result = ChromiumFeatureScanner.scan(directory:),
          contentKey: @escaping (URL) -> String = ChromiumFeatureScanner.contentKey(of:)) {
         self.store = store

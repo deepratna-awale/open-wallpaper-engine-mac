@@ -595,8 +595,26 @@ struct WallpaperPreview: SubviewOfContentView {
 private struct ChromiumFeatureBadge: View {
     let wallpaper: WEWallpaper
     @ObservedObject private var advisor = ChromiumFeatureAdvisor.shared
+    @ObservedObject private var router = WebEngineRouter.shared
 
     var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            // Which engine plays it: Automatic (Chromium only when needed), or forced.
+            Picker("Web engine", selection: Binding(get: { router.override(for: wallpaper) },
+                                                    set: { router.setOverride($0, for: wallpaper) })) {
+                Text("Automatic").tag(WebEngineOverride.automatic)
+                Text(verbatim: "WebKit").tag(WebEngineOverride.webKit)
+                Text(verbatim: "Chromium").tag(WebEngineOverride.chromium)
+                    .selectionDisabled(!router.installed)
+            }
+            .pickerStyle(.menu)
+            .help("Automatic plays this wallpaper in Chromium only if it uses Chromium-only features and the engine is installed; otherwise in WebKit, which uses far less memory.")
+            badge
+        }
+        .task { await advisor.scan(wallpaper) }
+    }
+
+    @ViewBuilder private var badge: some View {
         Group {
             if let features = advisor.features(of: wallpaper), !features.isEmpty {
                 Label("Some features only available on Chromium", systemImage: "globe.badge.chevron.backward")
@@ -608,7 +626,6 @@ private struct ChromiumFeatureBadge: View {
                     .accessibilityValue(Text(verbatim: features.map(\.api).joined(separator: ", ")))
             }
         }
-        .task { await advisor.scan(wallpaper) }
     }
 }
 

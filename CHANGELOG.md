@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Web wallpapers in Chromium:** with the optional Chromium web engine installed (Settings › Plugins), every web wallpaper, and WebM video that needs a web page, plays in Chromium, as in Wallpaper Engine. User and general properties, the audio and media listeners, pause, mute, suspend while covered, the FPS limit and mouse input work as they do in WebKit, and local files are served with the same folder containment. A switch in the same place turns it off.
+- **Web wallpapers in Chromium:** with the optional Chromium web engine installed (Settings › Plugins), a web wallpaper that uses Chromium-only features plays in Chromium; the rest stay in WebKit, which uses far less memory. A wallpaper's details have a **Web engine** choice (Automatic, WebKit, Chromium) to force one. In Chromium, user and general properties, the audio and media listeners, pause, mute, suspend while covered, the FPS limit and mouse input work as in WebKit, and local files are served with the same folder containment.
 - **Wallpapers that need Chromium** are pointed out when Chromium isn't installed: applying one shows which Chromium-only web APIs it uses, with **Open Plugins** and **Use Anyway** (remembered for that wallpaper until it changes), and its details carry a "Some features only available on Chromium" badge.
 
 ### Changed

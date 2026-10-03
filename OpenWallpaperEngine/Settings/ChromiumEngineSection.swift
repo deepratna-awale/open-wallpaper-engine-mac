@@ -6,8 +6,6 @@ import SwiftUI
 struct ChromiumEngineSection: View {
     @StateObject private var installer = ChromiumEngineInstaller()
     @State private var removeError: String?
-    /// Whether the installed engine plays web wallpapers (`WebEngineRouting`).
-    @AppStorage(WebEngineRouting.enabledKey, store: .app) private var usesChromium = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -16,17 +14,14 @@ struct ChromiumEngineSection: View {
                 Spacer()
                 status
             }
-            Text("An optional Chromium engine for web wallpapers, downloaded on demand from the official CEF builds and checked against the version this app expects. It runs in its own process. While it is installed, every web wallpaper plays in it, as in Wallpaper Engine.")
+            Text("An optional Chromium engine for web wallpapers, downloaded on demand from the official CEF builds and checked against the version this app expects. It runs in its own process.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
-            if installer.installedVersion != nil {
-                Toggle("Use for web wallpapers", isOn: $usesChromium)
-                    .help("On as soon as the engine is installed: every web wallpaper plays in Chromium. Off: web wallpapers use the system's WebKit.")
-                    .onChange(of: usesChromium) {
-                        NotificationCenter.default.post(name: .chromiumEngineChanged, object: nil)
-                    }
-            }
+            // A Chromium page costs far more memory than WebKit's (`WebEngineRouting`).
+            Text("Used only for wallpapers that need it")
+                .font(.caption)
+                .foregroundStyle(.secondary)
             if let version = installer.installedVersion {
                 row("Version", Text(verbatim: version).font(.caption.monospaced()))
             }

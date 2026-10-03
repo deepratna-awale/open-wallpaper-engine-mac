@@ -107,7 +107,7 @@ It starts the embedded helper on the installed engine, waits for 30 frames and w
 
 ## Phase 2: web wallpapers in Chromium
 
-**Routing** (`WebEngineRouting`, `WebEngineRouter`): while an engine is installed and **Use for web wallpapers** is on (Settings › Plugins, default on), every web wallpaper plays in Chromium, and so does a WebM video that AVFoundation can't decode (it plays through a page either way). Otherwise WebKit. Installing, removing or switching rebuilds the wallpaper views on the other engine. There is no per-wallpaper choice.
+**Routing** (`WebEngineRouting`, `WebEngineRouter`): one Chromium page costs about 550 MB, far more than WebKit, so WebKit plays web wallpapers by default. Chromium plays a wallpaper when the engine is installed and the wallpaper needs it: the static scan found a Chromium-only API, or WebKit's runtime probe saw it fail on one (stored per content key; the wallpaper switches on its next load). The **Web engine** choice in a wallpaper's details (Automatic, WebKit, Chromium; Chromium unavailable without the engine) overrides that. Installing, removing or overriding rebuilds the views.
 
 ```
 WallpaperView ── web ──► ChromiumWebWallpaperView ─► WebWallpaperViewModel (the same one WebKit uses)

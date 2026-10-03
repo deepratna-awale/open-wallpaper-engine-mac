@@ -26,7 +26,7 @@ struct WallpaperView: View {
             // A video AVFoundation can't decode (WebM) plays through WebKit on either framework.
             // With the Chromium engine installed, that page is Chromium's (`WebEngineRouting`).
             if WebKitVideoPlayer.handles(wallpaper.mediaURL) {
-                if webEngine.engine == .chromium {
+                if webEngine.engine(for: wallpaper) == .chromium {
                     ChromiumVideoWallpaperView(wallpaperViewModel: viewModel, screenId: screenId)
                         .id("\(instance.wallpaper)-chromium")
                 } else {
@@ -49,7 +49,7 @@ struct WallpaperView: View {
         case "web":
             // Every web wallpaper plays in Chromium while it is installed and on, else in WebKit;
             // switching rebuilds the view on the other engine.
-            if webEngine.engine == .chromium {
+            if webEngine.engine(for: wallpaper) == .chromium {
                 ChromiumWebWallpaperView(wallpaperViewModel: viewModel, screenId: screenId)
                     .id("\(viewModel.propertyScope(for: screenId))-chromium")
             } else {
