@@ -132,6 +132,9 @@ class WallpaperViewModel: ObservableObject {
     var keepWorkshopPreview: ((WEWallpaper) throws -> WEWallpaper?)?
     /// Receives wallpaper frame times. Set by `SafeRestart`.
     var renderWatchdog: RenderWatchdog?
+    /// The settings and script services this model's scenes run with; nil: Open Wallpaper
+    /// Engine's. Set by the Wallpaper Editor's process for its canvas.
+    var sceneHost: SceneWallpaperHost?
     /// Lets the displays that show the same web wallpaper share one WebContent process.
     let webProcessGroup = WebProcessGroup()
     /// The scenes (and Metal videos) running on this model's displays, one per wallpaper however

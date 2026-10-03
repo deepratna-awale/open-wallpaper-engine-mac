@@ -3,35 +3,12 @@ import SwiftUI
 import OWEEditor
 import OWESceneEditing
 
-extension AppDelegate {
-    /// Opens `wallpaper` in the Wallpaper Editor (docs/editor-plan.md), its own window, one per
-    /// wallpaper; the Scene Inspector stays as it is. Scene wallpapers only.
-    func showWallpaperEditor(for wallpaper: WEWallpaper) {
-        guard WallpaperEditorController.canEdit(wallpaper) else { return }
-        let key = wallpaper.wallpaperDirectory.standardizedFileURL
-        if let editor = wallpaperEditors[key] {
-            editor.window.makeKeyAndOrderFront(nil)
-            return
-        }
-        do {
-            let editor = try WallpaperEditorController(wallpaper: wallpaper)
-            editor.onClose = { [weak self] in self?.wallpaperEditors[key] = nil }
-            wallpaperEditors[key] = editor
-            editor.window.makeKeyAndOrderFront(nil)
-        } catch {
-            OWELog.error(.ui, "The Wallpaper Editor can't open \(wallpaper.wallpaperDirectory.path): \(error)")
-            let alert = NSAlert()
-            alert.messageText = String(localized: "The Wallpaper Editor can’t open “\(wallpaper.project.displayTitle)”.")
-            alert.informativeText = String(localized: "Its scene can’t be read.")
-            alert.runModal()
-        }
-    }
-}
-
 /// One Wallpaper Editor window: the editor module's view (`WallpaperEditorView`) over the app's
 /// own pieces. The canvas is the wallpaper running through the real renderer, in a preview of its
 /// own (as the Workshop preview runs one); edits are an overlay saved beside the wallpaper
-/// (`SceneEditOverlayFiles`), which every running instance of it reloads with.
+/// (`SceneEditOverlayFiles`), which every running instance of it reloads with: this process's
+/// directly, Open Wallpaper Engine's through `sync` (the editor runs in a process of its own,
+/// `WallpaperEditorAppDelegate`).
 @MainActor
 final class WallpaperEditorController: NSObject, NSWindowDelegate {
     let wallpaper: WEWallpaper
@@ -40,6 +17,11 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
     /// The window closed; its owner lets go of the controller.
     var onClose: (() -> Void)?
     private let identity: WallpaperSettingsIdentity
+    /// Hands saves, drags, particle restarts and library additions to Open Wallpaper Engine's
+    /// process; nil keeps them in this one.
+    private let sync: WallpaperEditorChangeSync?
+    /// File › Save as Local Wallpaper… and Revert… for this window.
+    private let commands = WallpaperEditorCommands()
     /// The canvas's own wallpaper model, as the Workshop preview has: one display, muted.
     private let preview: WallpaperViewModel
     private let userPropertyUndo: EditorUserPropertyUndo
@@ -64,8 +46,10 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         wallpaper.project.type.caseInsensitiveCompare("scene") == .orderedSame
     }
 
-    init(wallpaper: WEWallpaper) throws {
+    /// `host`: the settings and script services the canvas runs with (nil: the app's).
+    init(wallpaper: WEWallpaper, host: SceneWallpaperHost? = nil, sync: WallpaperEditorChangeSync? = nil) throws {
         self.wallpaper = wallpaper
+        self.sync = sync
         let identity = WallpaperSettingsIdentity.resolve(directory: wallpaper.wallpaperDirectory)
         self.identity = identity
         let source = try WallpaperEditorSource.read(wallpaper)
@@ -91,6 +75,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         userPropertyUndo = EditorUserPropertyUndo(wallpaper: wallpaper, undoManager: session.undoManager,
                                                   coalescingInterval: session.coalescingInterval)
         let preview = WallpaperViewModel(persistsWallpapers: false)
+        preview.sceneHost = host
         preview.setWallpaper(wallpaper, for: preview.selectedScreenId)
         preview.playVolume = 0
         // The canvas is framed to the scene's own aspect, so stretching is exact.
@@ -113,6 +98,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
             guard let self else { return }
             SceneEditOverlayFiles.preview(overlay, base: self.session.baseOutline,
                                           wallpaperDirectory: self.wallpaper.wallpaperDirectory)
+            self.sync?.preview(overlay, folder: self.wallpaper.wallpaperDirectory, identity: self.identity)
         }
         timeline.onCanvasTime = { [weak self] seconds in self?.timelineCanvas.show(seconds) }
         let content = NSHostingView(rootView: WallpaperEditorView(session: session, services: makeServices()))
@@ -150,7 +136,9 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         services.userPropertyChoices = { resources.userPropertyChoices() }
         services.timeline = timeline
         services.puppetAssets = EditorPuppetAssets.make(for: wallpaper)
+        services.commands = commands
         let assets = particleAssets, directory = wallpaper.wallpaperDirectory
+        let sync = self.sync, identity = self.identity
         do {
             services.particles = try ParticleEditorServices.make(
                 session: session, readAsset: { assets.data($0) }, presets: assets.presets(labels: labels),
@@ -158,6 +146,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
                 restart: { layerID in
                     // The system is built again from nothing; the rest of the scene keeps running.
                     SceneEditOverlayFiles.postParticles(session.overlay, wallpaperDirectory: directory, objectIDs: [layerID])
+                    sync?.restartParticles([layerID], folder: directory, identity: identity)
                 })
         } catch {
             OWELog.error(.ui, "The Wallpaper Editor runs without its particle editor: its schema can't be read: \(error)")
@@ -183,6 +172,8 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
                                                base: session.baseOutline, change: change)
             }
             savedSceneDigest = digest
+            // Open Wallpaper Engine's instances read it and decide the same way.
+            sync?.overlayDidSave(folder: wallpaper.wallpaperDirectory, identity: identity)
         } catch {
             OWELog.error(.scene, "Can't save the editor overlay of \(wallpaper.project.title): \(error)")
         }
@@ -220,8 +211,21 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
                                                      files: baked.files,
                                                      additionalFiles: try session.overlay.particles?.assetFiles() ?? [:])
         OWELog.info(.library, "Saved \(wallpaper.project.title) with its editor edits as \(folder.path)")
-        AppDelegate.shared.contentViewModel.refresh()
+        // Open Wallpaper Engine's library lists it.
+        sync?.libraryDidChange()
         return title
+    }
+
+    // MARK: Menu
+
+    /// File › Save as Local Wallpaper…
+    @objc func saveAsLocalWallpaper(_ sender: Any?) {
+        commands.send(.saveAsLocalWallpaper)
+    }
+
+    /// File › Revert…
+    @objc func revertEdits(_ sender: Any?) {
+        commands.send(.revert)
     }
 
     // MARK: NSWindowDelegate
@@ -236,6 +240,8 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         timeline.isActive = false
         if let consoleToken { SceneScriptConsoleTap.stop(consoleToken) }
         consoleToken = nil
+        // A drag or restart left for Open Wallpaper Engine goes with the window.
+        sync?.editorDidClose(identity: identity)
         // The canvas's instance stops with its view.
         preview.playRate = 0
         window.contentView = nil

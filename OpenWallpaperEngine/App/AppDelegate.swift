@@ -96,8 +96,29 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var workshopPreviewWindow: NSWindow?
     private var workshopPreviewViewModel: WallpaperViewModel?
     var sceneInspectorWindow: NSWindow?
-    /// The open Wallpaper Editor windows, one per wallpaper folder.
-    var wallpaperEditors: [URL: WallpaperEditorController] = [:]
+    /// The Wallpaper Editor, a process of its own (`WallpaperEditorAppDelegate`): opening a
+    /// wallpaper in it, and its edits reaching the wallpapers running here.
+    private(set) lazy var wallpaperEditorLauncher: WallpaperEditorLauncher = {
+        let launcher = WallpaperEditorLauncher(dependencies: .init(messaging: processMessaging, channel: .current))
+        launcher.onShowMainWindow = { [weak self] in
+            guard let self else { return }
+            NSApp.activate(ignoringOtherApps: true)
+            _ = self.applicationShouldHandleReopen(NSApp, hasVisibleWindows: false)
+        }
+        launcher.onLaunchFailure = { error in
+            let alert = NSAlert()
+            alert.messageText = String(localized: "The Wallpaper Editor couldn’t be opened.")
+            alert.informativeText = error.localizedDescription
+            alert.runModal()
+        }
+        return launcher
+    }()
+    private lazy var editorChangeSync: WallpaperEditorChangeSync = {
+        let sync = WallpaperEditorChangeSync(role: .app, dependencies: .init(messaging: processMessaging, channel: .current))
+        sync.onLibraryChange = { [weak self] in self?.contentViewModel.refresh() }
+        return sync
+    }()
+    private lazy var processMessaging: AppProcessMessaging = DistributedAppProcessMessaging()
 
     var contentViewModel = ContentViewModel()
     var wallpaperViewModel = WallpaperViewModel()
@@ -206,6 +227,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         // Before the wallpaper windows exist, so a wallpaper behind an unclean exit never loads.
         safeRestart.attach(to: wallpaperViewModel)
+
+        // The Wallpaper Editor's process: what it saves reaches the wallpapers running here.
+        wallpaperEditorLauncher.start()
+        editorChangeSync.start(watch: true) { [weak self] in
+            guard let self else { return [] }
+            var folders = self.wallpaperViewModel.wallpapers.values.map(\.wallpaperDirectory)
+            if let preview = self.workshopPreviewViewModel { folders.append(preview.currentWallpaper.wallpaperDirectory) }
+            return folders
+        }
 
         // Settings › Process Priority: at launch, before any render thread starts, and on change.
         processPriorityCancellable = globalSettingsViewModel.$settings.map(\.processPiority).removeDuplicates()

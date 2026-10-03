@@ -31,11 +31,17 @@ MainActor.assumeIsolated {
 #endif
 	// Unit tests are hosted in the app; skip the delegate so a test run doesn't open wallpaper
 	// windows, start playback or overwrite the user's saved state.
+	var delegate: NSApplicationDelegate?
 	if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
-		NSApplication.shared.delegate = AppDelegate.shared
+		// Open Wallpaper Engine, or the Wallpaper Editor in a process of its own (`AppLaunchPlan`).
+		delegate = AppLaunchPlan.plan(for: AppLaunchMode.parse(ProcessInfo.processInfo.arguments)).makeDelegate()
+		NSApplication.shared.delegate = delegate
 	} else {
 		// A test host has no delegate, so it marks its own Dock icon (`DockBadge.test`).
 		DockBadge.current.apply(to: NSApplication.shared.dockTile)
 	}
-	NSApplication.shared.run()
+	// `NSApplication.delegate` is weak: the delegate lives as long as the app runs.
+	withExtendedLifetime(delegate) {
+		NSApplication.shared.run()
+	}
 }

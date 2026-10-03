@@ -36,7 +36,7 @@ extension SceneEditOverlay {
     }
 
     /// The structure alone: what layers and effects there are, in which order, without any value edit.
-    var structureOnly: SceneEditOverlay {
+    public var structureOnly: SceneEditOverlay {
         var result = SceneEditOverlay()
         result.added = added
         result.removed = removed

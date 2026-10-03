@@ -55,6 +55,8 @@ public struct WallpaperEditorServices {
     public var puppetAssets: PuppetEditorAssets?
     /// The particle editor (WE's presets and textures, restarting a system); nil leaves it out.
     public var particles: ParticleEditorServices?
+    /// The app menu's document actions for this window; nil when only the toolbar offers them.
+    public var commands: WallpaperEditorCommands?
 
     public init(makeCanvas: @escaping () -> AnyView, userProperties: (() -> AnyView)? = nil,
                 blendModeTitle: String, blendModes: [InspectorOption], effectHelp: @escaping (String) -> String,

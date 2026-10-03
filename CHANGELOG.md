@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The Wallpaper Editor runs as its own app.** It has its own Dock icon and menu bar ("Wallpaper Editor"), one process for every wallpaper you edit. Quitting Open Wallpaper Engine leaves it open, closing it leaves Open Wallpaper Engine as it was, and a crash of one doesn't take the other down. Edits, drags and property changes still show on the desktop as you make them; the editor quits when its last window closes.
+
 - **Closing the last window** leaves Open Wallpaper Engine in the menu bar without a Dock icon; the icon comes back when a window opens (from the menu bar, a menu or reopening the app). A minimised window keeps the Dock icon, where it is restored from. The app also starts without a Dock icon when it opens no window.
 - **Loading a scene wallpaper** shows a full-resolution picture of the scene's own frame instead of its low-resolution Workshop preview, then crossfades to the live scene as before. The picture is taken when a wallpaper is downloaded or imported, and refreshed once per session while a wallpaper runs (and after its properties change), for each display size. It is stored in the Caches folder, capped in size, and removed with the wallpaper. The Workshop preview is still shown until a wallpaper has one.
 

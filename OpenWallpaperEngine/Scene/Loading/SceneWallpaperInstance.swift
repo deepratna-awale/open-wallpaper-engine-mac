@@ -384,7 +384,7 @@ final class SceneWallpaperInstance {
             let transient = info?["transient"] as? Bool ?? false
             MainActor.assumeIsolated {
                 guard let self,
-                      directory == self.viewModel.currentWallpaper.wallpaperDirectory.standardizedFileURL else { return }
+                      self.runsWallpaper(in: directory) else { return }
                 self.snapshotCapture?.rearm()
                 self.wakePacing(.slow)
                 if self.applyEditorEdits(overlay: overlay, base: base) { return }
@@ -402,7 +402,7 @@ final class SceneWallpaperInstance {
             let objectIDs = Set(notification.userInfo?["objectIDs"] as? [Int] ?? [])
             MainActor.assumeIsolated {
                 guard let self,
-                      directory == self.viewModel.currentWallpaper.wallpaperDirectory.standardizedFileURL else { return }
+                      self.runsWallpaper(in: directory) else { return }
                 self.viewModel.setEditorAssets(assets)
                 self.snapshotCapture?.rearm()
                 self.wakePacing(.slow)
