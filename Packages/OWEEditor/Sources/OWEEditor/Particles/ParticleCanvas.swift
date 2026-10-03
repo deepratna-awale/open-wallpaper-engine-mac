@@ -61,13 +61,13 @@ enum ParticleCanvasInteraction {
         switch drag {
         case .move(_, _, _, let moved):
             guard moved else { model.session.dragPreview = nil; return }
-            model.session.endDrag(actionName: PL("Move Particle System"))
+            model.session.endDrag(actionName: PartL("Move Particle System"))
         case .controlPoint(_, let path, let handle, _, let moved):
             let preview = model.controlPointPreview
             model.controlPointPreview = nil
             guard moved, let preview else { return }
             model.setControlPointOffset(preview.offset, index: handle.index, definition: path,
-                                        actionName: PL("Move Control Point"))
+                                        actionName: PartL("Move Control Point"))
         }
     }
 
@@ -147,12 +147,12 @@ struct ParticleAddMenu: View {
 
     var body: some View {
         Menu {
-            Button(PL("Blank Particle System")) {
-                services.model.addBlankSystem(name: PL("Particle System"), actionName: PL("Add Particle System"))
+            Button(PartL("Blank Particle System")) {
+                services.model.addBlankSystem(name: PartL("Particle System"), actionName: PartL("Add Particle System"))
             }
             if !services.presets.isEmpty {
                 Divider()
-                Section(PL("Presets")) {
+                Section(PartL("Presets")) {
                     ForEach(services.presets) { preset in
                         if preset.variants.count == 1, let variant = preset.variants.first {
                             Button(preset.title) { add(preset, variant) }
@@ -167,16 +167,12 @@ struct ParticleAddMenu: View {
                 }
             }
         } label: {
-            Label(PL("Add Particle System"), systemImage: "sparkles")
+            Label(PartL("Add Particle System"), systemImage: "sparkles")
         }
-        .help(PL("Add a particle system: a blank one or one of WE’s presets"))
+        .help(PartL("Add a particle system: a blank one or one of WE’s presets"))
     }
 
     private func add(_ preset: ParticlePreset, _ variant: ParticlePreset.Variant) {
-        services.model.addPreset(preset, variant: variant, actionName: PL("Add \(variant.title)"))
+        services.model.addPreset(preset, variant: variant, actionName: PartL("Add \(variant.title)"))
     }
-}
-
-private extension CGPoint {
-    init(_ point: SIMD2<Double>) { self.init(x: point.x, y: point.y) }
 }

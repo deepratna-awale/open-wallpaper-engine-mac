@@ -37,7 +37,7 @@ struct ParticleSystemSections: View {
                 }
             } else {
                 Section {
-                    Label(PL("This particle system’s file can’t be read."), systemImage: "exclamationmark.triangle")
+                    Label(PartL("This particle system’s file can’t be read."), systemImage: "exclamationmark.triangle")
                         .foregroundStyle(.secondary)
                 }
             }
@@ -51,17 +51,17 @@ struct ParticleSystemSections: View {
                 Button {
                     childPath.removeLast()
                 } label: {
-                    Label(PL("Back to \(parent)"), systemImage: "chevron.backward")
+                    Label(PartL("Back to \(parent)"), systemImage: "chevron.backward")
                 }
                 .buttonStyle(.link)
             }
-            LabeledContent(PL("File")) {
+            LabeledContent(PartL("File")) {
                 HStack(spacing: 4) {
                     Text(path).textSelection(.enabled).lineLimit(1).truncationMode(.middle)
                     if model.isEdited(path) {
                         Circle().fill(.tint).frame(width: 6, height: 6)
-                            .help(PL("Edited"))
-                            .accessibilityLabel(PL("Edited"))
+                            .help(PartL("Edited"))
+                            .accessibilityLabel(PartL("Edited"))
                     }
                 }
             }
@@ -69,29 +69,29 @@ struct ParticleSystemSections: View {
                 Button {
                     services.restart(layer.id)
                 } label: {
-                    Label(PL("Restart System"), systemImage: "arrow.clockwise")
+                    Label(PartL("Restart System"), systemImage: "arrow.clockwise")
                 }
-                .help(PL("Start the system again from its first particle"))
+                .help(PartL("Start the system again from its first particle"))
                 Spacer(minLength: 4)
                 Button {
-                    model.duplicateSystem(layer.id, name: PL("\(layer.title) Copy"), actionName: PL("Duplicate Particle System"))
+                    model.duplicateSystem(layer.id, name: PartL("\(layer.title) Copy"), actionName: PartL("Duplicate Particle System"))
                 } label: {
-                    Label(PL("Duplicate"), systemImage: "plus.square.on.square").labelStyle(.iconOnly)
+                    Label(PartL("Duplicate"), systemImage: "plus.square.on.square").labelStyle(.iconOnly)
                 }
-                .help(PL("Duplicate Particle System"))
+                .help(PartL("Duplicate Particle System"))
                 Button(role: .destructive) {
-                    model.deleteSystem(layer.id, actionName: PL("Delete Particle System"))
+                    model.deleteSystem(layer.id, actionName: PartL("Delete Particle System"))
                 } label: {
-                    Label(PL("Delete"), systemImage: "trash").labelStyle(.iconOnly)
+                    Label(PartL("Delete"), systemImage: "trash").labelStyle(.iconOnly)
                 }
-                .help(PL("Delete Particle System"))
+                .help(PartL("Delete Particle System"))
             }
             .buttonStyle(.borderless)
             if model.pixelUnits {
-                Toggle(PL("Show Control Points on the Canvas"), isOn: $model.showsControlPoints)
+                Toggle(PartL("Show Control Points on the Canvas"), isOn: $model.showsControlPoints)
             }
         } header: {
-            Text(childPath.isEmpty ? PL("Particle System") : PL("Child System"))
+            Text(childPath.isEmpty ? PartL("Particle System") : PartL("Child System"))
         }
     }
 
@@ -115,7 +115,7 @@ private struct ParticleInstanceSection: View {
                         ParticleFieldRow(field: field, kind: field.kind,
                                          value: SceneFieldBinding.literal(of: values[field.key]) ?? field.addDefault) { value, coalescing in
                             model.setInstanceOverride(field.key, to: value, of: layer.id,
-                                                      actionName: PL("Change Instance Override"), coalescing: coalescing)
+                                                      actionName: PartL("Change Instance Override"), coalescing: coalescing)
                         }
                     }
                 }
@@ -125,14 +125,14 @@ private struct ParticleInstanceSection: View {
                     ParticleColorWell(value: SceneFieldBinding.literal(of: values["colorn"]) ?? .string("1 1 1"),
                                       normalized: true) { value in
                         model.setInstanceOverride("colorn", to: value, of: layer.id,
-                                                  actionName: PL("Change Instance Override"), coalescing: true)
+                                                  actionName: PartL("Change Instance Override"), coalescing: true)
                     }
                 }
             }
         } header: {
-            Text(PL("Instance Override"))
+            Text(PartL("Instance Override"))
         } footer: {
-            Text(PL("Scales this layer’s system without changing its file."))
+            Text(PartL("Scales this layer’s system without changing its file."))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -143,7 +143,7 @@ private struct ParticleInstanceSection: View {
                                                  @ViewBuilder control: () -> Control) -> some View {
         if case .userProperty(let name) = SceneFieldBinding(values[key]) {
             LabeledContent(PLSchema(Self.labels[key] ?? key)) {
-                Text(PL("Set by the user property “\(name)”"))
+                Text(PartL("Set by the user property “\(name)”"))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.trailing)
             }
@@ -174,24 +174,24 @@ private struct ParticleGeneralSection: View {
                     ParticleFieldRow(field: field, kind: field.effectiveKind(in: values),
                                      value: ParticleDefinition.shownValue(of: field, in: definition.root, pixelUnits: model.pixelUnits)) { value, coalescing in
                         model.setField(field, to: value, section: .system, index: nil, definition: path,
-                                       actionName: PL("Change \(field.localizedLabel)"), coalescing: coalescing)
+                                       actionName: PartL("Change \(field.localizedLabel)"), coalescing: coalescing)
                     }
                 }
             }
         } header: {
-            Text(PL("General"))
+            Text(PartL("General"))
         }
     }
 
     @ViewBuilder private var materialRows: some View {
         let material = model.material(ofDefinition: path)
-        LabeledContent(PL("Texture")) {
+        LabeledContent(PartL("Texture")) {
             Button {
                 isPickingTexture = true
             } label: {
                 HStack(spacing: 6) {
                     ParticleTextureThumbnail(services: services, name: material?.texture, size: 22)
-                    Text(material?.texture ?? PL("None")).lineLimit(1).truncationMode(.middle)
+                    Text(material?.texture ?? PartL("None")).lineLimit(1).truncationMode(.middle)
                     Image(systemName: "chevron.up.chevron.down").font(.caption2).foregroundStyle(.secondary)
                 }
             }
@@ -199,19 +199,19 @@ private struct ParticleGeneralSection: View {
             .disabled(material == nil)
             .popover(isPresented: $isPickingTexture, arrowEdge: .leading) {
                 ParticleTexturePicker(services: services, selected: material?.texture) { name in
-                    model.editMaterial(ofDefinition: path, actionName: PL("Change Texture")) { $0.texture = name }
+                    model.editMaterial(ofDefinition: path, actionName: PartL("Change Texture")) { $0.texture = name }
                     isPickingTexture = false
                 }
             }
         }
         if let material {
-            LabeledContent(PL("Blending")) {
+            LabeledContent(PartL("Blending")) {
                 Picker(selection: Binding(
                     get: { material.string("blending")?.lowercased() ?? "translucent" },
-                    set: { value in model.editMaterial(ofDefinition: path, actionName: PL("Change Blending")) { $0.setString(value, for: "blending") } })) {
-                    Text(PL("Normal")).tag("normal")
-                    Text(PL("Translucent")).tag("translucent")
-                    Text(PL("Additive")).tag("additive")
+                    set: { value in model.editMaterial(ofDefinition: path, actionName: PartL("Change Blending")) { $0.setString(value, for: "blending") } })) {
+                    Text(PartL("Normal")).tag("normal")
+                    Text(PartL("Translucent")).tag("translucent")
+                    Text(PartL("Additive")).tag("additive")
                     if !ParticleMaterial.blendings.contains(material.string("blending")?.lowercased() ?? "translucent") {
                         Text(verbatim: material.string("blending") ?? "").tag(material.string("blending")?.lowercased() ?? "")
                     }
@@ -219,30 +219,30 @@ private struct ParticleGeneralSection: View {
                 .labelsHidden()
                 .fixedSize()
             }
-            LabeledContent(PL("Overbright")) {
+            LabeledContent(PartL("Overbright")) {
                 NumericSliderInput(value: Binding(
                     get: { material.constant(ParticleMaterial.overbrightKey)?.doubleValue ?? 1 },
                     set: { value in
-                        model.editMaterial(ofDefinition: path, actionName: PL("Change Overbright"),
+                        model.editMaterial(ofDefinition: path, actionName: PartL("Change Overbright"),
                                            coalescingKey: "particle-material:\(path):overbright") {
                             $0.setConstant(.number(value), for: ParticleMaterial.overbrightKey)
                         }
                     }), range: 0...5, defaultValue: 1, fractionDigits: 2, fieldWidth: 48, clampsTypedValue: false)
             }
-            modePicker(PL("Depth Test"), key: "depthtest", material: material,
-                       options: [("enabled", PL("Enabled")), ("disabled", PL("Disabled"))], fallback: "disabled")
-            modePicker(PL("Depth Write"), key: "depthwrite", material: material,
-                       options: [("enabled", PL("Enabled")), ("disabled", PL("Disabled"))], fallback: "disabled")
-            modePicker(PL("Culling"), key: "cullmode", material: material,
-                       options: [("normal", PL("Normal")), ("nocull", PL("No Cull"))], fallback: "nocull")
+            modePicker(PartL("Depth Test"), key: "depthtest", material: material,
+                       options: [("enabled", PartL("Enabled")), ("disabled", PartL("Disabled"))], fallback: "disabled")
+            modePicker(PartL("Depth Write"), key: "depthwrite", material: material,
+                       options: [("enabled", PartL("Enabled")), ("disabled", PartL("Disabled"))], fallback: "disabled")
+            modePicker(PartL("Culling"), key: "cullmode", material: material,
+                       options: [("normal", PartL("Normal")), ("nocull", PartL("No Cull"))], fallback: "nocull")
             if let materialPath = definition.materialPath {
-                LabeledContent(PL("Material")) {
+                LabeledContent(PartL("Material")) {
                     Text(materialPath).font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
                         .textSelection(.enabled)
                 }
             }
         } else if let materialPath = definition.materialPath {
-            Label(PL("The material “\(materialPath)” can’t be read."), systemImage: "exclamationmark.triangle")
+            Label(PartL("The material “\(materialPath)” can’t be read."), systemImage: "exclamationmark.triangle")
                 .foregroundStyle(.secondary)
         }
     }
@@ -252,7 +252,7 @@ private struct ParticleGeneralSection: View {
         LabeledContent(title) {
             Picker(selection: Binding(
                 get: { material.string(key)?.lowercased() ?? fallback },
-                set: { value in model.editMaterial(ofDefinition: path, actionName: PL("Change \(title)")) { $0.setString(value, for: key) } })) {
+                set: { value in model.editMaterial(ofDefinition: path, actionName: PartL("Change \(title)")) { $0.setString(value, for: key) } })) {
                 ForEach(options, id: \.0) { option in Text(option.1).tag(option.0) }
             } label: { EmptyView() }
             .labelsHidden()
@@ -292,14 +292,14 @@ struct ParticleTexturePicker: View {
     var body: some View {
         let matching = services.textures.filter { search.isEmpty || $0.name.localizedCaseInsensitiveContains(search) }
         VStack(alignment: .leading, spacing: 8) {
-            TextField(PL("Search Textures"), text: $search)
+            TextField(PartL("Search Textures"), text: $search)
                 .textFieldStyle(.roundedBorder)
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 10) {
-                    group(PL("This Wallpaper"), matching.filter { !$0.isShared })
-                    group(PL("Wallpaper Engine"), matching.filter(\.isShared))
+                    group(PartL("This Wallpaper"), matching.filter { !$0.isShared })
+                    group(PartL("Wallpaper Engine"), matching.filter(\.isShared))
                     if matching.isEmpty {
-                        Text(PL("No textures")).foregroundStyle(.secondary)
+                        Text(PartL("No textures")).foregroundStyle(.secondary)
                     }
                 }
             }
@@ -323,14 +323,14 @@ struct ParticleTexturePicker: View {
                             Text((texture.name as NSString).lastPathComponent)
                                 .font(.caption2).lineLimit(1).truncationMode(.middle)
                             if texture.frames > 1 {
-                                Text(PL("\(texture.frames) frames"))
+                                Text(PartL("\(texture.frames) frames"))
                                     .font(.caption2).foregroundStyle(.secondary)
                             }
                         }
                         .frame(width: 72)
                     }
                     .buttonStyle(.plain)
-                    .help(texture.frames > 1 ? PL("\(texture.name): sprite sheet of \(texture.frames) frames") : texture.name)
+                    .help(texture.frames > 1 ? PartL("\(texture.name): sprite sheet of \(texture.frames) frames") : texture.name)
                 }
             }
         }

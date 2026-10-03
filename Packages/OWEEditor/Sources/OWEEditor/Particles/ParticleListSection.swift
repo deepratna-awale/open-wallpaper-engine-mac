@@ -40,7 +40,7 @@ struct ParticleListSection: View {
             Menu {
                 ForEach(model.schema.components(in: section).filter(\.isAddable)) { component in
                     Button(component.localizedTitle) {
-                        model.addComponent(component, to: path, actionName: PL("Add \(component.localizedTitle)"))
+                        model.addComponent(component, to: path, actionName: PartL("Add \(component.localizedTitle)"))
                     }
                 }
             } label: {
@@ -53,7 +53,7 @@ struct ParticleListSection: View {
         } else {
             Button {
                 if section == .children {
-                    model.addChild(to: path, actionName: PL("Add Child System"))
+                    model.addChild(to: path, actionName: PartL("Add Child System"))
                 } else if let component = model.schema.component(section) {
                     model.addComponent(component, to: path, actionName: section.addTitle)
                 }
@@ -62,7 +62,7 @@ struct ParticleListSection: View {
             }
             .buttonStyle(.borderless)
             .disabled(full)
-            .help(full ? PL("A system has at most eight control points.") : section.addTitle)
+            .help(full ? PartL("A system has at most eight control points.") : section.addTitle)
         }
     }
 }
@@ -87,7 +87,7 @@ private struct ParticleComponentRow: View {
             if let component {
                 fields(component)
             } else {
-                Text(PL("WE’s editor doesn’t offer this component; it is kept as authored."))
+                Text(PartL("WE’s editor doesn’t offer this component; it is kept as authored."))
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
@@ -97,27 +97,27 @@ private struct ParticleComponentRow: View {
                 Spacer(minLength: 4)
                 Group {
                     Button { move(-1) } label: {
-                        Label(PL("Move Up"), systemImage: "chevron.up").labelStyle(.iconOnly)
+                        Label(PartL("Move Up"), systemImage: "chevron.up").labelStyle(.iconOnly)
                     }
                     .disabled(index == 0)
-                    .help(PL("Move Up"))
+                    .help(PartL("Move Up"))
                     Button { move(1) } label: {
-                        Label(PL("Move Down"), systemImage: "chevron.down").labelStyle(.iconOnly)
+                        Label(PartL("Move Down"), systemImage: "chevron.down").labelStyle(.iconOnly)
                     }
                     .disabled(index >= count - 1)
-                    .help(PL("Move Down"))
+                    .help(PartL("Move Down"))
                     Button(role: .destructive) { remove() } label: {
-                        Label(PL("Remove"), systemImage: "minus.circle").labelStyle(.iconOnly)
+                        Label(PartL("Remove"), systemImage: "minus.circle").labelStyle(.iconOnly)
                     }
-                    .help(PL("Remove"))
+                    .help(PartL("Remove"))
                 }
                 .buttonStyle(.borderless)
             }
             .contextMenu {
-                Button(PL("Move Up")) { move(-1) }.disabled(index == 0)
-                Button(PL("Move Down")) { move(1) }.disabled(index >= count - 1)
+                Button(PartL("Move Up")) { move(-1) }.disabled(index == 0)
+                Button(PartL("Move Down")) { move(1) }.disabled(index >= count - 1)
                 Divider()
-                Button(PL("Remove"), role: .destructive) { remove() }
+                Button(PartL("Remove"), role: .destructive) { remove() }
             }
         }
     }
@@ -125,12 +125,12 @@ private struct ParticleComponentRow: View {
     private var title: String {
         switch section {
         case .controlpoint:
-            return PL("Control Point \(index)")
+            return PartL("Control Point \(index)")
         case .children:
-            let name = item["name"]?.stringValue.map { ($0 as NSString).lastPathComponent } ?? PL("Child")
+            let name = item["name"]?.stringValue.map { ($0 as NSString).lastPathComponent } ?? PartL("Child")
             return name
         default:
-            return component?.localizedTitle ?? item["name"]?.stringValue ?? PL("Unnamed")
+            return component?.localizedTitle ?? item["name"]?.stringValue ?? PartL("Unnamed")
         }
     }
 
@@ -138,12 +138,12 @@ private struct ParticleComponentRow: View {
         let pixelUnits = model.pixelUnits
         let values = ParticleDefinition.conditionValues(item, component: component, pixelUnits: pixelUnits)
         if section == .children {
-            LabeledContent(PL("File")) {
+            LabeledContent(PartL("File")) {
                 HStack(spacing: 6) {
                     Text(item["name"]?.stringValue ?? "—").lineLimit(1).truncationMode(.middle)
                     if let child = item["name"]?.stringValue, model.definition(child) != nil {
-                        Button(PL("Edit")) { openChild(child) }
-                            .help(PL("Edit the child system"))
+                        Button(PartL("Edit")) { openChild(child) }
+                            .help(PartL("Edit the child system"))
                     }
                 }
             }
@@ -159,7 +159,7 @@ private struct ParticleComponentRow: View {
             ParticleFieldRow(field: field, kind: field.effectiveKind(in: values),
                              value: ParticleDefinition.shownValue(of: field, in: item, pixelUnits: pixelUnits)) { value, coalescing in
                 model.setField(field, to: value, section: section, index: index, definition: path,
-                               actionName: PL("Change \(field.localizedLabel)"), coalescing: coalescing)
+                               actionName: PartL("Change \(field.localizedLabel)"), coalescing: coalescing)
             }
         }
         if let name = component.name, ParticleLifetimeRamp.names.contains(name) {
@@ -175,10 +175,10 @@ private struct ParticleComponentRow: View {
         let destination = index + step
         guard destination >= 0, destination < count else { return }
         model.moveComponent(section, from: index, to: destination, in: path,
-                            actionName: step < 0 ? PL("Move Up") : PL("Move Down"))
+                            actionName: step < 0 ? PartL("Move Up") : PartL("Move Down"))
     }
 
     private func remove() {
-        model.removeComponent(section, at: index, from: path, actionName: PL("Remove \(title)"))
+        model.removeComponent(section, at: index, from: path, actionName: PartL("Remove \(title)"))
     }
 }

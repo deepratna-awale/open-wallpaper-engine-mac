@@ -26,7 +26,7 @@ final class ParticleEditorLocalizationTests: XCTestCase {
     /// `PL("…")` keys in the particle editor's sources, interpolations as the catalog's specifiers.
     private func usedKeys() throws -> Set<String> {
         var keys = Set<String>()
-        let regex = try NSRegularExpression(pattern: #"PL\("((?:[^"\\]|\\\([^)]*\))*)"\)"#)
+        let regex = try NSRegularExpression(pattern: #"PartL\("((?:[^"\\]|\\\([^)]*\))*)"\)"#)
         let files = try FileManager.default.contentsOfDirectory(at: Self.sources, includingPropertiesForKeys: nil)
             .filter { $0.pathExtension == "swift" }
         for file in files {

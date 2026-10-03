@@ -217,7 +217,7 @@ struct ParticleColorList: View {
             }), in: lower...upper) {
                 Text(verbatim: "\(colors.count)").monospacedDigit()
             }
-            .help(PL("Number of colours"))
+            .help(PartL("Number of colours"))
         }
     }
 }
@@ -308,7 +308,7 @@ struct ParticleLifetimeRamp: View {
                 .frame(height: 30)
                 .background(RoundedRectangle(cornerRadius: 4).fill(.quaternary.opacity(0.4)))
             }
-            Text(PL("Over the particle’s lifetime"))
+            Text(PartL("Over the particle’s lifetime"))
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }

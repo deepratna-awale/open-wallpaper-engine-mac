@@ -52,6 +52,7 @@ public struct SceneOutline: Sendable {
     init(layers: [SceneLayer], size: SIMD2<Double>?) {
         self.layers = layers
         self.size = size
+        sceneData = nil
         var byID: [Int: Int] = [:]
         for (position, layer) in layers.enumerated() where byID[layer.id] == nil { byID[layer.id] = position }
         self.byID = byID

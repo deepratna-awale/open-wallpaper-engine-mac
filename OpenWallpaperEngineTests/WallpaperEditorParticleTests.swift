@@ -136,7 +136,8 @@ final class WallpaperEditorParticleTests: XCTestCase {
 
     func testTheOverlaysSystemsAndDocumentsLoad() throws {
         let scene = Data(#"""
-        {"general": {"orthogonalprojection": {"width": 1920, "height": 1080}},
+        {"camera": {"center": "0 0 -1", "eye": "0 0 0", "up": "0 1 0"},
+         "general": {"orthogonalprojection": {"width": 1920, "height": 1080}},
          "objects": [{"id": 1, "image": "a.json"}, {"id": 2, "name": "Old", "particle": "particles/old.json"}]}
         """#.utf8)
         var overlay = SceneEditOverlay()
