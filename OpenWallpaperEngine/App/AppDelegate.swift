@@ -172,6 +172,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     static var shared = AppDelegate()
     
     func applicationWillFinishLaunching(_ notification: Notification) {
+        // Animated previews are built in now; the old plugin's on/off is dropped.
+        ThumbnailAnimation.removeRetiredPreference(from: .app)
 
         workshopDependencyCancellable = wallpaperViewModel.$wallpapers.sink { [weak self] wallpapers in
             for wallpaper in wallpapers.values {

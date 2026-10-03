@@ -113,6 +113,7 @@ A primeira compilação a partir do código-fonte baixa o pacote Swift Sparkle. 
 
 ### Oficina e biblioteca
 - Os filtros da Oficina do Wallpaper Engine: Mostrar Apenas, um filtro de resolução, gêneros combinados com E/OU e tags em cada cartão.
+- **Pré-visualizações animadas** — os blocos de imagens de fundo na biblioteca reproduzem a animação de pré-visualização da Oficina (GIF), para você ver uma imagem de fundo em movimento antes de aplicá-la. Elas só são reproduzidas enquanto estão visíveis e pausam quando a janela está oculta ou no Modo de Pouca Energia.
 - Imagens de fundo instaladas mostram suas tags da Oficina e podem ser filtradas por elas; itens que são apenas recursos ou dependências ficam fora de Instaladas.
 - Dependências da Oficina que faltam são baixadas automaticamente, e as que não são mais usadas são removidas após uma exclusão. Todo download vai para a pasta Armazenamento de Imagens de Fundo.
 - **Redefinir** em Detalhes devolve as propriedades de uma imagem de fundo, e suas edições no Inspetor de Cena, aos padrões definidos pelo autor.
