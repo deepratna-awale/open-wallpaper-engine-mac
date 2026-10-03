@@ -88,6 +88,9 @@ struct EffectsSection: View {
             .menuIndicator(.hidden)
             .fixedSize()
         }
+        // Scripts and bindings name an effect by its authored index (they apply before effects are
+        // added or reordered).
+        .fieldAuthoring(layer: layer.id, path: .effect(Int(effect.key) ?? effect.id))
     }
 
     /// Up is earlier (applied first), as the list reads top to bottom.

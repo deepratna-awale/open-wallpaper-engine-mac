@@ -1,0 +1,92 @@
+import SwiftUI
+import OWESceneEditing
+
+/// The properties panel as the user will see it, live: the properties in order, each with its
+/// control, shown only while its condition holds. Values here are the preview's own (starting at
+/// the defaults) and never change the wallpaper.
+struct UserPropertiesPreview: View {
+    let properties: [UserPropertyDraft]
+    @State private var values: [String: String] = [:]
+
+    var body: some View {
+        let current = resolvedValues
+        Form {
+            let visible = properties.filter { property in
+                property.condition.map { UserPropertyConditionExpression($0).evaluate(current) } ?? true
+            }
+            if visible.isEmpty {
+                Text(L("No properties to show.")).foregroundStyle(.secondary)
+            }
+            ForEach(visible) { property in
+                row(property, value: current[property.key] ?? property.defaultText)
+            }
+            if !values.isEmpty {
+                Button(L("Reset Preview")) { values = [:] }
+                    .buttonStyle(.borderless)
+            }
+        }
+        .formStyle(.grouped)
+    }
+
+    /// The preview's values over the defaults.
+    private var resolvedValues: [String: String] {
+        var resolved: [String: String] = [:]
+        for property in properties where property.kind.hasValue {
+            resolved[property.key] = values[property.key] ?? property.defaultText
+        }
+        return resolved
+    }
+
+    private func set(_ key: String, _ value: String) {
+        values[key] = value
+    }
+
+    @ViewBuilder private func row(_ property: UserPropertyDraft, value: String) -> some View {
+        let title = PropertyTitle.title(property)
+        if property.kind == .bool {
+            Toggle(title, isOn: Binding(get: { value == "true" || value == "1" },
+                                        set: { set(property.key, $0 ? "true" : "false") }))
+        } else if property.kind == .slider {
+            let lower = property.minimum ?? 0
+            let upper = max(property.maximum ?? 1, lower + 0.0001)
+            LabeledContent(title) {
+                HStack {
+                    Slider(value: Binding(get: { min(max(Double(value) ?? lower, lower), upper) },
+                                          set: { set(property.key, SceneVector.string([PropertyFormat.rounded($0, property)])) }),
+                           in: lower...upper)
+                    Text(Self.formatted(Double(value) ?? lower, property))
+                        .monospacedDigit()
+                        .frame(minWidth: 40, alignment: .trailing)
+                }
+            }
+        } else if property.kind == .color {
+            ColorPicker(title, selection: Binding(get: { PropertyColor.color(value) },
+                                                  set: { set(property.key, PropertyColor.text($0)) }),
+                        supportsOpacity: false)
+        } else if property.kind == .combo {
+            Picker(title, selection: Binding(get: { value }, set: { set(property.key, $0) })) {
+                ForEach(property.options, id: \.value) { option in
+                    Text(option.label).tag(option.value)
+                }
+            }
+        } else if property.kind == .textInput {
+            TextField(title, text: Binding(get: { value }, set: { set(property.key, $0) }))
+        } else if property.kind == .file || property.kind == .directory {
+            LabeledContent(title) {
+                Button(property.kind == .file ? L("Choose File…") : L("Choose Folder…")) {}
+                    .disabled(true)
+            }
+        } else if property.kind == .text {
+            Text(title)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        } else {
+            LabeledContent(title, value: value)
+        }
+    }
+
+    static func formatted(_ number: Double, _ property: UserPropertyDraft) -> String {
+        property.fraction == false ? String(Int(number.rounded())) : String(format: "%.\(property.decimals)f", number)
+    }
+}

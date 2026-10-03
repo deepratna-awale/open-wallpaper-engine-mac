@@ -24,7 +24,7 @@ final class EditorLocalizationTests: XCTestCase {
     private func usedKeys() throws -> Set<String> {
         var keys = Set<String>()
         let regex = try NSRegularExpression(pattern: #"L\("((?:[^"\\]|\\\([^)]*\))*)"\)"#)
-        // The module's folders too (Effects, Layers, Assets).
+        // The module's folders too (Effects, Layers, Assets, Scripting, Properties).
         let enumerator = try XCTUnwrap(FileManager.default.enumerator(at: Self.sources, includingPropertiesForKeys: nil))
         let files = enumerator.compactMap { $0 as? URL }.filter { $0.pathExtension == "swift" }
         XCTAssertGreaterThan(files.count, 10)

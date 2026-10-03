@@ -349,6 +349,9 @@ private final class ScriptHost: SceneScriptHost {
     }
 
     func runtime(_ runtime: SceneScriptRuntime, didReport error: SceneScriptError) {
+        // The Wallpaper Editor's console shows it at the script's line.
+        SceneScriptConsoleTap.post(.init(wallpaperID: identity.wallpaperID, scriptID: error.scriptID, isError: true,
+                                         message: error.message, line: error.line))
         guard error.kind == .terminated else { return }
         lock.lock()
         termination = error

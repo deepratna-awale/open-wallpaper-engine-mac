@@ -16,6 +16,7 @@ final class SceneScriptConsole {
     static let linesPerSecond = 20
 
     private let prefix: String
+    private let wallpaperID: String
     private let sink: Sink
     private var windowStart = 0.0
     private var written = 0
@@ -23,6 +24,7 @@ final class SceneScriptConsole {
 
     init(identity: SceneScriptIdentity, sink: @escaping Sink = SceneScriptConsole.log) {
         prefix = "[\(identity.wallpaperID) \(identity.screenID)]"
+        wallpaperID = identity.wallpaperID
         self.sink = sink
     }
 
@@ -44,6 +46,9 @@ final class SceneScriptConsole {
         let label = level == .error ? "Error: " : "Log: "
         let source = scriptID.isEmpty ? "" : " \(scriptID)"
         sink(level, "\(prefix)\(source) \(label)\(message)")
+        // The Wallpaper Editor's console, when one is open for this wallpaper.
+        SceneScriptConsoleTap.post(.init(wallpaperID: wallpaperID, scriptID: scriptID, isError: level == .error,
+                                         message: message, line: nil))
     }
 
     static func log(_ level: Level, _ line: String) {

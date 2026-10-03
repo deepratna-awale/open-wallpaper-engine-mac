@@ -20,8 +20,8 @@ Inspector today; the editor after phase 1 (this PR) and the phase that closes th
 | Timeline: keyframe animation of properties | — (plays authored timelines) | — | P4 |
 | Puppet warp: mesh, bones, animations | — (plays authored rigs) | — | P5 (view/pose first, authoring later) |
 | Particle editor: emitters, initializers, operators, renderers, children | Raw particle JSON | — | P5 |
-| SceneScript: per-property scripts, code editor | — (runs scripts) | Driven fields edit their start value; scripts keep running | Script editor: P6 |
-| User properties: define, bind, conditions | Values only (Details panel) | Values (the Details panel's own view), undoable; bound fields named | Authoring and binding: P6 |
+| SceneScript: per-property scripts, code editor | — (runs scripts) | Driven fields edit their start value; scripts keep running | **P6 (done):** attach/edit/remove per field and object scripts, code editor (highlighting, line numbers, find, API autocomplete, templates), syntax and runtime errors, console, Apply |
+| User properties: define, bind, conditions | Values only (Details panel) | Values (the Details panel's own view), undoable; bound fields named | **P6 (done):** add/edit/remove/reorder/rename every type, conditions, Bind to User Property…, live preview |
 | Scene settings: camera, bloom, clear colour, lights, 3D | Effects of `general` via properties | Scene size, layer count | P3 (2D settings), P7 (3D camera, lights, models) |
 | Custom shaders/effects | — | — | P7 |
 | Workshop publishing | — | — | Out of scope |
@@ -129,6 +129,25 @@ Each phase ships on its own; effort is focused engineering time.
 | **P5 Particles and puppets** | Particle editor (emitters, initializers, operators, renderers, children, control points); puppet warp view and pose, then authoring | 6–8 weeks |
 | **P6 Logic** | SceneScript editor (JavaScriptCore diagnostics), user property authoring, binding and conditions in project.json | 4 weeks |
 | **P7 3D and shaders** | Camera, lights and models with 3D gizmos; custom effect/shader editing on the existing translator | 6–8 weeks |
+
+## P6: scripting and user properties
+
+- **Kept in the overlay** (`SceneEditOverlay.authoring`, `SceneAuthoring`): per object and field path
+  (`origin`, `text`, `effects.1.visible`), a driver edit (`SceneFieldDriverEdit`: the script and its
+  `scriptproperties`, the user binding, or their removal), applied to scene.json before the value edits so
+  an edited value becomes the driver's start `value`; and the edited `general.properties` list
+  (`UserPropertyDraft`), which Save as Local Wallpaper writes into project.json (unknown keys kept).
+  The properties don't change the scene digest, so editing them doesn't reload the wallpaper.
+- **Apply** stores the script; the wallpaper reloads with it through the overlay's coalesced reload.
+  The runtime has no in-place swap of one script (a site's id is free again only after its
+  `destroy()` ran in a later frame), so a reload is the faithful path.
+- **Autocomplete** reads `SceneScriptTypings` (declarations written from WE's documented API and the
+  repository's member list of lib.sceneScript.d.ts, `Tests/Fixtures/SceneScript/object-model-members.json`)
+  and resolves the expression before a `.` through globals, imports, locals, calls and indexing.
+- **Errors**: JavaScriptCore checks the syntax before Apply (module statements blanked so lines
+  stay); the runtime's console lines and errors reach the editor through `SceneScriptConsoleTap`.
+- **Conditions**: the preview evaluates the subset the app's sidebar does
+  (`UserPropertyConditionExpression`); a single comparison edits as a rule.
 
 ## Architecture
 
