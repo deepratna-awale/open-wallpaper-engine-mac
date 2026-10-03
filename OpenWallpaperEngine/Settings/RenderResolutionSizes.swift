@@ -32,11 +32,11 @@ struct RenderResolutionSizes: Equatable {
     var retinaList: String { Self.list(screens.map(\.pixels)) }
 
     var displayLabel: String {
-        String(format: String(localized: "Display (%@)", comment: "Render resolution: the display's size in points, e.g. 1920×1080"), displayList)
+        String(localized: "Display (\(displayList))", comment: "Render resolution: the display's size in points, e.g. 1920×1080")
     }
 
     var retinaLabel: String {
-        String(format: String(localized: "Retina (%@)", comment: "Render resolution: the display's native backing pixels, e.g. 3840×2160"), retinaList)
+        String(localized: "Retina (\(retinaList))", comment: "Render resolution: the display's native backing pixels, e.g. 3840×2160")
     }
 
     static var fullLabel: String {
