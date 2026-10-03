@@ -96,6 +96,10 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     /// Scripts, user-property bindings and the user properties themselves (`SceneAuthoring`);
     /// nil when none were authored (version 2).
     public var authoring: SceneAuthoring?
+    /// Puppet Warp rigs made or edited in the editor, by the image layer's key
+    /// (`SceneEditOverlay+Puppets`). They don't change the running scene; Save as Local
+    /// Wallpaper writes them as `.mdl` files (`PuppetSceneBake`) (version 2).
+    public var puppets: [String: PuppetDocument]?
 
     public init(objects: [String: ObjectEdit] = [:]) {
         self.objects = objects
@@ -104,7 +108,7 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     /// Nothing to save: no edits and no locked layers.
     public var isEmpty: Bool {
         objects.values.allSatisfy(\.isEmpty) && !hasStructureEdits && timelines?.isEmpty != false
-            && authoring?.isEmpty != false
+            && authoring?.isEmpty != false && !hasPuppetEdits
     }
 
     /// Something changes the scene (locks don't). Authored properties count: they are edits of
@@ -119,7 +123,7 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
 
     /// Holds something version 1 can't apply.
     var needsVersion2: Bool {
-        hasStructureEdits || timelines?.isEmpty == false || authoring?.isEmpty == false
+        hasStructureEdits || timelines?.isEmpty == false || authoring?.isEmpty == false || hasPuppetEdits
             || objects.values.contains(where: \.needsVersion2)
     }
 
@@ -207,6 +211,7 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
         var sceneEdits = self
         sceneEdits.authoring?.properties = nil
         if sceneEdits.authoring?.isEmpty == true { sceneEdits.authoring = nil }
+        sceneEdits.puppets = nil
         for (key, edit) in sceneEdits.objects {
             sceneEdits.objects[key]?.locked = nil
             if !edit.hasSceneEdits { sceneEdits.objects[key] = nil }

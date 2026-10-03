@@ -23,7 +23,7 @@ final class EditorLocalizationTests: XCTestCase {
     /// `L("…")` keys in the sources, interpolations turned into the catalog's specifiers.
     private func usedKeys() throws -> Set<String> {
         var keys = Set<String>()
-        let regex = try NSRegularExpression(pattern: #"L\("((?:[^"\\]|\\\([^)]*\))*)"\)"#)
+        let regex = try NSRegularExpression(pattern: #"(?<![A-Za-z])L\("((?:[^"\\]|\\\([^)]*\))*)"\)"#)
         // The module's folders too (Effects, Layers, Assets, Scripting, Properties).
         let enumerator = try XCTUnwrap(FileManager.default.enumerator(at: Self.sources, includingPropertiesForKeys: nil))
         let files = enumerator.compactMap { $0 as? URL }.filter { $0.pathExtension == "swift" }

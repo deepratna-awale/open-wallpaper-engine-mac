@@ -52,7 +52,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
     private let scriptConsole: SceneScriptConsoleFeed
     private var consoleToken: UUID?
     /// The overlay's scene digest as last saved: a save that doesn't change it (a lock, the user
-    /// properties, which only Save as Local Wallpaper writes) doesn't reload the wallpaper.
+    /// properties, which only Save as Local Wallpaper writes, a puppet) doesn't reload the wallpaper.
     private var savedSceneDigest: String
 
     /// Only scene wallpapers have layers to edit.
@@ -143,6 +143,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         services.fonts = { resources.fonts() }
         services.userPropertyChoices = { resources.userPropertyChoices() }
         services.timeline = timeline
+        services.puppetAssets = EditorPuppetAssets.make(for: wallpaper)
         return services
     }
 
@@ -151,6 +152,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
     private func save(_ overlay: SceneEditOverlay) {
         let digest = Self.sceneDigest(overlay)
         do {
+            // A puppet edit doesn't change the running scene (`SceneEditOverlay.digest`): no reload.
             if digest == savedSceneDigest {
                 try SceneEditOverlayFiles.defaultStore.save(overlay, for: identity.rawValue)
             } else {
@@ -184,12 +186,16 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
             writerSource.packageFiles = files
             writerSource.packageName = source.packageName
         }
-        let scene = try session.overlay.applied(to: source.scene)
         let authoring = session.overlay.authoring
+        // The editor's puppets become `.mdl` files and the layers' references (`PuppetSceneBake`).
+        let read = EditorPuppetAssets.make(for: wallpaper).readFile
+        let baked = try PuppetSceneBake.bake(session.overlay, into: try session.overlay.applied(to: source.scene),
+                                             readFile: read)
         // The user properties as authored in the editor go into the copy's project.json.
-        let folder = try LocalWallpaperWriter().save(writerSource, scene: scene, title: title,
+        let folder = try LocalWallpaperWriter().save(writerSource, scene: baked.scene, title: title,
                                                      into: FileManager.default.wallpapersDirectory,
-                                                     editProject: { authoring?.applyProperties(to: &$0) })
+                                                     editProject: { authoring?.applyProperties(to: &$0) },
+                                                     files: baked.files)
         OWELog.info(.library, "Saved \(wallpaper.project.title) with its editor edits as \(folder.path)")
         AppDelegate.shared.contentViewModel.refresh()
         return title

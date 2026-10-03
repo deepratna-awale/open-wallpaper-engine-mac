@@ -51,6 +51,8 @@ public struct WallpaperEditorServices {
     /// What the wallpaper's running scripts log and the errors they raise; nil when the app
     /// doesn't report them.
     public var scriptConsole: SceneScriptConsoleFeed?
+    /// The wallpaper's files and images the puppet editor reads; nil hides Puppet Warp.
+    public var puppetAssets: PuppetEditorAssets?
 
     public init(makeCanvas: @escaping () -> AnyView, userProperties: (() -> AnyView)? = nil,
                 blendModeTitle: String, blendModes: [InspectorOption], effectHelp: @escaping (String) -> String,
