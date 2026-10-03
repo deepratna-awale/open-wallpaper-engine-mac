@@ -5,6 +5,16 @@ struct PlaylistView: View {
     @ObservedObject var wallpaperViewModel: WallpaperViewModel
     /// The playlist whose Delete button was clicked, until the confirmation is answered.
     @State private var playlistPendingDeletion: WallpaperPlaylist?
+    @ObservedObject private var shortcuts = AppDelegate.shared.playlistShortcuts
+    @State private var isRecordingShortcut = false
+    /// A recorded shortcut something else uses, until the warning is answered.
+    @State private var pendingShortcut: PendingShortcut?
+
+    private struct PendingShortcut {
+        let shortcut: GlobalShortcut
+        let playlistID: UUID
+        let conflicts: [GlobalShortcutConflict]
+    }
 
     var body: some View {
         playlistDetail
@@ -25,6 +35,32 @@ struct PlaylistView: View {
             } message: { _ in
                 Text("Its wallpapers stay in your library.")
             }
+            .alert(
+                Text("\(pendingShortcut?.shortcut.symbols ?? "") is already in use"),
+                isPresented: Binding(
+                    get: { pendingShortcut != nil },
+                    set: { if !$0 { pendingShortcut = nil } }
+                ),
+                presenting: pendingShortcut
+            ) { pending in
+                Button("Use Anyway") {
+                    shortcuts.assign(pending.shortcut, to: pending.playlistID, resolving: pending.conflicts)
+                }
+                Button("Choose Another") { isRecordingShortcut = true }
+                Button("Cancel", role: .cancel) {}
+            } message: { pending in
+                Text(verbatim: pending.conflicts.map(\.message).joined(separator: "\n\n"))
+            }
+    }
+
+    /// Saves a recorded shortcut, or first warns about what already uses it.
+    private func record(_ shortcut: GlobalShortcut, for playlistID: UUID) {
+        let conflicts = shortcuts.conflicts(for: shortcut, playlistID: playlistID)
+        if conflicts.isEmpty {
+            shortcuts.assign(shortcut, to: playlistID)
+        } else {
+            pendingShortcut = PendingShortcut(shortcut: shortcut, playlistID: playlistID, conflicts: conflicts)
+        }
     }
 
     @ViewBuilder private var playlistDetail: some View {
@@ -34,6 +70,13 @@ struct PlaylistView: View {
                     HStack {
                         Text(playlist.name).font(.largeTitle.bold())
                         Spacer()
+                        ShortcutRecorderField(
+                            shortcut: playlist.shortcut,
+                            isRecording: $isRecordingShortcut,
+                            onRecord: { record($0, for: playlist.id) },
+                            onClear: { shortcuts.assign(nil, to: playlist.id) },
+                            onRecordingChange: { $0 ? shortcuts.suspend() : shortcuts.resume() }
+                        )
                         Button(role: .destructive) {
                             playlistPendingDeletion = playlist
                         } label: {
@@ -42,6 +85,10 @@ struct PlaylistView: View {
                         }
                         .glassButtonStyle()
                         .help("Delete playlist")
+                    }
+                    if playlist.shortcut != nil, shortcuts.unregisteredPlaylists.contains(playlist.id) {
+                        Label("This shortcut may not work: another app uses it.", systemImage: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.secondary)
                     }
                     VStack(alignment: .leading, spacing: 8) {
                         Toggle("Rotate automatically", isOn: $wallpaperViewModel.playlistEnabled)

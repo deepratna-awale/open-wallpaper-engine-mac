@@ -99,10 +99,13 @@ struct WorkshopAssetResolver {
     }
 
     /// The bytes a workshop path points to, loose or inside one of the item's `.pkg` archives.
-    func data(for path: String) -> Data? {
+    func data(for path: String) -> Data? { located(path)?.data }
+
+    /// The bytes a workshop path points to and the file they are read from (the loose file or the `.pkg`).
+    func located(_ path: String) -> (data: Data, source: URL)? {
         if let url = url(for: path) {
             do {
-                return try AssetPathResolver.readRegularFile(at: url)
+                return (try AssetPathResolver.readRegularFile(at: url), url)
             } catch {
                 OWELog.error(.workshop, "Failed to read workshop asset \(url.path): \(error)")
                 return nil
@@ -121,7 +124,7 @@ struct WorkshopAssetResolver {
                 if let entry = parser.fileList.first(where: {
                     $0.replacingOccurrences(of: "\\", with: "/").caseInsensitiveCompare(candidate) == .orderedSame
                 }), let data = parser.extractFile(named: entry) {
-                    return data
+                    return (data, pkg)
                 }
             }
         }
