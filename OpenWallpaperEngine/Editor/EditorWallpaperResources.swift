@@ -76,6 +76,25 @@ final class EditorWallpaperResources {
                                   isWorkshop: isWorkshop, passCount: max(document.passes.count, 1))
     }
 
+    /// Copies a built-in effect's dependencies (`effect.json`'s `dependencies`: its materials,
+    /// shaders and textures) from WE's assets into the project files the editor keeps, where the
+    /// wallpaper doesn't have them: WE reads an effect's files at the project root, then the assets
+    /// root, never inside `assets/effects/<name>/` (`SceneEffectPlanBuilder.readWallpaperFile`), so
+    /// its editor copies them into a project an effect is added to. A Workshop effect the wallpaper
+    /// ships needs nothing.
+    func prepareEffect(_ entry: EffectCatalogEntry) throws {
+        guard !entry.isWorkshop, let data = data(entry.file),
+              let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+        let folder = (entry.file as NSString).deletingLastPathComponent
+        for dependency in json["dependencies"] as? [String] ?? [] {
+            let ownCopy = (try? AssetPathResolver.data(dependency, in: wallpaper.wallpaperDirectory)) ?? nil
+            guard package?.extractFile(named: dependency) == nil, ownCopy == nil,
+                  let source = WallpaperEngineAssets.locate(["\(folder)/\(dependency)"], in: WallpaperEngineAssets.searchDirectories)
+            else { continue }
+            try assets.store(try AssetPathResolver.readRegularFile(at: source), at: dependency)
+        }
+    }
+
     /// An effect's picture, where its folder has one.
     private static func preview(in folder: URL) -> URL? {
         for name in ["preview/preview.gif", "preview/preview.jpg", "preview/preview.png", "preview.gif", "preview.jpg", "preview.png"] {

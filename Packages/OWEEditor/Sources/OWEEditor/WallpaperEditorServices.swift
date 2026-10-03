@@ -26,6 +26,9 @@ public struct WallpaperEditorServices {
 
     /// The effects the editor can add: WE's built-in ones and the Workshop effects the wallpaper uses.
     public var effectCatalog: () -> [EffectCatalogEntry] = { [] }
+    /// Makes an effect ready to add: WE's editor copies a built-in effect's materials, shaders and
+    /// textures into the project (WE only reads them there), which the app does into the edits' files.
+    public var prepareEffect: (EffectCatalogEntry) throws -> Void = { _ in }
     /// What an effect (`effects/…/effect.json`) lets the editor change, from its shaders.
     public var effectSchema: (String) -> EffectSchema? = { _ in nil }
     /// Where imported files and painted masks go; nil when the editor can't add files.

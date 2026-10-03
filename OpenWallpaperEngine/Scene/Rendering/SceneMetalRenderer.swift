@@ -346,6 +346,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var baseValueCaches: [String: SceneBindingCache<SceneLayerBaseValues>] = [:]
     /// The Wallpaper Editor's live edits over the built content (`SceneEditorLive`).
     private var editorLive = SceneEditorLive()
+    /// `editorLive`'s revision the frame analysis last saw: a live edit redraws an idle scene.
+    private var analysedEditorRevision = 0
     private var placement: WallpaperPlacement = .fill
     /// Drawable pixels per view point (the backing scale), refreshed every frame.
     private var drawablePixelsPerPoint: Float = 1
@@ -3716,7 +3718,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         inputs.sceneChanged = shape.layers != analysedShape.layers || shape.target != analysedShape.target
             || warming || analysedWarmUp || landed != analysedLanded || textRaster.hasFinished
             || scripts.userVisibilityRevision != analysedUserVisibility
+            || editorLive.revision != analysedEditorRevision
         analysedUserVisibility = scripts.userVisibilityRevision
+        analysedEditorRevision = editorLive.revision
         analysedLanded = landed
         analysedShape = shape
         analysedWarmUp = warming

@@ -110,6 +110,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
             })
         services.effectCatalog = { resources.effectCatalog(outline: session.authored) }
         services.effectSchema = { resources.effectSchema($0) }
+        services.prepareEffect = { try resources.prepareEffect($0) }
         services.assetStore = resources.assets
         services.wallpaperAssets = { resources.wallpaperAssets() }
         services.texture = { resources.texture($0) }

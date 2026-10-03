@@ -173,6 +173,12 @@ public struct EditorAssetStore: Sendable {
 
     // MARK: Writing
 
+    /// Keeps `data` at scene path `path` (a built-in effect's material or shader, copied into the
+    /// project as WE's editor copies an added effect's dependencies). A file already there stays.
+    public func store(_ data: Data, at path: String) throws {
+        try write(data, to: path)
+    }
+
     func write(_ data: Data, to path: String) throws {
         let url = try LocalWallpaperWriter.contained(path, in: directory)
         if FileManager.default.fileExists(atPath: url.path) { return } // Named by content: already there.

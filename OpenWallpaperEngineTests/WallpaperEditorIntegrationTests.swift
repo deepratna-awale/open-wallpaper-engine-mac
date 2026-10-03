@@ -8,7 +8,8 @@ import OWESceneEditing
 @MainActor
 final class WallpaperEditorIntegrationTests: XCTestCase {
     private static let scene = Data("""
-    {"general": {"orthogonalprojection": {"width": 1920, "height": 1080}},
+    {"camera": {"center": "0 0 -1", "eye": "0 0 0", "up": "0 1 0"},
+     "general": {"orthogonalprojection": {"width": 1920, "height": 1080}},
      "objects": [{"id": 4, "image": "a.json", "origin": "0 0 0", "alpha": 1,
                   "effects": [{"file": "effects/blur/effect.json", "visible": true}]},
                  {"id": 5, "image": "b.json", "origin": "1 1 0"}]}

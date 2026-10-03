@@ -57,16 +57,12 @@ enum SceneEditOverlayFiles {
         EditorAssetStore(directory: store.assetsDirectory(for: identity.rawValue))
     }
 
-    /// The editor's file at scene path `path` for the wallpaper; nil when it added none there.
+    /// The editor's file at scene path `path` for the wallpaper (read after the wallpaper's own):
+    /// an imported file, or a built-in effect's material or shader the editor copied into the
+    /// project as WE's editor does; nil when it has none there.
     static func assetData(_ path: String, for identity: WallpaperSettingsIdentity,
                           store: SceneEditOverlayStore = defaultStore) -> Data? {
-        // Only the folders the editor writes to: a wallpaper's own path never reaches the disk here.
-        let lowered = path.lowercased()
-        guard Self.editorPrefixes.contains(where: lowered.hasPrefix) else { return nil }
         guard let url = assets(for: identity, store: store).url(for: path) else { return nil }
         return try? AssetPathResolver.readRegularFile(at: url)
     }
-
-    /// The folders `EditorAssetStore` writes under.
-    static let editorPrefixes = ["materials/editor/", "models/editor/", "sounds/editor/", "fonts/editor/", "materials/masks/editor_"]
 }

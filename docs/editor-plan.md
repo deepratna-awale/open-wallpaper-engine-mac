@@ -103,7 +103,9 @@ Properties. Later phases add a timeline under the canvas (P4) and an asset strip
   overlay in `<identity>.assets` under the scene's own paths (`materials/editor/…`,
   `models/editor/…`, `sounds/editor/…`, `fonts/editor/…`, `materials/masks/editor_…`), named by
   their content's hash; the loader finds them after the wallpaper's own files. Images other than PNG
-  and JPEG are converted to PNG; an image gets WE's `genericimage2` material and model.
+  and JPEG are converted to PNG; an image gets WE's `genericimage2` material and model. Adding a
+  built-in effect copies its `dependencies` (materials, shaders, textures) there too, as WE's editor
+  copies them into the project: WE reads them at the project root, not in `assets/effects/<name>/`.
 - **Live channel**: a change of a layer's `origin`, `scale`, `angles`, `alpha` or `color`, or of an
   effect's `visible` or a literal constant, is drawn per frame without reading the scene again
   (`SceneEditLiveValues` against the overlay the scene was read with; the renderer's
