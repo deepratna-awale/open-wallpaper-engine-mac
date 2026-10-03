@@ -46,6 +46,8 @@ struct LayerListView: View {
             }
         }
         .onAppear { tree = LayerNode.tree(session.outline) }
+        // Particle systems added or deleted in the editor.
+        .onChange(of: session.outline.layers) { _, _ in tree = LayerNode.tree(session.outline) }
     }
 }
 

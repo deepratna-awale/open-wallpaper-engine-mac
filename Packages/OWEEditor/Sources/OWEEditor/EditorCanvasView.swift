@@ -13,18 +13,22 @@ struct EditorCanvasView: View {
     @State private var hovered: Int?
     @State private var gesture: CanvasGesture?
     private let makeCanvas: () -> AnyView
+    /// The particle systems' handles (`ParticleCanvasInteraction`); nil without the particle editor.
+    private let particles: ParticleEditorServices?
 
     private enum CanvasGesture {
         case pan(startPan: SIMD2<Double>, startPoint: SIMD2<Double>)
         case transform(layer: Int, drag: LayerGizmo.Drag, startPoint: SIMD2<Double>, moved: Bool)
+        case particle(ParticleCanvasDrag)
     }
 
     /// A press moves this far (points) before it drags, so a click never nudges a layer.
     private static let dragThreshold: Double = 3
 
-    init(session: SceneEditSession, makeCanvas: @escaping () -> AnyView) {
+    init(session: SceneEditSession, makeCanvas: @escaping () -> AnyView, particles: ParticleEditorServices? = nil) {
         self.session = session
         self.makeCanvas = makeCanvas
+        self.particles = particles
         // A 3D scene has no 2D size: its view is framed 16:9 and has no gizmo.
         _viewport = State(initialValue: CanvasViewport(sceneSize: session.outline.size ?? SIMD2(1920, 1080),
                                                        canvasSize: SIMD2(800, 600)))
@@ -43,6 +47,10 @@ struct EditorCanvasView: View {
                     .allowsHitTesting(false)
                 GizmoOverlay(session: session, viewport: viewport, hovered: hovered)
                     .allowsHitTesting(false)
+                if let particles {
+                    ParticleCanvasOverlay(services: particles, viewport: viewport)
+                        .allowsHitTesting(false)
+                }
                 CanvasEventView(handlers: handlers)
             }
             .clipped()
@@ -139,6 +147,10 @@ struct EditorCanvasView: View {
             NSCursor.closedHand.set()
             return
         }
+        if let particles, let drag = ParticleCanvasInteraction.press(at: point, viewport: viewport, services: particles) {
+            gesture = .particle(drag)
+            return
+        }
         let scenePoint = viewport.scenePoint(point)
         // The selection's handles first, so a corner over another layer still scales.
         if let selected = session.selection, !session.isLocked(selected), let geometry = session.geometry(of: selected),
@@ -167,6 +179,11 @@ struct EditorCanvasView: View {
             if !moved { gesture = .transform(layer: layer, drag: drag, startPoint: startPoint, moved: true) }
             let shift = event.modifierFlags.contains(.shift)
             session.dragPreview = (layer, drag.transform(at: viewport.scenePoint(point), free: shift, snap: shift))
+        case .particle(var drag):
+            guard let particles else { return }
+            ParticleCanvasInteraction.drag(&drag, to: point, viewport: viewport,
+                                           free: event.modifierFlags.contains(.shift), services: particles)
+            gesture = .particle(drag)
         case nil:
             break
         }
@@ -174,6 +191,10 @@ struct EditorCanvasView: View {
 
     private func mouseUp() {
         defer { gesture = nil }
+        if case .particle(let drag)? = gesture, let particles {
+            ParticleCanvasInteraction.end(drag, services: particles)
+            return
+        }
         guard case .transform(_, let drag, _, let moved)? = gesture else { return }
         guard moved else { session.dragPreview = nil; return }
         switch drag.handle {
@@ -209,6 +230,9 @@ struct EditorCanvasView: View {
     }
 
     private func cursor(at point: SIMD2<Double>) -> NSCursor {
+        if let particles, let cursor = ParticleCanvasInteraction.cursor(at: point, viewport: viewport, services: particles) {
+            return cursor
+        }
         guard let selected = session.selection, !session.isLocked(selected),
               let geometry = session.geometry(of: selected),
               let handle = LayerGizmo.handle(at: point, geometry: geometry, viewport: viewport) else { return .arrow }

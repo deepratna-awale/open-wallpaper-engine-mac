@@ -28,7 +28,7 @@ public struct WallpaperEditorView: View {
             LayerListView(session: session)
                 .navigationSplitViewColumnWidth(min: 220, ideal: 260, max: 380)
         } detail: {
-            EditorCanvasView(session: session, makeCanvas: services.makeCanvas)
+            EditorCanvasView(session: session, makeCanvas: services.makeCanvas, particles: services.particles)
                 .overlay(alignment: .top) { noticeBanner }
                 .inspector(isPresented: $isInspectorPresented) {
                     LayerInspectorView(session: session, services: services)
@@ -70,6 +70,11 @@ public struct WallpaperEditorView: View {
         }
         if #available(macOS 26, *) {
             ToolbarSpacer(.flexible)
+        }
+        if let particles = services.particles {
+            ToolbarItem {
+                ParticleAddMenu(services: particles)
+            }
         }
         ToolbarItem {
             Button { isConfirmingRevert = true } label: {

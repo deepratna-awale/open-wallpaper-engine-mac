@@ -21,7 +21,9 @@ let package = Package(
         .target(name: "OWEInspectorKit"),
         .target(name: "OWEEditor",
                 dependencies: ["OWESceneEditing", "OWEInspectorKit"],
-                resources: [.process("Resources")]),
+                // The particle editor's catalog and its copy of WE's editor schema
+                // (docs/we-particle-editor-schema.json).
+                resources: [.process("Resources"), .process("Particles/Resources")]),
         .testTarget(name: "OWESceneEditingTests", dependencies: ["OWESceneEditing"]),
         .testTarget(name: "OWEInspectorKitTests", dependencies: ["OWEInspectorKit"]),
         .testTarget(name: "OWEEditorTests", dependencies: ["OWEEditor"]),

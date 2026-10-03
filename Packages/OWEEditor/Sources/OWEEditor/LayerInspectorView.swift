@@ -40,6 +40,9 @@ private struct LayerForm: View {
             if layer.kind != .sound {
                 transformSection
             }
+            if layer.kind == .particle, let particles = services.particles {
+                ParticleSystemSections(services: particles, layer: layer)
+            }
             if layer.kind == .image || layer.kind == .text {
                 appearanceSection
             }
