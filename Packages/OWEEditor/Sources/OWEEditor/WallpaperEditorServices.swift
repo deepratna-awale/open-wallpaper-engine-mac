@@ -53,6 +53,8 @@ public struct WallpaperEditorServices {
     public var scriptConsole: SceneScriptConsoleFeed?
     /// The wallpaper's files and images the puppet editor reads; nil hides Puppet Warp.
     public var puppetAssets: PuppetEditorAssets?
+    /// The particle editor (WE's presets and textures, restarting a system); nil leaves it out.
+    public var particles: ParticleEditorServices?
 
     public init(makeCanvas: @escaping () -> AnyView, userProperties: (() -> AnyView)? = nil,
                 blendModeTitle: String, blendModes: [InspectorOption], effectHelp: @escaping (String) -> String,

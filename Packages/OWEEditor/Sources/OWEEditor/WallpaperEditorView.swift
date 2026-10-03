@@ -101,6 +101,11 @@ public struct WallpaperEditorView: View {
         if #available(macOS 26, *) {
             ToolbarSpacer(.flexible)
         }
+        if let particles = services.particles {
+            ToolbarItem {
+                ParticleAddMenu(services: particles)
+            }
+        }
         if services.projectJSON != nil {
             ToolbarItem {
                 Button { authoring.isEditingProperties = true } label: {
