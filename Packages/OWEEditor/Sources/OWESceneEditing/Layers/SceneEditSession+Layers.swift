@@ -9,7 +9,8 @@ extension SceneEditSession {
     /// The id an added layer gets: above every id the scene and the edits have used.
     public var nextObjectID: Int {
         let ids = authored.layers.map(\.id) + outline.layers.map(\.id) + (overlay.added ?? []).map(\.id)
-            + (overlay.removed ?? [])
+            + (overlay.removed ?? []) + (overlay.particles?.removedObjects ?? [])
+            + (overlay.particles?.addedObjects ?? []).compactMap { $0["id"]?.doubleValue.map { Int($0) } }
         return max((ids.max() ?? -1) + 1, authored.layers.count)
     }
 

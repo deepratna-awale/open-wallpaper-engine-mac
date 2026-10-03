@@ -10,6 +10,9 @@ extension SceneEditOverlay {
         var removed: [Int]?
         var order: [Int]?
         var objects: [String: ObjectSignature]
+        /// The particle editor's added and deleted systems.
+        var particleObjects: [SceneJSONValue]?
+        var particlesRemoved: [Int]?
     }
 
     struct ObjectSignature: Hashable {
@@ -28,7 +31,8 @@ extension SceneEditOverlay {
             guard !fields.isEmpty || edit.effectOrder != nil || edit.addedEffects != nil else { continue }
             objects[key] = ObjectSignature(fields: fields, effectOrder: edit.effectOrder, addedEffects: edit.addedEffects)
         }
-        return OutlineSignature(added: added, removed: removed, order: order, objects: objects)
+        return OutlineSignature(added: added, removed: removed, order: order, objects: objects,
+                                particleObjects: particles?.addedObjects, particlesRemoved: particles?.removedObjects)
     }
 
     /// The structure alone: what layers and effects there are, in which order, without any value edit.
@@ -37,6 +41,10 @@ extension SceneEditOverlay {
         result.added = added
         result.removed = removed
         result.order = order
+        if let particles, particles.changesObjects {
+            result.particles = SceneParticleOverlay(addedObjects: particles.addedObjects,
+                                                    removedObjects: particles.removedObjects)
+        }
         for (key, edit) in objects where edit.effectOrder != nil || edit.addedEffects != nil {
             var structural = ObjectEdit()
             structural.effectOrder = edit.effectOrder

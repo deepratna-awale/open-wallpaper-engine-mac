@@ -36,6 +36,8 @@ extension SceneEditOverlay {
                 objects.append(object)
             }
         }
+        // The particle systems the editor added, after the scene's own (each has its id).
+        if let particles { objects += particles.addedObjectDictionaries }
         // Scripts and bindings first (added layers included): a value edit of a field they drive
         // is its start value.
         if let authoring {
@@ -59,6 +61,7 @@ extension SceneEditOverlay {
             guard edit?.hasSceneEdits == true || markingEffectKeys else { continue }
             Self.applyEffects(edit ?? ObjectEdit(), to: &objects[index], markingKeys: markingEffectKeys)
         }
+        particles?.removeDeleted(from: &objects)
         if let removed, !removed.isEmpty {
             let gone = Set(removed)
             objects.removeAll { gone.contains(Self.objectID($0)) }

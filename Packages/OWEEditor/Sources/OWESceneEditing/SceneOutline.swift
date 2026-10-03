@@ -48,6 +48,15 @@ public struct SceneOutline: Sendable {
         size = Self.orthographicSize(root, layers: layers)
     }
 
+    /// An outline of `layers` as they are (the editor's added and deleted objects applied).
+    init(layers: [SceneLayer], size: SIMD2<Double>?) {
+        self.layers = layers
+        self.size = size
+        var byID: [Int: Int] = [:]
+        for (position, layer) in layers.enumerated() where byID[layer.id] == nil { byID[layer.id] = position }
+        self.byID = byID
+    }
+
     public func layer(_ id: Int) -> SceneLayer? { byID[id].map { layers[$0] } }
 
     /// The layers whose parent is `id` (the scene's top level for nil), in draw order. A layer
