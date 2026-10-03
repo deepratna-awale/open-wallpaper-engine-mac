@@ -216,7 +216,7 @@ extension ScreenSaverSeamFinder {
     /// The best seam in `frames` (one `searchLuma` per recorded frame), or nil when the page has
     /// no active segment long enough or no seam reaches `minimumSeamScore`.
     static func searchActiveSeam(frames: [[Float]], frameRate: Int, minimumSeconds: Double = minimumSeconds,
-                                 maximumSeconds: Double = maximumSeconds) -> Decision? {
+                                 maximumSeconds: Double = maximumSeconds, alignment: Double? = nil) -> Decision? {
         let activity = activity(frames)
         guard !activity.isEmpty,
               let segment = activeSegment(activity: activity, blank: frames.map(isBlank), frameRate: frameRate) else {
@@ -232,18 +232,35 @@ extension ScreenSaverSeamFinder {
         let baseFade = max(Int((crossfadeSeconds * Double(frameRate)).rounded()), 1)
         let longestFade = max(Int((maximumCrossfadeSeconds * Double(frameRate)).rounded()), baseFade)
         let lastStart = min(segment.lowerBound + Int(startSearchSeconds * Double(frameRate)), segment.upperBound - 1)
+        // With an `alignment` (seconds, e.g. the synthetic audio's bar), the best loop whose length
+        // is a whole number of it wins when nearly as good (`alignedTolerance`), so audio-driven
+        // motion lines up at the seam too.
+        let step = alignment.map { Double(frameRate) * $0 } ?? 0
+        func isAligned(_ frames: Int) -> Bool {
+            guard step >= 1 else { return false }
+            return abs(Double(frames) - (Double(frames) / step).rounded() * step) < 0.5
+        }
         var best: (error: Double, decision: Decision)?
+        var bestAligned: (error: Double, decision: Decision)?
+        func consider(_ error: Double, _ decision: Decision) {
+            if best.map({ error < $0.error }) ?? true { best = (error, decision) }
+            if isAligned(decision.frames), bestAligned.map({ error < $0.error }) ?? true {
+                bestAligned = (error, decision)
+            }
+        }
         for a in segment.lowerBound...lastStart {
             let firstEnd = a + minimumFrames
             let lastEnd = min(a + maximumFrames, segment.upperBound - 1)
             guard firstEnd <= lastEnd else { break }
             for b in firstEnd...lastEnd where similarActivity(smoothed[a], smoothed[b]) {
                 let error = meanSquaredError(frames[a], frames[b])
-                if let best, error >= best.error { continue }
+                if let best, error >= best.error, !isAligned(b - a) || (bestAligned.map { error >= $0.error } ?? false) {
+                    continue
+                }
                 let score = error > 0 ? 10 * log10(1 / error) : .infinity
                 let loopFrames = b - a
                 if score >= minimumSeamScore {
-                    best = (error, Decision(frames: loopFrames, seam: .cut, start: a, score: score))
+                    consider(error, Decision(frames: loopFrames, seam: .cut, start: a, score: score))
                     continue
                 }
                 // The least fade that reaches the minimum: 20·log10(F + 1) ≥ minimum − score.
@@ -251,10 +268,11 @@ extension ScreenSaverSeamFinder {
                 let fade = max(needed, baseFade)
                 // The fade blends the frames after the loop's last one: they must be live too.
                 guard fade <= longestFade, fade <= loopFrames / 2, b + fade <= segment.upperBound else { continue }
-                best = (error, Decision(frames: loopFrames, seam: .crossfade(frames: fade), start: a,
-                                        score: seamScore(psnr: score, fade: fade)))
+                consider(error, Decision(frames: loopFrames, seam: .crossfade(frames: fade), start: a,
+                                         score: seamScore(psnr: score, fade: fade)))
             }
         }
+        if let bestAligned, let best, bestAligned.error <= best.error * alignedTolerance { return bestAligned.decision }
         return best?.decision
     }
 }
