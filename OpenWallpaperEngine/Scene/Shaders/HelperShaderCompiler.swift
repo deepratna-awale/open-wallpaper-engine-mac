@@ -10,7 +10,13 @@ import Foundation
 /// helper skips it as quarantined instead of crashing again.
 ///
 /// Callers block on their own (compile) thread, never the render thread. Requests are serialized:
-/// the libraries are single-threaded anyway. `lock` owns `channel`, `nextID` and `statistics`.
+/// the libraries are single-threaded anyway. Waiting requests go in priority order: the caller's
+/// QoS, so the visible scene's (user-initiated) ahead of prewarming (background) (`PriorityGate`).
+/// `lock` owns `channel`, `lastUsed`, `nextID` and `statistics`.
+///
+/// One per app process: the app's single translator (`SceneWallpaperViewModel.defaultEffectTranslator`)
+/// owns it, so every wallpaper instance and display shares one helper; an isolated copy is its
+/// own process with its own.
 final class HelperShaderCompiler: ShaderCompiler {
     typealias Launch = () throws -> ShaderCompileHelperChannel
 
@@ -37,7 +43,9 @@ final class HelperShaderCompiler: ShaderCompiler {
     let timeout: TimeInterval
     private let launch: Launch
     private let lock = NSLock()
+    private let gate = PriorityGate()
     private var channel: ShaderCompileHelperChannel?
+    private var lastUsed = DispatchTime.now().uptimeNanoseconds
     private var nextID: UInt64 = 0
     private var statistics = Statistics()
 
@@ -77,6 +85,8 @@ final class HelperShaderCompiler: ShaderCompiler {
                       source: String) throws -> ShaderCompileHelperMessage.Response {
         ThreadGuards.assertBackground("shader translation")
         let step = operation == .preprocess ? "preprocess" : "glslang"
+        gate.enter(priority: Thread.current.qualityOfService.rawValue)
+        defer { gate.leave() }
         lock.lock()
         defer { lock.unlock() }
         nextID &+= 1
@@ -110,6 +120,12 @@ final class HelperShaderCompiler: ShaderCompiler {
     /// One request on the current helper, starting one if needed. Caller holds `lock`.
     private func exchange(_ frame: Data, id: UInt64) throws -> ShaderCompileHelperMessage.Response {
         let current: ShaderCompileHelperChannel
+        let now = DispatchTime.now().uptimeNanoseconds
+        if let idle = channel, Double(now - lastUsed) / 1e9 > ShaderCompileHelperServer.idleTimeout - 30 {
+            idle.close() // about to idle out on its own
+            channel = nil
+        }
+        lastUsed = now
         if let channel {
             current = channel
         } else {

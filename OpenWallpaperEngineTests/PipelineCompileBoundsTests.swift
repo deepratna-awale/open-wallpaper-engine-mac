@@ -112,3 +112,26 @@ final class PipelineCompileBoundsTests: XCTestCase {
         XCTAssertEqual(ShaderCacheKey.current.variantGeneration, ShaderVariantTranslator.generation(toolchain: fingerprint))
     }
 }
+
+final class PriorityGateTests: XCTestCase {
+    func testWaitersGoInPriorityOrder() {
+        let gate = PriorityGate()
+        gate.enter(priority: 0)
+        let lock = NSLock()
+        var order: [Int] = []
+        let done = expectation(description: "all")
+        done.expectedFulfillmentCount = 3
+        for priority in [9, 25, 17] {
+            Thread.detachNewThread {
+                gate.enter(priority: priority)
+                lock.withLock { order.append(priority) }
+                gate.leave()
+                done.fulfill()
+            }
+            Thread.sleep(forTimeInterval: 0.05)
+        }
+        gate.leave()
+        wait(for: [done], timeout: 5)
+        XCTAssertEqual(order, [25, 17, 9])
+    }
+}
