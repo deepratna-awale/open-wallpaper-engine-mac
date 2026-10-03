@@ -24,8 +24,9 @@ final class EditorLocalizationTests: XCTestCase {
     private func usedKeys() throws -> Set<String> {
         var keys = Set<String>()
         let regex = try NSRegularExpression(pattern: #"L\("((?:[^"\\]|\\\([^)]*\))*)"\)"#)
-        let files = try FileManager.default.contentsOfDirectory(at: Self.sources, includingPropertiesForKeys: nil)
-            .filter { $0.pathExtension == "swift" }
+        // Subfolders too (`Scripting`, `Properties`).
+        let files = (FileManager.default.enumerator(at: Self.sources, includingPropertiesForKeys: nil)?.allObjects ?? [])
+            .compactMap { $0 as? URL }.filter { $0.pathExtension == "swift" }
         for file in files {
             let text = try String(contentsOf: file, encoding: .utf8)
             for match in regex.matches(in: text, range: NSRange(text.startIndex..., in: text)) {

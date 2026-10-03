@@ -1,5 +1,6 @@
 import SwiftUI
 import OWEInspectorKit
+import OWESceneEditing
 
 /// What the editor needs from the app: the live scene drawn by the app's own renderer, and the
 /// pieces of the Scene Inspector it shows again (the user properties, WE's blend modes and effect
@@ -19,10 +20,17 @@ public struct WallpaperEditorServices {
     /// Writes a new local wallpaper with the edits baked in and adds it to the library; returns
     /// the title it was saved under.
     public var saveAsLocalWallpaper: (String) throws -> String
+    /// The wallpaper's project.json as it ships, whose `general.properties` the user-property
+    /// editor starts from; nil hides the editor.
+    public var projectJSON: Data?
+    /// What the wallpaper's running scripts log and the errors they raise; nil when the app
+    /// doesn't report them.
+    public var scriptConsole: SceneScriptConsoleFeed?
 
     public init(makeCanvas: @escaping () -> AnyView, userProperties: (() -> AnyView)? = nil,
                 blendModeTitle: String, blendModes: [InspectorOption], effectHelp: @escaping (String) -> String,
-                suggestedLocalTitle: String, saveAsLocalWallpaper: @escaping (String) throws -> String) {
+                suggestedLocalTitle: String, saveAsLocalWallpaper: @escaping (String) throws -> String,
+                projectJSON: Data? = nil, scriptConsole: SceneScriptConsoleFeed? = nil) {
         self.makeCanvas = makeCanvas
         self.userProperties = userProperties
         self.blendModeTitle = blendModeTitle
@@ -30,5 +38,7 @@ public struct WallpaperEditorServices {
         self.effectHelp = effectHelp
         self.suggestedLocalTitle = suggestedLocalTitle
         self.saveAsLocalWallpaper = saveAsLocalWallpaper
+        self.projectJSON = projectJSON
+        self.scriptConsole = scriptConsole
     }
 }

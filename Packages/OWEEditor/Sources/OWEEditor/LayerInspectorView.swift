@@ -44,6 +44,7 @@ private struct LayerForm: View {
                 appearanceSection
             }
             effectsSection
+            LayerScriptsSection(layer: layer)
             Section {
                 DisclosureGroup(L("Details")) {
                     if let source = layer.sourcePath {
@@ -176,7 +177,7 @@ private struct LayerForm: View {
             }
             ForEach(layer.effects) { effect in
                 let bound: String? = {
-                    if case .userProperty(let name) = SceneFieldBinding(effect.visible) { return name }
+                    if case .userProperty(let name) = session.effectBinding(effect, of: layer.id) { return name }
                     return nil
                 }()
                 HStack(spacing: 6) {
@@ -193,22 +194,26 @@ private struct LayerForm: View {
                     .help(bound.map { L("Set by the user property “\($0)”") } ?? "")
                     InfoTip(services.effectHelp(effect.folderName))
                 }
+                .fieldAuthoring(layer: layer.id, path: .effect(effect.id))
             }
         }
     }
 
     /// The field's control, or, for one a user property sets, which property.
-    @ViewBuilder private func fieldRow<Control: View>(_ field: String, title: String,
-                                                      @ViewBuilder control: () -> Control) -> some View {
-        if case .userProperty(let name) = session.binding(field, of: layer.id) {
-            LabeledContent(title) {
-                Text(L("Set by the user property “\(name)”"))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.trailing)
+    private func fieldRow<Control: View>(_ field: String, title: String,
+                                         @ViewBuilder control: () -> Control) -> some View {
+        Group {
+            if case .userProperty(let name) = session.binding(field, of: layer.id) {
+                LabeledContent(title) {
+                    Text(L("Set by the user property “\(name)”"))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.trailing)
+                }
+            } else {
+                LabeledContent(title) { control() }
             }
-        } else {
-            LabeledContent(title) { control() }
         }
+        .fieldAuthoring(layer: layer.id, path: SceneFieldPath(components: [field]))
     }
 }
 
@@ -239,7 +244,13 @@ private struct SceneForm: View {
                 }
                 if let userProperties = services.userProperties {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(L("User Properties")).font(.headline)
+                        HStack {
+                            Text(L("User Properties")).font(.headline)
+                            Spacer()
+                            if services.projectJSON != nil {
+                                EditUserPropertiesButton()
+                            }
+                        }
                         userProperties()
                     }
                 }

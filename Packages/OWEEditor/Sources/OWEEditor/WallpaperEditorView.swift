@@ -11,6 +11,7 @@ public struct WallpaperEditorView: View {
     @State private var isConfirmingRevert = false
     @State private var isSaving = false
     @State private var notice: Notice?
+    @StateObject private var authoring: EditorAuthoringModel
 
     struct Notice: Identifiable, Equatable {
         let id = UUID()
@@ -21,6 +22,8 @@ public struct WallpaperEditorView: View {
     public init(session: SceneEditSession, services: WallpaperEditorServices) {
         self.session = session
         self.services = services
+        _authoring = StateObject(wrappedValue: EditorAuthoringModel(session: session, projectJSON: services.projectJSON,
+                                                                    console: services.scriptConsole))
     }
 
     public var body: some View {
@@ -28,8 +31,16 @@ public struct WallpaperEditorView: View {
             LayerListView(session: session)
                 .navigationSplitViewColumnWidth(min: 220, ideal: 260, max: 380)
         } detail: {
-            EditorCanvasView(session: session, makeCanvas: services.makeCanvas)
-                .overlay(alignment: .top) { noticeBanner }
+            VSplitView {
+                EditorCanvasView(session: session, makeCanvas: services.makeCanvas)
+                    .overlay(alignment: .top) { noticeBanner }
+                    .frame(minHeight: 200)
+                // The script editor docks under the canvas, which keeps running what it applies.
+                if let draft = authoring.draft {
+                    ScriptEditorPanel(authoring: authoring, draft: draft)
+                        .frame(minHeight: 240, idealHeight: 340)
+                }
+            }
                 .inspector(isPresented: $isInspectorPresented) {
                     LayerInspectorView(session: session, services: services)
                         .inspectorColumnWidth(min: 260, ideal: 300, max: 420)
@@ -37,6 +48,13 @@ public struct WallpaperEditorView: View {
                 .toolbar { toolbar }
         }
         .frame(minWidth: 960, minHeight: 600)
+        .environmentObject(authoring)
+        .sheet(item: $authoring.bindingTarget) { target in
+            BindPropertySheet(authoring: authoring, target: target)
+        }
+        .sheet(isPresented: $authoring.isEditingProperties) {
+            UserPropertiesEditorView(authoring: authoring)
+        }
         .alert(L("Revert to the Original?"), isPresented: $isConfirmingRevert) {
             Button(L("Revert"), role: .destructive) { session.revert(actionName: L("Revert")) }
             Button(L("Cancel"), role: .cancel) {}
@@ -70,6 +88,14 @@ public struct WallpaperEditorView: View {
         }
         if #available(macOS 26, *) {
             ToolbarSpacer(.flexible)
+        }
+        if services.projectJSON != nil {
+            ToolbarItem {
+                Button { authoring.isEditingProperties = true } label: {
+                    Label(L("User Properties"), systemImage: "slider.horizontal.3")
+                }
+                .help(L("Add, edit and arrange the wallpaper’s user properties"))
+            }
         }
         ToolbarItem {
             Button { isConfirmingRevert = true } label: {
