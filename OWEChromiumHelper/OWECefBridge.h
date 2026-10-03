@@ -30,6 +30,10 @@ void owe_cef_prepare_application(void);
 int owe_cef_start(const char *framework_dir, const char *cache_dir, const char *url, int width, int height,
                   int frame_rate, owe_cef_frame_callback callback, void *context, char *error, size_t error_size);
 
+/// Runs the main run loop from inside the call that started CEF, until `owe_cef_stop`. Call right
+/// after a successful `owe_cef_start`, from the same main-thread callout.
+void owe_cef_run(void);
+
 /// Closes the browser and stops pumping CEF's message loop. The process is expected to exit next.
 void owe_cef_stop(void);
 

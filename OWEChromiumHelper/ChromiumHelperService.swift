@@ -59,11 +59,13 @@ final class ChromiumHelperService: NSObject, ChromiumHelperProtocol {
                 Unmanaged<ChromiumHelperService>.fromOpaque(context).takeUnretainedValue().forward(surface)
             }, context, &error, error.count)
             reply(status == 0 ? nil : String(cString: error))
+            if status == 0 { owe_cef_run() }
         }
     }
 
     func stop() {
-        DispatchQueue.main.async { owe_cef_stop() }
+        // A run-loop block, not the main queue: the main queue is busy in `owe_cef_run`.
+        RunLoop.main.perform { owe_cef_stop() }
     }
 
     /// Copies CEF's surface into the next ring surface on the GPU and sends that one.

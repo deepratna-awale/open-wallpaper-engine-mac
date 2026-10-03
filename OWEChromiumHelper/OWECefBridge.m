@@ -7,6 +7,7 @@
 #import <AppKit/AppKit.h>
 #import <crt_externs.h>
 #import <dlfcn.h>
+#import <os/log.h>
 #import <stdatomic.h>
 #import <string.h>
 
@@ -124,6 +125,12 @@ static void set_string(cef_string_t *target, const char *utf8) {
 
 // MARK: - Subprocesses
 
+/// A subprocess failure goes to stderr and the unified log: an XPC service's stderr goes nowhere.
+static void report(const char *message) {
+    fprintf(stderr, "owe-chromium-helper: %s\n", message);
+    os_log_error(OS_LOG_DEFAULT, "owe-chromium-helper: %{public}s", message);
+}
+
 int owe_cef_is_subprocess(int argc, char *const *argv) {
     for (int i = 1; i < argc; i++) {
         if (strncmp(argv[i], "--type=", 7) == 0) return 1;
@@ -157,7 +164,7 @@ int owe_cef_run_subprocess(int argc, char **argv) {
     @autoreleasepool {
         NSString *frameworkDir = subprocess_framework_dir(argc, argv);
         if (!frameworkDir) {
-            fprintf(stderr, "owe-chromium-helper: no framework folder for this subprocess\n");
+            report("no framework folder for this subprocess");
             return 1;
         }
         // The sandbox is entered before the framework loads, as CefScopedSandboxContext does.
@@ -171,13 +178,13 @@ int owe_cef_run_subprocess(int argc, char **argv) {
             sandboxDestroy = sandbox ? (sandbox_destroy_fn)dlsym(sandbox, "cef_sandbox_destroy") : NULL;
             sandboxContext = initialize ? initialize(argc, argv) : NULL;
             if (!sandboxContext) {
-                fprintf(stderr, "owe-chromium-helper: can't enter CEF's sandbox\n");
+                report("can't enter CEF's sandbox");
                 return 1;
             }
         }
         char error[512] = {0};
         if (!load_cef(frameworkDir, error, sizeof error)) {
-            fprintf(stderr, "owe-chromium-helper: %s\n", error);
+            report(error);
             return 1;
         }
         cef_main_args_t args = {.argc = argc, .argv = argv};
@@ -274,10 +281,14 @@ int owe_cef_start(const char *framework_dir, const char *cache_dir, const char *
         set_string(&settings.framework_dir_path, frameworkPath.fileSystemRepresentation);
         set_string(&settings.browser_subprocess_path, NSBundle.mainBundle.executablePath.fileSystemRepresentation);
         set_string(&settings.root_cache_path, cache_dir);
+        // CEF's own log (fatal checks included): an XPC service's stderr goes nowhere.
+        NSString *logFile = [[NSString stringWithUTF8String:cache_dir] stringByAppendingPathComponent:@"cef.log"];
+        set_string(&settings.log_file, logFile.fileSystemRepresentation);
         int initialized = cef.initialize(&args, &settings, NULL, NULL);
         cef.utf16_clear(&settings.framework_dir_path);
         cef.utf16_clear(&settings.browser_subprocess_path);
         cef.utf16_clear(&settings.root_cache_path);
+        cef.utf16_clear(&settings.log_file);
         if (!initialized) {
             set_error(error, error_size, @"CEF didn't initialize");
             return 1;
@@ -321,6 +332,18 @@ int owe_cef_start(const char *framework_dir, const char *cache_dir, const char *
             cef.do_message_loop_work();
         }];
         return 0;
+    }
+}
+
+void owe_cef_run(void) {
+    // CEF's message pump observes the main run loop's entries and exits and pops one record per
+    // exit. CEF starts from a callout inside a run-loop pass whose entry it never saw, so letting
+    // that pass end trips its check (EXC_BREAKPOINT). Running nested passes from here keeps the
+    // outer one open; every pass CEF sees from now on has both its entry and its exit.
+    while (atomic_load(&state.started) && state.callback) {
+        @autoreleasepool {
+            [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]];
+        }
     }
 }
 
