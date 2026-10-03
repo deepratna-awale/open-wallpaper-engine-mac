@@ -18,18 +18,28 @@ final class SceneRootMotionTests: XCTestCase {
         var name: String
         var flags: UInt32
         var rootBone: Int32
+        /// WE's box centroid on the 1920×1080 screen at frames 5, 10, 15, 20 and 25 of a loop, read
+        /// from its capture `clips/mg4p_<name>.mp4` (6 s at 30 fps, from the frame the box jumps
+        /// back to its start); nil for the settings whose file is the same as another's.
+        var we: [SIMD2<Float>]? = nil
     }
 
     static let variants: [Variant] = [
-        Variant(name: "bone_none", flags: 0x401, rootBone: -1),
+        Variant(name: "bone_none", flags: 0x401, rootBone: -1,
+                we: [SIMD2(946, 556), SIMD2(892, 539), SIMD2(849, 527), SIMD2(782, 510), SIMD2(737, 498)]),
         Variant(name: "root_all_off", flags: 0x401, rootBone: 2),
-        Variant(name: "root_posX", flags: 0xc01, rootBone: 2),
-        Variant(name: "root_posY", flags: 0x1401, rootBone: 2),
-        Variant(name: "root_posZ", flags: 0x2401, rootBone: 2),
+        Variant(name: "root_posX", flags: 0xc01, rootBone: 2,
+                we: [SIMD2(931, 550), SIMD2(886, 535), SIMD2(831, 517), SIMD2(724, 484), SIMD2(671, 469)]),
+        Variant(name: "root_posY", flags: 0x1401, rootBone: 2,
+                we: [SIMD2(936, 559), SIMD2(862, 558), SIMD2(779, 559), SIMD2(611, 563), SIMD2(530, 566)]),
+        Variant(name: "root_posZ", flags: 0x2401, rootBone: 2,
+                we: [SIMD2(945, 574), SIMD2(894, 626), SIMD2(852, 675), SIMD2(793, 746), SIMD2(764, 783)]),
         Variant(name: "root_rotX", flags: 0x401, rootBone: 2),
-        Variant(name: "root_rotY", flags: 0x8401, rootBone: 2),
+        Variant(name: "root_rotY", flags: 0x8401, rootBone: 2,
+                we: [SIMD2(931, 551), SIMD2(885, 537), SIMD2(851, 531), SIMD2(789, 530), SIMD2(769, 530)]),
         Variant(name: "root_rotZ", flags: 0x401, rootBone: 2),
-        Variant(name: "root_all_on", flags: 0xbc01, rootBone: 2),
+        Variant(name: "root_all_on", flags: 0xbc01, rootBone: 2,
+                we: [SIMD2(915, 582), SIMD2(834, 649), SIMD2(776, 742), SIMD2(740, 911), SIMD2(742, 998)]),
     ]
 
     static var allOff: Variant { variants[1] }
@@ -147,6 +157,34 @@ final class SceneRootMotionTests: XCTestCase {
         XCTAssertLessThan(on.map { abs($0.yaw) }.max() ?? 0, (off.map { abs($0.yaw) }.max() ?? 0) * 0.25)
     }
 
+    /// The box's path through a loop, played as the capture's project plays it (layer on clip 26,
+    /// model scale 0.01, camera 8 6 8 → 0 1 0, fov 50, 1920×1080), against WE's MG4 captures, with
+    /// the object never moved by root motion. All off is the root bone with no axis, the same
+    /// file as `bone_none`, whose capture stands for it.
+    func testTheLoopFollowsWEsCaptures() throws {
+        let captured: [(Variant, [SIMD2<Float>])] = [
+            (Self.allOff, try XCTUnwrap(Self.variants[0].we)),
+            (Self.yawOnly, try XCTUnwrap(Self.yawOnly.we)),
+            (Self.allOn, try XCTUnwrap(Self.allOn.we)),
+        ] + Self.variants[2...4].compactMap { variant in variant.we.map { (variant, $0) } }
+        for (variant, we) in captured {
+            let path = try Self.screenPath(variant)
+            let errors: [Float] = zip(path, we).map { simd_distance($0, $1) }
+            let mean: Float = errors.reduce(0, +) / Float(errors.count)
+            XCTAssertLessThan(mean, 20, "\(variant.name): ours \(path), WE's \(we)")
+        }
+    }
+
+    /// WE 2.8.0.42's newer captures (we-test-wp-images @ 2aad5f2, tools/peer/requests/owe-beta3:
+    /// `rootmotion_strips.png` and `models_gt/mg4/clips`), read from `OWE_BETA3_CAPTURES` when set.
+    func testTheBeta3Captures() throws {
+        guard let folder = ProcessInfo.processInfo.environment["OWE_BETA3_CAPTURES"],
+              FileManager.default.fileExists(atPath: URL(fileURLWithPath: folder).appending(path: "rootmotion_strips.png").path) else {
+            throw XCTSkip("the owe-beta3 captures weren't reachable when this was written; their frames aren't transcribed yet")
+        }
+        throw XCTSkip("transcribe the box centroids from rootmotion_strips.png and models_gt/mg4/clips into `we` paths here")
+    }
+
     /// Nothing accumulates: each loop poses the root as the last did, for every setting.
     func testNoAccumulationAcrossLoops() throws {
         let frames = [5, 10, 15, 20, 25]
@@ -230,6 +268,41 @@ final class SceneRootMotionTests: XCTestCase {
                                       yaw: atan2(yaw.columns.2.x, yaw.columns.2.z)))
         }
         return samples
+    }
+
+    /// The box centre on screen after each of `steps` frames of 1/30 s (by default frames 5, 10,
+    /// 15, 20 and 25 of the second loop). The object stays at the origin, scale 0.01: root motion
+    /// never moves it.
+    static func screenPath(_ variant: Variant, steps: [Int] = [35, 40, 45, 50, 55]) throws -> [SIMD2<Float>] {
+        let model = try MDLReader.read(try data(variant))
+        var stack = try stack(model, rootMotion: true)
+        let bounds = model.bounds
+        let centre = (bounds.min + bounds.max) * 0.5
+        let object = SceneWorldMatrix.local(SceneLocalTransform3D(origin: .zero, scale: SIMD3(repeating: 0.01), angles: .zero))
+        var update = SceneAnimationLayerUpdate()
+        var path: [SIMD2<Float>] = []
+        for step in 1...(steps.max() ?? 0) {
+            let pose = stack.evaluate(delta: 1.0 / 30, update: &update)
+            guard steps.contains(step) else { continue }
+            let palette = stack.skeleton.palette(worlds: stack.skeleton.worlds(locals: pose.map(\.matrix)))
+            let placed: SIMD4<Float> = object * (palette[2] * SIMD4<Float>(centre, 1))
+            path.append(screen(SIMD3(placed.x, placed.y, placed.z)))
+        }
+        return path
+    }
+
+    /// Through the capture's camera: eye 8 6 8, centre 0 1 0, a 50° vertical fov, 16:9.
+    static func screen(_ point: SIMD3<Float>) -> SIMD2<Float> {
+        let eye = SIMD3<Float>(8, 6, 8)
+        let forward = simd_normalize(SIMD3<Float>(0, 1, 0) - eye)
+        let side = simd_normalize(simd_cross(forward, SIMD3(0, 1, 0)))
+        let up = simd_cross(side, forward)
+        let relative = point - eye
+        let depth: Float = simd_dot(relative, forward)
+        let tangent: Float = tan(25 * Float.pi / 180)
+        let x: Float = simd_dot(relative, side) / depth / tangent / (16.0 / 9.0)
+        let y: Float = simd_dot(relative, up) / depth / tangent
+        return SIMD2(960 + x * 960, 540 - y * 540)
     }
 
     /// The largest distance of a point from the first.
