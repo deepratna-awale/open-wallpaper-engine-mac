@@ -237,6 +237,20 @@ jobs:
           if grep -q "get-task-allow" <<<"$ENTS"; then
             echo "::error::get-task-allow is set; notarization rejects it"; exit 1
           fi
+          # Library validation stays on in the app; only the Chromium helper may load CEF's build.
+          if grep -q "disable-library-validation" <<<"$ENTS"; then
+            echo "::error::the app disables library validation"; exit 1
+          fi
+          CHROMIUM_HELPER="$APP/Contents/XPCServices/owe-chromium-helper.xpc"
+          codesign --verify --strict --verbose=2 "$CHROMIUM_HELPER"
+          for helper_app in "$APP/Contents/Helpers/"*.app; do
+            codesign --verify --strict --verbose=2 "$helper_app"
+          done
+          HELPER_ENTS=$(codesign -d --entitlements - --xml "$CHROMIUM_HELPER" 2>/dev/null | plutil -p - || true)
+          echo "$HELPER_ENTS"
+          if grep -q "get-task-allow" <<<"$HELPER_ENTS"; then
+            echo "::error::get-task-allow is set on the Chromium helper"; exit 1
+          fi
 
           INFO="$APP/Contents/Info.plist"
           plist() { /usr/libexec/PlistBuddy -c "Print :$1" "$INFO"; }
@@ -257,7 +271,7 @@ jobs:
                | grep -Ev '^(/usr/lib/|/System/Library/|@rpath/Sparkle\.framework/Versions/B/Sparkle$)'; then
             echo "::error::the app links a non-system library"; exit 1
           fi
-          # No executables besides the app's own and Sparkle's (nowPlayingAdapter.pl runs as an
+          # No executables besides the app's own, the Chromium helper and Sparkle's (nowPlayingAdapter.pl runs as an
           # argument to /usr/bin/perl and is a plain resource). Sparkle's are each verified; the
           # XPC services are unused (the app isn't sandboxed) but ship signed inside the framework.
           SPARKLE="$APP/Contents/Frameworks/Sparkle.framework/Versions/B"
@@ -267,6 +281,11 @@ jobs:
             "$SPARKLE/Updater.app/Contents/MacOS/Updater"
             "$SPARKLE/XPCServices/Downloader.xpc/Contents/MacOS/Downloader"
             "$SPARKLE/XPCServices/Installer.xpc/Contents/MacOS/Installer"
+            "$APP/Contents/XPCServices/owe-chromium-helper.xpc/Contents/MacOS/owe-chromium-helper"
+            "$APP/Contents/Helpers/OWE Chromium Helper.app/Contents/MacOS/OWE Chromium Helper"
+            "$APP/Contents/Helpers/OWE Chromium Helper (Renderer).app/Contents/MacOS/OWE Chromium Helper (Renderer)"
+            "$APP/Contents/Helpers/OWE Chromium Helper (GPU).app/Contents/MacOS/OWE Chromium Helper (GPU)"
+            "$APP/Contents/Helpers/OWE Chromium Helper (Plugin).app/Contents/MacOS/OWE Chromium Helper (Plugin)"
           )
           for helper in "${sparkle_executables[@]}"; do
             test -f "$helper" || { echo "::error::missing Sparkle executable: $helper"; exit 1; }
