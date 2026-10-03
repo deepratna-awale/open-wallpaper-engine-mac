@@ -7,12 +7,17 @@ import simd
 /// loop, 0x08/0x10/0x20 position x/y/z, 0x80 rotation y (all on: 0xBC). Its UI offers no other
 /// rotation.
 ///
-/// WE 2.8.0.42's captures (we-test-wp-images @ 2aad5f2, tools/peer/requests/owe-beta3) settle
-/// what it does with them: the flagged axes are taken out of the root bone's pose and nothing
-/// else. The object's transform never moves, and nothing accumulates: every loop of the clip
-/// returns to the same spot. With all axes off the root plays its full motion; with yaw alone the
-/// root keeps its start yaw while the rest plays; with every axis on the root stays at its start
-/// position and yaw, so the model stays near its origin.
+/// WE 2.8.0.42's captures (we-test-wp-images @ 2aad5f2: tools/peer/models_gt/mg4/clips and
+/// tools/peer/requests/owe-beta3) settle what it does with them. The flagged axes come out of the
+/// root bone's pose as 0x140225900 takes them out (below), each frame from that frame alone: the
+/// object's transform never moves and nothing accumulates, so every loop of the clip returns to
+/// the same spot. With all axes off the root plays its full motion. Yaw alone strips the root's
+/// yaw and the model keeps its heading (the rotY capture: 17 px mean with the strip alone, 67
+/// with the model turned). With position axes as well the model turns by the yaw the root gained
+/// (`turn`; the all-on capture: 18 px mean with the turn, 110 without). The position strip adds a
+/// model-space difference to a local translation, so under a rotated parent it lands on other
+/// axes; the per-axis captures follow that (the posY box runs along the model's z), and the
+/// all-on box doesn't stay put.
 ///
 /// The root's matrices here are WE's (0x140267580, 0x140267f00): the clip's own samples chained up
 /// the parents with translation and rotation only (no scale). Matrices are column-vector (`simd`
@@ -65,6 +70,31 @@ struct SceneRootMotion: Equatable {
             let gained = Self.yaw(Self.rotation(current) * startRotationInverse)
             let own = Self.yaw(Self.rotation(start) * startRotationInverse)
             pose[bone].rotation = simd_quatf(own * gained.transpose) * pose[bone].rotation
+        }
+    }
+
+    /// The yaw (radians, about the model's y) the model turns by this frame, before the stack's
+    /// weights: with yaw and a position axis flagged, the yaw the root gained since the start
+    /// frame (YA of `apply`); 0 otherwise. Like the strip it depends on the frame alone. The
+    /// captures fix when it applies (all on turns, yaw alone doesn't; see the type's note) [I: the
+    /// branch in 0x140225900 that gates it].
+    func turn(clip: MDLAnimation, skeleton: SceneSkeleton, frame0: Int, frame1: Int, fraction: Float) -> Float {
+        let positions = MDLAnimation.Flag.rootPositionX | MDLAnimation.Flag.rootPositionY | MDLAnimation.Flag.rootPositionZ
+        guard flags & MDLAnimation.Flag.rootRotationY != 0, flags & positions != 0 else { return 0 }
+        let current = Self.rootMatrix(clip, skeleton: skeleton, bone: bone, frame0: frame0, frame1: frame1, fraction: fraction)
+        let gained = Self.yaw(Self.rotation(current) * startRotationInverse)
+        return atan2(gained.columns.2.x, gained.columns.2.z)
+    }
+
+    /// `pose` turned about the model's y axis by `angle`: every bone without a parent, rotation and
+    /// translation, so the whole model turns about its origin.
+    static func turn(_ pose: inout [SceneBoneTransform], skeleton: SceneSkeleton, by angle: Float) {
+        guard angle != 0 else { return }
+        let yaw = yawMatrix(sin: sin(angle), cos: cos(angle))
+        let rotation = simd_quatf(yaw)
+        for bone in pose.indices where bone >= skeleton.parents.count || skeleton.parents[bone] == nil {
+            pose[bone].translation = yaw * pose[bone].translation
+            pose[bone].rotation = rotation * pose[bone].rotation
         }
     }
 
