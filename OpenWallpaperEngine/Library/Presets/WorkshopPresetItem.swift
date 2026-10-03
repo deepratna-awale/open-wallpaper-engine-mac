@@ -1,48 +1,50 @@
 import Foundation
 
-/// A Workshop item of `"type": "preset"`: another wallpaper (its base) plus a set of property
-/// values. project.json names the base in `dependency` (the base's Workshop id, which Steam
-/// downloads beside it) and carries the values in `preset`, keyed by property name the way WE's
-/// Share JSON is (`WallpaperEngineShareJSON`). An item that ships its own scene (`file` present
-/// in its folder) is its own base.
+/// A Workshop preset item: another wallpaper (its base) plus a set of property values, as WE
+/// 2.8 installs one (Workshop 3332091404, a preset of 3122339805;
+/// `Tests/Fixtures/Library/preset-item`).
 ///
-/// WE lists such an item as a Preset and plays the base with the preset's values as that item's
-/// defaults: the user's own edits to the item win, and resetting goes back to the preset's values.
-/// OWE plays it from the base's folder (`WEWallpaper.wallpaperDirectory`) and keeps its settings
-/// and preview under the preset's folder (`WEWallpaper.presetDirectory`).
+/// Its project.json has no `type` and no `file`. It names the base in `dependency` (the base's
+/// Workshop id as a string; Steam installs the base as a separate item beside it) and carries the
+/// values in `preset`, a flat `{propertyKey: value}` object keyed like the base's
+/// `general.properties`, holding raw WE values: bools, numbers, "r g b" colours, text, asset
+/// paths relative to the preset's own folder (`files/…`), and `null` for a value left unset (the
+/// base's default stands). The folder holds only project.json, the preview and those files.
+///
+/// WE lists it as an ordinary tile of its base's type with its own title and preview, and plays the
+/// base with the preset's values as that item's defaults: the user's own edits to the item win,
+/// and Reset goes back to the preset's values. OWE plays it from the base's folder
+/// (`WEWallpaper.wallpaperDirectory`) and keeps its settings, running property store and preview
+/// under the preset's folder (`WEWallpaper.presetDirectory`).
 enum WorkshopPresetItem {
-    static let type = "preset"
-
-    /// Whether project.json declares a preset item.
+    /// Whether project.json declares a preset item: a `preset` object and a `dependency`.
     static func isPreset(_ root: [String: Any]) -> Bool {
-        (root["type"] as? String)?.caseInsensitiveCompare(type) == .orderedSame
+        guard root["preset"] is [String: Any] else { return false }
+        return !dependencyIds(root).isEmpty
     }
 
-    /// The `preset` object as key → WE value. Both shapes are read: flat values (`{"name": 1}`, as
-    /// Share JSON writes them) and property-like entries (`{"name": {"value": 1}}`).
-    static func overrides(projectJSON root: [String: Any]) -> [String: Any] {
-        guard let preset = root["preset"] as? [String: Any] else { return [:] }
-        var result: [String: Any] = [:]
-        for (key, value) in preset {
-            if let entry = value as? [String: Any] {
-                if let inner = entry["value"] { result[key] = inner }
-            } else {
-                result[key] = value
-            }
+    /// `dependency` as Workshop ids: a string or number, or a list of them.
+    static func dependencyIds(_ root: [String: Any]) -> [String] {
+        guard let value = root["dependency"] else { return [] }
+        let values: [Any] = (value as? [Any]) ?? [value]
+        return values.compactMap { item -> String? in
+            let id = (item as? String) ?? (item as? NSNumber)?.stringValue
+            guard let id, !id.isEmpty, id.allSatisfy(\.isNumber) else { return nil }
+            return id
         }
-        return result
+    }
+
+    /// The `preset` object without its unset (`null`) entries.
+    static func overrides(projectJSON root: [String: Any]) -> [String: Any] {
+        (root["preset"] as? [String: Any] ?? [:]).filter { !($0.value is NSNull) }
     }
 
     /// The folder of the preset's base wallpaper, or nil when it isn't installed. `roots` are the
     /// folders that hold Workshop items by id (the library itself).
     static func baseDirectory(forPresetAt folder: URL, projectJSON root: [String: Any], roots: [URL]) -> URL? {
-        if let file = root["file"] as? String, let clean = WEProject.sanitizedFile(file), !clean.isEmpty,
-           hasScene(file: clean, in: folder) {
-            return folder
-        }
         let resolver = WorkshopAssetResolver(roots: roots)
-        for id in WorkshopDependencyResolver.projectDependencies(inItemAt: folder).sorted() {
-            guard id != folder.lastPathComponent, let base = resolver.itemDirectory(for: id),
+        for id in dependencyIds(root) where id != folder.lastPathComponent {
+            guard let base = resolver.itemDirectory(for: id),
                   let baseRoot = projectJSON(in: base), !isPreset(baseRoot) else { continue }
             return base
         }
@@ -50,20 +52,25 @@ enum WorkshopPresetItem {
     }
 
     /// The listed wallpaper for the preset item in `folder`: its own title, preview, tags and id,
-    /// played from its base. Without the base it stays in its own folder, typed as the scene WE
-    /// would fall back to, so the missing-dependency flow offers the base's download.
+    /// with its base's type and scene file, played from the base. Without the base it stays in its
+    /// own folder as a scene (the only base type seen so far), and the missing-dependency flow
+    /// offers the base's download from `dependency`.
     static func wallpaper(presetAt folder: URL, projectJSON root: [String: Any], roots: [URL]) -> WEWallpaper {
-        var project = (try? JSONDecoder().decode(WEProject.self, from: JSONSerialization.data(withJSONObject: withFile(root))))
-            ?? WEProject(file: "", title: root["title"] as? String ?? "", type: type)
+        var own = root
+        own["file"] = ""
+        own["type"] = ""
+        own.removeValue(forKey: "preset")
+        var project = (try? JSONSerialization.data(withJSONObject: own)).flatMap { try? JSONDecoder().decode(WEProject.self, from: $0) }
+            ?? WEProject(file: "", title: root["title"] as? String ?? "", type: "")
         project.applyTaggedContentRating()
         let base = baseDirectory(forPresetAt: folder, projectJSON: root, roots: roots)
         if let base, let baseRoot = projectJSON(in: base),
-           let baseProject = try? JSONDecoder().decode(WEProject.self, from: JSONSerialization.data(withJSONObject: baseRoot)) {
+           let baseProject = (try? JSONSerialization.data(withJSONObject: baseRoot)).flatMap({ try? JSONDecoder().decode(WEProject.self, from: $0) }) {
             project.type = baseProject.type
             project.file = baseProject.file
         } else {
             project.type = "scene"
-            if project.file.isEmpty { project.file = "scene.json" }
+            project.file = "scene.json"
         }
         var wallpaper = WEWallpaper(using: project, where: base ?? folder)
         wallpaper.presetDirectory = folder
@@ -71,32 +78,28 @@ enum WorkshopPresetItem {
     }
 
     /// The preset's values as OWE value strings, checked against the base's property definitions
-    /// (`WallpaperEngineShareJSON.values`); empty for an ordinary wallpaper.
+    /// (`WallpaperEngineShareJSON.values`); an asset path is resolved in the preset's folder. Empty
+    /// for an ordinary wallpaper or a preset whose base isn't installed.
     static func defaultValues(for wallpaper: WEWallpaper) -> [String: String] {
-        guard let presetDirectory = wallpaper.presetDirectory,
+        guard let presetDirectory = wallpaper.presetDirectory, presetDirectory != wallpaper.wallpaperDirectory,
               let root = projectJSON(in: presetDirectory) else { return [:] }
         let overrides = overrides(projectJSON: root)
         guard !overrides.isEmpty else { return [:] }
-        return WallpaperEngineShareJSON.values(from: overrides,
-                                               definitions: WallpaperEngineShareJSON.definitions(in: wallpaper.wallpaperDirectory))
+        let definitions = WallpaperEngineShareJSON.definitions(in: wallpaper.wallpaperDirectory)
+        var values = WallpaperEngineShareJSON.values(from: overrides, definitions: definitions)
+        for (key, value) in values where !value.isEmpty && !valueTypes.contains(definitions[key]?.type ?? "") {
+            if let file = AssetPathResolver.fileURL(value, in: presetDirectory) {
+                values[key] = file.path(percentEncoded: false)
+            }
+        }
+        return values
     }
+
+    /// Property types whose strings are values, never asset paths.
+    private static let valueTypes: Set<String> = ["bool", "slider", "combo", "color", "text", "textinput"]
 
     static func projectJSON(in folder: URL) -> [String: Any]? {
         guard let data = try? Data(contentsOf: folder.appending(path: "project.json")) else { return nil }
         return (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
-    }
-
-    /// WEProject requires `file`; a preset item may leave it out.
-    private static func withFile(_ root: [String: Any]) -> [String: Any] {
-        var root = root
-        if !(root["file"] is String) { root["file"] = "" }
-        return root
-    }
-
-    private static func hasScene(file: String, in folder: URL) -> Bool {
-        let fm = FileManager.default
-        let pkg = folder.appending(path: (file as NSString).deletingPathExtension + ".pkg")
-        return fm.fileExists(atPath: folder.appending(path: file).path(percentEncoded: false))
-            || fm.fileExists(atPath: pkg.path(percentEncoded: false))
     }
 }

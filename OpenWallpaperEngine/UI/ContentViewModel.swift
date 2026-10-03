@@ -255,9 +255,7 @@ class ContentViewModel: ObservableObject, DropDelegate {
             
             // Type
             var type = FRType.none
-            switch wallpaper.displayType.lowercased() {
-            case "preset":
-                type = .preset
+            switch wallpaper.project.type.lowercased() {
             case "video":
                 type = .video
             case "scene":
