@@ -253,7 +253,7 @@ private struct LockScreenGuide: View {
 private struct IPhoneLiveScene: NSViewRepresentable {
     let wallpaper: WEWallpaper
     let properties: WallpaperPropertyScope
-    static let screenID = "iphone-preview"
+    static let screenID = SceneWallpaperInstance.previewScreenIDs.first!
 
     func makeCoordinator() -> SceneWallpaperPresenter { SceneWallpaperPresenter() }
 
@@ -266,13 +266,11 @@ private struct IPhoneLiveScene: NSViewRepresentable {
                                                     loadingSnapshots: wallpapers.loadingSnapshots)
         let key = WallpaperInstanceKey(wallpaper, properties: properties)
         let wallpaper = wallpaper, properties = properties
-        // Started here (no display shows it with these properties): muted, the preview never plays
-        // sound. A display's instance plays as that display does.
+        // The preview never makes the instance audible: silent while it is the only user
+        // (`SceneWallpaperInstance.isPreviewOnly`), as usual once a display shows it too.
         let lease = SceneWallpaperPresenter.Lease(wallpapers.sceneInstances, key: key) {
-            let instance = SceneWallpaperInstance(wallpaper: wallpaper, environment: environment, screenID: Self.screenID,
-                                                  properties: properties)
-            instance.isMuted = true
-            return instance
+            SceneWallpaperInstance(wallpaper: wallpaper, environment: environment, screenID: Self.screenID,
+                                   properties: properties)
         }
         context.coordinator.show(lease, in: view, screenID: Self.screenID)
         return view
