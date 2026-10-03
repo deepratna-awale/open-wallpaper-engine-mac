@@ -271,8 +271,11 @@ final class ScenePuppetTests: XCTestCase {
             }
         }
         let atlas = Picture(width: 32, height: 16, pixels: bytes)
-        let mesh = Self.mesh(quads: [(SIMD4(-16, 8, 0, -8), SIMD4(0, 0, 14.0 / 32, 1)),
-                                     (SIMD4(0, 8, 16, -8), SIMD4(18.0 / 32, 0, 1, 1))], bones: [0, 1])
+        let quads: [(position: SIMD4<Float>, uv: SIMD4<Float>)] = [
+            (position: SIMD4<Float>(-16, 8, 0, -8), uv: SIMD4<Float>(0, 0, 14.0 / 32, 1)),
+            (position: SIMD4<Float>(0, 8, 16, -8), uv: SIMD4<Float>(18.0 / 32, 0, 1, 1)),
+        ]
+        let mesh = Self.mesh(quads: quads, bones: [0, 1])
         let plan = try plan(mesh, bones: 2, size: SIMD2(32, 16))
         var pose = ScenePuppetPose.bind(boneCount: 2)
         let move = Self.translation(SIMD3(3.5, 1.25, 0))
@@ -286,9 +289,13 @@ final class ScenePuppetTests: XCTestCase {
         commands.waitUntilCompleted()
         let pixels = try ScenePuppetTestSupport.rgba8(warped, device: device)
         // The seam, mesh x = 3.5, in the canvas's texels; every row the parts cover.
-        let seam = Int(((3.5 - canvas.min.x) / canvas.size.x * 32).rounded(.down))
-        let top = Int(((canvas.max.y - (8 + 1.25)) / canvas.size.y * 16).rounded(.up))
-        let bottom = Int(((canvas.max.y - (-8 + 1.25)) / canvas.size.y * 16).rounded(.down))
+        let size: SIMD2<Float> = canvas.size
+        let seamX: Float = (3.5 - canvas.min.x) / size.x * 32
+        let topY: Float = (canvas.max.y - Float(8 + 1.25)) / size.y * 16
+        let bottomY: Float = (canvas.max.y - Float(-8 + 1.25)) / size.y * 16
+        let seam = Int(seamX.rounded(.down))
+        let top = Int(topY.rounded(.up))
+        let bottom = Int(bottomY.rounded(.down))
         XCTAssertLessThan(top, bottom)
         for y in top..<bottom {
             for x in seam - 1...seam + 1 {
