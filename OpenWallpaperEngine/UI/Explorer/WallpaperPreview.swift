@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import OWEInspectorKit
 
 struct WallpaperPreview: SubviewOfContentView {
     @ObservedObject var viewModel: ContentViewModel
@@ -83,6 +84,13 @@ struct WallpaperPreview: SubviewOfContentView {
             }
             .help(String(localized: "The wallpaper's page didn't load, so no screen saver was recorded",
                          comment: "Details panel: why a web or WebM video wallpaper has no screen saver"))
+        case .notAvailable(.doesNotLoop):
+            screenSaverRow(String(localized: "Screen Saver Not Available",
+                                  comment: "Details panel: no screen saver is made from this wallpaper")) {
+                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.yellow)
+            }
+            .help(String(localized: "This page doesn't loop smoothly",
+                         comment: "Details panel: why a web wallpaper has no screen saver: its recording has no seamless loop"))
         case nil:
             EmptyView()
         }
@@ -145,8 +153,7 @@ struct WallpaperPreview: SubviewOfContentView {
             ScrollView {
                 VStack(spacing: 16) {
                     VStack(spacing: 10) {
-                        GifImage(contentsOf: wallpaperViewModel.displayedWallpaper.project
-                                    .previewURL(in: wallpaperViewModel.displayedWallpaper.wallpaperDirectory)
+                        GifImage(contentsOf: wallpaperViewModel.displayedWallpaper.previewURL
                                     ?? Bundle.main.url(forResource: "WallpaperNotFound", withExtension: "mp4")!,
                                  animates: viewModel.isApplicationActive)
                             .resizable()
@@ -300,6 +307,16 @@ struct WallpaperPreview: SubviewOfContentView {
                             }
                             .glassButtonStyle()
                             .help("Scene Inspector", shortcut: .sceneInspector)
+                            let editable = WallpaperEditorController.canEdit(wallpaperViewModel.displayedWallpaper)
+                            Button {
+                                AppDelegate.shared.showWallpaperEditor(for: wallpaperViewModel.displayedWallpaper)
+                            } label: {
+                                Label("Edit Wallpaper", systemImage: "square.and.pencil")
+                                    .frame(maxWidth: .infinity)
+                            }
+                            .glassButtonStyle()
+                            .disabled(!editable)
+                            .modifier(EditWallpaperHelp(editable: editable))
                         }
                     }
                     // MARK: Properties
@@ -372,6 +389,9 @@ struct WallpaperPreview: SubviewOfContentView {
                                 if wallpaperHasSceneAudio(wallpaperViewModel.displayedWallpaper) {
                                     sceneMusicControls(for: wallpaperViewModel.displayedWallpaper)
                                 }
+                            case "web":
+                                ChromiumFeatureBadge(wallpaper: wallpaperViewModel.displayedWallpaper)
+                                    .id(wallpaperViewModel.displayedWallpaper.wallpaperDirectory)
                             default:
                                 EmptyView()
                             }
@@ -604,6 +624,45 @@ struct WallpaperPreview: SubviewOfContentView {
     }
 }
 
+/// A web wallpaper that uses APIs only Chromium has (`ChromiumFeatureAdvisor`): a small badge in
+/// its details, with the APIs in its tooltip. The wallpaper is scanned when its details show.
+private struct ChromiumFeatureBadge: View {
+    let wallpaper: WEWallpaper
+    @ObservedObject private var advisor = ChromiumFeatureAdvisor.shared
+    @ObservedObject private var router = WebEngineRouter.shared
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            // Which engine plays it: Automatic (Chromium only when needed), or forced.
+            Picker("Web engine", selection: Binding(get: { router.override(for: wallpaper) },
+                                                    set: { router.setOverride($0, for: wallpaper) })) {
+                Text("Automatic").tag(WebEngineOverride.automatic)
+                Text(verbatim: "WebKit").tag(WebEngineOverride.webKit)
+                Text(verbatim: "Chromium").tag(WebEngineOverride.chromium)
+                    .selectionDisabled(!router.installed)
+            }
+            .pickerStyle(.menu)
+            .help("Automatic plays this wallpaper in Chromium only if it uses Chromium-only features and the engine is installed; otherwise in WebKit, which uses far less memory.")
+            badge
+        }
+        .task { await advisor.scan(wallpaper) }
+    }
+
+    @ViewBuilder private var badge: some View {
+        Group {
+            if let features = advisor.features(of: wallpaper), !features.isEmpty {
+                Label("Some features only available on Chromium", systemImage: "globe.badge.chevron.backward")
+                    .font(.caption.weight(.semibold))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(.quaternary, in: Capsule())
+                    .help(Text(verbatim: features.map(\.api).joined(separator: ", ")))
+                    .accessibilityValue(Text(verbatim: features.map(\.api).joined(separator: ", ")))
+            }
+        }
+    }
+}
+
 /// Shows when a scene wallpaper references effects/materials that live in another Steam Workshop
 /// item that isn't installed locally, and lets the user download + link them in. Items that were
 /// removed, made private or belong to another app are named with the reason and a link to their
@@ -734,6 +793,19 @@ extension URL {
         return try FileManager.default.contentsOfDirectory(at: self, includingPropertiesForKeys: nil).lazy.reduce(0) {
                  (try $1.resourceValues(forKeys: [.totalFileAllocatedSizeKey])
                     .totalFileAllocatedSize ?? 0) + $0
+        }
+    }
+}
+
+/// The Edit Wallpaper button's tooltip: the editor and its shortcut, or why it is unavailable.
+private struct EditWallpaperHelp: ViewModifier {
+    let editable: Bool
+
+    func body(content: Content) -> some View {
+        if editable {
+            content.help("Wallpaper Editor", shortcut: .wallpaperEditor)
+        } else {
+            content.help("Only scene wallpapers can be edited")
         }
     }
 }

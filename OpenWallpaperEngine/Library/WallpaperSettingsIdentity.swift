@@ -54,7 +54,7 @@ struct WallpaperSettingsIdentity: Hashable {
     }
 
     static func resolve(_ wallpaper: WEWallpaper, defaults: UserDefaults = .app) -> WallpaperSettingsIdentity {
-        resolve(directory: wallpaper.wallpaperDirectory, defaults: defaults)
+        resolve(directory: wallpaper.settingsDirectory, defaults: defaults)
     }
 
     private func migrateLegacyKeys(from directory: URL, defaults: UserDefaults) {

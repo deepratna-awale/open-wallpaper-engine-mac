@@ -76,7 +76,9 @@ final class InstalledLibraryCache {
     private func entry(for folder: URL) -> Entry {
         let projectModified = Self.modificationDate(of: folder.appending(path: "project.json"))
         let folderModified = Self.modificationDate(of: folder)
-        if let cached = entries[folder], cached.projectModified == projectModified {
+        // A preset whose base isn't installed yet is re-resolved each pass, so it plays once the base arrives.
+        if let cached = entries[folder], cached.projectModified == projectModified,
+           !(cached.wallpaper.map { $0.isWorkshopPreset && $0.wallpaperDirectory == $0.presetDirectory } ?? false) {
             if cached.folderModified == folderModified { return cached }
             // Files came or went: the project is the same but the size may not be.
             let refreshed = Entry(projectModified: projectModified, folderModified: folderModified,

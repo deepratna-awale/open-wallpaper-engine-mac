@@ -29,6 +29,7 @@ enum SettingsAnchor {
     static let developer = "developer"
     static let reset = "reset"
     static let plugins = "plugins"
+    static let chromium = "chromium"
 }
 
 /// Search in Settings: the settings people look for, where they are, and the matches for a query.
@@ -116,6 +117,7 @@ struct SettingsSearch {
             entry("Animated Thumbnails", .plugins, SettingsAnchor.plugins),
             entry("Screen Saver", .plugins, SettingsAnchor.plugins),
             entry("Depth Map Generation", .plugins, SettingsAnchor.plugins),
+            entry("Chromium web engine", .plugins, SettingsAnchor.chromium),
 
             entry("Credits", .about, nil),
         ] + AppShortcut.all.map { entry($0.title, .general, SettingsAnchor.shortcuts) }

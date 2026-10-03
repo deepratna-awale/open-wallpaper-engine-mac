@@ -27,7 +27,12 @@ final class WebKitVideoPlayer: NSObject, WKNavigationDelegate {
         return !AVURLAsset.isPlayableExtendedMIMEType("video/webm")
     }
 
-    let webView: WKWebView
+    /// The page playing the video: a WKWebView, or a Chromium browser when the Chromium engine
+    /// plays web content (`WebEngineRouting`).
+    let page: WebWallpaperPage
+    /// The page when WebKit plays it.
+    var webView: WKWebView? { page as? WKWebView }
+    private var chromiumPage: ChromiumBrowserPage? { page as? ChromiumBrowserPage }
     private let url: URL
     /// Bumped per state change, so a retry for an older state stops.
     private var generation = 0
@@ -66,7 +71,8 @@ final class WebKitVideoPlayer: NSObject, WKNavigationDelegate {
         // `apply()` evaluates counts as one, so the video starts muted or not as the state says.
         configuration.mediaTypesRequiringUserActionForPlayback = .all
         configuration.allowsAirPlayForMediaPlayback = false
-        webView = WKWebView(frame: .zero, configuration: configuration)
+        let webView = WKWebView(frame: .zero, configuration: configuration)
+        page = webView
         super.init()
         webView.navigationDelegate = self
         webView.setValue(false, forKey: "drawsBackground")
@@ -77,13 +83,35 @@ final class WebKitVideoPlayer: NSObject, WKNavigationDelegate {
         apply()
     }
 
+    /// Plays `url` in a Chromium browser, served from `readAccess` through `owe-wallpaper` with
+    /// the same containment as a web wallpaper. Chromium shows the file as its media document too.
+    init(chromiumPage: ChromiumBrowserPage, url: URL, readAccess: URL) {
+        self.url = url
+        page = chromiumPage
+        super.init()
+        OWELog.info(.library, "Playing \(url.lastPathComponent) through Chromium")
+        observeVisibility()
+        let root = readAccess.standardizedFileURL.path
+        let path = url.standardizedFileURL.path
+        let relative = path.hasPrefix(root + "/") ? String(path.dropFirst(root.count + 1)) : url.lastPathComponent
+        if let pageURL = WebWallpaperSchemeHandler.url(forRelativePath: relative) {
+            // Silent until `apply()` says otherwise: the media document autoplays.
+            chromiumPage.setPageMuted(true)
+            chromiumPage.load(.init(url: pageURL, directory: readAccess))
+        } else {
+            OWELog.error(.library, "Can't play \(url.lastPathComponent) through Chromium: invalid path")
+        }
+        apply()
+    }
+
     func stop() {
         stopped = true
         updateMusicSyncTimer()
         for (center, observer) in visibilityObservers { center.removeObserver(observer) }
         visibilityObservers = []
-        webView.evaluateJavaScript("document.querySelectorAll('video').forEach(function(v){v.pause();v.removeAttribute('src');v.load();})")
-        webView.stopLoading()
+        page.evaluate("document.querySelectorAll('video').forEach(function(v){v.pause();v.removeAttribute('src');v.load();})")
+        webView?.stopLoading()
+        chromiumPage?.close()
     }
 
     nonisolated func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
@@ -101,13 +129,17 @@ final class WebKitVideoPlayer: NSObject, WKNavigationDelegate {
     /// Applies `state` to the page's `<video>`, retrying until the media document has one (a
     /// media document reports no navigation finish to rely on).
     private func apply() {
+        // Chromium mutes the whole page too: its media document starts playing on its own.
+        chromiumPage?.setPageMuted(state.muted)
+        // Chromium stops drawing a paused video's page altogether.
+        chromiumPage?.applySchedulingPolicy(muted: state.muted, visible: !(state.paused || state.rate <= 0))
         generation += 1
         attempt(generation)
     }
 
     private func attempt(_ generation: Int) {
         guard !stopped, generation == self.generation else { return }
-        webView.evaluateJavaScript(Self.script(for: state)) { [weak self] result, _ in
+        page.evaluate(Self.script(for: state)) { [weak self] result in
             // An error here is the page still loading; the retry covers it.
             guard (result as? Bool) != true else { return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -250,7 +282,7 @@ final class WebKitVideoPlayer: NSObject, WKNavigationDelegate {
     private func send(_ frame: MusicSyncFrame?) {
         let script = Self.musicSyncScript(frame)
         guard script != appliedMusicSyncScript else { return }
-        webView.evaluateJavaScript(script) { [weak self] result, _ in
+        page.evaluate(script) { [weak self] result in
             // An error here is the page still loading; the next frame is sent anyway.
             guard (result as? Bool) == true else { return }
             MainActor.assumeIsolated { self?.appliedMusicSyncScript = script }
@@ -280,7 +312,7 @@ final class WebKitVideoPlayer: NSObject, WKNavigationDelegate {
                                            queue: .main) { [weak self] notification in
             MainActor.assumeIsolated {
                 guard let self, let window = notification.object as? NSWindow,
-                      window === self.webView.window else { return }
+                      window === self.page.hostWindow else { return }
                 self.visibility.windowVisible = window.occlusionState.contains(.visible)
                 self.updateMusicSyncTimer()
             }

@@ -30,6 +30,8 @@ final class ScreenSaverPlugin: ObservableObject {
     enum Reason: Equatable {
         /// The web page (or WebKit video) didn't load in the recorder.
         case pageDidNotLoad
+        /// The page's recording has no seam that loops smoothly (`ScreenSaverSeamFinder.searchActiveSeam`).
+        case doesNotLoop
     }
 
     /// How one helper run ended.
@@ -37,6 +39,7 @@ final class ScreenSaverPlugin: ObservableObject {
         case rendered
         case failed
         case pageDidNotLoad
+        case doesNotLoop
     }
 
     /// A wallpaper's videos, keyed as the store names them.
@@ -96,10 +99,11 @@ final class ScreenSaverPlugin: ObservableObject {
     }
 
     /// The status a finished job leaves: available when every video exists, not available when a
-    /// page didn't load, and nothing for another failure (logged by the runner).
-    nonisolated static func finishedStatus(allRendered: Bool, pageDidNotLoad: Bool) -> Status? {
+    /// page didn't load or doesn't loop smoothly, and nothing for another failure (logged by the runner).
+    nonisolated static func finishedStatus(allRendered: Bool, pageDidNotLoad: Bool, doesNotLoop: Bool = false) -> Status? {
         if allRendered { return .available }
-        return pageDidNotLoad ? .notAvailable(.pageDidNotLoad) : nil
+        if pageDidNotLoad { return .notAvailable(.pageDidNotLoad) }
+        return doesNotLoop ? .notAvailable(.doesNotLoop) : nil
     }
 
     /// The properties as the helper's last argument, and back.
@@ -179,7 +183,7 @@ final class ScreenSaverPlugin: ObservableObject {
              points: SIMD2(Int(screen.frame.width), Int(screen.frame.height)))
         }
         let properties = WallpaperServices.shared.userProperties(
-            wallpaper: WallpaperPropertyScope.shared.runtimeKey(directory: wallpaper.wallpaperDirectory))
+            wallpaper: WallpaperPropertyScope.shared.runtimeKey(directory: wallpaper.settingsDirectory))
         let generation = generation
         let directory = wallpaper.wallpaperDirectory
         let resolution = AppDelegate.shared.globalSettingsViewModel.settings.renderResolution
@@ -208,17 +212,19 @@ final class ScreenSaverPlugin: ObservableObject {
         // One render at a time: each is a full scene render (or page recording) and encode.
         let job = pool.submit(priority: .library) { [weak self] job in
             var pageDidNotLoad = false
+            var doesNotLoop = false
             for target in targets {
                 guard !job.isCancelled else { return }
                 guard !store.exists(fileName: target.fileName) else { continue }
                 let output = store.url(fileName: target.fileName)
                 let result = runner(wallpaper, target, output)
                 if result == .pageDidNotLoad { pageDidNotLoad = true }
+                if result == .doesNotLoop { doesNotLoop = true }
                 guard result == .rendered else { continue }
                 Task { @MainActor in self?.publish(targets, generation: generation) }
             }
             let status = Self.finishedStatus(allRendered: targets.allSatisfy { store.exists(fileName: $0.fileName) },
-                                             pageDidNotLoad: pageDidNotLoad)
+                                             pageDidNotLoad: pageDidNotLoad, doesNotLoop: doesNotLoop)
             Task { @MainActor in self?.finish(key, status: status, generation: generation) }
         }
         jobs.append(job)
@@ -356,6 +362,10 @@ final class ScreenSaverPlugin: ObservableObject {
         if process.terminationStatus == ShaderPrewarmCommand.pageDidNotLoadStatus {
             OWELog.error(.app, "Screen saver: \(wallpaper.lastPathComponent)'s page didn't load for its loop")
             return .pageDidNotLoad
+        }
+        if process.terminationStatus == ShaderPrewarmCommand.doesNotLoopStatus {
+            OWELog.error(.app, "Screen saver: \(wallpaper.lastPathComponent)'s page doesn't loop smoothly")
+            return .doesNotLoop
         }
         guard process.terminationStatus == 0 else {
             OWELog.error(.app, "Screen saver: the loop render of \(wallpaper.lastPathComponent) failed (\(process.terminationStatus))")

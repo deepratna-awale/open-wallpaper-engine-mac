@@ -53,9 +53,9 @@ struct WallpaperPresetBulkApply {
                 stored.merge(matching) { _, new in new }
                 defaults.set(stored, forKey: identity.key(.userProperties, scope: scope))
                 defaults.set(true, forKey: identity.key(.explicitUserProperties, scope: scope))
-                publish(scope.runtimeKey(directory: wallpaper.wallpaperDirectory), matching)
+                publish(scope.runtimeKey(directory: wallpaper.settingsDirectory), matching)
             }
-            NotificationCenter.default.post(name: .wallpaperPropertiesDidSave, object: wallpaper.wallpaperDirectory.path)
+            NotificationCenter.default.post(name: .wallpaperPropertiesDidSave, object: wallpaper.settingsDirectory.path)
             result.applied += 1
         }
         return result

@@ -9,7 +9,8 @@ struct WallpaperPropertyTargets {
     let scopes: [WallpaperPropertyScope]
 
     init(wallpaper: WEWallpaper, scopes: [WallpaperPropertyScope]) {
-        directory = wallpaper.wallpaperDirectory
+        // A Workshop preset item has its own running store, apart from its base's.
+        directory = wallpaper.settingsDirectory
         identity = WallpaperSettingsIdentity.resolve(wallpaper)
         self.scopes = scopes.isEmpty ? [.shared] : scopes
     }

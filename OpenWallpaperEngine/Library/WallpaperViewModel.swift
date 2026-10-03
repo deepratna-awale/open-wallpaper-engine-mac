@@ -27,6 +27,8 @@ class WallpaperViewModel: ObservableObject {
                 if let trustedWallpapers = UserDefaults.app.array(forKey: "TrustedWallpapers") as? [String],
                    trustedWallpapers.contains(newValue.wallpaperDirectory.path(percentEncoded: false)) {
                     self.setWallpaper(newValue, for: selectedScreenIds)
+                    // Points out a wallpaper that needs Chromium while it isn't installed.
+                    ChromiumFeatureAdvisor.shared.wallpaperApplied(newValue)
                 } else {
                     AppDelegate.shared.contentViewModel.warningUnsafeWallpaperModal(which: newValue)
                 }
@@ -68,6 +70,8 @@ class WallpaperViewModel: ObservableObject {
 
     @Published var wallpaperPlacement: WallpaperPlacement = .fill {
         didSet {
+            // A preview's placement (the Wallpaper Editor's canvas) isn't the user's setting.
+            guard persistsWallpapers else { return }
             UserDefaults.app.set(wallpaperPlacement.rawValue, forKey: "WallpaperPlacement")
         }
     }

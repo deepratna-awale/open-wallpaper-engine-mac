@@ -162,7 +162,7 @@ struct PlaylistView: View {
            let url = URL(string: wallpaper.project.file) {
             return url
         }
-        return wallpaper.project.previewURL(in: wallpaper.wallpaperDirectory)
+        return wallpaper.previewURL
             ?? Bundle.main.url(forResource: "WallpaperNotFound", withExtension: "mp4")!
     }
 }

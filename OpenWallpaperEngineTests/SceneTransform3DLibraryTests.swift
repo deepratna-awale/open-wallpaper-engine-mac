@@ -58,22 +58,17 @@ final class SceneTransform3DLibraryTests: XCTestCase {
     /// The ortho projection of the 3D matrix equals the 2D path for every object of every
     /// orthographic scene, the tilted ones (`angles.x`/`.y`) counted: 8 in the survey
     /// (2734461061, 3000562427, 3019043758, 3352730400, 3384390033, shimmering_particles ×3),
-    /// none under a tilted parent. A root without an `origin` is centred as the 2D path does.
+    /// none under a tilted parent. Both put a root without an `origin` at 0 (§5.13).
     func testOrthographicViewOfTheWorldMatrixEqualsThe2DPath() throws {
         var checked = 0
         var tilted: [String] = []
         var lines: [String] = []
         for scene in try scenes() {
             var decoded = try decodeTolerant(WEScene.self, from: scene.data)
-            let size: SIMD2<Float>
-            switch decoded.general.projection {
-            case .perspective: continue
-            case .orthographic(let width, let height): size = SIMD2(Float(width), Float(height))
-            case .orthographicAuto: size = SIMD2(1920, 1080)
-            }
+            guard !decoded.general.projection.isPerspective else { continue }
             decoded.objects = SceneObjectIdentity.assigningFallbackIDs(decoded.objects)
-            let flat = SceneTransformHierarchy(objects: decoded.objects, sceneSize: size)
-            let deep = SceneTransformHierarchy3D(objects: decoded.objects, rootOrigin: SIMD3(size / 2, 0))
+            let flat = SceneTransformHierarchy(objects: decoded.objects)
+            let deep = SceneTransformHierarchy3D(objects: decoded.objects)
             for (index, object) in decoded.objects.enumerated() {
                 let id = String(object.id ?? index)
                 let chain = [id] + deep.ancestors(of: id)

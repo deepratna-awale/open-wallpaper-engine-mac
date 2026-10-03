@@ -52,11 +52,11 @@ final class SceneScriptRigTests: XCTestCase {
         XCTAssertEqual(string(f, "puppet.getBoneTransform('hand').m[13]"), "5", "the bind pose until the renderer's first frame")
 
         // Local writes read back at once and reach the animator.
-        f.evaluate("puppet.setLocalBoneOrigin('arm', new Vec3(7, 8, 0)); puppet.setLocalBoneAngles(1, new Vec3(0, 0, 90));")
+        f.evaluate("puppet.setLocalBoneOrigin('arm', new Vec3(7, 8, 0)); puppet.setLocalBoneAngles(1, new Vec3(0, 0, Math.PI / 2));")
         XCTAssertEqual(string(f, """
             var a = puppet.getLocalBoneAngles('arm'), o = puppet.getLocalBoneOrigin('arm');
-            [Math.round(a.z), Math.round(a.x), o.x, o.y].join()
-            """), "90,0,7,8")
+            [a.z.toFixed(4), Math.round(a.x), o.x, o.y].join()
+            """), "1.5708,0,7,8")
         f.runtime.frame(deltaTime: 1.0 / 60)
         let commands = rigCommands(f)
         XCTAssertEqual(commands.count, 2)
@@ -138,6 +138,55 @@ final class SceneScriptRigTests: XCTestCase {
             [puppet.getAttachmentIndex('grip'), puppet.getAttachmentIndex('x'), o.x, o.y, a.z,
              puppet.getAttachmentMatrix('grip').m[13]].join()
             """), "0,-1,501,302,0,302")
+    }
+
+    /// WE 2.8's units for the bone and attachment angles (docs/models-plan.md §5.24,
+    /// tools/peer/requests/owe-beta3/models-open/524-bone-angle-units/README.md): radians, with a
+    /// bone by name or index; a bone at Angles Z = 90 in the editor (stored "0 -0 1.57080") logs
+    /// 0,0,1.5708 for both. The layers' `angles` stay degrees.
+    func testBoneAndAttachmentAnglesAreRadians() throws {
+        var image = SceneScriptObjectDescription.make(.image, id: 5, name: "puppet")
+        let quarter = simd_float4x4(simd_quatf(angle: .pi / 2, axis: SIMD3(0, 0, 1)))
+        var rig = Self.rig
+        rig.bones[1] = .init(name: "arm", parent: 0, local: SceneScriptRigLayout.components(quarter),
+                             model: SceneScriptRigLayout.components(quarter))
+        rig.attachments = [.init(name: "grip", bone: 1, matrix: SceneScriptRigLayout.components(matrix_identity_float4x4))]
+        image.rig = rig
+        let f = try SceneScriptObjectFixture(FakeSceneScriptObjectHost(scene: SceneScriptSceneDescription(objects: [image])))
+        f.runtime.load()
+        f.evaluate("var puppet = thisScene.getLayer('puppet');")
+        func fmt(_ v: String) -> String { "[\(v).x.toFixed(4), \(v).y.toFixed(4), \(v).z.toFixed(4)].join()" }
+        XCTAssertEqual(string(f, fmt("puppet.getLocalBoneAngles('arm')")), "0.0000,0.0000,1.5708")
+        XCTAssertEqual(string(f, fmt("puppet.getLocalBoneAngles(1)")), "0.0000,0.0000,1.5708", "a numeric index")
+        XCTAssertEqual(string(f, fmt("puppet.getAttachmentAngles('grip')")), "0.0000,0.0000,1.5708")
+
+        // A write in radians reads back the same and turns the bone that far.
+        f.evaluate("puppet.setLocalBoneAngles('arm', new Vec3(0, 0, Math.PI));")
+        XCTAssertEqual(string(f, fmt("puppet.getLocalBoneAngles(1)")), "0.0000,0.0000,3.1416")
+        f.runtime.frame(deltaTime: 1.0 / 60)
+        guard case let .setLocal(bone, matrix)? = rigCommands(f).last else { return XCTFail("no local write") }
+        XCTAssertEqual(bone, 1)
+        XCTAssertEqual(matrix.columns.0.x, -1, accuracy: 1e-5, "half a turn, not π degrees")
+        XCTAssertEqual(matrix.columns.0.y, 0, accuracy: 1e-5)
+    }
+
+    /// WE 2.8 with no bone (docs/models-plan.md §5.31,
+    /// tools/peer/requests/owe-beta3/models-open/531-impulse-no-bone/README.md): no arguments, or
+    /// the vectors alone, return undefined, throw nothing and move nothing.
+    func testBonePhysicsWithoutABoneDoesNothing() throws {
+        let f = try fixture()
+        _ = f.host.takeCommands()
+        XCTAssertEqual(string(f, """
+            (function () {
+                try {
+                    return [typeof puppet.applyBonePhysicsImpulse(),
+                            typeof puppet.applyBonePhysicsImpulse(new Vec3(0, 0, 0), new Vec3(0, 0, 45)),
+                            typeof puppet.resetBonePhysicsSimulation()].join();
+                } catch (e) { return 'threw ' + e; }
+            })()
+            """), "undefined,undefined,undefined")
+        f.runtime.frame(deltaTime: 1.0 / 60)
+        XCTAssertEqual(rigCommands(f), [])
     }
 
     /// A puppet's rig from the library: the Knight's bones and its `idle` layer.

@@ -14,10 +14,14 @@ struct ChromiumEngineSection: View {
                 Spacer()
                 status
             }
-            Text("An optional Chromium engine for web wallpapers, downloaded on demand from the official CEF builds and checked against the version this app expects. It runs in its own process. Web wallpapers keep using the system's WebKit for now.")
+            Text("An optional Chromium engine for web wallpapers, downloaded on demand from the official CEF builds and checked against the version this app expects. It runs in its own process.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
+            // A Chromium page costs far more memory than WebKit's (`WebEngineRouting`).
+            Text("Used only for wallpapers that need it")
+                .font(.caption)
+                .foregroundStyle(.secondary)
             if let version = installer.installedVersion {
                 row("Version", Text(verbatim: version).font(.caption.monospaced()))
             }

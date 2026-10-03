@@ -131,7 +131,7 @@ final class SceneRendererPlacementTests: XCTestCase {
         [{"id": 1, "origin": "100 100 0", "scale": "3 3 1", "angles": "0 0 1.5707963"},
          {"id": 2, "parent": 1, "origin": "0 0 0", "particle": "p.json"}]
         """#.utf8))
-        let hierarchy = SceneTransformHierarchy(objects: objects, sceneSize: SIMD2(1920, 1080))
+        let hierarchy = SceneTransformHierarchy(objects: objects)
         let space = SceneParticleEmitterSpace(world: hierarchy.world(of: "2"))
         let velocity = space.direction(SIMD2(0, 100))
         XCTAssertEqual(simd_length(velocity), 100, accuracy: 1e-3, "scale does not change speed")

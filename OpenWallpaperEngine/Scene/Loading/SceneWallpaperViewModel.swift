@@ -9,6 +9,7 @@
 import SwiftUI
 import CoreText
 import CryptoKit
+import OWESceneEditing
 
 class SceneWallpaperViewModel: ObservableObject {
     static func log(_ msg: String) {
@@ -121,7 +122,7 @@ class SceneWallpaperViewModel: ObservableObject {
     private var loadedWallpaperDirectory: URL?
     private var assetDataCache: [String: Data] = [:]
     /// Where the loaded wallpaper's settings are stored, and the directory it was resolved for.
-    private var settings: (directory: URL, identity: WallpaperSettingsIdentity)?
+    private var settings: (directory: URL, settingsDirectory: URL, identity: WallpaperSettingsIdentity)?
     /// Whose user properties this instance runs with: every display's, or one display's
     /// (`WallpaperPropertyScope`, `WallpaperPropertyGroups`).
     let propertyScope: WallpaperPropertyScope
@@ -337,7 +338,8 @@ class SceneWallpaperViewModel: ObservableObject {
         WorkshopDependencyResolver.linkInstalledDependencies(for: wallpaper)
         let dir = wallpaper.wallpaperDirectory
         let sceneFile = wallpaper.project.file  // e.g. "scene.json" or "gifscene.json"
-        let settingsKey = settingsIdentity(for: dir).key(.userProperties, scope: propertyScope)
+        let settingsKey = settingsIdentity(for: dir, settingsDirectory: wallpaper.settingsDirectory)
+            .key(.userProperties, scope: propertyScope)
 
         // Derive PKG name from scene file: "scene.json" → "scene.pkg", "gifscene.json" → "gifscene.pkg"
         let pkgURL = dir.appending(path: (sceneFile as NSString).deletingPathExtension + ".pkg")
@@ -360,7 +362,7 @@ class SceneWallpaperViewModel: ObservableObject {
                 let parser = try PKGParser(url: pkgURL)
                 read.parser = parser
                 if let data = parser.extractFile(named: sceneFile) {
-                    (read.scene, read.document) = try decodeScene(data, edits: request.edits)
+                    (read.scene, read.document) = try decodeScene(data, request: request)
                 }
             } catch {
                 Self.log("Failed to parse PKG: \(error)")
@@ -369,7 +371,7 @@ class SceneWallpaperViewModel: ObservableObject {
             // Loose files (no .pkg)
             do {
                 if let data = try AssetPathResolver.data(sceneFile, in: dir) {
-                    (read.scene, read.document) = try decodeScene(data, edits: request.edits)
+                    (read.scene, read.document) = try decodeScene(data, request: request)
                 } else {
                     Self.log("Loose \(sceneFile) is not a usable file inside the wallpaper folder")
                 }
@@ -459,13 +461,14 @@ class SceneWallpaperViewModel: ObservableObject {
         return ScenePreparation.Request(directory: dir, sceneFile: wallpaper.project.file,
                                         edits: split.edits, userProperties: split.properties,
                                         settings: String(describing: settings.contentKey),
-                                        displays: SceneCacheKey.Display.connected())
+                                        displays: SceneCacheKey.Display.connected(),
+                                        overlay: SceneEditOverlayFiles.overlay(for: settingsIdentity(for: dir)))
     }
 
     /// The scene and the document it was decoded from (for the scripts; nil when it isn't JSON the
     /// tolerant reader takes).
-    private func decodeScene(_ data: Data, edits: [String: String]) throws -> (WEScene, SceneJSON?) {
-        let resolved = try ScenePreparation.resolvedScene(data, edits: edits)
+    private func decodeScene(_ data: Data, request: ScenePreparation.Request) throws -> (WEScene, SceneJSON?) {
+        let resolved = try ScenePreparation.resolvedScene(data, edits: request.edits, overlay: request.overlay)
         return (try JSONDecoder().decode(WEScene.self, from: resolved), Self.document(resolved))
     }
 
@@ -502,31 +505,35 @@ class SceneWallpaperViewModel: ObservableObject {
         bindingUpdate(for: keys).impact
     }
 
-    /// The settings identity of the wallpaper in `directory`, resolved (and old path keys moved)
-    /// once per load.
-    private func settingsIdentity(for directory: URL) -> WallpaperSettingsIdentity {
+    /// The settings identity of the wallpaper played from `directory`, resolved (and old path keys
+    /// moved) once per load. A Workshop preset item plays from its base's folder but keeps its
+    /// settings under its own (`settingsDirectory`); later calls with only `directory` get the same.
+    private func settingsIdentity(for directory: URL, settingsDirectory: URL? = nil) -> WallpaperSettingsIdentity {
         identityLock.lock()
         defer { identityLock.unlock() }
-        if let settings, settings.directory == directory { return settings.identity }
-        let identity = WallpaperSettingsIdentity.resolve(directory: directory)
+        if let settings, settings.directory == directory,
+           settingsDirectory == nil || settings.settingsDirectory == settingsDirectory { return settings.identity }
+        let identity = WallpaperSettingsIdentity.resolve(directory: settingsDirectory ?? directory)
         identity.seed(propertyScope)
-        settings = (directory, identity)
+        settings = (directory, settingsDirectory ?? directory, identity)
         return identity
     }
 
     private func prepareSceneUserPropertyDefaults(for wallpaper: WEWallpaper, scene: WEScene) {
         guard wallpaper.project.type.caseInsensitiveCompare("scene") == .orderedSame else { return }
-        let identity = settingsIdentity(for: wallpaper.wallpaperDirectory)
+        let identity = settingsIdentity(for: wallpaper.wallpaperDirectory, settingsDirectory: wallpaper.settingsDirectory)
         let key = identity.key(.userProperties, scope: propertyScope)
         let defaults = UserDefaults.app
-        let stored = identity.userSetValues(scope: propertyScope, defaults: defaults)
+        var stored = identity.userSetValues(scope: propertyScope, defaults: defaults)
+        // A Workshop preset item's values are its defaults: the user's own edits still win.
+        stored.merge(WorkshopPresetItem.defaultValues(for: wallpaper)) { user, _ in user }
         let values = Self.userPropertyValues(stored: stored,
                                              declared: Self.declaredUserProperties(in: wallpaper.wallpaperDirectory),
                                              scene: scene)
         // A display's own store keeps what the user saved, so displays whose properties are equal
         // stay equal (`WallpaperPropertyGroups` compares the stores) whichever of them loaded.
         if propertyScope == .shared { defaults.set(values, forKey: key) }
-        WallpaperServices.shared.setUserProperties(values, wallpaper: propertyScope.runtimeKey(directory: wallpaper.wallpaperDirectory),
+        WallpaperServices.shared.setUserProperties(values, wallpaper: propertyScope.runtimeKey(directory: wallpaper.settingsDirectory),
                                                            replacing: true)
     }
 
@@ -544,8 +551,8 @@ class SceneWallpaperViewModel: ObservableObject {
                 values[name] = sceneUserPropertyString(option)
             }
         }
-        for object in SceneObjectIdentity.assigningFallbackIDs(scene.objects) where object.textValue != nil {
-            let prefix = "_owe_text_\(object.id ?? -1)_"
+        for (index, object) in scene.objects.enumerated() where object.textValue != nil {
+            let prefix = "_owe_text_\(SceneObjectIdentity.id(of: object, at: index))_"
             if values[prefix + "font"] == nil, let font = object.font {
                 values[prefix + "font"] = font
             }
@@ -616,12 +623,12 @@ class SceneWallpaperViewModel: ObservableObject {
                                               orthographic: !scene.general.projection.isPerspective,
                                               settings: renderSettings)
         // Hidden objects are built too: a script can show them (docs/scenescript-plan.md §4.3).
-        let visibility = Dictionary(scene.objects.map { (String($0.id ?? -1), isObjectVisible($0)) },
+        let visibility = Dictionary(scene.objects.enumerated().map { (String(SceneObjectIdentity.id(of: $1, at: $0)), isObjectVisible($1, at: $0)) },
                                     uniquingKeysWith: { first, _ in first })
-        let authoredTransforms = SceneTransformHierarchy(objects: scene.objects, sceneSize: sceneSize)
+        let authoredTransforms = SceneTransformHierarchy(objects: scene.objects)
         // WE draws objects in scene.json order; both lists carry that index so the renderer can interleave them.
         let layers: [SceneMetalLayer] = scene.objects.enumerated().compactMap { index, object in
-            var layer = bindingTable.building(.object(object.id ?? index)) {
+            var layer = bindingTable.building(.object(SceneObjectIdentity.id(of: object, at: index))) {
                 buildLayer(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize, context: valueContext)
             }
             layer?.order = index
@@ -633,7 +640,7 @@ class SceneWallpaperViewModel: ObservableObject {
         let particleCache = ParticleDefinitionCache(sharesParts: sharesParticleDefinitions)
         for (index, object) in scene.objects.enumerated() {
             let base = particleSystems.count
-            let family = bindingTable.building(.object(object.id ?? index)) {
+            let family = bindingTable.building(.object(SceneObjectIdentity.id(of: object, at: index))) {
                 buildParticleFamily(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
                                     pixelUnits: Self.particlesUsePixelUnits(scene), transforms: authoredTransforms,
                                     cache: particleCache)
@@ -665,13 +672,13 @@ class SceneWallpaperViewModel: ObservableObject {
                                             clearColor: scene.general.clearColor(in: valueContext),
                                             wallpaperKey: propertyStoreKey)
             content.general = scene.general
-            content.motions = objectMotions(scene.objects, besides: layers, sceneSize: sceneSize, context: valueContext)
+            content.motions = objectMotions(scene.objects, besides: layers, context: valueContext)
             content.visibility = visibility
             content.userVisibility = SceneUserVisibility(objects: scene.objects)
-            content.objectIDs = scene.objects.map { $0.id ?? -1 }
+            content.objectIDs = scene.objects.enumerated().map { SceneObjectIdentity.id(of: $1, at: $0) }
             content.spatial = SceneSpatialContentBuilder(
                 readFile: { self.assetData(named: $0, wallpaperDir: wallpaperDir) },
-                wallpaperName: wallpaperDir.lastPathComponent).build(scene, context: valueContext, sceneSize: sceneSize)
+                wallpaperName: wallpaperDir.lastPathComponent).build(scene, context: valueContext)
             content.spatial.models = buildModels(content.spatial.models, wallpaperDir: wallpaperDir)
             SceneAttachmentCheck.logUnresolved(in: scene.objects, models: content.spatial.models, layers: layers,
                                                wallpaperName: wallpaperDir.lastPathComponent)
@@ -744,7 +751,7 @@ class SceneWallpaperViewModel: ObservableObject {
         scene.objects = SceneObjectIdentity.assigningFallbackIDs(scene.objects)
         let sceneSize = metalSceneSize(for: scene)
         if scene.general.projection == .orthographicAuto { Self.centreFirstImage(of: &scene, sceneSize: sceneSize) }
-        let authoredTransforms = SceneTransformHierarchy(objects: scene.objects, sceneSize: sceneSize)
+        let authoredTransforms = SceneTransformHierarchy(objects: scene.objects)
         var layers: [SceneMetalLayer] = []
         var particleSystems: [SceneMetalParticleSystem] = []
         var capacities = particleCapacities
@@ -787,7 +794,7 @@ class SceneWallpaperViewModel: ObservableObject {
                                         bloom: bloomSettings(for: scene.general), transforms: transforms,
                                         camera: SceneCameraEffects(scene.general, in: valueContext),
                                         clearColor: scene.general.clearColor(in: valueContext), wallpaperKey: propertyStoreKey)
-        content.motions = objectMotions(rebuilt, besides: layers, sceneSize: sceneSize, context: valueContext)
+        content.motions = objectMotions(rebuilt, besides: layers, context: valueContext)
         content.engineCombos = sceneEngineCombos
         return SceneObjectReplacement(objectIDs: Set(ids.map(String.init)), content: content)
     }
@@ -874,7 +881,7 @@ class SceneWallpaperViewModel: ObservableObject {
             ?? buildMetalTextLayer(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize)
             ?? buildShapeLayer(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize)
         layer?.bindings = SceneLayerBindings(object: object, builtWith: context)
-        if layer?.fillsScene == false { layer?.tilt = SceneLocalTransform(object: object, sceneSize: sceneSize).tilt }
+        if layer?.fillsScene == false { layer?.tilt = SceneLocalTransform(object: object).tilt }
         return layer
     }
 
@@ -934,14 +941,14 @@ class SceneWallpaperViewModel: ObservableObject {
         if resolved.particle != nil {
             var systems = buildParticleFamily(resolved, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
                                               pixelUnits: loadedScene.map(Self.particlesUsePixelUnits) ?? true,
-                                              transforms: SceneTransformHierarchy(objects: [resolved], sceneSize: sceneSize),
+                                              transforms: SceneTransformHierarchy(objects: [resolved]),
                                               cache: ParticleDefinitionCache(sharesParts: sharesParticleDefinitions))
             guard !systems.isEmpty else { return nil }
             // The scene's factor, or the family's own if it alone exceeds the budget.
             let own = ParticleBudget.scale(authored: systems.reduce(0) { $0 + ParticleBudget.capacity(of: $1) },
                                            budget: renderSettings.particleBudget.limit)
             for index in systems.indices { systems[index].budgetScale = min(particleBudgetScale, own) }
-            let motion = SceneObjectMotion(object: resolved, sceneSize: sceneSize,
+            let motion = SceneObjectMotion(object: resolved,
                                            bindings: SceneLayerBindings(object: resolved, builtWith: context))
             return .particles(systems, motion: motion)
         }
@@ -960,7 +967,7 @@ class SceneWallpaperViewModel: ObservableObject {
             }
             guard let built = made, built.plan != nil,
                   let node = SceneTransformHierarchy3D(objects: [resolved]).nodes.values.first else { return nil }
-            let motion = SceneObjectMotion(object: resolved, sceneSize: sceneSize,
+            let motion = SceneObjectMotion(object: resolved,
                                            bindings: SceneLayerBindings(object: resolved, builtWith: context))
             return .model(built, node: node, motion: motion)
         }
@@ -1026,8 +1033,9 @@ class SceneWallpaperViewModel: ObservableObject {
             if let size = Self.firstImage(of: scene)?.size?.parseVector2(), size.0 != 0, size.1 != 0 {
                 return SIMD2<Float>(Float(size.0), Float(size.1))
             }
-            OWELog.error(.scene, "\(loadedWallpaperDirectory?.lastPathComponent ?? "?"): orthogonalprojection auto "
-                         + "needs an image with a size; the scene is 1920×1080")
+            // Its image takes its texture's size and the scene stays 1920×1080 (§5.21).
+            OWELog.debug(.scene, "\(loadedWallpaperDirectory?.lastPathComponent ?? "?"): orthogonalprojection auto "
+                         + "without an image size; the scene is 1920×1080")
             return SIMD2<Float>(1920, 1080)
         case .perspective:
             return SIMD2<Float>(1920, 1080)
@@ -1035,7 +1043,8 @@ class SceneWallpaperViewModel: ObservableObject {
     }
 
     /// `{"auto": true}` sizes the scene from its first image object, which WE puts at the
-    /// scene's centre (0x14018b2c0; it does so every frame, over what a script set [I]).
+    /// scene's centre (0x14018b2c0) once: a script that moves it afterwards wins (WE 2.8,
+    /// docs/models-plan.md §5.21).
     private static func firstImage(of scene: WEScene) -> WESceneObject? {
         scene.objects.first { $0.image != nil }
     }
@@ -1046,8 +1055,8 @@ class SceneWallpaperViewModel: ObservableObject {
     }
 
     /// An object's own `origin`, relative to its parent.
-    private func localOrigin(for object: WESceneObject, sceneSize: SIMD2<Float>) -> SIMD2<Float> {
-        SceneLocalTransform(object: object, sceneSize: sceneSize).origin
+    private func localOrigin(for object: WESceneObject) -> SIMD2<Float> {
+        SceneLocalTransform(object: object).origin
     }
 
     private func buildMetalLayer(_ object: WESceneObject, wallpaperDir: URL, sceneSize: SIMD2<Float>) -> SceneMetalLayer? {
@@ -1111,7 +1120,7 @@ class SceneWallpaperViewModel: ObservableObject {
         }
         let position: SIMD2<Float> = model.fullscreen == true
             ? sceneSize / 2
-            : localOrigin(for: object, sceneSize: sceneSize)
+            : localOrigin(for: object)
         let rotation = Float(object.angles?.parseVector3().2 ?? 0)
         let staticScale = object.scale?.parseVector3() ?? (1, 1, 1)
         let objectColor = object.color?.parseVector3() ?? (1, 1, 1)
@@ -1280,7 +1289,7 @@ class SceneWallpaperViewModel: ObservableObject {
         let staticScale = object.scale?.parseVector3() ?? (1, 1, 1)
         var layer = SceneMetalLayer(id: String(object.id ?? -1), name: object.name ?? String(object.id ?? -1),
                        source: .image(Self.solidImage(red: color.0, green: color.1, blue: color.2)),
-                       position: localOrigin(for: object, sceneSize: sceneSize),
+                       position: localOrigin(for: object),
                        size: size,
                        scale: SIMD2<Float>(Float(staticScale.0), Float(staticScale.1)),
                        opacity: Float(object.alpha ?? 1),
@@ -1340,7 +1349,7 @@ class SceneWallpaperViewModel: ObservableObject {
                                          effects: object.textEffects.effects)
         var layer = SceneMetalLayer(id: String(object.id ?? -1), name: object.name ?? String(object.id ?? -1),
                                source: .image(transparentPlaceholderImage),
-                               position: localOrigin(for: object, sceneSize: sceneSize),
+                               position: localOrigin(for: object),
                                size: SIMD2<Float>(Float(sizeValue.0), Float(sizeValue.1)),
                                scale: SIMD2<Float>(Float(textScale.0), Float(textScale.1)),
                                opacity: Float(object.alpha ?? 1),
@@ -1390,7 +1399,7 @@ class SceneWallpaperViewModel: ObservableObject {
         let plans = buildEffectPlans(effects, objectID: object.id ?? -1, wallpaperDir: wallpaperDir,
                                      objectCombos: Self.shapeEffectCombos).plans
         guard !plans.isEmpty else { return nil }
-        let position = localOrigin(for: object, sceneSize: sceneSize)
+        let position = localOrigin(for: object)
         let size: SIMD2<Float>
         if let sizeString = object.size {
             let value = sizeString.parseVector2()
@@ -1607,7 +1616,10 @@ class SceneWallpaperViewModel: ObservableObject {
 
     /// Key of this wallpaper instance's user properties in the script engine's store.
     var propertyStoreKey: String {
-        propertyScope.runtimeKey(directory: loadedWallpaperDirectory ?? currentWallpaper.wallpaperDirectory)
+        // A Workshop preset item's store is keyed by the preset, not the base it plays from.
+        let loaded = loadedWallpaperDirectory ?? currentWallpaper.wallpaperDirectory
+        return propertyScope.runtimeKey(directory: loaded == currentWallpaper.wallpaperDirectory
+                                        ? currentWallpaper.settingsDirectory : loaded)
     }
 
     /// This wallpaper's current value of a user property.
@@ -1627,8 +1639,8 @@ class SceneWallpaperViewModel: ObservableObject {
         return blending
     }
 
-    private func isObjectVisible(_ object: WESceneObject) -> Bool {
-        SceneUserVisibility.Site(object).isShown(userProperty)
+    private func isObjectVisible(_ object: WESceneObject, at index: Int) -> Bool {
+        SceneUserVisibility.Site(object, at: index).isShown(userProperty)
     }
 
     private func isEffectVisible(_ effect: WEObjectEffect) -> Bool {
@@ -1734,13 +1746,13 @@ class SceneWallpaperViewModel: ObservableObject {
 
     /// How every object that isn't a drawn layer (groups, particle systems) moves, so its
     /// children and its own particles follow it live.
-    private func objectMotions(_ objects: [WESceneObject], besides layers: [SceneMetalLayer], sceneSize: SIMD2<Float>,
+    private func objectMotions(_ objects: [WESceneObject], besides layers: [SceneMetalLayer],
                                context: SceneValueContext) -> [String: SceneObjectMotion] {
         let layerIDs = Set(layers.map(\.id))
         var motions: [String: SceneObjectMotion] = [:]
         for object in objects {
             guard let id = object.id.map(String.init), !layerIDs.contains(id) else { continue }
-            motions[id] = SceneObjectMotion(object: object, sceneSize: sceneSize,
+            motions[id] = SceneObjectMotion(object: object,
                                             bindings: SceneLayerBindings(object: object, builtWith: context))
         }
         return motions
@@ -1779,7 +1791,7 @@ class SceneWallpaperViewModel: ObservableObject {
         guard let particlePath = object.particle else { return [] }
         // The emitter's full world transform: its own and its parents' origin, scale and angle.
         let world = object.id.map { transforms.world(of: String($0)) }
-            ?? SceneAffineTransform(SceneLocalTransform(object: object, sceneSize: sceneSize))
+            ?? SceneAffineTransform(SceneLocalTransform(object: object))
         let builder = ParticleFamilyBuilder(
             load: { [weak self] path in self?.loadJSON(path: path, wallpaperDir: wallpaperDir) },
             build: { [weak self] path, system, world, overrides in

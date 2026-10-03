@@ -11,6 +11,8 @@ struct SceneScriptEngineEnvironment: Equatable {
     var placement: WallpaperPlacement = .fill
     /// Display pixels per point (2 on Retina); `.center` placement shows one scene unit per point.
     var pixelsPerPoint: Double = 1
+    /// An orthographic scene's zoom this frame; `input.cursorWorldPosition` unprojects through it.
+    var zoom = SceneOrthographicZoom.none
     /// `engine.isScreensaver()`; `engine.isWallpaper()` is its opposite.
     var isScreensaver = false
     /// `engine.isRunningInEditor()`: always false here, there is no editor.

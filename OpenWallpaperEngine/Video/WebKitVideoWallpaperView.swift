@@ -23,7 +23,8 @@ struct WebKitVideoWallpaperView: NSViewRepresentable {
         context.coordinator.player = player
         player.state = state(for: wallpaper)
         player.musicSync = VideoMusicSyncEffect(wallpaper)
-        return player.webView
+        // The WebKit initializer always makes a WKWebView.
+        return player.webView ?? WKWebView()
     }
 
     func updateNSView(_ nsView: WKWebView, context: Context) {
@@ -38,6 +39,14 @@ struct WebKitVideoWallpaperView: NSViewRepresentable {
     }
 
     private func state(for wallpaper: WEWallpaper) -> WebKitVideoPlayer.State {
+        Self.state(for: wallpaper, wallpaperViewModel: wallpaperViewModel, screenId: screenId)
+    }
+
+    /// The player's state on `screenId`: its display's pause, the wallpaper's audible display and
+    /// volume, placement and rate. Shared with the Chromium view.
+    @MainActor
+    static func state(for wallpaper: WEWallpaper, wallpaperViewModel: WallpaperViewModel,
+                      screenId: String) -> WebKitVideoPlayer.State {
         let key = WallpaperInstanceKey(wallpaper)
         let muted = !wallpaperViewModel.shouldPlayAudio(on: screenId) || wallpaperViewModel.playVolume == 0
             || !wallpaperViewModel.wallpaperPlayback(of: key).playsSound

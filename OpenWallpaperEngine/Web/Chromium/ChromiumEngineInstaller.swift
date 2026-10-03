@@ -85,10 +85,15 @@ final class ChromiumEngineInstaller: ObservableObject {
     /// Re-reads what is on disk.
     func refresh() {
         let state = ChromiumEngineInstallState.read(in: root)
+        let previousVersion = installedVersion
         if let active = state.active, ChromiumEnginePackage.manifest(in: root.appending(path: active)) != nil {
             installedVersion = active
         } else {
             installedVersion = nil
+        }
+        // Web wallpapers move to the engine that is now there (`WebEngineRouter`).
+        if installedVersion != previousVersion {
+            NotificationCenter.default.post(name: .chromiumEngineChanged, object: nil)
         }
         let versions = ChromiumEngineInstallJob.installedVersions(in: root)
         installedSize = versions.isEmpty ? nil : versions.reduce(Int64(0)) {

@@ -14,6 +14,9 @@
 		EE4000000000000000000011 /* CHANGELOG.md in Resources */ = {isa = PBXBuildFile; fileRef = EE4000000000000000000010 /* CHANGELOG.md */; };
 		EE4000000000000000000001 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = EE4000000000000000000002 /* Sparkle */; };
 		EE500000000000000000000B /* Open Wallpaper Engine.saver in Embed Screen Saver */ = {isa = PBXBuildFile; fileRef = EE5000000000000000000003 /* Open Wallpaper Engine.saver */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		ED7000000000000000000011 /* OWEInspectorKit in Frameworks */ = {isa = PBXBuildFile; productRef = ED7000000000000000000012 /* OWEInspectorKit */; };
+		ED7000000000000000000021 /* OWESceneEditing in Frameworks */ = {isa = PBXBuildFile; productRef = ED7000000000000000000022 /* OWESceneEditing */; };
+		ED7000000000000000000031 /* OWEEditor in Frameworks */ = {isa = PBXBuildFile; productRef = ED7000000000000000000032 /* OWEEditor */; };
 		EE6000000000000000000015 /* owe-chromium-helper.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = EE6000000000000000000003 /* owe-chromium-helper.xpc */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -148,6 +151,9 @@
 				AA1B2C3D4E5F600200ABCD05 /* SpriteKit.framework in Frameworks */,
 				EE3000000000000000000001 /* ShaderToolchain in Frameworks */,
 				EE4000000000000000000001 /* Sparkle in Frameworks */,
+				ED7000000000000000000031 /* OWEEditor in Frameworks */,
+				ED7000000000000000000021 /* OWESceneEditing in Frameworks */,
+				ED7000000000000000000011 /* OWEInspectorKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -256,6 +262,9 @@
 			packageProductDependencies = (
 				EE3000000000000000000002 /* ShaderToolchain */,
 				EE4000000000000000000002 /* Sparkle */,
+				ED7000000000000000000032 /* OWEEditor */,
+				ED7000000000000000000022 /* OWESceneEditing */,
+				ED7000000000000000000012 /* OWEInspectorKit */,
 			);
 			productName = OpenWallpaperEngine;
 			productReference = 5EC47E762A2DB2E600120CCC /* Open Wallpaper Engine.app */;
@@ -403,6 +412,7 @@
 			);
 			packageReferences = (
 				EE3000000000000000000003 /* XCLocalSwiftPackageReference "Vendor/ShaderToolchain" */,
+				ED7000000000000000000003 /* XCLocalSwiftPackageReference "Packages/OWEEditor" */,
 				EE4000000000000000000003 /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -911,6 +921,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Vendor/ShaderToolchain;
 		};
+		ED7000000000000000000003 /* XCLocalSwiftPackageReference "Packages/OWEEditor" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/OWEEditor;
+		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
@@ -933,6 +947,18 @@
 			isa = XCSwiftPackageProductDependency;
 			package = EE4000000000000000000003 /* XCRemoteSwiftPackageReference "Sparkle" */;
 			productName = Sparkle;
+		};
+		ED7000000000000000000012 /* OWEInspectorKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = OWEInspectorKit;
+		};
+		ED7000000000000000000022 /* OWESceneEditing */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = OWESceneEditing;
+		};
+		ED7000000000000000000032 /* OWEEditor */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = OWEEditor;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

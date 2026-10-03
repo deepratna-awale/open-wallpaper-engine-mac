@@ -9,18 +9,13 @@ struct SceneSpatialContentBuilder {
     /// For log lines.
     var wallpaperName: String
 
-    /// `sceneSize` is the scene's size in scene units, which an orthographic scene's `perspective`
-    /// objects are placed in (`perspectiveTransforms`).
-    func build(_ scene: WEScene, context: SceneValueContext, sceneSize: SIMD2<Float>? = nil) -> SceneSpatialContent {
+    func build(_ authoredScene: WEScene, context: SceneValueContext) -> SceneSpatialContent {
+        var scene = authoredScene
+        scene.objects = SceneObjectIdentity.assigningFallbackIDs(scene.objects)
         var content = SceneSpatialContent()
         content.camera = SceneCameraSettings(scene.general, in: context)
         content.drawOrder = SceneDrawOrderMode(content.camera)
         content.transforms = SceneTransformHierarchy3D(objects: scene.objects)
-        if !content.camera.projection.isPerspective, let sceneSize,
-           scene.objects.contains(where: { $0.perspective == true }) {
-            content.perspectiveTransforms = SceneTransformHierarchy3D(objects: scene.objects,
-                                                                       rootOrigin: SIMD3(sceneSize / 2, 0))
-        }
         if let eye = scene.camera.eye { content.staticEye = Self.vector(eye) }
         if let center = scene.camera.center { content.staticCenter = Self.vector(center) }
         if let up = scene.camera.up { content.staticUp = Self.vector(up) }
@@ -33,7 +28,7 @@ struct SceneSpatialContentBuilder {
             }
         }
         for (index, object) in scene.objects.enumerated() {
-            let id = String(object.id ?? -1)
+            let id = String(SceneObjectIdentity.id(of: object, at: index))
             let name = object.name ?? "#\(index)"
             if !object.renderValues.isEmpty { content.renderValues[id] = object.renderValues }
             // WE's factory tries model, particle, image, sprite and text before shape (0x14019075e).

@@ -30,8 +30,8 @@ struct SceneUserVisibility: Equatable {
         /// By index in the object's `effects`.
         let effects: [Gate]
 
-        init(_ object: WESceneObject) {
-            id = object.id ?? -1
+        init(_ object: WESceneObject, at index: Int) {
+            id = SceneObjectIdentity.id(of: object, at: index)
             isText = object.textValue != nil
             gate = Gate(visible: object.visible, condition: object.visibleCondition, property: object.visibleUserProperty)
             effects = (object.effects ?? []).map {
@@ -51,7 +51,7 @@ struct SceneUserVisibility: Equatable {
     let sites: [Site]
 
     init(objects: [WESceneObject] = []) {
-        sites = objects.map(Site.init)
+        sites = objects.enumerated().map { Site($1, at: $0) }
     }
 
     /// Every object's own visibility, by id, and each bound effect's, by object id and effect index.
