@@ -3558,7 +3558,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                   projection.draw(snapshot, under: placement, into: region, commandBuffer: commandBuffer) else { return nil }
             return region
         }
-        if reduction == 1, SceneRegionResample.coversWholeScene(quad, sceneSize: sceneSize) { return snapshot }
+        if reduction == 1, !layer.clearsSceneAlpha, SceneRegionResample.coversWholeScene(quad, sceneSize: sceneSize) { return snapshot }
         guard let size = SceneRegionResample.targetSize(quad, layerSize: layer.size, pixelsPerUnit: renderPixelsPerUnit / reduction),
               let region = renderTargetPool.texture(width: size.x, height: size.y,
                                                     pixelFormat: snapshot.pixelFormat, avoiding: snapshot) else { return nil }
@@ -3569,7 +3569,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         pass.colorAttachments[0].storeAction = .store
         guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { return nil }
         var uniform = SceneRegionResample.uniform(quad, sceneSize: sceneSize, targetSize: size)
-        encoder.setRenderPipelineState(layerPipelines.pipelines(for: region.pixelFormat).copy)
+        let pipelines = layerPipelines.pipelines(for: region.pixelFormat)
+        // Copied over the cleared target without its alpha, the layer's base keeps alpha 0.
+        encoder.setRenderPipelineState(layer.clearsSceneAlpha ? pipelines.colourCopy : pipelines.copy)
         encoder.setVertexBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
         encoder.setFragmentBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
         encoder.setFragmentTexture(snapshot, index: 0)
