@@ -20,10 +20,26 @@ final class SceneRegionTransformTests: XCTestCase {
         _ = try Fixtures.assets()
         let with = try FixtureSceneRenderer(directory: directory).render()
         let without = try FixtureSceneRenderer(directory: directory, sceneFile: "reference.json").render()
-        XCTAssertEqual(with.width, without.width)
-        XCTAssertEqual(with.height, without.height)
         try Self.write(with, name: "scene-region-with")
         try Self.write(without, name: "scene-region-without")
+        assertSame(with, without)
+    }
+
+    /// `"copybackground": false` (wallpaper64.exe swaps in `composelayer_clearalpha`): the 2D layer's
+    /// base is the scene with alpha 0, so its tint (a blend that keeps alpha) draws nothing and the
+    /// frame is the one without the layers. Copying the scene with its alpha drew the tinted region.
+    func testALayerWithoutCopyBackgroundStartsTransparent() throws {
+        _ = try Fixtures.assets()
+        let cleared = try FixtureSceneRenderer(directory: directory, sceneFile: "cleared.json").render()
+        let without = try FixtureSceneRenderer(directory: directory, sceneFile: "reference.json").render()
+        try Self.write(cleared, name: "scene-region-cleared")
+        assertSame(cleared, without)
+    }
+
+    private func assertSame(_ with: FixtureSceneRenderer.Frame, _ without: FixtureSceneRenderer.Frame,
+                            file: StaticString = #filePath, line: UInt = #line) {
+        XCTAssertEqual(with.width, without.width, file: file, line: line)
+        XCTAssertEqual(with.height, without.height, file: file, line: line)
         var differing = 0
         var total = 0
         for y in 0..<with.height {
@@ -37,8 +53,8 @@ final class SceneRegionTransformTests: XCTestCase {
         let pixels = with.width * with.height
         let mean = Double(total) / Double(pixels * 3)
         // The two quads cover about 9 % of the frame; only their antialiased edges may differ.
-        XCTAssertLessThan(Double(differing) / Double(pixels), 0.01, "pixels that differ by more than 48/255")
-        XCTAssertLessThan(mean, 1.5, "mean difference per channel")
+        XCTAssertLessThan(Double(differing) / Double(pixels), 0.01, "pixels that differ by more than 48/255", file: file, line: line)
+        XCTAssertLessThan(mean, 1.5, "mean difference per channel", file: file, line: line)
     }
 
     /// The same layers with WE's tint instead of the pass-through: they are drawn, where their live
