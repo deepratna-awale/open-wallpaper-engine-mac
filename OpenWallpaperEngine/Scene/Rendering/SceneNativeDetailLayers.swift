@@ -59,7 +59,14 @@ enum SceneNativeDetailLayers {
                     }
                 }
                 if readsScene { blocked = true }
-                if let bounds { covered.append(bounds) } else { blocked = true }
+                // The later layer's own pixels are filtered by the upscale too: grow it alike.
+                if let bounds {
+                    covered.append(SceneSnapshotTracker.Rect(x: bounds.x - padding, y: bounds.y - padding,
+                                                             width: bounds.width + 2 * padding,
+                                                             height: bounds.height + 2 * padding))
+                } else {
+                    blocked = true
+                }
             }
         }
         return promoted
