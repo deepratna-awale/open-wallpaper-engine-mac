@@ -9,18 +9,29 @@ import WebKit
 import SwiftUI
 import Combine
 
+/// One web wallpaper page on one display: WE's web API (user and general properties, audio,
+/// media, pause), mute, scheduling and the watchdog's heartbeat. It talks to the page through
+/// `WebWallpaperPage`, so a WKWebView and a Chromium browser get exactly the same treatment.
 class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     @Published var currentWallpaper: WEWallpaper
-    
+
     var fileUrl: URL {
         currentWallpaper.wallpaperDirectory.appending(path: currentWallpaper.project.file)
     }
-    
+
     var readAccessURL: URL {
         currentWallpaper.wallpaperDirectory
     }
-    
-    weak var webView: WKWebView?
+
+    /// The page the bridge talks to (a WKWebView or a `ChromiumBrowserPage`).
+    weak var page: WebWallpaperPage?
+
+    /// The page when WebKit renders it.
+    var webView: WKWebView? {
+        get { page as? WKWebView }
+        set { page = newValue }
+    }
+
     /// Serves the wallpaper's folder, with WE's patches (`assets/zcompat/web`) applied.
     let schemeHandler = WebWallpaperSchemeHandler()
 
@@ -38,7 +49,7 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     }
     /// Receives the page's frame intervals and heartbeats (a page that stops beating is hung).
     weak var renderWatchdog: RenderWatchdog?
-    private var heartbeatGate = WebHeartbeatGate()
+    private(set) var heartbeatGate = WebHeartbeatGate()
     /// Whether the current page has beaten yet: one that never runs the bridge (a load error
     /// page) is not judged.
     private var pageHasBeaten = false
@@ -62,10 +73,17 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     /// Which page a delivery is for; a new page (`pageWillLoad`) invalidates older deliveries.
     private var mediaPage = 0
 
-    init(wallpaper: WEWallpaper, propertyScope: WallpaperPropertyScope = .shared, media: MediaSessionSource? = nil) {
+    /// The user's FPS setting (WE's `applyGeneralProperties({fps})`) and its changes.
+    private let settings: GlobalSettingsViewModel
+    /// Called with the frame rate whenever it changes, for an engine that can cap it (Chromium).
+    var onFrameRateChange: ((Int) -> Void)?
+
+    init(wallpaper: WEWallpaper, propertyScope: WallpaperPropertyScope = .shared, media: MediaSessionSource? = nil,
+         settings: GlobalSettingsViewModel? = nil) {
         self.currentWallpaper = wallpaper
         self.propertyScope = propertyScope
         self.media = media
+        self.settings = settings ?? AppDelegate.shared.globalSettingsViewModel
         super.init()
         propertyObserver = NotificationCenter.default.addObserver(
             forName: .wallpaperUserPropertyChanged, object: nil, queue: .main
@@ -76,7 +94,7 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(systemDidWake(_:)), name: NSWorkspace.didWakeNotification, object: nil)
         observeVisibility()
     }
-    
+
     deinit {
         NotificationCenter.default.removeObserver(self)
         NSWorkspace.shared.notificationCenter.removeObserver(self)
@@ -89,6 +107,9 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         if let mediaSubscription { media?.unsubscribe(mediaSubscription) }
         renderWatchdog?.endHeartbeat(from: ObjectIdentifier(self))
     }
+
+    /// The user's frame rate.
+    var frameRate: Int { Int(settings.settings.fps) }
 
     // MARK: Heartbeat
 
@@ -110,10 +131,15 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         visibilityObservers.append(NotificationCenter.default.addObserver(
             forName: NSWindow.didChangeOcclusionStateNotification, object: nil, queue: .main
         ) { [weak self] notification in
-            guard let self, let window = notification.object as? NSWindow, window === self.webView?.window else { return }
-            self.heartbeatGate.windowVisible = window.occlusionState.contains(.visible)
-            self.reportHeartbeatGate()
+            guard let self, let window = notification.object as? NSWindow, window === self.page?.hostWindow else { return }
+            self.windowOcclusionChanged(visible: window.occlusionState.contains(.visible))
         })
+    }
+
+    /// The page's window was covered or uncovered.
+    func windowOcclusionChanged(visible: Bool) {
+        heartbeatGate.windowVisible = visible
+        reportHeartbeatGate()
     }
 
     /// A new page is loading; it is judged from its first heartbeat on.
@@ -126,11 +152,12 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     /// Restarts the heartbeat clock when the gate opens and stops it when it closes.
     private func reportHeartbeatGate() {
         updateAudioTimer()
+        applySchedulingPolicy()
         guard pageHasBeaten else { return }
         renderWatchdog?.recordHeartbeat(from: ObjectIdentifier(self), expectingMore: heartbeatGate.expectsHeartbeats)
     }
 
-    fileprivate func heartbeatReceived(_ heartbeat: WebWallpaperPropertyBridge.Heartbeat) {
+    func heartbeatReceived(_ heartbeat: WebWallpaperPropertyBridge.Heartbeat) {
         heartbeat.intervals.forEach { renderWatchdog?.recordFrame(duration: $0) }
         heartbeatGate.pageVisible = heartbeat.visible
         pageHasBeaten = true
@@ -139,22 +166,61 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
 
     // MARK: Wallpaper Engine web API
 
+    /// The scripts every page gets at document start, in order: WE's pause hooks, the audio and
+    /// heartbeat bridge, the media bridge. Chromium runs the same ones (`ChromiumPageScripts`).
+    static let documentStartScripts = [
+        WebWallpaperPropertyBridge.pauseScript,
+        WebWallpaperPropertyBridge.bootstrapScript,
+        WebWallpaperMediaBridge.bootstrapScript,
+    ]
+
+    /// The messages the bridge posts.
+    static let messageNames = [
+        WebWallpaperPropertyBridge.audioMessageName,
+        WebWallpaperPropertyBridge.frameMessageName,
+        WebWallpaperMediaBridge.messageName,
+    ]
+
     func installBridge(on controller: WKUserContentController) {
-        controller.addUserScript(WKUserScript(source: WebWallpaperPropertyBridge.pauseScript,
-                                              injectionTime: .atDocumentStart, forMainFrameOnly: true))
-        controller.addUserScript(WKUserScript(source: WebWallpaperPropertyBridge.bootstrapScript,
-                                              injectionTime: .atDocumentStart, forMainFrameOnly: true))
-        controller.add(WeakScriptMessageHandler(self), name: WebWallpaperPropertyBridge.audioMessageName)
-        controller.add(WeakScriptMessageHandler(self), name: WebWallpaperPropertyBridge.frameMessageName)
-        controller.addUserScript(WKUserScript(source: WebWallpaperMediaBridge.bootstrapScript,
-                                              injectionTime: .atDocumentStart, forMainFrameOnly: true))
-        controller.add(WeakScriptMessageHandler(self), name: WebWallpaperMediaBridge.messageName)
+        for script in Self.documentStartScripts {
+            controller.addUserScript(WKUserScript(source: script, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        }
+        for name in Self.messageNames {
+            controller.add(WeakScriptMessageHandler(self), name: name)
+        }
+        // Runtime detection of Chromium-only APIs: only WebKit needs it.
+        controller.addUserScript(WKUserScript(source: ChromiumFeatureProbe.script, injectionTime: .atDocumentStart,
+                                              forMainFrameOnly: true))
+        controller.add(WeakScriptMessageHandler(self), name: ChromiumFeatureProbe.messageName)
+    }
+
+    /// A message the page posted through the bridge, from either engine.
+    func receivePageMessage(name: String, body: Any) {
+        switch name {
+        case WebWallpaperPropertyBridge.audioMessageName:
+            audioListenerRegistered()
+        case WebWallpaperMediaBridge.messageName:
+            mediaListenerRegistered()
+        case WebWallpaperPropertyBridge.frameMessageName:
+            guard let heartbeat = WebWallpaperPropertyBridge.heartbeat(from: body) else {
+                OWELog.debug(.web, "Ignoring a malformed heartbeat message")
+                return
+            }
+            heartbeatReceived(heartbeat)
+        case ChromiumFeatureProbe.messageName:
+            let features = ChromiumFeatureProbe.features(fromMessage: body)
+            guard !features.isEmpty else { return }
+            let wallpaper = currentWallpaper
+            Task { @MainActor in ChromiumFeatureAdvisor.shared.recordRuntime(features, for: wallpaper) }
+        default:
+            break
+        }
     }
 
     // MARK: Media integration
 
     /// The page registered a media listener: the first one subscribes it to the session.
-    fileprivate func mediaListenerRegistered() {
+    func mediaListenerRegistered() {
         guard mediaSubscription == nil, let media else { return }
         let page = mediaPage
         mediaSubscription = media.subscribe { [weak self] state in
@@ -165,12 +231,12 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     /// Sends the page what changed: everything that isn't empty the first time, as WE does for a
     /// newly registered page, then each change.
     private func mediaChanged(_ state: MediaSessionState, page: Int) {
-        guard page == mediaPage, let webView else { return }
+        guard page == mediaPage, let target = self.page else { return }
         let changes = mediaSent.map { state.changes(since: $0) } ?? state.initialChanges
         mediaSent = state
         for change in changes {
             if let script = WebWallpaperMediaBridge.deliveryScript(change) {
-                webView.evaluateJavaScript(script, completionHandler: nil)
+                target.evaluate(script)
             }
         }
     }
@@ -188,24 +254,22 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
 
     /// Sends every declared property, as WE does once the page has loaded; the bootstrap holds
     /// them for a listener the page assigns later.
-    private func applyAllProperties(to webView: WKWebView) {
+    private func applyAllProperties(to page: WebWallpaperPage) {
         let properties = declaredProperties
         let stored = WallpaperSettingsIdentity.resolve(currentWallpaper)
             .userSetValues(scope: propertyScope)
         let values = WebWallpaperPropertyBridge.currentValues(properties: properties, stored: stored)
         if let script = WebWallpaperPropertyBridge.applyUserPropertiesScript(
             WebWallpaperPropertyBridge.payload(properties: properties, values: values), full: true) {
-            webView.evaluateJavaScript(script, completionHandler: nil)
+            page.evaluate(script)
         }
-        let settings = AppDelegate.shared.globalSettingsViewModel
-        webView.evaluateJavaScript(WebWallpaperPropertyBridge.applyGeneralPropertiesScript(fps: Int(settings.settings.fps)),
-                                   completionHandler: nil)
+        page.evaluate(WebWallpaperPropertyBridge.applyGeneralPropertiesScript(fps: frameRate))
         if fpsObserver == nil {
             fpsObserver = settings.$settings.map { Int($0.fps) }.removeDuplicates().dropFirst()
                 .receive(on: DispatchQueue.main)
                 .sink { [weak self] fps in
-                    self?.webView?.evaluateJavaScript(WebWallpaperPropertyBridge.applyGeneralPropertiesScript(fps: fps),
-                                                      completionHandler: nil)
+                    self?.page?.evaluate(WebWallpaperPropertyBridge.applyGeneralPropertiesScript(fps: fps))
+                    self?.onFrameRateChange?(fps)
                 }
         }
     }
@@ -217,14 +281,14 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
                 .contains(propertyScope.runtimeKey(directory: currentWallpaper.wallpaperDirectory)) ?? true,
               let key = notification.userInfo?["key"] as? String,
               let value = notification.userInfo?["value"] as? String,
-              let webView else { return }
+              let page else { return }
         let payload = WebWallpaperPropertyBridge.payload(properties: declaredProperties, values: [key: value])
         if let script = WebWallpaperPropertyBridge.applyUserPropertiesScript(payload) {
-            webView.evaluateJavaScript(script, completionHandler: nil)
+            page.evaluate(script)
         }
     }
 
-    fileprivate func audioListenerRegistered() {
+    func audioListenerRegistered() {
         audioRegistered = true
         updateAudioTimer()
     }
@@ -233,6 +297,9 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     private var audioRegistered = false
     /// Keeps system audio capture on while the audio delivery runs.
     private var audioCaptureLease: AudioCaptureLease?
+
+    /// Whether the 30 Hz audio delivery is running.
+    var isDeliveringAudio: Bool { audioTimer != nil }
 
     /// Runs the 30 Hz delivery only while the page is registered, playing and visible: a paused,
     /// covered or sleeping page would drop the values, so the timer and its IPC stop too.
@@ -249,10 +316,10 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         audioClock = clock
         // WE delivers 64 left and 64 right values to web listeners 30 times a second.
         let timer = Timer(timeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
-            guard let self, !self.isPaused, let webView = self.webView else { return }
+            guard let self, !self.isPaused, let page = self.page else { return }
             let snapshot = clock.advanceFrame()
             let samples = WebWallpaperPropertyBridge.audioArray(left: snapshot.left64, right: snapshot.right64)
-            webView.evaluateJavaScript(WebWallpaperPropertyBridge.audioDeliveryScript(samples), completionHandler: nil)
+            page.evaluate(WebWallpaperPropertyBridge.audioDeliveryScript(samples))
         }
         RunLoop.main.add(timer, forMode: .common)
         audioTimer = timer
@@ -265,21 +332,27 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     func setMuted(_ muted: Bool) {
         guard muted != isMuted else { return }
         isMuted = muted
-        if let webView { WebPageAudio.setMuted(muted, on: webView) }
+        page?.setPageMuted(muted)
         applySchedulingPolicy()
     }
 
-    /// What WebKit does with the page while its window is covered: a muted page is suspended (no
+    /// What the engine does with the page while it can't be seen: a muted page is suspended (no
     /// JS, timers or frames), an audible one only throttled, because a suspended page falls silent
     /// and Wallpaper Engine keeps a covered wallpaper's sound. The heartbeat gate and the audio
     /// timer already expect nothing from a covered window (`WebHeartbeatGate.windowVisible`).
     func applySchedulingPolicy() {
-        webView?.configuration.preferences.inactiveSchedulingPolicy = isMuted ? .suspend : .throttle
+        page?.applySchedulingPolicy(muted: isMuted, visible: isVisibleOnScreen)
+    }
+
+    /// Whether anyone can see the page: its window is uncovered, the displays are awake and the
+    /// playback rules don't pause it.
+    var isVisibleOnScreen: Bool {
+        heartbeatGate.windowVisible && heartbeatGate.displaysAwake && !isPaused
     }
 
     /// Whether the playback rules pause this display's page: its media is suspended and the page
     /// hears WE's `setPaused(true)`. WebKit has no public way to stop a page's animation frames,
-    /// so a page that ignores `setPaused` keeps drawing.
+    /// so a page that ignores `setPaused` keeps drawing there; Chromium stops drawing it.
     private(set) var isPaused = false
 
     func setPaused(_ paused: Bool) {
@@ -287,14 +360,14 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         isPaused = paused
         heartbeatGate.playing = !paused
         reportHeartbeatGate()
-        if let webView { applyPaused(to: webView) }
+        if let page { applyPaused(to: page) }
     }
 
-    private func applyPaused(to webView: WKWebView) {
-        webView.setAllMediaPlaybackSuspended(isPaused, completionHandler: nil)
+    private func applyPaused(to page: WebWallpaperPage) {
+        page.setPagePaused(isPaused)
         // WE's order: the page hears setPaused, then its callbacks and media are held.
-        webView.evaluateJavaScript(WebWallpaperPropertyBridge.setPausedScript(isPaused) +
-                                   WebWallpaperPropertyBridge.wpxPauseScript(isPaused), completionHandler: nil)
+        page.evaluate(WebWallpaperPropertyBridge.setPausedScript(isPaused) +
+                      WebWallpaperPropertyBridge.wpxPauseScript(isPaused))
     }
 
     func stopAudio() {
@@ -302,39 +375,43 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         audioTimer?.invalidate()
         audioTimer = nil
     }
-    
+
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         // Allow navigation to external URLs (e.g. YouTube embeds from URL-based web wallpapers)
         decisionHandler(.allow)
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        pageDidFinishLoading()
+    }
+
+    /// The page loaded (WebKit's `didFinish`, Chromium's load end): WE hands it its properties
+    /// now, and the page picks up the current mute and pause.
+    func pageDidFinishLoading() {
+        guard let page else { return }
         let javascriptStyle = "var css = '*{-webkit-touch-callout:none;-webkit-user-select:none}'; var head = document.head || document.getElementsByTagName('head')[0]; var style = document.createElement('style'); style.type = 'text/css'; style.appendChild(document.createTextNode(css)); head.appendChild(style);"
-        webView.evaluateJavaScript(javascriptStyle, completionHandler: nil)
-        applyAllProperties(to: webView)
+        page.evaluate(javascriptStyle)
+        applyAllProperties(to: page)
         // A new page starts unmuted by script, and playing.
-        if isMuted { WebPageAudio.setMuted(true, on: webView) }
-        if isPaused { applyPaused(to: webView) }
-        
-        if AppDelegate.shared.globalSettingsViewModel.settings.adjustMenuBarTint {
+        if isMuted { page.setPageMuted(true) }
+        if isPaused { applyPaused(to: page) }
+
+        if settings.settings.adjustMenuBarTint {
             // The display this page shows on gets its snapshot (small, under a stable name).
-            webView.takeSnapshot(with: nil) { [weak webView] nsImage, error in
-                guard let image = nsImage?.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
-                    if let error { OWELog.error(.web, "Menu bar tint snapshot failed: \(error)") }
-                    return
-                }
-                guard let screen = webView?.window?.screen ?? NSScreen.main else { return }
+            page.snapshot { [weak page] image in
+                guard let image else { return }
+                guard let screen = page?.hostWindow?.screen ?? NSScreen.main else { return }
                 DesktopSnapshotCache.setDesktopPicture(image, for: [screen])
             }
         }
     }
-    
+
     @objc func systemWillSleep(_ notification: Notification) {
         // Handle going to sleep
         OWELog.info(.web, "System is going to sleep")
         // Update your SwiftUI state here if needed
     }
-        
+
     @objc func systemDidWake(_ notification: Notification) {
         // Handle waking up
         OWELog.info(.web, "System woke up from sleep")
@@ -351,19 +428,6 @@ private final class WeakScriptMessageHandler: NSObject, WKScriptMessageHandler {
     }
 
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-        switch message.name {
-        case WebWallpaperPropertyBridge.audioMessageName:
-            owner?.audioListenerRegistered()
-        case WebWallpaperMediaBridge.messageName:
-            owner?.mediaListenerRegistered()
-        case WebWallpaperPropertyBridge.frameMessageName:
-            guard let heartbeat = WebWallpaperPropertyBridge.heartbeat(from: message.body) else {
-                OWELog.debug(.web, "Ignoring a malformed heartbeat message")
-                return
-            }
-            owner?.heartbeatReceived(heartbeat)
-        default:
-            break
-        }
+        owner?.receivePageMessage(name: message.name, body: message.body)
     }
 }

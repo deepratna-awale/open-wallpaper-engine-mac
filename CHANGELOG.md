@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Web wallpapers in Chromium:** with the optional Chromium web engine installed (Settings › Plugins), a web wallpaper that uses Chromium-only features plays in Chromium; the rest stay in WebKit, which uses far less memory. A wallpaper's details have a **Web engine** choice (Automatic, WebKit, Chromium) to force one. In Chromium, user and general properties, the audio and media listeners, pause, mute, suspend while covered, the FPS limit and mouse input work as in WebKit, and local files are served with the same folder containment.
+- **Wallpapers that need Chromium** are pointed out when Chromium isn't installed: applying one shows which Chromium-only web APIs it uses, with **Open Plugins** and **Use Anyway** (remembered for that wallpaper until it changes), and its details carry a "Some features only available on Chromium" badge.
 - **Wallpaper Editor** (Edit Wallpaper in Details, ⌥⌘E): a window for scene wallpapers with the layer hierarchy (visibility, lock), the live wallpaper as a canvas you can zoom and pan, and an inspector for the selected layer. Move, scale and rotate image and text layers on the canvas or with the inspector, change opacity, colour and blend mode, turn effects on and off, and set the wallpaper's properties; everything can be undone. Edits are kept beside the wallpaper and apply wherever it runs, without changing its files: Revert drops them, and Save as Local Wallpaper adds a copy with the edits to the library. The Scene Inspector is unchanged.
 
 ### Changed

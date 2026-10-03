@@ -74,6 +74,7 @@ struct WebWallpaperView: NSViewRepresentable {
     private static func loadWallpaper(_ webView: WKWebView, viewModel: WebWallpaperViewModel) {
         viewModel.pageWillLoad()
         let wallpaper = viewModel.currentWallpaper
+        ChromiumFeatureAdvisorScan.scan(wallpaper)
         switch pageLoad(pageFile: viewModel.fileUrl, relativePath: wallpaper.project.file) {
         case .remoteEmbed(let html):
             viewModel.schemeHandler.directory = nil
@@ -117,6 +118,11 @@ struct WebWallpaperView: NSViewRepresentable {
     }
 
     private func applyPlacement(_ placement: WallpaperPlacement, to webView: WKWebView) {
+        webView.evaluateJavaScript(Self.placementScript(placement), completionHandler: nil)
+    }
+
+    /// Sizes the page and its media to the window as the placement says (both engines).
+    static func placementScript(_ placement: WallpaperPlacement) -> String {
         let objectFit: String
         switch placement {
         case .stretch:
@@ -126,8 +132,7 @@ struct WebWallpaperView: NSViewRepresentable {
         case .fit, .center:
             objectFit = "contain"
         }
-        let javascript = "document.documentElement.style.width='100%';document.documentElement.style.height='100%';document.body.style.margin='0';document.body.style.width='100%';document.body.style.height='100%';document.querySelectorAll('video,img,canvas').forEach(function(element){element.style.width='100%';element.style.height='100%';element.style.objectFit='\(objectFit)';});"
-        webView.evaluateJavaScript(javascript, completionHandler: nil)
+        return "document.documentElement.style.width='100%';document.documentElement.style.height='100%';document.body.style.margin='0';document.body.style.width='100%';document.body.style.height='100%';document.querySelectorAll('video,img,canvas').forEach(function(element){element.style.width='100%';element.style.height='100%';element.style.objectFit='\(objectFit)';});"
     }
 }
 

@@ -61,6 +61,7 @@ These are folders in the app target today. The scene engine (`Scene/`, `Audio/`,
 
 - Each holds its player, view, view model and type-specific features: video music sync, and the web wallpaper property/audio bridge.
 - **`Web/Chromium/`:** the optional Chromium engine (CEF), installed on demand and pinned by SHA-256. CEF runs only in the `owe-chromium-helper` XPC service (target `OWEChromiumHelper/`), never in the app, and its frames reach the app as IOSurfaces. See [`docs/chromium-engine.md`](chromium-engine.md).
+- **Web engine routing:** WebKit by default; Chromium only for a wallpaper that needs it (a Chromium-only API found) while the engine is installed, or when the wallpaper's override says so (`WebEngineRouting`). `WebWallpaperViewModel` drives either engine through `WebWallpaperPage` (a `WKWebView` or a `ChromiumBrowserPage`), so the WE bridge is one implementation. Without Chromium, `ChromiumFeatureAdvisor` points out wallpapers that use Chromium-only APIs (static scan plus WebKit's runtime probe).
 
 ### `Library/`, `Workshop/`, `Settings/`, `UI/`, `App/`
 
