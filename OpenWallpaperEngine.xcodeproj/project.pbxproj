@@ -64,6 +64,8 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				OWESaverView.swift,
+				thumbnail.png,
+				"thumbnail@2x.png",
 			);
 			target = 5EC47E752A2DB2E600120CCC /* OpenWallpaperEngine */;
 		};
