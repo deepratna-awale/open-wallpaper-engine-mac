@@ -39,21 +39,27 @@ final class ChromiumFrameMessage: NSObject, NSSecureCoding {
     let surface: IOSurface
     /// Counts up from 1 per browser.
     let frameNumber: Int64
+    /// The browser that painted it (`ChromiumBrowserHelperProtocol.createBrowser`); 0 for the
+    /// phase-1 `start` browser.
+    let browserId: Int
 
-    init(surface: IOSurface, frameNumber: Int64) {
+    init(surface: IOSurface, frameNumber: Int64, browserId: Int = 0) {
         self.surface = surface
         self.frameNumber = frameNumber
+        self.browserId = browserId
     }
 
     func encode(with coder: NSCoder) {
         coder.encode(surface, forKey: "surface")
         coder.encode(frameNumber, forKey: "frameNumber")
+        coder.encode(browserId, forKey: "browserId")
     }
 
     init?(coder: NSCoder) {
         guard let surface = coder.decodeObject(of: IOSurface.self, forKey: "surface") else { return nil }
         self.surface = surface
         frameNumber = coder.decodeInt64(forKey: "frameNumber")
+        browserId = coder.decodeInteger(forKey: "browserId")
     }
 
     /// Whether the frame is one the app can show: BGRA, inside the size limit, a positive number.
@@ -65,9 +71,170 @@ final class ChromiumFrameMessage: NSObject, NSSecureCoding {
     }
 }
 
+// MARK: - Web wallpapers (phase 2)
+
+/// Many windowless browsers in one helper: one per web wallpaper instance, all sharing CEF's
+/// browser, GPU and (per site) renderer processes. Sizes are in points; CEF paints
+/// `width × scale` by `height × scale` pixels.
+@objc(OWEChromiumBrowserHelperProtocol)
+protocol ChromiumBrowserHelperProtocol: ChromiumHelperProtocol {
+    /// Loads and starts CEF once per helper; later calls reply with the first outcome.
+    func initialize(frameworkDirectory: String, cacheDirectory: String, reply: @escaping (String?) -> Void)
+    /// Opens `url` in a new browser numbered `browserId` (chosen by the app). `startScript` runs in
+    /// the page's main frame before any of its own scripts, as a WKUserScript at document start does.
+    func createBrowser(_ browserId: Int, url: String, width: Int, height: Int, scale: Double, frameRate: Int,
+                       startScript: String, reply: @escaping (String?) -> Void)
+    func closeBrowser(_ browserId: Int)
+    func resizeBrowser(_ browserId: Int, width: Int, height: Int, scale: Double)
+    /// Hidden: CEF stops layout, painting and animation frames (`was_hidden`).
+    func setBrowserHidden(_ browserId: Int, hidden: Bool)
+    func setBrowserFrameRate(_ browserId: Int, frameRate: Int)
+    func setBrowserAudioMuted(_ browserId: Int, muted: Bool)
+    func executeJavaScript(_ browserId: Int, script: String)
+    func sendMouseEvent(_ browserId: Int, event: ChromiumMouseEvent)
+}
+
+@objc(OWEChromiumBrowserHostProtocol)
+protocol ChromiumBrowserHostProtocol: ChromiumHostProtocol {
+    /// The page called `__owePost(name, body)`; `body` is JSON.
+    func browser(_ browserId: Int, postedMessage name: String, body: String)
+    /// The main frame finished loading (`status` is the HTTP status, or a negative CEF error).
+    func browser(_ browserId: Int, finishedLoadingWithStatus status: Int)
+    /// The page's renderer process ended.
+    func browserTerminated(_ browserId: Int, reason: String)
+    /// A request for `owe-wallpaper://local/…`: the app decides what is served (its containment
+    /// rules, WE's compatibility patches) and replies with the bytes or an open file.
+    func browser(_ browserId: Int, requestsResource url: String, range: String?,
+                 reply: @escaping (ChromiumResourceResponse) -> Void)
+}
+
+/// The app's answer to one `owe-wallpaper` request: a status, headers and either bytes or a
+/// range of an open file. The file crosses XPC as a descriptor, so a large video is never copied
+/// whole; the helper reads only `length` bytes from `offset`.
+@objc(OWEChromiumResourceResponse)
+final class ChromiumResourceResponse: NSObject, NSSecureCoding {
+    static var supportsSecureCoding: Bool { true }
+
+    let status: Int
+    let headers: [String: String]
+    let data: Data?
+    let file: FileHandle?
+    let offset: UInt64
+    let length: UInt64
+
+    init(status: Int, headers: [String: String], data: Data? = nil, file: FileHandle? = nil,
+         offset: UInt64 = 0, length: UInt64 = 0) {
+        self.status = status
+        self.headers = headers
+        self.data = data
+        self.file = file
+        self.offset = offset
+        self.length = file == nil ? UInt64(data?.count ?? 0) : length
+    }
+
+    static func notFound() -> ChromiumResourceResponse {
+        ChromiumResourceResponse(status: 404, headers: ["Access-Control-Allow-Origin": "*"], data: Data())
+    }
+
+    func encode(with coder: NSCoder) {
+        coder.encode(status, forKey: "status")
+        coder.encode(headers as NSDictionary, forKey: "headers")
+        if let data { coder.encode(data as NSData, forKey: "data") }
+        if let file { coder.encode(file, forKey: "file") }
+        coder.encode(Int64(bitPattern: offset), forKey: "offset")
+        coder.encode(Int64(bitPattern: length), forKey: "length")
+    }
+
+    init?(coder: NSCoder) {
+        status = coder.decodeInteger(forKey: "status")
+        headers = coder.decodeObject(of: [NSDictionary.self, NSString.self], forKey: "headers") as? [String: String] ?? [:]
+        data = coder.decodeObject(of: NSData.self, forKey: "data") as Data?
+        file = coder.decodeObject(of: FileHandle.self, forKey: "file")
+        offset = UInt64(bitPattern: coder.decodeInt64(forKey: "offset"))
+        length = UInt64(bitPattern: coder.decodeInt64(forKey: "length"))
+    }
+}
+
+/// One mouse event for a windowless browser, at a point in the view (points, top-left origin).
+@objc(OWEChromiumMouseEvent)
+final class ChromiumMouseEvent: NSObject, NSSecureCoding {
+    static var supportsSecureCoding: Bool { true }
+
+    enum Kind: Int {
+        case move, down, up, wheel, leave
+    }
+
+    enum Button: Int {
+        case left, middle, right
+    }
+
+    let kind: Kind
+    let x: Double
+    let y: Double
+    let button: Button
+    let clickCount: Int
+    let deltaX: Double
+    let deltaY: Double
+    /// CEF's `cef_event_flags_t` bits.
+    let modifiers: UInt32
+
+    init(kind: Kind, x: Double, y: Double, button: Button = .left, clickCount: Int = 1,
+         deltaX: Double = 0, deltaY: Double = 0, modifiers: UInt32 = 0) {
+        self.kind = kind
+        self.x = x
+        self.y = y
+        self.button = button
+        self.clickCount = clickCount
+        self.deltaX = deltaX
+        self.deltaY = deltaY
+        self.modifiers = modifiers
+    }
+
+    func encode(with coder: NSCoder) {
+        coder.encode(kind.rawValue, forKey: "kind")
+        coder.encode(x, forKey: "x")
+        coder.encode(y, forKey: "y")
+        coder.encode(button.rawValue, forKey: "button")
+        coder.encode(clickCount, forKey: "clickCount")
+        coder.encode(deltaX, forKey: "deltaX")
+        coder.encode(deltaY, forKey: "deltaY")
+        coder.encode(Int64(modifiers), forKey: "modifiers")
+    }
+
+    init?(coder: NSCoder) {
+        guard let kind = Kind(rawValue: coder.decodeInteger(forKey: "kind")),
+              let button = Button(rawValue: coder.decodeInteger(forKey: "button")) else { return nil }
+        self.kind = kind
+        self.button = button
+        x = coder.decodeDouble(forKey: "x")
+        y = coder.decodeDouble(forKey: "y")
+        clickCount = coder.decodeInteger(forKey: "clickCount")
+        deltaX = coder.decodeDouble(forKey: "deltaX")
+        deltaY = coder.decodeDouble(forKey: "deltaY")
+        modifiers = UInt32(truncatingIfNeeded: coder.decodeInt64(forKey: "modifiers"))
+    }
+
+    override func isEqual(_ object: Any?) -> Bool {
+        guard let other = object as? ChromiumMouseEvent else { return false }
+        return kind == other.kind && x == other.x && y == other.y && button == other.button
+            && clickCount == other.clickCount && deltaX == other.deltaX && deltaY == other.deltaY
+            && modifiers == other.modifiers
+    }
+
+    override var hash: Int { kind.rawValue &+ Int(x.rounded()) &* 31 &+ Int(y.rounded()) }
+
+    override var description: String { "\(kind)@(\(x),\(y)) button \(button.rawValue) Δ(\(deltaX),\(deltaY))" }
+}
+
 extension NSXPCInterface {
     static var chromiumHelper: NSXPCInterface { NSXPCInterface(with: ChromiumHelperProtocol.self) }
 
     /// `didPaint`'s argument class comes from its signature; the message decodes its IOSurface itself.
     static var chromiumHost: NSXPCInterface { NSXPCInterface(with: ChromiumHostProtocol.self) }
+
+    /// What the helper exports: the phase-1 calls and the per-browser ones.
+    static var chromiumBrowserHelper: NSXPCInterface { NSXPCInterface(with: ChromiumBrowserHelperProtocol.self) }
+
+    /// What the app exports to the helper; a phase-1 host only ever receives `didPaint`.
+    static var chromiumBrowserHost: NSXPCInterface { NSXPCInterface(with: ChromiumBrowserHostProtocol.self) }
 }
