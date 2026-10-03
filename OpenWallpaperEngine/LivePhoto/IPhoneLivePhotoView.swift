@@ -23,7 +23,7 @@ final class IPhoneLivePhotoModel: NSObject, ObservableObject, NSSharingServiceDe
     @Published var errorMessage: String?
 
     private var task: Task<Void, Never>?
-    private var sharedFiles: LivePhotoRenderer.Files?
+    private var sharedFiles: LivePhotoHelper.Files?
 
     init(wallpaper: WEWallpaper, properties: WallpaperPropertyScope, sceneSize: SIMD2<Double>) {
         self.wallpaper = wallpaper
@@ -59,8 +59,9 @@ final class IPhoneLivePhotoModel: NSObject, ObservableObject, NSSharingServiceDe
     func previewClip() {
         let preview = LivePhotoCrop(sceneSize: sceneSize, outputPixels: device.pixelSize / 4, zoom: crop.zoom, center: crop.center)
         let clip = clip
-        run { renderer, progress in
-            self.previewFrames = try await renderer.previewFrames(crop: preview, clip: clip, progress: progress)
+        run { wallpaper, properties, progress in
+            self.previewFrames = try await LivePhotoHelper.previewFrames(wallpaper, properties: properties, crop: preview,
+                                                                         clip: clip, progress: progress)
         }
     }
 
@@ -70,7 +71,7 @@ final class IPhoneLivePhotoModel: NSObject, ObservableObject, NSSharingServiceDe
     func sendToIPhone() {
         renderLivePhoto { files in
             guard let service = NSSharingService(named: .sendViaAirDrop) else {
-                LivePhotoRenderer.remove(files)
+                LivePhotoHelper.remove(files)
                 self.errorMessage = String(localized: "AirDrop isn't available on this Mac.")
                 return
             }
@@ -90,7 +91,7 @@ final class IPhoneLivePhotoModel: NSObject, ObservableObject, NSSharingServiceDe
         panel.message = String(localized: "Choose a folder for the Live Photo’s photo and movie.")
         guard panel.runModal() == .OK, let folder = panel.url else { return }
         renderLivePhoto { files in
-            defer { LivePhotoRenderer.remove(files) }
+            defer { LivePhotoHelper.remove(files) }
             do {
                 for source in [files.still, files.movie] {
                     let destination = folder.appending(path: source.lastPathComponent)
@@ -109,23 +110,27 @@ final class IPhoneLivePhotoModel: NSObject, ObservableObject, NSSharingServiceDe
         task?.cancel()
     }
 
-    private func renderLivePhoto(then finish: @escaping (LivePhotoRenderer.Files) -> Void) {
+    private func renderLivePhoto(then finish: @escaping (LivePhotoHelper.Files) -> Void) {
         let crop = crop, clip = clip
-        run { renderer, progress in
-            LivePhotoRenderer.removeStaleExports()
-            finish(try await renderer.export(crop: crop, clip: clip, progress: progress))
+        run { wallpaper, properties, progress in
+            if self.sharedFiles == nil { LivePhotoHelper.removeStaleExports() }
+            finish(try await LivePhotoHelper.export(wallpaper, properties: properties, crop: crop, clip: clip,
+                                                    progress: progress))
         }
     }
 
-    private func run(_ work: @escaping (LivePhotoRenderer, @escaping (Double) -> Void) async throws -> Void) {
+    /// Runs `work` with the wallpaper and a snapshot of the user properties the inspector edits (the
+    /// helper renders with exactly these).
+    private func run(_ work: @escaping (WEWallpaper, [String: String], @escaping @MainActor (Double) -> Void) async throws -> Void) {
         guard !isRendering else { return }
         isRendering = true
         progress = 0
         errorMessage = nil
-        let renderer = LivePhotoRenderer(wallpaper: wallpaper, properties: properties)
+        let wallpaper = wallpaper
+        let snapshot = WallpaperPropertyTargets(wallpaper: wallpaper, scopes: [properties]).storedValues
         task = Task { [weak self] in
             do {
-                try await work(renderer) { value in self?.progress = value }
+                try await work(wallpaper, snapshot) { value in self?.progress = value }
             } catch is CancellationError {
             } catch {
                 self?.errorMessage = error.localizedDescription
@@ -146,7 +151,7 @@ final class IPhoneLivePhotoModel: NSObject, ObservableObject, NSSharingServiceDe
     }
 
     private func removeSharedFiles() {
-        if let sharedFiles { LivePhotoRenderer.remove(sharedFiles) }
+        if let sharedFiles { LivePhotoHelper.remove(sharedFiles) }
         sharedFiles = nil
     }
 }
@@ -261,9 +266,13 @@ private struct IPhoneLiveScene: NSViewRepresentable {
                                                     loadingSnapshots: wallpapers.loadingSnapshots)
         let key = WallpaperInstanceKey(wallpaper, properties: properties)
         let wallpaper = wallpaper, properties = properties
+        // Started here (no display shows it with these properties): muted, the preview never plays
+        // sound. A display's instance plays as that display does.
         let lease = SceneWallpaperPresenter.Lease(wallpapers.sceneInstances, key: key) {
-            SceneWallpaperInstance(wallpaper: wallpaper, environment: environment, screenID: Self.screenID,
-                                   properties: properties)
+            let instance = SceneWallpaperInstance(wallpaper: wallpaper, environment: environment, screenID: Self.screenID,
+                                                  properties: properties)
+            instance.isMuted = true
+            return instance
         }
         context.coordinator.show(lease, in: view, screenID: Self.screenID)
         return view
