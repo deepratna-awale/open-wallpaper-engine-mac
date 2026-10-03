@@ -121,7 +121,7 @@ struct DisplaySettings: SubviewOfContentView {
         ), let preview = project.previewURL(in: wallpaper.wallpaperDirectory) {
             return preview
         }
-        return Bundle.main.url(forResource: "WallpaperNotFound", withExtension: "mp4")!
+        return AppBundleLayout.wallpaperNotFoundURL
     }
 }
 

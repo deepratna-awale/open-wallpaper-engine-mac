@@ -154,7 +154,7 @@ struct WallpaperPreview: SubviewOfContentView {
                 VStack(spacing: 16) {
                     VStack(spacing: 10) {
                         GifImage(contentsOf: wallpaperViewModel.displayedWallpaper.previewURL
-                                    ?? Bundle.main.url(forResource: "WallpaperNotFound", withExtension: "mp4")!,
+                                    ?? AppBundleLayout.wallpaperNotFoundURL,
                                  animates: viewModel.isApplicationActive)
                             .resizable()
                             .aspectRatio(contentMode: .fit)

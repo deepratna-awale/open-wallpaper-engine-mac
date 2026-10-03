@@ -23,8 +23,6 @@ struct AppProcessChannel: Equatable {
         case openWallpaper = "editor.open"
         /// The editor process is ready for `openWallpaper`.
         case editorReady = "editor.ready"
-        /// Show Open Wallpaper Engine's window (the app was opened while the editor ran).
-        case showMainWindow = "main.showWindow"
     }
 
     /// The `userInfo` key of the wallpaper's folder.

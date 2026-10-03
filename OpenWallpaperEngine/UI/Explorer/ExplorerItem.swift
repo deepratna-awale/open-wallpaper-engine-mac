@@ -42,7 +42,7 @@ struct ExplorerItem: SubviewOfContentView {
             // The library already decoded project.json; decoding it again per redraw made tab
             // switches slow.
             GifImage(contentsOf: wallpaper.previewURL
-                        ?? Bundle.main.url(forResource: "WallpaperNotFound", withExtension: "mp4")!,
+                        ?? AppBundleLayout.wallpaperNotFoundURL,
                      animates: animates && viewModel.isApplicationActive)
             .resizable()
             .scaleEffect((viewModel.imageScaleIndex == index ? 1.2 : 1.0) * 1.08)

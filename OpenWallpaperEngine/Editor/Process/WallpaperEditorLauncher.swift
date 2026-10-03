@@ -1,19 +1,20 @@
 import AppKit
 
 extension AppDelegate {
-    /// Opens `wallpaper` in the Wallpaper Editor (docs/editor-plan.md), which runs as its own
-    /// process: quitting Open Wallpaper Engine leaves it open, and closing it leaves the app as it
-    /// was. Scene wallpapers only.
+    /// Opens `wallpaper` in the Wallpaper Editor (docs/editor-plan.md), which is an app of its own:
+    /// quitting Open Wallpaper Engine leaves it open, and closing it leaves the app as it was.
+    /// Scene wallpapers only.
     func showWallpaperEditor(for wallpaper: WEWallpaper) {
         guard WallpaperEditorController.canEdit(wallpaper) else { return }
         wallpaperEditorLauncher.open(wallpaper.settingsDirectory)
     }
 }
 
-/// Open Wallpaper Engine's side of the Wallpaper Editor's process: one editor process for every
-/// wallpaper. Opening a wallpaper asks the running editor (`AppProcessChannel.Message.openWallpaper`),
-/// else launches one with `--wallpaper-editor <folder>` through LaunchServices, so it is no child
-/// of the app and outlives it. Requests made while it starts wait until it says it is ready.
+/// Open Wallpaper Engine's side of the Wallpaper Editor's app (`<app>/Contents/Helpers/Wallpaper
+/// Editor.app`, `AppBundleLayout`): one editor process for every wallpaper. Opening a wallpaper
+/// asks the running editor (`AppProcessChannel.Message.openWallpaper`), else opens the editor's app
+/// through LaunchServices with `--wallpaper-editor <folder>`, so it is no child of the app and
+/// outlives it. Requests made while it starts wait until it says it is ready.
 @MainActor
 final class WallpaperEditorLauncher {
     struct Dependencies {
@@ -21,11 +22,18 @@ final class WallpaperEditorLauncher {
         var channel: AppProcessChannel
         var sender: String = AppProcessChannel.processSender
         var isolationTag: String? = AppStorageLocation.current.isolationTag
+        /// The editor's app inside this one.
+        var editorApp: URL = AppBundleLayout.editorURL(inApp: Bundle.main.bundleURL)
+        /// The language the app was set to (Settings › General), for the editor to show.
+        var languages: [String]? = WallpaperEditorLauncher.appLanguages()
         /// Whether an editor process (isolated as this app is) runs.
-        var editorIsRunning: () -> Bool = { !AppProcessList.running(.wallpaperEditor).isEmpty }
-        /// Launches a new instance of the app with these arguments and environment.
-        var launch: (_ arguments: [String], _ environment: [String: String], _ done: @escaping @MainActor (Error?) -> Void) -> Void
-            = WallpaperEditorLauncher.launchNewInstance
+        var editorIsRunning: () -> Bool = {
+            let editor = AppBundleLayout.editorIdentifier(for: Bundle.main.bundleIdentifier ?? AppStorageLocation.realBundleIdentifier)
+            return !AppProcessList.running(.wallpaperEditor, bundleIdentifier: editor).isEmpty
+        }
+        /// Opens the app at the URL with these arguments and environment.
+        var launch: (_ app: URL, _ arguments: [String], _ environment: [String: String],
+                     _ done: @escaping @MainActor (Error?) -> Void) -> Void = WallpaperEditorLauncher.openApp
         var now: () -> Date = Date.init
     }
 
@@ -33,37 +41,29 @@ final class WallpaperEditorLauncher {
     static let launchTimeout: TimeInterval = 20
 
     private let dependencies: Dependencies
-    private var tokens: [AnyObject] = []
+    private var token: AnyObject?
     /// When the editor this app launched started, until it says it is ready.
     private var launchStarted: Date?
     /// Folders asked for while the editor starts.
     private var waiting: [URL] = []
-    /// The editor's process couldn't be launched.
+    /// The editor's app couldn't be opened.
     var onLaunchFailure: ((Error) -> Void)?
-    /// The app was opened (Finder, Spotlight) while only the editor ran, which LaunchServices
-    /// hands to the editor's process: it asks this one to show its window.
-    var onShowMainWindow: (() -> Void)?
 
     init(dependencies: Dependencies) {
         self.dependencies = dependencies
     }
 
     func start() {
-        guard tokens.isEmpty else { return }
-        let messaging = dependencies.messaging, channel = dependencies.channel
-        tokens.append(messaging.observe(channel.name(.editorReady)) { [weak self] sender, _ in
+        guard token == nil else { return }
+        token = dependencies.messaging.observe(dependencies.channel.name(.editorReady)) { [weak self] sender, _ in
             guard let self, sender != self.dependencies.sender else { return }
             self.editorDidBecomeReady()
-        })
-        tokens.append(messaging.observe(channel.name(.showMainWindow)) { [weak self] sender, _ in
-            guard let self, sender != self.dependencies.sender else { return }
-            self.onShowMainWindow?()
-        })
+        }
     }
 
     func stop() {
-        for token in tokens { dependencies.messaging.remove(token) }
-        tokens = []
+        if let token { dependencies.messaging.remove(token) }
+        token = nil
     }
 
     /// Opens (or brings forward) the editor of the wallpaper in `folder`.
@@ -79,13 +79,14 @@ final class WallpaperEditorLauncher {
             return
         }
         launchStarted = dependencies.now()
-        let arguments = AppLaunchMode.wallpaperEditorArguments(folder: folder, isolationTag: dependencies.isolationTag)
+        let arguments = AppLaunchMode.wallpaperEditorArguments(folder: folder, isolationTag: dependencies.isolationTag,
+                                                               languages: dependencies.languages)
         var environment: [String: String] = [:]
         if let tag = dependencies.isolationTag { environment[AppStorageLocation.environmentKey] = tag }
-        OWELog.info(.ui, "Launching the Wallpaper Editor for \(folder.path)")
-        dependencies.launch(arguments, environment) { [weak self] error in
+        OWELog.info(.ui, "Opening the Wallpaper Editor (\(dependencies.editorApp.path)) for \(folder.path)")
+        dependencies.launch(dependencies.editorApp, arguments, environment) { [weak self] error in
             guard let self, let error else { return }
-            OWELog.error(.ui, "Can't launch the Wallpaper Editor: \(error)")
+            OWELog.error(.ui, "Can't open the Wallpaper Editor at \(self.dependencies.editorApp.path): \(error)")
             self.launchStarted = nil
             self.waiting = []
             self.onLaunchFailure?(error)
@@ -104,16 +105,26 @@ final class WallpaperEditorLauncher {
                                     userInfo: [AppProcessChannel.folderKey: folder.path(percentEncoded: false)])
     }
 
-    /// A new instance of this app, launched by LaunchServices (not a child process).
-    nonisolated static func launchNewInstance(arguments: [String], environment: [String: String],
-                                  done: @escaping @MainActor (Error?) -> Void) {
+    /// The `AppleLanguages` the app's own defaults hold (the language set in Settings), nil when
+    /// it follows the system.
+    nonisolated static func appLanguages(location: AppStorageLocation = .current) -> [String]? {
+        let domain = location.suiteName ?? AppBundleLayout.appIdentifier(for: Bundle.main.bundleIdentifier
+                                                                          ?? AppStorageLocation.realBundleIdentifier)
+        return location.defaults.persistentDomain(forName: domain)?["AppleLanguages"] as? [String]
+    }
+
+    /// Opens the editor's app through LaunchServices (not a child process). A new instance even
+    /// when one runs: one that runs isolated otherwise than this app would be brought forward
+    /// instead (a running editor isolated as this app is gets the folder as a message, `open`).
+    nonisolated static func openApp(at app: URL, arguments: [String], environment: [String: String],
+                                    done: @escaping @MainActor (Error?) -> Void) {
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.createsNewApplicationInstance = true
         configuration.activates = true
         configuration.addsToRecentItems = false
         configuration.arguments = arguments
         if !environment.isEmpty { configuration.environment = environment }
-        NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: configuration) { _, error in
+        NSWorkspace.shared.openApplication(at: app, configuration: configuration) { _, error in
             DispatchQueue.main.async { MainActor.assumeIsolated { done(error) } }
         }
     }

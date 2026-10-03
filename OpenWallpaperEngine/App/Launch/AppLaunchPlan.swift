@@ -29,17 +29,14 @@ struct AppLaunchPlan: Equatable {
     /// The editor is a regular app (Dock icon, menu bar) while it runs; the main app manages its
     /// own (`DockPresence`).
     let activationPolicy: NSApplication.ActivationPolicy?
-    /// The name the process shows in the Dock and the menu bar, when it isn't the bundle's.
-    let displayName: String?
 
     static func plan(for mode: AppLaunchMode) -> AppLaunchPlan {
         switch mode {
         case .main:
             return AppLaunchPlan(mode: mode, services: Set(Service.allCases).subtracting([.wallpaperEditorWindows]),
-                                 activationPolicy: nil, displayName: nil)
+                                 activationPolicy: nil)
         case .wallpaperEditor:
-            return AppLaunchPlan(mode: mode, services: [.wallpaperEditorWindows], activationPolicy: .regular,
-                                 displayName: String(localized: "Wallpaper Editor"))
+            return AppLaunchPlan(mode: mode, services: [.wallpaperEditorWindows], activationPolicy: .regular)
         }
     }
 

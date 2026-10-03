@@ -1,11 +1,10 @@
 import AppKit
 import Darwin
 
-/// The other processes running this app's executable, told apart by their launch arguments:
-/// Open Wallpaper Engine, the Wallpaper Editor (`--wallpaper-editor`), or a helper run
-/// (`ShaderPrewarmCommand`, `CrashWatcher`). Each launch shares the bundle identifier, so
-/// LaunchServices alone can't say which is which. Only processes isolated as this one is count
-/// (`AppStorageLocation`).
+/// The other processes running the app's executable, told apart by their bundle and launch
+/// arguments: Open Wallpaper Engine, the Wallpaper Editor (its own app, `AppBundleLayout`, or
+/// `--wallpaper-editor`), or a helper run (`ShaderPrewarmCommand`, `CrashWatcher`). Only processes
+/// isolated as this one is count (`AppStorageLocation`): every isolated copy shares the bundle ids.
 enum AppProcessList {
     enum Kind: Equatable {
         case main
@@ -20,16 +19,19 @@ enum AppProcessList {
     }
 
     /// What a process launched with `arguments` (executable first) and `environment` is.
-    static func classify(arguments: [String], environment: [String: String]) -> (kind: Kind, isolationTag: String?) {
+    /// `bundleIdentifier` is the process's bundle's.
+    static func classify(arguments: [String], environment: [String: String],
+                         bundleIdentifier: String?) -> (kind: Kind, isolationTag: String?) {
         let tag = AppStorageLocation.isolationTag(environment: environment, arguments: arguments, isRunningTests: false)
-        if AppLaunchMode.parse(arguments).isWallpaperEditor { return (.wallpaperEditor, tag) }
         if ShaderPrewarmCommand.isHelperRun(arguments: arguments) || arguments.contains(CrashWatcher.argument) {
             return (.helper, tag)
         }
+        if AppLaunchMode.parse(arguments, bundleIdentifier: bundleIdentifier).isWallpaperEditor { return (.wallpaperEditor, tag) }
         return (.main, tag)
     }
 
-    /// The running processes of `kind`, besides this one, isolated under `isolationTag`.
+    /// The running processes of `kind` of the bundle `bundleIdentifier`, besides this one, isolated
+    /// under `isolationTag`.
     static func running(_ kind: Kind, isolationTag: String? = AppStorageLocation.current.isolationTag,
                         bundleIdentifier: String = Bundle.main.bundleIdentifier ?? AppStorageLocation.realBundleIdentifier)
         -> [Entry] {
@@ -37,7 +39,8 @@ enum AppProcessList {
         return NSRunningApplication.runningApplications(withBundleIdentifier: bundleIdentifier).compactMap { app in
             let pid = app.processIdentifier
             guard pid != own, !app.isTerminated, let launch = launchArguments(of: pid) else { return nil }
-            let (found, tag) = classify(arguments: launch.arguments, environment: launch.environment)
+            let (found, tag) = classify(arguments: launch.arguments, environment: launch.environment,
+                                        bundleIdentifier: app.bundleIdentifier)
             guard found == kind, tag == isolationTag else { return nil }
             return Entry(pid: pid, kind: found, isolationTag: tag)
         }

@@ -20,7 +20,7 @@ class WallpaperViewModel: ObservableObject {
     private let persistsWallpapers: Bool
 
     @Published var nextCurrentWallpaper: WEWallpaper =
-    WEWallpaper(using: .invalid, where: Bundle.main.url(forResource: "WallpaperNotFound", withExtension: "mp4")!) {
+    WEWallpaper(using: .invalid, where: AppBundleLayout.wallpaperNotFoundURL) {
         willSet {
             guard confirmApply?(newValue) ?? true else { return }
             if ["web", "application"].contains(newValue.project.type) {
@@ -76,7 +76,7 @@ class WallpaperViewModel: ObservableObject {
         }
     }
 
-    static let defaultWallpaper = WEWallpaper(using: .invalid, where: Bundle.main.url(forResource: "WallpaperNotFound", withExtension: "mp4")!)
+    static let defaultWallpaper = WEWallpaper(using: .invalid, where: AppBundleLayout.wallpaperNotFoundURL)
 
     // MARK: - Recent wallpapers
 

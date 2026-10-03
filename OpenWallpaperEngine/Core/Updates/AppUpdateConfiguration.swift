@@ -29,7 +29,8 @@ struct AppUpdateConfiguration: Equatable {
         self.init(feedURL: URL(string: feed), publicEDKey: key, versionLabel: label)
     }
 
-    static var main: AppUpdateConfiguration { .init(infoDictionary: Bundle.main.infoDictionary ?? [:]) }
+    /// The app's (the Wallpaper Editor's app reads the app's, `AppBundleLayout.appBundle`).
+    static var main: AppUpdateConfiguration { .init(infoDictionary: AppBundleLayout.appBundle.infoDictionary ?? [:]) }
 
     /// A real EdDSA public key (32 bytes, base64) and an https feed; anything else (an empty build
     /// setting, an unexpanded `$(…)`, a placeholder) leaves the updater off.

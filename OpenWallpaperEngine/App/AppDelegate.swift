@@ -100,11 +100,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// wallpaper in it, and its edits reaching the wallpapers running here.
     private(set) lazy var wallpaperEditorLauncher: WallpaperEditorLauncher = {
         let launcher = WallpaperEditorLauncher(dependencies: .init(messaging: processMessaging, channel: .current))
-        launcher.onShowMainWindow = { [weak self] in
-            guard let self else { return }
-            NSApp.activate(ignoringOtherApps: true)
-            _ = self.applicationShouldHandleReopen(NSApp, hasVisibleWindows: false)
-        }
         launcher.onLaunchFailure = { error in
             let alert = NSAlert()
             alert.messageText = String(localized: "The Wallpaper Editor couldn’t be opened.")

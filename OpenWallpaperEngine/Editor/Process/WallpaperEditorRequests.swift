@@ -41,11 +41,6 @@ final class WallpaperEditorRequests {
         messaging.post(channel.name(.editorReady), sender: sender, userInfo: [:])
     }
 
-    /// Asks the running Open Wallpaper Engine to show its window.
-    func askAppToShowItsWindow() {
-        messaging.post(channel.name(.showMainWindow), sender: sender, userInfo: [:])
-    }
-
     func stop() {
         if let token { messaging.remove(token) }
         token = nil

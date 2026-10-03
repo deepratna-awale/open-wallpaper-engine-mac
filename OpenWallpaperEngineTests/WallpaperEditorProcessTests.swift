@@ -47,6 +47,12 @@ final class WallpaperEditorProcessTests: XCTestCase {
         XCTAssertEqual(AppLaunchMode.parse(["/app", "--wallpaper-editor", "-OWEIsolatedState", "x"]), .wallpaperEditor(nil),
                        "an option after the flag isn't a folder")
         XCTAssertEqual(AppLaunchMode.parse(["/app", "--wallpaper-editor", ""]), .wallpaperEditor(nil))
+        // The editor's own app is the editor, with or without the flag.
+        let editorApp = "com.winddog.wallpaper-engine.editor"
+        XCTAssertEqual(AppLaunchMode.parse(["/editor"], bundleIdentifier: editorApp), .wallpaperEditor(nil))
+        XCTAssertEqual(AppLaunchMode.parse(["/editor", "--wallpaper-editor", "/library/42"], bundleIdentifier: editorApp),
+                       .wallpaperEditor(URL(filePath: "/library/42", directoryHint: .isDirectory)))
+        XCTAssertEqual(AppLaunchMode.parse(["/app"], bundleIdentifier: "com.winddog.wallpaper-engine"), .main)
     }
 
     func testTheEditorIsLaunchedWithTheFolderAndTheAppsIsolation() {
@@ -60,17 +66,72 @@ final class WallpaperEditorProcessTests: XCTestCase {
                        ["--wallpaper-editor", "/library/My Wallpaper"])
         XCTAssertFalse(ShaderPrewarmCommand.isHelperRun(arguments: ["/app"] + isolated),
                        "the editor saves overlays and properties: it isn't a read-only helper run")
+        let german = AppLaunchMode.wallpaperEditorArguments(folder: folder, isolationTag: nil, languages: ["de"])
+        XCTAssertEqual(Array(german.suffix(2)), ["-AppleLanguages", "(\"de\")"], "the editor speaks the app's language")
+        XCTAssertEqual(AppLaunchMode.parse(["/app"] + german), .wallpaperEditor(folder))
     }
 
-    func testRunningProcessesAreToldApartByTheirArguments() {
-        XCTAssertEqual(AppProcessList.classify(arguments: ["/app"], environment: [:]).kind, .main)
-        XCTAssertEqual(AppProcessList.classify(arguments: ["/app", "--wallpaper-editor", "/w"], environment: [:]).kind,
-                       .wallpaperEditor)
-        XCTAssertEqual(AppProcessList.classify(arguments: ["/app", "--prewarm-shaders"], environment: [:]).kind, .helper)
-        XCTAssertEqual(AppProcessList.classify(arguments: ["/app", "--crash-watcher", "/a", "/b"], environment: [:]).kind, .helper)
-        let isolated = AppProcessList.classify(arguments: ["/app"], environment: ["OWE_ISOLATED_STATE": "shots"])
+    func testRunningProcessesAreToldApartByTheirBundleAndArguments() {
+        let app = "com.winddog.wallpaper-engine", editor = "com.winddog.wallpaper-engine.editor"
+        func kind(_ arguments: [String], _ bundle: String = app) -> AppProcessList.Kind {
+            AppProcessList.classify(arguments: arguments, environment: [:], bundleIdentifier: bundle).kind
+        }
+        XCTAssertEqual(kind(["/app"]), .main)
+        XCTAssertEqual(kind(["/editor", "--wallpaper-editor", "/w"], editor), .wallpaperEditor)
+        XCTAssertEqual(kind(["/editor"], editor), .wallpaperEditor)
+        XCTAssertEqual(kind(["/app", "--prewarm-shaders"]), .helper)
+        XCTAssertEqual(kind(["/editor", "--shader-compile-helper"], editor), .helper, "the editor's own shader helper")
+        XCTAssertEqual(kind(["/app", "--crash-watcher", "/a", "/b"]), .helper)
+        let isolated = AppProcessList.classify(arguments: ["/app"], environment: ["OWE_ISOLATED_STATE": "shots"],
+                                               bundleIdentifier: app)
         XCTAssertEqual(isolated.isolationTag, "shots")
-        XCTAssertNil(AppProcessList.classify(arguments: ["/app"], environment: [:]).isolationTag)
+        XCTAssertNil(AppProcessList.classify(arguments: ["/app"], environment: [:], bundleIdentifier: app).isolationTag)
+    }
+
+    // MARK: The editor's app
+
+    func testTheEditorsAppIsInsideTheApp() throws {
+        let app = URL(filePath: "/Applications/Open Wallpaper Engine.app", directoryHint: .isDirectory)
+        let editor = AppBundleLayout.editorURL(inApp: app)
+        XCTAssertEqual(editor.path, "/Applications/Open Wallpaper Engine.app/Contents/Helpers/Wallpaper Editor.app")
+        XCTAssertEqual(AppBundleLayout.appURL(containingHelper: editor)?.path, app.path, "the editor finds the app it is in")
+        XCTAssertNil(AppBundleLayout.appURL(containingHelper: app), "the app isn't inside another")
+        XCTAssertNil(AppBundleLayout.appURL(containingHelper: URL(filePath: "/tmp/Helpers/X.app", directoryHint: .isDirectory)))
+        XCTAssertEqual(AppBundleLayout.editorIdentifier(for: "com.winddog.wallpaper-engine"), "com.winddog.wallpaper-engine.editor")
+        XCTAssertEqual(AppBundleLayout.appIdentifier(for: "com.winddog.wallpaper-engine.editor"), "com.winddog.wallpaper-engine")
+        XCTAssertEqual(AppBundleLayout.appIdentifier(for: "com.winddog.wallpaper-engine"), "com.winddog.wallpaper-engine")
+        XCTAssertTrue(AppBundleLayout.appBundle === Bundle.main, "the app reads its own resources")
+        XCTAssertNotNil(AppBundleLayout.appBundle.url(forResource: "WallpaperNotFound", withExtension: "mp4"))
+    }
+
+    func testTheEditorsAppHasItsOwnIdentity() throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+        let data = try Data(contentsOf: root.appending(path: "EditorHelper/Info.plist"))
+        let info = try XCTUnwrap(PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any])
+        XCTAssertEqual(info["CFBundleIdentifier"] as? String, "com.winddog.wallpaper-engine.editor")
+        XCTAssertEqual(info["CFBundleIdentifier"] as? String,
+                       AppBundleLayout.editorIdentifier(for: AppStorageLocation.realBundleIdentifier))
+        XCTAssertEqual(info["CFBundleName"] as? String, AppBundleLayout.editorName)
+        XCTAssertEqual(info["CFBundleDisplayName"] as? String, AppBundleLayout.editorName)
+        XCTAssertEqual(info["CFBundleExecutable"] as? String, AppBundleLayout.editorName)
+        XCTAssertEqual(info["CFBundlePackageType"] as? String, "APPL")
+        XCTAssertEqual(info["LSUIElement"] as? Bool, false, "a Dock tile and menu bar of its own")
+        XCTAssertEqual(info["NSPrincipalClass"] as? String, "NSApplication")
+        let icon = try XCTUnwrap(info["CFBundleIconFile"] as? String)
+        XCTAssertNil(info["CFBundleIconName"], "the badged icon, not the app's from the asset catalog")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: root.appending(path: "EditorHelper/\(icon).icns").path))
+        XCTAssertNil(info["SUFeedURL"], "the editor's app never updates itself")
+        let script = try String(contentsOf: root.appending(path: "Scripts/build-editor-helper.sh"), encoding: .utf8)
+        XCTAssertTrue(script.contains("${PRODUCT_BUNDLE_IDENTIFIER}.editor"), "the build keeps the id beside the app's")
+    }
+
+    func testTheEditorsAppKeepsTheAppsState() {
+        let editor = AppStorageLocation(isolationTag: "shots", bundleIdentifier: "com.winddog.wallpaper-engine.editor")
+        let app = AppStorageLocation(isolationTag: "shots", bundleIdentifier: "com.winddog.wallpaper-engine")
+        XCTAssertEqual(editor.suiteName, app.suiteName, "the same defaults")
+        XCTAssertEqual(editor.supportDirectory, app.supportDirectory)
+        XCTAssertEqual(editor.cachesDirectory, app.cachesDirectory)
+        XCTAssertEqual(editor.keychainServicePrefix, app.keychainServicePrefix)
     }
 
     func testProcessArgumentsAreReadFromTheKernelsLayout() throws {
@@ -103,8 +164,6 @@ final class WallpaperEditorProcessTests: XCTestCase {
         }
         XCTAssertFalse(main.services.contains(.wallpaperEditorWindows), "the app opens no editor window itself")
         XCTAssertEqual(editor.activationPolicy, .regular)
-        XCTAssertEqual(editor.displayName, String(localized: "Wallpaper Editor"))
-        XCTAssertNil(main.displayName)
     }
 
     func testEditorModeGetsTheEditorsDelegate() {
@@ -122,8 +181,8 @@ final class WallpaperEditorProcessTests: XCTestCase {
         let channel = AppProcessChannel(isolationTag: "tests")
         var launches: [[String]] = []
         let launcher = WallpaperEditorLauncher(dependencies: .init(
-            messaging: messaging, channel: channel, sender: "app", isolationTag: "tests",
-            editorIsRunning: { true }, launch: { arguments, _, _ in launches.append(arguments) }))
+            messaging: messaging, channel: channel, sender: "app", isolationTag: "tests", languages: nil,
+            editorIsRunning: { true }, launch: { _, arguments, _, _ in launches.append(arguments) }))
         let windows = FakeEditorWindows()
         let requests = WallpaperEditorRequests(messaging: messaging, channel: channel, sender: "editor", windows: windows)
         requests.start()
@@ -140,16 +199,20 @@ final class WallpaperEditorProcessTests: XCTestCase {
         let messaging = FakeProcessMessaging()
         let channel = AppProcessChannel(isolationTag: "tests")
         var running = false
-        var launches: [(arguments: [String], environment: [String: String])] = []
+        var launches: [(app: URL, arguments: [String], environment: [String: String])] = []
+        let app = URL(filePath: "/Applications/Open Wallpaper Engine.app", directoryHint: .isDirectory)
         let launcher = WallpaperEditorLauncher(dependencies: .init(
             messaging: messaging, channel: channel, sender: "app", isolationTag: "tests",
-            editorIsRunning: { running }, launch: { arguments, environment, _ in launches.append((arguments, environment)) }))
+            editorApp: AppBundleLayout.editorURL(inApp: app), languages: nil, editorIsRunning: { running },
+            launch: { app, arguments, environment, _ in launches.append((app, arguments, environment)) }))
         launcher.start()
         let other = folder.deletingLastPathComponent().appending(path: "other", directoryHint: .isDirectory)
 
         launcher.open(folder)
         launcher.open(other)
         XCTAssertEqual(launches.count, 1, "a second request waits for the editor that is starting")
+        XCTAssertEqual(launches.first?.app.path, "/Applications/Open Wallpaper Engine.app/Contents/Helpers/Wallpaper Editor.app",
+                       "the editor's own app, not another instance of this one")
         XCTAssertEqual(launches.first?.arguments,
                        ["--wallpaper-editor", folder.standardizedFileURL.path, "-OWEIsolatedState", "tests"])
         XCTAssertEqual(launches.first?.environment["OWE_ISOLATED_STATE"], "tests")
