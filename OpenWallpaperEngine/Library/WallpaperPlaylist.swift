@@ -24,14 +24,19 @@ struct WallpaperPlaylist: Codable, Identifiable, Equatable {
     var items: [WallpaperPlaylistItem]
     var duration: TimeInterval
     var changeWhenVideoEnds: Bool
+    /// The system-wide shortcut that starts this playlist (`PlaylistShortcutController`).
+    var shortcut: GlobalShortcut?
+    /// The displays the playlist last showed its wallpapers on, so its shortcut starts it there.
+    var displays: [String]?
 
     init(name: String, items: [WallpaperPlaylistItem] = [], duration: TimeInterval = 300,
-         changeWhenVideoEnds: Bool = false) {
+         changeWhenVideoEnds: Bool = false, shortcut: GlobalShortcut? = nil) {
         self.id = UUID()
         self.name = name
         self.items = items
         self.duration = max(duration, 1)
         self.changeWhenVideoEnds = changeWhenVideoEnds
+        self.shortcut = shortcut
     }
 
     /// The item auto-advance moves to after `current`, passing over any `isSkipped` item. Nil
@@ -56,7 +61,7 @@ struct WallpaperPlaylist: Codable, Identifiable, Equatable {
         return nil
     }
 
-    private enum CodingKeys: String, CodingKey { case id, name, items, duration, changeWhenVideoEnds }
+    private enum CodingKeys: String, CodingKey { case id, name, items, duration, changeWhenVideoEnds, shortcut, displays }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -66,5 +71,7 @@ struct WallpaperPlaylist: Codable, Identifiable, Equatable {
         duration = max(try container.decodeIfPresent(TimeInterval.self, forKey: .duration)
             ?? items.first?.duration ?? 300, 1)
         changeWhenVideoEnds = try container.decodeIfPresent(Bool.self, forKey: .changeWhenVideoEnds) ?? false
+        shortcut = try? container.decodeIfPresent(GlobalShortcut.self, forKey: .shortcut)
+        displays = try container.decodeIfPresent([String].self, forKey: .displays)
     }
 }
