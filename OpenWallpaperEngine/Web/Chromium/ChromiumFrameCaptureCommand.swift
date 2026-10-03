@@ -13,7 +13,10 @@ enum ChromiumFrameCaptureCommand {
     static let argument = "--chromium-capture"
     static let timeout: TimeInterval = 60
 
+    static let installArgument = "--chromium-install"
+
     static func run(arguments: [String]) -> Int32? {
+        if arguments.contains(installArgument) { return install() }
         guard let index = arguments.firstIndex(of: argument) else { return nil }
         let rest = Array(arguments[(index + 1)...])
         guard rest.count >= 3, let url = URL(string: rest[0]), let count = Int(rest[1]), count > 0 else {
@@ -29,6 +32,28 @@ enum ChromiumFrameCaptureCommand {
         } catch {
             print("Capture failed: \(error.localizedDescription)")
             return 1
+        }
+    }
+
+    /// Installs the pinned build through the same installer Settings uses, then exits.
+    static func install() -> Int32 {
+        MainActor.assumeIsolated {
+            let installer = ChromiumEngineInstaller()
+            installer.install()
+            while installer.isBusy {
+                _ = RunLoop.main.run(mode: .default, before: .now + 0.25)
+            }
+            switch installer.phase {
+            case .installed:
+                print("Installed \(installer.installedVersion ?? "?") at \(installer.activeInstall?.path ?? "?")")
+                return 0
+            case .failed(let message):
+                print("Install failed: \(message)")
+                return 1
+            default:
+                print("Install did not finish: \(installer.phase)")
+                return 1
+            }
         }
     }
 
@@ -60,6 +85,11 @@ enum ChromiumFrameCaptureCommand {
         let state = progress.state
         if let error = state.error { throw Failure(errorDescription: error) }
         guard let frame = state.last else { throw Failure(errorDescription: "No frame") }
+        if let first = state.firstAt, let last = state.lastAt, state.received > 1 {
+            let interval = (last - first) / Double(state.received - 1)
+            print(String(format: "First frame %.0f ms after start; %d frames, mean interval %.1f ms (%.1f fps)",
+                         (first - state.startedAt) * 1000, state.received, interval * 1000, 1 / interval))
+        }
         try writePNG(frame.texture, to: output)
     }
 
@@ -69,6 +99,9 @@ enum ChromiumFrameCaptureCommand {
             var received = 0
             var last: ChromiumFrame?
             var error: String?
+            let startedAt = CFAbsoluteTimeGetCurrent()
+            var firstAt: CFAbsoluteTime?
+            var lastAt: CFAbsoluteTime?
         }
 
         private let lock = NSLock()
@@ -84,6 +117,9 @@ enum ChromiumFrameCaptureCommand {
             lock.withLock {
                 stored.received += 1
                 stored.last = frame
+                let now = CFAbsoluteTimeGetCurrent()
+                if stored.firstAt == nil { stored.firstAt = now }
+                stored.lastAt = now
                 return stored.received == wanted
             }
         }
