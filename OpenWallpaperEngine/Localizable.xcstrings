@@ -3228,7 +3228,7 @@
       }
     },
     "A higher quality, more expensive blur. Prefer it for large radii where the fast blur shows banding." : {
-      "comment" : "Scene Inspector tooltip for the blurprecise effect",
+      "comment" : "Scene Editor tooltip for the blurprecise effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -3511,7 +3511,7 @@
       }
     },
     "A placeholder that does nothing. Authors use it to reserve a slot in the effect stack." : {
-      "comment" : "Scene Inspector tooltip for the empty effect",
+      "comment" : "Scene Editor tooltip for the empty effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -5398,7 +5398,7 @@
       }
     },
     "Additive" : {
-      "comment" : "Scene Inspector: material blending that adds the layer's colour to the scene",
+      "comment" : "Scene Editor: material blending that adds the layer's colour to the scene",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -5493,7 +5493,7 @@
       }
     },
     "Adds a rising flame distortion." : {
-      "comment" : "Scene Inspector tooltip for the fire effect",
+      "comment" : "Scene Editor tooltip for the fire effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -5588,7 +5588,7 @@
       }
     },
     "Adds depth-aware fog that thickens toward the bottom of the scene." : {
-      "comment" : "Scene Inspector tooltip for the volumetricfog effect",
+      "comment" : "Scene Editor tooltip for the volumetricfog effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -5683,7 +5683,7 @@
       }
     },
     "Adds directional beams of light across the layer." : {
-      "comment" : "Scene Inspector tooltip for the lightshafts effect",
+      "comment" : "Scene Editor tooltip for the lightshafts effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -5778,7 +5778,7 @@
       }
     },
     "Adds expanding ripples across the surface." : {
-      "comment" : "Scene Inspector tooltip for the waterripple effect",
+      "comment" : "Scene Editor tooltip for the waterripple effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -5873,7 +5873,7 @@
       }
     },
     "Adds moving film grain. Keep the amount low or it swamps darker scenes." : {
-      "comment" : "Scene Inspector tooltip for the filmgrain effect",
+      "comment" : "Scene Editor tooltip for the filmgrain effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -5968,7 +5968,7 @@
       }
     },
     "Adds scaling with depth so near parts grow as they shift, rather than just sliding." : {
-      "comment" : "Scene Inspector tooltip for the depthparallax effect's perspective parameter",
+      "comment" : "Scene Editor tooltip for the depthparallax effect's perspective parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -6063,7 +6063,7 @@
       }
     },
     "Adds tape distortion, colour bleed and scanlines." : {
-      "comment" : "Scene Inspector tooltip for the vhs effect",
+      "comment" : "Scene Editor tooltip for the vhs effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -6346,7 +6346,7 @@
       }
     },
     "Adjusts %@." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter; %@ is its name",
+      "comment" : "Scene Editor tooltip for an effect parameter; %@ is its name",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -8134,7 +8134,7 @@
       }
     },
     "Alpha to Coverage" : {
-      "comment" : "Scene Inspector: material blending that turns the layer's alpha into multisample coverage (graphics term)",
+      "comment" : "Scene Editor: material blending that turns the layer's alpha into multisample coverage (graphics term)",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -10119,7 +10119,7 @@
       }
     },
     "Applies the %@ effect to this layer." : {
-      "comment" : "Scene Inspector tooltip for an effect without a description; %@ is its file name",
+      "comment" : "Scene Editor tooltip for an effect without a description; %@ is its file name",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -13701,7 +13701,7 @@
       }
     },
     "Bends the image as if seen through rippled glass." : {
-      "comment" : "Scene Inspector tooltip for the refraction effect",
+      "comment" : "Scene Editor tooltip for the refraction effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -13890,7 +13890,7 @@
       }
     },
     "Blending" : {
-      "comment" : "Scene Inspector: picker for how a layer's material blends into the scene (normal, translucent, additive, alpha to coverage)",
+      "comment" : "Scene Editor: picker for how a layer's material blends into the scene (normal, translucent, additive, alpha to coverage)",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -14080,7 +14080,7 @@
       }
     },
     "Blue component of the bar colour." : {
-      "comment" : "Scene Inspector tooltip for the audiobars effect's blue parameter",
+      "comment" : "Scene Editor tooltip for the audiobars effect's blue parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -14270,7 +14270,7 @@
       }
     },
     "Blurs outward from a centre point, giving a zoom or speed streak look." : {
-      "comment" : "Scene Inspector tooltip for the blurradial effect",
+      "comment" : "Scene Editor tooltip for the blurradial effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -14554,7 +14554,7 @@
       }
     },
     "Brightness of the halo around each bar." : {
-      "comment" : "Scene Inspector tooltip for the audiobars effect's glow parameter",
+      "comment" : "Scene Editor tooltip for the audiobars effect's glow parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -14649,7 +14649,7 @@
       }
     },
     "Brightness of the light rays." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like ray_intensity",
+      "comment" : "Scene Editor tooltip for an effect parameter named like ray_intensity",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -14744,7 +14744,7 @@
       }
     },
     "Brightness of the shafts of light." : {
-      "comment" : "Scene Inspector tooltip for the godrays effect's rayintensity parameter",
+      "comment" : "Scene Editor tooltip for the godrays effect's rayintensity parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -14839,7 +14839,7 @@
       }
     },
     "Brightness of the shafts." : {
-      "comment" : "Scene Inspector tooltip for the lightshafts effect's colorwintensity parameter",
+      "comment" : "Scene Editor tooltip for the lightshafts effect's colorwintensity parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -15780,7 +15780,7 @@
       }
     },
     "Bulges the image outward from a centre point like a fisheye lens." : {
-      "comment" : "Scene Inspector tooltip for the fisheye effect",
+      "comment" : "Scene Editor tooltip for the fisheye effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -16735,7 +16735,7 @@
       }
     },
     "Casts light shafts from a bright source through the scene." : {
-      "comment" : "Scene Inspector tooltip for the godrays effect",
+      "comment" : "Scene Editor tooltip for the godrays effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -20603,7 +20603,7 @@
       }
     },
     "Colour richness. 0 is greyscale, 1 is unchanged." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like saturation",
+      "comment" : "Scene Editor tooltip for an effect parameter named like saturation",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -20698,7 +20698,7 @@
       }
     },
     "Colour used by this effect." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like color",
+      "comment" : "Scene Editor tooltip for an effect parameter named like color",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -25883,7 +25883,7 @@
       }
     },
     "Density of dropouts and noise specks." : {
-      "comment" : "Scene Inspector tooltip for the vhs effect's artifacts parameter",
+      "comment" : "Scene Editor tooltip for the vhs effect's artifacts parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -26072,7 +26072,7 @@
       }
     },
     "Depth where the fog reaches full density. Keep it above Fog Near or the gradient inverts." : {
-      "comment" : "Scene Inspector tooltip for the volumetricfog effect's far parameter",
+      "comment" : "Scene Editor tooltip for the volumetricfog effect's far parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -26167,7 +26167,7 @@
       }
     },
     "Depth where the fog starts. Nothing closer than this is fogged." : {
-      "comment" : "Scene Inspector tooltip for the volumetricfog effect's near parameter",
+      "comment" : "Scene Editor tooltip for the volumetricfog effect's near parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -26921,7 +26921,7 @@
       }
     },
     "Direction the effect travels, in degrees." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like direction",
+      "comment" : "Scene Editor tooltip for an effect parameter named like direction",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -27016,7 +27016,7 @@
       }
     },
     "Direction the waves travel, in degrees." : {
-      "comment" : "Scene Inspector tooltip for the waterwaves effect's direction parameter",
+      "comment" : "Scene Editor tooltip for the waterwaves effect's direction parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -28053,7 +28053,7 @@
       }
     },
     "Distorts the layer with rolling waves." : {
-      "comment" : "Scene Inspector tooltip for the waterwaves effect",
+      "comment" : "Scene Editor tooltip for the waterwaves effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -28431,96 +28431,96 @@
         }
       }
     },
-    "Do you want to undo every Scene Inspector edit of “%@”? Its properties are kept." : {
+    "Do you want to undo every Scene Editor edit of “%@”? Its properties are kept." : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "هل تريد التراجع عن كل تعديلات مراقب المشهد على «%@»؟ يتم الاحتفاظ بخصائصها."
+            "value" : "هل تريد التراجع عن كل تعديلات محرر المشهد على «%@»؟ يتم الاحتفاظ بخصائصها."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Möchten Sie alle Änderungen an „%@“ im Szeneninspektor widerrufen? Die Eigenschaften bleiben erhalten."
+            "value" : "Möchten Sie alle Änderungen an „%@“ im Szeneneditor widerrufen? Die Eigenschaften bleiben erhalten."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "¿Quieres deshacer todos los cambios del Inspector de escenas en «%@»? Sus propiedades se conservan."
+            "value" : "¿Quieres deshacer todos los cambios del Editor de escenas en «%@»? Sus propiedades se conservan."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Voulez-vous annuler toutes les modifications de « %@ » faites dans l’Inspecteur de scène ? Ses propriétés sont conservées."
+            "value" : "Voulez-vous annuler toutes les modifications de « %@ » faites dans l’Éditeur de scène ? Ses propriétés sont conservées."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "क्या आप “%@” में सीन इंस्पेक्टर के हर बदलाव को पहले जैसा करना चाहते हैं? इसकी प्रॉपर्टी बनी रहेंगी।"
+            "value" : "क्या आप “%@” में सीन एडिटर के हर बदलाव को पहले जैसा करना चाहते हैं? इसकी प्रॉपर्टी बनी रहेंगी।"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vuoi annullare ogni modifica a “%@” fatta nell’Inspector scena? Le sue proprietà vengono mantenute."
+            "value" : "Vuoi annullare ogni modifica a “%@” fatta nell’Editor scena? Le sue proprietà vengono mantenute."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "「%@」へのシーンインスペクタでの編集をすべて取り消しますか？プロパティは保持されます。"
+            "value" : "「%@」へのシーンエディタでの編集をすべて取り消しますか？プロパティは保持されます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "‘%@’에 대한 장면 인스펙터 편집 내용을 모두 취소하시겠습니까? 속성은 유지됩니다."
+            "value" : "‘%@’에 대한 장면 편집기 편집 내용을 모두 취소하시겠습니까? 속성은 유지됩니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Czy chcesz cofnąć wszystkie zmiany „%@” wprowadzone w Inspektorze sceny? Jej właściwości zostaną zachowane."
+            "value" : "Czy chcesz cofnąć wszystkie zmiany „%@” wprowadzone w Edytorze sceny? Jej właściwości zostaną zachowane."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deseja desfazer todas as edições do Inspetor de Cena em “%@”? As propriedades são mantidas."
+            "value" : "Deseja desfazer todas as edições do Editor de Cena em “%@”? As propriedades são mantidas."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Отменить все изменения «%@», сделанные в Инспекторе сцены? Свойства сохранятся."
+            "value" : "Отменить все изменения «%@», сделанные в Редакторе сцены? Свойства сохранятся."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "“%@” için tüm Sahne Denetçisi düzenlemelerini geri almak istiyor musunuz? Özellikleri korunur."
+            "value" : "“%@” için tüm Sahne Düzenleyicisi düzenlemelerini geri almak istiyor musunuz? Özellikleri korunur."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Скасувати всі зміни «%@», зроблені в Інспекторі сцени? Властивості збережуться."
+            "value" : "Скасувати всі зміни «%@», зроблені в Редакторі сцени? Властивості збережуться."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "要撤销场景检查器对“%@”所做的所有编辑吗？其属性会保留。"
+            "value" : "要撤销场景编辑器对“%@”所做的所有编辑吗？其属性会保留。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "要還原場景檢閱器對「%@」所做的所有編輯嗎？其屬性會保留。"
+            "value" : "要還原場景編輯器對「%@」所做的所有編輯嗎？其屬性會保留。"
           }
         }
       }
@@ -32815,7 +32815,7 @@
       }
     },
     "Draws bars that rise and fall with the audio you are hearing. Needs Screen & System Audio Recording permission." : {
-      "comment" : "Scene Inspector tooltip for the audiobars effect",
+      "comment" : "Scene Editor tooltip for the audiobars effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -33004,7 +33004,7 @@
       }
     },
     "Drifts a cloud texture across the layer." : {
-      "comment" : "Scene Inspector tooltip for the cloudmotion effect",
+      "comment" : "Scene Editor tooltip for the cloudmotion effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -33383,7 +33383,7 @@
       }
     },
     "Edit Wallpaper" : {
-      "comment" : "Details panel: opens the Wallpaper Editor",
+      "comment" : "Library bottom bar: opens the selected wallpaper in the Wallpaper Editor",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -33666,7 +33666,7 @@
       }
     },
     "Effect Stack" : {
-      "comment" : "Scene Inspector: the effects applied to a video",
+      "comment" : "Scene Editor: the effects applied to a video",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -35646,7 +35646,7 @@
       }
     },
     "Fades the layer in or out." : {
-      "comment" : "Scene Inspector tooltip for the opacity effect",
+      "comment" : "Scene Editor tooltip for the opacity effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -35741,7 +35741,7 @@
       }
     },
     "Fades the layer into a gradient, usually to darken edges or tint one side." : {
-      "comment" : "Scene Inspector tooltip for the blendgradient effect",
+      "comment" : "Scene Editor tooltip for the blendgradient effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -38951,7 +38951,7 @@
       }
     },
     "Green component of the bar colour." : {
-      "comment" : "Scene Inspector tooltip for the audiobars effect's green parameter",
+      "comment" : "Scene Editor tooltip for the audiobars effect's green parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -39242,7 +39242,7 @@
       }
     },
     "Height of the torn band. Small values give a thin tracking line, large values disturb most of the frame." : {
-      "comment" : "Scene Inspector tooltip for the vhs effect's distortionwidth parameter",
+      "comment" : "Scene Editor tooltip for the vhs effect's distortionwidth parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -39337,7 +39337,7 @@
       }
     },
     "Height of the waves — how far pixels are displaced." : {
-      "comment" : "Scene Inspector tooltip for the waterwaves effect's strength parameter",
+      "comment" : "Scene Editor tooltip for the waterwaves effect's strength parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -39432,7 +39432,7 @@
       }
     },
     "Height the bars keep in silence, so they do not vanish between beats." : {
-      "comment" : "Scene Inspector tooltip for the audiobars effect's minimum parameter",
+      "comment" : "Scene Editor tooltip for the audiobars effect's minimum parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -40561,7 +40561,7 @@
       }
     },
     "Highest audio frequency band that drives this. Lower it to ignore hiss and cymbals." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like frequencymax",
+      "comment" : "Scene Editor tooltip for an effect parameter named like frequencymax",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -40656,7 +40656,7 @@
       }
     },
     "Highest frequency band that drives the shift. Lower it to ignore cymbals and hiss." : {
-      "comment" : "Scene Inspector tooltip for the hueshift effect's frequencymax parameter",
+      "comment" : "Scene Editor tooltip for the hueshift effect's frequencymax parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -40751,7 +40751,7 @@
       }
     },
     "Highest frequency band that drives the warp." : {
-      "comment" : "Scene Inspector tooltip for the hyperdrive effect's frequencymax parameter",
+      "comment" : "Scene Editor tooltip for the hyperdrive effect's frequencymax parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -40940,7 +40940,7 @@
       }
     },
     "Horizontal scroll speed. Negative scrolls left, 0 stops. Only looks seamless on tiling textures." : {
-      "comment" : "Scene Inspector tooltip for the scroll effect's speedx parameter",
+      "comment" : "Scene Editor tooltip for the scroll effect's speedx parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -41035,7 +41035,7 @@
       }
     },
     "Horizontal speed. Negative values move the other way, 0 stops." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like speedx",
+      "comment" : "Scene Editor tooltip for an effect parameter named like speedx",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -41130,7 +41130,7 @@
       }
     },
     "How bright a pixel must be before it casts rays. Lower it to catch more of the image, raise it to keep rays on highlights only." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like ray_threshold",
+      "comment" : "Scene Editor tooltip for an effect parameter named like ray_threshold",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -41225,7 +41225,7 @@
       }
     },
     "How bright a pixel must be before it glows." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like bloomthreshold",
+      "comment" : "Scene Editor tooltip for an effect parameter named like bloomthreshold",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -41320,7 +41320,7 @@
       }
     },
     "How bright a pixel must be to emit rays. Lower it if nothing glows; raise it if the whole image smears." : {
-      "comment" : "Scene Inspector tooltip for the godrays effect's raythreshold parameter",
+      "comment" : "Scene Editor tooltip for the godrays effect's raythreshold parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -41415,7 +41415,7 @@
       }
     },
     "How close a pixel must be to the key colour to be removed. Raise it until the background is gone, then stop — going further eats the subject." : {
-      "comment" : "Scene Inspector tooltip for the colorkey effect's tolerance parameter",
+      "comment" : "Scene Editor tooltip for the colorkey effect's tolerance parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -41510,7 +41510,7 @@
       }
     },
     "How closely a pixel must match before it is affected. Raise it until the whole target area is covered, then stop." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like tolerance",
+      "comment" : "Scene Editor tooltip for an effect parameter named like tolerance",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -41605,7 +41605,7 @@
       }
     },
     "How far colour bleeds sideways, like worn tape." : {
-      "comment" : "Scene Inspector tooltip for the vhs effect's chromatic parameter",
+      "comment" : "Scene Editor tooltip for the vhs effect's chromatic parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -41700,7 +41700,7 @@
       }
     },
     "How far the bars react to volume. Raise it for quiet music, lower it if the bars keep hitting the ceiling." : {
-      "comment" : "Scene Inspector tooltip for the audiobars effect's strength parameter",
+      "comment" : "Scene Editor tooltip for the audiobars effect's strength parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -41795,7 +41795,7 @@
       }
     },
     "How far the blur reaches on each axis." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like blur_scale",
+      "comment" : "Scene Editor tooltip for an effect parameter named like blur_scale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -41890,7 +41890,7 @@
       }
     },
     "How far the hue rotates at full volume." : {
-      "comment" : "Scene Inspector tooltip for the hueshift effect's audioamount parameter",
+      "comment" : "Scene Editor tooltip for the hueshift effect's audioamount parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -41985,7 +41985,7 @@
       }
     },
     "How far the image shifts horizontally with the pointer. Needs a depth map; without one nothing moves." : {
-      "comment" : "Scene Inspector tooltip for the depthparallax effect's depthx parameter",
+      "comment" : "Scene Editor tooltip for the depthparallax effect's depthx parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -42080,7 +42080,7 @@
       }
     },
     "How far the image shifts vertically with the pointer." : {
-      "comment" : "Scene Inspector tooltip for the depthparallax effect's depthy parameter",
+      "comment" : "Scene Editor tooltip for the depthparallax effect's depthy parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -42175,7 +42175,7 @@
       }
     },
     "How far the image stretches into streaks." : {
-      "comment" : "Scene Inspector tooltip for the hyperdrive effect's strength parameter",
+      "comment" : "Scene Editor tooltip for the hyperdrive effect's strength parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -42270,7 +42270,7 @@
       }
     },
     "How far the layer moves each shake, in pixels." : {
-      "comment" : "Scene Inspector tooltip for the shake effect's strength parameter",
+      "comment" : "Scene Editor tooltip for the shake effect's strength parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -42365,7 +42365,7 @@
       }
     },
     "How far the layer slides against the pointer. Give background layers more than foreground ones to sell the depth." : {
-      "comment" : "Scene Inspector tooltip for the parallax effect's amount parameter",
+      "comment" : "Scene Editor tooltip for the parallax effect's amount parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -42460,7 +42460,7 @@
       }
     },
     "How far the leaves bend." : {
-      "comment" : "Scene Inspector tooltip for the foliagesway effect's strength parameter",
+      "comment" : "Scene Editor tooltip for the foliagesway effect's strength parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -42555,7 +42555,7 @@
       }
     },
     "How far the rays reach from their source." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like ray_length",
+      "comment" : "Scene Editor tooltip for an effect parameter named like ray_length",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -42650,7 +42650,7 @@
       }
     },
     "How far the red and blue channels separate. Keep it small — past a few pixels it stops reading as a lens and starts looking broken." : {
-      "comment" : "Scene Inspector tooltip for the chromaticaberration effect's strength parameter",
+      "comment" : "Scene Editor tooltip for the chromaticaberration effect's strength parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -42745,7 +42745,7 @@
       }
     },
     "How far the shafts reach from their source." : {
-      "comment" : "Scene Inspector tooltip for the godrays effect's raylength parameter",
+      "comment" : "Scene Editor tooltip for the godrays effect's raylength parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -42840,7 +42840,7 @@
       }
     },
     "How far the surface is displaced by each ripple." : {
-      "comment" : "Scene Inspector tooltip for the waterripple effect's ripplestrength parameter",
+      "comment" : "Scene Editor tooltip for the waterripple effect's ripplestrength parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -42935,7 +42935,7 @@
       }
     },
     "How far the tracking glitch tears the image sideways." : {
-      "comment" : "Scene Inspector tooltip for the vhs effect's distortionstrength parameter",
+      "comment" : "Scene Editor tooltip for the vhs effect's distortionstrength parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -43030,7 +43030,7 @@
       }
     },
     "How fast the fog moves across the scene." : {
-      "comment" : "Scene Inspector tooltip for the volumetricfog effect's drift parameter",
+      "comment" : "Scene Editor tooltip for the volumetricfog effect's drift parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -43125,7 +43125,7 @@
       }
     },
     "How fast the ripples spread." : {
-      "comment" : "Scene Inspector tooltip for the waterripple effect's animationspeed parameter",
+      "comment" : "Scene Editor tooltip for the waterripple effect's animationspeed parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -43220,7 +43220,7 @@
       }
     },
     "How fast the shafts drift." : {
-      "comment" : "Scene Inspector tooltip for the lightshafts effect's rayspeed parameter",
+      "comment" : "Scene Editor tooltip for the lightshafts effect's rayspeed parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -43315,7 +43315,7 @@
       }
     },
     "How fast the streaks travel outward." : {
-      "comment" : "Scene Inspector tooltip for the hyperdrive effect's speed parameter",
+      "comment" : "Scene Editor tooltip for the hyperdrive effect's speed parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -43410,7 +43410,7 @@
       }
     },
     "How fast the sway travels through the foliage." : {
-      "comment" : "Scene Inspector tooltip for the foliagesway effect's speeduv parameter",
+      "comment" : "Scene Editor tooltip for the foliagesway effect's speeduv parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -43505,7 +43505,7 @@
       }
     },
     "How fast the waves travel." : {
-      "comment" : "Scene Inspector tooltip for the waterwaves effect's speed parameter",
+      "comment" : "Scene Editor tooltip for the waterwaves effect's speed parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -43600,7 +43600,7 @@
       }
     },
     "How gradually the distortion ramps in and out. Low values snap, high values glide." : {
-      "comment" : "Scene Inspector tooltip for the nitro effect's smoothness parameter",
+      "comment" : "Scene Editor tooltip for the nitro effect's smoothness parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -43695,7 +43695,7 @@
       }
     },
     "How gradually the effect blends at its boundary." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like smoothness",
+      "comment" : "Scene Editor tooltip for an effect parameter named like smoothness",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -43790,7 +43790,7 @@
       }
     },
     "How hard the lens bends the image. Negative values pinch inward instead of bulging out." : {
-      "comment" : "Scene Inspector tooltip for the fisheye effect's scale parameter",
+      "comment" : "Scene Editor tooltip for the fisheye effect's scale parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -43979,7 +43979,7 @@
       }
     },
     "How many bars are drawn across the layer." : {
-      "comment" : "Scene Inspector tooltip for the audiobars effect's bars parameter",
+      "comment" : "Scene Editor tooltip for the audiobars effect's bars parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -44074,7 +44074,7 @@
       }
     },
     "How many times the texture tiles horizontally." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like repeatx",
+      "comment" : "Scene Editor tooltip for an effect parameter named like repeatx",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -44169,7 +44169,7 @@
       }
     },
     "How many times the texture tiles vertically." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like repeaty",
+      "comment" : "Scene Editor tooltip for an effect parameter named like repeaty",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -44264,7 +44264,7 @@
       }
     },
     "How much bar movement is averaged over time. High values glide, 0 reacts instantly and jitters." : {
-      "comment" : "Scene Inspector tooltip for the audiobars effect's smoothing parameter",
+      "comment" : "Scene Editor tooltip for the audiobars effect's smoothing parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -44359,7 +44359,7 @@
       }
     },
     "How much of the area the effect fills." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like density",
+      "comment" : "Scene Editor tooltip for an effect parameter named like density",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -44454,7 +44454,7 @@
       }
     },
     "How much of the layer the lens covers. Small values bulge only the centre." : {
-      "comment" : "Scene Inspector tooltip for the fisheye effect's size parameter",
+      "comment" : "Scene Editor tooltip for the fisheye effect's size parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -44643,7 +44643,7 @@
       }
     },
     "How much the warp reacts to volume." : {
-      "comment" : "Scene Inspector tooltip for the hyperdrive effect's audioamount parameter",
+      "comment" : "Scene Editor tooltip for the hyperdrive effect's audioamount parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -44738,7 +44738,7 @@
       }
     },
     "How often the pattern repeats over time." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like frequency",
+      "comment" : "Scene Editor tooltip for an effect parameter named like frequency",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -44833,7 +44833,7 @@
       }
     },
     "How often the tracking glitch rolls through." : {
-      "comment" : "Scene Inspector tooltip for the vhs effect's distortionspeed parameter",
+      "comment" : "Scene Editor tooltip for the vhs effect's distortionspeed parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -44928,7 +44928,7 @@
       }
     },
     "How quickly each shake settles. High values give a short sharp jolt, low values keep it wobbling." : {
-      "comment" : "Scene Inspector tooltip for the shake effect's friction parameter",
+      "comment" : "Scene Editor tooltip for the shake effect's friction parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -45023,7 +45023,7 @@
       }
     },
     "How quickly the effect animates. 0 freezes it." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like speed",
+      "comment" : "Scene Editor tooltip for an effect parameter named like speed",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -45118,7 +45118,7 @@
       }
     },
     "How quickly the effect fades away from the centre." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like centerfalloff",
+      "comment" : "Scene Editor tooltip for an effect parameter named like centerfalloff",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -45213,7 +45213,7 @@
       }
     },
     "How quickly the motion settles. High values stop it sharply, low values let it keep moving." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like friction",
+      "comment" : "Scene Editor tooltip for an effect parameter named like friction",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -45308,7 +45308,7 @@
       }
     },
     "How quickly the split fades toward the centre. High values keep the centre sharp and push the fringing to the edges, like a real lens." : {
-      "comment" : "Scene Inspector tooltip for the chromaticaberration effect's centerfalloff parameter",
+      "comment" : "Scene Editor tooltip for the chromaticaberration effect's centerfalloff parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -45403,7 +45403,7 @@
       }
     },
     "How rapidly it shakes." : {
-      "comment" : "Scene Inspector tooltip for the shake effect's speed parameter",
+      "comment" : "Scene Editor tooltip for the shake effect's speed parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -45498,7 +45498,7 @@
       }
     },
     "How strongly audio drives this parameter." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like audioamount",
+      "comment" : "Scene Editor tooltip for an effect parameter named like audioamount",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -45593,7 +45593,7 @@
       }
     },
     "How strongly noise distorts the result. Small values keep it organic; large values look grainy." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like noise_amount",
+      "comment" : "Scene Editor tooltip for an effect parameter named like noise_amount",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -45688,7 +45688,7 @@
       }
     },
     "How strongly the effect is applied." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like intensity\nScene Inspector tooltip for an effect parameter named like strength",
+      "comment" : "Scene Editor tooltip for an effect parameter named like intensity\nScene Editor tooltip for an effect parameter named like strength",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -45783,7 +45783,7 @@
       }
     },
     "How strongly the effect is applied. 0 disables it." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like amount",
+      "comment" : "Scene Editor tooltip for an effect parameter named like amount",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -45878,7 +45878,7 @@
       }
     },
     "How strongly the tint colour is mixed in. 0 leaves the layer untouched, 1 replaces it with the colour." : {
-      "comment" : "Scene Inspector tooltip for the tint effect's alpha parameter",
+      "comment" : "Scene Editor tooltip for the tint effect's alpha parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -46068,7 +46068,7 @@
       }
     },
     "How thick the fog is. Small changes read strongly — start low." : {
-      "comment" : "Scene Inspector tooltip for the volumetricfog effect's density parameter",
+      "comment" : "Scene Editor tooltip for the volumetricfog effect's density parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -46163,7 +46163,7 @@
       }
     },
     "How wide the shafts spread." : {
-      "comment" : "Scene Inspector tooltip for the lightshafts effect's rayradius parameter",
+      "comment" : "Scene Editor tooltip for the lightshafts effect's rayradius parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -46353,7 +46353,7 @@
       }
     },
     "Hue rotation applied even without audio." : {
-      "comment" : "Scene Inspector tooltip for the hueshift effect's intensity parameter",
+      "comment" : "Scene Editor tooltip for the hueshift effect's intensity parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -46731,7 +46731,7 @@
       }
     },
     "Image" : {
-      "comment" : "Scene Inspector: the kind of a scene object\nWallpaper type: an image added by URL",
+      "comment" : "Scene Editor: the kind of a scene object\nWallpaper type: an image added by URL",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -46826,7 +46826,7 @@
       }
     },
     "Image %lld" : {
-      "comment" : "Scene Inspector: an image layer without a name",
+      "comment" : "Scene Editor: an image layer without a name",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -50225,7 +50225,7 @@
       }
     },
     "Jitters the layer. Masked so only part of the image moves." : {
-      "comment" : "Scene Inspector tooltip for the shake effect",
+      "comment" : "Scene Editor tooltip for the shake effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -50604,7 +50604,7 @@
       }
     },
     "Keeps only the outlines in the image." : {
-      "comment" : "Scene Inspector tooltip for the edgedetection effect",
+      "comment" : "Scene Editor tooltip for the edgedetection effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -51923,7 +51923,7 @@
       }
     },
     "Leans the layer to one side." : {
-      "comment" : "Scene Inspector tooltip for the skew effect",
+      "comment" : "Scene Editor tooltip for the skew effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -54751,7 +54751,7 @@
       }
     },
     "Lowest audio frequency band that drives this. Raise it to ignore bass." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like frequencymin",
+      "comment" : "Scene Editor tooltip for an effect parameter named like frequencymin",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -54846,7 +54846,7 @@
       }
     },
     "Lowest frequency band that drives the shift. Raise it to ignore bass." : {
-      "comment" : "Scene Inspector tooltip for the hueshift effect's frequencymin parameter",
+      "comment" : "Scene Editor tooltip for the hueshift effect's frequencymin parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -54941,7 +54941,7 @@
       }
     },
     "Lowest frequency band that drives the warp. Raise it to ignore bass." : {
-      "comment" : "Scene Inspector tooltip for the hyperdrive effect's frequencymin parameter",
+      "comment" : "Scene Editor tooltip for the hyperdrive effect's frequencymin parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -55520,7 +55520,7 @@
       }
     },
     "Makes one colour transparent, like a green screen. Raise Tolerance until the colour disappears, then raise Fuzziness to soften the edge." : {
-      "comment" : "Scene Inspector tooltip for the colorkey effect",
+      "comment" : "Scene Editor tooltip for the colorkey effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -57686,7 +57686,7 @@
       }
     },
     "Midtone brightness curve. 1 leaves the layer unchanged." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like gamma",
+      "comment" : "Scene Editor tooltip for an effect parameter named like gamma",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -57875,7 +57875,7 @@
       }
     },
     "Mirrors the layer below itself, as if on water or glass." : {
-      "comment" : "Scene Inspector tooltip for the reflection effect",
+      "comment" : "Scene Editor tooltip for the reflection effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -58253,7 +58253,7 @@
       }
     },
     "Mixes a second image into the layer using a Photoshop-style blend mode." : {
-      "comment" : "Scene Inspector tooltip for the blend effect",
+      "comment" : "Scene Editor tooltip for the blend effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -61081,7 +61081,7 @@
       }
     },
     "Moves the layer against the pointer so it appears to sit at a different depth." : {
-      "comment" : "Scene Inspector tooltip for the parallax effect",
+      "comment" : "Scene Editor tooltip for the parallax effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -61271,7 +61271,7 @@
       }
     },
     "Multiplies the layer by a colour." : {
-      "comment" : "Scene Inspector tooltip for the tint effect",
+      "comment" : "Scene Editor tooltip for the tint effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -65898,7 +65898,7 @@
       }
     },
     "Object %lld" : {
-      "comment" : "Scene Inspector: a scene object without a name",
+      "comment" : "Scene Editor: a scene object without a name",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -66371,7 +66371,7 @@
       }
     },
     "Offsets the start of the animation, useful for de-syncing two copies of an effect." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like phase",
+      "comment" : "Scene Editor tooltip for an effect parameter named like phase",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -66466,7 +66466,7 @@
       }
     },
     "Offsets, scales or rotates the layer." : {
-      "comment" : "Scene Inspector tooltip for the transform effect",
+      "comment" : "Scene Editor tooltip for the transform effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -67505,7 +67505,7 @@
       }
     },
     "Opacity left behind where the colour is keyed out. 0 makes matched pixels fully transparent." : {
-      "comment" : "Scene Inspector tooltip for the colorkey effect's alpha parameter",
+      "comment" : "Scene Editor tooltip for the colorkey effect's alpha parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -70335,7 +70335,7 @@
       }
     },
     "Opens or closes a circular mask over the layer." : {
-      "comment" : "Scene Inspector tooltip for the iris effect",
+      "comment" : "Scene Editor tooltip for the iris effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -71465,7 +71465,7 @@
       }
     },
     "Other" : {
-      "comment" : "Resolution filter group for the remaining resolutions\nScene Inspector: the kind of a scene object that is neither an image nor particles",
+      "comment" : "Resolution filter group for the remaining resolutions\nScene Editor: the kind of a scene object that is neither an image nor particles",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -72032,7 +72032,7 @@
       }
     },
     "Overall amount of tape degradation." : {
-      "comment" : "Scene Inspector tooltip for the vhs effect's strength parameter",
+      "comment" : "Scene Editor tooltip for the vhs effect's strength parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -72127,7 +72127,7 @@
       }
     },
     "Overall lightness. 1 leaves the layer unchanged." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like brightness",
+      "comment" : "Scene Editor tooltip for an effect parameter named like brightness",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -72222,7 +72222,7 @@
       }
     },
     "Overlays procedural clouds." : {
-      "comment" : "Scene Inspector tooltip for the clouds effect",
+      "comment" : "Scene Editor tooltip for the clouds effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -72412,7 +72412,7 @@
       }
     },
     "Particle %lld" : {
-      "comment" : "Scene Inspector: a particle system without a name",
+      "comment" : "Scene Editor: a particle system without a name",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -72601,7 +72601,7 @@
       }
     },
     "Particle System" : {
-      "comment" : "Scene Inspector: the kind of a scene object",
+      "comment" : "Scene Editor: the kind of a scene object",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -77075,7 +77075,7 @@
       }
     },
     "Point the effect radiates from, as a fraction of the layer (0.5, 0.5 is the middle)." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like center",
+      "comment" : "Scene Editor tooltip for an effect parameter named like center",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -79527,7 +79527,7 @@
       }
     },
     "Projects rippling underwater light patterns." : {
-      "comment" : "Scene Inspector tooltip for the watercaustics effect",
+      "comment" : "Scene Editor tooltip for the watercaustics effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -79811,7 +79811,7 @@
       }
     },
     "Pulses a speed-boost distortion." : {
-      "comment" : "Scene Inspector tooltip for the nitro effect",
+      "comment" : "Scene Editor tooltip for the nitro effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -79906,7 +79906,7 @@
       }
     },
     "Pushes the image along as if it were flowing water." : {
-      "comment" : "Scene Inspector tooltip for the waterflow effect",
+      "comment" : "Scene Editor tooltip for the waterflow effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -80849,7 +80849,7 @@
       }
     },
     "Radius of the spinning disc, as a fraction of the layer." : {
-      "comment" : "Scene Inspector tooltip for the spin effect's size parameter",
+      "comment" : "Scene Editor tooltip for the spin effect's size parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -82264,7 +82264,7 @@
       }
     },
     "Red component of the bar colour." : {
-      "comment" : "Scene Inspector tooltip for the audiobars effect's red parameter",
+      "comment" : "Scene Editor tooltip for the audiobars effect's red parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -87495,96 +87495,96 @@
         }
       }
     },
-    "Reset Scene Inspector Edits" : {
+    "Reset Scene Editor Edits" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "إعادة تعيين تعديلات مراقب المشهد"
+            "value" : "إعادة تعيين تعديلات محرر المشهد"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Änderungen im Szeneninspektor zurücksetzen"
+            "value" : "Änderungen im Szeneneditor zurücksetzen"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Restablecer cambios del Inspector de escenas"
+            "value" : "Restablecer cambios del Editor de escenas"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Réinitialiser les modifications de l’Inspecteur de scène"
+            "value" : "Réinitialiser les modifications de l’Éditeur de scène"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "सीन इंस्पेक्टर के बदलाव रीसेट करें"
+            "value" : "सीन एडिटर के बदलाव रीसेट करें"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ripristina modifiche dell’Inspector scena"
+            "value" : "Ripristina modifiche dell’Editor scena"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "シーンインスペクタの編集をリセット"
+            "value" : "シーンエディタの編集をリセット"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "장면 인스펙터 편집 내용 재설정"
+            "value" : "장면 편집기 편집 내용 재설정"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Resetuj zmiany z Inspektora sceny"
+            "value" : "Resetuj zmiany z Edytora sceny"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Redefinir Edições do Inspetor de Cena"
+            "value" : "Redefinir Edições do Editor de Cena"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Сбросить изменения Инспектора сцены"
+            "value" : "Сбросить изменения Редактора сцены"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sahne Denetçisi Düzenlemelerini Sıfırla"
+            "value" : "Sahne Düzenleyicisi Düzenlemelerini Sıfırla"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Скинути зміни Інспектора сцени"
+            "value" : "Скинути зміни Редактора сцени"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重置场景检查器编辑"
+            "value" : "重置场景编辑器编辑"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重置場景檢閱器編輯"
+            "value" : "重置場景編輯器編輯"
           }
         }
       }
@@ -89099,7 +89099,7 @@
       }
     },
     "Reveals a second image through a moving window." : {
-      "comment" : "Scene Inspector tooltip for the xray effect",
+      "comment" : "Scene Editor tooltip for the xray effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -89288,7 +89288,7 @@
       }
     },
     "Rocks the layer back and forth around its base." : {
-      "comment" : "Scene Inspector tooltip for the swing effect",
+      "comment" : "Scene Editor tooltip for the swing effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -89666,7 +89666,7 @@
       }
     },
     "Rotates a circular region of the layer." : {
-      "comment" : "Scene Inspector tooltip for the spin effect",
+      "comment" : "Scene Editor tooltip for the spin effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -89761,7 +89761,7 @@
       }
     },
     "Rotates every colour around the colour wheel." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like hue\nScene Inspector tooltip for the hueshift effect",
+      "comment" : "Scene Editor tooltip for an effect parameter named like hue\nScene Editor tooltip for the hueshift effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -89856,7 +89856,7 @@
       }
     },
     "Rotation applied by the effect, in degrees." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like angle",
+      "comment" : "Scene Editor tooltip for an effect parameter named like angle",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -90329,7 +90329,7 @@
       }
     },
     "Runs a soft highlight across the layer." : {
-      "comment" : "Scene Inspector tooltip for the shimmer effect",
+      "comment" : "Scene Editor tooltip for the shimmer effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -90802,97 +90802,97 @@
         }
       }
     },
-    "Saves the current properties and Scene Inspector edits. A preset with the same name is replaced." : {
+    "Saves the current properties and Scene Editor edits. A preset with the same name is replaced." : {
       "comment" : "Message of the prompt that names a new wallpaper preset",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "يحفظ الخصائص الحالية وتعديلات مراقب المشهد. يُستبدل الإعداد المسبق الذي يحمل الاسم نفسه."
+            "value" : "يحفظ الخصائص الحالية وتعديلات محرر المشهد. يُستبدل الإعداد المسبق الذي يحمل الاسم نفسه."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sichert die aktuellen Eigenschaften und Änderungen im Szeneninspektor. Eine Voreinstellung mit demselben Namen wird ersetzt."
+            "value" : "Sichert die aktuellen Eigenschaften und Änderungen im Szeneneditor. Eine Voreinstellung mit demselben Namen wird ersetzt."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Guarda las propiedades actuales y los cambios del Inspector de escenas. Se reemplaza el preajuste con el mismo nombre."
+            "value" : "Guarda las propiedades actuales y los cambios del Editor de escenas. Se reemplaza el preajuste con el mismo nombre."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Enregistre les propriétés actuelles et les modifications de l’Inspecteur de scène. Un préréglage du même nom est remplacé."
+            "value" : "Enregistre les propriétés actuelles et les modifications de l’Éditeur de scène. Un préréglage du même nom est remplacé."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "मौजूदा प्रॉपर्टी और सीन इंस्पेक्टर के बदलाव सहेजता है। इसी नाम का प्रीसेट बदल दिया जाता है।"
+            "value" : "मौजूदा प्रॉपर्टी और सीन एडिटर के बदलाव सहेजता है। इसी नाम का प्रीसेट बदल दिया जाता है।"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Salva le proprietà attuali e le modifiche dell’Inspector scena. Un preset con lo stesso nome viene sostituito."
+            "value" : "Salva le proprietà attuali e le modifiche dell’Editor scena. Un preset con lo stesso nome viene sostituito."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "現在のプロパティとシーンインスペクタでの編集を保存します。同じ名前のプリセットは置き換えられます。"
+            "value" : "現在のプロパティとシーンエディタでの編集を保存します。同じ名前のプリセットは置き換えられます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "현재 속성과 장면 인스펙터 편집 내용을 저장합니다. 이름이 같은 사전 설정은 대치됩니다."
+            "value" : "현재 속성과 장면 편집기 편집 내용을 저장합니다. 이름이 같은 사전 설정은 대치됩니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zapisuje bieżące właściwości i zmiany z Inspektora sceny. Ustawienie wstępne o tej samej nazwie zostanie zastąpione."
+            "value" : "Zapisuje bieżące właściwości i zmiany z Edytora sceny. Ustawienie wstępne o tej samej nazwie zostanie zastąpione."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Salva as propriedades atuais e as edições do Inspetor de Cena. Uma predefinição com o mesmo nome é substituída."
+            "value" : "Salva as propriedades atuais e as edições do Editor de Cena. Uma predefinição com o mesmo nome é substituída."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Сохраняет текущие свойства и изменения в Инспекторе сцены. Пресет с таким же именем будет заменён."
+            "value" : "Сохраняет текущие свойства и изменения в Редакторе сцены. Пресет с таким же именем будет заменён."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Geçerli özellikleri ve Sahne Denetçisi düzenlemelerini kaydeder. Aynı adlı hazır ayar değiştirilir."
+            "value" : "Geçerli özellikleri ve Sahne Düzenleyicisi düzenlemelerini kaydeder. Aynı adlı hazır ayar değiştirilir."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Зберігає поточні властивості та зміни в Інспекторі сцени. Пресет із такою самою назвою буде замінено."
+            "value" : "Зберігає поточні властивості та зміни в Редакторі сцени. Пресет із такою самою назвою буде замінено."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "保存当前属性和场景检查器中的编辑。同名预设将被替换。"
+            "value" : "保存当前属性和场景编辑器中的编辑。同名预设将被替换。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "儲存目前屬性與場景檢閱器中的編輯。同名的預設組合會被取代。"
+            "value" : "儲存目前屬性與場景編輯器中的編輯。同名的預設組合會被取代。"
           }
         }
       }
@@ -90992,7 +90992,7 @@
       }
     },
     "Scales the layer in time with the audio." : {
-      "comment" : "Scene Inspector tooltip for the pulse effect",
+      "comment" : "Scene Editor tooltip for the pulse effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -91182,7 +91182,7 @@
       }
     },
     "Scatters sparkles across the layer." : {
-      "comment" : "Scene Inspector tooltip for the glitter effect",
+      "comment" : "Scene Editor tooltip for the glitter effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -91465,191 +91465,191 @@
         }
       }
     },
-    "Scene Inspector" : {
+    "Scene Editor" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "مراقب المشهد"
+            "value" : "محرر المشهد"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Szeneninspektor"
+            "value" : "Szeneneditor"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Inspector de escenas"
+            "value" : "Editor de escenas"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Inspecteur de scène"
+            "value" : "Éditeur de scène"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "सीन इंस्पेक्टर"
+            "value" : "सीन एडिटर"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Inspector scena"
+            "value" : "Editor scena"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "シーンインスペクタ"
+            "value" : "シーンエディタ"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "장면 인스펙터"
+            "value" : "장면 편집기"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Inspektor sceny"
+            "value" : "Edytor sceny"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Inspetor de Cena"
+            "value" : "Editor de Cena"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Инспектор сцены"
+            "value" : "Редактор сцены"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sahne Denetçisi"
+            "value" : "Sahne Düzenleyicisi"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Інспектор сцени"
+            "value" : "Редактор сцени"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "场景检查器"
+            "value" : "场景编辑器"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "場景檢閱器"
+            "value" : "場景編輯器"
           }
         }
       }
     },
-    "Scene Inspector edits are reset too." : {
-      "comment" : "Reset confirmation: the Scene Inspector's edits go as well",
+    "Scene Editor edits are reset too." : {
+      "comment" : "Reset confirmation: the Scene Editor's edits go as well",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "تتم إعادة تعيين تعديلات مراقب المشهد أيضًا."
+            "value" : "تتم إعادة تعيين تعديلات محرر المشهد أيضًا."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Änderungen im Szeneninspektor werden ebenfalls zurückgesetzt."
+            "value" : "Änderungen im Szeneneditor werden ebenfalls zurückgesetzt."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "También se restablecen los cambios del Inspector de escenas."
+            "value" : "También se restablecen los cambios del Editor de escenas."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Les modifications de l’Inspecteur de scène sont aussi réinitialisées."
+            "value" : "Les modifications de l’Éditeur de scène sont aussi réinitialisées."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "सीन इंस्पेक्टर के बदलाव भी रीसेट होंगे।"
+            "value" : "सीन एडिटर के बदलाव भी रीसेट होंगे।"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vengono ripristinate anche le modifiche dell’Inspector scena."
+            "value" : "Vengono ripristinate anche le modifiche dell’Editor scena."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "シーンインスペクタでの変更もリセットされます。"
+            "value" : "シーンエディタでの変更もリセットされます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "장면 인스펙터에서 편집한 내용도 재설정됩니다."
+            "value" : "장면 편집기에서 편집한 내용도 재설정됩니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zmiany wprowadzone w Inspektorze sceny również zostaną zresetowane."
+            "value" : "Zmiany wprowadzone w Edytorze sceny również zostaną zresetowane."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "As edições do Inspetor de Cena também são redefinidas."
+            "value" : "As edições do Editor de Cena também são redefinidas."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Изменения, сделанные в Инспекторе сцены, тоже сбрасываются."
+            "value" : "Изменения, сделанные в Редакторе сцены, тоже сбрасываются."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sahne Denetçisi düzenlemeleri de sıfırlanır."
+            "value" : "Sahne Düzenleyicisi düzenlemeleri de sıfırlanır."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Зміни, зроблені в Інспекторі сцени, теж скидаються."
+            "value" : "Зміни, зроблені в Редакторі сцени, теж скидаються."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "场景检查器中的编辑也会被重置。"
+            "value" : "场景编辑器中的编辑也会被重置。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "場景檢閱器中的編輯也會重置。"
+            "value" : "場景編輯器中的編輯也會重置。"
           }
         }
       }
@@ -94479,6 +94479,101 @@
         }
       }
     },
+    "Select a wallpaper to edit it" : {
+      "comment" : "Tooltip of the library bottom bar’s Edit Wallpaper button while no wallpaper is selected",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختر خلفية لتحريرها"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wählen Sie ein Hintergrundbild aus, um es zu bearbeiten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selecciona un fondo de pantalla para editarlo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sélectionnez un fond d’écran pour le modifier"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बदलने के लिए कोई वॉलपेपर चुनें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seleziona uno sfondo per modificarlo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "編集する壁紙を選択してください"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "편집할 배경화면을 선택하십시오"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wybierz tapetę, aby ją edytować"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selecione uma imagem de fundo para editá-la"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите обои, чтобы изменить их"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Düzenlemek için bir duvar kâğıdı seçin"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виберіть шпалеру, щоб редагувати її"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择要编辑的墙纸"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選擇要編輯的背景圖片"
+          }
+        }
+      }
+    },
     "Select an object to move it." : {
       "localizations" : {
         "ar" : {
@@ -95045,7 +95140,7 @@
       }
     },
     "Sends ripples out from the pointer as it moves." : {
-      "comment" : "Scene Inspector tooltip for the cursorripple effect",
+      "comment" : "Scene Editor tooltip for the cursorripple effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -95140,7 +95235,7 @@
       }
     },
     "Separation between lights and darks. 1 leaves the layer unchanged." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like contrast",
+      "comment" : "Scene Editor tooltip for an effect parameter named like contrast",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -97119,7 +97214,7 @@
       }
     },
     "Shapes the audio response. Above 1 reacts mainly to peaks." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like audioexponent",
+      "comment" : "Scene Editor tooltip for an effect parameter named like audioexponent",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -97214,7 +97309,7 @@
       }
     },
     "Shapes the response curve. Above 1 emphasises peaks and ignores small values." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like exponent",
+      "comment" : "Scene Editor tooltip for an effect parameter named like exponent",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -97309,7 +97404,7 @@
       }
     },
     "Shapes the response curve. Above 1 ignores quiet passages and reacts mainly to peaks." : {
-      "comment" : "Scene Inspector tooltip for the hueshift effect's audioexponent parameter",
+      "comment" : "Scene Editor tooltip for the hueshift effect's audioexponent parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -97404,7 +97499,7 @@
       }
     },
     "Shapes the response curve. Above 1 reacts mainly to peaks." : {
-      "comment" : "Scene Inspector tooltip for the hyperdrive effect's audioexponent parameter",
+      "comment" : "Scene Editor tooltip for the hyperdrive effect's audioexponent parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -97594,7 +97689,7 @@
       }
     },
     "Sharpens local detail without changing overall brightness. High values look crunchy." : {
-      "comment" : "Scene Inspector tooltip for the localcontrast effect",
+      "comment" : "Scene Editor tooltip for the localcontrast effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -97689,7 +97784,7 @@
       }
     },
     "Sharpness of the wave crests. 1 is a smooth sine; higher values give peaked, choppier water." : {
-      "comment" : "Scene Inspector tooltip for the waterwaves effect's exponent parameter",
+      "comment" : "Scene Editor tooltip for the waterwaves effect's exponent parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -97878,7 +97973,7 @@
       }
     },
     "Shifts parts of the image by a depth map so it looks three-dimensional as the pointer moves." : {
-      "comment" : "Scene Inspector tooltip for the depthparallax effect",
+      "comment" : "Scene Editor tooltip for the depthparallax effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -99854,7 +99949,7 @@
       }
     },
     "Simulated camera exposure. Positive brightens, negative darkens." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like exposure",
+      "comment" : "Scene Editor tooltip for an effect parameter named like exposure",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -100043,7 +100138,7 @@
       }
     },
     "Size of the affected area." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like size",
+      "comment" : "Scene Editor tooltip for an effect parameter named like size",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -100138,7 +100233,7 @@
       }
     },
     "Size of the affected region." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like radius",
+      "comment" : "Scene Editor tooltip for an effect parameter named like radius",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -100233,7 +100328,7 @@
       }
     },
     "Size of the noise pattern. Lower is coarser and blotchier, higher is finer." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like noise_scale",
+      "comment" : "Scene Editor tooltip for an effect parameter named like noise_scale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -100328,7 +100423,7 @@
       }
     },
     "Size of the pattern relative to the layer." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like scale",
+      "comment" : "Scene Editor tooltip for an effect parameter named like scale",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -100423,7 +100518,7 @@
       }
     },
     "Size of the ripples. Low values give broad swells, high values fine ridges." : {
-      "comment" : "Scene Inspector tooltip for the waterripple effect's scale parameter",
+      "comment" : "Scene Editor tooltip for the waterripple effect's scale parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -100518,7 +100613,7 @@
       }
     },
     "Size of the sway pattern. Low values move the whole layer together, high values ripple through it." : {
-      "comment" : "Scene Inspector tooltip for the foliagesway effect's scale parameter",
+      "comment" : "Scene Editor tooltip for the foliagesway effect's scale parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -100989,7 +101084,7 @@
       }
     },
     "Slides the texture continuously, useful for tiling backgrounds." : {
-      "comment" : "Scene Inspector tooltip for the scroll effect",
+      "comment" : "Scene Editor tooltip for the scroll effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -101178,7 +101273,7 @@
       }
     },
     "Smears the image along its direction of motion." : {
-      "comment" : "Scene Inspector tooltip for the motionblur effect",
+      "comment" : "Scene Editor tooltip for the motionblur effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -101367,7 +101462,7 @@
       }
     },
     "Softens the boundary of the affected region." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like feather",
+      "comment" : "Scene Editor tooltip for an effect parameter named like feather",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -101462,7 +101557,7 @@
       }
     },
     "Softens the layer. This is the cheap blur; use Blur Precise when you need a cleaner result." : {
-      "comment" : "Scene Inspector tooltip for the blur effect",
+      "comment" : "Scene Editor tooltip for the blur effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -101557,7 +101652,7 @@
       }
     },
     "Softness of the cut-out edge. Raise it if the keyed edge looks jagged; too high and the subject goes semi-transparent." : {
-      "comment" : "Scene Inspector tooltip for the colorkey effect's fuzziness parameter",
+      "comment" : "Scene Editor tooltip for the colorkey effect's fuzziness parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -101652,7 +101747,7 @@
       }
     },
     "Softness of the disc edge. Very small values leave a visible hard circle." : {
-      "comment" : "Scene Inspector tooltip for the spin effect's feather parameter",
+      "comment" : "Scene Editor tooltip for the spin effect's feather parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -101747,7 +101842,7 @@
       }
     },
     "Softness of the edge where the effect stops. Raise it to avoid a hard cut." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like fuzziness",
+      "comment" : "Scene Editor tooltip for an effect parameter named like fuzziness",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -102407,7 +102502,7 @@
       }
     },
     "Spacing between bars, as a fraction of their width." : {
-      "comment" : "Scene Inspector tooltip for the audiobars effect's gap parameter",
+      "comment" : "Scene Editor tooltip for the audiobars effect's gap parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -102597,7 +102692,7 @@
       }
     },
     "Splits red and blue channels apart, imitating a cheap camera lens. Subtle values read best." : {
-      "comment" : "Scene Inspector tooltip for the chromaticaberration effect",
+      "comment" : "Scene Editor tooltip for the chromaticaberration effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -106093,7 +106188,7 @@
       }
     },
     "Strength of the blend. 0 leaves the layer untouched, 1 applies it fully." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like multiply",
+      "comment" : "Scene Editor tooltip for an effect parameter named like multiply",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -106188,7 +106283,7 @@
       }
     },
     "Strength of the glow around bright areas." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like bloom",
+      "comment" : "Scene Editor tooltip for an effect parameter named like bloom",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -106283,7 +106378,7 @@
       }
     },
     "Strength of the speed-boost distortion." : {
-      "comment" : "Scene Inspector tooltip for the nitro effect's multiply parameter",
+      "comment" : "Scene Editor tooltip for the nitro effect's multiply parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -106473,7 +106568,7 @@
       }
     },
     "Stretches the image into streaks for a warp-speed look." : {
-      "comment" : "Scene Inspector tooltip for the hyperdrive effect",
+      "comment" : "Scene Editor tooltip for the hyperdrive effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -106662,7 +106757,7 @@
       }
     },
     "Sways the layer as if leaves were moving in wind." : {
-      "comment" : "Scene Inspector tooltip for the foliagesway effect",
+      "comment" : "Scene Editor tooltip for the foliagesway effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -106757,7 +106852,7 @@
       }
     },
     "Sweeps a bright band across the layer. The mask controls which parts can catch the light." : {
-      "comment" : "Scene Inspector tooltip for the shine effect",
+      "comment" : "Scene Editor tooltip for the shine effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -106852,7 +106947,7 @@
       }
     },
     "Swirls the image around a centre point." : {
-      "comment" : "Scene Inspector tooltip for the twirl effect",
+      "comment" : "Scene Editor tooltip for the twirl effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -110159,7 +110254,7 @@
       }
     },
     "The cut-off where the effect starts to apply. Lower catches more of the image, higher restricts it to the strongest pixels." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like threshold",
+      "comment" : "Scene Editor tooltip for an effect parameter named like threshold",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -115068,7 +115163,7 @@
       }
     },
     "Tilts the layer in 3D space." : {
-      "comment" : "Scene Inspector tooltip for the perspective effect",
+      "comment" : "Scene Editor tooltip for the perspective effect",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -115727,7 +115822,7 @@
       }
     },
     "Translucent" : {
-      "comment" : "Scene Inspector: material blending that draws the layer over the scene by its alpha",
+      "comment" : "Scene Editor: material blending that draws the layer over the scene by its alpha",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -115917,7 +116012,7 @@
       }
     },
     "Transparency of the bars." : {
-      "comment" : "Scene Inspector tooltip for the audiobars effect's opacity parameter",
+      "comment" : "Scene Editor tooltip for the audiobars effect's opacity parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -116012,7 +116107,7 @@
       }
     },
     "Transparency of the layer. 0 hides it completely, 1 is fully solid." : {
-      "comment" : "Scene Inspector tooltip for the opacity effect's alpha parameter",
+      "comment" : "Scene Editor tooltip for the opacity effect's alpha parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -116107,7 +116202,7 @@
       }
     },
     "Transparency. 0 is invisible, 1 is solid." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like alpha\nScene Inspector tooltip for an effect parameter named like opacity",
+      "comment" : "Scene Editor tooltip for an effect parameter named like alpha\nScene Editor tooltip for an effect parameter named like opacity",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -117616,96 +117711,96 @@
         }
       }
     },
-    "Undo every change made to this wallpaper in the Scene Inspector" : {
+    "Undo every change made to this wallpaper in the Scene Editor" : {
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "التراجع عن كل تغيير أُجري على خلفية الشاشة هذه في مراقب المشهد"
+            "value" : "التراجع عن كل تغيير أُجري على خلفية الشاشة هذه في محرر المشهد"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Alle Änderungen an diesem Hintergrundbild im Szeneninspektor widerrufen"
+            "value" : "Alle Änderungen an diesem Hintergrundbild im Szeneneditor widerrufen"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deshacer todos los cambios hechos a este fondo de pantalla en el Inspector de escenas"
+            "value" : "Deshacer todos los cambios hechos a este fondo de pantalla en el Editor de escenas"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Annuler toutes les modifications apportées à ce fond d’écran dans l’Inspecteur de scène"
+            "value" : "Annuler toutes les modifications apportées à ce fond d’écran dans l’Éditeur de scène"
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "सीन इंस्पेक्टर में इस वॉलपेपर में किए गए हर बदलाव को पहले जैसा करें"
+            "value" : "सीन एडिटर में इस वॉलपेपर में किए गए हर बदलाव को पहले जैसा करें"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Annulla ogni modifica fatta a questo sfondo nell’Inspector scena"
+            "value" : "Annulla ogni modifica fatta a questo sfondo nell’Editor scena"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "シーンインスペクタでこの壁紙に加えたすべての変更を取り消します"
+            "value" : "シーンエディタでこの壁紙に加えたすべての変更を取り消します"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "장면 인스펙터에서 이 배경화면에 적용한 모든 변경 사항을 취소합니다"
+            "value" : "장면 편집기에서 이 배경화면에 적용한 모든 변경 사항을 취소합니다"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cofnij wszystkie zmiany tej tapety wprowadzone w Inspektorze sceny"
+            "value" : "Cofnij wszystkie zmiany tej tapety wprowadzone w Edytorze sceny"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Desfazer todas as alterações feitas nesta imagem de fundo no Inspetor de Cena"
+            "value" : "Desfazer todas as alterações feitas nesta imagem de fundo no Editor de Cena"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Отменить все изменения этих обоев, сделанные в Инспекторе сцены"
+            "value" : "Отменить все изменения этих обоев, сделанные в Редакторе сцены"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sahne Denetçisi’nde bu duvar kâğıdında yapılan tüm değişiklikleri geri al"
+            "value" : "Sahne Düzenleyicisi’nde bu duvar kâğıdında yapılan tüm değişiklikleri geri al"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Скасувати всі зміни цієї шпалери, зроблені в Інспекторі сцени"
+            "value" : "Скасувати всі зміни цієї шпалери, зроблені в Редакторі сцени"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "撤销在场景检查器中对此墙纸所做的所有更改"
+            "value" : "撤销在场景编辑器中对此墙纸所做的所有更改"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "還原在場景檢閱器中對此背景圖片所做的所有變更"
+            "value" : "還原在場景編輯器中對此背景圖片所做的所有變更"
           }
         }
       }
@@ -121697,7 +121792,7 @@
       }
     },
     "Version %@" : {
-      "comment" : "Scene Inspector: one of a layer's alternative versions",
+      "comment" : "Scene Editor: one of a layer's alternative versions",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -122075,7 +122170,7 @@
       }
     },
     "Vertical scroll speed. Negative scrolls up, 0 stops." : {
-      "comment" : "Scene Inspector tooltip for the scroll effect's speedy parameter",
+      "comment" : "Scene Editor tooltip for the scroll effect's speedy parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -122170,7 +122265,7 @@
       }
     },
     "Vertical speed. Negative values move the other way, 0 stops." : {
-      "comment" : "Scene Inspector tooltip for an effect parameter named like speedy",
+      "comment" : "Scene Editor tooltip for an effect parameter named like speedy",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
@@ -124809,7 +124904,7 @@
       }
     },
     "Wavelength. Low values give many small ripples, high values give a few broad swells." : {
-      "comment" : "Scene Inspector tooltip for the waterwaves effect's scale parameter",
+      "comment" : "Scene Editor tooltip for the waterwaves effect's scale parameter",
       "localizations" : {
         "ar" : {
           "stringUnit" : {

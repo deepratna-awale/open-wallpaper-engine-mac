@@ -115,7 +115,7 @@ Building from source fetches the Sparkle Swift package on first build. Builds fr
 - Wallpaper Engine's Workshop filters: Show Only, a resolution filter, genres combined with AND/OR, and tags on every card.
 - Installed wallpapers show and filter by their Workshop tags; asset-only and dependency-only items stay out of Installed.
 - Missing Workshop dependencies download automatically, and unused ones are removed after a delete. Every download lands in the Wallpaper Storage folder.
-- **Reset** in Details returns a wallpaper's properties, and its Scene Inspector edits, to the defaults its author set.
+- **Reset** in Details returns a wallpaper's properties, and its Scene Editor edits, to the defaults its author set.
 - Property conditions, text rows and slider formats from the wallpaper's settings are honoured.
 - Steam passwords are never stored, and the Steam Web API key is kept in the Keychain.
 

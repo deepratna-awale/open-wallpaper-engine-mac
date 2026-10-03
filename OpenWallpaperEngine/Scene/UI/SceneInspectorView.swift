@@ -162,7 +162,7 @@ private final class SceneInspectorModel: ObservableObject {
                 let materialPath = model?.material
                 let material: WEMaterial? = materialPath.flatMap { data($0) }.flatMap { try? JSONDecoder().decode(WEMaterial.self, from: $0) }
                 let passes = material?.passes ?? []
-                return SceneInspectorItem(id: String(object.id ?? index), name: object.name ?? String(localized: "Image \(index + 1)", comment: "Scene Inspector: an image layer without a name"),
+                return SceneInspectorItem(id: String(object.id ?? index), name: object.name ?? String(localized: "Image \(index + 1)", comment: "Scene Editor: an image layer without a name"),
                                           kind: "Image", sourcePath: imagePath, materialPath: materialPath,
                                           texturePaths: passes.flatMap { $0.textures?.compactMap { $0 } ?? [] },
                                           shaderPaths: passes.compactMap(\.shader), rawObject: rawObject,
@@ -176,7 +176,7 @@ private final class SceneInspectorModel: ObservableObject {
                 let materialPath = particle?.material
                 let material: WEMaterial? = materialPath.flatMap { data($0) }.flatMap { try? JSONDecoder().decode(WEMaterial.self, from: $0) }
                 let passes = material?.passes ?? []
-                return SceneInspectorItem(id: String(object.id ?? index), name: object.name ?? String(localized: "Particle \(index + 1)", comment: "Scene Inspector: a particle system without a name"),
+                return SceneInspectorItem(id: String(object.id ?? index), name: object.name ?? String(localized: "Particle \(index + 1)", comment: "Scene Editor: a particle system without a name"),
                                           kind: "Particle", sourcePath: particlePath, materialPath: materialPath,
                                           texturePaths: passes.flatMap { $0.textures?.compactMap { $0 } ?? [] },
                                           shaderPaths: passes.compactMap(\.shader), rawObject: rawObject,
@@ -184,7 +184,7 @@ private final class SceneInspectorModel: ObservableObject {
                                           visible: visible,
                                           isVersion: false, versionName: nil, versionValue: nil, effects: effects)
             }
-            return SceneInspectorItem(id: String(object.id ?? index), name: object.name ?? String(localized: "Object \(index + 1)", comment: "Scene Inspector: a scene object without a name"),
+            return SceneInspectorItem(id: String(object.id ?? index), name: object.name ?? String(localized: "Object \(index + 1)", comment: "Scene Editor: a scene object without a name"),
                                       kind: "Other", sourcePath: "", materialPath: nil, texturePaths: [], shaderPaths: [],
                                       rawObject: rawObject, rawMaterial: nil, rawParticle: nil,
                                       visible: visible,
@@ -197,7 +197,7 @@ private final class SceneInspectorModel: ObservableObject {
     private static func versionName(from name: String?) -> String? {
         guard let name, let range = name.range(of: #"_(\d+)$"#, options: .regularExpression) else { return nil }
         let number = name[range].dropFirst()
-        return String(localized: "Version \(String(number))", comment: "Scene Inspector: one of a layer's alternative versions")
+        return String(localized: "Version \(String(number))", comment: "Scene Editor: one of a layer's alternative versions")
     }
 
     /// Wallpaper Engine renders a video through its `scenes/videoplayer` scene, and the Metal path
@@ -883,7 +883,7 @@ extension AppDelegate {
             backing: .buffered,
             defer: false
         )
-        window.title = String(localized: "Scene Inspector")
+        window.title = String(localized: "Scene Editor")
         window.isReleasedWhenClosed = false
         window.contentView = Self.sceneInspectorContent(wallpaper, scopes)
         window.center()
@@ -966,12 +966,12 @@ struct SceneInspectorView: View {
     /// The name shown for an item's kind; `kind` itself stays English, as the code matches on it.
     private static func kindLabel(_ kind: String) -> String {
         switch kind {
-        case "Image": return String(localized: "Image", comment: "Scene Inspector: the kind of a scene object")
-        case "Particle": return String(localized: "Particle System", comment: "Scene Inspector: the kind of a scene object")
+        case "Image": return String(localized: "Image", comment: "Scene Editor: the kind of a scene object")
+        case "Particle": return String(localized: "Particle System", comment: "Scene Editor: the kind of a scene object")
         case "Video": return String(localized: "Video")
         case "Audio": return String(localized: "Audio")
-        case "Effect Stack": return String(localized: "Effect Stack", comment: "Scene Inspector: the effects applied to a video")
-        default: return String(localized: "Other", comment: "Scene Inspector: the kind of a scene object that is neither an image nor particles")
+        case "Effect Stack": return String(localized: "Effect Stack", comment: "Scene Editor: the effects applied to a video")
+        default: return String(localized: "Other", comment: "Scene Editor: the kind of a scene object that is neither an image nor particles")
         }
     }
 
@@ -1023,10 +1023,10 @@ struct SceneInspectorView: View {
                         } label: {
                             Label("Reset Edits", systemImage: "arrow.triangle.2.circlepath")
                         }
-                        .help("Undo every change made to this wallpaper in the Scene Inspector")
+                        .help("Undo every change made to this wallpaper in the Scene Editor")
                     }
                 }
-                .alert("Reset Scene Inspector Edits", isPresented: $isConfirmingReset) {
+                .alert("Reset Scene Editor Edits", isPresented: $isConfirmingReset) {
                     Button("Reset", role: .destructive) {
                         model.removeEdits()
                         // Rebuilt from the stored values, now without the edits, once this view's
@@ -1036,7 +1036,7 @@ struct SceneInspectorView: View {
                     }
                     Button("Cancel", role: .cancel) { }
                 } message: {
-                    Text("Do you want to undo every Scene Inspector edit of “\(wallpaper.project.displayTitle)”? Its properties are kept.")
+                    Text("Do you want to undo every Scene Editor edit of “\(wallpaper.project.displayTitle)”? Its properties are kept.")
                 }
         }
         .searchable(text: $searchText, placement: .sidebar, prompt: "Search")
@@ -1129,7 +1129,7 @@ struct SceneInspectorView: View {
                 }
             }
         }
-        .navigationTitle("Scene Inspector")
+        .navigationTitle("Scene Editor")
     }
 
     private var detailColumn: some View {
