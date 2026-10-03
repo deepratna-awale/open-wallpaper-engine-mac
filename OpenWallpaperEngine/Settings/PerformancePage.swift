@@ -13,6 +13,7 @@ struct PerformancePage: SettingsPage {
     /// A display can show HDR, so "Ultra (Display HDR)" is offered (`DisplayHDRSupport`).
     private let displayHDR = DisplayHDRSupport.isAvailable()
     @State private var isEditingApplicationRules = false
+    @StateObject private var renderSizes = RenderResolutionSizesModel()
     
     init(globalSettings viewModel: GlobalSettingsViewModel) {
         self.viewModel = viewModel
@@ -159,9 +160,9 @@ struct PerformancePage: SettingsPage {
                 .changedFromDefault(viewModel.isChanged(\.sceneDetail))
                 .help("Match Display draws no more detail than the display shows: a scene larger than the display is drawn at the display's size, and each layer's effects at the size the layer appears on screen. Full draws every effect at its texture's full size, as Wallpaper Engine does.")
                 Picker("Render Resolution", selection: $viewModel.settings.renderResolution) {
-                    Text("Display", comment: "Render resolution: the display's size in points").tag(GSRenderResolution.display)
-                    Text("Retina", comment: "Render resolution: the display's native backing pixels").tag(GSRenderResolution.retina)
-                    Text("Full", comment: "Render resolution: the wallpaper's authored size").tag(GSRenderResolution.full)
+                    Text(verbatim: renderSizes.sizes.displayLabel).tag(GSRenderResolution.display)
+                    Text(verbatim: renderSizes.sizes.retinaLabel).tag(GSRenderResolution.retina)
+                    Text(verbatim: RenderResolutionSizes.fullLabel).tag(GSRenderResolution.full)
                 }
                 .changedFromDefault(viewModel.isChanged(\.renderResolution))
                 .help("Display, the default, renders at the display's size in points (a quarter of the pixels on Retina) and scales up; web wallpapers then draw at standard resolution too. Retina renders the native pixels one for one, and Full renders the wallpaper's authored size scaled to fit.")

@@ -299,6 +299,32 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     var effectPassesEncoded: Int { effectGraph?.passesEncoded ?? 0 }
     /// Whether an effect pipeline is still compiling (shader prewarm waits for them).
     var hasPendingEffectPipelines: Bool { effectGraph?.hasPendingPipelines ?? false }
+
+    /// One live particle as the last committed step left it (tests, diagnostics).
+    struct ParticleSample {
+        var age: Float
+        var lifetime: Float
+        var size: Float
+        var alpha: Float
+        var color: SIMD4<Float>
+    }
+
+    /// Every particle system's particles by scene object (a child under its family root's id),
+    /// read back from the GPU state, else the CPU simulation's. Blocks until the GPU is done.
+    func particleSamples() -> [(objectID: String?, particles: [ParticleSample])] {
+        particleSystems.map { system in
+            if let simulator = particleSimulator, system.gpu != nil {
+                let states = simulator.snapshot(system, queue: commandQueue)
+                return (particleObjectID(system), states.map {
+                    ParticleSample(age: $0.life.x, lifetime: $0.life.y, size: $0.life.z, alpha: $0.alphaRotation.x,
+                                   color: $0.color)
+                })
+            }
+            return (particleObjectID(system), system.particles.map {
+                ParticleSample(age: $0.age, lifetime: $0.lifetime, size: $0.size, alpha: $0.alpha, color: $0.color)
+            })
+        }
+    }
     /// The last frame's scene target, before the post-process (tests, diagnostics).
     var lastSceneTarget: MTLTexture? { sceneRenderTarget ?? lastDrawableScene }
     /// The drawable the last frame drew its scene straight into (S2), not held.
@@ -458,6 +484,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private(set) var layerAnalysis: SceneLayerAnalysis?
     /// Keeps system audio capture on while the content reacts to audio (`needsAudio`).
     private var audioCaptureLease: AudioCaptureLease?
+    /// Whether the loaded content reacts to audio (`needsAudio`); false before it is analysed.
+    var contentReadsAudio: Bool {
+        guard let layerAnalysis else { return false }
+        return Self.needsAudio(layerAnalysis, particles: particleSystems.map(\.configuration))
+    }
     /// Adaptive rate and idle skipping (`FramePacing`, WP2-C): the instance sets its limits and
     /// ticks the displays at its rate; an idle frame returns before anything is encoded.
     var framePacing = FramePacing()
