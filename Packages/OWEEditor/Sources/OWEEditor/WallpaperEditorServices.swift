@@ -21,6 +21,8 @@ public struct WallpaperEditorServices {
     /// Writes a new local wallpaper with the edits baked in and adds it to the library; returns
     /// the title it was saved under.
     public var saveAsLocalWallpaper: (String) throws -> String
+    /// The window's timeline (docs/editor-plan.md P4); nil shows none.
+    public var timeline: SceneTimelineEditor?
 
     // MARK: Adding and editing (phases 2–3)
 

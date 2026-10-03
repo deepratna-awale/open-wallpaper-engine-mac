@@ -140,3 +140,13 @@ Each phase ships on its own; effort is focused engineering time.
 - `OpenWallpaperEngine/Editor`: the app side: `WallpaperEditorController` (window, canvas through
   `WallpaperView` on a preview `WallpaperViewModel`, services the module needs), user-property undo,
   scene reading. `Scene/Loading/SceneEditOverlayFiles` stores overlays; `ScenePreparation` applies them.
+- **Timeline (P4)**, in `Timeline` folders of each target. `OWESceneEditing/Timeline`: `TimelineClip`
+  (WE's `animation` block read with WE's rules and written back in its format; the overlay's
+  `timelines` store clips in that same JSON), `TimelineCurve` (the player's float32 sampler, held
+  to the same bits by `EditorTimelineTests`), keyframe, ease and Bézier-handle editing in WE's
+  back/front model, and `SceneTimelineEditor` (playhead, playback, selection, clipboard, undo, and
+  animated fields keyed at the playhead through `SceneEditSession.animatedFields`).
+  `OWEEditor/Timeline`: the dock under the canvas (ruler, keyframe lanes, curve editor, clip
+  options), the inspector's keyframe buttons, its own catalog `Timeline.xcstrings`.
+  `OpenWallpaperEngine/Editor/Timeline`: while the timeline is open the canvas's scene clock is
+  held and every timeline stands at the playhead (`SceneRendererAnimations.scrubTime`).
