@@ -55,6 +55,8 @@ public struct WallpaperEditorServices {
     public var puppetAssets: PuppetEditorAssets?
     /// The particle editor (WE's presets and textures, restarting a system); nil leaves it out.
     public var particles: ParticleEditorServices?
+    /// Depth maps for depth parallax (the Depth Map Generation plugin); nil leaves the sections out.
+    public var depthMaps: DepthMapEditorServices?
 
     public init(makeCanvas: @escaping () -> AnyView, userProperties: (() -> AnyView)? = nil,
                 blendModeTitle: String, blendModes: [InspectorOption], effectHelp: @escaping (String) -> String,
