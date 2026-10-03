@@ -102,13 +102,10 @@ public enum PuppetMeshGenerator {
         let triangulation = PuppetDelaunay.triangulate(points)
         // Keep the triangles whose inside is inside the shape (a few samples: concave notches
         // span triangles whose centre alone is inside).
-        let kept = triangulation.filter { t in
-            let a = points[t.0], b = points[t.1], c = points[t.2]
-            let sum = a + b + c
-            let centre = sum / 3
-            let ab = (a + b) / 2, bc = (b + c) / 2, ca = (c + a) / 2
-            let samples = [centre, (centre + ab) / 2, (centre + bc) / 2, (centre + ca) / 2]
-            return samples.allSatisfy { isInside($0, inside, small.width, small.height, scale) }
+        let width = small.width, height = small.height
+        var kept: [(Int, Int, Int)] = []
+        for t in triangulation where triangleIsInside(points[t.0], points[t.1], points[t.2], inside, width, height, scale) {
+            kept.append(t)
         }
         // Drop unused points; to the mesh's space.
         var map = [Int: UInt32]()
@@ -172,6 +169,21 @@ public enum PuppetMeshGenerator {
     }
 
     /// Whether the pixel point (full-resolution pixels, y down) is in the reduced set.
+    /// Whether a triangle's centre and three points between the centre and its edge midpoints
+    /// all lie inside the shape (a concave notch can hold a triangle whose centre alone is inside).
+    static func triangleIsInside(_ a: SIMD2<Float>, _ b: SIMD2<Float>, _ c: SIMD2<Float>, _ cells: [Bool],
+                                 _ width: Int, _ height: Int, _ scale: Float) -> Bool {
+        let third: Float = 1.0 / 3.0
+        let half: Float = 0.5
+        let centre: SIMD2<Float> = (a + b + c) * third
+        let ab: SIMD2<Float> = (a + b) * half
+        let bc: SIMD2<Float> = (b + c) * half
+        let ca: SIMD2<Float> = (c + a) * half
+        let samples: [SIMD2<Float>] = [centre, (centre + ab) * half, (centre + bc) * half, (centre + ca) * half]
+        for sample in samples where !isInside(sample, cells, width, height, scale) { return false }
+        return true
+    }
+
     static func isInside(_ point: SIMD2<Float>, _ cells: [Bool], _ width: Int, _ height: Int, _ scale: Float) -> Bool {
         let x = Int((point.x / scale).rounded(.down)), y = Int((point.y / scale).rounded(.down))
         guard x >= 0, y >= 0, x < width, y < height else { return false }
