@@ -178,6 +178,16 @@ final class ScenePostProcess {
         return Self.compositeCopies(Self.compositeUniform(placement, extras: extras), size: outputSize)
     }
 
+    /// Whether this frame's post-process only places the scene on the output (at any size): LDR,
+    /// WE's bloom not running, colour correction identity, the camera fade off and the app's
+    /// adjustments at their defaults. Then a layer drawn over the output after the composite looks as
+    /// it would drawn into the scene (`SceneNativeDetailLayers`).
+    func onlyPlaces(bloom: Bloom, extras: AppExtras, settings: SceneRenderSettings,
+                    colorCorrection: SceneColorCorrectionSettings, display: SceneDisplayOutput, fade: Float) -> Bool {
+        !drawsHDR && !display.isExtended && !Self.runsBloom(bloom, settings: settings) && colorCorrection.isIdentity
+            && fade <= 0 && extras.saturation == 1 && abs(extras.hue) <= 0.0001 && extras.blur <= 1
+    }
+
     /// Whether the composite drawn with `uniform` onto `size` pixels from a scene target of that
     /// size is a copy: a quad exactly covering the output (to a thousandth of a pixel, so every
     /// fragment samples its texel's centre), unrotated, whole-texture UVs and every adjustment
