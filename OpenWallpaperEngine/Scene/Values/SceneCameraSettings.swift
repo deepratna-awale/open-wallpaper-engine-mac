@@ -11,8 +11,8 @@ enum SceneCameraDefaults {
     /// `general.nearz` / `farz`: perspective only; an orthographic scene is always z −2000…2000.
     static let nearZ: Double = 0.1
     static let farZ: Double = 10000
-    /// `general.zoom` and a camera layer's `zoom`: orthographic only [I: no reader on the
-    /// perspective path].
+    /// `general.zoom` and a camera layer's `zoom`: orthographic only; a perspective scene
+    /// ignores them (WE 2.8.0.42's captures, docs/models-plan.md §5).
     static let zoom: Double = 1
     /// The effective fov is clamped to this range (0x140189b1a).
     static let fovRange: ClosedRange<Double> = 0.1...179.9

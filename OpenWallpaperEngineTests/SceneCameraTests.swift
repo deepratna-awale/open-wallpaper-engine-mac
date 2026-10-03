@@ -167,3 +167,22 @@ final class SceneCameraTests: XCTestCase {
         XCTAssertEqual(rig(spatial).frameCamera(input(delta: 0.1)).fade, 0)
     }
 }
+
+extension SceneCameraTests {
+    /// WE 2.8.0.42 ignores `general.zoom` in a perspective scene: a static box renders pixel
+    /// identical at zoom 1 and 2, and Workshop 3657770939 keeps its static elements' size
+    /// (we-test-wp-images @ 2aad5f2, tools/peer/requests/owe-beta3). The frame camera is the same.
+    func testPerspectiveSceneIgnoresGeneralZoom() {
+        func camera(zoom: Double) -> SceneFrameCamera {
+            var spatial = SceneSpatialContent()
+            spatial.camera.projection = .perspective
+            spatial.camera.zoom = zoom
+            let input = SceneCameraRigInput(sceneSize: SIMD2(1920, 1080), aspect: 16.0 / 9, time: 0, deltaTime: 1.0 / 30)
+            return ScenePerspectiveCameraRig(spatial, values: SpatialProperties()).frameCamera(input)
+        }
+        let plain = camera(zoom: 1)
+        XCTAssertTrue(plain.isPerspective)
+        XCTAssertEqual(camera(zoom: 2), plain)
+        XCTAssertEqual(camera(zoom: 0.5), plain)
+    }
+}
