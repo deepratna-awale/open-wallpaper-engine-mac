@@ -1125,6 +1125,7 @@ class SceneWallpaperViewModel: ObservableObject {
                                rotation: rotation, effects: .identity)
         layer.weEffects = effectPlans.plans
         layer.sceneInput = sceneInput
+        layer.clearsSceneAlpha = sceneInput && object.copybackground == false
         if case .animated = source { layer.textureKey = textureName }
         layer.alignment = model.fullscreen == true ? nil : object.alignment
         layer.fillsScene = model.fullscreen == true
