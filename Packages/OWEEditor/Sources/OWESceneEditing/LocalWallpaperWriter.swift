@@ -43,9 +43,11 @@ public struct LocalWallpaperWriter {
     /// scene file and `title` into its project.json, which no longer names a Workshop item.
     /// Hidden files (the app's caches and kept package sources) and symbolic links (Workshop
     /// dependencies, linked again when the copy loads) stay behind. The copy is made in a hidden
-    /// folder and renamed into place, so the library never lists half a wallpaper.
+    /// folder and renamed into place, so the library never lists half a wallpaper. `editProject`
+    /// changes the copy's project.json first (the editor's user properties).
     @discardableResult
-    public func save(_ source: Source, scene: Data, title: String, into library: URL) throws -> URL {
+    public func save(_ source: Source, scene: Data, title: String, into library: URL,
+                     editProject: ((inout [String: Any]) -> Void)? = nil) throws -> URL {
         try fileManager.createDirectory(at: library, withIntermediateDirectories: true)
         let staging = library.appending(path: ".owe-editor-\(UUID().uuidString)", directoryHint: .isDirectory)
         do {
@@ -60,7 +62,7 @@ public struct LocalWallpaperWriter {
                 try merge(assets, into: staging)
             }
             try scene.write(to: try Self.contained(source.sceneFile, in: staging), options: .atomic)
-            try writeProject(in: staging, title: title)
+            try writeProject(in: staging, title: title, edit: editProject)
             let destination = uniqueFolder(named: Self.folderName(title), in: library)
             try fileManager.moveItem(at: staging, to: destination)
             return destination
@@ -109,10 +111,11 @@ public struct LocalWallpaperWriter {
 
     /// project.json with the new title and without the Workshop item it came from, so the copy is
     /// a local wallpaper with its own identity (its own properties and edits).
-    private func writeProject(in folder: URL, title: String) throws {
+    private func writeProject(in folder: URL, title: String, edit: ((inout [String: Any]) -> Void)?) throws {
         let url = folder.appending(path: "project.json")
         guard let data = fileManager.contents(atPath: url.path),
               var project = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { throw WriteError.noProject }
+        edit?(&project)
         project["title"] = title
         for key in Self.workshopKeys { project.removeValue(forKey: key) }
         let written = try JSONSerialization.data(withJSONObject: project, options: [.prettyPrinted, .sortedKeys])
