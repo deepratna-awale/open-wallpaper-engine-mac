@@ -77,6 +77,32 @@ final class SceneScriptCameraTests: XCTestCase {
         XCTAssertEqual(camera.forward, SIMD3(0, 0, -1))
     }
 
+    /// WE 2.8 with a camera path playing (docs/models-plan.md §5.5,
+    /// tools/peer/requests/owe-beta3/models-open/505-path-camera/README.md): on 3159348391 every
+    /// read from 0.25 s to 10 s is the static `camera` block while the path visibly moves the view.
+    /// Every frame here reads the block; nothing writes the path's pose back.
+    func testGetCameraTransformsIsTheStaticCameraWhilePathsPlay() throws {
+        _ = try Fixtures.assets()
+        let script = #"""
+            export function update(value) {
+                const c = thisScene.getCameraTransforms();
+                shared.reads = (shared.reads || []).concat([[c.eye.x, c.eye.y, c.eye.z, c.center.x, c.center.y, c.center.z,
+                                                             c.up.y].map(function (v) { return v.toFixed(3); }).join()]);
+                return value;
+            }
+            """#
+        let objects = [#"{"id": 1, "name": "Logger", "origin": {"script": \#(jsonString(script)), "value": "0 0 0"}}"#]
+        let camera = #""camera": {"eye": "-0.171 1.759 3.836", "center": "-0.144 1.683 2.839", "up": "0 1 0", "paths": ["scripts/camera_paths_203.json"]}"#
+        let wallpaper = try make(objects: objects, camera: camera)
+        for _ in 0..<5 {
+            let state = try frame(wallpaper)
+            XCTAssertNil(state.scene.scriptCamera, "reading leaves the camera to the rig")
+        }
+        let reads = try XCTUnwrap(try string(wallpaper, "reads.join('|')"))
+        XCTAssertEqual(reads.split(separator: "|").count, 5)
+        XCTAssertEqual(Set(reads.split(separator: "|").map(String.init)), ["-0.171,1.759,3.836,-0.144,1.683,2.839,1.000"])
+    }
+
     // MARK: - Support
 
     private func jsonString(_ text: String) -> String {
