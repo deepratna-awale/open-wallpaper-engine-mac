@@ -24,8 +24,8 @@ struct SceneObjectMotion {
         bindings = layer.bindings
     }
 
-    init(object: WESceneObject, sceneSize: SIMD2<Float>, bindings: SceneLayerBindings) {
-        let local = SceneLocalTransform(object: object, sceneSize: sceneSize)
+    init(object: WESceneObject, bindings: SceneLayerBindings) {
+        let local = SceneLocalTransform(object: object)
         name = object.name ?? ""
         origin = local.origin
         scale = local.scale
@@ -60,8 +60,8 @@ struct SceneObjectMotion {
     /// the same precedence as `local` (scripts, then timelines, then authored moved by user
     /// bindings), with every component. `authored` is the object's node in the 3D hierarchy: it
     /// carries `origin.z`, `scale.z` and WE's own defaults, which the 2D values this motion was
-    /// built with (`origin`, `scale`, `angle`, `tilt`) may not (a fullscreen layer's placement,
-    /// a root's centring in an orthographic scene), so only the user bindings' change since the
+    /// built with (`origin`, `scale`, `angle`, `tilt`) may not (a fullscreen layer's placement),
+    /// so only the user bindings' change since the
     /// build is applied to it. A script or timeline writes all three components of a field.
     func local3D(authored: SceneLocalTransform3D, animation: SceneObjectAnimation? = nil,
                  script: SceneScriptObjectState? = nil, scriptValues: Bool = true) -> SceneLocalTransform3D {

@@ -204,7 +204,7 @@ final class SceneCameraMotionTests: XCTestCase {
              {"id": 3, "parent": 2},
              {"id": 4, "origin": "5 5 0"}]
             """.utf8))
-        let hierarchy = SceneTransformHierarchy(objects: objects, sceneSize: size)
+        let hierarchy = SceneTransformHierarchy(objects: objects)
         XCTAssertEqual(hierarchy.root(of: "3"), "1")
         XCTAssertEqual(hierarchy.root(of: "1"), "1")
         XCTAssertEqual(hierarchy.root(of: "missing"), "missing")

@@ -73,8 +73,8 @@ final class VolumetricsLibraryTests: XCTestCase {
             {"id": 516, "origin": "\#(origin.origin.x + shift.x) \#(origin.origin.y + shift.y) -421.09644",
              "angles": "-0.14119 0.58229 -0.78032"}
             """#.utf8))
-        moved.motions["516"] = SceneObjectMotion(object: object, sceneSize: content.size, bindings: SceneLayerBindings())
-        moved.transforms.makeRoot("516", local: SceneLocalTransform(object: object, sceneSize: content.size))
+        moved.motions["516"] = SceneObjectMotion(object: object, bindings: SceneLayerBindings())
+        moved.transforms.makeRoot("516", local: SceneLocalTransform(object: object))
         let movedScene = try Scene(content: moved, scripts: scripts)
         defer { movedScene.close() }
         let movedStage = try XCTUnwrap(movedScene.renderer.volumetrics)
@@ -333,7 +333,7 @@ final class VolumetricsLibraryTests: XCTestCase {
             let lightObject = try XCTUnwrap(lights.first { $0.id == lightID })
             let world = SceneFrameLighting.world(
                 parent: SceneAffineTransform(linear: matrix_identity_float2x2, translation: .zero),
-                local: SceneLocalTransform(object: object, sceneSize: SIMD2(1920, 1080)), depth: lightObject.depth)
+                local: SceneLocalTransform(object: object), depth: lightObject.depth)
             let stage = SceneVolumetrics(device: device)
             stage.setPlan(plan)
             XCTAssertTrue(try XCTUnwrap(stage.pipelines).waitUntilReady(plan, sceneFormat: .rgba8Unorm))

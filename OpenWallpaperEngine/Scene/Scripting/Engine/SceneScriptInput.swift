@@ -23,7 +23,8 @@ struct SceneScriptInput: Equatable {
     /// `input.cursorWorldPosition` x and y: the scene point under the cursor, in scene units with
     /// y up from the scene's bottom-left, the space `origin` uses, plus the camera shake offset.
     /// The inverse of the composite's placement, so off the drawn scene (letterbox bars, cropped
-    /// edges) it lies outside the canvas.
+    /// edges) it lies outside the canvas. An orthographic scene's zoom is taken back out
+    /// (`SceneOrthographicZoom.worldPoint`), as unprojecting through WE's zoomed camera does.
     /// WE supports only x and y ("Only x and y are supported right now"); z is 0.
     func cursorWorldPosition(in environment: SceneScriptEngineEnvironment) -> SIMD2<Double> {
         let screen = environment.screenResolution
@@ -34,6 +35,6 @@ struct SceneScriptInput: Equatable {
                                                    sceneSize: SIMD2<Float>(environment.canvasSize),
                                                    drawableSize: SIMD2<Float>(screen),
                                                    pixelsPerPoint: Float(environment.pixelsPerPoint))
-        return SIMD2<Double>(scene) + shakeOffset
+        return SIMD2<Double>(environment.zoom.worldPoint(drawn: scene)) + shakeOffset
     }
 }

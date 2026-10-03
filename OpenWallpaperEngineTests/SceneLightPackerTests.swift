@@ -349,7 +349,7 @@ final class SceneLightPackerTests: XCTestCase {
         let content = SceneLightingContent(settings: SceneLightingSettings(general, in: context),
                                            lights: SceneWallpaperViewModel.lights(in: objects, context: context))
         let locals = Dictionary(uniqueKeysWithValues: objects.compactMap { object in
-            object.id.map { (String($0), SceneLocalTransform(object: object, sceneSize: SIMD2(1920, 1080))) }
+            object.id.map { (String($0), SceneLocalTransform(object: object)) }
         })
         return SceneFrameLighting.frame(content, input: frameInput(locals: locals))
     }

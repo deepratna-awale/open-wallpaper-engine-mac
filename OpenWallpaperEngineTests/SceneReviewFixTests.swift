@@ -95,7 +95,7 @@ final class SceneReviewFixTests: XCTestCase {
                                                from: Data(#"[{"id": 7}, {"name": "x"}, {"id": 3}]"#.utf8))
         let keyed = SceneObjectIdentity.assigningFallbackIDs(objects)
         XCTAssertEqual(keyed.map(\.id), [7, 1, 3])
-        let hierarchy = SceneTransformHierarchy(objects: objects, sceneSize: SIMD2(100, 100))
+        let hierarchy = SceneTransformHierarchy(objects: objects)
         for object in keyed {
             XCTAssertNotNil(hierarchy.nodes[String(object.id!)], "layer id matches a hierarchy node")
         }
@@ -108,7 +108,7 @@ final class SceneReviewFixTests: XCTestCase {
         [{"id": 1, "origin": "100 100 0", "scale": "2 2 1", "angles": "0 0 1.5707963"},
          {"id": 2, "parent": 1, "origin": "10 0 0", "particle": "p.json"}]
         """#.utf8))
-        let hierarchy = SceneTransformHierarchy(objects: objects, sceneSize: SIMD2(1920, 1080))
+        let hierarchy = SceneTransformHierarchy(objects: objects)
         let space = SceneParticleEmitterSpace(world: hierarchy.world(of: "2"))
         XCTAssertEqual(simd_length(space.origin - SIMD2(100, 100)), 20, accuracy: 1e-3,
                        "child offset is scaled by the parent")
