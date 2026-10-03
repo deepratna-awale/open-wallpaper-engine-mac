@@ -190,7 +190,7 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     private func applyAllProperties(to webView: WKWebView) {
         let properties = declaredProperties
         let stored = WallpaperSettingsIdentity.resolve(currentWallpaper)
-            .stored(.userProperties, scope: propertyScope) as? [String: String] ?? [:]
+            .userSetValues(scope: propertyScope)
         let values = WebWallpaperPropertyBridge.currentValues(properties: properties, stored: stored)
         if let script = WebWallpaperPropertyBridge.applyUserPropertiesScript(
             WebWallpaperPropertyBridge.payload(properties: properties, values: values)) {

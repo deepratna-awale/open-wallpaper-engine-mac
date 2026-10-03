@@ -515,11 +515,8 @@ class SceneWallpaperViewModel: ObservableObject {
         guard wallpaper.project.type.caseInsensitiveCompare("scene") == .orderedSame else { return }
         let identity = settingsIdentity(for: wallpaper.wallpaperDirectory)
         let key = identity.key(.userProperties, scope: propertyScope)
-        let explicitKey = identity.key(.explicitUserProperties, scope: propertyScope)
         let defaults = UserDefaults.app
-        let stored = defaults.bool(forKey: explicitKey)
-            ? defaults.dictionary(forKey: key) as? [String: String] ?? [:]
-            : [:]
+        let stored = identity.userSetValues(scope: propertyScope, defaults: defaults)
         let values = Self.userPropertyValues(stored: stored,
                                              declared: Self.declaredUserProperties(in: wallpaper.wallpaperDirectory),
                                              scene: scene)
