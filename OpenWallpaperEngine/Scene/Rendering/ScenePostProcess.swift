@@ -73,6 +73,8 @@ final class ScenePostProcess {
         var strength: Float
         var threshold: Float
         var tint: SIMD3<Float>
+        /// `_rt_Bloom`, which pass 4 (`combine_ldr`) added to the frame.
+        var bloom: MTLTexture? = nil
     }
 
     /// The last frame's bloom, nil when it didn't run (tests, diagnostics).
@@ -108,6 +110,10 @@ final class ScenePostProcess {
     private(set) var cameraFade: SceneCameraFade?
     /// The colour correction's targets are held by the effect graph.
     private var holdsColorCorrection = false
+    /// The detail patch's colour correction targets are held (`finishDetailPatch`), and whether a
+    /// patch was corrected since the last frame.
+    private var holdsPatchColorCorrection = false
+    private var correctedPatch = false
     /// Frames corrected so far: its input changes every frame while the texture stays.
     private var correctedFrames: UInt64 = 0
     /// The content draws in HDR: float targets, `HDR=1`, the HDR chain (`SceneEngineCombos.hdr`).
@@ -154,6 +160,12 @@ final class ScenePostProcess {
 
     /// Encodes everything from the scene target to the drawable. The caller presents and commits.
     func encode(_ frame: Frame) {
+        // The detail patch's correction targets go once a frame passes without one.
+        if holdsPatchColorCorrection, !correctedPatch, let effects = frame.effects {
+            effects.releaseLayer(SceneColorCorrection.patchStateID)
+            holdsPatchColorCorrection = false
+        }
+        correctedPatch = false
         // Step 5: the bloom and its combine.
         let combined = (drawsHDR ? combinedHDR(frame) : bloomed(frame)) ?? frame.scene
         // Step 6: WE's colour correction. Step 7: the camera fade, over what the frame shows.
@@ -176,6 +188,21 @@ final class ScenePostProcess {
         guard !drawsHDR, !display.isExtended, !Self.runsBloom(bloom, settings: settings), colorCorrection.isIdentity,
               sceneSize == outputSize else { return false }
         return Self.compositeCopies(Self.compositeUniform(placement, extras: extras), size: outputSize)
+    }
+
+    /// How this frame's post-process lets text and the media artwork be drawn at the output's pixels
+    /// (`SceneNativeDetailLayers`): nil when a step works on more than the pixel it writes, or
+    /// converts the frame (HDR, EDR, the app's blur); `.direct` when it only places the scene, so a
+    /// layer drawn over the output after the composite looks as it would drawn into the scene; else
+    /// `.patch`, every step per pixel (the bloom's combine, colour correction, the camera fade, the
+    /// app's saturation and hue), which `finishDetailPatch` runs on the layers' patch.
+    func detailMode(bloom: Bloom, extras: AppExtras, settings: SceneRenderSettings,
+                    colorCorrection: SceneColorCorrectionSettings, display: SceneDisplayOutput,
+                    fade: Float) -> SceneNativeDetailLayers.Mode? {
+        guard !drawsHDR, !display.isExtended, extras.blur <= 1 else { return nil }
+        let perPixel = Self.runsBloom(bloom, settings: settings) || !colorCorrection.isIdentity
+            || (fade > 0 && cameraFade != nil) || extras.saturation != 1 || abs(extras.hue) > 0.0001
+        return perPixel ? .patch : .direct
     }
 
     /// Whether the composite drawn with `uniform` onto `size` pixels from a scene target of that
@@ -235,7 +262,8 @@ final class ScenePostProcess {
                                               referenceSize: frame.bloomReferenceSize,
                                               commandBuffer: frame.commandBuffer) else { return nil }
         lastBloom = BloomRecord(frame: frame.scene, bloomed: bloomed, strength: strength,
-                                threshold: frame.bloom.threshold, tint: frame.bloom.tint)
+                                threshold: frame.bloom.threshold, tint: frame.bloom.tint,
+                                bloom: effects.fboTexture("_rt_Bloom", effect: 0, layer: SceneBloomChain.stateID))
         return bloomed
     }
 
@@ -312,6 +340,54 @@ final class ScenePostProcess {
         }
         encoder.setRenderPipelineState(pipeline)
         var uniform = Self.compositeUniform(frame.placement, extras: frame.extras)
+        encoder.setVertexBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
+        encoder.setFragmentBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
+        encoder.setFragmentTexture(finished, index: 0)
+        encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
+        encoder.endEncoding()
+    }
+
+    /// Runs this frame's steps after the bloom on `patch`, the output's pixels `rect` (origin at the
+    /// top left) as the upscaled scene with the detail layers drawn in and `_rt_Bloom` added
+    /// (`SceneNativeDetailLayers`), and composites it over that part of the output. Call after
+    /// `encode(frame)`: the patch takes the steps the frame took, WE's colour correction (when it
+    /// ran) and camera fade, then the composite's adjustments, each per pixel, so away from the
+    /// detail layers it shows what the composite put there.
+    func finishDetailPatch(_ patch: MTLTexture, at rect: SceneSnapshotTracker.Rect, _ frame: Frame) {
+        var finished = patch
+        if lastColorCorrection != nil, let effects = frame.effects, let colorCorrection {
+            holdsPatchColorCorrection = true
+            correctedPatch = true
+            // Its own targets: the patch isn't the frame's size.
+            finished = colorCorrection.encode(on: patch, settings: frame.colorCorrection, effects: effects,
+                                              builtins: frame.builtins, values: frame.values, frameIndex: correctedFrames,
+                                              stateID: SceneColorCorrection.patchStateID,
+                                              commandBuffer: frame.commandBuffer) ?? patch
+        }
+        if let cameraFade, cameraFade.lastFade != nil {
+            cameraFade.encode(on: finished, alpha: frame.builtins.camera.fade, builtins: frame.builtins,
+                              values: frame.values, records: false, commandBuffer: frame.commandBuffer)
+        }
+        guard let output = frame.output.colorAttachments[0].texture,
+              let pipeline = compositePipeline(for: output.pixelFormat) else { return }
+        let pass = MTLRenderPassDescriptor()
+        pass.colorAttachments[0].texture = output
+        pass.colorAttachments[0].loadAction = .load
+        pass.colorAttachments[0].storeAction = .store
+        guard let encoder = frame.commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { return }
+        encoder.label = "detail patch"
+        encoder.setRenderPipelineState(pipeline)
+        // The patch's pixels onto the output's, 1:1, with the composite's adjustments.
+        var uniform = Self.compositeUniform(frame.placement, extras: frame.extras)
+        uniform.sceneSize = SIMD2(Float(output.width), Float(output.height))
+        uniform.size = SIMD2(Float(rect.width), Float(rect.height))
+        uniform.position = SIMD2(Float(rect.x) + uniform.size.x / 2, Float(output.height - rect.maxY) + uniform.size.y / 2)
+        uniform.rotation = 0
+        uniform.quadAxisX = .zero
+        uniform.quadAxisY = .zero
+        uniform.uvOrigin = .zero
+        uniform.uvAxisX = SIMD2(1, 0)
+        uniform.uvAxisY = SIMD2(0, 1)
         encoder.setVertexBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
         encoder.setFragmentBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
         encoder.setFragmentTexture(finished, index: 0)
