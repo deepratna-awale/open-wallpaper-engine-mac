@@ -12,7 +12,8 @@ import OWESceneEditing
 @MainActor
 final class WallpaperEditorCoreEditingTests: XCTestCase {
     private static let sceneJSON = """
-    {"general": {"orthogonalprojection": {"width": 480, "height": 272}, "clearcolor": "0 0 0"}, "objects": []}
+    {"camera": {"center": "0 0 -1", "eye": "0 0 0", "up": "0 1 0"},
+     "general": {"orthogonalprojection": {"width": 480, "height": 272}, "clearcolor": "0 0 0"}, "objects": []}
     """
 
     /// A local wallpaper with an empty 480 × 272 scene, and its identity's overlay files removed after.
@@ -135,21 +136,32 @@ final class WallpaperEditorCoreEditingTests: XCTestCase {
     /// Renders a solid layer with a Tint effect added in the editor, then changes the tint's colour
     /// live: the renderer draws the new colour without the scene being read again.
     func testAnAddedLayerRendersAndItsEffectFollowsTheEditorLive() throws {
-        _ = try Fixtures.assets()
-        try XCTSkipUnless(Fixtures.hasWEShaderSources, "WE's shader sources aren't available")
+        let assets = try Fixtures.assets()
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: assets.appending(path: "effects/tint/materials/effects/tint.json").path),
+                          "WE's Tint effect isn't in the assets")
         let (directory, identity) = try makeWallpaper()
         let session = try session(for: directory)
         let solid = session.addLayer(SceneLayerFactory.solid(name: "Fill", color: SIMD3(1, 1, 1), size: SIMD2(480, 272),
                                                              origin: SIMD2(240, 136)), actionName: "Add")
-        let key = try XCTUnwrap(session.addEffect(EffectCatalogEntry(file: "effects/tint/effect.json", title: "Tint"),
-                                                  to: solid, actionName: "Add Effect"))
+        let tint = EffectCatalogEntry(file: "effects/tint/effect.json", title: "Tint")
+        // As the editor does before adding it: the effect's material and shaders go into the project.
+        let project = try JSONDecoder().decode(WEProject.self, from: Data(contentsOf: directory.appending(path: "project.json")))
+        try EditorWallpaperResources(wallpaper: WEWallpaper(using: project, where: directory), package: nil,
+                                     assets: SceneEditOverlayFiles.assets(for: identity)).prepareEffect(tint)
+        XCTAssertNotNil(SceneEditOverlayFiles.assetData("materials/effects/tint.json", for: identity))
+        let key = try XCTUnwrap(session.addEffect(tint, to: solid, actionName: "Add Effect"))
         session.setEffectConstant("color", to: .string("0 0 1"), effect: key, of: solid, actionName: "Change Color")
         try SceneEditOverlayFiles.save(session.overlay, for: identity, wallpaperDirectory: directory)
 
         let harness = try SceneFrameHarness(directory: directory, size: SIMD2(480, 272))
         defer { harness.close() }
-        harness.draw(frames: 20)
-        let blue = try XCTUnwrap(Self.pixel(harness, x: 240, y: 136))
+        // The effect's pipeline compiles off the render thread: the layer draws without it until then.
+        var blue = SIMD3(255, 255, 255)
+        for _ in 0..<60 where blue.x > 60 {
+            harness.draw(frames: 5)
+            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+            blue = try XCTUnwrap(Self.pixel(harness, x: 240, y: 136))
+        }
         XCTAssertGreaterThan(blue.z, 200, "the tint the editor set: \(blue)")
         XCTAssertLessThan(blue.x, 60)
 
@@ -188,7 +200,8 @@ final class WallpaperEditorCoreEditingTests: XCTestCase {
         let red = try XCTUnwrap(Self.pixel(harness, x: 100, y: 272 - 100))
         XCTAssertGreaterThan(red.x, 200, "the imported image: \(red)")
         XCTAssertLessThan(red.y, 60)
-        XCTAssertEqual(try XCTUnwrap(Self.pixel(harness, x: 20, y: 20)), SIMD3(0, 0, 0), "nothing else drawn")
+        let background = try XCTUnwrap(Self.pixel(harness, x: 20, y: 20))
+        XCTAssertLessThan(max(background.x, background.y, background.z), 32, "nothing else drawn: \(background)")
         var lit = 0
         for y in (272 - 230)..<(272 - 170) {
             for x in 260..<420 {

@@ -39,6 +39,13 @@ struct EffectsSection: View {
         }
         .sheet(isPresented: $isBrowsing) {
             EffectBrowserView(entries: services.effectCatalog()) { entry in
+                do {
+                    try services.prepareEffect(entry)
+                } catch {
+                    let title = entry.title
+                    tools.problem = L("“\(title)” couldn’t be added: \(error.localizedDescription)")
+                    return
+                }
                 if let key = session.addEffect(entry, to: layer.id, actionName: L("Add Effect")) { expanded.insert(key) }
             }
         }
