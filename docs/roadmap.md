@@ -29,7 +29,7 @@ Each step: research → parallel agents by file ownership + tester → fix the t
 6. ~~Area 6 3D models (with particle collisionmodel) → tester → optimise.~~ Done (models-plan T and O, 2026-09-27).
 7. ~~Area 7 Puppet warp → tester → optimise.~~ Done.
 8. Gaps queue, worked in alongside when their files are free:
-   - A shader-compiler helper process (hung compile with no Homebrew fallback).
+   - ~~A shader-compiler helper process (hung compile with no Homebrew fallback).~~ Done: translation runs in a long-lived helper (`HelperShaderCompiler`, `ShaderCompileHelperServer`), restarted and retried once when it dies; a second failure fails the variant into FailedShaders.
    - Music-sync settings keyed by stable identity, not the path.
    - Text with effects, blend modes or emoji through WE's font path.
    - UI: stray line under the seek bar — fixed be620ce (a stepped `Slider` drew a tick mark per step; `NumericSliderInput` now snaps the value instead).
@@ -132,9 +132,9 @@ Ranked; the area each item belongs to is in brackets.
 16. ~~Camera shake and parallax: amplitude, speed, roughness and delay are unused; parallax is our own model (0.18 factor).~~ Done (e480da5, 7d02897): WE's shake (0x140199580) and parallax (0x1401891a0: 0x140189b0f…0x140189cc6, 0x14018b062) from the binary, re-checked against it; the sweep matches WE's measured −164 px at 1920. In a perspective scene the shake moves the camera. The delay filter runs on the scene clock's step. Tests: `SceneCameraMotionTests` (formulas, the delay's step response, WE's defaults), `CameraParallaxLibraryTests`. [new]
 17. ~~Clear, ambient and skylight colours are decoded but not applied.~~ Done: `general.clearcolor` clears the scene target and the ambient and skylight colours feed `g_LightAmbientColor`/`g_LightSkylightColor` (`SceneFrameLighting`), scripts included. [5]
 18. The sidebar writes to the un-keyed property store, so with two displays an edit can land on the other wallpaper. [4] The Animation Speed is per instance now: the renderer reads it from its own store (`ScenePlaybackSpeed`, `ScenePlaybackEaseTests.testEachInstanceRunsAtItsOwnSpeed`); the sidebar itself writes through `WallpaperPropertyTargets` to the selected displays' stores.
-19. Scene audio cache names use `hashValue` (random per launch), so copies pile up in Caches. [new]
-20. Pipeline compiles are unbounded, with no eviction or retry; the variant cache key ignores toolchain versions; a `TEMPDUMP` debug block is left in. [1]
-21. The text cache clears completely past 128 entries and thrashes with animated scale. [new]
+19. ~~Scene audio cache names use `hashValue`~~: done. Names are a SHA-256 of wallpaper path, entry, size and package modification date; the old names are swept once and the folder is an LRU capped at 512 MB.
+20. ~~Pipeline compiles are unbounded, with no eviction or retry; the variant cache key ignores toolchain versions; a `TEMPDUMP` debug block is left in.~~ Done: at most one pipeline compile per performance core (`BoundedWorkQueue`), an LRU pipeline cache (`LRUCache`, 1024 entries), retries with backoff for transient Metal failures (`PipelineCompileRetry`), and the Metal compiler's OS build in the variant key next to the glslang and SPIRV-Cross versions (`ShaderToolchainVersions`); the `TEMPDUMP` block was already gone. Tests: `PipelineCompileBoundsTests`, `HelperShaderCompilerTests`. [1]
+21. ~~The text cache clears completely past 128 entries and thrashes with animated scale~~: done. LRU under a 32 MB byte budget; an animating scale reuses quantised (2^(1/4)) rasters drawn scaled on the GPU, and text at rest gets an exact raster after 30 still frames (`SceneTextRasterScale.Tracker`).
 22. ~~Script clones share `layer.id` with their source (text and effect state), and effect state is never pruned.~~ Done (WP11): created layers get their own ids and free their state when destroyed. [4]
 23. Objects without an `id`: the hierarchy uses the index, layers use −1, so the parent link is lost. [new]
 24. Dead `_owe_effect_*` UI code; toggling parallax triggers a full rebuild. [new]

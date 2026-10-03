@@ -9,11 +9,68 @@ final class SceneReviewFixTests: XCTestCase {
 
     func testSceneAudioCacheNameIsStableAndPerWallpaper() {
         let a = URL(fileURLWithPath: "/w/a"), b = URL(fileURLWithPath: "/w/b")
-        let name = SceneSoundContentBuilder.cacheName(entry: "sounds/music.mp3", wallpaperDirectory: a)
-        XCTAssertEqual(name, SceneSoundContentBuilder.cacheName(entry: "sounds/music.mp3", wallpaperDirectory: a))
-        XCTAssertNotEqual(name, SceneSoundContentBuilder.cacheName(entry: "sounds/music.mp3", wallpaperDirectory: b))
+        let day = Date(timeIntervalSinceReferenceDate: 86_400)
+        let name = SceneSoundContentBuilder.cacheName(entry: "sounds/music.mp3", wallpaperDirectory: a, size: 3, modified: day)
+        XCTAssertEqual(name, SceneSoundContentBuilder.cacheName(entry: "sounds/music.mp3", wallpaperDirectory: a, size: 3, modified: day))
+        XCTAssertNotEqual(name, SceneSoundContentBuilder.cacheName(entry: "sounds/music.mp3", wallpaperDirectory: b, size: 3, modified: day))
+        XCTAssertNotEqual(name, SceneSoundContentBuilder.cacheName(entry: "sounds/music.mp3", wallpaperDirectory: a,
+                                                                   size: 3, modified: day.addingTimeInterval(1))), "an updated package gets a new copy")
         XCTAssertTrue(name.hasSuffix(".mp3"))
         XCTAssertEqual(name.count, 64 + 4, "SHA256 hex plus extension")
+        // Deterministic and seed-free: a fixed input gives a fixed name, so it can't come from `hashValue`.
+        XCTAssertEqual(SceneSoundContentBuilder.cacheName(entry: "a.ogg", wallpaperDirectory: nil, size: 0, modified: nil),
+                       SceneSoundContentBuilder.cacheName(entry: "a.ogg", wallpaperDirectory: nil, size: 0, modified: nil))
+        XCTAssertTrue(SceneSoundContentBuilder.isCurrentCacheName(name))
+        XCTAssertFalse(SceneSoundContentBuilder.isCurrentCacheName("-4611686018427387904.mp3"))
+    }
+
+    func testSceneAudioCacheNameFollowsALooseSourceFile() throws {
+        // A converted wallpaper has no scene.pkg: its key comes from the file the bytes are read from.
+        let dir = FileManager.default.temporaryDirectory.appending(path: "owe-audio-src-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let source = dir.appending(path: "music.mp3")
+        try Data(count: 10).write(to: source)
+        try FileManager.default.setAttributes([.modificationDate: Date(timeIntervalSinceReferenceDate: 1000)],
+                                              ofItemAtPath: source.path)
+        let name = { SceneSoundContentBuilder.cacheName(entry: "sounds/music.mp3", wallpaperDirectory: dir,
+                                                        source: source, fallbackSize: 0) }
+        let first = name()
+        XCTAssertEqual(first, name(), "an unchanged file keeps its copy")
+        try FileManager.default.setAttributes([.modificationDate: Date(timeIntervalSinceReferenceDate: 2000)],
+                                              ofItemAtPath: source.path)
+        XCTAssertNotEqual(first, name(), "a touched file gets a new copy")
+        let touched = name()
+        try Data(count: 11).write(to: source)
+        try FileManager.default.setAttributes([.modificationDate: Date(timeIntervalSinceReferenceDate: 2000)],
+                                              ofItemAtPath: source.path)
+        XCTAssertNotEqual(touched, name(), "a resized file gets a new copy")
+    }
+
+    func testSceneAudioCacheDropsOldNamesOnceAndKeepsUnderItsCap() throws {
+        let dir = FileManager.default.temporaryDirectory.appending(path: "owe-audio-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        func write(_ name: String, bytes: Int, age: TimeInterval) throws -> URL {
+            let url = dir.appending(path: name)
+            try Data(count: bytes).write(to: url)
+            try FileManager.default.setAttributes([.modificationDate: Date(timeIntervalSinceNow: -age)], ofItemAtPath: url.path)
+            return url
+        }
+        let legacy = try write("1234567890.mp3", bytes: 10, age: 0)
+        let oldest = try write(String(repeating: "a", count: 64) + ".mp3", bytes: 100, age: 300)
+        let middle = try write(String(repeating: "b", count: 64) + ".mp3", bytes: 100, age: 200)
+        let newest = try write(String(repeating: "c", count: 64) + ".mp3", bytes: 100, age: 100)
+        SceneSoundContentBuilder.prune(dir, byteLimit: 250, keeping: newest)
+        let exists = { FileManager.default.fileExists(atPath: $0.path) }
+        XCTAssertFalse(exists(legacy), "the old per-launch names are swept")
+        XCTAssertFalse(exists(oldest), "least recently used goes first")
+        XCTAssertTrue(exists(middle))
+        XCTAssertTrue(exists(newest))
+        // The sweep runs once: a later odd name is left alone.
+        let later = try write("99.mp3", bytes: 1, age: 0)
+        SceneSoundContentBuilder.prune(dir, byteLimit: 1 << 20)
+        XCTAssertTrue(exists(later))
     }
 
     // MARK: Effect visibility

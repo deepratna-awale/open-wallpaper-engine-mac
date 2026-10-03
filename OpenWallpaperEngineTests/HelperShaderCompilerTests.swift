@@ -1,0 +1,160 @@
+import XCTest
+@testable import OpenWallpaperEngine
+
+/// The shader compile helper's protocol, its crash recovery and the failed-shader path, with an
+/// in-memory helper (`FakeChannel`) that runs `ShaderCompileHelperServer.handle` like the real one.
+final class HelperShaderCompilerTests: XCTestCase {
+    /// Echoes its input, tagged, so a test can tell which step produced what.
+    private struct StubCompiler: ShaderCompiler {
+        var cacheFingerprint: String { "stub" }
+        func preprocess(_ source: String, stage: ShaderStage) throws -> String { "pre(\(stage.rawValue)):" + source }
+        func compileToMSL(_ source: String, stage: ShaderStage) throws -> (msl: String, reflection: Data) {
+            if source.contains("BROKEN") { throw ShaderCompilerError.failed(step: "glslang", output: "ERROR: broken") }
+            return ("msl(\(stage.rawValue)):" + source, Data("{}".utf8))
+        }
+    }
+
+    /// A helper that serves requests in memory, or dies on the requests `crashes` says.
+    private final class FakeChannel: ShaderCompileHelperChannel {
+        let compiler: ShaderCompiler
+        let crashes: (ShaderCompileHelperMessage.Request) -> Bool
+        var closed = false
+
+        init(compiler: ShaderCompiler, crashes: @escaping (ShaderCompileHelperMessage.Request) -> Bool) {
+            self.compiler = compiler
+            self.crashes = crashes
+        }
+
+        func exchange(_ request: Data, timeout: TimeInterval) throws -> Data {
+            XCTAssertFalse(closed, "a closed helper was reused")
+            var buffer = request
+            let payload = try XCTUnwrap(ShaderCompileHelperFrame.take(from: &buffer))
+            XCTAssertTrue(buffer.isEmpty)
+            let decoded = try JSONDecoder().decode(ShaderCompileHelperMessage.Request.self, from: payload)
+            if crashes(decoded) { throw ShaderCompileHelperChannelError.exited("signal 11") }
+            var frame = try ShaderCompileHelperFrame.encode(ShaderCompileHelperServer.handle(decoded, compiler: compiler))
+            return try XCTUnwrap(ShaderCompileHelperFrame.take(from: &frame))
+        }
+
+        func close() { closed = true }
+    }
+
+    private final class Launcher {
+        var launches = 0
+        var channels: [FakeChannel] = []
+        let crashes: (Int, ShaderCompileHelperMessage.Request) -> Bool
+
+        init(crashes: @escaping (Int, ShaderCompileHelperMessage.Request) -> Bool = { _, _ in false }) {
+            self.crashes = crashes
+        }
+
+        func compiler() -> HelperShaderCompiler {
+            HelperShaderCompiler { [self] in
+                launches += 1
+                let launch = launches
+                let channel = FakeChannel(compiler: StubCompiler()) { self.crashes(launch, $0) }
+                channels.append(channel)
+                return channel
+            }
+        }
+    }
+
+    private func onBackground<T>(_ body: @escaping () throws -> T) throws -> T {
+        var result: Result<T, Error>!
+        let done = expectation(description: "compile")
+        DispatchQueue.global().async {
+            result = Result { try body() }
+            done.fulfill()
+        }
+        wait(for: [done], timeout: 10)
+        return try result.get()
+    }
+
+    func testFrameRoundTripSplitsAndJoins() throws {
+        let request = ShaderCompileHelperMessage.Request(id: 7, operation: .compileToMSL, stage: .fragment, source: "void main(){}")
+        var stream = try ShaderCompileHelperFrame.encode(request) + ShaderCompileHelperFrame.encode(request)
+        var partial = Data(stream.prefix(5))
+        XCTAssertNil(try ShaderCompileHelperFrame.take(from: &partial))
+        let first = try XCTUnwrap(ShaderCompileHelperFrame.take(from: &stream))
+        XCTAssertEqual(try JSONDecoder().decode(ShaderCompileHelperMessage.Request.self, from: first), request)
+        XCTAssertNotNil(try ShaderCompileHelperFrame.take(from: &stream))
+        XCTAssertTrue(stream.isEmpty)
+    }
+
+    func testRequestResponseRoundTrip() throws {
+        let launcher = Launcher()
+        let compiler = launcher.compiler()
+        let pre = try onBackground { try compiler.preprocess("#define A 1", stage: .vertex) }
+        XCTAssertEqual(pre, "pre(vert):#define A 1")
+        let out = try onBackground { try compiler.compileToMSL("void main(){}", stage: .fragment) }
+        XCTAssertEqual(out.msl, "msl(frag):void main(){}")
+        XCTAssertEqual(out.reflection, Data("{}".utf8))
+        XCTAssertEqual(launcher.launches, 1, "one long-lived helper serves every request")
+        let statistics = compiler.currentStatistics
+        XCTAssertEqual(statistics.requests, 2)
+        XCTAssertGreaterThanOrEqual(statistics.overheadMilliseconds, 0)
+        XCTAssertEqual(compiler.cacheFingerprint, InProcessShaderCompiler.fingerprint)
+    }
+
+    func testCompileErrorPassesThroughWithoutRestart() throws {
+        let launcher = Launcher()
+        let compiler = launcher.compiler()
+        XCTAssertThrowsError(try onBackground { try compiler.compileToMSL("BROKEN", stage: .vertex) }) { error in
+            guard case ShaderCompilerError.failed(let step, let output)? = error as? ShaderCompilerError else {
+                return XCTFail("\(error)")
+            }
+            XCTAssertEqual(step, "glslang")
+            XCTAssertTrue(output.contains("broken"))
+        }
+        XCTAssertEqual(launcher.launches, 1)
+    }
+
+    func testCrashRestartsAndRetriesOnce() throws {
+        // The first helper dies on its first request; the second serves it.
+        let launcher = Launcher { launch, _ in launch == 1 }
+        let compiler = launcher.compiler()
+        let out = try onBackground { try compiler.compileToMSL("void main(){}", stage: .vertex) }
+        XCTAssertEqual(out.msl, "msl(vert):void main(){}")
+        XCTAssertEqual(launcher.launches, 2)
+        XCTAssertTrue(launcher.channels[0].closed)
+        XCTAssertFalse(launcher.channels[1].closed)
+    }
+
+    func testSecondCrashFailsTheVariantAndDumpsItToFailedShaders() throws {
+        // Every helper dies on the fragment compile.
+        let launcher = Launcher { _, request in request.operation == .compileToMSL && request.stage == .fragment }
+        let failures = FileManager.default.temporaryDirectory.appending(path: "owe-helper-failed-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: failures) } // Optional: test scratch.
+        let translator = ShaderVariantTranslator(compiler: launcher.compiler(), cacheDirectory: nil, failureDirectory: failures)
+        let vertex = ShaderSource(stage: .vertex, path: "shaders/crashy.vert", text: "void main() { gl_Position = vec4(0.0); }",
+                                  combos: [], uniforms: [])
+        let fragment = ShaderSource(stage: .fragment, path: "shaders/crashy.frag", text: "void main() { gl_FragColor = vec4(1.0); }",
+                                    combos: [], uniforms: [])
+        XCTAssertThrowsError(try onBackground { try translator.variant(vertex: vertex, fragment: fragment, combos: [:]) }) { error in
+            XCTAssertTrue("\(error)".contains("failed twice"), "\(error)")
+        }
+        // The first helper served the vertex steps, then crashed; the retry's helper crashed too.
+        XCTAssertEqual(launcher.launches, 2)
+        let dumped = try FileManager.default.contentsOfDirectory(atPath: failures.path)
+        XCTAssertEqual(dumped.count, 1, "\(dumped)")
+        XCTAssertTrue(dumped[0].contains("crashy"), dumped[0])
+        // The next variant starts a new helper.
+        _ = try onBackground { try translator.compiler.preprocess("x", stage: .vertex) }
+        XCTAssertEqual(launcher.launches, 3)
+    }
+
+    func testHelperEnvironmentKeepsIsolationAndDropsTestInjection() {
+        let environment = ShaderCompileHelperProcess.environment(
+            ["PATH": "/usr/bin", "XCTestConfigurationFilePath": "/x", "DYLD_INSERT_LIBRARIES": "/y"], isolationTag: "dev")
+        XCTAssertEqual(environment["PATH"], "/usr/bin")
+        XCTAssertNil(environment["XCTestConfigurationFilePath"])
+        XCTAssertNil(environment["DYLD_INSERT_LIBRARIES"])
+        XCTAssertEqual(environment[AppStorageLocation.environmentKey], "dev")
+    }
+
+    func testFactoryTranslatesInProcessUnderTests() {
+        XCTAssertTrue(ShaderCompilerFactory.makeIsolated(qos: .background, inProcessStateDirectory: nil,
+                                                         environment: ["XCTestConfigurationFilePath": "/x"])
+                      is InProcessShaderCompiler)
+    }
+}
