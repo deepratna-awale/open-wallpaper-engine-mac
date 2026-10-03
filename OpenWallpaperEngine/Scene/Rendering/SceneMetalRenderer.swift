@@ -1,6 +1,7 @@
 import Cocoa
 import MetalKit
 import CryptoKit
+import OWESceneEditing
 
 private struct PreparedLayer {
     let frames: [RenderTextureFrame]
@@ -369,6 +370,10 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private(set) var bindingRevisions = SceneBindingRevisions()
     /// Layers' base values (`baseValues`) by layer id, per binding revision.
     private var baseValueCaches: [String: SceneBindingCache<SceneLayerBaseValues>] = [:]
+    /// The Wallpaper Editor's live edits over the built content (`SceneEditorLive`).
+    private var editorLive = SceneEditorLive()
+    /// `editorLive`'s revision the frame analysis last saw: a live edit redraws an idle scene.
+    private var analysedEditorRevision = 0
     private var placement: WallpaperPlacement = .fill
     /// Drawable pixels per view point (the backing scale), refreshed every frame.
     private var drawablePixelsPerPoint: Float = 1
@@ -675,6 +680,16 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let key = wallpaperKey
         let resolved = userVisibility.resolve { WallpaperServices.shared.userPropertyString($0, wallpaper: key) }
         scripts.applyUserVisibility(objects: resolved.objects, effects: resolved.effects)
+    }
+
+    /// The Wallpaper Editor's edits since the content was built, drawn from the next frame; nil or
+    /// empty draws the content as built.
+    func setEditorLiveValues(_ values: SceneEditLiveValues?) {
+        let next = SceneEditorLive(values ?? SceneEditLiveValues(), revision: editorLive.revision &+ 1)
+        guard !(next.isEmpty && editorLive.isEmpty) else { return }
+        editorLive = next
+        frameLocals.removeAll(keepingCapacity: true)
+        framePacing.wake(.interactive, at: wallTime())
     }
 
     /// Drops every prepared layer, releasing any video stream those layers hold.
@@ -3211,6 +3226,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// start from. Kept per binding revision (`SceneBindingRevisions`) unless a bound property
     /// follows the music.
     private func baseValues(_ entry: PreparedLayer) -> SceneLayerBaseValues {
+        let values = boundBaseValues(entry)
+        return editorLive.isEmpty ? values : editorLive.base(values, id: entry.layer.id)
+    }
+
+    private func boundBaseValues(_ entry: PreparedLayer) -> SceneLayerBaseValues {
         let bindings = entry.layer.bindings
         guard !bindings.isEmpty else { return SceneLayerBaseValues(entry.layer) }
         let context = LiveSceneValueContext()
@@ -3248,7 +3268,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// included), evaluated once per frame.
     private func objectLocal(_ motion: SceneObjectMotion, id: String) -> SceneLocalTransform {
         if let cached = frameLocals[id] { return cached }
-        let local = motion.local(animation: timelines.object(id), script: scripts.object(id))
+        var local = motion.local(animation: timelines.object(id), script: scripts.object(id))
+        if !editorLive.isEmpty { local = editorLive.local(local, id: id) }
         frameLocals[id] = local
         return local
     }
@@ -3554,7 +3575,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         if let probe = drawProbe { context.recordAnimated = { probe.record(constant: $0, value: $1) } }
         // Hidden effects (authored, user-bound or a script's `visible`) are built but skipped;
         // constants scripts set go over the material's.
-        let scripted = scripts.effects(entry.layer.weEffects, of: entry.layer.id)
+        var scripted = scripts.effects(entry.layer.weEffects, of: entry.layer.id)
+        if !editorLive.isEmpty { scripted = editorLive.effects(entry.layer.weEffects, of: entry.layer.id, scripted: scripted) }
         context.hiddenEffects = scripted.hidden
         context.constantWrites = scripted.writes
         context.scriptRevision = scripted.revision
@@ -4138,7 +4160,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         inputs.sceneChanged = shape.layers != analysedShape.layers || shape.target != analysedShape.target
             || warming || analysedWarmUp || landed != analysedLanded || textRaster.hasFinished
             || scripts.userVisibilityRevision != analysedUserVisibility
+            || editorLive.revision != analysedEditorRevision
         analysedUserVisibility = scripts.userVisibilityRevision
+        analysedEditorRevision = editorLive.revision
         analysedLanded = landed
         analysedShape = shape
         analysedWarmUp = warming

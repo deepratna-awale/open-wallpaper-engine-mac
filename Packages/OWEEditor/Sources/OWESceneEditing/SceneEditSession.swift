@@ -7,15 +7,28 @@ import Foundation
 /// running wallpaper apply it.
 @MainActor
 public final class SceneEditSession: ObservableObject {
-    public let outline: SceneOutline
+    /// The scene as the wallpaper ships it.
+    public let authored: SceneOutline
+    /// The scene as edited: layers added, deleted, reordered and regrouped, effects added and
+    /// reordered, names changed. What the layer list, the canvas and the inspector show.
+    @Published public private(set) var outline: SceneOutline
+    /// The scene with the structural edits only: what a layer's values are compared against (an
+    /// added layer's own values are its authored ones).
+    public private(set) var baseOutline: SceneOutline
     public let undoManager: UndoManager
     @Published public private(set) var overlay: SceneEditOverlay
     @Published public var selection: Int?
-    /// A gizmo drag in progress: the layer's transform as dragged, drawn on the canvas until the
-    /// drag ends and commits it.
-    @Published public var dragPreview: (layer: Int, transform: LayerTransform)?
+    /// A gizmo drag in progress: the layer's transform as dragged, drawn on the canvas (and, through
+    /// `onLivePreview`, by the running wallpaper) until the drag ends and commits it.
+    @Published public var dragPreview: (layer: Int, transform: LayerTransform)? {
+        didSet { if dragPreview != nil { onLivePreview?(previewOverlay) } }
+    }
+    /// The text layer being edited on the canvas.
+    @Published public var editingText: Int?
     /// Saves and applies the overlay after every change, undo and redo included.
     public var onChange: ((SceneEditOverlay) -> Void)?
+    /// The overlay with a drag in progress, for the running wallpaper to draw live; not saved.
+    public var onLivePreview: ((SceneEditOverlay) -> Void)?
 
     /// Edits of one control within this long of each other are one undo step (a slider drag, typing).
     public var coalescingInterval: TimeInterval = 1
@@ -25,10 +38,13 @@ public final class SceneEditSession: ObservableObject {
     /// `undoManager`: a new one when nil.
     public init(outline: SceneOutline, overlay: SceneEditOverlay = SceneEditOverlay(),
                 undoManager: UndoManager? = nil) {
-        self.outline = outline
+        authored = outline
         self.overlay = overlay
+        self.outline = outline
+        baseOutline = outline
         let undoManager = undoManager ?? UndoManager()
         self.undoManager = undoManager
+        refreshOutlines()
         // Undo, redo and steps others register (the user properties) change what Undo and Redo
         // offer, with or without an overlay change.
         let center = NotificationCenter.default
@@ -37,6 +53,46 @@ public final class SceneEditSession: ObservableObject {
             center.publisher(for: name, object: undoManager)
                 .sink { [weak self] _ in self?.objectWillChange.send() }
         }
+    }
+
+    /// The overlay with the drag in progress applied.
+    public var previewOverlay: SceneEditOverlay {
+        guard let preview = dragPreview else { return overlay }
+        var next = overlay
+        let current = storedTransform(of: preview.layer)
+        func set(_ field: String, _ vector: SIMD3<Double>, _ was: SIMD3<Double>) {
+            guard vector != was, isEditable(field, of: preview.layer) else { return }
+            next.setField(field, to: SceneVector.value([vector.x, vector.y, vector.z]), of: preview.layer)
+        }
+        set("origin", preview.transform.origin, current.origin)
+        set("scale", preview.transform.scale, current.scale)
+        set("angles", preview.transform.angles, current.angles)
+        return next
+    }
+
+    /// The scene applied with `overlay` (every edit) and with its structure only, read again
+    /// when the structure, a name or a parent changed. Without the scene's data (an outline made
+    /// from a decoded root) the authored outline stands.
+    private func refreshOutlines(from previous: SceneEditOverlay? = nil) {
+        guard let data = authored.sceneData else { return }
+        if let previous, previous.outlineSignature == overlay.outlineSignature { return }
+        do {
+            outline = try Self.outline(of: data, with: overlay)
+            baseOutline = try Self.outline(of: data, with: overlay.structureOnly)
+        } catch {
+            outline = authored
+            baseOutline = authored
+        }
+        if let selection, outline.layer(selection) == nil { self.selection = nil }
+        if let editing = editingText, outline.layer(editing) == nil { editingText = nil }
+    }
+
+    static func outline(of data: Data, with overlay: SceneEditOverlay) throws -> SceneOutline {
+        guard var root = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw SceneEditOverlayError.notAScene
+        }
+        try overlay.apply(to: &root, markingEffectKeys: true)
+        return try SceneOutline(root: root)
     }
 
     public var canUndo: Bool { undoManager.canUndo }
@@ -57,12 +113,12 @@ public final class SceneEditSession: ObservableObject {
     /// The field as the scene now has it: the edit, else the authored value (a driven field's
     /// starting value).
     public func value(_ field: String, of layerID: Int) -> SceneJSONValue? {
-        overlay.field(field, of: layerID) ?? SceneFieldBinding.literal(of: outline.layer(layerID)?.fields[field])
+        overlay.field(field, of: layerID) ?? SceneFieldBinding.literal(of: baseOutline.layer(layerID)?.fields[field])
     }
 
     /// How the authored field gets its value; a field bound to a user property isn't edited here.
     public func binding(_ field: String, of layerID: Int) -> SceneFieldBinding {
-        SceneFieldBinding(outline.layer(layerID)?.fields[field])
+        SceneFieldBinding(baseOutline.layer(layerID)?.fields[field])
     }
 
     public func isEditable(_ field: String, of layerID: Int) -> Bool {
@@ -80,6 +136,11 @@ public final class SceneEditSession: ObservableObject {
 
     public func transform(of layerID: Int) -> LayerTransform {
         if let preview = dragPreview, preview.layer == layerID { return preview.transform }
+        return storedTransform(of: layerID)
+    }
+
+    /// The transform as the overlay has it, without a drag in progress.
+    func storedTransform(of layerID: Int) -> LayerTransform {
         let origin = vector("origin", of: layerID, default: [0, 0, 0])
         let scale = vector("scale", of: layerID, default: [1, 1, 1])
         let angles = vector("angles", of: layerID, default: [0, 0, 0])
@@ -97,7 +158,13 @@ public final class SceneEditSession: ObservableObject {
     public func isEdited(_ layerID: Int) -> Bool { overlay.hasEdits(layerID) }
 
     public func isEffectVisible(_ effect: SceneLayerEffect, of layerID: Int) -> Bool {
-        overlay.effectVisible(effect.id, of: layerID) ?? SceneFieldBinding.literal(of: effect.visible)?.boolValue ?? true
+        overlay.effectEdit(effect.key, of: layerID)?.visible
+            ?? SceneFieldBinding.literal(of: baseEffect(effect.key, of: layerID)?.visible ?? effect.visible)?.boolValue ?? true
+    }
+
+    /// The effect as the structure-only scene has it: its authored values (an added effect's own).
+    public func baseEffect(_ key: String, of layerID: Int) -> SceneLayerEffect? {
+        baseOutline.layer(layerID)?.effects.first { $0.key == key }
     }
 
     /// The planar layer's rectangle on the scene, its parents' transforms included; nil for a
@@ -121,7 +188,7 @@ public final class SceneEditSession: ObservableObject {
         if size.count >= 2, size[0] > 0, size[1] > 0 { return SIMD2(size[0], size[1]) }
         guard layer.kind == .text else { return SIMD2(100, 100) }
         let points = value("pointsize", of: layer.id)?.doubleValue ?? 32
-        let text = value("text", of: layer.id)?.stringValue ?? ""
+        let text = textContent(of: layer.id) ?? ""
         let lines = text.split(separator: "\n", omittingEmptySubsequences: false)
         let longest = lines.map(\.count).max() ?? 0
         var width = max(Double(longest) * points * 0.6, points * 2)
@@ -187,10 +254,17 @@ public final class SceneEditSession: ObservableObject {
     }
 
     public func setEffectVisible(_ visible: Bool, effect: SceneLayerEffect, of layerID: Int, actionName: String) {
-        let authored = SceneFieldBinding.literal(of: effect.visible)?.boolValue ?? true
+        let base = baseEffect(effect.key, of: layerID)?.visible ?? effect.visible
+        guard !isUserBound(base) else { return }
+        let authored = SceneFieldBinding.literal(of: base)?.boolValue ?? true
         var next = overlay
-        next.setEffectVisible(visible == authored ? nil : visible, effect: effect.id, of: layerID)
+        next.updateEffect(key: effect.key, of: layerID) { $0.visible = visible == authored ? nil : visible }
         commit(next, actionName: actionName, coalescingKey: nil)
+    }
+
+    private func isUserBound(_ value: SceneJSONValue?) -> Bool {
+        if case .userProperty = SceneFieldBinding(value) { return true }
+        return false
     }
 
     /// Drops every scene edit (locks stay: they aren't edits of the wallpaper). Undoable.
@@ -205,7 +279,10 @@ public final class SceneEditSession: ObservableObject {
     /// nil when `value` is what the scene authored, so the layer no longer counts as edited.
     private func normalized(_ value: SceneJSONValue?, field: String, of layerID: Int) -> SceneJSONValue? {
         guard let value else { return nil }
-        let authored = SceneFieldBinding.literal(of: outline.layer(layerID)?.fields[field]) ?? Self.defaults[field]
+        let authoredField = baseOutline.layer(layerID)?.fields[field]
+        // Taking a layer out of its group (null) where the scene has it at the top level is no edit.
+        if value == .null { return authoredField == nil ? nil : value }
+        let authored = SceneFieldBinding.literal(of: authoredField) ?? Self.defaults[field]
         return Self.same(value, authored) ? nil : value
     }
 
@@ -227,7 +304,8 @@ public final class SceneEditSession: ObservableObject {
 
     // MARK: Undo
 
-    private func commit(_ next: SceneEditOverlay, actionName: String, coalescingKey: String?) {
+    /// Every edit ends here: one undo step (or part of the running one), saved and applied.
+    func commit(_ next: SceneEditOverlay, actionName: String, coalescingKey: String?) {
         guard next != overlay else { return }
         let now = Date()
         let continues = coalescingKey.map { key in
@@ -235,7 +313,9 @@ public final class SceneEditSession: ObservableObject {
         } ?? false
         if !continues { registerUndo(restoring: overlay, actionName: actionName) }
         lastCoalescing = coalescingKey.map { ($0, now) }
+        let previous = overlay
         overlay = next
+        refreshOutlines(from: previous)
         onChange?(next)
     }
 
@@ -254,7 +334,9 @@ public final class SceneEditSession: ObservableObject {
         registerUndo(restoring: overlay, actionName: actionName)
         lastCoalescing = nil
         dragPreview = nil
+        let previous = overlay
         overlay = snapshot
+        refreshOutlines(from: previous)
         onChange?(snapshot)
     }
 }

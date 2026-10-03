@@ -42,6 +42,10 @@ class SceneWallpaperViewModel: ObservableObject {
     private var pendingRenderSettings = SceneRenderSettings()
     private var loadedTextureReductionSize: SIMD2<Float>?
     private var loadedBindingTable = UserPropertyBindingTable()
+    /// The Wallpaper Editor's overlay the loaded scene was read with; the editor's newer edits
+    /// are drawn live against it (`SceneEditLiveValues`).
+    private var _loadedEditOverlay: SceneEditOverlay?
+    var loadedEditOverlay: SceneEditOverlay? { stateLock.withLock { _loadedEditOverlay } }
     /// The newest load; an older one that finishes later is dropped.
     private var loadGeneration = 0
     private var loadJob: PreparationPool.Job?
@@ -278,6 +282,8 @@ class SceneWallpaperViewModel: ObservableObject {
         var source = "parsed"
         var bindingTable = UserPropertyBindingTable()
         var hasScriptSites = false
+        /// The editor overlay the scene was read with.
+        var overlay: SceneEditOverlay?
     }
 
     /// Loads `wallpaper` on the calling thread; the scene is loaded when it returns. The app loads
@@ -352,6 +358,7 @@ class SceneWallpaperViewModel: ObservableObject {
         let key = request.key
         guard isCurrent() else { return nil }
         var read = SceneRead(wallpaper: wallpaper, signature: key.name + "|" + sceneFile, hasPackage: hasPackage)
+        read.overlay = request.overlay
         if let cached = Self.cachedParse(for: dir, signature: read.signature) {
             read.parser = cached.parser
             read.scene = cached.scene
@@ -447,6 +454,7 @@ class SceneWallpaperViewModel: ObservableObject {
         loadedWallpaperDirectory = dir
         stateLock.withLock {
             loadedBindingTable = read.bindingTable
+            _loadedEditOverlay = read.overlay
             loadedTextureReductionSize = TextureReduction.orthographicSize(of: scene)
         }
         bumpRevision()
@@ -2015,6 +2023,8 @@ class SceneWallpaperViewModel: ObservableObject {
         } catch {
             OWELog.error(.scene, "Failed to read \(path) in \(wallpaperDir.path): \(error)")
         }
+        // Files the Wallpaper Editor imported for the wallpaper (`EditorAssetStore`).
+        if let data = SceneEditOverlayFiles.assetData(path, for: settingsIdentity(for: wallpaperDir)) { return data }
         return workshopAssets.data(for: path)
     }
 

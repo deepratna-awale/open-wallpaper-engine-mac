@@ -43,7 +43,7 @@ final class SceneEditOverlayTests: XCTestCase {
         let effects = try Fixtures.object(10, in: try overlay.applied(to: Fixtures.sceneData))["effects"] as! [[String: Any]]
         XCTAssertEqual(effects.count, 2, "an effect the scene doesn't have is skipped")
         XCTAssertEqual(effects[0]["visible"] as? Bool, false)
-        let constants = (effects[0]["passes"] as! [[String: Any]])[0]["constants"] as! [String: Any]
+        let constants = (effects[0]["passes"] as! [[String: Any]])[0]["constantshadervalues"] as! [String: Any]
         XCTAssertEqual((constants["Speed"] as? NSNumber)?.doubleValue, 3, "the authored key's spelling is kept")
         XCTAssertNil(constants["speed"])
         XCTAssertEqual((constants["ripplescale"] as? NSNumber)?.doubleValue, 2)

@@ -92,6 +92,25 @@ Properties. Later phases add a timeline under the canvas (P4) and an asset strip
 - **Stored** per wallpaper in `<Application Support>/Open Wallpaper Engine/editor/<identity>.json`
   (the settings identity: Workshop id, else a project hash), never in the wallpaper's folder or the
   property store. An empty overlay removes its file.
+- **Structure** (version 2 of the file, written only when used, so an older app still reads a
+  version-1 overlay): layers added (`added`, their scene.json objects under new ids), deleted
+  (`removed`) and reordered (`order`, every id in draw order); per object, effects added
+  (`addedEffects`, keyed `+1`, `+2`…) and their order (`effectOrder`, which also removes); per
+  effect, `combos`, `textures` (masks) and `bindings` (a constant following a user property)
+  beside `visible` and `constants`. Effect edits are keyed by the effect, not its place, so they
+  follow it when it moves. Objects without an `id` get their index as one once the structure changes.
+- **Files the editor adds** (imported images, sounds and fonts, painted masks) live beside the
+  overlay in `<identity>.assets` under the scene's own paths (`materials/editor/…`,
+  `models/editor/…`, `sounds/editor/…`, `fonts/editor/…`, `materials/masks/editor_…`), named by
+  their content's hash; the loader finds them after the wallpaper's own files. Images other than PNG
+  and JPEG are converted to PNG; an image gets WE's `genericimage2` material and model. Adding a
+  built-in effect copies its `dependencies` (materials, shaders, textures) there too, as WE's editor
+  copies them into the project: WE reads them at the project root, not in `assets/effects/<name>/`.
+- **Live channel**: a change of a layer's `origin`, `scale`, `angles`, `alpha` or `color`, or of an
+  effect's `visible` or a literal constant, is drawn per frame without reading the scene again
+  (`SceneEditLiveValues` against the overlay the scene was read with; the renderer's
+  `SceneEditorLive`). Gizmo drags are sent live while they last and saved once on release.
+  Everything else (structure, combos, textures, bindings, text, a field a script drives) reloads.
 - **Revert** drops the scene edits (undoable). **Save as Local Wallpaper…** copies the folder into
   the library (hidden files and symbolic links left behind, a `.pkg` written out as loose files),
   writes the merged scene.json and a project.json without the Workshop id, so the copy is a local
@@ -104,8 +123,8 @@ Each phase ships on its own; effort is focused engineering time.
 | Phase | Delivers | Effort |
 |---|---|---|
 | **P1 Foundation** (this PR) | `OWEEditor` package (edit model, shared kit, views), the window, live canvas with fit/zoom/pan, hierarchy with visibility and lock, contextual inspector (transform, opacity, colour, blend, effect toggles, user properties), canvas selection and gizmo for image/text layers, undo/redo, overlay persistence and live reload, Revert, Save as Local Wallpaper, 15 languages, tests | 2–3 weeks |
-| **P2 Tweaking complete** | Effect parameters, combos, colours and music sync through the Inspector's effect controls (moved to `OWEInspectorKit`); live transform channel (the renderer's `object` binding class instead of a reload); snapping, guides, align, multi-select; text content and font; layer reorder, duplicate, delete (structural overlay ops) | 3–4 weeks |
-| **P3 Adding things** | Add image/text/fullscreen/composition/sound layers and WE's catalog effects; asset browser and import into an editor project folder; scene settings (clear colour, bloom); mask painting | 4–6 weeks |
+| **P2 Tweaking complete** (done, except multi-select and music sync of effect parameters) | Effect parameters, combos, colours and music sync through the Inspector's effect controls (moved to `OWEInspectorKit`); live transform channel (the renderer's `object` binding class instead of a reload); snapping, guides, align, multi-select; text content and font; layer reorder, duplicate, delete (structural overlay ops) | 3–4 weeks |
+| **P3 Adding things** (done, except scene settings) | Add image/text/fullscreen/composition/sound layers and WE's catalog effects; asset browser and import into an editor project folder; scene settings (clear colour, bloom); mask painting | 4–6 weeks |
 | **P4 Timeline** | Keyframe tracks for WE's `animation` values, curves, scrubbing the live canvas | 4–6 weeks |
 | **P5 Particles and puppets** | Particle editor (emitters, initializers, operators, renderers, children, control points); puppet warp view and pose, then authoring | 6–8 weeks |
 | **P6 Logic** | SceneScript editor (JavaScriptCore diagnostics), user property authoring, binding and conditions in project.json | 4 weeks |

@@ -43,6 +43,8 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
     /// The canvas's own wallpaper model, as the Workshop preview has: one display, muted.
     private let preview: WallpaperViewModel
     private let userPropertyUndo: EditorUserPropertyUndo
+    /// The effects, files, fonts and properties the editor offers.
+    private let resources: EditorWallpaperResources
 
     /// Only scene wallpapers have layers to edit.
     static func canEdit(_ wallpaper: WEWallpaper) -> Bool {
@@ -57,6 +59,8 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         let session = SceneEditSession(outline: try SceneOutline(sceneData: source.scene),
                                        overlay: SceneEditOverlayFiles.overlay(for: identity) ?? SceneEditOverlay())
         self.session = session
+        resources = EditorWallpaperResources(wallpaper: wallpaper, package: source.package,
+                                             assets: SceneEditOverlayFiles.assets(for: identity))
         userPropertyUndo = EditorUserPropertyUndo(wallpaper: wallpaper, undoManager: session.undoManager,
                                                   coalescingInterval: session.coalescingInterval)
         let preview = WallpaperViewModel(persistsWallpapers: false)
@@ -75,6 +79,12 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         window.toolbarStyle = .unified
         window.delegate = self
         session.onChange = { [weak self] overlay in self?.save(overlay) }
+        // A gizmo drag is drawn live by the running wallpaper while it lasts.
+        session.onLivePreview = { [weak self] overlay in
+            guard let self else { return }
+            SceneEditOverlayFiles.preview(overlay, base: self.session.baseOutline,
+                                          wallpaperDirectory: self.wallpaper.wallpaperDirectory)
+        }
         let content = NSHostingView(rootView: WallpaperEditorView(session: session, services: makeServices()))
         content.sizingOptions = [.minSize]
         window.contentView = content
@@ -85,7 +95,8 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
     private func makeServices() -> WallpaperEditorServices {
         let labels = WallpaperEngineLabels.load()
         let preview = self.preview, wallpaper = self.wallpaper, userPropertyUndo = self.userPropertyUndo
-        return WallpaperEditorServices(
+        let resources = self.resources, session = self.session
+        var services = WallpaperEditorServices(
             makeCanvas: { AnyView(WallpaperView(viewModel: preview, screenId: preview.selectedScreenId)) },
             userProperties: { AnyView(EditorUserProperties(wallpaper: wallpaper, undo: userPropertyUndo)) },
             blendModeTitle: SceneBlendModeOptions.title(labels: labels),
@@ -97,13 +108,23 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
                 guard let self else { return title }
                 return try self.saveAsLocalWallpaper(title: title)
             })
+        services.effectCatalog = { resources.effectCatalog(outline: session.authored) }
+        services.effectSchema = { resources.effectSchema($0) }
+        services.prepareEffect = { try resources.prepareEffect($0) }
+        services.assetStore = resources.assets
+        services.wallpaperAssets = { resources.wallpaperAssets() }
+        services.texture = { resources.texture($0) }
+        services.fonts = { resources.fonts() }
+        services.userPropertyChoices = { resources.userPropertyChoices() }
+        return services
     }
 
     /// Saves the overlay; the running instances of the wallpaper (the canvas and the desktop)
     /// reload with it.
     private func save(_ overlay: SceneEditOverlay) {
         do {
-            try SceneEditOverlayFiles.save(overlay, for: identity, wallpaperDirectory: wallpaper.wallpaperDirectory)
+            try SceneEditOverlayFiles.save(overlay, for: identity, wallpaperDirectory: wallpaper.wallpaperDirectory,
+                                           base: session.baseOutline)
         } catch {
             OWELog.error(.scene, "Can't save the editor overlay of \(wallpaper.project.title): \(error)")
         }
@@ -114,7 +135,8 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
     private func saveAsLocalWallpaper(title: String) throws -> String {
         let source = try WallpaperEditorSource.read(wallpaper)
         var writerSource = LocalWallpaperWriter.Source(directory: wallpaper.wallpaperDirectory,
-                                                       sceneFile: wallpaper.project.file)
+                                                       sceneFile: wallpaper.project.file,
+                                                       assetsDirectory: resources.assets.directory)
         if let package = source.package {
             var files: [String: Data] = [:]
             for path in package.fileList where files[path] == nil {
