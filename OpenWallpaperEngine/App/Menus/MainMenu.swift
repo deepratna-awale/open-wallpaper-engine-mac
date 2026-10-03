@@ -96,6 +96,7 @@ extension AppDelegate {
             .separator(),
             item(.wallpaperExplorer, #selector(openMainWindow)),
             item(.sceneInspector, #selector(showSceneInspectorForDisplayedWallpaper)),
+            item(.wallpaperEditor, #selector(showWallpaperEditorForDisplayedWallpaper)),
             .separator(),
             plain("Bring All to Front", #selector(NSApplication.arrangeInFront(_:))),
         ])
@@ -198,6 +199,8 @@ extension AppDelegate: NSMenuItemValidation {
         case #selector(previousWallpaper):
             Self.labelStepItem(menuItem, next: false, inPlaylist: wallpaperViewModel.stepsThroughPlaylist)
             return wallpaperViewModel.canStepToPreviousWallpaper
+        case #selector(showWallpaperEditorForDisplayedWallpaper):
+            return WallpaperEditorController.canEdit(wallpaperViewModel.displayedWallpaper)
         default:
             return true
         }

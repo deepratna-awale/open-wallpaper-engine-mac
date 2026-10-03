@@ -20,13 +20,23 @@ public final class SceneEditSession: ObservableObject {
     /// Edits of one control within this long of each other are one undo step (a slider drag, typing).
     public var coalescingInterval: TimeInterval = 1
     private var lastCoalescing: (key: String, date: Date)?
+    private var undoObservers: [AnyCancellable] = []
 
     /// `undoManager`: a new one when nil.
     public init(outline: SceneOutline, overlay: SceneEditOverlay = SceneEditOverlay(),
                 undoManager: UndoManager? = nil) {
         self.outline = outline
         self.overlay = overlay
-        self.undoManager = undoManager ?? UndoManager()
+        let undoManager = undoManager ?? UndoManager()
+        self.undoManager = undoManager
+        // Undo, redo and steps others register (the user properties) change what Undo and Redo
+        // offer, with or without an overlay change.
+        let center = NotificationCenter.default
+        undoObservers = [Notification.Name.NSUndoManagerDidCloseUndoGroup, .NSUndoManagerDidUndoChange,
+                         .NSUndoManagerDidRedoChange].map { name in
+            center.publisher(for: name, object: undoManager)
+                .sink { [weak self] _ in self?.objectWillChange.send() }
+        }
     }
 
     public var canUndo: Bool { undoManager.canUndo }

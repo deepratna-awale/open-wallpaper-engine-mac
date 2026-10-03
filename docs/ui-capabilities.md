@@ -180,6 +180,17 @@ collapsed sections survive a switch) and no longer rescans the library several t
 - [x] **SI9** Minimum size 1120 × 560. Before: `Scene/UI/SceneInspectorView.swift:844`. **Now:** Unchanged.
 - [x] **SI10** (new, 2026-09-27) Toolbar "Reset Edits": after the "Reset Scene Inspector Edits" confirmation, drops every edit made in the inspector (object JSON, origin, scale, visibility, package-file JSON, effect overrides and their music sync) from the stores it edits, keeps the wallpaper's properties, and reopens the inspector on the result (`Scene/UI/SceneInspectorView.swift`). WE has no equivalent; the Details panel's Reset clears these edits along with the properties.
 
+## ED. Wallpaper Editor (new, 2026-10)
+
+A separate window and module (`Packages/OWEEditor`, `Editor/`; [`docs/editor-plan.md`](editor-plan.md)). The Scene Inspector (SI) is unchanged; the two share `NumericSliderInput`, `InfoTip` and the blend-mode picker (`OWEInspectorKit`).
+
+- [x] **ED1** Opened from the Details panel's "Edit Wallpaper" (under Scene Inspector; disabled with a reason for non-scene wallpapers) and Window › Wallpaper Editor (⌥⌘E); one window per wallpaper, titled with the wallpaper, subtitle "Wallpaper Editor", frame autosaved (`UI/Explorer/WallpaperPreview.swift`, `App/Menus`, `Editor/WallpaperEditorController.swift`).
+- [x] **ED2** Layers sidebar: scene objects as a tree under their parents, topmost first, kind icon, edited dot, lock (shown on hover or when locked) and visibility buttons with help; a visibility a user property sets is disabled and names the property (`OWEEditor/LayerListView.swift`).
+- [x] **ED3** Canvas: the wallpaper's live scene through the app's renderer (muted), fitted with a margin; scroll or Space-drag pans, pinch or ⌘-scroll zooms about the pointer, glass zoom capsule (−, percentage menu with Zoom to Fit ⌘0 and Actual Size, + ; ⌘= / ⌘−). A 3D scene shows a note that its layers are edited in the inspector (`OWEEditor/EditorCanvasView.swift`).
+- [x] **ED4** Selection and gizmo (image and text layers): click picks the topmost visible, unlocked layer (hover outlines it), drag moves; corner handles scale (proportional, Shift free), the handle above the top edge rotates (Shift 15° steps); arrow keys nudge 10 (Shift 50, Control 1); Esc clears the selection; cursors follow the handle.
+- [x] **ED5** Inspector: the selected layer's Transform (position, scale with Keep Proportions, rotation), Appearance (opacity, colour, blend mode for images), Effects (on/off with help) and Details (source, ID, parent); nothing selected shows the scene (size, layers, edited layers) and the wallpaper's user properties (the Details panel's own view). A field a user property sets names it instead of a control (`OWEEditor/LayerInspectorView.swift`).
+- [x] **ED6** Toolbar: Undo, Redo (with the action in the help), Revert (confirmation, undoable), Save as Local Wallpaper… (name sheet; a banner reports the result), inspector toggle. ⌘Z / ⇧⌘Z undo every edit in the window, user properties included.
+
 ## WP. Workshop preview window
 
 - [x] **WP1** Live wallpaper (Metal, AVKit or web). Before: `App/AppDelegate.swift:41-45`. **Now:** Unchanged.

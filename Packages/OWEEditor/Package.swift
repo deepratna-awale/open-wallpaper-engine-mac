@@ -4,6 +4,7 @@
 //   outline, gizmo and canvas math, undo, Save as Local Wallpaper). The app's scene loader applies
 //   the overlay through it, so the editor and the renderer can't disagree about an edit.
 // - OWEInspectorKit: controls the Scene Inspector and the editor share.
+// - OWEEditor: the editor window's views; the app hands it the live canvas and its services.
 import PackageDescription
 
 let package = Package(
@@ -13,11 +14,16 @@ let package = Package(
     products: [
         .library(name: "OWESceneEditing", targets: ["OWESceneEditing"]),
         .library(name: "OWEInspectorKit", targets: ["OWEInspectorKit"]),
+        .library(name: "OWEEditor", targets: ["OWEEditor"]),
     ],
     targets: [
         .target(name: "OWESceneEditing"),
         .target(name: "OWEInspectorKit"),
+        .target(name: "OWEEditor",
+                dependencies: ["OWESceneEditing", "OWEInspectorKit"],
+                resources: [.process("Resources")]),
         .testTarget(name: "OWESceneEditingTests", dependencies: ["OWESceneEditing"]),
         .testTarget(name: "OWEInspectorKitTests", dependencies: ["OWEInspectorKit"]),
+        .testTarget(name: "OWEEditorTests", dependencies: ["OWEEditor"]),
     ]
 )
