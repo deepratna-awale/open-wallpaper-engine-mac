@@ -195,6 +195,7 @@ struct SceneAnimationLayerStack: Equatable {
     mutating func evaluate(delta: Float, update: inout SceneAnimationLayerUpdate, morphs: inout [SceneMorphWeights],
                            kind: SceneMorphRig.Kind) -> [SceneBoneTransform] {
         var pose = skeleton.bindPose
+        var turn: Float = 0
         var index = 0
         while index < layers.count {
             guard layers[index].visible else {
@@ -210,7 +211,7 @@ struct SceneAnimationLayerStack: Equatable {
             let weight = layers[index].weight()
             apply(layers[index], weight: weight, to: &pose)
             if !morphs.isEmpty { applyMorphs(layers[index], weight: weight, to: &morphs, kind: kind) }
-            applyRootMotion(at: index, weight: weight, to: &pose)
+            turn += applyRootMotion(at: index, weight: weight, to: &pose)
             if layers[index].removesWhenFinished, after.flags.contains(.finished) {
                 layers.remove(at: index)
                 update.removed.append(key)
@@ -218,26 +219,31 @@ struct SceneAnimationLayerStack: Equatable {
             }
             index += 1
         }
+        SceneRootMotion.turn(&pose, skeleton: skeleton, by: turn)
         return pose
     }
 
     /// After layer `index` applied (0x14021cbf8…0x14021cd50): when its clip has root motion and
     /// the later visible non-additive layers leave it weight, `Π(1 − w)` (0x14026c8b0 for each),
-    /// the clip's flagged root axes come out of the pose (`SceneRootMotion`). WE never moves the
-    /// object by them (§2.8).
-    private func applyRootMotion(at index: Int, weight: Float, to pose: inout [SceneBoneTransform]) {
+    /// the clip's flagged root axes come out of the pose (`SceneRootMotion`). Returns the yaw the
+    /// model turns by for this layer, times `w` and `Π(1 − w)`; `evaluate` turns the finished pose
+    /// by the sum, so later layers don't undo it. WE never moves the object by root motion (§2.8).
+    private func applyRootMotion(at index: Int, weight: Float, to pose: inout [SceneBoneTransform]) -> Float {
         let clip = layers[index].clip
-        guard clip < rootMotions.count, let motion = rootMotions[clip] else { return }
+        guard clip < rootMotions.count, let motion = rootMotions[clip] else { return 0 }
         var remaining: Float = 1
         for later in layers[(index + 1)...] where later.visible && !later.additive {
             var copy = later
             remaining *= 1 - copy.weight()
         }
-        guard remaining > 0 else { return }
+        guard remaining > 0 else { return 0 }
         let position = layers[index].clock.samplePosition
         let (sampled, first) = source(of: clip)
-        motion.apply(clip: sampled, skeleton: skeleton, frame0: Int(position.frame0) + first,
-                     frame1: Int(position.frame1) + first, fraction: position.fraction, weight: weight, pose: &pose)
+        let frame0 = Int(position.frame0) + first, frame1 = Int(position.frame1) + first
+        motion.apply(clip: sampled, skeleton: skeleton, frame0: frame0, frame1: frame1, fraction: position.fraction,
+                     weight: weight, pose: &pose)
+        let turn = motion.turn(clip: sampled, skeleton: skeleton, frame0: frame0, frame1: frame1, fraction: position.fraction)
+        return turn * weight * remaining
     }
 
     /// Whether the clip reached its end this frame (0x14021c6e6…0x14021c743): not when it was

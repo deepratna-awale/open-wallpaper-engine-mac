@@ -10,9 +10,11 @@ import simd
 /// 0x17D4: 0x04 Match loop, 0x08/0x10/0x20 position x/y/z, 0x80 rotation y) and the root bone (the
 /// u32 at 0x2534).
 ///
-/// WE's captures (we-test-wp-images @ 2aad5f2, tools/peer/requests/owe-beta3) show WE strips the
-/// flagged axes from the root's pose and never moves the object by them, with nothing carried
-/// from loop to loop. The stack has no object motion to apply, so these tests check the pose.
+/// WE's captures (we-test-wp-images @ 2aad5f2: tools/peer/models_gt/mg4/clips, README and
+/// tools/peer/requests/owe-beta3) show WE takes the flagged axes out of the root's pose each frame
+/// and never moves the object by them, with nothing carried from loop to loop; with yaw and a
+/// position axis the model turns by the root's yaw (all on). The stack has no object motion to
+/// apply, so these tests check the pose, and its box against the captures.
 final class SceneRootMotionTests: XCTestCase {
     struct Variant {
         var name: String
@@ -138,29 +140,57 @@ final class SceneRootMotionTests: XCTestCase {
         XCTAssertGreaterThan(rooted.map { abs($0.yaw) }.max() ?? 0, 0.1, "the root turns")
     }
 
-    /// Yaw only: the root's yaw comes out of the pose, its translation plays as with all off.
-    func testYawOnlyKeepsTheRootsYaw() throws {
-        let yaw = try Self.rootPath(Self.yawOnly, rootMotion: true)
-        let full = try Self.rootPath(Self.allOff, rootMotion: true)
-        let fullTurn = full.map { abs($0.yaw) }.max() ?? 0
-        XCTAssertLessThan(yaw.map { abs($0.yaw) }.max() ?? 0, fullTurn * 0.25, "the yaw is stripped")
+    /// Yaw only: the yaw the root gained since the start (YA, in the model's space) comes out of
+    /// its local rotation, `quat(YA⁻¹) · q` (0x140225900, in its parent's frame); its translation
+    /// plays as with all off, and the model doesn't turn (WE's rotY capture keeps its heading).
+    func testYawOnlyStripsTheRootsYaw() throws {
+        let yaw = try Self.poses(Self.yawOnly)
+        let full = try Self.poses(Self.allOff)
+        var largest: Float = 0
         for (a, b) in zip(yaw, full) {
-            XCTAssertLessThan(simd_distance(a.translation, b.translation), 1e-4, "the translation still plays")
+            let gained = try Self.gainedYaw(b)
+            largest = max(largest, abs(gained))
+            let stripped = simd_quatf(angle: -gained, axis: SIMD3(0, 1, 0)) * b.locals[2].rotation
+            XCTAssertLessThan(Self.angle(a.locals[2].rotation, stripped), 1e-3, "the root's yaw comes out")
+            XCTAssertLessThan(simd_distance(a.locals[2].translation, b.locals[2].translation), 1e-4, "the translation plays")
+            for bone in [0, 1] {
+                XCTAssertLessThan(Self.angle(a.locals[bone].rotation, b.locals[bone].rotation), 1e-5, "no turn")
+            }
         }
+        XCTAssertGreaterThan(largest, 0.3, "the root gains yaw to strip")
     }
 
-    /// All on: translation and yaw come out of the pose, so the root stays near its start.
-    func testAllOnKeepsTheModelNearTheOrigin() throws {
-        let on = try Self.rootPath(Self.allOn, rootMotion: true)
-        let off = try Self.rootPath(Self.allOff, rootMotion: true)
-        XCTAssertLessThan(Self.spread(on.map(\.translation)), Self.spread(off.map(\.translation)) * 0.25)
-        XCTAssertLessThan(on.map { abs($0.yaw) }.max() ?? 0, (off.map { abs($0.yaw) }.max() ?? 0) * 0.25)
+    /// All on: the root's local translation gains `start − current` on every axis, as each axis
+    /// alone does (the per-axis captures), so the offsets add up; its yaw comes out as with yaw
+    /// only; and the model turns about its origin by the yaw the root gained (the all-on capture).
+    func testAllOnStripsEveryAxisAndTurnsTheModel() throws {
+        let on = try Self.poses(Self.allOn)
+        let off = try Self.poses(Self.allOff)
+        let yaw = try Self.poses(Self.yawOnly)
+        let axes = try Self.variants[2...4].map { try Self.poses($0) }
+        for frame in on.indices {
+            let base = off[frame].locals[2].translation
+            let offsets = axes.map { $0[frame].locals[2].translation - base }
+            for (axis, offset) in offsets.enumerated() {
+                XCTAssertLessThan(simd_length(offset - simd_dot(offset, Self.unit(axis)) * Self.unit(axis)), 1e-4,
+                                  "each flag moves its own local axis")
+            }
+            let expected = base + offsets.reduce(SIMD3<Float>(repeating: 0), +)
+            XCTAssertLessThan(simd_distance(on[frame].locals[2].translation, expected), 1e-3, "frame \(frame)")
+            XCTAssertLessThan(Self.angle(on[frame].locals[2].rotation, yaw[frame].locals[2].rotation), 1e-3)
+            let turn = simd_quatf(angle: try Self.gainedYaw(off[frame]), axis: SIMD3(0, 1, 0))
+            XCTAssertLessThan(Self.angle(on[frame].locals[0].rotation, turn * off[frame].locals[0].rotation), 1e-3,
+                              "the model turns by the root's yaw")
+        }
+        let travel = Self.spread(on.map { $0.locals[2].translation })
+        XCTAssertGreaterThan(travel, 0.1, "the strip lands on the parent's axes, so the root still moves")
     }
 
     /// The box's path through a loop, played as the capture's project plays it (layer on clip 26,
     /// model scale 0.01, camera 8 6 8 → 0 1 0, fov 50, 1920×1080), against WE's MG4 captures, with
     /// the object never moved by root motion. All off is the root bone with no axis, the same
-    /// file as `bone_none`, whose capture stands for it.
+    /// file as `bone_none`, whose capture stands for it. 20 px mean: the clips repeat frames, so
+    /// a sample's phase is only known to about a frame, and the box moves up to 30 px a frame.
     func testTheLoopFollowsWEsCaptures() throws {
         let captured: [(Variant, [SIMD2<Float>])] = [
             (Self.allOff, try XCTUnwrap(Self.variants[0].we)),
@@ -177,35 +207,45 @@ final class SceneRootMotionTests: XCTestCase {
 
     /// WE 2.8.0.42's owe-beta3 answer (branch `we-test-wp-images` @ 2aad5f2,
     /// tools/peer/requests/owe-beta3/README.md and `rootmotion_strips.png`, taken from the MG4 clips
-    /// `tools/peer/models_gt/mg4/clips/mg4p_root_{all_off,rotY,all_on}.mp4`): the box centroid at the
-    /// loop point (whole seconds) and mid-cycle (0.5 s), from tools/peer/models_gt/mg4/README.md's
-    /// table on the 960×540-scaled frame, doubled to 1920×1080. Every loop returns to the loop
-    /// point, so frames 30, 60 and 90 all match it.
+    /// `tools/peer/models_gt/mg4/clips/mg4p_root_{all_off,rotY,all_on}.mp4`): the box centroid at
+    /// the recording's whole seconds and half seconds, tools/peer/models_gt/mg4/README.md's table.
+    /// Its points are on the 1920×1080 frame whatever its heading says (all on reaches y 940).
+    /// The recordings don't start on a loop: their loops begin 19 to 21 frames into each second,
+    /// so the whole seconds fall on frames 9 to 11 of a loop and the half seconds 15 frames later.
+    /// The clips repeat frames, so each point's frame is known to ±2 (the rotY clip's box is at
+    /// the table's half-second point 3 frames early), and the box moves up to 30 px a frame: each
+    /// point must lie within 40 px of the box's path over those frames, in every loop. 40 px is the
+    /// per-frame check's largest error (yaw only, frame 25: 35 px).
     func testTheBeta3LoopAndMidCycleCentroids() throws {
-        let table: [(Variant, loop: SIMD2<Float>, mid: SIMD2<Float>)] = [
+        let table: [(Variant, second: SIMD2<Float>, half: SIMD2<Float>)] = [
             (Self.allOff, SIMD2(905, 542), SIMD2(743, 499)),
             (Self.yawOnly, SIMD2(927, 549), SIMD2(785, 529)),
             (Self.allOn, SIMD2(857, 627), SIMD2(743, 940)),
         ]
-        for (variant, loop, mid) in table {
-            let path = try Self.screenPath(variant, steps: [30, 45, 60, 90])
-            let we = [loop * 2, mid * 2, loop * 2, loop * 2]
-            let errors: [Float] = zip(path, we).map { simd_distance($0, $1) }
-            let mean: Float = errors.reduce(0, +) / Float(errors.count)
-            XCTAssertLessThan(mean, 20, "\(variant.name): ours \(path), WE's \(we)")
+        for (variant, second, half) in table {
+            for loop in 1...3 {
+                for (point, frames) in [(second, 7...13), (half, 22...28)] {
+                    let path = try Self.screenPath(variant, steps: frames.map { $0 + 30 * loop })
+                    let nearest = zip(path, path.dropFirst()).map { Self.distance(point, $0, $1) }.min() ?? .infinity
+                    XCTAssertLessThan(nearest, 40, "\(variant.name) loop \(loop): ours \(path), WE's \(point)")
+                }
+            }
         }
     }
 
-    /// Nothing accumulates: each loop poses the root as the last did, for every setting.
+    /// Nothing accumulates: each loop poses the root as the last did, for every setting. Sampled
+    /// half a frame off the frame times, where the clock's truncation can't round either way;
+    /// positions to 1e-2 in the model's units (the root travels hundreds; the clock's float sum
+    /// drifts by about 1e-3 over five loops).
     func testNoAccumulationAcrossLoops() throws {
         let frames = [5, 10, 15, 20, 25]
         for variant in [Self.allOff, Self.yawOnly, Self.allOn] {
             let loops = (0..<5).map { loop in frames.map { $0 + 30 * loop } }
-            let path = try Self.rootPath(variant, rootMotion: true, steps: loops.flatMap { $0 })
+            let path = try Self.rootPath(variant, rootMotion: true, steps: loops.flatMap { $0 }, offset: 0.5 / 30)
             for loop in 1..<5 {
                 for index in frames.indices {
                     let a = path[index], b = path[loop * frames.count + index]
-                    XCTAssertLessThan(simd_distance(a.translation, b.translation), 1e-3, "\(variant.name) loop \(loop)")
+                    XCTAssertLessThan(simd_distance(a.translation, b.translation), 1e-2, "\(variant.name) loop \(loop)")
                     XCTAssertEqual(a.yaw, b.yaw, accuracy: 1e-3, "\(variant.name) loop \(loop)")
                 }
             }
@@ -256,29 +296,82 @@ final class SceneRootMotionTests: XCTestCase {
     }
 
     /// The root bone's model-space position and yaw after each of `steps` frames of 1/30 s (by
-    /// default frames 5, 10, 15, 20 and 25 of the second loop).
-    static func rootPath(_ variant: Variant, rootMotion: Bool, steps: [Int] = [35, 40, 45, 50, 55]) throws -> [RootSample] {
+    /// default frames 5, 10, 15, 20 and 25 of the second loop), the clock first moved by `offset`.
+    static func rootPath(_ variant: Variant, rootMotion: Bool, steps: [Int] = [35, 40, 45, 50, 55],
+                         offset: Float = 0) throws -> [RootSample] {
         let model = try MDLReader.read(try data(variant))
         var stack = try stack(model, rootMotion: rootMotion)
         let skeleton = stack.skeleton
         func root(_ pose: [SceneBoneTransform]) -> simd_float4x4 { skeleton.worlds(locals: pose.map(\.matrix))[2] }
-        func rotation(_ matrix: simd_float4x4) -> simd_float3x3 {
-            let r = SceneRootMotion.rotation(matrix)
-            return simd_float3x3(simd_normalize(r.columns.0), simd_normalize(r.columns.1), simd_normalize(r.columns.2))
-        }
         var update = SceneAnimationLayerUpdate()
-        let first = rotation(root(stack.evaluate(delta: 0, update: &update)))
+        let first = rotation(root(stack.evaluate(delta: offset, update: &update)))
         var samples: [RootSample] = []
         for step in 1...(steps.max() ?? 0) {
             let pose = stack.evaluate(delta: 1.0 / 30, update: &update)
             guard steps.contains(step) else { continue }
             let world = root(pose)
-            let yaw = SceneRootMotion.yaw(rotation(world) * first.inverse)
-            // The yaw matrix's columns are (c, 0, −s), (0, 1, 0), (s, 0, c).
             samples.append(RootSample(translation: SceneRootMotion.translation(world),
-                                      yaw: atan2(yaw.columns.2.x, yaw.columns.2.z)))
+                                      yaw: yawAngle(rotation(world) * first.inverse)))
         }
         return samples
+    }
+
+    /// A model-space rotation without the skeleton's scale (the editor's `Rig` scales by 100).
+    static func rotation(_ matrix: simd_float4x4) -> simd_float3x3 {
+        let r = SceneRootMotion.rotation(matrix)
+        return simd_float3x3(simd_normalize(r.columns.0), simd_normalize(r.columns.1), simd_normalize(r.columns.2))
+    }
+
+    /// The angle of a rotation's yaw (`SceneRootMotion.yaw`, whose columns are (c, 0, −s),
+    /// (0, 1, 0), (s, 0, c)).
+    static func yawAngle(_ rotation: simd_float3x3) -> Float {
+        let yaw = SceneRootMotion.yaw(rotation)
+        return atan2(yaw.columns.2.x, yaw.columns.2.z)
+    }
+
+    struct Pose {
+        var locals: [SceneBoneTransform]
+        var worlds: [simd_float4x4]
+        /// The root's world at the clip's first frame.
+        var start: simd_float4x4
+    }
+
+    /// The pose half a frame past frames 2, 6, …, 26 of the second loop (off the frame times).
+    static func poses(_ variant: Variant) throws -> [Pose] {
+        let model = try MDLReader.read(try data(variant))
+        var stack = try stack(model, rootMotion: true)
+        let skeleton = stack.skeleton
+        let plain = try Self.stack(model, rootMotion: false)
+        let start = skeleton.worlds(locals: plain.skeleton.bindPose.indices.map { bone in
+            plain.sample(plain.layers[0])[bone]?.matrix ?? plain.skeleton.bindPose[bone].matrix
+        })[2]
+        var update = SceneAnimationLayerUpdate()
+        _ = stack.evaluate(delta: 0.5 / 30, update: &update)
+        var poses: [Pose] = []
+        for step in 1...56 {
+            let pose = stack.evaluate(delta: 1.0 / 30, update: &update)
+            guard step > 30, step % 4 == 2 else { continue }
+            poses.append(Pose(locals: pose, worlds: skeleton.worlds(locals: pose.map(\.matrix)), start: start))
+        }
+        return poses
+    }
+
+    /// The yaw the root gained since the clip's first frame in an all-off pose, in the model's
+    /// space (YA): its world rotation against the start's.
+    static func gainedYaw(_ pose: Pose) throws -> Float {
+        yawAngle(rotation(pose.worlds[2]) * rotation(pose.start).inverse)
+    }
+
+    /// The angle between two rotations (radians).
+    static func angle(_ a: simd_quatf, _ b: simd_quatf) -> Float {
+        let d = abs(simd_dot(a.normalized.vector, b.normalized.vector))
+        return 2 * acos(min(d, 1))
+    }
+
+    static func unit(_ axis: Int) -> SIMD3<Float> {
+        var v = SIMD3<Float>(repeating: 0)
+        v[axis] = 1
+        return v
     }
 
     /// The box centre on screen after each of `steps` frames of 1/30 s (by default frames 5, 10,
@@ -314,6 +407,14 @@ final class SceneRootMotionTests: XCTestCase {
         let x: Float = simd_dot(relative, side) / depth / tangent / (16.0 / 9.0)
         let y: Float = simd_dot(relative, up) / depth / tangent
         return SIMD2(960 + x * 960, 540 - y * 540)
+    }
+
+    /// The distance of `point` from the segment `a`…`b`.
+    static func distance(_ point: SIMD2<Float>, _ a: SIMD2<Float>, _ b: SIMD2<Float>) -> Float {
+        let ab = b - a
+        let length = simd_length_squared(ab)
+        let t = length > 0 ? min(max(simd_dot(point - a, ab) / length, 0), 1) : 0
+        return simd_distance(point, a + ab * t)
     }
 
     /// The largest distance of a point from the first.
