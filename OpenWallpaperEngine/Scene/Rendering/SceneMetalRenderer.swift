@@ -2776,8 +2776,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         if let cached = frameLocals3D[id] { return cached }
         guard let motion = layerIndexByStateId[id].map({ layers[$0].motion }) ?? objectMotions[id] else { return nil }
         let authored = hierarchy.nodes[id]?.local ?? SceneLocalTransform3D(objectLocal(motion, id: id))
-        var local = motion.local3D(authored: authored, animation: timelines.object(id), script: scripts.object(id))
-        if let rootMotion = models?.rootMotion(of: id) { local = rootMotion.applied(to: local) }
+        let local = motion.local3D(authored: authored, animation: timelines.object(id), script: scripts.object(id))
         frameLocals3D[id] = local
         return local
     }
@@ -3450,20 +3449,13 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         var frame = BuiltinFrameContext()
         frame.time = clock.time
         frame.frameTime = clock.delta
-        var movedByRoot = false
         for model in spatial.models where scripts.isVisible(model.id) {
-            // Root motion moves the object through its world as it stands before this frame's motion.
-            let rooted = model.plan != nil && models.hasRootMotion(model.id)
-            let world = rooted ? world3D(model.id, in: spatial.transforms) : matrix_identity_float4x4
-            movedByRoot = movedByRoot || rooted
             guard let plan = model.plan,
-                  models.advance(model, plan: plan, frame: frame, values: timelines.values, objectWorld: world) != nil,
+                  models.advance(model, plan: plan, frame: frame, values: timelines.values) != nil,
                   !scripts.isRunning, let animator = models.animator(for: model.id) else { continue }
             _ = animator.takeEnded()
             _ = animator.takeEvents()
         }
-        // The worlds read above predate the motion and the scripts' frame.
-        if movedByRoot { frameLocals3D.removeAll(keepingCapacity: true) }
     }
 
     private func puppetAnimator(_ id: String, _ puppet: ScenePuppetPlan) -> ScenePuppetAnimator {
