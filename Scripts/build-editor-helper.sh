@@ -25,6 +25,13 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
 cp "$CONTENTS/MacOS/${EXECUTABLE_NAME}" "$APP/Contents/MacOS/$NAME"
+# A Debug build's executable is a stub that loads @rpath/<name>.debug.dylib from the app's MacOS
+# folder (ENABLE_DEBUG_DYLIB): the copy looks there instead of the app's Frameworks (which the
+# dylib's own rpaths still reach; the stub has no room for another rpath).
+if [ -f "$CONTENTS/MacOS/${EXECUTABLE_NAME}.debug.dylib" ]; then
+  install_name_tool -rpath "@executable_path/../../../../Frameworks" "@executable_path/../../../../MacOS" \
+    "$APP/Contents/MacOS/$NAME"
+fi
 
 rsync -a --exclude "WallpaperNotFound.mp4" --exclude "maxwell-cat.gif" --exclude "AppIcon.icns" \
   "$CONTENTS/Resources/" "$APP/Contents/Resources/"
