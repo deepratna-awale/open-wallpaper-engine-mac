@@ -179,7 +179,7 @@ final class ScreenSaverPlugin: ObservableObject {
              points: SIMD2(Int(screen.frame.width), Int(screen.frame.height)))
         }
         let properties = WallpaperServices.shared.userProperties(
-            wallpaper: WallpaperPropertyScope.shared.runtimeKey(directory: wallpaper.wallpaperDirectory))
+            wallpaper: WallpaperPropertyScope.shared.runtimeKey(directory: wallpaper.settingsDirectory))
         let generation = generation
         let directory = wallpaper.wallpaperDirectory
         let resolution = AppDelegate.shared.globalSettingsViewModel.settings.renderResolution

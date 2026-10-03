@@ -213,7 +213,7 @@ struct WallpaperPreview: SubviewOfContentView {
                     }
                     favoriteControl
                     HStack {
-                        Text(verbatim: LocalizedLabels.wallpaperType(wallpaperViewModel.displayedWallpaper.displayType))
+                        Text(verbatim: LocalizedLabels.wallpaperType(wallpaperViewModel.displayedWallpaper.project.type))
                         Text(wallpaperSize)
                             .task(id: wallpaperViewModel.displayedWallpaper.wallpaperDirectory) {
                                 let directory = wallpaperViewModel.displayedWallpaper.wallpaperDirectory

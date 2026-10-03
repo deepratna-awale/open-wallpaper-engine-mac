@@ -183,7 +183,12 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     }
 
     private var declaredProperties: [String: WebWallpaperPropertyBridge.Property] {
-        WebWallpaperPropertyBridge.declaredProperties(wallpaperDirectory: currentWallpaper.wallpaperDirectory)
+        var properties = WebWallpaperPropertyBridge.declaredProperties(wallpaperDirectory: currentWallpaper.wallpaperDirectory)
+        // A Workshop preset item's values are its defaults.
+        for (key, value) in WorkshopPresetItem.defaultValues(for: currentWallpaper) where properties[key] != nil {
+            properties[key]?.defaultValue = value
+        }
+        return properties
     }
 
     /// Sends every declared property, as WE does once the page has loaded.
@@ -210,10 +215,10 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     }
 
     private func propertyChanged(_ notification: Notification) {
-        guard let path = notification.object as? String, path == currentWallpaper.wallpaperDirectory.path,
+        guard let path = notification.object as? String, path == currentWallpaper.settingsDirectory.path,
               // An edit of another display's properties doesn't reach this page.
               (notification.userInfo?["stores"] as? [String])?
-                .contains(propertyScope.runtimeKey(directory: currentWallpaper.wallpaperDirectory)) ?? true,
+                .contains(propertyScope.runtimeKey(directory: currentWallpaper.settingsDirectory)) ?? true,
               let key = notification.userInfo?["key"] as? String,
               let value = notification.userInfo?["value"] as? String,
               let webView else { return }

@@ -64,7 +64,7 @@ final class SceneUserPropertiesModel: ObservableObject {
     private let wallpaperPath: String
 
     init(wallpaper: WEWallpaper, scopes: [WallpaperPropertyScope]) {
-        wallpaperPath = wallpaper.wallpaperDirectory.path
+        wallpaperPath = wallpaper.settingsDirectory.path
         targets = WallpaperPropertyTargets(wallpaper: wallpaper, scopes: scopes)
         load(wallpaper)
     }

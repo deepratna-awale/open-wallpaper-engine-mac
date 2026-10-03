@@ -534,7 +534,7 @@ class SceneWallpaperViewModel: ObservableObject {
         // A display's own store keeps what the user saved, so displays whose properties are equal
         // stay equal (`WallpaperPropertyGroups` compares the stores) whichever of them loaded.
         if propertyScope == .shared { defaults.set(values, forKey: key) }
-        WallpaperServices.shared.setUserProperties(values, wallpaper: propertyScope.runtimeKey(directory: wallpaper.wallpaperDirectory),
+        WallpaperServices.shared.setUserProperties(values, wallpaper: propertyScope.runtimeKey(directory: wallpaper.settingsDirectory),
                                                            replacing: true)
     }
 
@@ -1615,7 +1615,10 @@ class SceneWallpaperViewModel: ObservableObject {
 
     /// Key of this wallpaper instance's user properties in the script engine's store.
     var propertyStoreKey: String {
-        propertyScope.runtimeKey(directory: loadedWallpaperDirectory ?? currentWallpaper.wallpaperDirectory)
+        // A Workshop preset item's store is keyed by the preset, not the base it plays from.
+        let loaded = loadedWallpaperDirectory ?? currentWallpaper.wallpaperDirectory
+        return propertyScope.runtimeKey(directory: loaded == currentWallpaper.wallpaperDirectory
+                                        ? currentWallpaper.settingsDirectory : loaded)
     }
 
     /// This wallpaper's current value of a user property.

@@ -22,14 +22,12 @@ struct WEWallpaper: Codable, RawRepresentable, Identifiable {
 
     var isWorkshopPreset: Bool { presetDirectory != nil }
 
-    /// Where the wallpaper's own project.json lives: its stored settings and preview are keyed by it.
+    /// Where the wallpaper's own project.json lives: its stored settings, its running property
+    /// store (`WallpaperPropertyScope.runtimeKey`) and its preview are keyed by it.
     var settingsDirectory: URL { presetDirectory ?? wallpaperDirectory }
 
     /// The preview image; a preset item shows its own.
     var previewURL: URL? { project.previewURL(in: settingsDirectory) }
-
-    /// The type shown and filtered by: `preset` for a preset item, else project.json's.
-    var displayType: String { isWorkshopPreset ? WorkshopPresetItem.type : project.type }
 
     /// A remote wallpaper stores an absolute URL in `project.file`; everything else stores a path
     /// relative to its folder.
