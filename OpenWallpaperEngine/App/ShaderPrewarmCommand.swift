@@ -21,9 +21,11 @@ enum ShaderPrewarmCommand {
     /// `--render-screensaver-loop <folder> <width>x<height> <points width>x<points height> <output> [<properties JSON>]`
     /// renders a scene's loop video for the screen saver (`ScreenSaverLoopRenderer`), or records a
     /// web wallpaper's or WebM video's (`ScreenSaverWebLoopRecorder`, with the user properties).
-    /// Exits 0 when the video is written, `pageDidNotLoadStatus` when a page didn't load, 1 otherwise.
+    /// Exits 0 when the video is written, `pageDidNotLoadStatus` when a page didn't load,
+    /// `doesNotLoopStatus` when a page has no smooth loop, 1 otherwise.
     static let screenSaverArgument = "--render-screensaver-loop"
     static let pageDidNotLoadStatus: Int32 = 3
+    static let doesNotLoopStatus: Int32 = 4
 
     /// `--render-live-photo <job.json>` renders a Live Photo (`LivePhotoJob`, `LivePhotoRenderer`),
     /// writing its progress to standard output.
@@ -61,6 +63,7 @@ enum ShaderPrewarmCommand {
             switch recorder.run() {
             case .recorded: return 0
             case .pageDidNotLoad: return pageDidNotLoadStatus
+            case .doesNotLoop: return doesNotLoopStatus
             case .failed: return 1
             }
         }
