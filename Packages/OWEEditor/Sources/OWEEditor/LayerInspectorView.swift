@@ -9,11 +9,12 @@ import OWESceneEditing
 /// which one instead of a control, as WE's editor does.
 struct LayerInspectorView: View {
     @ObservedObject var session: SceneEditSession
+    @ObservedObject var tools: EditorTools
     let services: WallpaperEditorServices
 
     var body: some View {
         if let selected = session.selection, let layer = session.outline.layer(selected) {
-            LayerForm(session: session, services: services, layer: layer)
+            LayerForm(session: session, tools: tools, services: services, layer: layer)
                 .id(layer.id)
         } else {
             SceneForm(session: session, services: services)
@@ -23,6 +24,7 @@ struct LayerInspectorView: View {
 
 private struct LayerForm: View {
     @ObservedObject var session: SceneEditSession
+    @ObservedObject var tools: EditorTools
     let services: WallpaperEditorServices
     let layer: SceneLayer
     @State private var isScaleLinked = true
@@ -37,13 +39,20 @@ private struct LayerForm: View {
             } header: {
                 Text(layer.title).font(.headline)
             }
-            if layer.kind != .sound {
+            if layer.kind != .sound && !layer.fillsScene {
                 transformSection
+            }
+            if layer.kind == .text {
+                LayerTextSection(session: session, tools: tools, services: services, layer: layer)
             }
             if layer.kind == .image || layer.kind == .text {
                 appearanceSection
             }
-            effectsSection
+            if layer.kind == .image || layer.kind == .text {
+                EffectsSection(session: session, tools: tools, services: services, layer: layer)
+            } else if !layer.effects.isEmpty {
+                effectsSection
+            }
             Section {
                 DisclosureGroup(L("Details")) {
                     if let source = layer.sourcePath {
@@ -97,6 +106,17 @@ private struct LayerForm: View {
                         session.setTransform(transform, of: layer.id, actionName: L("Change Rotation"), coalescing: true)
                     }), range: -180...180, defaultValue: 0, step: 1, suffix: "°", fractionDigits: 1,
                     fieldWidth: 56, clampsTypedValue: false)
+            }
+            LayerSizeRows(session: session, layer: layer)
+            if layer.isPlanar, session.outline.size != nil {
+                LabeledContent(L("Align")) {
+                    Menu {
+                        AlignmentButtons(actions: LayerActions(session: session, services: services, tools: tools), layerID: layer.id)
+                    } label: {
+                        Label(L("Align to Scene"), systemImage: "align.horizontal.center")
+                    }
+                    .fixedSize()
+                }
             }
         }
     }

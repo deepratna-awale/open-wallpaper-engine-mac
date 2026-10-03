@@ -1,5 +1,7 @@
+import CoreGraphics
 import SwiftUI
 import OWEInspectorKit
+import OWESceneEditing
 
 /// What the editor needs from the app: the live scene drawn by the app's own renderer, and the
 /// pieces of the Scene Inspector it shows again (the user properties, WE's blend modes and effect
@@ -20,6 +22,24 @@ public struct WallpaperEditorServices {
     /// the title it was saved under.
     public var saveAsLocalWallpaper: (String) throws -> String
 
+    // MARK: Adding and editing (phases 2–3)
+
+    /// The effects the editor can add: WE's built-in ones and the Workshop effects the wallpaper uses.
+    public var effectCatalog: () -> [EffectCatalogEntry] = { [] }
+    /// What an effect (`effects/…/effect.json`) lets the editor change, from its shaders.
+    public var effectSchema: (String) -> EffectSchema? = { _ in nil }
+    /// Where imported files and painted masks go; nil when the editor can't add files.
+    public var assetStore: EditorAssetStore?
+    /// The wallpaper's own files the asset browser lists (textures, models, sounds, fonts).
+    public var wallpaperAssets: () -> [EditorAsset] = { [] }
+    /// A texture's picture (`masks/…`, `editor/…`, a wallpaper's texture), for previews and for
+    /// painting over an existing mask; nil when it can't be read.
+    public var texture: (String) -> CGImage? = { _ in nil }
+    /// Fonts a text layer can use: WE's, the wallpaper's, imported ones.
+    public var fonts: () -> [EditorFont] = { [] }
+    /// The wallpaper's user properties a value can be bound to (key, title), with their type.
+    public var userPropertyChoices: () -> [EditorUserPropertyChoice] = { [] }
+
     public init(makeCanvas: @escaping () -> AnyView, userProperties: (() -> AnyView)? = nil,
                 blendModeTitle: String, blendModes: [InspectorOption], effectHelp: @escaping (String) -> String,
                 suggestedLocalTitle: String, saveAsLocalWallpaper: @escaping (String) throws -> String) {
@@ -30,5 +50,73 @@ public struct WallpaperEditorServices {
         self.effectHelp = effectHelp
         self.suggestedLocalTitle = suggestedLocalTitle
         self.saveAsLocalWallpaper = saveAsLocalWallpaper
+    }
+}
+
+/// A file the asset browser lists.
+public struct EditorAsset: Hashable, Identifiable, Sendable {
+    public enum Kind: String, CaseIterable, Sendable {
+        case texture, model, sound, font, other
+    }
+
+    /// Its path in the scene (`materials/foo.tex`, `models/foo.json`).
+    public var path: String
+    public var kind: Kind
+    /// Imported in the editor rather than shipped by the wallpaper.
+    public var isImported: Bool
+
+    public var id: String { path }
+
+    public init(path: String, kind: Kind, isImported: Bool = false) {
+        self.path = path
+        self.kind = kind
+        self.isImported = isImported
+    }
+
+    /// Its kind by its path, as WE lays a wallpaper's folder out.
+    public static func kind(of path: String) -> Kind {
+        let lowered = path.lowercased()
+        let fileExtension = (lowered as NSString).pathExtension
+        if ["tex", "png", "jpg", "jpeg", "gif"].contains(fileExtension), lowered.hasPrefix("materials/") { return .texture }
+        if fileExtension == "json", lowered.hasPrefix("models/") { return .model }
+        if EditorAssetStore.soundTypes.contains(fileExtension) { return .sound }
+        if EditorAssetStore.fontTypes.contains(fileExtension) { return .font }
+        return .other
+    }
+
+    /// The texture name a material or effect slot uses for it (`materials/foo.tex` → `foo`).
+    public var textureName: String? {
+        guard kind == .texture, path.lowercased().hasPrefix("materials/") else { return nil }
+        return ((path as NSString).deletingPathExtension as NSString).substring(from: "materials/".count)
+    }
+
+    public var fileName: String { (path as NSString).lastPathComponent }
+}
+
+/// A font a text layer can use: its `font` value and a name to show.
+public struct EditorFont: Hashable, Identifiable, Sendable {
+    public var value: String
+    public var title: String
+    public var id: String { value }
+
+    public init(value: String, title: String) {
+        self.value = value
+        self.title = title
+    }
+}
+
+/// A user property a value can follow.
+public struct EditorUserPropertyChoice: Hashable, Identifiable, Sendable {
+    public var key: String
+    public var title: String
+    /// WE's type (`slider`, `color`, `bool`, `combo`, …).
+    public var type: String
+
+    public var id: String { key }
+
+    public init(key: String, title: String, type: String) {
+        self.key = key
+        self.title = title
+        self.type = type
     }
 }
