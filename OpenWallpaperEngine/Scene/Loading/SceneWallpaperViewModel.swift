@@ -1514,7 +1514,7 @@ class SceneWallpaperViewModel: ObservableObject {
     /// Shared by every scene: translated variants are cached in memory and on disk.
     /// Optional only for its callers' `guard let`s; it always exists.
     static let defaultEffectTranslator: ShaderVariantTranslator? =
-        ShaderVariantTranslator(compiler: ShaderCompilerFactory.makeDefault())
+        ShaderVariantTranslator(compiler: ShaderCompilerFactory.makeIsolated(qos: .userInitiated))
     /// This scene's translator (`init`).
     private let effectTranslator: ShaderVariantTranslator?
 
