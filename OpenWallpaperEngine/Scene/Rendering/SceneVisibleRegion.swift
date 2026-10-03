@@ -117,7 +117,7 @@ enum SceneVisibleRegion {
         var scale = abs(amplitude) * 0.1
         if let orthographicHeight { scale *= abs(orthographicHeight) * 0.1 }
         let exponent = pow(roughness, 3)
-        let length: Float = 2.0.squareRoot()
+        let length = Float(2).squareRoot()
         let shaped = exponent > 0.001 && exponent != 1 ? pow(length, exponent) : length
         let bound = max(shaped, length) * scale
         return bound.isFinite ? bound : .infinity

@@ -127,7 +127,7 @@ final class FullscreenEffectLayerTests: XCTestCase {
     /// the orthographic height, raised by a roughness exponent above 1.
     func testShakeBoundCoversEveryFrame() {
         let bound = SceneVisibleRegion.shakeBound(amplitude: 0.5, roughness: 1, orthographicHeight: 1600)
-        XCTAssertEqual(bound, 2.0.squareRoot() * 0.5 * 0.1 * 160, accuracy: 1e-3)
+        XCTAssertEqual(bound, Float(2).squareRoot() * 0.5 * 0.1 * 160, accuracy: 1e-3)
         for roughness: Float in [0, 0.5, 1, 1.5] {
             let reach = SceneVisibleRegion.shakeBound(amplitude: 0.5, roughness: roughness, orthographicHeight: 1600)
             for step in 0..<2000 {
