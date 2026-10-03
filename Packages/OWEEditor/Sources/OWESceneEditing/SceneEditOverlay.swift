@@ -46,13 +46,17 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
 
     public var version = SceneEditOverlay.currentVersion
     public var objects: [String: ObjectEdit] = [:]
+    /// Puppet Warp rigs made or edited in the editor, by the image layer's key
+    /// (`SceneEditOverlay+Puppets`). They don't change the running scene; Save as Local
+    /// Wallpaper writes them as `.mdl` files (`PuppetSceneBake`).
+    public var puppets: [String: PuppetDocument]?
 
     public init(objects: [String: ObjectEdit] = [:]) {
         self.objects = objects
     }
 
     /// Nothing to save: no edits and no locked layers.
-    public var isEmpty: Bool { objects.values.allSatisfy(\.isEmpty) }
+    public var isEmpty: Bool { objects.values.allSatisfy(\.isEmpty) && !hasPuppetEdits }
 
     /// Something changes the scene (locks don't).
     public var hasSceneEdits: Bool { objects.values.contains(where: \.hasSceneEdits) }
@@ -129,6 +133,7 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     /// the edits it was made with.
     public var digest: String {
         var sceneEdits = self
+        sceneEdits.puppets = nil
         for (key, edit) in sceneEdits.objects {
             sceneEdits.objects[key]?.locked = nil
             if !edit.hasSceneEdits { sceneEdits.objects[key] = nil }

@@ -227,7 +227,7 @@ public final class SceneEditSession: ObservableObject {
 
     // MARK: Undo
 
-    private func commit(_ next: SceneEditOverlay, actionName: String, coalescingKey: String?) {
+    func commit(_ next: SceneEditOverlay, actionName: String, coalescingKey: String?) {
         guard next != overlay else { return }
         let now = Date()
         let continues = coalescingKey.map { key in
