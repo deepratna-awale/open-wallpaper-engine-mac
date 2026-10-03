@@ -175,14 +175,25 @@ final class SceneRootMotionTests: XCTestCase {
         }
     }
 
-    /// WE 2.8.0.42's newer captures (we-test-wp-images @ 2aad5f2, tools/peer/requests/owe-beta3:
-    /// `rootmotion_strips.png` and `models_gt/mg4/clips`), read from `OWE_BETA3_CAPTURES` when set.
-    func testTheBeta3Captures() throws {
-        guard let folder = ProcessInfo.processInfo.environment["OWE_BETA3_CAPTURES"],
-              FileManager.default.fileExists(atPath: URL(fileURLWithPath: folder).appending(path: "rootmotion_strips.png").path) else {
-            throw XCTSkip("the owe-beta3 captures weren't reachable when this was written; their frames aren't transcribed yet")
+    /// WE 2.8.0.42's owe-beta3 answer (branch `we-test-wp-images` @ 2aad5f2,
+    /// tools/peer/requests/owe-beta3/README.md and `rootmotion_strips.png`, taken from the MG4 clips
+    /// `tools/peer/models_gt/mg4/clips/mg4p_root_{all_off,rotY,all_on}.mp4`): the box centroid at the
+    /// loop point (whole seconds) and mid-cycle (0.5 s), from tools/peer/models_gt/mg4/README.md's
+    /// table on the 960×540-scaled frame, doubled to 1920×1080. Every loop returns to the loop
+    /// point, so frames 30, 60 and 90 all match it.
+    func testTheBeta3LoopAndMidCycleCentroids() throws {
+        let table: [(Variant, loop: SIMD2<Float>, mid: SIMD2<Float>)] = [
+            (Self.allOff, SIMD2(905, 542), SIMD2(743, 499)),
+            (Self.yawOnly, SIMD2(927, 549), SIMD2(785, 529)),
+            (Self.allOn, SIMD2(857, 627), SIMD2(743, 940)),
+        ]
+        for (variant, loop, mid) in table {
+            let path = try Self.screenPath(variant, steps: [30, 45, 60, 90])
+            let we = [loop * 2, mid * 2, loop * 2, loop * 2]
+            let errors: [Float] = zip(path, we).map { simd_distance($0, $1) }
+            let mean: Float = errors.reduce(0, +) / Float(errors.count)
+            XCTAssertLessThan(mean, 20, "\(variant.name): ours \(path), WE's \(we)")
         }
-        throw XCTSkip("transcribe the box centroids from rootmotion_strips.png and models_gt/mg4/clips into `we` paths here")
     }
 
     /// Nothing accumulates: each loop poses the root as the last did, for every setting.
