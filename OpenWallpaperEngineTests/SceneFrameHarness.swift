@@ -62,6 +62,28 @@ final class SceneFrameHarness {
         }
     }
 
+    /// Sets `values` in the running store and applies them as `SceneWallpaperInstance` does on
+    /// `.sceneUserPropertiesDidChange`, synchronously: the renderer hands the change to the scripts
+    /// (`applyUserProperties`) and then moves the owners of the bindings that read it to a new
+    /// binding revision and takes the visibility again; objects a structural binding reads are
+    /// rebuilt alone and swapped in. Returns the whole-content impact left for the caller (the
+    /// instance's `scheduleSceneUpdate`). Calling only `renderer.scripts.userPropertiesDidChange`
+    /// skips the bindings, and a live change then draws nothing new.
+    @discardableResult
+    func changeProperties(_ values: [String: String]) throws -> SceneChangeImpact {
+        WallpaperServices.shared.setUserProperties(values, wallpaper: model.propertyStoreKey, replacing: false)
+        let update = model.bindingUpdate(for: Array(values.keys))
+        renderer.userPropertiesDidChange(Set(values.keys), owners: update.owners)
+        if !update.rebuild.isEmpty {
+            if let replacement = model.rebuildObjects(update.rebuild) {
+                renderer.replaceObjects(replacement)
+            } else {
+                return .rebuildContent
+            }
+        }
+        return update.impact
+    }
+
     /// `expression` evaluated in the scripts' context (their `shared` object is global there), as
     /// a string.
     func evaluate(_ expression: String) throws -> String? {
