@@ -94,7 +94,7 @@ jobs:
         with:
           path: build/DerivedData
           # dd-opt: optimised builds, keyed on their settings too, never mixed with unoptimised ones.
-          key: dd-opt-${{ steps.xcode.outputs.version }}-${{ hashFiles('Scripts/test-build-settings.txt') }}-${{ hashFiles('OpenWallpaperEngine.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-${{ hashFiles('OpenWallpaperEngine/**', 'OpenWallpaperEngineTests/**', 'OpenWallpaperEngine.xcodeproj/**', 'OpenWallpaperEngine-Info.plist', 'Vendor/**') }}
+          key: dd-opt-${{ steps.xcode.outputs.version }}-${{ hashFiles('Scripts/test-build-settings.txt') }}-${{ hashFiles('OpenWallpaperEngine.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-${{ hashFiles('OpenWallpaperEngine/**', 'OpenWallpaperEngineTests/**', 'OpenWallpaperEngine.xcodeproj/**', 'OpenWallpaperEngine-Info.plist', 'Vendor/**', 'Packages/**') }}
           restore-keys: |
             dd-opt-${{ steps.xcode.outputs.version }}-${{ hashFiles('Scripts/test-build-settings.txt') }}-${{ hashFiles('OpenWallpaperEngine.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}-
 
@@ -235,10 +235,27 @@ jobs:
           path: build/results
           retention-days: 7
 
-  # The required status check: passes only when the build and every shard passed (or no test
-  # class had to run).
+  # The local packages' own tests (Packages/*), which the app's test bundle doesn't hold.
+  packages:
+    runs-on: macos-26
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - id: xcode
+        uses: ./.github/actions/select-xcode
+
+      - name: Test the packages
+        run: |
+          set -o pipefail
+          for package in Packages/*/; do
+            swift test --package-path "$package" --scratch-path "build/packages/$(basename "$package")"
+          done
+
+  # The required status check: passes only when the build, every shard and the packages passed (or
+  # no test class had to run).
   build-and-test:
-    needs: [plan, build, test]
+    needs: [plan, build, test, packages]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -248,10 +265,11 @@ jobs:
           PLAN: ${{ needs.plan.result }}
           BUILD: ${{ needs.build.result }}
           TEST: ${{ needs.test.result }}
+          PACKAGES: ${{ needs.packages.result }}
           SELECTION: ${{ needs.plan.outputs.selection }}
         run: |
-          echo "plan: $PLAN, build: $BUILD, shards: $TEST"
-          [[ "$PLAN" == success && "$BUILD" == success ]] || exit 1
+          echo "plan: $PLAN, build: $BUILD, shards: $TEST, packages: $PACKAGES"
+          [[ "$PLAN" == success && "$BUILD" == success && "$PACKAGES" == success ]] || exit 1
           [[ "$TEST" == success || ( "$TEST" == skipped && "$SELECTION" == none ) ]]
 
   # The same suite with Wallpaper Engine's built-in assets, so the asset-gated tests run. The assets

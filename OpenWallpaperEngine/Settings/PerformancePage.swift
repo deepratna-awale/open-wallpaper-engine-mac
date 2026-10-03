@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import OWEInspectorKit
 
 struct PerformancePage: SettingsPage {
     @ObservedObject var viewModel: GlobalSettingsViewModel

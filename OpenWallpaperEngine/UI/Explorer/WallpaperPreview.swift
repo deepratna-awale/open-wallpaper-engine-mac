@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import OWEInspectorKit
 
 struct WallpaperPreview: SubviewOfContentView {
     @ObservedObject var viewModel: ContentViewModel

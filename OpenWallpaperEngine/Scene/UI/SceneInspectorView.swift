@@ -1,5 +1,6 @@
 import SwiftUI
 import AVFoundation
+import OWEInspectorKit
 
 private struct SceneInspectorItem: Identifiable {
     let id: String

@@ -10,6 +10,7 @@ import Combine
 import SwiftUI
 import AVKit
 import WebKit
+import OWEInspectorKit
 
 private final class WorkshopPreviewWindow: NSWindow {
     var onDismiss: (() -> Void)?

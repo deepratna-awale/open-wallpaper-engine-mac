@@ -1,5 +1,6 @@
 import SwiftUI
 import UniformTypeIdentifiers
+import OWEInspectorKit
 
 /// Wallpaper Engine authors often put a localization key in a property's `text` field rather than
 /// a label. WE's own translation (`WallpaperEngineLabels`, from the bundled locale files) is used;
