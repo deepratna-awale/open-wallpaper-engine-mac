@@ -52,7 +52,7 @@ final class SceneScriptRigTests: XCTestCase {
         XCTAssertEqual(string(f, "puppet.getBoneTransform('hand').m[13]"), "5", "the bind pose until the renderer's first frame")
 
         // Local writes read back at once and reach the animator.
-        f.evaluate("puppet.setLocalBoneOrigin('arm', new Vec3(7, 8, 0)); puppet.setLocalBoneAngles(1, new Vec3(0, 0, Math.PI / 2));")
+        f.evaluate("puppet.setLocalBoneOrigin('arm', { x: 7, y: 8, z: 0 }); puppet.setLocalBoneAngles(1, { x: 0, y: 0, z: Math.PI / 2 });")
         XCTAssertEqual(string(f, """
             var a = puppet.getLocalBoneAngles('arm'), o = puppet.getLocalBoneOrigin('arm');
             [a.z.toFixed(4), Math.round(a.x), o.x, o.y].join()
@@ -161,7 +161,7 @@ final class SceneScriptRigTests: XCTestCase {
         XCTAssertEqual(string(f, fmt("puppet.getAttachmentAngles('grip')")), "0.0000,0.0000,1.5708")
 
         // A write in radians reads back the same and turns the bone that far.
-        f.evaluate("puppet.setLocalBoneAngles('arm', new Vec3(0, 0, Math.PI));")
+        f.evaluate("puppet.setLocalBoneAngles('arm', { x: 0, y: 0, z: Math.PI });")
         XCTAssertEqual(string(f, fmt("puppet.getLocalBoneAngles(1)")), "0.0000,0.0000,3.1416")
         f.runtime.frame(deltaTime: 1.0 / 60)
         guard case let .setLocal(bone, matrix)? = rigCommands(f).last else { return XCTFail("no local write") }
@@ -180,7 +180,7 @@ final class SceneScriptRigTests: XCTestCase {
             (function () {
                 try {
                     return [typeof puppet.applyBonePhysicsImpulse(),
-                            typeof puppet.applyBonePhysicsImpulse(new Vec3(0, 0, 0), new Vec3(0, 0, 45)),
+                            typeof puppet.applyBonePhysicsImpulse({ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 45 }),
                             typeof puppet.resetBonePhysicsSimulation()].join();
                 } catch (e) { return 'threw ' + e; }
             })()
