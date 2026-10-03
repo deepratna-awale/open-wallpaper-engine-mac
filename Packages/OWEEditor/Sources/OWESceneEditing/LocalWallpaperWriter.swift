@@ -44,10 +44,12 @@ public struct LocalWallpaperWriter {
     /// Hidden files (the app's caches and kept package sources) and symbolic links (Workshop
     /// dependencies, linked again when the copy loads) stay behind. The copy is made in a hidden
     /// folder and renamed into place, so the library never lists half a wallpaper. `editProject`
-    /// changes the copy's project.json first (the editor's user properties).
+    /// changes the copy's project.json first (the editor's user properties). `files` are written
+    /// into the copy by their path (the editor's puppets, `PuppetSceneBake`).
     @discardableResult
     public func save(_ source: Source, scene: Data, title: String, into library: URL,
-                     editProject: ((inout [String: Any]) -> Void)? = nil) throws -> URL {
+                     editProject: ((inout [String: Any]) -> Void)? = nil,
+                     files: [String: Data] = [:]) throws -> URL {
         try fileManager.createDirectory(at: library, withIntermediateDirectories: true)
         let staging = library.appending(path: ".owe-editor-\(UUID().uuidString)", directoryHint: .isDirectory)
         do {
@@ -60,6 +62,11 @@ public struct LocalWallpaperWriter {
             }
             if let assets = source.assetsDirectory, fileManager.fileExists(atPath: assets.path) {
                 try merge(assets, into: staging)
+            }
+            for (path, data) in files {
+                let destination = try Self.contained(path, in: staging)
+                try fileManager.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try data.write(to: destination, options: .atomic)
             }
             try scene.write(to: try Self.contained(source.sceneFile, in: staging), options: .atomic)
             try writeProject(in: staging, title: title, edit: editProject)
