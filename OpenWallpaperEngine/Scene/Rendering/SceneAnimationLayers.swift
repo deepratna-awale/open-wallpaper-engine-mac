@@ -28,8 +28,6 @@ struct SceneAnimationLayer: Equatable {
     var visible: Bool
     /// `playSingleAnimation`: the layer goes once its clip finished [I].
     var removesWhenFinished = false
-    /// Its clip's root motion last frame (`SceneRootMotion`).
-    var rootMotion = SceneRootMotion.State()
 
     init(key: Int, name: String, clip: Int, animation: MDLAnimation, additive: Bool = false, blendIn: Bool = false,
          blendOut: Bool = false, blendTime: Float = 0.5, rate: Float = 1, blend: Float = 1, visible: Bool = true) {
@@ -120,8 +118,6 @@ struct SceneAnimationLayerStack: Equatable {
     /// model whose `rootmotion` is on: 0x14021cbf8 tests obj+0x310; puppets' update 0x1401fdf90
     /// has none).
     let rootMotions: [SceneRootMotion?]
-    /// What root motion moved the object by since the load.
-    private(set) var rootMotion = SceneRootMotion.Motion()
 
     /// A model's stack (its update 0x14021c480), where a clip the editor cut without Match loop
     /// reads its source clip's tracks (`source(of:)`); puppets' update (0x1401fdf90) doesn't.
@@ -147,9 +143,6 @@ struct SceneAnimationLayerStack: Equatable {
               Int(reference.animation) < clips.count else { return (clip, 0) }
         return (clips[Int(reference.animation)], Int(reference.startFrame))
     }
-
-    /// Whether any clip moves the object (then its world is needed each frame).
-    var hasRootMotion: Bool { rootMotions.contains { $0 != nil } }
 
     /// The clip with that id, what an authored layer's `animation` names.
     func clipIndex(id: UInt64) -> Int? { clips.firstIndex { $0.id == id } }
@@ -200,8 +193,9 @@ struct SceneAnimationLayerStack: Equatable {
 
     /// The same, with each layer's morph tracks laid over `morphs` (`applyMorphs`) as it applies.
     mutating func evaluate(delta: Float, update: inout SceneAnimationLayerUpdate, morphs: inout [SceneMorphWeights],
-                           kind: SceneMorphRig.Kind, objectWorld: simd_float3x3 = matrix_identity_float3x3) -> [SceneBoneTransform] {
+                           kind: SceneMorphRig.Kind) -> [SceneBoneTransform] {
         var pose = skeleton.bindPose
+        var turn: Float = 0
         var index = 0
         while index < layers.count {
             guard layers[index].visible else {
@@ -217,7 +211,7 @@ struct SceneAnimationLayerStack: Equatable {
             let weight = layers[index].weight()
             apply(layers[index], weight: weight, to: &pose)
             if !morphs.isEmpty { applyMorphs(layers[index], weight: weight, to: &morphs, kind: kind) }
-            applyRootMotion(at: index, weight: weight, objectWorld: objectWorld, to: &pose)
+            turn += applyRootMotion(at: index, weight: weight, to: &pose)
             if layers[index].removesWhenFinished, after.flags.contains(.finished) {
                 layers.remove(at: index)
                 update.removed.append(key)
@@ -225,37 +219,31 @@ struct SceneAnimationLayerStack: Equatable {
             }
             index += 1
         }
+        SceneRootMotion.turn(&pose, skeleton: skeleton, by: turn)
         return pose
     }
 
-    /// After layer `index` applied (0x14021cbf8…0x14021cd50): when its clip has root motion, the
-    /// weight the later visible non-additive layers leave, `Π(1 − w)` (0x14026c8b0 for each), and
-    /// while that is positive the root motion itself; the layer then counts as running root
-    /// motion and keeps its clock time. A clip without root motion clears that.
-    private mutating func applyRootMotion(at index: Int, weight: Float, objectWorld: simd_float3x3,
-                                          to pose: inout [SceneBoneTransform]) {
+    /// After layer `index` applied (0x14021cbf8…0x14021cd50): when its clip has root motion and
+    /// the later visible non-additive layers leave it weight, `Π(1 − w)` (0x14026c8b0 for each),
+    /// the clip's flagged root axes come out of the pose (`SceneRootMotion`). Returns the yaw the
+    /// model turns by for this layer, times `w` and `Π(1 − w)`; `evaluate` turns the finished pose
+    /// by the sum, so later layers don't undo it. WE never moves the object by root motion (§2.8).
+    private func applyRootMotion(at index: Int, weight: Float, to pose: inout [SceneBoneTransform]) -> Float {
         let clip = layers[index].clip
-        guard clip < rootMotions.count, let motion = rootMotions[clip] else {
-            layers[index].rootMotion.active = false
-            return
-        }
+        guard clip < rootMotions.count, let motion = rootMotions[clip] else { return 0 }
         var remaining: Float = 1
         for later in layers[(index + 1)...] where later.visible && !later.additive {
             var copy = later
             remaining *= 1 - copy.weight()
         }
-        if remaining > 0 {
-            let position = layers[index].clock.samplePosition
-            let (sampled, first) = source(of: clip)
-            var state = layers[index].rootMotion
-            motion.apply(clip: sampled, skeleton: skeleton, frame0: Int(position.frame0) + first, frame1: Int(position.frame1) + first,
-                         fraction: position.fraction, time: layers[index].clock.time, weight: weight,
-                         remaining: remaining, objectWorld: objectWorld, pose: &pose, state: &state,
-                         motion: &rootMotion)
-            layers[index].rootMotion = state
-        }
-        layers[index].rootMotion.active = true
-        layers[index].rootMotion.previousTime = layers[index].clock.time
+        guard remaining > 0 else { return 0 }
+        let position = layers[index].clock.samplePosition
+        let (sampled, first) = source(of: clip)
+        let frame0 = Int(position.frame0) + first, frame1 = Int(position.frame1) + first
+        motion.apply(clip: sampled, skeleton: skeleton, frame0: frame0, frame1: frame1, fraction: position.fraction,
+                     weight: weight, pose: &pose)
+        let turn = motion.turn(clip: sampled, skeleton: skeleton, frame0: frame0, frame1: frame1, fraction: position.fraction)
+        return turn * weight * remaining
     }
 
     /// Whether the clip reached its end this frame (0x14021c6e6…0x14021c743): not when it was

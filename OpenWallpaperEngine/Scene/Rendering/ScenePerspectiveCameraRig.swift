@@ -10,7 +10,8 @@ import simd
 ///    with the scene's `fov`.
 /// 3. Camera shake moves the eye and the centre; the fov is clamped to 0.1…179.9.
 /// 4. The view is `lookAtRH`; the projection is reversed-Z with `nearz`/`farz` and the target's
-///    aspect. `zoom` does nothing here [I].
+///    aspect. `general.zoom` and every other zoom do nothing here: WE 2.8.0.42 renders a
+///    perspective scene identically at any zoom (docs/models-plan.md §5).
 ///
 /// `camerafade` fades each scene camera path in and out whichever source is the camera, as WE
 /// computes it from the paths' state alone (0x140180c1a).
