@@ -67,6 +67,11 @@ struct QualityEfficiency: Equatable {
         }
     }
 
+    /// The divisor of a temporal accumulation's buffers (motion blur's history,
+    /// `EffectResolutionPolicy.isTemporalAccumulation`): halved only at the efficiency end until
+    /// its perceptual gate is measured on the library (docs/optimizations.md, Pending).
+    var temporalAccumulationDivisor: Int { stop >= 5 ? 2 : 1 }
+
     /// The MetalFX upscaling input scale (1 draws at full size).
     var upscaleInputScale: Float { stop >= 5 ? 0.75 : 1 }
 }

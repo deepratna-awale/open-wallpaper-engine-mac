@@ -16,15 +16,23 @@ import Foundation
 /// - effects that carry frames (motion blur's accumulation, simulations) or copy between buffers,
 ///   whose sizes must match;
 /// - chains on text or line-art layers, where a softened intermediate would show at sharp edges.
+///
+/// A temporal accumulation (`isTemporalAccumulation`: motion blur's history and its copy) is the
+/// one frame-carrying effect that may shrink, by its own divisor (`temporalDivisor`): its buffers
+/// blend frames over time, so they hold the low-frequency trail, and every one of them shrinks by
+/// the same factor, so its copies stay between equal sizes.
 struct EffectResolutionPolicy: Equatable {
     /// 1 full size, 2 half, 4 quarter.
     var divisor: Int
     /// The layer is text or line art (`SceneLayerContentClass`): its chain stays at full size.
     var sharpContent: Bool
+    /// The divisor of a temporal accumulation's buffers (1 keeps them; `QualityEfficiency.temporalAccumulationDivisor`).
+    var temporalDivisor: Int
 
-    init(divisor: Int = 1, sharpContent: Bool = false) {
+    init(divisor: Int = 1, sharpContent: Bool = false, temporalDivisor: Int = 1) {
         self.divisor = max(1, divisor)
         self.sharpContent = sharpContent
+        self.temporalDivisor = max(1, temporalDivisor)
     }
 
     static let full = EffectResolutionPolicy()
@@ -49,9 +57,16 @@ struct EffectResolutionPolicy: Equatable {
 
     /// The extra divisor of `fbo`'s size in `effect` (1 keeps the authored size).
     func divisor(for fbo: EffectFBO, in effect: SceneEffectPlan) -> Int {
-        guard divisor > 1, !sharpContent, Self.eligible(effect) else { return 1 }
-        if let width = fbo.width, let height = fbo.height, width > 0, height > 0 { return 1 }
-        if fbo.uvs == "repeat" || fbo.fit != nil { return 1 }
+        guard !sharpContent, Self.followsLayer(fbo) else { return 1 }
+        if temporalDivisor > 1, Self.isTemporalAccumulation(effect) {
+            // Every buffer by the same factor: a copy between two of them needs equal sizes.
+            let shrinkable = effect.fbos.allSatisfy(Self.followsLayer) && Set(effect.fbos.map(\.scale)).count == 1
+            guard shrinkable else { return 1 }
+            var extra = temporalDivisor
+            while extra > 1, max(fbo.scale, 1) * extra > Self.maxTotalScale { extra /= 2 }
+            return extra
+        }
+        guard divisor > 1, Self.eligible(effect) else { return 1 }
         let authored = max(fbo.scale, 1)
         // A full-size buffer is the author asking for detail (`blurprecise`): at most halved.
         var extra = authored == 1 ? min(divisor, 2) : divisor
@@ -66,6 +81,32 @@ struct EffectResolutionPolicy: Equatable {
         while factor > 1, min(size.x, size.y) / factor < minSide { factor /= 2 }
         guard factor > 1 else { return size }
         return SIMD2(max((size.x + factor - 1) / factor, 1), max((size.y + factor - 1) / factor, 1))
+    }
+
+    /// A buffer sized from the layer (`scale`), not fixed, fitted or tiled.
+    private static func followsLayer(_ fbo: EffectFBO) -> Bool {
+        if let width = fbo.width, let height = fbo.height, width > 0, height > 0 { return false }
+        return fbo.uvs != "repeat" && fbo.fit == nil
+    }
+
+    /// A blur that carries frames through copies between its own buffers (motion blur: blend the
+    /// image into the history, copy it back, show it). A simulation swaps its buffers and a copy
+    /// from the effect's input keeps the input's size; neither is one.
+    static func isTemporalAccumulation(_ effect: SceneEffectPlan) -> Bool {
+        guard isBlurLike(effect), effect.carriesFrames else { return false }
+        var copies = false
+        for pass in effect.passes {
+            switch pass.command {
+            case .render:
+                continue
+            case .swap:
+                return false
+            case .copy(let source, _):
+                if source == "previous" { return false }
+                copies = true
+            }
+        }
+        return copies
     }
 
     private static func eligible(_ effect: SceneEffectPlan) -> Bool {

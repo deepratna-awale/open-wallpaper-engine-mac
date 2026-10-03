@@ -64,6 +64,8 @@ final class EffectGraphRenderer {
         var standInSize = SIMD2<Int>(0, 0)
         /// How far the chain's blur-like buffers are reduced (`EffectResolutionPolicy`).
         var resolution = EffectResolutionPolicy.full
+        /// The part of the buffers the chain shades (`Context.renderRect`); nil all of them.
+        var renderRect: SceneSnapshotTracker.Rect?
         var programs: [[UniformProgram?]] = []
         /// Each render pass's pipeline, resolved once the chain is ready; held so a trim never drops one in use.
         var pipelines: [[MTLRenderPipelineState?]] = []
@@ -146,6 +148,8 @@ final class EffectGraphRenderer {
 
     /// Counters for tests and diagnostics.
     private(set) var passesEncoded = 0
+    /// Copies handed over as textures instead of copied (`copyCanAlias`).
+    private(set) var copiesAliased = 0
     private(set) var layersReused = 0
     /// Times every effect pass when set (profiling; `EffectPassTimer`).
     var passTimer: EffectPassTimer?
@@ -319,6 +323,14 @@ final class EffectGraphRenderer {
         var inputStandInSize: SIMD2<Int>? = nil
         /// How far blur-like effect buffers may be reduced (`EffectResolutionPolicy`).
         var resolution = EffectResolutionPolicy.full
+        /// The only pixels of the chain's buffers that can reach the screen, in pixels of the
+        /// input (y down): every pass shades just these (a scissor, scaled to each target) and
+        /// copies copy just these (`SceneVisibleRegion`). Pixels outside hold nothing meaningful,
+        /// so the caller draws the output only there. nil shades everything.
+        var renderRect: SceneSnapshotTracker.Rect? = nil
+        /// A `copy` between two of an effect's buffers hands the texture over instead of copying
+        /// it, where nothing tells the two apart (`copyCanAlias`).
+        var aliasCopies = false
 
         var targetFormats: TargetFormats { TargetFormats(frameBuffer: frameBufferFormat, output: outputFormat ?? frameBufferFormat) }
     }
@@ -377,12 +389,16 @@ final class EffectGraphRenderer {
                 effect.passes.map { pass in pass.variant.map { UniformProgram(layout: $0.uniforms, constants: pass.constants) } }
             }
             state.resolution = context.resolution
+            state.renderRect = context.renderRect
             allocateTargets(state, effects: effects, width: width, height: height, standIn: standIn)
             state.ready = true
         } else if state.width != width || state.height != height || state.standInSize != standIn
-                    || state.resolution != context.resolution {
+                    || state.resolution != context.resolution || state.renderRect != context.renderRect {
+            // A new shaded part starts from fresh buffers, as a new size does: what lay outside the
+            // old one was never drawn, and a buffer carried into the next frame would show it.
             recycleTargets(state)
             state.resolution = context.resolution
+            state.renderRect = context.renderRect
             allocateTargets(state, effects: effects, width: width, height: height, standIn: standIn)
         }
         // The leading effects that don't change over time, when later ones do: their output is kept
@@ -446,14 +462,36 @@ final class EffectGraphRenderer {
             }
             let previous = current
             var fbos = state.fbos[effectIndex]
+            // Buffers handed over by an aliased copy, as the next frame starts from them.
+            var carried: [String: MTLTexture] = [:]
             if effect.carriesFrames { reusable = false }
             for (passIndex, pass) in effect.passes.enumerated() {
                 switch pass.command {
                 case .copy(let source, let destination):
                     guard let from = fbos[source] ?? (source == "previous" ? previous : nil), let to = fbos[destination],
-                          from.width == to.width, from.height == to.height, from.pixelFormat == to.pixelFormat,
-                          let blit = commandBuffer.makeBlitCommandEncoder() else { continue }
-                    blit.copy(from: from, to: to)
+                          from.width == to.width, from.height == to.height, from.pixelFormat == to.pixelFormat else { continue }
+                    if context.aliasCopies, from !== to, Self.copyCanAlias(effect, at: passIndex) {
+                        // The destination reads the source's texture from now on; the source takes
+                        // the destination's, which the next frame writes before reading it.
+                        fbos[destination] = from
+                        carried[source] = to
+                        carried[destination] = from
+                        copiesAliased += 1
+                        continue
+                    }
+                    guard let blit = commandBuffer.makeBlitCommandEncoder() else { continue }
+                    if let rect = state.renderRect {
+                        let region = SceneVisibleRegion.scaled(rect, from: SIMD2(state.width, state.height),
+                                                               to: SIMD2(from.width, from.height))
+                        if region.width > 0, region.height > 0 {
+                            let origin = MTLOrigin(x: region.x, y: region.y, z: 0)
+                            blit.copy(from: from, sourceSlice: 0, sourceLevel: 0, sourceOrigin: origin,
+                                      sourceSize: MTLSize(width: region.width, height: region.height, depth: 1),
+                                      to: to, destinationSlice: 0, destinationLevel: 0, destinationOrigin: origin)
+                        }
+                    } else {
+                        blit.copy(from: from, to: to)
+                    }
                     blit.endEncoding()
                 case .swap(let first, let second):
                     // A swapped pair carries this frame's buffers into the next (`carriesFrames`).
@@ -473,7 +511,7 @@ final class EffectGraphRenderer {
                                               targetSize: SIMD2(Float(state.standInSize.x), Float(state.standInSize.y)),
                                               scriptWrites: context.constantWrites[effect.effectIndex] ?? [],
                                               repeatingFBOs: Set(effect.fbos.filter { $0.uvs == "repeat" }.map(\.name)))
-                        state.fbos[effectIndex] = fbos
+                        state.fbos[effectIndex] = fbos.merging(carried) { _, kept in kept }
                         break chain
                     }
                     let output: MTLTexture
@@ -487,9 +525,12 @@ final class EffectGraphRenderer {
                         output = ping
                     }
                     reusable = reusable && program.isReusable && !pass.readsSceneSnapshot && !pass.readsMipMappedFrameBuffer
+                    let scissor = state.renderRect.map {
+                        SceneVisibleRegion.scaled($0, from: SIMD2(state.width, state.height), to: SIMD2(output.width, output.height))
+                    }
                     encode(pass, pipeline: pipeline, program: program, variant: variant, output: output,
                            current: current, previous: previous, fbos: fbos, context: context,
-                           standIn: standInSizes,
+                           standIn: standInSizes, scissor: scissor,
                            scriptWrites: context.constantWrites[effect.effectIndex] ?? [],
                            repeatingFBOs: Set(effect.fbos.filter { $0.uvs == "repeat" }.map(\.name)),
                            commandBuffer: commandBuffer)
@@ -498,7 +539,7 @@ final class EffectGraphRenderer {
                 }
             }
             // Swaps last: the next frame starts from the buffers this one left.
-            state.fbos[effectIndex] = fbos
+            state.fbos[effectIndex] = fbos.merging(carried) { _, kept in kept }
         }
         if let drawn {
             // The passes before the last are kept as a static chain's output is; the last is drawn
@@ -518,6 +559,47 @@ final class EffectGraphRenderer {
         state.staticDrawn = nil
         if state.staticOutput != nil { releaseScratch(state, keeping: [current]) }
         return (current, nil)
+    }
+
+    /// Whether the `copy` at `index` of `effect` may hand its source's texture to its destination
+    /// instead of copying it: the destination then holds exactly what the copy would have written,
+    /// and the source takes the destination's old texture. Safe when nothing could tell:
+    /// - both are the effect's own buffers (not its input);
+    /// - no later pass of the effect writes either (they share one texture until the frame ends);
+    /// - the source is written before anything reads it, every frame (its next contents never
+    ///   depend on what it held, which is now the destination's old image).
+    /// Motion blur's history copy is one: it accumulates into one buffer, copies that into the
+    /// history and shows it, and accumulates into the first buffer again next frame.
+    static func copyCanAlias(_ effect: SceneEffectPlan, at index: Int) -> Bool {
+        guard index < effect.passes.count, case .copy(let source, let destination) = effect.passes[index].command,
+              source != "previous", destination != "previous", source != destination,
+              effect.fbos.contains(where: { $0.name == source }), effect.fbos.contains(where: { $0.name == destination })
+        else { return false }
+        func writes(_ pass: SceneEffectPassPlan, _ name: String) -> Bool {
+            switch pass.command {
+            case .render: return pass.target == name
+            case .copy(_, let target): return target == name
+            case .swap(let a, let b): return a == name || b == name
+            }
+        }
+        func reads(_ pass: SceneEffectPassPlan, _ name: String) -> Bool {
+            switch pass.command {
+            case .render:
+                return pass.textures.values.contains { input in
+                    if case .fbo(let read) = input { return read == name }
+                    return false
+                }
+            case .copy(let from, _): return from == name
+            case .swap(let a, let b): return a == name || b == name
+            }
+        }
+        for pass in effect.passes[(index + 1)...] where writes(pass, source) || writes(pass, destination) { return false }
+        // The source's first use is a write (a render target or a copy into it), before this copy.
+        for pass in effect.passes[..<index] {
+            if reads(pass, source) { return false }
+            if writes(pass, source) { return true }
+        }
+        return false
     }
 
     /// The pass WE draws into the scene: the last visible effect's last pass, when it renders into
@@ -851,8 +933,11 @@ final class EffectGraphRenderer {
     private func encode(_ pass: SceneEffectPassPlan, pipeline: MTLRenderPipelineState, program: UniformProgram,
                         variant: TranslatedShaderVariant, output: MTLTexture,
                         current: MTLTexture, previous: MTLTexture, fbos: [String: MTLTexture],
-                        context: Context, standIn: StandIn, scriptWrites: [SceneScriptConstantWrite],
+                        context: Context, standIn: StandIn, scissor: SceneSnapshotTracker.Rect? = nil,
+                        scriptWrites: [SceneScriptConstantWrite],
                         repeatingFBOs: Set<String> = [], commandBuffer: MTLCommandBuffer) {
+        // Nothing of the target can show: the pass is skipped (its buffer keeps what it held).
+        if let scissor, scissor.width <= 0 || scissor.height <= 0 { return }
         let descriptor = MTLRenderPassDescriptor()
         descriptor.colorAttachments[0].texture = output
         // Blended passes composite over what's already there; others overwrite every pixel.
@@ -863,6 +948,9 @@ final class EffectGraphRenderer {
         guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor) else { return }
         defer { encoder.endEncoding() }
         passesEncoded += 1
+        if let scissor {
+            encoder.setScissorRect(MTLScissorRect(x: scissor.x, y: scissor.y, width: scissor.width, height: scissor.height))
+        }
         encoder.setRenderPipelineState(pipeline)
         encoder.setVertexBuffer(quadPositions, offset: 0, index: Self.positionBuffer)
         encoder.setVertexBuffer(quadTexCoords, offset: 0, index: Self.texCoordBuffer)

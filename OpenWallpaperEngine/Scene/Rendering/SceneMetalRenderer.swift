@@ -479,12 +479,28 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var analysedUserVisibility = 0
     /// The blur-like buffer divisor (1, 2, 4) over the slider's (`OWE_BLUR_DIVISOR` for comparisons).
     var blurDivisorOverride = ProcessInfo.processInfo.environment["OWE_BLUR_DIVISOR"].flatMap(Int.init)
+    /// The fullscreen-layer optimisations (`SceneFullscreenEffectOptions`, `OWE_FX_*` for comparisons).
+    var fullscreenEffectOptions = SceneFullscreenEffectOptions.environment()
+    /// The part of the scene the displays show this frame (`SceneVisibleRegion.window`); nil when
+    /// they show all of it.
+    private var visibleWindow: SceneVisibleRegion.Rect?
+    /// This frame's shaded part of each clamped fullscreen layer's effect buffers, by layer id
+    /// (`visibleClamp`, `EffectGraphRenderer.Context.renderRect`).
+    private var layerRenderRects: [String: SceneSnapshotTracker.Rect] = [:]
+    /// Fullscreen layers drawn only where they can show, this frame (tests and diagnostics).
+    private(set) var clampedLayerIDs: Set<String> = []
     private func effectResolution(of layerID: String) -> EffectResolutionPolicy {
         let divisor = blurDivisorOverride ?? framePacing.limits.policy.blurResolutionDivisor
-        guard divisor > 1 else { return .full }
+        let temporal: Int
+        switch fullscreenEffectOptions.halfResolutionAccumulation {
+        case .some(true): temporal = 2
+        case .some(false): temporal = 1
+        case .none: temporal = framePacing.limits.policy.temporalAccumulationDivisor
+        }
+        guard divisor > 1 || temporal > 1 else { return .full }
         let layer = layerAnalysis.flatMap { analysis in analysis.index(of: layerID).map { analysis.layers[$0] } }
         let sharp = layer.map { $0.contentClass == .text || ($0.contentClass == .lineArt && $0.classifiedFromPixels) } ?? false
-        return EffectResolutionPolicy(divisor: divisor, sharpContent: sharp)
+        return EffectResolutionPolicy(divisor: divisor, sharpContent: sharp, temporalDivisor: temporal)
     }
     private var lastTextSizes: [String: SIMD2<Float>] = [:]
     /// Told how long each frame took on the CPU, including the wait for a drawable.
@@ -1403,6 +1419,14 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         guard let destination = frameDestination(output) else { return }
         let viewports = destination.viewports
         drawablePixelsPerPoint = viewports[0].pixelsPerPoint
+        // Shared frames are composited whole and placed per display when presented: what shows is
+        // each display at the user's placement either way.
+        visibleWindow = SceneVisibleRegion.window(
+            sceneSize: sceneSize,
+            displays: viewports.map { SceneVisibleRegion.Display(drawableSize: $0.drawableSize, pixelsPerPoint: $0.pixelsPerPoint) },
+            placement: placement)
+        layerRenderRects.removeAll(keepingCapacity: true)
+        clampedLayerIDs.removeAll(keepingCapacity: true)
         // The largest target any display needs, so each shows the scene at its own density.
         let renderDrawable = SceneRenderResolution.drawableSize(viewports, resolution: renderSettings.renderResolution,
                                                                 sceneSize: sceneSize)
@@ -1836,6 +1860,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             reflection: renderSettings.reflection)
         snapshotTracker.reset()
         let targetSize = SIMD2(sceneTexture.width, sceneTexture.height)
+        let clampsLayers = fullscreenEffectOptions.clampToVisible && visibleWindow != nil && clampIsSafeThisFrame()
         for (item, barrier) in sequence.items {
             let batchesBefore = nextParticleBatch
             guard drawParticleBatches(before: barrier) else { return }
@@ -1853,6 +1878,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             // Hidden layers (script `visible = false`) draw nothing, their raw texture included.
             guard let draw = draws[layerIndex] else { continue }
             var layerSnapshot: MTLTexture?
+            // Where a fullscreen layer drawn only where it can show draws (`visibleClamp`).
+            var drawScissor: SceneSnapshotTracker.Rect?
             if entry.layer.readsScene || compositeOrder.inScene.contains(entry.layer.id) {
                 // Metal can't sample the attachment it's drawing into: pause the scene pass, run
                 // this layer's effects on what's drawn so far (`_rt_FullFrameBuffer`), resume. The
@@ -1874,9 +1901,19 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                     : solidEffectInput(entry.layer, commandBuffer: commandBuffer)
                         ?? effectInput(entry, image: textFrames[layerIndex]?.frame ?? textureFrame(for: entry),
                                        commandBuffer: commandBuffer)
+                layerRenderRects[entry.layer.id] = nil
+                if clampsLayers, let input,
+                   let clamp = visibleClamp(entry, draw: draw, chainSize: SIMD2(input.width, input.height), motion: motion,
+                                            targetSize: targetSize, compositeOrder: compositeOrder) {
+                    layerRenderRects[entry.layer.id] = clamp.chain
+                    drawScissor = clamp.target
+                    clampedLayerIDs.insert(entry.layer.id)
+                }
                 dynamicTextures[layerIndex] = posedEffectOutput(input.flatMap {
                     runEffects(entry, draw: draw, input: $0, snapshot: snapshot, frame: effectFrame, commandBuffer: commandBuffer)
                 }, of: entry, commandBuffer: commandBuffer)
+                // Its buffers hold its image only where they were shaded.
+                if dynamicTextures[layerIndex] == nil { drawScissor = nil }
                 guard let resumed = resumeScenePass(on: sceneTexture, commandBuffer: commandBuffer) else { return }
                 encoder = resumed
                 // Its composite is what readers drawn after it sample (`_rt_imageLayerComposite_<id>_a`).
@@ -1893,12 +1930,19 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             } else if let drawn = SceneSnapshotTracker.pixelRect(of: draw.quad, sceneSize: sceneSize, targetSize: targetSize) {
                 snapshotTracker.sceneDrawn(in: drawn)
             }
+            if let drawScissor {
+                encoder.setScissorRect(MTLScissorRect(x: drawScissor.x, y: drawScissor.y,
+                                                      width: drawScissor.width, height: drawScissor.height))
+            }
             encodeLayer(entry, draw, image: textFrames[layerIndex]?.frame ?? textureFrame(for: entry),
                         effectOutput: dynamicTextures[layerIndex], drawnLastPass: drawnLastPasses[layerIndex],
                         snapshot: layerSnapshot, frame: effectFrame,
                         target: LayerTarget(size: drawableSize, pixelFormat: sceneTexture.pixelFormat,
                                             sampleCount: sceneSampleCount, depth: frameDepth, pipelines: scenePassPipelines),
                         encoder: encoder, commandBuffer: commandBuffer)
+            if drawScissor != nil {
+                encoder.setScissorRect(MTLScissorRect(x: 0, y: 0, width: sceneTexture.width, height: sceneTexture.height))
+            }
         }
         guard drawParticleBatches(before: .max) else { return }
         endScenePass(encoder, resumes: false)
@@ -2350,6 +2394,73 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         guard let pixels = viewports.lazy.compactMap(\.cursorScreenPixels).first else { return lastCursorScreenPixels }
         lastCursorScreenPixels = pixels
         return pixels
+    }
+
+    /// Whether nothing drawn after the scene pass reads the scene where a display doesn't show it,
+    /// so fullscreen layers may leave it as it was there (`visibleClamp`): WE's bloom and HDR
+    /// chains blur the whole frame, `_rt_MipMappedFrameBuffer`'s mips average it, models may read
+    /// it anywhere, and so may a layer's effect that samples `_rt_FullFrameBuffer`. Layers and
+    /// particles that read the scene under themselves read near what shows, within the margin.
+    private func clampIsSafeThisFrame() -> Bool {
+        guard !postProcess.drawsHDR, !(liveBloom().enabled && renderSettings.postProcessing.allowsBloom),
+              mipMappedTarget == nil, spatial.models.isEmpty else { return false }
+        return !layers.contains { $0.layer.effectsReadScene }
+    }
+
+    /// The part of a fullscreen layer's effect buffers (`chainSize` pixels) that can show, and
+    /// where it lands in the scene target (`targetSize`), when its effects may shade only that
+    /// part (`SceneVisibleRegion`): a 2D fullscreen layer reading the scene, whose image no other
+    /// object samples. The margin is the sampling margin plus the farthest parallax and shake can
+    /// move the layer, so the part stays put while it moves.
+    private func visibleClamp(_ entry: PreparedLayer, draw: LayerDraw, chainSize: SIMD2<Int>, motion: CameraMotion,
+                              targetSize: SIMD2<Int>, compositeOrder: SceneLayerCompositeOrder)
+        -> (chain: SceneSnapshotTracker.Rect, target: SceneSnapshotTracker.Rect)? {
+        let layer = entry.layer
+        guard let window = visibleWindow, layer.sceneInput, layer.fillsScene, draw.placement == nil,
+              !compositeOrder.sources.contains(layer.id), models?.compositeLayerIDs.contains(layer.id) != true,
+              renderPixelsPerUnit > 0 else { return nil }
+        let offset = parallaxOffset(entry, local: evaluatedLocal(entry), motion: motion) - motion.shake
+        let margin = SIMD2<Float>(repeating: SceneVisibleRegion.samplingMargin / renderPixelsPerUnit) + motionBound(entry)
+        guard margin.x.isFinite, margin.y.isFinite,
+              let chain = SceneVisibleRegion.chainRect(quad: draw.quad, offset: offset, window: window, margin: margin,
+                                                       chainSize: chainSize),
+              let target = SceneVisibleRegion.targetRect(chain, chainSize: chainSize, quad: draw.quad,
+                                                         sceneSize: sceneSize, targetSize: targetSize) else { return nil }
+        return (chain, target)
+    }
+
+    /// The farthest camera parallax and shake can move `entry` from where its transform puts it,
+    /// in scene units (`SceneVisibleRegion.shakeBound`, `parallaxBound`), with this frame's settings.
+    private func motionBound(_ entry: PreparedLayer) -> SIMD2<Float> {
+        guard camera.orthographic else { return .zero }
+        var shake: Float = 0
+        if scripts.state.scene.flag(.camerashake) ?? camera.shake {
+            shake = SceneVisibleRegion.shakeBound(amplitude: sceneSetting(.camerashakeamplitude) ?? camera.shakeAmplitude,
+                                                  roughness: sceneSetting(.camerashakeroughness) ?? camera.shakeRoughness,
+                                                  orthographicHeight: sceneSize.y)
+        }
+        var bound = SIMD2<Float>(repeating: shake)
+        guard cameraParallax.isActive || parallaxEnabled else { return bound }
+        let amount = (sceneSetting(.cameraparallaxamount) ?? camera.parallaxAmount)
+            * WallpaperServices.shared.userPropertyValue("_owe_effect_parallax_amount", fallback: 1)
+        let rootID = transforms.root(of: entry.layer.id)
+        let origin: SIMD2<Float>
+        let depth: SIMD2<Float>
+        if rootID == entry.layer.id {
+            origin = evaluatedLocal(entry).origin
+            let authored = entry.layer.parallaxDepth
+            depth = scripts.object(rootID)?.vector2(.parallaxDepth) ?? timelines.object(rootID)?.parallaxDepth
+                ?? SIMD2(authored.x, authored.y)
+        } else if let node = transforms.nodes[rootID] {
+            origin = (liveLocal(rootID) ?? node.local).origin
+            depth = parallaxDepth(of: rootID, node: node)
+        } else {
+            return SIMD2(repeating: .infinity)
+        }
+        bound += SceneVisibleRegion.parallaxBound(
+            amount: amount, rootOrigin: origin, rootDepth: depth, sceneSize: sceneSize,
+            influence: sceneSetting(.cameraparallaxmouseinfluence) ?? camera.parallaxMouseInfluence, shake: shake)
+        return bound
     }
 
     /// The scene's own `general.cameraparallax` (possibly user-bound, or set by a script) or the
@@ -3127,6 +3238,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         context.constantWrites = scripted.writes
         context.scriptRevision = scripted.revision
         context.resolution = effectResolution(of: entry.layer.id)
+        context.renderRect = layerRenderRects[entry.layer.id]
+        context.aliasCopies = fullscreenEffectOptions.aliasCopies
         // A puppet's mesh redraws its image into the same texture as it moves: without the
         // drawing's version, the chain's kept output and base pass would hold the first pose.
         if entry.layer.puppet != nil { context.inputVersion = puppets?.albedoVersion(entry.layer.id) ?? 0 }

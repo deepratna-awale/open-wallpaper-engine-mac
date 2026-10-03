@@ -73,6 +73,7 @@ The detailed 2D plan, its baseline and its audit are in [`efficiency-plan-2d.md`
 | Distance-fog model skip | — | Reverted | commit b396cc38 |
 | Bundled video decoder | — | The lossless remux (PR #65) plays the same files with the system decoder | PR #65 |
 | Live lock-screen wallpaper | — | Not possible on macOS; a lock-screen picture and a screen saver are offered instead | PR #72 |
+| Film grain at its noise's scale | — | Not equivalent: WE's `filmgrain` samples `util/noise` (256²) at the layer's UV × `scale` × aspect, about 1.45 noise texels per pixel on rain at 4K, and the same pass carries the full-resolution image; a smaller pass would blur both | `effects/filmgrain` shaders, perf/fullscreen-effect-layers |
 
 ## Settings and storage decisions
 
@@ -86,4 +87,5 @@ The detailed 2D plan, its baseline and its audit are in [`efficiency-plan-2d.md`
 
 | Change | State | Source |
 |---|---|---|
+| Fullscreen layers drawn where a display shows them (`SceneVisibleRegion`, a scissor on every effect pass plus a 64 px margin and the farthest parallax and shake), copies between an effect's buffers handed over as textures (`EffectGraphRenderer.copyCanAlias`), motion blur's history at half size (`EffectResolutionPolicy.temporalDivisor`, slider stop 5 until measured) | Implemented, each switchable (`OWE_FX_CLAMP`, `OWE_FX_COPY_ALIAS`, `OWE_FX_HALF_ACCUM`); to be measured with `FullscreenEffectMeasureTests` (GPU ms and SSIM on rain, Tsunade, witcher) and kept only where it wins | perf/fullscreen-effect-layers |
 | MetalFX upscaling (Off or MetalFX at 50/67/75 %) | Small, noisy gain: Katana fastest frame 25.9 → 21.9 ms, median about 53 ms both; Cyberpunk Samurai 2.1 → 3.2 ms (a cheap scene gains nothing). To be re-measured after point-size rendering | PR #73 |
