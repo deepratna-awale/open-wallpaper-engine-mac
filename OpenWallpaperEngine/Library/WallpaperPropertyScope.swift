@@ -53,6 +53,18 @@ extension WallpaperSettingsIdentity {
         defaults.object(forKey: key(family, scope: scope)) ?? defaults.object(forKey: key(family))
     }
 
+    /// The values the user set for `scope`, which a wallpaper starts with: its own when the user
+    /// set them, else the shared ones the user set (a display that never had its own, or whose own
+    /// were seeded before the shared ones were set), else none (project.json's defaults apply).
+    /// Every load reads them here, so a scene, its scripts, its text and a web page all start with
+    /// what the sidebar shows.
+    func userSetValues(scope: WallpaperPropertyScope, defaults: UserDefaults = .app) -> [String: String] {
+        for candidate in [scope, .shared] where defaults.bool(forKey: key(.explicitUserProperties, scope: candidate)) {
+            return defaults.dictionary(forKey: key(.userProperties, scope: candidate)) as? [String: String] ?? [:]
+        }
+        return [:]
+    }
+
     /// Saves the shared values under `scope`'s own keys when it has none yet, so a display's store
     /// starts from the wallpaper's properties and is read and written under its own key from then on.
     func seed(_ scope: WallpaperPropertyScope, defaults: UserDefaults = .app) {
