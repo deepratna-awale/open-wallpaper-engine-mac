@@ -70,7 +70,8 @@ final class EditorPreviewRenderTests: XCTestCase {
         let duration = try await asset.load(.duration).seconds
         XCTAssertEqual(duration, Double(EditorPreviewRenderer.particleFrames) / Double(EditorPreviewRenderer.particleFrameRate),
                        accuracy: 0.1)
-        let frame = try XCTUnwrap(try await firstFrame(of: url))
+        let decoded = try await firstFrame(of: url)
+        let frame = try XCTUnwrap(decoded)
         XCTAssertEqual(frame.width, EditorPreviewScene.particleFrame.pixelWidth)
     }
 
