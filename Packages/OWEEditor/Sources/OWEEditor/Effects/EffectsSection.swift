@@ -104,6 +104,8 @@ struct EffectParametersView: View {
     let effect: SceneLayerEffect
     @State private var schema: EffectSchema?
     @State private var unlinked: Set<String> = []
+    /// The wallpaper's textures a slot can take, read once.
+    @State private var wallpaperTextures: [String] = []
 
     var body: some View {
         Group {
@@ -118,7 +120,12 @@ struct EffectParametersView: View {
                 Text(L("This effect’s settings can’t be read.")).foregroundStyle(.secondary)
             }
         }
-        .onAppear { schema = services.effectSchema(effect.file) }
+        .onAppear {
+            schema = services.effectSchema(effect.file)
+            if schema?.textures.isEmpty == false {
+                wallpaperTextures = services.wallpaperAssets().compactMap(\.textureName)
+            }
+        }
     }
 
     // MARK: Combos
@@ -316,10 +323,9 @@ struct EffectParametersView: View {
                     }
                     Button(L("Import Image…")) { importTexture(slot) }
                         .disabled(services.assetStore == nil)
-                    let textures = services.wallpaperAssets().compactMap(\.textureName)
-                    if !textures.isEmpty {
+                    if !wallpaperTextures.isEmpty {
                         Menu(L("Wallpaper Texture")) {
-                            ForEach(textures, id: \.self) { name in
+                            ForEach(wallpaperTextures, id: \.self) { name in
                                 Button(name) { setTexture(slot, name) }
                             }
                         }
