@@ -31,6 +31,20 @@ struct ParticleFieldRow: View {
         }
     }
 
+    private var slider: some View {
+        let lower: Double = field.minimum ?? 0
+        let upper: Double = max(field.maximum ?? 1, lower + 0.001)
+        let isInteger: Bool = kind == .sliderint
+        let binding = Binding<Double>(
+            get: { value?.doubleValue ?? lower },
+            set: { (newValue: Double) in set(.number(isInteger ? newValue.rounded() : newValue), true) })
+        let fractionDigits: Int = isInteger ? 0 : (upper - lower < 0.5 ? 3 : 2)
+        let step: Double? = isInteger ? 1 : nil
+        return NumericSliderInput<Double>(value: binding, range: lower...upper,
+                                          defaultValue: field.addDefault?.doubleValue ?? lower, step: step,
+                                          fractionDigits: fractionDigits, fieldWidth: 52, clampsTypedValue: false)
+    }
+
     private var labelText: some View {
         HStack(spacing: 4) {
             Text(field.localizedLabel)
@@ -44,19 +58,13 @@ struct ParticleFieldRow: View {
             ParticleNumberField(value: value?.doubleValue ?? SceneVector.components(value).first ?? 0,
                                 isInteger: field.isInteger) { set(.number($0), true) }
         case .slider, .sliderint, .hue:
-            let lower = field.minimum ?? 0, upper = max(field.maximum ?? 1, (field.minimum ?? 0) + 0.001)
             HStack(spacing: 6) {
                 if kind == .hue {
                     Circle()
                         .fill(Color(hue: value?.doubleValue ?? 0, saturation: 1, brightness: 1))
                         .frame(width: 14, height: 14)
                 }
-                NumericSliderInput(value: Binding(
-                    get: { value?.doubleValue ?? lower },
-                    set: { set(.number(kind == .sliderint ? $0.rounded() : $0), true) }),
-                    range: lower...upper, defaultValue: field.addDefault?.doubleValue ?? lower,
-                    step: kind == .sliderint ? 1 : nil, fractionDigits: kind == .sliderint ? 0 : (upper - lower < 0.5 ? 3 : 2),
-                    fieldWidth: 52, clampsTypedValue: false)
+                slider
             }
         case .vec2, .vec3:
             ParticleVectorField(field: field, count: kind == .vec2 ? 2 : 3, value: value) { set($0, true) }

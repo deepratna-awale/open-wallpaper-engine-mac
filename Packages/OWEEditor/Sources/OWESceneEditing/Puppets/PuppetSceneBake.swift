@@ -33,8 +33,9 @@ public enum PuppetSceneBake {
         var files: [String: Data] = [:]
         func isFree(_ path: String) -> Bool { files[path] == nil && readFile(path) == nil }
         for (key, document) in puppets.sorted(by: { $0.key < $1.key }) {
-            guard let index = objects.indices.first(where: { index in
-                String((objects[index]["id"] as? NSNumber)?.intValue ?? index) == key
+            guard let index = objects.indices.first(where: { (index: Int) -> Bool in
+                let id: Int = (objects[index]["id"] as? NSNumber)?.intValue ?? index
+                return String(id) == key
             }), let modelPath = objects[index]["image"] as? String else { throw BakeError.noImageLayer(key) }
             var model = readFile(modelPath).flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }
                 ?? ["material": document.material]

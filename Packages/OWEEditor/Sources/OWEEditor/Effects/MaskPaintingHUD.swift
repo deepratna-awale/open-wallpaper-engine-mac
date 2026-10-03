@@ -22,8 +22,7 @@ struct MaskPaintingHUD: View {
             .labelsHidden()
             .fixedSize()
             .help(L("Paint shows the effect; Erase hides it"))
-            labeledSlider(L("Size"), value: $painting.brushSize,
-                          range: 1...max(2, max(painting.layerSize.x, painting.layerSize.y) / 2))
+            labeledSlider(L("Size"), value: $painting.brushSize, range: 1...maximumBrushSize)
             labeledSlider(L("Softness"), value: $painting.softness, range: 0...1)
             labeledSlider(L("Strength"), value: $painting.strength, range: 0.02...1)
             Menu {
@@ -46,6 +45,11 @@ struct MaskPaintingHUD: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
         .editorGlass(in: Capsule())
+    }
+
+    private var maximumBrushSize: Double {
+        let longest: Double = max(painting.layerSize.x, painting.layerSize.y)
+        return max(2, longest / 2)
     }
 
     private func labeledSlider(_ title: String, value: Binding<Double>, range: ClosedRange<Double>) -> some View {

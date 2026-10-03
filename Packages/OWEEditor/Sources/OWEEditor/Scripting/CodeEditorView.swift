@@ -212,11 +212,12 @@ final class ScriptTextView: NSTextView {
 
     /// A new line keeps the current line's indentation, one level more after `{`.
     override func insertNewline(_ sender: Any?) {
-        let text = string as NSString
-        let selection = selectedRange()
-        let lineRange = text.lineRange(for: NSRange(location: selection.location, length: 0))
-        let line = text.substring(with: NSRange(location: lineRange.location, length: selection.location - lineRange.location))
-        var indentation = String(line.prefix { $0 == " " || $0 == "\t" })
+        let text: NSString = string as NSString
+        let selection: NSRange = selectedRange()
+        let lineRange: NSRange = text.lineRange(for: NSRange(location: selection.location, length: 0))
+        let lineLength: Int = selection.location - lineRange.location
+        let line: String = text.substring(with: NSRange(location: lineRange.location, length: lineLength))
+        var indentation = String(line.prefix { (character: Character) -> Bool in character == " " || character == "\t" })
         if line.trimmingCharacters(in: .whitespaces).hasSuffix("{") { indentation += "\t" }
         super.insertNewline(sender)
         if !indentation.isEmpty { insertText(indentation, replacementRange: selectedRange()) }

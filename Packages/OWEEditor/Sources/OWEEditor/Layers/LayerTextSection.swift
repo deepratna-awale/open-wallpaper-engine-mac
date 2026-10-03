@@ -12,90 +12,138 @@ struct LayerTextSection: View {
 
     var body: some View {
         Section(L("Text")) {
-            let script = session.textScript(of: layer.id)
-            let known = SceneLayerFactory.TextScript(source: script)
-            LabeledContent(L("Content")) {
-                Picker(selection: Binding<String>(
-                    get: { known?.rawValue ?? (script == nil ? "none" : "custom") },
-                    set: { choice in
-                        guard choice != "custom" else { return }
-                        session.setTextScript(SceneLayerFactory.TextScript(rawValue: choice), of: layer.id,
-                                              actionName: L("Change Text Script"))
-                    })) {
-                    Text(L("Text")).tag("none")
-                    Text(L("Clock")).tag(SceneLayerFactory.TextScript.clock.rawValue)
-                    Text(L("Date")).tag(SceneLayerFactory.TextScript.date.rawValue)
-                    if script != nil && known == nil { Text(L("Script")).tag("custom") }
-                } label: { EmptyView() }
-                .labelsHidden()
-                .disabled(!session.isEditable("text", of: layer.id))
-            }
-            if script == nil {
-                TextEditor(text: Binding(
-                    get: { session.textContent(of: layer.id) ?? "" },
-                    set: { session.setText($0, of: layer.id, actionName: L("Change Text")) }))
-                    .font(.body)
-                    .frame(minHeight: 54, maxHeight: 120)
-                    .disabled(!session.isEditable("text", of: layer.id))
-            } else if known == .clock {
-                scriptToggle("use24hFormat", title: L("24-Hour Clock"), default: true)
-                scriptToggle("showSeconds", title: L("Show Seconds"), default: false)
-                LabeledContent(L("Separator")) {
-                    TextField(L("Separator"), text: Binding(
-                        get: { session.textScriptProperties(of: layer.id)["delimiter"]?.stringValue ?? ":" },
-                        set: { session.setTextScriptProperty("delimiter", to: .string($0), of: layer.id,
-                                                             actionName: L("Change Text Script")) }))
-                    .labelsHidden()
-                    .frame(width: 60)
-                }
-            } else if known == .date {
-                scriptToggle("showWeekday", title: L("Show Weekday"), default: true)
-            } else {
-                Text(L("A script writes this text. Its code is edited in the Script editor."))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
+            let script: String? = session.textScript(of: layer.id)
+            let known: SceneLayerFactory.TextScript? = SceneLayerFactory.TextScript(source: script)
+            contentRow(script: script, known: known)
+            scriptOptions(script: script, known: known)
             fontRow
-            fieldRow("pointsize", title: L("Size")) {
-                NumericSliderInput(value: Binding(
-                    get: { session.number("pointsize", of: layer.id, default: 32) },
-                    set: { session.setValue(.number($0.rounded()), for: "pointsize", of: layer.id,
-                                            actionName: L("Change Text Size"), coalescing: true) }),
-                    range: 4...256, defaultValue: 32, step: 1, fractionDigits: 0, fieldWidth: 48, clampsTypedValue: false)
-            }
-            fieldRow("horizontalalign", title: L("Alignment")) {
-                Picker(selection: Binding(
-                    get: { session.value("horizontalalign", of: layer.id)?.stringValue ?? "center" },
-                    set: { session.setValue(.string($0), for: "horizontalalign", of: layer.id, actionName: L("Change Alignment")) })) {
-                    Image(systemName: "text.alignleft").help(L("Left")).tag("left")
-                    Image(systemName: "text.aligncenter").help(L("Center")).tag("center")
-                    Image(systemName: "text.alignright").help(L("Right")).tag("right")
-                } label: { EmptyView() }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .fixedSize()
-            }
-            fieldRow("verticalalign", title: L("Vertical Alignment")) {
-                Picker(selection: Binding(
-                    get: { session.value("verticalalign", of: layer.id)?.stringValue ?? "center" },
-                    set: { session.setValue(.string($0), for: "verticalalign", of: layer.id, actionName: L("Change Alignment")) })) {
-                    Text(L("Top")).tag("top")
-                    Text(L("Center")).tag("center")
-                    Text(L("Bottom")).tag("bottom")
-                } label: { EmptyView() }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .fixedSize()
-            }
-            fieldRow("padding", title: L("Padding")) {
-                NumericSliderInput(value: Binding(
-                    get: { SceneVector.components(session.value("padding", of: layer.id)).first ?? 32 },
-                    set: { session.setValue(.number($0.rounded()), for: "padding", of: layer.id,
-                                            actionName: L("Change Padding"), coalescing: true) }),
-                    range: 0...200, defaultValue: 32, step: 1, fractionDigits: 0, fieldWidth: 48, clampsTypedValue: false)
-            }
+            sizeRow
+            alignmentRow
+            verticalAlignmentRow
+            paddingRow
             Button(L("Edit on Canvas")) { session.editingText = layer.id }
                 .disabled(script != nil || session.geometry(of: layer.id) == nil)
+        }
+    }
+
+    private func contentRow(script: String?, known: SceneLayerFactory.TextScript?) -> some View {
+        let selection = Binding<String>(
+            get: { known?.rawValue ?? (script == nil ? "none" : "custom") },
+            set: { (choice: String) in
+                guard choice != "custom" else { return }
+                session.setTextScript(SceneLayerFactory.TextScript(rawValue: choice), of: layer.id,
+                                      actionName: L("Change Text Script"))
+            })
+        return LabeledContent(L("Content")) {
+            Picker(selection: selection) {
+                Text(L("Text")).tag("none")
+                Text(L("Clock")).tag(SceneLayerFactory.TextScript.clock.rawValue)
+                Text(L("Date")).tag(SceneLayerFactory.TextScript.date.rawValue)
+                if script != nil && known == nil { Text(L("Script")).tag("custom") }
+            } label: { EmptyView() }
+            .labelsHidden()
+            .disabled(!session.isEditable("text", of: layer.id))
+        }
+    }
+
+    @ViewBuilder
+    private func scriptOptions(script: String?, known: SceneLayerFactory.TextScript?) -> some View {
+        if script == nil {
+            textEditor
+        } else if known == .clock {
+            scriptToggle("use24hFormat", title: L("24-Hour Clock"), default: true)
+            scriptToggle("showSeconds", title: L("Show Seconds"), default: false)
+            separatorRow
+        } else if known == .date {
+            scriptToggle("showWeekday", title: L("Show Weekday"), default: true)
+        } else {
+            Text(L("A script writes this text. Its code is edited in the Script editor."))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var textEditor: some View {
+        let text = Binding<String>(
+            get: { session.textContent(of: layer.id) ?? "" },
+            set: { (value: String) in session.setText(value, of: layer.id, actionName: L("Change Text")) })
+        return TextEditor(text: text)
+            .font(.body)
+            .frame(minHeight: 54, maxHeight: 120)
+            .disabled(!session.isEditable("text", of: layer.id))
+    }
+
+    private var separatorRow: some View {
+        let text = Binding<String>(
+            get: { session.textScriptProperties(of: layer.id)["delimiter"]?.stringValue ?? ":" },
+            set: { (value: String) in
+                session.setTextScriptProperty("delimiter", to: .string(value), of: layer.id,
+                                              actionName: L("Change Text Script"))
+            })
+        return LabeledContent(L("Separator")) {
+            TextField(L("Separator"), text: text)
+                .labelsHidden()
+                .frame(width: 60)
+        }
+    }
+
+    private var sizeRow: some View {
+        let value = Binding<Double>(
+            get: { session.number("pointsize", of: layer.id, default: 32) },
+            set: { (size: Double) in
+                session.setValue(.number(size.rounded()), for: "pointsize", of: layer.id,
+                                 actionName: L("Change Text Size"), coalescing: true)
+            })
+        return fieldRow("pointsize", title: L("Size")) {
+            NumericSliderInput<Double>(value: value, range: 4...256, defaultValue: 32, step: 1, fractionDigits: 0,
+                                       fieldWidth: 48, clampsTypedValue: false)
+        }
+    }
+
+    private func alignmentBinding(_ field: String) -> Binding<String> {
+        return Binding<String>(
+            get: { session.value(field, of: layer.id)?.stringValue ?? "center" },
+            set: { (value: String) in
+                session.setValue(.string(value), for: field, of: layer.id, actionName: L("Change Alignment"))
+            })
+    }
+
+    private var alignmentRow: some View {
+        fieldRow("horizontalalign", title: L("Alignment")) {
+            Picker(selection: alignmentBinding("horizontalalign")) {
+                Image(systemName: "text.alignleft").help(L("Left")).tag("left")
+                Image(systemName: "text.aligncenter").help(L("Center")).tag("center")
+                Image(systemName: "text.alignright").help(L("Right")).tag("right")
+            } label: { EmptyView() }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .fixedSize()
+        }
+    }
+
+    private var verticalAlignmentRow: some View {
+        fieldRow("verticalalign", title: L("Vertical Alignment")) {
+            Picker(selection: alignmentBinding("verticalalign")) {
+                Text(L("Top")).tag("top")
+                Text(L("Center")).tag("center")
+                Text(L("Bottom")).tag("bottom")
+            } label: { EmptyView() }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .fixedSize()
+        }
+    }
+
+    private var paddingRow: some View {
+        let value = Binding<Double>(
+            get: { SceneVector.components(session.value("padding", of: layer.id)).first ?? 32 },
+            set: { (padding: Double) in
+                session.setValue(.number(padding.rounded()), for: "padding", of: layer.id,
+                                 actionName: L("Change Padding"), coalescing: true)
+            })
+        return fieldRow("padding", title: L("Padding")) {
+            NumericSliderInput<Double>(value: value, range: 0...200, defaultValue: 32, step: 1, fractionDigits: 0,
+                                       fieldWidth: 48, clampsTypedValue: false)
         }
     }
 

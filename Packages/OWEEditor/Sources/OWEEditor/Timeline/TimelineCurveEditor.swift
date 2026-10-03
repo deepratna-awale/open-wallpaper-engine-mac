@@ -128,46 +128,12 @@ struct TimelineCurveEditor: View {
         let handles = handleMarks(clip: clip, scale: scale, axis: axis)
         let playheadX = scale.x(timeline.playhead)
         let channels = visibleChannels(clip)
-        Canvas { context, canvasSize in
-            // Value grid.
-            let step = Self.niceStep(axis.range.upperBound - axis.range.lowerBound)
-            var value = (axis.range.lowerBound / step).rounded(.up) * step
-            while value <= axis.range.upperBound {
-                let y = axis.y(value)
-                context.stroke(Path { $0.move(to: CGPoint(x: 0, y: y)); $0.addLine(to: CGPoint(x: canvasSize.width, y: y)) },
-                               with: .color(.primary.opacity(abs(value) < step / 1000 ? 0.25 : 0.08)), lineWidth: 1)
-                context.draw(Text(verbatim: Self.format(value, step: step)).font(.caption2.monospacedDigit()).foregroundStyle(.secondary),
-                             at: CGPoint(x: 4, y: y - 1), anchor: .bottomLeading)
-                value += step
-            }
-            // Curves: WE's per-frame samples, joined.
-            for channel in channels {
-                let keyframes = clip.playerKeyframes(channel: channel)
-                let color = Self.colors[channel % Self.colors.count]
-                var path = Path()
-                let stride = max(Int(Double(clip.length) / max(canvasSize.width, 1)), 1)
-                var started = false
-                for frame in Swift.stride(from: 0, through: clip.length, by: stride) {
-                    let point = CGPoint(x: scale.x(frame: frame, fps: clip.fps),
-                                        y: axis.y(Double(TimelineCurve.sample(keyframes, at: Int32(clamping: frame)))))
-                    if started { path.addLine(to: point) } else { path.move(to: point); started = true }
-                }
-                context.stroke(path, with: .color(color), lineWidth: 1.5)
-            }
-            for handle in handles {
-                context.stroke(Path { $0.move(to: handle.key); $0.addLine(to: handle.point) },
-                               with: .color(.primary.opacity(0.5)), lineWidth: 1)
-                let dot = Path(ellipseIn: CGRect(x: handle.point.x - 3.5, y: handle.point.y - 3.5, width: 7, height: 7))
-                context.fill(dot, with: .color(Color(nsColor: .controlBackgroundColor)))
-                context.stroke(dot, with: .color(.accentColor), lineWidth: 1.5)
-            }
-            for key in keys {
-                let mark = TimelineLanes.diamond(at: key.point, radius: 5)
-                let color = Self.colors[key.ref.channel % Self.colors.count]
-                context.fill(mark, with: key.selected ? .color(.accentColor) : .color(color))
-                context.stroke(mark, with: .color(key.selected ? .white : .black.opacity(0.4)), lineWidth: 1)
-            }
-            context.stroke(Path { $0.move(to: CGPoint(x: playheadX, y: 0)); $0.addLine(to: CGPoint(x: playheadX, y: canvasSize.height)) },
+        Canvas { (context: inout GraphicsContext, canvasSize: CGSize) in
+            Self.drawGrid(in: &context, size: canvasSize, axis: axis)
+            Self.drawCurves(in: &context, size: canvasSize, clip: clip, channels: channels, scale: scale, axis: axis)
+            Self.drawMarks(in: &context, keys: keys, handles: handles)
+            let headX: CGFloat = CGFloat(playheadX)
+            context.stroke(Self.line(from: CGPoint(x: headX, y: 0), to: CGPoint(x: headX, y: canvasSize.height)),
                            with: .color(.red), lineWidth: 1)
             if let box {
                 context.fill(Path(box), with: .color(.accentColor.opacity(0.12)))
@@ -178,6 +144,67 @@ struct TimelineCurveEditor: View {
         .gesture(DragGesture(minimumDistance: 0)
             .onChanged { drag in changed(drag, clip: clip, keys: keys, handles: handles, scale: scale, axis: axis) }
             .onEnded { _ in ended(keys: keys) })
+    }
+
+    private static func line(from start: CGPoint, to end: CGPoint) -> Path {
+        var path = Path()
+        path.move(to: start)
+        path.addLine(to: end)
+        return path
+    }
+
+    /// The value grid and its labels.
+    private static func drawGrid(in context: inout GraphicsContext, size: CGSize, axis: ValueAxis) {
+        let lower: Double = axis.range.lowerBound
+        let upper: Double = axis.range.upperBound
+        let step: Double = niceStep(upper - lower)
+        var value: Double = (lower / step).rounded(.up) * step
+        while value <= upper {
+            let y: CGFloat = CGFloat(axis.y(value))
+            let opacity: Double = abs(value) < step / 1000 ? 0.25 : 0.08
+            context.stroke(line(from: CGPoint(x: 0, y: y), to: CGPoint(x: size.width, y: y)),
+                           with: .color(.primary.opacity(opacity)), lineWidth: 1)
+            let label: Text = Text(verbatim: format(value, step: step)).font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
+            context.draw(label, at: CGPoint(x: 4, y: y - 1), anchor: .bottomLeading)
+            value += step
+        }
+    }
+
+    /// The curves: WE's per-frame samples, joined.
+    private static func drawCurves(in context: inout GraphicsContext, size: CGSize, clip: TimelineClip, channels: [Int],
+                                   scale: TimelineScale, axis: ValueAxis) {
+        let width: Double = max(Double(size.width), 1)
+        let stride: Int = max(Int(Double(clip.length) / width), 1)
+        for channel in channels {
+            let keyframes = clip.playerKeyframes(channel: channel)
+            let color: Color = colors[channel % colors.count]
+            var path = Path()
+            var started = false
+            for frame in Swift.stride(from: 0, through: clip.length, by: stride) {
+                let sample: Double = Double(TimelineCurve.sample(keyframes, at: Int32(clamping: frame)))
+                let x: Double = scale.x(frame: frame, fps: clip.fps)
+                let point = CGPoint(x: x, y: axis.y(sample))
+                if started { path.addLine(to: point) } else { path.move(to: point); started = true }
+            }
+            context.stroke(path, with: .color(color), lineWidth: 1.5)
+        }
+    }
+
+    /// The selected keys' handles, then every key.
+    private static func drawMarks(in context: inout GraphicsContext, keys: [KeyMark], handles: [HandleMark]) {
+        for handle in handles {
+            context.stroke(line(from: handle.key, to: handle.point), with: .color(.primary.opacity(0.5)), lineWidth: 1)
+            let dotRect = CGRect(x: handle.point.x - 3.5, y: handle.point.y - 3.5, width: 7, height: 7)
+            let dot = Path(ellipseIn: dotRect)
+            context.fill(dot, with: .color(Color(nsColor: .controlBackgroundColor)))
+            context.stroke(dot, with: .color(.accentColor), lineWidth: 1.5)
+        }
+        for key in keys {
+            let mark: Path = TimelineLanes.diamond(at: key.point, radius: 5)
+            let color: Color = colors[key.ref.channel % colors.count]
+            context.fill(mark, with: key.selected ? .color(.accentColor) : .color(color))
+            context.stroke(mark, with: .color(key.selected ? .white : .black.opacity(0.4)), lineWidth: 1)
+        }
     }
 
     private func keyMarks(clip: TimelineClip, scale: TimelineScale, axis: ValueAxis) -> [KeyMark] {
@@ -222,7 +249,7 @@ struct TimelineCurveEditor: View {
             frozenRange = axis.range
             timeline.focused = target
             let start = drag.startLocation
-            func distance(_ point: CGPoint) -> Double { hypot(point.x - start.x, point.y - start.y) }
+            func distance(_ point: CGPoint) -> Double { Double(hypot(point.x - start.x, point.y - start.y)) }
             if let handle = handles.filter({ distance($0.point) <= 6 }).min(by: { distance($0.point) < distance($1.point) }) {
                 gesture = .handle(handle.ref, handle.side)
             } else if let key = keys.filter({ distance($0.point) <= 7 }).min(by: { distance($0.point) < distance($1.point) }) {
@@ -239,13 +266,16 @@ struct TimelineCurveEditor: View {
         switch gesture {
         case let .move(start)?:
             guard !timeline.selection.isEmpty else { return }
-            let frames = Int(((drag.location.x - start.x) / max(scale.pointsPerFrame(fps: clip.fps), 1e-6)).rounded())
+            let dx: Double = Double(drag.location.x - start.x)
+            let dy: Double = Double(drag.location.y - start.y)
+            let frames: Int = Int((dx / max(scale.pointsPerFrame(fps: clip.fps), 1e-6)).rounded())
             // ⌥ moves in time only.
-            let value = modifiers.contains(.option) ? 0 : axis.valueDelta(drag.location.y - start.y)
+            let value: Double = modifiers.contains(.option) ? 0 : axis.valueDelta(dy)
             timeline.previewMove(byFrames: frames, value: value)
         case let .handle(ref, side)?:
-            let frame = scale.seconds(drag.location.x) * clip.fps
-            timeline.previewHandle(ref, side: side, to: SIMD2(frame, axis.value(drag.location.y)))
+            let frame: Double = scale.seconds(Double(drag.location.x)) * clip.fps
+            let value: Double = axis.value(Double(drag.location.y))
+            timeline.previewHandle(ref, side: side, to: SIMD2<Double>(frame, value))
         case let .box(start, _)?:
             box = CGRect(x: min(start.x, drag.location.x), y: min(start.y, drag.location.y),
                          width: abs(drag.location.x - start.x), height: abs(drag.location.y - start.y))

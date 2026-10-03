@@ -253,7 +253,7 @@ struct EffectParametersView: View {
 
     private func slider(_ parameter: EffectSchema.Parameter, component: Int, linked: Bool = false) -> some View {
         let low = min(parameter.minimum, parameter.maximum), high = max(parameter.minimum, parameter.maximum)
-        return NumericSliderInput(value: Binding(
+        return NumericSliderInput<Double>(value: Binding<Double>(
             get: { components(parameter)[safe: component] ?? 0 },
             set: { value in
                 var values = components(parameter)

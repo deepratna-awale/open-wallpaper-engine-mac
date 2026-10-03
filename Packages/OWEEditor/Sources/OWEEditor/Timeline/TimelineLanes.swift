@@ -41,36 +41,47 @@ struct TimelineRuler: View {
     @ObservedObject var timeline: SceneTimelineEditor
     static let height: Double = 24
 
+
+    private static func line(from start: CGPoint, to end: CGPoint) -> Path {
+        var path = Path()
+        path.move(to: start)
+        path.addLine(to: end)
+        return path
+    }
+
+    private static func draw(in context: inout GraphicsContext, size: CGSize, scale: TimelineScale, playhead: Double) {
+        let height: CGFloat = size.height
+        let step: Double = scale.tickStep()
+        var tick: Double = 0
+        while tick <= scale.duration + 1e-9 {
+            let x: CGFloat = CGFloat(scale.x(tick))
+            context.stroke(line(from: CGPoint(x: x, y: height - 8), to: CGPoint(x: x, y: height)),
+                           with: .color(.secondary), lineWidth: 1)
+            let label: Text = Text(verbatim: TimelineNames.time(tick)).font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
+            context.draw(label, at: CGPoint(x: x + 3, y: 2), anchor: .topLeading)
+            let half: Double = tick + step / 2
+            if half <= scale.duration {
+                let hx: CGFloat = CGFloat(scale.x(half))
+                context.stroke(line(from: CGPoint(x: hx, y: height - 4), to: CGPoint(x: hx, y: height)),
+                               with: .color(.secondary.opacity(0.6)), lineWidth: 1)
+            }
+            tick += step
+        }
+        let x: CGFloat = CGFloat(scale.x(playhead))
+        var head = Path()
+        head.move(to: CGPoint(x: x - 5, y: height - 10))
+        head.addLine(to: CGPoint(x: x + 5, y: height - 10))
+        head.addLine(to: CGPoint(x: x, y: height))
+        head.closeSubpath()
+        context.fill(head, with: .color(.red))
+        context.stroke(line(from: CGPoint(x: x, y: 0), to: CGPoint(x: x, y: height)), with: .color(.red), lineWidth: 1)
+    }
     var body: some View {
         GeometryReader { proxy in
             let scale = TimelineScale(duration: timeline.duration, width: proxy.size.width)
             let playhead = timeline.playhead
-            Canvas { context, size in
-                let step = scale.tickStep()
-                var tick = 0.0
-                while tick <= scale.duration + 1e-9 {
-                    let x = scale.x(tick)
-                    context.stroke(Path { $0.move(to: CGPoint(x: x, y: size.height - 8)); $0.addLine(to: CGPoint(x: x, y: size.height)) },
-                                   with: .color(.secondary), lineWidth: 1)
-                    context.draw(Text(verbatim: TimelineNames.time(tick)).font(.caption2.monospacedDigit()).foregroundStyle(.secondary),
-                                 at: CGPoint(x: x + 3, y: 2), anchor: .topLeading)
-                    let half = tick + step / 2
-                    if half <= scale.duration {
-                        let hx = scale.x(half)
-                        context.stroke(Path { $0.move(to: CGPoint(x: hx, y: size.height - 4)); $0.addLine(to: CGPoint(x: hx, y: size.height)) },
-                                       with: .color(.secondary.opacity(0.6)), lineWidth: 1)
-                    }
-                    tick += step
-                }
-                let x = scale.x(playhead)
-                var head = Path()
-                head.move(to: CGPoint(x: x - 5, y: size.height - 10))
-                head.addLine(to: CGPoint(x: x + 5, y: size.height - 10))
-                head.addLine(to: CGPoint(x: x, y: size.height))
-                head.closeSubpath()
-                context.fill(head, with: .color(.red))
-                context.stroke(Path { $0.move(to: CGPoint(x: x, y: 0)); $0.addLine(to: CGPoint(x: x, y: size.height)) },
-                               with: .color(.red), lineWidth: 1)
+            Canvas { (context: inout GraphicsContext, size: CGSize) in
+                Self.draw(in: &context, size: size, scale: scale, playhead: playhead)
             }
             .contentShape(Rectangle())
             .gesture(DragGesture(minimumDistance: 0)
@@ -134,10 +145,10 @@ struct TimelineLanes: View {
             let spans = makeSpans(scale: scale)
             let playheadX = scale.x(timeline.playhead)
             let focusedRows = Set(rows.indices.filter { rows[$0].target == timeline.activeTarget })
-            Canvas { context, size in
+            Canvas { (context: inout GraphicsContext, size: CGSize) in
                 for index in rows.indices {
-                    let y = Double(index) * TimelineRow.height
-                    let band = CGRect(x: 0, y: y, width: size.width, height: TimelineRow.height)
+                    let y: CGFloat = CGFloat(Double(index) * TimelineRow.height)
+                    let band = CGRect(x: 0, y: y, width: size.width, height: CGFloat(TimelineRow.height))
                     if focusedRows.contains(index) {
                         context.fill(Path(band), with: .color(.accentColor.opacity(0.08)))
                     } else if index % 2 == 1 {
@@ -153,8 +164,11 @@ struct TimelineLanes: View {
                     context.fill(path, with: mark.selected ? .color(.accentColor) : .color(Color(nsColor: .controlBackgroundColor)))
                     context.stroke(path, with: mark.selected ? .color(.accentColor) : .color(.primary.opacity(0.75)), lineWidth: 1)
                 }
-                context.stroke(Path { $0.move(to: CGPoint(x: playheadX, y: 0)); $0.addLine(to: CGPoint(x: playheadX, y: size.height)) },
-                               with: .color(.red), lineWidth: 1)
+                let headX: CGFloat = CGFloat(playheadX)
+                var head = Path()
+                head.move(to: CGPoint(x: headX, y: 0))
+                head.addLine(to: CGPoint(x: headX, y: size.height))
+                context.stroke(head, with: .color(.red), lineWidth: 1)
                 if let box {
                     context.fill(Path(box), with: .color(.accentColor.opacity(0.12)))
                     context.stroke(Path(box), with: .color(.accentColor.opacity(0.7)), lineWidth: 1)
@@ -165,28 +179,31 @@ struct TimelineLanes: View {
                 .onChanged { drag in changed(drag, marks: marks, scale: scale) }
                 .onEnded { drag in ended(drag, marks: marks) })
         }
-        .frame(height: max(Double(rows.count) * TimelineRow.height, TimelineRow.height))
+        .frame(height: CGFloat(max(Double(rows.count) * TimelineRow.height, TimelineRow.height)))
     }
 
     static func diamond(at point: CGPoint, radius: Double = 5.5) -> Path {
-        Path { path in
-            path.move(to: CGPoint(x: point.x, y: point.y - radius))
-            path.addLine(to: CGPoint(x: point.x + radius, y: point.y))
-            path.addLine(to: CGPoint(x: point.x, y: point.y + radius))
-            path.addLine(to: CGPoint(x: point.x - radius, y: point.y))
-            path.closeSubpath()
-        }
+        let r: CGFloat = CGFloat(radius)
+        let x: CGFloat = point.x, y: CGFloat = point.y
+        var path = Path()
+        path.move(to: CGPoint(x: x, y: y - r))
+        path.addLine(to: CGPoint(x: x + r, y: y))
+        path.addLine(to: CGPoint(x: x, y: y + r))
+        path.addLine(to: CGPoint(x: x - r, y: y))
+        path.closeSubpath()
+        return path
     }
 
     static func square(at point: CGPoint, radius: Double = 4.5) -> Path {
-        Path(CGRect(x: point.x - radius, y: point.y - radius, width: radius * 2, height: radius * 2))
+        let r: CGFloat = CGFloat(radius)
+        return Path(CGRect(x: point.x - r, y: point.y - r, width: r * 2, height: r * 2))
     }
 
     private func makeMarks(scale: TimelineScale) -> [Mark] {
         var marks: [Mark] = []
         for (index, row) in rows.enumerated() {
             guard let clip = timeline.clip(row.target) else { continue }
-            let y = (Double(index) + 0.5) * TimelineRow.height
+            let y: Double = (Double(index) + 0.5) * TimelineRow.height
             let channels = row.channel.map { [$0] } ?? Array(clip.channels.indices)
             var byFrame: [Int: (refs: Set<TimelineKeyframeRef>, hold: Bool)] = [:]
             for channel in channels where clip.channels.indices.contains(channel) {
@@ -209,14 +226,21 @@ struct TimelineLanes: View {
             guard let clip = timeline.clip(row.target) else { return nil }
             let frames = row.channel.map { clip.channels.indices.contains($0) ? clip.channels[$0].map(\.frame) : [] } ?? clip.keyframeFrames
             guard let first = frames.min(), let last = frames.max(), last > first else { return nil }
-            let y = (Double(index) + 0.5) * TimelineRow.height
-            return (CGPoint(x: scale.x(frame: first, fps: clip.fps), y: y), CGPoint(x: scale.x(frame: last, fps: clip.fps), y: y))
+            let y: Double = (Double(index) + 0.5) * TimelineRow.height
+            let start = CGPoint(x: scale.x(frame: first, fps: clip.fps), y: y)
+            let end = CGPoint(x: scale.x(frame: last, fps: clip.fps), y: y)
+            return (start, end)
         }
     }
 
     private func hit(_ point: CGPoint, marks: [Mark]) -> Mark? {
-        marks.filter { abs($0.point.y - point.y) < TimelineRow.height / 2 && abs($0.point.x - point.x) <= 7 }
-            .min { abs($0.point.x - point.x) < abs($1.point.x - point.x) }
+        let halfRow: CGFloat = CGFloat(TimelineRow.height / 2)
+        let near: [Mark] = marks.filter { (mark: Mark) -> Bool in
+            let dy: CGFloat = abs(mark.point.y - point.y)
+            let dx: CGFloat = abs(mark.point.x - point.x)
+            return dy < halfRow && dx <= 7
+        }
+        return near.min { (a: Mark, b: Mark) -> Bool in abs(a.point.x - point.x) < abs(b.point.x - point.x) }
     }
 
     private func changed(_ drag: DragGesture.Value, marks: [Mark], scale: TimelineScale) {
@@ -235,14 +259,15 @@ struct TimelineLanes: View {
                 gesture = .move(start: drag.startLocation, pointsPerFrame: scale.pointsPerFrame(fps: fps))
             } else {
                 gesture = .box(start: drag.startLocation, extending: extending)
-                let row = Int(drag.startLocation.y / TimelineRow.height)
+                let row: Int = Int(Double(drag.startLocation.y) / TimelineRow.height)
                 if rows.indices.contains(row) { timeline.focused = rows[row].target }
             }
         }
         switch gesture {
         case let .move(start, pointsPerFrame)?:
             guard !timeline.selection.isEmpty else { return }
-            let frames = Int(((drag.location.x - start.x) / max(pointsPerFrame, 1e-6)).rounded())
+            let dx: Double = Double(drag.location.x - start.x)
+            let frames: Int = Int((dx / max(pointsPerFrame, 1e-6)).rounded())
             timeline.previewMove(byFrames: frames)
         case let .box(start, _)?:
             box = CGRect(x: min(start.x, drag.location.x), y: min(start.y, drag.location.y),

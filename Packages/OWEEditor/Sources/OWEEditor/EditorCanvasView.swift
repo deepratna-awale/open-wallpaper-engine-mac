@@ -47,65 +47,86 @@ struct EditorCanvasView: View {
     private var actions: LayerActions { LayerActions(session: session, services: services, tools: tools) }
 
     var body: some View {
-        GeometryReader { proxy in
-            let rect = viewport.sceneRect
-            ZStack(alignment: .topLeading) {
-                Color(nsColor: .underPageBackgroundColor)
-                canvas
-                    .frame(width: max(rect.size.x, 1), height: max(rect.size.y, 1))
-                    .clipped()
-                    .shadow(color: .black.opacity(0.25), radius: 12, y: 4)
-                    .position(x: rect.origin.x + rect.size.x / 2, y: rect.origin.y + rect.size.y / 2)
-                    .allowsHitTesting(false)
-                GizmoOverlay(session: session, tools: tools, viewport: viewport, hovered: hovered, pointer: pointer)
-                    .allowsHitTesting(false)
-                if let particles {
-                    ParticleCanvasOverlay(services: particles, viewport: viewport)
-                        .allowsHitTesting(false)
-                }
-                CanvasEventView(handlers: handlers)
-                if let editing = session.editingText {
-                    CanvasTextEditor(session: session, layerID: editing, viewport: viewport)
-                }
-                if isDropTargeted {
-                    Rectangle()
-                        .strokeBorder(Color.accentColor, style: StrokeStyle(lineWidth: 3, dash: [8, 5]))
-                        .allowsHitTesting(false)
-                }
-            }
-            .clipped()
-            .dropDestination(for: URL.self) { urls, location in
-                let point = viewport.scenePoint(SIMD2(Double(location.x), Double(location.y)))
-                actions.importDropped(urls, at: session.outline.size == nil ? nil : point)
-                return !urls.isEmpty
-            } isTargeted: { isDropTargeted = $0 && services.assetStore != nil }
-            .onAppear {
-                if canvas == nil { canvas = makeCanvas() }
-                viewport.backingScale = Double(NSScreen.main?.backingScaleFactor ?? 2)
-                viewport.resize(canvas: SIMD2(Double(proxy.size.width), Double(proxy.size.height)))
-                viewport.fit()
-            }
-            .onChange(of: proxy.size) { _, size in
-                viewport.resize(canvas: SIMD2(Double(size.width), Double(size.height)))
-            }
+        GeometryReader { (proxy: GeometryProxy) in
+            canvasStack(proxy: proxy)
         }
         .overlay(alignment: .bottom) { zoomControls }
-        .overlay(alignment: .top) {
-            if let painting = tools.maskPainting {
-                MaskPaintingHUD(painting: painting, session: session, tools: tools, services: services)
-                    .padding(.top, 12)
+        .overlay(alignment: .top) { maskPaintingHUD }
+        .overlay(alignment: .topLeading) { sceneKindNote }
+    }
+
+    private func canvasStack(proxy: GeometryProxy) -> some View {
+        ZStack(alignment: .topLeading) {
+            Color(nsColor: .underPageBackgroundColor)
+            sceneCanvas
+            GizmoOverlay(session: session, tools: tools, viewport: viewport, hovered: hovered, pointer: pointer)
+                .allowsHitTesting(false)
+            if let particles {
+                ParticleCanvasOverlay(services: particles, viewport: viewport)
+                    .allowsHitTesting(false)
+            }
+            CanvasEventView(handlers: handlers)
+            if let editing = session.editingText {
+                CanvasTextEditor(session: session, layerID: editing, viewport: viewport)
+            }
+            if isDropTargeted {
+                Rectangle()
+                    .strokeBorder(Color.accentColor, style: StrokeStyle(lineWidth: 3, dash: [8, 5]))
+                    .allowsHitTesting(false)
             }
         }
-        .overlay(alignment: .topLeading) {
-            if session.outline.size == nil {
-                Label(L("Layers of a 3D scene are edited in the inspector."), systemImage: "cube")
-                    .font(.callout)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .editorGlass(in: Capsule())
-                    .padding(12)
-            }
+        .clipped()
+        .dropDestination(for: URL.self) { (urls: [URL], location: CGPoint) -> Bool in
+            let point: SIMD2<Double> = viewport.scenePoint(SIMD2<Double>(Double(location.x), Double(location.y)))
+            actions.importDropped(urls, at: session.outline.size == nil ? nil : point)
+            return !urls.isEmpty
+        } isTargeted: { (targeted: Bool) in isDropTargeted = targeted && services.assetStore != nil }
+        .onAppear {
+            if canvas == nil { canvas = makeCanvas() }
+            viewport.backingScale = Double(NSScreen.main?.backingScaleFactor ?? 2)
+            viewport.resize(canvas: SIMD2<Double>(Double(proxy.size.width), Double(proxy.size.height)))
+            viewport.fit()
         }
+        .onChange(of: proxy.size) { (_: CGSize, size: CGSize) in
+            viewport.resize(canvas: SIMD2<Double>(Double(size.width), Double(size.height)))
+        }
+    }
+
+    /// The scene's render, at the viewport's rectangle.
+    private var sceneCanvas: some View {
+        let rect: (origin: SIMD2<Double>, size: SIMD2<Double>) = viewport.sceneRect
+        let width: CGFloat = CGFloat(max(rect.size.x, 1))
+        let height: CGFloat = CGFloat(max(rect.size.y, 1))
+        return canvas
+            .frame(width: width, height: height)
+            .clipped()
+            .shadow(color: .black.opacity(0.25), radius: 12, y: 4)
+            .position(Self.centre(of: rect))
+            .allowsHitTesting(false)
+    }
+
+    @ViewBuilder private var maskPaintingHUD: some View {
+        if let painting = tools.maskPainting {
+            MaskPaintingHUD(painting: painting, session: session, tools: tools, services: services)
+                .padding(.top, 12)
+        }
+    }
+
+    @ViewBuilder private var sceneKindNote: some View {
+        if session.outline.size == nil {
+            Label(L("Layers of a 3D scene are edited in the inspector."), systemImage: "cube")
+                .font(.callout)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .editorGlass(in: Capsule())
+                .padding(12)
+        }
+    }
+
+    private static func centre(of rect: (origin: SIMD2<Double>, size: SIMD2<Double>)) -> CGPoint {
+        let x: Double = rect.origin.x + rect.size.x / 2
+        let y: Double = rect.origin.y + rect.size.y / 2
+        return CGPoint(x: x, y: y)
     }
 
     // MARK: Zoom
@@ -122,7 +143,7 @@ struct EditorCanvasView: View {
                     .keyboardShortcut("0", modifiers: .command)
                 Button(L("Actual Size")) { withAnimation(.snappy) { viewport.actualSize() } }
                 Divider()
-                ForEach([0.25, 0.5, 1, 2, 4], id: \.self) { factor in
+                ForEach([0.25, 0.5, 1, 2, 4] as [Double], id: \.self) { (factor: Double) in
                     Button(factor.formatted(.percent)) {
                         withAnimation(.snappy) { viewport.zoom(to: factor / max(viewport.backingScale, 1)) }
                     }

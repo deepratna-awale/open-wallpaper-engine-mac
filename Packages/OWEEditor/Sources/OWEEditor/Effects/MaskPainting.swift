@@ -44,9 +44,10 @@ final class MaskPainting: ObservableObject {
     init?(layer: Int, effectKey: String, effectTitle: String, slot: EffectSchema.TextureSlot, layerSize: SIMD2<Double>,
           existing: CGImage?) {
         guard layerSize.x > 0, layerSize.y > 0 else { return nil }
-        let longest = max(layerSize.x, layerSize.y)
-        let scale = min(1, Double(Self.maximumSide) / longest)
-        let width = max(Int((layerSize.x * scale).rounded()), 1), height = max(Int((layerSize.y * scale).rounded()), 1)
+        let longest: Double = max(layerSize.x, layerSize.y)
+        let scale: Double = min(1, Double(Self.maximumSide) / longest)
+        let width: Int = max(Int((layerSize.x * scale).rounded()), 1)
+        let height: Int = max(Int((layerSize.y * scale).rounded()), 1)
         guard let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
                                       space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.none.rawValue) else {
             return nil
@@ -65,10 +66,17 @@ final class MaskPainting: ObservableObject {
             context.draw(existing, in: rect)
         } else {
             // WE's `paintdefaultcolor` ("0 0 0 1": the effect off until painted); white without one.
-            let gray = slot.paintDefault.map { ($0.prefix(3).reduce(0, +)) / Double(max(min($0.count, 3), 1)) } ?? 1
-            context.setFillColor(gray: gray, alpha: 1)
+            let gray: Double = slot.paintDefault.map(Self.gray(of:)) ?? 1
+            context.setFillColor(gray: CGFloat(gray), alpha: 1)
             context.fill(rect)
         }
+    }
+
+    /// The mean of a `paintdefaultcolor`'s first three components.
+    private static func gray(of color: [Double]) -> Double {
+        let sum: Double = color.prefix(3).reduce(0, +)
+        let count: Int = max(min(color.count, 3), 1)
+        return sum / Double(count)
     }
 
     /// The mask as it is now.

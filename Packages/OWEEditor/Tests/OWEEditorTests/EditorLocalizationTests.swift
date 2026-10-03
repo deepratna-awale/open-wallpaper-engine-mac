@@ -26,7 +26,7 @@ final class EditorLocalizationTests: XCTestCase {
         let regex = try NSRegularExpression(pattern: #"(?<![A-Za-z])L\("((?:[^"\\]|\\\([^)]*\))*)"\)"#)
         // The module's folders too (Effects, Layers, Assets, Scripting, Properties).
         let enumerator = try XCTUnwrap(FileManager.default.enumerator(at: Self.sources, includingPropertiesForKeys: nil))
-        let files = enumerator.compactMap { $0 as? URL }.filter { $0.pathExtension == "swift" }
+        let files = enumerator.compactMap { (item: Any) -> URL? in item as? URL }.filter { (url: URL) -> Bool in url.pathExtension == "swift" }
         XCTAssertGreaterThan(files.count, 10)
         for file in files {
             let text = try String(contentsOf: file, encoding: .utf8)

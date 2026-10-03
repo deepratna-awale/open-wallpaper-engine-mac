@@ -161,35 +161,42 @@ struct TimelinePanel: View {
 
     // MARK: Controls
 
+    @ViewBuilder private var transportButtons: some View {
+        Button { stepToKeyframe(forward: false) } label: {
+            Label(T("Go to Previous Keyframe"), systemImage: "backward.end.fill")
+        }
+        .help(T("Go to Previous Keyframe"))
+        Button { timeline.togglePlayback() } label: {
+            Label(timeline.isPlaying ? T("Pause") : T("Play"), systemImage: timeline.isPlaying ? "pause.fill" : "play.fill")
+                .frame(width: 18)
+        }
+        .help(timeline.isPlaying ? T("Pause") : T("Play"))
+        Button { stepToKeyframe(forward: true) } label: {
+            Label(T("Go to Next Keyframe"), systemImage: "forward.end.fill")
+        }
+        .help(T("Go to Next Keyframe"))
+        Toggle(isOn: $timeline.loops) {
+            Label(T("Loop Playback"), systemImage: "repeat")
+        }
+        .toggleStyle(.button)
+        .help(T("Loop Playback"))
+    }
+
+    private var playheadReadout: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(verbatim: TimelineNames.time(timeline.playhead)).font(.body.monospacedDigit())
+            if let clip = timeline.activeClip {
+                let number = timeline.playheadFrame(in: clip)
+                Text(T("Frame \(number)")).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+            }
+        }
+        .frame(minWidth: 72, alignment: .leading)
+    }
+
     private var controls: some View {
         HStack(spacing: 10) {
-            Button { stepToKeyframe(forward: false) } label: {
-                Label(T("Go to Previous Keyframe"), systemImage: "backward.end.fill")
-            }
-            .help(T("Go to Previous Keyframe"))
-            Button { timeline.togglePlayback() } label: {
-                Label(timeline.isPlaying ? T("Pause") : T("Play"), systemImage: timeline.isPlaying ? "pause.fill" : "play.fill")
-                    .frame(width: 18)
-            }
-            .help(timeline.isPlaying ? T("Pause") : T("Play"))
-            Button { stepToKeyframe(forward: true) } label: {
-                Label(T("Go to Next Keyframe"), systemImage: "forward.end.fill")
-            }
-            .help(T("Go to Next Keyframe"))
-            Toggle(isOn: $timeline.loops) {
-                Label(T("Loop Playback"), systemImage: "repeat")
-            }
-            .toggleStyle(.button)
-            .help(T("Loop Playback"))
-
-            VStack(alignment: .leading, spacing: 0) {
-                Text(verbatim: TimelineNames.time(timeline.playhead)).font(.body.monospacedDigit())
-                if let clip = timeline.activeClip {
-                    let number = timeline.playheadFrame(in: clip)
-                    Text(T("Frame \(number)")).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
-                }
-            }
-            .frame(minWidth: 72, alignment: .leading)
+            transportButtons
+            playheadReadout
 
             keyframeFields
             Spacer(minLength: 8)

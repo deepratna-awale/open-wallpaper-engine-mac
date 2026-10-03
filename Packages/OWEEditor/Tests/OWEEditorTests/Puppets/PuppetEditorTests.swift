@@ -24,7 +24,7 @@ final class PuppetEditorTests: XCTestCase {
         let regex = try NSRegularExpression(pattern: #"PL\("((?:[^"\\]|\\\([^)]*\))*)"\)"#)
         let folder = Self.sources.appending(path: "Puppets")
         let files = try FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)
-            .filter { $0.pathExtension == "swift" }
+            .filter { (url: URL) -> Bool in url.pathExtension == "swift" }
         XCTAssertFalse(files.isEmpty)
         for file in files {
             let text = try String(contentsOf: file, encoding: .utf8)

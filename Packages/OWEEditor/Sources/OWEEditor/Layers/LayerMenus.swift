@@ -60,8 +60,10 @@ struct LayerContextMenu: View {
         if layer.parentID.flatMap(session.outline.layer) != nil {
             Button(L("Move Out of Group")) { actions.unparent(layer.id) }
         }
-        let groups = session.outline.layers.filter { candidate in
-            candidate.id != layer.id && (candidate.kind == .group || candidate.kind == .other) && session.canParent(layer.id, to: candidate.id)
+        let groups: [SceneLayer] = session.outline.layers.filter { (candidate: SceneLayer) -> Bool in
+            guard candidate.id != layer.id else { return false }
+            let isGroupLike: Bool = candidate.kind == .group || candidate.kind == .other
+            return isGroupLike && session.canParent(layer.id, to: candidate.id)
         }
         if !groups.isEmpty {
             Menu(L("Move Into Group")) {
