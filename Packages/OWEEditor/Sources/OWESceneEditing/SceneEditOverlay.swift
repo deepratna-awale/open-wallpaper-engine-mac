@@ -9,20 +9,35 @@ import Foundation
 /// Objects are keyed by their scene.json `id` (their index when they have none), effects by their
 /// index in the object's `effects`, as the Scene Inspector's edits are.
 public struct SceneEditOverlay: Codable, Hashable, Sendable {
-    public static let currentVersion = 1
+    /// The newest version this app reads. A file is written as version 1 while it holds only what
+    /// version 1 knew (field, effect visibility and constant edits), so an older app still reads it.
+    public static let currentVersion = 2
 
     public struct EffectEdit: Codable, Hashable, Sendable {
         /// The effect's `visible`; nil keeps the authored one.
         public var visible: Bool?
         /// Values of its first pass's `constants`, by the material key.
         public var constants: [String: SceneJSONValue] = [:]
+        /// Values of its first pass's `combos`, by the combo name (version 2).
+        public var combos: [String: Int]?
+        /// Its first pass's `textures` by slot (`"1"` for `g_Texture1`): a texture path, or null for
+        /// the shader's default (version 2).
+        public var textures: [String: SceneJSONValue]?
+        /// Constants a user property sets, by the material key: the property's name, or `""` for a
+        /// constant the scene binds that the editor set free again (version 2).
+        public var bindings: [String: String]?
 
         public init(visible: Bool? = nil, constants: [String: SceneJSONValue] = [:]) {
             self.visible = visible
             self.constants = constants
         }
 
-        public var isEmpty: Bool { visible == nil && constants.isEmpty }
+        public var isEmpty: Bool {
+            visible == nil && constants.isEmpty && (combos ?? [:]).isEmpty && (textures ?? [:]).isEmpty
+                && (bindings ?? [:]).isEmpty
+        }
+
+        var needsVersion2: Bool { !(combos ?? [:]).isEmpty || !(textures ?? [:]).isEmpty || !(bindings ?? [:]).isEmpty }
     }
 
     public struct ObjectEdit: Codable, Hashable, Sendable {
@@ -33,6 +48,11 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
         public var effects: [String: EffectEdit] = [:]
         /// Editor state, not a scene edit: the layer can't be picked or moved on the canvas.
         public var locked: Bool?
+        /// The effects in order, by key: an authored effect's index (`"0"`), an added one's `"+1"`.
+        /// One the list leaves out is removed. Nil keeps the authored list (version 2).
+        public var effectOrder: [String]?
+        /// Effects added from the catalog, by key (`"+1"`): the effect's scene.json object (version 2).
+        public var addedEffects: [String: SceneJSONValue]?
 
         public init(fields: [String: SceneJSONValue] = [:], effects: [String: EffectEdit] = [:], locked: Bool? = nil) {
             self.fields = fields
@@ -40,22 +60,52 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
             self.locked = locked
         }
 
-        public var hasSceneEdits: Bool { !fields.isEmpty || effects.values.contains { !$0.isEmpty } }
+        public var hasSceneEdits: Bool {
+            !fields.isEmpty || effects.values.contains { !$0.isEmpty } || effectOrder != nil || !(addedEffects ?? [:]).isEmpty
+        }
         var isEmpty: Bool { !hasSceneEdits && locked != true }
+
+        var needsVersion2: Bool {
+            effectOrder != nil || !(addedEffects ?? [:]).isEmpty || effects.values.contains(where: \.needsVersion2)
+        }
+    }
+
+    /// A layer the editor added: its scene.json object, given `id` when applied.
+    public struct AddedObject: Codable, Hashable, Sendable {
+        public var id: Int
+        public var object: SceneJSONValue
+
+        public init(id: Int, object: SceneJSONValue) {
+            self.id = id
+            self.object = object
+        }
     }
 
     public var version = SceneEditOverlay.currentVersion
     public var objects: [String: ObjectEdit] = [:]
+    /// Layers added in the editor, in the order they were added (version 2).
+    public var added: [AddedObject]?
+    /// Layers deleted in the editor, by id (version 2).
+    public var removed: [Int]?
+    /// Every layer's id in draw order (first drawn first) once the editor reordered them; nil keeps
+    /// the scene's order with added layers on top (version 2).
+    public var order: [Int]?
 
     public init(objects: [String: ObjectEdit] = [:]) {
         self.objects = objects
     }
 
     /// Nothing to save: no edits and no locked layers.
-    public var isEmpty: Bool { objects.values.allSatisfy(\.isEmpty) }
+    public var isEmpty: Bool { objects.values.allSatisfy(\.isEmpty) && !hasStructureEdits }
 
     /// Something changes the scene (locks don't).
-    public var hasSceneEdits: Bool { objects.values.contains(where: \.hasSceneEdits) }
+    public var hasSceneEdits: Bool { objects.values.contains(where: \.hasSceneEdits) || hasStructureEdits }
+
+    /// Layers added, deleted or reordered.
+    public var hasStructureEdits: Bool { !(added ?? []).isEmpty || !(removed ?? []).isEmpty || order != nil }
+
+    /// Holds something version 1 can't apply.
+    var needsVersion2: Bool { hasStructureEdits || objects.values.contains(where: \.needsVersion2) }
 
     // MARK: Reading
 
@@ -94,7 +144,7 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
         update(objectID) { $0.locked = locked ? true : nil }
     }
 
-    private mutating func update(_ objectID: Int, _ change: (inout ObjectEdit) -> Void) {
+    mutating func update(_ objectID: Int, _ change: (inout ObjectEdit) -> Void) {
         let key = String(objectID)
         var edit = objects[key] ?? ObjectEdit()
         change(&edit)
@@ -102,8 +152,12 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     }
 
     private mutating func updateEffect(_ effectIndex: Int, of objectID: Int, _ change: (inout EffectEdit) -> Void) {
+        updateEffect(key: String(effectIndex), of: objectID, change)
+    }
+
+    /// Changes the edit of the effect with `key` (`"0"`, `"+1"`; `SceneLayerEffect.key`).
+    mutating func updateEffect(key: String, of objectID: Int, _ change: (inout EffectEdit) -> Void) {
         update(objectID) { edit in
-            let key = String(effectIndex)
             var effect = edit.effects[key] ?? EffectEdit()
             change(&effect)
             edit.effects[key] = effect.isEmpty ? nil : effect
@@ -116,12 +170,16 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     public func encoded() throws -> Data {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        return try encoder.encode(self)
+        var written = self
+        written.version = needsVersion2 ? 2 : 1
+        return try encoder.encode(written)
     }
 
     public static func decoded(from data: Data) throws -> SceneEditOverlay {
-        let overlay = try JSONDecoder().decode(SceneEditOverlay.self, from: data)
+        var overlay = try JSONDecoder().decode(SceneEditOverlay.self, from: data)
         guard overlay.version <= currentVersion else { throw SceneEditOverlayError.newerVersion(overlay.version) }
+        // In memory every overlay is the current version; `encoded()` writes the one it needs.
+        overlay.version = currentVersion
         return overlay
     }
 

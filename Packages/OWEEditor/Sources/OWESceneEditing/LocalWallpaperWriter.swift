@@ -13,12 +13,17 @@ public struct LocalWallpaperWriter {
         public var packageFiles: [String: Data]?
         /// The package's name in the folder (`scene.pkg`), left out of the copy.
         public var packageName: String?
+        /// The editor's own files for the wallpaper (`EditorAssetStore`): imported images, sounds,
+        /// fonts and painted masks, which the edited scene names. Copied in beside the wallpaper's.
+        public var assetsDirectory: URL?
 
-        public init(directory: URL, sceneFile: String, packageFiles: [String: Data]? = nil, packageName: String? = nil) {
+        public init(directory: URL, sceneFile: String, packageFiles: [String: Data]? = nil, packageName: String? = nil,
+                    assetsDirectory: URL? = nil) {
             self.directory = directory
             self.sceneFile = sceneFile
             self.packageFiles = packageFiles
             self.packageName = packageName
+            self.assetsDirectory = assetsDirectory
         }
     }
 
@@ -51,6 +56,9 @@ public struct LocalWallpaperWriter {
                 try fileManager.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
                 try data.write(to: destination, options: .atomic)
             }
+            if let assets = source.assetsDirectory, fileManager.fileExists(atPath: assets.path) {
+                try merge(assets, into: staging)
+            }
             try scene.write(to: try Self.contained(source.sceneFile, in: staging), options: .atomic)
             try writeProject(in: staging, title: title)
             let destination = uniqueFolder(named: Self.folderName(title), in: library)
@@ -80,6 +88,23 @@ public struct LocalWallpaperWriter {
         let children = try fileManager.contentsOfDirectory(at: item, includingPropertiesForKeys: [.isSymbolicLinkKey, .isDirectoryKey],
                                                            options: [.skipsHiddenFiles])
         for child in children { try copy(child, to: destination.appending(path: child.lastPathComponent)) }
+    }
+
+    /// Copies the folder's files into `destination`'s folders of the same names, keeping what is there.
+    private func merge(_ source: URL, into destination: URL) throws {
+        let items = try fileManager.contentsOfDirectory(at: source, includingPropertiesForKeys: [.isSymbolicLinkKey, .isDirectoryKey],
+                                                        options: [.skipsHiddenFiles])
+        for item in items {
+            let target = destination.appending(path: item.lastPathComponent)
+            let values = try item.resourceValues(forKeys: [.isSymbolicLinkKey, .isDirectoryKey])
+            if values.isSymbolicLink == true { continue }
+            if values.isDirectory == true {
+                try fileManager.createDirectory(at: target, withIntermediateDirectories: true)
+                try merge(item, into: target)
+            } else if !fileManager.fileExists(atPath: target.path) {
+                try fileManager.copyItem(at: item, to: target)
+            }
+        }
     }
 
     /// project.json with the new title and without the Workshop item it came from, so the copy is

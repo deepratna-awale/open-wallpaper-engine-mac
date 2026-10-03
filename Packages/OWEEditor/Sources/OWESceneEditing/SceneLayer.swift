@@ -9,6 +9,26 @@ public struct SceneLayerEffect: Identifiable, Hashable, Sendable {
     /// The authored `name`, when the author gave one.
     public let name: String?
     public let visible: SceneJSONValue?
+    /// The key its edits are stored under (`SceneEditOverlay.EffectEdit`): its authored index
+    /// (`"0"`), or `"+1"` for one added in the editor.
+    public var key: String
+    /// Its first pass's `constantshadervalues`, `combos` and `textures` as the scene has them.
+    public var constants: [String: SceneJSONValue] = [:]
+    public var combos: [String: Int] = [:]
+    public var textures: [SceneJSONValue] = []
+    /// How many passes the scene lists for it.
+    public var passCount = 0
+
+    public init(id: Int, file: String, name: String?, visible: SceneJSONValue?, key: String? = nil) {
+        self.id = id
+        self.file = file
+        self.name = name
+        self.visible = visible
+        self.key = key ?? String(id)
+    }
+
+    /// Whether the editor added it (it isn't in the wallpaper's scene).
+    public var isAdded: Bool { key.hasPrefix("+") }
 
     /// The effect's folder, which names WE's built-in effects (`blur`, `waterripple`, …).
     public var folderName: String {
@@ -49,7 +69,7 @@ public struct SceneLayer: Identifiable, Hashable, Sendable {
     }
 
     /// A flat layer the canvas can select and transform with the gizmo.
-    public var isPlanar: Bool { kind == .image || kind == .text }
+    public var isPlanar: Bool { (kind == .image && !fillsScene) || kind == .text }
 
     /// What the layer is called in the list.
     public func displayName(fallback: (Kind, Int) -> String) -> String {
