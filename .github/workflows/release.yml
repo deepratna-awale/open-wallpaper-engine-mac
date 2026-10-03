@@ -243,6 +243,7 @@ jobs:
           fi
           CHROMIUM_HELPER="$APP/Contents/XPCServices/owe-chromium-helper.xpc"
           codesign --verify --strict --verbose=2 "$CHROMIUM_HELPER"
+          codesign --verify --strict --verbose=2 "$APP/Contents/XPCServices/owe-chromium-helper (Renderer).app"
           HELPER_ENTS=$(codesign -d --entitlements - --xml "$CHROMIUM_HELPER" 2>/dev/null | plutil -p - || true)
           echo "$HELPER_ENTS"
           if grep -q "get-task-allow" <<<"$HELPER_ENTS"; then
@@ -279,6 +280,7 @@ jobs:
             "$SPARKLE/XPCServices/Downloader.xpc/Contents/MacOS/Downloader"
             "$SPARKLE/XPCServices/Installer.xpc/Contents/MacOS/Installer"
             "$APP/Contents/XPCServices/owe-chromium-helper.xpc/Contents/MacOS/owe-chromium-helper"
+            "$APP/Contents/XPCServices/owe-chromium-helper (Renderer).app/Contents/MacOS/owe-chromium-helper (Renderer)"
           )
           for helper in "${sparkle_executables[@]}"; do
             test -f "$helper" || { echo "::error::missing Sparkle executable: $helper"; exit 1; }
