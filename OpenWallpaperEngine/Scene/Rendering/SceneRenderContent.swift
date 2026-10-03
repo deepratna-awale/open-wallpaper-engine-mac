@@ -127,6 +127,11 @@ struct SceneMetalLayer {
     /// Composition, fullscreen and project layers: the base image is the scene rendered so far
     /// under the layer (`_rt_FullFrameBuffer`), not a texture.
     var sceneInput = false
+    /// A scene-input layer authored `"copybackground": false`: its base image is the scene's colour
+    /// with alpha 0, so only what its effects draw shows. WE swaps the layer's material for
+    /// `materials/util/composelayer_clearalpha.json` (`CLEARALPHA` 1), its only use in the binary
+    /// next to the `copybackground` key.
+    var clearsSceneAlpha = false
     /// A layer whose material has no texture (a solid layer's `flat`, a shape): its fill as
     /// straight RGBA. Its quad stretches a 1×1 source, but WE sizes its effect buffers to the
     /// layer's `size`, rounded (`wallpaper64.exe` 0x140209206…0x14020923c), so its effects start
@@ -240,6 +245,9 @@ struct SceneMetalContent {
     /// transform moves, so what hangs below them follows.
     var motions: [String: SceneObjectMotion] = [:]
     var camera = SceneCameraEffects()
+    /// The scene's `general`, which `camera` was resolved from: the renderer resolves it again
+    /// when a property bound to it changes.
+    var general: WESceneGeneral?
     /// The projection, camera settings, camera layers and paths, model objects and draw-order mode
     /// of WE's 3D runtime (`SceneSpatialContentBuilder`; docs/models-plan.md § Seams).
     var spatial = SceneSpatialContent()
