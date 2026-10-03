@@ -64,6 +64,13 @@ final class SceneShadowPass {
     var cullsViews = true
     /// The views the casters' draws covered: each draw once per view whose frustum holds it.
     private(set) var casterInstances = 0
+    /// Draws that drew several casters at once, instanced (`ShaderInstancing`), and the casters.
+    private(set) var instancedCasterDraws = 0
+    private(set) var instancedCasters = 0
+    /// Whether alike casters draw instanced (`OWE_MODEL_INSTANCING=0` turns it off).
+    var instancing = ProcessInfo.processInfo.environment["OWE_MODEL_INSTANCING"] != "0"
+    /// `OWE_MODEL_DRAW_STATS=1`: the pass's caster draws and CPU time (`SceneModelDrawStats`).
+    let drawStats = SceneModelDrawStats(label: "Model shadow pass")
     private(set) var lastMapCount = 0
     /// Frames whose atlas was kept as it stood, as they would have drawn exactly the same.
     private(set) var atlasesReused = 0
@@ -136,15 +143,24 @@ final class SceneShadowPass {
                 commandBuffer: MTLCommandBuffer) -> MTLTexture? {
         lastMapCount = shadows.maps.count
         guard !shadows.maps.isEmpty else { return atlas.bound(commandBuffer: commandBuffer) }
+        let started = drawStats.begin(frame: frame.time)
+        let drawsBefore = casterDraws
+        defer { drawStats.end(started, objects: casters.count, draws: casterDraws - drawsBefore) }
         guard let texture = atlas.texture(extent: shadows.extent) else { return atlas.bound(commandBuffer: commandBuffer) }
         // Each caster is posed and its meshes' draws prepared once a frame; a batch only culls it
         // against its views and writes their matrices.
+        // Only a plan several casters draw can instance (no instanced pipeline for the others).
+        var copies: [ObjectIdentifier: Int] = [:]
+        for caster in casters { if let plan = caster.model.plan { copies[ObjectIdentifier(plan), default: 0] += 1 } }
         let prepared = casters.compactMap { caster -> PreparedCaster? in
             // A script's `replaceData` re-plans its model (`SceneModelRenderer.currentPlan`).
             guard let plan = caster.model.plan.map({ models.currentPlan($0, objectID: caster.model.id) }), !plan.isTranslucent,
                   plan.meshes.contains(where: { $0.material.shadowCaster != nil }) else { return nil }
             let bones = models.advance(caster.model, plan: plan, frame: frame, values: values)
-            return prepare(caster, plan: plan, bones: bones, models: models, frame: frame, values: values,
+            // Its own pose (bones, morphs), or no copy to share a draw with: drawn alone.
+            let posed = bones != nil || plan.meshes.contains { $0.material.meshCombos.morphing }
+                || (caster.model.plan.map { copies[ObjectIdentifier($0)] ?? 0 } ?? 0) < 2
+            return prepare(caster, plan: plan, bones: bones, posed: posed, models: models, frame: frame, values: values,
                            assetTexture: assetTexture)
         }
         var recording = Recording(atlas: texture)
@@ -157,6 +173,10 @@ final class SceneShadowPass {
             // views' viewports and matrices, compacted alike, draw what all six would (the others'
             // triangles are clipped), and the depth test (GREATER, write) doesn't depend on order.
             var subsets: [[Int]: [Float]] = [:]
+            // Alike draws of unposed casters with the same views gather here and draw instanced
+            // after the batch's others; the depth test (GREATER, write) doesn't depend on order.
+            var groups: [InstanceGroupKey: [(draw: MeshDraw, world: simd_float4x4)]] = [:]
+            var groupOrder: [InstanceGroupKey] = []
             for caster in prepared {
                 let holding = frustums.indices.filter { frustums[$0].contains(caster.sphere) }
                 guard !holding.isEmpty else { continue }
@@ -172,8 +192,32 @@ final class SceneShadowPass {
                 for draw in caster.draws {
                     // A mesh outside every kept view is clipped in all of them.
                     if let sphere = draw.sphere, !kept.contains(where: { frustums[$0].contains(sphere) }) { continue }
+                    if instancing, !caster.posed, let shared = draw.sharedUniforms, draw.instancedPipeline != nil {
+                        let key = InstanceGroupKey(views: kept, draw: draw, shared: shared)
+                        if groups[key] == nil { groupOrder.append(key) }
+                        groups[key, default: []].append((draw, caster.world))
+                        continue
+                    }
                     recording.add(draw, matrices: matrices, instances: kept.count)
                 }
+            }
+            for key in groupOrder {
+                guard let members = groups[key], let first = members.first, let matrices = subsets[key.views] else { continue }
+                recording.setViewports(key.views.map { batch.viewports[$0] })
+                if members.count == 1 {
+                    recording.add(first.draw, matrices: matrices, instances: key.views.count)
+                    continue
+                }
+                var records: [Float] = []
+                records.reserveCapacity(members.count * key.views.count * ShaderInstancing.record)
+                for member in members {
+                    var pass = BuiltinPassContext(targetSize: frame.screenSize)
+                    pass.place(SceneLayerPlacement(world: member.world, size: SIMD2(1, 1), camera: frame.camera))
+                    for view in key.views.indices {
+                        ShaderInstancing.writeRecord(into: &records, frame: frame, pass: pass, view: view)
+                    }
+                }
+                recording.add(first.draw, matrices: matrices, instances: members.count * key.views.count, records: records)
             }
         }
         // The atlas already holds exactly these maps: last frame drew the same commands into it.
@@ -251,10 +295,34 @@ final class SceneShadowPass {
 
     // MARK: - Casters
 
-    /// A caster this frame: its bounding sphere and its meshes' draws.
+    /// A caster this frame: its bounding sphere and its meshes' draws, its world and whether it
+    /// has its own pose (bones or morphs, which instances can't share).
     private struct PreparedCaster {
         let sphere: SceneModelCulling.Sphere
         let draws: [MeshDraw]
+        var world = matrix_identity_float4x4
+        var posed = true
+    }
+
+    /// Casters' draws that can draw as one: the same views, the same pipeline, buffers, textures
+    /// and counts (`drawsSame`), and the same uniforms but for what each instance carries.
+    private struct InstanceGroupKey: Hashable {
+        let views: [Int]
+        let draw: MeshDraw
+        let shared: [UInt8]
+
+        static func == (a: Self, b: Self) -> Bool {
+            a.views == b.views && a.shared == b.shared && a.draw.drawsSame(as: b.draw)
+                && a.draw.instancedPipeline === b.draw.instancedPipeline
+        }
+
+        func hash(into hasher: inout Hasher) {
+            hasher.combine(views)
+            hasher.combine(ObjectIdentifier(draw.pipeline))
+            hasher.combine(ObjectIdentifier(draw.buffers.indices))
+            hasher.combine(draw.indexCount)
+            hasher.combine(shared)
+        }
     }
 
     /// One opaque mesh's draw: its pipeline, textures and uniforms (all but the views' matrices).
@@ -269,6 +337,11 @@ final class SceneShadowPass {
         let hasChangingTexture: Bool
         /// The mesh's own sphere (`SceneModelPlan.Mesh.bounds`), nil to follow the caster's.
         var sphere: SceneModelCulling.Sphere? = nil
+        /// The variant's instanced pipeline, when it is instanceable and ready.
+        var instancedPipeline: MTLRenderPipelineState? = nil
+        /// The uniforms but for what an instance carries and the views' matrices
+        /// (`ShaderInstancing.sharedBytes`); nil when the variant isn't instanceable.
+        var sharedUniforms: [UInt8]? = nil
 
         /// The same objects and counts (the uniforms are compared as bytes).
         func drawsSame(as other: MeshDraw) -> Bool {
@@ -281,7 +354,7 @@ final class SceneShadowPass {
     }
 
     /// The caster's meshes that draw this frame, their uniforms written but for the views.
-    private func prepare(_ caster: Caster, plan: SceneModelPlan, bones: [Float]?, models: SceneModelRenderer,
+    private func prepare(_ caster: Caster, plan: SceneModelPlan, bones: [Float]?, posed: Bool, models: SceneModelRenderer,
                          frame: BuiltinFrameContext, values: SceneValueContext,
                          assetTexture: (String, SceneMetalTextureSource) -> MTLTexture?) -> PreparedCaster {
         let buffers = models.meshBuffers(plan)
@@ -315,13 +388,21 @@ final class SceneShadowPass {
                 program = uniforms
             }
             // A script's `applyData` may have shortened the triangle list since the plan was made.
-            draws.append(MeshDraw(pipeline: pipeline, buffers: meshBuffers, textures: bound, uniforms: program,
-                                  indexCount: models.indexCount(of: mesh, in: plan),
-                                  indexType: mesh.usesUInt32Indices ? .uint32 : .uint16,
-                                  hasChangingTexture: bound.contains { $0.changes },
-                                  sphere: mesh.bounds.map { SceneModelCulling.Sphere($0, world: caster.world) }))
+            var draw = MeshDraw(pipeline: pipeline, buffers: meshBuffers, textures: bound, uniforms: program,
+                                indexCount: models.indexCount(of: mesh, in: plan),
+                                indexType: mesh.usesUInt32Indices ? .uint32 : .uint16,
+                                hasChangingTexture: bound.contains { $0.changes },
+                                sphere: mesh.bounds.map { SceneModelCulling.Sphere($0, world: caster.world) })
+            if instancing, !posed, variant.instanceable == true,
+               let instanced = self.pipeline(for: mesh, material: material, variant: variant, instanced: true) {
+                draw.instancedPipeline = instanced
+                draw.sharedUniforms = ShaderInstancing.sharedBytes(program?.bytes ?? [], layout: variant.uniforms,
+                                                                   ignoring: ["g_ViewportViewProjectionMatrices"])
+            }
+            draws.append(draw)
         }
-        return PreparedCaster(sphere: SceneModelCulling.Sphere(plan.cullBounds, world: caster.world), draws: draws)
+        return PreparedCaster(sphere: SceneModelCulling.Sphere(plan.cullBounds, world: caster.world), draws: draws,
+                              world: caster.world, posed: posed)
     }
 
     /// Encodes a frame's recorded commands.
@@ -333,14 +414,25 @@ final class SceneShadowPass {
                     MTLViewport(originX: Double(rect.x), originY: Double(rect.y), width: Double(rect.z), height: Double(rect.w),
                                 znear: 0, zfar: 1)
                 })
-            case let .draw(draw, uniforms, instances):
+            case let .draw(draw, uniforms, instances, records):
+                if let records, let pipeline = draw.instancedPipeline {
+                    guard let slice = recording.instanceRecords.withUnsafeBytes({ raw in
+                        uniformArena.allocate(UnsafeRawBufferPointer(rebasing: raw[(records.lowerBound * 4)..<(records.upperBound * 4)]),
+                                              for: commandBuffer)
+                    }) else { continue }
+                    encoder.setVertexBuffer(slice.buffer, offset: slice.offset, index: ShaderInstancing.instanceBuffer)
+                    instancedCasterDraws += 1
+                    instancedCasters += records.count / ShaderInstancing.record
+                    encoder.setRenderPipelineState(pipeline)
+                } else {
+                    encoder.setRenderPipelineState(draw.pipeline)
+                }
                 if let uniforms {
                     recording.uniformBytes.withUnsafeBytes { raw in
                         uniformArena.bind(UnsafeRawBufferPointer(rebasing: raw[uniforms]), index: 0, to: encoder,
                                           commandBuffer: commandBuffer)
                     }
                 }
-                encoder.setRenderPipelineState(draw.pipeline)
                 draw.buffers.bindVertices(to: encoder)
                 encoder.setVertexBuffer(zeroAttributes, offset: 0, index: EffectGraphRenderer.zeroBuffer)
                 for entry in draw.textures {
@@ -373,13 +465,16 @@ final class SceneShadowPass {
     private struct Recording {
         enum Operation {
             case viewports([SIMD4<Int>])
-            case draw(MeshDraw, uniforms: Range<Int>?, instances: Int)
+            /// `records`: the instance records (`instanceRecords`) of an instanced draw.
+            case draw(MeshDraw, uniforms: Range<Int>?, instances: Int, records: Range<Int>?)
         }
 
         let atlas: MTLTexture
         var ops: [Operation] = []
         /// Every draw's uniform block, as bound.
         var uniformBytes: [UInt8] = []
+        /// Every instanced draw's instance records (`ShaderInstancing.record` floats each).
+        var instanceRecords: [Float] = []
         var hasChangingInput = false
 
         /// The viewports the last `viewports` operation set.
@@ -397,7 +492,7 @@ final class SceneShadowPass {
         }
 
         /// Records `draw` once per view, `matrices` its views' render matrices.
-        mutating func add(_ draw: MeshDraw, matrices: [Float], instances: Int) {
+        mutating func add(_ draw: MeshDraw, matrices: [Float], instances: Int, records: [Float]? = nil) {
             var range: Range<Int>?
             if let program = draw.uniforms {
                 program.write(matrices, member: "g_ViewportViewProjectionMatrices")
@@ -406,19 +501,26 @@ final class SceneShadowPass {
                 range = start..<uniformBytes.count
             }
             hasChangingInput = hasChangingInput || draw.hasChangingTexture
-            ops.append(.draw(draw, uniforms: range, instances: instances))
+            var recordRange: Range<Int>?
+            if let records {
+                let start = instanceRecords.count
+                instanceRecords.append(contentsOf: records)
+                recordRange = start..<instanceRecords.count
+            }
+            ops.append(.draw(draw, uniforms: range, instances: instances, records: recordRange))
         }
 
         func matches(_ other: Recording) -> Bool {
             let a = self, b = other
             guard !a.hasChangingInput, !b.hasChangingInput, a.atlas === b.atlas, a.ops.count == b.ops.count,
-                  a.uniformBytes == b.uniformBytes else { return false }
+                  a.uniformBytes == b.uniformBytes, a.instanceRecords == b.instanceRecords else { return false }
             for (x, y) in zip(a.ops, b.ops) {
                 switch (x, y) {
                 case let (.viewports(p), .viewports(q)):
                     guard p == q else { return false }
-                case let (.draw(p, pu, pi), .draw(q, qu, qi)):
-                    guard pu == qu, pi == qi, p.drawsSame(as: q) else { return false }
+                case let (.draw(p, pu, pi, pr), .draw(q, qu, qi, qr)):
+                    guard pu == qu, pi == qi, pr == qr, p.drawsSame(as: q),
+                          pr == nil || p.instancedPipeline === q.instancedPipeline else { return false }
                 default:
                     return false
                 }
@@ -501,17 +603,19 @@ final class SceneShadowPass {
 
     // MARK: - Pipelines
 
-    static func pipelineKey(_ mesh: SceneModelPlan.Mesh, material: ModelMaterialPlan) -> String {
+    static func pipelineKey(_ mesh: SceneModelPlan.Mesh, material: ModelMaterialPlan, instanced: Bool = false) -> String {
         "shadow|\(material.pass.variantKey)|\(mesh.format.rawValue)|\(material.blending)|d\(SceneShadowAtlas.pixelFormat.rawValue)"
+            + (instanced ? "|instanced" : "")
     }
 
     /// Blocks until every caster mesh of `plan` compiled or failed (tests). True when all are ready.
-    func waitUntilReady(_ plan: SceneModelPlan, timeout: TimeInterval = 120) -> Bool {
+    /// `instanced`: the instanced pipelines too.
+    func waitUntilReady(_ plan: SceneModelPlan, instanced: Bool = false, timeout: TimeInterval = 120) -> Bool {
         let deadline = Date().addingTimeInterval(timeout)
         for mesh in plan.meshes where mesh.material.isOpaque {
             guard let material = mesh.material.shadowCaster, let variant = material.pass.variant else { continue }
-            let key = Self.pipelineKey(mesh, material: material)
-            while pipeline(for: mesh, material: material, variant: variant) == nil {
+            let key = Self.pipelineKey(mesh, material: material, instanced: instanced)
+            while pipeline(for: mesh, material: material, variant: variant, instanced: instanced) == nil {
                 if pipelineLock.withLock({ failed.contains(key) }) || Date() > deadline { return false }
                 Thread.sleep(forTimeInterval: 0.005)
             }
@@ -520,8 +624,8 @@ final class SceneShadowPass {
     }
 
     private func pipeline(for mesh: SceneModelPlan.Mesh, material: ModelMaterialPlan,
-                          variant: TranslatedShaderVariant) -> MTLRenderPipelineState? {
-        let key = Self.pipelineKey(mesh, material: material)
+                          variant: TranslatedShaderVariant, instanced: Bool = false) -> MTLRenderPipelineState? {
+        let key = Self.pipelineKey(mesh, material: material, instanced: instanced)
         let state: (pipeline: MTLRenderPipelineState?, busy: Bool) = pipelineLock.withLock {
             (pipelines[key], pending.contains(key) || failed.contains(key))
         }
@@ -532,7 +636,8 @@ final class SceneShadowPass {
         compileQueue.async { [weak self] in
             let result: MTLRenderPipelineState?
             do {
-                result = try EffectGraphRenderer.makePipeline(Self.pipelineDescriptor(variant, format: format, device: device),
+                result = try EffectGraphRenderer.makePipeline(Self.pipelineDescriptor(variant, format: format, device: device,
+                                                                                      instanced: instanced),
                                                               device: device, archive: archive, key: key)
             } catch {
                 OWELog.error(.shader, "Model material \(name) can't draw into the shadow atlas; the mesh casts no shadow: \(error)")
@@ -553,9 +658,9 @@ final class SceneShadowPass {
     /// depth (WE's casters without `ALPHATOCOVERAGE`, whose `main` is empty) changes nothing in a
     /// depth-only pass either, so the pipeline has none and the rasteriser writes the depth alone.
     static func pipelineDescriptor(_ variant: TranslatedShaderVariant, format: MDLVertexFormat,
-                                   device: MTLDevice) throws -> MTLRenderPipelineDescriptor {
+                                   device: MTLDevice, instanced: Bool = false) throws -> MTLRenderPipelineDescriptor {
         let (vertexLibrary, fragmentLibrary) = try variant.makeLibraries(device: device)
-        guard let vertex = vertexLibrary.makeFunction(name: "main0"),
+        guard let vertex = try ShaderInstancing.vertexFunction(vertexLibrary, instanced: instanced),
               let fragment = fragmentLibrary.makeFunction(name: "main0") else {
             throw ShaderCompilerError.failed(step: "metal", output: "entry point main0 missing")
         }
@@ -565,7 +670,8 @@ final class SceneShadowPass {
         descriptor.depthAttachmentPixelFormat = SceneShadowAtlas.pixelFormat
         descriptor.rasterSampleCount = 1
         descriptor.inputPrimitiveTopology = .triangle
-        descriptor.vertexDescriptor = SceneModelRenderer.vertexDescriptor(for: vertex, attributes: variant.attributes, format: format)
+        descriptor.vertexDescriptor = SceneModelRenderer.vertexDescriptor(for: vertex, attributes: variant.attributes, format: format,
+                                                                          instanced: instanced)
         return descriptor
     }
 

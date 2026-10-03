@@ -19,7 +19,7 @@ enum ShaderPairRewriter {
         "a_TexCoordVec4C2": 8, "a_TexCoordVec3C2": 8,
         "a_TexCoordC3": 9, "a_TexCoordVec4C3": 9,
         "a_TexCoordC4": 10, "a_PositionC1": 11,
-    ]
+    ].merging(ShaderInstancing.attributeLocations) { first, _ in first }
 
     struct Result {
         let vertex: String

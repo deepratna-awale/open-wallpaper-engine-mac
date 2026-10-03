@@ -87,6 +87,15 @@ final class SceneModelRenderer: SceneModelDrawing {
     /// (tests, diagnostics).
     private(set) var meshDraws: [String: Int] = [:]
     private(set) var culledModels = Set<String>()
+    /// Instanced draws and the instances they drew (`draw(run:)`), for tests and diagnostics.
+    private(set) var instancedDraws = 0
+    private(set) var instancesDrawn = 0
+    /// Whether runs of alike objects draw instanced (`OWE_MODEL_INSTANCING=0` turns it off, to
+    /// measure against).
+    var instancing = ProcessInfo.processInfo.environment["OWE_MODEL_INSTANCING"] != "0"
+    /// `OWE_MODEL_DRAW_STATS=1` logs the scene pass's model draws and their CPU time every
+    /// `SceneModelDrawStats.interval` frames.
+    let drawStats = SceneModelDrawStats(label: "Model scene pass")
     /// Compiled pipelines.
     var pipelineCount: Int { pipelineLock.withLock { pipelines.count } }
     /// Bytes of the meshes' buffers (diagnostics).
@@ -167,6 +176,14 @@ final class SceneModelRenderer: SceneModelDrawing {
 
     func draw(_ model: SceneModelObject, _ draw: SceneModelDraw, encoder: MTLRenderCommandEncoder,
               commandBuffer: MTLCommandBuffer) {
+        let start = drawStats.begin(frame: draw.frame.time)
+        let before = drawsEncoded
+        drawOne(model, draw, encoder: encoder, commandBuffer: commandBuffer)
+        drawStats.end(start, objects: 1, draws: drawsEncoded - before)
+    }
+
+    private func drawOne(_ model: SceneModelObject, _ draw: SceneModelDraw, encoder: MTLRenderCommandEncoder,
+                         commandBuffer: MTLCommandBuffer) {
         guard let authored = model.plan else { return }
         let plan = currentPlan(authored, objectID: model.id)
         // WE poses a visible model every frame, culled or not (0x14021c480).
@@ -238,6 +255,163 @@ final class SceneModelRenderer: SceneModelDrawing {
         if drew, draw.depth == nil { encoder.setCullMode(.none) }
     }
 
+    // MARK: - Instancing
+
+    /// Draws consecutive objects of the object loop (`SceneModelDrawing.draw(run:)`). Each stretch
+    /// of consecutive objects that draw alike (`instanceKey`, `drawsAlike`) draws every mesh once,
+    /// instanced over its visible objects in their order; any other object draws as `draw` does.
+    /// The result is the per-object draws': an instance draws after the one before it, as the
+    /// next object did, and a stretch of several meshes is opaque (`instanceKey`), so drawing every
+    /// object's first mesh before their second changes only which of two exactly equal depths wins.
+    func draw(run: [(model: SceneModelObject, draw: SceneModelDraw)], encoder: MTLRenderCommandEncoder,
+              commandBuffer: MTLCommandBuffer) {
+        guard let first = run.first else { return }
+        let start = drawStats.begin(frame: first.draw.frame.time)
+        let before = drawsEncoded
+        var index = 0
+        while index < run.count {
+            let key = instancing ? instanceKey(run[index].model, run[index].draw) : nil
+            var end = index + 1
+            if let key {
+                while end < run.count, instanceKey(run[end].model, run[end].draw) == key,
+                      Self.drawsAlike(run[index].draw, run[end].draw) { end += 1 }
+            }
+            let stretch = run[index..<end]
+            if end - index < 2 || !drawInstanced(stretch, encoder: encoder, commandBuffer: commandBuffer) {
+                for item in stretch { drawOne(item.model, item.draw, encoder: encoder, commandBuffer: commandBuffer) }
+            }
+            index = end
+        }
+        drawStats.end(start, objects: run.count, draws: drawsEncoded - before)
+    }
+
+    /// What objects drawing alike share: their plan (the same `.mdl` and skin, so the same
+    /// materials and combos).
+    struct InstanceKey: Hashable {
+        let plan: ObjectIdentifier
+        let mirrored: Bool
+    }
+
+    /// Nil for an object that draws alone: one with bones or morphs (its own pose), a variant
+    /// that can't take the world per instance, or several meshes not all opaque.
+    func instanceKey(_ model: SceneModelObject, _ draw: SceneModelDraw) -> InstanceKey? {
+        guard let authored = model.plan else { return nil }
+        let plan = currentPlan(authored, objectID: model.id)
+        return Self.instanceKey(plan, hasAnimator: animator(for: model.id) != nil, mirrored: draw.mirrored)
+    }
+
+    /// `instanceKey` from the plan alone (tests).
+    static func instanceKey(_ plan: SceneModelPlan, hasAnimator: Bool, mirrored: Bool = false) -> InstanceKey? {
+        guard !hasAnimator, plan.skeleton?.bones.isEmpty ?? true, !plan.meshes.isEmpty else { return nil }
+        for mesh in plan.meshes {
+            guard !mesh.deforms, !mesh.material.meshCombos.morphing, !mesh.material.meshCombos.skinning,
+                  mesh.material.pass.variant?.instanceable == true else { return nil }
+            if plan.meshes.count > 1, !mesh.material.isOpaque { return nil }
+        }
+        return InstanceKey(plan: ObjectIdentifier(plan), mirrored: mirrored)
+    }
+
+    /// The same pass and camera: everything but the world.
+    static func drawsAlike(_ a: SceneModelDraw, _ b: SceneModelDraw) -> Bool {
+        a.camera == b.camera && a.pixelFormat == b.pixelFormat && a.sampleCount == b.sampleCount
+            && a.depth === b.depth && a.mirrored == b.mirrored && a.frame.time == b.frame.time
+    }
+
+    /// Draws a stretch of alike objects instanced; false (nothing drawn) while an instanced
+    /// pipeline isn't ready, so the stretch draws one by one meanwhile.
+    private func drawInstanced(_ stretch: ArraySlice<(model: SceneModelObject, draw: SceneModelDraw)>,
+                               encoder: MTLRenderCommandEncoder, commandBuffer: MTLCommandBuffer) -> Bool {
+        guard let head = stretch.first, let authored = head.model.plan else { return false }
+        let plan = currentPlan(authored, objectID: head.model.id)
+        let draw = head.draw
+        let depthFormat = draw.depth == nil ? MTLPixelFormat.invalid : SceneDepthStates.format
+        var pipelines: [MTLRenderPipelineState?] = []
+        for mesh in plan.meshes {
+            guard mesh.material.pass.variant != nil else { pipelines.append(nil); continue }
+            guard let pipeline = pipeline(for: mesh, pixelFormat: draw.pixelFormat, sampleCount: draw.sampleCount,
+                                          depthFormat: depthFormat, instanced: true) else { return false }
+            pipelines.append(pipeline)
+        }
+        // Per object, the culling `drawOne` does: the model's sphere, then each mesh's.
+        let viewFrustum = frustum(draw.camera.viewProjection)
+        var visible: [(model: SceneModelObject, draw: SceneModelDraw)] = []
+        for item in stretch {
+            if viewFrustum.contains(SceneModelCulling.Sphere(plan.cullBounds, world: item.draw.world)) {
+                visible.append(item)
+            } else {
+                modelsCulled += 1
+                culledModels.insert(item.model.id)
+            }
+        }
+        guard let shared = visible.first else { return true }
+        let meshBuffers = self.meshBuffers(plan)
+        // The uniforms are the first visible object's: the instances differ only in what they
+        // read from their records.
+        let meshUniforms = self.uniforms(for: shared.model.id, plan: plan)
+        let placement = shared.draw.placement
+        var drew = false
+        for (index, mesh) in plan.meshes.enumerated() {
+            let instances = visible.filter { item in
+                mesh.bounds.map { viewFrustum.contains(SceneModelCulling.Sphere($0, world: item.draw.world)) } ?? true
+            }
+            guard !instances.isEmpty, let pipeline = pipelines[index], let buffers = meshBuffers[index],
+                  let bound = textures(of: mesh.material, draw, morph: nil) else { continue }
+            let program = meshUniforms[index]
+            if program.size > 0 {
+                let key = ModelMaterialUniforms.PassKey(
+                    world: shared.draw.world, view: draw.camera.view, viewProjection: placement.shaderViewProjection,
+                    eye: draw.frame.eyePosition, screen: draw.frame.screenSize, target: draw.frame.screenSize,
+                    textures: bound.map { SIMD4(Float($0.texture.width), Float($0.texture.height),
+                                                $0.contentSize?.x ?? 0, $0.contentSize?.y ?? 0) })
+                program.update(key: key, frame: draw.frame, values: draw.values, shared: (frameValues, mesh.material)) {
+                    var pass = BuiltinPassContext(targetSize: draw.frame.screenSize)
+                    pass.place(placement)
+                    for entry in bound {
+                        pass.textures[entry.slot] = EffectGraphRenderer.textureInfo(for: entry.texture, contentSize: entry.contentSize)
+                    }
+                    return pass
+                }
+            }
+            var records: [Float] = []
+            records.reserveCapacity(instances.count * ShaderInstancing.record)
+            for item in instances {
+                var pass = BuiltinPassContext(targetSize: draw.frame.screenSize)
+                pass.place(item.draw.placement)
+                ShaderInstancing.writeRecord(into: &records, frame: draw.frame, pass: pass)
+            }
+            guard let slice = records.withUnsafeBytes({ uniformArena.allocate($0, for: commandBuffer) }) else { continue }
+            encoder.setRenderPipelineState(pipeline)
+            if let depth = draw.depth {
+                depth.apply(mesh.material.raster, to: encoder)
+            } else {
+                encoder.setCullMode(mesh.material.raster.cullMode)
+            }
+            encoder.setFrontFacing(draw.mirrored ? .clockwise : Self.frontFacing)
+            buffers.bindVertices(to: encoder)
+            encoder.setVertexBuffer(zeroAttributes, offset: 0, index: EffectGraphRenderer.zeroBuffer)
+            encoder.setVertexBuffer(slice.buffer, offset: slice.offset, index: ShaderInstancing.instanceBuffer)
+            for entry in bound {
+                encoder.setFragmentTexture(entry.texture, index: entry.slot)
+                encoder.setFragmentSamplerState(entry.sampler, index: entry.slot)
+                encoder.setVertexTexture(entry.texture, index: entry.slot)
+                encoder.setVertexSamplerState(entry.sampler, index: entry.slot)
+            }
+            if program.size > 0 {
+                program.bytes.withUnsafeBytes { raw in uniformArena.bind(raw, index: 0, to: encoder, commandBuffer: commandBuffer) }
+            }
+            encoder.drawIndexedPrimitives(type: .triangle, indexCount: indexCount(of: mesh, in: plan),
+                                          indexType: mesh.usesUInt32Indices ? .uint32 : .uint16,
+                                          indexBuffer: buffers.indices, indexBufferOffset: 0, instanceCount: instances.count)
+            drawsEncoded += 1
+            instancedDraws += 1
+            instancesDrawn += instances.count
+            for item in instances { meshDraws[item.model.id, default: 0] += 1 }
+            drew = true
+        }
+        if drew, draw.depth == nil { encoder.setCullMode(.none) }
+        return true
+    }
+
     /// WE's front faces (`FrontCounterClockwise = FALSE`, 0x1400990f9): clockwise on D3D's
     /// y-down render target, which is counter-clockwise in clip space, where Metal decides the
     /// winding. A `.mdl` winds its outward faces counter-clockwise (right-handed), and WE draws
@@ -259,7 +433,7 @@ final class SceneModelRenderer: SceneModelDrawing {
     /// Poses the model once this frame (only while visible, which is when the renderer draws it)
     /// and returns its `g_Bones` components; nil for a model without bones. The shadow pass poses
     /// its casters so before the scene pass draws them. `objectWorld` is the object's world
-    /// matrix, which root motion moves the object through.
+    /// matrix (physics bones step in it).
     func advance(_ model: SceneModelObject, plan: SceneModelPlan, frame: BuiltinFrameContext,
                  values: SceneValueContext, objectWorld: simd_float4x4 = matrix_identity_float4x4) -> [Float]? {
         guard let animator = animator(for: model.id) else { return nil }
@@ -272,15 +446,6 @@ final class SceneModelRenderer: SceneModelDrawing {
         let components = animator.pose.boneComponents
         boneComponents[model.id] = components
         return components
-    }
-
-    /// Whether the model's clips move it (root motion), so its world is needed as it advances.
-    func hasRootMotion(_ id: String) -> Bool { animator(for: id)?.stack.hasRootMotion ?? false }
-
-    /// What root motion moved the model by (`SceneRootMotion`); nil when it has none.
-    func rootMotion(of id: String) -> SceneRootMotion.Motion? {
-        guard let motion = animators[id]?.rootMotion, !motion.isZero else { return nil }
-        return motion
     }
 
     /// The model objects with a posed skeleton (script feedback).
@@ -555,18 +720,22 @@ final class SceneModelRenderer: SceneModelDrawing {
     static let meshAttributesBuffer = 27
 
     static func pipelineKey(_ mesh: SceneModelPlan.Mesh, pixelFormat: MTLPixelFormat, sampleCount: Int,
-                            depthFormat: MTLPixelFormat) -> String {
+                            depthFormat: MTLPixelFormat, instanced: Bool = false) -> String {
         "model|\(mesh.material.pass.variantKey)|\(mesh.format.rawValue)|\(mesh.material.blending)|\(pixelFormat.rawValue)"
-            + "|x\(sampleCount)|d\(depthFormat.rawValue)"
+            + "|x\(sampleCount)|d\(depthFormat.rawValue)" + (instanced ? "|instanced" : "")
     }
 
     /// Blocks until every mesh's pipeline compiled or failed (tests, prewarming). True when all are ready.
+    /// `instanced`: the instanced pipelines (`draw(run:)`).
     func waitUntilReady(_ plan: SceneModelPlan, pixelFormat: MTLPixelFormat, sampleCount: Int = 1,
-                        depthFormat: MTLPixelFormat = SceneDepthStates.format, timeout: TimeInterval = 120) -> Bool {
+                        depthFormat: MTLPixelFormat = SceneDepthStates.format, instanced: Bool = false,
+                        timeout: TimeInterval = 120) -> Bool {
         let deadline = Date().addingTimeInterval(timeout)
         for mesh in plan.meshes {
-            let key = Self.pipelineKey(mesh, pixelFormat: pixelFormat, sampleCount: sampleCount, depthFormat: depthFormat)
-            while pipeline(for: mesh, pixelFormat: pixelFormat, sampleCount: sampleCount, depthFormat: depthFormat) == nil {
+            let key = Self.pipelineKey(mesh, pixelFormat: pixelFormat, sampleCount: sampleCount, depthFormat: depthFormat,
+                                       instanced: instanced)
+            while pipeline(for: mesh, pixelFormat: pixelFormat, sampleCount: sampleCount, depthFormat: depthFormat,
+                           instanced: instanced) == nil {
                 if pipelineLock.withLock({ failed.contains(key) }) || Date() > deadline { return false }
                 Thread.sleep(forTimeInterval: 0.005)
             }
@@ -575,20 +744,22 @@ final class SceneModelRenderer: SceneModelDrawing {
     }
 
     private func pipeline(for mesh: SceneModelPlan.Mesh, pixelFormat: MTLPixelFormat, sampleCount: Int,
-                          depthFormat: MTLPixelFormat) -> MTLRenderPipelineState? {
-        let key = Self.pipelineKey(mesh, pixelFormat: pixelFormat, sampleCount: sampleCount, depthFormat: depthFormat)
+                          depthFormat: MTLPixelFormat, instanced: Bool = false) -> MTLRenderPipelineState? {
+        let key = Self.pipelineKey(mesh, pixelFormat: pixelFormat, sampleCount: sampleCount, depthFormat: depthFormat,
+                                   instanced: instanced)
         let state: (pipeline: MTLRenderPipelineState?, busy: Bool) = pipelineLock.withLock {
             (pipelines[key], pending.contains(key) || failed.contains(key))
         }
         if let pipeline = state.pipeline { return pipeline }
         if !state.busy, let variant = mesh.material.pass.variant {
-            compile(variant, mesh: mesh, pixelFormat: pixelFormat, sampleCount: sampleCount, depthFormat: depthFormat, key: key)
+            compile(variant, mesh: mesh, pixelFormat: pixelFormat, sampleCount: sampleCount, depthFormat: depthFormat,
+                    instanced: instanced, key: key)
         }
         return nil
     }
 
     private func compile(_ variant: TranslatedShaderVariant, mesh: SceneModelPlan.Mesh, pixelFormat: MTLPixelFormat,
-                         sampleCount: Int, depthFormat: MTLPixelFormat, key: String) {
+                         sampleCount: Int, depthFormat: MTLPixelFormat, instanced: Bool, key: String) {
         pipelineLock.withLock { _ = pending.insert(key) }
         let device = self.device
         let archive = self.archive
@@ -600,7 +771,8 @@ final class SceneModelRenderer: SceneModelDrawing {
             do {
                 result = try EffectGraphRenderer.makePipeline(
                     Self.pipelineDescriptor(variant, format: format, blending: blending, pixelFormat: pixelFormat,
-                                            sampleCount: sampleCount, depthFormat: depthFormat, device: device),
+                                            sampleCount: sampleCount, depthFormat: depthFormat, device: device,
+                                            instanced: instanced),
                     device: device, archive: archive, key: key)
             } catch {
                 OWELog.error(.shader, "Model material \(material) can't draw through its shader; the mesh draws nothing: \(error)")
@@ -615,12 +787,13 @@ final class SceneModelRenderer: SceneModelDrawing {
     }
 
     /// The pipeline of a mesh's variant: WE's blending (`alphatocoverage` as Metal's alpha to
-    /// coverage, without blending), the mesh's vertex layout.
+    /// coverage, without blending), the mesh's vertex layout. `instanced` specializes the vertex
+    /// stage's instanced path and reads its instance records (`ShaderInstancing`).
     static func pipelineDescriptor(_ variant: TranslatedShaderVariant, format: MDLVertexFormat, blending: String,
                                    pixelFormat: MTLPixelFormat, sampleCount: Int, depthFormat: MTLPixelFormat,
-                                   device: MTLDevice) throws -> MTLRenderPipelineDescriptor {
+                                   device: MTLDevice, instanced: Bool = false) throws -> MTLRenderPipelineDescriptor {
         let (vertexLibrary, fragmentLibrary) = try variant.makeLibraries(device: device)
-        guard let vertex = vertexLibrary.makeFunction(name: "main0"),
+        guard let vertex = try ShaderInstancing.vertexFunction(vertexLibrary, instanced: instanced),
               let fragment = fragmentLibrary.makeFunction(name: "main0") else {
             throw ShaderCompilerError.failed(step: "metal", output: "entry point main0 missing")
         }
@@ -640,7 +813,8 @@ final class SceneModelRenderer: SceneModelDrawing {
             attachment.destinationRGBBlendFactor = blend.destination
             attachment.destinationAlphaBlendFactor = blend.destination
         }
-        descriptor.vertexDescriptor = vertexDescriptor(for: vertex, attributes: variant.attributes, format: format)
+        descriptor.vertexDescriptor = vertexDescriptor(for: vertex, attributes: variant.attributes, format: format,
+                                                       instanced: instanced)
         return descriptor
     }
 
@@ -648,17 +822,25 @@ final class SceneModelRenderer: SceneModelDrawing {
     /// (`ShaderPairRewriter.attributeLocations`). An input takes the mesh's attribute of the same
     /// D3D semantic and index (a `vec2 a_TexCoord` reads the first two components of a mesh's
     /// `a_TexCoordVec4`, as WE's input layout binds by semantic [I]); one the mesh lacks reads zeros.
+    /// `instanced` reads the instanced path's attributes from the instance records
+    /// (`ShaderInstancing.instanceBuffer`, one record per instance); a plain pipeline reads zeros
+    /// there, which its stage never uses.
     static func vertexDescriptor(for function: MTLFunction, attributes: [String: Int],
-                                 format: MDLVertexFormat) -> MTLVertexDescriptor {
+                                 format: MDLVertexFormat, instanced: Bool = false) -> MTLVertexDescriptor {
         let descriptor = MTLVertexDescriptor()
         var names: [Int: [String]] = [:]
         for (name, location) in attributes { names[location, default: []].append(name) }
-        var usesZero = false, usesAttributes = false, usesMesh = false
+        var usesZero = false, usesAttributes = false, usesMesh = false, usesInstances = false
         let streams = SceneModelVertexStreams(format)
         for input in function.vertexAttributes ?? [] where input.isActive {
             let element = descriptor.attributes[input.attributeIndex]!
             let isInteger = [.uint, .uint2, .uint3, .uint4, .int, .int2, .int3, .int4].contains(input.attributeType)
-            if let attribute = meshAttribute(for: names[input.attributeIndex] ?? [], in: format),
+            if instanced, let instance = (names[input.attributeIndex] ?? []).lazy.compactMap(ShaderInstancing.instanceAttribute).first {
+                element.format = instance.format
+                element.offset = instance.offset
+                element.bufferIndex = ShaderInstancing.instanceBuffer
+                usesInstances = true
+            } else if let attribute = meshAttribute(for: names[input.attributeIndex] ?? [], in: format),
                let offset = format.offset(of: attribute) {
                 element.format = ScenePuppetRenderer.vertexFormat(attribute)
                 if let streams, let location = streams.location(of: attribute, in: format) {
@@ -681,6 +863,11 @@ final class SceneModelRenderer: SceneModelDrawing {
         // or zeros), so each buffer's layout is set only when used.
         if usesMesh { descriptor.layouts[meshBuffer].stride = streams?.positionStride ?? format.stride }
         if let streams, usesAttributes { descriptor.layouts[meshAttributesBuffer].stride = streams.attributeStride }
+        if usesInstances {
+            descriptor.layouts[ShaderInstancing.instanceBuffer].stride = ShaderInstancing.record * 4
+            descriptor.layouts[ShaderInstancing.instanceBuffer].stepFunction = .perInstance
+            descriptor.layouts[ShaderInstancing.instanceBuffer].stepRate = 1
+        }
         if usesZero {
             descriptor.layouts[EffectGraphRenderer.zeroBuffer].stride = 16
             descriptor.layouts[EffectGraphRenderer.zeroBuffer].stepFunction = .constant
@@ -723,5 +910,54 @@ struct SceneAttachmentProviders: SceneAttachmentProviding {
 
     func attachmentWorld(_ object: SceneAttachedObject) -> simd_float4x4? {
         providers.lazy.compactMap { $0.attachmentWorld(object) }.first
+    }
+}
+
+
+/// The model draws of a pass and the CPU time spent encoding them, logged every `interval`
+/// frames when `OWE_MODEL_DRAW_STATS=1` (to measure instancing: run a scene of many copies with
+/// `OWE_MODEL_INSTANCING=0` and without). Render thread only.
+final class SceneModelDrawStats {
+    static let interval = 120
+    static let enabled = ProcessInfo.processInfo.environment["OWE_MODEL_DRAW_STATS"] == "1"
+
+    let label: String
+    private var frameTime: Double?
+    private var frames = 0
+    private var objects = 0
+    private var draws = 0
+    private var seconds = 0.0
+
+    init(label: String) {
+        self.label = label
+    }
+
+    /// Starts a measurement in the frame at `frame` (its time), which tells the frames apart.
+    func begin(frame: Double) -> UInt64 {
+        guard Self.enabled else { return 0 }
+        if frameTime != frame {
+            frameTime = frame
+            frames += 1
+            if frames > Self.interval { flush() }
+        }
+        return DispatchTime.now().uptimeNanoseconds
+    }
+
+    func end(_ start: UInt64, objects: Int, draws: Int) {
+        guard Self.enabled else { return }
+        self.objects += objects
+        self.draws += draws
+        seconds += Double(DispatchTime.now().uptimeNanoseconds - start) / 1e9
+    }
+
+    /// Logs the frames before the one just begun.
+    private func flush() {
+        let count = Double(frames - 1)
+        OWELog.info(.scene, String(format: "%@: %.1f objects, %.1f draws, %.3f ms CPU per frame over %d frames",
+                                   label, Double(objects) / count, Double(draws) / count, seconds * 1000 / count, frames - 1))
+        frames = 1
+        objects = 0
+        draws = 0
+        seconds = 0
     }
 }

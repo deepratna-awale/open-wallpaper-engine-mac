@@ -50,6 +50,12 @@ enum ScreenSaverLoopLength {
         var seconds: Double { Double(frames) / Double(frameRate) }
     }
 
+    /// A recording's periods: the scene's own, plus the synthetic spectrum's when the scene reacts
+    /// to audio (the recording feeds it `SyntheticAudioSpectrum`, so it is part of the motion).
+    static func recordingPeriods(_ periods: [Period], readsAudio: Bool) -> [Period] {
+        readsAudio ? periods + [SyntheticAudioSpectrum.period] : periods
+    }
+
     /// The least common multiple of `periods`; nil when there are none or it overflows.
     static func leastCommonMultiple(_ periods: [Period]) -> Period? {
         guard var result = periods.first else { return nil }

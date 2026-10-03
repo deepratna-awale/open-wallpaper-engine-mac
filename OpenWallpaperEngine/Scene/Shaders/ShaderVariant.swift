@@ -31,6 +31,10 @@ struct TranslatedShaderVariant: Codable {
     let attributes: [String: Int]
     /// Combos the variant was compiled with (defaults included).
     let combos: [String: Int]
+    /// Whether one instanced draw can draw several objects through it (`ShaderInstancing`):
+    /// translated with `instancing` and reading no world-dependent built-in it can't take per
+    /// instance. Nil (false) for every other variant.
+    var instanceable: Bool? = nil
 }
 
 enum ShaderVariantError: Error, CustomStringConvertible {
@@ -51,7 +55,7 @@ enum ShaderVariantError: Error, CustomStringConvertible {
 /// hundreds of thousands possible, so nothing is precompiled.
 final class ShaderVariantTranslator {
     /// Bump whenever translated output for the same input can change.
-    static let revision = 13
+    static let revision = 14
 
     let compiler: ShaderCompiler
     /// Root of the disk cache; variants go into its `generationDirectory`.
@@ -174,12 +178,16 @@ final class ShaderVariantTranslator {
         return combos
     }
 
-    func variant(vertex: ShaderSource, fragment: ShaderSource, combos: [String: Int]) throws -> TranslatedShaderVariant {
+    /// `instancing` (model materials) adds the instanced path (`ShaderInstancing`) to the vertex
+    /// stage; a pipeline made without it draws as the plain variant does.
+    func variant(vertex: ShaderSource, fragment: ShaderSource, combos: [String: Int],
+                 instancing: Bool = false) throws -> TranslatedShaderVariant {
         let toolchain = toolchainFingerprint
         // Combos the shaders never name can't change the translation (the engine's `SCENE_ORTHO`
         // and `HDR` reach every material): one variant serves all their values.
         let combos = Self.effectiveCombos(vertex: vertex, fragment: fragment, combos: combos)
-        let key = Self.cacheKey(vertex: vertex, fragment: fragment, combos: combos, toolchain: toolchain)
+        let key = Self.cacheKey(vertex: vertex, fragment: fragment, combos: combos, toolchain: toolchain,
+                                instancing: instancing)
         lock.lock()
         if let cached = memory[key] { lock.unlock(); return cached }
         lock.unlock()
@@ -188,7 +196,7 @@ final class ShaderVariantTranslator {
             return cached
         }
         let translated = try OWEPhaseTiming.measure(.shaderTranslate) {
-            try translate(vertex: vertex, fragment: fragment, combos: combos)
+            try translate(vertex: vertex, fragment: fragment, combos: combos, instancing: instancing)
         }
         store(key, translated, persist: true)
         return translated
@@ -213,7 +221,7 @@ final class ShaderVariantTranslator {
     /// The variant's cache key. Only `effectiveCombos` are hashed, so a combo the shaders never
     /// name doesn't fork the key (test-risks LR17).
     static func cacheKey(vertex: ShaderSource, fragment: ShaderSource, combos: [String: Int],
-                         toolchain: String = "") -> String {
+                         toolchain: String = "", instancing: Bool = false) -> String {
         let combos = effectiveCombos(vertex: vertex, fragment: fragment, combos: combos)
         var hasher = SHA256()
         hasher.update(data: Data("\(revision)\u{0}\(toolchain)\u{0}".utf8))
@@ -223,11 +231,12 @@ final class ShaderVariantTranslator {
         for (name, value) in combos.sorted(by: { $0.key < $1.key }) {
             hasher.update(data: Data("\u{0}\(name)=\(value)".utf8))
         }
+        if instancing { hasher.update(data: Data("\u{0}instancing".utf8)) }
         return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
 
     private func translate(vertex: ShaderSource, fragment: ShaderSource,
-                           combos: [String: Int]) throws -> TranslatedShaderVariant {
+                           combos: [String: Int], instancing: Bool = false) throws -> TranslatedShaderVariant {
         let label = "\(vertex.path) + \(fragment.path)"
         // The input of the step running now, kept for `recordFailure`.
         var step: (source: ShaderSource, text: String)?
@@ -236,9 +245,17 @@ final class ShaderVariantTranslator {
             let vertexText = try compiler.preprocess(step!.text, stage: .vertex)
             step = (fragment, ShaderPrelude.text(for: .fragment, combos: combos, analysis: fragment.preludeAnalysis) + fragment.text(combos: combos))
             let fragmentText = try compiler.preprocess(step!.text, stage: .fragment)
+            var fixedVertex = ShaderPrelude.fixupAfterPreprocess(vertexText)
+            let fixedFragment = ShaderPrelude.fixupAfterPreprocess(fragmentText)
+            var instanceable: Bool?
+            if instancing {
+                let instanced = ShaderInstancing.rewrite(vertex: fixedVertex, fragment: fixedFragment)
+                fixedVertex = instanced.vertex
+                instanceable = instanced.instanceable
+            }
             let pair = ShaderPairRewriter.rewrite(
-                vertex: ShaderPrelude.fixupAfterPreprocess(vertexText),
-                fragment: ShaderPrelude.fixupAfterPreprocess(fragmentText),
+                vertex: fixedVertex,
+                fragment: fixedFragment,
                 stageLocal: ShaderUniformDeclaration.stageLocalNames(vertex: vertex.uniforms, fragment: fragment.uniforms))
             step = (vertex, pair.vertex)
             let vertexOut = try compiler.compileToMSL(pair.vertex, stage: .vertex)
@@ -247,7 +264,8 @@ final class ShaderVariantTranslator {
             step = nil
             let layout = try Self.uniformLayout(from: fragmentOut.reflection) ?? Self.uniformLayout(from: vertexOut.reflection)
             return TranslatedShaderVariant(vertexMSL: vertexOut.msl, fragmentMSL: fragmentOut.msl, uniforms: layout,
-                                           textureSlots: pair.textureSlots, attributes: pair.attributes, combos: combos)
+                                           textureSlots: pair.textureSlots, attributes: pair.attributes, combos: combos,
+                                           instanceable: instanceable)
         } catch {
             if let step { recordFailure(step.source, text: step.text, error: error) }
             throw ShaderVariantError.translation(label, underlying: error)

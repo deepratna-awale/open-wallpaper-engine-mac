@@ -20,6 +20,18 @@ protocol SceneModelDrawing: AnyObject {
     /// (`SceneRasterState`, through `draw.depth`); the renderer resets its own state after.
     func draw(_ model: SceneModelObject, _ draw: SceneModelDraw, encoder: MTLRenderCommandEncoder,
               commandBuffer: MTLCommandBuffer)
+
+    /// Encodes consecutive models of the object loop, in order, with nothing drawn between them
+    /// (`SceneModelRenderer` instances the alike ones).
+    func draw(run: [(model: SceneModelObject, draw: SceneModelDraw)], encoder: MTLRenderCommandEncoder,
+              commandBuffer: MTLCommandBuffer)
+}
+
+extension SceneModelDrawing {
+    func draw(run: [(model: SceneModelObject, draw: SceneModelDraw)], encoder: MTLRenderCommandEncoder,
+              commandBuffer: MTLCommandBuffer) {
+        for item in run { draw(item.model, item.draw, encoder: encoder, commandBuffer: commandBuffer) }
+    }
 }
 
 /// What a model's draw gets from the renderer.
