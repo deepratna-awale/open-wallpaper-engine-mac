@@ -45,10 +45,15 @@ enum ScreenSaverSeamFinder {
         for index in first..<differences.count where differences[index] < differences[best] { best = index }
         guard let alignment, alignment > 0 else { return best }
         let step = Double(frameRate) * alignment
-        let aligned = (1...).lazy.map { Int((Double($0) * step).rounded()) }
-            .prefix { $0 < differences.count }
-            .filter { $0 >= first && abs(Double($0) - (Double($0) / step).rounded() * step) < 1e-6 }
-        guard let bestAligned = aligned.min(by: { differences[$0] < differences[$1] }) else { return best }
+        var bestAligned: Int?
+        var bar = 1
+        while true {
+            let index = Int((Double(bar) * step).rounded())
+            guard index < differences.count else { break }
+            if index >= first, bestAligned.map({ differences[index] < differences[$0] }) ?? true { bestAligned = index }
+            bar += 1
+        }
+        guard let bestAligned else { return best }
         let good = differences[bestAligned] <= invisibleDifference
             || differences[bestAligned] <= differences[best] * alignedTolerance
         return good ? bestAligned : best
