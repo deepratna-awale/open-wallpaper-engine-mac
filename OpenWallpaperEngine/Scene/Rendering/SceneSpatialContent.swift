@@ -14,12 +14,9 @@ struct SceneSpatialContent: Equatable {
     var models: [SceneModelObject] = []
     var drawOrder = SceneDrawOrderMode.sceneOrder
     /// Every object's authored 3D transform, parent and bone attachment, with WE's defaults
-    /// (`SceneTransformHierarchy3D`): the model matrices of a perspective scene.
+    /// (`SceneTransformHierarchy3D`): the model matrices of a perspective scene, and of an
+    /// orthographic scene's models and `perspective` objects.
     var transforms = SceneTransformHierarchy3D.empty
-    /// An orthographic scene with `perspective` objects: the same hierarchy with a root without
-    /// `origin` centred, as the 2D path places it (M3's `rootOrigin`), which those objects are
-    /// drawn with through their temporary camera. Nil otherwise.
-    var perspectiveTransforms: SceneTransformHierarchy3D?
     /// `sortorder`, `castshadow`, `reflected` and `depthtest` of every object that authors one, by
     /// object id (`WESceneObject.renderValues`).
     var renderValues: [String: [SceneObjectRenderField: SceneRawValue]] = [:]

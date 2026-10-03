@@ -55,6 +55,16 @@ struct SceneAffineTransform: Equatable {
 
     /// How much one local unit grows along each local axis.
     var axisScale: SIMD2<Float> { SIMD2(simd_length(linear.columns.0), simd_length(linear.columns.1)) }
+
+    /// An orthographic scene's `zoom` as a scene-plane transform: the plane scaled by `zoom` about
+    /// the scene's centre. WE scales its orthographic projection about the screen's centre
+    /// (0x14017fd50), which is the same before `ortho(0, width, 0, height)`; WE 2.8 draws an
+    /// 870 px image at `zoom` 2 1742 px wide about the centre (docs/models-plan.md §5.19).
+    static func orthographicZoom(_ zoom: Float, sceneSize: SIMD2<Float>) -> SceneAffineTransform {
+        guard zoom != 1, zoom.isFinite, zoom > 0 else { return .identity }
+        let centre = sceneSize / 2
+        return SceneAffineTransform(linear: simd_float2x2(diagonal: SIMD2(repeating: zoom)), translation: centre - zoom * centre)
+    }
 }
 
 /// An object's own transform relative to its parent.
@@ -68,19 +78,11 @@ struct SceneLocalTransform: Equatable {
 
     static let identity = SceneLocalTransform(origin: .zero, scale: SIMD2(repeating: 1), angle: 0)
 
-    /// The authored transform. A root object without an `origin` sits at the scene centre; a
-    /// child without one sits on its parent's origin.
-    init(object: WESceneObject, sceneSize: SIMD2<Float>) {
-        if let origin = object.origin?.parseVector3() {
-            self.origin = SIMD2(Float(origin.0), Float(origin.1))
-        } else {
-            self.origin = object.parent == nil ? sceneSize / 2 : .zero
-        }
-        let scale = object.scale?.parseVector3() ?? (1, 1, 1)
-        self.scale = SIMD2(Float(scale.0), Float(scale.1))
-        let angles = object.angles?.parseVector3() ?? (0, 0, 0)
-        self.angle = Float(angles.2)
-        self.tilt = SIMD2(Float(angles.0), Float(angles.1))
+    /// The authored transform: the x and y of the object's 3D one (`SceneLocalTransform3D`), with
+    /// WE's defaults. An object without an `origin` sits at 0, a root one on the scene's
+    /// bottom-left corner (WE 2.8's capture, docs/models-plan.md §5.13).
+    init(object: WESceneObject) {
+        self = SceneLocalTransform3D(object: object).planar
     }
 
     init(origin: SIMD2<Float>, scale: SIMD2<Float>, angle: Float, tilt: SIMD2<Float> = .zero) {
@@ -155,13 +157,27 @@ struct SceneTransformHierarchy {
         let parallaxDepth: SIMD2<Float>
         /// The `attachment` name, when the object hangs from a bone of its parent's rig.
         var attachment: String?
+        /// The authored `origin.z` and `scale.z`, which the 2D view drops but a tilted ancestor
+        /// shows (`composesInDepth`).
+        var originZ: Float = 0
+        var scaleZ: Float = 1
 
         init(parentID: String?, local: SceneLocalTransform, parallaxDepth: SIMD2<Float> = SIMD2(1, 1),
-             attachment: String? = nil) {
+             attachment: String? = nil, originZ: Float = 0, scaleZ: Float = 1) {
             self.parentID = parentID
             self.local = local
             self.parallaxDepth = parallaxDepth
             self.attachment = attachment
+            self.originZ = originZ
+            self.scaleZ = scaleZ
+        }
+
+        /// What a tilted ancestor turns into the scene's plane: the node's own tilt, or a depth.
+        var hasDepth: Bool { local.tilt != .zero || originZ != 0 }
+
+        /// `own` (this node's live 2D transform) with the node's depth, for the 3D product.
+        func local3D(_ own: SceneLocalTransform) -> SceneLocalTransform3D {
+            SceneLocalTransform3D(own, originZ: originZ, scaleZ: scaleZ)
         }
     }
 
@@ -169,27 +185,54 @@ struct SceneTransformHierarchy {
     /// attachment matrix`, 0x1401dd7d0); nil hangs it from the parent's origin.
     typealias Attachments = (_ child: String, _ parent: String, _ name: String) -> SceneAffineTransform?
 
-    private(set) var nodes: [String: Node]
+    private(set) var nodes: [String: Node] {
+        didSet { composesInDepth = Self.composesInDepth(nodes) }
+    }
+
+    /// Whether some object with a depth (its own tilt or `origin.z`) hangs below a tilted
+    /// ancestor. Worlds are then the orthographic view of the 3D product
+    /// (`SceneWorldMatrix.orthographic`), as WE composes them in an orthographic scene too
+    /// (docs/models-plan.md §5.16): the product of each level's 2D view drops what the ancestor's
+    /// tilt turns into the plane. Read from the authored tilts and depths; otherwise the two
+    /// products agree and the 2D one is used.
+    private(set) var composesInDepth = false
 
     static let empty = SceneTransformHierarchy(nodes: [:])
 
-    init(nodes: [String: Node]) { self.nodes = nodes }
+    init(nodes: [String: Node]) {
+        self.nodes = nodes
+        composesInDepth = Self.composesInDepth(nodes)
+    }
 
-    init(objects: [WESceneObject], sceneSize: SIMD2<Float>) {
+    init(objects: [WESceneObject]) {
         var nodes: [String: Node] = [:]
         for (index, object) in objects.enumerated() {
             let depth = object.parallaxDepthValue
-            nodes[String(object.id ?? index)] = Node(parentID: object.parent.map(String.init),
-                                                     local: SceneLocalTransform(object: object, sceneSize: sceneSize),
+            let local = SceneLocalTransform3D(object: object)
+            nodes[String(object.id ?? index)] = Node(parentID: object.parent.map(String.init), local: local.planar,
                                                      parallaxDepth: SIMD2(Float(depth.0), Float(depth.1)),
-                                                     attachment: object.attachment)
+                                                     attachment: object.attachment,
+                                                     originZ: local.origin.z, scaleZ: local.scale.z)
         }
-        self.nodes = nodes
+        self.init(nodes: nodes)
     }
 
     /// Fullscreen layers fill the scene whatever their parent is.
     mutating func makeRoot(_ id: String, local: SceneLocalTransform) {
         nodes[id] = Node(parentID: nil, local: local, parallaxDepth: nodes[id]?.parallaxDepth ?? SIMD2(1, 1))
+    }
+
+    private static func composesInDepth(_ nodes: [String: Node]) -> Bool {
+        nodes.contains { id, node in
+            guard node.hasDepth else { return false }
+            var visited: Set<String> = [id]
+            var next = node.parentID
+            while let parentID = next, visited.insert(parentID).inserted, let parent = nodes[parentID] {
+                if parent.local.tilt != .zero { return true }
+                next = parent.parentID
+            }
+            return false
+        }
     }
 
     /// `ILayer.setParent`: hangs `id` from `parent` (nil makes it a root), from the attachment
@@ -219,6 +262,39 @@ struct SceneTransformHierarchy {
     /// ancestors use their authored transform. Cycles stop the walk.
     func parentWorld(of id: String, live: (String) -> SceneLocalTransform? = { _ in nil },
                      attachments: Attachments? = nil) -> SceneAffineTransform {
+        if composesInDepth {
+            return SceneWorldMatrix.orthographic(parentWorld3D(of: id, live: live, attachments: attachments))
+        }
+        return ancestors(of: id).reversed().reduce(.identity) { world, ancestor in
+            world * attachment(of: ancestor, attachments) * SceneAffineTransform(live(ancestor) ?? nodes[ancestor]!.local)
+        }
+    }
+
+    /// `id`'s world: its parent's, its attachment, then `local` (else `live`, else authored).
+    /// When the hierarchy `composesInDepth`, the orthographic view of the 3D product, whose leaf
+    /// may have a depth of its own; otherwise the 2D product.
+    func world(of id: String, local: SceneLocalTransform? = nil,
+               live: (String) -> SceneLocalTransform? = { _ in nil }, attachments: Attachments? = nil) -> SceneAffineTransform {
+        guard let own = local ?? live(id) ?? nodes[id]?.local else { return .identity }
+        guard composesInDepth else {
+            return attachedParentWorld(of: id, live: live, attachments: attachments) * SceneAffineTransform(own)
+        }
+        let own3D = nodes[id]?.local3D(own) ?? SceneLocalTransform3D(own)
+        return SceneWorldMatrix.orthographic(parentWorld3D(of: id, live: live, attachments: attachments)
+                                             * Self.embedded(attachment(of: id, attachments)) * own3D.matrix)
+    }
+
+    /// The space `id`'s own transform lives in: its ancestors' world, then its attachment on its
+    /// parent's rig when it has one (`parentWorld · attachment`, 0x1401dd7d0). When the hierarchy
+    /// `composesInDepth` this is only its orthographic view, which a leaf with a depth can't be
+    /// composed with: `world(of:local:)` composes it.
+    func attachedParentWorld(of id: String, live: (String) -> SceneLocalTransform? = { _ in nil },
+                             attachments: Attachments? = nil) -> SceneAffineTransform {
+        parentWorld(of: id, live: live, attachments: attachments) * attachment(of: id, attachments)
+    }
+
+    /// `id`'s ancestors, nearest first. Cycles stop the walk.
+    private func ancestors(of id: String) -> [String] {
         var chain: [String] = []
         var visited: Set<String> = [id]
         var next = nodes[id]?.parentID
@@ -226,22 +302,24 @@ struct SceneTransformHierarchy {
             chain.append(parentID)
             next = node.parentID
         }
-        return chain.reversed().reduce(.identity) { world, ancestor in
-            world * attachment(of: ancestor, attachments) * SceneAffineTransform(live(ancestor) ?? nodes[ancestor]!.local)
+        return chain
+    }
+
+    /// The 3D product of `id`'s ancestors, root first (`SceneTransformHierarchy3D`'s rule), each
+    /// with its live 2D transform and its authored depth.
+    private func parentWorld3D(of id: String, live: (String) -> SceneLocalTransform?,
+                               attachments: Attachments?) -> simd_float4x4 {
+        ancestors(of: id).reversed().reduce(matrix_identity_float4x4) { world, ancestor in
+            let node = nodes[ancestor]!
+            return world * Self.embedded(attachment(of: ancestor, attachments)) * node.local3D(live(ancestor) ?? node.local).matrix
         }
     }
 
-    func world(of id: String, local: SceneLocalTransform? = nil,
-               live: (String) -> SceneLocalTransform? = { _ in nil }, attachments: Attachments? = nil) -> SceneAffineTransform {
-        guard let own = local ?? live(id) ?? nodes[id]?.local else { return .identity }
-        return attachedParentWorld(of: id, live: live, attachments: attachments) * SceneAffineTransform(own)
-    }
-
-    /// The space `id`'s own transform lives in: its ancestors' world, then its attachment on its
-    /// parent's rig when it has one (`parentWorld · attachment`, 0x1401dd7d0).
-    func attachedParentWorld(of id: String, live: (String) -> SceneLocalTransform? = { _ in nil },
-                             attachments: Attachments? = nil) -> SceneAffineTransform {
-        parentWorld(of: id, live: live, attachments: attachments) * attachment(of: id, attachments)
+    /// A 2D transform as a 4×4 one, z untouched.
+    private static func embedded(_ transform: SceneAffineTransform) -> simd_float4x4 {
+        let x = transform.linear.columns.0, y = transform.linear.columns.1
+        return simd_float4x4(columns: (SIMD4(x.x, x.y, 0, 0), SIMD4(y.x, y.y, 0, 0), SIMD4(0, 0, 1, 0),
+                                       SIMD4(transform.translation.x, transform.translation.y, 0, 1)))
     }
 
     /// `id`'s attachment on its parent (world = parentWorld · attachment · local), identity when

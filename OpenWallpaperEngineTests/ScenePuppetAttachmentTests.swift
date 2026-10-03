@@ -38,7 +38,7 @@ final class ScenePuppetAttachmentTests: XCTestCase {
         XCTAssertEqual(hand, bone * ScenePuppetTests.translation(SIMD3(0, 10, 0)))
         XCTAssertNil(ScenePuppetAttachments.matrix(named: "foot", in: attachments, worlds: animator.worlds))
 
-        let hierarchy = SceneTransformHierarchy(objects: [parent, child], sceneSize: SIMD2(1920, 1080))
+        let hierarchy = SceneTransformHierarchy(objects: [parent, child])
         let world = hierarchy.world(of: "2", attachments: { child, parent, name in
             XCTAssertEqual([child, parent, name], ["2", "1", "hand"])
             return ScenePuppetAttachments.affine(hand)

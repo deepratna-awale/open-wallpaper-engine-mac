@@ -5,12 +5,11 @@ import simd
 /// D3/D8: full parent transforms and image alignment anchors, checked against objects taken from
 /// real workshop scenes (see `_source` in the fixture).
 final class SceneTransformTests: XCTestCase {
-    private let sceneSize = SIMD2<Float>(3840, 2160)
 
     private func hierarchy() throws -> SceneTransformHierarchy {
         let objects = try JSONDecoder().decode([WESceneObject].self,
                                                from: Fixtures.data("Scenes/text-transforms/objects.json"))
-        return SceneTransformHierarchy(objects: objects, sceneSize: sceneSize)
+        return SceneTransformHierarchy(objects: objects)
     }
 
     private func assertEqual(_ a: SIMD2<Float>, _ b: SIMD2<Float>, accuracy: Float = 0.01,
@@ -98,11 +97,13 @@ final class SceneTransformTests: XCTestCase {
         assertEqual(quad.center, SIMD2(600, 450))
     }
 
-    func testRootWithoutOriginSitsAtSceneCentre() throws {
+    /// WE 2.8's capture (docs/models-plan.md §5.13, `ModelsOpenPointsCaptureTests`): a root
+    /// without an `origin` sits on the scene's bottom-left corner, and its child with it.
+    func testRootWithoutOriginSitsAtZero() throws {
         let objects = try JSONDecoder().decode([WESceneObject].self, from: Data(#"[{"id": 1}, {"id": 2, "parent": 1}]"#.utf8))
-        let hierarchy = SceneTransformHierarchy(objects: objects, sceneSize: sceneSize)
-        assertEqual(hierarchy.world(of: "1").translation, sceneSize / 2)
-        assertEqual(hierarchy.world(of: "2").translation, sceneSize / 2)
+        let hierarchy = SceneTransformHierarchy(objects: objects)
+        assertEqual(hierarchy.world(of: "1").translation, .zero)
+        assertEqual(hierarchy.world(of: "2").translation, .zero)
     }
 
     // MARK: - angles.x / angles.y (WE 2.8.0.42's editor, orthographic scenes)
@@ -110,7 +111,7 @@ final class SceneTransformTests: XCTestCase {
     private func world(angles: String) throws -> SceneAffineTransform {
         let json = #"{"id": 1, "origin": "100 200 0", "angles": "\#(angles)"}"#
         let object = try JSONDecoder().decode(WESceneObject.self, from: Data(json.utf8))
-        return SceneAffineTransform(SceneLocalTransform(object: object, sceneSize: sceneSize))
+        return SceneAffineTransform(SceneLocalTransform(object: object))
     }
 
     /// Editor ground truth: `angles.x` = 30° squashes the object vertically by cos 30°, no perspective.
@@ -151,7 +152,7 @@ final class SceneTransformTests: XCTestCase {
     /// Timelines and scripts that set `angles` set the tilt too; without them the authored tilt stays.
     func testObjectMotionKeepsTheTilt() throws {
         let object = try JSONDecoder().decode(WESceneObject.self, from: Data(#"{"id": 1, "angles": "0.3 0.2 0.1"}"#.utf8))
-        let motion = SceneObjectMotion(object: object, sceneSize: sceneSize, bindings: SceneLayerBindings())
+        let motion = SceneObjectMotion(object: object, bindings: SceneLayerBindings())
         let local = motion.local()
         XCTAssertEqual(local.tilt.x, 0.3, accuracy: 0.0001)
         XCTAssertEqual(local.tilt.y, 0.2, accuracy: 0.0001)

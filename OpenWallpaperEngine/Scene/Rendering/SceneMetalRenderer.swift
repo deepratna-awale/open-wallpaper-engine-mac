@@ -1570,7 +1570,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 if drawnLastPasses[layerIndex] == nil {
                     dynamicTextures[layerIndex] = posedEffectOutput(
                         runEffects(entry, draw: draw, input: input, snapshot: nil, frame: effectFrame, commandBuffer: commandBuffer),
-                        of: entry, commandBuffer: commandBuffer)
+                        of: entry, camera: effectFrame.camera, commandBuffer: commandBuffer)
                 }
             }
             if isCompositeSource {
@@ -1876,7 +1876,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                                        commandBuffer: commandBuffer)
                 dynamicTextures[layerIndex] = posedEffectOutput(input.flatMap {
                     runEffects(entry, draw: draw, input: $0, snapshot: snapshot, frame: effectFrame, commandBuffer: commandBuffer)
-                }, of: entry, commandBuffer: commandBuffer)
+                }, of: entry, camera: effectFrame.camera, commandBuffer: commandBuffer)
                 guard let resumed = resumeScenePass(on: sceneTexture, commandBuffer: commandBuffer) else { return }
                 encoder = resumed
                 // Its composite is what readers drawn after it sample (`_rt_imageLayerComposite_<id>_a`).
@@ -1999,7 +1999,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         var frame = SceneFrameLighting.frame(lighting, input: SceneFrameLightingInput(
 
             local: { [unowned self] id in self.liveLocal(id) ?? self.transforms.nodes[id]?.local },
-            parentWorld: { [unowned self] id in self.transforms.parentWorld(of: id) { self.liveLocal($0) } },
+            // In the plane the layers are drawn in (the orthographic zoom, `orthographicView`).
+            parentWorld: { [unowned self] id in self.orthographicView * self.transforms.parentWorld(of: id) { self.liveLocal($0) } },
             isVisible: { [unowned self] id in self.scripts.isVisible(id) },
             world3D: isPerspective ? { [unowned self] id in self.world3D(id, in: self.spatial.transforms) } : nil,
             sceneColor: { scene.vector3($0) },
@@ -2467,11 +2468,14 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let musicSyncLevel = entry.layer.musicSync?.levelSource.map { $0() } ?? motion.audioLevel
         local.scale *= 1 + (entry.layer.musicSync?.zoomAmount ?? 0) * Float(musicSyncLevel)
         local.angle += entry.layer.musicSync.map { $0.tiltAmount * Float(musicSyncLevel) * .pi / 180 } ?? 0
-        let quad = SceneQuadGeometry(world: parentWorld(entry) * SceneAffineTransform(local),
+        // A fullscreen layer is drawn in screen space (`passthrough` without `TRANSFORM`), which
+        // the orthographic zoom doesn't scale.
+        let view = entry.layer.fillsScene ? SceneAffineTransform.identity : orthographicView
+        let quad = SceneQuadGeometry(world: view * worldTransform(entry, local: local),
                                      size: baseSize, alignment: entry.layer.alignment)
         // WE draws a layer where its transform and the camera put it; an oversized layer (sized
         // to hide its edges while it moves) isn't pinned inside the scene.
-        let center = quad.center + parallaxOffset - motion.shake
+        let center = quad.center + view.linear * (parallaxOffset - motion.shake)
             + quad.axisX * (contentOffset.x / max(baseSize.x, .leastNormalMagnitude))
             + quad.axisY * (contentOffset.y / max(baseSize.y, .leastNormalMagnitude))
         let animation = timelines.object(entry.layer.id)
@@ -2550,8 +2554,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             let world = layerWorld3D(entry, in: spatial.transforms, musicSyncLevel: musicSyncLevel)
             return SceneLayerPlacement(world: world, size: size, offset: offset, camera: camera)
         }
-        guard entry.layer.perspective, let hierarchy = spatial.perspectiveTransforms else { return nil }
-        var world = layerWorld3D(entry, in: hierarchy, musicSyncLevel: musicSyncLevel)
+        guard entry.layer.perspective else { return nil }
+        var world = layerWorld3D(entry, in: spatial.transforms, musicSyncLevel: musicSyncLevel)
         let shift = parallaxOffset(entry, local: evaluatedLocal(entry), motion: motion) - motion.shake
         world.columns.3 += SIMD4(shift.x, shift.y, 0, 0)
         return SceneLayerPlacement(world: world, size: size, offset: offset,
@@ -2834,25 +2838,35 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         return objectMotions[id].map { objectLocal($0, id: id) }
     }
 
-    /// The full transform of a layer's ancestors this frame. Every ancestor uses its live
-    /// (scripted, animated) transform, so moving a parent moves its children.
-    /// The space a layer's own transform lives in: its parents', then its attachment on its
-    /// parent's rig (the witcher's sword, 3803167460, hangs from the hand, not the parent's origin).
-    private func parentWorld(_ entry: PreparedLayer) -> SceneAffineTransform {
-        transforms.attachedParentWorld(of: entry.layer.id, live: { [self] id in liveLocal(id) },
-                                       attachments: puppetAttachments.affine)
+    /// A layer's world this frame: its own transform (`local`, else its evaluated one) in its
+    /// parents' space, then its attachment on its parent's rig (the witcher's sword, 3803167460,
+    /// hangs from the hand, not the parent's origin). Every ancestor uses its live (scripted,
+    /// animated) transform, so moving a parent moves its children. Without the orthographic zoom
+    /// (`orthographicView`), which only the draw applies.
+    private func worldTransform(_ entry: PreparedLayer, local: SceneLocalTransform? = nil) -> SceneAffineTransform {
+        transforms.world(of: entry.layer.id, local: local ?? evaluatedLocal(entry), live: { [self] id in liveLocal(id) },
+                         attachments: puppetAttachments.affine)
+    }
+
+    /// WE's orthographic `zoom` (`general.zoom`): it scales the projection about the screen's
+    /// centre (0x14017fd50; WE 2.8's capture, docs/models-plan.md §5.19), which here is the scene
+    /// plane scaled about the scene's centre before the scene's projection. Identity in a
+    /// perspective scene, where the camera's zoom isn't read.
+    private var orthographicView: SceneAffineTransform {
+        guard !isPerspective else { return .identity }
+        return .orthographicZoom(Float(spatial.camera.zoom), sceneSize: sceneSize)
     }
 
     /// A particle system's emitter transform this frame: its object's, parents included, moved by
     /// camera parallax and shake as WE moves every object's model matrix (0x14018a0b3): the
     /// system's particles follow it unless it is `worldspace`; its children follow it through
-    /// their links.
+    /// their links. The orthographic zoom (`orthographicView`) scales the plane they're drawn in.
     private func emitterWorld(_ configuration: SceneMetalParticleSystem,
                               motion: CameraMotion) -> SceneAffineTransform? {
         guard let id = configuration.objectID else { return nil }
         var world = transforms.world(of: id, live: { [self] id in liveLocal(id) }, attachments: puppetAttachments.affine)
         world.translation += particleParallaxOffset(id, motion: motion) - motion.shake
-        return world
+        return orthographicView * world
     }
 
     /// A `layerimage` emitter's layer this frame (`ParticleFrameInputs.placeImages`), moved by
@@ -2861,7 +2875,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         guard transforms.nodes[id] != nil else { return nil }
         var world = transforms.world(of: id, live: { [self] id in liveLocal(id) }, attachments: puppetAttachments.affine)
         world.translation += particleParallaxOffset(id, motion: motion) - motion.shake
-        return world
+        return orthographicView * world
     }
 
     /// The scene object a particle system belongs to: its own, or its family root's for a child.
@@ -2963,10 +2977,6 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let rootLocal = liveLocal(rootID) ?? node.local
         return parallax.state.offset(rootOrigin: rootLocal.origin, rootDepth: parallaxDepth(of: rootID, node: node),
                                      amount: parallax.amount)
-    }
-
-    private func worldTransform(_ entry: PreparedLayer) -> SceneAffineTransform {
-        parentWorld(entry) * SceneAffineTransform(evaluatedLocal(entry))
     }
 
     /// Hands the vertex stage the quad's full axes (parent rotation and non-uniform scale), in
@@ -3202,11 +3212,14 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             return
         }
 
+        // The mesh drawn in the scene culls by its winding there, which a mirroring world flips
+        // (§5.17); drawn into the image for effects or for another layer, it isn't in the scene yet.
+        let mirrored = direct && puppetIsMirrored(entry, camera: frame.camera)
         puppetAlbedos[entry.layer.id] = puppets.albedo(puppet, ScenePuppetRenderer.Draw(
             layerID: entry.layer.id, source: source, pose: pose, frame: frame,
             values: timelines.values,
             assetTexture: { [unowned self] key, source in self.effectAssetTexture(key: key, source: source) },
-            canvas: direct ? canvas : nil),
+            canvas: direct ? canvas : nil, mirrored: mirrored),
             commandBuffer: commandBuffer)
         // Without effects WE draws the mesh in the scene through the layer's material, sampling
         // every texture at the mesh's coordinates: the quad draws with them laid out likewise.
@@ -3216,15 +3229,29 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             guard let texture = effectAssetTexture(key: key, source: assetSource) else { continue }
             warped[key] = puppets.warp(puppet, layerID: entry.layer.id, key: key, texture: texture,
                                        contentSize: assetSource.contentSize, pose: animator.pose, canvas: canvas,
-                                       commandBuffer: commandBuffer)
+                                       mirrored: mirrored, commandBuffer: commandBuffer)
         }
         puppetWarps[entry.layer.id] = warped
     }
 
+    /// Whether a puppet layer shows its image mirrored on screen this frame: its world through the
+    /// camera in a perspective scene, else its 2D world (`ScenePuppetRenderer.isMirrored`).
+    private func puppetIsMirrored(_ entry: PreparedLayer, camera: SceneFrameCamera) -> Bool {
+        if isPerspective {
+            return ScenePuppetRenderer.isMirrored(world: world3D(entry.layer.id, in: spatial.transforms),
+                                                  viewProjection: camera.viewProjection)
+        }
+        let linear = worldTransform(entry).linear
+        return ScenePuppetRenderer.isMirrored(axisX: linear.columns.0, axisY: linear.columns.1)
+    }
+
     /// A puppet's effect output (in its image's bind layout, `drawPuppet`) laid out by the posed
     /// mesh, which the layer then draws: WE draws a layer with effects through its geometry, the
-    /// skinned mesh for a puppet, its triangles blended over each other by the layer's material. Anything else, or while the mesh can't be drawn, as it is.
-    private func posedEffectOutput(_ output: MTLTexture?, of entry: PreparedLayer, commandBuffer: MTLCommandBuffer) -> MTLTexture? {
+    /// skinned mesh for a puppet, its triangles blended over each other by the layer's material,
+    /// culled by their winding through `camera` (`puppetIsMirrored`). Anything else, or while the
+    /// mesh can't be drawn, as it is.
+    private func posedEffectOutput(_ output: MTLTexture?, of entry: PreparedLayer, camera: SceneFrameCamera,
+                                   commandBuffer: MTLCommandBuffer) -> MTLTexture? {
         guard let output, let puppet = entry.layer.puppet, let puppets, let animator = puppetAnimators[entry.layer.id],
               let source = entry.frames.first?.texture, source.width > 0, source.height > 0 else { return output }
         // The output keeps the source's layout, the image in the same share of its texels.
@@ -3232,7 +3259,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let content = SIMD2(Float(output.width), Float(output.height)) * simd_min(share, SIMD2(repeating: 1))
         return puppets.warp(puppet, layerID: entry.layer.id, key: "_effects", texture: output, contentSize: content,
                             pose: animator.pose, canvas: puppetCanvases[entry.layer.id], redraw: true, blended: true,
-                            commandBuffer: commandBuffer) ?? output
+                            mirrored: puppetIsMirrored(entry, camera: camera), commandBuffer: commandBuffer) ?? output
     }
 
     /// A script's call on a puppet's layers or bones. `setBoneTransform`'s matrix is in the scene;

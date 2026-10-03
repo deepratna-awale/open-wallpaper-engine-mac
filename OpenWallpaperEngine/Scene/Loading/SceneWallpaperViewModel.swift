@@ -621,7 +621,7 @@ class SceneWallpaperViewModel: ObservableObject {
         // Hidden objects are built too: a script can show them (docs/scenescript-plan.md §4.3).
         let visibility = Dictionary(scene.objects.map { (String($0.id ?? -1), isObjectVisible($0)) },
                                     uniquingKeysWith: { first, _ in first })
-        let authoredTransforms = SceneTransformHierarchy(objects: scene.objects, sceneSize: sceneSize)
+        let authoredTransforms = SceneTransformHierarchy(objects: scene.objects)
         // WE draws objects in scene.json order; both lists carry that index so the renderer can interleave them.
         let layers: [SceneMetalLayer] = scene.objects.enumerated().compactMap { index, object in
             var layer = bindingTable.building(.object(object.id ?? index)) {
@@ -668,13 +668,13 @@ class SceneWallpaperViewModel: ObservableObject {
                                             clearColor: scene.general.clearColor(in: valueContext),
                                             wallpaperKey: propertyStoreKey)
             content.general = scene.general
-            content.motions = objectMotions(scene.objects, besides: layers, sceneSize: sceneSize, context: valueContext)
+            content.motions = objectMotions(scene.objects, besides: layers, context: valueContext)
             content.visibility = visibility
             content.userVisibility = SceneUserVisibility(objects: scene.objects)
             content.objectIDs = scene.objects.map { $0.id ?? -1 }
             content.spatial = SceneSpatialContentBuilder(
                 readFile: { self.assetData(named: $0, wallpaperDir: wallpaperDir) },
-                wallpaperName: wallpaperDir.lastPathComponent).build(scene, context: valueContext, sceneSize: sceneSize)
+                wallpaperName: wallpaperDir.lastPathComponent).build(scene, context: valueContext)
             content.spatial.models = buildModels(content.spatial.models, wallpaperDir: wallpaperDir)
             SceneAttachmentCheck.logUnresolved(in: scene.objects, models: content.spatial.models, layers: layers,
                                                wallpaperName: wallpaperDir.lastPathComponent)
@@ -747,7 +747,7 @@ class SceneWallpaperViewModel: ObservableObject {
         scene.objects = SceneObjectIdentity.assigningFallbackIDs(scene.objects)
         let sceneSize = metalSceneSize(for: scene)
         if scene.general.projection == .orthographicAuto { Self.centreFirstImage(of: &scene, sceneSize: sceneSize) }
-        let authoredTransforms = SceneTransformHierarchy(objects: scene.objects, sceneSize: sceneSize)
+        let authoredTransforms = SceneTransformHierarchy(objects: scene.objects)
         var layers: [SceneMetalLayer] = []
         var particleSystems: [SceneMetalParticleSystem] = []
         var capacities = particleCapacities
@@ -790,7 +790,7 @@ class SceneWallpaperViewModel: ObservableObject {
                                         bloom: bloomSettings(for: scene.general), transforms: transforms,
                                         camera: SceneCameraEffects(scene.general, in: valueContext),
                                         clearColor: scene.general.clearColor(in: valueContext), wallpaperKey: propertyStoreKey)
-        content.motions = objectMotions(rebuilt, besides: layers, sceneSize: sceneSize, context: valueContext)
+        content.motions = objectMotions(rebuilt, besides: layers, context: valueContext)
         content.engineCombos = sceneEngineCombos
         return SceneObjectReplacement(objectIDs: Set(ids.map(String.init)), content: content)
     }
@@ -877,7 +877,7 @@ class SceneWallpaperViewModel: ObservableObject {
             ?? buildMetalTextLayer(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize)
             ?? buildShapeLayer(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize)
         layer?.bindings = SceneLayerBindings(object: object, builtWith: context)
-        if layer?.fillsScene == false { layer?.tilt = SceneLocalTransform(object: object, sceneSize: sceneSize).tilt }
+        if layer?.fillsScene == false { layer?.tilt = SceneLocalTransform(object: object).tilt }
         return layer
     }
 
@@ -937,14 +937,14 @@ class SceneWallpaperViewModel: ObservableObject {
         if resolved.particle != nil {
             var systems = buildParticleFamily(resolved, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
                                               pixelUnits: loadedScene.map(Self.particlesUsePixelUnits) ?? true,
-                                              transforms: SceneTransformHierarchy(objects: [resolved], sceneSize: sceneSize),
+                                              transforms: SceneTransformHierarchy(objects: [resolved]),
                                               cache: ParticleDefinitionCache(sharesParts: sharesParticleDefinitions))
             guard !systems.isEmpty else { return nil }
             // The scene's factor, or the family's own if it alone exceeds the budget.
             let own = ParticleBudget.scale(authored: systems.reduce(0) { $0 + ParticleBudget.capacity(of: $1) },
                                            budget: renderSettings.particleBudget.limit)
             for index in systems.indices { systems[index].budgetScale = min(particleBudgetScale, own) }
-            let motion = SceneObjectMotion(object: resolved, sceneSize: sceneSize,
+            let motion = SceneObjectMotion(object: resolved,
                                            bindings: SceneLayerBindings(object: resolved, builtWith: context))
             return .particles(systems, motion: motion)
         }
@@ -963,7 +963,7 @@ class SceneWallpaperViewModel: ObservableObject {
             }
             guard let built = made, built.plan != nil,
                   let node = SceneTransformHierarchy3D(objects: [resolved]).nodes.values.first else { return nil }
-            let motion = SceneObjectMotion(object: resolved, sceneSize: sceneSize,
+            let motion = SceneObjectMotion(object: resolved,
                                            bindings: SceneLayerBindings(object: resolved, builtWith: context))
             return .model(built, node: node, motion: motion)
         }
@@ -1049,8 +1049,8 @@ class SceneWallpaperViewModel: ObservableObject {
     }
 
     /// An object's own `origin`, relative to its parent.
-    private func localOrigin(for object: WESceneObject, sceneSize: SIMD2<Float>) -> SIMD2<Float> {
-        SceneLocalTransform(object: object, sceneSize: sceneSize).origin
+    private func localOrigin(for object: WESceneObject) -> SIMD2<Float> {
+        SceneLocalTransform(object: object).origin
     }
 
     private func buildMetalLayer(_ object: WESceneObject, wallpaperDir: URL, sceneSize: SIMD2<Float>) -> SceneMetalLayer? {
@@ -1114,7 +1114,7 @@ class SceneWallpaperViewModel: ObservableObject {
         }
         let position: SIMD2<Float> = model.fullscreen == true
             ? sceneSize / 2
-            : localOrigin(for: object, sceneSize: sceneSize)
+            : localOrigin(for: object)
         let rotation = Float(object.angles?.parseVector3().2 ?? 0)
         let staticScale = object.scale?.parseVector3() ?? (1, 1, 1)
         let objectColor = object.color?.parseVector3() ?? (1, 1, 1)
@@ -1283,7 +1283,7 @@ class SceneWallpaperViewModel: ObservableObject {
         let staticScale = object.scale?.parseVector3() ?? (1, 1, 1)
         var layer = SceneMetalLayer(id: String(object.id ?? -1), name: object.name ?? String(object.id ?? -1),
                        source: .image(Self.solidImage(red: color.0, green: color.1, blue: color.2)),
-                       position: localOrigin(for: object, sceneSize: sceneSize),
+                       position: localOrigin(for: object),
                        size: size,
                        scale: SIMD2<Float>(Float(staticScale.0), Float(staticScale.1)),
                        opacity: Float(object.alpha ?? 1),
@@ -1343,7 +1343,7 @@ class SceneWallpaperViewModel: ObservableObject {
                                          effects: object.textEffects.effects)
         var layer = SceneMetalLayer(id: String(object.id ?? -1), name: object.name ?? String(object.id ?? -1),
                                source: .image(transparentPlaceholderImage),
-                               position: localOrigin(for: object, sceneSize: sceneSize),
+                               position: localOrigin(for: object),
                                size: SIMD2<Float>(Float(sizeValue.0), Float(sizeValue.1)),
                                scale: SIMD2<Float>(Float(textScale.0), Float(textScale.1)),
                                opacity: Float(object.alpha ?? 1),
@@ -1393,7 +1393,7 @@ class SceneWallpaperViewModel: ObservableObject {
         let plans = buildEffectPlans(effects, objectID: object.id ?? -1, wallpaperDir: wallpaperDir,
                                      objectCombos: Self.shapeEffectCombos).plans
         guard !plans.isEmpty else { return nil }
-        let position = localOrigin(for: object, sceneSize: sceneSize)
+        let position = localOrigin(for: object)
         let size: SIMD2<Float>
         if let sizeString = object.size {
             let value = sizeString.parseVector2()
@@ -1737,13 +1737,13 @@ class SceneWallpaperViewModel: ObservableObject {
 
     /// How every object that isn't a drawn layer (groups, particle systems) moves, so its
     /// children and its own particles follow it live.
-    private func objectMotions(_ objects: [WESceneObject], besides layers: [SceneMetalLayer], sceneSize: SIMD2<Float>,
+    private func objectMotions(_ objects: [WESceneObject], besides layers: [SceneMetalLayer],
                                context: SceneValueContext) -> [String: SceneObjectMotion] {
         let layerIDs = Set(layers.map(\.id))
         var motions: [String: SceneObjectMotion] = [:]
         for object in objects {
             guard let id = object.id.map(String.init), !layerIDs.contains(id) else { continue }
-            motions[id] = SceneObjectMotion(object: object, sceneSize: sceneSize,
+            motions[id] = SceneObjectMotion(object: object,
                                             bindings: SceneLayerBindings(object: object, builtWith: context))
         }
         return motions
@@ -1782,7 +1782,7 @@ class SceneWallpaperViewModel: ObservableObject {
         guard let particlePath = object.particle else { return [] }
         // The emitter's full world transform: its own and its parents' origin, scale and angle.
         let world = object.id.map { transforms.world(of: String($0)) }
-            ?? SceneAffineTransform(SceneLocalTransform(object: object, sceneSize: sceneSize))
+            ?? SceneAffineTransform(SceneLocalTransform(object: object))
         let builder = ParticleFamilyBuilder(
             load: { [weak self] path in self?.loadJSON(path: path, wallpaperDir: wallpaperDir) },
             build: { [weak self] path, system, world, overrides in
