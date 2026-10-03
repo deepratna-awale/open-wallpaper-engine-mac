@@ -352,6 +352,18 @@ final class SceneWallpaperInstance {
                 self.scheduleSceneUpdate(.reloadScene)
             }
         })
+        // The Wallpaper Editor saved this wallpaper's overlay: the scene is read again with it
+        // (`ScenePreparation`), through the same coalesced reload as an Inspector JSON edit.
+        observers.append(center.addObserver(forName: .sceneEditOverlayDidChange, object: nil, queue: .main) { [weak self] notification in
+            let directory = notification.userInfo?["wallpaperDirectory"] as? URL
+            MainActor.assumeIsolated {
+                guard let self,
+                      directory == self.viewModel.currentWallpaper.wallpaperDirectory.standardizedFileURL else { return }
+                self.snapshotCapture?.rearm()
+                self.wakePacing(.slow)
+                self.scheduleSceneUpdate(.reloadScene)
+            }
+        })
         observers.append(center.addObserver(forName: .sceneMusicSettingsDidChange, object: nil, queue: .main) { [weak self] notification in
             let path = notification.userInfo?["path"] as? String
             MainActor.assumeIsolated {
