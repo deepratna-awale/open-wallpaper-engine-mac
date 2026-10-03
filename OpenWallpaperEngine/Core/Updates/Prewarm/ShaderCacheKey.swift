@@ -15,9 +15,9 @@ struct ShaderCacheKey: Codable, Equatable, Sendable {
     /// This build's key.
     static var current: ShaderCacheKey {
         let toolchain: String = InProcessShaderCompiler.libraryFingerprint
-        let compilerFingerprint: String = InProcessShaderCompiler().cacheFingerprint
+        let variantToolchain = ShaderToolchainVersions.fingerprint(compiler: InProcessShaderCompiler.fingerprint)
         return ShaderCacheKey(translatorRevision: ShaderVariantTranslator.revision,
-                              variantGeneration: ShaderVariantTranslator.generation(toolchain: compilerFingerprint),
+                              variantGeneration: ShaderVariantTranslator.generation(toolchain: variantToolchain),
                               pipelineEnvironment: EffectPipelineArchive.environmentKey(
                                 os: ProcessInfo.processInfo.operatingSystemVersionString, toolchain: toolchain))
     }
