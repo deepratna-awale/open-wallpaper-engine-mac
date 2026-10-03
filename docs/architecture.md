@@ -74,6 +74,12 @@ These are folders in the app target today. The scene engine (`Scene/`, `Audio/`,
 - **`App/`:** the entry point, `AppDelegate`, windows and menus.
 - Each view model lives next to its view.
 
+### `Editor/` and `Packages/OWEEditor`: the Wallpaper Editor
+
+- The editor ([`docs/editor-plan.md`](editor-plan.md)) is a local Swift package with three modules: `OWESceneEditing` (Foundation only: the edit overlay over scene.json, the layer outline, gizmo and canvas math, `SceneEditSession` with undo, Save as Local Wallpaper), `OWEInspectorKit` (controls the Scene Inspector shares with it) and `OWEEditor` (the window's views and their own string catalog). The package depends on nothing in the app; its tests run with `swift test`.
+- `Editor/` is the app's side: the window (`WallpaperEditorController`), whose canvas is the wallpaper's own instance in a preview `WallpaperViewModel`, and the services the module asks for (the user properties view, WE's blend modes, effect help, saving a copy).
+- Edits are an overlay per wallpaper (`<supportDirectory>/editor/<identity>.json`, `Scene/Loading/SceneEditOverlayFiles`), never written into the wallpaper. `ScenePreparation` applies it before the Scene Inspector's edits, the scene cache key covers it, and saving it reloads every running instance of the wallpaper.
+
 ### `Resources/`
 
 - `Assets.xcassets`, `Localizable.xcstrings`, media.
@@ -81,7 +87,7 @@ These are folders in the app target today. The scene engine (`Scene/`, `Audio/`,
 
 ## Scene data flow
 
-1. **Load.** `Scene/Format` decodes `project.json`, `scene.json` (from disk or the `.pkg`), then models, materials, effects and textures (`.tex`).
+1. **Load.** `Scene/Format` decodes `project.json`, `scene.json` (from disk or the `.pkg`, with the Wallpaper Editor's overlay and the Scene Inspector's edits applied, `ScenePreparation`), then models, materials, effects and textures (`.tex`).
 2. **Resolve.** `Scene/Values` binds user properties (per wallpaper), scripts and animations to typed values. Nothing downstream reads raw JSON or string-keyed dictionaries.
    - Every `{"user": …}` of scene.json and of every JSON document the build reads (effects, materials, particle systems, models, Workshop dependencies, WE's assets) is recorded in the scene's `UserPropertyBindingTable`, with its path, the typed target it drives and a class: `uniform` (a shader constant, updated in place), `object` (a transform, colour, visibility, particle override or script-read value: the object's state updates) or `structural` (a combo, texture, size or anything unrecognised: the object is rebuilt alone, `SceneObjectReplacement`). The parsers decode the table's resolution of each document, so none can drop a binding.
    - A property change is looked up in the table (`SceneBindingUpdate`). The owners it touches move to a new binding revision (`SceneBindingRevisions`), which every cache of a bound value keys on. Only the app's own keys, scene-wide structure (`general`) and objects the scene's stages hold (lights, sounds, models, cameras) rebuild the content; editing properties ends with one rebuild, the reconcile.

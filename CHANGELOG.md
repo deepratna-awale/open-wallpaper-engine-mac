@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Wallpaper Editor** (Edit Wallpaper in Details, ⌥⌘E): a window for scene wallpapers with the layer hierarchy (visibility, lock), the live wallpaper as a canvas you can zoom and pan, and an inspector for the selected layer. Move, scale and rotate image and text layers on the canvas or with the inspector, change opacity, colour and blend mode, turn effects on and off, and set the wallpaper's properties; everything can be undone. Edits are kept beside the wallpaper and apply wherever it runs, without changing its files: Revert drops them, and Save as Local Wallpaper adds a copy with the edits to the library. The Scene Inspector is unchanged.
+
 ### Changed
 
 - **Closing the last window** leaves Open Wallpaper Engine in the menu bar without a Dock icon; the icon comes back when a window opens (from the menu bar, a menu or reopening the app). A minimised window keeps the Dock icon, where it is restored from. The app also starts without a Dock icon when it opens no window.

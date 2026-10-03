@@ -10,6 +10,7 @@ import Combine
 import SwiftUI
 import AVKit
 import WebKit
+import OWEInspectorKit
 
 private final class WorkshopPreviewWindow: NSWindow {
     var onDismiss: (() -> Void)?
@@ -95,7 +96,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var workshopPreviewWindow: NSWindow?
     private var workshopPreviewViewModel: WallpaperViewModel?
     var sceneInspectorWindow: NSWindow?
-    
+    /// The open Wallpaper Editor windows, one per wallpaper folder.
+    var wallpaperEditors: [URL: WallpaperEditorController] = [:]
+
     var contentViewModel = ContentViewModel()
     var wallpaperViewModel = WallpaperViewModel()
     var globalSettingsViewModel = GlobalSettingsViewModel()

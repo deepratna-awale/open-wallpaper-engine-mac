@@ -32,6 +32,12 @@ extension AppDelegate {
         showSceneInspector(for: wallpaper, scopes: wallpaperViewModel.editedPropertyScopes(of: wallpaper))
     }
 
+    /// Window › Wallpaper Editor: the displayed wallpaper in its editor; scene wallpapers only
+    /// (`validateMenuItem`).
+    @objc func showWallpaperEditorForDisplayedWallpaper() {
+        showWallpaperEditor(for: wallpaperViewModel.displayedWallpaper)
+    }
+
     @objc func showInstalledTab() { showLibraryTab(0) }
     @objc func showDownloadsTab() { showLibraryTab(2) }
     @objc func showPlaylistsTab() { showLibraryTab(3) }

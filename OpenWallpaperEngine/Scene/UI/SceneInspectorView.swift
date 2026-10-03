@@ -1,5 +1,6 @@
 import SwiftUI
 import AVFoundation
+import OWEInspectorKit
 
 private struct SceneInspectorItem: Identifiable {
     let id: String
@@ -343,8 +344,7 @@ private final class SceneInspectorModel: ObservableObject {
 
     /// A blend-mode group heading without WE's translation table: its English text.
     private static func groupTitle(_ key: String) -> String {
-        [WEImageBlendModes.nativeGroup, WEImageBlendModes.emulatedGroup].first { $0.label == key }?.english
-            ?? SceneEffectParameters.title(key)
+        SceneBlendModeOptions.groupTitle(key)
     }
 
     private static func displayEffectValue(_ value: Double, key: String) -> Double {
@@ -743,14 +743,12 @@ private final class SceneInspectorModel: ObservableObject {
 
     /// WE's blend modes as its editor lists them (`WEImageBlendModes`), with WE's labels.
     lazy var blendModeCombo: SceneInspectorEffectCombo = {
+        // Shared with the Wallpaper Editor (`SceneBlendModeOptions`).
         let labels = WallpaperEngineLabels.load()
         return SceneInspectorEffectCombo(
             id: "colorBlendMode", effectID: "", combo: "BLENDMODE",
-            title: labels.translation("ui_editor_properties_blend_mode") ?? String(localized: "Blend Mode"),
-            options: SceneEffectParameters.blendModeOptions.map { option in
-                (labels.translation(option.label) ?? option.english ?? option.label, option.value,
-                 option.group.map { labels.translation($0) ?? Self.groupTitle($0) })
-            })
+            title: SceneBlendModeOptions.title(labels: labels),
+            options: SceneBlendModeOptions.options(labels: labels).map { (title: $0.title, value: $0.value, group: $0.group) })
     }()
 
     func saveObjectJSON(_ text: String, item: SceneInspectorItem) {
@@ -1312,14 +1310,11 @@ struct SceneInspectorView: View {
     /// blend modes), in order; one run without a heading for authored options.
     private static func optionGroups(_ combo: SceneInspectorEffectCombo)
         -> [(offset: Int, heading: String?, options: [(title: String, value: Int)])] {
-        var groups: [(offset: Int, heading: String?, options: [(title: String, value: Int)])] = []
-        for option in combo.options {
-            if groups.isEmpty || groups[groups.count - 1].heading != option.group {
-                groups.append((groups.count, option.group, []))
+        // Shared with the Wallpaper Editor (`InspectorOptionGroups`).
+        InspectorOptionGroups.groups(combo.options.map { InspectorOption(title: $0.title, value: $0.value, group: $0.group) })
+            .map { group -> (offset: Int, heading: String?, options: [(title: String, value: Int)]) in
+                (group.id, group.heading, group.options.map { (title: $0.title, value: $0.value) })
             }
-            groups[groups.count - 1].options.append((option.title, option.value))
-        }
-        return groups
     }
 
     @ViewBuilder private func inspectorMusicSyncControls(for control: SceneInspectorEffectControl) -> some View {

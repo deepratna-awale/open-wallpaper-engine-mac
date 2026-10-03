@@ -19,3 +19,7 @@ Thumbs.db
 .playwright-mcp/
 
 __pycache__/
+
+## Swift package builds
+.build/
+.swiftpm/

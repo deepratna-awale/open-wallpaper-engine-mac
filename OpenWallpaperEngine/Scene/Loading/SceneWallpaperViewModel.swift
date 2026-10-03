@@ -9,6 +9,7 @@
 import SwiftUI
 import CoreText
 import CryptoKit
+import OWESceneEditing
 
 class SceneWallpaperViewModel: ObservableObject {
     static func log(_ msg: String) {
@@ -360,7 +361,7 @@ class SceneWallpaperViewModel: ObservableObject {
                 let parser = try PKGParser(url: pkgURL)
                 read.parser = parser
                 if let data = parser.extractFile(named: sceneFile) {
-                    (read.scene, read.document) = try decodeScene(data, edits: request.edits)
+                    (read.scene, read.document) = try decodeScene(data, request: request)
                 }
             } catch {
                 Self.log("Failed to parse PKG: \(error)")
@@ -369,7 +370,7 @@ class SceneWallpaperViewModel: ObservableObject {
             // Loose files (no .pkg)
             do {
                 if let data = try AssetPathResolver.data(sceneFile, in: dir) {
-                    (read.scene, read.document) = try decodeScene(data, edits: request.edits)
+                    (read.scene, read.document) = try decodeScene(data, request: request)
                 } else {
                     Self.log("Loose \(sceneFile) is not a usable file inside the wallpaper folder")
                 }
@@ -459,13 +460,14 @@ class SceneWallpaperViewModel: ObservableObject {
         return ScenePreparation.Request(directory: dir, sceneFile: wallpaper.project.file,
                                         edits: split.edits, userProperties: split.properties,
                                         settings: String(describing: settings.contentKey),
-                                        displays: SceneCacheKey.Display.connected())
+                                        displays: SceneCacheKey.Display.connected(),
+                                        overlay: SceneEditOverlayFiles.overlay(for: settingsIdentity(for: dir)))
     }
 
     /// The scene and the document it was decoded from (for the scripts; nil when it isn't JSON the
     /// tolerant reader takes).
-    private func decodeScene(_ data: Data, edits: [String: String]) throws -> (WEScene, SceneJSON?) {
-        let resolved = try ScenePreparation.resolvedScene(data, edits: edits)
+    private func decodeScene(_ data: Data, request: ScenePreparation.Request) throws -> (WEScene, SceneJSON?) {
+        let resolved = try ScenePreparation.resolvedScene(data, edits: request.edits, overlay: request.overlay)
         return (try JSONDecoder().decode(WEScene.self, from: resolved), Self.document(resolved))
     }
 
