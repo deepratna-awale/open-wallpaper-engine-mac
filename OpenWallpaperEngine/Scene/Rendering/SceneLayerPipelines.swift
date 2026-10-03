@@ -12,6 +12,8 @@ final class SceneLayerPipelines {
         let normal: MTLRenderPipelineState
         let additive: MTLRenderPipelineState
         let copy: MTLRenderPipelineState
+        /// The copy writing colour only, the target's alpha kept (`SceneMetalLayer.clearsSceneAlpha`).
+        let colourCopy: MTLRenderPipelineState
         /// The copy resample added onto the target's colour, its alpha kept: a reduced-resolution
         /// additive particle pass composited back (`SceneRenderSettings.reducedResolutionParticles`).
         let addCopy: MTLRenderPipelineState
@@ -126,6 +128,9 @@ final class SceneLayerPipelines {
         copyDescriptor.rasterSampleCount = variant.sampleCount
         copyDescriptor.depthAttachmentPixelFormat = variant.depthFormat
         let copy = try device.makeRenderPipelineState(descriptor: copyDescriptor)
+        copyDescriptor.colorAttachments[0].writeMask = [.red, .green, .blue]
+        let colourCopy = try device.makeRenderPipelineState(descriptor: copyDescriptor)
+        copyDescriptor.colorAttachments[0].writeMask = .all
         let add = copyDescriptor.colorAttachments[0]!
         add.isBlendingEnabled = true
         add.sourceRGBBlendFactor = .one
@@ -134,7 +139,7 @@ final class SceneLayerPipelines {
         add.destinationAlphaBlendFactor = .one
         return Pipelines(normal: try blended(functions.vertex, additive: false),
                          additive: try blended(functions.vertex, additive: true),
-                         copy: copy, addCopy: try device.makeRenderPipelineState(descriptor: copyDescriptor),
+                         copy: copy, colourCopy: colourCopy, addCopy: try device.makeRenderPipelineState(descriptor: copyDescriptor),
                          placedNormal: try functions.placedVertex.map { try blended($0, additive: false) },
                          placedAdditive: try functions.placedVertex.map { try blended($0, additive: true) })
     }
