@@ -66,7 +66,7 @@ final class HelperShaderCompilerTests: XCTestCase {
             result = Result { try body() }
             done.fulfill()
         }
-        wait(for: [done], timeout: 10)
+        wait(for: [done], timeout: 60)
         return try result.get()
     }
 
@@ -156,5 +156,22 @@ final class HelperShaderCompilerTests: XCTestCase {
         XCTAssertTrue(ShaderCompilerFactory.makeIsolated(qos: .background, inProcessStateDirectory: nil,
                                                          environment: ["XCTestConfigurationFilePath": "/x"])
                       is InProcessShaderCompiler)
+    }
+
+    /// The real helper: this app's executable run with `--shader-compile-helper`, over real pipes,
+    /// so a stream bug (one the in-memory channel can't have) fails here instead of in the app.
+    func testRealHelperExecutableTranslatesEndToEnd() throws {
+        let executable = try XCTUnwrap(AppRelauncher.helperExecutable)
+        let compiler = HelperShaderCompiler(timeout: 20) {
+            try ShaderCompileHelperProcess(executable: executable, qos: .userInitiated,
+                                           isolationTag: "helper-e2e-test")
+        }
+        let source = "#version 450\nlayout(location = 0) out vec4 color;\nvoid main() { color = vec4(0.25); }\n"
+        let pre = try onBackground { try compiler.preprocess(source, stage: .fragment) }
+        XCTAssertTrue(pre.contains("main"), pre)
+        let out = try onBackground { try compiler.compileToMSL(source, stage: .fragment) }
+        XCTAssertTrue(out.msl.contains("fragment"), out.msl)
+        XCTAssertFalse(out.reflection.isEmpty)
+        XCTAssertEqual(compiler.currentStatistics.launches, 1, "one helper answered both requests")
     }
 }

@@ -124,8 +124,13 @@ enum ShaderCompileHelperServer {
     private static func nextFrame(_ input: FileHandle, buffer: inout Data) throws -> Data? {
         while true {
             if let payload = try ShaderCompileHelperFrame.take(from: &buffer) { return payload }
-            guard let chunk = try input.read(upToCount: 1 << 16), !chunk.isEmpty else { return nil }
-            buffer.append(chunk)
+            // read(2), not `FileHandle.read(upToCount:)`: that one waits for the whole count (or
+            // EOF) on a pipe, so a request smaller than it would never arrive.
+            var chunk = [UInt8](repeating: 0, count: 1 << 16)
+            let count = chunk.withUnsafeMutableBytes { Darwin.read(input.fileDescriptor, $0.baseAddress, $0.count) }
+            if count < 0, errno == EINTR { continue }
+            guard count > 0 else { return nil }
+            buffer.append(contentsOf: chunk[..<count])
         }
     }
 }

@@ -45,12 +45,13 @@ final class ShaderCompileHelperProcess: ShaderCompileHelperChannel {
     private var buffer = Data()
     private var ended = false
 
-    init(executable: URL, qos: QualityOfService) throws {
+    init(executable: URL, qos: QualityOfService,
+         isolationTag: String? = AppStorageLocation.current.isolationTag) throws {
         let input = Pipe(), output = Pipe()
         process.executableURL = executable
         process.arguments = [ShaderCompileHelperServer.argument]
         process.environment = Self.environment(ProcessInfo.processInfo.environment,
-                                               isolationTag: AppStorageLocation.current.isolationTag)
+                                               isolationTag: isolationTag)
         process.qualityOfService = qos
         process.standardInput = input
         process.standardOutput = output
