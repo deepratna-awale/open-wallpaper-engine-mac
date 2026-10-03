@@ -28,7 +28,9 @@ public struct WallpaperEditorView: View {
             LayerListView(session: session)
                 .navigationSplitViewColumnWidth(min: 220, ideal: 260, max: 380)
         } detail: {
-            EditorCanvasView(session: session, makeCanvas: services.makeCanvas)
+            TimelineDock(timeline: services.timeline) {
+                EditorCanvasView(session: session, makeCanvas: services.makeCanvas)
+            }
                 .overlay(alignment: .top) { noticeBanner }
                 .inspector(isPresented: $isInspectorPresented) {
                     LayerInspectorView(session: session, services: services)
@@ -36,6 +38,7 @@ public struct WallpaperEditorView: View {
                 }
                 .toolbar { toolbar }
         }
+        .environment(\.sceneTimeline, services.timeline)
         .frame(minWidth: 960, minHeight: 600)
         .alert(L("Revert to the Original?"), isPresented: $isConfirmingRevert) {
             Button(L("Revert"), role: .destructive) { session.revert(actionName: L("Revert")) }
@@ -90,6 +93,11 @@ public struct WallpaperEditorView: View {
         }
         if #available(macOS 26, *) {
             ToolbarSpacer(.fixed)
+        }
+        if let timeline = services.timeline {
+            ToolbarItem {
+                TimelineToolbarButton(timeline: timeline)
+            }
         }
         ToolbarItem {
             Button { withAnimation { isInspectorPresented.toggle() } } label: {

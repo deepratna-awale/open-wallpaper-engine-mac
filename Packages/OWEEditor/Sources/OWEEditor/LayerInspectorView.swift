@@ -207,7 +207,12 @@ private struct LayerForm: View {
                     .multilineTextAlignment(.trailing)
             }
         } else {
-            LabeledContent(title) { control() }
+            LabeledContent(title) {
+                HStack(spacing: 6) {
+                    control()
+                    KeyframeButton(target: .field(field, of: layer.id))
+                }
+            }
         }
     }
 }

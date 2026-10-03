@@ -1,5 +1,6 @@
 import SwiftUI
 import OWEInspectorKit
+import OWESceneEditing
 
 /// What the editor needs from the app: the live scene drawn by the app's own renderer, and the
 /// pieces of the Scene Inspector it shows again (the user properties, WE's blend modes and effect
@@ -19,6 +20,8 @@ public struct WallpaperEditorServices {
     /// Writes a new local wallpaper with the edits baked in and adds it to the library; returns
     /// the title it was saved under.
     public var saveAsLocalWallpaper: (String) throws -> String
+    /// The window's timeline (docs/editor-plan.md P4); nil shows none.
+    public var timeline: SceneTimelineEditor?
 
     public init(makeCanvas: @escaping () -> AnyView, userProperties: (() -> AnyView)? = nil,
                 blendModeTitle: String, blendModes: [InspectorOption], effectHelp: @escaping (String) -> String,

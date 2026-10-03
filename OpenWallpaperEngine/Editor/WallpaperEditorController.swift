@@ -43,6 +43,9 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
     /// The canvas's own wallpaper model, as the Workshop preview has: one display, muted.
     private let preview: WallpaperViewModel
     private let userPropertyUndo: EditorUserPropertyUndo
+    /// The timeline (docs/editor-plan.md P4) and the canvas it drives.
+    let timeline: SceneTimelineEditor
+    private let timelineCanvas: EditorTimelineCanvas
 
     /// Only scene wallpapers have layers to edit.
     static func canEdit(_ wallpaper: WEWallpaper) -> Bool {
@@ -65,6 +68,8 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         // The canvas is framed to the scene's own aspect, so stretching is exact.
         preview.wallpaperPlacement = .stretch
         self.preview = preview
+        timeline = SceneTimelineEditor(session: session, index: (try? TimelineSceneIndex(sceneData: source.scene)) ?? .empty)
+        timelineCanvas = EditorTimelineCanvas(preview: preview)
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1360, height: 840),
                           styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
                           backing: .buffered, defer: false)
@@ -75,6 +80,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         window.toolbarStyle = .unified
         window.delegate = self
         session.onChange = { [weak self] overlay in self?.save(overlay) }
+        timeline.onCanvasTime = { [weak self] seconds in self?.timelineCanvas.show(seconds) }
         let content = NSHostingView(rootView: WallpaperEditorView(session: session, services: makeServices()))
         content.sizingOptions = [.minSize]
         window.contentView = content
@@ -85,7 +91,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
     private func makeServices() -> WallpaperEditorServices {
         let labels = WallpaperEngineLabels.load()
         let preview = self.preview, wallpaper = self.wallpaper, userPropertyUndo = self.userPropertyUndo
-        return WallpaperEditorServices(
+        var services = WallpaperEditorServices(
             makeCanvas: { AnyView(WallpaperView(viewModel: preview, screenId: preview.selectedScreenId)) },
             userProperties: { AnyView(EditorUserProperties(wallpaper: wallpaper, undo: userPropertyUndo)) },
             blendModeTitle: SceneBlendModeOptions.title(labels: labels),
@@ -97,6 +103,8 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
                 guard let self else { return title }
                 return try self.saveAsLocalWallpaper(title: title)
             })
+        services.timeline = timeline
+        return services
     }
 
     /// Saves the overlay; the running instances of the wallpaper (the canvas and the desktop)
@@ -139,6 +147,8 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
     }
 
     func windowWillClose(_ notification: Notification) {
+        // The timeline lets go of the canvas's clock (and its playback timer).
+        timeline.isActive = false
         // The canvas's instance stops with its view.
         preview.playRate = 0
         window.contentView = nil
