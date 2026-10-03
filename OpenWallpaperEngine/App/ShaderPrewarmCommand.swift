@@ -19,13 +19,20 @@ enum ShaderPrewarmCommand {
     /// `--render-screensaver-loop <folder> <width>x<height> <points width>x<points height> <output> [<properties JSON>]`
     /// renders a scene's loop video for the screen saver (`ScreenSaverLoopRenderer`), or records a
     /// web wallpaper's or WebM video's (`ScreenSaverWebLoopRecorder`, with the user properties).
-    /// Exits 0 when the video is written, `pageDidNotLoadStatus` when a page didn't load, 1 otherwise.
+    /// Exits 0 when the video is written, `pageDidNotLoadStatus` when a page didn't load,
+    /// `doesNotLoopStatus` when a page has no smooth loop, 1 otherwise.
     static let screenSaverArgument = "--render-screensaver-loop"
     static let pageDidNotLoadStatus: Int32 = 3
+    static let doesNotLoopStatus: Int32 = 4
+
+    /// `--render-live-photo <job.json>` renders a Live Photo (`LivePhotoJob`, `LivePhotoRenderer`),
+    /// writing its progress to standard output.
+    static let livePhotoArgument = "--render-live-photo"
 
     static func isHelperRun(arguments: [String]) -> Bool {
         arguments.contains(printKeyArgument) || arguments.contains(prewarmArgument)
             || arguments.contains(prepareArgument) || arguments.contains(screenSaverArgument)
+            || arguments.contains(livePhotoArgument)
     }
 
     /// `<width>x<height>` as numbers, nil otherwise.
@@ -53,6 +60,7 @@ enum ShaderPrewarmCommand {
             switch recorder.run() {
             case .recorded: return 0
             case .pageDidNotLoad: return pageDidNotLoadStatus
+            case .doesNotLoop: return doesNotLoopStatus
             case .failed: return 1
             }
         }
@@ -85,6 +93,19 @@ enum ShaderPrewarmCommand {
             NSApplication.shared.setActivationPolicy(.prohibited)
             exitWithParent()
             return renderScreenSaverLoop(arguments[(index + 1)...])
+        }
+        if let index = arguments.firstIndex(of: livePhotoArgument) {
+            defer { AppStorageLocation.current.discardReadOnlyScratch() }
+            // The user waits for it: user-initiated, not background, priority.
+            NSApplication.shared.setActivationPolicy(.prohibited)
+            exitWithParent()
+            guard index + 1 < arguments.count,
+                  let data = try? Data(contentsOf: URL(filePath: arguments[index + 1], directoryHint: .notDirectory)),
+                  let job = try? JSONDecoder().decode(LivePhotoJob.self, from: data) else {
+                OWELog.error(.app, "Live Photo: unreadable job")
+                return 2
+            }
+            return LivePhotoRenderer.run(job)
         }
         let prepareIndex = arguments.firstIndex(of: prepareArgument)
         guard arguments.contains(prewarmArgument) || prepareIndex != nil else { return nil }

@@ -16,8 +16,10 @@ import WebKit
 /// Recording permission and no real-time speed: a slow snapshot only makes the recording take
 /// longer, the video still shows 30 frames per page second. The time each frame took is logged.
 ///
-/// Pages aren't periodic, so the loop is always found by `ScreenSaverSeamFinder` (best match to
-/// frame 0 after 5 s, at most 60 s, a crossfade when the seam shows). A page can't be replayed
+/// Pages aren't periodic, so the loop is always found by `ScreenSaverSeamFinder.searchActiveSeam`
+/// (the best seam pair in the page's active segment, at least 5 s and at most 60 s apart, a cut or
+/// a crossfade of up to 1 s that must score `minimumSeamScore`); a page that doesn't loop smoothly,
+/// or stops moving or goes black too soon, is `doesNotLoop`. A page can't be replayed
 /// identically (randomness, network), so the frames are kept in a near-lossless intermediate
 /// video while searching and re-encoded from it into the loop, at constant quality 0.95.
 @MainActor
@@ -26,6 +28,8 @@ final class ScreenSaverWebLoopRecorder: NSObject, WKNavigationDelegate {
         case recorded
         /// The page didn't load (navigation failed, an HTTP error, or no video), with why.
         case pageDidNotLoad(String)
+        /// No seam in the page's active part reaches `ScreenSaverSeamFinder.minimumSeamScore`.
+        case doesNotLoop
         case failed
     }
 
@@ -91,7 +95,7 @@ final class ScreenSaverWebLoopRecorder: NSObject, WKNavigationDelegate {
         }
         let frameRate = Self.frameRate
         let count = Int(maximumSeconds * Double(frameRate)) + 1
-        let fadeFrames = max(Int((ScreenSaverSeamFinder.crossfadeSeconds * Double(frameRate)).rounded()), 1)
+        let fadeFrames = max(Int((ScreenSaverSeamFinder.maximumCrossfadeSeconds * Double(frameRate)).rounded()), 1)
         let pass = output.deletingLastPathComponent()
             .appending(path: ".pass-\(output.lastPathComponent)", directoryHint: .notDirectory)
         defer { try? FileManager.default.removeItem(at: pass) } // Optional: a scratch file.
@@ -103,16 +107,16 @@ final class ScreenSaverWebLoopRecorder: NSObject, WKNavigationDelegate {
             return .failed
         }
 
-        // Pass 1: capture, compare with frame 0, keep every frame in the intermediate video.
+        // Pass 1: capture, keep each frame's small luma for the seam search and every frame in
+        // the intermediate video.
         guard let intermediate = HEVCWriter(url: pass, pixelSize: pixelSize, frameRate: frameRate, quality: 1) else {
             return .failed
         }
         let settleFrames = Int(settleSeconds * Double(frameRate))
         audioFrame = -settleFrames // Frame 0 of the loop hears the pattern's start.
         for _ in 0..<settleFrames { _ = advance() }
-        var reference: ScreenSaverFrameSignature?
-        var differences: [Double] = []
-        differences.reserveCapacity(count)
+        var lumas: [[Float]] = []
+        lumas.reserveCapacity(count + fadeFrames)
         for index in 0..<(count + fadeFrames) {
             let started = Date()
             guard advance(), let image = snapshot() else {
@@ -121,11 +125,8 @@ final class ScreenSaverWebLoopRecorder: NSObject, WKNavigationDelegate {
                 return .failed
             }
             frameDurations.append(Date().timeIntervalSince(started))
-            if index < count {
-                guard let signature = ScreenSaverFrameSignature(image) else { intermediate.cancel(); return .failed }
-                if reference == nil { reference = signature }
-                differences.append(reference.map { signature.difference($0) } ?? 1)
-            }
+            guard let signature = ScreenSaverFrameSignature(image) else { intermediate.cancel(); return .failed }
+            lumas.append(signature.searchLuma)
             guard intermediate.append(image, overlay: nil, weight: 0, frame: index) else {
                 intermediate.cancel()
                 return .failed
@@ -133,15 +134,20 @@ final class ScreenSaverWebLoopRecorder: NSObject, WKNavigationDelegate {
         }
         guard intermediate.finish() else { return .failed }
         logTiming()
-        guard let decision = ScreenSaverSeamFinder.decide(differences: differences, frameRate: frameRate,
-                                                          minimumSeconds: minimumSeconds,
-                                                          alignment: SyntheticAudioSpectrum.barSeconds) else {
-            OWELog.error(.app, "Screen saver: \(name) has no loop")
-            return .failed
+        guard let decision = ScreenSaverSeamFinder.searchActiveSeam(frames: lumas, frameRate: frameRate,
+                                                                    minimumSeconds: minimumSeconds,
+                                                                    maximumSeconds: maximumSeconds,
+                                                                    alignment: SyntheticAudioSpectrum.barSeconds) else {
+            OWELog.error(.app, "Screen saver: \(name) doesn't loop smoothly (no seam of "
+                         + "\(Int(ScreenSaverSeamFinder.minimumSeamScore)) dB in its active part)")
+            return .doesNotLoop
         }
-        OWELog.info(.app, "Screen saver: \(name) loops after \(decision.frames) frames (\(decision.seam))")
+        let score = decision.score.map { String(format: "%.1f dB", $0) } ?? "-"
+        OWELog.info(.app, "Screen saver: \(name) loops frames \(decision.start)..<\(decision.start + decision.frames) "
+                    + "(\(decision.seam), seam \(score))")
         // Pass 2: the loop, from the intermediate frames.
-        return encodeLoop(from: pass, frames: decision.frames, seam: decision.seam) ? .recorded : .failed
+        return encodeLoop(from: pass, start: decision.start, frames: decision.frames, seam: decision.seam)
+            ? .recorded : .failed
     }
 
     private func logTiming() {
@@ -339,15 +345,22 @@ final class ScreenSaverWebLoopRecorder: NSObject, WKNavigationDelegate {
 
     // MARK: Loop
 
-    /// Re-encodes `frames` frames of the intermediate video as the loop, crossfading its seam
-    /// into the frames that follow, as `ScreenSaverLoopRenderer` does.
-    private func encodeLoop(from pass: URL, frames: Int, seam: ScreenSaverSeamFinder.Seam) -> Bool {
+    /// Re-encodes `frames` frames of the intermediate video from frame `start` as the loop,
+    /// crossfading its seam into the frames that follow, as `ScreenSaverLoopRenderer` does.
+    private func encodeLoop(from pass: URL, start: Int, frames: Int, seam: ScreenSaverSeamFinder.Seam) -> Bool {
         let partial = output.deletingLastPathComponent()
             .appending(path: ".partial-\(output.lastPathComponent)", directoryHint: .notDirectory)
         try? FileManager.default.removeItem(at: partial) // Optional: a leftover of an earlier run.
         guard let reader = IntermediateReader(url: pass),
               let writer = HEVCWriter(url: partial, pixelSize: pixelSize, frameRate: Self.frameRate) else { return false }
         let fade: Int = { if case .crossfade(let frames) = seam { return frames }; return 0 }()
+        // The frames before the loop's start are skipped.
+        for skipped in 0..<start where reader.next() == nil {
+            OWELog.error(.app, "Screen saver: \(name)'s recorded frame \(skipped) couldn't be read")
+            reader.cancel()
+            writer.cancel()
+            return false
+        }
         var head: [CGImage] = []
         for rendered in 0..<(frames + fade) {
             guard let image = reader.next() else {

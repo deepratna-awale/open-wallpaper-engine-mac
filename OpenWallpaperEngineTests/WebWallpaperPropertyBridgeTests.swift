@@ -1,3 +1,4 @@
+import WebKit
 import XCTest
 @testable import OpenWallpaperEngine
 
@@ -34,7 +35,9 @@ final class WebWallpaperPropertyBridgeTests: XCTestCase {
     func testApplyScriptContainsJSON() throws {
         let script = try XCTUnwrap(WebWallpaperPropertyBridge.applyUserPropertiesScript(
             ["showclock": ["type": "bool", "value": false]]))
-        XCTAssertTrue(script.contains("applyUserProperties({\"showclock\":{\"type\":\"bool\",\"value\":false}})"))
+        XCTAssertTrue(script.contains("__oweApplyUserProperties({\"showclock\":{\"type\":\"bool\",\"value\":false}})"))
+        let full = try XCTUnwrap(WebWallpaperPropertyBridge.applyUserPropertiesScript(["a": ["value": 1]], full: true))
+        XCTAssertTrue(full.contains("__oweSetUserProperties("))
         XCTAssertNil(WebWallpaperPropertyBridge.applyUserPropertiesScript([:]))
     }
 
@@ -56,6 +59,35 @@ final class WebWallpaperPropertyBridgeTests: XCTestCase {
         XCTAssertTrue(WebWallpaperPropertyBridge.applyGeneralPropertiesScript(fps: 15).contains("{fps:15}"))
     }
 
+    /// The value WE hands the page for each property type.
+    func testValueFormatPerPropertyType() throws {
+        let project: [String: Any] = ["general": ["properties": [
+            "b": ["type": "bool", "value": false],
+            "s": ["type": "slider", "value": 100, "min": 10, "max": 200],
+            "f": ["type": "slider", "value": 0.5, "min": 0, "max": 1, "precision": 2],
+            "c": ["type": "combo", "value": 2, "options": [["label": "A", "value": 1], ["label": "B", "value": 2]]],
+            "col": ["type": "color", "value": "1 1 1"],
+            "t": ["type": "textinput", "value": "hello"],
+            "file": ["type": "file", "value": ""],
+            "dir": ["type": "directory", "value": ""]
+        ]]]
+        let properties = WebWallpaperPropertyBridge.declaredProperties(projectRoot: project)
+        let values = WebWallpaperPropertyBridge.currentValues(
+            properties: properties, stored: ["b": "true", "s": "150", "col": "0 0.5 1", "dir": "/tmp/x"])
+        let payload = WebWallpaperPropertyBridge.payload(properties: properties, values: values)
+        func value(_ key: String) -> Any? { (payload[key] as? [String: Any])?["value"] }
+        XCTAssertEqual(value("b") as? Bool, true)
+        XCTAssertFalse(value("b") is String)
+        XCTAssertEqual((value("s") as? NSNumber)?.stringValue, "150")
+        XCTAssertEqual(value("f") as? Double, 0.5)
+        XCTAssertEqual(value("c") as? String, "2")
+        XCTAssertEqual(value("col") as? String, "0 0.5 1")
+        XCTAssertEqual(value("t") as? String, "hello")
+        XCTAssertEqual(value("file") as? String, "")
+        XCTAssertEqual(value("dir") as? String, "/tmp/x")
+        XCTAssertEqual(WebWallpaperPropertyBridge.jsonValue(type: "bool", value: "false") as? Bool, false)
+    }
+
     func testPauseScriptDefinesWEHooksAndQueues() {
         let script = WebWallpaperPropertyBridge.pauseScript
         for token in ["___wpxPause", "___wpxUnpause", "wpxPausePseudoAnimationAll", "pending.raf",
@@ -75,5 +107,84 @@ final class WebPageScaleTests: XCTestCase {
         XCTAssertEqual(WebPageScale.scaleFactor(standardResolution: true, backingScale: 2), 1)
         XCTAssertEqual(WebPageScale.scaleFactor(standardResolution: true, backingScale: 1), 0)
         XCTAssertEqual(WebPageScale.scaleFactor(standardResolution: false, backingScale: 2), 0)
+    }
+}
+
+/// Runs the bootstrap in a real page that records every listener call.
+@MainActor
+final class WebWallpaperPropertyDeliveryTests: XCTestCase {
+    private func page(_ body: String) async throws -> WKWebView {
+        let configuration = WKWebViewConfiguration()
+        configuration.userContentController.addUserScript(WKUserScript(
+            source: WebWallpaperPropertyBridge.bootstrapScript, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        let webView = WKWebView(frame: CGRect(x: 0, y: 0, width: 64, height: 64), configuration: configuration)
+        let delegate = LoadWaiter()
+        webView.navigationDelegate = delegate
+        webView.loadHTMLString("<html><body><script>window.calls=[];\(body)</script></body></html>", baseURL: nil)
+        try await delegate.wait()
+        return webView
+    }
+
+    private func recorded(_ webView: WKWebView) async throws -> [[String: Any]] {
+        let json = try await webView.evaluateJavaScript("JSON.stringify(window.calls)") as? String ?? "[]"
+        return try JSONSerialization.jsonObject(with: Data(json.utf8)) as? [[String: Any]] ?? []
+    }
+
+    private func run(_ webView: WKWebView, _ script: String?) async throws {
+        _ = try await webView.evaluateJavaScript((script ?? "") + ";0")
+    }
+
+    private let listener = "{applyUserProperties:function(p){window.calls.push(p);}}"
+
+    func testLateListenerGetsFullSetThenOnlyChanges() async throws {
+        let webView = try await page("")
+        let full: [String: Any] = ["speed": ["type": "slider", "value": 3], "on": ["type": "bool", "value": true]]
+        // Loaded with no listener yet: nothing to call, and a change made meanwhile is kept.
+        try await run(webView, WebWallpaperPropertyBridge.applyUserPropertiesScript(full, full: true))
+        try await run(webView, WebWallpaperPropertyBridge.applyUserPropertiesScript(["speed": ["type": "slider", "value": 7]]))
+        var calls = try await recorded(webView)
+        XCTAssertTrue(calls.isEmpty)
+        // The page assigns its listener late: it gets the whole, current set once.
+        try await run(webView, "setTimeout(function(){ window.wallpaperPropertyListener = \(listener); }, 50)")
+        try await Task.sleep(nanoseconds: 300_000_000)
+        calls = try await recorded(webView)
+        XCTAssertEqual(calls.count, 1)
+        XCTAssertEqual(Set(calls[0].keys), ["speed", "on"])
+        XCTAssertEqual((calls[0]["speed"] as? [String: Any])?["value"] as? Int, 7)
+        // A live change delivers only the changed property.
+        try await run(webView, WebWallpaperPropertyBridge.applyUserPropertiesScript(["on": ["type": "bool", "value": false]]))
+        calls = try await recorded(webView)
+        XCTAssertEqual(calls.count, 2)
+        XCTAssertEqual(Set(calls[1].keys), ["on"])
+        XCTAssertEqual((calls[1]["on"] as? [String: Any])?["value"] as? Bool, false)
+    }
+
+    func testEarlyListenerGetsFullSetOnLoad() async throws {
+        let webView = try await page("var wallpaperPropertyListener = \(listener);")
+        let full: [String: Any] = ["a": ["type": "textinput", "value": "x"], "b": ["type": "color", "value": "1 0 0"]]
+        try await run(webView, WebWallpaperPropertyBridge.applyUserPropertiesScript(full, full: true))
+        let calls = try await recorded(webView)
+        XCTAssertEqual(calls.count, 1)
+        XCTAssertEqual(Set(calls[0].keys), ["a", "b"])
+        XCTAssertEqual((calls[0]["b"] as? [String: Any])?["value"] as? String, "1 0 0")
+    }
+}
+
+@MainActor
+private final class LoadWaiter: NSObject, WKNavigationDelegate {
+    private var continuation: CheckedContinuation<Void, Error>?
+    private var done = false
+
+    func wait() async throws {
+        if done { return }
+        try await withCheckedThrowingContinuation { continuation = $0 }
+    }
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        done = true; continuation?.resume(); continuation = nil
+    }
+
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        done = true; continuation?.resume(throwing: error); continuation = nil
     }
 }
