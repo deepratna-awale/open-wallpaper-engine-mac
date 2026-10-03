@@ -65,6 +65,13 @@ struct SceneClock {
         if wallTime.isFinite { lastWallTime = wallTime }
     }
 
+    /// Draws a frame again without stepping: the time stays and the frame's step is 0, and the
+    /// next `advance` still steps from the last frame's wall time.
+    mutating func standStill() {
+        delta = 0
+        frame = 0
+    }
+
     /// The rate a speed runs the clock at: WE's floor of 0.1; a speed that isn't a number runs at 1.
     static func rate(_ speed: Double) -> Double {
         speed.isFinite ? max(speed, minimumRate) : 1
