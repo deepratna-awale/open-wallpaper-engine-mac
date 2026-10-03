@@ -153,8 +153,7 @@ struct WallpaperPreview: SubviewOfContentView {
             ScrollView {
                 VStack(spacing: 16) {
                     VStack(spacing: 10) {
-                        GifImage(contentsOf: wallpaperViewModel.displayedWallpaper.project
-                                    .previewURL(in: wallpaperViewModel.displayedWallpaper.wallpaperDirectory)
+                        GifImage(contentsOf: wallpaperViewModel.displayedWallpaper.previewURL
                                     ?? Bundle.main.url(forResource: "WallpaperNotFound", withExtension: "mp4")!,
                                  animates: viewModel.isApplicationActive)
                             .resizable()
