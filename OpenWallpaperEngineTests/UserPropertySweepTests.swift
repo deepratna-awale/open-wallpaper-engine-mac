@@ -1,3 +1,4 @@
+import JavaScriptCore
 import MetalKit
 import WebKit
 import XCTest
@@ -195,14 +196,65 @@ final class UserPropertySweepTests: XCTestCase {
         var pixels: [UInt8]
         var target: String
         var scriptValue: String?
+        /// Per particle system, what its particles are (`ParticleStats`).
+        var particles: [ParticleStats] = []
     }
 
-    private func capture(_ harness: SceneFrameHarness, probe: SceneDrawProbe, property: String?) -> Frame {
+    /// A particle system's particles in a few numbers: an `instanceoverride` change only reaches
+    /// the particles emitted after it, which take seconds to show in the pixels, but is in their
+    /// GPU state at once.
+    struct ParticleStats {
+        var count: Float
+        var size: Float
+        var alpha: Float
+        var lifetime: Float
+        var color: SIMD3<Float>
+
+        /// The particles of each system, only those emitted within the last `window` seconds when
+        /// given (the ones a change since then reached).
+        static func of(_ renderer: SceneMetalRenderer, newerThan window: Float?) -> [ParticleStats] {
+            renderer.particleSamples().map { system in
+                let particles = window.map { window in system.particles.filter { $0.age <= window } } ?? system.particles
+                let n = Float(max(particles.count, 1))
+                var stats = ParticleStats(count: Float(particles.count), size: 0, alpha: 0, lifetime: 0, color: .zero)
+                for particle in particles {
+                    stats.size += particle.size / n
+                    stats.alpha += particle.alpha / n
+                    stats.lifetime += particle.lifetime / n
+                    stats.color += SIMD3(particle.color.x, particle.color.y, particle.color.z) / n
+                }
+                return stats
+            }
+        }
+
+        /// The largest relative difference of any number of any system (1 when the systems differ).
+        static func difference(_ a: [ParticleStats], _ b: [ParticleStats]) -> Double {
+            guard a.count == b.count else { return 1 }
+            func relative(_ x: Float, _ y: Float) -> Float { abs(x - y) / max(max(abs(x), abs(y)), 1e-3) }
+            var result: Float = 0
+            for (x, y) in zip(a, b) {
+                result = max(result, relative(x.count, y.count), relative(x.size, y.size), relative(x.alpha, y.alpha),
+                             relative(x.lifetime, y.lifetime), relative(x.color.x, y.color.x),
+                             relative(x.color.y, y.color.y), relative(x.color.z, y.color.z))
+            }
+            return Double(result)
+        }
+
+        /// Changed: beyond 5% and twice what two unchanged copies differ by.
+        static func changed(_ difference: Double, noise: Double) -> Bool { difference > 0.05 + 2 * noise }
+    }
+
+    /// How long the live copies are drawn after a change, in scene seconds.
+    private static var changeWindow: Float { Float(Double(changeFrames) * step) }
+
+    private func capture(_ harness: SceneFrameHarness, probe: SceneDrawProbe, property: String?,
+                         particlesNewerThan window: Float? = nil) -> Frame {
         let size = harness.size
         var bytes = [UInt8](repeating: 0, count: size.x * size.y * 4)
         harness.view.currentDrawable?.texture.getBytes(&bytes, bytesPerRow: size.x * 4,
                                                        from: MTLRegionMake2D(0, 0, size.x, size.y), mipmapLevel: 0)
-        return Frame(pixels: bytes, target: target(harness, probe: probe), scriptValue: property.flatMap { scriptValue($0, harness) })
+        return Frame(pixels: bytes, target: target(harness, probe: probe), scriptValue: property.flatMap { scriptValue($0, harness) },
+                     particles: ParticleStats.of(harness.renderer, newerThan: window))
     }
 
     /// What the property can be bound to, as this frame has it: every object's visibility, the
@@ -290,12 +342,30 @@ final class UserPropertySweepTests: XCTestCase {
         }
     }
 
-    /// Sets `values` on `harness`'s store as the app does when the user edits a property, and
-    /// hands the change to its scripts; returns how much of the content the change invalidates.
-    private func publish(_ values: [String: String], to harness: SceneFrameHarness) -> SceneChangeImpact {
-        WallpaperServices.shared.setUserProperties(values, wallpaper: harness.model.propertyStoreKey, replacing: false)
-        harness.renderer.scripts.userPropertiesDidChange(Set(values.keys))
-        return harness.model.impact(of: Array(values.keys))
+    /// Sets `values` on `harness`'s store and applies them as `SceneWallpaperInstance` does when the
+    /// user edits a property (`SceneFrameHarness.changeProperties`: scripts, then the bindings'
+    /// owners, then objects rebuilt alone); returns the whole-content impact left to run.
+    private func publish(_ values: [String: String], to harness: SceneFrameHarness) throws -> SceneChangeImpact {
+        try harness.changeProperties(values)
+    }
+
+    /// The property's editor `condition` (WE shows it only while that holds, e.g.
+    /// `visualizer.value == true`) is false with every property at its default: what it drives is
+    /// off by default, so nothing visible is expected from changing it alone. Nil when it has no
+    /// condition or the condition holds.
+    static func offByDefault(_ definition: [String: Any], declared: [String: [String: Any]]) -> String? {
+        guard let condition = definition["condition"] as? String,
+              !condition.trimmingCharacters(in: .whitespaces).isEmpty,
+              let context = JSContext() else { return nil }
+        var values: [String: Any] = [:]
+        for (name, property) in declared { values[name] = ["value": property["value"] ?? NSNull()] }
+        guard JSONSerialization.isValidJSONObject(values),
+              let data = try? JSONSerialization.data(withJSONObject: values),
+              let json = String(data: data, encoding: .utf8) else { return nil }
+        context.exceptionHandler = { _, _ in }
+        let script = "(function(p){with(p){return !!(\(condition));}})(\(json))"
+        guard let result = context.evaluateScript(script), result.isBoolean, !result.toBool() else { return nil }
+        return condition
     }
 
     /// The rebuild or reload `impact` asks for, as `SceneWallpaperInstance` runs it.
@@ -349,6 +419,7 @@ final class UserPropertySweepTests: XCTestCase {
         let again = try freshFrame(directory, values: [:], id: "d2", property: nil)
         let freshNoise = Self.difference(base.pixels, again.pixels)
         let freshTargetStable = base.target == again.target
+        let freshParticleNoise = ParticleStats.difference(base.particles, again.particles)
 
         // Live: a reference and a copy that takes the changes.
         var pair = try [load(directory, scope: scopes[0], id: "a"), load(directory, scope: scopes[1], id: "b")]
@@ -375,7 +446,9 @@ final class UserPropertySweepTests: XCTestCase {
             }
 
             // Live. The copies drift apart only by randomness; resync them when they have.
-            var before = [capture(pair[0], probe: probes[0], property: property), capture(pair[1], probe: probes[1], property: property)]
+            let window = Self.changeWindow
+            var before = [capture(pair[0], probe: probes[0], property: property, particlesNewerThan: window),
+                          capture(pair[1], probe: probes[1], property: property, particlesNewerThan: window)]
             var noise = Self.difference(before[0].pixels, before[1].pixels)
             if noise > max(0.02, 4 * initialNoise) {
                 pair.forEach { $0.close() }
@@ -383,20 +456,26 @@ final class UserPropertySweepTests: XCTestCase {
                 probes = [SceneDrawProbe(), SceneDrawProbe()]
                 for (harness, probe) in zip(pair, probes) { harness.renderer.drawProbe = probe }
                 draw(pair, frames: Self.warmUpFrames)
-                before = [capture(pair[0], probe: probes[0], property: property), capture(pair[1], probe: probes[1], property: property)]
+                before = [capture(pair[0], probe: probes[0], property: property, particlesNewerThan: window),
+                          capture(pair[1], probe: probes[1], property: property, particlesNewerThan: window)]
                 noise = Self.difference(before[0].pixels, before[1].pixels)
             }
-            let impact = publish([property: to], to: pair[1])
+            let impact = try publish([property: to], to: pair[1])
             rebuild(pair[0], impact)
             rebuild(pair[1], impact)
             draw(pair, frames: Self.changeFrames)
-            let reference = capture(pair[0], probe: probes[0], property: property)
-            let live = capture(pair[1], probe: probes[1], property: property)
+            let reference = capture(pair[0], probe: probes[0], property: property, particlesNewerThan: window)
+            let live = capture(pair[1], probe: probes[1], property: property, particlesNewerThan: window)
             let liveDifference = Self.difference(reference.pixels, live.pixels)
+            let particleBound = propertySites.contains { $0.kind == .particleOverride }
+            // Particles: the ones emitted since the change, compared in their GPU state.
+            let liveParticles = ParticleStats.difference(reference.particles, live.particles)
+            let liveParticleNoise = ParticleStats.difference(before[0].particles, before[1].particles)
             let liveTarget = reference.target != live.target
+                || particleBound && ParticleStats.changed(liveParticles, noise: liveParticleNoise)
             let scriptTook = live.scriptValue != nil && live.scriptValue != before[1].scriptValue
             // Back to the default for the next property.
-            let revert = publish([property: from], to: pair[1])
+            let revert = try publish([property: from], to: pair[1])
             rebuild(pair[0], revert)
             rebuild(pair[1], revert)
             draw(pair, frames: Self.changeFrames)
@@ -404,17 +483,31 @@ final class UserPropertySweepTests: XCTestCase {
             // Fresh.
             let fresh = try freshFrame(directory, values: [property: to], id: "f", property: property)
             let freshDifference = Self.difference(base.pixels, fresh.pixels)
+            let freshParticles = ParticleStats.difference(base.particles, fresh.particles)
             let freshTarget = freshTargetStable && base.target != fresh.target
+                || particleBound && ParticleStats.changed(freshParticles, noise: freshParticleNoise)
             var note = String(format: "live Δ%.4f (noise %.4f)%@, fresh Δ%.4f (noise %.4f)%@, impact %@",
                               liveDifference, noise, liveTarget ? " target" : "",
                               freshDifference, freshNoise, freshTarget ? " target" : "", "\(impact)")
+            if particleBound {
+                note += String(format: ", particles live Δ%.3f (noise %.3f), fresh Δ%.3f (noise %.3f)",
+                               liveParticles, liveParticleNoise, freshParticles, freshParticleNoise)
+            }
             if live.scriptValue != nil { note += scriptTook ? ", script got it" : ", script value unchanged" }
 
             let kinds = Set(propertySites.map(\.kind))
             let primary = propertySites.map(\.kind).filter { $0 != .scriptOnly }.min() ?? (kinds.contains(.scriptOnly) ? .scriptOnly : .unknown)
-            if let (status, reason) = Self.verdict(live: Self.outcome(liveDifference, noise: noise, target: liveTarget),
-                                                   fresh: Self.outcome(freshDifference, noise: freshNoise, target: freshTarget)) {
+            let verdict = Self.verdict(live: Self.outcome(liveDifference, noise: noise, target: liveTarget),
+                                       fresh: Self.outcome(freshDifference, noise: freshNoise, target: freshTarget))
+            if verdict?.0 != .working, !propertySites.isEmpty,
+               propertySites.allSatisfy({ $0.kind == .particleOverride && $0.path.hasSuffix("instanceoverride/rate") }) {
+                // `rate` only drives the turbulence's timing: subtle by design.
+                rows.append(row(.unclear, "subtle by design", "particle `rate` only drives turbulence timing; " + note, to: to))
+            } else if let (status, reason) = verdict {
                 rows.append(row(status, status == .unclear ? "noisy" : primary.rawValue, reason + note, to: to))
+            } else if let condition = Self.offByDefault(definition, declared: declared) {
+                rows.append(row(.unclear, "off by default",
+                                "nothing visible expected: its condition `\(condition)` is false by default; " + note, to: to))
             } else if propertySites.isEmpty {
                 rows.append(row(.unclear, "unreferenced", "nothing in the scene reads it; " + note, to: to))
             } else if kinds == [.scriptOnly] {
@@ -450,6 +543,9 @@ final class UserPropertySweepTests: XCTestCase {
             model = WebWallpaperViewModel(wallpaper: wallpaper, propertyScope: scope)
             payload = WebWallpaperPropertyBridge.payload(properties: properties, values: values)
             let configuration = WebWallpaperView.makeConfiguration()
+            configuration.userContentController.addUserScript(
+                WKUserScript(source: UserPropertySweepTests.listenerRecorder, injectionTime: .atDocumentStart,
+                             forMainFrameOnly: true))
             model.installBridge(on: configuration.userContentController)
             // The page runs while its offscreen window is covered, as a visible wallpaper does.
             configuration.preferences.inactiveSchedulingPolicy = .none
@@ -546,14 +642,35 @@ final class UserPropertySweepTests: XCTestCase {
         wait(1.5)
     }
 
-    /// Wraps the page's listener so a throw is recorded (`window.__oweSweepError`).
-    private static let listenerProbe = """
-    (function(){var l=window.wallpaperPropertyListener;\
-    if(!l||typeof l.applyUserProperties!=='function')return 'none';\
-    if(!l.__oweSweep){var f=l.applyUserProperties;l.applyUserProperties=function(p){\
-    try{return f.apply(this,arguments);}catch(e){window.__oweSweepError=String(e);throw e;}};l.__oweSweep=true;}\
-    window.__oweSweepError='';return 'ok';})()
+    /// Installed before any page script runs: whichever script registers
+    /// `window.wallpaperPropertyListener` (the page's own, or a separate `js/settings.js`), and
+    /// whenever it sets `applyUserProperties`, each call is recorded with the properties it was
+    /// given (`window.__oweSweep.calls`) and any throw (`.errors`).
+    static let listenerRecorder = """
+    (function(){var W=window;var S=W.__oweSweep={calls:[],errors:[]};\
+    function wrap(l){if(!l||(typeof l!=='object'&&typeof l!=='function'))return l;\
+    var f=l.applyUserProperties;if(typeof f==='function'&&!f.__oweSweep){\
+    var g=function(p){try{S.calls.push(Object.keys(p||{}));}catch(e){}\
+    try{return f.apply(this,arguments);}catch(e){S.errors.push(String(e));throw e;}};\
+    g.__oweSweep=true;try{l.applyUserProperties=g;}catch(e){}}return l;}\
+    var current;try{Object.defineProperty(W,'wallpaperPropertyListener',{configurable:true,enumerable:true,\
+    get:function(){return wrap(current);},set:function(v){current=v;wrap(v);}});}catch(e){}})();
     """
+
+    /// Whether the page has a listener now ('none' / 'ok'), and clears the recorded calls and errors.
+    private static let listenerProbe = """
+    (function(){var S=window.__oweSweep;if(S){S.calls=[];S.errors=[];}\
+    var l=window.wallpaperPropertyListener;\
+    return (l&&typeof l.applyUserProperties==='function')?'ok':'none';})()
+    """
+
+    /// Whether `applyUserProperties` was called with `property` since the probe.
+    private static func listenerCalled(_ property: String) -> String {
+        let name = String(data: (try? JSONSerialization.data(withJSONObject: [property])) ?? Data("[\"\"]".utf8),
+                          encoding: .utf8) ?? "[\"\"]"
+        return "(function(){var S=window.__oweSweep;if(!S)return 'unknown';var n=\(name)[0];"
+            + "return S.calls.some(function(k){return k.indexOf(n)>=0;})?'yes':'no';})()"
+    }
 
     private func sweepWeb(name: String, directory: URL, project: WEProject,
                           declared: [String: [String: Any]]) throws -> [Row] {
@@ -594,7 +711,8 @@ final class UserPropertySweepTests: XCTestCase {
                                                        "stores": [scopes[1].runtimeKey(directory: directory)]])
             Self.wait(0.6)
             let liveDifference = Self.difference(pair[0].snapshot(), pair[1].snapshot())
-            let error = pair[1].evaluate("window.__oweSweepError||''") ?? ""
+            let error = pair[1].evaluate("(window.__oweSweep&&window.__oweSweep.errors.join('; '))||''") ?? ""
+            let called = pair[1].evaluate(Self.listenerCalled(property)) ?? "unknown"
             NotificationCenter.default.post(name: .wallpaperUserPropertyChanged, object: directory.path,
                                             userInfo: ["key": property, "value": from,
                                                        "stores": [scopes[1].runtimeKey(directory: directory)]])
@@ -609,10 +727,16 @@ final class UserPropertySweepTests: XCTestCase {
 
             let note = String(format: "live Δ%.4f (noise %.4f), fresh Δ%.4f (noise %.4f)", liveDifference, noise,
                               freshDifference, freshNoise)
-            if listener == "none" {
+            let offByDefault = Self.offByDefault(definition, declared: declared)
+            if listener == "none" && called != "yes" {
                 rows.append(row(.broken, "web listener", "the page has no wallpaperPropertyListener.applyUserProperties; " + note, to: to))
             } else if !error.isEmpty {
                 rows.append(row(.broken, "web listener", "applyUserProperties threw \(error); " + note, to: to))
+            } else if called == "no" {
+                rows.append(row(.broken, "web listener", "applyUserProperties was never called with it; " + note, to: to))
+            } else if let condition = offByDefault, Self.outcome(liveDifference, noise: noise) != .changed {
+                rows.append(row(.unclear, "off by default",
+                                "nothing visible expected: its condition `\(condition)` is false by default; " + note, to: to))
             } else if let (status, reason) = Self.verdict(live: Self.outcome(liveDifference, noise: noise),
                                                           fresh: Self.outcome(freshDifference, noise: freshNoise)) {
                 rows.append(row(status, "web", reason + note, to: to))
