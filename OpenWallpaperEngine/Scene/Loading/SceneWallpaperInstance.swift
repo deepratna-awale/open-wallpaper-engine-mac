@@ -1,6 +1,7 @@
 import Cocoa
 import Combine
 import MetalKit
+import OWESceneEditing
 
 /// What a running scene reads from the app: the displays' wallpapers and the playback controls,
 /// the user's quality and frame-rate settings, and the services every scene's scripts share.
@@ -61,6 +62,10 @@ final class SceneWallpaperInstance {
     /// A property change was applied while the user edited properties: the content is rebuilt once
     /// editing ends, to exactly what a fresh load draws.
     private var appliedLive = false
+    /// The Wallpaper Editor's latest overlay of this wallpaper and the scene's structure it reads
+    /// over, while the editor is sending them: drawn live against the overlay the loaded scene was
+    /// read with (`SceneWallpaperInstance+EditorLive`).
+    var editorEdits: (overlay: SceneEditOverlay, base: SceneOutline)?
     /// Objects a structural property change rebuilds alone, and the pending rebuild.
     private var pendingObjects = Set<Int>()
     private var pendingObjectRebuild: DispatchWorkItem?
@@ -229,7 +234,11 @@ final class SceneWallpaperInstance {
         viewModel.contentAsync { [weak self] content in
             guard let self else { return }
             // Thread boundary: main → render thread.
-            self.renderLoop.perform { $0.setContent(content) }
+            let live = self.editorLiveValues()
+            self.renderLoop.perform {
+                $0.setContent(content)
+                $0.setEditorLiveValues(live)
+            }
             self.updateVideoPlayback()
         }
     }
@@ -365,15 +374,22 @@ final class SceneWallpaperInstance {
                 self.scheduleSceneUpdate(.reloadScene)
             }
         })
-        // The Wallpaper Editor saved this wallpaper's overlay: the scene is read again with it
-        // (`ScenePreparation`), through the same coalesced reload as an Inspector JSON edit.
+        // The Wallpaper Editor changed this wallpaper's overlay: a change of values the renderer
+        // takes per frame is drawn live (`SceneEditLiveValues`); anything else reads the scene again
+        // with it (`ScenePreparation`), through the same coalesced reload as an Inspector JSON edit.
         observers.append(center.addObserver(forName: .sceneEditOverlayDidChange, object: nil, queue: .main) { [weak self] notification in
-            let directory = notification.userInfo?["wallpaperDirectory"] as? URL
+            let info = notification.userInfo
+            let directory = info?["wallpaperDirectory"] as? URL
+            let overlay = info?["overlay"] as? SceneEditOverlay, base = info?["base"] as? SceneOutline
+            let transient = info?["transient"] as? Bool ?? false
             MainActor.assumeIsolated {
                 guard let self,
                       directory == self.viewModel.currentWallpaper.wallpaperDirectory.standardizedFileURL else { return }
                 self.snapshotCapture?.rearm()
                 self.wakePacing(.slow)
+                if self.applyEditorEdits(overlay: overlay, base: base) { return }
+                // A drag in progress the renderer can't draw live waits for its commit.
+                guard !transient else { return }
                 self.scheduleSceneUpdate(.reloadScene)
             }
         })
