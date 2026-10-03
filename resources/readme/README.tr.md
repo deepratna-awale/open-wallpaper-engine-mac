@@ -113,6 +113,7 @@ Kaynaktan ilk derleme Sparkle Swift paketini indirir. Kaynaktan derlenen sürüm
 
 ### Atölye ve arşiv
 - Wallpaper Engine’in Atölye filtreleri: Yalnızca Şunları Göster, bir çözünürlük filtresi, VE/VEYA ile birleştirilen türler ve her kartta etiketler.
+- **Hareketli önizlemeler** — arşivdeki duvar kâğıdı kutucukları Atölye önizleme animasyonlarını (GIF) oynatır; böylece bir duvar kâğıdını uygulamadan önce hareket hâlinde görebilirsiniz. Yalnızca görünürken oynatılır; pencere gizliyken veya Düşük Güç Modu’nda duraklatılır.
 - Yüklü duvar kâğıtları Atölye etiketlerini gösterir ve bunlara göre filtrelenebilir; yalnızca varlık ya da bağımlılık içeren öğeler Yüklü bölümünde görünmez.
 - Eksik Atölye bağımlılıkları otomatik olarak indirilir, artık kullanılmayanlar silme işleminden sonra kaldırılır. Her indirme Duvar Kâğıdı Deposu klasörüne kaydedilir.
 - Ayrıntılar’daki **Sıfırla**, bir duvar kâğıdının özelliklerini ve Sahne Denetçisi’ndeki düzenlemelerini yazarının belirlediği varsayılanlara döndürür.
