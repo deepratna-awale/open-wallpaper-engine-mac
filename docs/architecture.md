@@ -44,7 +44,7 @@ These are folders in the app target today. The scene engine (`Scene/`, `Audio/`,
 |---|---|---|
 | `Scene/Format/` | Decode WE files into plain Swift models. It does no rendering and has no side effects. | `scene.json`, `project.json` scene properties, `effect.json`, materials, models, particles, `.pkg`, `.tex` |
 | `Scene/Values/` | Resolve every dynamic value the same way: literal, `{"user":…}`, `{"user":{"name","condition"}}`, `{"script":…}`, `{"animation":…}`. User bindings live in one table per loaded scene (`Values/Bindings`). | `UserPropertyBindingTable`, `SceneValueSource` |
-| `Scene/Shaders/` | GLSL → SPIR-V → MSL translation, reflection, the translation cache and the effect catalog. | `ShaderVariantTranslator`, `InProcessShaderCompiler`, `SceneDynamicEffectCatalog` |
+| `Scene/Shaders/` | GLSL → SPIR-V → MSL translation (in a helper process, `--shader-compile-helper`), reflection, the translation cache and the effect catalog. | `ShaderVariantTranslator`, `HelperShaderCompiler`, `ShaderCompileHelperServer`, `InProcessShaderCompiler`, `SceneDynamicEffectCatalog` |
 | `Scene/Rendering/` | Metal: layers, the effect pass graph, render targets, text, particles and the camera. | `SceneMetalRenderer`, `SceneShaders.metal` |
 | `Scene/Scripting/` | The SceneScript runtime (JavaScriptCore), one per wallpaper instance on its own thread, and the WE JS API surface as extensions; `Host/` ties a runtime to the renderer (docs/scenescript-plan.md). | `SceneScriptRuntime`, `SceneScriptWallpaper`, `SceneScriptSceneMirror` |
 | `Scene/Loading/` | Turns a wallpaper into render content: loads, resolves and builds. | `SceneWallpaperViewModel` (to be split) |
