@@ -36,6 +36,13 @@ extension SceneEditOverlay {
                 objects.append(object)
             }
         }
+        // Scripts and bindings first (added layers included): a value edit of a field they drive
+        // is its start value.
+        if let authoring {
+            root["objects"] = objects
+            authoring.applyDrivers(to: &root)
+            objects = root["objects"] as? [[String: Any]] ?? objects
+        }
         for index in objects.indices {
             let objectID = (objects[index]["id"] as? NSNumber)?.intValue ?? index
             let edit = self.objects[String(objectID)]

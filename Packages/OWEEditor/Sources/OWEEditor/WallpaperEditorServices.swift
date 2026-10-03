@@ -45,9 +45,17 @@ public struct WallpaperEditorServices {
     /// The wallpaper's user properties a value can be bound to (key, title), with their type.
     public var userPropertyChoices: () -> [EditorUserPropertyChoice] = { [] }
 
+    /// The wallpaper's project.json as it ships, whose `general.properties` the user-property
+    /// editor starts from; nil hides the editor.
+    public var projectJSON: Data?
+    /// What the wallpaper's running scripts log and the errors they raise; nil when the app
+    /// doesn't report them.
+    public var scriptConsole: SceneScriptConsoleFeed?
+
     public init(makeCanvas: @escaping () -> AnyView, userProperties: (() -> AnyView)? = nil,
                 blendModeTitle: String, blendModes: [InspectorOption], effectHelp: @escaping (String) -> String,
-                suggestedLocalTitle: String, saveAsLocalWallpaper: @escaping (String) throws -> String) {
+                suggestedLocalTitle: String, saveAsLocalWallpaper: @escaping (String) throws -> String,
+                projectJSON: Data? = nil, scriptConsole: SceneScriptConsoleFeed? = nil) {
         self.makeCanvas = makeCanvas
         self.userProperties = userProperties
         self.blendModeTitle = blendModeTitle
@@ -55,6 +63,8 @@ public struct WallpaperEditorServices {
         self.effectHelp = effectHelp
         self.suggestedLocalTitle = suggestedLocalTitle
         self.saveAsLocalWallpaper = saveAsLocalWallpaper
+        self.projectJSON = projectJSON
+        self.scriptConsole = scriptConsole
     }
 }
 
