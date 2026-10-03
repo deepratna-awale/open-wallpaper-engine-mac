@@ -29,13 +29,29 @@ enum ScreenSaverSeamFinder {
     /// The best loop length for `differences` (`differences[i]` compares frame `i` with frame
     /// 0) at `frameRate`: the index after `minimumSeconds` with the least difference (the
     /// earliest on a tie). Nil when no frame is late enough.
-    static func bestFrame(differences: [Double], frameRate: Int, minimumSeconds: Double = minimumSeconds) -> Int? {
+    ///
+    /// With an `alignment` (seconds, e.g. the synthetic audio's bar), the best candidate on a
+    /// multiple of it wins when it is nearly as good (`alignedTolerance`), so audio-driven motion
+    /// lines up at the seam too.
+    static func bestFrame(differences: [Double], frameRate: Int, minimumSeconds: Double = minimumSeconds,
+                          alignment: Double? = nil) -> Int? {
         let first = max(Int((minimumSeconds * Double(frameRate)).rounded(.up)), 1)
         guard first < differences.count else { return nil }
         var best = first
         for index in first..<differences.count where differences[index] < differences[best] { best = index }
-        return best
+        guard let alignment, alignment > 0 else { return best }
+        let step = Double(frameRate) * alignment
+        let aligned = (1...).lazy.map { Int((Double($0) * step).rounded()) }
+            .prefix { $0 < differences.count }
+            .filter { $0 >= first && abs(Double($0) - (Double($0) / step).rounded() * step) < 1e-6 }
+        guard let bestAligned = aligned.min(by: { differences[$0] < differences[$1] }) else { return best }
+        let good = differences[bestAligned] <= invisibleDifference
+            || differences[bestAligned] <= differences[best] * alignedTolerance
+        return good ? bestAligned : best
     }
+
+    /// How much worse than the overall best match an aligned one may be and still be preferred.
+    static let alignedTolerance = 1.25
 
     /// Whether the seam at a frame `difference` from frame 0 needs a crossfade, and how long.
     static func seam(difference: Double, frameRate: Int, loopFrames: Int) -> Seam {
@@ -44,8 +60,10 @@ enum ScreenSaverSeamFinder {
         return frames > 0 ? .crossfade(frames: frames) : .cut
     }
 
-    static func decide(differences: [Double], frameRate: Int, minimumSeconds: Double = minimumSeconds) -> Decision? {
-        guard let best = bestFrame(differences: differences, frameRate: frameRate, minimumSeconds: minimumSeconds) else {
+    static func decide(differences: [Double], frameRate: Int, minimumSeconds: Double = minimumSeconds,
+                       alignment: Double? = nil) -> Decision? {
+        guard let best = bestFrame(differences: differences, frameRate: frameRate, minimumSeconds: minimumSeconds,
+                                   alignment: alignment) else {
             return nil
         }
         return Decision(frames: best, seam: seam(difference: differences[best], frameRate: frameRate, loopFrames: best))

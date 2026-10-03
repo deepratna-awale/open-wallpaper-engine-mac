@@ -8,7 +8,7 @@ import WebKit
 /// The page is loaded in an offscreen `WKWebView` of the display's size in points, configured as
 /// the desktop's: served by `WebWallpaperSchemeHandler` with WE's patches, the pause script and
 /// the WE web API bridge, user properties and `applyGeneralProperties({fps})` sent once loaded, a
-/// silent audio listener feed and no now-playing session. The page is muted.
+/// synthetic music audio listener feed (`SyntheticAudioSpectrum`, on the recording's clock) and no now-playing session. The page is muted.
 ///
 /// **Time is stepped**, not real: `clockScript` gives the page a virtual clock (`performance.now`,
 /// `Date.now`, animation frames, timers, CSS animations and `<video>` time), and each frame
@@ -68,6 +68,8 @@ final class ScreenSaverWebLoopRecorder: NSObject, WKNavigationDelegate {
     private var loadFinished = false
     /// Whether the virtual clock answered; without it frames are captured in real time.
     private var stepsTime = true
+    /// The frame whose synthetic audio `advance` delivers next.
+    private var audioFrame = 0
 
     init(wallpaper: WEWallpaper, pixelSize: SIMD2<Int>, pointSize: SIMD2<Int>, output: URL,
          properties: [String: String], fps: Int) {
@@ -105,7 +107,9 @@ final class ScreenSaverWebLoopRecorder: NSObject, WKNavigationDelegate {
         guard let intermediate = HEVCWriter(url: pass, pixelSize: pixelSize, frameRate: frameRate, quality: 1) else {
             return .failed
         }
-        for _ in 0..<Int(settleSeconds * Double(frameRate)) { _ = advance() }
+        let settleFrames = Int(settleSeconds * Double(frameRate))
+        audioFrame = -settleFrames // Frame 0 of the loop hears the pattern's start.
+        for _ in 0..<settleFrames { _ = advance() }
         var reference: ScreenSaverFrameSignature?
         var differences: [Double] = []
         differences.reserveCapacity(count)
@@ -130,7 +134,8 @@ final class ScreenSaverWebLoopRecorder: NSObject, WKNavigationDelegate {
         guard intermediate.finish() else { return .failed }
         logTiming()
         guard let decision = ScreenSaverSeamFinder.decide(differences: differences, frameRate: frameRate,
-                                                          minimumSeconds: minimumSeconds) else {
+                                                          minimumSeconds: minimumSeconds,
+                                                          alignment: SyntheticAudioSpectrum.barSeconds) else {
             OWELog.error(.app, "Screen saver: \(name) has no loop")
             return .failed
         }
@@ -270,11 +275,12 @@ final class ScreenSaverWebLoopRecorder: NSObject, WKNavigationDelegate {
 
     // MARK: Frames
 
-    /// Moves the page 1/30 s on, with a silent audio frame; false when the page stopped answering.
+    /// Moves the page 1/30 s on, with the synthetic audio frame; false when the page stopped answering.
     private func advance() -> Bool {
         guard let webView else { return false }
-        let silence = WebWallpaperPropertyBridge.audioDeliveryScript(Array(repeating: 0, count: 128))
-        webView.evaluateJavaScript(silence, completionHandler: nil)
+        let audio = SyntheticAudioSpectrum.raw(at: Double(audioFrame) / Double(Self.frameRate))
+        audioFrame += 1
+        webView.evaluateJavaScript(WebWallpaperPropertyBridge.audioDeliveryScript(audio), completionHandler: nil)
         guard stepsTime else {
             spin(1 / Double(Self.frameRate))
             return true

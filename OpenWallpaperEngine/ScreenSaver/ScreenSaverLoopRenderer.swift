@@ -8,10 +8,12 @@ import Metal
 /// process: never on the app's main or render thread.
 ///
 /// The scene is loaded by the real loader and drawn offscreen by the real renderer, with
-/// `engine.isScreensaver()` true, no sound and a silent spectrum, on a fixed frame step, so frame
+/// `engine.isScreensaver()` true, no sound and a synthetic music spectrum (`SyntheticAudioSpectrum`, on the
+/// recording's own clock, so audio-reactive scenes move as with music), on a fixed frame step, so frame
 /// `i` shows scene time `i / frameRate`. The loop length:
 /// 1. **Known periods** (`ScreenSaverLoopLength`): with no particles or scripts and only periodic
-///    timelines and sprite sheets, the least common multiple of their periods, capped. The frame
+///    timelines and sprite sheets, the least common multiple of their periods (with the
+///    synthetic spectrum's when the scene reacts to audio), capped. The frame
 ///    after the last is rendered too and checked against frame 0; a scene whose other motion (an
 ///    effect's `g_Time`) doesn't follow falls through to 2.
 /// 2. **Search** (`ScreenSaverSeamFinder`): up to the cap is rendered and compared with frame 0;
@@ -32,6 +34,8 @@ struct ScreenSaverLoopRenderer {
     /// session and no sound; their `localStorage` is a scratch folder, so the loop never changes
     /// what the wallpaper's scripts saved.
     var scriptServices: SceneScriptServices
+    /// The recording's time, which the synthetic spectrum follows (scenes and scripts).
+    let audioClock: SyntheticAudioClock
 
     init(wallpaper: WEWallpaper, pixelSize: SIMD2<Int>, pointSize: SIMD2<Float>, output: URL, defaults: UserDefaults,
          scratchDirectory: URL) {
@@ -40,9 +44,12 @@ struct ScreenSaverLoopRenderer {
         self.pointSize = pointSize
         self.output = output
         self.defaults = defaults
+        let audioClock = SyntheticAudioClock()
+        self.audioClock = audioClock
         scriptServices = SceneScriptServices(prelude: SceneScriptPrelude.load(),
                                              storage: SceneScriptStorage(directory: scratchDirectory),
-                                             media: SilentMediaSession(), spectrum: { .silent })
+                                             media: SilentMediaSession(),
+                                             spectrum: { SyntheticAudioSpectrum.snapshot(at: audioClock.seconds) })
     }
 
     /// Renders the video; false when it couldn't (logged).
@@ -116,7 +123,8 @@ struct ScreenSaverLoopRenderer {
         renderer.hidesClockLayers = true
         renderer.renderSettings = renderSettings
         renderer.sounds.setTargetGain(0)
-        renderer.audioSpectrumFrame = { _ in .silent }
+        audioClock.seconds = 0
+        renderer.audioSpectrumFrame = { [audioClock] _ in SyntheticAudioSpectrum.snapshot(at: audioClock.seconds) }
         renderer.wallTime = { startTime }
         renderer.holdsClock = true
         renderer.setContent(content)
@@ -144,12 +152,14 @@ struct ScreenSaverLoopRenderer {
             aperiodic = aperiodic || timeline.aperiodic
             periods += set.textures.frameTimeLists.compactMap { ScreenSaverLoopLength.Period(frameTimes: $0) }
         }
+        periods = ScreenSaverLoopLength.recordingPeriods(periods, readsAudio: renderer.contentReadsAudio)
         return Session(renderer: renderer, viewport: viewport, periods: periods, aperiodic: aperiodic, startTime: startTime)
     }
 
     /// Draws the session's next frame at a fixed step and reads it back.
     private func nextFrame(_ session: Session, frameRate: Int) -> CGImage? {
         let time = session.startTime + Double(session.frame) / Double(frameRate)
+        audioClock.seconds = Double(session.frame) / Double(frameRate)
         session.renderer.wallTime = { time }
         session.frame += 1
         session.renderer.renderShared([session.viewport])
@@ -174,7 +184,8 @@ struct ScreenSaverLoopRenderer {
             if reference == nil { reference = signature }
             differences.append(reference.map { signature.difference($0) } ?? 1)
         }
-        guard let decision = ScreenSaverSeamFinder.decide(differences: differences, frameRate: frameRate) else { return nil }
+        guard let decision = ScreenSaverSeamFinder.decide(differences: differences, frameRate: frameRate,
+                                                          alignment: SyntheticAudioSpectrum.barSeconds) else { return nil }
         return (decision.frames, frameRate, decision.seam)
     }
 
