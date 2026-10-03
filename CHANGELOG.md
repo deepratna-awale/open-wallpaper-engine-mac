@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Wallpaper Editor and Scene Inspector:** a number's unit (×, %, °, px, s, fps) stays beside the number on one line in a narrow inspector or beside a long translated label, instead of the number showing above it.
 - **Settings › Assets › Update from Steam** no longer downloads Wallpaper Engine again when the assets are current: it first reads the public build from SteamCMD's app info and reports "up to date" when it matches the installed build and the files are there. If the check fails (offline, not logged in), nothing is downloaded. **Re-download** downloads regardless, to repair a damaged copy.
 
 ## [1.0.0]
