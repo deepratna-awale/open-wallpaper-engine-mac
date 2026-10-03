@@ -71,14 +71,16 @@ enum WebWallpaperPropertyBridge {
         return values
     }
 
-    static func applyUserPropertiesScript(_ payload: [String: Any]) -> String? {
+    /// Delivers user properties through the bootstrap's listener trap. `full` is the whole set
+    /// (sent once the page has loaded; the trap hands it to the listener now, or when the page
+    /// assigns one later); otherwise only the changed values, which reach a listener that has
+    /// already had the full set (a listener assigned later gets the merged full set instead).
+    static func applyUserPropertiesScript(_ payload: [String: Any], full: Bool = false) -> String? {
         guard !payload.isEmpty,
               let data = try? JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys]),
               let json = String(data: data, encoding: .utf8) else { return nil }
-        return """
-        (function(){var l=window.wallpaperPropertyListener;\
-        if(l&&typeof l.applyUserProperties==='function'){try{l.applyUserProperties(\(json));}catch(e){console.error(e);}}})();
-        """
+        let function = full ? "__oweSetUserProperties" : "__oweApplyUserProperties"
+        return "window.\(function)&&window.\(function)(\(json));"
     }
 
     /// WE's `wallpaperPropertyListener.setPaused(isPaused)`: the wallpaper was paused or resumed.
@@ -175,10 +177,7 @@ enum WebWallpaperPropertyBridge {
     """
 
     static func applyGeneralPropertiesScript(fps: Int) -> String {
-        """
-        (function(){var l=window.wallpaperPropertyListener;\
-        if(l&&typeof l.applyGeneralProperties==='function'){try{l.applyGeneralProperties({fps:\(fps)});}catch(e){console.error(e);}}})();
-        """
+        "window.__oweApplyGeneralProperties&&window.__oweApplyGeneralProperties({fps:\(fps)});"
     }
 
     /// 128 values: 64 left then 64 right, each clamped to 0…1.
@@ -230,6 +229,41 @@ enum WebWallpaperPropertyBridge {
       };
       window.__oweDeliverAudio = function(values){
         for (var i = 0; i < audio.length; i++) { try { audio[i](values); } catch(e) { console.error(e); } }
+      };
+      // WE hands a page its properties once it has loaded and its wallpaperPropertyListener
+      // exists. A page may assign the listener late (after load, from a timer or an async
+      // script), so the assignment is trapped: a listener that hasn't had the full set gets it
+      // (the merged current values) the moment it is assigned; one that has gets only changes.
+      var listener = window.wallpaperPropertyListener, user = null, general = null;
+      var userSent = null, generalSent = null;
+      var call = function(l, name, arg){
+        if (l && typeof l[name] === 'function') { try { l[name](arg); } catch(e) { console.error(e); } return true; }
+        return false;
+      };
+      var copy = function(o){ var r = {}; for (var k in o) r[k] = o[k]; return r; };
+      var flush = function(){
+        if (!listener) return;
+        if (general && generalSent !== listener && call(listener, 'applyGeneralProperties', copy(general))) generalSent = listener;
+        if (user && userSent !== listener && call(listener, 'applyUserProperties', copy(user))) userSent = listener;
+      };
+      try {
+        Object.defineProperty(window, 'wallpaperPropertyListener', {
+          configurable: true, enumerable: true,
+          get: function(){ return listener; },
+          set: function(value){ listener = value; flush(); }
+        });
+      } catch(e) {}
+      window.__oweSetUserProperties = function(all){ user = copy(all); userSent = null; flush(); };
+      window.__oweApplyUserProperties = function(changed){
+        if (!user) return; // not loaded yet: the full set, read after load, carries it
+        for (var k in changed) user[k] = changed[k];
+        if (listener && userSent === listener) call(listener, 'applyUserProperties', changed); else flush();
+      };
+      window.__oweApplyGeneralProperties = function(values){
+        var had = general !== null && generalSent === listener;
+        general = general ? general : {};
+        for (var k in values) general[k] = values[k];
+        if (had && listener) call(listener, 'applyGeneralProperties', values); else flush();
       };
       // Heartbeat for the render watchdog, posted once a second: whether the page is visible and
       // its requestAnimationFrame intervals since the last post. A hidden page gets no frame
