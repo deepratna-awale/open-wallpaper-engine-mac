@@ -40,8 +40,8 @@ final class ChromiumHelperService: NSObject, ChromiumHelperProtocol {
         self.connection = connection
     }
 
-    func start(url: String, frameworkDirectory: String, cacheDirectory: String, width: Int, height: Int,
-               frameRate: Int, reply: @escaping (String?) -> Void) {
+    func start(url: String, engineBundle: String, cacheDirectory: String, width: Int, height: Int,
+               frameRate: Int, debugNoSandbox: Bool, reply: @escaping (String?) -> Void) {
         guard (1...ChromiumHelperIPC.maxDimension).contains(width), (1...ChromiumHelperIPC.maxDimension).contains(height) else {
             reply("Frame size \(width)×\(height) is out of range")
             return
@@ -53,8 +53,8 @@ final class ChromiumHelperService: NSObject, ChromiumHelperProtocol {
         DispatchQueue.main.async {
             var error = [CChar](repeating: 0, count: 512)
             let context = Unmanaged.passUnretained(self).toOpaque()
-            let status = owe_cef_start(frameworkDirectory, cacheDirectory, url, Int32(width), Int32(height),
-                                       Int32(max(1, min(frameRate, 240))), { context, surface in
+            let status = owe_cef_start(engineBundle, cacheDirectory, url, Int32(width), Int32(height),
+                                       Int32(max(1, min(frameRate, 240))), debugNoSandbox ? 1 : 0, { context, surface in
                 guard let context, let surface else { return }
                 Unmanaged<ChromiumHelperService>.fromOpaque(context).takeUnretainedValue().forward(surface)
             }, context, &error, error.count)

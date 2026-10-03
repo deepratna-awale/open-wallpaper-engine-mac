@@ -214,6 +214,8 @@ struct ChromiumEngineInstallJob: Sendable {
     let root: URL
     let pin: ChromiumEnginePin
     let downloader: SteamCmdPackageDownloading
+    /// The helper apps copied into the engine bundle; nil copies none (tests).
+    var helpers: URL? = ChromiumEngineHelpers.bundled
 
     static let stagingPrefix = ".staging-"
 
@@ -241,7 +243,7 @@ struct ChromiumEngineInstallJob: Sendable {
         let scratch = staging.appending(path: "scratch", directoryHint: .isDirectory)
         try fileManager.createDirectory(at: scratch, withIntermediateDirectories: false)
         let unpacked = staging.appending(path: "unpacked", directoryHint: .isDirectory)
-        try ChromiumEnginePackage.unpack(archive, pin: pin, scratch: scratch, into: unpacked)
+        try ChromiumEnginePackage.unpack(archive, pin: pin, scratch: scratch, into: unpacked, helpers: helpers)
         try Task.checkCancellation()
 
         try commit(unpacked, staging: staging)

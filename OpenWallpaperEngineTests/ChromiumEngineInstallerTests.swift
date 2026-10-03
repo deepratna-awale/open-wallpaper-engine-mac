@@ -128,7 +128,7 @@ final class ChromiumEngineInstallerTests: XCTestCase {
         XCTAssertNotNil(installer.installedSize)
         let folder = engineRoot.appending(path: "1.0.0")
         let names = try FileManager.default.contentsOfDirectory(atPath: folder.path).sorted()
-        XCTAssertEqual(names, [ChromiumEnginePackage.manifestName, ChromiumEnginePackage.frameworkName, "LICENSE.txt"].sorted())
+        XCTAssertEqual(names, [ChromiumEnginePackage.manifestName, ChromiumHelperIPC.engineBundleName, "LICENSE.txt"].sorted())
         XCTAssertEqual(ChromiumEnginePackage.manifest(in: folder)?.version, "1.0.0")
         XCTAssertEqual(try stagingEntries(), [])
     }
@@ -169,7 +169,7 @@ final class ChromiumEngineInstallerTests: XCTestCase {
         let job = ChromiumEngineInstallJob(root: engineRoot, pin: pin, downloader: CopyingDownloader(source: archive))
         XCTAssertThrowsError(try job.commit(staging.appending(path: "missing"), staging: staging))
 
-        let binary = target.appending(path: "\(ChromiumEnginePackage.frameworkName)/\(ChromiumEnginePackage.frameworkBinary)")
+        let binary = ChromiumEnginePackage.frameworksFolder(in: target).appending(path: "\(ChromiumEnginePackage.frameworkName)/\(ChromiumEnginePackage.frameworkBinary)")
         XCTAssertEqual(try String(contentsOf: binary, encoding: .utf8), "old")
         XCTAssertNotNil(ChromiumEnginePackage.manifest(in: target))
     }

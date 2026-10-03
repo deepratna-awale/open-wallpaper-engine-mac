@@ -70,11 +70,16 @@ enum ChromiumFrameCaptureCommand {
 
         let done = DispatchSemaphore(value: 0)
         let progress = CaptureProgress(wanted: frames)
-        let session = ChromiumEngineSession.embedded(device: device) { frame in
+        let session = ChromiumEngineSession.embedded(device: device, onFrame: { frame in
             if progress.add(frame) { done.signal() }
-        }
+        }, onExit: { reason in
+            // Fail fast: a crashed helper sends no more frames.
+            progress.fail(reason)
+            done.signal()
+        })
         defer { session.stop() }
-        session.start(url: url, install: install, profile: profile, width: size.x, height: size.y, frameRate: 60) { error in
+        session.start(url: url, install: install, profile: profile, width: size.x, height: size.y, frameRate: 60,
+                      debugNoSandbox: ProcessInfo.processInfo.environment["OWE_CEF_NO_SANDBOX"] == "1") { error in
             guard let error else { return }
             progress.fail(error)
             done.signal()

@@ -65,9 +65,19 @@ enum ChromiumEnginePackage {
         guard try handle.read(upToCount: 3) == Data("BZh".utf8) else { throw Failure.notBzip2 }
     }
 
+    /// Where an install folder keeps the framework and helpers: CEF's macOS app layout,
+    /// `<version>/OWE Chromium.app/Contents/Frameworks`. CEF's sandbox allows reading its main
+    /// bundle, so everything CEF loads has to be inside this one bundle.
+    static func frameworksFolder(in folder: URL) -> URL {
+        folder.appending(path: "\(ChromiumHelperIPC.engineBundleName)/Contents/Frameworks", directoryHint: .isDirectory)
+    }
+
     /// Unpacks the framework and license of the verified `archive` into `destination` (which must
-    /// not exist yet) and writes the manifest last. `scratch` is an empty folder for tar's output.
-    static func unpack(_ archive: URL, pin: ChromiumEnginePin, scratch: URL, into destination: URL) throws {
+    /// not exist yet), assembles the engine bundle around the framework with the helpers from
+    /// `helpers` (the app's `Contents/Helpers`; nil copies none) and writes the manifest last.
+    /// `scratch` is an empty folder for tar's output.
+    static func unpack(_ archive: URL, pin: ChromiumEnginePin, scratch: URL, into destination: URL,
+                       helpers: URL? = nil) throws {
         try checkBzip2(archive)
         let root = pin.archiveRoot
         let framework = "\(root)/Release/\(frameworkName)"
@@ -80,8 +90,14 @@ enum ChromiumEnginePackage {
             throw Failure.missingFramework
         }
         try fileManager.createDirectory(at: destination, withIntermediateDirectories: false)
-        try fileManager.moveItem(at: unpackedFramework, to: destination.appending(path: frameworkName))
+        let frameworks = frameworksFolder(in: destination)
+        try fileManager.createDirectory(at: frameworks, withIntermediateDirectories: true)
+        try writeBundleInfo(in: destination)
+        try fileManager.moveItem(at: unpackedFramework, to: frameworks.appending(path: frameworkName))
         try fileManager.moveItem(at: scratch.appending(path: license), to: destination.appending(path: "LICENSE.txt"))
+        if let helpers {
+            try ChromiumEngineHelpers.install(from: helpers, into: frameworks)
+        }
         let manifest = Manifest(version: pin.version, platform: pin.platform, sha256: pin.sha256)
         try JSONEncoder().encode(manifest).write(to: destination.appending(path: manifestName), options: .atomic)
     }
@@ -116,12 +132,59 @@ enum ChromiumEnginePackage {
         }
     }
 
+    /// The engine bundle's Info.plist. The bundle has no executable of its own: the XPC helper is
+    /// CEF's browser process and only names this bundle as CEF's main bundle.
+    private static func writeBundleInfo(in folder: URL) throws {
+        let info: [String: Any] = [
+            "CFBundleIdentifier": "com.winddog.wallpaper-engine.chromium-engine",
+            "CFBundleName": "OWE Chromium",
+            "CFBundlePackageType": "APPL",
+            "CFBundleInfoDictionaryVersion": "6.0",
+            "LSUIElement": true,
+        ]
+        let data = try PropertyListSerialization.data(fromPropertyList: info, format: .xml, options: 0)
+        try data.write(to: folder.appending(path: "\(ChromiumHelperIPC.engineBundleName)/Contents/Info.plist"))
+    }
+
     /// The manifest of the install in `folder`, nil when it isn't a complete install.
     static func manifest(in folder: URL) -> Manifest? {
         guard let data = try? Data(contentsOf: folder.appending(path: manifestName)),
               let manifest = try? JSONDecoder().decode(Manifest.self, from: data),
-              FileManager.default.fileExists(atPath: folder.appending(path: "\(frameworkName)/\(frameworkBinary)").path)
+              FileManager.default.fileExists(atPath: frameworksFolder(in: folder).appending(path: "\(frameworkName)/\(frameworkBinary)").path)
         else { return nil }
         return manifest
+    }
+}
+
+/// CEF's helper apps, built and signed with the app (`Contents/Helpers/OWE Chromium Helper*.app`)
+/// and copied whole into the engine bundle, so their team signatures stay intact.
+enum ChromiumEngineHelpers {
+    /// The app's own copies, nil when the app has none (unit tests' fake installs).
+    static var bundled: URL? {
+        let url = Bundle.main.bundleURL.appending(path: "Contents/Helpers", directoryHint: .isDirectory)
+        return FileManager.default.fileExists(atPath: url.appending(path: appName("")).path) ? url : nil
+    }
+
+    static func appName(_ variant: String) -> String { "\(ChromiumHelperIPC.helperName)\(variant).app" }
+
+    /// Replaces every helper app in `frameworks` with the one in `source`.
+    static func install(from source: URL, into frameworks: URL) throws {
+        let fileManager = FileManager.default
+        for variant in ChromiumHelperIPC.helperVariants {
+            let target = frameworks.appending(path: appName(variant), directoryHint: .isDirectory)
+            if fileManager.fileExists(atPath: target.path) { try fileManager.removeItem(at: target) }
+            try fileManager.copyItem(at: source.appending(path: appName(variant), directoryHint: .isDirectory), to: target)
+        }
+    }
+
+    /// Brings the helpers of the install in `folder` up to this app's, after an app update.
+    static func sync(_ folder: URL) throws {
+        let frameworks = ChromiumEnginePackage.frameworksFolder(in: folder)
+        guard let source = bundled, FileManager.default.fileExists(atPath: frameworks.path) else { return }
+        let executable = "\(appName(""))/Contents/MacOS/\(ChromiumHelperIPC.helperName)"
+        let current = try? Data(contentsOf: frameworks.appending(path: executable))
+        guard current != (try Data(contentsOf: source.appending(path: executable))) else { return }
+        OWELog.info(.web, "Updating the Chromium engine's helpers")
+        try install(from: source, into: frameworks)
     }
 }

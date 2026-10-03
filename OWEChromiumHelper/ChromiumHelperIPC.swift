@@ -11,16 +11,25 @@ enum ChromiumHelperIPC {
     static let maxDimension = 16_384
     /// The only pixel format frames come in: 8-bit BGRA, what CEF paints on macOS.
     static let pixelFormat: OSType = 0x4247_5241 // 'BGRA'
+    /// The self-contained app bundle each installed version is assembled into (CEF's macOS layout),
+    /// so CEF's sandbox, which allows its main bundle, covers the framework and helpers.
+    static let engineBundleName = "OWE Chromium.app"
+    /// CEF's helper inside that bundle's Frameworks folder; Chromium derives the variants'
+    /// names from it ("<name> (Renderer)", "(GPU)", "(Plugin)").
+    static let helperName = "OWE Chromium Helper"
+    static let helperVariants = ["", " (Renderer)", " (GPU)", " (Plugin)"]
 }
 
 /// What the app asks the helper to do.
 @objc(OWEChromiumHelperProtocol)
 protocol ChromiumHelperProtocol {
-    /// Loads CEF from `frameworkDirectory` (the installed version's folder), keeps its profile in
-    /// `cacheDirectory` and opens `url` windowless at `width`×`height` pixels, painting at most
-    /// `frameRate` frames a second. Replies nil once the browser exists, else the reason.
-    func start(url: String, frameworkDirectory: String, cacheDirectory: String, width: Int, height: Int,
-               frameRate: Int, reply: @escaping (String?) -> Void)
+    /// Loads CEF from `engineBundle` (the installed version's `OWE Chromium.app`), keeps its
+    /// profile in `cacheDirectory` and opens `url` windowless at `width`×`height` pixels, painting
+    /// at most `frameRate` frames a second. `debugNoSandbox` turns CEF's sandbox off in Debug
+    /// builds only (an XPC service doesn't inherit the app's environment, so switches come this
+    /// way). Replies nil once the browser exists, else the reason.
+    func start(url: String, engineBundle: String, cacheDirectory: String, width: Int, height: Int,
+               frameRate: Int, debugNoSandbox: Bool, reply: @escaping (String?) -> Void)
     /// Closes the browser; the helper exits when the connection goes away.
     func stop()
 }

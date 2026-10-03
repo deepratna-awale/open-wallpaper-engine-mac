@@ -48,7 +48,8 @@ final class ChromiumFrameIPCTests: XCTestCase {
 
         let request = try XCTUnwrap(fakeHelper.lastRequest)
         XCTAssertEqual(request.url, "https://example.com/")
-        XCTAssertEqual(request.frameworkDirectory, "/tmp/engine")
+        XCTAssertEqual(request.engineBundle, "/tmp/engine/OWE Chromium.app")
+        XCTAssertFalse(request.debugNoSandbox)
         XCTAssertEqual(request.cacheDirectory, "/tmp/profile")
         XCTAssertEqual(request.width, 640)
         XCTAssertEqual(request.height, 360)
@@ -120,7 +121,8 @@ final class ChromiumFrameIPCTests: XCTestCase {
 private final class FakeChromiumHelper: NSObject, NSXPCListenerDelegate, ChromiumHelperProtocol, @unchecked Sendable {
     struct Request {
         let url: String
-        let frameworkDirectory: String
+        let engineBundle: String
+        let debugNoSandbox: Bool
         let cacheDirectory: String
         let width: Int
         let height: Int
@@ -147,10 +149,10 @@ private final class FakeChromiumHelper: NSObject, NSXPCListenerDelegate, Chromiu
         return true
     }
 
-    func start(url: String, frameworkDirectory: String, cacheDirectory: String, width: Int, height: Int,
-               frameRate: Int, reply: @escaping (String?) -> Void) {
+    func start(url: String, engineBundle: String, cacheDirectory: String, width: Int, height: Int,
+               frameRate: Int, debugNoSandbox: Bool, reply: @escaping (String?) -> Void) {
         lock.withLock {
-            request = Request(url: url, frameworkDirectory: frameworkDirectory, cacheDirectory: cacheDirectory,
+            request = Request(url: url, engineBundle: engineBundle, debugNoSandbox: debugNoSandbox, cacheDirectory: cacheDirectory,
                               width: width, height: height, frameRate: frameRate)
         }
         reply(startError)

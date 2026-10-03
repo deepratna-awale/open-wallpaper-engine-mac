@@ -237,7 +237,7 @@
 				5EC47E742A2DB2E600120CCC /* Resources */,
 				EE500000000000000000000A /* Embed Screen Saver */,
 				EE6000000000000000000014 /* Embed XPC Services */,
-				EE6000000000000000000018 /* Chromium Renderer Helper */,
+				EE6000000000000000000018 /* Chromium Helper Apps */,
 			);
 			buildRules = (
 			);
@@ -449,7 +449,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		EE6000000000000000000018 /* Chromium Renderer Helper */ = {
+		EE6000000000000000000018 /* Chromium Helper Apps */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -459,14 +459,14 @@
 			);
 			inputPaths = (
 			);
-			name = "Chromium Renderer Helper";
+			name = "Chromium Helper Apps";
 			outputFileListPaths = (
 			);
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -euo pipefail\n# Chromium starts renderers from a \"<helper> (Renderer).app\" beside the helper bundle\n# (ChildProcessHost::GetChildPath on macOS); without it every renderer launch fails.\n# Same executable and entitlements as the XPC helper.\nX=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/XPCServices\"\nNAME=\"owe-chromium-helper (Renderer)\"\nAPP=\"$X/$NAME.app\"\nrm -rf \"$APP\"\nmkdir -p \"$APP/Contents/MacOS\"\ncp \"$X/owe-chromium-helper.xpc/Contents/MacOS/owe-chromium-helper\" \"$APP/Contents/MacOS/$NAME\"\ncp \"$X/owe-chromium-helper.xpc/Contents/Info.plist\" \"$APP/Contents/Info.plist\"\nplutil -replace CFBundleExecutable -string \"$NAME\" \"$APP/Contents/Info.plist\"\nplutil -replace CFBundleIdentifier -string \"com.winddog.wallpaper-engine.chromium-helper.renderer\" \"$APP/Contents/Info.plist\"\nplutil -replace CFBundlePackageType -string APPL \"$APP/Contents/Info.plist\"\nplutil -remove XPCService \"$APP/Contents/Info.plist\"\nif [ -n \"${EXPANDED_CODE_SIGN_IDENTITY:-}\" ]; then\n  codesign --force --sign \"$EXPANDED_CODE_SIGN_IDENTITY\" --options runtime ${OTHER_CODE_SIGN_FLAGS:-} --entitlements \"${SRCROOT}/OWEChromiumHelper/OWEChromiumHelper.entitlements\" \"$APP\"\nfi\n";
+			shellScript = "set -euo pipefail\n# CEF's helper apps, in CEF's macOS naming: \"<helper>.app\" and its (Renderer), (GPU) and (Plugin)\n# variants, which Chromium launches by name. The installer copies them into the engine bundle\n# (<version>/OWE Chromium.app/Contents/Frameworks) beside the framework, so CEF's sandbox, which\n# allows its main bundle, covers them. Same executable and entitlements as the XPC helper.\nHELPERS=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Helpers\"\nSOURCE=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/XPCServices/owe-chromium-helper.xpc/Contents\"\nrm -rf \"$HELPERS\"\nmkdir -p \"$HELPERS\"\nfor VARIANT in \"\" \" (Renderer)\" \" (GPU)\" \" (Plugin)\"; do\n  NAME=\"OWE Chromium Helper$VARIANT\"\n  SUFFIX=$(printf '%s' \"$VARIANT\" | tr -d ' ()' | tr '[:upper:]' '[:lower:]')\n  APP=\"$HELPERS/$NAME.app\"\n  mkdir -p \"$APP/Contents/MacOS\"\n  cp \"$SOURCE/MacOS/owe-chromium-helper\" \"$APP/Contents/MacOS/$NAME\"\n  cp \"$SOURCE/Info.plist\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleExecutable -string \"$NAME\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleName -string \"$NAME\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleDisplayName -string \"$NAME\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleIdentifier -string \"com.winddog.wallpaper-engine.chromium-helper${SUFFIX:+.$SUFFIX}.app\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundlePackageType -string APPL \"$APP/Contents/Info.plist\"\n  plutil -remove XPCService \"$APP/Contents/Info.plist\"\n  if [ -n \"${EXPANDED_CODE_SIGN_IDENTITY:-}\" ]; then\n    codesign --force --sign \"$EXPANDED_CODE_SIGN_IDENTITY\" --options runtime ${OTHER_CODE_SIGN_FLAGS:-} --entitlements \"${SRCROOT}/OWEChromiumHelper/OWEChromiumHelper.entitlements\" \"$APP\"\n  fi\ndone\nrm -rf \"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/XPCServices/owe-chromium-helper (Renderer).app\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
