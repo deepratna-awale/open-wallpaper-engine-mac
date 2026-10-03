@@ -100,6 +100,38 @@ final class LivePhotoTests: XCTestCase {
         XCTAssertEqual(clip.keyFrameSeconds, 1.5, accuracy: 1e-9)
     }
 
+    func testClipLengthIsAtMostThreeSecondsAndBoundsTheStart() {
+        let short = LivePhotoClip(start: 100, length: 1)
+        XCTAssertEqual(short.frameCount, 30)
+        XCTAssertEqual(short.start, LivePhotoClip.timelineLength - 1)
+        XCTAssertEqual(LivePhotoClip(length: 10).length, LivePhotoClip.duration)
+    }
+
+    // MARK: Helper job
+
+    func testJobRoundTripsTheCropClipAndProperties() throws {
+        let crop = LivePhotoCrop(sceneSize: landscape, outputPixels: IPhoneModel.pro.pixelSize, zoom: 2,
+                                 center: SIMD2(300, 400))
+        let clip = LivePhotoClip(start: 4.5)
+        let job = LivePhotoJob(wallpaperDirectory: URL(filePath: "/tmp/w", directoryHint: .isDirectory),
+                               properties: ["schemecolor": "1 0 0"], crop: crop, clip: clip,
+                               still: URL(filePath: "/tmp/a.HEIC"), movie: URL(filePath: "/tmp/a.MOV"), identifier: "id")
+        let decoded = try JSONDecoder().decode(LivePhotoJob.self, from: JSONEncoder().encode(job))
+        XCTAssertEqual(decoded, job)
+        XCTAssertEqual(decoded.crop, crop)
+        XCTAssertEqual(decoded.clip, clip)
+        XCTAssertEqual(decoded.properties["schemecolor"], "1 0 0")
+        XCTAssertNil(LivePhotoJob(wallpaperDirectory: URL(filePath: "/tmp/w"), properties: [:], crop: crop, clip: clip,
+                                  still: nil, movie: URL(filePath: "/tmp/p.MOV"), identifier: "p").still)
+    }
+
+    func testProgressLinesParse() {
+        let line = LivePhotoJob.progressLine(0.25)
+        XCTAssertEqual(LivePhotoJob.progress(fromLine: Substring(line.dropLast())), 0.25)
+        XCTAssertNil(LivePhotoJob.progress(fromLine: "something else"))
+        XCTAssertEqual(LivePhotoJob.progress(fromLine: Substring(LivePhotoJob.progressLine(7).dropLast())), 1)
+    }
+
     // MARK: Render policy
 
     func testExportHidesClockLayersIsMutedAndRendersAtFullDetail() {

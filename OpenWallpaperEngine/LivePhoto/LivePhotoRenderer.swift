@@ -3,10 +3,13 @@ import CoreGraphics
 import Metal
 
 /// Renders a scene wallpaper's clip as a Live Photo (a HEIC still and an HEVC movie paired by one
-/// content identifier) or as preview frames.
+/// content identifier), or as the clip's movie alone for its preview, in the app's helper run
+/// (`ShaderPrewarmCommand`, `--render-live-photo`): in its own process, never on the app's main
+/// or render thread. The app shows the progress the helper reports and shares the files
+/// (`LivePhotoHelper`).
 ///
 /// The scene is loaded by the real loader and drawn offscreen by its own real renderer, as the
-/// screen saver's loop is (`ScreenSaverLoopRenderer`): the stored user properties, no sound, a
+/// screen saver's loop is (`ScreenSaverLoopRenderer`): the job's user properties, no sound, a
 /// silent spectrum, the clock, day and date layers hidden (iOS draws its own,
 /// `SceneClockLayers`), on a fixed frame step from load, so frame `i` shows scene time
 /// `i / frameRate`. The whole scene is drawn at `LivePhotoCrop.renderScale` (never below its
@@ -14,13 +17,6 @@ import Metal
 /// crop is cut out at the phone's exact pixel size.
 @MainActor
 final class LivePhotoRenderer {
-    struct Files {
-        let directory: URL
-        let still: URL
-        let movie: URL
-        let identifier: String
-    }
-
     enum Failure: LocalizedError {
         case noScene, loadTimedOut, readBack, movie
 
@@ -41,13 +37,14 @@ final class LivePhotoRenderer {
     }
 
     let wallpaper: WEWallpaper
-    /// The user properties it renders with: the store the inspector edits.
-    let properties: WallpaperPropertyScope
+    let defaults: UserDefaults
     var timeoutSeconds: TimeInterval = 120
 
-    init(wallpaper: WEWallpaper, properties: WallpaperPropertyScope = .shared) {
+    /// `defaults`: the helper's read-only view of the app's (`UserDefaults.app`); the job's
+    /// properties are written to its scratch suite, never to the app's.
+    init(wallpaper: WEWallpaper, defaults: UserDefaults = .app) {
         self.wallpaper = wallpaper
-        self.properties = properties
+        self.defaults = defaults
     }
 
     /// The export's quality: the user's settings with WE's full scene detail, no upscaling and
@@ -71,66 +68,65 @@ final class LivePhotoRenderer {
         renderer.audioSpectrumFrame = { _ in .silent }
     }
 
-    /// The app's cache folder for exports; each export gets its own folder in it.
-    static var cacheDirectory: URL {
-        let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-        return caches.appending(path: Bundle.main.bundleIdentifier ?? "OpenWallpaperEngine", directoryHint: .isDirectory)
-            .appending(path: "LivePhoto", directoryHint: .isDirectory)
-    }
+    // MARK: Helper run
 
-    static func remove(_ files: Files) {
-        try? FileManager.default.removeItem(at: files.directory)
-    }
-
-    /// Removes earlier exports' folders (a crash or quit left them).
-    static func removeStaleExports() {
-        try? FileManager.default.removeItem(at: cacheDirectory)
-    }
-
-    // MARK: Export
-
-    /// Renders the Live Photo into a new folder under `cacheDirectory`. `progress` gets 0…1.
-    func export(crop: LivePhotoCrop, clip: LivePhotoClip, progress: @escaping (Double) -> Void) async throws -> Files {
-        let identifier = UUID().uuidString
-        let directory = Self.cacheDirectory.appending(path: identifier, directoryHint: .isDirectory)
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let base = Self.fileName(wallpaper.project.displayTitle)
-        let files = Files(directory: directory, still: directory.appending(path: base + ".HEIC"),
-                          movie: directory.appending(path: base + ".MOV"), identifier: identifier)
-        do {
-            try await write(files, crop: crop, clip: clip, progress: progress)
-            return files
-        } catch {
-            Self.remove(files)
-            throw error
+    /// The helper's work: renders `job`, writing progress lines to standard output; 0 when done.
+    static func run(_ job: LivePhotoJob) -> Int32 {
+        guard let crop = job.crop,
+              let wallpaper = InstalledLibrary.wallpaper(at: URL(filePath: job.wallpaperDirectory, directoryHint: .isDirectory), hiding: []),
+              wallpaper.project.type.caseInsensitiveCompare("scene") == .orderedSame else {
+            OWELog.error(.app, "Live Photo: bad job for \(job.wallpaperDirectory)")
+            return 2
         }
+        let renderer = LivePhotoRenderer(wallpaper: wallpaper)
+        renderer.useProperties(job.properties)
+        var status: Int32?
+        Task { @MainActor in
+            do {
+                try await renderer.write(job, crop: crop) { fraction in
+                    FileHandle.standardOutput.write(Data(LivePhotoJob.progressLine(fraction).utf8))
+                }
+                status = 0
+            } catch {
+                OWELog.error(.app, "Live Photo: \(wallpaper.wallpaperDirectory.lastPathComponent) failed: \(error)")
+                status = 1
+            }
+        }
+        while status == nil { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
+        return status ?? 1
     }
 
-    /// The clip's frames at `crop`'s output size, for previewing the loop.
-    func previewFrames(crop: LivePhotoCrop, clip: LivePhotoClip, progress: @escaping (Double) -> Void) async throws -> [CGImage] {
-        var frames: [CGImage] = []
-        try await render(crop: crop, clip: clip, progress: progress) { _, image in frames.append(image) }
-        return frames
+    /// The scene loads with `values` as its stored user properties (the shared store).
+    func useProperties(_ values: [String: String]) {
+        let identity = WallpaperSettingsIdentity.resolve(wallpaper, defaults: defaults)
+        defaults.set(values, forKey: identity.key(.userProperties, scope: .shared))
+        defaults.set(true, forKey: identity.key(.explicitUserProperties, scope: .shared))
     }
 
-    private func write(_ files: Files, crop: LivePhotoCrop, clip: LivePhotoClip, progress: @escaping (Double) -> Void) async throws {
+    /// Writes the job's movie, and its still when it has one.
+    func write(_ job: LivePhotoJob, crop: LivePhotoCrop, progress: @escaping (Double) -> Void) async throws {
+        let clip = job.clip
         var stillAdaptor: AVAssetWriterInputMetadataAdaptor?
-        guard let writer = HEVCWriter(url: files.movie, pixelSize: crop.outputPixels, frameRate: LivePhotoClip.frameRate,
+        let paired = job.still != nil
+        guard let writer = HEVCWriter(url: job.movie, pixelSize: crop.outputPixels, frameRate: LivePhotoClip.frameRate,
                                       prepare: { writer in
-                                          writer.metadata = [LivePhotoMetadata.contentIdentifierItem(files.identifier)]
+                                          guard paired else { return }
+                                          writer.metadata = [LivePhotoMetadata.contentIdentifierItem(job.identifier)]
                                           stillAdaptor = try LivePhotoMetadata.addStillImageTimeInput(to: writer)
-                                      }), let stillAdaptor else { throw Failure.movie }
-        // The still's moment is known up front: written first, its track is done before the frames.
-        let keyTime = CMTime(value: CMTimeValue(clip.keyFrameIndex), timescale: CMTimeScale(LivePhotoClip.frameRate))
-        guard stillAdaptor.append(LivePhotoMetadata.stillImageTimeGroup(at: keyTime, frameRate: LivePhotoClip.frameRate)) else {
-            writer.cancel()
-            throw Failure.movie
+                                      }) else { throw Failure.movie }
+        if let stillAdaptor {
+            // The still's moment is known up front: written first, its track is done before the frames.
+            let keyTime = CMTime(value: CMTimeValue(clip.keyFrameIndex), timescale: CMTimeScale(LivePhotoClip.frameRate))
+            guard stillAdaptor.append(LivePhotoMetadata.stillImageTimeGroup(at: keyTime, frameRate: LivePhotoClip.frameRate)) else {
+                writer.cancel()
+                throw Failure.movie
+            }
+            stillAdaptor.assetWriterInput.markAsFinished()
         }
-        stillAdaptor.assetWriterInput.markAsFinished()
         do {
             try await render(crop: crop, clip: clip, progress: progress) { index, image in
-                if index == clip.keyFrameIndex {
-                    try LivePhotoMetadata.writeStill(image, to: files.still, identifier: files.identifier)
+                if index == clip.keyFrameIndex, let still = job.still {
+                    try LivePhotoMetadata.writeStill(image, to: still, identifier: job.identifier)
                 }
                 guard writer.append(image, overlay: nil, weight: 0, frame: index) else { throw Failure.movie }
             }
@@ -154,8 +150,8 @@ final class LivePhotoRenderer {
         let services = SceneScriptServices(prelude: SceneScriptPrelude.load(),
                                            storage: SceneScriptStorage(directory: scratch),
                                            media: SilentMediaSession(), spectrum: { .silent })
-        let model = SceneWallpaperViewModel(wallpaper: wallpaper, propertyScope: properties)
-        let settings = Self.renderSettings(from: ScreenSaverLoopRenderer.globalSettings(from: .standard))
+        let model = SceneWallpaperViewModel(wallpaper: wallpaper)
+        let settings = Self.renderSettings(from: ScreenSaverLoopRenderer.globalSettings(from: defaults))
         model.setRenderSettings(settings)
         guard let content = model.metalContent(),
               let renderer = SceneMetalRenderer(pixelFormat: .bgra8Unorm, scriptServices: services,

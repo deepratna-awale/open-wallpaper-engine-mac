@@ -38,6 +38,15 @@ final class SceneWallpaperInstance {
     var renderer: SceneMetalRenderer? { renderLoop.renderer }
     /// A display drew the live scene (set on main after the render thread's first frame).
     var hasContent = false
+    /// Silences the instance whatever the playback settings: a preview that started it (the
+    /// Scene Inspector's iPhone mode) never plays sound.
+    var isMuted = false {
+        didSet {
+            guard isMuted != oldValue else { return }
+            let gain = soundGain
+            renderLoop.perform { $0.sounds.setTargetGain(gain) }
+        }
+    }
     private let hasRenderer: Bool
     private let environment: SceneWallpaperEnvironment
     private var displays: [ObjectIdentifier: Display] = [:]
@@ -250,7 +259,7 @@ final class SceneWallpaperInstance {
     /// several instances (displays with different properties) plays from one of them. The playback
     /// rules silence it only when every display showing the wallpaper is muted, paused or stopped.
     private var soundGain: Float {
-        guard let wallpapers = environment.wallpapers, wallpapers.playsAudio(for: key), sceneMusicEnabled,
+        guard !isMuted, let wallpapers = environment.wallpapers, wallpapers.playsAudio(for: key), sceneMusicEnabled,
               wallpapers.playRate != 0, wallpapers.wallpaperPlayback(of: key).playsSound else { return 0 }
         return wallpapers.playVolume * sceneMusicVolume
     }

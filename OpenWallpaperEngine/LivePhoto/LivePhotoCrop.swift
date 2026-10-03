@@ -143,6 +143,7 @@ struct LivePhotoCrop: Equatable {
 
 /// The ~3 s of the scene a Live Photo moves through: Live Photo motion is limited to about 3 s.
 struct LivePhotoClip: Equatable {
+    /// The longest clip, and the default.
     static let duration = 3.0
     static let frameRate = 30
     /// How far into the scene a clip can start, plus its length: the scrubber's range.
@@ -150,18 +151,24 @@ struct LivePhotoClip: Equatable {
 
     /// Seconds of scene time from load to the clip's first frame.
     private(set) var start: Double = 0
+    /// The clip's length in seconds: one frame up to `duration`.
+    let length: Double
 
-    init(start: Double = 0) { setStart(start) }
+    init(start: Double = 0, length: Double = LivePhotoClip.duration) {
+        let frame = 1 / Double(Self.frameRate)
+        self.length = length.isFinite ? min(max(length, frame), Self.duration) : Self.duration
+        setStart(start)
+    }
 
     static var latestStart: Double { timelineLength - duration }
 
     mutating func setStart(_ value: Double) {
-        start = value.isFinite ? min(max(value, 0), Self.latestStart) : 0
+        start = value.isFinite ? min(max(value, 0), Self.timelineLength - length) : 0
     }
 
-    var end: Double { start + Self.duration }
+    var end: Double { start + length }
     /// Frames in the clip.
-    var frameCount: Int { Int((Self.duration * Double(Self.frameRate)).rounded()) }
+    var frameCount: Int { max(1, Int((length * Double(Self.frameRate)).rounded())) }
     /// Frames rendered (not kept) before the first, so particles and scripts have run to `start`.
     var leadInFrames: Int { Int((start * Double(Self.frameRate)).rounded()) }
     /// The still: the clip's middle frame.
