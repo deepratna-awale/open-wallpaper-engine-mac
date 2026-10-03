@@ -55,8 +55,10 @@ struct ShaderPrewarm {
     func run(_ targets: [ShaderPrewarmTargets.Target]) -> Report {
         let started = Date()
         let translator = ShaderVariantTranslator(
-            compiler: ShaderCompilerFactory.makeDefault(stateDirectory: variantCacheDirectory?.deletingLastPathComponent()
-                .appending(path: "shader-compiler", directoryHint: .isDirectory)),
+            compiler: ShaderCompilerFactory.makeIsolated(
+                qos: .background,
+                inProcessStateDirectory: variantCacheDirectory?.deletingLastPathComponent()
+                    .appending(path: "shader-compiler", directoryHint: .isDirectory)),
             cacheDirectory: variantCacheDirectory)
         let variantsBefore: Int = Self.fileCount(in: translator.generationDirectory)
         // Held for the whole run, so every scene's pipelines go into one write.
