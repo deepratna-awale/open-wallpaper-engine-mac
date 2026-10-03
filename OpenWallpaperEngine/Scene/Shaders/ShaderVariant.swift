@@ -58,7 +58,8 @@ final class ShaderVariantTranslator {
     let cacheDirectory: URL?
     /// `<cacheDirectory>/<generation>`: every variant this revision and compiler can produce.
     let generationDirectory: URL?
-    /// The compiler's backend, versions and options (`ShaderCompiler.cacheFingerprint`); names
+    /// The compiler's backend, versions and options (`ShaderCompiler.cacheFingerprint`) and the
+    /// Metal compiler's OS build (`ShaderToolchainVersions.fingerprint`); names
     /// `generationDirectory` and keys every variant.
     let toolchainFingerprint: String
     /// Where the source a compiler step rejected is written, one file per shader and stage: the
@@ -78,7 +79,7 @@ final class ShaderVariantTranslator {
         self.compiler = compiler
         self.cacheDirectory = cacheDirectory
         self.failureDirectory = failureDirectory
-        toolchainFingerprint = compiler.cacheFingerprint
+        toolchainFingerprint = ShaderToolchainVersions.fingerprint(compiler: compiler.cacheFingerprint)
         let generation = Self.generation(toolchain: toolchainFingerprint)
         generationDirectory = cacheDirectory?.appending(path: generation, directoryHint: .isDirectory)
         if let cacheDirectory {
