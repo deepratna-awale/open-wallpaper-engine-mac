@@ -422,7 +422,8 @@ struct WallpaperPreview: SubviewOfContentView {
                 .blur(radius: wallpaperViewModel.displayedWallpaper.project == .invalid ? 16.0 : 0)
                 .overlay {
                     if wallpaperViewModel.displayedWallpaper.project == .invalid {
-                        Text("Please select a valid wallpaper")
+                        Text(verbatim: AppLanguage.string("Please select a valid wallpaper",
+                                                           setting: AppDelegate.shared.globalSettingsViewModel.settings.language))
                     }
                 }
                 .disabled(wallpaperViewModel.displayedWallpaper.project == .invalid ? true : false)
