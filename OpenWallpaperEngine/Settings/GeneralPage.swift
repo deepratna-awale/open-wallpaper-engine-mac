@@ -23,6 +23,7 @@ struct GeneralPage: SettingsPage {
             Section {
                 Toggle("Start with macOS", isOn: $viewModel.settings.autoStart)
                     .changedFromDefault(viewModel.isChanged(\.autoStart))
+                    .help("Opens Open Wallpaper Engine when you log in to your Mac. Off by default.")
             } header: {
                 Label("Automatic Startup", systemImage: "star.fill")
             }
@@ -39,6 +40,7 @@ struct GeneralPage: SettingsPage {
                     }
                 }
                 .changedFromDefault(viewModel.isChanged(\.language))
+                .help("The language of the app's windows and menus. Follow System uses your Mac's language; a change applies after the app restarts.")
                 if viewModel.languageChange.needsRelaunch(for: viewModel.settings.language) {
                     HStack {
                         Spacer()
@@ -59,6 +61,7 @@ struct GeneralPage: SettingsPage {
                     Text("Auto").tag(GSAppearance.followSystem)
                 }
                 .changedFromDefault(viewModel.isChanged(\.appearance))
+                .help("Whether the app's windows are light or dark. Auto follows your Mac's appearance.")
             } header: {
                 Label("Appearance", systemImage: "paintpalette.fill")
             }
@@ -67,6 +70,10 @@ struct GeneralPage: SettingsPage {
             Section {
                 Toggle("Adjust Menu Bar Color", isOn: $viewModel.settings.adjustMenuBarTint)
                     .changedFromDefault(viewModel.isChanged(\.adjustMenuBarTint))
+                    .help("While a video or web wallpaper plays, sets the desktop picture to a frame of it, so macOS tints the menu bar to match. Off restores your own picture.")
+                Toggle("Show Wallpaper on Lock Screen", isOn: $viewModel.settings.lockScreenPicture)
+                    .changedFromDefault(viewModel.isChanged(\.lockScreenPicture))
+                    .help("Sets each display's desktop picture to the scene wallpaper's snapshot, so the lock screen shows it. Turning it off restores your own pictures.")
             } header: {
                 Label("macOS", systemImage: "apple.logo")
             }
@@ -81,6 +88,7 @@ struct GeneralPage: SettingsPage {
                         viewModel.isFirstLaunch = true
                         AppDelegate.shared.openMainWindow()
                     }
+                    .help("Opens the setup assistant again, to redo the choices from the first launch.")
                 }
             }
             .settingsAnchor(SettingsAnchor.setup)
@@ -114,6 +122,7 @@ struct KeyboardShortcutsSection: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .help("Lists the keyboard shortcuts of every menu.")
         } footer: {
             Text("The same shortcuts are shown in the menus. You can change them in System Settings › Keyboard › Keyboard Shortcuts › App Shortcuts.")
         }

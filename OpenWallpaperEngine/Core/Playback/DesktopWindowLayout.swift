@@ -37,6 +37,12 @@ struct DisplayConditions: Equatable {
     /// Another application's window covers the whole display, as a native full-screen Space or a
     /// borderless full-screen game does ("Other application fullscreen").
     var fullscreen = false
+    /// The bundle identifier of the application whose window is focused here (Application Rules'
+    /// "is focused").
+    var focusedApplication: String?
+    /// The bundle identifiers of the applications with a window filling this display, full screen
+    /// or maximized (Application Rules' "is fullscreen").
+    var fillingApplications: Set<String> = []
 }
 
 /// Which display each window belongs to, and what that means for the playback rules.
@@ -78,10 +84,12 @@ enum DesktopWindowLayout {
     }
 
     /// Each display's conditions. `windows` are front to back; `frontmostPID` is the active
-    /// application, nil when it is the desktop (Finder) or this app; `ignoredPIDs` are this app's.
+    /// application, nil when it is the desktop (Finder) or this app; `ignoredPIDs` are this app's;
+    /// `bundleIdentifiers` names the applications the application rules mention, by process.
     /// Every display in `displays` gets an entry.
     static func conditions(windows: [DesktopWindow], displays: [DesktopDisplay], frontmostPID: pid_t?,
-                           ignoredPIDs: Set<pid_t>) -> [String: DisplayConditions] {
+                           ignoredPIDs: Set<pid_t>,
+                           bundleIdentifiers: [pid_t: String] = [:]) -> [String: DisplayConditions] {
         var result: [String: DisplayConditions] = [:]
         for display in displays { result[display.id] = DisplayConditions() }
         var focusFound = false
@@ -92,11 +100,18 @@ enum DesktopWindowLayout {
                 // The frontmost application's front window: the one it has focused.
                 focusFound = true
                 conditions.focused = true
+                conditions.focusedApplication = bundleIdentifiers[window.ownerPID]
             }
+            var fills = true
             if coversFrame(window.bounds, of: display) {
                 conditions.fullscreen = true
             } else if coversVisibleArea(window.bounds, of: display) {
                 conditions.maximized = true
+            } else {
+                fills = false
+            }
+            if fills, let application = bundleIdentifiers[window.ownerPID] {
+                conditions.fillingApplications.insert(application)
             }
             result[display.id] = conditions
         }

@@ -8,7 +8,70 @@ import Foundation
 /// archive is moved into `.owe-source/` rather than deleted; reclaiming that space is a separate,
 /// explicit step because the converter is not yet lossless for every Wallpaper Engine feature.
 enum WallpaperPackageConverter {
-    static let converterVersion = 2
+    static let converterVersion = 3
+
+    /// For each converter version, which bundles made by an earlier version it changes. A stale
+    /// bundle no newer rule matches is only stamped current. Add an entry with every bump.
+    static let versionRules: [Int: (Manifest, URL) -> Bool] = [
+        // Version 3 extracts the `workshop/<id>/` asset-pack files version 2 left in the package.
+        // Manifests from before the field was recorded are checked against the files themselves.
+        3: { manifest, directory in
+            if let entries = manifest.dependencyEntries { return !entries.isEmpty }
+            return hasUnresolvedWorkshopReference(in: directory)
+        },
+    ]
+
+    /// Whether any version after the bundle's own changes what this one would produce.
+    static func isAffectedByNewerVersions(_ manifest: Manifest, directory: URL) -> Bool {
+        guard manifest.converterVersion < converterVersion else { return false }
+        return ((manifest.converterVersion + 1)...converterVersion).contains { version in
+            versionRules[version]?(manifest, directory) ?? true
+        }
+    }
+
+    private static let assetCategories = ["", "materials", "models", "particles", "effects", "shaders",
+                                          "scripts", "sounds", "fonts"]
+    private static let workshopReference = try! NSRegularExpression(
+        pattern: #""([^"]*workshop(?:/|\\\\)+[0-9]+(?:/|\\\\)[^"]*)""#)
+
+    /// Whether a JSON file in the bundle (the scene, materials, models, particles, effects) names a
+    /// `workshop/<id>/…` file that neither the bundle nor its dependency links provide. A text scan:
+    /// linked dependency folders are not descended into.
+    static func hasUnresolvedWorkshopReference(in directory: URL, fileManager: FileManager = .default) -> Bool {
+        guard let files = fileManager.enumerator(at: directory, includingPropertiesForKeys: nil,
+                                                 options: [.skipsHiddenFiles]) else { return false }
+        for case let file as URL in files where file.pathExtension.lowercased() == "json" {
+            guard let text = try? String(contentsOf: file, encoding: .utf8), text.contains("workshop") else { continue }
+            let range = NSRange(text.startIndex..., in: text)
+            for match in workshopReference.matches(in: text, range: range) {
+                guard let found = Range(match.range(at: 1), in: text) else { continue }
+                let reference = text[found].replacingOccurrences(of: "\\\\", with: "/")
+                    .split(separator: "/").joined(separator: "/")
+                if !resolves(reference, in: directory, fileManager: fileManager) { return true }
+            }
+        }
+        return false
+    }
+
+    private static func resolves(_ reference: String, in directory: URL, fileManager: FileManager) -> Bool {
+        for category in assetCategories {
+            let base = category.isEmpty ? directory : directory.appending(path: category)
+            for suffix in ["", ".tex", ".json"] {
+                // fileExists follows the dependency links the resolver made.
+                if fileManager.fileExists(atPath: base.appending(path: reference + suffix).path(percentEncoded: false)) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+    /// Records the bundle as made by the current version without converting it again.
+    static func stampCurrent(in wallpaperDirectory: URL) {
+        guard var current = manifest(in: wallpaperDirectory) else { return }
+        current.converterVersion = converterVersion
+        write(current, to: wallpaperDirectory)
+    }
 
     static let manifestName = ".owe-bundle.json"
     static let sourceFolderName = ".owe-source"
@@ -25,8 +88,9 @@ enum WallpaperPackageConverter {
         /// ever removing the archived original.
         var verifiedAt: Date?
         var verifiedObjectCount: Int?
-        /// Entries under `…/workshop/<id>/`, which are not extracted: those paths are where the
-        /// dependency resolver links other Workshop items in. Kept so the references still count.
+        /// Version 2 only: entries under `…/workshop/<id>/` it did not extract. Since version 3 they
+        /// are extracted like any other entry (Wallpaper Engine reads them from the package), and an
+        /// empty list is written so that none is recorded; absent only in manifests older than the field.
         var dependencyEntries: [String]?
     }
 
@@ -67,7 +131,6 @@ enum WallpaperPackageConverter {
 
         var extracted: [String] = []
         var warnings: [String] = []
-        var dependencyEntries: [String] = []
         guard let root = ContainedPath.canonical(wallpaperDirectory) else {
             OWELog.error(.importer, "Convert: can't resolve \(wallpaperDirectory.path)")
             return nil
@@ -79,11 +142,9 @@ enum WallpaperPackageConverter {
                 warnings.append("Skipped unsafe entry path: \(entry)")
                 continue
             }
-            guard !isUnderWorkshopItem(relativePath) else {
-                OWELog.info(.importer, "Convert: not extracting \(entry); workshop/<id>/ paths hold linked dependencies")
-                dependencyEntries.append(relativePath)
-                continue
-            }
+            // Entries under `workshop/<id>/` are the asset-pack files the wallpaper uses, bundled by
+            // the editor. Wallpaper Engine reads them from the package before the installed item,
+            // so they are extracted too; the dependency resolver keeps a real folder it finds there.
             guard let data = parser.extractFile(named: entry) else {
                 warnings.append("Missing data for entry: \(entry)")
                 continue
@@ -149,7 +210,7 @@ enum WallpaperPackageConverter {
                                 convertedAt: Date(),
                                 verifiedAt: nil,
                                 verifiedObjectCount: nil,
-                                dependencyEntries: dependencyEntries.isEmpty ? nil : dependencyEntries)
+                                dependencyEntries: [])
         write(manifest, to: wallpaperDirectory)
 
         OWELog.info(.importer, "Converted \(wallpaperDirectory.lastPathComponent): \(extracted.count) files, \(warnings.count) warnings")
@@ -254,18 +315,6 @@ enum WallpaperPackageConverter {
         guard let data = try? Data(contentsOf: wallpaperDirectory.appending(path: "project.json")),
               let project = try? JSONDecoder().decode(WEProject.self, from: data) else { return nil }
         return project.file.lowercased().hasSuffix(".json") ? project.file : nil
-    }
-
-    /// Whether `path` (a sanitized entry path) lies in a `workshop/<digits>` folder, where the
-    /// dependency resolver links other Workshop items. Backslashes count as separators.
-    static func isUnderWorkshopItem(_ path: String) -> Bool {
-        let components = path.replacingOccurrences(of: "\\", with: "/").split(separator: "/")
-        guard components.count >= 2 else { return false }
-        for index in 0..<(components.count - 1) where components[index].lowercased() == "workshop" {
-            let id = components[index + 1]
-            if !id.isEmpty, id.allSatisfy({ $0 >= "0" && $0 <= "9" }) { return true }
-        }
-        return false
     }
 
     /// PKG entries are authored on Windows and are untrusted input, so reject anything absolute or

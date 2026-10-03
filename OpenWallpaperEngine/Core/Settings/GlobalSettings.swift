@@ -4,6 +4,22 @@ import SwiftUI
 import ServiceManagement
 import Metal
 
+extension GlobalSettings {
+    /// The render resolution and upscaling a quality preset sets: Low draws half of each side and
+    /// upscales it with MetalFX; the others draw at the displays' pixels without upscaling. A
+    /// later choice of the user's stands until a preset is applied again.
+    mutating func applyResolutionPreset(_ quality: GSQuality) {
+        switch quality {
+        case .low:
+            upscaling = .metalFX
+            renderScale = .percent50
+        case .medium, .high, .ultra:
+            upscaling = .off
+            renderResolution = .display
+        }
+    }
+}
+
 enum GSQuality {
     case low, medium, high, ultra
 
@@ -121,12 +137,56 @@ enum GSTextureResolutionQuality: String, CaseIterable, Identifiable, Codable {
     }
 }
 
-/// How many pixels the scene target gets per point of the display (`SceneRenderResolution`):
-/// the display's backing pixels, or one per point (a 2× display drawn at half its pixels and
-/// scaled up), which a lower-resolution display would draw.
+/// What the scene target is sized for (`SceneRenderResolution`): `display` draws at the
+/// displays' size in points (a 2× display's looks-like size, a quarter of its pixels) and the
+/// composite scales the frame up to the backing pixels; `retina` draws at the backing pixels, 1:1;
+/// `full` draws at the wallpaper's authored size and scales that onto the display with WE's
+/// placement. Earlier stored values: "native" reads as `retina`, "desktop" as `display`
+/// (`init(storedValue:)`).
 enum GSRenderResolution: String, CaseIterable, Identifiable, Codable {
     var id: Self { self }
-    case native, desktop
+    case display, retina, full
+
+    /// The choice a stored value means, including the values earlier versions wrote; nil for an
+    /// unknown value.
+    init?(storedValue value: String) {
+        switch value {
+        case "display", "desktop": self = .display
+        case "retina", "native": self = .retina
+        case "full": self = .full
+        default: return nil
+        }
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let value = try container.decode(String.self)
+        guard let resolution = GSRenderResolution(storedValue: value) else {
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unknown render resolution \(value)")
+        }
+        self = resolution
+    }
+}
+
+/// "Upscaling": the scene drawn at `GSRenderScale` of its size and scaled up to it, by MetalFX's
+/// spatial scaler where the GPU and the frame's format allow it, else bilinearly (`SceneUpscaler`).
+enum GSUpscaling: String, CaseIterable, Identifiable, Codable {
+    var id: Self { self }
+    case off, metalFX
+}
+
+/// "Render scale": the share of each side of the scene target drawn when upscaling.
+enum GSRenderScale: String, CaseIterable, Identifiable, Codable {
+    var id: Self { self }
+    case percent50, percent67, percent75
+
+    var factor: Float {
+        switch self {
+        case .percent50: return 0.5
+        case .percent67: return 2.0 / 3
+        case .percent75: return 0.75
+        }
+    }
 }
 
 /// How much detail a scene is drawn with (`SceneDetail`). `full` draws as WE does: the scene
@@ -213,6 +273,8 @@ struct GlobalSettings: Codable, Equatable {
     var otherApplicationPlayingAudio = GSPlayback.keepRunning
     var displayAsleep = GSPlayback.keepRunning
     var laptopOnBattery = GSPlayback.keepRunning
+    /// Settings › Performance › Application Rules (`ApplicationRule`), in the order listed.
+    var applicationRules: [ApplicationRule] = []
     
     // MARK: Quality
     /// WE's default is none (`config.json` `"msaa": "none"`).
@@ -221,8 +283,12 @@ struct GlobalSettings: Codable, Equatable {
     /// engine reads a missing key as "disabled"; docs/lighting-plan.md §5).
     var postProcessing = GSPostProcessingQuality.enabled
     var textureResolution = GSTextureResolutionQuality.automatic
-    /// The scene target's pixels per display point (`GSRenderResolution`).
-    var renderResolution = GSRenderResolution.native
+    /// What the scene target is sized for (`GSRenderResolution`).
+    var renderResolution = GSRenderResolution.display
+    /// "Upscaling" (`GSUpscaling`): off draws the scene at its full size.
+    var upscaling = GSUpscaling.off
+    /// "Render scale" while upscaling (`GSRenderScale`).
+    var renderScale = GSRenderScale.percent75
     /// The scene's detail (`GSSceneDetail`); drawing no more than the display shows is the default.
     var sceneDetail = GSSceneDetail.matchDisplay
     /// WE's `reflection` setting (default on): the screen-space reflection copy.
@@ -263,6 +329,12 @@ struct GlobalSettings: Codable, Equatable {
     
     // MARK: macOS
     var adjustMenuBarTint = true
+    /// The lock screen shows the scene wallpaper: each display's desktop picture is the scene's
+    /// loading snapshot (`LockScreenPicture`). On by default; off puts the user's pictures back.
+    var lockScreenPicture = true
+    /// Settings › Plugins › Screen Saver: the current scene's loop video plays as the screen saver
+    /// (`ScreenSaverPlugin`). On by default: the saver is installed for the user to pick.
+    var screenSaver = true
     
     // MARK: Appearance
     var appearance = GSAppearance.followSystem
@@ -278,18 +350,23 @@ struct GlobalSettings: Codable, Equatable {
     /// WE's "Media integration support" (`mediaintegration`, on by default): wallpapers hear the
     /// system's Now Playing session (`MacMediaSessionSource`).
     var mediaIntegration = true
-    var reloadWhenChangingOutputDevice = true // Not putting in use
+    /// WE's "Reload when changing output device": the running wallpapers reload when the default
+    /// output device changes (`OutputDeviceChangeMonitor`). Capture follows the device either way.
+    var reloadWhenChangingOutputDevice = true
     
     // MARK: Video
     var videoFramework = GSVideoFramework.preferred
     
     // MARK: Advanced
-    var processPiority = GSProcessPiority.normal // Not putting in use
-    var pauseOnVRAMExhausted = false // Not putting in use
-    var restartAfterCrashing = false // Not putting in use
+    /// WE's process priority (`ProcessPriority`): the app's nice value and its threads' QoS.
+    var processPiority = GSProcessPiority.normal
+    /// Pauses playback while the GPU's video memory is exhausted (`VideoMemoryWatch`).
+    var pauseOnVRAMExhausted = false
+    /// Reopens the app after a crash (`CrashWatcher`, `CrashRelaunchPolicy`). Off by default.
+    var restartAfterCrashing = false
     
     // MARK: Developer
-    var logLevel = GSLogLevel.none
+    var logLevel = GSLogLevel.error
     
     // MARK: Misc
     var autoRefresh = true
@@ -300,17 +377,21 @@ struct GlobalSettings: Codable, Equatable {
     /// are left behind.
     enum CodingKeys: String, CodingKey {
         case otherApplicationFocused, otherApplicationMaximized, otherApplicationFullscreen, otherApplicationPlayingAudio
-        case displayAsleep
+        case displayAsleep, applicationRules
         case laptopOnBattery, textureResolution, shadows, volumetrics, fps, fpsSetByUser, particleBudget, optimiseTextures
         case webStandardResolution, reducedResolutionParticles
         case qualityEfficiency
         case antiAliasing = "msaa"
-        case renderResolution, sceneDetail
+        case renderResolution, sceneDetail, upscaling, renderScale
         case postProcessing = "postProcessingQuality"
         case reflections = "reflection"
         case autoStart, safeMode, language, adjustMenuBarTint, appearance, audioOutput
+        case lockScreenPicture, screenSaver
         case reloadWhenChangingOutputDevice, videoFramework, processPiority, pauseOnVRAMExhausted
-        case restartAfterCrashing, logLevel, autoRefresh
+        case restartAfterCrashing, autoRefresh
+        /// Moved when Errors Only became the default: the old `logLevel` key can't tell the old
+        /// default (None) from a chosen None.
+        case logLevel = "logLevelChoice"
         case syncPropertiesAcrossDisplays
         case mediaIntegration
         case cheaperShadows
@@ -318,6 +399,9 @@ struct GlobalSettings: Codable, Equatable {
 }
 
 extension GlobalSettings {
+    /// Keys settings were saved under before, read once to carry the user's choice over.
+    private enum LegacyKeys: String, CodingKey { case logLevel }
+
     /// Reads each stored setting on its own: a key that is missing (a setting added since the
     /// settings were saved) or unreadable keeps its default, and the others are kept.
     init(from decoder: Decoder) throws {
@@ -336,11 +420,16 @@ extension GlobalSettings {
         read(.otherApplicationPlayingAudio, &otherApplicationPlayingAudio)
         read(.displayAsleep, &displayAsleep)
         read(.laptopOnBattery, &laptopOnBattery)
+        var ruleList = ApplicationRuleList()
+        read(.applicationRules, &ruleList)
+        applicationRules = ruleList.rules
         read(.antiAliasing, &antiAliasing)
         read(.postProcessing, &postProcessing)
         read(.textureResolution, &textureResolution)
         read(.renderResolution, &renderResolution)
         read(.sceneDetail, &sceneDetail)
+        read(.upscaling, &upscaling)
+        read(.renderScale, &renderScale)
         read(.reflections, &reflections)
         read(.shadows, &shadows)
         read(.volumetrics, &volumetrics)
@@ -356,6 +445,8 @@ extension GlobalSettings {
         read(.safeMode, &safeMode)
         read(.language, &language)
         read(.adjustMenuBarTint, &adjustMenuBarTint)
+        read(.lockScreenPicture, &lockScreenPicture)
+        read(.screenSaver, &screenSaver)
         read(.appearance, &appearance)
         read(.audioOutput, &audioOutput)
         read(.reloadWhenChangingOutputDevice, &reloadWhenChangingOutputDevice)
@@ -363,7 +454,14 @@ extension GlobalSettings {
         read(.processPiority, &processPiority)
         read(.pauseOnVRAMExhausted, &pauseOnVRAMExhausted)
         read(.restartAfterCrashing, &restartAfterCrashing)
-        read(.logLevel, &logLevel)
+        if container.contains(.logLevel) {
+            read(.logLevel, &logLevel)
+        } else if let legacy = try? decoder.container(keyedBy: LegacyKeys.self),
+                  let stored = try? legacy.decodeIfPresent(GSLogLevel.self, forKey: .logLevel),
+                  stored != .none {
+            // A stored None was the old default, so it becomes the new one, Errors Only.
+            logLevel = stored
+        }
         read(.autoRefresh, &autoRefresh)
         read(.syncPropertiesAcrossDisplays, &syncPropertiesAcrossDisplays)
         read(.mediaIntegration, &mediaIntegration)

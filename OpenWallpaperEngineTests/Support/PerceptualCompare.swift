@@ -1,6 +1,7 @@
 import Accelerate
 import CoreGraphics
 import Foundation
+@testable import OpenWallpaperEngine
 
 /// An opaque 8-bit sRGB frame for perceptual comparison. Alpha is ignored: rendered wallpaper
 /// frames are composited over black, so colour is what the viewer sees.
@@ -143,28 +144,30 @@ enum PerceptualCompare {
     /// K1 = 0.01, K2 = 0.03, L = 1), averaged over `mask` when given. Computed at full
     /// resolution, without the usual downsampling, so 1-px shifts of thin strokes register.
     static func ssim(_ a: PerceptualImage, _ b: PerceptualImage, mask: PerceptualMask? = nil) -> Double {
-        precondition(a.width == b.width && a.height == b.height, "SSIM needs equal sizes")
-        let w = a.width, h = a.height, n = w * h
-        let x = a.luma(), y = b.luma()
-        var xx = [Float](repeating: 0, count: n), yy = xx, xy = xx
-        vDSP_vsq(x, 1, &xx, 1, vDSP_Length(n))
-        vDSP_vsq(y, 1, &yy, 1, vDSP_Length(n))
-        vDSP_vmul(x, 1, y, 1, &xy, 1, vDSP_Length(n))
-        let mx = blur(x, w, h), my = blur(y, w, h)
-        let sxx = blur(xx, w, h), syy = blur(yy, w, h), sxy = blur(xy, w, h)
-        let c1: Float = 0.01 * 0.01, c2: Float = 0.03 * 0.03
-        var sum = 0.0
-        var count = 0
-        for i in 0..<n {
-            if let mask, !mask.bits[i] { continue }
-            let ux = mx[i], uy = my[i]
-            let vx = sxx[i] - ux * ux, vy = syy[i] - uy * uy, cov = sxy[i] - ux * uy
-            let num = (2 * ux * uy + c1) * (2 * cov + c2)
-            let den = (ux * ux + uy * uy + c1) * (vx + vy + c2)
-            sum += Double(num / den)
-            count += 1
+        OWEPhaseTiming.measure(.compare) { () -> Double in
+            precondition(a.width == b.width && a.height == b.height, "SSIM needs equal sizes")
+            let w = a.width, h = a.height, n = w * h
+            let x = a.luma(), y = b.luma()
+            var xx = [Float](repeating: 0, count: n), yy = xx, xy = xx
+            vDSP_vsq(x, 1, &xx, 1, vDSP_Length(n))
+            vDSP_vsq(y, 1, &yy, 1, vDSP_Length(n))
+            vDSP_vmul(x, 1, y, 1, &xy, 1, vDSP_Length(n))
+            let mx = blur(x, w, h), my = blur(y, w, h)
+            let sxx = blur(xx, w, h), syy = blur(yy, w, h), sxy = blur(xy, w, h)
+            let c1: Float = 0.01 * 0.01, c2: Float = 0.03 * 0.03
+            var sum = 0.0
+            var count = 0
+            for i in 0..<n {
+                if let mask, !mask.bits[i] { continue }
+                let ux = mx[i], uy = my[i]
+                let vx = sxx[i] - ux * ux, vy = syy[i] - uy * uy, cov = sxy[i] - ux * uy
+                let num = (2 * ux * uy + c1) * (2 * cov + c2)
+                let den = (ux * ux + uy * uy + c1) * (vx + vy + c2)
+                sum += Double(num / den)
+                count += 1
+            }
+            return count == 0 ? 1 : sum / Double(count)
         }
-        return count == 0 ? 1 : sum / Double(count)
     }
 
     /// 99th percentile of the per-pixel CIEDE2000 colour difference, over `mask` when given.
@@ -174,32 +177,34 @@ enum PerceptualCompare {
 
     static func deltaEPercentile(_ a: PerceptualImage, _ b: PerceptualImage, percentile: Double,
                                  mask: PerceptualMask? = nil) -> Double {
-        precondition(a.width == b.width && a.height == b.height, "ΔE needs equal sizes")
-        let lut = linearLUT
-        var cache: [UInt32: Lab] = [:]
-        func lab(_ p: UnsafeBufferPointer<UInt8>, _ o: Int) -> Lab {
-            let key = UInt32(p[o]) << 16 | UInt32(p[o + 1]) << 8 | UInt32(p[o + 2])
-            if let hit = cache[key] { return hit }
-            let v = Lab(r: lut[Int(p[o])], g: lut[Int(p[o + 1])], b: lut[Int(p[o + 2])])
-            cache[key] = v
-            return v
-        }
-        var values: [Double] = []
-        values.reserveCapacity(mask?.count ?? a.width * a.height)
-        a.rgba.withUnsafeBufferPointer { pa in
-            b.rgba.withUnsafeBufferPointer { pb in
-                for i in 0..<(a.width * a.height) {
-                    if let mask, !mask.bits[i] { continue }
-                    let o = i * 4
-                    if pa[o] == pb[o], pa[o + 1] == pb[o + 1], pa[o + 2] == pb[o + 2] { values.append(0); continue }
-                    values.append(ciede2000(lab(pa, o), lab(pb, o)))
+        OWEPhaseTiming.measure(.compare) { () -> Double in
+            precondition(a.width == b.width && a.height == b.height, "ΔE needs equal sizes")
+            let lut = linearLUT
+            var cache: [UInt32: Lab] = [:]
+            func lab(_ p: UnsafeBufferPointer<UInt8>, _ o: Int) -> Lab {
+                let key = UInt32(p[o]) << 16 | UInt32(p[o + 1]) << 8 | UInt32(p[o + 2])
+                if let hit = cache[key] { return hit }
+                let v = Lab(r: lut[Int(p[o])], g: lut[Int(p[o + 1])], b: lut[Int(p[o + 2])])
+                cache[key] = v
+                return v
+            }
+            var values: [Double] = []
+            values.reserveCapacity(mask?.count ?? a.width * a.height)
+            a.rgba.withUnsafeBufferPointer { pa in
+                b.rgba.withUnsafeBufferPointer { pb in
+                    for i in 0..<(a.width * a.height) {
+                        if let mask, !mask.bits[i] { continue }
+                        let o = i * 4
+                        if pa[o] == pb[o], pa[o + 1] == pb[o + 1], pa[o + 2] == pb[o + 2] { values.append(0); continue }
+                        values.append(ciede2000(lab(pa, o), lab(pb, o)))
+                    }
                 }
             }
+            guard !values.isEmpty else { return 0 }
+            values.sort()
+            let rank = Int((Double(values.count - 1) * percentile).rounded(.up))
+            return values[min(rank, values.count - 1)]
         }
-        guard !values.isEmpty else { return 0 }
-        values.sort()
-        let rank = Int((Double(values.count - 1) * percentile).rounded(.up))
-        return values[min(rank, values.count - 1)]
     }
 
     /// Applies §4: the change kind's bar on the whole frame, and SSIM ≥ 0.995 on the text and

@@ -22,8 +22,10 @@ final class SceneFrameHarness {
         _ = try Fixtures.assets()
         self.directory = directory
         self.size = size
-        let project = try JSONDecoder().decode(WEProject.self, from: Data(contentsOf: directory.appending(path: "project.json")))
-        model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory), propertyScope: scope)
+        model = try OWEPhaseTiming.measure(.sceneLoad) {
+            let project = try JSONDecoder().decode(WEProject.self, from: Data(contentsOf: directory.appending(path: "project.json")))
+            return SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory), propertyScope: scope)
+        }
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         view = MTKView(frame: CGRect(x: 0, y: 0, width: size.x, height: size.y), device: device)
         view.colorPixelFormat = .bgra8Unorm
@@ -53,9 +55,9 @@ final class SceneFrameHarness {
     func draw(frames: Int, step: Double = 1.0 / 60) {
         for _ in 0..<frames {
             now += step
-            renderer.draw(in: view)
-            renderer.lastCommandBuffer?.waitUntilCompleted()
-            renderer.scripts.wallpaper?.waitUntilIdle()
+            OWEPhaseTiming.measure(.render, frames: 1) { renderer.draw(in: view) }
+            OWEPhaseTiming.measure(.gpuWait) { renderer.lastCommandBuffer?.waitUntilCompleted() }
+            OWEPhaseTiming.measure(.scripts) { renderer.scripts.wallpaper?.waitUntilIdle() }
             RunLoop.main.run(until: Date().addingTimeInterval(0.001))
         }
     }

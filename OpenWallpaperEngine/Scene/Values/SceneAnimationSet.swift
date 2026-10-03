@@ -305,3 +305,30 @@ final class SceneAnimationSet {
         textures.drawnFrame(object: id, tick: frameCounter, delta: delta)
     }
 }
+
+extension SceneAnimationSet {
+    /// What the timelines say about the scene's period (the screen saver's loop,
+    /// `ScreenSaverLoopLength`): each running clock owner's period, and whether any owner has no
+    /// period (a random start, a one-shot timeline or a rate a script changed). Paused and
+    /// finished clocks hold their value, so they don't count.
+    func loopPeriods() -> (periods: [ScreenSaverLoopLength.Period], aperiodic: Bool) {
+        var periods: [ScreenSaverLoopLength.Period] = []
+        var aperiodic = false
+        for entry in entries where entry.parent == nil {
+            let clock = entry.timeline.clock
+            if clock.flags.contains(.paused) || clock.flags.contains(.finished) || entry.rate == 0 { continue }
+            if clock.flags.contains(.random) || clock.flags.contains(.single) || entry.rate != 1 {
+                aperiodic = true
+                continue
+            }
+            let fps = clock.frameDuration > 0 ? 1 / clock.frameDuration : 0
+            if let period = ScreenSaverLoopLength.Period(timelineLength: clock.length, fps: fps,
+                                                          mirrored: clock.flags.contains(.mirror)) {
+                periods.append(period)
+            } else {
+                aperiodic = true
+            }
+        }
+        return (periods, aperiodic)
+    }
+}

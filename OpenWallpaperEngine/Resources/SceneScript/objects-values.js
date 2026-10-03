@@ -249,7 +249,7 @@
 
     // Defines `iface.member` on `proto` as an inert stub that logs once per runtime and returns
     // `result()` (or nothing). These are WE members that need engine features this app lacks yet
-    // (bones, animation layers, attachments, parenting at runtime, model data, video textures).
+    // (none are left; kept for members a future WE adds).
     objects.stub = function (proto, iface, member, result) {
         const qualified = iface + '.' + member;
         objects.UNSUPPORTED.add(qualified);

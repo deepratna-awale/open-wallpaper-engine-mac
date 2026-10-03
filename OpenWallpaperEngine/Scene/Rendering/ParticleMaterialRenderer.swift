@@ -511,8 +511,10 @@ final class ParticleMaterialRenderer {
             var failure: String?
             var pipeline: MTLRenderPipelineState?
             do {
-                pipeline = try Self.makePipeline(stage, format: format, blending: blending, pixelFormat: pixelFormat,
-                                                 sampleCount: sampleCount, depthFormat: depthFormat, device: device)
+                pipeline = try OWEPhaseTiming.measure(.pipeline) {
+                    try Self.makePipeline(stage, format: format, blending: blending, pixelFormat: pixelFormat,
+                                          sampleCount: sampleCount, depthFormat: depthFormat, device: device)
+                }
             } catch {
                 failure = "\(error)"
                 OWELog.error(.shader, "Particle pipeline failed (\(plan.materialPath), \(stage.geometry)): \(error)")

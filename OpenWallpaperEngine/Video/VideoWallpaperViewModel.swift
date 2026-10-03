@@ -20,10 +20,18 @@ class VideoWallpaperViewModel: ObservableObject {
 
     @Published var currentWallpaper: WEWallpaper {
         didSet {
-            replacePlayers(with: currentWallpaper)
+            preparePlayers(for: currentWallpaper)
             updateMusicSyncCapture()
         }
     }
+
+    /// A copy of the video AVFoundation can play is being made (`RepairedVideoCache`).
+    @Published private(set) var isPreparingVideo = false
+    /// Finds the file the players open, off the main thread.
+    private var preparation: Task<Void, Never>?
+    /// Identifies the preparation in flight; nil once its file is open.
+    private var pendingPreparation: UUID?
+    private var stopped = false
 
     var playRate: Float = 0 {
         didSet {
@@ -75,18 +83,13 @@ class VideoWallpaperViewModel: ObservableObject {
         self.currentWallpaper = currentWallpaper
         self.playsAudio = wallpaperViewModel.playsInstanceAudio
         self.wallpaperViewModel = wallpaperViewModel
-        self.player = WallpaperAVPlayer.make(item: AVPlayerItem(url: currentWallpaper.mediaURL))
-        self.audioPlayer = WallpaperAVPlayer.make(item: AVPlayerItem(url: currentWallpaper.mediaURL))
         self.player.isMuted = true
         // The default `.pause` drops the rate to 0 at the end, and the rate cache then never sets
         // it back, so the video stopped after one pass. With `.none` it keeps its rate across the
         // seek back to the start.
         self.player.actionAtItemEnd = .none
         self.audioPlayer.actionAtItemEnd = .none
-        self.audioPlayer.currentItem?.audioTimePitchAlgorithm = .timeDomain
         self.audioPlayer.isMuted = !playsAudio
-        if let audioItem = self.audioPlayer.currentItem { ownAudioTap.attach(to: audioItem) }
-        observeItemEnd(of: self.player.currentItem)
         // Block-based observers with a weak target, so this instance can still deinit (and stop
         // playback) when the wallpaper view is torn down instead of being kept alive forever.
         sleepObserver = NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.screensDidSleepNotification, object: nil, queue: .main) { [weak self] _ in
@@ -139,10 +142,16 @@ class VideoWallpaperViewModel: ObservableObject {
             .store(in: &cancellables)
         playVolume = wallpaperViewModel.playVolume
         playRate = wallpaperViewModel.playRate
+        preparePlayers(for: currentWallpaper)
     }
 
     /// Stops playback for good: no display shows the video any more.
     func stop() {
+        stopped = true
+        preparation?.cancel()
+        preparation = nil
+        pendingPreparation = nil
+        isPreparingVideo = false
         cancellables.removeAll()
         musicSyncCaptureLease = nil
         probeTimer?.invalidate()
@@ -154,6 +163,7 @@ class VideoWallpaperViewModel: ObservableObject {
     }
 
     deinit {
+        preparation?.cancel()
         player.pause()
         audioPlayer.pause()
         if let itemEndObserver { NotificationCenter.default.removeObserver(itemEndObserver) }
@@ -275,12 +285,42 @@ class VideoWallpaperViewModel: ObservableObject {
         }
     }
 
-    private func replacePlayers(with wallpaper: WEWallpaper) {
+    /// Opens the wallpaper's video in the players once the file to open is known: a video whose
+    /// track AVFoundation refuses as it is plays from its repaired copy, which is made first when
+    /// it doesn't exist yet (a few seconds, shown as "Preparing video…").
+    private func preparePlayers(for wallpaper: WEWallpaper) {
+        preparation?.cancel()
+        pendingPreparation = nil
+        isPreparingVideo = false
+        let source = wallpaper.mediaURL
+        guard RepairedVideoCache.mayNeedRepair(source) else {
+            replacePlayers(with: source)
+            return
+        }
+        let cache = RepairedVideoCache.current
+        let id = UUID()
+        pendingPreparation = id
+        preparation = Task { [weak self] in
+            let url = await Task.detached(priority: .userInitiated) {
+                cache.playableURL(for: source) {
+                    Task { @MainActor [weak self] in
+                        guard let self, self.pendingPreparation == id else { return }
+                        self.isPreparingVideo = true
+                    }
+                }
+            }.value
+            guard let self, !Task.isCancelled, !self.stopped, self.pendingPreparation == id else { return }
+            self.pendingPreparation = nil
+            self.isPreparingVideo = false
+            self.replacePlayers(with: url)
+        }
+    }
+
+    private func replacePlayers(with url: URL) {
         // New AVPlayers start at rate 0, so the cached values no longer describe them.
         appliedVideoRate = nil
         appliedAudioRate = nil
         probe.reset()
-        let url = wallpaper.mediaURL
         let videoItem = AVPlayerItem(url: url)
         let audioItem = AVPlayerItem(url: url)
         audioItem.audioTimePitchAlgorithm = .timeDomain

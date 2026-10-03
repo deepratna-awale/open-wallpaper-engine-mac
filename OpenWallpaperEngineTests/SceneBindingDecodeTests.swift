@@ -60,7 +60,6 @@ final class SceneBindingDecodeTests: XCTestCase {
     func testTextAndPointSizeBindings() throws {
         let text = try loadScene().0.objects[1]
         XCTAssertEqual(text.textValue, "Default caption")
-        XCTAssertEqual(text.textUserProperty, "caption")
         XCTAssertEqual(text.pointsize, 40)
         XCTAssertEqual(text.values[.pointsize]?.userPropertyName, "fontsize")
     }

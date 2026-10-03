@@ -81,6 +81,11 @@ class WallpaperViewModel: ObservableObject {
 
     @Published var recentWallpapers: [WEWallpaper] = []
 
+    /// Each display's wallpapers, for Previous Wallpaper outside a playlist.
+    @Published var wallpaperHistory = WallpaperHistory() {
+        didSet { if persistsWallpapers { wallpaperHistory.save(to: .app) } }
+    }
+
     @Published var playlists: [WallpaperPlaylist] = [] {
         didSet { savePlaylists() }
     }
@@ -243,12 +248,14 @@ class WallpaperViewModel: ObservableObject {
 
     /// Set wallpaper for a specific screen.
     func setWallpaper(_ wallpaper: WEWallpaper, for screenId: String) {
-        wallpapers[screenId] = wallpaper
-        addToRecents(wallpaper)
+        setWallpaper(wallpaper, for: [screenId])
     }
 
     func setWallpaper(_ wallpaper: WEWallpaper, for screenIds: Set<String>) {
         for screenId in screenIds {
+            // The outgoing one too: it may have been restored at launch rather than set.
+            wallpaperHistory.push(self.wallpaper(for: screenId), for: screenId)
+            wallpaperHistory.push(wallpaper, for: screenId)
             wallpapers[screenId] = wallpaper
         }
         addToRecents(wallpaper)
@@ -363,6 +370,9 @@ class WallpaperViewModel: ObservableObject {
                     try fileManager.copyItem(at: url, to: destination.appending(path: fileName))
                     if let previewData { try previewData.write(to: destination.appending(path: "preview.jpg"), options: .atomic) }
                     try JSONEncoder().encode(project).write(to: destination.appending(path: "project.json"), options: .atomic)
+                    DispatchQueue.global(qos: .utility).async {
+                        WallpaperPreparation.prepareVideo(wallpaperDirectory: destination)
+                    }
                 } catch {
                     OWELog.error(.importer, "Failed to import video: \(error.localizedDescription)")
                 }
@@ -868,6 +878,7 @@ class WallpaperViewModel: ObservableObject {
 
         // Load recent wallpapers
         loadRecents()
+        wallpaperHistory = WallpaperHistory.load(from: .app)
         restartPlaylistTimer()
         refreshInstanceKeys()
     }

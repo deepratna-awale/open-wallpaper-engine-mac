@@ -102,6 +102,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// The settings window's tab and the setting a link or search result opens.
     let settingsNavigation = SettingsNavigation()
     lazy var safeRestart = SafeRestart()
+    lazy var crashWatcher = CrashWatcher()
+    private var processPriorityCancellable: AnyCancellable?
+    private var crashWatcherCancellable: AnyCancellable?
+    /// Hides the Dock icon while no window is open (`DockPresence`).
+    let dockPresence = DockPresence()
     /// Sparkle, off in builds without an update signing key (`Core/Updates`).
     lazy var updater = AppUpdater(configuration: .main)
     /// The system's now-playing session, one for the process (MediaRemote registers per process):
@@ -109,6 +114,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     lazy var mediaSession = MacMediaSessionSource()
     /// What every scene's SceneScripts share: WE's prelude, `localStorage`, the one media session and
     /// the desktop's left clicks.
+    /// Settings › Plugins › Screen Saver: the loop videos and the bundled saver.
+    lazy var screenSaver = ScreenSaverPlugin()
     lazy var sceneScriptServices: SceneScriptServices = {
         if !SceneScriptJIT.isEnabled {
             OWELog.info(.script, "JavaScriptCore runs without its JIT (no \(SceneScriptJIT.entitlement)): scripts run several times slower")
@@ -139,8 +146,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var audioOutputCancellable: AnyCancellable?
     private var syncPropertiesCancellable: AnyCancellable?
     private var mediaIntegrationCancellable: AnyCancellable?
+    /// Follows the default output device: capture always restarts, wallpapers reload when the
+    /// setting is on. `rebuildWallpaperWindows` is the same reload an asset change uses.
+    private lazy var outputDeviceMonitor = OutputDeviceChangeMonitor(
+        source: CoreAudioOutputDeviceSource(),
+        schedule: { delay, work in DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work) },
+        reloadEnabled: { [weak self] in self?.globalSettingsViewModel.settings.reloadWhenChangingOutputDevice ?? false },
+        restartCapture: { MainActor.assumeIsolated { WallpaperServices.shared.audioCapture.outputDeviceDidChange() } },
+        reloadWallpapers: { [weak self] in MainActor.assumeIsolated { self?.rebuildWallpaperWindows() } })
     /// Settings › Performance › Playback, per display (`App/Playback`).
-    private lazy var displayPlaybackMonitor = makeDisplayPlaybackMonitor()
+    private(set) lazy var displayPlaybackMonitor = makeDisplayPlaybackMonitor()
+    /// Advanced › "Pause when VRAM is exhausted", fed to `displayPlaybackMonitor`.
+    private(set) lazy var videoMemoryWatch = makeVideoMemoryWatch()
+    private var videoMemorySettingCancellable: AnyCancellable?
     
     var importOpenPanel: NSOpenPanel!
     
@@ -154,6 +172,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             for wallpaper in wallpapers.values {
                 self?.workshopDependencies.ensureDependencies(for: wallpaper)
             }
+            // After the change is applied, so the old wallpaper counts as no longer shown.
+            DispatchQueue.main.async { self?.staleBundleRefresher?.shownWallpapersChanged() }
         }
 
         // New or removed assets: scripts, the library (default wallpapers) and every scene reload.
@@ -166,18 +186,28 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         wallpaperViewModel.keepWorkshopPreview = { [steamCmd = contentViewModel.steamCmd] in try steamCmd.keepPreview($0) }
 
-        // Settings → Audio Output silences every wallpaper (`WallpaperAudioRouting`).
+        // Settings › Optimizations › Audio Output silences every wallpaper (`WallpaperAudioRouting`).
         audioOutputCancellable = globalSettingsViewModel.$settings.map(\.audioOutput).removeDuplicates()
             .sink { [weak self] enabled in self?.wallpaperViewModel.audioOutputEnabled = enabled }
-        // Settings → General: one set of user properties for every display, or each display's own.
+        // Settings › Optimizations: one set of user properties for every display, or each display's own.
         syncPropertiesCancellable = globalSettingsViewModel.$settings.map(\.syncPropertiesAcrossDisplays).removeDuplicates()
             .sink { [weak self] synced in self?.wallpaperViewModel.syncsPropertiesAcrossDisplays = synced }
-        // Settings → General → Media integration support: whether wallpapers hear Now Playing.
+        // Settings › Optimizations › Media integration support: whether wallpapers hear Now Playing.
         mediaIntegrationCancellable = globalSettingsViewModel.$settings.map(\.mediaIntegration).removeDuplicates()
             .sink { [weak self] enabled in self?.mediaSession.setIntegrationEnabled(enabled) }
 
+        // Settings → Audio → Reload when changing output device (`OutputDeviceChangeMonitor`).
+        outputDeviceMonitor.start()
+
         // Before the wallpaper windows exist, so a wallpaper behind an unclean exit never loads.
         safeRestart.attach(to: wallpaperViewModel)
+
+        // Settings › Process Priority: at launch, before any render thread starts, and on change.
+        processPriorityCancellable = globalSettingsViewModel.$settings.map(\.processPiority).removeDuplicates()
+            .sink { ProcessPriority.apply($0) }
+        // Settings › Restart after crashing: the watcher that reopens the app after a crash.
+        crashWatcherCancellable = globalSettingsViewModel.$settings.map(\.restartAfterCrashing).removeDuplicates()
+            .sink { [weak self] enabled in self?.crashWatcher.update(enabled: enabled) }
 
         // 创建设置视窗
         setSettingsWindow()
@@ -232,6 +262,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         updater.willRelaunch = { [unowned self] in self.captureUpdateRelaunchState().save(to: .app) }
         updater.start()
         displayPlaybackMonitor.start(settings: globalSettingsViewModel.$settings)
+        videoMemorySettingCancellable = globalSettingsViewModel.$settings
+            .map(\.pauseOnVRAMExhausted)
+            .removeDuplicates()
+            .sink { [weak self] enabled in MainActor.assumeIsolated { self?.videoMemoryWatch.setEnabled(enabled) } }
 
         // After an update relaunch, what was open before; otherwise the setup assistant if due.
         if !restoreUpdateRelaunchState(),
@@ -239,6 +273,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             self.mainWindowController.window.center()
             self.mainWindowController.window.makeKeyAndOrderFront(nil)
         }
+
+        // Launched into the menu bar only, the Dock icon goes until a window opens.
+        dockPresence.start()
 
         // Workshop downloads need SteamCMD; set it up from Valve in the background when it's missing.
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
@@ -251,9 +288,42 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             if UserDefaults.app.bool(forKey: "ReclaimOriginalPackages") {
                 WallpaperPackageConverter.reclaimEligibleSources()
             }
+            // Bundles left on an older conversion with no package to redo it from.
+            let stale = StaleBundleScanner.scan(storage: FileManager.default.wallpapersDirectory)
+            guard !stale.isEmpty else { return }
+            // Later, so the cached SteamCMD login restored at launch has had its turn.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 30) { [weak self] in
+                self?.refreshStaleBundles(stale)
+            }
         }
     }
     
+    private var staleBundleRefresher: StaleBundleRefresher?
+    private var staleBundleNotice: SafeRestartNotice?
+
+    private func refreshStaleBundles(_ stale: [StaleBundle]) {
+        let refresher = StaleBundleRefresher(
+            downloader: contentViewModel.steamCmd,
+            isShown: { [weak self] directory in
+                self?.wallpaperViewModel.wallpapers.values.contains {
+                    $0.wallpaperDirectory.standardizedFileURL == directory.standardizedFileURL
+                } ?? false
+            },
+            notify: { [weak self] titles in
+                guard let self else { return }
+                self.staleBundleNotice?.close()
+                self.staleBundleNotice = SafeRestartNotice(
+                    message: StaleBundleRefresher.noticeMessage(for: titles), onRetry: nil,
+                    onDismiss: { [weak self] in
+                        self?.staleBundleNotice?.close()
+                        self?.staleBundleNotice = nil
+                    })
+                self.staleBundleNotice?.show()
+            })
+        staleBundleRefresher = refresher
+        refresher.run(stale)
+    }
+
     func applicationDidBecomeActive(_ notification: Notification) {
         contentViewModel.isApplicationActive = true
         // Picks up a steamcmd installed meanwhile, e.g. with Homebrew.
@@ -277,9 +347,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     
     func applicationWillTerminate(_ notification: Notification) {
         safeRestart.applicationWillTerminate()
+        crashWatcher.applicationWillTerminate()
         updater.stopShaderPrewarm()
+        // The lock-screen pictures go back to each display's own picture, the rest to the one saved
+        // at launch.
+        LockScreenPicture.restore(synchronously: true)
         if DesktopSnapshotCache.mayChangeDesktopPicture, let wallpaper = UserDefaults.app.url(forKey: "OSWallpaper") {
-            for screen in NSScreen.screens {
+            for screen in NSScreen.screens
+            where NSWorkspace.shared.desktopImageURL(for: screen).map(DesktopSnapshotCache.current.isSnapshot) ?? true {
                 try? NSWorkspace.shared.setDesktopImageURL(wallpaper, for: screen)
             }
         }
@@ -563,6 +638,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     
     func setPlacehoderWallpaper(with wallpaper: WEWallpaper) {
+        let settings = globalSettingsViewModel.settings
+        screenSaver.update(enabled: settings.screenSaver, wallpaper: wallpaper)
+        if settings.lockScreenPicture { LockScreenPicture.apply(wallpaper) }
         switch wallpaper.project.type {
         case "video":
             let asset = AVAsset(url: wallpaper.wallpaperDirectory.appending(component: wallpaper.project.file))

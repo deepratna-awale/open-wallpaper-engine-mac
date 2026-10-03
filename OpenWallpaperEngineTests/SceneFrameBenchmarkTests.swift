@@ -75,9 +75,9 @@ final class SceneFrameBenchmarkTests: XCTestCase {
     }
 
     /// The render settings `OWE_SCENE_BENCH_MODES` asks for, by name (comma separated): `half` (WE's
-    /// texture reduction), `match` (scene detail matched to the display), `desktop` (one pixel per
-    /// point), `textures` ("Optimise textures" on: BC7 colour images, `TexturePreparation`), and `+`
-    /// joins them (`match+desktop`). With the variable set, only these and `full` are drawn.
+    /// texture reduction), `match` (scene detail matched to the display), `authored` (render
+    /// resolution Full: the scene's authored size), `display` (render resolution Display: the display's points), `metalfx50` (drawn at 50% and upscaled), `textures` ("Optimise textures" on: BC7 colour images, `TexturePreparation`), and `+`
+    /// joins them (`match+metalfx50`). With the variable set, only these and `full` are drawn.
     /// `OWE_SCENE_BENCH_TEXTURES=1` adds the `textures` row to the default variants, so the rows
     /// show the setting off (`full`) and on.
     private static func renderModes(_ request: String) -> [Variant] {
@@ -88,7 +88,11 @@ final class SceneFrameBenchmarkTests: XCTestCase {
                 switch part {
                 case "half": settings.textureReduction = 2
                 case "match": settings.sceneDetail = .matchDisplay
-                case "desktop": settings.renderResolution = .desktop
+                case "authored": settings.renderResolution = .full
+                case "display": settings.renderResolution = .display
+                case "metalfx50":
+                    settings.upscaling = .metalFX
+                    settings.renderScale = .percent50
                 case "textures": settings.optimiseTextures = true
                 default: XCTFail("unknown render mode \(part)")
                 }

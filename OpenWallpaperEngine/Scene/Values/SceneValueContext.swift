@@ -9,10 +9,18 @@ protocol SceneValueContext {
     /// The timeline at `site` as the wallpaper instance's `SceneAnimationSet` sampled it this
     /// frame, one component per channel; nil when nothing animates it.
     func animationValue(_ site: SceneAnimationSite) -> [Float]?
+    /// The binding revision of the object being drawn (`SceneBindingRevisions`): values bound to
+    /// user properties alone are kept while it stays. Nil outside the renderer: nothing is kept.
+    var bindingRevision: UInt64? { get }
+    /// Whether property `name` (or a component of it) follows the music, so its value changes
+    /// every frame.
+    func isMusicSynced(_ name: String) -> Bool
 }
 
 extension SceneValueContext {
     func animationValue(_ site: SceneAnimationSite) -> [Float]? { nil }
+    var bindingRevision: UInt64? { nil }
+    func isMusicSynced(_ name: String) -> Bool { false }
 }
 
 /// `SceneValueContext` over the app's user property store.
@@ -22,6 +30,8 @@ struct LiveSceneValueContext: SceneValueContext {
     let animations: SceneAnimationSet?
     /// The wallpaper whose user properties to read; nil reads the wallpaper being rendered.
     let wallpaper: String?
+    /// The drawn object's binding revision; the renderer sets it per object.
+    var bindingRevision: UInt64?
 
     init(engine: WallpaperServices = .shared, animations: SceneAnimationSet? = nil, wallpaper: String? = nil) {
         self.engine = engine
@@ -31,6 +41,11 @@ struct LiveSceneValueContext: SceneValueContext {
 
     func animationValue(_ site: SceneAnimationSite) -> [Float]? {
         animations?.drawnValue(of: site)
+    }
+
+    /// A scalar syncs under `<name>`, each vector component under `<name>_<i>` (`musicSynced`).
+    func isMusicSynced(_ name: String) -> Bool {
+        engine.isMusicSynced(name) || (0..<4).contains { engine.isMusicSynced("\(name)_\($0)") }
     }
 
     /// Reads outside a frame (`wallpaper` set) are the stored value; reads while rendering follow

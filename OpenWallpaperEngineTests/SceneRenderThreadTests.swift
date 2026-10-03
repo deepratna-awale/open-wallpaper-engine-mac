@@ -91,14 +91,6 @@ final class SceneRenderThreadTests: XCTestCase {
         }
     }
 
-    /// Thread-guard hits, recorded from any thread.
-    private final class Violations: @unchecked Sendable {
-        private let lock = NSLock()
-        private var all: [ThreadGuards.Violation] = []
-        func record(_ violation: ThreadGuards.Violation) { lock.withLock { all.append(violation) } }
-        var list: [ThreadGuards.Violation] { lock.withLock { all } }
-    }
-
     /// Startup with WE's MSAA ×2: the scene pass's multisampled pipelines are made on first use,
     /// so a frame drawn on the main thread beside the render thread's raced to make them. The
     /// view's own timer never runs, and a stray main-thread draw is dropped and reported.
@@ -108,9 +100,6 @@ final class SceneRenderThreadTests: XCTestCase {
         defer { Fixtures.removeStoredSettings(for: directory) }
         let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/msaa/project.json"))
         let content = try XCTUnwrap(SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory)).metalContent())
-        let violations = Violations()
-        let previous = ThreadGuards.setHandler { violations.record($0) }
-        defer { ThreadGuards.setHandler(previous) }
         let frames = Frames()
         _ = try startLoop(frames) { renderer in
             renderer.renderSettings.antiAliasing = .msaa_x2
@@ -122,18 +111,17 @@ final class SceneRenderThreadTests: XCTestCase {
         waitForFrames(frames, atLeast: 20, timeout: 30)
         XCTAssertGreaterThanOrEqual(frames.count, 20, "the display link draws")
         XCTAssertTrue(frames.allOffMain, "every frame draws off the main thread")
-        #if DEBUG
-        XCTAssertEqual(violations.list, [], "startup draws only on the render thread")
-        #endif
+        // Startup draws only on the render thread: any guard hit fails the test through
+        // `ThreadGuardTestObserver`.
 
-        // A stray main-thread draw while the link draws: dropped, and a guard hit in debug.
+        // A stray main-thread draw while the link draws: dropped, and a guard hit.
         let before = frames.count
-        waitForFrames(frames, atLeast: before + 20, timeout: 10) { view.draw() }
+        let violations = expectThreadGuardViolations {
+            waitForFrames(frames, atLeast: before + 20, timeout: 10) { view.draw() }
+        }
         XCTAssertTrue(frames.allOffMain, "no frame drew on the main thread")
-        #if DEBUG
-        XCTAssertTrue(violations.list.contains { $0.kind == .offRenderThread && $0.what == "A scene view's draw" })
-        XCTAssertFalse(violations.list.contains { $0.what.contains("scene frame") }, "the renderer never ran it")
-        #endif
+        XCTAssertTrue(violations.contains { $0.kind == .offRenderThread && $0.what == "A scene view's draw" })
+        XCTAssertFalse(violations.contains { $0.what.contains("scene frame") }, "the renderer never ran it")
     }
 
     func testDrawRunsOffTheMainThread() throws {

@@ -451,6 +451,29 @@ extension SceneLayerAnalysis {
                                   ancestorObjectIDs: ancestors, sceneStagesAnimate: sceneStagesAnimate)
     }
 
+    /// This analysis with the layers of objects `ids` replaced by `fresh`'s (a structural binding
+    /// change rebuilt them, `SceneObjectReplacement`). A rebuilt layer keeps what the scene gave the
+    /// old one (scripts, timelines), which its own analysis can't see, and covers the whole scene
+    /// until the next full analysis. Every layer is dirty on the next update.
+    func replacing(_ ids: Set<String>, with fresh: SceneLayerAnalysis) -> SceneLayerAnalysis {
+        let old = Dictionary(layers.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let sceneWide = layers.reduce(SceneLayerDependencies()) { $0.union($1.dependencies.intersection([.script, .timeline])) }
+        let rebuilt = fresh.layers.map { layer -> Layer in
+            let previous = old[layer.id]
+            return Layer(id: layer.id, objectID: layer.objectID, lineage: layer.lineage, order: layer.order,
+                         dependencies: layer.dependencies.union(previous?.dependencies ?? sceneWide),
+                         staticCoverage: .full(sceneSize),
+                         movedBy: layer.movedBy.union(previous?.movedBy ?? sceneWide),
+                         contentClass: layer.contentClass, classifiedFromPixels: layer.classifiedFromPixels,
+                         readsPreviousFrame: layer.readsPreviousFrame, compositeSources: layer.compositeSources,
+                         particlesBeneath: layer.particlesBeneath)
+        }
+        return SceneLayerAnalysis(sceneSize: sceneSize, layers: layers.filter { !ids.contains($0.id) } + rebuilt,
+                                  knownObjectIDs: knownObjectIDs.union(fresh.knownObjectIDs),
+                                  ancestorObjectIDs: ancestorObjectIDs.union(fresh.ancestorObjectIDs),
+                                  sceneStagesAnimate: sceneStagesAnimate)
+    }
+
     /// What the layer's own description says it follows (before its place in the scene).
     static func dependencies(of layer: SceneMetalLayer) -> SceneLayerDependencies {
         var deps: SceneLayerDependencies = []

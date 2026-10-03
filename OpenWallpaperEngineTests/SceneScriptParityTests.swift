@@ -101,7 +101,8 @@ final class SceneScriptParityTests: XCTestCase {
             """, initialValue: 0))
         fixture.runtime.load()
         XCTAssertTrue(fixture.host.errors.isEmpty, "\(fixture.host.errors)")
-        XCTAssertEqual(fixture.runtime.context.evaluateScript("shared.renderContext")?.toBool(), true)
+        XCTAssertEqual(fixture.runtime.context.evaluateScript("shared.renderContext")?.toBool(), true,
+                       "renderContext missing or init threw: \(fixture.host.errors)")
         XCTAssertEqual(fixture.consoleLines.map(\.1).filter { ["w", "i", "d", "t"].contains(where: $0.hasSuffix) }.count, 4,
                        "\(fixture.consoleLines)")
     }

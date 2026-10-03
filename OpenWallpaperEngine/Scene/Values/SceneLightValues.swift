@@ -53,9 +53,8 @@ struct SceneLight: Equatable {
     init(_ light: WESceneLight, in context: SceneValueContext) {
         self.init(kind: light.kind)
         func value(_ field: SceneLightValueField) -> ShaderValue? {
-            guard let raw = light.values[field] else { return nil }
-            if let source = raw.userBindingSource { return SceneValueResolver.resolve(source, in: context) }
-            return raw.literalString.flatMap(ShaderValue.init(string:))
+            // User bindings are resolved in the document (`UserPropertyBindingTable`).
+            light.values[field]?.literalString.flatMap(ShaderValue.init(string:))
         }
         func float(_ field: SceneLightValueField, _ fallback: Float) -> Float { value(field)?.float ?? fallback }
         func flag(_ field: SceneLightValueField) -> Bool { (value(field)?.float ?? 0) != 0 }

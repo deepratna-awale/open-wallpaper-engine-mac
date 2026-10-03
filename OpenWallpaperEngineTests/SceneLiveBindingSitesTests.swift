@@ -1,15 +1,19 @@
 import XCTest
 @testable import OpenWallpaperEngine
 
-/// A user property read only where the renderer re-resolves it every frame doesn't rebuild the content.
+/// A user property change is applied by the class of the bindings that read it
+/// (`SceneBindingUpdate`): in place for uniform and object sites, by rebuilding only the owning
+/// object for structural ones, and by rebuilding the content only for scene-wide structure.
 final class SceneLiveBindingSitesTests: XCTestCase {
-    private func contentProperties(_ json: String) throws -> Set<String> {
+    private func update(_ json: String, _ keys: [String]) throws -> SceneBindingUpdate {
         let document = try JSONDecoder().decode(SceneJSON.self, from: Data(json.utf8))
-        return SceneWallpaperViewModel.contentUserProperties(in: document)
+        let table = UserPropertyBindingTable()
+        table.record(.scene, json: document)
+        return SceneBindingUpdate(keys: keys, table: table)
     }
 
-    func testPerFrameSitesDontRebuild() throws {
-        let names = try contentProperties(#"""
+    func testPerFrameSitesApplyInPlace() throws {
+        let update = try update(#"""
         {"objects": [
           {"id": 1, "image": "models/a.json",
            "origin": {"user": "x", "value": "0 0 0"},
@@ -17,34 +21,49 @@ final class SceneLiveBindingSitesTests: XCTestCase {
            "angles": {"user": "r", "value": "0 0 0"},
            "color": {"user": "tint", "value": "1 1 1"},
            "alpha": {"user": "fade", "value": 1},
-           "brightness": {"user": "glow", "value": 1}}
+           "brightness": {"user": "glow", "value": 1},
+           "visible": {"user": "show", "value": true},
+           "effects": [{"file": "e.json", "passes": [{"constantshadervalues": {"speed": {"user": "speed", "value": 1}}}]}]},
+          {"id": 2, "text": {"value": "hi"}, "color": {"user": "textcolour", "value": "1 1 1"}}
         ]}
-        """#)
-        XCTAssertEqual(names, [])
+        """#, ["x", "s", "r", "tint", "fade", "glow", "show", "speed", "textcolour"])
+        XCTAssertEqual(update.impact, .none)
+        XCTAssertEqual(update.rebuild, [])
+        XCTAssertEqual(update.owners, [.object(1), .object(2)])
     }
 
-    func testBakedSitesStillRebuild() throws {
-        let names = try contentProperties(#"""
+    func testStructuralSitesRebuildOnlyTheirObject() throws {
+        let json = #"""
         {"general": {"bloom": {"user": "bloom", "value": true}},
          "objects": [
           {"id": 1, "image": "models/a.json",
-           "visible": {"user": "show", "value": true},
            "size": {"user": "size", "value": "10 10"},
-           "effects": [{"file": "e.json", "passes": [{"constantshadervalues": {"speed": {"user": "speed", "value": 1}}}]}]},
-          {"id": 2, "text": {"value": "hi"}, "color": {"user": "textcolour", "value": "1 1 1"}},
+           "effects": [{"file": "e.json", "passes": [{"combos": {"MODE": {"user": "mode", "value": 0}}}]}]},
+          {"id": 2, "text": {"user": "caption", "value": "hi"}},
           {"id": 3, "light": "point", "origin": {"user": "lightpos", "value": "0 0 0"}}
         ]}
-        """#)
-        XCTAssertEqual(names, ["bloom", "show", "size", "speed", "textcolour", "lightpos"])
+        """#
+        let objects = try update(json, ["size", "mode", "caption", "lightpos"])
+        XCTAssertEqual(objects.impact, .none, "no whole-content rebuild")
+        XCTAssertEqual(objects.rebuild, [1, 2, 3])
+        XCTAssertEqual(try update(json, ["bloom"]).impact, .rebuildContent, "general is the scene's own structure")
     }
 
-    func testPropertyAlsoReadAtBakedSiteRebuilds() throws {
-        let names = try contentProperties(#"""
+    func testTheHeaviestClassOfAPropertyWins() throws {
+        let update = try update(#"""
         {"objects": [
           {"id": 1, "image": "models/a.json", "alpha": {"user": "p", "value": 1}},
-          {"id": 2, "image": "models/b.json", "visible": {"user": "p", "value": true}}
+          {"id": 2, "image": "models/b.json", "size": {"user": "p", "value": "4 4"}}
         ]}
-        """#)
-        XCTAssertEqual(names, ["p"])
+        """#, ["p"])
+        XCTAssertEqual(update.owners, [.object(1), .object(2)])
+        XCTAssertEqual(update.rebuild, [2])
+    }
+
+    func testAppKeysKeepTheirOwnImpact() throws {
+        let json = #"{"objects": [{"id": 1, "image": "models/a.json", "alpha": {"user": "p", "value": 1}}]}"#
+        XCTAssertEqual(try update(json, [sceneObjectVisibilityKey(objectID: 1)]).impact, .rebuildContent)
+        XCTAssertEqual(try update(json, ["p_musicSync"]).impact, .none)
+        XCTAssertTrue(try update(json, ["unbound"]).isEmpty, "only scripts read it")
     }
 }

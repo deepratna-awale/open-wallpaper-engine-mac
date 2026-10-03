@@ -12,26 +12,27 @@ private struct FogPropertyContext: SceneValueContext {
 /// fields with WE's defaults, the `FOG_DIST`/`FOG_HEIGHT` engine combos on materials whose `FOG` is
 /// on, the `g_Fog*` uniforms, and the volumetric ray march, whose samples the fog squares.
 final class SceneFogTests: XCTestCase {
-    private func general(_ json: String) throws -> WESceneGeneral {
-        try decodeTolerant(WESceneGeneral.self, from: Data(json.utf8))
+    private func general(_ json: String, properties: [String: String] = [:]) throws -> WESceneGeneral {
+        try BoundDocument.decode(WESceneGeneral.self, from: Data(json.utf8), properties: properties)
     }
 
     // MARK: - general
 
     /// 3378346807's fog: distance on, its colour bound to the background colour property.
     func testTheFogFieldsAreDecodedWithTheirBindings() throws {
-        let general = try general(#"""
+        let json = #"""
             {"fogdistance": true,
              "fogdistancecolor": {"user": "backgroundcolor", "value": "0.25490 0.31373 0.32549"},
              "fogdistanceend": 48.0, "fogdistanceenddensity": 1.0,
              "fogdistancestart": 1.0, "fogdistancestartdensity": 0.0}
-            """#)
+            """#
+        let general = try general(json)
         let fog = SceneLightingSettings(general, in: FogPropertyContext()).fog
         XCTAssertTrue(fog.distance)
         XCTAssertFalse(fog.height)
         XCTAssertEqual(fog.distanceColor.x, 0.2549, accuracy: 1e-4)
         XCTAssertEqual(fog.distanceParams, SIMD4<Float>(1, 47, 0, 1))
-        let bound = SceneFogSettings(general, in: FogPropertyContext(properties: ["backgroundcolor": "1 0.5 0"]))
+        let bound = SceneFogSettings(try self.general(json, properties: ["backgroundcolor": "1 0.5 0"]), in: FogPropertyContext())
         XCTAssertEqual(bound.distanceColor, SIMD3<Float>(1, 0.5, 0))
     }
 

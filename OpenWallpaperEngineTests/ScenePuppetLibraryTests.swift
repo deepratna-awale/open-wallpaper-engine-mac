@@ -47,10 +47,10 @@ final class ScenePuppetLibraryTests: XCTestCase {
         print("Library puppets, posed (and their bind pose against the picture):\n\(report)")
     }
 
-    /// A puppet with effects runs them on its posed image, frame after frame. The Cyberpunk
-    /// Samurai (2321732083: `pulse` and `blend` on the puppet) stood in its first pose while its
-    /// effects' kept output was keyed by the image's texture alone, which the mesh redraws in
-    /// place; only the pulse moved. Its crop now changes as its cape and head layers play.
+    /// A puppet with effects moves with its pose, frame after frame. The Cyberpunk Samurai
+    /// (2321732083: `pulse` and `blend` on the puppet) stood in its first pose while its effects'
+    /// kept output was keyed by the image's texture alone, which the mesh redraws in place; only
+    /// the pulse moved. Its crop now changes as its cape and head layers play.
     func testAPuppetWithEffectsMovesWithItsPose() throws {
         _ = try Fixtures.assets()
         let directory = LibrarySweepTests.libraryRoot.appending(path: "2321732083", directoryHint: .isDirectory)
@@ -81,6 +81,84 @@ final class ScenePuppetLibraryTests: XCTestCase {
         XCTAssertGreaterThan(mean, 1.8, "the samurai's crop per 0.25 s: \(steps)")
     }
 
+    /// A puppet's effects run in its image's own layout, where their masks are painted, and the
+    /// posed mesh lays their output out. Katana Girl (3238423642) keeps her head apart in the
+    /// texture's left eighth and poses it onto her neck; the eye effects' masks are painted on
+    /// that part of the texture (the eyes' tint, blink, movement and iris). Run on the posed
+    /// image, they hit empty sky and the eye properties changed nothing. Clock held, the tint is
+    /// `tintlow`, the user's eye colour.
+    func testAnAtlasPuppetsEffectsFollowTheirMasks() throws {
+        _ = try Fixtures.assets()
+        let directory = LibrarySweepTests.libraryRoot.appending(path: "3238423642", directoryHint: .isDirectory)
+        let projectURL = directory.appending(path: "project.json")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: projectURL.path), "3238423642 not in the library")
+        Fixtures.removeStoredSettings(for: directory)
+        defer { Fixtures.removeStoredSettings(for: directory) }
+        let project = try decodeTolerant(WEProject.self, from: Data(contentsOf: projectURL))
+        let model = SceneWallpaperViewModel(wallpaper: WEWallpaper(using: project, where: directory))
+        let content = try XCTUnwrap(model.metalContent())
+        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
+        let size = SIMD2<Float>(1920, 1080)
+        let view = MTKView(frame: CGRect(x: 0, y: 0, width: 1920, height: 1080), device: device)
+        view.colorPixelFormat = .bgra8Unorm
+        view.autoResizeDrawable = false
+        view.drawableSize = CGSize(width: 1920, height: 1080)
+        let renderer = try XCTUnwrap(SceneMetalRenderer(view: view, scriptServices: nil, screenID: "atlas-puppet"))
+        defer { renderer.releaseContent() }
+        view.isPaused = true
+        renderer.setPlacement(.fill)
+        var now: CFTimeInterval = 1000
+        renderer.wallTime = { now }
+        renderer.setContent(content)
+        func frame() throws -> [UInt8]? {
+            renderer.renderShared([SceneViewport(drawableSize: size, pointSize: size, cursor: .zero, frameRateLimit: 30)])
+            renderer.lastCommandBuffer?.waitUntilCompleted()
+            RunLoop.main.run(until: Date().addingTimeInterval(0.005))
+            return try renderer.sharedFrame.map { try TextureUploadTests.read($0, device: device) }
+        }
+        // The content lands in the background and the scene's clock starts then: frames drawn before
+        // it don't count, so the posed time (and her blink's phase with it) is the same every run.
+        let landing = Date().addingTimeInterval(60)
+        while !renderer.hasContent, Date() < landing { _ = try frame() }
+        XCTAssertTrue(renderer.hasContent, "the content never landed")
+        // Posed: her head leaves the texture's corner for her neck as her layers play.
+        for _ in 0..<90 {
+            now += 1.0 / 30
+            _ = try frame()
+        }
+        // The first frame after the content landed starts the clock; each later one is a step.
+        XCTAssertEqual(renderer.sceneTime, 89.0 / 30, accuracy: 1e-6, "the clock ran only from the content's landing")
+        // Settled, the clock held: every pipeline compiled, two frames alike.
+        renderer.holdsClock = true
+        var before: [UInt8]?
+        let deadline = Date().addingTimeInterval(120)
+        var frames = 0
+        repeat {
+            for _ in 0..<10 { _ = try frame() }
+            frames += 11
+            let next = try frame()
+            if frames >= 120, next != nil, next == before { break }
+            before = next
+        } while Date() < deadline
+        let shown = try XCTUnwrap(before)
+        WallpaperServices.shared.setUserProperties(["eyesglowingcolor": "0 1 0"], wallpaper: model.propertyStoreKey, replacing: false)
+        // The change reaches the renderer as the wallpaper instance hands it on: the bindings that
+        // read the property take it under a new revision (`SceneWallpaperInstance`).
+        renderer.userPropertiesDidChange(["eyesglowingcolor"], owners: model.bindingUpdate(for: ["eyesglowingcolor"]).owners)
+        let tinted = try XCTUnwrap(try frame())
+        // Her eye, on her face at the frame's right of centre (the frame is the scene's target).
+        let width = try XCTUnwrap(renderer.sharedFrame).width
+        let scale = Float(width) / 1920
+        var changed = 0
+        for y in Int(380 * scale)..<Int(460 * scale) {
+            for x in Int(1090 * scale)..<Int(1190 * scale) {
+                let index = (y * width + x) * 4
+                if (0..<3).contains(where: { abs(Int(shown[index + $0]) - Int(tinted[index + $0])) > 16 }) { changed += 1 }
+            }
+        }
+        XCTAssertGreaterThan(changed, 10, "the eye's pixels the eye colour changed")
+    }
+
     // MARK: - One scene
 
     private func sweep(_ item: Item, output: URL?) throws -> String {
@@ -88,6 +166,10 @@ final class ScenePuppetLibraryTests: XCTestCase {
         var content = try XCTUnwrap(model.metalContent(), "\(item.id): no content")
         defer { Fixtures.removeStoredSettings(for: item.directory) }
         var plans: [String: ScenePuppetPlan] = [:]
+        // A rig that rearranges an atlas and has effects runs them on its texture as stored, where
+        // their masks are painted, and its posed mesh lays their output out: it draws no image of
+        // its own for the oracle, only that layout.
+        var atlases: Set<String> = []
         for id in item.layers {
             guard let layer = content.layers.first(where: { $0.id == id }) else {
                 XCTFail("\(item.id) layer \(id): not in the content")
@@ -108,10 +190,18 @@ final class ScenePuppetLibraryTests: XCTestCase {
                     (0..<4).allSatisfy { column[$0].isFinite }
                 }
             }, "\(item.id) \(id): a finite pose")
-            plans[id] = plan
+            if !plan.bindPoseIsTextureLayout, !layer.weEffects.isEmpty {
+                atlases.insert(id)
+            } else {
+                plans[id] = plan
+            }
             // Hidden puppets (a user property's variant) are drawn too, for the check.
             content.visibility[id] = true
         }
+
+        // The renderer resolves user-bound visibility again as it takes the content; with no user
+        // values that is what `visibility` already holds, except the hidden puppets shown above.
+        content.userVisibility = SceneUserVisibility()
 
         let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         let view = MTKView(frame: CGRect(x: 0, y: 0, width: 320, height: 180), device: device)
@@ -138,10 +228,15 @@ final class ScenePuppetLibraryTests: XCTestCase {
         // The clock stands still until every mesh has drawn (how long that takes depends on which
         // pipelines earlier tests compiled), then runs a fixed second: every run checks the same pose.
         deadline = Date().addingTimeInterval(90)
-        while plans.keys.contains(where: { renderer.puppetImage(ofLayer: $0) == nil }), Date() < deadline { frame() }
+        while plans.keys.contains(where: { renderer.puppetImage(ofLayer: $0) == nil })
+                || atlases.contains(where: { !renderer.puppetLaidOutEffects(ofLayer: $0) }), Date() < deadline { frame() }
         for _ in 0..<30 {
             now += 1.0 / 30
             frame()
+        }
+        for id in atlases.sorted() {
+            XCTAssertNil(renderer.puppetImage(ofLayer: id), "\(item.id) layer \(id): an atlas rig with effects draws no image")
+            XCTAssertTrue(renderer.puppetLaidOutEffects(ofLayer: id), "\(item.id) layer \(id): its effect output was never posed")
         }
 
         var lines = ""
@@ -154,7 +249,7 @@ final class ScenePuppetLibraryTests: XCTestCase {
             let image = try ScenePuppetTestSupport.rgba8(drawn.image, device: device)
             let size = SIMD2(drawn.image.width, drawn.image.height)
             XCTAssertEqual(size, SIMD2(drawn.source.width, drawn.source.height), "\(item.id) \(id): the source's layout")
-            let pose = try XCTUnwrap(renderer.puppetPose(ofLayer: id), "\(item.id) \(id)")
+            let pose = try XCTUnwrap(renderer.puppetImagePose(ofLayer: id), "\(item.id) \(id)")
             // A layer without effects covers its posed mesh (`ScenePuppetCanvas`).
             let result = Self.compare(plan, source: source, image: image, size: size, pose: pose,
                                       canvas: renderer.puppetCanvas(ofLayer: id))

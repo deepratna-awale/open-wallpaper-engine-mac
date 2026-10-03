@@ -172,7 +172,7 @@ final class SceneModelRenderer: SceneModelDrawing {
         // WE poses a visible model every frame, culled or not (0x14021c480).
         let bones = advance(model, plan: plan, frame: draw.frame, values: draw.values)
         let viewFrustum = frustum(draw.camera.viewProjection)
-        guard viewFrustum.contains(SceneModelCulling.Sphere(plan.bounds, world: draw.world)) else {
+        guard viewFrustum.contains(SceneModelCulling.Sphere(plan.cullBounds, world: draw.world)) else {
             modelsCulled += 1
             culledModels.insert(model.id)
             return
@@ -619,8 +619,7 @@ final class SceneModelRenderer: SceneModelDrawing {
     static func pipelineDescriptor(_ variant: TranslatedShaderVariant, format: MDLVertexFormat, blending: String,
                                    pixelFormat: MTLPixelFormat, sampleCount: Int, depthFormat: MTLPixelFormat,
                                    device: MTLDevice) throws -> MTLRenderPipelineDescriptor {
-        let vertexLibrary = try device.makeLibrary(source: variant.vertexMSL, options: nil)
-        let fragmentLibrary = try device.makeLibrary(source: variant.fragmentMSL, options: nil)
+        let (vertexLibrary, fragmentLibrary) = try variant.makeLibraries(device: device)
         guard let vertex = vertexLibrary.makeFunction(name: "main0"),
               let fragment = fragmentLibrary.makeFunction(name: "main0") else {
             throw ShaderCompilerError.failed(step: "metal", output: "entry point main0 missing")

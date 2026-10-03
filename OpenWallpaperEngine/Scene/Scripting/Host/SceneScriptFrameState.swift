@@ -178,4 +178,6 @@ enum SceneScriptRenderEvent {
     case textureAnimation(id: Int, SceneTextureAnimationControl, frame: UInt64)
     /// A script's call on puppet image `id`'s animation layers or bones, in call order.
     case rig(id: Int, SceneScriptRigCommand)
+    /// `IVideoTexture` calls on image `id`'s video texture, in call order.
+    case video(id: Int, SceneVideoTextureCommand)
 }

@@ -51,7 +51,7 @@ enum ShaderVariantError: Error, CustomStringConvertible {
 /// hundreds of thousands possible, so nothing is precompiled.
 final class ShaderVariantTranslator {
     /// Bump whenever translated output for the same input can change.
-    static let revision = 12
+    static let revision = 13
 
     let compiler: ShaderCompiler
     /// Root of the disk cache; variants go into its `generationDirectory`.
@@ -64,6 +64,9 @@ final class ShaderVariantTranslator {
     /// Where the source a compiler step rejected is written, one file per shader and stage: the
     /// compiler's line numbers refer to it, not to the WE file. nil writes nothing.
     let failureDirectory: URL?
+    /// Parsed stages and folded geometry stages, shared by every material planned through this
+    /// translator (`ShaderSourceMemo`).
+    let sources = ShaderSourceMemo()
     private let lock = NSLock()
     private var memory: [String: TranslatedShaderVariant] = [:]
 
@@ -184,7 +187,9 @@ final class ShaderVariantTranslator {
             store(key, cached, persist: false)
             return cached
         }
-        let translated = try translate(vertex: vertex, fragment: fragment, combos: combos)
+        let translated = try OWEPhaseTiming.measure(.shaderTranslate) {
+            try translate(vertex: vertex, fragment: fragment, combos: combos)
+        }
         store(key, translated, persist: true)
         return translated
     }
@@ -279,6 +284,7 @@ final class ShaderVariantTranslator {
               let typeID = block["type"] as? String,
               let members = types[typeID]?["members"] as? [[String: Any]] else { return nil }
         var result: [String: UniformMember] = [:]
+        var alignment = 4
         for member in members {
             guard let reflected = member["name"] as? String, let offset = member["offset"] as? Int else {
                 throw ShaderVariantError.reflection("member without name/offset in \(typeID)")
@@ -286,12 +292,33 @@ final class ShaderVariantTranslator {
             // Material constants bind by WE's name, not the one the prelude gave a reserved word.
             let name = GLSLReservedWords.originalName(reflected)
             let count = (member["array"] as? [Int])?.first ?? 1
+            alignment = max(alignment, metalAlignment(ofReflectedType: member["type"] as? String ?? ""))
             result[name] = UniformMember(name: name, type: member["type"] as? String ?? "",
                                          offset: offset, count: max(count, 1),
                                          arrayStride: member["array_stride"] as? Int ?? 0,
                                          matrixStride: member["matrix_stride"] as? Int ?? 0)
         }
-        return UniformLayout(size: block["block_size"] as? Int ?? 0, members: result)
+        // `block_size` ends at the last member; the MSL struct the shader binds is rounded up to its
+        // alignment, and Metal checks the bound length against that.
+        let packed = block["block_size"] as? Int ?? 0
+        return UniformLayout(size: (packed + alignment - 1) / alignment * alignment, members: result)
+    }
+
+    /// Alignment in MSL of a reflected GLSL member type (an array aligns as its element): 8 for a
+    /// two-component vector or a matrix of them, 16 for three or four, 4 for a scalar.
+    static func metalAlignment(ofReflectedType type: String) -> Int {
+        let rows: Int?
+        if let range = type.range(of: "vec") {
+            rows = Int(type[range.upperBound...])
+        } else if type.hasPrefix("mat") {
+            // `matN` or `matCxR`: columns are R-component vectors.
+            rows = Int(type.split(separator: "x").last.map { String($0.drop(while: { !$0.isNumber })) } ?? "")
+        } else {
+            rows = nil
+        }
+        let scalar = type.hasPrefix("d") ? 8 : 4
+        guard let rows else { return scalar }
+        return scalar * (rows == 2 ? 2 : 4)
     }
 
     // MARK: - Cache

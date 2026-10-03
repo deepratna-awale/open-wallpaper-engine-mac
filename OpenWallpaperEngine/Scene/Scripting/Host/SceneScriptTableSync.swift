@@ -100,6 +100,7 @@ final class SceneScriptTableSync {
                 put(Self.size + 1, size.y)
             }
             if let playing = feedback.playing { put(Self.playing, playing ? 1 : 0) }
+            if let videoTime = feedback.videoTime { put(Layout.videoTime, videoTime) }
             // The world matrix, column-major like simd: the 2D affine part in a 4×4.
             let linear = feedback.world.linear, translation = feedback.world.translation
             let matrix = Layout.worldMatrix

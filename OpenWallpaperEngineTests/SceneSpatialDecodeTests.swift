@@ -265,7 +265,10 @@ final class SceneSpatialDecodeTests: XCTestCase {
         let bound = try general(json)
         XCTAssertEqual(bound.fov, 75)
         XCTAssertEqual(bound.values[.fov]?.userPropertyName, "camerazoom")
-        let settings = SceneCameraSettings(bound, in: SpatialProperties(values: ["camerazoom": "200"]))
+        // The loader resolves the binding (`UserPropertyBindingTable`) before the settings read it.
+        let resolved = try BoundDocument.decode(WESceneGeneral.self, from: Data(json.utf8),
+                                                properties: ["camerazoom": "200"])
+        let settings = SceneCameraSettings(resolved, in: SpatialProperties())
         XCTAssertEqual(settings.fov, 200)
         XCTAssertEqual(settings.sceneFov, 179.9, "clamped")
         XCTAssertEqual(settings.nearZ, 0.01, accuracy: 1e-7)

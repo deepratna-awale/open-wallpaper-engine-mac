@@ -22,9 +22,23 @@ struct WallpaperPropertyTargets {
     /// The keys of the running stores (`SceneUserPropertyService`) the scopes are read from.
     var runtimeKeys: [String] { scopes.map { $0.runtimeKey(directory: directory) } }
 
-    /// Hands `values` to the running wallpapers at once.
-    func publish(_ values: [String: String]) {
-        for key in runtimeKeys { WallpaperServices.shared.setUserProperties(values, wallpaper: key, replacing: false) }
+    /// Hands `values` to the running wallpapers at once: only what differs from each running store,
+    /// where a key the store lacks stands for its default (`defaults`, the value the wallpaper
+    /// takes without it). Showing the properties with nothing changed changes nothing, so opening
+    /// the panel never rebuilds a wallpaper.
+    func publish(_ values: [String: String], defaults: [String: String] = [:],
+                 services: WallpaperServices = .shared) {
+        for key in runtimeKeys {
+            let changed = Self.changes(values, from: services.userProperties(wallpaper: key), defaults: defaults)
+            guard !changed.isEmpty else { continue }
+            services.setUserProperties(changed, wallpaper: key, replacing: false)
+        }
+    }
+
+    /// The entries of `values` that change `running`, a missing key being its default.
+    static func changes(_ values: [String: String], from running: [String: String],
+                        defaults: [String: String]) -> [String: String] {
+        values.filter { key, value in (running[key] ?? defaults[key]) != value }
     }
 
     /// Saves `values` as every scope's, marked as set by the user, and lets the displays regroup

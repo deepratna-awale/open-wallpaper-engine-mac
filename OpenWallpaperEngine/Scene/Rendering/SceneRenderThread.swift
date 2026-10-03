@@ -43,10 +43,34 @@ final class SceneRenderThread: @unchecked Sendable {
             state.exited.signal()
         }
         thread.name = name
-        thread.qualityOfService = .userInteractive
+        // Settings › Process Priority (`ProcessPriority`); never below user-initiated.
+        thread.qualityOfService = ProcessPriority.current.renderThreadQoS
         thread.start()
         state.ready.wait()
         cfRunLoop = state.runLoop!.getCFRunLoop()
+        Self.registry.add(self)
+    }
+
+    // MARK: - Process priority
+
+    /// Every live render thread, so a change of Process Priority reaches the running ones.
+    private final class Registry: @unchecked Sendable {
+        private let lock = NSLock()
+        private let threads = NSHashTable<AnyObject>.weakObjects()
+        func add(_ thread: SceneRenderThread) { lock.lock(); threads.add(thread); lock.unlock() }
+        var all: [SceneRenderThread] {
+            lock.lock(); defer { lock.unlock() }
+            return threads.allObjects.compactMap { $0 as? SceneRenderThread }
+        }
+    }
+    private static let registry = Registry()
+
+    /// Moves every running render thread to `qos`, from the thread itself (a thread's QoS can only
+    /// be changed from inside it once it runs).
+    static func applyQoS(_ qos: DispatchQoS.QoSClass) {
+        for thread in registry.all {
+            thread.perform { _ = pthread_set_qos_class_self_np(qos.rawValue, 0) }
+        }
     }
 
     var isCurrent: Bool { Thread.current == thread }

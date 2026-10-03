@@ -31,13 +31,11 @@ struct SceneSoundContentBuilder {
         }
     }
 
-    /// A float of a sound (`volume`, `attenuation`, `mindistance`): its user
-    /// binding's value, else the literal (a script's value comes from the runtime), else WE's
-    /// default 1.
+    /// A float of a sound (`volume`, `attenuation`, `mindistance`): the value as the document
+    /// holds it, its user binding resolved (`UserPropertyBindingTable`; a script's value comes from
+    /// the runtime), else WE's default 1.
     static func value(_ raw: SceneRawValue?, in context: SceneValueContext) -> Float {
-        guard let raw else { return 1 }
-        if let source = raw.userBindingSource { return SceneValueResolver.resolve(source, in: context).float }
-        return raw.literalDouble.map(Float.init) ?? 1
+        raw?.literalDouble.map(Float.init) ?? 1
     }
 
     private func file(_ path: String) -> SceneSoundContent.File? {

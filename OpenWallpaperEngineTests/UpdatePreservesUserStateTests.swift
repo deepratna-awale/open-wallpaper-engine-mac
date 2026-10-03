@@ -103,6 +103,7 @@ final class UpdatePreservesUserStateTests: XCTestCase {
                                            "UpdateShaderPrewarmer.swift", "AppUpdater.swift", "UpdateVersionDisplay.swift"]
         let bundleLocations: [String] = ["Bundle.main.bundleURL", "Bundle.main.bundlePath", "Bundle.main.resourceURL",
                                          "Bundle.main.resourcePath", "Bundle.main.executableURL"]
+        let bundleReaders: Set<String> = ["AppRelauncher.swift", "ScreenSaverInstaller.swift"]
         var problems: [String] = []
         let enumerator = try XCTUnwrap(FileManager.default.enumerator(at: sources, includingPropertiesForKeys: nil))
         for case let file as URL in enumerator where file.pathExtension == "swift" {
@@ -111,8 +112,10 @@ final class UpdatePreservesUserStateTests: XCTestCase {
             if !versionReaders.contains(name), text.contains("CFBundleVersion") || text.contains("CFBundleShortVersionString") {
                 problems.append("\(name) reads the app version")
             }
-            // Relaunching opens the bundle; nothing else may use its location.
-            if name != "AppRelauncher.swift", let hit = bundleLocations.first(where: text.contains) {
+            // Relaunching opens the bundle, and the screen saver installer copies the bundled
+            // .saver out to ~/Library/Screen Savers (it only reads the bundle); nothing else may
+            // use its location.
+            if !bundleReaders.contains(name), let hit = bundleLocations.first(where: text.contains) {
                 problems.append("\(name) uses \(hit)")
             }
         }

@@ -44,6 +44,9 @@ struct SceneScriptObjectDescription {
     var effects: [Effect] = []
     /// The image's spritesheet animation (`getTextureAnimation()`), if its texture has one.
     var textureAnimation: SceneScriptAnimationDescription?
+    /// The duration in seconds of the image's video texture (`getVideoTexture()`), if its texture
+    /// is a video.
+    var videoDuration: Double?
     /// Named timeline animations of the object and its properties (`property` is the scene.json
     /// key, e.g. "alpha", "origin", "instanceoverride.rate").
     var animations: [SceneScriptAnimationDescription] = []

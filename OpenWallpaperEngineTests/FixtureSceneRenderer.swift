@@ -57,8 +57,10 @@ struct FixtureSceneRenderer {
         var frame = 0
         while Date() < deadline {
             now += 1.0 / 30
-            renderer.renderShared([SceneViewport(drawableSize: drawable, pointSize: points, cursor: nil, frameRateLimit: 30)])
-            renderer.lastCommandBuffer?.waitUntilCompleted()
+            OWEPhaseTiming.measure(.render, frames: 1) {
+                renderer.renderShared([SceneViewport(drawableSize: drawable, pointSize: points, cursor: nil, frameRateLimit: 30)])
+            }
+            OWEPhaseTiming.measure(.gpuWait) { renderer.lastCommandBuffer?.waitUntilCompleted() }
             RunLoop.main.run(until: Date().addingTimeInterval(0.005))
             frame += 1
             guard frame % 10 == 0, let texture = renderer.sharedFrame else { continue }

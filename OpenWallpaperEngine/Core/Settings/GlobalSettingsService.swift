@@ -46,6 +46,8 @@ class GlobalSettingsViewModel: ObservableObject {
     var didCurrentWallpaperChangeCancellable: Cancellable?
     var didAddToLoginItemCancellable: Cancellable?
     var didChangeAdjustMenuBarTintCancellable: Cancellable?
+    var didChangeLockScreenPictureCancellable: Cancellable?
+    var didChangeScreenSaverCancellable: Cancellable?
     
     init() {
         let loaded: GlobalSettings
@@ -70,6 +72,8 @@ class GlobalSettingsViewModel: ObservableObject {
         didCurrentWallpaperChangeCancellable?.cancel()
         didAddToLoginItemCancellable?.cancel()
         didChangeAdjustMenuBarTintCancellable?.cancel()
+        didChangeLockScreenPictureCancellable?.cancel()
+        didChangeScreenSaverCancellable?.cancel()
     }
     
     func didFinishLaunchingNotification() {
@@ -93,6 +97,25 @@ class GlobalSettingsViewModel: ObservableObject {
             .removeDuplicates { $0.adjustMenuBarTint == $1.adjustMenuBarTint }
             .map { $0.adjustMenuBarTint }
             .sink { [weak self] in self?.didChangeAdjustMenuBarTint($0) }
+
+        self.didChangeLockScreenPictureCancellable =
+        self.$settings
+            .map { $0.lockScreenPicture }
+            .removeDuplicates()
+            .dropFirst()
+            .sink { [weak self] in self?.didChangeLockScreenPicture($0) }
+
+        self.didChangeScreenSaverCancellable =
+        self.$settings
+            .map { [$0.screenSaver as AnyHashable, $0.renderResolution] }
+            .removeDuplicates()
+            .dropFirst()
+            .sink { [weak self] _ in
+                guard let enabled = self?.settings.screenSaver else { return }
+                // The loop follows Render Resolution, so a change re-renders it.
+                AppDelegate.shared.screenSaver.update(enabled: enabled,
+                                                      wallpaper: AppDelegate.shared.wallpaperViewModel.currentWallpaper)
+            }
             
         
         self.validate()
@@ -112,6 +135,11 @@ class GlobalSettingsViewModel: ObservableObject {
     }
     
     func didChangeAdjustMenuBarTint(_ newValue: Bool) {
+        // A lock-screen picture stays either way: it is a setting of its own, and already the
+        // scene's picture.
+        let showsLockPicture = NSScreen.main.flatMap { NSWorkspace.shared.desktopImageURL(for: $0) }
+            .map(LockScreenPicture.current.isLockPicture) ?? false
+        guard !showsLockPicture else { return }
         if newValue != true {
             if DesktopSnapshotCache.mayChangeDesktopPicture, let wallpaper = UserDefaults.app.url(forKey: "OSWallpaper") {
                 try? NSWorkspace.shared.setDesktopImageURL(wallpaper, for: .main!)
@@ -121,6 +149,18 @@ class GlobalSettingsViewModel: ObservableObject {
         }
     }
     
+    /// The lock screen shows the scene again, or the user's own pictures come back (and the menu
+    /// bar tint's picture of a video or web wallpaper, when that is on).
+    func didChangeLockScreenPicture(_ newValue: Bool) {
+        let wallpaper = AppDelegate.shared.wallpaperViewModel.currentWallpaper
+        if newValue {
+            LockScreenPicture.apply(wallpaper)
+        } else {
+            LockScreenPicture.restore()
+            if settings.adjustMenuBarTint { AppDelegate.shared.setPlacehoderWallpaper(with: wallpaper) }
+        }
+    }
+
     func didCurrentWallpaperChange(_ newValue: WEWallpaper) {
         AppDelegate.shared.setPlacehoderWallpaper(with: newValue)
     }
@@ -145,6 +185,7 @@ class GlobalSettingsViewModel: ObservableObject {
         self.settings.qualityEfficiency = QualityEfficiency(preset: quality).stop
         self.settings.fps = quality.fps
         self.settings.fpsSetByUser = false
+        self.settings.applyResolutionPreset(quality)
         switch quality {
         case .low:
             self.settings.antiAliasing = .none

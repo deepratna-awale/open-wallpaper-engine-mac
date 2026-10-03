@@ -21,7 +21,11 @@ enum SceneMetalTextureSource {
             return SIMD2(Float(texture.contentWidth), Float(texture.contentHeight))
         case let .uploaded(info):
             return info.contentSize
-        case .image, .animated, .video:
+        case let .image(image):
+            // A raw .tex image is uploaded as its padded allocation, like a block-compressed one.
+            guard let raw = TEXRawImageRep.of(image), raw.isPadded else { return nil }
+            return SIMD2(Float(raw.pixelsWide), Float(raw.pixelsHigh))
+        case .animated, .video:
             return nil
         }
     }
@@ -69,7 +73,13 @@ enum SceneMetalTextureSource {
         switch self {
         case let .dxt(texture): size = SIMD2(Float(texture.width), Float(texture.height))
         case let .uploaded(info): return info.sheetPixelSize
-        case .image, .animated, .video: size = pixelSize
+        case let .image(image):
+            if let raw = TEXRawImageRep.of(image) {
+                size = SIMD2(Float(raw.rowPixels), Float(raw.allocationRows))
+            } else {
+                size = pixelSize
+            }
+        case .animated, .video: size = pixelSize
         }
         return size.x > 0 && size.y > 0 ? SIMD2<Double>(size) : nil
     }
@@ -240,6 +250,9 @@ struct SceneMetalContent {
     /// Every object's own `visible` before scripts (authored, user-bound or the app's toggle), by
     /// id. Hidden objects are built anyway: scripts can show them (plan §4.3).
     var visibility: [String: Bool] = [:]
+    /// What `visibility` and the effects' `visible` follow, which the renderer takes again when a
+    /// user property changes (`SceneUserVisibility`).
+    var userVisibility = SceneUserVisibility()
     /// The id of each object of scene.json, in scene order.
     var objectIDs: [Int] = []
     /// The scene's SceneScripts; nil when it has none.

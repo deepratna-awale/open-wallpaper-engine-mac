@@ -18,6 +18,8 @@ final class WallpaperServices {
     let audioCapture: SystemAudioCapture
     /// Per-wallpaper user properties and their music-synced modulation.
     let propertyService: SceneUserPropertyService
+    /// Whether a window that edits wallpaper properties is open.
+    @MainActor let propertyEditing = ScenePropertyEditing()
 
     private init() {
         let capture = SystemAudioCapture()

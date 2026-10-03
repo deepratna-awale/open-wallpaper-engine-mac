@@ -40,7 +40,7 @@ class SceneWallpaperViewModel: ObservableObject {
     /// The settings `setRenderSettings` last gave; the next content build takes them.
     private var pendingRenderSettings = SceneRenderSettings()
     private var loadedTextureReductionSize: SIMD2<Float>?
-    private var loadedContentUserProperties = Set<String>()
+    private var loadedBindingTable = UserPropertyBindingTable()
     /// The newest load; an older one that finishes later is dropped.
     private var loadGeneration = 0
     private var loadJob: PreparationPool.Job?
@@ -75,10 +75,21 @@ class SceneWallpaperViewModel: ObservableObject {
     /// The factor the particle budget put on the scene's systems (`ParticleBudget`); systems
     /// scripts create later are thinned by it too.
     private var particleBudgetScale: Float = 1
+    /// The particles each object's systems hold as authored (`ParticleBudget.capacity`), by object
+    /// id, as the last content build made them: an object rebuilt alone is thinned by the scene's
+    /// factor while that stays the same.
+    private var particleCapacities: [Int: Int] = [:]
+    /// Time spent planning particle materials (`buildParticleMaterial`) since the content build
+    /// began, and the plans made, for its load log line.
+    private var particleMaterialPlanTime: (nanoseconds: UInt64, plans: Int) = (0, 0)
     /// The budget scaling last logged, so a rebuild of the same scene doesn't log it again.
     private var loggedParticleBudget: (directory: URL, report: ParticleBudget.Report)?
     /// Retained for video wallpapers rendered through the scene pipeline.
     private var videoStream: VideoTextureStream?
+    /// Scene images' video textures, which follow the wallpaper's playback (`setEmbeddedVideoRate`).
+    private let embeddedVideoStreams = NSHashTable<VideoTextureStream>.weakObjects()
+    private var embeddedVideoRate: Float = 1
+    private let embeddedVideoLock = NSLock()
     private var builtVideoFrameSize: SIMD2<Float>?
 
     /// Builds the render content off the main thread and delivers it on the main queue. While a
@@ -97,9 +108,12 @@ class SceneWallpaperViewModel: ObservableObject {
     private var loadedDocument: (document: SceneJSON, signature: String)?
     /// The loaded wallpaper's project.json, which declares its user properties.
     private var loadedProject: SceneJSON?
-    /// User properties the built content reads (layer visibility, bound values outside scripts):
-    /// changing any other only reaches the scripts (`applyUserProperties`), without a rebuild.
-    var contentUserProperties: Set<String> { stateLock.withLock { loadedContentUserProperties } }
+    /// Every user-property binding of the loaded scene and the documents its build read; every
+    /// bound value the build decodes is resolved through it.
+    var bindingTable: UserPropertyBindingTable { stateLock.withLock { loadedBindingTable } }
+    /// Copies of a particle definition share its built parts within one build
+    /// (`ParticleDefinitionCache`); false builds every copy in full (tests compare the two).
+    var sharesParticleDefinitions = true
     /// The loaded scene has SceneScripts.
     private var hasScriptSites = false
     private var loadedWallpaperDirectory: URL?
@@ -259,7 +273,7 @@ class SceneWallpaperViewModel: ObservableObject {
         var document: SceneJSON?
         var project: SceneJSON?
         var source = "parsed"
-        var contentUserProperties = Set<String>()
+        var bindingTable = UserPropertyBindingTable()
         var hasScriptSites = false
     }
 
@@ -309,6 +323,10 @@ class SceneWallpaperViewModel: ObservableObject {
     /// Reads `wallpaper`'s scene: the in-memory parse, else the scene file itself. Touches no loaded state, so
     /// it runs without the scene lock; nil when `isCurrent` says a newer load took over.
     private func readScene(_ wallpaper: WEWallpaper, isCurrent: () -> Bool) -> SceneRead? {
+        OWEPhaseTiming.measure(.sceneLoad) { readSceneUntimed(wallpaper, isCurrent: isCurrent) }
+    }
+
+    private func readSceneUntimed(_ wallpaper: WEWallpaper, isCurrent: () -> Bool) -> SceneRead? {
         let signpost = OWESignpost.begin(OWESignpost.scene, "loadScene")
         defer { signpost.end() }
         OWEFrameMetrics.countSceneReload()
@@ -363,7 +381,7 @@ class SceneWallpaperViewModel: ObservableObject {
                                         document: read.document), for: dir)
         }
         if let document = read.document {
-            read.contentUserProperties = Self.contentUserProperties(in: document)
+            read.bindingTable.record(.scene, json: document)
             read.hasScriptSites = !SceneScriptSiteBuilder(wallpaperID: "").sites(in: document).isEmpty
         }
         read.project = Self.project(in: dir)
@@ -423,7 +441,7 @@ class SceneWallpaperViewModel: ObservableObject {
         hasScriptSites = read.hasScriptSites
         loadedWallpaperDirectory = dir
         stateLock.withLock {
-            loadedContentUserProperties = read.contentUserProperties
+            loadedBindingTable = read.bindingTable
             loadedTextureReductionSize = TextureReduction.orthographicSize(of: scene)
         }
         bumpRevision()
@@ -469,50 +487,16 @@ class SceneWallpaperViewModel: ObservableObject {
         }
     }
 
-    /// The user properties the content is built from: every `"user"` binding of the document
-    /// except inside script sites (their scripts get the change through `applyUserProperties` and
-    /// the binding, docs/scenescript-plan.md WP8), `scriptproperties`, and the object fields the
-    /// renderer re-resolves every frame (`SceneLiveBindingSites`), which a change reaches without a rebuild.
-    static func contentUserProperties(in document: SceneJSON) -> Set<String> {
-        var names = Set<String>()
-        func walk(_ value: SceneJSON, liveSites: Bool = false) {
-            switch value {
-            case .object(let fields):
-                if case .string(let script)? = fields["script"], !script.isEmpty { return }
-                if let user = SceneScriptUserReference(fields["user"]) { names.insert(user.name) }
-                for (key, field) in fields where key != "scriptproperties" {
-                    if liveSites, SceneLiveBindingSites.isLive(key, of: fields) { continue }
-                    walk(field)
-                }
-            case .array(let values):
-                values.forEach { walk($0) }
-            default:
-                break
-            }
-        }
-        // Only the scene's own objects have live sites; everything else is walked as before.
-        guard case .object(let root) = document else {
-            walk(document)
-            return names
-        }
-        for (key, field) in root where key != "scriptproperties" {
-            if key == "objects", case .array(let objects) = field {
-                objects.forEach { walk($0, liveSites: true) }
-            } else {
-                walk(field)
-            }
-        }
-        return names
+    /// What changing user properties `keys` needs (`SceneBindingUpdate`), from the bindings the
+    /// loaded scene and the documents its build read declare.
+    func bindingUpdate(for keys: [String]) -> SceneBindingUpdate {
+        SceneBindingUpdate(keys: keys, table: bindingTable)
     }
 
-    /// How much of the scene a user property change invalidates. A declared property no built
-    /// content reads (only scripts do) changes nothing here: the renderer hands it to the scripts.
+    /// How much of the whole scene a change of `keys` invalidates: only the app's own keys and
+    /// scene-wide structural bindings rebuild it (`bindingUpdate(for:)`).
     func impact(of keys: [String]) -> SceneChangeImpact {
-        keys.reduce(.none) { impact, key in
-            let own = SceneChangeImpact.impact(of: key)
-            guard own == .rebuildContent, !key.hasPrefix("_owe_") else { return max(impact, own) }
-            return max(impact, contentUserProperties.contains(key) ? .rebuildContent : .none)
-        }
+        bindingUpdate(for: keys).impact
     }
 
     /// The settings identity of the wallpaper in `directory`, resolved (and old path keys moved)
@@ -596,6 +580,10 @@ class SceneWallpaperViewModel: ObservableObject {
     }
 
     func metalContent() -> SceneMetalContent? {
+        OWEPhaseTiming.measure(.sceneLoad) { metalContentUntimed() }
+    }
+
+    private func metalContentUntimed() -> SceneMetalContent? {
         sceneLock.lock()
         defer { sceneLock.unlock() }
         let revision = metalRevision
@@ -615,11 +603,10 @@ class SceneWallpaperViewModel: ObservableObject {
         defer { signpost.end() }
         defer { endBuildTextures() }
         guard let authoredScene = loadedScene, let wallpaperDir = loadedWallpaperDirectory else { return nil }
-        // Content is built from what the user properties say; a property change rebuilds it.
+        // Content is built from what the user properties say (`bindingTable`).
         let valueContext = userValueContext
-        var scene = authoredScene
-        scene.objects = SceneObjectIdentity.assigningFallbackIDs(
-            authoredScene.objects.map { $0.resolvingUserBindings(in: valueContext) })
+        var scene = resolvedScene(authoredScene)
+        scene.objects = SceneObjectIdentity.assigningFallbackIDs(scene.objects)
         let sceneSize = metalSceneSize(for: scene)
         if scene.general.projection == .orthographicAuto { Self.centreFirstImage(of: &scene, sceneSize: sceneSize) }
         let bloom = bloomSettings(for: scene.general)
@@ -634,21 +621,35 @@ class SceneWallpaperViewModel: ObservableObject {
         let authoredTransforms = SceneTransformHierarchy(objects: scene.objects, sceneSize: sceneSize)
         // WE draws objects in scene.json order; both lists carry that index so the renderer can interleave them.
         let layers: [SceneMetalLayer] = scene.objects.enumerated().compactMap { index, object in
-            var layer = buildLayer(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize, context: valueContext)
+            var layer = bindingTable.building(.object(object.id ?? index)) {
+                buildLayer(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize, context: valueContext)
+            }
             layer?.order = index
             return layer
         }
         var particleSystems: [SceneMetalParticleSystem] = []
+        particleMaterialPlanTime = (0, 0)
+        let memoBefore = effectTranslator?.sources.counts
+        let particleCache = ParticleDefinitionCache(sharesParts: sharesParticleDefinitions)
         for (index, object) in scene.objects.enumerated() {
             let base = particleSystems.count
-            for var system in buildParticleFamily(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
-                                                  pixelUnits: Self.particlesUsePixelUnits(scene),
-                                                  transforms: authoredTransforms) {
+            let family = bindingTable.building(.object(object.id ?? index)) {
+                buildParticleFamily(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
+                                    pixelUnits: Self.particlesUsePixelUnits(scene), transforms: authoredTransforms,
+                                    cache: particleCache)
+            }
+            for var system in family {
                 system.order = index
                 system.link?.parentIndex += base
                 particleSystems.append(system)
             }
         }
+        logParticleMaterialPlanTime(wallpaperDir: wallpaperDir, memoBefore: memoBefore)
+        logParticleBuildTiming(particleCache.timing, wallpaperDir: wallpaperDir)
+        particleCapacities = Dictionary(particleSystems.map { system in
+            (system.order < scene.objects.count ? scene.objects[system.order].id ?? system.order : system.order,
+             ParticleBudget.capacity(of: system))
+        }, uniquingKeysWith: +)
         applyParticleBudget(to: &particleSystems, wallpaperDir: wallpaperDir)
         // A scene of scripts alone (groups whose scripts create layers) runs too, and so does one
         // of models alone (the default project arsenal).
@@ -665,6 +666,7 @@ class SceneWallpaperViewModel: ObservableObject {
                                             wallpaperKey: propertyStoreKey)
             content.motions = objectMotions(scene.objects, besides: layers, sceneSize: sceneSize, context: valueContext)
             content.visibility = visibility
+            content.userVisibility = SceneUserVisibility(objects: scene.objects)
             content.objectIDs = scene.objects.map { $0.id ?? -1 }
             content.spatial = SceneSpatialContentBuilder(
                 readFile: { self.assetData(named: $0, wallpaperDir: wallpaperDir) },
@@ -713,13 +715,91 @@ class SceneWallpaperViewModel: ObservableObject {
             bloom: SceneBloomSettings(enabled: false, strength: 0, threshold: 0.7, tint: SIMD3<Float>(repeating: 1)))
     }
 
+    // MARK: - Objects rebuilt alone
+
+    /// Rebuilds objects `ids` off the render and main threads, on the content queue, and delivers
+    /// them on the main queue (`rebuildObjects`); nil when they can't be rebuilt alone.
+    func rebuildObjectsAsync(_ ids: Set<Int>, completion: @escaping (SceneObjectReplacement?) -> Void) {
+        contentQueue.async { [weak self] in
+            let replacement = self?.rebuildObjects(ids)
+            DispatchQueue.main.async { completion(replacement) }
+        }
+    }
+
+    /// Objects `ids` built again with the current user properties, for the renderer to swap in
+    /// (`SceneObjectReplacement`): the layers and particle systems of image, text, shape and
+    /// particle objects. Nil, for a whole-content rebuild instead, when one is anything else (a
+    /// light, sound, model or camera, which the scene's own stages hold), isn't in the scene,
+    /// builds nothing, emits from another layer's image, or changes the scene's particle budget
+    /// factor. Takes the scene lock.
+    func rebuildObjects(_ ids: Set<Int>) -> SceneObjectReplacement? {
+        sceneLock.lock()
+        defer { sceneLock.unlock() }
+        defer { endBuildTextures() }
+        guard !ids.isEmpty, let authoredScene = loadedScene, let wallpaperDir = loadedWallpaperDirectory,
+              !Self.isVideoType(currentWallpaper.project.type) else { return nil }
+        let valueContext = userValueContext
+        var scene = resolvedScene(authoredScene)
+        scene.objects = SceneObjectIdentity.assigningFallbackIDs(scene.objects)
+        let sceneSize = metalSceneSize(for: scene)
+        if scene.general.projection == .orthographicAuto { Self.centreFirstImage(of: &scene, sceneSize: sceneSize) }
+        let authoredTransforms = SceneTransformHierarchy(objects: scene.objects, sceneSize: sceneSize)
+        var layers: [SceneMetalLayer] = []
+        var particleSystems: [SceneMetalParticleSystem] = []
+        var capacities = particleCapacities
+        let particleCache = ParticleDefinitionCache(sharesParts: sharesParticleDefinitions)
+        defer { logParticleBuildTiming(particleCache.timing, wallpaperDir: wallpaperDir) }
+        for id in ids.sorted() {
+            guard let index = scene.objects.firstIndex(where: { $0.id == id }) else { return nil }
+            let object = scene.objects[index]
+            guard object.light == nil, object.sound == nil, object.model == nil, object.cameraLayer == nil else { return nil }
+            var layer = bindingTable.building(.object(id)) {
+                buildLayer(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize, context: valueContext)
+            }
+            layer?.order = index
+            let family = bindingTable.building(.object(id)) {
+                buildParticleFamily(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
+                                    pixelUnits: Self.particlesUsePixelUnits(scene), transforms: authoredTransforms,
+                                    cache: particleCache)
+            }
+            guard layer != nil || !family.isEmpty, !family.contains(where: { !$0.emitterImages.isEmpty }) else { return nil }
+            if let layer { layers.append(layer) }
+            let base = particleSystems.count
+            for var system in family {
+                system.order = index
+                system.link?.parentIndex += base
+                particleSystems.append(system)
+            }
+            capacities[id] = family.isEmpty ? nil : family.reduce(0) { $0 + ParticleBudget.capacity(of: $1) }
+        }
+        let limit = renderSettings.particleBudget.limit
+        let scale = ParticleBudget.scale(authored: ParticleBudget.total(Array(capacities.values)), budget: limit)
+        guard particleSystems.isEmpty || scale == particleBudgetScale else { return nil }
+        particleCapacities = capacities
+        for index in particleSystems.indices { particleSystems[index].budgetScale = particleBudgetScale }
+        var transforms = authoredTransforms
+        for layer in layers where layer.fillsScene {
+            transforms.makeRoot(layer.id, local: SceneLocalTransform(origin: layer.position, scale: layer.scale, angle: layer.rotation))
+        }
+        let rebuilt = scene.objects.filter { $0.id.map(ids.contains) ?? false }
+        var content = SceneMetalContent(size: sceneSize, layers: layers, particleSystems: particleSystems,
+                                        bloom: bloomSettings(for: scene.general), transforms: transforms,
+                                        camera: SceneCameraEffects(scene.general, in: valueContext),
+                                        clearColor: scene.general.clearColor(in: valueContext), wallpaperKey: propertyStoreKey)
+        content.motions = objectMotions(rebuilt, besides: layers, sceneSize: sceneSize, context: valueContext)
+        content.engineCombos = sceneEngineCombos
+        return SceneObjectReplacement(objectIDs: Set(ids.map(String.init)), content: content)
+    }
+
     // MARK: - Video as a scene
 
     /// Wraps a video wallpaper in a one-layer scene so the effect stack applies to it, the way
     /// Wallpaper Engine's own `scenes/videoplayer` does.
     private func videoContent() -> SceneMetalContent? {
         guard let device = MTLCreateSystemDefaultDevice() else { return nil }
-        let url = currentWallpaper.mediaURL
+        // Runs on the content queue: a video AVFoundation refuses as it is plays from its repaired
+        // copy, made here on first play when the import didn't make it.
+        let url = videoStream == nil ? RepairedVideoCache.current.playableURL(for: currentWallpaper.mediaURL) : currentWallpaper.mediaURL
         let stream = videoStream ?? VideoTextureStream(url: url, device: device)
         guard let stream else {
             OWELog.error(.scene, "Could not open video \(url.lastPathComponent) for Metal playback")
@@ -755,6 +835,15 @@ class SceneWallpaperViewModel: ObservableObject {
         return SceneMetalContent(size: sceneSize, layers: [layer], particleSystems: [],
                                  bloom: SceneBloomSettings(enabled: false, strength: 0, threshold: 0.7,
                                                            tint: SIMD3<Float>(repeating: 1)))
+    }
+
+    /// Plays or pauses every scene image's video texture with the wallpaper: 0 while it is
+    /// paused, covered or frozen, so their decoders stop as a video wallpaper's does.
+    func setEmbeddedVideoRate(_ rate: Float) {
+        embeddedVideoLock.withLock {
+            embeddedVideoRate = rate
+            for stream in embeddedVideoStreams.allObjects { stream.setHostRate(rate) }
+        }
     }
 
     /// Drives playback for the Metal video path; the AVKit path owns its own players.
@@ -832,20 +921,20 @@ class SceneWallpaperViewModel: ObservableObject {
         sceneLock.lock()
         defer { sceneLock.unlock() }
         defer { endBuildTextures() }
-        let object: WESceneObject
+        let context = userValueContext
+        let resolved: WESceneObject
         do {
-            let data = try JSONSerialization.data(withJSONObject: SceneJSON.object(json).foundationObject)
-            object = try JSONDecoder().decode(WESceneObject.self, from: data)
+            resolved = try UserPropertyBindingTable.decode(
+                WESceneObject.self, from: UserPropertyBindingTable.resolving(.object(json), properties: userProperty))
         } catch {
             OWELog.error(.script, "createLayer: the object can't be decoded: \(error)")
             return nil
         }
-        let context = userValueContext
-        let resolved = object.resolvingUserBindings(in: context)
         if resolved.particle != nil {
             var systems = buildParticleFamily(resolved, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
                                               pixelUnits: loadedScene.map(Self.particlesUsePixelUnits) ?? true,
-                                              transforms: SceneTransformHierarchy(objects: [resolved], sceneSize: sceneSize))
+                                              transforms: SceneTransformHierarchy(objects: [resolved], sceneSize: sceneSize),
+                                              cache: ParticleDefinitionCache(sharesParts: sharesParticleDefinitions))
             guard !systems.isEmpty else { return nil }
             // The scene's factor, or the family's own if it alone exceeds the budget.
             let own = ParticleBudget.scale(authored: systems.reduce(0) { $0 + ParticleBudget.capacity(of: $1) },
@@ -907,6 +996,18 @@ class SceneWallpaperViewModel: ObservableObject {
     }
 
     /// Resolves user-bound values against this wallpaper's properties.
+    /// The loaded scene with its user bindings resolved (`UserPropertyBindingTable.resolvedScene`);
+    /// the authored scene, logged, when the resolved document can't be decoded.
+    private func resolvedScene(_ authored: WEScene) -> WEScene {
+        guard let document = loadedDocument?.document else { return authored }
+        do {
+            return try bindingTable.resolvedScene(authored, document: document, properties: userProperty)
+        } catch {
+            OWELog.error(.scene, "\(currentWallpaper.project.title): scene.json can't be decoded with its user properties: \(error)")
+            return authored
+        }
+    }
+
     private var userValueContext: LiveSceneValueContext {
         LiveSceneValueContext(wallpaper: propertyStoreKey)
     }
@@ -996,6 +1097,9 @@ class SceneWallpaperViewModel: ObservableObject {
         } else if let sizeString = object.size {
             let value = sizeString.parseVector2()
             size = SIMD2<Float>(Float(value.0), Float(value.1))
+        } else if let declared = model.declaredSize {
+            // The model's own size (WE's templates), not its first texture's.
+            size = declared
         } else {
             // In pixels, and for a .tex the image's own size, not the padded allocation around it;
             // for a sprite sheet one frame's.
@@ -1063,6 +1167,10 @@ class SceneWallpaperViewModel: ObservableObject {
     /// Plans are kept by `.mdl` and skin for the content's life, so a script's clones share their
     /// original's (and its GPU buffers).
     private func buildModels(_ models: [SceneModelObject], wallpaperDir: URL) -> [SceneModelObject] {
+        OWEPhaseTiming.measure(.particlesModels) { buildModelsUntimed(models, wallpaperDir: wallpaperDir) }
+    }
+
+    private func buildModelsUntimed(_ models: [SceneModelObject], wallpaperDir: URL) -> [SceneModelObject] {
         guard !models.isEmpty, let translator = effectTranslator else { return models }
         let known = models.map { object -> SceneModelObject in
             var object = object
@@ -1180,6 +1288,8 @@ class SceneWallpaperViewModel: ObservableObject {
         layer.weEffects = buildEffectPlans(object.effects ?? [], objectID: object.id ?? -1, wallpaperDir: wallpaperDir).plans
         layer.alignment = object.alignment
         layer.solidFill = SIMD4(Float(color.0), Float(color.1), Float(color.2), 1)
+        // The colour is the image: a bound colour rebuilds the layer.
+        bindingTable.baked(.objectField(.color), of: .object(object.id ?? -1))
         return layer
     }
 
@@ -1453,7 +1563,10 @@ class SceneWallpaperViewModel: ObservableObject {
                 self?.loadMetalTexture(named: name, materialDir: materialPath, wallpaperDir: wallpaperDir)
             },
             sceneEngineCombos: sceneEngineCombos,
-            readWallpaperFile: { [weak self] path in self?.wallpaperData(named: path, wallpaperDir: wallpaperDir) })
+            readWallpaperFile: { [weak self] path in
+                guard let self, let data = self.wallpaperData(named: path, wallpaperDir: wallpaperDir) else { return nil }
+                return self.bindingTable.resolvedData(data, path: path, properties: self.userProperty)
+            })
         builder.objectCombos = objectCombos
         var plans: [SceneEffectPlan] = []
         var handled = Set<Int>()
@@ -1512,26 +1625,7 @@ class SceneWallpaperViewModel: ObservableObject {
     }
 
     private func isObjectVisible(_ object: WESceneObject) -> Bool {
-        let objectID = object.id ?? -1
-        let overrideKey = sceneObjectVisibilityKey(objectID: objectID)
-        if let override = userProperty(overrideKey) {
-            return override != "false"
-        }
-        if object.textValue != nil {
-            if userProperty("_owe_text_\(objectID)_enabled") == "false" {
-                return false
-            }
-        }
-        if let property = object.visibleUserProperty {
-            guard let selectedValue = userProperty(property) else {
-                return object.visible != false
-            }
-            if let condition = object.visibleCondition {
-                return normalizeVariant(condition) == normalizeVariant(selectedValue)
-            }
-            return selectedValue.caseInsensitiveCompare("true") == .orderedSame || selectedValue == "1"
-        }
-        return object.visible != false
+        SceneUserVisibility.Site(object).isShown(userProperty)
     }
 
     private func isEffectVisible(_ effect: WEObjectEffect) -> Bool {
@@ -1541,22 +1635,8 @@ class SceneWallpaperViewModel: ObservableObject {
     /// An effect bound to a user property follows it; with the property missing it keeps its
     /// authored `visible` (default true), as objects do.
     static func isEffectVisible(_ effect: WEObjectEffect, userProperty: (String) -> String?) -> Bool {
-        if let property = effect.visibleUserProperty {
-            guard let selectedValue = userProperty(property) else { return effect.visible != false }
-            if let condition = effect.visibleCondition {
-                return normalizeVariant(condition) == normalizeVariant(selectedValue)
-            }
-            return selectedValue.caseInsensitiveCompare("true") == .orderedSame || selectedValue == "1"
-        }
-        return effect.visible != false
-    }
-
-    private func normalizeVariant(_ value: String) -> String {
-        Self.normalizeVariant(value)
-    }
-
-    private static func normalizeVariant(_ value: String) -> String {
-        value.lowercased().filter { $0.isLetter || $0.isNumber }
+        SceneUserVisibility.Gate(visible: effect.visible, condition: effect.visibleCondition,
+                                 property: effect.visibleUserProperty).isShown(userProperty)
     }
 
     /// An object's `parallaxDepth` (WE's 1 1 when absent), as the layer carries it.
@@ -1570,6 +1650,13 @@ class SceneWallpaperViewModel: ObservableObject {
     /// normal maps, anything a material reads as data) loads as stored.
     private func loadMetalTexture(named name: String, materialDir: String, wallpaperDir: URL,
                                   colour: Bool = false) -> SceneMetalTextureSource? {
+        OWEPhaseTiming.measure(.texture) {
+            loadMetalTextureUntimed(named: name, materialDir: materialDir, wallpaperDir: wallpaperDir, colour: colour)
+        }
+    }
+
+    private func loadMetalTextureUntimed(named name: String, materialDir: String, wallpaperDir: URL,
+                                         colour: Bool) -> SceneMetalTextureSource? {
         // WE's texture reduction loads a smaller mipmap (`TextureReduction`), cached apart.
         let reduction = renderSettings.textureReduction
         let optimise = colour && renderSettings.optimiseTextures && TexturePreparation.deviceSupportsBC7
@@ -1593,9 +1680,21 @@ class SceneWallpaperViewModel: ObservableObject {
             if let texture = parser.extractCompressedTexture(reduction: reduction) {
                 return cacheTexture(.dxt(texture), for: cacheKey)
             }
-            let mipmaps = optimise ? parser.firstImageMipmapCount() ?? 1 : 1
+            // A video texture plays (`IVideoTexture`); its poster frame stays the fallback.
+            if let video = parser.extractVideoData(), let device = MTLCreateSystemDefaultDevice(),
+               let stream = VideoTextureStream.embedded(mp4: video, device: device) {
+                embeddedVideoLock.withLock {
+                    embeddedVideoStreams.add(stream)
+                    stream.setHostRate(embeddedVideoRate)
+                }
+                return cacheTexture(.video(stream), for: cacheKey)
+            }
+            // A padded raw image keeps its allocation (`TEXRawImageRep.makeAllocationTexture`); a
+            // prepared texture holds only the image.
+            let prepares = optimise && !parser.isPaddedRawImage()
+            let mipmaps = prepares ? parser.firstImageMipmapCount() ?? 1 : 1
             let level = TextureReduction.loadedMipmap(reduction: reduction, mipmapCount: mipmaps)
-            let preparedKey = optimise ? TexturePreparation.key(texData: data, level: level) : nil
+            let preparedKey = prepares ? TexturePreparation.key(texData: data, level: level) : nil
             if let preparedKey, let prepared = TexturePreparation.cachedTexture(key: preparedKey) {
                 return cacheTexture(.dxt(prepared), for: cacheKey)
             }
@@ -1663,7 +1762,17 @@ class SceneWallpaperViewModel: ObservableObject {
     }
 
     private func buildParticleFamily(_ object: WESceneObject, wallpaperDir: URL, sceneSize: SIMD2<Float>, pixelUnits: Bool,
-                                     transforms: SceneTransformHierarchy) -> [SceneMetalParticleSystem] {
+                                     transforms: SceneTransformHierarchy,
+                                     cache: ParticleDefinitionCache) -> [SceneMetalParticleSystem] {
+        OWEPhaseTiming.measure(.particlesModels) {
+            buildParticleFamilyUntimed(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize, pixelUnits: pixelUnits,
+                                       transforms: transforms, cache: cache)
+        }
+    }
+
+    private func buildParticleFamilyUntimed(_ object: WESceneObject, wallpaperDir: URL, sceneSize: SIMD2<Float>,
+                                            pixelUnits: Bool, transforms: SceneTransformHierarchy,
+                                            cache: ParticleDefinitionCache) -> [SceneMetalParticleSystem] {
         guard let particlePath = object.particle else { return [] }
         // The emitter's full world transform: its own and its parents' origin, scale and angle.
         let world = object.id.map { transforms.world(of: String($0)) }
@@ -1673,7 +1782,7 @@ class SceneWallpaperViewModel: ObservableObject {
             build: { [weak self] path, system, world, overrides in
                 self?.buildMetalParticleSystem(path, particleSystem: system, object: object, world: world,
                                                overrides: overrides, sceneSize: sceneSize, pixelUnits: pixelUnits,
-                                               wallpaperDir: wallpaperDir)
+                                               wallpaperDir: wallpaperDir, cache: cache)
             },
             report: { message in OWELog.error(.scene, "Particle object \(object.id ?? -1): \(message)") })
         var family = builder.family(particlePath, world: world,
@@ -1687,43 +1796,97 @@ class SceneWallpaperViewModel: ObservableObject {
         return family
     }
 
+    /// Logs where a build's particle systems spent their time (`ParticleBuildTiming`).
+    private func logParticleBuildTiming(_ timing: ParticleBuildTiming, wallpaperDir: URL) {
+        guard let summary = timing.summary else { return }
+        Self.logDetail("\(wallpaperDir.lastPathComponent): \(summary)")
+    }
+
     private func buildMetalParticleSystem(_ particlePath: String, particleSystem: WEParticleSystem, object: WESceneObject,
                                           world: SceneAffineTransform, overrides: SceneParticleOverrides,
-                                          sceneSize: SIMD2<Float>, pixelUnits: Bool,
-                                          wallpaperDir: URL) -> SceneMetalParticleSystem? {
-        guard let materialPath = particleSystem.material,
-              var material: WEMaterial = loadJSON(path: materialPath, wallpaperDir: wallpaperDir),
-              let textureName = material.passes?.first?.textures?.first ?? nil else { return nil }
+                                          sceneSize: SIMD2<Float>, pixelUnits: Bool, wallpaperDir: URL,
+                                          cache: ParticleDefinitionCache) -> SceneMetalParticleSystem? {
+        guard let materialPath = particleSystem.material else { return nil }
         // The object's blending is its own system's; the children it spawns keep their materials'.
         let blending = particlePath == object.particle ? blendingOverride(for: object) : nil
+        // Every copy of a definition shares what its definition, material and blending decide;
+        // the rest is the copy's own.
+        let key = ParticleDefinitionCache.Key(particlePath: particlePath, materialPath: materialPath,
+                                              blending: blending?.rawValue)
+        let table = bindingTable
+        guard let parts = cache.parts(for: key, noteReads: { table.noteReads($0) }, build: {
+            table.capturingReads {
+                buildSharedParticleParts(particlePath, materialPath: materialPath, particleSystem: particleSystem,
+                                         blending: blending, object: object, wallpaperDir: wallpaperDir,
+                                         timing: cache.timing)
+            }
+        }) else { return nil }
+        return makeParticleSystem(particlePath, parts: parts, particleSystem: particleSystem, object: object, world: world,
+                                  overrides: overrides, sceneSize: sceneSize, pixelUnits: pixelUnits,
+                                  timing: cache.timing)
+    }
+
+    /// What every copy of a particle definition with the same material and blending draws with:
+    /// the material, texture 0, its sprite sheet, each renderer's material plan and the built-in
+    /// draw's texture. Nil when the system can't draw (no material or texture).
+    private func buildSharedParticleParts(_ particlePath: String, materialPath: String, particleSystem: WEParticleSystem,
+                                          blending: WEMaterialBlending?, object: WESceneObject, wallpaperDir: URL,
+                                          timing: ParticleBuildTiming) -> ParticleSharedParts? {
+        guard var material: WEMaterial = timing.measure(.materialDocument, {
+                  loadJSON(path: materialPath, wallpaperDir: wallpaperDir)
+              }),
+              let textureName = material.passes?.first?.textures?.first ?? nil else { return nil }
         if let blending { material.passes?[0].blending = blending.rawValue }
-        guard let source = loadMetalTexture(named: textureName, materialDir: materialPath, wallpaperDir: wallpaperDir,
-                                            colour: true) else {
+        guard let source = timing.measure(.texture, {
+            loadMetalTexture(named: textureName, materialDir: materialPath, wallpaperDir: wallpaperDir, colour: true)
+        }) else {
             OWELog.error(.scene, "\(wallpaperDir.lastPathComponent): particle \(particlePath) (object \(object.id ?? -1)): "
                          + "texture \(textureName) of \(materialPath) not found")
             return nil
         }
-        let spriteSheet = loadSpriteSheet(named: textureName, materialDir: materialPath,
-                          wallpaperDir: wallpaperDir, source: source)
-
-        let particleRenderer = particleSystem.renderer?.first
-        let materialPlan = buildParticleMaterial(materialPath, particleSystem: particleSystem, renderer: particleRenderer,
-                                                 source: source, spriteSheet: spriteSheet, blending: blending,
-                                                 object: object, wallpaperDir: wallpaperDir)
-        var system = ParticleSystemBuilder.build(particlePath, particleSystem: particleSystem, object: object,
-                                                 world: world, overrides: overrides, sceneSize: sceneSize,
-                                                 source: source, spriteSheet: spriteSheet, material: material,
-                                                 materialPlan: materialPlan, pixelUnits: pixelUnits)
-        system.material = materialPlan
-        let albedo = ParticleMaterialPlanBuilder.textureHeader(named: textureName, materialPath: materialPath) {
-            assetData(named: $0, wallpaperDir: wallpaperDir)
+        let spriteSheet = timing.measure(.spriteSheet) {
+            loadSpriteSheet(named: textureName, materialDir: materialPath, wallpaperDir: wallpaperDir, source: source)
         }
-        system.fallbackSource = ParticleFallbackTexture.converted(source, format: albedo.flatMap(TEXImageFormat.init(texData:)))
+        let renderers = particleSystem.renderer ?? []
+        let materialPlan = timing.measure(.materialPlan) {
+            buildParticleMaterial(materialPath, particleSystem: particleSystem, renderer: renderers.first, source: source,
+                                  spriteSheet: spriteSheet, blending: blending, object: object, wallpaperDir: wallpaperDir)
+        }
+        let fallbackSource = timing.measure(.fallbackTexture) { () -> SceneMetalTextureSource? in
+            let albedo = ParticleMaterialPlanBuilder.textureHeader(named: textureName, materialPath: materialPath) {
+                assetData(named: $0, wallpaperDir: wallpaperDir)
+            }
+            return ParticleFallbackTexture.converted(source, format: albedo.flatMap(TEXImageFormat.init(texData:)))
+        }
         // WE draws every renderer of the system from its one simulation, each through the material
         // with that renderer's combos.
-        ParticleSystemBuilder.addRenderers(to: &system, particleSystem: particleSystem) { renderer in
-            buildParticleMaterial(materialPath, particleSystem: particleSystem, renderer: renderer, source: source,
-                                  spriteSheet: spriteSheet, blending: blending, object: object, wallpaperDir: wallpaperDir)
+        let rendererMaterials = timing.measure(.extraRenderers) {
+            renderers.dropFirst().map { renderer in
+                buildParticleMaterial(materialPath, particleSystem: particleSystem, renderer: renderer, source: source,
+                                      spriteSheet: spriteSheet, blending: blending, object: object,
+                                      wallpaperDir: wallpaperDir)
+            }
+        }
+        return ParticleSharedParts(material: material, source: source, spriteSheet: spriteSheet, materialPlan: materialPlan,
+                                   fallbackSource: fallbackSource, rendererMaterials: rendererMaterials)
+    }
+
+    /// One copy's system: its own transform, overrides and object over the shared `parts`.
+    private func makeParticleSystem(_ particlePath: String, parts: ParticleSharedParts, particleSystem: WEParticleSystem,
+                                    object: WESceneObject, world: SceneAffineTransform, overrides: SceneParticleOverrides,
+                                    sceneSize: SIMD2<Float>, pixelUnits: Bool,
+                                    timing: ParticleBuildTiming) -> SceneMetalParticleSystem {
+        var system = timing.measure(.system) {
+            ParticleSystemBuilder.build(particlePath, particleSystem: particleSystem, object: object, world: world,
+                                        overrides: overrides, sceneSize: sceneSize, source: parts.source,
+                                        spriteSheet: parts.spriteSheet, material: parts.material,
+                                        materialPlan: parts.materialPlan, pixelUnits: pixelUnits)
+        }
+        system.material = parts.materialPlan
+        system.fallbackSource = parts.fallbackSource
+        var rendererMaterials = parts.rendererMaterials.makeIterator()
+        ParticleSystemBuilder.addRenderers(to: &system, particleSystem: particleSystem) { _ in
+            rendererMaterials.next() ?? nil
         }
         return system
     }
@@ -1735,6 +1898,11 @@ class SceneWallpaperViewModel: ObservableObject {
                                        spriteSheet: SpriteSheet?, blending: WEMaterialBlending?, object: WESceneObject,
                                        wallpaperDir: URL) -> ParticleMaterialPlan? {
         guard let translator = effectTranslator else { return nil }
+        let start = DispatchTime.now().uptimeNanoseconds
+        defer {
+            particleMaterialPlanTime.nanoseconds += DispatchTime.now().uptimeNanoseconds - start
+            particleMaterialPlanTime.plans += 1
+        }
         let builder = ParticleMaterialPlanBuilder(
             translator: translator,
             readFile: { [weak self] path in self?.assetData(named: path, wallpaperDir: wallpaperDir) },
@@ -1747,6 +1915,18 @@ class SceneWallpaperViewModel: ObservableObject {
             OWELog.error(.scene, "Particle system \(object.id ?? -1) uses the built-in draw, material \(materialPath): \(error)")
             return nil
         }
+    }
+
+    /// One line: the content build's particle material plans and their time, and how many
+    /// shader parses and geometry folds came from the translator's memo (`ShaderSourceMemo`).
+    private func logParticleMaterialPlanTime(wallpaperDir: URL, memoBefore: (hits: Int, misses: Int)?) {
+        guard particleMaterialPlanTime.plans > 0 else { return }
+        let memo = effectTranslator.map { translator -> String in
+            let now = translator.sources.counts
+            return ", shader memo \(now.hits - (memoBefore?.hits ?? 0)) hits, \(now.misses - (memoBefore?.misses ?? 0)) misses"
+        } ?? ""
+        Self.logDetail(String(format: "%@: particle material plans: %d in %.1f ms", wallpaperDir.lastPathComponent,
+                              particleMaterialPlanTime.plans, Double(particleMaterialPlanTime.nanoseconds) / 1e6) + memo)
     }
 
     private func loadSpriteSheet(named name: String, materialDir: String, wallpaperDir: URL,
@@ -1783,14 +1963,22 @@ class SceneWallpaperViewModel: ObservableObject {
         let data: Data
         if let values = UserDefaults.app.dictionary(forKey: storageKey) as? [String: String],
            let override = values[overrideKey], let overrideData = override.data(using: .utf8) {
-            data = overrideData
+            data = bindingTable.resolvedData(overrideData, path: path, properties: userProperty)
         } else {
             data = original
         }
         return try? JSONDecoder().decode(T.self, from: data)
     }
 
+    /// The file at `path` as the build reads it: a JSON document with its user bindings resolved
+    /// and recorded (`bindingTable`), any other file as it is.
     private func assetData(named path: String, wallpaperDir: URL) -> Data? {
+        rawAssetData(named: path, wallpaperDir: wallpaperDir).map {
+            bindingTable.resolvedData($0, path: path, properties: userProperty)
+        }
+    }
+
+    private func rawAssetData(named path: String, wallpaperDir: URL) -> Data? {
         if let cached = assetDataCache[path] { return cached }
         // WE's fixed copy of a broken Workshop shader replaces the one the wallpaper ships.
         if let fixed = shaderCompat?.replacement(forShaderPath: path, projectId: loadedProjectId) {

@@ -321,7 +321,7 @@ final class SceneShadowPass {
                                   hasChangingTexture: bound.contains { $0.changes },
                                   sphere: mesh.bounds.map { SceneModelCulling.Sphere($0, world: caster.world) }))
         }
-        return PreparedCaster(sphere: SceneModelCulling.Sphere(plan.bounds, world: caster.world), draws: draws)
+        return PreparedCaster(sphere: SceneModelCulling.Sphere(plan.cullBounds, world: caster.world), draws: draws)
     }
 
     /// Encodes a frame's recorded commands.
@@ -554,8 +554,7 @@ final class SceneShadowPass {
     /// depth-only pass either, so the pipeline has none and the rasteriser writes the depth alone.
     static func pipelineDescriptor(_ variant: TranslatedShaderVariant, format: MDLVertexFormat,
                                    device: MTLDevice) throws -> MTLRenderPipelineDescriptor {
-        let vertexLibrary = try device.makeLibrary(source: variant.vertexMSL, options: nil)
-        let fragmentLibrary = try device.makeLibrary(source: variant.fragmentMSL, options: nil)
+        let (vertexLibrary, fragmentLibrary) = try variant.makeLibraries(device: device)
         guard let vertex = vertexLibrary.makeFunction(name: "main0"),
               let fragment = fragmentLibrary.makeFunction(name: "main0") else {
             throw ShaderCompilerError.failed(step: "metal", output: "entry point main0 missing")

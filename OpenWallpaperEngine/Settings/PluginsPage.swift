@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-/// Settings › Plugins: optional features. Animated Thumbnails works now; Depth Map Generation is
-/// coming as downloadable plugins.
+/// Settings › Plugins: optional features. Animated Thumbnails and Screen Saver work now; Depth
+/// Map Generation is coming as downloadable plugins.
 struct PluginsPage: SettingsPage {
     @ObservedObject var viewModel: GlobalSettingsViewModel
 
@@ -26,6 +26,7 @@ struct PluginsPage: SettingsPage {
                 VStack(spacing: 20) {
                     Toggle("Animated Thumbnails", isOn: $animates)
                         .changedFromDefault(animates)
+                        .help("Plays animated GIF previews in the wallpaper explorer. Uses more CPU while the explorer is open.")
                     if isExpanded {
                         HStack {
                             GifImage("maxwell-cat", animates: animates)
@@ -68,6 +69,20 @@ struct PluginsPage: SettingsPage {
                     .tint(.accentColor)
                     .buttonStyle(.borderless)
                     .frame(maxWidth: .infinity)
+                }
+                VStack(alignment: .leading, spacing: 6) {
+                    Toggle("Screen Saver", isOn: $viewModel.settings.screenSaver)
+                        .changedFromDefault(viewModel.isChanged(\.screenSaver))
+                        .help("Renders a seamless loop of the current scene in the background, at the largest display's point size and without clock and date layers, and installs it as a screen saver. Rendering waits while your Mac is on battery or hot.")
+                    Text("Renders a seamless loop of the current scene wallpaper in the background and installs a screen saver that plays it. Choose Open Wallpaper Engine in Screen Saver settings to use it. Turning it off removes the screen saver and its videos.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if viewModel.settings.screenSaver {
+                        Button("Open Screen Saver Settings…") {
+                            ScreenSaverInstaller.current.openSettings()
+                        }
+                    }
                 }
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {

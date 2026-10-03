@@ -23,6 +23,8 @@ final class ImageMaterialUniforms {
     private(set) var bytes: [UInt8]
     let size: Int
     private let dynamic: [(member: UniformMember, constant: ShaderConstantResolver.DynamicConstant)]
+    /// The user-bound dynamic constants, kept per binding revision.
+    private var userConstants = SceneUserConstantCache()
     private let frameBuiltins: [UniformMember]
     private let passBuiltins: [UniformMember]
     /// `g_Brightness` and `g_UserAlpha` scaled by the material's own value.
@@ -55,10 +57,9 @@ final class ImageMaterialUniforms {
 
     /// Writes this draw's values. `pass` builds the pass context; it runs only when `key` changed.
     func update(key: PassKey, frame: BuiltinFrameContext, values: SceneValueContext, pass: () -> BuiltinPassContext) {
-        for (member, constant) in dynamic {
-            let value = ShaderConstantResolver.shape(SceneValueResolver.resolve(constant.source, in: values),
-                                                     count: constant.count, isInt: constant.isInt)
-            UniformWriter.write(value.components, member: member, into: &bytes)
+        userConstants.begin(dynamic.map(\.constant), in: values)
+        for (index, (member, constant)) in dynamic.enumerated() {
+            UniformWriter.write(userConstants.value(index, of: constant, in: values).components, member: member, into: &bytes)
         }
         let placementChanged = key != lastKey
         guard !frameBuiltins.isEmpty || placementChanged else { return }

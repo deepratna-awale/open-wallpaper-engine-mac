@@ -97,8 +97,6 @@ struct WESceneObject: Decodable {
     /// Every value-bearing field in its full authored form (literal, `user`, `script`, `animation`).
     /// The typed fields above hold only the literal fallback.
     var values: [SceneObjectValueField: SceneRawValue] = [:]
-    /// `text` bound to a user property (`{"user":"name","value":"…"}`): the property's text replaces the value.
-    var textUserProperty: String?
 
     enum CodingKeys: String, CodingKey {
         case id, parent, name, origin, scale, angles, visible, effects, text, font, pointsize, horizontalalign, verticalalign
@@ -116,7 +114,6 @@ struct WESceneObject: Decodable {
                 values[field] = raw
             }
         }
-        textUserProperty = c.decodeLogged(SceneRawValue.self, forKey: .text, userInfo: decoder.userInfo)?.userPropertyName
         // Fields that are always simple types
         id = try? c.decodeIfPresent(Int.self, forKey: .id)
         parent = try? c.decodeIfPresent(Int.self, forKey: .parent)

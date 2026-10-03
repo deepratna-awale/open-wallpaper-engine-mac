@@ -24,6 +24,11 @@ final class SceneRendererScripts {
     private var baseVisibility: [String: Bool] = [:]
     /// Objects' parents, for visibility.
     private var parents: [String: String] = [:]
+    /// User-bound effects' `visible` since the content was built, by object id and effect index
+    /// (`applyUserVisibility`); an effect not in it keeps its plan's.
+    private var userEffectVisibility: [String: [Int: Bool]] = [:]
+    /// Bumped by every `applyUserVisibility`, so effect chains kept as static are drawn again.
+    private(set) var userVisibilityRevision = 0
     private var lastScreenSize: SIMD2<Double>?
     /// Whether the last `submit` started a script frame (`finishFrame` waits only for that).
     private var frameSubmitted = false
@@ -46,6 +51,7 @@ final class SceneRendererScripts {
     func setContent(_ content: SceneScriptSceneContent?, visibility: [String: Bool], parents: [String: String]) {
         baseVisibility = visibility
         self.parents = parents
+        userEffectVisibility = [:]
         if let wallpaper, let content, wallpaper.identity.wallpaperID == content.wallpaperID,
            wallpaper.documentSignature == content.documentSignature {
             self.content = content
@@ -165,6 +171,15 @@ final class SceneRendererScripts {
 
     func baseVisible(_ id: String) -> Bool { baseVisibility[id] ?? true }
 
+    /// The user's visibility of the scene's objects and effects after a property change
+    /// (`SceneUserVisibility.resolve`): objects' base `visible` and bound effects' `visible`,
+    /// without a content rebuild.
+    func applyUserVisibility(objects: [String: Bool], effects: [String: [Int: Bool]]) {
+        baseVisibility.merge(objects) { _, new in new }
+        userEffectVisibility = effects
+        userVisibilityRevision &+= 1
+    }
+
     /// A text layer's configuration with what scripts set: `text`, `pointsize` and alignments.
     func text(_ text: SceneMetalText, of id: String) -> (text: SceneMetalText, value: String, pointSize: Float?) {
         guard let object = object(id) else { return (text, text.value, nil) }
@@ -178,15 +193,19 @@ final class SceneRendererScripts {
         return (scripted, object.strings[.text] ?? text.value, pointSize)
     }
 
-    /// The effect graph's view of a layer's effects this frame: which are hidden (base `visible`
-    /// or a script's) and the constants scripts set.
+    /// The effect graph's view of a layer's effects this frame: which are hidden (a script's
+    /// `visible`, else the user's, else the plan's) and the constants scripts set. The revision
+    /// changes whenever either does.
     func effects(_ plans: [SceneEffectPlan], of id: String) -> (hidden: Set<Int>, writes: [Int: [SceneScriptConstantWrite]], revision: Int) {
         let object = object(id)
+        let user = userEffectVisibility[id]
         var hidden = Set<Int>()
-        for (index, plan) in plans.enumerated() where !(object?.effectVisible[plan.effectIndex] ?? plan.visible) {
+        for (index, plan) in plans.enumerated()
+        where !(object?.effectVisible[plan.effectIndex] ?? user?[plan.effectIndex] ?? plan.visible) {
             hidden.insert(index)
         }
-        return (hidden, object?.constants ?? [:], object?.effectRevision ?? 0)
+        // Both only grow, so their sum changes whenever either does.
+        return (hidden, object?.constants ?? [:], (object?.effectRevision ?? 0) &+ userVisibilityRevision)
     }
 
     // MARK: - Draw order

@@ -39,6 +39,9 @@ final class ParticleGPUSimulator {
     /// Compactions that also write sprite records, by draw kind.
     private let compactWriters: [ParticleGPUDrawKind: MTLComputePipelineState]
     private let writers: [ParticleGPUDrawKind: MTLComputePipelineState]
+    /// Bound as the linked points of a system that isn't linked: the kernels never read it, but
+    /// Metal checks the binding holds one `LinkedPoints`. Zeroed.
+    let unlinkedPoints: MTLBuffer
 
     init(device: MTLDevice) throws {
         let library = try device.makeDefaultLibrary(bundle: Bundle(for: ParticleGPUSimulator.self))
@@ -49,6 +52,13 @@ final class ParticleGPUSimulator {
             return try device.makeComputePipelineState(function: function)
         }
         self.device = device
+        let unlinkedLength = MemoryLayout<ParticleGPULinkedPoints>.stride
+        guard let unlinked = device.makeBuffer(length: unlinkedLength, options: .storageModeShared) else {
+            throw ShaderCompilerError.failed(step: "metal", output: "could not allocate the unlinked points buffer")
+        }
+        memset(unlinked.contents(), 0, unlinkedLength)
+        unlinked.label = "OWE particle unlinked points"
+        unlinkedPoints = unlinked
         age = try pipeline("particleAge")
         begin = try pipeline("particleBegin")
         emit = try pipeline("particleEmit")
@@ -133,7 +143,7 @@ final class ParticleGPUSimulator {
         for request in requests {
             guard let gpu = request.system.gpu, gpu.isReady,
                   let plan = StepPlan(request, gpu: gpu, sceneSize: sceneSize, targetSize: targetSize,
-                                         compactWriters: compactWriters) else { continue }
+                                         compactWriters: compactWriters, unlinkedPoints: unlinkedPoints) else { continue }
             // A renderer after a system's first draws in the wave after that system's step, and
             // each further renderer after the one before (they share its scratch buffers).
             let key = ObjectIdentifier(request.system.simulation ?? request.system)
@@ -218,7 +228,7 @@ final class ParticleGPUSimulator {
         let ropeOrder: MTLBuffer?
 
         init?(_ request: Request, gpu: ParticleGPUSystem, sceneSize: SIMD2<Float>, targetSize: SIMD2<Float>,
-              compactWriters: [ParticleGPUDrawKind: MTLComputePipelineState]) {
+              compactWriters: [ParticleGPUDrawKind: MTLComputePipelineState], unlinkedPoints: MTLBuffer) {
             let configuration = request.system.configuration
             let subdivision = max(configuration.ropeSubdivision, 1)
             let followed: ParticleGPUSystem?
@@ -265,7 +275,7 @@ final class ParticleGPUSimulator {
             }
             trailCounts = source.trailCounts ?? gpu.control
             instances = gpu.instances ?? gpu.control
-            linked = gpu.linkedPoints ?? gpu.control
+            linked = gpu.linkedPoints ?? unlinkedPoints
             program = request.inputs.initializers + request.inputs.operators
             var steps = request.inputs.emitters.prefix(gpu.emitterCount).map(ParticleGPUEmitterStep.init)
             while steps.count < max(gpu.emitterCount, 1) { steps.append(ParticleGPUEmitterStep(ParticleEmitterStep())) }

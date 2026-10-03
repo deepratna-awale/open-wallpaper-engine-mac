@@ -2,7 +2,7 @@
 
 Open Wallpaper Engine for macOS plays Wallpaper Engine (WE) wallpapers: **scene**, **video** and **web**. The `application` type is out of scope. The goal is to run *any* WE wallpaper, including arbitrary Workshop scenes with custom effects, shaders and SceneScripts. So the scene engine implements WE's actual formats and semantics, not per-wallpaper approximations.
 
-This document describes the target structure and the rules for what goes where. [`docs/reorg-plan.md`](reorg-plan.md) lists the steps from today's layout to this one. [`docs/progress-snapshot.md`](progress-snapshot.md) records how complete each feature is.
+This document describes the target structure and the rules for what goes where. [`docs/reorg-plan.md`](reorg-plan.md) lists the steps from today's layout to this one. [`docs/progress-snapshot.md`](progress-snapshot.md) records how complete each feature is. [`docs/optimizations.md`](optimizations.md) records what was tried to make wallpapers cheaper, what shipped and what was rejected.
 
 ## Big picture
 
@@ -43,7 +43,7 @@ These are folders in the app target today. The scene engine (`Scene/`, `Audio/`,
 | Area | Responsibility | Examples |
 |---|---|---|
 | `Scene/Format/` | Decode WE files into plain Swift models. It does no rendering and has no side effects. | `scene.json`, `project.json` scene properties, `effect.json`, materials, models, particles, `.pkg`, `.tex` |
-| `Scene/Values/` | *(Phase 4)* Resolve every dynamic value the same way: literal, `{"user":…}`, `{"user":{"name","condition"}}`, `{"script":…}`, `{"animation":…}`. | `SceneValue<T>` |
+| `Scene/Values/` | Resolve every dynamic value the same way: literal, `{"user":…}`, `{"user":{"name","condition"}}`, `{"script":…}`, `{"animation":…}`. User bindings live in one table per loaded scene (`Values/Bindings`). | `UserPropertyBindingTable`, `SceneValueSource` |
 | `Scene/Shaders/` | GLSL → SPIR-V → MSL translation, reflection, the translation cache and the effect catalog. | `ShaderVariantTranslator`, `InProcessShaderCompiler`, `SceneDynamicEffectCatalog` |
 | `Scene/Rendering/` | Metal: layers, the effect pass graph, render targets, text, particles and the camera. | `SceneMetalRenderer`, `SceneShaders.metal` |
 | `Scene/Scripting/` | The SceneScript runtime (JavaScriptCore), one per wallpaper instance on its own thread, and the WE JS API surface as extensions; `Host/` ties a runtime to the renderer (docs/scenescript-plan.md). | `SceneScriptRuntime`, `SceneScriptWallpaper`, `SceneScriptSceneMirror` |
@@ -82,6 +82,8 @@ These are folders in the app target today. The scene engine (`Scene/`, `Audio/`,
 
 1. **Load.** `Scene/Format` decodes `project.json`, `scene.json` (from disk or the `.pkg`), then models, materials, effects and textures (`.tex`).
 2. **Resolve.** `Scene/Values` binds user properties (per wallpaper), scripts and animations to typed values. Nothing downstream reads raw JSON or string-keyed dictionaries.
+   - Every `{"user": …}` of scene.json and of every JSON document the build reads (effects, materials, particle systems, models, Workshop dependencies, WE's assets) is recorded in the scene's `UserPropertyBindingTable`, with its path, the typed target it drives and a class: `uniform` (a shader constant, updated in place), `object` (a transform, colour, visibility, particle override or script-read value: the object's state updates) or `structural` (a combo, texture, size or anything unrecognised: the object is rebuilt alone, `SceneObjectReplacement`). The parsers decode the table's resolution of each document, so none can drop a binding.
+   - A property change is looked up in the table (`SceneBindingUpdate`). The owners it touches move to a new binding revision (`SceneBindingRevisions`), which every cache of a bound value keys on. Only the app's own keys, scene-wide structure (`general`) and objects the scene's stages hold (lights, sounds, models, cameras) rebuild the content; editing properties ends with one rebuild, the reconcile.
 3. **Build.** `Scene/Loading` produces render content: an ordered layer list in authored object order. Each layer carries its full parent transform, its effect pass graph (from `effect.json` passes, `fbos`, `bind`, `target` and combos) and its text, particle and sound state.
 4. **Render.** `Scene/Rendering` executes the pass graph each frame through translated WE shaders. Uniforms come from reflection, plus built-ins such as `g_Time`, resolutions, pointer and audio spectrum, plus resolved constants.
 5. **Script.** `Scene/Scripting` runs once per frame in one context per wallpaper instance, on its own thread. Layer objects read and write a shared object table; the renderer feeds it each object's drawn values before the frame and draws what scripts wrote after it (`SceneRendererScripts`).
@@ -98,6 +100,15 @@ A wallpaper runs **once**, however many displays show it with the same user prop
 - **Web:** a `WKWebView` can't be in two windows, so each display keeps its page. Only the page on the wallpaper's audible display plays sound; the others are muted (`WebPageAudio`).
 - **Sound** (`WallpaperAudioRouting`): each running wallpaper plays its sound once; a web wallpaper's from its audible display (the main display when it shows it, else the lowest display id), and a wallpaper running as several instances (different properties) from the instance on that display. Different wallpapers on different displays each play theirs. Settings → Audio Output silences all of them; volume and mute (the status menu) apply to all.
 - **The watchdog** gets one frame time per rendered frame of an instance, not one per display.
+
+## Lock screen and screen saver
+
+- **Lock screen** (`App/LockScreenPicture`, Settings › General › "Show Wallpaper on Lock Screen", on by default). When a scene wallpaper is set, each display's system desktop picture becomes that scene's loading snapshot (`SceneLoadingSnapshotStore`, nothing new is captured), copied to `<Caches>/Open Wallpaper Engine/DesktopSnapshots/lock-<display>-<a|b>.<heic|jpg>`. The picture each display showed first is recorded per display and put back when the setting is turned off or the app quits. The menu bar tint's pictures (`DesktopSnapshotCache`) stay for video and web wallpapers; turning the tint off leaves a lock-screen picture alone.
+- **Screen saver** (`ScreenSaver/`, Settings › Plugins › Screen Saver, off by default). While on, the current scene's loop video is rendered for each display's pixel size by the helper run `--render-screensaver-loop` (`ScreenSaverLoopRenderer`): a `.library` job on the `PreparationPool` under the power policy, in its own process at background priority, HEVC through `AVAssetWriter`, scripts seeing `engine.isScreensaver()` true.
+  - **Loop length.** With only periodic motion (timelines, sprite sheets; no particles or scripts) the loop is the least common multiple of the periods, at most 60 s, a whole number of frames, and frame N is checked against frame 0 (`ScreenSaverLoopLength`). Otherwise up to 60 s is rendered and the loop ends before the frame most like frame 0 after 5 s, compared at 64×36 (`ScreenSaverSeamFinder`), with a 0.25 s crossfade when that seam is still visible.
+  - **Storage.** macOS runs third-party savers sandboxed in `legacyScreenSaver`, which can read only its own container, so the videos and `current.json` (`ScreenSaverManifest`) go in `~/Library/Containers/com.apple.ScreenSaver.Engine.legacyScreenSaver/Data/Library/Application Support/Open Wallpaper Engine/ScreenSaver`. Each video is named by wallpaper and content, a hash of its user properties, the pixel size and `ScreenSaverVideoStore.revision`; anything the manifest no longer lists is removed.
+  - **Saver.** The `OpenWallpaperEngineSaver` target (`OWESaverView`: a `ScreenSaverView` with an `AVPlayerLayer` and `AVPlayerLooper`) is embedded in the app and copied to `~/Library/Screen Savers`; the app then opens the Screen Saver settings for the user to choose it and changes no system setting itself. Turning the plugin off stops rendering and removes the saver and the videos.
+- **Isolation.** An isolated copy never sets the desktop picture, installs or removes the saver, or writes where the saver reads (its videos go under its own support folder).
 
 ## Invariants
 

@@ -57,6 +57,9 @@ extension SceneScriptCommandRing.Opcode {
     static let rigBonePhysicsImpulse = Self(rawValue: 457)
     /// target slot; numbers [bone].
     static let rigBonePhysicsReset = Self(rawValue: 458)
+    /// `IVideoTexture`: target slot; numbers [action (play 0, pause 1, stop 2, seek 3, rate 4,
+    /// loop 5), value?].
+    static let videoTexture = Self(rawValue: 460)
 
     /// Every object-model opcode with its JS name, for `__rt.objects.OP`.
     static let objectModelOpcodes: [String: Self] = [
@@ -71,6 +74,6 @@ extension SceneScriptCommandRing.Opcode {
         "rigLayerCreate": .rigLayerCreate, "rigLayerDestroy": .rigLayerDestroy, "rigLayerSet": .rigLayerSet,
         "rigLayerPlayback": .rigLayerPlayback, "rigBoneLocal": .rigBoneLocal, "rigBoneWorld": .rigBoneWorld,
         "rigBlendShape": .rigBlendShape, "rigBonePhysicsImpulse": .rigBonePhysicsImpulse,
-        "rigBonePhysicsReset": .rigBonePhysicsReset,
+        "rigBonePhysicsReset": .rigBonePhysicsReset, "videoTexture": .videoTexture,
     ]
 }
