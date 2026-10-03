@@ -1,11 +1,9 @@
 # Chromium web engine
 
-Web wallpapers run in WKWebView today. Some Workshop web wallpapers expect Chromium (WE ships CEF), so the app can optionally install a Chromium engine: the Chromium Embedded Framework (CEF), downloaded on demand like SteamCMD. Nothing of CEF ships with the app.
+Web wallpapers run in WKWebView unless the user installs the Chromium engine. Some Workshop web wallpapers expect Chromium (WE ships CEF), so the app can optionally install a Chromium engine: the Chromium Embedded Framework (CEF), downloaded on demand like SteamCMD. Nothing of CEF ships with the app.
 
-This is **phase 1 of 2**:
-
-- **Phase 1 (this):** the installer and updater, the helper process and IOSurface frame sharing, with a debug harness that proves it end to end. No wallpaper uses it yet.
-- **Phase 2:** routing web wallpapers to it (a per-wallpaper or global choice), the WE web API (`wallpaperPropertyListener`, user properties, audio and media listeners), input, resize and pausing.
+- **Phase 1:** the installer and updater, the helper process and IOSurface frame sharing, with a debug harness that proves it end to end.
+- **Phase 2:** web wallpapers in Chromium ([below](#phase-2-web-wallpapers-in-chromium)), and pointing out wallpapers that need it while it isn't installed ([below](#wallpapers-that-need-chromium)).
 
 ## Architecture
 
@@ -69,7 +67,7 @@ The SHA-1 of both archives matched the CDN's `index.json` when they were pinned.
 
 ### Frame sharing
 
-- The helper creates one windowless browser (`windowless_rendering_enabled`, `shared_texture_enabled`) with an external message pump on its main run loop.
+- The helper creates windowless browsers (`windowless_rendering_enabled`, `shared_texture_enabled`), one per page, with an external message pump on its main run loop.
 - CEF calls `OnAcceleratedPaint` with an IOSurface from its own pool, which goes back to the pool when the callback returns. The helper therefore blits it on the GPU into one of three IOSurfaces it owns, waits for the copy, and sends that surface.
 - The message is `ChromiumFrameMessage` (an `IOSurface` plus a frame number) over NSXPC. XPC sends an IOSurface as a Mach port: the pixels are never copied between processes.
 - The app wraps the surface with `device.makeTexture(descriptor:iosurface:plane:)`. Frames that aren't BGRA, are over 16384 px or have no frame number are dropped.
@@ -107,12 +105,80 @@ It starts the embedded helper on the installed engine, waits for 30 frames and w
 | Helper in the app bundle | well under 1 MB | |
 | Vendored headers in the repo | under 1 MB | |
 
-## Phase 2 plan
+## Phase 2: web wallpapers in Chromium
 
-1. **Routing:** add a web engine choice (global plus per-wallpaper override) in `WebWallpaperViewModel`. When Chromium is chosen and installed, render with `ChromiumEngineSession` frames in a `CAMetalLayer` instead of WKWebView.
-2. **WE web API:** inject the same bridge scripts as `WebWallpaperPropertyBridge` / `WebWallpaperMediaBridge` through a CEF render-process handler and process messages. Deliver user properties, `wallpaperRegisterAudioListener` spectra from `Audio/` and media metadata.
-3. **Local content:** serve the wallpaper folder through a CEF scheme handler, mirroring `WebWallpaperSchemeHandler`'s path checks.
-4. **Lifecycle:** resize (`was_resized`), pause (`was_hidden`, frame rate 0), one browser per display, crash relaunch, and a proper `cef_shutdown`.
-5. **Input:** forward mouse events for interactive wallpapers.
-6. **Frame pacing:** drive `send_external_begin_frame` from the display link instead of CEF's own timer.
-7. **Auto-update:** once wallpapers depend on it, install a new pin in the background when the previous version was installed.
+**Routing** (`WebEngineRouting`, `WebEngineRouter`): while an engine is installed and **Use for web wallpapers** is on (Settings › Plugins, default on), every web wallpaper plays in Chromium, and so does a WebM video that AVFoundation can't decode (it plays through a page either way). Otherwise WebKit. Installing, removing or switching rebuilds the wallpaper views on the other engine. There is no per-wallpaper choice.
+
+```
+WallpaperView ── web ──► ChromiumWebWallpaperView ─► WebWallpaperViewModel (the same one WebKit uses)
+                                │                          │ WebWallpaperPage
+                                ▼                          ▼
+                        ChromiumPageView ◄─ frames ─ ChromiumBrowserPage ─► ChromiumBrowserHost.shared
+                        (CAMetalLayer, mouse)                                   │ one NSXPC connection
+                                                                                ▼
+                                       owe-chromium-helper: one CEF, one windowless browser per page
+```
+
+| Piece | Where |
+|---|---|
+| Engine choice | `Web/WebEngineRouting.swift` |
+| The page abstraction both engines implement | `Web/WebWallpaperPage.swift` |
+| Shared connection, start scripts, `owe-wallpaper` serving | `Web/Chromium/ChromiumBrowserHost.swift` |
+| One browser as a page | `Web/Chromium/ChromiumBrowserPage.swift` |
+| Metal layer and mouse | `Web/Chromium/ChromiumPageView.swift` |
+| Web / WebM views | `Web/Chromium/ChromiumWebWallpaperView.swift`, `Video/ChromiumVideoWallpaperView.swift` |
+| Helper side | `OWECefBridge.m` (browsers, resource handler, render-process handler), `ChromiumHelperService.swift` |
+
+How each part matches the WebKit path:
+
+- **One browser per page, one helper for all.** Each display's page is its own CEF browser (`createBrowser`, numbered by the app); all of them live in the one helper process, as WebKit pages share a web content process. The helper exits 5 s after the last browser closes. If it crashes, each page reopens its browser (at most 3 times in a row).
+- **Start scripts.** The browser carries WebKit's document-start scripts (`WebWallpaperViewModel.documentStartScripts`: WE's pause hooks, the property/audio/heartbeat bridge, the media bridge) in its extra info. The renderer runs them in `on_context_created` for the main frame, before the page's own scripts, after binding `__oweHostPost(name, json)`. `ChromiumPageScripts` points the scripts' `window.webkit.messageHandlers.X.postMessage` at that function; nothing named `webkit` is defined, so a page can't mistake Chromium for Safari. Whatever the bridge does (including the late-listener delivery of #109 once merged) is therefore the same in both engines.
+- **Local files.** `owe-wallpaper://local/…` is registered in every process (standard, secure, CORS and fetch enabled). Each request goes to the app over XPC, which answers with `WebWallpaperSchemeHandler.reply`: the same canonical-path containment (audit H1/H2), patches and ranges. A file body crosses XPC as a file descriptor, and the helper reads only the range asked for. A remote embed (YouTube/Vimeo) is served at `https://localhost/`, the origin WebKit gives it.
+- **Properties, audio, media, FPS:** `WebWallpaperViewModel` runs unchanged against `ChromiumBrowserPage`: the full user property set on load, then changes; `applyGeneralProperties({fps})`; the 128-value spectrum 30 times a second while registered and visible; media listener events. The FPS setting also caps the browser's frame rate (`set_windowless_frame_rate`), which WebKit can't.
+- **Pause, suspend, mute.** Paused: WE's `setPaused` and `___wpxPause`, and the browser is hidden (`was_hidden`), so Chromium stops drawing even a page that ignores `setPaused`. Covered or displays asleep: hidden (Chromium stops frames and throttles timers; sound plays on, as WebKit's throttled page keeps WE's covered-wallpaper sound). Mute: `set_audio_muted` on the browser (CEF has no per-browser volume; WebKit's path mutes too).
+- **Frames:** the helper copies CEF's IOSurface into one of three of its own per browser and sends it; `ChromiumPageView` blits it into its `CAMetalLayer`'s drawable and presents. The page is sized to the view in points at the display's scale, or 1 with "Render web wallpapers at standard resolution".
+- **Input:** wallpaper windows ignore the mouse, so `ChromiumMouseForwarder` watches global and local mouse events like `DesktopClickMonitor` and forwards moves, presses, drags, releases and wheel to the browser (`send_mouse_*_event`) only where they land on the wallpaper (`DesktopClickMonitor.landsOnWallpaper`).
+- **Sound:** CEF plays the page's audio itself; media autoplays without a gesture (`--autoplay-policy=no-user-gesture-required`), as WebKit is configured. Popups are refused.
+
+Still to do: drive frames from the display link (`send_external_begin_frame`), keyboard input, and installing a new pin in the background.
+
+## Wallpapers that need Chromium
+
+Without the engine, a web wallpaper that uses an API only Chromium has is pointed out (`ChromiumFeatureAdvisor`):
+
+- **Static scan** (`ChromiumFeatureScanner`) when a web wallpaper loads or its details show: every `.html`, `.htm`, `.js`, `.mjs` in its folder (inline scripts and `on…=` handlers in HTML), with string, template and regular-expression literals and comments blanked first. A feature counts only when it is *used* (a method called, a member read, a constructor), not tested for: `navigator.serial.requestPort()` counts, `if (navigator.serial)` or `'serial' in navigator` doesn't. Cached by content key (the files' paths, sizes and dates).
+- **Runtime detection** (`ChromiumFeatureProbe`, WebKit only): an early script reports TypeErrors and ReferenceErrors (uncaught, rejected promises, and errors logged with `console.error`). WebKit's message names the expression that came back undefined, e.g. *undefined is not an object (evaluating 'navigator.serial.requestPort')*, so the probe needs to define nothing the page could see.
+- **Alert** when the user applies such a wallpaper: "This wallpaper uses features that need the Chromium web engine", listing the APIs, with **Open Plugins** (Settings › Plugins, the engine highlighted) and **Use Anyway** (plays on in WebKit; remembered for the wallpaper until its content key changes). It doesn't block: the wallpaper is already playing. The library's details show a "Some features only available on Chromium" badge.
+
+### The API list (19)
+
+Only APIs WebKit on macOS 26 lacks, from WebKit's feature status and standards positions and caniuse/MDN browser-compat data (Safari through 26):
+
+| Id | API | Source |
+|---|---|---|
+| chrome-apis | `window.chrome.*` (`runtime`, `app`, `loadTimes`, …) | Chrome-only global; MDN: non-standard |
+| css-paint | `CSS.paintWorklet`, `registerPaint` | caniuse css-paint-api: Safari behind a flag only |
+| ua-client-hints | `navigator.userAgentData` | WebKit position: oppose; caniuse |
+| web-serial | `navigator.serial` | WebKit position: oppose; caniuse web-serial |
+| webusb | `navigator.usb` | WebKit position: oppose; caniuse webusb |
+| webhid | `navigator.hid` | WebKit position: oppose; caniuse webhid |
+| web-bluetooth | `navigator.bluetooth` | WebKit position: oppose; caniuse web-bluetooth |
+| feature-policy | `document.featurePolicy` | Chrome-only; MDN |
+| file-system-access | `showOpenFilePicker`, `showSaveFilePicker`, `showDirectoryPicker` | caniuse native-filesystem-api: Safari has only the origin private file system |
+| battery | `navigator.getBattery()` | caniuse battery-status: removed from WebKit |
+| eyedropper | `EyeDropper` | caniuse/MDN |
+| keyboard-map | `navigator.keyboard` | WebKit position: oppose |
+| local-fonts | `queryLocalFonts()` | WebKit position: oppose |
+| document-pip | `documentPictureInPicture` | caniuse/MDN |
+| performance-memory | `performance.memory` | Chrome-only; MDN |
+| chrome-file-system | `webkitRequestFileSystem()` | Chrome-only; MDN |
+| idle-detection | `IdleDetector` | WebKit position: oppose |
+| window-management | `getScreenDetails()` | Chromium only; MDN |
+| compute-pressure | `PressureObserver` | Chromium only; MDN |
+
+Left out:
+
+- **Present in Safari 26:** WebGPU, OffscreenCanvas, CompressionStream, Screen Wake Lock, `requestVideoFrameCallback`, `CSS.registerProperty`, prefixed speech recognition.
+- **Uncertain for Safari 26, so not counted:** `requestIdleCallback`, `scheduler.postTask`, Trusted Types, `BarcodeDetector`, `AudioContext.setSinkId`. Add one to `ChromiumFeatureCatalog` once WebKit's status confirms it is missing.
+- **Missing but harmless:** `navigator.deviceMemory` and `navigator.connection`; pages fall back.
+- **`-webkit-app-region`:** it does nothing in any browser tab, Chromium's included, so a wallpaper doesn't need Chromium for it.

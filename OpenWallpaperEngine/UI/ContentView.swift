@@ -21,6 +21,8 @@ struct ContentView: View {
     @ObservedObject var wallpaperViewModel: WallpaperViewModel
     
     @State private var isRemoteWallpaperSheetPresented = false
+    /// Raises the "needs Chromium" alert for a wallpaper just applied.
+    @ObservedObject private var chromiumAdvisor = ChromiumFeatureAdvisor.shared
     /// Picked on the setup assistant's last step; opened once the sheet has closed.
     @State private var onboardingShortcut: OnboardingShortcut?
 
@@ -168,6 +170,15 @@ struct ContentView: View {
                 .frame(width: 600, height: 300)
                 .presentationBackground(.regularMaterial)
         }
+        // Non-blocking: the wallpaper already plays in WebKit while this is up.
+        .alert("This wallpaper uses features that need the Chromium web engine",
+               isPresented: chromiumAdvicePresented, presenting: chromiumAdvisor.pendingAdvice) { advice in
+            Button("Open Plugins") { chromiumAdvisor.openPlugins(advice) }
+            Button("Use Anyway", role: .cancel) { chromiumAdvisor.useAnyway(advice) }
+        } message: { advice in
+            Text("\(advice.title) uses \(advice.featureList), which the system's WebKit doesn't have. Install the Chromium web engine in Settings › Plugins to play it as in Wallpaper Engine.",
+                 comment: "First %@ is the wallpaper's title, the second a list of web APIs such as navigator.serial, EyeDropper")
+        }
         .sheet(isPresented: $isRemoteWallpaperSheetPresented) {
             RemoteWallpaperURLSheet(wallpaperViewModel: wallpaperViewModel)
                 .frame(width: 500, height: 180)
@@ -183,6 +194,11 @@ struct ContentView: View {
             if ThreadGuards.isDevBuild { ThreadGuardIndicator() }
         }
         .frame(minWidth: 1000, minHeight: 640, idealHeight: 800)
+    }
+
+    private var chromiumAdvicePresented: Binding<Bool> {
+        Binding(get: { chromiumAdvisor.pendingAdvice != nil },
+                set: { if !$0 { chromiumAdvisor.pendingAdvice = nil } })
     }
 
     private func openOnboardingShortcut() {

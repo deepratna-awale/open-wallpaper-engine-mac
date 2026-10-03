@@ -11,6 +11,7 @@ import AVKit
 
 struct WallpaperView: View {
     @ObservedObject var viewModel: WallpaperViewModel
+    @ObservedObject var webEngine = WebEngineRouter.shared
     let screenId: String
 
     var body: some View {
@@ -23,8 +24,14 @@ struct WallpaperView: View {
         // A remote video is the same pipeline as a local one; only the URL differs.
         case "video", "remote-video":
             // A video AVFoundation can't decode (WebM) plays through WebKit on either framework.
+            // With the Chromium engine installed, that page is Chromium's (`WebEngineRouting`).
             if WebKitVideoPlayer.handles(wallpaper.mediaURL) {
-                WebKitVideoWallpaperView(wallpaperViewModel: viewModel, screenId: screenId).id(instance.wallpaper)
+                if webEngine.engine == .chromium {
+                    ChromiumVideoWallpaperView(wallpaperViewModel: viewModel, screenId: screenId)
+                        .id("\(instance.wallpaper)-chromium")
+                } else {
+                    WebKitVideoWallpaperView(wallpaperViewModel: viewModel, screenId: screenId).id(instance.wallpaper)
+                }
             // The Metal path draws video as a scene layer so the effect stack applies to it; that
             // needs the assets' shaders, so without them video plays through AVKit.
             } else if AppDelegate.shared.globalSettingsViewModel.settings.videoFramework == .metal,
@@ -40,8 +47,15 @@ struct WallpaperView: View {
                 AssetsMissingWallpaperView()
             }
         case "web":
-            WebWallpaperView(wallpaperViewModel: viewModel, screenId: screenId)
-                .id(viewModel.propertyScope(for: screenId))
+            // Every web wallpaper plays in Chromium while it is installed and on, else in WebKit;
+            // switching rebuilds the view on the other engine.
+            if webEngine.engine == .chromium {
+                ChromiumWebWallpaperView(wallpaperViewModel: viewModel, screenId: screenId)
+                    .id("\(viewModel.propertyScope(for: screenId))-chromium")
+            } else {
+                WebWallpaperView(wallpaperViewModel: viewModel, screenId: screenId)
+                    .id(viewModel.propertyScope(for: screenId))
+            }
         case "remote-image":
             RemoteImageWallpaperView(url: URL(string: wallpaper.project.file))
         default:

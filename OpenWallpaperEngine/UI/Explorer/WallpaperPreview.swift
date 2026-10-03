@@ -355,6 +355,9 @@ struct WallpaperPreview: SubviewOfContentView {
                                 if wallpaperHasSceneAudio(wallpaperViewModel.displayedWallpaper) {
                                     sceneMusicControls(for: wallpaperViewModel.displayedWallpaper)
                                 }
+                            case "web":
+                                ChromiumFeatureBadge(wallpaper: wallpaperViewModel.displayedWallpaper)
+                                    .id(wallpaperViewModel.displayedWallpaper.wallpaperDirectory)
                             default:
                                 EmptyView()
                             }
@@ -584,6 +587,28 @@ struct WallpaperPreview: SubviewOfContentView {
 
     private func infoButton(_ help: String) -> some View {
         InfoTip(help)
+    }
+}
+
+/// A web wallpaper that uses APIs only Chromium has (`ChromiumFeatureAdvisor`): a small badge in
+/// its details, with the APIs in its tooltip. The wallpaper is scanned when its details show.
+private struct ChromiumFeatureBadge: View {
+    let wallpaper: WEWallpaper
+    @ObservedObject private var advisor = ChromiumFeatureAdvisor.shared
+
+    var body: some View {
+        Group {
+            if let features = advisor.features(of: wallpaper), !features.isEmpty {
+                Label("Some features only available on Chromium", systemImage: "globe.badge.chevron.backward")
+                    .font(.caption.weight(.semibold))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(.quaternary, in: Capsule())
+                    .help(Text(verbatim: features.map(\.api).joined(separator: ", ")))
+                    .accessibilityValue(Text(verbatim: features.map(\.api).joined(separator: ", ")))
+            }
+        }
+        .task { await advisor.scan(wallpaper) }
     }
 }
 

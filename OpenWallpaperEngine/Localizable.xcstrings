@@ -683,6 +683,101 @@
         }
       }
     },
+    "%@ uses %@, which the system's WebKit doesn't have. Install the Chromium web engine in Settings › Plugins to play it as in Wallpaper Engine." : {
+      "comment" : "Message of the needs-Chromium alert. First %@ is the wallpaper's title, the second a list of web APIs such as navigator.serial, EyeDropper (code, not translated)",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تستخدم %1$@ ‏%2$@، وهذه غير موجودة في WebKit الخاص بالنظام. ثبّت محرك الويب Chromium من الإعدادات › الإضافات لتشغيلها كما في Wallpaper Engine."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%1$@“ nutzt %2$@, was das WebKit des Systems nicht hat. Installiere die Chromium-Web-Engine unter Einstellungen › Plug-ins, um den Hintergrund wie in Wallpaper Engine abzuspielen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«%1$@» usa %2$@, que WebKit del sistema no tiene. Instala el motor web Chromium en Ajustes › Complementos para reproducirlo como en Wallpaper Engine."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "« %1$@ » utilise %2$@, que le WebKit du système ne propose pas. Installez le moteur web Chromium dans Réglages › Plug-ins pour l’afficher comme dans Wallpaper Engine."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@ का उपयोग करता है, जो सिस्टम के WebKit में नहीं है। इसे Wallpaper Engine की तरह चलाने के लिए सेटिंग्स › प्लग-इन में Chromium वेब इंजन इंस्टॉल करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«%1$@» usa %2$@, che WebKit di sistema non ha. Installa il motore web Chromium in Impostazioni › Plug-in per riprodurlo come in Wallpaper Engine."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%1$@」は %2$@ を使用していますが、システムの WebKit にはありません。Wallpaper Engine と同じように再生するには、設定 › プラグインで Chromium ウェブエンジンをインストールしてください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘%1$@’은(는) 시스템의 WebKit에 없는 %2$@을(를) 사용합니다. Wallpaper Engine처럼 재생하려면 설정 › 플러그인에서 Chromium 웹 엔진을 설치하세요."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%1$@” używa %2$@, czego systemowy WebKit nie ma. Zainstaluj silnik WWW Chromium w Ustawieniach › Wtyczki, aby odtwarzać ją tak jak w Wallpaper Engine."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%1$@” usa %2$@, que o WebKit do sistema não tem. Instale o motor web Chromium em Ajustes › Plug-ins para reproduzi-lo como no Wallpaper Engine."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«%1$@» использует %2$@, чего нет в системном WebKit. Установите веб-движок Chromium в разделе «Настройки › Плагины», чтобы воспроизводить обои как в Wallpaper Engine."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%1$@”, sistemin WebKit’inde bulunmayan %2$@ kullanıyor. Wallpaper Engine’deki gibi oynatmak için Chromium web motorunu Ayarlar › Eklentiler’den yükleyin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«%1$@» використовує %2$@, чого немає в системному WebKit. Установіть веб-рушій Chromium у розділі «Параметри › Плагіни», щоб відтворювати шпалери як у Wallpaper Engine."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%1$@”使用了 %2$@，而系统的 WebKit 不支持。请在“设置 › 插件”中安装 Chromium 网页引擎，以像在 Wallpaper Engine 中一样播放。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%1$@」使用了 %2$@，而系統的 WebKit 不支援。請在「設定 › 外掛程式」中安裝 Chromium 網頁引擎，以像在 Wallpaper Engine 中一樣播放。"
+          }
+        }
+      }
+    },
     "%@ was stopped because Open Wallpaper Engine didn't quit cleanly last time." : {
       "localizations" : {
         "ar" : {
@@ -7850,97 +7945,97 @@
         }
       }
     },
-    "An optional Chromium engine for web wallpapers, downloaded on demand from the official CEF builds and checked against the version this app expects. It runs in its own process. Web wallpapers keep using the system's WebKit for now." : {
-      "comment" : "Settings › Plugins: description of the optional Chromium engine; CEF and WebKit are product names",
+    "An optional Chromium engine for web wallpapers, downloaded on demand from the official CEF builds and checked against the version this app expects. It runs in its own process. While it is installed, every web wallpaper plays in it, as in Wallpaper Engine." : {
+      "comment" : "Settings › Plugins › Chromium web engine: what the engine is and that it plays every web wallpaper once installed",
       "localizations" : {
         "ar" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "محرك Chromium اختياري لخلفيات الويب، يُنزَّل عند الطلب من إصدارات CEF الرسمية ويُتحقق منه مقابل الإصدار الذي يتوقعه هذا التطبيق. يعمل في عملية مستقلة. تواصل خلفيات الويب استخدام WebKit الخاص بالنظام حاليًا."
+            "value" : "محرك Chromium اختياري لخلفيات الويب، يُنزَّل عند الطلب من إصدارات CEF الرسمية ويُتحقق منه مقابل الإصدار الذي يتوقعه هذا التطبيق. يعمل في عملية مستقلة. ما دام مثبتًا، تُشغَّل فيه كل خلفيات الويب، كما في Wallpaper Engine."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Eine optionale Chromium-Engine für Web-Hintergründe, bei Bedarf aus den offiziellen CEF-Builds geladen und mit der Version abgeglichen, die diese App erwartet. Sie läuft in einem eigenen Prozess. Web-Hintergründe nutzen vorerst weiterhin das WebKit des Systems."
+            "value" : "Eine optionale Chromium-Engine für Web-Hintergründe, bei Bedarf aus den offiziellen CEF-Builds geladen und mit der Version abgeglichen, die diese App erwartet. Sie läuft in einem eigenen Prozess. Solange sie installiert ist, laufen alle Web-Hintergründe darin, wie in Wallpaper Engine."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Un motor Chromium opcional para fondos web, descargado bajo demanda de las compilaciones oficiales de CEF y comprobado con la versión que espera esta app. Se ejecuta en su propio proceso. Por ahora, los fondos web siguen usando WebKit del sistema."
+            "value" : "Un motor Chromium opcional para fondos web, descargado bajo demanda de las compilaciones oficiales de CEF y comprobado con la versión que espera esta app. Se ejecuta en su propio proceso. Mientras esté instalado, todos los fondos web se reproducen en él, como en Wallpaper Engine."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Un moteur Chromium facultatif pour les fonds d’écran web, téléchargé à la demande depuis les versions officielles de CEF et vérifié par rapport à la version attendue par cette app. Il s’exécute dans son propre processus. Pour l’instant, les fonds d’écran web continuent d’utiliser le WebKit du système."
+            "value" : "Un moteur Chromium facultatif pour les fonds d’écran web, téléchargé à la demande depuis les versions officielles de CEF et vérifié par rapport à la version attendue par cette app. Il s’exécute dans son propre processus. Tant qu’il est installé, tous les fonds d’écran web s’y affichent, comme dans Wallpaper Engine."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "वेब वॉलपेपर के लिए एक वैकल्पिक Chromium इंजन, जो ज़रूरत पड़ने पर आधिकारिक CEF बिल्ड से डाउनलोड होता है और इस ऐप द्वारा अपेक्षित संस्करण से जाँचा जाता है। यह अपनी अलग प्रक्रिया में चलता है। फ़िलहाल वेब वॉलपेपर सिस्टम का WebKit ही उपयोग करते हैं।"
+            "value" : "वेब वॉलपेपर के लिए एक वैकल्पिक Chromium इंजन, जो ज़रूरत पड़ने पर आधिकारिक CEF बिल्ड से डाउनलोड होता है और इस ऐप द्वारा अपेक्षित संस्करण से जाँचा जाता है। यह अपनी अलग प्रक्रिया में चलता है। इंस्टॉल रहने तक हर वेब वॉलपेपर इसी में चलता है, जैसे Wallpaper Engine में।"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Un motore Chromium facoltativo per gli sfondi web, scaricato su richiesta dalle build ufficiali di CEF e verificato rispetto alla versione prevista da questa app. Viene eseguito in un processo separato. Per ora gli sfondi web continuano a usare WebKit di sistema."
+            "value" : "Un motore Chromium facoltativo per gli sfondi web, scaricato su richiesta dalle build ufficiali di CEF e verificato rispetto alla versione prevista da questa app. Viene eseguito in un processo separato. Finché è installato, tutti gli sfondi web vengono riprodotti con esso, come in Wallpaper Engine."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ウェブ壁紙用のオプションの Chromium エンジンです。必要なときに公式の CEF ビルドからダウンロードし、このアプリが想定するバージョンと照合します。専用のプロセスで動作します。現時点では、ウェブ壁紙は引き続きシステムの WebKit を使用します。"
+            "value" : "ウェブ壁紙用のオプションの Chromium エンジンです。必要なときに公式の CEF ビルドからダウンロードし、このアプリが想定するバージョンと照合します。専用のプロセスで動作します。インストールされている間は、Wallpaper Engine と同様にすべてのウェブ壁紙がこのエンジンで再生されます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "웹 배경화면을 위한 선택적 Chromium 엔진으로, 필요할 때 공식 CEF 빌드에서 다운로드하고 이 앱이 요구하는 버전과 대조해 확인합니다. 별도의 프로세스에서 실행됩니다. 현재 웹 배경화면은 계속 시스템의 WebKit을 사용합니다."
+            "value" : "웹 배경화면을 위한 선택적 Chromium 엔진으로, 필요할 때 공식 CEF 빌드에서 다운로드하고 이 앱이 요구하는 버전과 대조해 확인합니다. 별도의 프로세스에서 실행됩니다. 설치되어 있는 동안에는 Wallpaper Engine처럼 모든 웹 배경화면이 이 엔진에서 재생됩니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Opcjonalny silnik Chromium dla tapet WWW, pobierany na żądanie z oficjalnych kompilacji CEF i sprawdzany względem wersji oczekiwanej przez tę aplikację. Działa we własnym procesie. Na razie tapety WWW nadal korzystają z systemowego WebKit."
+            "value" : "Opcjonalny silnik Chromium dla tapet WWW, pobierany na żądanie z oficjalnych kompilacji CEF i sprawdzany względem wersji oczekiwanej przez tę aplikację. Działa we własnym procesie. Dopóki jest zainstalowany, wszystkie tapety WWW działają w nim, tak jak w Wallpaper Engine."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Um motor Chromium opcional para papéis de parede web, baixado sob demanda das compilações oficiais do CEF e verificado com a versão que este app espera. Ele é executado em um processo próprio. Por enquanto, os papéis de parede web continuam usando o WebKit do sistema."
+            "value" : "Um motor Chromium opcional para papéis de parede web, baixado sob demanda das compilações oficiais do CEF e verificado com a versão que este app espera. Ele é executado em um processo próprio. Enquanto estiver instalado, todos os papéis de parede web são reproduzidos nele, como no Wallpaper Engine."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Необязательный движок Chromium для веб-обоев: загружается по запросу из официальных сборок CEF и сверяется с версией, которую ожидает приложение. Работает в отдельном процессе. Пока веб-обои по-прежнему используют системный WebKit."
+            "value" : "Необязательный движок Chromium для веб-обоев: загружается по запросу из официальных сборок CEF и сверяется с версией, которую ожидает приложение. Работает в отдельном процессе. Пока он установлен, все веб-обои воспроизводятся в нём, как в Wallpaper Engine."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Web duvar kâğıtları için isteğe bağlı bir Chromium motoru; gerektiğinde resmî CEF derlemelerinden indirilir ve bu uygulamanın beklediği sürümle karşılaştırılarak doğrulanır. Kendi işleminde çalışır. Web duvar kâğıtları şimdilik sistemin WebKit’ini kullanmaya devam eder."
+            "value" : "Web duvar kâğıtları için isteğe bağlı bir Chromium motoru; gerektiğinde resmî CEF derlemelerinden indirilir ve bu uygulamanın beklediği sürümle karşılaştırılarak doğrulanır. Kendi işleminde çalışır. Kurulu olduğu sürece tüm web duvar kâğıtları, Wallpaper Engine’de olduğu gibi bu motorda oynatılır."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Необовʼязковий рушій Chromium для вебшпалер: завантажується на вимогу з офіційних збірок CEF і звіряється з версією, яку очікує застосунок. Працює в окремому процесі. Поки що вебшпалери й надалі використовують системний WebKit."
+            "value" : "Необовʼязковий рушій Chromium для вебшпалер: завантажується на вимогу з офіційних збірок CEF і звіряється з версією, яку очікує застосунок. Працює в окремому процесі. Поки його встановлено, усі вебшпалери відтворюються в ньому, як у Wallpaper Engine."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "用于网页壁纸的可选 Chromium 引擎，按需从官方 CEF 构建下载，并与本应用预期的版本进行校验。它在独立进程中运行。目前网页壁纸仍使用系统的 WebKit。"
+            "value" : "用于网页壁纸的可选 Chromium 引擎，按需从官方 CEF 构建下载，并与本应用预期的版本进行校验。它在独立进程中运行。安装后，所有网页壁纸都会在其中播放，与 Wallpaper Engine 一致。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "用於網頁桌布的選用 Chromium 引擎，需要時從官方 CEF 組建下載，並與本 App 預期的版本進行核對。它在獨立程序中執行。目前網頁桌布仍使用系統的 WebKit。"
+            "value" : "用於網頁桌布的選用 Chromium 引擎，需要時從官方 CEF 組建下載，並與本 App 預期的版本進行核對。它在獨立程序中執行。安裝後，所有網頁桌布都會在其中播放，與 Wallpaper Engine 一致。"
           }
         }
       }
@@ -63643,6 +63738,101 @@
         }
       }
     },
+    "Open Plugins" : {
+      "comment" : "Button in the needs-Chromium alert: opens Settings › Plugins at the Chromium web engine",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فتح الإضافات"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plug-ins öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir Complementos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir les plug-ins"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "प्लग-इन खोलें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri Plug-in"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "プラグインを開く"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "플러그인 열기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otwórz Wtyczki"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir Plug-ins"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть плагины"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eklentileri Aç"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити плагіни"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开插件"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打開外掛程式"
+          }
+        }
+      }
+    },
     "Open Privacy Settings" : {
       "localizations" : {
         "ar" : {
@@ -72033,6 +72223,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在背景圖片瀏覽器中播放動態 GIF 預覽。瀏覽器打開期間會使用較多 CPU。"
+          }
+        }
+      }
+    },
+    "Plays every web wallpaper in Chromium. Off: web wallpapers use the system's WebKit." : {
+      "comment" : "Settings › Plugins › Chromium web engine: tooltip of the Use for web wallpapers toggle",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يشغّل كل خلفيات الويب في Chromium. عند الإيقاف: تستخدم خلفيات الويب WebKit الخاص بالنظام."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spielt alle Web-Hintergründe in Chromium ab. Aus: Web-Hintergründe nutzen das WebKit des Systems."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproduce todos los fondos web en Chromium. Desactivado: los fondos web usan WebKit del sistema."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Affiche tous les fonds d’écran web dans Chromium. Désactivé : les fonds d’écran web utilisent le WebKit du système."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "हर वेब वॉलपेपर Chromium में चलाता है। बंद होने पर: वेब वॉलपेपर सिस्टम का WebKit उपयोग करते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riproduce tutti gli sfondi web in Chromium. Disattivato: gli sfondi web usano WebKit di sistema."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "すべてのウェブ壁紙を Chromium で再生します。オフの場合、ウェブ壁紙はシステムの WebKit を使用します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "모든 웹 배경화면을 Chromium에서 재생합니다. 끄면 웹 배경화면이 시스템의 WebKit을 사용합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odtwarza wszystkie tapety WWW w Chromium. Wyłączone: tapety WWW korzystają z systemowego WebKit."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproduz todos os papéis de parede web no Chromium. Desativado: os papéis de parede web usam o WebKit do sistema."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Воспроизводит все веб-обои в Chromium. Выключено: веб-обои используют системный WebKit."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tüm web duvar kâğıtlarını Chromium’da oynatır. Kapalıyken web duvar kâğıtları sistemin WebKit’ini kullanır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відтворює всі вебшпалери в Chromium. Вимкнено: вебшпалери використовують системний WebKit."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Chromium 中播放所有网页壁纸。关闭时：网页壁纸使用系统的 WebKit。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Chromium 中播放所有網頁桌布。關閉時：網頁桌布使用系統的 WebKit。"
           }
         }
       }
@@ -95814,6 +96099,101 @@
         }
       }
     },
+    "Some features only available on Chromium" : {
+      "comment" : "Badge in a web wallpaper's details: it uses web APIs only the Chromium engine has",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "بعض الميزات متاحة فقط على Chromium"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einige Funktionen nur mit Chromium verfügbar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algunas funciones solo están disponibles en Chromium"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certaines fonctions ne sont disponibles qu’avec Chromium"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कुछ सुविधाएँ केवल Chromium पर उपलब्ध हैं"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alcune funzioni sono disponibili solo con Chromium"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一部の機能は Chromium でのみ利用可能"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일부 기능은 Chromium에서만 사용 가능"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niektóre funkcje dostępne tylko w Chromium"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alguns recursos só estão disponíveis no Chromium"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Некоторые функции доступны только в Chromium"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bazı özellikler yalnızca Chromium’da kullanılabilir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Деякі функції доступні лише в Chromium"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "部分功能仅在 Chromium 上可用"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "部分功能僅在 Chromium 上可用"
+          }
+        }
+      }
+    },
     "Sort" : {
       "localizations" : {
         "ar" : {
@@ -106443,6 +106823,101 @@
         }
       }
     },
+    "This wallpaper uses features that need the Chromium web engine" : {
+      "comment" : "Alert title when a web wallpaper that uses Chromium-only web APIs is applied without the Chromium engine",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تستخدم هذه الخلفية ميزات تتطلب محرك الويب Chromium"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Hintergrund nutzt Funktionen, die die Chromium-Web-Engine benötigen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este fondo usa funciones que necesitan el motor web Chromium"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce fond d’écran utilise des fonctions qui nécessitent le moteur web Chromium"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह वॉलपेपर ऐसी सुविधाएँ उपयोग करता है जिनके लिए Chromium वेब इंजन ज़रूरी है"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo sfondo usa funzioni che richiedono il motore web Chromium"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この壁紙は Chromium ウェブエンジンが必要な機能を使用しています"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 배경화면은 Chromium 웹 엔진이 필요한 기능을 사용합니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ta tapeta używa funkcji, które wymagają silnika WWW Chromium"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este papel de parede usa recursos que precisam do motor web Chromium"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Эти обои используют функции, которым нужен веб-движок Chromium"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu duvar kâğıdı Chromium web motoru gerektiren özellikler kullanıyor"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ці шпалери використовують функції, яким потрібен веб-рушій Chromium"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此壁纸使用了需要 Chromium 网页引擎的功能"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此桌布使用了需要 Chromium 網頁引擎的功能"
+          }
+        }
+      }
+    },
     "This wallpaper was showing when Open Wallpaper Engine crashed, hung or was force-quit twice in a row. It may do so again." : {
       "localizations" : {
         "ar" : {
@@ -112085,6 +112560,101 @@
         }
       }
     },
+    "Use Anyway" : {
+      "comment" : "Button in the needs-Chromium alert: keep playing the wallpaper in WebKit and don't ask again for it",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الاستخدام على أي حال"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trotzdem verwenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar de todos modos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utiliser quand même"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फिर भी उपयोग करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usa comunque"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このまま使用"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "그래도 사용"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Użyj mimo to"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar mesmo assim"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Всё равно использовать"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yine de Kullan"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усе одно використати"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仍然使用"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仍要使用"
+          }
+        }
+      }
+    },
     "Use Cached Session" : {
       "localizations" : {
         "ar" : {
@@ -112457,6 +113027,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "使用此版本"
+          }
+        }
+      }
+    },
+    "Use for web wallpapers" : {
+      "comment" : "Settings › Plugins › Chromium web engine: toggle that plays web wallpapers in Chromium",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استخدامه لخلفيات الويب"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Für Web-Hintergründe verwenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar para fondos web"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utiliser pour les fonds d’écran web"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वेब वॉलपेपर के लिए उपयोग करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usa per gli sfondi web"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ウェブ壁紙に使用"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "웹 배경화면에 사용"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Używaj dla tapet WWW"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar para papéis de parede web"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Использовать для веб-обоев"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web duvar kâğıtları için kullan"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Використовувати для вебшпалер"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用于网页壁纸"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用於網頁桌布"
           }
         }
       }

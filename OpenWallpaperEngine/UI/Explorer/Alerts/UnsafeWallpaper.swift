@@ -66,7 +66,8 @@ struct UnsafeWallpaper: View {
                 Button {
                     AppDelegate.shared.wallpaperViewModel.currentWallpaper =
                     AppDelegate.shared.wallpaperViewModel.nextCurrentWallpaper
-                    
+                    ChromiumFeatureAdvisor.shared.wallpaperApplied(AppDelegate.shared.wallpaperViewModel.nextCurrentWallpaper)
+
                     if isIgnored {
                         var trustedWallpapers =
                         UserDefaults.app.array(forKey: "TrustedWallpapers") as? [String] ?? [String]()

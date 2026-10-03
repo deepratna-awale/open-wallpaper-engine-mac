@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Web wallpapers in Chromium:** with the optional Chromium web engine installed (Settings › Plugins), every web wallpaper, and WebM video that needs a web page, plays in Chromium, as in Wallpaper Engine. User and general properties, the audio and media listeners, pause, mute, suspend while covered, the FPS limit and mouse input work as they do in WebKit, and local files are served with the same folder containment. A switch in the same place turns it off.
+- **Wallpapers that need Chromium** are pointed out when Chromium isn't installed: applying one shows which Chromium-only web APIs it uses, with **Open Plugins** and **Use Anyway** (remembered for that wallpaper until it changes), and its details carry a "Some features only available on Chromium" badge.
+
 ### Changed
 
 - **Closing the last window** leaves Open Wallpaper Engine in the menu bar without a Dock icon; the icon comes back when a window opens (from the menu bar, a menu or reopening the app). A minimised window keeps the Dock icon, where it is restored from. The app also starts without a Dock icon when it opens no window.
