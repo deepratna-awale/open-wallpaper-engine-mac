@@ -1330,19 +1330,19 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         if case .view(let view) = output { displayOutput.apply(to: view, standard: pixelFormat) }
     }
 
-    /// The pass onto a shared scene's finished frame, the size of `scene`, in this frame's output
-    /// format (`displayOutput`).
-    private func sharedFramePass(matching scene: MTLTexture) -> MTLRenderPassDescriptor? {
+    /// The pass onto a shared scene's finished frame, `width` × `height` (the scene's size, or the
+    /// backing pixels its detail layers draw at), in this frame's output format (`displayOutput`).
+    private func sharedFramePass(width: Int, height: Int) -> MTLRenderPassDescriptor? {
         let format = displayOutput.pixelFormat(standard: pixelFormat)
-        if sharedFrameTarget?.width != scene.width || sharedFrameTarget?.height != scene.height
+        if sharedFrameTarget?.width != width || sharedFrameTarget?.height != height
             || sharedFrameTarget?.pixelFormat != format {
-            let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: format, width: scene.width,
-                                                                      height: scene.height, mipmapped: false)
+            let descriptor = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: format, width: width,
+                                                                      height: height, mipmapped: false)
             descriptor.usage = [.renderTarget, .shaderRead]
             descriptor.storageMode = .private
             sharedFrameTarget = device.makeTexture(descriptor: descriptor)
             if sharedFrameTarget == nil {
-                OWELog.error(.scene, "Could not allocate the \(scene.width)×\(scene.height) shared frame")
+                OWELog.error(.scene, "Could not allocate the \(width)×\(height) shared frame")
             }
         }
         guard let target = sharedFrameTarget else { return nil }
@@ -1361,12 +1361,20 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         /// which is `scene` itself) and the drawable.
         var output: (descriptor: MTLRenderPassDescriptor?, drawable: CAMetalDrawable?)?
         var sceneIsOutput: Bool { output != nil }
+        /// A shared frame that would draw straight into its scene target (S2) but keeps its own
+        /// frame while its detail layers may be promoted (`sharedFrameGainsDetail`): when none is,
+        /// the scene target is the frame after all, as it would have been.
+        var deferredPassThrough = false
     }
 
     /// Off with `OWE_COMPOSITE_SKIP=0` (comparisons): the composite always runs.
     var skipsIdentityComposite = ProcessInfo.processInfo.environment["OWE_COMPOSITE_SKIP"] != "0"
     /// Frames drawn straight into their output, the composite skipped (tests, diagnostics).
     private(set) var compositesSkipped = 0
+    /// Off with `OWE_NATIVE_DETAIL=0` (comparisons): every layer draws in the scene pass.
+    var promotesDetailLayers = ProcessInfo.processInfo.environment["OWE_NATIVE_DETAIL"] != "0"
+    /// Layers the last frame drew at the output's backing pixels (`SceneNativeDetailLayers`).
+    private(set) var promotedDetailLayers = 0
 
     /// The scene target for this frame. When the post-process would change nothing and the
     /// composite would be a 1:1 copy (`ScenePostProcess.passesThrough`), the scene is drawn straight
@@ -1381,6 +1389,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 display: displayOutput, sceneSize: size, outputSize: size,
                 placement: layerUniform(position: sceneSize / 2, size: sceneSize, opacity: 1, drawableSize: outputSize,
                                         placement: destination.placement))
+        if passesThrough, sharedFrameGainsDetail(output, sceneTargetSize: size) {
+            return sceneRenderTarget(pixelFormat: format, size: size).map {
+                FrameTargets(scene: $0, output: nil, deferredPassThrough: true)
+            }
+        }
         if passesThrough {
             switch output {
             case .view(let view):
@@ -1403,16 +1416,29 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         return sceneRenderTarget(pixelFormat: format, size: size).map { FrameTargets(scene: $0, output: nil) }
     }
 
+    /// Whether a shared frame of a content with detail layers would have more pixels per unit than
+    /// its `sceneTargetSize` scene target: it then keeps its own frame, which its detail layers may
+    /// draw onto at the displays' backing pixels (`nativeDetailPlan`), rather than being the scene.
+    private func sharedFrameGainsDetail(_ output: FrameOutput, sceneTargetSize: SIMD2<Int>) -> Bool {
+        guard promotesDetailLayers, case .shared(let viewports) = output,
+              layers.contains(where: { $0.layer.text != nil || $0.layer.systemImage != nil }) else { return false }
+        let pixelsPerUnit = SceneRenderResolution.pixelsPerUnit(
+            sceneSize: sceneSize, drawableSize: SceneViewport.largestDrawable(viewports),
+            matchDisplay: renderSettings.sceneDetail == .matchDisplay)
+        return SceneNativeDetailLayers.gainsDetail(scenePixelsPerUnit: Float(sceneTargetSize.x) / max(sceneSize.x, 1),
+                                                   outputPixelsPerUnit: pixelsPerUnit)
+    }
+
     /// The pass the post-process composites onto, taken once the frame's work is encoded (F1): the
     /// view's drawable, or the shared frame. Nil (the frame isn't shown) without a drawable.
-    private func lateOutput(_ output: FrameOutput, matching scene: MTLTexture)
+    private func lateOutput(_ output: FrameOutput, matching scene: MTLTexture, size: SIMD2<Int>? = nil)
         -> (descriptor: MTLRenderPassDescriptor?, drawable: CAMetalDrawable?) {
         switch output {
         case .view(let view):
             guard let descriptor = view.currentRenderPassDescriptor, let drawable = view.currentDrawable else { return (nil, nil) }
             return (descriptor, drawable)
         case .shared:
-            return (sharedFramePass(matching: scene), nil)
+            return (sharedFramePass(width: size?.x ?? scene.width, height: size?.y ?? scene.height), nil)
         }
     }
 
@@ -1424,6 +1450,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         pass.colorAttachments[0].loadAction = .load
         pass.colorAttachments[0].storeAction = .store
         return pass
+    }
+
+    /// A shared frame's output when its scene target is the frame (`outputPass`), as `lateOutput` returns one.
+    private static func passThroughOutput(onto scene: MTLTexture)
+        -> (descriptor: MTLRenderPassDescriptor?, drawable: CAMetalDrawable?) {
+        (outputPass(onto: scene), nil)
     }
 
     private func renderFrame(_ output: FrameOutput) {
@@ -1781,6 +1813,18 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // after the particle systems whose key is below its barrier.
         let sequence = drawSequence(batches: particleBatches.map(\.system), forward: effectFrame.camera.forward)
         particleBatches = sequence.batchOrder.map { particleBatches[$0] }
+        // Text and the media artwork drawn at the output's backing pixels, after the composite.
+        let native = nativeDetailPlan(output, destination: destination, sequence: sequence,
+                                      particleBatchCount: particleBatches.count, draws: draws,
+                                      compositeOrder: compositeOrder, frame: effectFrame, scene: sceneTexture,
+                                      sceneIsOutput: targets.sceneIsOutput)
+        let nativeLayers = Set(native.layers)
+        for index in native.layers where layers[index].layer.text != nil {
+            let entry = layers[index]
+            let onScreen = max(worldTransform(entry).axisScale.x, worldTransform(entry).axisScale.y) * native.pixelsPerUnit
+            textFrames[index] = layerTextFrame(entry, boxSize: layerBaseSize(entry),
+                                               pixelsPerUnit: SceneTextRasterScale.layer(onScreen: onScreen, hasEffects: false))
+        }
         var nextParticleBatch = 0
         /// One instanced draw per system, for every system whose key is below `order`. False when the
         /// scene pass couldn't resume after a snapshot.
@@ -1900,6 +1944,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             let entry = layers[layerIndex]
             // Hidden layers (script `visible = false`) draw nothing, their raw texture included.
             guard let draw = draws[layerIndex] else { continue }
+            // Drawn over the output after the composite instead (`drawNativeDetailLayers`).
+            if nativeLayers.contains(layerIndex) { continue }
             var layerSnapshot: MTLTexture?
             if entry.layer.readsScene || compositeOrder.inScene.contains(entry.layer.id) {
                 // Metal can't sample the attachment it's drawing into: pause the scene pass, run
@@ -1949,6 +1995,17 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                         encoder: encoder, commandBuffer: commandBuffer)
         }
         guard drawParticleBatches(before: .max) else { return }
+        let nativeImage = { [unowned self] (index: Int) in textFrames[index]?.frame ?? self.textureFrame(for: self.layers[index]) }
+        // What reads the finished scene (the bloom, the reflection copy) sees the promoted layers as
+        // before: drawn last, where nothing kept in the pass after them reaches. The patch's base is
+        // the scene as it was without them.
+        var detailBase: MTLTexture?
+        if native.feedsScene, !native.layers.isEmpty {
+            let fed = feedDetailLayers(native.layers, baseTexels: native.baseTexels, draws: draws, image: nativeImage,
+                                       scene: sceneTexture, frame: effectFrame, encoder: &encoder, commandBuffer: commandBuffer)
+            guard fed.resumed else { return }
+            detailBase = fed.base
+        }
         endScenePass(encoder, resumes: false)
 
         var stageContext = SceneFrameStageContext(scene: sceneTexture, commandBuffer: commandBuffer, sceneSize: sceneSize,
@@ -1967,20 +2024,55 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             postScene = upscaled
             postFullDetailScale = fullDetailScale * Float(sceneTexture.width) / Float(max(upscaled.width, 1))
         }
-        let (descriptor, drawable) = targets.output ?? lateOutput(output, matching: postScene)
+        // A shared frame that kept its own target for detail layers none of which was promoted is
+        // the scene after all, as it would have been (`FrameTargets.deferredPassThrough`).
+        let passesThroughNow = targets.deferredPassThrough && native.layers.isEmpty && postScene === sceneTexture
+        if passesThroughNow {
+            sharedFrameTarget = nil
+            compositesSkipped += 1
+        }
+        let (descriptor, drawable) = targets.output
+            ?? (passesThroughNow ? Self.passThroughOutput(onto: sceneTexture)
+                : lateOutput(output, matching: postScene, size: native.sharedSize))
         if let descriptor {
             // What the post-process composites onto: the drawable, or the shared frame.
-            let realDrawableSize = SIMD2<Float>(Float(descriptor.colorAttachments[0].texture?.width ?? sceneTexture.width),
-                                                Float(descriptor.colorAttachments[0].texture?.height ?? sceneTexture.height))
+            let outputTexture = descriptor.colorAttachments[0].texture
+            let realDrawableSize = SIMD2<Float>(Float(outputTexture?.width ?? sceneTexture.width),
+                                                Float(outputTexture?.height ?? sceneTexture.height))
             // The scene-resolution target goes onto the real drawable, placement applied exactly once.
-            postProcess.encode(ScenePostProcess.Frame(
+            let placement = layerUniform(position: sceneSize / 2, size: sceneSize, opacity: 1, drawableSize: realDrawableSize,
+                                         placement: destination.placement)
+            let postFrame = ScenePostProcess.Frame(
                 scene: postScene, output: descriptor, commandBuffer: commandBuffer,
-                placement: layerUniform(position: sceneSize / 2, size: sceneSize, opacity: 1, drawableSize: realDrawableSize,
-                                        placement: destination.placement),
+                placement: placement,
                 bloom: liveBloom(), extras: appExtras(), settings: renderSettings,
                 colorCorrection: colorCorrection(),
                 effects: effectGraph, builtins: effectFrame, values: timelines.values, fullDetailScale: postFullDetailScale,
-                display: displayOutput, sceneIsOutput: targets.sceneIsOutput))
+                display: displayOutput, sceneIsOutput: targets.sceneIsOutput || passesThroughNow)
+            // The promoted layers' patch, over the scene as the composite upscales it without them,
+            // made before the post-process (the camera fade may draw onto the scene target).
+            var patch: (texture: MTLTexture, rect: SceneSnapshotTracker.Rect)?
+            if native.mode == .patch, !native.layers.isEmpty, let rect = native.patch, let outputTexture,
+               outputTexture.width == native.outputSize.x, outputTexture.height == native.outputSize.y,
+               let base = native.feedsScene ? detailBase : Optional(postScene),
+               let texture = detailPatch(native, rect: rect, base: base, baseTexels: native.feedsScene ? native.baseTexels : nil,
+                                         sceneTexels: SIMD2(sceneTexture.width, sceneTexture.height), composite: placement,
+                                         draws: draws, image: nativeImage, frame: effectFrame, commandBuffer: commandBuffer) {
+                patch = (texture, rect)
+            }
+            postProcess.encode(postFrame)
+            if let patch {
+                // `combine_ldr`'s sum, then the steps after it, per pixel.
+                if let bloom = postProcess.lastBloom?.bloom {
+                    addBloom(bloom, to: patch.texture, rect: patch.rect, composite: placement,
+                             outputHeight: native.outputSize.y, commandBuffer: commandBuffer)
+                }
+                postProcess.finishDetailPatch(patch.texture, at: patch.rect, postFrame)
+            } else if let outputTexture, !native.layers.isEmpty, !native.feedsScene {
+                // Straight over the composite; or, should the patch fail, so they still show.
+                drawNativeDetailLayers(native.layers, draws: draws, image: nativeImage, onto: outputTexture,
+                                       placement: native.placement, frame: effectFrame, commandBuffer: commandBuffer)
+            }
             if let drawable {
                 commandBuffer.present(drawable)
             } else {
@@ -2178,6 +2270,290 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         encoder.setFragmentTexture(effectOutput ?? textureFrame.texture, index: 0)
         encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
         if draw.placement != nil || additive { encoder.setRenderPipelineState(target.pipelines.normal) }
+    }
+
+    // MARK: - Detail layers at the output's backing pixels (`SceneNativeDetailLayers`)
+
+    /// This frame's detail layers drawn at the output's pixels: their indices in draw order, the
+    /// output's pixels per scene unit, the placement they are drawn with, for a shared frame the
+    /// backing size it is made at so they keep their pixels (nil: the scene's size), and how they
+    /// reach the output.
+    private struct NativeDetailPlan {
+        var layers: [Int] = []
+        var pixelsPerUnit: Float = 0
+        var placement: WallpaperPlacement = .stretch
+        var sharedSize: SIMD2<Int>?
+        var mode = SceneNativeDetailLayers.Mode.direct
+        /// The output's size in pixels the plan was made for.
+        var outputSize = SIMD2<Int>(0, 0)
+        /// `.patch`: the output pixels it covers (origin at the top left).
+        var patch: SceneSnapshotTracker.Rect?
+        /// The layers also go into the scene target, after everything else, for what reads the
+        /// finished scene (WE's bloom, `_rt_MipMappedFrameBuffer`). The patch's base is then a copy
+        /// of the target's `baseTexels` made before they are drawn.
+        var feedsScene = false
+        var baseTexels: SceneSnapshotTracker.Rect?
+    }
+
+    /// Which layers leave the scene pass this frame: none unless the output has more pixels per unit
+    /// than the scene target and the post-process works per pixel (`ScenePostProcess.detailMode`);
+    /// then the candidates nothing kept in the scene pass after them reads or covers
+    /// (`SceneNativeDetailLayers.promoted`).
+    private func nativeDetailPlan(_ output: FrameOutput, destination: SceneFrameDestination, sequence: DrawSequence,
+                                  particleBatchCount: Int, draws: [Int: LayerDraw], compositeOrder: SceneLayerCompositeOrder,
+                                  frame: BuiltinFrameContext, scene: MTLTexture, sceneIsOutput: Bool) -> NativeDetailPlan {
+        var plan = NativeDetailPlan()
+        defer {
+            if plan.layers.count != promotedDetailLayers {
+                OWELog.info(.scene, "Detail layers drawn at the output's pixels: \(plan.layers.count)")
+            }
+            promotedDetailLayers = plan.layers.count
+        }
+        // WE's volumetrics add light over the finished scene from its depth, which a patch can't take.
+        let frameBloom = liveBloom()
+        guard promotesDetailLayers, !sceneIsOutput, !SceneVolumetrics.runs(volumetrics?.plan, settings: renderSettings),
+              var mode = postProcess.detailMode(bloom: frameBloom, extras: appExtras(), settings: renderSettings,
+                                                colorCorrection: colorCorrection(), display: displayOutput,
+                                                fade: frame.camera.fade)
+        else { return plan }
+        let feedsScene = mipMappedTarget != nil || ScenePostProcess.runsBloom(frameBloom, settings: renderSettings)
+        if feedsScene {
+            mode = .patch
+            // The patch's base would be MetalFX's upscale of the scene without the layers, which isn't made.
+            if drawsAtRenderScale, upscaler.path(settings: renderSettings, format: scene.pixelFormat) == .metalFX {
+                return plan
+            }
+        }
+        let outputSize: SIMD2<Float>
+        switch output {
+        case .view:
+            outputSize = destination.viewports[0].drawableSize
+            plan.placement = destination.placement
+        case .shared(let viewports):
+            let pixelsPerUnit = SceneRenderResolution.pixelsPerUnit(
+                sceneSize: sceneSize, drawableSize: SceneViewport.largestDrawable(viewports),
+                matchDisplay: renderSettings.sceneDetail == .matchDisplay)
+            let size = SceneRenderResolution.targetSize(sceneSize: sceneSize, pixelsPerUnit: pixelsPerUnit)
+            plan.sharedSize = size
+            outputSize = SIMD2(Float(size.x), Float(size.y))
+        }
+        plan.outputSize = SIMD2(Int(outputSize.x.rounded()), Int(outputSize.y.rounded()))
+        let placed = layerUniform(position: sceneSize / 2, size: sceneSize, opacity: 1, drawableSize: outputSize,
+                                  placement: plan.placement)
+        plan.pixelsPerUnit = placed.size.x / max(sceneSize.x, 1)
+        guard SceneNativeDetailLayers.gainsDetail(scenePixelsPerUnit: Float(scene.width) / max(sceneSize.x, 1),
+                                                  outputPixelsPerUnit: plan.pixelsPerUnit) else {
+            plan.sharedSize = nil
+            return plan
+        }
+        let targetSize = SIMD2(scene.width, scene.height)
+        var items: [SceneNativeDetailLayers.Item] = []
+        var nextBatch = 0
+        func batches(before barrier: Int) {
+            while nextBatch < particleBatchCount, sequence.batchKeys[nextBatch] < barrier {
+                items.append(.unbounded)
+                nextBatch += 1
+            }
+        }
+        for (item, barrier) in sequence.items {
+            batches(before: barrier)
+            switch item {
+            case .layer(let index):
+                guard let draw = draws[index] else { continue }
+                let entry = layers[index]
+                let id = entry.layer.id
+                let readsScene = entry.layer.readsScene || compositeOrder.inScene.contains(id)
+                    || entry.layer.imageMaterial?.readsSceneSnapshot == true
+                let visible = scripts.isVisible(id) && !(hidesClockLayers && clockLayerIDs.contains(id))
+                let candidate = SceneNativeDetailLayers.isCandidate(
+                    isText: entry.layer.text != nil, isMediaImage: entry.layer.systemImage != nil, visible: visible,
+                    compositeSource: compositeOrder.sources.contains(id) || models?.compositeLayerIDs.contains(id) == true,
+                    hasLayerEffects: !entry.layer.weEffects.isEmpty, readsScene: readsScene,
+                    isPuppet: entry.layer.puppet != nil, placed3D: draw.placement != nil)
+                // A layer through a 3D camera covers what its projection does: anywhere.
+                let bounds: SceneSnapshotTracker.Rect? = draw.placement != nil ? nil
+                    : SceneSnapshotTracker.pixelRect(of: draw.quad, sceneSize: sceneSize, targetSize: targetSize) ?? .empty
+                items.append(.layer(index: index, bounds: bounds, readsScene: readsScene, candidate: candidate))
+            case .model, .particles:
+                items.append(.unbounded)
+            }
+        }
+        batches(before: .max)
+        let promoted = SceneNativeDetailLayers.promoted(items)
+        var promotedTexels: [SceneSnapshotTracker.Rect] = []
+        plan.layers = items.compactMap { item -> Int? in
+            guard case let .layer(index, bounds, _, _) = item, promoted.contains(index) else { return nil }
+            if let bounds { promotedTexels.append(bounds) }
+            return index
+        }
+        plan.mode = mode
+        plan.feedsScene = feedsScene
+        if mode == .patch {
+            // The output pixels the layers' texels (padded for the filters) land on.
+            let placedRect = SceneNativeDetailLayers.placedViewport(center: placed.position, size: placed.size,
+                                                                    outputSize: outputSize)
+            guard let texels = SceneNativeDetailLayers.union(promotedTexels),
+                  let patch = SceneNativeDetailLayers.outputRect(ofTexels: texels, sceneTexels: targetSize,
+                                                                 placed: placedRect, outputSize: plan.outputSize)
+            else {
+                // Nothing of them is on the output: they stay in the scene pass.
+                plan.layers = []
+                plan.sharedSize = nil
+                return plan
+            }
+            plan.patch = patch
+            if feedsScene {
+                plan.baseTexels = SceneNativeDetailLayers.texels(under: patch, sceneTexels: targetSize, placed: placedRect)
+            }
+        }
+        if plan.layers.isEmpty { plan.sharedSize = nil }
+        return plan
+    }
+
+    /// Draws the promoted layers `indices` (in draw order) after the scene pass, at the scene
+    /// target's pixels, into the resumed scene pass: what reads the finished scene sees them as
+    /// before (`NativeDetailPlan.feedsScene`). First copies the target's `baseTexels`, the scene
+    /// without them that the patch is drawn over (`base`, nil when the copy can't be made).
+    /// `resumed` false: the scene pass couldn't resume, and `encoder` is ended.
+    private func feedDetailLayers(_ indices: [Int], baseTexels: SceneSnapshotTracker.Rect?, draws: [Int: LayerDraw],
+                                  image: (Int) -> RenderTextureFrame, scene: MTLTexture, frame: BuiltinFrameContext,
+                                  encoder: inout MTLRenderCommandEncoder,
+                                  commandBuffer: MTLCommandBuffer) -> (resumed: Bool, base: MTLTexture?) {
+        endScenePass(encoder, resumes: true)
+        var base: MTLTexture?
+        if let region = baseTexels, region.width > 0, region.height > 0,
+           let copy = renderTargetPool.texture(width: region.width, height: region.height, pixelFormat: scene.pixelFormat,
+                                               avoiding: scene),
+           let blit = commandBuffer.makeBlitCommandEncoder() {
+            blit.copy(from: scene, sourceSlice: 0, sourceLevel: 0, sourceOrigin: MTLOrigin(x: region.x, y: region.y, z: 0),
+                      sourceSize: MTLSize(width: region.width, height: region.height, depth: 1),
+                      to: copy, destinationSlice: 0, destinationLevel: 0, destinationOrigin: MTLOrigin(x: 0, y: 0, z: 0))
+            blit.endEncoding()
+            base = copy
+        }
+        guard let resumed = resumeScenePass(on: scene, commandBuffer: commandBuffer) else { return (false, nil) }
+        encoder = resumed
+        let target = LayerTarget(size: SIMD2(Float(scene.width), Float(scene.height)), pixelFormat: scene.pixelFormat,
+                                 sampleCount: sceneSampleCount, depth: frameDepth, pipelines: scenePassPipelines)
+        for index in indices {
+            guard let draw = draws[index] else { continue }
+            encodeLayer(layers[index], draw, image: image(index), effectOutput: nil, snapshot: nil, frame: frame,
+                        target: target, encoder: encoder, commandBuffer: commandBuffer)
+        }
+        return (true, base)
+    }
+
+    /// The detail patch (`SceneNativeDetailLayers.Mode.patch`): the output pixels `rect` of the
+    /// scene as the composite upscales it, from `base` (a copy of the scene target's `baseTexels`,
+    /// or with nil the whole texture the composite reads), with the promoted layers drawn over it at
+    /// those pixels. `composite` is the composite's quad on the output, before its adjustments. Nil
+    /// when its target can't be had.
+    private func detailPatch(_ plan: NativeDetailPlan, rect: SceneSnapshotTracker.Rect, base: MTLTexture,
+                             baseTexels: SceneSnapshotTracker.Rect?, sceneTexels: SIMD2<Int>, composite: LayerUniform,
+                             draws: [Int: LayerDraw], image: (Int) -> RenderTextureFrame, frame: BuiltinFrameContext,
+                             commandBuffer: MTLCommandBuffer) -> MTLTexture? {
+        guard let patch = renderTargetPool.texture(width: rect.width, height: rect.height, pixelFormat: base.pixelFormat,
+                                                   avoiding: base) else { return nil }
+        let pass = MTLRenderPassDescriptor()
+        pass.colorAttachments[0].texture = patch
+        pass.colorAttachments[0].loadAction = .clear
+        pass.colorAttachments[0].clearColor = SceneFrameDestination.clearColor
+        pass.colorAttachments[0].storeAction = .store
+        guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { return nil }
+        defer { encoder.endEncoding() }
+        encoder.label = "detail patch"
+        let pipelines = layerPipelines.pipelines(for: patch.pixelFormat)
+        // The scene's quad as the composite draws it, moved into the patch and read with the same
+        // linear filter, alpha included (the layers blend over it as over the scene target).
+        var uniform = composite
+        uniform.sceneSize = SIMD2(Float(rect.width), Float(rect.height))
+        uniform.position = SceneNativeDetailLayers.patchPosition(composite.position, rect: rect, outputHeight: plan.outputSize.y)
+        if let baseTexels {
+            let uv = SceneNativeDetailLayers.copyUV(of: baseTexels, sceneTexels: sceneTexels)
+            uniform.uvOrigin = uv.origin
+            uniform.uvAxisX = uv.axisX
+            uniform.uvAxisY = uv.axisY
+        }
+        encoder.setRenderPipelineState(pipelines.copy)
+        encoder.setVertexBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
+        encoder.setFragmentBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
+        encoder.setFragmentTexture(base, index: 0)
+        encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
+        encodeNativeDetailLayers(plan.layers, draws: draws, image: image, into: encoder, target: patch,
+                                 origin: SIMD2(Float(rect.x), Float(rect.y)),
+                                 outputSize: SIMD2(Float(plan.outputSize.x), Float(plan.outputSize.y)),
+                                 placement: plan.placement, frame: frame, commandBuffer: commandBuffer)
+        return patch
+    }
+
+    /// Adds `bloom` (`_rt_Bloom`) to the detail patch `rect` as WE's `combine_ldr` adds it to the
+    /// frame: read at each pixel's place in the scene with the linear filter, the sum stored in the
+    /// patch's format. `composite` is the composite's quad on the output.
+    private func addBloom(_ bloom: MTLTexture, to patch: MTLTexture, rect: SceneSnapshotTracker.Rect,
+                          composite: LayerUniform, outputHeight: Int, commandBuffer: MTLCommandBuffer) {
+        let pass = MTLRenderPassDescriptor()
+        pass.colorAttachments[0].texture = patch
+        pass.colorAttachments[0].loadAction = .load
+        pass.colorAttachments[0].storeAction = .store
+        guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { return }
+        encoder.label = "detail patch bloom"
+        var uniform = composite
+        uniform.sceneSize = SIMD2(Float(rect.width), Float(rect.height))
+        uniform.position = SceneNativeDetailLayers.patchPosition(composite.position, rect: rect, outputHeight: outputHeight)
+        encoder.setRenderPipelineState(layerPipelines.pipelines(for: patch.pixelFormat).addCopy)
+        encoder.setVertexBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
+        encoder.setFragmentBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
+        encoder.setFragmentTexture(bloom, index: 0)
+        encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
+        encoder.endEncoding()
+    }
+
+    /// Draws `indices` (in draw order) over `texture` once the composite has put the scene on it
+    /// (`SceneNativeDetailLayers.Mode.direct`).
+    private func drawNativeDetailLayers(_ indices: [Int], draws: [Int: LayerDraw], image: (Int) -> RenderTextureFrame,
+                                        onto texture: MTLTexture, placement: WallpaperPlacement, frame: BuiltinFrameContext,
+                                        commandBuffer: MTLCommandBuffer) {
+        let pass = MTLRenderPassDescriptor()
+        pass.colorAttachments[0].texture = texture
+        pass.colorAttachments[0].loadAction = .load
+        pass.colorAttachments[0].storeAction = .store
+        guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: pass) else { return }
+        defer { encoder.endEncoding() }
+        let outputSize = SIMD2<Float>(Float(texture.width), Float(texture.height))
+        encodeNativeDetailLayers(indices, draws: draws, image: image, into: encoder, target: texture, origin: .zero,
+                                 outputSize: outputSize, placement: placement, frame: frame, commandBuffer: commandBuffer)
+    }
+
+    /// Encodes `indices` into `encoder`, whose `target` is the output's pixels from `origin` (top
+    /// left) on: each layer as the scene pass draws it, through a viewport on the scene's placed
+    /// rect, so its quad, opacity, colour, blend and parallax land on the same pixels at the
+    /// output's density.
+    private func encodeNativeDetailLayers(_ indices: [Int], draws: [Int: LayerDraw], image: (Int) -> RenderTextureFrame,
+                                          into encoder: MTLRenderCommandEncoder, target texture: MTLTexture,
+                                          origin: SIMD2<Float>, outputSize: SIMD2<Float>, placement: WallpaperPlacement,
+                                          frame: BuiltinFrameContext, commandBuffer: MTLCommandBuffer) {
+        let placed = layerUniform(position: sceneSize / 2, size: sceneSize, opacity: 1, drawableSize: outputSize,
+                                  placement: placement)
+        var viewport = SceneNativeDetailLayers.placedViewport(center: placed.position, size: placed.size, outputSize: outputSize)
+        viewport.origin -= origin
+        // Only the placed scene within the target: a cropping placement's viewport reaches past it.
+        let size = SIMD2<Float>(Float(texture.width), Float(texture.height))
+        let low = simd_clamp(viewport.origin.rounded(.down), SIMD2<Float>(0, 0), size)
+        let high = simd_clamp((viewport.origin + viewport.size).rounded(.up), SIMD2<Float>(0, 0), size)
+        guard high.x > low.x, high.y > low.y else { return }
+        encoder.setViewport(MTLViewport(originX: Double(viewport.origin.x), originY: Double(viewport.origin.y),
+                                        width: Double(viewport.size.x), height: Double(viewport.size.y), znear: 0, zfar: 1))
+        encoder.setScissorRect(MTLScissorRect(x: Int(low.x), y: Int(low.y),
+                                              width: Int(high.x - low.x), height: Int(high.y - low.y)))
+        let pipelines = layerPipelines.pipelines(for: texture.pixelFormat)
+        encoder.setRenderPipelineState(pipelines.normal)
+        let target = LayerTarget(size: viewport.size, pixelFormat: texture.pixelFormat, sampleCount: 1, depth: nil,
+                                 pipelines: pipelines)
+        for index in indices {
+            guard let draw = draws[index] else { continue }
+            encodeLayer(layers[index], draw, image: image(index), effectOutput: nil, snapshot: nil, frame: frame,
+                        target: target, encoder: encoder, commandBuffer: commandBuffer)
+        }
     }
 
     /// This frame's `_rt_Reflection` (docs/models-plan.md §2.11): while a model is reflective, the
