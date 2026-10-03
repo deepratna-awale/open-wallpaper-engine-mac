@@ -105,6 +105,7 @@ struct GeneralPage: SettingsPage {
 struct KeyboardShortcutsSection: View {
     @AppStorage("ShowsKeyboardShortcuts", store: .app) private var isExpanded = false
     @EnvironmentObject private var navigation: SettingsNavigation
+    @ObservedObject private var wallpaperViewModel = AppDelegate.shared.wallpaperViewModel
 
     var body: some View {
         Section {
@@ -142,6 +143,24 @@ struct KeyboardShortcutsSection: View {
                 } header: {
                     Text(group.menu.title)
                 }
+            }
+            // The playlists' system-wide shortcuts, set in each playlist's header.
+            Section {
+                let playlists = wallpaperViewModel.playlists.filter { $0.shortcut != nil }
+                if playlists.isEmpty {
+                    Text("No playlist has a shortcut yet.").foregroundStyle(.secondary)
+                }
+                ForEach(playlists) { playlist in
+                    LabeledContent {
+                        ShortcutKeyCaps(keys: playlist.shortcut?.keys ?? [])
+                    } label: {
+                        Text(verbatim: playlist.name)
+                    }
+                }
+            } header: {
+                Text("Playlists")
+            } footer: {
+                Text("These work in every app and start the playlist. Set one in the playlist's header on the Playlists tab.")
             }
         }
     }
