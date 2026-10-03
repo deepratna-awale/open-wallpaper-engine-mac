@@ -26,10 +26,12 @@ enum SceneEditOverlayFiles {
         }
     }
 
-    /// Saves the wallpaper's overlay and has its running instances apply it.
+    /// Saves the wallpaper's overlay and has its running instances apply it (unless `notify` is
+    /// false: the scene edits didn't change).
     static func save(_ overlay: SceneEditOverlay, for identity: WallpaperSettingsIdentity, wallpaperDirectory: URL,
-                     store: SceneEditOverlayStore = defaultStore) throws {
+                     store: SceneEditOverlayStore = defaultStore, notify: Bool = true) throws {
         try store.save(overlay, for: identity.rawValue)
+        guard notify else { return }
         NotificationCenter.default.post(name: .sceneEditOverlayDidChange, object: nil,
                                         userInfo: ["wallpaperDirectory": wallpaperDirectory.standardizedFileURL])
     }

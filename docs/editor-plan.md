@@ -121,3 +121,32 @@ Each phase ships on its own; effort is focused engineering time.
 - `OpenWallpaperEngine/Editor`: the app side: `WallpaperEditorController` (window, canvas through
   `WallpaperView` on a preview `WallpaperViewModel`, services the module needs), user-property undo,
   scene reading. `Scene/Loading/SceneEditOverlayFiles` stores overlays; `ScenePreparation` applies them.
+
+## Puppet Warp (P5, puppets)
+
+An image layer's inspector has a **Puppet Warp** section: Create Puppet… (an image without a
+rig) or Edit Puppet… (its rig, or the editor's edit of it). The puppet editor opens over the
+window with five tools, every finished edit one undo step in the window's session:
+
+| Tool | Does |
+|---|---|
+| Mesh | Generate from alpha (outline traced, simplified and spaced, the inside on a staggered grid, Delaunay, triangles outside the shape dropped; point spacing, edge padding, alpha threshold); select, move, add and delete vertices |
+| Skeleton | Add bones by dragging (under the selected bone), move joints (Option leaves the children), turn by the end handle (Shift: 15°), hierarchy, names, parents |
+| Weights | Automatic weights by heat diffusion (Baran–Popović bone heat over the mesh's cotangent Laplacian) or distance; a brush per bone (add, subtract, smooth, replace; size, strength) over a heat map; at most four bones a vertex, summing to 1 |
+| Animate | Clips (name, fps, length, loop/mirror/single), keys set by posing at a frame, onion skin, the image's animation layers (blend, rate, additive, blend in/out, blend time) previewed as the player evaluates them, root-motion flags and the clip record as WE's model editor writes them |
+| Physics | Each bone's physics constraint as WE's Puppet Warp editor offers it (spring or rigid, rotation, position, gravity, limits, tip), stepped live with the player's bone physics; drag to shake |
+
+- **Model:** `OWESceneEditing/Puppets` (Foundation): `PuppetDocument`, `PuppetMDLWriter` (`MDLV0023`,
+  `MDLS0004`, `MDLA0006`; the bone properties' compiled keys, docs/models-plan.md §2.14),
+  `PuppetMDLReader` (every version the runtime reads; attachments, reference pose, blend shapes and
+  per-bone blocks kept while still valid), mesh generation, weights, pose, layers and physics ports
+  of the player's, a CPU rasterizer for the preview. Views: `OWEEditor/Puppets`, their text in
+  `Resources/Puppets.xcstrings`.
+- **Stored** in the overlay (`SceneEditOverlay.puppets`, by layer); they don't change the running
+  scene (left out of the digest, so no reload). **Save as Local Wallpaper** writes each as a new
+  `.mdl` and model JSON (`<model>_puppet_<id>`) and points the layer at it with its
+  `animationlayers` (`PuppetSceneBake`).
+- **Tests:** the package's `Puppets` tests (mesh from a synthetic shape, normalised weights, the
+  writer–reader round trip, a two-bone bend rendered, the fixtures' rigs saved back) and the app's
+  `EditorPuppetMDLTests` (the app's `MDLReader` reads the writer's bytes field for field; the
+  preview's layers and physics match `SceneAnimationLayerStack` and `SceneBonePhysics`).

@@ -76,7 +76,7 @@ public struct WallpaperEditorView: View {
                 Label(L("Revert"), systemImage: "arrow.counterclockwise")
             }
             .help(L("Drop every edit made in the editor"))
-            .disabled(!session.overlay.hasSceneEdits)
+            .disabled(!session.overlay.hasSceneEdits && !session.overlay.hasPuppetEdits)
         }
         if #available(macOS 26, *) {
             ToolbarSpacer(.fixed)

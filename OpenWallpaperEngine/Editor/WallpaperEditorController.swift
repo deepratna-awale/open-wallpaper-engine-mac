@@ -43,6 +43,8 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
     /// The canvas's own wallpaper model, as the Workshop preview has: one display, muted.
     private let preview: WallpaperViewModel
     private let userPropertyUndo: EditorUserPropertyUndo
+    /// The scene edits last saved, so a save that changes only puppets doesn't reload the scene.
+    private var savedDigest: String?
 
     /// Only scene wallpapers have layers to edit.
     static func canEdit(_ wallpaper: WEWallpaper) -> Bool {
@@ -75,6 +77,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         window.toolbarStyle = .unified
         window.delegate = self
         session.onChange = { [weak self] overlay in self?.save(overlay) }
+        savedDigest = session.overlay.digest
         let content = NSHostingView(rootView: WallpaperEditorView(session: session, services: makeServices()))
         content.sizingOptions = [.minSize]
         window.contentView = content
@@ -85,7 +88,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
     private func makeServices() -> WallpaperEditorServices {
         let labels = WallpaperEngineLabels.load()
         let preview = self.preview, wallpaper = self.wallpaper, userPropertyUndo = self.userPropertyUndo
-        return WallpaperEditorServices(
+        var services = WallpaperEditorServices(
             makeCanvas: { AnyView(WallpaperView(viewModel: preview, screenId: preview.selectedScreenId)) },
             userProperties: { AnyView(EditorUserProperties(wallpaper: wallpaper, undo: userPropertyUndo)) },
             blendModeTitle: SceneBlendModeOptions.title(labels: labels),
@@ -97,13 +100,19 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
                 guard let self else { return title }
                 return try self.saveAsLocalWallpaper(title: title)
             })
+        services.puppetAssets = EditorPuppetAssets.make(for: wallpaper)
+        return services
     }
 
     /// Saves the overlay; the running instances of the wallpaper (the canvas and the desktop)
     /// reload with it.
     private func save(_ overlay: SceneEditOverlay) {
         do {
-            try SceneEditOverlayFiles.save(overlay, for: identity, wallpaperDirectory: wallpaper.wallpaperDirectory)
+            // A puppet edit doesn't change the running scene (`SceneEditOverlay.digest`): no reload.
+            let digest = overlay.digest
+            defer { savedDigest = digest }
+            try SceneEditOverlayFiles.save(overlay, for: identity, wallpaperDirectory: wallpaper.wallpaperDirectory,
+                                           notify: digest != savedDigest)
         } catch {
             OWELog.error(.scene, "Can't save the editor overlay of \(wallpaper.project.title): \(error)")
         }
@@ -123,9 +132,12 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
             writerSource.packageFiles = files
             writerSource.packageName = source.packageName
         }
-        let scene = try session.overlay.applied(to: source.scene)
-        let folder = try LocalWallpaperWriter().save(writerSource, scene: scene, title: title,
-                                                     into: FileManager.default.wallpapersDirectory)
+        // The editor's puppets become `.mdl` files and the layers' references (`PuppetSceneBake`).
+        let read = EditorPuppetAssets.make(for: wallpaper).readFile
+        let baked = try PuppetSceneBake.bake(session.overlay, into: try session.overlay.applied(to: source.scene),
+                                             readFile: read)
+        let folder = try LocalWallpaperWriter().save(writerSource, scene: baked.scene, title: title,
+                                                     into: FileManager.default.wallpapersDirectory, files: baked.files)
         OWELog.info(.library, "Saved \(wallpaper.project.title) with its editor edits as \(folder.path)")
         AppDelegate.shared.contentViewModel.refresh()
         return title

@@ -257,7 +257,7 @@ final class PuppetCoreTests: XCTestCase {
         XCTAssertEqual(properties[0]["se"], .bool(true))
         XCTAssertEqual(properties[0]["r"], .bool(true))
         XCTAssertEqual(properties[0]["rs"], .number(200))
-        XCTAssertEqual(properties[0]["gd"], .string("0.00000 -1.00000 0.00000"))
+        XCTAssertEqual(properties[0]["gd"], .string("0.0 -1.0 0.0"))
         // Tip size 0: the distance to the child (100 px) along the forward direction.
         XCTAssertEqual(properties[0]["tp"], .string("100.00000 0.00000 0.00000"))
         XCTAssertEqual(properties[0]["raz"], .bool(true))
@@ -269,9 +269,6 @@ final class PuppetCoreTests: XCTestCase {
         XCTAssertEqual(PuppetBonePhysics(properties: properties[0]), {
             var expected = PuppetBonePhysics()
             expected.compiledTip = SIMD3(100, 0, 0)
-            // Angles are written with five decimals, as WE's compiler writes them.
-            expected.minAngles.z = -3.14159
-            expected.maxAngles.z = 3.14159
             return expected
         }())
     }

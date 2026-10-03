@@ -44,6 +44,9 @@ private struct LayerForm: View {
                 appearanceSection
             }
             effectsSection
+            if layer.kind == .image, let assets = services.puppetAssets {
+                PuppetInspectorSection(session: session, layer: layer, assets: assets)
+            }
             Section {
                 DisclosureGroup(L("Details")) {
                     if let source = layer.sourcePath {

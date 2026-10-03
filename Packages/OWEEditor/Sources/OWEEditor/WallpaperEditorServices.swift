@@ -19,6 +19,8 @@ public struct WallpaperEditorServices {
     /// Writes a new local wallpaper with the edits baked in and adds it to the library; returns
     /// the title it was saved under.
     public var saveAsLocalWallpaper: (String) throws -> String
+    /// The wallpaper's files and images the puppet editor reads; nil hides Puppet Warp.
+    public var puppetAssets: PuppetEditorAssets?
 
     public init(makeCanvas: @escaping () -> AnyView, userProperties: (() -> AnyView)? = nil,
                 blendModeTitle: String, blendModes: [InspectorOption], effectHelp: @escaping (String) -> String,
