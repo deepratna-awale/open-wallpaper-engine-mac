@@ -101,14 +101,7 @@ public struct WallpaperEditorView: View {
         if #available(macOS 26, *) {
             ToolbarSpacer(.flexible)
         }
-        if services.projectJSON != nil {
-            ToolbarItem {
-                Button { authoring.isEditingProperties = true } label: {
-                    Label(L("User Properties"), systemImage: "slider.horizontal.3")
-                }
-                .help(L("Add, edit and arrange the wallpaper’s user properties"))
-            }
-        }
+        authoringItems
         ToolbarItem {
             Button { isConfirmingRevert = true } label: {
                 Label(L("Revert"), systemImage: "arrow.counterclockwise")
@@ -129,6 +122,28 @@ public struct WallpaperEditorView: View {
         if #available(macOS 26, *) {
             ToolbarSpacer(.fixed)
         }
+        panelItems
+    }
+
+    /// The particle editor's Add menu and the user properties' editor.
+    @ToolbarContentBuilder private var authoringItems: some ToolbarContent {
+        if let particles = services.particles {
+            ToolbarItem {
+                ParticleAddMenu(services: particles)
+            }
+        }
+        if services.projectJSON != nil {
+            ToolbarItem {
+                Button { authoring.isEditingProperties = true } label: {
+                    Label(L("User Properties"), systemImage: "slider.horizontal.3")
+                }
+                .help(L("Add, edit and arrange the wallpaper’s user properties"))
+            }
+        }
+    }
+
+    /// The timeline and the inspector.
+    @ToolbarContentBuilder private var panelItems: some ToolbarContent {
         if let timeline = services.timeline {
             ToolbarItem {
                 TimelineToolbarButton(timeline: timeline)

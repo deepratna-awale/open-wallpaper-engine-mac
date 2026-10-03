@@ -10,11 +10,14 @@ public final class SceneEditSession: ObservableObject {
     /// The scene as the wallpaper ships it.
     public let authored: SceneOutline
     /// The scene as edited: layers added, deleted, reordered and regrouped, effects added and
-    /// reordered, names changed. What the layer list, the canvas and the inspector show.
+    /// reordered, names changed, the particle editor's systems added and deleted
+    /// (`SceneParticleOverlay`). What the layer list, the canvas and the inspector show.
     @Published public private(set) var outline: SceneOutline
     /// The scene with the structural edits only: what a layer's values are compared against (an
     /// added layer's own values are its authored ones).
     public private(set) var baseOutline: SceneOutline
+    /// The scene's layers as authored (`authored`).
+    public var authoredOutline: SceneOutline { authored }
     public let undoManager: UndoManager
     @Published public private(set) var overlay: SceneEditOverlay
     @Published public var selection: Int?
@@ -77,8 +80,13 @@ public final class SceneEditSession: ObservableObject {
     /// when the structure, a name or a parent changed. Without the scene's data (an outline made
     /// from a decoded root) the authored outline stands.
     private func refreshOutlines(from previous: SceneEditOverlay? = nil) {
-        guard let data = authored.sceneData else { return }
         if let previous, previous.outlineSignature == overlay.outlineSignature { return }
+        guard let data = authored.sceneData else {
+            outline = authored.applying(overlay.particles)
+            baseOutline = outline
+            if let selection, outline.layer(selection) == nil { self.selection = nil }
+            return
+        }
         do {
             outline = try Self.outline(of: data, with: overlay)
             baseOutline = try Self.outline(of: data, with: overlay.structureOnly)
@@ -327,12 +335,14 @@ public final class SceneEditSession: ObservableObject {
         return zip(left, right).allSatisfy { abs($0 - $1) <= 1e-6 * max(1, abs($0)) }
     }
 
-    /// A change of the overlay made outside the setters above (the timeline): one undo step.
+    /// Any change of the overlay as one undo step (the timeline, the particle editor's documents
+    /// and systems); `coalescingKey` merges a run of changes of one control.
     public func edit(actionName: String, coalescingKey: String? = nil, _ change: (inout SceneEditOverlay) -> Void) {
         var next = overlay
         change(&next)
         commit(next, actionName: actionName, coalescingKey: coalescingKey)
     }
+
 
     // MARK: Undo
 

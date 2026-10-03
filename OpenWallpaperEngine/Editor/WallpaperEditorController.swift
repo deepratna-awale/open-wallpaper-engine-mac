@@ -54,6 +54,10 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
     /// The overlay's scene digest as last saved: a save that doesn't change it (a lock, the user
     /// properties, which only Save as Local Wallpaper writes, a puppet) doesn't reload the wallpaper.
     private var savedSceneDigest: String
+    /// The files the particle editor reads (the wallpaper's, WE's), its textures and presets.
+    private let particleAssets: WallpaperEditorParticleAssets
+    /// The overlay as last saved, which tells a particle document change from a scene change.
+    private var savedOverlay: SceneEditOverlay
 
     /// Only scene wallpapers have layers to edit.
     static func canEdit(_ wallpaper: WEWallpaper) -> Bool {
@@ -71,6 +75,8 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         resources = EditorWallpaperResources(wallpaper: wallpaper, package: source.package,
                                              assets: SceneEditOverlayFiles.assets(for: identity))
         savedSceneDigest = Self.sceneDigest(session.overlay)
+        savedOverlay = session.overlay
+        particleAssets = WallpaperEditorParticleAssets(wallpaper: wallpaper, package: source.package)
         let scriptConsole = SceneScriptConsoleFeed(
             wallpaperID: SceneScriptStorageKey.key(forWallpaperDirectory: wallpaper.wallpaperDirectory))
         self.scriptConsole = scriptConsole
@@ -144,6 +150,18 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         services.userPropertyChoices = { resources.userPropertyChoices() }
         services.timeline = timeline
         services.puppetAssets = EditorPuppetAssets.make(for: wallpaper)
+        let assets = particleAssets, directory = wallpaper.wallpaperDirectory
+        do {
+            services.particles = try ParticleEditorServices.make(
+                session: session, readAsset: { assets.data($0) }, presets: assets.presets(labels: labels),
+                textures: assets.textures(), thumbnail: { assets.thumbnail($0) },
+                restart: { layerID in
+                    // The system is built again from nothing; the rest of the scene keeps running.
+                    SceneEditOverlayFiles.postParticles(session.overlay, wallpaperDirectory: directory, objectIDs: [layerID])
+                })
+        } catch {
+            OWELog.error(.ui, "The Wallpaper Editor runs without its particle editor: its schema can't be read: \(error)")
+        }
         return services
     }
 
@@ -151,6 +169,9 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
     /// reload with it.
     private func save(_ overlay: SceneEditOverlay) {
         let digest = Self.sceneDigest(overlay)
+        // A change of particle documents alone builds only the systems that read them.
+        let change = overlay.liveChange(from: savedOverlay)
+        savedOverlay = overlay
         do {
             // A puppet edit doesn't change the running scene (`SceneEditOverlay.digest`): no reload.
             if digest == savedSceneDigest {
@@ -159,7 +180,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
                 // Scripts applied here run from this reload (the runtime has no in-place swap of
                 // one script: a site's id is only free again after its `destroy()`).
                 try SceneEditOverlayFiles.save(overlay, for: identity, wallpaperDirectory: wallpaper.wallpaperDirectory,
-                                               base: session.baseOutline)
+                                               base: session.baseOutline, change: change)
             }
             savedSceneDigest = digest
         } catch {
@@ -191,11 +212,13 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         let read = EditorPuppetAssets.make(for: wallpaper).readFile
         let baked = try PuppetSceneBake.bake(session.overlay, into: try session.overlay.applied(to: source.scene),
                                              readFile: read)
-        // The user properties as authored in the editor go into the copy's project.json.
+        // The user properties as authored in the editor go into the copy's project.json; the
+        // particle editor's documents (definitions, materials) are files of the copy.
         let folder = try LocalWallpaperWriter().save(writerSource, scene: baked.scene, title: title,
                                                      into: FileManager.default.wallpapersDirectory,
                                                      editProject: { authoring?.applyProperties(to: &$0) },
-                                                     files: baked.files)
+                                                     files: baked.files,
+                                                     additionalFiles: try session.overlay.particles?.assetFiles() ?? [:])
         OWELog.info(.library, "Saved \(wallpaper.project.title) with its editor edits as \(folder.path)")
         AppDelegate.shared.contentViewModel.refresh()
         return title

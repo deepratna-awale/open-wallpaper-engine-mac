@@ -8,6 +8,12 @@ extension Notification.Name {
     /// drag in progress, which isn't saved. Its running instances draw the change live when they
     /// can (`SceneEditLiveValues`), else reload the scene with it (`SceneWallpaperInstance`).
     static let sceneEditOverlayDidChange = Notification.Name("SceneEditOverlayDidChange")
+    /// The particle editor changed only documents particle systems read, or restarts a system:
+    /// `userInfo["wallpaperDirectory"]` is the wallpaper's folder, `["assets"]` the overlay's
+    /// documents by path (`[String: Data]`), `["paths"]` the changed ones and `["objectIDs"]`
+    /// systems to build again in any case. Running instances build again only those systems
+    /// (`SceneWallpaperInstance`); the rest of the scene keeps running.
+    static let sceneEditParticlesDidChange = Notification.Name("SceneEditParticlesDidChange")
 }
 
 /// The Wallpaper Editor's overlays (`SceneEditOverlay`) on disk, one per wallpaper under
@@ -30,12 +36,19 @@ enum SceneEditOverlayFiles {
         }
     }
 
-    /// Saves the wallpaper's overlay and has its running instances apply it. `base` lets them
-    /// draw a value-only change live.
+    /// Saves the wallpaper's overlay and has its running instances apply it: they read the scene
+    /// again (`base` lets them draw a value-only change live), or, when only particle documents
+    /// changed (`change`), build those systems again.
     static func save(_ overlay: SceneEditOverlay, for identity: WallpaperSettingsIdentity, wallpaperDirectory: URL,
-                     base: SceneOutline? = nil, store: SceneEditOverlayStore = defaultStore) throws {
+                     base: SceneOutline? = nil, change: SceneEditOverlay.LiveChange = .scene,
+                     store: SceneEditOverlayStore = defaultStore) throws {
         try store.save(overlay, for: identity.rawValue)
-        post(overlay, base: base, wallpaperDirectory: wallpaperDirectory, transient: false)
+        switch change {
+        case .scene:
+            post(overlay, base: base, wallpaperDirectory: wallpaperDirectory, transient: false)
+        case .particleAssets(let paths):
+            postParticles(overlay, wallpaperDirectory: wallpaperDirectory, paths: paths)
+        }
     }
 
     /// A change the running instances draw while it lasts (a gizmo drag), not saved.
@@ -48,6 +61,18 @@ enum SceneEditOverlayFiles {
                                        "overlay": overlay, "transient": transient]
         if let base { userInfo["base"] = base }
         NotificationCenter.default.post(name: .sceneEditOverlayDidChange, object: nil, userInfo: userInfo)
+    }
+
+    /// Has the running instances read the overlay's particle documents again and build the
+    /// systems that read `paths`, and the systems `objectIDs` (a restart), again.
+    static func postParticles(_ overlay: SceneEditOverlay, wallpaperDirectory: URL, paths: Set<String> = [],
+                              objectIDs: Set<Int> = []) {
+        NotificationCenter.default.post(name: .sceneEditParticlesDidChange, object: nil, userInfo: [
+            "wallpaperDirectory": wallpaperDirectory.standardizedFileURL,
+            "assets": overlay.particles?.assetData() ?? [:],
+            "paths": Array(paths),
+            "objectIDs": Array(objectIDs),
+        ])
     }
 
     // MARK: Files the editor added

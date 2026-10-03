@@ -125,6 +125,10 @@ class SceneWallpaperViewModel: ObservableObject {
     private var hasScriptSites = false
     private var loadedWallpaperDirectory: URL?
     private var assetDataCache: [String: Data] = [:]
+    /// The Wallpaper Editor's documents (particle definitions and their materials,
+    /// `SceneParticleOverlay`), by path, read in place of the wallpaper's and WE's files.
+    private var editorAssets: [String: Data] = [:]
+    private let editorAssetsLock = NSLock()
     /// Where the loaded wallpaper's settings are stored, and the directory it was resolved for.
     private var settings: (directory: URL, settingsDirectory: URL, identity: WallpaperSettingsIdentity)?
     /// Whose user properties this instance runs with: every display's, or one display's
@@ -284,6 +288,8 @@ class SceneWallpaperViewModel: ObservableObject {
         var hasScriptSites = false
         /// The editor overlay the scene was read with.
         var overlay: SceneEditOverlay?
+        /// The editor overlay's documents the load was read with.
+        var editorAssets: [String: Data] = [:]
     }
 
     /// Loads `wallpaper` on the calling thread; the scene is loaded when it returns. The app loads
@@ -359,6 +365,7 @@ class SceneWallpaperViewModel: ObservableObject {
         guard isCurrent() else { return nil }
         var read = SceneRead(wallpaper: wallpaper, signature: key.name + "|" + sceneFile, hasPackage: hasPackage)
         read.overlay = request.overlay
+        read.editorAssets = request.overlay?.particles?.assetData() ?? [:]
         if let cached = Self.cachedParse(for: dir, signature: read.signature) {
             read.parser = cached.parser
             read.scene = cached.scene
@@ -447,6 +454,7 @@ class SceneWallpaperViewModel: ObservableObject {
         if !read.hasPackage {
             WallpaperPackageConverter.markVerified(wallpaperDirectory: dir, objectCount: scene.objects.count)
         }
+        setEditorAssets(read.editorAssets)
         loadedScene = scene
         loadedDocument = read.document.map { ($0, "\(dir.path)|\(read.signature)") }
         loadedProject = read.project
@@ -805,6 +813,54 @@ class SceneWallpaperViewModel: ObservableObject {
         content.motions = objectMotions(rebuilt, besides: layers, context: valueContext)
         content.engineCombos = sceneEngineCombos
         return SceneObjectReplacement(objectIDs: Set(ids.map(String.init)), content: content)
+    }
+
+    // MARK: - The Wallpaper Editor's particle documents
+
+    /// Replaces the editor's documents the build reads (`SceneParticleOverlay.assets`); the
+    /// systems that read a changed one are then built again (`particleObjectIDsAsync`).
+    func setEditorAssets(_ assets: [String: Data]) {
+        editorAssetsLock.withLock { editorAssets = assets }
+    }
+
+    /// The particle objects whose system, child systems or their materials read one of `paths`,
+    /// found on the content queue and delivered on the main queue.
+    func particleObjectIDsAsync(using paths: Set<String>, completion: @escaping (Set<Int>) -> Void) {
+        contentQueue.async { [weak self] in
+            let ids = self?.particleObjectIDs(using: paths) ?? []
+            DispatchQueue.main.async { completion(ids) }
+        }
+    }
+
+    /// The particle objects (by the ids the build gives them) that read one of `paths`. Takes the
+    /// scene lock.
+    func particleObjectIDs(using paths: Set<String>) -> Set<Int> {
+        sceneLock.lock()
+        defer { sceneLock.unlock() }
+        guard !paths.isEmpty, let authoredScene = loadedScene, let wallpaperDir = loadedWallpaperDirectory else { return [] }
+        var ids = Set<Int>()
+        for object in SceneObjectIdentity.assigningFallbackIDs(resolvedScene(authoredScene).objects) {
+            guard let id = object.id, let path = object.particle else { continue }
+            var visited = Set<String>()
+            if particleDefinition(path, reads: paths, wallpaperDir: wallpaperDir, visited: &visited) { ids.insert(id) }
+        }
+        return ids
+    }
+
+    /// Whether the definition at `path` is, or reads (its material, its children's), one of `paths`.
+    private func particleDefinition(_ path: String, reads paths: Set<String>, wallpaperDir: URL,
+                                    visited: inout Set<String>) -> Bool {
+        if paths.contains(path) { return true }
+        // A definition that doesn't decode builds nothing, which its build logs; it reads nothing here.
+        guard visited.insert(path).inserted, let data = rawAssetData(named: path, wallpaperDir: wallpaperDir),
+              let system = try? JSONDecoder().decode(WEParticleSystem.self, from: data) else { return false }
+        if let material = system.material, paths.contains(material) { return true }
+        for child in system.children ?? [] {
+            if let name = child.name, particleDefinition(name, reads: paths, wallpaperDir: wallpaperDir, visited: &visited) {
+                return true
+            }
+        }
+        return false
     }
 
     // MARK: - Video as a scene
@@ -2002,6 +2058,7 @@ class SceneWallpaperViewModel: ObservableObject {
     }
 
     private func rawAssetData(named path: String, wallpaperDir: URL) -> Data? {
+        if let edited = editorAssetsLock.withLock({ editorAssets[path] }) { return edited }
         if let cached = assetDataCache[path] { return cached }
         // WE's fixed copy of a broken Workshop shader replaces the one the wallpaper ships.
         if let fixed = shaderCompat?.replacement(forShaderPath: path, projectId: loadedProjectId) {

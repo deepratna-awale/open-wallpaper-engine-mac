@@ -100,6 +100,9 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     /// (`SceneEditOverlay+Puppets`). They don't change the running scene; Save as Local
     /// Wallpaper writes them as `.mdl` files (`PuppetSceneBake`) (version 2).
     public var puppets: [String: PuppetDocument]?
+    /// The particle editor's systems and documents (`SceneParticleOverlay`); nil without any
+    /// (version 2).
+    public var particles: SceneParticleOverlay?
 
     public init(objects: [String: ObjectEdit] = [:]) {
         self.objects = objects
@@ -108,14 +111,14 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     /// Nothing to save: no edits and no locked layers.
     public var isEmpty: Bool {
         objects.values.allSatisfy(\.isEmpty) && !hasStructureEdits && timelines?.isEmpty != false
-            && authoring?.isEmpty != false && !hasPuppetEdits
+            && authoring?.isEmpty != false && !hasPuppetEdits && particles?.isEmpty != false
     }
 
     /// Something changes the scene (locks don't). Authored properties count: they are edits of
     /// the wallpaper, and Save as Local Wallpaper writes them.
     public var hasSceneEdits: Bool {
         objects.values.contains(where: \.hasSceneEdits) || hasStructureEdits || timelines?.isEmpty == false
-            || authoring?.isEmpty == false
+            || authoring?.isEmpty == false || particles?.isEmpty == false
     }
 
     /// Layers added, deleted or reordered.
@@ -124,7 +127,7 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     /// Holds something version 1 can't apply.
     var needsVersion2: Bool {
         hasStructureEdits || timelines?.isEmpty == false || authoring?.isEmpty == false || hasPuppetEdits
-            || objects.values.contains(where: \.needsVersion2)
+            || particles?.isEmpty == false || objects.values.contains(where: \.needsVersion2)
     }
 
     // MARK: Reading

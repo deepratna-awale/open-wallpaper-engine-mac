@@ -45,11 +45,12 @@ public struct LocalWallpaperWriter {
     /// dependencies, linked again when the copy loads) stay behind. The copy is made in a hidden
     /// folder and renamed into place, so the library never lists half a wallpaper. `editProject`
     /// changes the copy's project.json first (the editor's user properties). `files` are written
-    /// into the copy by their path (the editor's puppets, `PuppetSceneBake`).
+    /// into the copy by their path (the editor's puppets, `PuppetSceneBake`), then
+    /// `additionalFiles` (the particle editor's documents) over it.
     @discardableResult
     public func save(_ source: Source, scene: Data, title: String, into library: URL,
                      editProject: ((inout [String: Any]) -> Void)? = nil,
-                     files: [String: Data] = [:]) throws -> URL {
+                     files: [String: Data] = [:], additionalFiles: [String: Data] = [:]) throws -> URL {
         try fileManager.createDirectory(at: library, withIntermediateDirectories: true)
         let staging = library.appending(path: ".owe-editor-\(UUID().uuidString)", directoryHint: .isDirectory)
         do {
@@ -63,7 +64,7 @@ public struct LocalWallpaperWriter {
             if let assets = source.assetsDirectory, fileManager.fileExists(atPath: assets.path) {
                 try merge(assets, into: staging)
             }
-            for (path, data) in files {
+            for (path, data) in files.merging(additionalFiles, uniquingKeysWith: { $1 }) {
                 let destination = try Self.contained(path, in: staging)
                 try fileManager.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
                 try data.write(to: destination, options: .atomic)
