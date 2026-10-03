@@ -7,6 +7,7 @@ import OWESceneEditing
 public struct WallpaperEditorView: View {
     @ObservedObject private var session: SceneEditSession
     private let services: WallpaperEditorServices
+    @StateObject private var tools = EditorTools()
     @State private var isInspectorPresented = true
     @State private var isConfirmingRevert = false
     @State private var isSaving = false
@@ -25,18 +26,23 @@ public struct WallpaperEditorView: View {
 
     public var body: some View {
         NavigationSplitView {
-            LayerListView(session: session)
+            LayerListView(session: session, tools: tools, services: services)
                 .navigationSplitViewColumnWidth(min: 220, ideal: 260, max: 380)
         } detail: {
-            EditorCanvasView(session: session, makeCanvas: services.makeCanvas)
+            EditorCanvasView(session: session, tools: tools, services: services)
                 .overlay(alignment: .top) { noticeBanner }
                 .inspector(isPresented: $isInspectorPresented) {
-                    LayerInspectorView(session: session, services: services)
+                    LayerInspectorView(session: session, tools: tools, services: services)
                         .inspectorColumnWidth(min: 260, ideal: 300, max: 420)
                 }
                 .toolbar { toolbar }
         }
         .frame(minWidth: 960, minHeight: 600)
+        .onChange(of: tools.problem) { _, problem in
+            guard let problem else { return }
+            tools.problem = nil
+            show(Notice(text: problem, isError: true))
+        }
         .alert(L("Revert to the Original?"), isPresented: $isConfirmingRevert) {
             Button(L("Revert"), role: .destructive) { session.revert(actionName: L("Revert")) }
             Button(L("Cancel"), role: .cancel) {}
@@ -67,6 +73,9 @@ public struct WallpaperEditorView: View {
             }
             .help(session.undoManager.redoMenuItemTitle)
             .disabled(!session.canRedo)
+        }
+        ToolbarItem {
+            AddLayerMenu(actions: LayerActions(session: session, services: services, tools: tools))
         }
         if #available(macOS 26, *) {
             ToolbarSpacer(.flexible)

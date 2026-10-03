@@ -24,8 +24,10 @@ final class EditorLocalizationTests: XCTestCase {
     private func usedKeys() throws -> Set<String> {
         var keys = Set<String>()
         let regex = try NSRegularExpression(pattern: #"L\("((?:[^"\\]|\\\([^)]*\))*)"\)"#)
-        let files = try FileManager.default.contentsOfDirectory(at: Self.sources, includingPropertiesForKeys: nil)
-            .filter { $0.pathExtension == "swift" }
+        // The module's folders too (Effects, Layers, Assets).
+        let enumerator = try XCTUnwrap(FileManager.default.enumerator(at: Self.sources, includingPropertiesForKeys: nil))
+        let files = enumerator.compactMap { $0 as? URL }.filter { $0.pathExtension == "swift" }
+        XCTAssertGreaterThan(files.count, 10)
         for file in files {
             let text = try String(contentsOf: file, encoding: .utf8)
             for match in regex.matches(in: text, range: NSRange(text.startIndex..., in: text)) {
