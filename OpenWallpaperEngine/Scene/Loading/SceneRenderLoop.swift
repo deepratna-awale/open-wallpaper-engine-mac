@@ -186,8 +186,7 @@ final class SceneRenderLoop {
     /// its loading snapshot (`SceneLoadingSnapshotCapture`), at most once a second per scene and
     /// once per display size and session. With one display the scene draws onto the drawable, so
     /// `rendersFrame` redraws the frame to copy from without stepping the scene (`redrawShared`),
-    /// freed right after; the readback and
-    /// encoding run off this thread.
+    /// freed right after; the readback and encoding run off this thread.
     private func captureSnapshotIfDue(_ view: MTKView, renderer: SceneMetalRenderer, rendersFrame: Bool) {
         guard let snapshots, renderer.hasContent else { return }
         let now = CACurrentMediaTime()
