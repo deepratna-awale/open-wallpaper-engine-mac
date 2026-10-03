@@ -141,7 +141,9 @@ struct ParticleVectorField: View {
     var body: some View {
         let components = Self.components(value, count: count)
         let scale = field.isAngle ? 180 / Double.pi : 1
-        HStack(spacing: 4) {
+        // Baseline-aligned so the degree sign sits beside the numbers, not halfway down to the
+        // axis captions under them.
+        HStack(alignment: .firstTextBaseline, spacing: 4) {
             ForEach(0..<count, id: \.self) { index in
                 VStack(spacing: 1) {
                     ParticleNumberField(value: components[index] * scale, width: 52) { typed in
@@ -155,7 +157,10 @@ struct ParticleVectorField: View {
                 }
             }
             if field.isAngle {
-                Text(verbatim: "°").foregroundStyle(.secondary)
+                Text(verbatim: "°")
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .fixedSize()
             }
         }
     }
