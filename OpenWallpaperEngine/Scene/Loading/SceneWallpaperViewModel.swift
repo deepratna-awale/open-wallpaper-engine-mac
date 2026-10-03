@@ -1028,8 +1028,9 @@ class SceneWallpaperViewModel: ObservableObject {
             if let size = Self.firstImage(of: scene)?.size?.parseVector2(), size.0 != 0, size.1 != 0 {
                 return SIMD2<Float>(Float(size.0), Float(size.1))
             }
-            OWELog.error(.scene, "\(loadedWallpaperDirectory?.lastPathComponent ?? "?"): orthogonalprojection auto "
-                         + "needs an image with a size; the scene is 1920×1080")
+            // Its image takes its texture's size and the scene stays 1920×1080 (§5.21).
+            OWELog.debug(.scene, "\(loadedWallpaperDirectory?.lastPathComponent ?? "?"): orthogonalprojection auto "
+                         + "without an image size; the scene is 1920×1080")
             return SIMD2<Float>(1920, 1080)
         case .perspective:
             return SIMD2<Float>(1920, 1080)
@@ -1037,7 +1038,8 @@ class SceneWallpaperViewModel: ObservableObject {
     }
 
     /// `{"auto": true}` sizes the scene from its first image object, which WE puts at the
-    /// scene's centre (0x14018b2c0; it does so every frame, over what a script set [I]).
+    /// scene's centre (0x14018b2c0) once: a script that moves it afterwards wins (WE 2.8,
+    /// docs/models-plan.md §5.21).
     private static func firstImage(of scene: WEScene) -> WESceneObject? {
         scene.objects.first { $0.image != nil }
     }

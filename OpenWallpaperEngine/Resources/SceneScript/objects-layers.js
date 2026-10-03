@@ -317,12 +317,12 @@
     // slot `rig.slot` of the rig buffer (SceneScriptRigLayout), which the renderer's animator
     // writes before every frame. Calls change it at once, so a script reads back what it did, and
     // reach the animator as commands. Matrices are WE's Mat4 memory (column-major here, translation
-    // in 12..14). Angles are degrees, as every SceneScript angle is [?: the host returns radians,
-    // 0x14020fa10; the DLL's conversion for these methods wasn't traced].
+    // in 12..14). The bone and attachment angles are radians, as the host's (0x14020fa10) and the
+    // compiled puppet JSON's are; WE 2.8 hands scripts them unconverted (docs/models-plan.md §5.24),
+    // unlike the layers' `angles`, which stay degrees.
     const rigBuffer = rt.native.objects.rigs;
     const RL = rt.native.objects.rigLayout;
     const rigValues = rigBuffer.values;
-    const RAD = Math.PI / 180;
     // Keys of script-made layers; authored layers keep their scene ids.
     let nextLayerKey = 1 << 21;
     // Every layer object handed out, for `addEndedCallback`.
@@ -388,18 +388,18 @@
         return out;
     }
     // WE's Euler extraction (0x14020fa10): z = atan2(m01, m00), y = atan2(-m02, |(m12, m22)|),
-    // x = atan2(sin z·m20 − cos z·m21, cos z·m11 − sin z·m10); in degrees.
-    function eulerDegrees(m) {
+    // x = atan2(sin z·m20 − cos z·m21, cos z·m11 − sin z·m10); in radians.
+    function eulerRadians(m) {
         const z = Math.atan2(m[1], m[0]);
         const y = Math.atan2(-m[2], Math.sqrt(m[6] * m[6] + m[10] * m[10]));
         const sz = Math.sin(z), cz = Math.cos(z);
         const x = Math.atan2(sz * m[8] - cz * m[9], cz * m[5] - sz * m[4]);
-        return objects.vec3(x / RAD, y / RAD, z / RAD);
+        return objects.vec3(x, y, z);
     }
-    // `m` with its rotation replaced by R = Rz·Ry·Rx of `degrees`, keeping each axis's scale and
+    // `m` with its rotation replaced by R = Rz·Ry·Rx of `radians`, keeping each axis's scale and
     // the translation (the rows of 0x1401dd630).
-    function withAngles(m, degrees) {
-        const x = degrees[0] * RAD, y = degrees[1] * RAD, z = degrees[2] * RAD;
+    function withAngles(m, radians) {
+        const x = radians[0], y = radians[1], z = radians[2];
         const cx = Math.cos(x), sx = Math.sin(x), cy = Math.cos(y), sy = Math.sin(y), cz = Math.cos(z), sz = Math.sin(z);
         const rows = [[cy * cz, cy * sz, -sy], [sx * sy * cz - cx * sz, sx * sy * sz + cx * cz, sx * cy],
             [cx * sy * cz + sx * sz, cx * sy * sz - sx * cz, cx * cy]];
@@ -725,11 +725,11 @@
     objects.defineMethod(P, 'getLocalBoneAngles', function (which) {
         const rig = boneRigOf(this);
         const bone = rig ? rigBone(rig, which) : -1;
-        return bone < 0 ? objects.vec3(0, 0, 0) : eulerDegrees(rigMatrix(rig, bone, 0));
+        return bone < 0 ? objects.vec3(0, 0, 0) : eulerRadians(rigMatrix(rig, bone, 0));
     });
     objects.defineMethod(P, 'setLocalBoneAngles', function (which, angles) {
-        const degrees = vectorArgument(angles);
-        if (degrees !== undefined) setLocal(this, which, function (m) { return withAngles(m, degrees); });
+        const radians = vectorArgument(angles);
+        if (radians !== undefined) setLocal(this, which, function (m) { return withAngles(m, radians); });
     });
     objects.defineMethod(P, 'getLocalBoneOrigin', function (which) {
         const rig = boneRigOf(this);
@@ -746,8 +746,8 @@
 
     // Bone physics (0x140210990, 0x140210e10; docs/models-plan.md §2.14): one bone, by index or
     // by the first bone of that name (the host matches an empty name with the first bone). The
-    // state changes for the renderer's next frame. [?: what the DLL hands the host for a missing
-    // bone; the host itself acts only on a number or a string.]
+    // state changes for the renderer's next frame. Without a bone (no arguments, or only the
+    // vectors) WE 2.8 returns undefined, throws nothing and moves nothing (§5.31): so here.
     function physicsBone(rig, which) {
         if (typeof which === 'number') return rigBone(rig, which);
         if (typeof which !== 'string') return -1;
@@ -829,7 +829,7 @@
     });
     objects.defineMethod(P, 'getAttachmentAngles', function (which) {
         const m = attachmentMatrix(this, which);
-        return m === undefined ? objects.vec3(0, 0, 0) : eulerDegrees(m);
+        return m === undefined ? objects.vec3(0, 0, 0) : eulerRadians(m);
     });
 
     function setPlaying(layer, playing) {
