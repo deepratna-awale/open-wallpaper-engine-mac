@@ -39,14 +39,21 @@ public struct LocalWallpaperWriter {
     /// Hidden files (the app's caches and kept package sources) and symbolic links (Workshop
     /// dependencies, linked again when the copy loads) stay behind. The copy is made in a hidden
     /// folder and renamed into place, so the library never lists half a wallpaper.
+    /// `additionalFiles` (the particle editor's documents, by path) are written over the copy.
     @discardableResult
-    public func save(_ source: Source, scene: Data, title: String, into library: URL) throws -> URL {
+    public func save(_ source: Source, scene: Data, title: String, into library: URL,
+                     additionalFiles: [String: Data] = [:]) throws -> URL {
         try fileManager.createDirectory(at: library, withIntermediateDirectories: true)
         let staging = library.appending(path: ".owe-editor-\(UUID().uuidString)", directoryHint: .isDirectory)
         do {
             try fileManager.createDirectory(at: staging, withIntermediateDirectories: true)
             try copyContents(of: source.directory, to: staging, skipping: source.packageName)
             for (path, data) in source.packageFiles ?? [:] {
+                let destination = try Self.contained(path, in: staging)
+                try fileManager.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try data.write(to: destination, options: .atomic)
+            }
+            for (path, data) in additionalFiles {
                 let destination = try Self.contained(path, in: staging)
                 try fileManager.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
                 try data.write(to: destination, options: .atomic)

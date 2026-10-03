@@ -46,16 +46,18 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
 
     public var version = SceneEditOverlay.currentVersion
     public var objects: [String: ObjectEdit] = [:]
+    /// The particle editor's systems and documents (`SceneParticleOverlay`); nil without any.
+    public var particles: SceneParticleOverlay?
 
     public init(objects: [String: ObjectEdit] = [:]) {
         self.objects = objects
     }
 
     /// Nothing to save: no edits and no locked layers.
-    public var isEmpty: Bool { objects.values.allSatisfy(\.isEmpty) }
+    public var isEmpty: Bool { objects.values.allSatisfy(\.isEmpty) && (particles?.isEmpty ?? true) }
 
     /// Something changes the scene (locks don't).
-    public var hasSceneEdits: Bool { objects.values.contains(where: \.hasSceneEdits) }
+    public var hasSceneEdits: Bool { objects.values.contains(where: \.hasSceneEdits) || !(particles?.isEmpty ?? true) }
 
     // MARK: Reading
 

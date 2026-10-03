@@ -7,7 +7,11 @@ import Foundation
 /// running wallpaper apply it.
 @MainActor
 public final class SceneEditSession: ObservableObject {
-    public let outline: SceneOutline
+    /// The scene's layers as edited: the authored ones, with the particle systems the editor
+    /// added and without those it deleted (`SceneParticleOverlay`).
+    @Published public private(set) var outline: SceneOutline
+    /// The scene's layers as authored.
+    public let authoredOutline: SceneOutline
     public let undoManager: UndoManager
     @Published public private(set) var overlay: SceneEditOverlay
     @Published public var selection: Int?
@@ -25,7 +29,8 @@ public final class SceneEditSession: ObservableObject {
     /// `undoManager`: a new one when nil.
     public init(outline: SceneOutline, overlay: SceneEditOverlay = SceneEditOverlay(),
                 undoManager: UndoManager? = nil) {
-        self.outline = outline
+        authoredOutline = outline
+        self.outline = outline.applying(overlay.particles)
         self.overlay = overlay
         let undoManager = undoManager ?? UndoManager()
         self.undoManager = undoManager
@@ -225,6 +230,22 @@ public final class SceneEditSession: ObservableObject {
         return zip(left, right).allSatisfy { abs($0 - $1) <= 1e-6 * max(1, abs($0)) }
     }
 
+    /// Any change of the overlay as one undo step (the particle editor's documents and systems);
+    /// `coalescingKey` merges a run of changes of one control.
+    public func edit(actionName: String, coalescingKey: String? = nil, _ change: (inout SceneEditOverlay) -> Void) {
+        var next = overlay
+        change(&next)
+        commit(next, actionName: actionName, coalescingKey: coalescingKey)
+    }
+
+    /// The layers again after an added or deleted object; a selection that's gone is dropped.
+    private func refreshOutline() {
+        let next = authoredOutline.applying(overlay.particles)
+        guard next.layers != outline.layers else { return }
+        outline = next
+        if let selected = selection, outline.layer(selected) == nil { selection = nil }
+    }
+
     // MARK: Undo
 
     private func commit(_ next: SceneEditOverlay, actionName: String, coalescingKey: String?) {
@@ -236,6 +257,7 @@ public final class SceneEditSession: ObservableObject {
         if !continues { registerUndo(restoring: overlay, actionName: actionName) }
         lastCoalescing = coalescingKey.map { ($0, now) }
         overlay = next
+        refreshOutline()
         onChange?(next)
     }
 
@@ -255,6 +277,7 @@ public final class SceneEditSession: ObservableObject {
         lastCoalescing = nil
         dragPreview = nil
         overlay = snapshot
+        refreshOutline()
         onChange?(snapshot)
     }
 }

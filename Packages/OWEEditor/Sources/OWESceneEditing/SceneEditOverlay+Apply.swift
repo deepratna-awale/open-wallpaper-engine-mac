@@ -15,6 +15,8 @@ extension SceneEditOverlay {
     /// scene no longer has is skipped: the wallpaper was updated under the edits.
     public func apply(to root: inout [String: Any]) throws {
         guard var objects = root["objects"] as? [[String: Any]] else { throw SceneEditOverlayError.notAScene }
+        // The particle systems the editor added, after the scene's own (each has its id).
+        if let particles { objects += particles.addedObjectDictionaries }
         for index in objects.indices {
             let objectID = (objects[index]["id"] as? NSNumber)?.intValue ?? index
             guard let edit = self.objects[String(objectID)], edit.hasSceneEdits else { continue }
@@ -41,6 +43,7 @@ extension SceneEditOverlay {
             }
             objects[index]["effects"] = effects
         }
+        particles?.removeDeleted(from: &objects)
         root["objects"] = objects
     }
 
