@@ -240,6 +240,9 @@ struct SceneMetalContent {
     /// transform moves, so what hangs below them follows.
     var motions: [String: SceneObjectMotion] = [:]
     var camera = SceneCameraEffects()
+    /// The scene's `general`, which `camera` was resolved from: the renderer resolves it again
+    /// when a property bound to it changes.
+    var general: WESceneGeneral?
     /// The projection, camera settings, camera layers and paths, model objects and draw-order mode
     /// of WE's 3D runtime (`SceneSpatialContentBuilder`; docs/models-plan.md § Seams).
     var spatial = SceneSpatialContent()
