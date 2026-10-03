@@ -111,8 +111,7 @@ final class ScenePuppetAnimator {
         var update = SceneAnimationLayerUpdate()
         for index in morphs.indices { morphs[index].reset() }
         if !stack.layers.isEmpty {
-            let transforms = stack.evaluate(delta: delta, update: &update, morphs: &morphs, kind: morphRig?.kind ?? .model,
-                                            objectWorld: SceneRootMotion.rotation(objectWorld))
+            let transforms = stack.evaluate(delta: delta, update: &update, morphs: &morphs, kind: morphRig?.kind ?? .model)
             locals = transforms.map(\.matrix)
             worldOverrides.removeAll()
         }
@@ -130,9 +129,6 @@ final class ScenePuppetAnimator {
         recompute(physics: frame)
         poseMayChange = layered
     }
-
-    /// What root motion moved the object by since the load (`SceneRootMotion`).
-    var rootMotion: SceneRootMotion.Motion { stack.rootMotion }
 
     /// The layers whose clip ended since the last call, for scripts' `addEndedCallback`.
     func takeEnded() -> [Int] {

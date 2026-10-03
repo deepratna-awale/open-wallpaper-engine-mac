@@ -239,6 +239,12 @@ final class EffectGraphRenderer {
 
     /// Layers holding state, for tests and diagnostics.
     var layerStateCount: Int { layers.count }
+    /// The texture an effect's FBO `name` holds now on layer `stateId` (after this frame's swaps),
+    /// for tests and diagnostics.
+    func fboTexture(_ name: String, effect: Int, layer stateId: String) -> MTLTexture? {
+        guard let state = layers[stateId], effect < state.fbos.count else { return nil }
+        return state.fbos[effect][name]
+    }
     /// Spare targets kept and their allocated bytes, for tests and diagnostics.
     var spareTargetCount: Int { spareTargets.values.reduce(0) { $0 + $1.count } }
     var spareTargetBytes: Int { spareBytes }

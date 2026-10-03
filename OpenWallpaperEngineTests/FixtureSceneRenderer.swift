@@ -13,6 +13,8 @@ struct FixtureSceneRenderer {
         let height: Int
         /// RGBA, row 0 at the top.
         let pixels: [UInt8]
+        /// Layers the frame drew at the output's backing pixels (`SceneNativeDetailLayers`).
+        var promoted = 0
 
         func pixel(_ x: Int, _ y: Int) -> SIMD4<Int> {
             let index = (y * width + x) * 4
@@ -26,6 +28,8 @@ struct FixtureSceneRenderer {
     var points = SIMD2<Float>(480, 272)
     var pixelsPerPoint: Float = 1
     var settings = SceneRenderSettings()
+    /// Runs on the renderer before its content is set.
+    var configure: (SceneMetalRenderer) -> Void = { _ in }
 
     func render() throws -> Frame {
         defer { Fixtures.removeStoredSettings(for: directory) }
@@ -47,6 +51,7 @@ struct FixtureSceneRenderer {
         defer { renderer.releaseContent() }
         view.isPaused = true
         renderer.renderSettings = settings
+        configure(renderer)
         var now: CFTimeInterval = 1000
         renderer.wallTime = { now }
         renderer.setContent(content)
@@ -66,7 +71,8 @@ struct FixtureSceneRenderer {
             guard frame % 10 == 0, let texture = renderer.sharedFrame else { continue }
             let bytes = try TextureUploadTests.read(texture, device: device)
             if frame >= 60, bytes == previous {
-                return Frame(width: texture.width, height: texture.height, pixels: bytes)
+                return Frame(width: texture.width, height: texture.height, pixels: bytes,
+                             promoted: renderer.promotedDetailLayers)
             }
             previous = bytes
         }
