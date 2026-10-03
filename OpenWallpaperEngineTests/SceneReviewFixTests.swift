@@ -62,7 +62,7 @@ final class SceneReviewFixTests: XCTestCase {
         let middle = try write(String(repeating: "b", count: 64) + ".mp3", bytes: 100, age: 200)
         let newest = try write(String(repeating: "c", count: 64) + ".mp3", bytes: 100, age: 100)
         SceneSoundContentBuilder.prune(dir, byteLimit: 250, keeping: newest)
-        let exists = { FileManager.default.fileExists(atPath: $0.path) }
+        let exists = { (url: URL) in FileManager.default.fileExists(atPath: url.path) }
         XCTAssertFalse(exists(legacy), "the old per-launch names are swept")
         XCTAssertFalse(exists(oldest), "least recently used goes first")
         XCTAssertTrue(exists(middle))
