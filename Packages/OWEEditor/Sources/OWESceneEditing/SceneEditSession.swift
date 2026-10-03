@@ -29,6 +29,9 @@ public final class SceneEditSession: ObservableObject {
     public var onChange: ((SceneEditOverlay) -> Void)?
     /// The overlay with a drag in progress, for the running wallpaper to draw live; not saved.
     public var onLivePreview: ((SceneEditOverlay) -> Void)?
+    /// The timeline's say over animated fields: what they show at the playhead, and the keyframe
+    /// an edit of one sets there (`SceneTimelineEditor`). Nil leaves every field static.
+    public weak var animatedFields: SceneAnimatedFields?
 
     /// Edits of one control within this long of each other are one undo step (a slider drag, typing).
     public var coalescingInterval: TimeInterval = 1
@@ -113,6 +116,12 @@ public final class SceneEditSession: ObservableObject {
     /// The field as the scene now has it: the edit, else the authored value (a driven field's
     /// starting value).
     public func value(_ field: String, of layerID: Int) -> SceneJSONValue? {
+        if let animated = animatedFields?.value(field, of: layerID) { return animated }
+        return staticValue(field, of: layerID)
+    }
+
+    /// The field's value without its timeline: the edit, else the authored (starting) value.
+    public func staticValue(_ field: String, of layerID: Int) -> SceneJSONValue? {
         overlay.field(field, of: layerID) ?? SceneFieldBinding.literal(of: baseOutline.layer(layerID)?.fields[field])
     }
 
@@ -215,7 +224,11 @@ public final class SceneEditSession: ObservableObject {
                          actionName: String, coalescing: Bool = false) {
         guard isEditable(field, of: layerID) else { return }
         var next = overlay
-        next.setField(field, to: normalized(value, field: field, of: layerID), of: layerID)
+        if let value, let keyed = animatedFields?.overlay(setting: value, for: field, of: layerID, in: next) {
+            next = keyed
+        } else {
+            next.setField(field, to: normalized(value, field: field, of: layerID), of: layerID)
+        }
         commit(next, actionName: actionName, coalescingKey: coalescing ? "\(layerID):\(field)" : nil)
     }
 
@@ -226,8 +239,12 @@ public final class SceneEditSession: ObservableObject {
         var next = overlay
         func set(_ field: String, _ vector: SIMD3<Double>, _ was: SIMD3<Double>) {
             guard vector != was, isEditable(field, of: layerID) else { return }
-            next.setField(field, to: normalized(SceneVector.value([vector.x, vector.y, vector.z]), field: field, of: layerID),
-                          of: layerID)
+            let value = SceneVector.value([vector.x, vector.y, vector.z])
+            if let keyed = animatedFields?.overlay(setting: value, for: field, of: layerID, in: next) {
+                next = keyed
+                return
+            }
+            next.setField(field, to: normalized(value, field: field, of: layerID), of: layerID)
         }
         set("origin", transform.origin, current.origin)
         set("scale", transform.scale, current.scale)
@@ -302,6 +319,13 @@ public final class SceneEditSession: ObservableObject {
         return zip(left, right).allSatisfy { abs($0 - $1) <= 1e-6 * max(1, abs($0)) }
     }
 
+    /// A change of the overlay made outside the setters above (the timeline): one undo step.
+    public func edit(actionName: String, coalescingKey: String? = nil, _ change: (inout SceneEditOverlay) -> Void) {
+        var next = overlay
+        change(&next)
+        commit(next, actionName: actionName, coalescingKey: coalescingKey)
+    }
+
     // MARK: Undo
 
     /// Every edit ends here: one undo step (or part of the running one), saved and applied.
@@ -339,4 +363,15 @@ public final class SceneEditSession: ObservableObject {
         refreshOutlines(from: previous)
         onChange?(snapshot)
     }
+}
+
+/// What the timeline tells the session about animated fields (`SceneEditSession.animatedFields`).
+@MainActor
+public protocol SceneAnimatedFields: AnyObject {
+    /// The field's value at the playhead; nil when no timeline shows it.
+    func value(_ field: String, of layerID: Int) -> SceneJSONValue?
+    /// `overlay` with the field's keyframes at the playhead set to `value`; nil when no timeline
+    /// takes the edit (it then changes the static value).
+    func overlay(setting value: SceneJSONValue, for field: String, of layerID: Int,
+                 in overlay: SceneEditOverlay) -> SceneEditOverlay?
 }

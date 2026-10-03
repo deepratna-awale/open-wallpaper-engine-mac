@@ -90,22 +90,31 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     /// Every layer's id in draw order (first drawn first) once the editor reordered them; nil keeps
     /// the scene's order with added layers on top (version 2).
     public var order: [Int]?
+    /// Property timelines the editor made, changed or removed (`SceneTimelineEdits`); nil for none
+    /// (version 2).
+    public var timelines: SceneTimelineEdits?
 
     public init(objects: [String: ObjectEdit] = [:]) {
         self.objects = objects
     }
 
     /// Nothing to save: no edits and no locked layers.
-    public var isEmpty: Bool { objects.values.allSatisfy(\.isEmpty) && !hasStructureEdits }
+    public var isEmpty: Bool {
+        objects.values.allSatisfy(\.isEmpty) && !hasStructureEdits && timelines?.isEmpty != false
+    }
 
     /// Something changes the scene (locks don't).
-    public var hasSceneEdits: Bool { objects.values.contains(where: \.hasSceneEdits) || hasStructureEdits }
+    public var hasSceneEdits: Bool {
+        objects.values.contains(where: \.hasSceneEdits) || hasStructureEdits || timelines?.isEmpty == false
+    }
 
     /// Layers added, deleted or reordered.
     public var hasStructureEdits: Bool { !(added ?? []).isEmpty || !(removed ?? []).isEmpty || order != nil }
 
     /// Holds something version 1 can't apply.
-    var needsVersion2: Bool { hasStructureEdits || objects.values.contains(where: \.needsVersion2) }
+    var needsVersion2: Bool {
+        hasStructureEdits || timelines?.isEmpty == false || objects.values.contains(where: \.needsVersion2)
+    }
 
     // MARK: Reading
 
@@ -123,7 +132,9 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
 
     public func isLocked(_ objectID: Int) -> Bool { objects[String(objectID)]?.locked == true }
 
-    public func hasEdits(_ objectID: Int) -> Bool { objects[String(objectID)]?.hasSceneEdits == true }
+    public func hasEdits(_ objectID: Int) -> Bool {
+        objects[String(objectID)]?.hasSceneEdits == true || timelines?.touches(layer: objectID) == true
+    }
 
     // MARK: Changing
 
