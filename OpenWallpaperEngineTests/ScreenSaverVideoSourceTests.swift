@@ -56,10 +56,13 @@ final class ScreenSaverVideoSourceTests: XCTestCase {
         for file in ["video.mp4", "video.MOV", "video.m4v"] {
             XCTAssertTrue(Plugin.isEligible(wallpaper(file: file)), file)
         }
-        for file in ["video.webm", "video.mkv", "https://example.com/video.mp4"] {
+        for file in ["video.mkv", "https://example.com/video.mp4"] {
             XCTAssertFalse(Plugin.isEligible(wallpaper(file: file)), file)
         }
-        XCTAssertFalse(Plugin.isEligible(wallpaper(file: "index.html", type: "web")))
+        // WebM and web pages are recorded instead of linked.
+        XCTAssertTrue(Plugin.isEligible(wallpaper(file: "video.webm")))
+        XCTAssertFalse(ScreenSaverVideoSource.isEligible(wallpaper(file: "video.webm")))
+        XCTAssertTrue(Plugin.isEligible(wallpaper(file: "index.html", type: "web")))
         XCTAssertTrue(Plugin.isEligible(wallpaper(file: "scene.json", type: "scene")))
     }
 
@@ -163,6 +166,6 @@ final class ScreenSaverVideoSourceTests: XCTestCase {
         XCTAssertEqual(Plugin.status(for: video, enabled: true, statuses: [key: .notEligible]), .notEligible,
                        "a codec AVFoundation can't play")
         XCTAssertNil(Plugin.status(for: video, enabled: false, statuses: [key: .available]))
-        XCTAssertEqual(Plugin.status(for: wallpaper(file: "video.webm"), enabled: true, statuses: [:]), .notEligible)
+        XCTAssertEqual(Plugin.status(for: wallpaper(file: "video.mkv"), enabled: true, statuses: [:]), .notEligible)
     }
 }

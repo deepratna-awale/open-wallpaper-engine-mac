@@ -76,20 +76,27 @@ struct WallpaperPreview: SubviewOfContentView {
                 Image(systemName: "xmark.circle.fill").foregroundStyle(.red)
             }
             .help(screenSaverNotAvailableReason)
+        case .notAvailable(.pageDidNotLoad):
+            screenSaverRow(String(localized: "Screen Saver Not Available",
+                                  comment: "Details panel: no screen saver is made from this wallpaper")) {
+                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.yellow)
+            }
+            .help(String(localized: "The wallpaper's page didn't load, so no screen saver was recorded",
+                         comment: "Details panel: why a web or WebM video wallpaper has no screen saver"))
         case nil:
             EmptyView()
         }
     }
 
     /// Why the saver doesn't play the selected wallpaper: a video in a format AVFoundation can't
-    /// play (WebM/VP9, or another codec), or a web or application wallpaper.
+    /// play and WebM can't record, or an application wallpaper.
     private var screenSaverNotAvailableReason: String {
         if wallpaperViewModel.displayedWallpaper.project.type.caseInsensitiveCompare("video") == .orderedSame {
-            return String(localized: "The screen saver plays MP4 and MOV videos in H.264 or HEVC; WebM plays only on the desktop",
-                          comment: "Details panel: why a video wallpaper (WebM/VP9 or another codec) has no screen saver")
+            return String(localized: "The screen saver plays MP4 and MOV videos in H.264 or HEVC, and records WebM videos",
+                          comment: "Details panel: why a video wallpaper in another codec has no screen saver")
         }
-        return String(localized: "Screen savers are made from scene and video wallpapers",
-                      comment: "Details panel: why a web or application wallpaper has no screen saver")
+        return String(localized: "Screen savers are made from scene, web and video wallpapers",
+                      comment: "Details panel: why an application wallpaper has no screen saver")
     }
 
     private func screenSaverRow(_ text: String, showsSettings: Bool = false,
