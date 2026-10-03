@@ -56,10 +56,13 @@ final class ScreenSaverVideoSourceTests: XCTestCase {
         for file in ["video.mp4", "video.MOV", "video.m4v"] {
             XCTAssertTrue(Plugin.isEligible(wallpaper(file: file)), file)
         }
-        for file in ["video.webm", "video.mkv", "https://example.com/video.mp4"] {
+        for file in ["video.mkv", "https://example.com/video.mp4"] {
             XCTAssertFalse(Plugin.isEligible(wallpaper(file: file)), file)
         }
-        XCTAssertFalse(Plugin.isEligible(wallpaper(file: "index.html", type: "web")))
+        // WebM and web pages are recorded instead of linked.
+        XCTAssertTrue(Plugin.isEligible(wallpaper(file: "video.webm")))
+        XCTAssertFalse(ScreenSaverVideoSource.isEligible(wallpaper(file: "video.webm")))
+        XCTAssertTrue(Plugin.isEligible(wallpaper(file: "index.html", type: "web")))
         XCTAssertTrue(Plugin.isEligible(wallpaper(file: "scene.json", type: "scene")))
     }
 

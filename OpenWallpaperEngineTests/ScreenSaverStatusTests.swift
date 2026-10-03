@@ -21,7 +21,7 @@ final class ScreenSaverStatusTests: XCTestCase {
         XCTAssertTrue(Plugin.isEligible(wallpaper(type: "Scene")))
         XCTAssertTrue(Plugin.isEligible(wallpaper(type: "web", file: "index.html")))
         XCTAssertTrue(Plugin.isEligible(wallpaper(type: "video", file: "clip.webm")))
-        XCTAssertFalse(Plugin.isEligible(wallpaper(type: "video", file: "clip.mp4")))
+        XCTAssertTrue(Plugin.isEligible(wallpaper(type: "video", file: "clip.mp4")))
         XCTAssertFalse(Plugin.isEligible(wallpaper(type: "application", file: "app.exe")))
         XCTAssertFalse(Plugin.isEligible(WEWallpaper(using: .invalid, where: URL(fileURLWithPath: "/tmp/x"))))
     }
