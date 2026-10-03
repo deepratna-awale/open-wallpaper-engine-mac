@@ -273,4 +273,34 @@ final class SceneRenderPrimitivesTests: XCTestCase {
         }
         XCTAssertLessThanOrEqual(scales.count, 4, "only the growth steps re-rasterise")
     }
+
+    func testAnimatedTextScaleReusesABoundedSetOfRastersAndSettlesExact() {
+        var tracker = SceneTextRasterScale.Tracker()
+        var scales = Set<Float>()
+        for step in 0..<600 {
+            scales.insert(tracker.scale(for: 2 * (1 + 0.5 * sin(Float(step) * 0.1))))
+        }
+        XCTAssertLessThanOrEqual(scales.count, 4, "an animating layer reuses a handful of quantised rasters")
+        let rest: Float = 2.37
+        var settled: Float = 0
+        for _ in 0...SceneTextRasterScale.settleFrames { settled = tracker.scale(for: rest) }
+        XCTAssertEqual(settled, rest, "text at rest gets an exact raster")
+        XCTAssertNotEqual(tracker.scale(for: 2.0), rest, "a new animation goes back to quantised steps")
+    }
+
+    func testTextCacheEvictsLeastRecentlyUsedUnderItsByteBudget() {
+        var cache = SceneLRUCache<String, Int>(capacity: 128, costLimit: 300)
+        cache.beginGeneration()
+        cache.insert(1, for: "a", cost: 100)
+        cache.insert(2, for: "b", cost: 100)
+        cache.insert(3, for: "c", cost: 100)
+        cache.beginGeneration()
+        _ = cache.value(for: "a")
+        cache.insert(4, for: "d", cost: 100)
+        XCTAssertNil(cache.value(for: "b"), "the least recently used raster goes, not the whole cache")
+        XCTAssertNotNil(cache.value(for: "a"))
+        XCTAssertNotNil(cache.value(for: "c"))
+        XCTAssertNotNil(cache.value(for: "d"))
+        XCTAssertEqual(cache.totalCost, 300)
+    }
 }
