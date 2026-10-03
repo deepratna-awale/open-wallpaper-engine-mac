@@ -109,7 +109,7 @@ final class LivePhotoTests: XCTestCase {
 
     // MARK: Preview sound
 
-    func testPreviewFirstThenDesktopMakesTheInstanceAudible() {
+    @MainActor func testPreviewFirstThenDesktopMakesTheInstanceAudible() {
         let preview = "iphone-preview"
         var users = [preview]
         XCTAssertTrue(SceneWallpaperInstance.isPreviewOnly(screenIDs: users))
@@ -119,7 +119,7 @@ final class LivePhotoTests: XCTestCase {
         XCTAssertTrue(SceneWallpaperInstance.isPreviewOnly(screenIDs: users))
     }
 
-    func testDesktopFirstThenPreviewStaysAudible() {
+    @MainActor func testDesktopFirstThenPreviewStaysAudible() {
         let preview = "iphone-preview"
         var users = ["display-1"]
         XCTAssertFalse(SceneWallpaperInstance.isPreviewOnly(screenIDs: users))
