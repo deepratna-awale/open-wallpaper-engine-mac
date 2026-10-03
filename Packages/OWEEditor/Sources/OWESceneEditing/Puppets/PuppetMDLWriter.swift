@@ -73,11 +73,12 @@ public enum PuppetMDLWriter {
         out.u32(flags)
         if flags & 2 != 0, let extra = document.preserved.meshFlagsExtra { out.u32(extra) }
         let bounds = boundsOf(document.mesh.vertices.map(\.position))
-        out.f32s([bounds.min.x, bounds.min.y, 0, bounds.max.x, bounds.max.y, 0])
+        let depths = document.mesh.vertices.map { $0.depth ?? 0 }
+        out.f32s([bounds.min.x, bounds.min.y, depths.min() ?? 0, bounds.max.x, bounds.max.y, depths.max() ?? 0])
         out.u32(format)
         var vertices = PuppetMDLOutput()
         for (index, vertex) in document.mesh.vertices.enumerated() {
-            vertices.f32s([vertex.position.x, vertex.position.y, 0])
+            vertices.f32s([vertex.position.x, vertex.position.y, vertex.depth ?? 0])
             if let morphs { vertices.f32(morphs[index]) }
             let entries = index < document.weights.count ? document.weights[index] : []
             for slot in 0..<4 { vertices.u32(slot < entries.count ? UInt32(entries[slot].bone) : 0) }

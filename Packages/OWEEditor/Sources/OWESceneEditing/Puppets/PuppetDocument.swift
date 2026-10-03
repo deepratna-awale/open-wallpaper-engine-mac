@@ -356,10 +356,14 @@ public struct PuppetVertex: Codable, Hashable, Sendable {
     public var position: SIMD2<Float>
     /// The texture coordinate, v down.
     public var uv: SIMD2<Float>
+    /// The bind pose's z, as a rig read from a wallpaper has it (its parts' depth order); nil is 0,
+    /// which the editor's own meshes use.
+    public var depth: Float?
 
-    public init(position: SIMD2<Float>, uv: SIMD2<Float>) {
+    public init(position: SIMD2<Float>, uv: SIMD2<Float>, depth: Float? = nil) {
         self.position = position
         self.uv = uv
+        self.depth = depth
     }
 }
 

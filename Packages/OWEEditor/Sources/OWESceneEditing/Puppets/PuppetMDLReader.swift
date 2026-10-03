@@ -133,7 +133,8 @@ public enum PuppetMDLReader {
             let base = vertex * stride
             let point = SIMD2(f32(base + position), f32(base + position + 4))
             let uv = texCoord.map { SIMD2(f32(base + $0), f32(base + $0 + 4)) } ?? document.textureCoordinate(of: point)
-            vertices.append(PuppetVertex(position: point, uv: uv))
+            let depth = f32(base + position + 8)
+            vertices.append(PuppetVertex(position: point, uv: uv, depth: depth == 0 ? nil : depth))
             if positionOffset == nil, vec4Offset != nil { morphs.append(f32(base + position + 12)) }
             var entries: [PuppetWeight] = []
             if let blendIndices, let blendWeights {
