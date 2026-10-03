@@ -9,6 +9,7 @@ public struct WallpaperEditorView: View {
     private let services: WallpaperEditorServices
     @StateObject private var tools = EditorTools()
     @State private var isInspectorPresented = true
+    @AppStorage("WallpaperEditorScriptHeight") private var scriptHeight: Double = 340
     @State private var isConfirmingRevert = false
     @State private var isSaving = false
     @State private var notice: Notice?
@@ -33,14 +34,19 @@ public struct WallpaperEditorView: View {
                 .navigationSplitViewColumnWidth(min: 220, ideal: 260, max: 380)
         } detail: {
             TimelineDock(timeline: services.timeline) {
-                VSplitView {
+                // A plain stack with its own divider, like the timeline dock: an AppKit split view
+                // nested in the split view's detail and the inspector reported changing minimum
+                // sizes back and forth until AppKit stopped the layout ("more Update Constraints
+                // passes than there are views") and the app crashed.
+                VStack(spacing: 0) {
                     EditorCanvasView(session: session, tools: tools, services: services)
                         .overlay(alignment: .top) { noticeBanner }
                         .frame(minHeight: 200)
                     // The script editor docks under the canvas, which keeps running what it applies.
                     if let draft = authoring.draft {
+                        ScriptDockDivider(height: $scriptHeight)
                         ScriptEditorPanel(authoring: authoring, draft: draft)
-                            .frame(minHeight: 240, idealHeight: 340)
+                            .frame(height: min(max(scriptHeight, 240), 640))
                     }
                 }
             }
@@ -227,5 +233,31 @@ extension View {
         } else {
             background(.regularMaterial, in: shape)
         }
+    }
+}
+
+/// The drag bar between the canvas and the script editor.
+private struct ScriptDockDivider: View {
+    @Binding var height: Double
+    @State private var dragStartHeight: Double?
+
+    var body: some View {
+        Rectangle()
+            .fill(.separator)
+            .frame(height: 1)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 3)
+            .contentShape(Rectangle())
+            .onHover { inside in
+                if inside { NSCursor.resizeUpDown.push() } else { NSCursor.pop() }
+            }
+            .gesture(DragGesture(minimumDistance: 1, coordinateSpace: .global)
+                .onChanged { drag in
+                    let start: Double = dragStartHeight ?? height
+                    dragStartHeight = start
+                    let proposed: Double = start - Double(drag.translation.height)
+                    height = min(max(proposed, 240), 640)
+                }
+                .onEnded { _ in dragStartHeight = nil })
     }
 }
