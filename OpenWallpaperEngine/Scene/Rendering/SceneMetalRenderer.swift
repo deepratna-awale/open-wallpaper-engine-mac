@@ -1899,7 +1899,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // Consecutive models with nothing drawn between them (the same particle barrier) draw as
         // one run, which the model renderer may instance (`SceneModelDrawing.draw(run:)`).
         var modelRun: (indices: [Int], barrier: Int) = ([], 0)
-        let flushModels = { [unowned self] (encoder: MTLRenderCommandEncoder) in
+        let flushModels = { (encoder: MTLRenderCommandEncoder) in
             guard !modelRun.indices.isEmpty else { return }
             self.drawModels(modelRun.indices, frame: effectFrame, pixelFormat: sceneTexture.pixelFormat, encoder: encoder,
                             commandBuffer: commandBuffer)
