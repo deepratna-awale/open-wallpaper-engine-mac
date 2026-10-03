@@ -20,7 +20,7 @@ Legend: ✅ working · 🟡 partial (what's left is named) · ❌ missing. "Unve
 | Web | ✅ | Properties and audio/media listeners delivered (`WebWallpaperPropertyBridgeTests`, `WebWallpaperMediaBridgeTests`); one WebContent process per wallpaper (#12). Open: late listeners get properties faithfully (#109, open). |
 | Scene | ✅ | See the feature table. |
 | Application | n/a | Out of scope. |
-| Preset (Workshop `preset` type) | 🟡 | Local presets: save, apply, export, import WE's share JSON (#34, `WallpaperPresetTests`, `WallpaperPresetCompatibilityTests`). Workshop `preset`-type items are still hidden from the filter (`UI/Explorer/FilterResultsViewModel.swift`); loading one is unverified. |
+| Preset (Workshop `preset` type) | 🟡 | Local presets: save, apply, export, import WE's share JSON (#34, `WallpaperPresetTests`, `WallpaperPresetCompatibilityTests`). Workshop `preset`-type items are listed as Preset and filterable; they play from their base (`dependency`, or their own scene) with the `preset` values as the item's defaults (`WorkshopPresetItem`, `WorkshopPresetItemTests`). Unverified against a real Workshop preset item. |
 
 ### Scene features
 

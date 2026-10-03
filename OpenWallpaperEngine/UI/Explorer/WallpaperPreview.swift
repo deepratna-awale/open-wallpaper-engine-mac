@@ -153,8 +153,7 @@ struct WallpaperPreview: SubviewOfContentView {
             ScrollView {
                 VStack(spacing: 16) {
                     VStack(spacing: 10) {
-                        GifImage(contentsOf: wallpaperViewModel.displayedWallpaper.project
-                                    .previewURL(in: wallpaperViewModel.displayedWallpaper.wallpaperDirectory)
+                        GifImage(contentsOf: wallpaperViewModel.displayedWallpaper.previewURL
                                     ?? Bundle.main.url(forResource: "WallpaperNotFound", withExtension: "mp4")!,
                                  animates: viewModel.isApplicationActive)
                             .resizable()
@@ -222,7 +221,7 @@ struct WallpaperPreview: SubviewOfContentView {
                     }
                     favoriteControl
                     HStack {
-                        Text(verbatim: LocalizedLabels.wallpaperType(wallpaperViewModel.displayedWallpaper.project.type))
+                        Text(verbatim: LocalizedLabels.wallpaperType(wallpaperViewModel.displayedWallpaper.displayType))
                         Text(wallpaperSize)
                             .task(id: wallpaperViewModel.displayedWallpaper.wallpaperDirectory) {
                                 let directory = wallpaperViewModel.displayedWallpaper.wallpaperDirectory

@@ -112,6 +112,8 @@ final class SceneUserPropertiesModel: ObservableObject {
           guard let data = try? Data(contentsOf: wallpaper.wallpaperDirectory.appending(path: "project.json")),
               let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
         let definitions = UserPropertyDefinition.all(projectJSON: root)
+        // A Workshop preset item's values are its defaults (what Reset returns to).
+        let presetDefaults = WorkshopPresetItem.defaultValues(for: wallpaper)
         let labels = WallpaperEngineLabels.load()
         authoredPropertyIDs = Set(definitions.map(\.key))
         properties = definitions.map { definition in
@@ -119,7 +121,7 @@ final class SceneUserPropertiesModel: ObservableObject {
                 ? UserPropertyHTML.plainText(definition.text) : definition.text
             var property = SceneUserProperty(id: definition.key, title: sceneUserPropertyTitle(plainTitle, labels: labels),
                                              type: definition.type, order: definition.order ?? Int.max,
-                                             defaultValue: definition.defaultValue,
+                                             defaultValue: presetDefaults[definition.key] ?? definition.defaultValue,
                                              options: definition.options.map { (sceneUserPropertyTitle($0.label, labels: labels), $0.value) },
                                              minimum: definition.minimum, maximum: definition.maximum)
             property.condition = definition.condition.flatMap(UserPropertyCondition.init)

@@ -16,6 +16,20 @@ struct WEWallpaper: Codable, RawRepresentable, Identifiable {
     
     var wallpaperDirectory: URL
     var project: WEProject
+    /// For a Workshop preset item (`WorkshopPresetItem`), the item's own folder; `wallpaperDirectory`
+    /// is then its base wallpaper's. Nil for every other wallpaper.
+    var presetDirectory: URL?
+
+    var isWorkshopPreset: Bool { presetDirectory != nil }
+
+    /// Where the wallpaper's own project.json lives: its stored settings and preview are keyed by it.
+    var settingsDirectory: URL { presetDirectory ?? wallpaperDirectory }
+
+    /// The preview image; a preset item shows its own.
+    var previewURL: URL? { project.previewURL(in: settingsDirectory) }
+
+    /// The type shown and filtered by: `preset` for a preset item, else project.json's.
+    var displayType: String { isWorkshopPreset ? WorkshopPresetItem.type : project.type }
 
     /// A remote wallpaper stores an absolute URL in `project.file`; everything else stores a path
     /// relative to its folder.
@@ -46,6 +60,7 @@ struct WEWallpaper: Codable, RawRepresentable, Identifiable {
     enum CodingKeys: CodingKey {
         case wallpaperDirectory
         case project
+        case presetDirectory
         // <all the other elements too>
     }
 
@@ -53,6 +68,7 @@ struct WEWallpaper: Codable, RawRepresentable, Identifiable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.wallpaperDirectory = try container.decode(URL.self, forKey: .wallpaperDirectory)
         self.project = try container.decode(WEProject.self, forKey: .project)
+        self.presetDirectory = try container.decodeIfPresent(URL.self, forKey: .presetDirectory)
         // <and so on>
     }
 
@@ -60,6 +76,7 @@ struct WEWallpaper: Codable, RawRepresentable, Identifiable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(wallpaperDirectory, forKey: .wallpaperDirectory)
         try container.encode(project, forKey: .project)
+        try container.encodeIfPresent(presetDirectory, forKey: .presetDirectory)
         // <and so on>
     }
     
