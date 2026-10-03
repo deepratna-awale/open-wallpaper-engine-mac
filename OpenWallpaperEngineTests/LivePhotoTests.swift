@@ -107,6 +107,29 @@ final class LivePhotoTests: XCTestCase {
         XCTAssertEqual(LivePhotoClip(length: 10).length, LivePhotoClip.duration)
     }
 
+    // MARK: Preview sound
+
+    func testPreviewFirstThenDesktopMakesTheInstanceAudible() {
+        let preview = "iphone-preview"
+        var users = [preview]
+        XCTAssertTrue(SceneWallpaperInstance.isPreviewOnly(screenIDs: users))
+        users.append("display-1")
+        XCTAssertFalse(SceneWallpaperInstance.isPreviewOnly(screenIDs: users))
+        users.removeAll { $0 == "display-1" }
+        XCTAssertTrue(SceneWallpaperInstance.isPreviewOnly(screenIDs: users))
+    }
+
+    func testDesktopFirstThenPreviewStaysAudible() {
+        let preview = "iphone-preview"
+        var users = ["display-1"]
+        XCTAssertFalse(SceneWallpaperInstance.isPreviewOnly(screenIDs: users))
+        users.append(preview)
+        XCTAssertFalse(SceneWallpaperInstance.isPreviewOnly(screenIDs: users))
+        users.removeAll { $0 == preview }
+        XCTAssertFalse(SceneWallpaperInstance.isPreviewOnly(screenIDs: users))
+        XCTAssertFalse(SceneWallpaperInstance.isPreviewOnly(screenIDs: []))
+    }
+
     // MARK: Helper job
 
     func testJobRoundTripsTheCropClipAndProperties() throws {
