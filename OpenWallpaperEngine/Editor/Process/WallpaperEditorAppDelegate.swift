@@ -29,10 +29,10 @@ final class WallpaperEditorAppDelegate: NSObject, NSApplicationDelegate, Wallpap
                                             media: MacMediaSessionSource(),
                                             spectrum: { WallpaperServices.shared.audioSpectrumSnapshot }))
 
-    init(initialFolder: URL?, messaging: AppProcessMessaging = DistributedAppProcessMessaging(),
-         channel: AppProcessChannel = .current) {
+    /// `messaging` nil: the login session's (`DistributedAppProcessMessaging`).
+    init(initialFolder: URL?, messaging: AppProcessMessaging? = nil, channel: AppProcessChannel = .current) {
         self.initialFolder = initialFolder
-        self.messaging = messaging
+        self.messaging = messaging ?? DistributedAppProcessMessaging()
         self.channel = channel
     }
 
