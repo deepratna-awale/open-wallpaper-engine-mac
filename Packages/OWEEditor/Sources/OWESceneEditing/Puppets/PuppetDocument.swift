@@ -453,10 +453,13 @@ public struct PuppetWeight: Codable, Hashable, Sendable {
     public static func normalized(_ entries: [PuppetWeight]) -> [PuppetWeight] {
         var sums: [Int: Float] = [:]
         for entry in entries where entry.weight.isFinite && entry.weight > 0 { sums[entry.bone, default: 0] += entry.weight }
-        let kept = sums.map { PuppetWeight(bone: $0.key, weight: $0.value) }
-            .sorted { $0.weight != $1.weight ? $0.weight > $1.weight : $0.bone < $1.bone }
-            .prefix(maximumInfluences)
-        let total = kept.reduce(0) { $0 + $1.weight }
+        let all: [PuppetWeight] = sums.map { PuppetWeight(bone: $0.key, weight: $0.value) }
+        let sorted: [PuppetWeight] = all.sorted { lhs, rhs in
+            if lhs.weight != rhs.weight { return lhs.weight > rhs.weight }
+            return lhs.bone < rhs.bone
+        }
+        let kept = sorted.prefix(maximumInfluences)
+        let total: Float = kept.reduce(0) { $0 + $1.weight }
         guard total > 0 else { return [] }
         return kept.map { PuppetWeight(bone: $0.bone, weight: $0.weight / total) }
     }

@@ -104,8 +104,10 @@ public enum PuppetMeshGenerator {
         // span triangles whose centre alone is inside).
         let kept = triangulation.filter { t in
             let a = points[t.0], b = points[t.1], c = points[t.2]
-            let centre = (a + b + c) / 3
-            let samples = [centre, (centre + (a + b) / 2) / 2, (centre + (b + c) / 2) / 2, (centre + (c + a) / 2) / 2]
+            let sum = a + b + c
+            let centre = sum / 3
+            let ab = (a + b) / 2, bc = (b + c) / 2, ca = (c + a) / 2
+            let samples = [centre, (centre + ab) / 2, (centre + bc) / 2, (centre + ca) / 2]
             return samples.allSatisfy { isInside($0, inside, small.width, small.height, scale) }
         }
         // Drop unused points; to the mesh's space.
