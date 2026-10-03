@@ -41,7 +41,7 @@ struct ExplorerItem: SubviewOfContentView {
         ZStack(alignment: .bottom) {
             // The library already decoded project.json; decoding it again per redraw made tab
             // switches slow.
-            GifImage(contentsOf: wallpaper.project.previewURL(in: wallpaper.wallpaperDirectory)
+            GifImage(contentsOf: wallpaper.previewURL
                         ?? Bundle.main.url(forResource: "WallpaperNotFound", withExtension: "mp4")!,
                      animates: animates && viewModel.isApplicationActive)
             .resizable()

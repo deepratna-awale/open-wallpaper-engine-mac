@@ -121,7 +121,7 @@ class SceneWallpaperViewModel: ObservableObject {
     private var loadedWallpaperDirectory: URL?
     private var assetDataCache: [String: Data] = [:]
     /// Where the loaded wallpaper's settings are stored, and the directory it was resolved for.
-    private var settings: (directory: URL, identity: WallpaperSettingsIdentity)?
+    private var settings: (directory: URL, settingsDirectory: URL, identity: WallpaperSettingsIdentity)?
     /// Whose user properties this instance runs with: every display's, or one display's
     /// (`WallpaperPropertyScope`, `WallpaperPropertyGroups`).
     let propertyScope: WallpaperPropertyScope
@@ -337,7 +337,8 @@ class SceneWallpaperViewModel: ObservableObject {
         WorkshopDependencyResolver.linkInstalledDependencies(for: wallpaper)
         let dir = wallpaper.wallpaperDirectory
         let sceneFile = wallpaper.project.file  // e.g. "scene.json" or "gifscene.json"
-        let settingsKey = settingsIdentity(for: dir).key(.userProperties, scope: propertyScope)
+        let settingsKey = settingsIdentity(for: dir, settingsDirectory: wallpaper.settingsDirectory)
+            .key(.userProperties, scope: propertyScope)
 
         // Derive PKG name from scene file: "scene.json" → "scene.pkg", "gifscene.json" → "gifscene.pkg"
         let pkgURL = dir.appending(path: (sceneFile as NSString).deletingPathExtension + ".pkg")
@@ -502,27 +503,31 @@ class SceneWallpaperViewModel: ObservableObject {
         bindingUpdate(for: keys).impact
     }
 
-    /// The settings identity of the wallpaper in `directory`, resolved (and old path keys moved)
-    /// once per load.
-    private func settingsIdentity(for directory: URL) -> WallpaperSettingsIdentity {
+    /// The settings identity of the wallpaper played from `directory`, resolved (and old path keys
+    /// moved) once per load. A Workshop preset item plays from its base's folder but keeps its
+    /// settings under its own (`settingsDirectory`); later calls with only `directory` get the same.
+    private func settingsIdentity(for directory: URL, settingsDirectory: URL? = nil) -> WallpaperSettingsIdentity {
         identityLock.lock()
         defer { identityLock.unlock() }
-        if let settings, settings.directory == directory { return settings.identity }
-        let identity = WallpaperSettingsIdentity.resolve(directory: directory)
+        if let settings, settings.directory == directory,
+           settingsDirectory == nil || settings.settingsDirectory == settingsDirectory { return settings.identity }
+        let identity = WallpaperSettingsIdentity.resolve(directory: settingsDirectory ?? directory)
         identity.seed(propertyScope)
-        settings = (directory, identity)
+        settings = (directory, settingsDirectory ?? directory, identity)
         return identity
     }
 
     private func prepareSceneUserPropertyDefaults(for wallpaper: WEWallpaper, scene: WEScene) {
         guard wallpaper.project.type.caseInsensitiveCompare("scene") == .orderedSame else { return }
-        let identity = settingsIdentity(for: wallpaper.wallpaperDirectory)
+        let identity = settingsIdentity(for: wallpaper.wallpaperDirectory, settingsDirectory: wallpaper.settingsDirectory)
         let key = identity.key(.userProperties, scope: propertyScope)
         let explicitKey = identity.key(.explicitUserProperties, scope: propertyScope)
         let defaults = UserDefaults.app
-        let stored = defaults.bool(forKey: explicitKey)
+        var stored = defaults.bool(forKey: explicitKey)
             ? defaults.dictionary(forKey: key) as? [String: String] ?? [:]
             : [:]
+        // A Workshop preset item's values are its defaults: the user's own edits still win.
+        stored.merge(WorkshopPresetItem.defaultValues(for: wallpaper)) { user, _ in user }
         let values = Self.userPropertyValues(stored: stored,
                                              declared: Self.declaredUserProperties(in: wallpaper.wallpaperDirectory),
                                              scene: scene)

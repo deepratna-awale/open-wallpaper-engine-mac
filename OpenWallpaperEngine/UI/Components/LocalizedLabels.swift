@@ -19,6 +19,7 @@ enum LocalizedLabels {
         case "Video": return LocalizedStringResource("Video", comment: "Wallpaper type: a video file")
         case "Web": return LocalizedStringResource("Web", comment: "Wallpaper type: a web page")
         case "Application": return LocalizedStringResource("Application", comment: "Wallpaper type: a program (not supported on macOS)")
+        case "Preset": return LocalizedStringResource("Preset", comment: "Wallpaper type: a Workshop preset, another wallpaper with its own property values")
         // Age rating
         case "Everyone": return LocalizedStringResource("Everyone", comment: "Age rating: suitable for everyone")
         case "Questionable", "Partial Nudity": return LocalizedStringResource("Questionable", comment: "Age rating between Everyone and Mature (partial nudity, mild violence)")
@@ -82,6 +83,7 @@ enum LocalizedLabels {
         case "video", "remote-video": return String(localized: filterOption("Video"))
         case "web": return String(localized: filterOption("Web"))
         case "application": return String(localized: filterOption("Application"))
+        case "preset": return String(localized: filterOption("Preset"))
         case "remote-image": return String(localized: "Image", comment: "Wallpaper type: an image added by URL")
         default: return type.capitalized
         }

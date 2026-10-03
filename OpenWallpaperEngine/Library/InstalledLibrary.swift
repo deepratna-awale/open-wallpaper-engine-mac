@@ -3,7 +3,7 @@
 //  Open Wallpaper Engine
 //
 //  What the Installed tab lists, decided the way WE does: only wallpapers (project.json `type` of
-//  scene, video, web or application) the user got themselves. Workshop items that aren't
+//  scene, video, web or application, or a `preset` of one, `WorkshopPresetItem`) the user got themselves. Workshop items that aren't
 //  wallpapers (asset packs, effects and other `"category": "Asset"` items, which have no `type`)
 //  and items downloaded only as another wallpaper's dependency stay on disk but aren't listed.
 //
@@ -37,6 +37,9 @@ enum InstalledLibrary {
         // A folder without project.json is shown as invalid below, so a failed read is expected.
         guard let data = try? Data(contentsOf: folder.appending(path: "project.json")) else {
             return WEWallpaper(using: .invalid, where: folder)
+        }
+        if let root = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any], WorkshopPresetItem.isPreset(root) {
+            return WorkshopPresetItem.wallpaper(presetAt: folder, projectJSON: root, roots: [folder.deletingLastPathComponent()])
         }
         guard isWallpaperProject(data) != false else { return nil }
         do {
