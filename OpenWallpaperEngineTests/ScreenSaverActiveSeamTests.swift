@@ -103,7 +103,7 @@ final class ScreenSaverActiveSeamTests: XCTestCase {
     }
 
     func testSearchLumaHalvesTheSignature() {
-        let values = (0..<(64 * 36)).flatMap { _ in [Float(0.25), 0, 0] }
+        let values: [Float] = (0..<(64 * 36)).flatMap { _ -> [Float] in [0.25, 0, 0] }
         let luma = ScreenSaverFrameSignature(values: values).searchLuma
         XCTAssertEqual(luma.count, 32 * 18)
         XCTAssertEqual(luma.first, 0.25)
