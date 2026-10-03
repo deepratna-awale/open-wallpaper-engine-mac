@@ -4,7 +4,7 @@ import OWESceneEditing
 
 /// What the Wallpaper Editor's particle editor reads from the app: the wallpaper's files (its
 /// package, else its folder) and WE's assets, as the scene loader finds them; the textures a
-/// particle material can draw and their previews; and WE's particle presets.
+/// particle material can draw and their previews; and WE's particle systems and presets.
 final class WallpaperEditorParticleAssets {
     private let directory: URL
     private let package: PKGParser?
@@ -38,11 +38,11 @@ final class WallpaperEditorParticleAssets {
         }
     }
 
-    /// WE's particle presets, titled in WE's own words for the user's language.
-    func presets(labels: WallpaperEngineLabels) -> [ParticlePreset] {
-        guard let assets = WallpaperEngineAssets.directory else { return [] }
-        return ParticlePresetCatalog.load(presetsDirectory: assets.appending(path: "presets", directoryHint: .isDirectory),
-                                          translate: { labels.translation($0) })
+    /// WE's default particle systems and presets, titled in WE's own words for the user's
+    /// language; empty without WE's assets.
+    func catalog(labels: WallpaperEngineLabels) -> ParticleCatalog {
+        guard let assets = WallpaperEngineAssets.directory else { return ParticleCatalog(items: [], hasPresets: false) }
+        return ParticleCatalog.load(assetsDirectory: assets, translate: { labels.translation($0) })
     }
 
     /// The wallpaper's textures (`materials/**.tex`) and WE's particle sprites

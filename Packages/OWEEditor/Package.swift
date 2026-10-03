@@ -22,8 +22,8 @@ let package = Package(
         .target(name: "OWEEditor",
                 dependencies: ["OWESceneEditing", "OWEInspectorKit"],
                 // The particle editor's catalog and its copy of WE's editor schema
-                // (docs/we-particle-editor-schema.json).
-                resources: [.process("Resources"), .process("Particles/Resources")]),
+                // (docs/we-particle-editor-schema.json); the effect previews' test card.
+                resources: [.process("Resources"), .process("Particles/Resources"), .process("Previews/Resources")]),
         .testTarget(name: "OWESceneEditingTests", dependencies: ["OWESceneEditing"]),
         .testTarget(name: "OWEInspectorKitTests", dependencies: ["OWEInspectorKit"]),
         .testTarget(name: "OWEEditorTests", dependencies: ["OWEEditor"]),

@@ -204,10 +204,23 @@ public final class ParticleEditingModel: ObservableObject {
     /// layer's id, which becomes the selection.
     @discardableResult
     public func addBlankSystem(name: String, actionName: String) -> Int {
+        addSystem(definition: templateDefinition(), name: name, actionName: actionName)
+    }
+
+    /// Adds a new system from one of WE's default systems (`particles/examplecursorfollow.json`),
+    /// as WE's editor creates one: a copy of the file the new system draws, centred on a 2D scene.
+    /// Returns its layer's id; nil when the file can't be read.
+    @discardableResult
+    public func addSystem(from source: String, name: String, actionName: String) -> Int? {
+        guard let definition = authoredDocument(source).flatMap(ParticleDefinition.init(json:)) else { return nil }
+        return addSystem(definition: definition, name: name, actionName: actionName)
+    }
+
+    private func addSystem(definition template: ParticleDefinition, name: String, actionName: String) -> Int {
         let path = uniquePath("particles/editor/particle_system.json")
         let id = session.nextObjectID
         let object = Self.object(id: id, name: name, particle: path, origin: sceneCentre)
-        let definition = templateDefinition().json
+        let definition = template.json
         session.edit(actionName: actionName) { overlay in
             overlay.updateParticles { particles in
                 particles.assets[path] = definition
@@ -229,7 +242,7 @@ public final class ParticleEditingModel: ObservableObject {
             let url = preset.directory.appending(path: dependency)
             // A preset may list a file it doesn't ship; a system that needs one isn't added (below).
             guard let data = try? Data(contentsOf: url),
-                  let object = try? JSONSerialization.jsonObject(with: data),
+                  let object = try? WETolerantJSON.object(from: data),
                   let json = SceneJSONValue(any: object) else { continue }
             let path = uniquePath(dependency, besides: Set(documents.keys))
             renamed[dependency] = path

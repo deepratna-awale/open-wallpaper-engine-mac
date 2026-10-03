@@ -31,6 +31,14 @@ public struct EffectCatalogEntry: Hashable, Sendable, Identifiable {
         self.passCount = passCount
     }
 
+    /// For a Workshop effect, the folder of the wallpaper that ships it (its preview reads it there).
+    public var wallpaperDirectory: String?
+
+    /// What its rendered preview shows: the effect, at its defaults, on the test card.
+    public var previewSubject: EditorPreviewSubject {
+        .effect(file: file, wallpaper: isWorkshop ? wallpaperDirectory : nil)
+    }
+
     /// The effect's folder name (`waterripple`).
     public var folderName: String {
         ((file as NSString).deletingLastPathComponent as NSString).lastPathComponent.lowercased()
@@ -59,6 +67,18 @@ public enum EffectCatalog {
             if left != right { return !left }
             return lhs.localizedStandardCompare(rhs) == .orderedAscending
         }.map { ($0, groups[$0]!) }
+    }
+
+    /// WE's built-in effects in the asset tree `assets`: every `effects/<name>/effect.json`, by
+    /// folder name, but the internal ones (`_empty`), which its editor doesn't offer.
+    public static func builtInEffectFiles(in assets: URL, fileManager: FileManager = .default) -> [String] {
+        let effects = assets.appending(path: "effects", directoryHint: .isDirectory)
+        // Optional: an asset tree without an effects folder has no effects.
+        let folders = (try? fileManager.contentsOfDirectory(atPath: effects.path(percentEncoded: false))) ?? []
+        return folders.sorted().filter { name in
+            !name.hasPrefix("_") && !name.hasPrefix(".")
+                && fileManager.fileExists(atPath: effects.appending(path: "\(name)/effect.json").path(percentEncoded: false))
+        }.map { "effects/\($0)/effect.json" }
     }
 
     static func fold(_ text: String) -> String {
