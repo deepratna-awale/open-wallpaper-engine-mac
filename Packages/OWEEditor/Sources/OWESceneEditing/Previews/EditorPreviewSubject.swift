@@ -18,6 +18,14 @@ public enum EditorPreviewSubject: Codable, Hashable, Sendable {
         return true
     }
 
+    /// A 3D particle system, seen through WE's particle editor camera.
+    public var is3D: Bool {
+        switch self {
+        case .effect: return false
+        case .particleSystem(_, let is3D), .particlePreset(_, _, let is3D): return is3D
+        }
+    }
+
     /// The preview's file name without its extension: readable, and unique by a digest of the
     /// whole subject (a Workshop effect's wallpaper included).
     public var cacheName: String {

@@ -7,7 +7,7 @@ import Foundation
 /// the others (`prune`). `revision` is bumped whenever the rendering changes.
 public struct EditorPreviewCache: Sendable {
     /// Bump when what a preview shows changes (its scene, size, length or encoding).
-    public static let revision = 1
+    public static let revision = 2
     /// A preview's file types: a still, a loop.
     public static let stillExtension = "heic"
     public static let movieExtension = "mov"
