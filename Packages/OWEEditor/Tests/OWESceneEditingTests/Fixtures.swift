@@ -14,7 +14,7 @@ enum Fixtures {
          "alpha": 1, "color": "1 1 1", "colorBlendMode": 0,
          "effects": [
            {"file": "effects/waterripple/effect.json", "visible": true,
-            "passes": [{"constants": {"Speed": 1.5}}]},
+            "passes": [{"constantshadervalues": {"Speed": 1.5}}]},
            {"file": "effects/blur/effect.json", "name": "Soft", "visible": {"user": "showblur", "value": true}}
          ]},
         {"id": 11, "name": "Clock", "parent": 10, "text": {"value": "12:00", "script": "export function update(v) { return v; }"},

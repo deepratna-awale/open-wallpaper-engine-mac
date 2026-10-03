@@ -7,15 +7,23 @@ public struct SceneOutline: Sendable {
     /// The orthographic scene's size in scene units; nil for a 3D (perspective) scene.
     public let size: SIMD2<Double>?
     private let byID: [Int: Int]
+    /// The scene.json it was read from, which the editor applies structural edits to
+    /// (`SceneEditSession`); nil for an outline made from a decoded root.
+    public let sceneData: Data?
 
     public init(sceneData: Data) throws {
         guard let root = try JSONSerialization.jsonObject(with: sceneData) as? [String: Any] else {
             throw SceneEditOverlayError.notAScene
         }
-        try self.init(root: root)
+        try self.init(root: root, sceneData: sceneData)
     }
 
     public init(root: [String: Any]) throws {
+        try self.init(root: root, sceneData: nil)
+    }
+
+    init(root: [String: Any], sceneData: Data?) throws {
+        self.sceneData = sceneData
         guard let objects = root["objects"] as? [[String: Any]] else { throw SceneEditOverlayError.notAScene }
         let parents = Set(objects.compactMap { ($0["parent"] as? NSNumber)?.intValue })
         var layers: [SceneLayer] = []
@@ -26,9 +34,7 @@ public struct SceneOutline: Sendable {
                 if let value = SceneJSONValue(any: value) { fields[key] = value }
             }
             let effects = (object["effects"] as? [[String: Any]] ?? []).enumerated().map { effectIndex, effect in
-                SceneLayerEffect(id: effectIndex, file: effect["file"] as? String ?? "",
-                                 name: effect["name"] as? String,
-                                 visible: SceneJSONValue(any: effect["visible"]).flatMap { $0 == .null ? nil : $0 })
+                Self.effect(effect, index: effectIndex)
             }
             layers.append(SceneLayer(id: id, index: index, name: object["name"] as? String,
                                      kind: Self.kind(of: object, isParent: parents.contains(id)),
@@ -63,6 +69,26 @@ public struct SceneOutline: Sendable {
             current = parent.parentID
         }
         return chain
+    }
+
+    /// One effect as the scene lists it, with its first pass's values and its edit key (the
+    /// editor's applied scenes mark it, `SceneEditOverlay.effectKeyMarker`; else its index).
+    static func effect(_ effect: [String: Any], index: Int) -> SceneLayerEffect {
+        var result = SceneLayerEffect(id: index, file: effect["file"] as? String ?? "",
+                                      name: effect["name"] as? String,
+                                      visible: SceneJSONValue(any: effect["visible"]).flatMap { $0 == .null ? nil : $0 },
+                                      key: effect[SceneEditOverlay.effectKeyMarker] as? String)
+        let passes = effect["passes"] as? [[String: Any]] ?? []
+        result.passCount = passes.count
+        if let pass = passes.first {
+            let constants = pass["constantshadervalues"] as? [String: Any] ?? pass["constants"] as? [String: Any] ?? [:]
+            for (key, value) in constants { result.constants[key] = SceneJSONValue(any: value) }
+            for (key, value) in pass["combos"] as? [String: Any] ?? [:] {
+                if let number = value as? NSNumber { result.combos[key] = number.intValue }
+            }
+            result.textures = (pass["textures"] as? [Any] ?? []).map { SceneJSONValue(any: $0) ?? .null }
+        }
+        return result
     }
 
     static func kind(of object: [String: Any], isParent: Bool) -> SceneLayer.Kind {

@@ -14,6 +14,12 @@ public struct SceneEditOverlayStore: Sendable {
         directory.appending(path: Self.fileName(identity) + ".json")
     }
 
+    /// The folder of the files the editor added for the wallpaper (`EditorAssetStore`), beside its
+    /// overlay: `<identity>.assets`.
+    public func assetsDirectory(for identity: String) -> URL {
+        directory.appending(path: Self.fileName(identity) + ".assets", directoryHint: .isDirectory)
+    }
+
     /// The saved overlay; nil when the wallpaper has none.
     public func overlay(for identity: String) throws -> SceneEditOverlay? {
         let url = fileURL(for: identity)
