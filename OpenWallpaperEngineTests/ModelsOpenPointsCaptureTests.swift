@@ -259,8 +259,10 @@ final class ModelsOpenPointsCaptureTests: XCTestCase {
         let camera = SceneOrthographicCameraRig(zoom: 2).frameCamera(input)
         let weZoomed = zoom.projection(SceneCamera.orthographic(size: Self.screen))
         for point in [SIMD3<Float>(1395.2, 540, 0), SIMD3(524.8, 104.8, 300), SIMD3(960, 540, -900), SIMD3(100, 900, 50)] {
-            let ours = camera.viewProjection * zoom.space * SIMD4(point, 1)
-            let we = weZoomed * SIMD4(point, 1)
+            let world: SIMD4<Float> = SIMD4<Float>(point, 1)
+            let drawnSpace: simd_float4x4 = camera.viewProjection * zoom.space
+            let ours: SIMD4<Float> = drawnSpace * world
+            let we: SIMD4<Float> = weZoomed * world
             XCTAssertEqual(ours.x / ours.w, we.x / we.w, accuracy: 1e-5)
             XCTAssertEqual(ours.y / ours.w, we.y / we.w, accuracy: 1e-5)
             XCTAssertEqual(ours.z / ours.w, we.z / we.w, accuracy: 1e-5)

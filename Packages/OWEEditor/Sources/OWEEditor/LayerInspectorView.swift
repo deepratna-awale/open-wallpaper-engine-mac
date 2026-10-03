@@ -105,7 +105,7 @@ private struct LayerForm: View {
                 }
             }
             fieldRow("angles", title: L("Rotation")) {
-                NumericSliderInput(value: Binding(
+                NumericSliderInput<Double>(value: Binding<Double>(
                     get: { session.transform(of: layer.id).angles.z * 180 / .pi },
                     set: { degrees in
                         var transform = session.transform(of: layer.id)
@@ -143,7 +143,7 @@ private struct LayerForm: View {
     }
 
     private func scaleSlider(components: [Int]) -> some View {
-        NumericSliderInput(value: Binding(
+        NumericSliderInput<Double>(value: Binding<Double>(
             get: { session.vector("scale", of: layer.id, default: [1, 1, 1])[components[0]] },
             set: { value in
                 var transform = session.transform(of: layer.id)
@@ -160,7 +160,7 @@ private struct LayerForm: View {
     @ViewBuilder private var appearanceSection: some View {
         Section(L("Appearance")) {
             fieldRow("alpha", title: L("Opacity")) {
-                NumericSliderInput(value: Binding(
+                NumericSliderInput<Double>(value: Binding<Double>(
                     get: { session.number("alpha", of: layer.id, default: 1) },
                     set: { session.setValue(.number($0), for: "alpha", of: layer.id, actionName: L("Change Opacity"), coalescing: true) }),
                     range: 0...1, defaultValue: 1, displayScale: 100, suffix: "%", fractionDigits: 0, fieldWidth: 44)

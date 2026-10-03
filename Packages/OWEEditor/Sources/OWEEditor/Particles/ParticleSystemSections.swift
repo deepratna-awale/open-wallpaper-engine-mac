@@ -220,7 +220,7 @@ private struct ParticleGeneralSection: View {
                 .fixedSize()
             }
             LabeledContent(PartL("Overbright")) {
-                NumericSliderInput(value: Binding(
+                NumericSliderInput<Double>(value: Binding<Double>(
                     get: { material.constant(ParticleMaterial.overbrightKey)?.doubleValue ?? 1 },
                     set: { value in
                         model.editMaterial(ofDefinition: path, actionName: PartL("Change Overbright"),

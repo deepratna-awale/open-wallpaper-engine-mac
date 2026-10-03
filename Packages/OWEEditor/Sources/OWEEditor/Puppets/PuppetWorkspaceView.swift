@@ -213,45 +213,68 @@ extension PuppetTimelineView {
 struct PuppetFrameRuler: View {
     @ObservedObject var workspace: PuppetWorkspace
 
+    private var frames: Int { max(workspace.clip?.frames ?? 1, 1) }
+
     var body: some View {
-        GeometryReader { proxy in
-            let frames = max(workspace.clip?.frames ?? 1, 1)
-            let width = Double(proxy.size.width)
-            let x = { (frame: Double) -> Double in 8 + (width - 16) * frame / Double(frames) }
-            Canvas { context, size in
-                context.fill(Path(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: 6),
-                             with: .color(.secondary.opacity(0.12)))
-                let step = max(1, Int((Double(frames) / max((width - 16) / 8, 1)).rounded(.up)))
-                for frame in stride(from: 0, through: frames, by: step) {
-                    var tick = Path()
-                    let major = frame % (step * 5) == 0
-                    tick.move(to: CGPoint(x: x(Double(frame)), y: size.height))
-                    tick.addLine(to: CGPoint(x: x(Double(frame)), y: size.height - (major ? 10 : 5)))
-                    context.stroke(tick, with: .color(.secondary.opacity(0.6)), lineWidth: 1)
-                }
-                for key in workspace.keyFrames where key <= frames {
-                    let centre = CGPoint(x: x(Double(key)), y: size.height / 2 - 3)
-                    var diamond = Path()
-                    diamond.move(to: CGPoint(x: centre.x, y: centre.y - 5))
-                    diamond.addLine(to: CGPoint(x: centre.x + 5, y: centre.y))
-                    diamond.addLine(to: CGPoint(x: centre.x, y: centre.y + 5))
-                    diamond.addLine(to: CGPoint(x: centre.x - 5, y: centre.y))
-                    diamond.closeSubpath()
-                    context.fill(diamond, with: .color(.yellow))
-                    context.stroke(diamond, with: .color(.black.opacity(0.6)), lineWidth: 0.75)
-                }
-                var head = Path()
-                let px = x(Double(workspace.frame))
-                head.move(to: CGPoint(x: px, y: 0))
-                head.addLine(to: CGPoint(x: px, y: size.height))
-                context.stroke(head, with: .color(.accentColor), lineWidth: 2)
+        GeometryReader { (proxy: GeometryProxy) in
+            let width: Double = Double(proxy.size.width)
+            let frames: Int = self.frames
+            Canvas { (context: inout GraphicsContext, size: CGSize) in
+                draw(in: &context, size: size, width: width, frames: frames)
             }
             .contentShape(Rectangle())
-            .gesture(DragGesture(minimumDistance: 0).onChanged { value in
-                guard workspace.clip != nil else { return }
-                let frame = (Double(value.location.x) - 8) / max(width - 16, 1) * Double(frames)
-                workspace.frame = Float(min(max(frame, 0), Double(frames)).rounded())
-            })
+            .gesture(scrub(width: width, frames: frames))
+        }
+    }
+
+    /// The x of a frame on a ruler `width` wide.
+    private func x(_ frame: Double, width: Double, frames: Int) -> CGFloat {
+        let span: Double = width - 16
+        return CGFloat(8 + span * frame / Double(frames))
+    }
+
+    private func draw(in context: inout GraphicsContext, size: CGSize, width: Double, frames: Int) {
+        let height: CGFloat = size.height
+        context.fill(Path(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: 6),
+                     with: .color(.secondary.opacity(0.12)))
+        let perTick: Double = max((width - 16) / 8, 1)
+        let step: Int = max(1, Int((Double(frames) / perTick).rounded(.up)))
+        for frame in stride(from: 0, through: frames, by: step) {
+            let major: Bool = frame % (step * 5) == 0
+            let tickX: CGFloat = x(Double(frame), width: width, frames: frames)
+            let tickLength: CGFloat = major ? 10 : 5
+            var tick = Path()
+            tick.move(to: CGPoint(x: tickX, y: height))
+            tick.addLine(to: CGPoint(x: tickX, y: height - tickLength))
+            context.stroke(tick, with: .color(.secondary.opacity(0.6)), lineWidth: 1)
+        }
+        for key in workspace.keyFrames where key <= frames {
+            let cx: CGFloat = x(Double(key), width: width, frames: frames)
+            let cy: CGFloat = height / 2 - 3
+            let r: CGFloat = 5
+            var diamond = Path()
+            diamond.move(to: CGPoint(x: cx, y: cy - r))
+            diamond.addLine(to: CGPoint(x: cx + r, y: cy))
+            diamond.addLine(to: CGPoint(x: cx, y: cy + r))
+            diamond.addLine(to: CGPoint(x: cx - r, y: cy))
+            diamond.closeSubpath()
+            context.fill(diamond, with: .color(.yellow))
+            context.stroke(diamond, with: .color(.black.opacity(0.6)), lineWidth: 0.75)
+        }
+        let px: CGFloat = x(Double(workspace.frame), width: width, frames: frames)
+        var head = Path()
+        head.move(to: CGPoint(x: px, y: 0))
+        head.addLine(to: CGPoint(x: px, y: height))
+        context.stroke(head, with: .color(.accentColor), lineWidth: 2)
+    }
+
+    private func scrub(width: Double, frames: Int) -> some Gesture {
+        let frameCount: Double = Double(frames)
+        return DragGesture(minimumDistance: 0).onChanged { (value: DragGesture.Value) in
+            guard workspace.clip != nil else { return }
+            let span: Double = max(width - 16, 1)
+            let frame: Double = (Double(value.location.x) - 8) / span * frameCount
+            workspace.frame = Float(min(max(frame, 0), frameCount).rounded())
         }
     }
 }

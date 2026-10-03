@@ -47,13 +47,17 @@ struct UserPropertiesPreview: View {
             Toggle(title, isOn: Binding(get: { value == "true" || value == "1" },
                                         set: { set(property.key, $0 ? "true" : "false") }))
         } else if property.kind == .slider {
-            let lower = property.minimum ?? 0
-            let upper = max(property.maximum ?? 1, lower + 0.0001)
+            let lower: Double = property.minimum ?? 0
+            let upper: Double = max(property.maximum ?? 1, lower + 0.0001)
+            let sliderValue = Binding<Double>(
+                get: { min(max(Double(value) ?? lower, lower), upper) },
+                set: { (newValue: Double) in
+                    let rounded: Double = PropertyFormat.rounded(newValue, property)
+                    set(property.key, SceneVector.string([rounded]))
+                })
             LabeledContent(title) {
                 HStack {
-                    Slider(value: Binding(get: { min(max(Double(value) ?? lower, lower), upper) },
-                                          set: { set(property.key, SceneVector.string([PropertyFormat.rounded($0, property)])) }),
-                           in: lower...upper)
+                    Slider(value: sliderValue, in: lower...upper)
                     Text(Self.formatted(Double(value) ?? lower, property))
                         .monospacedDigit()
                         .frame(minWidth: 40, alignment: .trailing)

@@ -47,6 +47,11 @@ private struct PuppetMeshPanel: View {
     @ObservedObject var workspace: PuppetWorkspace
     @State private var isConfirmingGenerate = false
 
+    private var thresholdBinding: Binding<Double> {
+        return Binding<Double>(get: { Double(workspace.meshOptions.threshold) },
+                               set: { (value: Double) in workspace.meshOptions.threshold = UInt8(min(max(value, 0), 254)) })
+    }
+
     var body: some View {
         Section(PL("Generate from Alpha")) {
             LabeledContent(PL("Point Spacing")) {
@@ -59,9 +64,8 @@ private struct PuppetMeshPanel: View {
                                    fractionDigits: 0, fieldWidth: 52)
             }
             LabeledContent(PL("Alpha Threshold")) {
-                NumericSliderInput(value: Binding(get: { Double(workspace.meshOptions.threshold) },
-                                                  set: { workspace.meshOptions.threshold = UInt8(min(max($0, 0), 254)) }),
-                                   range: 0...254, defaultValue: 8, step: 1, fractionDigits: 0, fieldWidth: 52)
+                NumericSliderInput<Double>(value: thresholdBinding, range: 0...254, defaultValue: 8, step: 1,
+                                           fractionDigits: 0, fieldWidth: 52)
             }
             Button(PL("Generate Mesh")) { isConfirmingGenerate = true }
                 .disabled(workspace.source?.texture == nil)
@@ -144,35 +148,64 @@ private struct PuppetSkeletonPanel: View {
             PuppetBoneList(workspace: workspace)
         }
         if let document = workspace.document, let bone = workspace.selectedBone, document.bones.indices.contains(bone) {
-            Section(PL("Selected Bone")) {
-                TextField(PL("Name"), text: $name)
-                    .onSubmit { workspace.renameBone(bone, to: name) }
-                    .onAppear { name = document.bones[bone].name }
-                    .onChange(of: bone) { _, new in name = workspace.document?.bones[new].name ?? "" }
-                Picker(PL("Parent"), selection: Binding(get: { document.bones[bone].parent ?? -1 },
-                                                        set: { workspace.reparentBone(bone, to: $0 < 0 ? nil : $0) })) {
-                    Text(PL("None")).tag(-1)
-                    let below = document.subtree(of: bone)
-                    ForEach(document.bones.indices.filter { !below.contains($0) }, id: \.self) { index in
-                        Text(document.bones[index].name).tag(index)
-                    }
+            PuppetSelectedBoneSection(workspace: workspace, document: document, bone: bone, name: $name)
+        }
+    }
+}
+
+private struct PuppetSelectedBoneSection: View {
+    @ObservedObject var workspace: PuppetWorkspace
+    let document: PuppetDocument
+    let bone: Int
+    @Binding var name: String
+
+    private var world: simd_float4x4 { document.bindWorlds[bone] }
+
+    private var parentBinding: Binding<Int> {
+        return Binding<Int>(get: { document.bones[bone].parent ?? -1 },
+                            set: { (parent: Int) in workspace.reparentBone(bone, to: parent < 0 ? nil : parent) })
+    }
+
+    private var parentCandidates: [Int] {
+        let below: Set<Int> = document.subtree(of: bone)
+        return document.bones.indices.filter { (index: Int) -> Bool in !below.contains(index) }
+    }
+
+    private var jointText: String {
+        let x: Float = world.columns.3.x
+        let y: Float = world.columns.3.y
+        return String(format: "%.1f, %.1f", x, y)
+    }
+
+    private var angleBinding: Binding<Double> {
+        let degrees: Double = Double(PuppetMath.angle(of: world)) * 180 / Double.pi
+        return Binding<Double>(get: { degrees }, set: { (newDegrees: Double) in
+            let radians: Float = Float(newDegrees * Double.pi / 180)
+            workspace.edit(PL("Rotate Bone"), coalescing: true) { $0.rotateBone(bone, toAngle: radians) }
+        })
+    }
+
+    var body: some View {
+        Section(PL("Selected Bone")) {
+            TextField(PL("Name"), text: $name)
+                .onSubmit { workspace.renameBone(bone, to: name) }
+                .onAppear { name = document.bones[bone].name }
+                .onChange(of: bone) { _, new in name = workspace.document?.bones[new].name ?? "" }
+            Picker(PL("Parent"), selection: parentBinding) {
+                Text(PL("None")).tag(-1)
+                ForEach(parentCandidates, id: \.self) { (index: Int) in
+                    Text(document.bones[index].name).tag(index)
                 }
-                let world = document.bindWorlds[bone]
-                LabeledContent(PL("Joint")) {
-                    Text(verbatim: String(format: "%.1f, %.1f", world.columns.3.x, world.columns.3.y)).monospacedDigit()
-                }
-                LabeledContent(PL("Angle")) {
-                    NumericSliderInput(value: Binding(get: { Double(PuppetMath.angle(of: world)) * 180 / .pi },
-                                                      set: { degrees in
-                                                          workspace.edit(PL("Rotate Bone"), coalescing: true) {
-                                                              $0.rotateBone(bone, toAngle: Float(degrees * .pi / 180))
-                                                          }
-                                                      }),
-                                       range: -180...180, defaultValue: 0, step: 1, suffix: "°", fractionDigits: 1, fieldWidth: 56)
-                }
-                Button(PL("Delete Bone"), role: .destructive) { workspace.deleteSelectedBone() }
-                    .disabled(document.bones.count < 2)
             }
+            LabeledContent(PL("Joint")) {
+                Text(verbatim: jointText).monospacedDigit()
+            }
+            LabeledContent(PL("Angle")) {
+                NumericSliderInput<Double>(value: angleBinding, range: -180...180, defaultValue: 0, step: 1, suffix: "°",
+                                           fractionDigits: 1, fieldWidth: 56)
+            }
+            Button(PL("Delete Bone"), role: .destructive) { workspace.deleteSelectedBone() }
+                .disabled(document.bones.count < 2)
         }
     }
 }
@@ -236,12 +269,12 @@ private struct PuppetAnimationPanel: View {
                     .onAppear { name = clip.name }
                     .onChange(of: clipIndex) { _, _ in name = workspace.clip?.name ?? "" }
                 LabeledContent(PL("Frame Rate")) {
-                    NumericSliderInput(value: Binding(get: { clip.fps }, set: { fps in
+                    NumericSliderInput<Float>(value: Binding<Float>(get: { clip.fps }, set: { fps in
                         workspace.updateClip(PL("Change Frame Rate")) { $0.fps = max(fps, 1) }
                     }), range: 1...120, defaultValue: 30, step: 1, suffix: " fps", fractionDigits: 0, fieldWidth: 52)
                 }
                 LabeledContent(PL("Length")) {
-                    NumericSliderInput(value: Binding(get: { Double(clip.frames) }, set: { frames in
+                    NumericSliderInput<Double>(value: Binding<Double>(get: { Double(clip.frames) }, set: { frames in
                         workspace.updateClip(PL("Change Length")) { $0.setFrames(Int(frames.rounded())) }
                     }), range: 1...1000, defaultValue: 60, step: 1, fractionDigits: 0, fieldWidth: 52, clampsTypedValue: false)
                 }
@@ -352,13 +385,13 @@ private struct PuppetLayerRow: View {
                 ForEach(clips, id: \.id) { Text($0.name).tag($0.id) }
             }
             LabeledContent(PL("Blend")) {
-                NumericSliderInput(value: Binding(get: { layer.blend }, set: { value in
+                NumericSliderInput<Float>(value: Binding<Float>(get: { layer.blend }, set: { value in
                     workspace.updateLayer(index, PL("Change Layer Blend")) { $0.blend = value }
                 }), range: 0...1, defaultValue: 1, displayScale: 100, suffix: "%", fractionDigits: 0, fieldWidth: 48,
                     clampsTypedValue: false)
             }
             LabeledContent(PL("Rate")) {
-                NumericSliderInput(value: Binding(get: { layer.rate }, set: { value in
+                NumericSliderInput<Float>(value: Binding<Float>(get: { layer.rate }, set: { value in
                     workspace.updateLayer(index, PL("Change Layer Rate")) { $0.rate = value }
                 }), range: -4...4, defaultValue: 1, step: 0.05, suffix: "×", fractionDigits: 2, fieldWidth: 48, clampsTypedValue: false)
             }
@@ -373,7 +406,7 @@ private struct PuppetLayerRow: View {
             }))
             .help(PL("Only for animations that play once, as in Wallpaper Engine."))
             LabeledContent(PL("Blend Time")) {
-                NumericSliderInput(value: Binding(get: { layer.blendTime }, set: { value in
+                NumericSliderInput<Float>(value: Binding<Float>(get: { layer.blendTime }, set: { value in
                     workspace.updateLayer(index, PL("Change Layer Blending")) { $0.blendTime = max(value, 0) }
                 }), range: 0...5, defaultValue: 0.5, step: 0.05, suffix: " s", fractionDigits: 2, fieldWidth: 48)
             }
@@ -438,7 +471,7 @@ private struct PuppetPhysicsPanel: View {
     private func slider(_ title: String, _ key: WritableKeyPath<PuppetBonePhysics, Float>, _ range: ClosedRange<Float>,
                         _ fallback: Float, bone: Int, physics: PuppetBonePhysics?, suffix: String = "") -> some View {
         LabeledContent(title) {
-            NumericSliderInput(value: Binding(get: { physics?[keyPath: key] ?? fallback }, set: { value in
+            NumericSliderInput<Float>(value: Binding<Float>(get: { physics?[keyPath: key] ?? fallback }, set: { value in
                 update(bone) { $0[keyPath: key] = value }
             }), range: range, defaultValue: fallback, step: 1, suffix: suffix, fractionDigits: 0, fieldWidth: 52,
                 clampsTypedValue: false)
@@ -447,21 +480,57 @@ private struct PuppetPhysicsPanel: View {
 
     @ViewBuilder
     private func settings(_ physics: PuppetBonePhysics?, bone: Int) -> some View {
-        Section {
-            Toggle(PL("Simulate This Bone"), isOn: Binding(get: { physics != nil }, set: { on in
-                workspace.updatePhysics(of: bone, on ? PL("Add Bone Physics") : PL("Remove Bone Physics"), coalescing: false) {
-                    $0 = on ? PuppetBonePhysics() : nil
-                }
-            }))
+        headerSection(physics, bone: bone)
+        if let physics {
+            rotationSection(physics, bone: bone)
+            positionSection(physics, bone: bone)
+            gravitySection(physics, bone: bone)
+            tipSection(physics, bone: bone)
+        }
+    }
+
+    /// A checkbox for one of the physics' switches.
+    private func toggle(_ title: String, _ key: WritableKeyPath<PuppetBonePhysics, Bool>, bone: Int,
+                        physics: PuppetBonePhysics) -> some View {
+        let isOn = Binding<Bool>(get: { physics[keyPath: key] },
+                                 set: { (on: Bool) in update(bone, coalescing: false) { $0[keyPath: key] = on } })
+        return Toggle(title, isOn: isOn)
+    }
+
+    /// A slider in degrees over a value the physics keeps in radians (or as a direction).
+    private func degreesSlider(_ title: String, range: ClosedRange<Float>, defaultValue: Float, bone: Int,
+                               radians: @escaping () -> Float,
+                               set: @escaping (inout PuppetBonePhysics, Float) -> Void) -> some View {
+        let value = Binding<Float>(get: { radians() * 180 / Float.pi }, set: { (degrees: Float) in
+            let newRadians: Float = degrees * Float.pi / 180
+            update(bone) { set(&$0, newRadians) }
+        })
+        return LabeledContent(title) {
+            NumericSliderInput<Float>(value: value, range: range, defaultValue: defaultValue, step: 1, suffix: "°",
+                                      fractionDigits: 0, fieldWidth: 48)
+        }
+    }
+
+    private func headerSection(_ physics: PuppetBonePhysics?, bone: Int) -> some View {
+        let simulates = Binding<Bool>(get: { physics != nil }, set: { (on: Bool) in
+            let actionName: String = on ? PL("Add Bone Physics") : PL("Remove Bone Physics")
+            workspace.updatePhysics(of: bone, actionName, coalescing: false) { $0 = on ? PuppetBonePhysics() : nil }
+        })
+        let kind = Binding<PuppetBonePhysics.Kind>(get: { physics?.kind ?? .spring },
+                                                   set: { (kind: PuppetBonePhysics.Kind) in
+                                                       update(bone, coalescing: false) { $0.kind = kind }
+                                                   })
+        return Section {
+            Toggle(PL("Simulate This Bone"), isOn: simulates)
             if physics != nil {
                 Menu(PL("Preset")) {
-                    ForEach(PuppetBonePhysics.Preset.allCases, id: \.self) { preset in
+                    ForEach(PuppetBonePhysics.Preset.allCases, id: \.self) { (preset: PuppetBonePhysics.Preset) in
                         Button(preset.title) {
                             workspace.updatePhysics(of: bone, PL("Apply Physics Preset"), coalescing: false) { $0 = PuppetBonePhysics(preset: preset) }
                         }
                     }
                 }
-                Picker(PL("Kind"), selection: Binding(get: { physics?.kind ?? .spring }, set: { kind in update(bone, coalescing: false) { $0.kind = kind } })) {
+                Picker(PL("Kind"), selection: kind) {
                     Text(PL("Spring")).tag(PuppetBonePhysics.Kind.spring)
                     Text(PL("Rigid")).tag(PuppetBonePhysics.Kind.rigid)
                 }
@@ -470,67 +539,72 @@ private struct PuppetPhysicsPanel: View {
         } header: {
             Text(workspace.document?.bones[bone].name ?? "")
         }
-        if let physics {
-            Section(PL("Rotation")) {
-                Toggle(PL("Simulate Rotation"), isOn: Binding(get: { physics.rotation }, set: { on in update(bone, coalescing: false) { $0.rotation = on } }))
-                if physics.rotation {
-                    slider(PL("Stiffness"), \.rotationStiffness, 0...1000, 200, bone: bone, physics: physics)
-                    slider(PL("Friction"), \.rotationFriction, 0...100, 20, bone: bone, physics: physics)
-                    slider(PL("Inertia"), \.rotationInertia, 0...100, 30, bone: bone, physics: physics, suffix: "%")
-                    Toggle(PL("Limit Angle"), isOn: Binding(get: { physics.limitAngles }, set: { on in update(bone, coalescing: false) { $0.limitAngles = on } }))
-                    if physics.limitAngles {
-                        LabeledContent(PL("Minimum")) {
-                            NumericSliderInput(value: Binding(get: { physics.minAngles.z * 180 / .pi }, set: { degrees in
-                                update(bone) { $0.minAngles.z = degrees * .pi / 180 }
-                            }), range: -180...0, defaultValue: -180, step: 1, suffix: "°", fractionDigits: 0, fieldWidth: 48)
-                        }
-                        LabeledContent(PL("Maximum")) {
-                            NumericSliderInput(value: Binding(get: { physics.maxAngles.z * 180 / .pi }, set: { degrees in
-                                update(bone) { $0.maxAngles.z = degrees * .pi / 180 }
-                            }), range: 0...180, defaultValue: 180, step: 1, suffix: "°", fractionDigits: 0, fieldWidth: 48)
-                        }
-                    }
-                    Toggle(PL("Limit Torque"), isOn: Binding(get: { physics.limitTorque }, set: { on in update(bone, coalescing: false) { $0.limitTorque = on } }))
-                    if physics.limitTorque { slider(PL("Maximum Torque"), \.maxTorque, 0...360, 100, bone: bone, physics: physics, suffix: "°") }
+    }
+
+    private func rotationSection(_ physics: PuppetBonePhysics, bone: Int) -> some View {
+        Section(PL("Rotation")) {
+            toggle(PL("Simulate Rotation"), \.rotation, bone: bone, physics: physics)
+            if physics.rotation {
+                slider(PL("Stiffness"), \.rotationStiffness, 0...1000, 200, bone: bone, physics: physics)
+                slider(PL("Friction"), \.rotationFriction, 0...100, 20, bone: bone, physics: physics)
+                slider(PL("Inertia"), \.rotationInertia, 0...100, 30, bone: bone, physics: physics, suffix: "%")
+                toggle(PL("Limit Angle"), \.limitAngles, bone: bone, physics: physics)
+                if physics.limitAngles {
+                    degreesSlider(PL("Minimum"), range: -180...0, defaultValue: -180, bone: bone,
+                                  radians: { physics.minAngles.z }, set: { $0.minAngles.z = $1 })
+                    degreesSlider(PL("Maximum"), range: 0...180, defaultValue: 180, bone: bone,
+                                  radians: { physics.maxAngles.z }, set: { $0.maxAngles.z = $1 })
+                }
+                toggle(PL("Limit Torque"), \.limitTorque, bone: bone, physics: physics)
+                if physics.limitTorque {
+                    slider(PL("Maximum Torque"), \.maxTorque, 0...360, 100, bone: bone, physics: physics, suffix: "°")
                 }
             }
-            Section(PL("Position")) {
-                Toggle(PL("Simulate Position"), isOn: Binding(get: { physics.translation }, set: { on in update(bone, coalescing: false) { $0.translation = on } }))
-                if physics.translation {
-                    slider(PL("Stiffness"), \.translationStiffness, 0...1000, 200, bone: bone, physics: physics)
-                    slider(PL("Friction"), \.translationFriction, 0...100, 20, bone: bone, physics: physics)
-                    slider(PL("Inertia"), \.translationInertia, 0...100, 30, bone: bone, physics: physics, suffix: "%")
-                    slider(PL("Maximum Distance"), \.maxDistance, 0...1000, 200, bone: bone, physics: physics, suffix: " px")
-                }
+        }
+    }
+
+    private func positionSection(_ physics: PuppetBonePhysics, bone: Int) -> some View {
+        Section(PL("Position")) {
+            toggle(PL("Simulate Position"), \.translation, bone: bone, physics: physics)
+            if physics.translation {
+                slider(PL("Stiffness"), \.translationStiffness, 0...1000, 200, bone: bone, physics: physics)
+                slider(PL("Friction"), \.translationFriction, 0...100, 20, bone: bone, physics: physics)
+                slider(PL("Inertia"), \.translationInertia, 0...100, 30, bone: bone, physics: physics, suffix: "%")
+                slider(PL("Maximum Distance"), \.maxDistance, 0...1000, 200, bone: bone, physics: physics, suffix: " px")
             }
-            Section(PL("Gravity")) {
-                Toggle(PL("Gravity"), isOn: Binding(get: { physics.gravity }, set: { on in update(bone, coalescing: false) { $0.gravity = on } }))
-                if physics.gravity {
-                    LabeledContent(PL("Direction")) {
-                        NumericSliderInput(value: Binding(get: { atan2(physics.gravityDirection.y, physics.gravityDirection.x) * 180 / .pi },
-                                                          set: { degrees in
-                                                              let radians = degrees * .pi / 180
-                                                              update(bone) { $0.gravityDirection = SIMD3(cos(radians), sin(radians), 0) }
-                                                          }),
-                                           range: -180...180, defaultValue: -90, step: 1, suffix: "°", fractionDigits: 0, fieldWidth: 48)
-                    }
-                    slider(PL("Mass"), \.mass, 0...1000, 20, bone: bone, physics: physics)
-                }
+        }
+    }
+
+    private func gravitySection(_ physics: PuppetBonePhysics, bone: Int) -> some View {
+        Section(PL("Gravity")) {
+            toggle(PL("Gravity"), \.gravity, bone: bone, physics: physics)
+            if physics.gravity {
+                degreesSlider(PL("Direction"), range: -180...180, defaultValue: -90, bone: bone,
+                              radians: { atan2(physics.gravityDirection.y, physics.gravityDirection.x) },
+                              set: { (value: inout PuppetBonePhysics, radians: Float) in
+                                  value.gravityDirection = SIMD3<Float>(cos(radians), sin(radians), 0)
+                              })
+                slider(PL("Mass"), \.mass, 0...1000, 20, bone: bone, physics: physics)
             }
-            Section(PL("Tip")) {
-                LabeledContent(PL("Tip Size")) {
-                    NumericSliderInput(value: Binding(get: { physics.tipSize }, set: { value in
-                        update(bone) { $0.tipSize = max(value, 0); $0.compiledTip = nil }
-                    }), range: 0...500, defaultValue: 0, step: 1, suffix: " px", fractionDigits: 0, fieldWidth: 52)
-                }
-                .help(PL("0 reaches the bone's first child."))
-                LabeledContent(PL("Direction")) {
-                    NumericSliderInput(value: Binding(get: { atan2(physics.forward.y, physics.forward.x) * 180 / .pi }, set: { degrees in
-                        let radians = degrees * .pi / 180
-                        update(bone) { $0.forward = SIMD3(cos(radians), sin(radians), 0); $0.compiledTip = nil }
-                    }), range: -180...180, defaultValue: 0, step: 1, suffix: "°", fractionDigits: 0, fieldWidth: 48)
-                }
+        }
+    }
+
+    private func tipSection(_ physics: PuppetBonePhysics, bone: Int) -> some View {
+        let tipSize = Binding<Float>(get: { physics.tipSize }, set: { (value: Float) in
+            update(bone) { $0.tipSize = max(value, 0); $0.compiledTip = nil }
+        })
+        return Section(PL("Tip")) {
+            LabeledContent(PL("Tip Size")) {
+                NumericSliderInput<Float>(value: tipSize, range: 0...500, defaultValue: 0, step: 1, suffix: " px",
+                                          fractionDigits: 0, fieldWidth: 52)
             }
+            .help(PL("0 reaches the bone's first child."))
+            degreesSlider(PL("Direction"), range: -180...180, defaultValue: 0, bone: bone,
+                          radians: { atan2(physics.forward.y, physics.forward.x) },
+                          set: { (value: inout PuppetBonePhysics, radians: Float) in
+                              value.forward = SIMD3<Float>(cos(radians), sin(radians), 0)
+                              value.compiledTip = nil
+                          })
         }
     }
 }

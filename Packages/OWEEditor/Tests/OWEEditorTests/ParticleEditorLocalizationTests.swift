@@ -28,7 +28,7 @@ final class ParticleEditorLocalizationTests: XCTestCase {
         var keys = Set<String>()
         let regex = try NSRegularExpression(pattern: #"PartL\("((?:[^"\\]|\\\([^)]*\))*)"\)"#)
         let files = try FileManager.default.contentsOfDirectory(at: Self.sources, includingPropertiesForKeys: nil)
-            .filter { $0.pathExtension == "swift" }
+            .filter { (url: URL) -> Bool in url.pathExtension == "swift" }
         for file in files {
             let text = try String(contentsOf: file, encoding: .utf8)
             for match in regex.matches(in: text, range: NSRange(text.startIndex..., in: text)) {

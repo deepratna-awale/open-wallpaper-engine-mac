@@ -80,7 +80,7 @@ public final class SceneScriptConsoleFeed: ObservableObject {
 
     /// The entries of the script on `path` of `layerID`.
     public func entries(of layerID: Int, _ path: SceneFieldPath) -> [SceneScriptConsoleEntry] {
-        entries.filter { $0.layerID == layerID && $0.path == path }
+        entries.filter { (entry: SceneScriptConsoleEntry) -> Bool in entry.layerID == layerID && entry.path == path }
     }
 
     /// The latest error of each line of the script on `path` of `layerID`, for inline marks.

@@ -309,14 +309,16 @@ extension SceneScriptTemplate.ID {
 /// Colours as WE's properties write them: normalized `"r g b"`.
 enum PropertyColor {
     static func color(_ text: String) -> Color {
-        let rgb = SceneVector.components(.string(text), fallback: [1, 1, 1])
+        let rgb: [Double] = SceneVector.components(.string(text), fallback: [1, 1, 1])
         // Some files write 0…255.
-        let scale = rgb.contains { $0 > 1 } ? 255.0 : 1.0
-        return Color(red: rgb[0] / scale, green: rgb[1] / scale, blue: rgb[2] / scale)
+        let scale: Double = rgb.contains { (component: Double) -> Bool in component > 1 } ? 255.0 : 1.0
+        let red: Double = rgb[0] / scale, green: Double = rgb[1] / scale, blue: Double = rgb[2] / scale
+        return Color(red: red, green: green, blue: blue)
     }
 
     static func text(_ color: Color) -> String {
-        let rgb = NSColor(color).usingColorSpace(.sRGB) ?? .white
-        return SceneVector.string([rgb.redComponent, rgb.greenComponent, rgb.blueComponent].map { Double($0) })
+        let rgb: NSColor = NSColor(color).usingColorSpace(.sRGB) ?? .white
+        let components: [CGFloat] = [rgb.redComponent, rgb.greenComponent, rgb.blueComponent]
+        return SceneVector.string(components.map { (component: CGFloat) -> Double in Double(component) })
     }
 }
