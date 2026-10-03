@@ -29,12 +29,13 @@ final class PlaylistShortcutController: ObservableObject {
     static let keyboardSettingsURL = URL(string: "x-apple.systempreferences:com.apple.Keyboard-Settings.extension")!
 
     init(viewModel: WallpaperViewModel,
-         registrar: HotKeyRegistering = CarbonHotKeyRegistrar(),
+         registrar: HotKeyRegistering? = nil,
          finder: GlobalShortcutConflictFinder = GlobalShortcutConflictFinder(),
          openKeyboardSettings: @escaping () -> Void = {
              NSWorkspace.shared.open(PlaylistShortcutController.keyboardSettingsURL)
          }) {
         self.viewModel = viewModel
+        let registrar = registrar ?? CarbonHotKeyRegistrar()
         self.registrar = registrar
         self.finder = finder
         self.openKeyboardSettings = openKeyboardSettings
