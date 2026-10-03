@@ -19,7 +19,7 @@ Inspector today; the editor after phase 1 (this PR) and the phase that closes th
 | Add layers (image, text, composition, fullscreen, particles, sound, model, light), asset browser and import | — | — | P3 |
 | Timeline: keyframe animation of properties | — (plays authored timelines) | — | P4 |
 | Puppet warp: mesh, bones, animations | — (plays authored rigs) | — | P5 (view/pose first, authoring later) |
-| Particle editor: emitters, initializers, operators, renderers, children | Raw particle JSON | — | P5 |
+| Particle editor: emitters, initializers, operators, renderers, children | Raw particle JSON | — | Done (`Particles/`, below): systems added from WE's presets or blank, moved, duplicated, deleted; WE's panel from its schema; control points on the canvas; live rebuild of the edited system |
 | SceneScript: per-property scripts, code editor | — (runs scripts) | Driven fields edit their start value; scripts keep running | **P6 (done):** attach/edit/remove per field and object scripts, code editor (highlighting, line numbers, find, API autocomplete, templates), syntax and runtime errors, console, Apply |
 | User properties: define, bind, conditions | Values only (Details panel) | Values (the Details panel's own view), undoable; bound fields named | **P6 (done):** add/edit/remove/reorder/rename every type, conditions, Bind to User Property…, live preview |
 | Scene settings: camera, bloom, clear colour, lights, 3D | Effects of `general` via properties | Scene size, layer count | P3 (2D settings), P7 (3D camera, lights, models) |
@@ -156,6 +156,15 @@ Each phase ships on its own; effort is focused engineering time.
   with the Scene Inspector: `NumericSliderInput`, `InfoTip`, `InspectorOptionPicker`);
   **OWEEditor** (the window's views, its own string catalog). Package tests run with `swift test`
   (CI job `packages`).
+- **Particles** (`OWESceneEditing/Particles`, `OWEEditor/Particles`): WE's particle editor schema
+  (docs/we-particle-editor-schema.json, bundled) read in panel order into components and fields
+  (control per type, ranges, add values for 2D and 3D, conditions); `ParticleDefinition` edits a
+  particle JSON (add with WE's values, remove, reorder, flags) and writes it as WE does;
+  `ParticleEditingModel` makes every change an undo step of the session. The overlay's
+  `particles` holds the documents it wrote and the systems it added or deleted; the loader reads
+  the documents in place of the files, and a change of documents alone builds again only the
+  systems that read them (`sceneEditParticlesDidChange`, `rebuildObjects`), the rest of the scene
+  running on. Save as Local Wallpaper writes the documents into the copy.
 - `OpenWallpaperEngine/Editor`: the app side: `WallpaperEditorController` (window, canvas through
   `WallpaperView` on a preview `WallpaperViewModel`, services the module needs), user-property undo,
   scene reading. `Scene/Loading/SceneEditOverlayFiles` stores overlays; `ScenePreparation` applies them.
