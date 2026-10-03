@@ -150,7 +150,7 @@ final class ShaderVariantCacheTests: XCTestCase {
         let compiler = FakeCompiler(fingerprint: "a", marker: "a")
         let translator = ShaderVariantTranslator(compiler: compiler, cacheDirectory: cache)
         _ = try translator.variant(vertex: vertex, fragment: fragment, combos: [:])
-        let generation = ShaderVariantTranslator.generation(toolchain: "a")
+        let generation = ShaderVariantTranslator.generation(toolchain: translator.toolchainFingerprint)
         XCTAssertTrue(generation.hasPrefix("r\(ShaderVariantTranslator.revision)-"))
         XCTAssertNotEqual(generation, ShaderVariantTranslator.generation(toolchain: "b"))
         XCTAssertEqual(translator.generationDirectory?.lastPathComponent, generation)

@@ -103,6 +103,8 @@ class SceneWallpaperViewModel: ObservableObject {
     }
 
     private var pkgParser: PKGParser?
+    /// The `.pkg` `pkgParser` reads, which keys the sound cache's copies.
+    private var pkgURL: URL?
     private var loadedScene: WEScene?
     /// The loaded scene.json and its parse signature (`ParsedScene`), which the scripts run from.
     private var loadedDocument: (document: SceneJSON, signature: String)?
@@ -412,6 +414,7 @@ class SceneWallpaperViewModel: ObservableObject {
             loadedProjectId = Self.workshopId(of: wallpaper)
         }
         pkgParser = read.parser
+        pkgURL = dir.appending(path: (wallpaper.project.file as NSString).deletingPathExtension + ".pkg")
 
         guard let scene = read.scene else {
             // A video or web wallpaper legitimately has no scene; only a scene wallpaper missing
@@ -515,11 +518,8 @@ class SceneWallpaperViewModel: ObservableObject {
         guard wallpaper.project.type.caseInsensitiveCompare("scene") == .orderedSame else { return }
         let identity = settingsIdentity(for: wallpaper.wallpaperDirectory)
         let key = identity.key(.userProperties, scope: propertyScope)
-        let explicitKey = identity.key(.explicitUserProperties, scope: propertyScope)
         let defaults = UserDefaults.app
-        let stored = defaults.bool(forKey: explicitKey)
-            ? defaults.dictionary(forKey: key) as? [String: String] ?? [:]
-            : [:]
+        let stored = identity.userSetValues(scope: propertyScope, defaults: defaults)
         let values = Self.userPropertyValues(stored: stored,
                                              declared: Self.declaredUserProperties(in: wallpaper.wallpaperDirectory),
                                              scene: scene)
@@ -664,6 +664,7 @@ class SceneWallpaperViewModel: ObservableObject {
                                             camera: SceneCameraEffects(scene.general, in: valueContext),
                                             clearColor: scene.general.clearColor(in: valueContext),
                                             wallpaperKey: propertyStoreKey)
+            content.general = scene.general
             content.motions = objectMotions(scene.objects, besides: layers, sceneSize: sceneSize, context: valueContext)
             content.visibility = visibility
             content.userVisibility = SceneUserVisibility(objects: scene.objects)
@@ -973,7 +974,8 @@ class SceneWallpaperViewModel: ObservableObject {
         return SceneSoundContentBuilder(wallpaperDirectory: wallpaperDir,
                                         packagedData: { parser?.extractFile(named: $0) },
                                         workshopURL: { workshop.url(for: $0) },
-                                        workshopData: { workshop.data(for: $0) })
+                                        workshopData: { path in workshop.located(path).map { ($0.data, $0.source) } },
+                                        packageURL: parser == nil ? nil : pkgURL)
     }
 
     private func bloomSettings(for general: WESceneGeneral) -> SceneBloomSettings {
@@ -1123,6 +1125,7 @@ class SceneWallpaperViewModel: ObservableObject {
                                rotation: rotation, effects: .identity)
         layer.weEffects = effectPlans.plans
         layer.sceneInput = sceneInput
+        layer.clearsSceneAlpha = sceneInput && object.copybackground == false
         if case .animated = source { layer.textureKey = textureName }
         layer.alignment = model.fullscreen == true ? nil : object.alignment
         layer.fillsScene = model.fullscreen == true
@@ -1509,7 +1512,7 @@ class SceneWallpaperViewModel: ObservableObject {
     /// Shared by every scene: translated variants are cached in memory and on disk.
     /// Optional only for its callers' `guard let`s; it always exists.
     static let defaultEffectTranslator: ShaderVariantTranslator? =
-        ShaderVariantTranslator(compiler: ShaderCompilerFactory.makeDefault())
+        ShaderVariantTranslator(compiler: ShaderCompilerFactory.makeIsolated(qos: .userInitiated))
     /// This scene's translator (`init`).
     private let effectTranslator: ShaderVariantTranslator?
 

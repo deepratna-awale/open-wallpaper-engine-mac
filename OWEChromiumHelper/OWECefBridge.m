@@ -11,6 +11,8 @@
 #import <AppKit/AppKit.h>
 #import <crt_externs.h>
 #import <dlfcn.h>
+#import <objc/runtime.h>
+#import <os/log.h>
 #import <pthread.h>
 #import <stdatomic.h>
 #import <stddef.h>
@@ -43,10 +45,27 @@ static NSString *const kFrameworkName = @"Chromium Embedded Framework.framework"
 static NSString *const kFrameworkBinary = @"Chromium Embedded Framework";
 static const char *kFrameworkDirSwitch = "--framework-dir-path=";
 static const char *kFrameworkDirEnvironment = "OWE_CEF_FRAMEWORK_DIR";
-#if DEBUG
-/// Debug builds only: runs CEF without its sandbox, to tell a sandbox problem from anything else.
-static const char *kNoSandboxEnvironment = "OWE_CEF_NO_SANDBOX";
-#endif
+/// CEF's helper, copied into the engine bundle's Frameworks folder with its (Renderer), (GPU) and
+/// (Plugin) variants, the names Chromium derives from this one.
+static NSString *const kHelperName = @"OWE Chromium Helper";
+
+// MARK: - The main bundle CEF sees
+
+// Chromium gives each sandboxed subprocess read access to the browser's main bundle
+// (`(allow file-read* (subpath (param bundle-path)))`), computed from +[NSBundle mainBundle].
+// CEF's main_bundle_path setting doesn't change that parameter, and this process's own bundle is
+// the XPC service, so the framework and helpers in the engine bundle would be unreadable once a
+// subprocess enters the sandbox. This process exists only to host CEF, so from just before
+// cef_initialize its main bundle is the engine bundle (OWE Chromium.app).
+static NSBundle *engineMainBundle;
+@implementation NSBundle (OWEEngineMainBundle)
++ (NSBundle *)owe_mainBundle { return engineMainBundle ?: [self owe_mainBundle]; }
+@end
+static void use_engine_main_bundle(NSString *path) {
+    engineMainBundle = [NSBundle bundleWithPath:path];
+    method_exchangeImplementations(class_getClassMethod(NSBundle.class, @selector(mainBundle)),
+                                   class_getClassMethod(NSBundle.class, @selector(owe_mainBundle)));
+}
 
 /// The scheme local wallpapers load from; the app answers every request for it.
 static const char *kWallpaperScheme = "owe-wallpaper";
@@ -369,6 +388,12 @@ static void init_app(void) {
 
 // MARK: - Subprocesses
 
+/// A subprocess failure goes to stderr and the unified log: an XPC service's stderr goes nowhere.
+static void report(const char *message) {
+    fprintf(stderr, "owe-chromium-helper: %s\n", message);
+    os_log_error(OS_LOG_DEFAULT, "owe-chromium-helper: %{public}s", message);
+}
+
 int owe_cef_is_subprocess(int argc, char *const *argv) {
     for (int i = 1; i < argc; i++) {
         if (strncmp(argv[i], "--type=", 7) == 0) return 1;
@@ -377,6 +402,11 @@ int owe_cef_is_subprocess(int argc, char *const *argv) {
 }
 
 static NSString *subprocess_framework_dir(int argc, char **argv) {
+    // CEF's layout: <engine>.app/Contents/Frameworks/<helper>.app beside the framework.
+    NSString *frameworks = NSBundle.mainBundle.bundlePath.stringByDeletingLastPathComponent;
+    if ([NSFileManager.defaultManager fileExistsAtPath:[frameworks stringByAppendingPathComponent:kFrameworkName]]) {
+        return frameworks;
+    }
     size_t prefix = strlen(kFrameworkDirSwitch);
     for (int i = 1; i < argc; i++) {
         if (strncmp(argv[i], kFrameworkDirSwitch, prefix) == 0) {
@@ -389,26 +419,30 @@ static NSString *subprocess_framework_dir(int argc, char **argv) {
     return environment ? [NSString stringWithUTF8String:environment] : nil;
 }
 
-static BOOL sandbox_disabled(void) {
+/// A subprocess runs unsandboxed only when the browser was started without the sandbox (Debug
+/// builds only, `owe_cef_start`); CEF then passes --no-sandbox on.
+static BOOL sandbox_disabled(int argc, char **argv) {
 #if DEBUG
-    const char *value = getenv(kNoSandboxEnvironment);
-    return value && strcmp(value, "1") == 0;
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "--no-sandbox") == 0) return YES;
+    }
 #else
-    return NO;
+    (void)argc; (void)argv;
 #endif
+    return NO;
 }
 
 int owe_cef_run_subprocess(int argc, char **argv) {
     @autoreleasepool {
         NSString *frameworkDir = subprocess_framework_dir(argc, argv);
         if (!frameworkDir) {
-            fprintf(stderr, "owe-chromium-helper: no framework folder for this subprocess\n");
+            report("no framework folder for this subprocess");
             return 1;
         }
         // The sandbox is entered before the framework loads, as CefScopedSandboxContext does.
         void *sandboxContext = NULL;
         sandbox_destroy_fn sandboxDestroy = NULL;
-        if (!sandbox_disabled()) {
+        if (!sandbox_disabled(argc, argv)) {
             NSString *library = [[frameworkDir stringByAppendingPathComponent:kFrameworkName]
                 stringByAppendingPathComponent:@"Libraries/libcef_sandbox.dylib"];
             void *sandbox = dlopen(library.fileSystemRepresentation, RTLD_LAZY | RTLD_LOCAL | RTLD_FIRST);
@@ -416,13 +450,13 @@ int owe_cef_run_subprocess(int argc, char **argv) {
             sandboxDestroy = sandbox ? (sandbox_destroy_fn)dlsym(sandbox, "cef_sandbox_destroy") : NULL;
             sandboxContext = initialize ? initialize(argc, argv) : NULL;
             if (!sandboxContext) {
-                fprintf(stderr, "owe-chromium-helper: can't enter CEF's sandbox\n");
+                report("can't enter CEF's sandbox");
                 return 1;
             }
         }
-        char error[512] = {0};
+        char error[2048] = {0};
         if (!load_cef(frameworkDir, error, sizeof error)) {
-            fprintf(stderr, "owe-chromium-helper: %s\n", error);
+            report(error);
             return 1;
         }
         // Every process registers the scheme; renderers also run the start scripts.
@@ -894,8 +928,8 @@ static owe_browser *make_browser(int browserId, int width, int height, double sc
     return browser;
 }
 
-int owe_cef_initialize(const char *framework_dir, const char *cache_dir, const owe_cef_callbacks *newCallbacks,
-                       char *error, size_t error_size) {
+int owe_cef_initialize(const char *engine_bundle, const char *cache_dir, int no_sandbox,
+                       const owe_cef_callbacks *newCallbacks, char *error, size_t error_size) {
     @autoreleasepool {
         if (initializeStatus == 0) return 0;
         if (initializeStatus == 1) {
@@ -903,12 +937,24 @@ int owe_cef_initialize(const char *framework_dir, const char *cache_dir, const o
             return 1;
         }
         initializeStatus = 1;
-        if (!load_cef([NSString stringWithUTF8String:framework_dir], error, error_size)) {
+        // Everything CEF runs from lives in one bundle, so its sandbox (which allows the main
+        // bundle) covers the framework, its resources and the helpers.
+        NSString *bundle = [NSString stringWithUTF8String:engine_bundle];
+        NSString *frameworks = [bundle stringByAppendingPathComponent:@"Contents/Frameworks"];
+        NSString *helper = [frameworks stringByAppendingPathComponent:
+            [NSString stringWithFormat:@"%@.app/Contents/MacOS/%@", kHelperName, kHelperName]];
+        if (![NSFileManager.defaultManager isExecutableFileAtPath:helper]) {
+            initializeError = [NSString stringWithFormat:@"The engine has no helper at %@", helper];
+            set_error(error, error_size, initializeError);
+            return 1;
+        }
+        if (!load_cef(frameworks, error, error_size)) {
             initializeError = [NSString stringWithUTF8String:error];
             return 1;
         }
+        use_engine_main_bundle(bundle);
         // Subprocesses find the framework through this when CEF doesn't pass the switch on.
-        setenv(kFrameworkDirEnvironment, framework_dir, 1);
+        setenv(kFrameworkDirEnvironment, frameworks.fileSystemRepresentation, 1);
         if (newCallbacks) callbacks = *newCallbacks;
         browsers = [NSMutableDictionary dictionary];
         init_app();
@@ -917,20 +963,30 @@ int owe_cef_initialize(const char *framework_dir, const char *cache_dir, const o
         cef_settings_t settings;
         memset(&settings, 0, sizeof settings);
         settings.size = sizeof settings;
-        settings.no_sandbox = sandbox_disabled();
+#if DEBUG
+        settings.no_sandbox = no_sandbox != 0;
+#else
+        (void)no_sandbox;
+#endif
         settings.windowless_rendering_enabled = 1;
         settings.external_message_pump = 1;
         settings.command_line_args_disabled = 1;
         settings.persist_session_cookies = 0;
         settings.log_severity = LOGSEVERITY_WARNING;
-        NSString *frameworkPath = [[NSString stringWithUTF8String:framework_dir] stringByAppendingPathComponent:kFrameworkName];
+        NSString *frameworkPath = [frameworks stringByAppendingPathComponent:kFrameworkName];
         set_string(&settings.framework_dir_path, frameworkPath.fileSystemRepresentation);
-        set_string(&settings.browser_subprocess_path, NSBundle.mainBundle.executablePath.fileSystemRepresentation);
+        set_string(&settings.main_bundle_path, bundle.fileSystemRepresentation);
+        set_string(&settings.browser_subprocess_path, helper.fileSystemRepresentation);
         set_string(&settings.root_cache_path, cache_dir);
+        // CEF's own log (fatal checks included): an XPC service's stderr goes nowhere.
+        NSString *logFile = [[NSString stringWithUTF8String:cache_dir] stringByAppendingPathComponent:@"cef.log"];
+        set_string(&settings.log_file, logFile.fileSystemRepresentation);
         int initialized = cef.initialize(&args, &settings, &app, NULL);
         cef.utf16_clear(&settings.framework_dir_path);
         cef.utf16_clear(&settings.browser_subprocess_path);
+        cef.utf16_clear(&settings.main_bundle_path);
         cef.utf16_clear(&settings.root_cache_path);
+        cef.utf16_clear(&settings.log_file);
         if (!initialized) {
             initializeError = @"CEF didn't initialize";
             set_error(error, error_size, initializeError);
@@ -996,6 +1052,23 @@ int owe_cef_create_browser(int browser_id, const char *url, int width, int heigh
             return 1;
         }
         return 0;
+    }
+}
+
+/// Set while `owe_cef_run` keeps the main run loop going; cleared by `owe_cef_stop`.
+static atomic_int running;
+
+void owe_cef_run(void) {
+    // CEF's message pump observes the main run loop's entries and exits and pops one record per
+    // exit. CEF starts from a callout inside a run-loop pass whose entry it never saw, so letting
+    // that pass end trips its check (EXC_BREAKPOINT). Running nested passes from here keeps the
+    // outer one open; every pass CEF sees from now on has both its entry and its exit.
+    int expected = 0;
+    if (initializeStatus != 0 || !atomic_compare_exchange_strong(&running, &expected, 1)) return;
+    while (atomic_load(&running)) {
+        @autoreleasepool {
+            [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]];
+        }
     }
 }
 
@@ -1079,8 +1152,8 @@ static void phase1_frame(void *context, int browser_id, IOSurfaceRef surface) {
     if (phase1Callback) phase1Callback(phase1Context, surface);
 }
 
-int owe_cef_start(const char *framework_dir, const char *cache_dir, const char *url, int width, int height,
-                  int frame_rate, owe_cef_frame_callback callback, void *context, char *error, size_t error_size) {
+int owe_cef_start(const char *engine_bundle, const char *cache_dir, const char *url, int width, int height,
+                  int frame_rate, int no_sandbox, owe_cef_frame_callback callback, void *context, char *error, size_t error_size) {
     if (initializeStatus != -1) {
         set_error(error, error_size, @"The helper already started CEF");
         return 1;
@@ -1088,7 +1161,7 @@ int owe_cef_start(const char *framework_dir, const char *cache_dir, const char *
     phase1Callback = callback;
     phase1Context = context;
     owe_cef_callbacks phase1 = {.frame = phase1_frame};
-    if (owe_cef_initialize(framework_dir, cache_dir, &phase1, error, error_size) != 0) return 1;
+    if (owe_cef_initialize(engine_bundle, cache_dir, no_sandbox, &phase1, error, error_size) != 0) return 1;
     // Pixels as points at scale 1: the size asked for is the size painted.
     return owe_cef_create_browser(0, url, width, height, 1, frame_rate, NULL, error, error_size);
 }
@@ -1096,4 +1169,5 @@ int owe_cef_start(const char *framework_dir, const char *cache_dir, const char *
 void owe_cef_stop(void) {
     phase1Callback = NULL;
     for (NSNumber *browserId in browsers.allKeys) owe_cef_close_browser(browserId.intValue);
+    atomic_store(&running, 0);
 }

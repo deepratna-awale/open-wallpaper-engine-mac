@@ -118,7 +118,17 @@ final class ChromiumBrowserHost: NSObject, ChromiumBrowserHostProtocol, @uncheck
             fail("The Chromium helper isn't available")
             return id
         }
-        helper.initialize(frameworkDirectory: engine.install.path, cacheDirectory: engine.profile.path) { error in
+        do {
+            try ChromiumEngineHelpers.sync(engine.install)
+        } catch {
+            fail("Can't update the Chromium engine's helpers: \(error.localizedDescription)")
+            return id
+        }
+        let bundle = engine.install.appending(path: ChromiumHelperIPC.engineBundleName, directoryHint: .isDirectory)
+        // Debug builds only (the helper ignores it otherwise): tells a sandbox problem from anything else.
+        let noSandbox = ProcessInfo.processInfo.environment["OWE_CEF_NO_SANDBOX"] == "1"
+        helper.initialize(engineBundle: bundle.path, cacheDirectory: engine.profile.path,
+                          debugNoSandbox: noSandbox) { error in
             if let error {
                 fail(error)
                 return

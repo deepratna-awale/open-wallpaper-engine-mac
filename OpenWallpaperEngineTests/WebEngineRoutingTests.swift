@@ -26,7 +26,7 @@ final class WebEngineRoutingTests: XCTestCase {
     /// A complete install of `version`: its framework binary and manifest, recorded as active.
     private func install(_ version: String) throws {
         let folder = root.appending(path: version)
-        let framework = folder.appending(path: ChromiumEnginePackage.frameworkName)
+        let framework = ChromiumEnginePackage.frameworksFolder(in: folder).appending(path: ChromiumEnginePackage.frameworkName)
         try FileManager.default.createDirectory(at: framework, withIntermediateDirectories: true)
         try Data().write(to: framework.appending(path: ChromiumEnginePackage.frameworkBinary))
         let manifest = ChromiumEnginePackage.Manifest(version: version, platform: "macosarm64", sha256: "00")

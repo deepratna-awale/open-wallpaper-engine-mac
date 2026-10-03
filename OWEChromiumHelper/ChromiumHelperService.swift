@@ -51,10 +51,16 @@ final class ChromiumHelperService: NSObject, ChromiumBrowserHelperProtocol {
         connection?.remoteObjectProxy as? ChromiumBrowserHostProtocol
     }
 
+    /// Runs `body` on the main thread. Once CEF runs, the main queue is busy in `owe_cef_run`, so
+    /// work arrives as run-loop blocks, which its nested passes serve.
+    private static func onMain(_ body: @escaping () -> Void) {
+        RunLoop.main.perform(body)
+    }
+
     // MARK: Phase 1
 
-    func start(url: String, frameworkDirectory: String, cacheDirectory: String, width: Int, height: Int,
-               frameRate: Int, reply: @escaping (String?) -> Void) {
+    func start(url: String, engineBundle: String, cacheDirectory: String, width: Int, height: Int,
+               frameRate: Int, debugNoSandbox: Bool, reply: @escaping (String?) -> Void) {
         guard (1...ChromiumHelperIPC.maxDimension).contains(width), (1...ChromiumHelperIPC.maxDimension).contains(height) else {
             reply("Frame size \(width)×\(height) is out of range")
             return
@@ -66,27 +72,30 @@ final class ChromiumHelperService: NSObject, ChromiumBrowserHelperProtocol {
         DispatchQueue.main.async {
             var error = [CChar](repeating: 0, count: 512)
             let context = Unmanaged.passUnretained(self).toOpaque()
-            let status = owe_cef_start(frameworkDirectory, cacheDirectory, url, Int32(width), Int32(height),
-                                       Int32(max(1, min(frameRate, 240))), { context, surface in
+            let status = owe_cef_start(engineBundle, cacheDirectory, url, Int32(width), Int32(height),
+                                       Int32(max(1, min(frameRate, 240))), debugNoSandbox ? 1 : 0, { context, surface in
                 guard let context, let surface else { return }
                 Unmanaged<ChromiumHelperService>.fromOpaque(context).takeUnretainedValue().forward(surface, browserId: 0)
             }, context, &error, error.count)
             reply(status == 0 ? nil : String(cString: error))
+            if status == 0 { owe_cef_run() }
         }
     }
 
     func stop() {
-        DispatchQueue.main.async { owe_cef_stop() }
+        // A run-loop block, not the main queue: the main queue is busy in `owe_cef_run`.
+        RunLoop.main.perform { owe_cef_stop() }
     }
 
     // MARK: Browsers
 
-    func initialize(frameworkDirectory: String, cacheDirectory: String, reply: @escaping (String?) -> Void) {
+    func initialize(engineBundle: String, cacheDirectory: String, debugNoSandbox: Bool,
+                    reply: @escaping (String?) -> Void) {
         guard device != nil else {
             reply("No Metal device")
             return
         }
-        DispatchQueue.main.async {
+        Self.onMain {
             var error = [CChar](repeating: 0, count: 512)
             var callbacks = owe_cef_callbacks()
             callbacks.context = Unmanaged.passUnretained(self).toOpaque()
@@ -112,8 +121,11 @@ final class ChromiumHelperService: NSObject, ChromiumBrowserHelperProtocol {
                 ChromiumHelperService.service(context).resource(browserId: Int(browserId), url: String(cString: url),
                                                range: range.map { String(cString: $0) }, request: request)
             }
-            let status = owe_cef_initialize(frameworkDirectory, cacheDirectory, &callbacks, &error, error.count)
+            let status = owe_cef_initialize(engineBundle, cacheDirectory, debugNoSandbox ? 1 : 0, &callbacks,
+                                            &error, error.count)
             reply(status == 0 ? nil : String(cString: error))
+            // Only the first successful call runs the loop; later ones return at once.
+            if status == 0 { owe_cef_run() }
         }
     }
 
@@ -129,7 +141,7 @@ final class ChromiumHelperService: NSObject, ChromiumBrowserHelperProtocol {
             reply("Browser size \(width)×\(height) at \(scale)× is out of range")
             return
         }
-        DispatchQueue.main.async {
+        Self.onMain {
             var error = [CChar](repeating: 0, count: 512)
             let status = owe_cef_create_browser(Int32(browserId), url, Int32(width), Int32(height), scale,
                                                 Int32(max(1, min(frameRate, 240))), startScript, &error, error.count)
@@ -138,7 +150,7 @@ final class ChromiumHelperService: NSObject, ChromiumBrowserHelperProtocol {
     }
 
     func closeBrowser(_ browserId: Int) {
-        DispatchQueue.main.async {
+        Self.onMain {
             self.rings[browserId] = nil
             owe_cef_close_browser(Int32(browserId))
         }
@@ -147,27 +159,27 @@ final class ChromiumHelperService: NSObject, ChromiumBrowserHelperProtocol {
     func resizeBrowser(_ browserId: Int, width: Int, height: Int, scale: Double) {
         guard width > 0, height > 0, scale > 0, scale <= 4,
               Double(max(width, height)) * scale <= Double(ChromiumHelperIPC.maxDimension) else { return }
-        DispatchQueue.main.async { owe_cef_resize_browser(Int32(browserId), Int32(width), Int32(height), scale) }
+        Self.onMain { owe_cef_resize_browser(Int32(browserId), Int32(width), Int32(height), scale) }
     }
 
     func setBrowserHidden(_ browserId: Int, hidden: Bool) {
-        DispatchQueue.main.async { owe_cef_set_hidden(Int32(browserId), hidden ? 1 : 0) }
+        Self.onMain { owe_cef_set_hidden(Int32(browserId), hidden ? 1 : 0) }
     }
 
     func setBrowserFrameRate(_ browserId: Int, frameRate: Int) {
-        DispatchQueue.main.async { owe_cef_set_frame_rate(Int32(browserId), Int32(max(1, min(frameRate, 240)))) }
+        Self.onMain { owe_cef_set_frame_rate(Int32(browserId), Int32(max(1, min(frameRate, 240)))) }
     }
 
     func setBrowserAudioMuted(_ browserId: Int, muted: Bool) {
-        DispatchQueue.main.async { owe_cef_set_audio_muted(Int32(browserId), muted ? 1 : 0) }
+        Self.onMain { owe_cef_set_audio_muted(Int32(browserId), muted ? 1 : 0) }
     }
 
     func executeJavaScript(_ browserId: Int, script: String) {
-        DispatchQueue.main.async { owe_cef_execute_javascript(Int32(browserId), script) }
+        Self.onMain { owe_cef_execute_javascript(Int32(browserId), script) }
     }
 
     func sendMouseEvent(_ browserId: Int, event: ChromiumMouseEvent) {
-        DispatchQueue.main.async {
+        Self.onMain {
             owe_cef_send_mouse(Int32(browserId), Int32(event.kind.rawValue), event.x, event.y,
                                Int32(event.button.rawValue), Int32(event.clickCount), event.deltaX, event.deltaY,
                                event.modifiers)

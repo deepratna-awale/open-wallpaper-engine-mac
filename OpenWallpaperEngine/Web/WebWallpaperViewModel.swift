@@ -79,11 +79,11 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
     var onFrameRateChange: ((Int) -> Void)?
 
     init(wallpaper: WEWallpaper, propertyScope: WallpaperPropertyScope = .shared, media: MediaSessionSource? = nil,
-         settings: GlobalSettingsViewModel = AppDelegate.shared.globalSettingsViewModel) {
+         settings: GlobalSettingsViewModel? = nil) {
         self.currentWallpaper = wallpaper
         self.propertyScope = propertyScope
         self.media = media
-        self.settings = settings
+        self.settings = settings ?? AppDelegate.shared.globalSettingsViewModel
         super.init()
         propertyObserver = NotificationCenter.default.addObserver(
             forName: .wallpaperUserPropertyChanged, object: nil, queue: .main
@@ -252,14 +252,15 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         WebWallpaperPropertyBridge.declaredProperties(wallpaperDirectory: currentWallpaper.wallpaperDirectory)
     }
 
-    /// Sends every declared property, as WE does once the page has loaded.
+    /// Sends every declared property, as WE does once the page has loaded; the bootstrap holds
+    /// them for a listener the page assigns later.
     private func applyAllProperties(to page: WebWallpaperPage) {
         let properties = declaredProperties
         let stored = WallpaperSettingsIdentity.resolve(currentWallpaper)
-            .stored(.userProperties, scope: propertyScope) as? [String: String] ?? [:]
+            .userSetValues(scope: propertyScope)
         let values = WebWallpaperPropertyBridge.currentValues(properties: properties, stored: stored)
         if let script = WebWallpaperPropertyBridge.applyUserPropertiesScript(
-            WebWallpaperPropertyBridge.payload(properties: properties, values: values)) {
+            WebWallpaperPropertyBridge.payload(properties: properties, values: values), full: true) {
             page.evaluate(script)
         }
         page.evaluate(WebWallpaperPropertyBridge.applyGeneralPropertiesScript(fps: frameRate))

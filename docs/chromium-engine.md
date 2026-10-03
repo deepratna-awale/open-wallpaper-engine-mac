@@ -15,9 +15,11 @@ Open Wallpaper Engine.app                        (hardened runtime, library vali
 └── Contents/XPCServices/owe-chromium-helper.xpc (hardened runtime, allow-jit,
                                            │      disable-library-validation)
       main.swift / ChromiumHelperService ──┘     copies CEF's surface into its own ring
-      OWECefBridge.m ── dlopen ──► ~/Library/Application Support/Open Wallpaper Engine/
-                                     ChromiumEngine/<version>/Chromium Embedded Framework.framework
-      CEF renderer / GPU / utility processes = the same helper executable with --type=…
+      OWECefBridge.m ── dlopen ──► ~/Library/Application Support/Open Wallpaper Engine/ChromiumEngine/
+                                     <version>/OWE Chromium.app/Contents/Frameworks/
+                                       Chromium Embedded Framework.framework
+                                       OWE Chromium Helper{, (Renderer), (GPU), (Plugin)}.app
+      CEF renderer / GPU / utility processes = those helper apps (same executable) with --type=…
 ```
 
 | Piece | Where |
@@ -35,7 +37,9 @@ Open Wallpaper Engine.app                        (hardened runtime, library vali
 
 ```
 <Application Support>/Open Wallpaper Engine/ChromiumEngine/      (isolated copies: "Open Wallpaper Engine (isolated <tag>)")
-  <version>/Chromium Embedded Framework.framework
+  <version>/OWE Chromium.app/Contents/Info.plist
+  <version>/OWE Chromium.app/Contents/Frameworks/Chromium Embedded Framework.framework
+  <version>/OWE Chromium.app/Contents/Frameworks/OWE Chromium Helper*.app   copied from the app's Contents/Helpers
   <version>/LICENSE.txt
   <version>/.owe-chromium-engine.json   written last; a folder without it is not an install
   .state.json                           { active, previous }
@@ -79,7 +83,7 @@ The SHA-1 of both archives matched the CDN's `index.json` when they were pinned.
   --chromium-capture https://example.com 30 /tmp/frame.png 1280x720
 ```
 
-It starts the embedded helper on the installed engine, waits for 30 frames and writes the last one as a PNG. Set `OWE_CEF_NO_SANDBOX=1` (Debug builds only) to tell a sandbox problem from anything else.
+It starts the embedded helper on the installed engine, waits for 30 frames and writes the last one as a PNG. Set `OWE_CEF_NO_SANDBOX=1` (Debug builds only) to tell a sandbox problem from anything else. `--chromium-install` (Debug builds) installs the pinned build through the same installer Settings uses. If the helper exits, the harness fails at once with the reason.
 
 ## Security model
 
@@ -90,8 +94,9 @@ It starts the embedded helper on the installed engine, waits for 30 frames and w
   - `com.apple.security.cs.disable-library-validation`: the helper `dlopen`s the CEF framework the app downloaded. CEF's official build is not signed by our team (the arm64 binaries are linker-signed ad hoc, the x86_64 ones unsigned), so library validation would refuse it. The alternative, re-signing CEF with our Developer ID on the user's Mac, isn't possible, and shipping CEF in the app would add about 330 MB to every download for an optional feature. The exception is on the helper only, never the app, and the release workflow fails if the app ever carries it.
   - `com.apple.security.cs.allow-jit`: V8 generates code at run time (`MAP_JIT`). Chrome's own renderer helper has the same entitlement.
   - `com.apple.security.network.client`: wallpapers may load remote content.
-- **No re-signing needed:** Apple silicon only requires a valid signature to run code, and CEF's arm64 binaries already carry linker-signed ad-hoc signatures. A process with library validation off may load them. CEF's helper apps (GPU, Renderer, Plugin) are not used: the minimal distribution doesn't ship them, and CEF starts our own helper executable (`browser_subprocess_path`) for every subprocess. That executable is already signed with the app, so nothing downloaded needs `codesign -s -`. If a future CEF drops its linker signature, ad-hoc signing the verified framework after unpacking is the fallback.
-- **CEF's sandbox stays on.** Subprocesses enter it through `libcef_sandbox.dylib` from the framework before CEF loads, the way `CefScopedSandboxContext` does. Debug builds can turn it off with `OWE_CEF_NO_SANDBOX=1`.
+- **One self-contained engine bundle.** Each installed version is assembled into `OWE Chromium.app`, CEF's standard macOS app layout: the framework and the helper apps in `Contents/Frameworks`. The helper apps (`OWE Chromium Helper.app` and its `(Renderer)`, `(GPU)` and `(Plugin)` variants, the names Chromium derives and launches) are built with the app into `Contents/Helpers`, signed with our team and the helper's entitlements, and copied whole into the engine bundle at install, and again when an app update changes them. The bundle itself has no executable; the XPC helper is CEF's browser process.
+- **Signing, Gatekeeper and library validation:** nothing downloaded is re-signed. CEF's arm64 binaries keep their linker-signed ad-hoc signatures (`codesign` shows no team; AMFI logs "has no CMS blob" when loading them, which is informational). Our helper apps keep their team signature, hardened runtime and entitlements, and `codesign --verify --strict` passes on each copy. Only processes with `disable-library-validation` (the XPC helper and the helper apps) load the ad-hoc framework; the app never does and keeps library validation. Gatekeeper doesn't assess the engine bundle: files the app writes aren't quarantined, the downloaded archive's flag (if any) is cleared before unpacking, and the bundle is never opened through Launch Services. Its outer bundle is unsigned, which is fine because nothing executes it as an app. If a future CEF drops its linker signature, ad-hoc signing the verified framework after unpacking is the fallback.
+- **CEF's sandbox stays on.** Subprocesses enter it through `libcef_sandbox.dylib` before CEF loads, the way `CefScopedSandboxContext` does. Chromium's subprocess profile only allows reading the browser's main bundle (`(allow file-read* (subpath (param bundle-path)))`, taken from `+[NSBundle mainBundle]`; CEF's `main_bundle_path` setting doesn't change it). The XPC helper exists only to host CEF, so just before `cef_initialize` its `+[NSBundle mainBundle]` becomes the engine bundle, and the framework, its resources and the helper apps are then readable inside the sandbox and nothing else is. Debug builds can turn the sandbox off for diagnosis with the harness's `OWE_CEF_NO_SANDBOX=1`, which travels to the helper over the XPC connection (an XPC service doesn't inherit the app's environment) and on to subprocesses as `--no-sandbox`.
 - **On-disk trust after install:** the install folder is in the user's Application Support, writable by any process running as the user. Such a process could already change the user's login items or shell profile, so this adds no new privilege boundary. It is the same trust as SteamCMD's copy.
 - **Profile:** cookies and caches stay in `ChromiumEngine/.profile`. Session cookies are not persisted, and Remove deletes the profile with the engine.
 

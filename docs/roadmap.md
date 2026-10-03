@@ -2,13 +2,14 @@
 
 Order: finish what is **most implemented** first, then what is **partly implemented**, then what is **not implemented**. Within each area, smaller items come first. The goal is to run every Wallpaper Engine wallpaper except the `application` type (see [`architecture.md`](architecture.md)).
 
-**Status: 2026-09-28.** PR #2, branch `deepratna/feature-work`.
+**Status: 2026-10-02**, `main`. Current coverage: [`progress-snapshot.md`](progress-snapshot.md).
 
 ## Done
 
 - Hotfixes: audio capture lifecycle, translator regressions, stable signing, no permission prompt spam.
 - Phase 1: guidelines, reorganization, tests, CI.
 - Phase 2: effects and shaders through WE's own shaders (M1–M8), plus the library sweep.
+- Every effect in WE's install, `fluidsimulation` included (its 20 passes, swaps and FBOs run on the effect graph; checked in #113), matches WE's capture in the effect gallery (`WEEffectGalleryTests`).
 - Phase 3: composition, fullscreen and solid layers, `_rt_FullFrameBuffer`, effects on text layers, object draw order.
 - Phase 4: user properties on every field, per-wallpaper property store, sidebar conditions and property types, web wallpaper properties and audio.
 - Phase 5: parent transforms, image alignment, WE text layout and colour.
@@ -29,7 +30,7 @@ Each step: research → parallel agents by file ownership + tester → fix the t
 6. ~~Area 6 3D models (with particle collisionmodel) → tester → optimise.~~ Done (models-plan T and O, 2026-09-27).
 7. ~~Area 7 Puppet warp → tester → optimise.~~ Done.
 8. Gaps queue, worked in alongside when their files are free:
-   - A shader-compiler helper process (hung compile with no Homebrew fallback).
+   - A shader-compiler helper process (hung compile with no Homebrew fallback): in #107 (open), with item 20.
    - Music-sync settings keyed by stable identity, not the path.
    - Text with effects, blend modes or emoji through WE's font path.
    - UI: stray line under the seek bar — fixed be620ce (a stepped `Slider` drew a tick mark per step; `NumericSliderInput` now snaps the value instead).
@@ -131,10 +132,10 @@ Ranked; the area each item belongs to is in brackets.
 15. ~~Built-ins never set: `g_PointerPositionLast`, `g_PointerState`, `g_ParallaxPosition`; `g_Texture*Resolution` reports the allocated size.~~ Done: `g_PointerPositionLast` is the previous frame's pointer (the pointer itself on the first frame), `g_PointerState` the primary button over the wallpaper in `.z` (the only component WE's shipped shaders read, cursorripple and fluidsimulation; `.x` mirrors it), `g_ParallaxPosition` WE's `clamp(pos / size, 0, 1)` (`SceneCameraParallax`, audit §3), all set per frame (`SceneMetalRenderer`); WE's context holds them together (+0x8c pointer, +0x94 last, +0x9c parallax, zeroed at 0x14017c77d). `g_Texture*Resolution` is (texture w, h, image w, h): an asset's `.tex` image size in `zw`, and a chain drawn below full detail reports the sizes it stands for (30836fa). Tests: `BuiltinUniformTests.testPointerParallaxAndScreen`, `testTextureMetadata`, `EffectGraphCachingTests.testTextureResolutionReportsAllocatedThenContentSize`, `SceneCameraMotionTests`. Open: where WE fills `g_PointerState`'s other components wasn't located in `wallpaper64.exe`. ~~Spritesheet effect textures don't animate~~: done (area 3, T7). [1]
 16. ~~Camera shake and parallax: amplitude, speed, roughness and delay are unused; parallax is our own model (0.18 factor).~~ Done (e480da5, 7d02897): WE's shake (0x140199580) and parallax (0x1401891a0: 0x140189b0f…0x140189cc6, 0x14018b062) from the binary, re-checked against it; the sweep matches WE's measured −164 px at 1920. In a perspective scene the shake moves the camera. The delay filter runs on the scene clock's step. Tests: `SceneCameraMotionTests` (formulas, the delay's step response, WE's defaults), `CameraParallaxLibraryTests`. [new]
 17. ~~Clear, ambient and skylight colours are decoded but not applied.~~ Done: `general.clearcolor` clears the scene target and the ambient and skylight colours feed `g_LightAmbientColor`/`g_LightSkylightColor` (`SceneFrameLighting`), scripts included. [5]
-18. The sidebar writes to the un-keyed property store, so with two displays an edit can land on the other wallpaper. [4] The Animation Speed is per instance now: the renderer reads it from its own store (`ScenePlaybackSpeed`, `ScenePlaybackEaseTests.testEachInstanceRunsAtItsOwnSpeed`); the sidebar itself writes through `WallpaperPropertyTargets` to the selected displays' stores.
-19. Scene audio cache names use `hashValue` (random per launch), so copies pile up in Caches. [new]
-20. Pipeline compiles are unbounded, with no eviction or retry; the variant cache key ignores toolchain versions; a `TEMPDUMP` debug block is left in. [1]
-21. The text cache clears completely past 128 entries and thrashes with animated scale. [new]
+18. ~~The sidebar writes to the un-keyed property store, so with two displays an edit can land on the other wallpaper.~~ Done: per-display stores with "Sync properties across displays" (31f75f70, `WallpaperPropertyScopeTests`). [4] The Animation Speed is per instance now: the renderer reads it from its own store (`ScenePlaybackSpeed`, `ScenePlaybackEaseTests.testEachInstanceRunsAtItsOwnSpeed`); the sidebar itself writes through `WallpaperPropertyTargets` to the selected displays' stores.
+19. ~~Scene audio cache names use `hashValue`~~: done. Names are a SHA-256 of wallpaper path, entry, size and the source file's modification date; the old names are swept once and the folder is an LRU capped at 512 MB (#105).
+20. ~~Pipeline compiles are unbounded, with no eviction or retry; the variant cache key ignores toolchain versions; a `TEMPDUMP` debug block is left in.~~ Done: at most one pipeline compile per performance core (`BoundedWorkQueue`), an LRU pipeline cache (`LRUCache`, 1024 entries), retries with backoff for transient Metal failures (`PipelineCompileRetry`), and the Metal compiler's OS build in the variant key next to the glslang and SPIRV-Cross versions (`ShaderToolchainVersions`); the `TEMPDUMP` block was already gone. Tests: `PipelineCompileBoundsTests`, `HelperShaderCompilerTests`. [1]
+21. ~~The text cache clears completely past 128 entries and thrashes with animated scale~~: done. LRU under a 32 MB byte budget; an animating scale reuses quantised (2^(1/4)) rasters drawn scaled on the GPU, and text at rest gets an exact raster after 30 still frames (`SceneTextRasterScale.Tracker`, #105).
 22. ~~Script clones share `layer.id` with their source (text and effect state), and effect state is never pruned.~~ Done (WP11): created layers get their own ids and free their state when destroyed. [4]
-23. Objects without an `id`: the hierarchy uses the index, layers use −1, so the parent link is lost. [new]
-24. Dead `_owe_effect_*` UI code; toggling parallax triggers a full rebuild. [new]
+23. Objects without an `id`: the hierarchy uses the index, layers use −1, so the parent link is lost. [new] Partly done (04aea06): layers, visibility and binding keys use the index; `?? -1` remains in `SceneSpatialContentBuilder.swift` and `SceneWallpaperViewModel.swift` (text keys, visibility map).
+24. Dead `_owe_effect_*` UI code; toggling parallax triggers a full rebuild. [new] The `_owe_effect_*` keys left are the live parallax settings; the rebuild is fixed in #106 (open).

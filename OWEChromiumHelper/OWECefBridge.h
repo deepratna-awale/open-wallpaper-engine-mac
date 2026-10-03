@@ -38,19 +38,26 @@ int owe_cef_is_subprocess(int argc, char *const *argv);
 
 /// Runs a CEF subprocess: enters CEF's sandbox (unless it is turned off), loads the framework and
 /// returns the exit code of `cef_execute_process`. The framework folder comes from the
-/// `--framework-dir-path=` switch CEF passes on, else `OWE_CEF_FRAMEWORK_DIR`. Renderer processes
-/// run the start script of each browser and relay its `__owePost` messages.
+/// helper's place in the engine bundle, else the `--framework-dir-path=` switch, else `OWE_CEF_FRAMEWORK_DIR`.
+/// Renderer processes run the start script of each browser and relay its `__owePost` messages.
 int owe_cef_run_subprocess(int argc, char **argv);
 
 /// Creates the NSApplication subclass CEF requires. Call before anything touches `NSApp`.
 void owe_cef_prepare_application(void);
 
-/// Loads the framework in `framework_dir` and starts CEF with its profile in `cache_dir`, the
-/// `owe-wallpaper` scheme registered and its message loop pumped on the main run loop. Main
-/// thread only. Returns 0 on success (also when CEF already runs), else writes a message into
-/// `error` and returns nonzero.
-int owe_cef_initialize(const char *framework_dir, const char *cache_dir, const owe_cef_callbacks *callbacks,
-                       char *error, size_t error_size);
+/// Loads the framework from the engine bundle `engine_bundle` (`OWE Chromium.app`, CEF's macOS
+/// app layout: framework and helpers in `Contents/Frameworks`) and starts CEF with its profile in
+/// `cache_dir`, the `owe-wallpaper` scheme registered and its message loop pumped on the main run
+/// loop. `no_sandbox` turns CEF's sandbox off in Debug builds and is ignored otherwise. Main thread
+/// only. Returns 0 on success (also when CEF already runs), else writes a message into `error`
+/// and returns nonzero. On success the caller runs `owe_cef_run` next, from the same callout.
+int owe_cef_initialize(const char *engine_bundle, const char *cache_dir, int no_sandbox,
+                       const owe_cef_callbacks *callbacks, char *error, size_t error_size);
+
+/// Runs the main run loop from inside the call that started CEF, until `owe_cef_stop`. Call right
+/// after the first successful `owe_cef_initialize` (or `owe_cef_start`), from the same main-thread
+/// callout; later work reaches the main thread as run-loop blocks, not main-queue blocks.
+void owe_cef_run(void);
 
 /// Opens a windowless browser numbered `browser_id` of `width`×`height` points at `scale` pixels
 /// per point. `start_script` runs in each new main-frame document before the page's scripts.
@@ -74,12 +81,12 @@ void owe_cef_send_mouse(int browser_id, int kind, double x, double y, int button
 void owe_cef_resource_respond(owe_cef_resource_request *request, int status, const char *headers,
                               const void *data, size_t data_length, int fd, uint64_t offset, uint64_t length);
 
-/// Phase 1: initializes CEF and opens one browser (number 0) of `width`×`height` pixels whose
-/// frames go to `callback`. Main thread only, once per process.
-int owe_cef_start(const char *framework_dir, const char *cache_dir, const char *url, int width, int height,
-                  int frame_rate, owe_cef_frame_callback callback, void *context, char *error, size_t error_size);
+/// Phase 1: initializes CEF from `engine_bundle` and opens one browser (number 0) of
+/// `width`×`height` pixels whose frames go to `callback`. Main thread only, once per process.
+int owe_cef_start(const char *engine_bundle, const char *cache_dir, const char *url, int width, int height,
+                  int frame_rate, int no_sandbox, owe_cef_frame_callback callback, void *context, char *error, size_t error_size);
 
-/// Closes every browser. The process is expected to exit next.
+/// Closes every browser and ends `owe_cef_run`. The process is expected to exit next.
 void owe_cef_stop(void);
 
 #ifdef __cplusplus

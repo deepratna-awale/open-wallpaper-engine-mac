@@ -22,7 +22,11 @@ struct InProcessShaderCompiler: ShaderCompiler {
 
     static var libraryFingerprint: String { String(cString: owe_shader_toolchain_fingerprint()) }
 
-    var cacheFingerprint: String { "in-process|\(Self.libraryFingerprint)" }
+    /// The libraries' output doesn't depend on which process runs them, so the compile helper
+    /// (`HelperShaderCompiler`) shares this fingerprint and the caches it names.
+    static var fingerprint: String { "in-process|\(libraryFingerprint)" }
+
+    var cacheFingerprint: String { Self.fingerprint }
 
     /// Whether a call overran the watchdog this session (later calls fail at once).
     var isStuck: Bool { thread.isStuck }

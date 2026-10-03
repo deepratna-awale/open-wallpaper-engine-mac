@@ -133,8 +133,87 @@ final class SceneSharedInstanceTests: XCTestCase {
     /// Two displays drawing a scripted scene every frame: one script runtime, one script frame and
     /// one render per frame, and the scene's one set of sound layers.
     func testTwoDisplaysStepTheScriptsOncePerFrame() throws {
+        let scene = try scriptedScene(sizes: [(64, 64), (96, 64)])
+        defer { scene.stop() }
+        let (renderer, thread, runtime, loop) = (scene.renderer, scene.thread, scene.runtime, scene.loop)
+        XCTAssertEqual(scene.made, 1)
+        XCTAssertEqual(scene.instance.displayCount, 2)
+        let (renders, scriptFrames) = thread.sync {
+            var renders = 0
+            renderer.frameTimeObserver = { _ in renders += 1 }
+            defer { renderer.frameTimeObserver = nil }
+            runtime.waitUntilIdle()
+            let framesBefore = runtime.frameTiming.frames
+            for _ in 0..<5 {
+                loop.draw(ObjectIdentifier(scene.presenters[0]), in: scene.views[0])
+                loop.draw(ObjectIdentifier(scene.presenters[1]), in: scene.views[1])
+                renderer.lastPresentCommandBuffer?.waitUntilCompleted()
+                runtime.waitUntilIdle()
+            }
+            return (renders, runtime.frameTiming.frames - framesBefore)
+        }
+        XCTAssertEqual(renders, 5, "the driving display renders; the other presents")
+        XCTAssertEqual(scriptFrames, 5, "one script frame per frame")
+        XCTAssertIdentical(thread.sync { renderer.scripts.wallpaper }, runtime, "one runtime for both displays")
+    }
+
+    /// The loading snapshot of a single display redraws the frame to copy it, as a picture of the
+    /// scene: no extra script frame or clock step (WE never steps a scene to take a picture).
+    func testLoadingSnapshotDoesNotStepTheScene() throws {
+        let snapshots = SceneLoadingSnapshotSession(store: SceneLoadingSnapshotStore(cachesDirectory: storage))
+        let scene = try scriptedScene(sizes: [(64, 64)], loadingSnapshots: snapshots)
+        defer { scene.stop() }
+        let (renderer, thread, runtime, loop) = (scene.renderer, scene.thread, scene.runtime, scene.loop)
+        func drawFrame() {
+            loop.draw(ObjectIdentifier(scene.presenters[0]), in: scene.views[0])
+            renderer.lastPresentCommandBuffer?.waitUntilCompleted()
+            runtime.waitUntilIdle()
+        }
+        // The first frame with content starts the snapshot's delay; the next one after it captures.
+        thread.sync { drawFrame() }
+        RunLoop.main.run(until: Date().addingTimeInterval(SceneLoadingSnapshotCapture.delay + 1.1))
+        let (renders, scriptFrames) = thread.sync {
+            var renders = 0
+            renderer.frameTimeObserver = { _ in renders += 1 }
+            defer { renderer.frameTimeObserver = nil }
+            runtime.waitUntilIdle()
+            let framesBefore = runtime.frameTiming.frames
+            drawFrame()
+            return (renders, runtime.frameTiming.frames - framesBefore)
+        }
+        XCTAssertEqual(renders, 2, "the frame, then the snapshot's redraw")
+        XCTAssertFalse(snapshots.claim(SceneLoadingSnapshotStore.wallpaperKey(for: scene.directory), pixelSize: SIMD2(64, 64)),
+                       "the snapshot was taken")
+        XCTAssertEqual(scriptFrames, 1, "one script frame: the redraw steps none")
+    }
+
+    @MainActor private struct ScriptedScene {
+        let directory: URL
+        /// Owns the instance registry: once it goes, the instance shuts down and its render thread
+        /// ends under the test.
+        let wallpapers: WallpaperViewModel
+        let instance: SceneWallpaperInstance
+        let renderer: SceneMetalRenderer
+        let thread: SceneRenderThread
+        let runtime: SceneScriptWallpaper
+        let loop: SceneRenderLoop
+        let presenters: [SceneWallpaperPresenter]
+        let views: [MTKView]
+        let made: Int
+        let cleanup: () -> Void
+        func stop() {
+            presenters.forEach { $0.stop() }
+            cleanup()
+            withExtendedLifetime(wallpapers) {}
+        }
+    }
+
+    /// The scripted counter shown on displays of `sizes`, paused. A paused scene's display links
+    /// tick while its clock eases to a stop, so a test counts frames inside one render-thread
+    /// block, where no tick can land.
+    private func scriptedScene(sizes: [(Int, Int)],
+                               loadingSnapshots: SceneLoadingSnapshotSession? = nil) throws -> ScriptedScene {
         let directory = Fixtures.url("Scenes/scripted-counter")
-        defer { Fixtures.removeStoredSettings(for: directory) }
         let project = try JSONDecoder().decode(WEProject.self, from: Fixtures.data("Scenes/scripted-counter/project.json"))
         let wallpaper = WEWallpaper(using: project, where: directory)
         let wallpapers = WallpaperViewModel(persistsWallpapers: false)
@@ -144,51 +223,33 @@ final class SceneSharedInstanceTests: XCTestCase {
         let services = SceneScriptServices(prelude: SceneScriptPrelude.load(), storage: SceneScriptStorage(directory: storage),
                                            media: SceneScriptReplayMediaSource(), spectrum: { .silent })
         let environment = SceneWallpaperEnvironment(wallpapers: wallpapers, settings: GlobalSettingsViewModel(),
-                                                    scriptServices: services)
+                                                    scriptServices: services, loadingSnapshots: loadingSnapshots)
         var made = 0
-        func lease() -> SceneWallpaperPresenter.Lease {
-            SceneWallpaperPresenter.Lease(wallpapers.sceneInstances, key: WallpaperInstanceKey(wallpaper)) {
+        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
+        var presenters: [SceneWallpaperPresenter] = [], views: [MTKView] = []
+        for (index, size) in sizes.enumerated() {
+            let presenter = SceneWallpaperPresenter(), view = view(size.0, size.1, device: device)
+            presenter.show(SceneWallpaperPresenter.Lease(wallpapers.sceneInstances, key: WallpaperInstanceKey(wallpaper)) {
                 made += 1
                 return SceneWallpaperInstance(wallpaper: wallpaper, environment: environment, screenID: "A")
-            }
+            }, in: view, screenID: index == 0 ? "A" : "B")
+            presenters.append(presenter)
+            views.append(view)
         }
-        let device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
-        let left = SceneWallpaperPresenter(), right = SceneWallpaperPresenter()
-        let leftView = view(64, 64, device: device), rightView = view(96, 64, device: device)
-        left.show(lease(), in: leftView, screenID: "A")
-        right.show(lease(), in: rightView, screenID: "B")
-        defer {
-            left.stop()
-            right.stop()
-        }
-        let instance = try XCTUnwrap(left.instance)
-        XCTAssertIdentical(instance, right.instance)
-        XCTAssertEqual(made, 1)
-        XCTAssertEqual(instance.displayCount, 2)
+        let cleanup = { Fixtures.removeStoredSettings(for: directory) }
+        let instance = try XCTUnwrap(presenters[0].instance)
+        for presenter in presenters { XCTAssertIdentical(instance, presenter.instance) }
         let renderer = try XCTUnwrap(instance.renderer)
         // The renderer lives on the instance's render thread: the test reaches it there.
         let thread = instance.renderLoop.thread
-
         let deadline = Date().addingTimeInterval(30)
-        while !thread.sync({ renderer.hasContent && renderer.scripts.wallpaper != nil }), Date() < deadline {
+        while !thread.sync({ renderer.hasContent && renderer.scripts.wallpaper != nil }),
+              Date() < deadline {
             RunLoop.main.run(until: Date().addingTimeInterval(0.01))
         }
         let runtime = try XCTUnwrap(thread.sync { renderer.scripts.wallpaper }, "the scene's scripts run")
-        var renders = 0
-        thread.sync { renderer.frameTimeObserver = { _ in renders += 1 } }
-        let framesBefore = runtime.frameTiming.frames
-        let loop = instance.renderLoop
-        for _ in 0..<5 {
-            thread.sync {
-                loop.draw(ObjectIdentifier(left), in: leftView)
-                loop.draw(ObjectIdentifier(right), in: rightView)
-                renderer.lastPresentCommandBuffer?.waitUntilCompleted()
-            }
-            runtime.waitUntilIdle()
-        }
-        XCTAssertEqual(thread.sync { renders }, 5, "the driving display renders; the other presents")
-        XCTAssertEqual(runtime.frameTiming.frames - framesBefore, 5, "one script frame per frame")
-        XCTAssertIdentical(thread.sync { renderer.scripts.wallpaper }, runtime, "one runtime for both displays")
+        return ScriptedScene(directory: directory, wallpapers: wallpapers, instance: instance, renderer: renderer, thread: thread, runtime: runtime,
+                             loop: instance.renderLoop, presenters: presenters, views: views, made: made, cleanup: cleanup)
     }
 
     /// The AVKit path: two displays of one video share its player, so its sound plays once.

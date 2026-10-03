@@ -77,6 +77,8 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				OWESaverView.swift,
+				thumbnail.png,
+				"thumbnail@2x.png",
 			);
 			target = 5EC47E752A2DB2E600120CCC /* OpenWallpaperEngine */;
 		};
@@ -237,6 +239,7 @@
 				5EC47E742A2DB2E600120CCC /* Resources */,
 				EE500000000000000000000A /* Embed Screen Saver */,
 				EE6000000000000000000014 /* Embed XPC Services */,
+				EE6000000000000000000018 /* Chromium Helper Apps */,
 			);
 			buildRules = (
 			);
@@ -446,6 +449,28 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		EE6000000000000000000018 /* Chromium Helper Apps */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Chromium Helper Apps";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -euo pipefail\n# CEF's helper apps, in CEF's macOS naming: \"<helper>.app\" and its (Renderer), (GPU) and (Plugin)\n# variants, which Chromium launches by name. The installer copies them into the engine bundle\n# (<version>/OWE Chromium.app/Contents/Frameworks) beside the framework, so CEF's sandbox, which\n# allows its main bundle, covers them. Same executable and entitlements as the XPC helper.\nHELPERS=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Helpers\"\nSOURCE=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/XPCServices/owe-chromium-helper.xpc/Contents\"\nrm -rf \"$HELPERS\"\nmkdir -p \"$HELPERS\"\nfor VARIANT in \"\" \" (Renderer)\" \" (GPU)\" \" (Plugin)\"; do\n  NAME=\"OWE Chromium Helper$VARIANT\"\n  SUFFIX=$(printf '%s' \"$VARIANT\" | tr -d ' ()' | tr '[:upper:]' '[:lower:]')\n  APP=\"$HELPERS/$NAME.app\"\n  mkdir -p \"$APP/Contents/MacOS\"\n  cp \"$SOURCE/MacOS/owe-chromium-helper\" \"$APP/Contents/MacOS/$NAME\"\n  cp \"$SOURCE/Info.plist\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleExecutable -string \"$NAME\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleName -string \"$NAME\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleDisplayName -string \"$NAME\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleIdentifier -string \"com.winddog.wallpaper-engine.chromium-helper${SUFFIX:+.$SUFFIX}.app\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundlePackageType -string APPL \"$APP/Contents/Info.plist\"\n  plutil -remove XPCService \"$APP/Contents/Info.plist\"\n  if [ -n \"${EXPANDED_CODE_SIGN_IDENTITY:-}\" ]; then\n    codesign --force --sign \"$EXPANDED_CODE_SIGN_IDENTITY\" --options runtime ${OTHER_CODE_SIGN_FLAGS:-} --entitlements \"${SRCROOT}/OWEChromiumHelper/OWEChromiumHelper.entitlements\" \"$APP\"\n  fi\ndone\nrm -rf \"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/XPCServices/owe-chromium-helper (Renderer).app\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		5EC47E722A2DB2E600120CCC /* Sources */ = {

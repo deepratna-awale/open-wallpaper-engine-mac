@@ -217,9 +217,11 @@ enum ChromiumMouseMapping {
     }
 
     /// `screenPoint` in the view whose frame on screen is `viewFrameInScreen`, from its top-left
-    /// corner; nil outside it.
+    /// corner; nil outside it. Half-open from the top-left: the top edge (`maxY` on screen) is the
+    /// view's first row, the bottom edge is outside.
     static func viewPoint(_ screenPoint: NSPoint, viewFrameInScreen frame: NSRect) -> CGPoint? {
-        guard frame.contains(screenPoint) else { return nil }
+        guard screenPoint.x >= frame.minX, screenPoint.x < frame.maxX,
+              screenPoint.y > frame.minY, screenPoint.y <= frame.maxY else { return nil }
         return CGPoint(x: screenPoint.x - frame.minX, y: frame.maxY - screenPoint.y)
     }
 

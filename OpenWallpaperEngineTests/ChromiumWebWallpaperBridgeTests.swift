@@ -77,7 +77,7 @@ final class ChromiumWebWallpaperBridgeTests: XCTestCase {
         XCTAssertEqual(created.height, 200)
         XCTAssertEqual(created.scale, 2)
         XCTAssertEqual(created.frameRate, 30)
-        XCTAssertEqual(helper.initialized.first?.framework, "/tmp/owe-engine")
+        XCTAssertEqual(helper.initialized.first?.framework, "/tmp/owe-engine/OWE Chromium.app")
         // The same scripts as WebKit's, posting through the helper, and nothing named webkit.
         XCTAssertTrue(created.script.hasPrefix(ChromiumPageScripts.prelude))
         for script in WebWallpaperViewModel.documentStartScripts {
@@ -95,10 +95,10 @@ final class ChromiumWebWallpaperBridgeTests: XCTestCase {
         defer { page.close() }
         helper.finishLoading(id)
         let properties = WebWallpaperPropertyBridge.declaredProperties(wallpaperDirectory: folder)
-        let stored = WallpaperSettingsIdentity.resolve(wallpaper).stored(.userProperties, scope: viewModel.propertyScope)
-            as? [String: String] ?? [:]
+        let stored = WallpaperSettingsIdentity.resolve(wallpaper).userSetValues(scope: viewModel.propertyScope)
         let full = try XCTUnwrap(WebWallpaperPropertyBridge.applyUserPropertiesScript(WebWallpaperPropertyBridge.payload(
-            properties: properties, values: WebWallpaperPropertyBridge.currentValues(properties: properties, stored: stored))))
+            properties: properties, values: WebWallpaperPropertyBridge.currentValues(properties: properties, stored: stored)),
+            full: true))
         let general = WebWallpaperPropertyBridge.applyGeneralPropertiesScript(fps: viewModel.frameRate)
         waitUntil("the properties") { helper.scripts(for: id).contains(full) && helper.scripts(for: id).contains(general) }
 
@@ -357,15 +357,16 @@ private final class FakeBrowserHelper: NSObject, NSXPCListenerDelegate, Chromium
 
     // MARK: ChromiumBrowserHelperProtocol
 
-    func start(url: String, frameworkDirectory: String, cacheDirectory: String, width: Int, height: Int,
-               frameRate: Int, reply: @escaping (String?) -> Void) {
+    func start(url: String, engineBundle: String, cacheDirectory: String, width: Int, height: Int,
+               frameRate: Int, debugNoSandbox: Bool, reply: @escaping (String?) -> Void) {
         reply("not used")
     }
 
     func stop() {}
 
-    func initialize(frameworkDirectory: String, cacheDirectory: String, reply: @escaping (String?) -> Void) {
-        lock.withLock { _initialized.append((frameworkDirectory, cacheDirectory)) }
+    func initialize(engineBundle: String, cacheDirectory: String, debugNoSandbox: Bool,
+                    reply: @escaping (String?) -> Void) {
+        lock.withLock { _initialized.append((engineBundle, cacheDirectory)) }
         reply(nil)
     }
 

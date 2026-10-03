@@ -100,6 +100,6 @@ final class WebKitVideoPlaybackTests: XCTestCase {
     }
 
     private func evaluate(_ player: WebKitVideoPlayer, _ script: String) async throws -> Any? {
-        try await player.webView.evaluateJavaScript(script)
+        try await player.webView?.evaluateJavaScript(script)
     }
 }

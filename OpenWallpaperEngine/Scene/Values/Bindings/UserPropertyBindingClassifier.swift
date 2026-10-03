@@ -50,11 +50,18 @@ enum UserPropertyBindingClassifier {
         return false
     }
 
+    /// `general` fields the renderer reads every frame (`SceneMetalRenderer.refreshCamera()`):
+    /// the camera parallax, which turns on and off without a content rebuild.
+    static let liveGeneralFields: Set<UserPropertyBindingTarget> = Set(
+        [SceneGeneralValueField.cameraparallax, .cameraparallaxamount, .cameraparallaxdelay,
+         .cameraparallaxmouseinfluence].map { UserPropertyBindingTarget.general($0.rawValue) })
+
     private static func classifyScene(_ path: UserPropertyBindingPath, root: SceneJSON) -> Classification {
         guard path.key(at: 0) == "objects", let index = path.index(at: 1) else {
             let target: UserPropertyBindingTarget = path.key(at: 0) == "general" && path.count == 2
                 ? .general(path.key(at: 1) ?? "") : .other(path.description)
-            return Classification(target: target, dependency: .structural, owner: .scene)
+            return Classification(target: target, dependency: liveGeneralFields.contains(target) ? .object : .structural,
+                                  owner: .scene)
         }
         let owner = objectOwner(index, root: root)
         let object = objectFields(index, root: root)
