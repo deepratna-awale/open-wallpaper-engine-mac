@@ -546,8 +546,8 @@ class SceneWallpaperViewModel: ObservableObject {
                 values[name] = sceneUserPropertyString(option)
             }
         }
-        for object in SceneObjectIdentity.assigningFallbackIDs(scene.objects) where object.textValue != nil {
-            let prefix = "_owe_text_\(object.id ?? -1)_"
+        for (index, object) in scene.objects.enumerated() where object.textValue != nil {
+            let prefix = "_owe_text_\(SceneObjectIdentity.id(of: object, at: index))_"
             if values[prefix + "font"] == nil, let font = object.font {
                 values[prefix + "font"] = font
             }
@@ -618,12 +618,12 @@ class SceneWallpaperViewModel: ObservableObject {
                                               orthographic: !scene.general.projection.isPerspective,
                                               settings: renderSettings)
         // Hidden objects are built too: a script can show them (docs/scenescript-plan.md §4.3).
-        let visibility = Dictionary(scene.objects.map { (String($0.id ?? -1), isObjectVisible($0)) },
+        let visibility = Dictionary(scene.objects.enumerated().map { (String(SceneObjectIdentity.id(of: $1, at: $0)), isObjectVisible($1, at: $0)) },
                                     uniquingKeysWith: { first, _ in first })
         let authoredTransforms = SceneTransformHierarchy(objects: scene.objects, sceneSize: sceneSize)
         // WE draws objects in scene.json order; both lists carry that index so the renderer can interleave them.
         let layers: [SceneMetalLayer] = scene.objects.enumerated().compactMap { index, object in
-            var layer = bindingTable.building(.object(object.id ?? index)) {
+            var layer = bindingTable.building(.object(SceneObjectIdentity.id(of: object, at: index))) {
                 buildLayer(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize, context: valueContext)
             }
             layer?.order = index
@@ -635,7 +635,7 @@ class SceneWallpaperViewModel: ObservableObject {
         let particleCache = ParticleDefinitionCache(sharesParts: sharesParticleDefinitions)
         for (index, object) in scene.objects.enumerated() {
             let base = particleSystems.count
-            let family = bindingTable.building(.object(object.id ?? index)) {
+            let family = bindingTable.building(.object(SceneObjectIdentity.id(of: object, at: index))) {
                 buildParticleFamily(object, wallpaperDir: wallpaperDir, sceneSize: sceneSize,
                                     pixelUnits: Self.particlesUsePixelUnits(scene), transforms: authoredTransforms,
                                     cache: particleCache)
@@ -670,7 +670,7 @@ class SceneWallpaperViewModel: ObservableObject {
             content.motions = objectMotions(scene.objects, besides: layers, sceneSize: sceneSize, context: valueContext)
             content.visibility = visibility
             content.userVisibility = SceneUserVisibility(objects: scene.objects)
-            content.objectIDs = scene.objects.map { $0.id ?? -1 }
+            content.objectIDs = scene.objects.enumerated().map { SceneObjectIdentity.id(of: $1, at: $0) }
             content.spatial = SceneSpatialContentBuilder(
                 readFile: { self.assetData(named: $0, wallpaperDir: wallpaperDir) },
                 wallpaperName: wallpaperDir.lastPathComponent).build(scene, context: valueContext, sceneSize: sceneSize)
@@ -1629,8 +1629,8 @@ class SceneWallpaperViewModel: ObservableObject {
         return blending
     }
 
-    private func isObjectVisible(_ object: WESceneObject) -> Bool {
-        SceneUserVisibility.Site(object).isShown(userProperty)
+    private func isObjectVisible(_ object: WESceneObject, at index: Int) -> Bool {
+        SceneUserVisibility.Site(object, at: index).isShown(userProperty)
     }
 
     private func isEffectVisible(_ effect: WEObjectEffect) -> Bool {
