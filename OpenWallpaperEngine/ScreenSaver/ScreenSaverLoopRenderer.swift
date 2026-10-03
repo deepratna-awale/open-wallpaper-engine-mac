@@ -287,7 +287,8 @@ final class HEVCWriter {
     private let frameRate: Int
 
     /// `prepare` adds what else the movie holds (metadata, more inputs) before writing starts.
-    init?(url: URL, pixelSize: SIMD2<Int>, frameRate: Int, prepare: (AVAssetWriter) throws -> Void = { _ in }) {
+    init?(url: URL, pixelSize: SIMD2<Int>, frameRate: Int, quality: Double = HEVCWriter.quality,
+          prepare: (AVAssetWriter) throws -> Void = { _ in }) {
         do {
             writer = try AVAssetWriter(outputURL: url, fileType: .mov)
         } catch {
@@ -300,7 +301,7 @@ final class HEVCWriter {
             AVVideoCodecKey: AVVideoCodecType.hevc,
             AVVideoWidthKey: pixelSize.x,
             AVVideoHeightKey: pixelSize.y,
-            AVVideoCompressionPropertiesKey: [AVVideoQualityKey: Self.quality,
+            AVVideoCompressionPropertiesKey: [AVVideoQualityKey: quality,
                                               AVVideoExpectedSourceFrameRateKey: frameRate],
         ])
         input.expectsMediaDataInRealTime = false

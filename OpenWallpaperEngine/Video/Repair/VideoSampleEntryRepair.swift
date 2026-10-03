@@ -32,6 +32,19 @@ enum VideoSampleEntryRepair {
         }
     }
 
+    /// The sample entry types (`avc1`, `hev1`, `mp4a`, …) of every track of the file at `url`.
+    /// Reads the top-level box headers and `moov` only.
+    static func sampleEntryTypes(_ url: URL) throws -> [String] {
+        let handle = try FileHandle(forReadingFrom: url)
+        defer { try? handle.close() } // Closing a read-only handle has nothing to report.
+        let fileSize = try handle.seekToEnd()
+        let moov = try readMovieBox(handle, at: try locateMovieBox(handle, fileSize: fileSize))
+        return (moov.children ?? []).flatMap { trak -> [String] in
+            guard trak.type == "trak", let entries = trak.descendant(trackTablePath + ["stsd"])?.children else { return [] }
+            return entries.map(\.type)
+        }
+    }
+
     /// Writes the repaired copy of `source` to `destination`; a file already there (the same copy,
     /// made by a concurrent caller) is kept. Returns false, writing nothing, when no track needs repair.
     @discardableResult
