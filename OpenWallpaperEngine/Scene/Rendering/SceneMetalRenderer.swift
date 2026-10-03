@@ -165,6 +165,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     private var clock = SceneClock()
     /// Test harnesses: while true the scene clock stands still (`SceneClock.hold`). The app never sets it.
     var holdsClock = false
+    /// The frame being rendered only redraws the scene as it stands (`redrawShared`).
+    private var redrawing = false
     /// The renderer draws the screen saver's loop video (`ScreenSaverLoopRenderer`): scripts see
     /// `engine.isScreensaver()` true. Set before the first frame.
     var rendersScreenSaver = false
@@ -1158,6 +1160,15 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         ThreadGuards.renderFrame { renderFrame(.shared(viewports)) }
     }
 
+    /// Draws the shared frame again (a loading snapshot, the lock screen's frame without the clock)
+    /// without stepping the scene: no script frame, no clock, timeline or particle step. WE never
+    /// steps a scene to take a picture of it.
+    func redrawShared(_ viewports: [SceneViewport]) {
+        redrawing = true
+        defer { redrawing = false }
+        renderShared(viewports)
+    }
+
     /// Shows the latest shared frame (`renderShared`) on `view`, at its size and the user's
     /// placement: one pass per display.
     func present(in view: MTKView) {
@@ -1408,15 +1419,15 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         let drawableSize = SIMD2<Float>(Float(sceneTargetSize.x), Float(sceneTargetSize.y))
         clock.paused = pausesPlayback
         let rate = playbackRate?() ?? ScenePlaybackSpeed.speed(ofStore: wallpaperKey)
-        if holdsClock { clock.hold(at: wallTime()) } else { clock.advance(to: wallTime(), speed: rate) }
+        if redrawing { clock.standStill() } else if holdsClock { clock.hold(at: wallTime()) } else { clock.advance(to: wallTime(), speed: rate) }
         let sceneTime = clock.time
         if clock.hasStopped { onPlaybackStopped?() }
         let time = Float(sceneTime)
         // What a script frame that overran the last draw's wait left (they run on their own thread, §4.5).
         let orderBefore = scripts.state.order
-        applyScriptEvents(scripts.beginFrame())
+        if !redrawing { applyScriptEvents(scripts.beginFrame()) }
         // WE writes every timeline before the scripts run; a script's calls act on the next advance.
-        let animationEvents = timelines.advance(by: Float(clock.delta))
+        let animationEvents = redrawing ? [] : timelines.advance(by: Float(clock.delta))
         drawProbe?.beginFrame()
         let cursorSample = cursorTracker.update(sceneCursor(viewports), sceneSize: sceneSize)
         let cursor = cursorSample.position
@@ -1428,7 +1439,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         spriteFrameVersions.removeAll(keepingCapacity: true)
         beginTransformFrame()
         advanceRigs()
-        if scripts.isRunning {
+        if scripts.isRunning && !redrawing {
 
             // Like WE, the scripts run before the frame that shows what they did (§4.4): this
             // frame's clock, cursor and animated values go in, and their results are drawn now
@@ -1476,7 +1487,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         effectFrame.lighting = frameLighting(eye: effectFrame.eyePosition, forward: effectFrame.viewForward,
                                              shake: motion.shake)
         analyseLayers(effectFrame: effectFrame, motion: motion, drawableSize: drawableSize)
-        guard paceFrame(effectFrame, at: wallTime()) else { return }
+        guard redrawing || paceFrame(effectFrame, at: wallTime()) else { return }
         // Only a frame that is drawn takes its targets, and the drawable only once its work is
         // encoded (F1), unless the scene draws straight into it (`FrameTargets`, S2).
         guard let commandBuffer = commandQueue.makeCommandBuffer(),
