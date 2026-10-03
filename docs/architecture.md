@@ -60,6 +60,7 @@ These are folders in the app target today. The scene engine (`Scene/`, `Audio/`,
 ### `Video/` and `Web/`
 
 - Each holds its player, view, view model and type-specific features: video music sync, and the web wallpaper property/audio bridge.
+- **`Web/Chromium/`:** the optional Chromium engine (CEF), installed on demand and pinned by SHA-256. CEF runs only in the `owe-chromium-helper` XPC service (target `OWEChromiumHelper/`), never in the app, and its frames reach the app as IOSurfaces. See [`docs/chromium-engine.md`](chromium-engine.md).
 
 ### `Library/`, `Workshop/`, `Settings/`, `UI/`, `App/`
 

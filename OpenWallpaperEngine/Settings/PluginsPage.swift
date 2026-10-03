@@ -84,6 +84,7 @@ struct PluginsPage: SettingsPage {
                         }
                     }
                 }
+                ChromiumEngineSection()
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
                         Text("Depth Map Generation")

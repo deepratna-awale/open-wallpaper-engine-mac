@@ -7850,6 +7850,101 @@
         }
       }
     },
+    "An optional Chromium engine for web wallpapers, downloaded on demand from the official CEF builds and checked against the version this app expects. It runs in its own process. Web wallpapers keep using the system's WebKit for now." : {
+      "comment" : "Settings › Plugins: description of the optional Chromium engine; CEF and WebKit are product names",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "محرك Chromium اختياري لخلفيات الويب، يُنزَّل عند الطلب من إصدارات CEF الرسمية ويُتحقق منه مقابل الإصدار الذي يتوقعه هذا التطبيق. يعمل في عملية مستقلة. تواصل خلفيات الويب استخدام WebKit الخاص بالنظام حاليًا."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine optionale Chromium-Engine für Web-Hintergründe, bei Bedarf aus den offiziellen CEF-Builds geladen und mit der Version abgeglichen, die diese App erwartet. Sie läuft in einem eigenen Prozess. Web-Hintergründe nutzen vorerst weiterhin das WebKit des Systems."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un motor Chromium opcional para fondos web, descargado bajo demanda de las compilaciones oficiales de CEF y comprobado con la versión que espera esta app. Se ejecuta en su propio proceso. Por ahora, los fondos web siguen usando WebKit del sistema."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un moteur Chromium facultatif pour les fonds d’écran web, téléchargé à la demande depuis les versions officielles de CEF et vérifié par rapport à la version attendue par cette app. Il s’exécute dans son propre processus. Pour l’instant, les fonds d’écran web continuent d’utiliser le WebKit du système."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वेब वॉलपेपर के लिए एक वैकल्पिक Chromium इंजन, जो ज़रूरत पड़ने पर आधिकारिक CEF बिल्ड से डाउनलोड होता है और इस ऐप द्वारा अपेक्षित संस्करण से जाँचा जाता है। यह अपनी अलग प्रक्रिया में चलता है। फ़िलहाल वेब वॉलपेपर सिस्टम का WebKit ही उपयोग करते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un motore Chromium facoltativo per gli sfondi web, scaricato su richiesta dalle build ufficiali di CEF e verificato rispetto alla versione prevista da questa app. Viene eseguito in un processo separato. Per ora gli sfondi web continuano a usare WebKit di sistema."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ウェブ壁紙用のオプションの Chromium エンジンです。必要なときに公式の CEF ビルドからダウンロードし、このアプリが想定するバージョンと照合します。専用のプロセスで動作します。現時点では、ウェブ壁紙は引き続きシステムの WebKit を使用します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "웹 배경화면을 위한 선택적 Chromium 엔진으로, 필요할 때 공식 CEF 빌드에서 다운로드하고 이 앱이 요구하는 버전과 대조해 확인합니다. 별도의 프로세스에서 실행됩니다. 현재 웹 배경화면은 계속 시스템의 WebKit을 사용합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opcjonalny silnik Chromium dla tapet WWW, pobierany na żądanie z oficjalnych kompilacji CEF i sprawdzany względem wersji oczekiwanej przez tę aplikację. Działa we własnym procesie. Na razie tapety WWW nadal korzystają z systemowego WebKit."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Um motor Chromium opcional para papéis de parede web, baixado sob demanda das compilações oficiais do CEF e verificado com a versão que este app espera. Ele é executado em um processo próprio. Por enquanto, os papéis de parede web continuam usando o WebKit do sistema."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Необязательный движок Chromium для веб-обоев: загружается по запросу из официальных сборок CEF и сверяется с версией, которую ожидает приложение. Работает в отдельном процессе. Пока веб-обои по-прежнему используют системный WebKit."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web duvar kâğıtları için isteğe bağlı bir Chromium motoru; gerektiğinde resmî CEF derlemelerinden indirilir ve bu uygulamanın beklediği sürümle karşılaştırılarak doğrulanır. Kendi işleminde çalışır. Web duvar kâğıtları şimdilik sistemin WebKit’ini kullanmaya devam eder."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Необовʼязковий рушій Chromium для вебшпалер: завантажується на вимогу з офіційних збірок CEF і звіряється з версією, яку очікує застосунок. Працює в окремому процесі. Поки що вебшпалери й надалі використовують системний WebKit."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用于网页壁纸的可选 Chromium 引擎，按需从官方 CEF 构建下载，并与本应用预期的版本进行校验。它在独立进程中运行。目前网页壁纸仍使用系统的 WebKit。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用於網頁桌布的選用 Chromium 引擎，需要時從官方 CEF 組建下載，並與本 App 預期的版本進行核對。它在獨立程序中執行。目前網頁桌布仍使用系統的 WebKit。"
+          }
+        }
+      }
+    },
     "Animal" : {
       "comment" : "Workshop genre tag",
       "localizations" : {
@@ -15033,6 +15128,196 @@
         }
       }
     },
+    "Can't reach the server to download the Chromium engine. Check your internet connection and try again." : {
+      "comment" : "Chromium engine install error",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذّر الوصول إلى الخادم لتنزيل محرك Chromium. تحقق من اتصالك بالإنترنت وحاول مرة أخرى."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Server zum Laden der Chromium-Engine ist nicht erreichbar. Prüfe deine Internetverbindung und versuche es erneut."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se puede acceder al servidor para descargar el motor Chromium. Comprueba tu conexión a Internet e inténtalo de nuevo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de joindre le serveur pour télécharger le moteur Chromium. Vérifiez votre connexion à Internet et réessayez."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium इंजन डाउनलोड करने के लिए सर्वर तक नहीं पहुँच सका। अपना इंटरनेट कनेक्शन जाँचें और फिर कोशिश करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile raggiungere il server per scaricare il motore Chromium. Controlla la connessione a Internet e riprova."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium エンジンをダウンロードするサーバに接続できません。インターネット接続を確認してもう一度お試しください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium 엔진을 다운로드할 서버에 연결할 수 없습니다. 인터넷 연결을 확인하고 다시 시도하세요."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie można połączyć się z serwerem, aby pobrać silnik Chromium. Sprawdź połączenie z internetem i spróbuj ponownie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não é possível acessar o servidor para baixar o motor Chromium. Verifique sua conexão com a internet e tente novamente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удаётся связаться с сервером для загрузки движка Chromium. Проверьте подключение к интернету и повторите попытку."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium motorunu indirmek için sunucuya ulaşılamıyor. İnternet bağlantınızı kontrol edip yeniden deneyin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдається звʼязатися із сервером для завантаження рушія Chromium. Перевірте підключення до інтернету й спробуйте ще раз."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法连接服务器以下载 Chromium 引擎。请检查互联网连接后重试。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法連線至伺服器以下載 Chromium 引擎。請檢查網際網路連線後再試一次。"
+          }
+        }
+      }
+    },
+    "Can't unpack the Chromium engine: %@" : {
+      "comment" : "Chromium engine install error; %@ is the system's reason",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذّر فك حزمة محرك Chromium: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Chromium-Engine kann nicht entpackt werden: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se puede descomprimir el motor Chromium: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de décompresser le moteur Chromium : %@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium इंजन अनपैक नहीं हो सका: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile estrarre il motore Chromium: %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium エンジンを展開できません: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium 엔진의 압축을 풀 수 없습니다: %@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie można rozpakować silnika Chromium: %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não é possível descompactar o motor Chromium: %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удаётся распаковать движок Chromium: %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium motoru açılamıyor: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдається розпакувати рушій Chromium: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法解压 Chromium 引擎：%@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法解壓縮 Chromium 引擎：%@"
+          }
+        }
+      }
+    },
     "Cancel" : {
       "comment" : "TEST COMMENT",
       "localizations" : {
@@ -17862,6 +18147,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "所選檔案夾"
+          }
+        }
+      }
+    },
+    "Chromium web engine" : {
+      "comment" : "Settings › Plugins: name of the optional Chromium (CEF) engine for web wallpapers",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "محرك الويب Chromium"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium-Web-Engine"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Motor web Chromium"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moteur web Chromium"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium वेब इंजन"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Motore web Chromium"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium ウェブエンジン"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium 웹 엔진"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Silnik WWW Chromium"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Motor web Chromium"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Веб-движок Chromium"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium web motoru"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Веб-рушій Chromium"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium 网页引擎"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium 網頁引擎"
           }
         }
       }
@@ -27763,6 +28143,101 @@
         }
       }
     },
+    "Download size" : {
+      "comment" : "Settings: size of a download before it is installed",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حجم التنزيل"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloadgröße"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamaño de descarga"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taille du téléchargement"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "डाउनलोड आकार"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dimensione download"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ダウンロードサイズ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다운로드 크기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rozmiar pobierania"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamanho do download"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Размер загрузки"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İndirme boyutu"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розмір завантаження"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载大小"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下載大小"
+          }
+        }
+      }
+    },
     "Download the items of a Workshop collection" : {
       "localizations" : {
         "ar" : {
@@ -29177,6 +29652,196 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "排隊中的下載項目：%lld。從 Steam 拷貝：%lld。"
+          }
+        }
+      }
+    },
+    "Downloads the Chromium engine from the official CEF builds." : {
+      "comment" : "Help for the Chromium engine's Install button; CEF is a product name",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ينزّل محرك Chromium من إصدارات CEF الرسمية."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lädt die Chromium-Engine aus den offiziellen CEF-Builds."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descarga el motor Chromium de las compilaciones oficiales de CEF."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Télécharge le moteur Chromium depuis les versions officielles de CEF."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आधिकारिक CEF बिल्ड से Chromium इंजन डाउनलोड करता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scarica il motore Chromium dalle build ufficiali di CEF."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公式の CEF ビルドから Chromium エンジンをダウンロードします。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "공식 CEF 빌드에서 Chromium 엔진을 다운로드합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pobiera silnik Chromium z oficjalnych kompilacji CEF."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baixa o motor Chromium das compilações oficiais do CEF."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Загружает движок Chromium из официальных сборок CEF."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium motorunu resmî CEF derlemelerinden indirir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантажує рушій Chromium з офіційних збірок CEF."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从官方 CEF 构建下载 Chromium 引擎。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從官方 CEF 組建下載 Chromium 引擎。"
+          }
+        }
+      }
+    },
+    "Downloads the Chromium engine version this release of the app uses and removes older ones." : {
+      "comment" : "Help for the Chromium engine's Update button",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ينزّل إصدار محرك Chromium الذي يستخدمه هذا الإصدار من التطبيق ويزيل الإصدارات الأقدم."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lädt die Version der Chromium-Engine, die diese App-Version verwendet, und entfernt ältere."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descarga la versión del motor Chromium que usa esta versión de la app y elimina las anteriores."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Télécharge la version du moteur Chromium utilisée par cette version de l’app et supprime les plus anciennes."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऐप की इस रिलीज़ द्वारा उपयोग किया जाने वाला Chromium इंजन संस्करण डाउनलोड करता है और पुराने संस्करण हटाता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scarica la versione del motore Chromium usata da questa versione dell’app e rimuove quelle precedenti."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このバージョンのアプリが使う Chromium エンジンをダウンロードし、古いものを削除します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 버전의 앱이 사용하는 Chromium 엔진을 다운로드하고 이전 버전을 제거합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pobiera wersję silnika Chromium używaną przez to wydanie aplikacji i usuwa starsze."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baixa a versão do motor Chromium usada por esta versão do app e remove as mais antigas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Загружает версию движка Chromium, которую использует этот выпуск приложения, и удаляет старые."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uygulamanın bu sürümünün kullandığı Chromium motoru sürümünü indirir ve eski sürümleri kaldırır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантажує версію рушія Chromium, яку використовує цей випуск застосунку, і вилучає старіші."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载此版本应用所用的 Chromium 引擎版本，并移除旧版本。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下載此版本 App 所用的 Chromium 引擎版本，並移除舊版本。"
           }
         }
       }
@@ -44935,6 +45600,101 @@
         }
       }
     },
+    "Install" : {
+      "comment" : "Button: downloads and installs a component",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تثبيت"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installer"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इंस्टॉल करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installa"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "インストール"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "설치"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zainstaluj"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Установить"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yükle"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Встановити"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安裝"
+          }
+        }
+      }
+    },
     "Install SteamCMD" : {
       "comment" : "Button: download and install SteamCMD from Valve",
       "localizations" : {
@@ -56457,6 +57217,101 @@
         }
       }
     },
+    "Moves the Chromium engine and its data to the Trash." : {
+      "comment" : "Help for the Chromium engine's Remove button",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ينقل محرك Chromium وبياناته إلى سلة المهملات."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Legt die Chromium-Engine und ihre Daten in den Papierkorb."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mueve el motor Chromium y sus datos a la papelera."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Place le moteur Chromium et ses données dans la corbeille."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium इंजन और उसके डेटा को ट्रैश में ले जाता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sposta il motore Chromium e i suoi dati nel Cestino."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium エンジンとそのデータをゴミ箱に入れます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium 엔진과 데이터를 휴지통으로 이동합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przenosi silnik Chromium i jego dane do kosza."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move o motor Chromium e seus dados para o Lixo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перемещает движок Chromium и его данные в Корзину."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium motorunu ve verilerini Çöp Sepeti’ne taşır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переміщує рушій Chromium і його дані до Смітника."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将 Chromium 引擎及其数据移到废纸篓。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將 Chromium 引擎及其資料移到垃圾桶。"
+          }
+        }
+      }
+    },
     "Moves the app's SteamCMD to the Trash. Workshop downloads won't work until SteamCMD is installed again." : {
       "localizations" : {
         "ar" : {
@@ -60516,6 +61371,196 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "一般"
+          }
+        }
+      }
+    },
+    "Not available for this Mac." : {
+      "comment" : "Settings › Plugins: the Chromium engine has no build for this CPU",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "غير متوفر لجهاز Mac هذا."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Für diesen Mac nicht verfügbar."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No disponible para este Mac."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non disponible pour ce Mac."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इस Mac के लिए उपलब्ध नहीं है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non disponibile per questo Mac."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この Mac では利用できません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 Mac에서는 사용할 수 없습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niedostępne dla tego Maca."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indisponível para este Mac."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Недоступно для этого Mac."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu Mac için kullanılamıyor."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Недоступно для цього Mac."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不适用于这台 Mac。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不適用於這部 Mac。"
+          }
+        }
+      }
+    },
+    "Not installed" : {
+      "comment" : "Settings: status of a downloadable component",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "غير مثبّت"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht installiert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No instalado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non installé"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इंस्टॉल नहीं है"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non installato"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未インストール"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "설치되지 않음"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie zainstalowano"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não instalado"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не установлен"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yüklü değil"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не встановлено"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未安装"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未安裝"
           }
         }
       }
@@ -101287,6 +102332,291 @@
         }
       }
     },
+    "The Chromium download doesn't match the version this app expects, so it wasn't installed. Try again later." : {
+      "comment" : "Chromium engine install error: the downloaded file's checksum is wrong",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يطابق تنزيل Chromium الإصدار الذي يتوقعه هذا التطبيق، لذا لم يُثبَّت. حاول مرة أخرى لاحقًا."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Chromium-Download entspricht nicht der Version, die diese App erwartet, und wurde daher nicht installiert. Versuche es später erneut."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La descarga de Chromium no coincide con la versión que espera esta app, así que no se instaló. Inténtalo más tarde."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le téléchargement de Chromium ne correspond pas à la version attendue par cette app ; il n’a donc pas été installé. Réessayez plus tard."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium डाउनलोड इस ऐप द्वारा अपेक्षित संस्करण से मेल नहीं खाता, इसलिए इसे इंस्टॉल नहीं किया गया। बाद में फिर कोशिश करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il download di Chromium non corrisponde alla versione prevista da questa app, quindi non è stato installato. Riprova più tardi."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium のダウンロードがこのアプリの想定するバージョンと一致しないため、インストールしませんでした。しばらくしてからもう一度お試しください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다운로드한 Chromium이 이 앱이 요구하는 버전과 일치하지 않아 설치하지 않았습니다. 나중에 다시 시도하세요."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pobrany Chromium nie zgadza się z wersją oczekiwaną przez tę aplikację, więc nie został zainstalowany. Spróbuj ponownie później."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O download do Chromium não corresponde à versão que este app espera, por isso não foi instalado. Tente novamente mais tarde."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Загруженный Chromium не совпадает с версией, которую ожидает приложение, поэтому он не установлен. Повторите попытку позже."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium indirmesi bu uygulamanın beklediği sürümle eşleşmediği için yüklenmedi. Daha sonra yeniden deneyin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантажений Chromium не збігається з версією, яку очікує застосунок, тому його не встановлено. Спробуйте пізніше."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载的 Chromium 与本应用预期的版本不符，因此未安装。请稍后再试。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下載的 Chromium 與本 App 預期的版本不符，因此未安裝。請稍後再試。"
+          }
+        }
+      }
+    },
+    "The Chromium download has no Chromium Embedded Framework." : {
+      "comment" : "Chromium engine install error; Chromium Embedded Framework is a product name",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يحتوي تنزيل Chromium على Chromium Embedded Framework."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Chromium-Download enthält kein Chromium Embedded Framework."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La descarga de Chromium no contiene Chromium Embedded Framework."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le téléchargement de Chromium ne contient pas Chromium Embedded Framework."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium डाउनलोड में Chromium Embedded Framework नहीं है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il download di Chromium non contiene Chromium Embedded Framework."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium のダウンロードに Chromium Embedded Framework が含まれていません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다운로드한 Chromium에 Chromium Embedded Framework가 없습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pobrany Chromium nie zawiera Chromium Embedded Framework."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O download do Chromium não contém o Chromium Embedded Framework."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В загруженном Chromium нет Chromium Embedded Framework."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium indirmesinde Chromium Embedded Framework yok."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У завантаженому Chromium немає Chromium Embedded Framework."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载的 Chromium 中没有 Chromium Embedded Framework。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下載的 Chromium 中沒有 Chromium Embedded Framework。"
+          }
+        }
+      }
+    },
+    "The Chromium download isn't a valid archive. Try again later." : {
+      "comment" : "Chromium engine install error",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تنزيل Chromium ليس أرشيفًا صالحًا. حاول مرة أخرى لاحقًا."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Chromium-Download ist kein gültiges Archiv. Versuche es später erneut."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La descarga de Chromium no es un archivo válido. Inténtalo más tarde."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le téléchargement de Chromium n’est pas une archive valide. Réessayez plus tard."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium डाउनलोड मान्य आर्काइव नहीं है। बाद में फिर कोशिश करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il download di Chromium non è un archivio valido. Riprova più tardi."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium のダウンロードは有効なアーカイブではありません。しばらくしてからもう一度お試しください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다운로드한 Chromium이 올바른 압축 파일이 아닙니다. 나중에 다시 시도하세요."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pobrany Chromium nie jest prawidłowym archiwum. Spróbuj ponownie później."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O download do Chromium não é um arquivo compactado válido. Tente novamente mais tarde."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Загруженный Chromium не является корректным архивом. Повторите попытку позже."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium indirmesi geçerli bir arşiv değil. Daha sonra yeniden deneyin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантажений Chromium не є коректним архівом. Спробуйте пізніше."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载的 Chromium 不是有效的归档。请稍后再试。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下載的 Chromium 不是有效的封存檔。請稍後再試。"
+          }
+        }
+      }
+    },
     "The SteamCMD download from Valve isn't a valid archive. Try again later." : {
       "comment" : "Error installing SteamCMD: the downloaded file is not a valid archive",
       "localizations" : {
@@ -102045,6 +103375,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "下載會在背景繼續。"
+          }
+        }
+      }
+    },
+    "The download server answered with HTTP status %lld." : {
+      "comment" : "Chromium engine install error; %lld is an HTTP status code",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ردّ خادم التنزيل برمز حالة HTTP ‏%lld."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Download-Server hat mit dem HTTP-Status %lld geantwortet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El servidor de descarga respondió con el estado HTTP %lld."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le serveur de téléchargement a répondu avec le statut HTTP %lld."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "डाउनलोड सर्वर ने HTTP स्थिति %lld के साथ जवाब दिया।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il server di download ha risposto con lo stato HTTP %lld."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ダウンロードサーバが HTTP ステータス %lld を返しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다운로드 서버가 HTTP 상태 %lld(으)로 응답했습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serwer pobierania odpowiedział stanem HTTP %lld."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O servidor de download respondeu com o status HTTP %lld."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сервер загрузки ответил с кодом HTTP %lld."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İndirme sunucusu HTTP %lld durumuyla yanıt verdi."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сервер завантаження відповів кодом HTTP %lld."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下载服务器返回了 HTTP 状态 %lld。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下載伺服器回傳了 HTTP 狀態 %lld。"
           }
         }
       }
@@ -103367,6 +104792,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "沒有足夠的可用磁碟空間來安裝 SteamCMD。"
+          }
+        }
+      }
+    },
+    "There isn't enough free disk space to install the Chromium engine." : {
+      "comment" : "Chromium engine install error",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا توجد مساحة كافية على القرص لتثبيت محرك Chromium."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es ist nicht genug Speicherplatz frei, um die Chromium-Engine zu installieren."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay suficiente espacio libre en disco para instalar el motor Chromium."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’espace disque disponible est insuffisant pour installer le moteur Chromium."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium इंजन इंस्टॉल करने के लिए डिस्क में पर्याप्त खाली जगह नहीं है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lo spazio libero su disco non è sufficiente per installare il motore Chromium."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium エンジンをインストールするための空きディスク容量が足りません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium 엔진을 설치할 디스크 여유 공간이 부족합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Za mało wolnego miejsca na dysku, aby zainstalować silnik Chromium."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não há espaço livre em disco suficiente para instalar o motor Chromium."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Недостаточно свободного места на диске для установки движка Chromium."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium motorunu yüklemek için yeterli boş disk alanı yok."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Недостатньо вільного місця на диску для встановлення рушія Chromium."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "磁盘空间不足，无法安装 Chromium 引擎。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "磁碟空間不足，無法安裝 Chromium 引擎。"
           }
         }
       }
@@ -108467,6 +109987,101 @@
         }
       }
     },
+    "Unpacking…" : {
+      "comment" : "Progress: extracting a downloaded archive",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جارٍ فك الحزمة…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird entpackt …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descomprimiendo…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Décompression…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अनपैक किया जा रहा है…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estrazione in corso…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "展開中…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "압축 해제 중…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rozpakowywanie…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descompactando…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Распаковка…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Açılıyor…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розпакування…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在解压…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在解壓縮…"
+          }
+        }
+      }
+    },
     "Unspecified Genre" : {
       "comment" : "Workshop genre tag for items without a genre",
       "localizations" : {
@@ -109522,6 +111137,101 @@
         }
       }
     },
+    "Update" : {
+      "comment" : "Button: installs the newer version of a downloaded component",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تحديث"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktualisieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre à jour"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपडेट करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiorna"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アップデート"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "업데이트"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktualizuj"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atualizar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обновить"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Güncelle"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновити"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更新"
+          }
+        }
+      }
+    },
     "Update automatically" : {
       "comment" : "Settings › General › Updates toggle: check for, download and install app updates without asking",
       "localizations" : {
@@ -109613,6 +111323,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "自動更新"
+          }
+        }
+      }
+    },
+    "Update available" : {
+      "comment" : "Settings: status of a downloaded component with a newer version",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يتوفر تحديث"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update verfügbar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualización disponible"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mise à jour disponible"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपडेट उपलब्ध है"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiornamento disponibile"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アップデートあり"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "업데이트 있음"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dostępna aktualizacja"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atualização disponível"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступно обновление"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Güncelleme var"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступне оновлення"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有可用更新"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有可用更新"
           }
         }
       }
@@ -111313,6 +113118,196 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "詳盡"
+          }
+        }
+      }
+    },
+    "Verifying…" : {
+      "comment" : "Progress: checking a downloaded file",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جارٍ التحقق…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wird überprüft …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verificando…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vérification…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सत्यापित किया जा रहा है…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verifica in corso…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "検証中…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "확인 중…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weryfikowanie…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verificando…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверка…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Doğrulanıyor…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірка…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在验证…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在驗證…"
+          }
+        }
+      }
+    },
+    "Version" : {
+      "comment" : "Settings: label of the installed version of a downloaded component",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الإصدار"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versión"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "संस्करण"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versione"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "バージョン"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "버전"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wersja"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versão"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Версия"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sürüm"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Версія"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "版本"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "版本"
           }
         }
       }
