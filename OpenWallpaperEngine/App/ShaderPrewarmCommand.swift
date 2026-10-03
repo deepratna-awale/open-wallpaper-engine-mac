@@ -2,6 +2,8 @@ import AppKit
 import Darwin
 
 /// The app's helper runs, handled in `main.swift` before any app lifecycle starts:
+/// - `--shader-compile-helper` translates shaders for the app that started it
+///   (`ShaderCompileHelperServer`) until that app closes its stdin;
 /// - `--print-shader-cache-key` prints this build's `ShaderCacheKey` as one line of JSON;
 /// - `--prepare-wallpapers <folders>` prepares arrived scenes the same way, and writes their
 ///   loading snapshots (`SceneLoadingSnapshotStore`);
@@ -29,6 +31,7 @@ enum ShaderPrewarmCommand {
 
     static func isHelperRun(arguments: [String]) -> Bool {
         arguments.contains(printKeyArgument) || arguments.contains(prewarmArgument)
+            || arguments.contains(ShaderCompileHelperServer.argument)
             || arguments.contains(prepareArgument) || arguments.contains(screenSaverArgument)
             || arguments.contains(livePhotoArgument)
     }
@@ -74,6 +77,10 @@ enum ShaderPrewarmCommand {
     /// Runs the helper `arguments` ask for and returns its exit status, or nil for a normal launch.
     @MainActor
     static func run(arguments: [String]) -> Int32? {
+        if arguments.contains(ShaderCompileHelperServer.argument) {
+            defer { AppStorageLocation.current.discardReadOnlyScratch() }
+            return ShaderCompileHelperServer.run()
+        }
         if arguments.contains(printKeyArgument) {
             defer { AppStorageLocation.current.discardReadOnlyScratch() }
             do {
