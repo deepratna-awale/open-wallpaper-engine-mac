@@ -40,7 +40,7 @@ enum ShaderPrewarmCommand {
         let values = Array(arguments)
         guard values.count >= 4, let pixels = size(values[1]), let points = size(values[2]),
               let wallpaper = InstalledLibrary.wallpaper(at: URL(filePath: values[0], directoryHint: .isDirectory), hiding: []),
-              ScreenSaverPlugin.isEligible(wallpaper) else {
+              ScreenSaverPlugin.isScene(wallpaper) || ScreenSaverWebLoopRecorder.records(wallpaper) else {
             OWELog.error(.app, "Screen saver: bad loop arguments \(values)")
             return 2
         }
