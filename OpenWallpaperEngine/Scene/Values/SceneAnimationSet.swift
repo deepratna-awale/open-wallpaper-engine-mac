@@ -144,6 +144,20 @@ final class SceneAnimationSet {
         return frame
     }
 
+    /// The Wallpaper Editor's playhead (docs/editor-plan.md P4), in place of an advance: every
+    /// clock owner stands where its mode puts `seconds` (`SceneTimelineClock.scrub`) and every
+    /// site is sampled there. No clock advances and no event fires; the frame counter moves, as a
+    /// frame's does.
+    func scrub(to seconds: Float) {
+        frameCounter &+= 1
+        recentDeltas[Int(frameCounter % UInt64(Self.replayedFrames))] = 0
+        replayedEvents.removeAll()
+        for index in entries.indices where entries[index].parent == nil {
+            entries[index].timeline.clock.scrub(to: seconds)
+        }
+        for index in entries.indices { sample(index) }
+    }
+
     /// Samples every site again without moving any clock (after script calls, or at load).
     func refresh() {
         for index in entries.indices {

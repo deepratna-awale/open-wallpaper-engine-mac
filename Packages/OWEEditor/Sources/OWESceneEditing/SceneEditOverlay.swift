@@ -46,16 +46,20 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
 
     public var version = SceneEditOverlay.currentVersion
     public var objects: [String: ObjectEdit] = [:]
+    /// Property timelines the editor made, changed or removed (`SceneTimelineEdits`); nil for none.
+    public var timelines: SceneTimelineEdits?
 
     public init(objects: [String: ObjectEdit] = [:]) {
         self.objects = objects
     }
 
     /// Nothing to save: no edits and no locked layers.
-    public var isEmpty: Bool { objects.values.allSatisfy(\.isEmpty) }
+    public var isEmpty: Bool { objects.values.allSatisfy(\.isEmpty) && timelines?.isEmpty != false }
 
     /// Something changes the scene (locks don't).
-    public var hasSceneEdits: Bool { objects.values.contains(where: \.hasSceneEdits) }
+    public var hasSceneEdits: Bool {
+        objects.values.contains(where: \.hasSceneEdits) || timelines?.isEmpty == false
+    }
 
     // MARK: Reading
 
@@ -73,7 +77,9 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
 
     public func isLocked(_ objectID: Int) -> Bool { objects[String(objectID)]?.locked == true }
 
-    public func hasEdits(_ objectID: Int) -> Bool { objects[String(objectID)]?.hasSceneEdits == true }
+    public func hasEdits(_ objectID: Int) -> Bool {
+        objects[String(objectID)]?.hasSceneEdits == true || timelines?.touches(layer: objectID) == true
+    }
 
     // MARK: Changing
 

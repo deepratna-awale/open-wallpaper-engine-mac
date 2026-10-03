@@ -41,6 +41,7 @@ extension SceneEditOverlay {
             }
             objects[index]["effects"] = effects
         }
+        timelines?.apply(to: &objects)
         root["objects"] = objects
     }
 
