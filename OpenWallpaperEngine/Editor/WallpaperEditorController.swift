@@ -60,7 +60,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
     private var savedOverlay: SceneEditOverlay
 
     /// Only scene wallpapers have layers to edit.
-    static func canEdit(_ wallpaper: WEWallpaper) -> Bool {
+    nonisolated static func canEdit(_ wallpaper: WEWallpaper) -> Bool {
         wallpaper.project.type.caseInsensitiveCompare("scene") == .orderedSame
     }
 
