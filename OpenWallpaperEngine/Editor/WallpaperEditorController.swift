@@ -43,6 +43,10 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
     /// The canvas's own wallpaper model, as the Workshop preview has: one display, muted.
     private let preview: WallpaperViewModel
     private let userPropertyUndo: EditorUserPropertyUndo
+    /// The files the particle editor reads (the wallpaper's, WE's), its textures and presets.
+    private let particleAssets: WallpaperEditorParticleAssets
+    /// The overlay as last saved, which tells a particle document change from a scene change.
+    private var savedOverlay: SceneEditOverlay
 
     /// Only scene wallpapers have layers to edit.
     static func canEdit(_ wallpaper: WEWallpaper) -> Bool {
@@ -57,6 +61,8 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         let session = SceneEditSession(outline: try SceneOutline(sceneData: source.scene),
                                        overlay: SceneEditOverlayFiles.overlay(for: identity) ?? SceneEditOverlay())
         self.session = session
+        savedOverlay = session.overlay
+        particleAssets = WallpaperEditorParticleAssets(wallpaper: wallpaper, package: source.package)
         userPropertyUndo = EditorUserPropertyUndo(wallpaper: wallpaper, undoManager: session.undoManager,
                                                   coalescingInterval: session.coalescingInterval)
         let preview = WallpaperViewModel(persistsWallpapers: false)
@@ -85,7 +91,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
     private func makeServices() -> WallpaperEditorServices {
         let labels = WallpaperEngineLabels.load()
         let preview = self.preview, wallpaper = self.wallpaper, userPropertyUndo = self.userPropertyUndo
-        return WallpaperEditorServices(
+        var services = WallpaperEditorServices(
             makeCanvas: { AnyView(WallpaperView(viewModel: preview, screenId: preview.selectedScreenId)) },
             userProperties: { AnyView(EditorUserProperties(wallpaper: wallpaper, undo: userPropertyUndo)) },
             blendModeTitle: SceneBlendModeOptions.title(labels: labels),
@@ -97,13 +103,30 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
                 guard let self else { return title }
                 return try self.saveAsLocalWallpaper(title: title)
             })
+        let assets = particleAssets, session = self.session, directory = wallpaper.wallpaperDirectory
+        do {
+            services.particles = try ParticleEditorServices.make(
+                session: session, readAsset: { assets.data($0) }, presets: assets.presets(labels: labels),
+                textures: assets.textures(), thumbnail: { assets.thumbnail($0) },
+                restart: { layerID in
+                    // The system is built again from nothing; the rest of the scene keeps running.
+                    SceneEditOverlayFiles.postParticles(session.overlay, wallpaperDirectory: directory, objectIDs: [layerID])
+                })
+        } catch {
+            OWELog.error(.ui, "The Wallpaper Editor runs without its particle editor: its schema can't be read: \(error)")
+        }
+        return services
     }
 
     /// Saves the overlay; the running instances of the wallpaper (the canvas and the desktop)
     /// reload with it.
     private func save(_ overlay: SceneEditOverlay) {
+        // A change of particle documents alone builds only the systems that read them.
+        let change = overlay.liveChange(from: savedOverlay)
+        savedOverlay = overlay
         do {
-            try SceneEditOverlayFiles.save(overlay, for: identity, wallpaperDirectory: wallpaper.wallpaperDirectory)
+            try SceneEditOverlayFiles.save(overlay, for: identity, wallpaperDirectory: wallpaper.wallpaperDirectory,
+                                           change: change)
         } catch {
             OWELog.error(.scene, "Can't save the editor overlay of \(wallpaper.project.title): \(error)")
         }
@@ -124,8 +147,10 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
             writerSource.packageName = source.packageName
         }
         let scene = try session.overlay.applied(to: source.scene)
+        // The particle editor's documents (definitions, materials) are files of the copy.
         let folder = try LocalWallpaperWriter().save(writerSource, scene: scene, title: title,
-                                                     into: FileManager.default.wallpapersDirectory)
+                                                     into: FileManager.default.wallpapersDirectory,
+                                                     additionalFiles: try session.overlay.particles?.assetFiles() ?? [:])
         OWELog.info(.library, "Saved \(wallpaper.project.title) with its editor edits as \(folder.path)")
         AppDelegate.shared.contentViewModel.refresh()
         return title

@@ -78,6 +78,7 @@ These are folders in the app target today. The scene engine (`Scene/`, `Audio/`,
 - The editor ([`docs/editor-plan.md`](editor-plan.md)) is a local Swift package with three modules: `OWESceneEditing` (Foundation only: the edit overlay over scene.json, the layer outline, gizmo and canvas math, `SceneEditSession` with undo, Save as Local Wallpaper), `OWEInspectorKit` (controls the Scene Inspector shares with it) and `OWEEditor` (the window's views and their own string catalog). The package depends on nothing in the app; its tests run with `swift test`.
 - `Editor/` is the app's side: the window (`WallpaperEditorController`), whose canvas is the wallpaper's own instance in a preview `WallpaperViewModel`, and the services the module asks for (the user properties view, WE's blend modes, effect help, saving a copy).
 - Edits are an overlay per wallpaper (`<supportDirectory>/editor/<identity>.json`, `Scene/Loading/SceneEditOverlayFiles`), never written into the wallpaper. `ScenePreparation` applies it before the Scene Inspector's edits, the scene cache key covers it, and saving it reloads every running instance of the wallpaper.
+- The particle editor (`Particles/` in both modules) keeps particle definitions and materials it wrote in the overlay; the view model reads them before any file (`setEditorAssets`), and a change of those documents alone rebuilds only the particle objects that read them (`particleObjectIDs(using:)`, `rebuildObjects`) instead of reloading the scene.
 
 ### `Resources/`
 

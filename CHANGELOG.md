@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Wallpaper Editor** (Edit Wallpaper in Details, ⌥⌘E): a window for scene wallpapers with the layer hierarchy (visibility, lock), the live wallpaper as a canvas you can zoom and pan, and an inspector for the selected layer. Move, scale and rotate image and text layers on the canvas or with the inspector, change opacity, colour and blend mode, turn effects on and off, and set the wallpaper's properties; everything can be undone. Edits are kept beside the wallpaper and apply wherever it runs, without changing its files: Revert drops them, and Save as Local Wallpaper adds a copy with the edits to the library. The Scene Inspector is unchanged.
+- **Particle editor** in the Wallpaper Editor: add a particle system (blank, or one of Wallpaper Engine's presets), move it on the canvas, duplicate or delete it, and edit it as Wallpaper Engine's editor lays it out: its texture and material, its own settings, emitters, initializers, operators, renderers, child systems, control points (dragged on the canvas) and the layer's instance override. Components are added, removed and reordered in lists, each field with the control Wallpaper Engine gives it. Changes show at once on the running system, only that system starting over (Restart System starts it again on demand), can be undone, and are written as Wallpaper Engine's particle files by Save as Local Wallpaper.
 
 ### Changed
 

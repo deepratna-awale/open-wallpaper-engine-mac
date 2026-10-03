@@ -364,6 +364,29 @@ final class SceneWallpaperInstance {
                 self.scheduleSceneUpdate(.reloadScene)
             }
         })
+        // The particle editor changed documents particle systems read (or restarts one): only
+        // the systems that read them are built again (`rebuildObjects`), the rest keeps running.
+        observers.append(center.addObserver(forName: .sceneEditParticlesDidChange, object: nil, queue: .main) { [weak self] notification in
+            let directory = notification.userInfo?["wallpaperDirectory"] as? URL
+            let assets = notification.userInfo?["assets"] as? [String: Data] ?? [:]
+            let paths = Set(notification.userInfo?["paths"] as? [String] ?? [])
+            let objectIDs = Set(notification.userInfo?["objectIDs"] as? [Int] ?? [])
+            MainActor.assumeIsolated {
+                guard let self,
+                      directory == self.viewModel.currentWallpaper.wallpaperDirectory.standardizedFileURL else { return }
+                self.viewModel.setEditorAssets(assets)
+                self.snapshotCapture?.rearm()
+                self.wakePacing(.slow)
+                if !objectIDs.isEmpty { self.scheduleObjectRebuild(objectIDs) }
+                guard !paths.isEmpty else { return }
+                self.viewModel.particleObjectIDsAsync(using: paths) { [weak self] ids in
+                    MainActor.assumeIsolated {
+                        guard let self, !ids.isEmpty else { return }
+                        self.scheduleObjectRebuild(ids)
+                    }
+                }
+            }
+        })
         observers.append(center.addObserver(forName: .sceneMusicSettingsDidChange, object: nil, queue: .main) { [weak self] notification in
             let path = notification.userInfo?["path"] as? String
             MainActor.assumeIsolated {
