@@ -26,7 +26,7 @@ final class SceneIDLessObjectTests: XCTestCase {
 
     func testParentLinkResolvesWithoutIDs() throws {
         let content = SceneSpatialContentBuilder(readFile: { _ in nil }, wallpaperName: "test")
-            .build(try scene(), context: PropertyContext())
+            .build(try scene(), context: SpatialProperties())
         XCTAssertEqual(SceneWorldMatrix.translation(content.transforms.world(of: "1")), SIMD3(0, 0, 5),
                        "the child inherits its id-less parent's origin")
     }
