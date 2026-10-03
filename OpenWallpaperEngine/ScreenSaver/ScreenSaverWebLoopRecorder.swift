@@ -179,6 +179,10 @@ final class ScreenSaverWebLoopRecorder: NSObject, WKNavigationDelegate {
         WebPageScale.apply(standardResolution: pixelSize.x <= pointSize.x, to: webView)
 
         let page = wallpaper.wallpaperDirectory.appending(path: wallpaper.project.file)
+        // A missing page would load the handler's empty 404 body; nothing to record.
+        guard FileManager.default.fileExists(atPath: page.path(percentEncoded: false)) else {
+            return "no page at \(wallpaper.project.file)"
+        }
         if video {
             webView.loadFileURL(page, allowingReadAccessTo: wallpaper.wallpaperDirectory)
         } else {

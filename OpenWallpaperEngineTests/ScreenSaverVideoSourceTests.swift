@@ -166,6 +166,6 @@ final class ScreenSaverVideoSourceTests: XCTestCase {
         XCTAssertEqual(Plugin.status(for: video, enabled: true, statuses: [key: .notEligible]), .notEligible,
                        "a codec AVFoundation can't play")
         XCTAssertNil(Plugin.status(for: video, enabled: false, statuses: [key: .available]))
-        XCTAssertEqual(Plugin.status(for: wallpaper(file: "video.webm"), enabled: true, statuses: [:]), .notEligible)
+        XCTAssertEqual(Plugin.status(for: wallpaper(file: "video.mkv"), enabled: true, statuses: [:]), .notEligible)
     }
 }
