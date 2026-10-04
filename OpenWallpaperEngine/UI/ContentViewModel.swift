@@ -66,9 +66,15 @@ class ContentViewModel: ObservableObject, DropDelegate {
         }
         return svc
     }()
-    lazy var workshopVM: WorkshopViewModel = WorkshopViewModel(steamCmd: steamCmd)
+    /// Workshop wallpapers and authors hidden from the Workshop and Discover tabs.
+    lazy var workshopBlockList = WorkshopBlockList()
+    lazy var workshopVM: WorkshopViewModel = {
+        let model = WorkshopViewModel(steamCmd: steamCmd, blockList: workshopBlockList)
+        model.showsBrowser = { [weak self] in self?.topTabBarSelection = 1 }
+        return model
+    }()
     /// The Discover tab's lists.
-    lazy var discoverVM = WorkshopDiscoverViewModel()
+    lazy var discoverVM = WorkshopDiscoverViewModel(blockList: workshopBlockList)
     private var steamCmdCancellable: AnyCancellable?
 
     @Published var searchText = ""

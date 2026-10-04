@@ -222,6 +222,9 @@ class WorkshopAPIService {
         for (index, tag) in filter.excludedTags.enumerated() {
             queryItems.append(URLQueryItem(name: "excludedtags[\(index)]", value: tag))
         }
+        if let parent = filter.childOf {
+            queryItems.append(URLQueryItem(name: "child_publishedfileid", value: parent))
+        }
         return queryItems
     }
 

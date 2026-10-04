@@ -2,7 +2,8 @@ import SwiftUI
 import AppKit
 
 /// Settings › Assets: the Wallpaper Engine assets scenes need, from the user's own Steam copy,
-/// SteamCMD, the Wallpaper Storage folder, the library folders and the Steam Web API key. Shows which copy is in use
+/// SteamCMD, the Wallpaper Storage folder, the library folders, the Steam Web API key and the
+/// Workshop block list. Shows which copy is in use
 /// and installs, updates or removes it. Changes apply at once; the
 /// window's OK and Cancel don't cover them.
 struct AssetsPage: SettingsPage {
@@ -55,6 +56,9 @@ struct AssetsPage: SettingsPage {
                 Text("Needed to browse and search the Workshop. It is stored in your keychain and checked with Steam before saving. Without it, author names come from public Steam profiles.")
             }
             .settingsAnchor(SettingsAnchor.apiKey)
+
+            WorkshopBlockListSection(blockList: AppDelegate.shared.contentViewModel.workshopBlockList)
+                .settingsAnchor(SettingsAnchor.blockList)
         }
         .onAppear { assets.refresh() }
         .confirmationDialog("Remove the assets?", isPresented: $confirmsRemoval) {

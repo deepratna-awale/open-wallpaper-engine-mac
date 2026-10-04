@@ -122,6 +122,8 @@ struct WorkshopQuery: Equatable {
     var clientRequiredTags: [String] = []
     /// Show Only options checked on each result (any one passes); empty checks nothing.
     var clientShowOnly: Set<WorkshopShowOnly> = []
+    /// Only items that require this one (QueryFiles `child_publishedfileid`): a wallpaper's presets.
+    var childOf: String?
 
     init(requiredTags: [String] = [], matchAllTags: Bool = true, excludedTags: [String] = [],
          clientRequiredTags: [String] = [], clientShowOnly: Set<WorkshopShowOnly> = []) {

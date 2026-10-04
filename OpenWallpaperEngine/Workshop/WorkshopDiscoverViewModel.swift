@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 
 /// The Discover tab's lists (`WorkshopDiscover.home`): each loads its first page when it comes into
@@ -36,19 +37,24 @@ final class WorkshopDiscoverViewModel: ObservableObject {
     @Published private(set) var needsAPIKey = false
 
     private let fetch: PageFetch
-    private let isHidden: (WorkshopItem) -> Bool
+    private let blockList: WorkshopBlockList
+    private var blockListCancellable: AnyCancellable?
     /// Bumped by `reload`, so pages requested before it don't land in the new rows.
     private var generation = 0
 
     init(sections: [WorkshopDiscoverSection] = WorkshopDiscover.home,
-         fetch: PageFetch? = nil,
-         isHidden: @escaping (WorkshopItem) -> Bool = { _ in false }) {
+         blockList: WorkshopBlockList = WorkshopBlockList(),
+         fetch: PageFetch? = nil) {
         self.sections = sections
         let service = WorkshopAPIService()
         self.fetch = fetch ?? { section, page, perPage in
             try await service.discoverItems(section, page: page, perPage: perPage)
         }
-        self.isHidden = isHidden
+        self.blockList = blockList
+        // A newly blocked item or author leaves the lists at once; unblocked ones come back on Refresh.
+        blockListCancellable = blockList.objectWillChange.sink { [weak self] _ in
+            DispatchQueue.main.async { MainActor.assumeIsolated { self?.removeHiddenItems() } }
+        }
     }
 
     func row(_ section: WorkshopDiscoverSection) -> Row {
@@ -84,7 +90,7 @@ final class WorkshopDiscoverViewModel: ObservableObject {
                 guard started == generation else { return }
                 current.nextPage += 1
                 current.reachedEnd = page.count < Self.pageSize
-                added = WorkshopDiscover.shownItems(page, of: section, after: current.items, hidden: isHidden)
+                added = WorkshopDiscover.shownItems(page, of: section, after: current.items, hidden: blockList.isBlocked)
                 if added.isEmpty { emptyPages += 1 }
             }
             current.items += added
@@ -110,7 +116,7 @@ final class WorkshopDiscoverViewModel: ObservableObject {
     func removeHiddenItems() {
         for (id, row) in rows {
             var row = row
-            row.items.removeAll(where: isHidden)
+            row.items.removeAll(where: blockList.isBlocked)
             rows[id] = row
         }
     }
