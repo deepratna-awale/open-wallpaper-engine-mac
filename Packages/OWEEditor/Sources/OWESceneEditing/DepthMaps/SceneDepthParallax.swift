@@ -42,6 +42,13 @@ public enum SceneDepthParallax {
     public static let centerKey = "center"
     public static let defaultCenter = 0.3
 
+    /// `general.cameraparallax`: WE updates `g_ParallaxPosition` only while it is on, so the
+    /// effect follows the pointer only then (`SceneCameraParallax`).
+    public static let cameraParallaxSetting = "cameraparallax"
+    /// `general.cameraparallaxamount`: how far the layers themselves move. Turning parallax on for
+    /// the effect alone sets it to 0, so the scene's layers stay where they were.
+    public static let cameraParallaxAmountSetting = "cameraparallaxamount"
+
     /// A texture path the generator wrote (`depth/…`).
     public static func isGeneratedDepthMap(_ texture: String?) -> Bool {
         guard let texture else { return false }
@@ -98,6 +105,29 @@ extension SceneEditSession {
             effect.folderName == SceneDepthParallax.folderName
                 && SceneDepthParallax.isGeneratedDepthMap(effectTexture(SceneDepthParallax.depthSlot, effect: effect.key, of: layerID))
         }
+    }
+
+    /// Some layer has depth parallax bound to a generated depth map.
+    public var hasDepthParallax: Bool {
+        outline.layers.contains { depthParallaxEffect(of: $0.id) != nil }
+    }
+
+    /// `next` (the overlay `outline` now shows) with the camera parallax the effect needs: on a
+    /// scene authored with parallax off, the first depth parallax turns it on at amount 0 (only
+    /// `g_ParallaxPosition` moves; the scene's own influence and delay stay), and removing the
+    /// last one drops those edits again. A scene authored with parallax on is left as it is.
+    func settlingDepthParallaxCamera(_ next: SceneEditOverlay) -> SceneEditOverlay {
+        let authoredSetting = SceneFieldBinding.literal(of: authored.general[SceneDepthParallax.cameraParallaxSetting])
+        guard authoredSetting?.boolValue != true else { return next }
+        var settled = next
+        if hasDepthParallax {
+            settled.setGeneralSetting(SceneDepthParallax.cameraParallaxSetting, to: .bool(true))
+            settled.setGeneralSetting(SceneDepthParallax.cameraParallaxAmountSetting, to: .number(0))
+        } else if settled.generalSetting(SceneDepthParallax.cameraParallaxSetting) == .bool(true) {
+            settled.setGeneralSetting(SceneDepthParallax.cameraParallaxSetting, to: nil)
+            settled.setGeneralSetting(SceneDepthParallax.cameraParallaxAmountSetting, to: nil)
+        }
+        return settled
     }
 
     /// The depth map the layer's effect is bound to.

@@ -103,6 +103,9 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     /// The particle editor's systems and documents (`SceneParticleOverlay`); nil without any
     /// (version 2).
     public var particles: SceneParticleOverlay?
+    /// Scene settings (scene.json's `general`) by name, each replacing the authored value; nil
+    /// for none (version 2).
+    public var general: [String: SceneJSONValue]?
 
     public init(objects: [String: ObjectEdit] = [:]) {
         self.objects = objects
@@ -111,15 +114,18 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     /// Nothing to save: no edits and no locked layers.
     public var isEmpty: Bool {
         objects.values.allSatisfy(\.isEmpty) && !hasStructureEdits && timelines?.isEmpty != false
-            && authoring?.isEmpty != false && !hasPuppetEdits && particles?.isEmpty != false
+            && authoring?.isEmpty != false && !hasPuppetEdits && particles?.isEmpty != false && !hasGeneralEdits
     }
 
     /// Something changes the scene (locks don't). Authored properties count: they are edits of
     /// the wallpaper, and Save as Local Wallpaper writes them.
     public var hasSceneEdits: Bool {
         objects.values.contains(where: \.hasSceneEdits) || hasStructureEdits || timelines?.isEmpty == false
-            || authoring?.isEmpty == false || particles?.isEmpty == false
+            || authoring?.isEmpty == false || particles?.isEmpty == false || hasGeneralEdits
     }
+
+    /// Scene settings changed.
+    public var hasGeneralEdits: Bool { !(general ?? [:]).isEmpty }
 
     /// Layers added, deleted or reordered.
     public var hasStructureEdits: Bool { !(added ?? []).isEmpty || !(removed ?? []).isEmpty || order != nil }
@@ -127,7 +133,7 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     /// Holds something version 1 can't apply.
     var needsVersion2: Bool {
         hasStructureEdits || timelines?.isEmpty == false || authoring?.isEmpty == false || hasPuppetEdits
-            || particles?.isEmpty == false || objects.values.contains(where: \.needsVersion2)
+            || particles?.isEmpty == false || hasGeneralEdits || objects.values.contains(where: \.needsVersion2)
     }
 
     // MARK: Reading
@@ -144,6 +150,9 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
         objects[String(objectID)]?.effects[String(effectIndex)]?.constants[key]
     }
 
+    /// The edit of the scene setting `general.<name>`.
+    public func generalSetting(_ name: String) -> SceneJSONValue? { general?[name] }
+
     public func isLocked(_ objectID: Int) -> Bool { objects[String(objectID)]?.locked == true }
 
     public func hasEdits(_ objectID: Int) -> Bool {
@@ -155,6 +164,13 @@ public struct SceneEditOverlay: Codable, Hashable, Sendable {
     /// Sets field `name` of the object; nil drops the edit (the authored value again).
     public mutating func setField(_ name: String, to value: SceneJSONValue?, of objectID: Int) {
         update(objectID) { $0.fields[name] = value }
+    }
+
+    /// Sets the scene setting `general.<name>`; nil drops the edit (the authored value again).
+    public mutating func setGeneralSetting(_ name: String, to value: SceneJSONValue?) {
+        var settings = general ?? [:]
+        settings[name] = value
+        general = settings.isEmpty ? nil : settings
     }
 
     public mutating func setEffectVisible(_ visible: Bool?, effect effectIndex: Int, of objectID: Int) {

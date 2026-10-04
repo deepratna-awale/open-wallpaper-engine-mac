@@ -166,6 +166,55 @@ final class DepthParallaxEditTests: XCTestCase {
         XCTAssertNil(session.depthParallaxLayer(above: nil))
     }
 
+    // MARK: Camera parallax
+
+    private func general(_ data: Data) throws -> [String: Any] {
+        let root = try XCTUnwrap(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        return root["general"] as? [String: Any] ?? [:]
+    }
+
+    /// `g_ParallaxPosition` moves only with `general.cameraparallax` on: the first depth parallax
+    /// turns it on at amount 0 (the layers stay put), the last one's removal restores the scene's.
+    func testDepthParallaxTurnsCameraParallaxOnWithoutMovingTheLayers() throws {
+        session.applyDepthParallax(texture: texture, strength: 1, to: 13, actionName: "Apply")
+        var settings = try general(try applied())
+        XCTAssertEqual(settings["cameraparallax"] as? Bool, true)
+        XCTAssertEqual(settings["cameraparallaxamount"] as? Double, 0)
+        XCTAssertNil(settings["cameraparallaxdelay"], "the scene's own delay and influence stay")
+        XCTAssertNil(settings["cameraparallaxmouseinfluence"])
+        XCTAssertEqual(settings["clearcolor"] as? String, "0 0 0")
+        XCTAssertEqual(try SceneEditOverlay.decoded(from: try session.overlay.encoded()), session.overlay)
+
+        let id = session.addDepthParallaxLayer(texture: texture, strength: 1, above: nil, name: "Scene", actionName: "Apply")
+        session.removeDepthParallax(of: 13, actionName: "Remove")
+        XCTAssertEqual(try general(try applied())["cameraparallax"] as? Bool, true, "one is left")
+        session.delete([id], actionName: "Remove")
+        settings = try general(try applied())
+        XCTAssertNil(settings["cameraparallax"])
+        XCTAssertNil(settings["cameraparallaxamount"])
+        XCTAssertNil(session.overlay.general)
+
+        session.undo()
+        XCTAssertEqual(session.overlay.generalSetting("cameraparallax"), .bool(true))
+        session.undo()
+        session.undo()
+        session.undo()
+        XCTAssertNil(session.overlay.general, "undone with the effect")
+    }
+
+    func testASceneWithCameraParallaxOnIsLeftAsItIs() throws {
+        var root = try XCTUnwrap(try JSONSerialization.jsonObject(with: Fixtures.sceneData) as? [String: Any])
+        var settings = root["general"] as? [String: Any] ?? [:]
+        settings["cameraparallax"] = true
+        settings["cameraparallaxamount"] = 0.4
+        root["general"] = settings
+        let data = try JSONSerialization.data(withJSONObject: root)
+        let session = SceneEditSession(outline: try SceneOutline(sceneData: data))
+        session.applyDepthParallax(texture: texture, strength: 1, to: 13, actionName: "Apply")
+        XCTAssertNil(session.overlay.general)
+        XCTAssertEqual(try general(try session.overlay.applied(to: data))["cameraparallaxamount"] as? Double, 0.4)
+    }
+
     // MARK: The depth map's file
 
     func testDepthMapsAreKeptWithTheEditorsFiles() throws {

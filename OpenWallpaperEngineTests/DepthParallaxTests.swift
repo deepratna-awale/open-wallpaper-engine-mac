@@ -165,29 +165,17 @@ final class DepthParallaxTests: XCTestCase {
         let sceneURL = directory.appending(path: "scene.json")
         let sceneData = try Data(contentsOf: sceneURL)
         let session = SceneEditSession(outline: try SceneOutline(sceneData: sceneData))
+        // As authored, camera parallax is off: `g_ParallaxPosition` stays put until the plugin's
+        // apply turns it on.
+        XCTAssertNotEqual(session.authoredOutline.general["cameraparallax"]?.boolValue, true)
         _ = try XCTUnwrap(session.applyDepthParallax(texture: texture, strength: 1, to: 10, actionName: "Apply"))
         try session.overlay.applied(to: sceneData).write(to: sceneURL)
-        // `g_ParallaxPosition` moves only with camera parallax on (WE's own preview and the
-        // workshop scenes that use the effect turn it on; amount 0 keeps the layers still).
-        for project in [directory, control] { try Self.enableCameraParallax(in: project) }
 
         let left = try render(directory, cursor: SIMD2(200, 540))
         let right = try render(directory, cursor: SIMD2(1720, 540))
         let plain = try render(control, cursor: SIMD2(200, 540))
         XCTAssertGreaterThan(WEEffectGallery.meanAbsoluteDifference(left, plain), 0.5, "the effect draws")
         XCTAssertGreaterThan(WEEffectGallery.meanAbsoluteDifference(left, right), 0.5, "it follows the pointer")
-    }
-
-    private static func enableCameraParallax(in directory: URL) throws {
-        let url = directory.appending(path: "scene.json")
-        var root = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
-        var general = root["general"] as? [String: Any] ?? [:]
-        general["cameraparallax"] = true
-        general["cameraparallaxamount"] = 0
-        general["cameraparallaxdelay"] = 0
-        general["cameraparallaxmouseinfluence"] = 1
-        root["general"] = general
-        try JSONSerialization.data(withJSONObject: root).write(to: url)
     }
 
     private func render(_ directory: URL, cursor: SIMD2<Double>) throws -> WEReferenceImage {
