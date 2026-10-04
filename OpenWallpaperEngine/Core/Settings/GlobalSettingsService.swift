@@ -50,13 +50,8 @@ class GlobalSettingsViewModel: ObservableObject {
     var didChangeScreenSaverCancellable: Cancellable?
     
     init() {
-        let loaded: GlobalSettings
-        if let data = UserDefaults.app.data(forKey: "GlobalSettings"),
-           let settings = try? JSONDecoder().decode(GlobalSettings.self, from: data) {
-            loaded = settings
-        } else {
-            loaded = GlobalSettings()
-        }
+        let loaded: GlobalSettings = Self.loadSettings(from: UserDefaults.app.data(forKey: "GlobalSettings"),
+                                                       backupDirectory: AppStorageLocation.current.supportDirectory)
         self.settings = loaded
         languageChange = LanguageChange(atLaunch: loaded.language)
         OWELog.apply(logLevel: settings.logLevel)
@@ -66,7 +61,31 @@ class GlobalSettingsViewModel: ObservableObject {
         NotificationCenter.default.publisher(for: NSApplication.didFinishLaunchingNotification)
             .sink { [weak self] _ in self?.didFinishLaunchingNotification() }
     }
-    
+
+    /// The stored settings. `GlobalSettings` reads each key on its own, so this only fails when
+    /// the data isn't a settings object at all. The defaults are used then, and as the next save
+    /// replaces the stored data, it is first copied to `settings.corrupt-<date>.json` in
+    /// `backupDirectory`.
+    nonisolated static func loadSettings(from data: Data?, backupDirectory: URL, now: Date = Date()) -> GlobalSettings {
+        guard let data else { return GlobalSettings() }
+        do {
+            return try JSONDecoder().decode(GlobalSettings.self, from: data)
+        } catch {
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            formatter.dateFormat = "yyyyMMdd-HHmmss"
+            let backup: URL = backupDirectory.appending(path: "settings.corrupt-\(formatter.string(from: now)).json")
+            do {
+                try FileManager.default.createDirectory(at: backupDirectory, withIntermediateDirectories: true)
+                try data.write(to: backup, options: .atomic)
+                OWELog.error(.settings, "Settings can't be read and are reset to the defaults; the stored copy is at \(backup.path): \(error)")
+            } catch let backupError {
+                OWELog.error(.settings, "Settings can't be read and are reset to the defaults (\(error)); backing up the stored copy failed: \(backupError)")
+            }
+            return GlobalSettings()
+        }
+    }
+
     deinit {
         didFinishLaunchingNotificationCancellable?.cancel()
         didCurrentWallpaperChangeCancellable?.cancel()

@@ -103,6 +103,9 @@ class ContentViewModel: ObservableObject, DropDelegate {
     
     var importAlertError: WPImportError? = nil
 
+    @Published var deletionAlertPresented = false
+    var deletionAlertError: WallpaperDeletion.Failure? = nil
+
     init() {
         _ = steamCmd
         memoCancellables = [
@@ -184,6 +187,24 @@ class ContentViewModel: ObservableObject, DropDelegate {
         DownloadedWallpaperIndex.shared.remove(directory: directory)
         let store = SceneLoadingSnapshotStore.current
         Task.detached(priority: .utility) { store.removeSnapshots(forWallpaperAt: directory) }
+    }
+
+    /// Deletes the wallpapers' folders, or moves them to the Trash, off the main thread. Then each
+    /// one that is gone is forgotten, every one leaves the screens showing it, and a failure is
+    /// shown in an alert.
+    func deleteWallpapers(at directories: [URL], toTrash: Bool, wallpaperViewModel: WallpaperViewModel) {
+        Task { @MainActor in
+            let result: (deleted: [URL], failure: WallpaperDeletion.Failure?) = await Task.detached(priority: .userInitiated) {
+                WallpaperDeletion.delete(directories, toTrash: toTrash)
+            }.value
+            for directory in result.deleted { forgetDeletedWallpaper(at: directory) }
+            for directory in directories { wallpaperViewModel.removeWallpaperFromAllScreens(directory: directory) }
+            removeUnusedWorkshopDependencies()
+            if let failure = result.failure {
+                deletionAlertError = failure
+                deletionAlertPresented = true
+            }
+        }
     }
 
     /// After wallpapers were deleted: removes the dependency-only items none of the remaining ones use.
@@ -305,37 +326,14 @@ class ContentViewModel: ObservableObject, DropDelegate {
         filteredWallpapers.sorted {
             switch sortingBy {
             case .name:
-                if $0.project.title <= $1.project.title,
-                      sortingSequence == .increase
-                 { return false }
-                
-                if $0.project.title >= $1.project.title,
-                      sortingSequence == .decrease
-                 { return false }
-                
-                return true
+                return Self.precedes($0.project.title, $1.project.title, in: sortingSequence)
             case .rating:
-                if $0.project.contentrating ?? "0" <= $1.project.contentrating ?? "0",
-                      sortingSequence == .increase
-                 { return false }
-                
-                if $0.project.contentrating ?? "0" >= $1.project.contentrating ?? "0",
-                      sortingSequence == .decrease
-                 { return false }
-                
-                return true
+                return Self.precedes($0.project.contentrating ?? "0", $1.project.contentrating ?? "0",
+                                     in: sortingSequence)
 //            case .favorite:
 //                return false
             case .fileSize:
-                if library.size(of: $0) <= library.size(of: $1),
-                      sortingSequence == .increase
-                 { return false }
-                
-                if $0.project.title >= $1.project.title,
-                      sortingSequence == .decrease
-                 { return false }
-                
-                return true
+                return Self.precedes(library.size(of: $0), library.size(of: $1), in: sortingSequence)
             case .dateAdded:
                 let firstDate = DownloadedWallpaperIndex.shared.dateAdded(for: $0.wallpaperDirectory)
                 let secondDate = DownloadedWallpaperIndex.shared.dateAdded(for: $1.wallpaperDirectory)
@@ -351,6 +349,16 @@ class ContentViewModel: ObservableObject, DropDelegate {
         }
     }
     
+    /// Whether `lhs` sorts before `rhs` for the title, rating and file size orders: `.increase` puts
+    /// the larger value first and `.decrease` the smaller, as the library has always ordered them.
+    static func precedes<Value: Comparable>(_ lhs: Value, _ rhs: Value,
+                                            in sequence: WEWallpaperSortingSequence) -> Bool {
+        switch sequence {
+        case .increase: return lhs > rhs
+        case .decrease: return lhs < rhs
+        }
+    }
+
     /// Provide wallpapers information for UI, being filtered by FilterResults and divided in pages
     public var autoRefreshWallpapers: [WEWallpaper] {
         sortedWallpapers

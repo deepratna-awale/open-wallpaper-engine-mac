@@ -41,6 +41,10 @@ struct WallpaperPreview: SubviewOfContentView {
     /// walks every file, which stalled each redraw of the panel.
     @State private var measuredSize: (directory: URL, text: String)?
 
+    /// Whether each scene shown ships sounds (`SceneAudioPresence`), found off the main thread
+    /// once per wallpaper: it reads the wallpaper's packages.
+    @State private var sceneAudioPresence: [URL: Bool] = [:]
+
     var wallpaperSize: String {
         guard let measuredSize, measuredSize.directory == wallpaperViewModel.displayedWallpaper.wallpaperDirectory
         else { return "…" }
@@ -229,6 +233,15 @@ struct WallpaperPreview: SubviewOfContentView {
                                 measuredSize = (directory, text)
                             }
                     }
+                    .task(id: wallpaperViewModel.displayedWallpaper.wallpaperDirectory) {
+                        let wallpaper = wallpaperViewModel.displayedWallpaper
+                        let directory = wallpaper.wallpaperDirectory
+                        guard wallpaper.project.type.lowercased() == "scene", sceneAudioPresence[directory] == nil else { return }
+                        let hasAudio = await Task.detached(priority: .utility) {
+                            SceneAudioPresence.hasAudio(in: directory)
+                        }.value
+                        sceneAudioPresence[directory] = hasAudio
+                    }
                     .font(.footnote)
                     
                     ViewThatFits(in: .horizontal) {
@@ -376,7 +389,7 @@ struct WallpaperPreview: SubviewOfContentView {
                                                                   dependencies: AppDelegate.shared.workshopDependencies,
                                                                   wallpaper: wallpaperViewModel.displayedWallpaper)
                                     .id(wallpaperViewModel.displayedWallpaper.wallpaperDirectory)
-                                if wallpaperHasSceneAudio(wallpaperViewModel.displayedWallpaper) {
+                                if sceneAudioPresence[wallpaperViewModel.displayedWallpaper.wallpaperDirectory] == true {
                                     sceneMusicControls(for: wallpaperViewModel.displayedWallpaper)
                                 }
                             case "web":
@@ -441,33 +454,6 @@ struct WallpaperPreview: SubviewOfContentView {
                 .padding(.bottom)
             }
         }
-    }
-
-    private static var sceneAudioPresenceCache: [String: Bool] = [:]
-
-    private func wallpaperHasSceneAudio(_ wallpaper: WEWallpaper) -> Bool {
-        let key = wallpaper.wallpaperDirectory.path
-        if let cached = Self.sceneAudioPresenceCache[key] { return cached }
-        let extensions: Set<String> = ["mp3", "ogg", "wav", "m4a", "flac"]
-        let fm = FileManager.default
-        var found = false
-        if let enumerator = fm.enumerator(at: wallpaper.wallpaperDirectory, includingPropertiesForKeys: nil) {
-            for case let url as URL in enumerator {
-                if extensions.contains(url.pathExtension.lowercased()) {
-                    found = true
-                    break
-                }
-                if url.pathExtension.lowercased() == "pkg",
-                   let data = try? Data(contentsOf: url),
-                   let parser = try? PKGParser(data: data),
-                   parser.fileList.contains(where: { extensions.contains(URL(fileURLWithPath: $0).pathExtension.lowercased()) }) {
-                    found = true
-                    break
-                }
-            }
-        }
-        Self.sceneAudioPresenceCache[key] = found
-        return found
     }
 
     private var favoriteControl: some View {
