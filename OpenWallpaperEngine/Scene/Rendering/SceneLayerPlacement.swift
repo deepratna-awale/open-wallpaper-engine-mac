@@ -61,18 +61,6 @@ struct SceneLayerPlacement: Equatable {
         return 2 * max(simd_length(right - middle), simd_length(up - middle))
     }
 
-    /// The pixels the quad covers in a target of `targetSize`, as a box; nil when a corner is
-    /// behind the eye (then the caller treats the whole target as touched).
-    func pixelBounds(targetSize: SIMD2<Float>) -> (min: SIMD2<Float>, max: SIMD2<Float>)? {
-        var low = SIMD2<Float>(repeating: .greatestFiniteMagnitude), high = -low
-        for uv in ImageMaterialRenderer.corners {
-            guard let point = pixel(corner(uv), targetSize: targetSize) else { return nil }
-            low = simd_min(low, point)
-            high = simd_max(high, point)
-        }
-        return (low, high)
-    }
-
     /// What the native layer draw's `sceneVertex3D` takes.
     var native: LayerPlacement3D {
         LayerPlacement3D(modelViewProjection: modelViewProjection, size: size, offset: offset)

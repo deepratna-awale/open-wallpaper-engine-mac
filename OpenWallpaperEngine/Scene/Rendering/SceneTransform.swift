@@ -364,4 +364,16 @@ enum ScenePlacementScale {
         let offset = (drawable - sceneSize * scale) / 2
         return (drawablePoint - offset) / scale
     }
+
+    /// `scenePoint`'s inverse: where a point in scene units (y up) is drawn, in drawable pixels
+    /// from the bottom-left.
+    static func drawablePoint(scenePoint: SIMD2<Float>, placement: WallpaperPlacement, sceneSize: SIMD2<Float>,
+                              drawableSize: SIMD2<Float>, pixelsPerPoint: Float) -> SIMD2<Float> {
+        let drawable = simd_max(drawableSize, SIMD2(1, 1))
+        let size = simd_max(sceneSize, SIMD2(1, 1))
+        if placement == .stretch { return scenePoint * drawable / size }
+        let scale = self.scale(for: placement, sceneSize: size, drawableSize: drawable, pixelsPerPoint: pixelsPerPoint)
+        let offset = (drawable - size * scale) / 2
+        return scenePoint * scale + offset
+    }
 }

@@ -54,6 +54,9 @@ final class WorkshopItemAvailabilityTests: XCTestCase {
         XCTAssertEqual(WorkshopItemAvailability.workshopPageURL(for: "1000000001")?.absoluteString,
                        "https://steamcommunity.com/sharedfiles/filedetails/?id=1000000001")
         XCTAssertNil(WorkshopItemAvailability.workshopPageURL(for: "../x"))
+        XCTAssertEqual(WorkshopItemAvailability.steamClientPageURL(for: "1000000001")?.absoluteString,
+                       "steam://url/CommunityFilePage/1000000001")
+        XCTAssertNil(WorkshopItemAvailability.steamClientPageURL(for: "../x"))
     }
 
     func testSteamCmdFileNotFound() {

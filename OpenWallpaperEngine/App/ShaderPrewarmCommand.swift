@@ -1,7 +1,7 @@
 import AppKit
 import Darwin
 
-/// The app's helper runs, handled in `main.swift` before any app lifecycle starts:
+/// The app's helper runs, handled in `AppMain` before any app lifecycle starts:
 /// - `--shader-compile-helper` translates shaders for the app that started it
 ///   (`ShaderCompileHelperServer`) until that app closes its stdin;
 /// - `--print-shader-cache-key` prints this build's `ShaderCacheKey` as one line of JSON;

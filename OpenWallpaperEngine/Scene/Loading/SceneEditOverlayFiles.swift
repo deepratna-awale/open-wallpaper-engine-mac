@@ -56,18 +56,22 @@ enum SceneEditOverlayFiles {
         post(overlay, base: base, wallpaperDirectory: wallpaperDirectory, transient: true)
     }
 
-    private static func post(_ overlay: SceneEditOverlay, base: SceneOutline?, wallpaperDirectory: URL, transient: Bool) {
+    /// Has this process's running instances of the wallpaper apply `overlay` (`transient`: a drag
+    /// in progress). The Wallpaper Editor's process reaches Open Wallpaper Engine's through
+    /// `WallpaperEditorChangeSync`, which posts the same here.
+    static func post(_ overlay: SceneEditOverlay, base: SceneOutline?, wallpaperDirectory: URL, transient: Bool,
+                     center: NotificationCenter = .default) {
         var userInfo: [String: Any] = ["wallpaperDirectory": wallpaperDirectory.standardizedFileURL,
                                        "overlay": overlay, "transient": transient]
         if let base { userInfo["base"] = base }
-        NotificationCenter.default.post(name: .sceneEditOverlayDidChange, object: nil, userInfo: userInfo)
+        center.post(name: .sceneEditOverlayDidChange, object: nil, userInfo: userInfo)
     }
 
     /// Has the running instances read the overlay's particle documents again and build the
     /// systems that read `paths`, and the systems `objectIDs` (a restart), again.
     static func postParticles(_ overlay: SceneEditOverlay, wallpaperDirectory: URL, paths: Set<String> = [],
-                              objectIDs: Set<Int> = []) {
-        NotificationCenter.default.post(name: .sceneEditParticlesDidChange, object: nil, userInfo: [
+                              objectIDs: Set<Int> = [], center: NotificationCenter = .default) {
+        center.post(name: .sceneEditParticlesDidChange, object: nil, userInfo: [
             "wallpaperDirectory": wallpaperDirectory.standardizedFileURL,
             "assets": overlay.particles?.assetData() ?? [:],
             "paths": Array(paths),

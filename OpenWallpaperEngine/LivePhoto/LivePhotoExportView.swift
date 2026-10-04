@@ -301,10 +301,8 @@ struct LockScreenPreview: View {
     var body: some View {
         GeometryReader { geometry in
             let window = isLandscape ? model.crop.landscapeRect : model.crop.cropRect
-            let aspect = window.width / max(window.height, 1)
-            let frame = Self.frameSize(fitting: geometry.size, aspect: aspect)
-            let scale = frame.width / max(window.width, 1)
-            screen(frame: frame, window: window, scale: scale)
+            let layout = Self.layout(window: window, sceneSize: model.sceneSize, in: geometry.size)
+            screen(frame: layout.frame, window: window, scale: layout.scale)
                 .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
         }
         .padding(24)
@@ -350,9 +348,10 @@ struct LockScreenPreview: View {
     private func content(frame: CGSize, window: CGRect, scale: CGFloat) -> some View {
         if model.previewFrames.isEmpty {
             if !model.session.isEnded {
-                IsolatedSceneView(session: model.session)
-                    .frame(width: model.sceneSize.x * scale, height: model.sceneSize.y * scale)
-                    .offset(x: -window.minX * scale, y: -window.minY * scale)
+                let layout = Self.Layout(window: window, sceneSize: model.sceneSize, scale: scale)
+                IsolatedSceneView(session: model.session, presentation: LivePhotoRenderer.presentation)
+                    .frame(width: layout.sceneViewSize.width, height: layout.sceneViewSize.height)
+                    .offset(x: layout.sceneViewOffset.x, y: layout.sceneViewOffset.y)
                     .allowsHitTesting(false)
             }
         } else {
@@ -368,6 +367,29 @@ struct LockScreenPreview: View {
                     .offset(x: (crop.minX - window.minX) * scale, y: (crop.minY - window.minY) * scale)
             }
         }
+    }
+
+    /// The preview's geometry: the screen's frame, its points per scene unit, and the scene's
+    /// view (the whole scene at that scale, drawn as the export draws it,
+    /// `LivePhotoRenderer.presentation`) moved so the window's top-left is the frame's.
+    struct Layout {
+        let frame: CGSize
+        let scale: CGFloat
+        let sceneViewSize: CGSize
+        let sceneViewOffset: CGPoint
+
+        init(window: CGRect, sceneSize: SIMD2<Double>, scale: CGFloat) {
+            self.scale = scale
+            frame = CGSize(width: window.width * scale, height: window.height * scale)
+            sceneViewSize = CGSize(width: sceneSize.x * scale, height: sceneSize.y * scale)
+            sceneViewOffset = CGPoint(x: -window.minX * scale, y: -window.minY * scale)
+        }
+    }
+
+    /// `window` (scene units) shown as large as it fits in `size`.
+    static func layout(window: CGRect, sceneSize: SIMD2<Double>, in size: CGSize) -> Layout {
+        let frame = frameSize(fitting: size, aspect: window.width / max(window.height, 1))
+        return Layout(window: window, sceneSize: sceneSize, scale: frame.width / max(window.width, 1))
     }
 
     /// The largest frame at `aspect` inside `size`.

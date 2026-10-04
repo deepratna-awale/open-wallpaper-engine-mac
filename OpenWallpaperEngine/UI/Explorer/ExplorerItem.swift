@@ -43,7 +43,7 @@ struct ExplorerItem: SubviewOfContentView {
             // The library already decoded project.json; decoding it again per redraw made tab
             // switches slow.
             GifImage(contentsOf: wallpaper.previewURL
-                        ?? Bundle.main.url(forResource: "WallpaperNotFound", withExtension: "mp4")!,
+                        ?? AppBundleLayout.wallpaperNotFoundURL,
                      animates: ThumbnailAnimation.plays(isAppActive: viewModel.isApplicationActive,
                                                         isLowPowerMode: lowPowerMode.isEnabled,
                                                         isHovered: isHovered))
@@ -68,15 +68,6 @@ struct ExplorerItem: SubviewOfContentView {
             .background(Color(white: 0, opacity: viewModel.imageScaleIndex == index ? 0.4 : 0.2))
             .multilineTextAlignment(.center)
             .foregroundStyle(Color(white: viewModel.imageScaleIndex == index ? 0.9 : 0.7))
-            
-//            Spacer()
-//                .onHover { onHover in
-//                    if onHover {
-//                        viewModel.imageScaleIndex = index
-//                    } else {
-//                        viewModel.imageScaleIndex = -1
-//                    }
-//                }
         }
         .onHover { isHovered = $0 }
         .help(tooltip)

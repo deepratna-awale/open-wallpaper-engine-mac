@@ -159,3 +159,4 @@ map:
   "OpenWallpaperEngine/UI/**": ["Onboarding*", "WhatsNew*", "FilterResults*", "SortBy*", "Menu*", "Playlist*", "Installed*", "NumericSlider*", "Legal*", "Desktop*", "Workshop*", "Steam*", "WallpaperPreset*", "Settings*"]
   "OpenWallpaperEngine/Localizable.xcstrings": ["Localization*"]
   "OpenWallpaperEngine/DepthMaps/**": ["DepthMap*", "DepthParallax*", "Localization*"]
+  "OpenWallpaperEngine/Installs/**": ["VersionedInstall*", "ChromiumEngine*", "DepthMapPlugin*", "WebEngineRouting*"]

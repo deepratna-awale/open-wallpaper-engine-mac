@@ -19,7 +19,7 @@ final class SceneRegionProjection {
     private var failed: Set<MTLPixelFormat> = []
 
     init?(device: MTLDevice) {
-        guard let library = device.makeDefaultLibrary(),
+        guard let library = SceneMetalLibrary.make(device: device),
               let vertex = library.makeFunction(name: "sceneRegionVertex3D"),
               let fragment = library.makeFunction(name: "sceneRegionFragment3D") else {
             OWELog.error(.scene, "Scene region projection: shader functions missing")

@@ -36,7 +36,7 @@ extension SceneEditOverlay {
     }
 
     /// The structure alone: what layers and effects there are, in which order, without any value edit.
-    var structureOnly: SceneEditOverlay {
+    public var structureOnly: SceneEditOverlay {
         var result = SceneEditOverlay()
         result.added = added
         result.removed = removed
@@ -58,12 +58,6 @@ extension SceneEditOverlay {
 
     public func effectEdit(_ key: String, of objectID: Int) -> EffectEdit? {
         objects[String(objectID)]?.effects[key]
-    }
-
-    /// The effect keys of the object in order, given how many effects it authors.
-    public func effectKeys(of objectID: Int, authoredCount: Int) -> [String] {
-        let edit = objects[String(objectID)]
-        return edit?.effectOrder ?? Self.defaultEffectOrder(authoredCount: authoredCount, added: edit?.addedEffects)
     }
 
     // MARK: Layers

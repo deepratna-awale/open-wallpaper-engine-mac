@@ -121,6 +121,16 @@ final class SceneStructureEditTests: XCTestCase {
         XCTAssertEqual(session.overlay.field("alpha", of: 11), .number(0.5))
     }
 
+    /// A wallpaper in another process than the editor's reads the same base the session holds.
+    func testTheBaseOutlineCanBeReadFromTheSceneAndOverlayAlone() throws {
+        session.setValue(.number(0.5), for: "alpha", of: 11, actionName: "Opacity")
+        session.delete([13], actionName: "Delete Layer")
+        let base = try SceneEditSession.baseOutline(sceneData: Fixtures.sceneData, overlay: session.overlay)
+        XCTAssertEqual(base.layers.map(\.id), session.baseOutline.layers.map(\.id))
+        XCTAssertEqual(base.layer(11)?.fields["alpha"], session.baseOutline.layer(11)?.fields["alpha"],
+                       "the base holds the structure, not the value edits")
+    }
+
     func testDeletingAnAddedLayerLeavesNothing() {
         let id = session.addLayer(SceneLayerFactory.fullscreen(name: "FX"), actionName: "Add")
         session.delete([id], actionName: "Delete")

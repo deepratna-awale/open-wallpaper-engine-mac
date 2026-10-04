@@ -113,6 +113,9 @@ private final class SceneInspectorModel: ObservableObject {
     @Published var loadingItemID: String?
     private(set) var initiallySelectedID: String?
     private(set) var sceneSize = SIMD2<Double>(1920, 1080)
+    /// The size the renderer draws the scene at (`SceneWallpaperViewModel.sceneSize(of:)`): the
+    /// iPhone & iPad Export's crop frames the drawn scene, in its preview and its render alike.
+    private(set) var renderSceneSize = SIMD2<Double>(1920, 1080)
 
     private let directory: URL
     private let package: PKGParser?
@@ -155,6 +158,7 @@ private final class SceneInspectorModel: ObservableObject {
             return
         }
                 sceneSize = Self.sceneSize(for: scene)
+        renderSceneSize = SIMD2<Double>(SceneWallpaperViewModel.sceneSize(of: scene))
 
         let storedValues: [String: String] = targets.storedValues
         items = scene.objects.enumerated().map { index, object in
@@ -357,10 +361,6 @@ private final class SceneInspectorModel: ObservableObject {
         SceneBlendModeOptions.groupTitle(key)
     }
 
-    private static func displayEffectValue(_ value: Double, key: String) -> Double {
-        value
-    }
-
     func setEffectValue(_ value: Double, control: SceneInspectorEffectControl) {
         effectValues[control.id] = value
         // A linked vec2 moves both components together, as WE's linked slider does.
@@ -493,10 +493,6 @@ private final class SceneInspectorModel: ObservableObject {
 
     private func musicAmountKey(for control: SceneInspectorEffectControl) -> String {
         "\(overrideKey(for: control) ?? control.id)_musicAmount"
-    }
-
-    func resetEffectValue(_ control: SceneInspectorEffectControl) {
-        setEffectValue(control.defaultValue, control: control)
     }
 
     func setEffectEnabled(_ enabled: Bool, effect: SceneInspectorEffect) {
@@ -1270,7 +1266,7 @@ private struct SceneInspectorContent: View {
         let eligible = LivePhotoExportModel.isEligible(wallpaper)
         return Picker("Mode", selection: Binding(get: { mode }, set: { newValue in
             guard newValue != mode else { return }
-            onModeChange(newValue, model.sceneSize)
+            onModeChange(newValue, model.renderSceneSize)
         })) {
             ForEach(SceneInspectorMode.allCases, id: \.self) { mode in
                 Text(mode.title).tag(mode)
@@ -1898,14 +1894,6 @@ private struct SceneInspectorContent: View {
                 Text(title).font(.headline)
                 ForEach(values, id: \.self) { Text($0).font(.caption.monospaced()) }
             }
-        }
-    }
-
-    private func sourceBlock(_ title: String, _ text: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(.headline)
-            Text(text).font(.caption.monospaced()).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)
-                .padding(8).background(Color(nsColor: .controlBackgroundColor)).clipShape(RoundedRectangle(cornerRadius: 6))
         }
     }
 

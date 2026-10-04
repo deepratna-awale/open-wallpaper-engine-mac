@@ -15,7 +15,7 @@ final class SceneScriptJITTests: XCTestCase {
     }
 
     /// The watchdog stops a JIT-compiled empty loop only with polling traps, which the app turns on
-    /// at launch (the test host runs the same `main.swift`).
+    /// at launch (the test host runs the same `AppMain`).
     func testTheWatchdogStopsAJITCompiledEmptyLoop() throws {
         XCTAssertEqual(ProcessInfo.processInfo.environment["JSC_usePollingTraps"], "true")
         try XCTSkipUnless(SceneScriptJIT.isEnabled, "the test host isn't signed with \(SceneScriptJIT.entitlement)")

@@ -322,7 +322,6 @@ struct GlobalSettings: Codable, Equatable {
     
     // MARK: Automatic Setup
     var autoStart = false
-    var safeMode = false
     
     // MARK: Basic Setup
     var language = GSLocalization.followSystem
@@ -385,7 +384,7 @@ struct GlobalSettings: Codable, Equatable {
         case renderResolution, sceneDetail, upscaling, renderScale
         case postProcessing = "postProcessingQuality"
         case reflections = "reflection"
-        case autoStart, safeMode, language, adjustMenuBarTint, appearance, audioOutput
+        case autoStart, language, adjustMenuBarTint, appearance, audioOutput
         case lockScreenPicture, screenSaver
         case reloadWhenChangingOutputDevice, videoFramework, processPiority, pauseOnVRAMExhausted
         case restartAfterCrashing, autoRefresh
@@ -442,7 +441,6 @@ extension GlobalSettings {
         read(.webStandardResolution, &webStandardResolution)
         read(.reducedResolutionParticles, &reducedResolutionParticles)
         read(.autoStart, &autoStart)
-        read(.safeMode, &safeMode)
         read(.language, &language)
         read(.adjustMenuBarTint, &adjustMenuBarTint)
         read(.lockScreenPicture, &lockScreenPicture)
