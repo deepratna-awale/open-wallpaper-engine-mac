@@ -103,6 +103,9 @@ class ContentViewModel: ObservableObject, DropDelegate {
     
     var importAlertError: WPImportError? = nil
 
+    @Published var deletionAlertPresented = false
+    var deletionAlertError: WallpaperDeletion.Failure? = nil
+
     init() {
         _ = steamCmd
         memoCancellables = [
@@ -184,6 +187,24 @@ class ContentViewModel: ObservableObject, DropDelegate {
         DownloadedWallpaperIndex.shared.remove(directory: directory)
         let store = SceneLoadingSnapshotStore.current
         Task.detached(priority: .utility) { store.removeSnapshots(forWallpaperAt: directory) }
+    }
+
+    /// Deletes the wallpapers' folders, or moves them to the Trash, off the main thread. Then each
+    /// one that is gone is forgotten, every one leaves the screens showing it, and a failure is
+    /// shown in an alert.
+    func deleteWallpapers(at directories: [URL], toTrash: Bool, wallpaperViewModel: WallpaperViewModel) {
+        Task { @MainActor in
+            let result: (deleted: [URL], failure: WallpaperDeletion.Failure?) = await Task.detached(priority: .userInitiated) {
+                WallpaperDeletion.delete(directories, toTrash: toTrash)
+            }.value
+            for directory in result.deleted { forgetDeletedWallpaper(at: directory) }
+            for directory in directories { wallpaperViewModel.removeWallpaperFromAllScreens(directory: directory) }
+            removeUnusedWorkshopDependencies()
+            if let failure = result.failure {
+                deletionAlertError = failure
+                deletionAlertPresented = true
+            }
+        }
     }
 
     /// After wallpapers were deleted: removes the dependency-only items none of the remaining ones use.
