@@ -78,6 +78,8 @@ struct GeneralPage: SettingsPage {
                 Label("macOS", systemImage: "apple.logo")
             }
             .settingsAnchor(SettingsAnchor.macOS)
+            // MARK: Theming
+            ThemingSection(viewModel: viewModel, controller: AppDelegate.shared.theming)
             // MARK: Setup Assistant
             Section {
                 HStack {

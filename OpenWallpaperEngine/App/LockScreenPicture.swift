@@ -130,13 +130,18 @@ struct LockScreenPicture: @unchecked Sendable { // UserDefaults is thread-safe; 
                              Int(screen.frame.height * screen.backingScaleFactor))
             return (id, NSWorkspace.shared.desktopImageURL(for: screen), size)
         }
+        let strips = DesktopPictureTheming.strips()
         queue.async {
             guard let contentKey = SceneLoadingSnapshotStore.contentKey(for: directory) else { return }
             var written: [(CGDirectDisplayID, URL?, URL)] = []
             for (id, showing, size) in targets {
                 guard let snapshot = store.bestSnapshot(forWallpaperAt: directory, contentKey: contentKey,
                                                         pixelSize: size) else { continue }
-                do { written.append((id, showing, try picture.write(snapshot: snapshot, display: id, showing: showing))) } catch {
+                do {
+                    let url = try picture.write(snapshot: snapshot, display: id, showing: showing)
+                    DesktopPictureTheming.draw(strips, into: url, display: id)
+                    written.append((id, showing, url))
+                } catch {
                     OWELog.error(.app, "Lock screen picture: can't copy the snapshot: \(error)")
                 }
             }

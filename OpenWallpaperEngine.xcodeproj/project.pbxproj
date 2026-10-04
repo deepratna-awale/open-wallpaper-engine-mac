@@ -24,6 +24,7 @@
 		FA1000000000000000000013 /* OpenWallpaperEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA1000000000000000000002 /* OpenWallpaperEngine.framework */; };
 		FB1000000000000000000010 /* Wallpaper Editor.app in Embed Wallpaper Editor */ = {isa = PBXBuildFile; fileRef = FB1000000000000000000002 /* Wallpaper Editor.app */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		EC1000000000000000000011 /* OWEControlProtocol in Frameworks */ = {isa = PBXBuildFile; productRef = EC1000000000000000000012 /* OWEControlProtocol */; };
+		EF8000000000000000000011 /* OWETheming in Frameworks */ = {isa = PBXBuildFile; productRef = EF8000000000000000000012 /* OWETheming */; };
 		EC1000000000000000000021 /* OWEMCP in Frameworks */ = {isa = PBXBuildFile; productRef = EC1000000000000000000022 /* OWEMCP */; };
 		EC2000000000000000000010 /* owe-mcp in Embed MCP Server */ = {isa = PBXBuildFile; fileRef = EC2000000000000000000002 /* owe-mcp */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		EE6000000000000000000015 /* owe-chromium-helper.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = EE6000000000000000000003 /* owe-chromium-helper.xpc */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -266,6 +267,7 @@
 				ED7000000000000000000021 /* OWESceneEditing in Frameworks */,
 				ED7000000000000000000011 /* OWEInspectorKit in Frameworks */,
 				EC1000000000000000000011 /* OWEControlProtocol in Frameworks */,
+				EF8000000000000000000011 /* OWETheming in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -423,6 +425,7 @@
 				ED7000000000000000000022 /* OWESceneEditing */,
 				ED7000000000000000000012 /* OWEInspectorKit */,
 				EC1000000000000000000012 /* OWEControlProtocol */,
+				EF8000000000000000000012 /* OWETheming */,
 			);
 			productName = OpenWallpaperEngine;
 			productReference = FA1000000000000000000002 /* OpenWallpaperEngine.framework */;
@@ -664,6 +667,7 @@
 				EE3000000000000000000003 /* XCLocalSwiftPackageReference "Vendor/ShaderToolchain" */,
 				ED7000000000000000000003 /* XCLocalSwiftPackageReference "Packages/OWEEditor" */,
 				EC1000000000000000000003 /* XCLocalSwiftPackageReference "Packages/OWEControl" */,
+				EF8000000000000000000003 /* XCLocalSwiftPackageReference "Packages/OWETheming" */,
 				EE4000000000000000000003 /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -1421,6 +1425,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/OWEControl;
 		};
+		EF8000000000000000000003 /* XCLocalSwiftPackageReference "Packages/OWETheming" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/OWETheming;
+		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
@@ -1468,6 +1476,10 @@
 		EC1000000000000000000022 /* OWEMCP */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = OWEMCP;
+		};
+		EF8000000000000000000012 /* OWETheming */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = OWETheming;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

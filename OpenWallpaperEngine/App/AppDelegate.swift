@@ -11,6 +11,7 @@ import SwiftUI
 import AVKit
 import WebKit
 import OWEInspectorKit
+import OWETheming
 
 private final class WorkshopPreviewWindow: NSWindow {
     var onDismiss: (() -> Void)?
@@ -148,6 +149,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// the desktop's left clicks.
     /// Settings › Plugins › Screen Saver: the loop videos and the bundled saver.
     lazy var screenSaver = ScreenSaverPlugin()
+    /// Settings › General › Theming: macOS follows the wallpaper's scheme colour.
+    private(set) lazy var theming = ThemingController.make { [unowned self] in
+        setDesktopPictures(for: wallpaperViewModel.currentWallpaper)
+    }
     /// Settings › Plugins › MCP Server: MCP clients' control of the app while installed (`MCP/`).
     private(set) lazy var mcpServerPlugin: MCPServerPlugin = {
         let model = AppControlModel(app: self)
@@ -403,6 +408,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // MCP clients connect once the app is set up, while the MCP Server plugin is installed.
         mcpServerPlugin.start()
 
+        // Theming: puts back what a crashed session changed, then follows the wallpaper's colour.
+        DesktopPictureTheming.provider = { [unowned self] in theming.strips }
+        theming.start(settings: globalSettingsViewModel.$settings.map(\.theming).eraseToAnyPublisher(),
+                      wallpapers: wallpaperViewModel)
+
         // Launched into the menu bar only, the Dock icon goes until a window opens.
         dockPresence.start()
 
@@ -485,6 +495,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         crashWatcher.applicationWillTerminate()
         mcpServerPlugin.stop()
         updater.stopShaderPrewarm()
+        // The system colours go back when the user chose "Restore on quit".
+        theming.stop()
         // The lock-screen pictures go back to each display's own picture, the rest to the one saved
         // at launch.
         LockScreenPicture.restore(synchronously: true)
@@ -808,8 +820,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     
     func setPlacehoderWallpaper(with wallpaper: WEWallpaper) {
+        screenSaver.update(enabled: globalSettingsViewModel.settings.screenSaver, wallpaper: wallpaper)
+        setDesktopPictures(for: wallpaper)
+    }
+
+    /// The desktop pictures OWE sets for `wallpaper`: the scene's lock-screen picture, a video's
+    /// first frame. Again when theming's menu bar strip changes (`ThemingController`).
+    func setDesktopPictures(for wallpaper: WEWallpaper) {
         let settings = globalSettingsViewModel.settings
-        screenSaver.update(enabled: settings.screenSaver, wallpaper: wallpaper)
         if settings.lockScreenPicture { LockScreenPicture.apply(wallpaper) }
         switch wallpaper.project.type {
         case "video":

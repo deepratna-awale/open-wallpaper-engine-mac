@@ -4739,6 +4739,100 @@
         }
       }
     },
+    "Accent Color" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لون التمييز"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akzentfarbe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Color de acento"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couleur d’accentuation"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एक्सेंट रंग"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colore di accento"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アクセントカラー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "강조 색상"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kolor akcentu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cor de Destaque"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цвет акцента"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vurgu Rengi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Колір акценту"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "强调色"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "強調色"
+          }
+        }
+      }
+    },
     "Accessibility" : {
       "localizations" : {
         "ar" : {
@@ -11433,6 +11527,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "仍要套用"
+          }
+        }
+      }
+    },
+    "Apply Now (Restarts Dock)" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تطبيق الآن (يعيد تشغيل Dock)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jetzt anwenden (startet das Dock neu)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aplicar ahora (reinicia el Dock)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appliquer maintenant (redémarre le Dock)"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अभी लागू करें (Dock रीस्टार्ट होगा)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Applica ora (riavvia il Dock)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今すぐ適用（Dockを再起動）"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지금 적용(Dock 재시작)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zastosuj teraz (uruchamia ponownie Dock)"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aplicar Agora (Reinicia o Dock)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Применить сейчас (перезапускает Dock)"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Şimdi Uygula (Dock’u Yeniden Başlatır)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Застосувати зараз (перезапускає Dock)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "立即应用（重新启动程序坞）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "立即套用（重新啟動 Dock）"
           }
         }
       }
@@ -39943,6 +40131,100 @@
         }
       }
     },
+    "Fills the menu bar's strip of the desktop picture Open Wallpaper Engine sets with the color; the translucent menu bar shows it. Needs Show Wallpaper on Lock Screen for scenes, or Adjust Menu Bar Color for video and web wallpapers." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يملأ شريط القائمة في صورة سطح المكتب التي يضبطها Open Wallpaper Engine باللون، فيظهر عبر شريط القائمة الشفاف. يتطلب «عرض الخلفية على شاشة القفل» للمشاهد، أو «ضبط لون شريط القائمة» لخلفيات الفيديو والويب."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Füllt den Streifen der Menüleiste im Schreibtischbild, das Open Wallpaper Engine setzt, mit der Farbe; die durchscheinende Menüleiste zeigt sie. Braucht „Hintergrundbild auf dem Sperrbildschirm zeigen“ für Szenen oder „Menüleistenfarbe anpassen“ für Video- und Web-Hintergrundbilder."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rellena con el color la franja de la barra de menús en la imagen de escritorio que establece Open Wallpaper Engine; la barra de menús translúcida la muestra. Necesita «Mostrar el fondo de pantalla en la pantalla bloqueada» para escenas, o «Ajustar color de la barra de menús» para fondos de vídeo y web."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remplit de la couleur la bande de la barre des menus dans l’image du bureau que définit Open Wallpaper Engine ; la barre des menus translucide l’affiche. Nécessite « Afficher le fond d'écran sur l'écran verrouillé » pour les scènes, ou « Ajuster la couleur de la barre des menus » pour les fonds vidéo et web."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine जो डेस्कटॉप चित्र सेट करता है, उसमें मेनू बार वाली पट्टी को इस रंग से भरता है; पारदर्शी मेनू बार उसे दिखाता है। सीन के लिए “लॉक स्क्रीन पर वॉलपेपर दिखाएँ” या वीडियो और वेब वॉलपेपर के लिए “मेनू बार का रंग एडजस्ट करें” चालू होना चाहिए।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riempie con il colore la fascia della barra dei menu nell’immagine della scrivania impostata da Open Wallpaper Engine; la barra dei menu traslucida la mostra. Richiede «Mostra lo sfondo nella schermata di blocco» per le scene, o «Adatta il colore della barra dei menu» per gli sfondi video e web."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engineが設定するデスクトップピクチャのメニューバー部分をこのカラーで塗ります。半透明のメニューバーに反映されます。シーンには「ロック画面に壁紙を表示」、ビデオとWebの壁紙には「メニューバーの色を調整」が必要です。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine이 설정하는 데스크탑 사진의 메뉴 막대 부분을 이 색상으로 채웁니다. 반투명한 메뉴 막대에 비쳐 보입니다. 장면에는 '잠금 화면에 배경화면 표시', 비디오와 웹 배경화면에는 '메뉴 막대 색상 조정'이 필요합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wypełnia kolorem pas paska menu na obrazku biurka ustawianym przez Open Wallpaper Engine; półprzezroczysty pasek menu go pokazuje. Wymaga opcji „Pokazuj tapetę na ekranie blokady” dla scen lub „Dostosuj kolor paska menu” dla tapet wideo i web."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preenche com a cor a faixa da barra de menus na imagem da mesa que o Open Wallpaper Engine define; a barra de menus translúcida a mostra. Requer “Mostrar Papel de Parede na Tela Bloqueada” para cenas, ou “Ajustar Cor da Barra de Menus” para papéis de parede de vídeo e web."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заливает цветом полосу строки меню на картинке рабочего стола, которую устанавливает Open Wallpaper Engine; полупрозрачная строка меню её показывает. Нужно «Показывать обои на экране блокировки» для сцен или «Подстраивать цвет строки меню» для видео- и веб-обоев."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine’in ayarladığı masaüstü resminde menü çubuğuna denk gelen şeridi bu renkle doldurur; yarı saydam menü çubuğu onu gösterir. Sahneler için “Duvar Kâğıdını Kilit Ekranında Göster”, video ve web duvar kâğıtları için “Menü Çubuğu Rengini Ayarla” gerekir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заливає кольором смугу смуги меню на зображенні робочого столу, яке встановлює Open Wallpaper Engine; напівпрозора смуга меню його показує. Потрібно «Показувати шпалери на екрані блокування» для сцен або «Коригувати колір смуги меню» для відео- та вебшпалер."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用此颜色填充 Open Wallpaper Engine 所设桌面图片中菜单栏所在的条带，半透明的菜单栏会显示出来。场景需要“在锁定屏幕上显示壁纸”，视频和网页墙纸需要“调整菜单栏颜色”。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以此顏色填滿 Open Wallpaper Engine 所設桌面圖片中選單列所在的條帶，半透明的選單列會顯示出來。場景需要「在鎖定畫面上顯示桌布」，影片和網頁背景圖片需要「調整選單列顏色」。"
+          }
+        }
+      }
+    },
     "Filter Results" : {
       "localizations" : {
         "ar" : {
@@ -40315,6 +40597,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "依名稱或標籤尋找背景圖片，或瀏覽熱門內容。"
+          }
+        }
+      }
+    },
+    "Finds the most common color in the wallpaper's picture. Otherwise a wallpaper without a scheme color leaves everything as it is." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يجد اللون الأكثر شيوعًا في صورة الخلفية. وإلا فإن الخلفية التي ليس لها لون مخطط تترك كل شيء كما هو."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ermittelt die häufigste Farbe im Bild des Hintergrundbilds. Sonst lässt ein Hintergrundbild ohne Schemafarbe alles, wie es ist."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Busca el color más frecuente en la imagen del fondo de pantalla. Si no, un fondo sin color de esquema deja todo como está."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trouve la couleur la plus fréquente dans l’image du fond d’écran. Sinon, un fond d’écran sans couleur de schéma laisse tout tel quel."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वॉलपेपर के चित्र में सबसे आम रंग ढूँढ़ता है। वरना बिना स्कीम रंग वाला वॉलपेपर सब कुछ जैसा है वैसा छोड़ देता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trova il colore più frequente nell’immagine dello sfondo. Altrimenti uno sfondo senza colore dello schema lascia tutto com’è."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "壁紙の画像で最も多い色を見つけます。オフの場合、スキームカラーのない壁紙では何も変更しません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배경화면 이미지에서 가장 흔한 색을 찾습니다. 그렇지 않으면 스킴 색상이 없는 배경화면은 아무것도 바꾸지 않습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Znajduje najczęstszy kolor na obrazie tapety. W przeciwnym razie tapeta bez koloru schematu niczego nie zmienia."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encontra a cor mais comum na imagem do papel de parede. Caso contrário, um papel de parede sem cor de esquema deixa tudo como está."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Находит самый частый цвет на изображении обоев. Иначе обои без цвета схемы ничего не меняют."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duvar kâğıdının resmindeki en yaygın rengi bulur. Aksi hâlde şema rengi olmayan bir duvar kâğıdı hiçbir şeyi değiştirmez."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знаходить найпоширеніший колір на зображенні шпалер. Інакше шпалери без кольору схеми нічого не змінюють."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找出墙纸图片中最常见的颜色。否则，没有配色的墙纸不会更改任何设置。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找出背景圖片中最常見的顏色。否則，沒有配色的背景圖片不會更改任何設定。"
           }
         }
       }
@@ -41068,6 +41444,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "檔案夾"
+          }
+        }
+      }
+    },
+    "Folder Color" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لون المجلدات"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordnerfarbe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Color de carpetas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couleur des dossiers"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फ़ोल्डर का रंग"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colore cartelle"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フォルダのカラー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "폴더 색상"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kolor folderów"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cor das Pastas"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цвет папок"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klasör Rengi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Колір папок"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件夹颜色"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "檔案夾顏色"
           }
         }
       }
@@ -64530,6 +65000,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "迷因"
+          }
+        }
+      }
+    },
+    "Menu Bar" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "شريط القائمة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menüleiste"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Barra de menús"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Barre des menus"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मेनू बार"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Barra dei menu"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メニューバー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "메뉴 막대"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pasek menu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Barra de Menus"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Строка меню"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menü Çubuğu"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Смуга меню"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "菜单栏"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選單列"
           }
         }
       }
@@ -90808,6 +91372,100 @@
         }
       }
     },
+    "Puts your own colors back when Open Wallpaper Engine quits. After a crash they are put back at the next launch." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يعيد ألوانك عند إنهاء Open Wallpaper Engine. بعد التعطل تُعاد عند التشغيل التالي."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stellt deine eigenen Farben wieder her, wenn Open Wallpaper Engine beendet wird. Nach einem Absturz geschieht das beim nächsten Start."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Devuelve tus propios colores al salir de Open Wallpaper Engine. Tras un fallo, se devuelven en el siguiente arranque."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rétablit vos propres couleurs quand Open Wallpaper Engine se ferme. Après un plantage, elles sont rétablies au lancement suivant."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine बंद होने पर आपके अपने रंग लौटा देता है। क्रैश के बाद वे अगली बार खोलने पर लौटते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ripristina i tuoi colori quando Open Wallpaper Engine si chiude. Dopo un arresto anomalo vengono ripristinati all’avvio successivo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engineの終了時に元のカラーに戻します。クラッシュした場合は次回の起動時に戻します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine을 종료하면 원래 색상으로 되돌립니다. 충돌 후에는 다음 실행 시 되돌립니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przywraca Twoje kolory po zakończeniu Open Wallpaper Engine. Po awarii są przywracane przy następnym uruchomieniu."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Devolve suas próprias cores quando o Open Wallpaper Engine é encerrado. Após uma falha, elas voltam na próxima abertura."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Возвращает ваши цвета при выходе из Open Wallpaper Engine. После сбоя они возвращаются при следующем запуске."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine’den çıkıldığında kendi renklerinizi geri getirir. Çökmeden sonra bir sonraki açılışta geri getirilir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повертає ваші кольори під час виходу з Open Wallpaper Engine. Після збою їх буде повернуто під час наступного запуску."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "退出 Open Wallpaper Engine 时恢复你自己的颜色。发生崩溃后，会在下次启动时恢复。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "結束 Open Wallpaper Engine 時還原你自己的顏色。發生當機後，會在下次啟動時還原。"
+          }
+        }
+      }
+    },
     "Quality" : {
       "localizations" : {
         "ar" : {
@@ -100657,6 +101315,100 @@
         }
       }
     },
+    "Restore on Quit" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الاستعادة عند الإنهاء"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beim Beenden wiederherstellen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurar al salir"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurer à la fermeture"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "बंद करने पर पुनर्स्थापित करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ripristina all’uscita"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "終了時に元に戻す"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "종료 시 복원"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przywracaj przy zakończeniu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurar ao Encerrar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Восстанавливать при выходе"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çıkışta Geri Yükle"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відновлювати під час виходу"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "退出时恢复"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "結束時還原"
+          }
+        }
+      }
+    },
     "Restore the defaults of %@?" : {
       "comment" : "%@ is a settings tab, e.g. Performance",
       "localizations" : {
@@ -106609,6 +107361,100 @@
         }
       }
     },
+    "Scheme color" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لون المخطط"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schemafarbe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Color de esquema"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couleur de schéma"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्कीम रंग"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colore dello schema"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スキームカラー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "스킴 색상"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kolor schematu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cor do esquema"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цвет схемы"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Şema rengi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Колір схеми"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配色"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配色"
+          }
+        }
+      }
+    },
     "Sci-Fi" : {
       "comment" : "Workshop genre tag: science fiction",
       "localizations" : {
@@ -110566,6 +111412,100 @@
         }
       }
     },
+    "Sets System Settings › Appearance › Color to the closest of its colors, as macOS has no custom accent color, and the text highlight color to a light tint of the color." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يضبط «إعدادات النظام › المظهر › اللون» على أقرب ألوانه، إذ لا يدعم macOS لون تمييز مخصصًا، ويضبط لون تمييز النص على درجة فاتحة من اللون."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setzt Systemeinstellungen › Erscheinungsbild › Farbe auf die nächstliegende ihrer Farben, da macOS keine eigene Akzentfarbe kennt, und die Textmarkierungsfarbe auf einen hellen Ton der Farbe."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajusta Ajustes del Sistema › Apariencia › Color al más cercano de sus colores, ya que macOS no admite un color de acento propio, y el color de resaltado del texto a un tono claro del color."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Règle Réglages Système › Apparence › Couleur sur la plus proche de ses couleurs, macOS n’ayant pas de couleur d’accentuation personnalisée, et la couleur de surlignage du texte sur une teinte claire de la couleur."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सिस्टम सेटिंग्स › दिखावट › रंग को उसके सबसे नज़दीकी रंग पर सेट करता है, क्योंकि macOS में अपना एक्सेंट रंग नहीं होता, और टेक्स्ट हाइलाइट रंग को इस रंग के हल्के शेड पर।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imposta Impostazioni di Sistema › Aspetto › Colore sul più vicino dei suoi colori, poiché macOS non ha un colore di accento personalizzato, e il colore di evidenziazione del testo su una tinta chiara del colore."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "システム設定 › 外観 › カラーを最も近い色に設定します（macOSにはカスタムのアクセントカラーがないため）。テキストの強調表示色はこのカラーの淡い色にします。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시스템 설정 › 화면 모드 › 색상을 가장 가까운 색으로 설정하고(macOS에는 사용자 지정 강조 색상이 없음), 텍스트 하이라이트 색상을 이 색의 옅은 색조로 설정합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ustawia Ustawienia systemowe › Wygląd › Kolor na najbliższy z jego kolorów, bo macOS nie ma własnego koloru akcentu, a kolor zaznaczenia tekstu na jasny odcień koloru."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Define Ajustes do Sistema › Aparência › Cor como a mais próxima de suas cores, pois o macOS não tem cor de destaque personalizada, e a cor de realce do texto como um tom claro da cor."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Задаёт в «Системные настройки › Оформление › Цвет» ближайший из его цветов (своего цвета акцента в macOS нет), а цвет выделения текста — светлый оттенок цвета."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sistem Ayarları › Görünüş › Renk’i, macOS özel vurgu rengi desteklemediğinden, renklerinden en yakın olanına; metin vurgu rengini de bu rengin açık bir tonuna ayarlar."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Встановлює в «Системні параметри › Вигляд › Колір» найближчий з його кольорів (власного кольору акценту в macOS немає), а колір виділення тексту — світлий відтінок кольору."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将“系统设置 › 外观 › 颜色”设为最接近的颜色（macOS 不支持自定强调色），并将文本高亮颜色设为此颜色的浅色调。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將「系統設定 › 外觀 › 顏色」設為最接近的顏色（macOS 不支援自訂強調色），並將文字醒目提示顏色設為此顏色的淺色調。"
+          }
+        }
+      }
+    },
     "Sets each display's desktop picture to the scene wallpaper's snapshot, so the lock screen shows it. Turning it off restores your own pictures." : {
       "localizations" : {
         "ar" : {
@@ -110656,6 +111596,194 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "將每個顯示器的桌面圖片設為場景桌布的快照，讓鎖定畫面顯示它。關閉後會還原你自己的圖片。"
+          }
+        }
+      }
+    },
+    "Sets the icon and widget style to Tinted, in the color." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يضبط نمط الأيقونات والأدوات على «ملوّن» بهذا اللون."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setzt den Stil von Symbolen und Widgets auf „Getönt“, in der Farbe."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajusta el estilo de iconos y widgets a «Tintado», con el color."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Règle le style des icônes et widgets sur « Teinté », dans la couleur."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आइकन और विजेट स्टाइल को इस रंग में “टिंटेड” पर सेट करता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imposta lo stile di icone e widget su «Tinta», nel colore."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アイコンとウィジェットのスタイルを、このカラーの「色付き」にします。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아이콘 및 위젯 스타일을 이 색상의 '틴트'로 설정합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ustawia styl ikon i widżetów na „Przyciemniony”, w tym kolorze."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Define o estilo dos ícones e widgets como “Com Tom”, na cor."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Устанавливает стиль значков и виджетов «Тонированный» в этом цвете."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Simge ve araç takımı stilini bu renkte “Renk Tonlu” olarak ayarlar."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Встановлює стиль піктограм і віджетів «Тонований» у цьому кольорі."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将图标和小组件样式设为此颜色的“着色”。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將圖像和小工具樣式設為此顏色的「著色」。"
+          }
+        }
+      }
+    },
+    "Sets the icon, widget and folder color, which folders use with every icon style." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يضبط لون الأيقونات والأدوات والمجلدات، وتستخدمه المجلدات مع كل أنماط الأيقونات."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setzt die Farbe für Symbole, Widgets und Ordner, die Ordner bei jedem Symbolstil verwenden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajusta el color de iconos, widgets y carpetas, que las carpetas usan con cualquier estilo de iconos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Règle la couleur des icônes, widgets et dossiers, que les dossiers utilisent avec tous les styles d’icônes."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आइकन, विजेट और फ़ोल्डर का रंग सेट करता है, जिसे फ़ोल्डर हर आइकन स्टाइल में इस्तेमाल करते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imposta il colore di icone, widget e cartelle, che le cartelle usano con ogni stile di icone."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アイコン、ウィジェット、フォルダのカラーを設定します。フォルダはどのアイコンスタイルでもこのカラーを使います。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아이콘, 위젯 및 폴더 색상을 설정합니다. 폴더는 모든 아이콘 스타일에서 이 색상을 사용합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ustawia kolor ikon, widżetów i folderów, którego foldery używają w każdym stylu ikon."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Define a cor de ícones, widgets e pastas, que as pastas usam com todos os estilos de ícone."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Задаёт цвет значков, виджетов и папок, который папки используют при любом стиле значков."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Simge, araç takımı ve klasör rengini ayarlar; klasörler bu rengi her simge stilinde kullanır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Задає колір піктограм, віджетів і папок, який папки використовують за будь-якого стилю піктограм."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设置图标、小组件和文件夹颜色，文件夹在任何图标样式下都使用它。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "設定圖像、小工具和檔案夾顏色，檔案夾在任何圖像樣式下都會使用它。"
           }
         }
       }
@@ -125953,6 +127081,100 @@
         }
       }
     },
+    "The Dock and the icons show a new style or tint once the Dock starts again. Your windows stay open." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يعرض Dock والأيقونات النمط أو اللون الجديد بعد إعادة تشغيل Dock. تبقى نوافذك مفتوحة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Dock und die Symbole zeigen einen neuen Stil oder Farbton, sobald das Dock neu startet. Deine Fenster bleiben offen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El Dock y los iconos muestran un nuevo estilo o tinte cuando el Dock vuelve a iniciarse. Tus ventanas siguen abiertas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le Dock et les icônes affichent un nouveau style ou une nouvelle teinte une fois le Dock redémarré. Vos fenêtres restent ouvertes."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock दोबारा शुरू होने पर Dock और आइकन नया स्टाइल या टिंट दिखाते हैं। आपकी विंडो खुली रहती हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il Dock e le icone mostrano un nuovo stile o una nuova tinta quando il Dock si riavvia. Le finestre restano aperte."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dockが再起動すると、Dockとアイコンに新しいスタイルや色が反映されます。ウインドウは開いたままです。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock이 다시 시작되면 Dock과 아이콘에 새 스타일이나 색조가 표시됩니다. 윈도우는 열린 상태로 유지됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock i ikony pokazują nowy styl lub odcień po ponownym uruchomieniu Docka. Okna pozostają otwarte."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Dock e os ícones mostram um novo estilo ou tom quando o Dock reinicia. Suas janelas continuam abertas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock и значки показывают новый стиль или оттенок после перезапуска Dock. Окна остаются открытыми."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock yeniden başladığında Dock ve simgeler yeni stili veya tonu gösterir. Pencereleriniz açık kalır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock і піктограми показують новий стиль або відтінок після перезапуску Dock. Вікна залишаються відкритими."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "程序坞重新启动后，程序坞和图标会显示新的样式或色调。你的窗口保持打开。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock 重新啟動後，Dock 和圖像會顯示新的樣式或色調。你的視窗會保持開啟。"
+          }
+        }
+      }
+    },
     "The Installed tab also lists the wallpapers in these folders, and follows their changes. Each wallpaper is a folder with a project.json. Downloads and imports still go into the Wallpaper Storage folder." : {
       "localizations" : {
         "ar" : {
@@ -130108,6 +131330,194 @@
         }
       }
     },
+    "Theming" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التلوين"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Farbanpassung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temas de color"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thème de couleur"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "थीमिंग"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tema colore"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "テーマ設定"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "테마"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Motyw kolorów"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temas de Cor"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цветовая тема"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renk Teması"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Колірна тема"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主题颜色"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主題顏色"
+          }
+        }
+      }
+    },
+    "Theme macOS with the Wallpaper's Color" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تلوين macOS بلون الخلفية"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS in der Farbe des Hintergrundbilds gestalten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aplicar a macOS el color del fondo de pantalla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appliquer à macOS la couleur du fond d’écran"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS पर वॉलपेपर का रंग लागू करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Applica a macOS il colore dello sfondo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "壁紙のカラーをmacOSに適用"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배경화면 색상을 macOS에 적용"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stosuj kolor tapety w systemie macOS"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aplicar ao macOS a Cor do Papel de Parede"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Применять цвет обоев к macOS"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS’e Duvar Kâğıdının Rengini Uygula"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Застосовувати колір шпалер до macOS"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将墙纸颜色应用到 macOS"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將背景圖片顏色套用到 macOS"
+          }
+        }
+      }
+    },
     "There are no servers, accounts, analytics or tracking." : {
       "localizations" : {
         "ar" : {
@@ -133596,6 +135006,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "時間"
+          }
+        }
+      }
+    },
+    "Tinted Icon Color" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لون الأيقونات الملوّنة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Farbe getönter Symbole"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Color de iconos tintados"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couleur des icônes teintées"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "टिंटेड आइकन का रंग"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colore icone tinte"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "色付きアイコンのカラー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "틴트 아이콘 색상"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kolor przyciemnionych ikon"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cor dos Ícones com Tom"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цвет тонированных значков"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renk Tonlu Simge Rengi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Колір тонованих піктограм"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "着色图标颜色"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "著色圖像顏色"
           }
         }
       }
@@ -139660,6 +141164,100 @@
         }
       }
     },
+    "Use the wallpaper's main color when it has no scheme color" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "استخدام اللون الرئيسي للخلفية عندما لا يكون لها لون مخطط"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hauptfarbe des Hintergrundbilds verwenden, wenn es keine Schemafarbe hat"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar el color principal del fondo de pantalla cuando no tenga color de esquema"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utiliser la couleur principale du fond d’écran s’il n’a pas de couleur de schéma"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्कीम रंग न होने पर वॉलपेपर का मुख्य रंग इस्तेमाल करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usa il colore principale dello sfondo quando non ha un colore dello schema"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スキームカラーがない壁紙ではメインの色を使用"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "스킴 색상이 없으면 배경화면의 주 색상 사용"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Używaj głównego koloru tapety, gdy nie ma koloru schematu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usar a cor principal do papel de parede quando ele não tiver cor de esquema"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Использовать основной цвет обоев, если у них нет цвета схемы"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Şema rengi yoksa duvar kâğıdının ana rengini kullan"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Використовувати основний колір шпалер, якщо в них немає кольору схеми"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "墙纸没有配色时使用其主要颜色"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "背景圖片沒有配色時使用其主要顏色"
+          }
+        }
+      }
+    },
     "Used only for wallpapers that need it" : {
       "comment" : "Settings › Plugins › Chromium web engine: Chromium plays only the web wallpapers that use Chromium-only features; the rest stay in WebKit",
       "localizations" : {
@@ -140033,6 +141631,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "使用此 Mac 上已有的 Wallpaper Engine 檔案夾中的資源，直接就地讀取而不下載。"
+          }
+        }
+      }
+    },
+    "Uses the scheme color of the wallpaper on the main display, which follows its properties. Turning it off puts your own settings back." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يستخدم لون مخطط الخلفية على الشاشة الرئيسية، ويتبع خصائصها. إيقافه يعيد إعداداتك."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwendet die Schemafarbe des Hintergrundbilds auf dem Hauptmonitor, die seinen Eigenschaften folgt. Beim Ausschalten kehren deine eigenen Einstellungen zurück."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usa el color de esquema del fondo de pantalla de la pantalla principal, que sigue sus propiedades. Al desactivarlo vuelven tus ajustes."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utilise la couleur de schéma du fond d’écran de l’écran principal, qui suit ses propriétés. Le désactiver rétablit vos propres réglages."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मुख्य डिस्प्ले के वॉलपेपर का स्कीम रंग इस्तेमाल करता है, जो उसकी प्रॉपर्टीज़ के साथ बदलता है। बंद करने पर आपकी अपनी सेटिंग्स लौट आती हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usa il colore dello schema dello sfondo sullo schermo principale, che segue le sue proprietà. Disattivandolo tornano le tue impostazioni."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メインディスプレイの壁紙のスキームカラーを使います。壁紙のプロパティに従って変わります。オフにすると元の設定に戻ります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "주 디스플레이 배경화면의 스킴 색상을 사용하며, 배경화면 속성을 따릅니다. 끄면 원래 설정으로 돌아갑니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Używa koloru schematu tapety na głównym monitorze, który podąża za jej właściwościami. Wyłączenie przywraca Twoje ustawienia."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usa a cor do esquema do papel de parede da tela principal, que segue suas propriedades. Desativar devolve seus próprios ajustes."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Использует цвет схемы обоев на основном дисплее, который следует за их свойствами. При выключении возвращаются ваши настройки."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ana ekrandaki duvar kâğıdının şema rengini kullanır; renk, duvar kâğıdının özelliklerini izler. Kapatıldığında kendi ayarlarınız geri gelir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Використовує колір схеми шпалер на головному дисплеї, який слідує за їхніми властивостями. Вимкнення повертає ваші налаштування."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用主显示器上墙纸的配色，配色随墙纸属性变化。关闭后会恢复你自己的设置。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用主顯示器上背景圖片的配色，配色會隨背景圖片屬性變化。關閉後會還原你自己的設定。"
           }
         }
       }
@@ -143431,6 +145123,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "每個顯示器的背景圖片"
+          }
+        }
+      }
+    },
+    "Wallpaper's main color" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اللون الرئيسي للخلفية"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hauptfarbe des Hintergrundbilds"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Color principal del fondo de pantalla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couleur principale du fond d’écran"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वॉलपेपर का मुख्य रंग"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colore principale dello sfondo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "壁紙のメインの色"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배경화면의 주 색상"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Główny kolor tapety"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cor principal do papel de parede"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Основной цвет обоев"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duvar kâğıdının ana rengi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Основний колір шпалер"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "墙纸的主要颜色"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "背景圖片的主要顏色"
           }
         }
       }
@@ -147674,6 +149460,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "你的訂閱"
+          }
+        }
+      }
+    },
+    "Your own settings are saved before the first change and put back when an option is turned off. The menu bar is translucent, so its color is a tint, and the accent color is the closest of macOS's colors." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تُحفظ إعداداتك قبل أول تغيير وتُعاد عند إيقاف أي خيار. شريط القائمة شفاف، لذا يظهر لونه كدرجة لونية، ولون التمييز هو أقرب ألوان macOS."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deine eigenen Einstellungen werden vor der ersten Änderung gesichert und zurückgesetzt, wenn eine Option ausgeschaltet wird. Die Menüleiste ist durchscheinend, ihre Farbe also nur ein Farbton, und die Akzentfarbe ist die nächstliegende der macOS-Farben."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tus ajustes se guardan antes del primer cambio y vuelven al desactivar una opción. La barra de menús es translúcida, así que su color es un tinte, y el color de acento es el más cercano de los colores de macOS."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vos réglages sont enregistrés avant la première modification et rétablis quand une option est désactivée. La barre des menus est translucide, sa couleur n’est donc qu’une teinte, et la couleur d’accentuation est la plus proche des couleurs de macOS."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पहले बदलाव से पहले आपकी अपनी सेटिंग्स सहेजी जाती हैं और कोई विकल्प बंद करने पर लौटा दी जाती हैं। मेनू बार पारदर्शी है, इसलिए उसका रंग एक टिंट है, और एक्सेंट रंग macOS के रंगों में सबसे नज़दीकी है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le tue impostazioni vengono salvate prima della prima modifica e ripristinate quando disattivi un’opzione. La barra dei menu è traslucida, quindi il suo colore è una tinta, e il colore di accento è il più vicino tra quelli di macOS."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "元の設定は最初の変更前に保存され、オプションをオフにすると戻ります。メニューバーは半透明なので色は淡く映り、アクセントカラーはmacOSの色の中で最も近いものになります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "원래 설정은 첫 변경 전에 저장되며 옵션을 끄면 되돌아갑니다. 메뉴 막대는 반투명하므로 색상이 색조로 보이고, 강조 색상은 macOS 색상 중 가장 가까운 색입니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twoje ustawienia są zapisywane przed pierwszą zmianą i przywracane po wyłączeniu opcji. Pasek menu jest półprzezroczysty, więc jego kolor to odcień, a kolor akcentu to najbliższy z kolorów macOS."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seus ajustes são salvos antes da primeira alteração e restaurados quando uma opção é desativada. A barra de menus é translúcida, então sua cor é um tom, e a cor de destaque é a mais próxima das cores do macOS."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваши настройки сохраняются до первого изменения и возвращаются, когда параметр выключен. Строка меню полупрозрачна, поэтому её цвет — лишь оттенок, а цвет акцента — ближайший из цветов macOS."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kendi ayarlarınız ilk değişiklikten önce kaydedilir ve bir seçenek kapatıldığında geri getirilir. Menü çubuğu yarı saydam olduğundan rengi bir tondur; vurgu rengi de macOS renklerinin en yakınıdır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваші налаштування зберігаються до першої зміни й повертаються, коли параметр вимкнено. Смуга меню напівпрозора, тож її колір — лише відтінок, а колір акценту — найближчий із кольорів macOS."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你自己的设置会在首次更改前存储，并在关闭选项时恢复。菜单栏是半透明的，所以其颜色只是色调；强调色是 macOS 颜色中最接近的一种。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "你自己的設定會在首次更改前儲存，並在關閉選項時還原。選單列是半透明的，所以其顏色只是色調；強調色是 macOS 顏色中最接近的一種。"
           }
         }
       }

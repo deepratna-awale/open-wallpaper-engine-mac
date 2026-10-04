@@ -181,6 +181,7 @@ struct DesktopSnapshotCache {
             return (id, NSWorkspace.shared.desktopImageURL(for: screen))
         }
         guard !targets.isEmpty else { return }
+        let strips = DesktopPictureTheming.strips()
         queue.async {
             guard let jpeg = jpegData(image) else {
                 OWELog.error(.app, "Desktop snapshot could not be encoded")
@@ -188,7 +189,11 @@ struct DesktopSnapshotCache {
             }
             var written: [(CGDirectDisplayID, URL)] = []
             for (id, showing) in targets {
-                do { written.append((id, try cache.write(jpeg, display: id, showing: showing))) } catch {
+                do {
+                    let url = try cache.write(jpeg, display: id, showing: showing)
+                    DesktopPictureTheming.draw(strips, into: url, display: id)
+                    written.append((id, url))
+                } catch {
                     OWELog.error(.app, "Writing the desktop snapshot failed: \(error)")
                 }
             }
