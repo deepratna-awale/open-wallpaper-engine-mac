@@ -23,6 +23,9 @@ final class ScenePuppetAnimator {
     /// The rig's blend shapes, and their weights per mesh this frame (`SceneMorphWeights`).
     let morphRig: SceneMorphRig?
     private(set) var morphs: [SceneMorphWeights]
+    /// The texture channels' weights, `g_BlendMap` (puppet+0x350): what the layers last set,
+    /// kept from frame to frame, 0 until a clip with channel tracks plays.
+    private(set) var channelWeights = [Float](repeating: 0, count: SceneAnimationLayerStack.maximumTextureChannels)
     /// The rig's physics bones (docs/models-plan.md §2.14); nil without one.
     private(set) var physics: SceneBonePhysics?
     /// The object's world matrix at the last `advance`, which with `worlds` gives the physics
@@ -111,7 +114,8 @@ final class ScenePuppetAnimator {
         var update = SceneAnimationLayerUpdate()
         for index in morphs.indices { morphs[index].reset() }
         if !stack.layers.isEmpty {
-            let transforms = stack.evaluate(delta: delta, update: &update, morphs: &morphs, kind: morphRig?.kind ?? .model)
+            let transforms = stack.evaluate(delta: delta, update: &update, morphs: &morphs, kind: morphRig?.kind ?? .model,
+                                            channels: &channelWeights)
             locals = transforms.map(\.matrix)
             worldOverrides.removeAll()
         }
@@ -178,7 +182,8 @@ final class ScenePuppetAnimator {
         }
         self.worlds = worlds
         let next = ScenePuppetPose(bones: palette, bonesAlpha: pose.bonesAlpha,
-                                   morph: morphRig?.puppetUniforms(morphs, boneMatrices: worlds))
+                                   morph: morphRig?.puppetUniforms(morphs, boneMatrices: worlds),
+                                   blendMap: channelWeights)
         if next != pose { pose = next }
     }
 

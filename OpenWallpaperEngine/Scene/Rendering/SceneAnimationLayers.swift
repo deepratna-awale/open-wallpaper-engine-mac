@@ -188,12 +188,14 @@ struct SceneAnimationLayerStack: Equatable {
     /// Advances every visible layer by `delta` seconds and returns the pose, one transform per bone.
     mutating func evaluate(delta: Float, update: inout SceneAnimationLayerUpdate) -> [SceneBoneTransform] {
         var morphs: [SceneMorphWeights] = []
-        return evaluate(delta: delta, update: &update, morphs: &morphs, kind: .model)
+        var channels: [Float] = []
+        return evaluate(delta: delta, update: &update, morphs: &morphs, kind: .model, channels: &channels)
     }
 
-    /// The same, with each layer's morph tracks laid over `morphs` (`applyMorphs`) as it applies.
+    /// The same, with each layer's morph tracks laid over `morphs` (`applyMorphs`) and its
+    /// texture-channel tracks over `channels` (`applyChannels`) as it applies.
     mutating func evaluate(delta: Float, update: inout SceneAnimationLayerUpdate, morphs: inout [SceneMorphWeights],
-                           kind: SceneMorphRig.Kind) -> [SceneBoneTransform] {
+                           kind: SceneMorphRig.Kind, channels: inout [Float]) -> [SceneBoneTransform] {
         var pose = skeleton.bindPose
         var turn: Float = 0
         var index = 0
@@ -211,6 +213,7 @@ struct SceneAnimationLayerStack: Equatable {
             let weight = layers[index].weight()
             apply(layers[index], weight: weight, to: &pose)
             if !morphs.isEmpty { applyMorphs(layers[index], weight: weight, to: &morphs, kind: kind) }
+            if !channels.isEmpty { applyChannels(layers[index], weight: weight, to: &channels) }
             turn += applyRootMotion(at: index, weight: weight, to: &pose)
             if layers[index].removesWhenFinished, after.flags.contains(.finished) {
                 layers.remove(at: index)

@@ -23,10 +23,12 @@ struct MDLMesh: Equatable {
 
     /// One material path per skin; a model object's `skin` picks one (§2.6).
     var materials: [String]
-    /// Bit 0: u32 indices; 0x2: `flagsExtra` follows [?]; 0x4: `SKINNING_ALPHA`;
-    /// 0x400/0x800/0x1000/0x2000: extra `MDMP` blobs per morph target, 0x2000 `MORPHING_MODIFIERS`.
+    /// Bit 0: u32 indices; 0x2: a Puppet Warp texture-channel mesh, `flagsExtra` follows;
+    /// 0x4: `SKINNING_ALPHA`; 0x400/0x800/0x1000/0x2000: extra `MDMP` blobs per morph target,
+    /// 0x2000 `MORPHING_MODIFIERS`.
     var flags: UInt32
-    /// The `u32` after the flags when flags & 0x2 [?].
+    /// The `u32` after the flags when flags & 0x2: the channel material's `BLENDROWCOUNT`, the
+    /// `vec4` rows of `g_BlendMap` (mesh+0x1c, read at 0x140209f28 and 0x1402079e5).
     var flagsExtra: UInt32?
     /// The authored box (`MDLV` 17 and later).
     var bounds: MDLBounds?
@@ -48,6 +50,9 @@ struct MDLMesh: Equatable {
     /// Mesh flag 0x4.
     var usesSkinningAlpha: Bool { flags & 0x4 != 0 }
     var isSkinned: Bool { format.contains(.blendIndices) }
+    /// Mesh flag 0x2: the texture channels' quads of a puppet (`ScenePuppetChannelPlan`), whose
+    /// `a_BlendIndices.x` names a channel's `g_BlendMap` entry, not a bone.
+    var isTextureChannelMesh: Bool { flags & 0x2 != 0 }
 
     /// The indices, widened to u32.
     var indices: [UInt32] {

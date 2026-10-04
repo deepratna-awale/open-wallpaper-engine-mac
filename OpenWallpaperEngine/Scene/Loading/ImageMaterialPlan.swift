@@ -31,6 +31,9 @@ final class ImageMaterialPlan {
     /// The first pass's `depthtest`, `depthwrite` and `cullmode` (docs/models-plan.md §2.4): what
     /// the layer's quad draws with where the scene pass has depth.
     var raster = SceneRasterState.engineDefault
+    /// The first pass's `alphawriting`: false when the material turns it off (Puppet Warp's
+    /// "Alpha writing" option for texture channels), so the draw leaves the target's alpha [I].
+    var writesAlpha = true
 
     init(materialPath: String, pass: SceneEffectPassPlan, prelighting: SceneEffectPassPlan? = nil, usesSpriteSheetUniforms: Bool,
          liveFactors: [String: Float], clampedSlots: Set<Int> = [0], cullmode: String? = nil) {
@@ -139,6 +142,16 @@ struct ImageMaterialPlanBuilder {
                   puppet: puppet)
     }
 
+    /// A puppet's texture-channel material (`puppettexturechannels`, the mesh with flag 0x2;
+    /// 0x140209f28): the material as authored, every texture its own (`g_Texture0` the channel
+    /// atlas, `g_Texture1` the base image), with `BLENDROWCOUNT` = the mesh's row count. WE
+    /// creates it with that combo alone, and its draw runs without `DOUBLEBUFFERED` although
+    /// `g_Texture1` is bound (WE 2.8.42's capture of the rope: the pixel shader has no discard).
+    func buildPuppetTextureChannels(materialPath: String, blendRows: Int) throws -> ImageMaterialPlan? {
+        try build(materialPath: materialPath, colorBlendMode: nil, clampUVs: nil, listsItsImage: false, prelit: false,
+                  extraCombos: ["BLENDROWCOUNT": blendRows, "DOUBLEBUFFERED": 0], imageIsAsset: true)
+    }
+
     /// A text object's font material (`materials/fonts/basefont*.json`, WE's `font` shader). It
     /// lists no texture: `g_Texture0` is the rasterised text, a coverage mask the shader tints with
     /// `g_Color4` (the text's colour, brightness and alpha). Clamped, since it is exactly the text.
@@ -172,7 +185,7 @@ struct ImageMaterialPlanBuilder {
 
     private func build(materialPath: String, colorBlendMode: Int?, clampUVs: Bool?,
                        listsItsImage: Bool, prelit: Bool, puppet: ImagePuppetCombos? = nil,
-                       extraCombos: [String: Int] = [:]) throws -> ImageMaterialPlan? {
+                       extraCombos: [String: Int] = [:], imageIsAsset: Bool = false) throws -> ImageMaterialPlan? {
         guard let data = readFile(materialPath) else { throw ImageMaterialPlanError.missing(materialPath) }
         let material: MaterialDocument
         do {
@@ -197,7 +210,7 @@ struct ImageMaterialPlanBuilder {
 
         var listed: [Int: SceneEffectTextureInput] = [:]
         var headers: [Int: Data] = [:]
-        for (slot, name) in materialPass.textures.enumerated() where slot > 0 {
+        for (slot, name) in materialPass.textures.enumerated() where slot > 0 || imageIsAsset {
             guard let name else { continue }
             listed[slot] = try textureInput(named: name, materialPath: materialPath)
             if listed[slot] != nil, !name.hasPrefix("_rt_") { headers[slot] = textureHeader(name, materialPath: materialPath) }
@@ -245,7 +258,7 @@ struct ImageMaterialPlanBuilder {
                       let name = sampler.defaultTexture else { continue }
                 inputs[slot] = try textureInput(named: name, materialPath: materialPath)
             }
-            inputs[0] = .current
+            if !imageIsAsset { inputs[0] = .current }
             // The puppet renderer binds the morph texture itself.
             let engineBound: Set<Int> = puppet?.morphing == true ? [ImagePuppetCombos.morphSlot] : []
             if let unbound = sampled.subtracting(inputs.keys).subtracting(engineBound).min() {
@@ -287,6 +300,7 @@ struct ImageMaterialPlanBuilder {
                                      liveFactors: liveFactors, clampedSlots: clampedSlots, cullmode: materialPass.cullmode)
         plan.raster = SceneRasterState(depthtest: materialPass.depthtest, depthwrite: materialPass.depthwrite,
                                        cullmode: materialPass.cullmode, blending: materialPass.blending)
+        plan.writesAlpha = !["false", "disabled", "0"].contains(materialPass.alphawriting?.lowercased() ?? "")
         return plan
     }
 

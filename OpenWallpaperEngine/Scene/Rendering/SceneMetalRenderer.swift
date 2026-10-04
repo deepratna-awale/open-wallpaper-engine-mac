@@ -3672,7 +3672,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // With effects the mesh draws its bind pose, the image as its texture lays it out: that is
         // where the effects' masks are painted, and the posed mesh then lays their output out
         // (`posedEffectOutput`), as WE draws the layer's geometry last.
-        let pose = entry.layer.weEffects.isEmpty ? animator.pose : ScenePuppetPose.bind(boneCount: animator.pose.bones.count)
+        var pose = animator.pose
+        if !entry.layer.weEffects.isEmpty {
+            // The texture channels are the image's: its effects see them.
+            pose = ScenePuppetPose.bind(boneCount: animator.pose.bones.count)
+            pose.blendMap = animator.pose.blendMap
+        }
         // A rig that rearranges an atlas: the editor paints the effects' masks over its texture as
         // stored, where its parts don't overlap, so the effects read the texture itself and the
         // posed mesh lays their output out by its texture coordinates.
