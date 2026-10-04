@@ -66,10 +66,25 @@ final class LivePhotoRenderer {
         return render
     }
 
+    /// How the export draws its scene, and its preview too (`IsolatedSceneView`), so the preview
+    /// shows what is exported: the whole scene filling a drawable of its own aspect, from which
+    /// `LivePhotoCrop` cuts the window; the pointer held at the scene's centre, so the camera and
+    /// depth parallax and the cursor uniforms don't follow the mouse; no clock layers.
+    static let presentation = SceneWallpaperInstance.Presentation(placement: .fill, pointer: SIMD2(0.5, 0.5),
+                                                                  hidesClockLayers: Policy.hidesClockLayers)
+
+    /// The scene's drawable for `crop`: the whole scene at `LivePhotoCrop.renderScale`, one pixel a
+    /// point, without a cursor (`presentation` fixes the pointer).
+    static func viewport(for crop: LivePhotoCrop) -> SceneViewport {
+        let pixelSize = crop.renderPixelSize
+        let drawable = SIMD2(Float(pixelSize.x), Float(pixelSize.y))
+        return SceneViewport(drawableSize: drawable, pointSize: drawable, cursor: nil, frameRateLimit: LivePhotoClip.frameRate)
+    }
+
     /// The renderer's configuration for a Live Photo.
     static func configure(_ renderer: SceneMetalRenderer) {
         renderer.rendersScreenSaver = true
-        renderer.hidesClockLayers = Policy.hidesClockLayers
+        presentation.apply(to: renderer)
         if Policy.muted { renderer.sounds.setTargetGain(0) }
         renderer.audioSpectrumFrame = { _ in .silent }
     }
@@ -223,15 +238,13 @@ final class LivePhotoRenderer {
                                                 screenID: "livephoto-\(name)") else { throw Failure.noScene }
         defer { renderer.releaseContent() }
         let pixelSize = crop.renderPixelSize
-        let drawable = SIMD2(Float(pixelSize.x), Float(pixelSize.y))
         let startTime: CFTimeInterval = 1000
         Self.configure(renderer)
         renderer.renderSettings = settings
         renderer.wallTime = { startTime }
         renderer.holdsClock = true
         renderer.setContent(content)
-        let viewport = SceneViewport(drawableSize: drawable, pointSize: drawable, cursor: nil,
-                                     frameRateLimit: LivePhotoClip.frameRate)
+        let viewport = Self.viewport(for: crop)
         let deadline = Date().addingTimeInterval(timeoutSeconds)
         while !renderer.hasContent, Date() < deadline {
             try await Task.sleep(for: .milliseconds(10))

@@ -97,10 +97,12 @@ final class UpdatePreservesUserStateTests: XCTestCase {
     func testSourcesNeitherWriteIntoTheBundleNorKeyOnTheVersion() throws {
         let sources: URL = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .appending(path: "OpenWallpaperEngine")
-        // The update prewarm matches the downloaded update's bundle by its version; it keys no state on it.
+        // The update prewarm matches the downloaded update's bundle by its version, and the MCP Server
+        // plugin refreshes its installed owe-mcp when the app's version changes; neither keys state on it.
         let versionReaders: Set<String> = ["MainWindow.swift", "AboutUsView.swift", "AppUpdateConfiguration.swift", "AppVersion.swift",
                                            "ReleaseVersion.swift", "UpdateBundleLocator.swift",
-                                           "UpdateShaderPrewarmer.swift", "AppUpdater.swift", "UpdateVersionDisplay.swift"]
+                                           "UpdateShaderPrewarmer.swift", "AppUpdater.swift", "UpdateVersionDisplay.swift",
+                                           "MCPServerPlugin.swift"]
         let bundleLocations: [String] = ["Bundle.main.bundleURL", "Bundle.main.bundlePath", "Bundle.main.resourceURL",
                                          "Bundle.main.resourcePath", "Bundle.main.executableURL"]
         let bundleReaders: Set<String> = ["AppRelauncher.swift", "ScreenSaverInstaller.swift", "CrashWatcher.swift",

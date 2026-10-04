@@ -81,4 +81,43 @@ final class SceneUserPropertyStoreTests: XCTestCase {
         XCTAssertEqual(SceneValueResolver.resolve(.user(name: "tint", condition: nil, fallback: .literal(.zero)),
                                                   in: context).components, [0, 1, 0])
     }
+
+    /// Two instances render at once on their own threads (the desktop's, and an isolated edit
+    /// session's private instance): a frame reads its own wallpaper's properties even when the other
+    /// thread begins or ends a frame in the middle of it.
+    func testOverlappingFramesOnTwoThreadsReadTheirOwnWallpaper() {
+        let engine = WallpaperServices.shared
+        let desktop = "/tests/\(UUID().uuidString)/desktop", isolated = "/tests/\(UUID().uuidString)/isolated"
+        engine.setUserProperties(["speed": "0.25"], wallpaper: desktop, replacing: true)
+        engine.setUserProperties(["speed": "0.9"], wallpaper: isolated, replacing: true)
+
+        let desktopBegan = DispatchSemaphore(value: 0), isolatedBegan = DispatchSemaphore(value: 0)
+        let desktopRead = DispatchSemaphore(value: 0), isolatedEnded = DispatchSemaphore(value: 0)
+        let done = DispatchSemaphore(value: 0)
+        nonisolated(unsafe) var reads: [String?] = []  // Written by the desktop thread, read after `done`.
+        nonisolated(unsafe) var isolatedRead: String?
+        Thread {
+            engine.beginFrame(wallpaper: desktop)
+            desktopBegan.signal()
+            isolatedBegan.wait()
+            reads.append(engine.userPropertyString("speed"))
+            desktopRead.signal()
+            isolatedEnded.wait()
+            reads.append(engine.userPropertyString("speed"))
+            engine.endFrame()
+            done.signal()
+        }.start()
+        Thread {
+            desktopBegan.wait()
+            engine.beginFrame(wallpaper: isolated)
+            isolatedBegan.signal()
+            desktopRead.wait()
+            isolatedRead = engine.userPropertyString("speed")
+            engine.endFrame()
+            isolatedEnded.signal()
+        }.start()
+        XCTAssertEqual(done.wait(timeout: .now() + 5), .success)
+        XCTAssertEqual(reads, ["0.25", "0.25"], "the desktop's frame reads the desktop's store throughout")
+        XCTAssertEqual(isolatedRead, "0.9")
+    }
 }

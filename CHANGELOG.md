@@ -31,8 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **The Wallpaper Editor runs as its own app**, inside Open Wallpaper Engine. It has its own Dock icon and menu bar ("Wallpaper Editor"), one process for every wallpaper you edit. Quitting Open Wallpaper Engine leaves it open, closing it leaves Open Wallpaper Engine as it was, and a crash of one doesn't take the other down. Edits, drags and property changes still show on the desktop as you make them; the editor quits when its last window closes.
 - **The Scene Editor is now the Scene Editor (Live)** in its window, the Details panel, the Window menu (⌥⌘I), tooltips and the onboarding tour, in every language: its Wallpaper mode edits the running wallpaper. Image layers gain Opacity and Color controls.
+- **The Wallpaper Editor runs as its own app**, inside Open Wallpaper Engine. It has its own Dock icon and menu bar ("Wallpaper Editor"), one process for every wallpaper you edit. Quitting Open Wallpaper Engine leaves it open, closing it leaves Open Wallpaper Engine as it was, and a crash of one doesn't take the other down. Edits, drags and property changes still show on the desktop as you make them; the editor quits when its last window closes.
 - **The Scene Inspector is now called the Scene Editor**, in its window, the Details panel, the Window menu (⌥⌘I), tooltips and the onboarding tour, in every language.
 - **Edit Wallpaper** moved from the Details panel to the library's bottom bar, beside Create Playlist. It opens the selected wallpaper in the Wallpaper Editor and is disabled, with a tooltip saying why, when nothing is selected or the selection isn't a scene wallpaper. Window › Wallpaper Editor (⌥⌘E) works as before.
 - Animated library previews are built in and always on (no longer a plugin).
@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Settings › Plugins › Screen Saver** now acts on the setting as changed: turning it on or off, or changing Render Resolution, used the value from before the change.
+- **Two scenes drawing at once no longer read each other's properties:** each wallpaper instance renders on its own thread, but every frame shared one property snapshot, so a frame could draw with the other instance's values (two displays with their own properties, or the iPhone & iPad Export's preview beside the desktop), and the two could crash the app. Each thread now keeps its own.
 - **Wallpaper Editor and Scene Inspector:** a number's unit (×, %, °, px, s, fps) stays beside the number on one line in a narrow inspector or beside a long translated label, instead of the number showing above it.
 - **Settings › Assets › Update from Steam** no longer downloads Wallpaper Engine again when the assets are current: it first reads the public build from SteamCMD's app info and reports "up to date" when it matches the installed build and the files are there. If the check fails (offline, not logged in), nothing is downloaded. **Re-download** downloads regardless, to repair a damaged copy.
 

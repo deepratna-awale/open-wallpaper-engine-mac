@@ -1,3 +1,5 @@
+import AppKit
+import simd
 import XCTest
 @testable import OpenWallpaperEngine
 
@@ -237,5 +239,159 @@ final class LivePhotoExportTests: XCTestCase {
         model.sheet = nil
         model.showSettings()
         XCTAssertEqual(model.sheet, .settings)
+    }
+
+    // MARK: What the preview shows is what is exported
+
+    /// A test card through both paths, for an iPhone and an iPad, zoomed and panned: the preview
+    /// (the lock-screen view's geometry, `LockScreenPreview.layout`, over the private instance's
+    /// renderer drawn as `LivePhotoRenderer.presentation` says, at a Retina view's pixels, with
+    /// the mouse in a corner) and the export (`LivePhotoRenderer.viewport` cut by
+    /// `LivePhotoCrop.outputImage`) put the marker at the same place, within 1% of the picture,
+    /// with camera parallax off and on.
+    @MainActor
+    func testPreviewAndExportFrameTheSameWithAndWithoutParallax() throws {
+        let sceneSize = SIMD2<Double>(1600, 900)
+        let marker = SIMD2<Double>(1150, 600)  // Scene units, origin top-left.
+        for parallax in [false, true] {
+            let content = try Self.testCard(sceneSize: sceneSize, marker: marker, parallax: parallax)
+            for name in ["iPhone 17 Pro", "iPad Pro 11-inch (M5)"] {
+                let device = DeviceModel.model(id: name)
+                XCTAssertEqual(device.name, name)
+                var crop = LivePhotoCrop(sceneSize: sceneSize, outputPixels: device.pixelSize)
+                crop.setZoom(1.6)
+                crop.setCenter(SIMD2(1080, 520))
+
+                let exported = try XCTUnwrap(crop.outputImage(from: try render(content, LivePhotoRenderer.viewport(for: crop),
+                                                                                  pixels: crop.renderPixelSize) {
+                    LivePhotoRenderer.configure($0)
+                }))
+                XCTAssertEqual(exported.width, device.pixelSize.x)
+                XCTAssertEqual(exported.height, device.pixelSize.y)
+                let previewed = try preview(content, crop: crop, fixed: true)
+                let exportMarker = try XCTUnwrap(Self.markerCentre(in: exported), "\(name): marker in the export")
+                let previewMarker = try XCTUnwrap(Self.markerCentre(in: previewed), "\(name): marker in the preview")
+                let label = "\(name), parallax \(parallax)"
+                XCTAssertEqual(previewMarker.x, exportMarker.x, accuracy: 0.01, label)
+                XCTAssertEqual(previewMarker.y, exportMarker.y, accuracy: 0.01, label)
+                if !parallax {
+                    // Where the crop says (the parallax moves an off-centre layer even at the centre).
+                    let window = crop.cropRect
+                    let expected = SIMD2((marker.x - window.minX) / window.width, (marker.y - window.minY) / window.height)
+                    XCTAssertEqual(exportMarker.x, expected.x, accuracy: 0.01, label)
+                    XCTAssertEqual(exportMarker.y, expected.y, accuracy: 0.01, label)
+                } else {
+                    // Following the mouse instead, the preview would move the marker away.
+                    let following = try XCTUnwrap(Self.markerCentre(in: try preview(content, crop: crop, fixed: false)))
+                    XCTAssertGreaterThan(simd_length(following - exportMarker), 0.02, label)
+                }
+            }
+        }
+    }
+
+    /// The preview's picture: the scene drawn into the lock-screen view's scene view (2 pixels a
+    /// point, the mouse at its bottom-left corner) and the screen's frame cut out of it.
+    @MainActor
+    private func preview(_ content: SceneMetalContent, crop: LivePhotoCrop, fixed: Bool) throws -> CGImage {
+        let layout = LockScreenPreview.layout(window: crop.cropRect, sceneSize: crop.sceneSize,
+                                              in: CGSize(width: 420, height: 640))
+        let points = SIMD2(Float(layout.sceneViewSize.width), Float(layout.sceneViewSize.height))
+        let pixels = SIMD2(Int((points.x * 2).rounded()), Int((points.y * 2).rounded()))
+        let viewport = SceneViewport(drawableSize: SIMD2(Float(pixels.x), Float(pixels.y)), pointSize: points,
+                                     cursor: SIMD2(4, 4), frameRateLimit: 30)
+        let frame = try render(content, viewport, pixels: pixels) { renderer in
+            LivePhotoRenderer.presentation.apply(to: renderer)
+            if !fixed { renderer.fixedPointer = nil }
+        }
+        let rect = CGRect(x: -layout.sceneViewOffset.x * 2, y: -layout.sceneViewOffset.y * 2,
+                          width: layout.frame.width * 2, height: layout.frame.height * 2).integral
+        return try XCTUnwrap(frame.cropping(to: rect))
+    }
+
+    @MainActor
+    private func render(_ content: SceneMetalContent, _ viewport: SceneViewport, pixels: SIMD2<Int>,
+                        configure: (SceneMetalRenderer) -> Void) throws -> CGImage {
+        let renderer = try XCTUnwrap(SceneMetalRenderer(pixelFormat: .bgra8Unorm))
+        defer { renderer.releaseContent() }
+        configure(renderer)
+        renderer.wallTime = { 1000 }
+        renderer.setContent(content)
+        let deadline = Date().addingTimeInterval(10)
+        while !renderer.hasContent, Date() < deadline { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
+        XCTAssertTrue(renderer.hasContent)
+        for step in 1...6 {
+            renderer.wallTime = { 1000 + Double(step) / 30 }
+            renderer.renderShared([viewport])
+            renderer.lastCommandBuffer?.waitUntilCompleted()
+        }
+        let captured = expectation(description: "captured")
+        nonisolated(unsafe) var image: CGImage?  // Written once by the completion, read after the wait.
+        XCTAssertTrue(renderer.captureSharedFrame(pixelSize: pixels, pixelsPerPoint: viewport.pixelsPerPoint) {
+            image = $0
+            captured.fulfill()
+        })
+        wait(for: [captured], timeout: 10)
+        return try XCTUnwrap(image)
+    }
+
+    /// A grey scene with a red square centred on `marker` (scene units, origin top-left), parallax
+    /// depth 1 on the square.
+    private static func testCard(sceneSize: SIMD2<Double>, marker: SIMD2<Double>, parallax: Bool) throws -> SceneMetalContent {
+        let size = SIMD2(Float(sceneSize.x), Float(sceneSize.y))
+        func layer(_ id: String, _ image: NSImage, position: SIMD2<Float>, size: SIMD2<Float>, depth: SIMD3<Float>,
+                   order: Int) -> SceneMetalLayer {
+            var layer = SceneMetalLayer(
+                id: id, name: id, source: .image(image), position: position, size: size, scale: SIMD2(1, 1), opacity: 1,
+                brightness: 1, color: SIMD4(repeating: 1), text: nil, parallaxDepth: depth, perspective: false, rotation: 0,
+                effects: .identity)
+            layer.order = order
+            return layer
+        }
+        // Layer positions are scene units with y up.
+        let square = SIMD2(Float(marker.x), size.y - Float(marker.y))
+        var content = SceneMetalContent(
+            size: size,
+            layers: [layer("1", try solid(128, 128, 128), position: size / 2, size: size, depth: .zero, order: 0),
+                     layer("2", try solid(255, 0, 0), position: square, size: SIMD2(40, 40), depth: SIMD3(1, 1, 0), order: 1)],
+            particleSystems: [],
+            bloom: SceneBloomSettings(enabled: false, strength: 0, threshold: 0.7, tint: SIMD3(repeating: 1)))
+        content.camera.parallax = parallax
+        content.camera.parallaxAmount = 0.05
+        content.camera.parallaxMouseInfluence = 1
+        content.camera.parallaxDelay = 0
+        return content
+    }
+
+    private static func solid(_ red: UInt8, _ green: UInt8, _ blue: UInt8) throws -> NSImage {
+        let pixel: [UInt8] = [red, green, blue, 255]
+        let bytes: [UInt8] = Array(repeating: pixel, count: 16).flatMap { $0 }
+        let provider = try XCTUnwrap(CGDataProvider(data: Data(bytes) as CFData))
+        let image = try XCTUnwrap(CGImage(width: 4, height: 4, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: 16,
+                                          space: CGColorSpaceCreateDeviceRGB(),
+                                          bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.last.rawValue).union(.byteOrder32Big),
+                                          provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent))
+        return NSImage(cgImage: image, size: NSSize(width: 4, height: 4))
+    }
+
+    /// The red square's centre in `image`, as a fraction of its size from the top-left.
+    private static func markerCentre(in image: CGImage) -> SIMD2<Double>? {
+        let width = image.width, height = image.height
+        guard let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
+                                      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                      bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue) else { return nil }
+        context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+        guard let data = context.data?.assumingMemoryBound(to: UInt8.self) else { return nil }
+        var sum = SIMD2<Double>(0, 0), count = 0.0
+        for y in 0..<height {
+            for x in 0..<width {
+                let i = (y * width + x) * 4
+                if data[i] > 180, data[i + 1] < 90, data[i + 2] < 90 {
+                    sum += SIMD2(Double(x) + 0.5, Double(y) + 0.5)
+                    count += 1
+                }
+            }
+        }
+        guard count > 0 else { return nil }
+        return SIMD2(sum.x / count / Double(width), sum.y / count / Double(height))
     }
 }

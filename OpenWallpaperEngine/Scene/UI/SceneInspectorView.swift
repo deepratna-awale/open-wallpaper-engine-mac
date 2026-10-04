@@ -113,6 +113,9 @@ private final class SceneInspectorModel: ObservableObject {
     @Published var loadingItemID: String?
     private(set) var initiallySelectedID: String?
     private(set) var sceneSize = SIMD2<Double>(1920, 1080)
+    /// The size the renderer draws the scene at (`SceneWallpaperViewModel.sceneSize(of:)`): the
+    /// iPhone & iPad Export's crop frames the drawn scene, in its preview and its render alike.
+    private(set) var renderSceneSize = SIMD2<Double>(1920, 1080)
 
     private let directory: URL
     private let package: PKGParser?
@@ -155,6 +158,7 @@ private final class SceneInspectorModel: ObservableObject {
             return
         }
                 sceneSize = Self.sceneSize(for: scene)
+        renderSceneSize = SIMD2<Double>(SceneWallpaperViewModel.sceneSize(of: scene))
 
         let storedValues: [String: String] = targets.storedValues
         items = scene.objects.enumerated().map { index, object in
@@ -1265,7 +1269,7 @@ private struct SceneInspectorContent: View {
         let eligible = LivePhotoExportModel.isEligible(wallpaper)
         return Picker("Mode", selection: Binding(get: { mode }, set: { newValue in
             guard newValue != mode else { return }
-            onModeChange(newValue, model.sceneSize)
+            onModeChange(newValue, model.renderSceneSize)
         })) {
             ForEach(SceneInspectorMode.allCases, id: \.self) { mode in
                 Text(mode.title).tag(mode)

@@ -75,18 +75,23 @@ final class AppControlModel: ControlAppModel {
     func setWallpaper(_ wallpaper: ControlWallpaper, displays: [String]) throws {
         guard let found = find(wallpaper) else { throw Self.missing(wallpaper) }
         let type = found.project.type.lowercased()
-        if ["web", "application"].contains(type) {
+        if Self.needsTrust(found) {
             // The library asks before a web wallpaper's first run; that stays the user's to answer.
-            let trusted = UserDefaults.app.array(forKey: "TrustedWallpapers") as? [String] ?? []
-            guard trusted.contains(found.wallpaperDirectory.path(percentEncoded: false)) else {
-                throw ControlError(.refused, "\"\(wallpaper.title)\" is a \(type) wallpaper that hasn't been trusted yet. Apply it once in Open Wallpaper Engine and choose \"Don't ask again for this wallpaper\"; then it can be set from here.")
-            }
+            throw ControlError(.refused, "\"\(wallpaper.title)\" is a \(type) wallpaper that hasn't been trusted yet. Apply it once in Open Wallpaper Engine and choose \"Don't ask again for this wallpaper\"; then it can be set from here.")
         }
         guard wallpaperViewModel.confirmApply?(found) ?? true else {
             throw ControlError(.refused, "\"\(wallpaper.title)\" wasn't applied: safe restart holds it back after it stopped the app.")
         }
         wallpaperViewModel.setWallpaper(found, for: Set(displays))
         if type == "web" { ChromiumFeatureAdvisor.shared.wallpaperApplied(found) }
+    }
+
+    /// A web or application wallpaper the user hasn't trusted yet: applying it asks first.
+    static func needsTrust(_ wallpaper: WEWallpaper) -> Bool {
+        // Whatever its case, as the library reads project.json's type ("Web" is common).
+        guard ["web", "application"].contains(wallpaper.project.type.lowercased()) else { return false }
+        let trusted = UserDefaults.app.array(forKey: "TrustedWallpapers") as? [String] ?? []
+        return !trusted.contains(wallpaper.wallpaperDirectory.path(percentEncoded: false))
     }
 
     func setPaused(_ paused: Bool) {
@@ -126,7 +131,8 @@ final class AppControlModel: ControlAppModel {
         let selection = model.selectedScreenIds
         model.selectedScreenIds = Set(displays)
         if forward {
-            model.stepToNextWallpaper(shown: contentViewModel.autoRefreshWallpapers)
+            // Never one that would wait on the trust prompt, which no one may be there to answer.
+            model.stepToNextWallpaper(shown: contentViewModel.autoRefreshWallpapers.filter { !Self.needsTrust($0) })
         } else {
             model.stepToPreviousWallpaper()
         }

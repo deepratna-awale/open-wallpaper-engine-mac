@@ -162,3 +162,4 @@ map:
   "OpenWallpaperEngine/DepthMaps/**": ["DepthMap*", "DepthParallax*", "Localization*"]
   "OpenWallpaperEngine/MCP/**": ["MCP*", "Localization*"]
   "MCPServer/**": ["MCPServerProcess*"]
+  "OpenWallpaperEngine/Installs/**": ["VersionedInstall*", "ChromiumEngine*", "DepthMapPlugin*", "WebEngineRouting*"]
