@@ -113,6 +113,7 @@ Beim ersten Build aus dem Quellcode wird das Swift-Paket Sparkle geladen. Aus de
 
 ### Workshop & Mediathek
 - Die Workshop-Filter von Wallpaper Engine: „Nur anzeigen“, ein Auflösungsfilter, mit UND/ODER kombinierte Genres und Tags auf jeder Karte.
+- **Animierte Vorschauen** — Hintergrundbild-Kacheln in der Mediathek spielen ihre Workshop-Vorschauanimation (GIF) ab, sodass du ein Hintergrundbild in Bewegung siehst, bevor du es anwendest. Sie laufen nur, solange sie sichtbar sind, und pausieren, wenn das Fenster ausgeblendet ist oder der Stromsparmodus aktiv ist.
 - Installierte Hintergrundbilder zeigen ihre Workshop-Tags und lassen sich danach filtern; reine Asset- und Abhängigkeitselemente erscheinen nicht unter „Installiert“.
 - Fehlende Workshop-Abhängigkeiten werden automatisch geladen, und nicht mehr benötigte werden nach dem Löschen entfernt. Jeder Download landet im Ordner „Hintergrundbild-Speicher“.
 - **Zurücksetzen** unter „Details“ setzt die Eigenschaften eines Hintergrundbilds und seine Änderungen im Szeneninspektor auf die Standardwerte seines Autors zurück.
