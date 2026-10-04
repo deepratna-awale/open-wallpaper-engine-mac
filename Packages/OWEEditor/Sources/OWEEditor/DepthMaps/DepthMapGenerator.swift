@@ -70,24 +70,30 @@ public final class DepthMapGenerator: ObservableObject {
     private let locateModel: () -> DepthMapPluginLayout.ActiveModel?
     private let loadModel: @Sendable (URL) throws -> DepthEstimating
     private let cache: DepthMapCache?
+    /// The upscale and smoothing on the GPU; nil (no Metal device) runs them on the CPU.
+    private let processing: DepthMapGPUProcessing?
     private let scheduler: DepthMapIdleScheduler
     private let log: @Sendable (String) -> Void
     private var estimator: DepthEstimating?
     private var loadedVersion: String?
     private var footprintBeforeLoad: UInt64?
     private var releaseTimer: DepthMapIdleTimer?
+    private var releasedReading: DepthMapIdleTimer?
     private var current: Task<Result, Error>?
 
     /// `locateModel`: the installed model (`DepthMapPluginLayout.activeModel`); `loadModel` loads
-    /// it (Core ML; a fake in tests); `scheduler` runs the idle release (a manual clock in tests).
+    /// it (Core ML; a fake in tests); `scheduler` runs the idle release (a manual clock in tests);
+    /// `processing` refines the model's output (the CPU's filters when nil).
     public init(locateModel: @escaping () -> DepthMapPluginLayout.ActiveModel?,
                 loadModel: @escaping @Sendable (URL) throws -> DepthEstimating = { try CoreMLDepthEstimator(contentsOf: $0) },
                 cache: DepthMapCache?,
+                processing: DepthMapGPUProcessing? = DepthMapGPUProcessing(),
                 scheduler: DepthMapIdleScheduler = DispatchDepthMapIdleScheduler(),
                 log: @escaping @Sendable (String) -> Void = DepthMapGenerator.defaultLog) {
         self.locateModel = locateModel
         self.loadModel = loadModel
         self.cache = cache
+        self.processing = processing
         self.scheduler = scheduler
         self.log = log
     }
@@ -141,7 +147,8 @@ public final class DepthMapGenerator: ObservableObject {
     }
 
     private func run(source: CGImage, smoothing: Double, model: DepthMapPluginLayout.ActiveModel) async throws -> Result {
-        let cache = self.cache
+        let cache = self.cache, processing = self.processing, log = self.log
+        let started = Date()
         let prepared = try await Task.detached(priority: .userInitiated) { () throws -> (CGImage, DepthMapBuffer, String?, DepthMapBuffer?) in
             let image = Self.fitted(source)
             guard let guide = DepthMapBuffer.luminance(of: image) else { throw Failure.unreadableSource }
@@ -154,6 +161,7 @@ public final class DepthMapGenerator: ObservableObject {
         progress = 0.1
 
         let depth: DepthMapBuffer
+        var storing: Task<Void, Never>?
         if let cached {
             depth = cached
         } else {
@@ -167,20 +175,29 @@ public final class DepthMapGenerator: ObservableObject {
             progress = 0.7
             depth = await Task.detached(priority: .userInitiated) { () -> DepthMapBuffer in
                 let normalized = DepthMapProcessing.normalized(raw, inverseDepth: estimator.outputIsInverseDepth)
-                let upscaled = DepthMapProcessing.upscaled(normalized, guide: guide)
-                if let key { try? cache?.store(upscaled, for: key) } // A cache: failing to keep it costs a later run.
+                let upscaled = (try? processing?.upscaled(normalized, guide: guide))
+                    ?? DepthMapProcessing.upscaled(normalized, guide: guide)
                 return upscaled
             }.value
+            if let key, let cache {
+                // Written while the smoothing runs. A cache: failing to keep it costs a later run.
+                let upscaled = depth
+                storing = Task.detached(priority: .userInitiated) { try? cache.store(upscaled, for: key) }
+            }
             try Task.checkCancellation()
         }
         phase = .refining
         progress = 0.85
         let result = try await Task.detached(priority: .userInitiated) { () throws -> Result in
-            let smoothed = DepthMapProcessing.smoothed(depth, guide: guide, smoothing: smoothing)
+            let smoothed = (try? processing?.smoothed(depth, guide: guide, smoothing: smoothing))
+                ?? DepthMapProcessing.smoothed(depth, guide: guide, smoothing: smoothing)
             guard let png = smoothed.pngData() else { throw Failure.unreadableSource }
             return Result(depth: smoothed, png: png, fromCache: cached != nil)
         }.value
+        await storing?.value
         try Task.checkCancellation()
+        log("Depth map \(guide.width) × \(guide.height) made in \(String(format: "%.2f", Date().timeIntervalSince(started))) s"
+            + (cached != nil ? " from the cache" : "") + (processing == nil ? " on the CPU" : ""))
         return result
     }
 
@@ -188,6 +205,8 @@ public final class DepthMapGenerator: ObservableObject {
     private func loadedEstimator(for model: DepthMapPluginLayout.ActiveModel) async throws -> DepthEstimating {
         if let estimator, loadedVersion == model.version { return estimator }
         releaseModel()
+        releasedReading?.cancel()
+        releasedReading = nil
         phase = .loadingModel
         progress = 0.15
         let before = ResidentMemory.footprint()
@@ -225,10 +244,22 @@ public final class DepthMapGenerator: ObservableObject {
         estimator = nil
         loadedVersion = nil
         let after = ResidentMemory.footprint()
-        log("Depth model released; resident memory \(ResidentMemory.describeDelta(from: before, to: after))"
-            + (footprintBeforeLoad.map { ", \(ResidentMemory.describeDelta(from: $0, to: after)) against before it loaded" } ?? ""))
+        // Core ML frees its memory lazily: the reading right away under-reports, so a second one
+        // follows a second later.
+        log("Depth model released; resident memory right after \(ResidentMemory.describeDelta(from: before, to: after))")
+        let loaded = footprintBeforeLoad
         footprintBeforeLoad = nil
+        releasedReading?.cancel()
+        releasedReading = scheduler.schedule(after: Self.releaseReadingDelay) { [weak self] in
+            self?.releasedReading = nil
+            let settled = ResidentMemory.footprint()
+            self?.log("Depth model released 1 s ago; resident memory \(ResidentMemory.describeDelta(from: before, to: settled))"
+                + (loaded.map { ", \(ResidentMemory.describeDelta(from: $0, to: settled)) against before it loaded" } ?? ""))
+        }
     }
+
+    /// When the memory is read again after a release.
+    static let releaseReadingDelay: TimeInterval = 1
 
     /// `source` scaled down to `maximumSide` when larger.
     nonisolated static func fitted(_ source: CGImage) -> CGImage {

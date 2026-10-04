@@ -86,6 +86,33 @@ final class DepthMapProcessingTests: XCTestCase {
         XCTAssertGreaterThan(smooth[100, 16] - smooth[28, 16], 0.4, "the step survives")
     }
 
+    // MARK: On the GPU
+
+    /// The GPU's upscale and smoothing are the CPU's filters: the same map to within an 8-bit step.
+    func testTheGPUsFiltersMatchTheCPUs() throws {
+        let gpu = try XCTUnwrap(DepthMapGPUProcessing(), "no Metal device")
+        let source = DepthMapTestSupport.image(width: 301, height: 157) { x, y in
+            (x - 150) * (x - 150) + (y - 78) * (y - 78) < 60 * 60 ? 0.9 : 0.15 + 0.1 * sin(Double(x + y) / 7)
+        }
+        let guide = try XCTUnwrap(DepthMapBuffer.luminance(of: source))
+        var low = DepthMapBuffer(width: 37, height: 21)
+        for y in 0..<21 { for x in 0..<37 { low[x, y] = Float((x - 18) * (x - 18) + (y - 10) * (y - 10) < 64 ? 1 : 0.1 + 0.02 * Double(x % 3)) } }
+
+        func largestDifference(_ a: DepthMapBuffer, _ b: DepthMapBuffer) -> Float {
+            zip(a.values, b.values).map { abs($0 - $1) }.max() ?? 0
+        }
+        let upscaled = DepthMapProcessing.upscaled(low, guide: guide)
+        let gpuUpscaled = try gpu.upscaled(low, guide: guide)
+        XCTAssertEqual(gpuUpscaled.width, 301)
+        XCTAssertEqual(gpuUpscaled.height, 157)
+        XCTAssertLessThan(largestDifference(upscaled, gpuUpscaled), 1 / 255)
+        for smoothing in [0, 0.25, 1.0] {
+            let smoothed = DepthMapProcessing.smoothed(upscaled, guide: guide, smoothing: smoothing)
+            XCTAssertLessThan(largestDifference(smoothed, try gpu.smoothed(upscaled, guide: guide, smoothing: smoothing)), 1 / 255,
+                              "smoothing \(smoothing)")
+        }
+    }
+
     // MARK: Files
 
     func testTheDepthMapIsAnEightBitGreyPNGAtItsSize() throws {

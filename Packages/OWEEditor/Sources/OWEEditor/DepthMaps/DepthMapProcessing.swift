@@ -194,11 +194,16 @@ public enum DepthMapProcessing {
     /// `smoothing` 0…1: 0 leaves the map; more blurs flat areas over a wider window while keeping
     /// the source's edges.
     public static func smoothed(_ depth: DepthMapBuffer, guide: DepthMapBuffer, smoothing: Double) -> DepthMapBuffer {
+        guard let filter = guidedFilterParameters(smoothing: smoothing, width: depth.width, height: depth.height) else { return depth }
+        return guidedFilter(depth, guide: guide, radius: filter.radius, epsilon: filter.epsilon)
+    }
+
+    /// The guided filter `smoothing` (0…1) runs on a `width` × `height` map; nil for none.
+    static func guidedFilterParameters(smoothing: Double, width: Int, height: Int) -> (radius: Int, epsilon: Float)? {
         let amount = min(max(smoothing, 0), 1)
-        guard amount > 0.001 else { return depth }
-        let shortSide = Double(min(depth.width, depth.height))
+        guard amount > 0.001 else { return nil }
+        let shortSide = Double(min(width, height))
         let radius = max(1, Int((amount * shortSide / 48).rounded()))
-        let epsilon = Float(0.0005 + amount * amount * 0.02)
-        return guidedFilter(depth, guide: guide, radius: radius, epsilon: epsilon)
+        return (radius, Float(0.0005 + amount * amount * 0.02))
     }
 }
