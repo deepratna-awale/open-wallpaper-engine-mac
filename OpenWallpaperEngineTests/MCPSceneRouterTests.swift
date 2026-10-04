@@ -17,7 +17,7 @@ final class MCPSceneRouterTests: XCTestCase {
         fixture = try MCPSceneFixture()
         editors = FakeSceneEditorControl()
         announced = []
-        service = fixture.service(announce: { [weak self] folder, overlay, name in self?.announced.append((folder, overlay, name)) })
+        service = fixture.service(announce: { [weak self] folder, overlay, name, _ in self?.announced.append((folder, overlay, name)) })
         let group = SceneControlRequests(service: service, editors: editors)
         router = ControlRequestRouter(model: MCPSceneAppModel([fixture.wallpaper]), groups: [group])
     }
