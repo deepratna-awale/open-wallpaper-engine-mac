@@ -31,11 +31,16 @@ enum ShaderPrewarmCommand {
     /// writing its progress to standard output.
     static let livePhotoArgument = "--render-live-photo"
 
+    /// `--render-editor-previews <job.json>` renders the Wallpaper Editor's previews of effects
+    /// and particle systems (`EditorPreviewJob`, `EditorPreviewRenderer`), writing a line to
+    /// standard output as each is done.
+    static let editorPreviewArgument = "--render-editor-previews"
+
     static func isHelperRun(arguments: [String]) -> Bool {
         arguments.contains(printKeyArgument) || arguments.contains(prewarmArgument)
             || arguments.contains(ShaderCompileHelperServer.argument)
             || arguments.contains(prepareArgument) || arguments.contains(screenSaverArgument)
-            || arguments.contains(livePhotoArgument)
+            || arguments.contains(livePhotoArgument) || arguments.contains(editorPreviewArgument)
     }
 
     /// `<width>x<height>` as numbers, nil otherwise.
@@ -113,6 +118,23 @@ enum ShaderPrewarmCommand {
                 return 2
             }
             return LivePhotoRenderer.run(job)
+        }
+        if let index = arguments.firstIndex(of: editorPreviewArgument) {
+            defer { AppStorageLocation.current.discardReadOnlyScratch() }
+            NSApplication.shared.setActivationPolicy(.prohibited)
+            exitWithParent()
+            guard index + 1 < arguments.count else {
+                OWELog.error(.app, "Editor previews: no job file")
+                return 2
+            }
+            let jobFile = URL(filePath: arguments[index + 1], directoryHint: .notDirectory)
+            do {
+                let job = try JSONDecoder().decode(EditorPreviewJob.self, from: Data(contentsOf: jobFile))
+                return EditorPreviewRenderer.run(job)
+            } catch {
+                OWELog.error(.app, "Editor previews: unreadable job \(jobFile.path): \(error)")
+                return 2
+            }
         }
         let prepareIndex = arguments.firstIndex(of: prepareArgument)
         guard arguments.contains(prewarmArgument) || prepareIndex != nil else { return nil }
