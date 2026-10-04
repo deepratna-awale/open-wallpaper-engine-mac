@@ -510,7 +510,9 @@ struct WorkshopFiltersSidebar: View {
 
 // MARK: - Workshop Item Card
 
-private struct WorkshopItemCard: View {
+/// A Workshop result in the Workshop and Discover tabs: its preview, title and tags, the download
+/// control and the item's context menu.
+struct WorkshopItemCard: View {
     let item: WorkshopItem
     @ObservedObject var viewModel: WorkshopViewModel
 

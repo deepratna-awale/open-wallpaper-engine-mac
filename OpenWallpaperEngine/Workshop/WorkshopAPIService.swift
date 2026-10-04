@@ -184,26 +184,23 @@ class WorkshopAPIService {
         page: Int = 1,
         perPage: Int = 20
     ) async throws -> [WorkshopItem] {
-        guard let key = apiKey.load() else { throw WorkshopAPIError.noAPIKey }
-        var components = URLComponents(url: Self.queryFilesURL, resolvingAgainstBaseURL: false)!
-        components.queryItems = Self.queryItems(text: query, filter: filter, sortOrder: sortOrder,
-                                                page: page, perPage: perPage)
-        guard let url = components.url else {
-            throw WorkshopAPIError.invalidURL
-        }
-
-        let data = try await sendKeyed(url, key: key)
-        let items = try Self.parseItems(from: data)
-        WorkshopMetadataStore.shared.save(items)
-        return items
+        try await queryFiles(Self.queryItems(text: query, filter: filter, sortOrder: sortOrder,
+                                             page: page, perPage: perPage))
     }
 
     /// QueryFiles' parameters for a search: `requiredtags[n]` with `match_all_tags`, and
     /// `excludedtags[n]`, as `WorkshopQuery` plans them.
     static func queryItems(text: String, filter: WorkshopQuery, sortOrder: WorkshopSortOrder,
                            page: Int, perPage: Int) -> [URLQueryItem] {
+        queryItems(queryType: sortOrder.queryTypeForSearch(hasText: !text.isEmpty), text: text, filter: filter,
+                   page: page, perPage: perPage)
+    }
+
+    /// QueryFiles' parameters for `queryType` (`EPublishedFileQueryType`) and `filter`'s tags.
+    static func queryItems(queryType: Int, text: String = "", filter: WorkshopQuery,
+                           page: Int, perPage: Int) -> [URLQueryItem] {
         var queryItems: [URLQueryItem] = [
-            URLQueryItem(name: "query_type", value: "\(sortOrder.queryTypeForSearch(hasText: !text.isEmpty))"),
+            URLQueryItem(name: "query_type", value: "\(queryType)"),
             URLQueryItem(name: "page", value: "\(page)"),
             URLQueryItem(name: "numperpage", value: "\(perPage)"),
             URLQueryItem(name: "appid", value: "\(wallpaperEngineAppId)"),
@@ -226,6 +223,22 @@ class WorkshopAPIService {
             queryItems.append(URLQueryItem(name: "excludedtags[\(index)]", value: tag))
         }
         return queryItems
+    }
+
+    /// One page of a Discover section (QueryFiles with the user's Web API key).
+    func discoverItems(_ section: WorkshopDiscoverSection, page: Int, perPage: Int) async throws -> [WorkshopItem] {
+        try await queryFiles(WorkshopDiscover.queryItems(for: section, page: page, perPage: perPage))
+    }
+
+    /// A QueryFiles request with the user's Web API key; the items are remembered for the library.
+    private func queryFiles(_ queryItems: [URLQueryItem]) async throws -> [WorkshopItem] {
+        guard let key = apiKey.load() else { throw WorkshopAPIError.noAPIKey }
+        var components = URLComponents(url: Self.queryFilesURL, resolvingAgainstBaseURL: false)!
+        components.queryItems = queryItems
+        guard let url = components.url else { throw WorkshopAPIError.invalidURL }
+        let items = try Self.parseItems(from: try await sendKeyed(url, key: key))
+        WorkshopMetadataStore.shared.save(items)
+        return items
     }
 
     /// Get details for specific workshop items by their IDs.

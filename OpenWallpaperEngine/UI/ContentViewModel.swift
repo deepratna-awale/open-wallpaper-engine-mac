@@ -67,6 +67,8 @@ class ContentViewModel: ObservableObject, DropDelegate {
         return svc
     }()
     lazy var workshopVM: WorkshopViewModel = WorkshopViewModel(steamCmd: steamCmd)
+    /// The Discover tab's lists.
+    lazy var discoverVM = WorkshopDiscoverViewModel()
     private var steamCmdCancellable: AnyCancellable?
 
     @Published var searchText = ""
