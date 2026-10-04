@@ -78,11 +78,9 @@ struct ApplicationRuleTargetPicker: View {
         .fixedSize()
     }
 
-    @ViewBuilder
     private var profileMenu: some View {
-        let profiles = library.profiles()
-        if profiles.isAvailable {
-            let names = profiles.profileNames
+        let names = library.profiles().profileNames
+        return HStack {
             Menu {
                 if names.isEmpty {
                     Text("No Saved Profiles")
@@ -98,10 +96,11 @@ struct ApplicationRuleTargetPicker: View {
                 Label { chosenLabel } icon: { Image(systemName: "rectangle.3.group") }
             }
             .fixedSize()
-        } else {
-            Label("Profiles are available after display layouts update", systemImage: "info.circle")
-                .font(.callout)
-                .foregroundStyle(.secondary)
+            // A profile deleted since the rule chose it: the rule skips it.
+            if let file = rule.file, !file.isEmpty, !names.contains(file) {
+                Label("Missing", systemImage: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.orange)
+            }
         }
     }
 }

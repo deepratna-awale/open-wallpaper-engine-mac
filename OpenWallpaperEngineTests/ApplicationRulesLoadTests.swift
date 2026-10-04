@@ -75,6 +75,72 @@ final class ApplicationRulesLoadTests: XCTestCase {
         XCTAssertEqual(target.calls, ["record before", "load gone", "restore before"])
     }
 
+    // MARK: Load profile
+
+    private func wallpaper(_ folder: String) -> WEWallpaper {
+        WEWallpaper(using: WEProject(file: "scene.json", preview: "preview.jpg", title: folder, type: "scene"),
+                    where: URL(filePath: "/tmp/owe-rule-profile-tests/\(folder)"))
+    }
+
+    /// Two displays showing "a" and "b" in the plain layout, and a saved profile "Gaming" that
+    /// splits display 2 into "c" and "d".
+    private func profileFixture() -> (WallpaperViewModel, DisplayProfiles, URL) {
+        let folder = FileManager.default.temporaryDirectory.appending(path: "ApplicationRulesLoadTests-\(UUID().uuidString)")
+        let model = WallpaperViewModel(persistsWallpapers: false)
+        let displays = [
+            DisplayIdentity(screenId: "1", identity: "UUID-A", frame: CGRect(x: 0, y: 0, width: 1920, height: 1080)),
+            DisplayIdentity(screenId: "2", identity: "UUID-B", frame: CGRect(x: 1920, y: 0, width: 1920, height: 1080)),
+        ]
+        model.connectedDisplays = { displays }
+        model.audioOutputEnabled = false
+        model.refreshDisplayLayout()
+        let plain = model.displayLayout
+        let profiles = DisplayProfiles(model: model, fileURL: folder.appending(path: "DisplayProfiles.json"))
+        model.wallpapers = ["1": wallpaper("c"), "2": wallpaper("c")]
+        model.split("2", DisplaySplit(direction: .vertical, position: 0.5))
+        model.wallpapers["2/R"] = wallpaper("d")
+        XCTAssertTrue(profiles.save(name: "Gaming"))
+        model.displayLayout = plain
+        model.wallpapers = ["1": wallpaper("a"), "2": wallpaper("b")]
+        return (model, profiles, folder)
+    }
+
+    private func titles(_ model: WallpaperViewModel) -> [String: String] {
+        model.wallpapers.mapValues(\.project.title)
+    }
+
+    func testALoadProfileRuleShowsTheProfileAndRestoresTheLayoutBefore() {
+        let (model, profiles, folder) = profileFixture()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let before = model.displayLayout
+        let loader = ApplicationRuleLoader(target: WallpaperRuleLoadTarget(viewModel: model, library: { [] },
+                                                                           profiles: { profiles }))
+        loader.update(ApplicationRuleLoad(kind: .profile, file: "Gaming"))
+        XCTAssertEqual(model.displayLayout, profiles.profile(named: "Gaming")?.layout)
+        XCTAssertNotEqual(model.displayLayout, before)
+        XCTAssertTrue(model.isSplitRegion("2/R"))
+        XCTAssertEqual(titles(model)["2/R"], "d")
+        loader.update(nil)
+        XCTAssertEqual(model.displayLayout, before, "the layout from before the rule comes back")
+        XCTAssertEqual(titles(model), ["1": "a", "2": "b"], "and the wallpapers, without the profile's regions")
+        XCTAssertFalse(model.isSplitRegion("2/R"))
+    }
+
+    func testADeletedProfileIsSkipped() {
+        let (model, profiles, folder) = profileFixture()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        profiles.delete(name: "Gaming")
+        let before = model.displayLayout
+        let loader = ApplicationRuleLoader(target: WallpaperRuleLoadTarget(viewModel: model, library: { [] },
+                                                                           profiles: { profiles }))
+        loader.update(ApplicationRuleLoad(kind: .profile, file: "Gaming"))
+        XCTAssertEqual(model.displayLayout, before)
+        XCTAssertEqual(titles(model), ["1": "a", "2": "b"])
+        loader.update(nil)
+        XCTAssertEqual(model.displayLayout, before)
+        XCTAssertEqual(titles(model), ["1": "a", "2": "b"])
+    }
+
     // MARK: Monitor with fake providers
 
     private final class Desktop: @unchecked Sendable {
