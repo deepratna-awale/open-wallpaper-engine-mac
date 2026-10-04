@@ -93,6 +93,33 @@ final class WallpaperEditorLauncher {
         }
     }
 
+    /// Asks the running editor to close the window of the wallpaper in `folder`; false when no
+    /// editor runs.
+    @discardableResult
+    func close(_ folder: URL) -> Bool {
+        post(.closeWallpaper, folder: folder)
+    }
+
+    /// Asks the running editor to play, pause or seek the timeline of the wallpaper's window; false
+    /// when no editor runs.
+    @discardableResult
+    func controlTimeline(_ folder: URL, command: String, seconds: Double?) -> Bool {
+        var info = [AppProcessChannel.timelineCommandKey: command]
+        if let seconds { info[AppProcessChannel.secondsKey] = String(seconds) }
+        return post(.timeline, folder: folder, extra: info)
+    }
+
+    /// Whether an editor process runs (isolated as this app is).
+    var isEditorRunning: Bool { dependencies.editorIsRunning() }
+
+    private func post(_ message: AppProcessChannel.Message, folder: URL, extra: [String: String] = [:]) -> Bool {
+        guard dependencies.editorIsRunning() else { return false }
+        var info = extra
+        info[AppProcessChannel.folderKey] = folder.standardizedFileURL.path(percentEncoded: false)
+        dependencies.messaging.post(dependencies.channel.name(message), sender: dependencies.sender, userInfo: info)
+        return true
+    }
+
     private func editorDidBecomeReady() {
         launchStarted = nil
         let folders = waiting

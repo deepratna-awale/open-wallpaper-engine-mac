@@ -81,12 +81,19 @@ final class MCPServerTests: XCTestCase {
     func testToolsListHasEveryToolWithValidSchemas() async throws {
         let tools = try await unwrapped(request("tools/list")?["result"]?["tools"]?.arrayValue)
         let names = tools.compactMap { $0["name"]?.stringValue }
-        XCTAssertEqual(Set(names), [
+        XCTAssertTrue(Set(names).isSuperset(of: [
             "list_displays", "get_status", "list_wallpapers", "get_wallpaper", "set_wallpaper",
             "pause", "resume", "toggle_playback", "set_volume", "set_muted", "set_user_property",
             "list_playlists", "play_playlist", "next_wallpaper", "previous_wallpaper",
             "import_wallpaper", "open_editor", "snapshot",
-        ])
+        ]), "the first release's tools stay")
+        XCTAssertTrue(Set(names).isSuperset(of: [
+            "scene_get", "scene_apply_edits", "scene_undo", "scene_redo", "scene_save", "scene_save_as_local_wallpaper",
+            "scene_revert", "effects_catalog", "particles_catalog", "particles_get", "particles_restart", "puppets_list",
+            "timeline_get", "timeline_preview", "script_get", "script_set", "script_check", "user_properties_get",
+            "depth_generate", "depth_apply", "depth_remove", "editor_close", "editor_set_tab",
+        ]), "the scene and editors' tools")
+        XCTAssertEqual(names, MCPToolCatalog.tools.map(\.name))
         XCTAssertEqual(names.count, Set(names).count, "names are unique")
         for tool in tools {
             let name = tool["name"]?.stringValue ?? "?"

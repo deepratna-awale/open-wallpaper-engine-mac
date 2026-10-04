@@ -108,7 +108,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
         return launcher
     }()
-    private lazy var editorChangeSync: WallpaperEditorChangeSync = {
+    private(set) lazy var editorChangeSync: WallpaperEditorChangeSync = {
         let sync = WallpaperEditorChangeSync(role: .app, dependencies: .init(messaging: processMessaging, channel: .current))
         sync.onLibraryChange = { [weak self] in self?.contentViewModel.refresh() }
         sync.onOpenSettings = { [weak self] in self?.openSettings(for: $0) }

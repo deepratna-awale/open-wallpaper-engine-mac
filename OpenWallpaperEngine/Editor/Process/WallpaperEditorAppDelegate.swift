@@ -49,6 +49,10 @@ final class WallpaperEditorAppDelegate: NSObject, NSApplicationDelegate, Wallpap
         if let policy = plan.activationPolicy { NSApp.setActivationPolicy(policy) }
         WallpaperEditorMenu.install(WallpaperEditorMenu.make(helpTarget: self, help: #selector(openHelp)))
         requests.start()
+        // An MCP client's edit the app saved: the open window of the wallpaper takes it as an undo step.
+        changeSync.onAppOverlay = { [weak self] folder, actionName in
+            self?.editor(of: folder)?.adoptSavedOverlay(actionName: actionName)
+        }
         changeSync.start()
     }
 
@@ -108,6 +112,28 @@ final class WallpaperEditorAppDelegate: NSObject, NSApplicationDelegate, Wallpap
             OWELog.error(.ui, "The Wallpaper Editor can't open \(wallpaper.wallpaperDirectory.path): \(error)")
             showCantOpen(title: wallpaper.project.displayTitle)
             return false
+        }
+    }
+
+    /// The open editor of the wallpaper in `folder`, however its path was spelt.
+    private func editor(of folder: URL) -> WallpaperEditorController? {
+        let path = folder.standardizedFileURL.path
+        return editors.first { $0.key.standardizedFileURL.path == path }?.value
+    }
+
+    func closeEditor(of folder: URL) {
+        editor(of: folder)?.window.close()
+    }
+
+    func controlTimeline(of folder: URL, command: String, seconds: Double?) {
+        guard let timeline = editor(of: folder)?.timeline else { return }
+        switch command {
+        case "play": timeline.isActive = true; timeline.play()
+        case "pause": timeline.pause()
+        case "seek":
+            timeline.isActive = true
+            timeline.setPlayhead(seconds ?? 0)
+        default: OWELog.error(.ui, "The Wallpaper Editor got an unknown timeline command \(command)")
         }
     }
 

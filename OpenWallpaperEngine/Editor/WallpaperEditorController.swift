@@ -40,6 +40,8 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
     private let particleAssets: WallpaperEditorParticleAssets
     /// The overlay as last saved, which tells a particle document change from a scene change.
     private var savedOverlay: SceneEditOverlay
+    /// Taking an overlay Open Wallpaper Engine saved (`adoptSavedOverlay`): applied here, not saved.
+    private var isAdopting = false
 
     /// Only scene wallpapers have layers to edit.
     nonisolated static func canEdit(_ wallpaper: WEWallpaper) -> Bool {
@@ -179,6 +181,20 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         // A change of particle documents alone builds only the systems that read them.
         let change = overlay.liveChange(from: savedOverlay)
         savedOverlay = overlay
+        if isAdopting {
+            // The app saved it and applied it to its own instances; the canvas applies it here.
+            if digest != savedSceneDigest {
+                switch change {
+                case .scene:
+                    SceneEditOverlayFiles.post(overlay, base: session.baseOutline, wallpaperDirectory: wallpaper.wallpaperDirectory,
+                                               transient: false)
+                case .particleAssets(let paths):
+                    SceneEditOverlayFiles.postParticles(overlay, wallpaperDirectory: wallpaper.wallpaperDirectory, paths: paths)
+                }
+            }
+            savedSceneDigest = digest
+            return
+        }
         do {
             // A puppet edit doesn't change the running scene (`SceneEditOverlay.digest`): no reload.
             if digest == savedSceneDigest {
@@ -199,6 +215,23 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
 
     private static func sceneDigest(_ overlay: SceneEditOverlay) -> String {
         overlay.hasSceneEdits ? overlay.digest : ""
+    }
+
+    /// Open Wallpaper Engine saved an overlay of this wallpaper for an MCP client and applied it to
+    /// its own instances (`HeadlessSceneDocument`): the window takes it as the undo step
+    /// `actionName`, so Undo here undoes it (and that Undo is saved and reaches the app as any edit).
+    func adoptSavedOverlay(actionName: String) {
+        let stored: SceneEditOverlay
+        do {
+            stored = try SceneEditOverlayFiles.defaultStore.overlay(for: identity.rawValue) ?? SceneEditOverlay()
+        } catch {
+            OWELog.error(.scene, "The Wallpaper Editor can't read the edits Open Wallpaper Engine saved for \(wallpaper.project.title): \(error)")
+            return
+        }
+        guard stored != session.overlay else { return }
+        isAdopting = true
+        session.edit(actionName: actionName.isEmpty ? HeadlessSceneDocument.defaultActionName : actionName) { $0 = stored }
+        isAdopting = false
     }
 
     /// Save as Local Wallpaper: a copy in the library with the edits in its scene.json; the
