@@ -349,9 +349,8 @@ struct LockScreenPreview: View {
         if model.previewFrames.isEmpty {
             if !model.session.isEnded {
                 let layout = Self.Layout(window: window, sceneSize: model.sceneSize, scale: scale)
-                IsolatedSceneView(session: model.session, presentation: LivePhotoRenderer.presentation)
-                    .frame(width: layout.sceneViewSize.width, height: layout.sceneViewSize.height)
-                    .offset(x: layout.sceneViewOffset.x, y: layout.sceneViewOffset.y)
+                Self.pinned(IsolatedSceneView(session: model.session, presentation: LivePhotoRenderer.presentation),
+                            size: layout.sceneViewSize, at: layout.sceneViewOffset, in: frame)
                     .allowsHitTesting(false)
             }
         } else {
@@ -361,10 +360,8 @@ struct LockScreenPreview: View {
             TimelineView(.animation) { context in
                 let frames = model.previewFrames
                 let index = Int(context.date.timeIntervalSinceReferenceDate * Double(LivePhotoClip.frameRate)) % frames.count
-                Image(decorative: frames[index], scale: 1)
-                    .resizable()
-                    .frame(width: width, height: height)
-                    .offset(x: (crop.minX - window.minX) * scale, y: (crop.minY - window.minY) * scale)
+                Self.pinned(Image(decorative: frames[index], scale: 1).resizable(), size: CGSize(width: width, height: height),
+                            at: CGPoint(x: (crop.minX - window.minX) * scale, y: (crop.minY - window.minY) * scale), in: frame)
             }
         }
     }
@@ -384,6 +381,15 @@ struct LockScreenPreview: View {
             sceneViewSize = CGSize(width: sceneSize.x * scale, height: sceneSize.y * scale)
             sceneViewOffset = CGPoint(x: -window.minX * scale, y: -window.minY * scale)
         }
+    }
+
+    /// `view` at `size` with its top-left at `origin` in the screen's `frame`. Pinned to the
+    /// frame's top-left and no larger than it: a view larger than the screen would otherwise widen
+    /// the screen's stack, which its frame then centres, moving the picture by half the overflow.
+    static func pinned<V: View>(_ view: V, size: CGSize, at origin: CGPoint, in frame: CGSize) -> some View {
+        view.frame(width: size.width, height: size.height)
+            .offset(x: origin.x, y: origin.y)
+            .frame(width: frame.width, height: frame.height, alignment: .topLeading)
     }
 
     /// `window` (scene units) shown as large as it fits in `size`.
