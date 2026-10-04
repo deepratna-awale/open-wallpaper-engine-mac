@@ -909,6 +909,8 @@ extension AppDelegate {
 
 struct SceneInspectorView: View {
     @StateObject private var model: SceneInspectorModel
+    /// Depth maps and depth parallax, kept in the wallpaper's editor overlay.
+    @StateObject private var depthMaps: SceneEditorDepthMapHost
     @State private var selectedID: String?
     @State private var searchText = ""
     @State private var didCopyPath = false
@@ -926,6 +928,7 @@ struct SceneInspectorView: View {
         self.wallpaper = wallpaper
         self.scopes = scopes
         _model = StateObject(wrappedValue: SceneInspectorModel(wallpaper: wallpaper, scopes: scopes))
+        _depthMaps = StateObject(wrappedValue: SceneEditorDepthMapHost(wallpaper: wallpaper))
     }
 
     private func matches(_ item: SceneInspectorItem) -> Bool {
@@ -1180,6 +1183,9 @@ struct SceneInspectorView: View {
                 decodedTextureList(for: item)
                 detailList("Shaders", values: item.shaderPaths)
                 effectList(for: item)
+                if !item.isSynthetic, let objectID = Int(item.id) {
+                    SceneEditorDepthMapSection(host: depthMaps, objectID: objectID)
+                }
                 editableObjectBlock(for: item)
                 if let particle = item.rawParticle {
                     editableAssetBlock(title: "Particle System", isParticle: true, text: particle, path: item.sourcePath)

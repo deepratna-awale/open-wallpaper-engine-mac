@@ -157,3 +157,4 @@ map:
   "OpenWallpaperEngine/Settings/**": ["Settings*", "ApplicationRules*", "Quality*", "PowerPolicy*", "DisplayHDR*", "ReadOnlyDefaults*", "SteamCmd*", "AppUpdate*", "Update*", "WhatsNew*", "MenuShortcut*", "WallpaperEngineAssets*"]
   "OpenWallpaperEngine/UI/**": ["Onboarding*", "WhatsNew*", "FilterResults*", "SortBy*", "Menu*", "Playlist*", "Installed*", "NumericSlider*", "Legal*", "Desktop*", "Workshop*", "Steam*", "WallpaperPreset*", "Settings*"]
   "OpenWallpaperEngine/Localizable.xcstrings": ["Localization*"]
+  "OpenWallpaperEngine/DepthMaps/**": ["DepthMap*", "DepthParallax*", "Localization*"]

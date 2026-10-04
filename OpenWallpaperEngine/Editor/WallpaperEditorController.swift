@@ -150,6 +150,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         services.userPropertyChoices = { resources.userPropertyChoices() }
         services.timeline = timeline
         services.puppetAssets = EditorPuppetAssets.make(for: wallpaper)
+        services.depthMaps = DepthMapPlugin.services(for: wallpaper, resources: resources)
         // The browsers' previews, rendered for the WE assets in use when the window opened.
         let previews = EditorPreviewHelper.provider()
         let hasWEAssets = { WallpaperEngineAssets.directory != nil }

@@ -24,6 +24,14 @@ extension SceneEditOverlay {
     /// `markingEffectKeys`: every effect carries its edit key (`effectKeyMarker`), for the outline.
     func apply(to root: inout [String: Any], markingEffectKeys: Bool) throws {
         guard var objects = root["objects"] as? [[String: Any]] else { throw SceneEditOverlayError.notAScene }
+        if let general, !general.isEmpty {
+            var settings = root["general"] as? [String: Any] ?? [:]
+            for (name, value) in general {
+                // A user-bound or scripted setting keeps its driver; the edit is its value.
+                settings[name] = Self.merged(settings[name], with: value.any)
+            }
+            root["general"] = settings
+        }
         if hasStructureEdits {
             // Added, deleted or moved layers would shift the index an object without an id is
             // known by: it keeps that index as its id.

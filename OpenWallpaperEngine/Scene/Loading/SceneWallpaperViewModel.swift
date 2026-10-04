@@ -31,6 +31,9 @@ class SceneWallpaperViewModel: ObservableObject {
     /// instances load this way, so setting a wallpaper never blocks the main thread; tools and
     /// tests that want the scene at once load synchronously.
     let loadsInBackground: Bool
+    /// Edits to read the scene with instead of the wallpaper's saved overlay (a depth map's still
+    /// frame, `DepthMapSceneCapture`); nil reads the saved one.
+    let overlayOverride: SceneEditOverlay?
 
     /// Guards the small state the main thread reads and writes (the revision, the settings, what
     /// the loaded scene declares), so the main thread never waits on a load or a content build
@@ -213,8 +216,9 @@ class SceneWallpaperViewModel: ObservableObject {
     /// (`startLoad`); otherwise the scene is loaded when init returns.
     init(wallpaper: WEWallpaper, propertyScope: WallpaperPropertyScope = .shared,
          effectTranslator: ShaderVariantTranslator? = SceneWallpaperViewModel.defaultEffectTranslator,
-         loadsInBackground: Bool = false) {
+         loadsInBackground: Bool = false, overlay: SceneEditOverlay? = nil) {
         self.currentWallpaper = wallpaper
+        overlayOverride = overlay
         self.propertyScope = propertyScope
         self.effectTranslator = effectTranslator
         self.loadsInBackground = loadsInBackground
@@ -478,7 +482,7 @@ class SceneWallpaperViewModel: ObservableObject {
                                         edits: split.edits, userProperties: split.properties,
                                         settings: String(describing: settings.contentKey),
                                         displays: SceneCacheKey.Display.connected(),
-                                        overlay: SceneEditOverlayFiles.overlay(for: settingsIdentity(for: dir)))
+                                        overlay: overlayOverride ?? SceneEditOverlayFiles.overlay(for: settingsIdentity(for: dir)))
     }
 
     /// The scene and the document it was decoded from (for the scripts; nil when it isn't JSON the

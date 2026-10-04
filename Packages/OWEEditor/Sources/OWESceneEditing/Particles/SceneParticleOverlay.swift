@@ -113,7 +113,7 @@ extension SceneOutline {
             layers.append(SceneLayer(id: layer.id, index: base + offset, name: layer.name, kind: layer.kind,
                                      parentID: layer.parentID, fields: layer.fields, effects: layer.effects))
         }
-        return SceneOutline(layers: layers, size: size)
+        return SceneOutline(layers: layers, size: size, general: general)
     }
 
     /// An id no layer of the scene has, authored, added or deleted.
