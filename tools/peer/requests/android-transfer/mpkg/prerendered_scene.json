@@ -1,0 +1,257 @@
+{
+	"camera" : 
+	{
+		"center" : "0.00000 0.00000 -1.00000",
+		"eye" : "0.00000 0.00000 0.00000",
+		"up" : "0.00000 1.00000 0.00000"
+	},
+	"general" : 
+	{
+		"ambientcolor" : "0.16078 0.16078 0.16078",
+		"bloom" : false,
+		"bloomhdrfeather" : 0.1,
+		"bloomhdriterations" : 8,
+		"bloomhdrscatter" : 1.619,
+		"bloomhdrstrength" : 2.0,
+		"bloomhdrthreshold" : 1.0,
+		"bloomstrength" : 2.0,
+		"bloomthreshold" : 0.64999998,
+		"camerafade" : true,
+		"cameraparallax" : false,
+		"cameraparallaxamount" : 0.5,
+		"cameraparallaxdelay" : 0.1,
+		"cameraparallaxmouseinfluence" : 0.5,
+		"camerapreview" : true,
+		"camerashake" : false,
+		"camerashakeamplitude" : 0.5,
+		"camerashakeroughness" : 1.0,
+		"camerashakespeed" : 3.0,
+		"clearcolor" : "0.00000 0.00000 0.00000",
+		"clearenabled" : true,
+		"farz" : 10000.0,
+		"fov" : 50.0,
+		"hdr" : false,
+		"nearz" : 0.0099999998,
+		"orthogonalprojection" : 
+		{
+			"height" : 1080,
+			"width" : 1920
+		},
+		"skylightcolor" : "0.30000 0.30000 0.30000",
+		"texturereduction" : 4,
+		"zoom" : 1.0
+	},
+	"objects" : 
+	[
+		{
+			"alignment" : "center",
+			"alpha" : 1.0,
+			"angles" : "0.00000 0.00000 0.00000",
+			"brightness" : 1.0,
+			"color" : "1.00000 1.00000 1.00000",
+			"colorBlendMode" : 0,
+			"copybackground" : true,
+			"effects" : 
+			[
+				{
+					"file" : "effects/pulse/effect.json",
+					"id" : 67,
+					"name" : "",
+					"passes" : 
+					[
+						{
+							"constantshadervalues" : 
+							{
+								"amount" : 0.2,
+								"bounds" : "0 1",
+								"noiseamount" : 1,
+								"noisespeed" : 0.1,
+								"phase" : 0.0,
+								"power" : 1.0,
+								"speed" : 3.0,
+								"tinthigh" : "1 1 1",
+								"tintlow" : "1 1 1"
+							},
+							"id" : 68,
+							"textures" : 
+							[
+								null,
+								"util/noise",
+								"masks/pulse_mask_c90fdc1ddc49389266e4c73cc937c1a5dcb82f25"
+							]
+						}
+					],
+					"visible" : true
+				},
+				{
+					"file" : "effects/waterflow/effect.json",
+					"id" : 97,
+					"name" : "",
+					"passes" : 
+					[
+						{
+							"constantshadervalues" : 
+							{
+								"phasescale" : 2.0,
+								"speed" : 0.21,
+								"strength" : 1.0
+							},
+							"id" : 98,
+							"textures" : [ null, "masks/waterflow_mask_d3e88ced", "effects/waterflowphase" ]
+						}
+					],
+					"visible" : true
+				},
+				{
+					"file" : "effects/waterwaves/effect.json",
+					"id" : 84,
+					"name" : "",
+					"passes" : 
+					[
+						{
+							"constantshadervalues" : 
+							{
+								"direction" : 1.4559197,
+								"perspective" : 0.0,
+								"scale" : 29.71,
+								"speed" : 3.23,
+								"strength" : 0.07
+							},
+							"id" : 85,
+							"textures" : [ null, "masks/waterwaves_mask_95411193" ]
+						}
+					],
+					"visible" : true
+				}
+			],
+			"id" : 13,
+			"image" : "models/centurion 1080p.json",
+			"ledsource" : false,
+			"locktransforms" : false,
+			"name" : "centurion 1080p",
+			"origin" : "960.00000 540.00000 0.00000",
+			"parallaxDepth" : "1.00000 1.00000",
+			"perspective" : false,
+			"scale" : "1.00000 1.00000 1.00000",
+			"size" : "1920.00000 1080.00000",
+			"solid" : true,
+			"visible" : true
+		},
+		{
+			"angles" : "0.00000 0.00000 0.00000",
+			"id" : 32,
+			"instanceoverride" : null,
+			"locktransforms" : false,
+			"name" : "Ash",
+			"origin" : "1090.92322 778.98010 0.00000",
+			"parallaxDepth" : "1.00000 1.00000",
+			"particle" : "particles/presets/ash.json",
+			"scale" : "1.00000 1.00000 1.00000",
+			"visible" : true
+		},
+		{
+			"angles" : "0.00000 -0.00000 0.35163",
+			"id" : 42,
+			"instanceoverride" : 
+			{
+				"colorn" : "0.21961 0.20784 0.20784",
+				"id" : 43,
+				"rate" : 0.31999999
+			},
+			"locktransforms" : false,
+			"name" : "Smoke cloud",
+			"origin" : "1593.08484 565.64984 0.00000",
+			"parallaxDepth" : "1.00000 1.00000",
+			"particle" : "particles/presets/smoke1.json",
+			"scale" : "1.00000 1.00000 1.00000",
+			"visible" : true
+		},
+		{
+			"angles" : "0.00000 -0.00000 1.68757",
+			"id" : 51,
+			"instanceoverride" : 
+			{
+				"id" : 52,
+				"lifetime" : 2.0,
+				"size" : 0.44999999
+			},
+			"locktransforms" : false,
+			"name" : "Ember",
+			"origin" : "1936.44763 517.37244 0.00000",
+			"parallaxDepth" : "1.00000 1.00000",
+			"particle" : "particles/presets/ember.json",
+			"scale" : "1.00000 1.00000 1.00000",
+			"visible" : true
+		},
+		{
+			"alignment" : "center",
+			"alpha" : 1.0,
+			"angles" : "0.00000 0.00000 0.00000",
+			"animationlayers" : 
+			[
+				{
+					"additive" : false,
+					"animation" : 41,
+					"blend" : 1.0,
+					"id" : 47,
+					"name" : "idle",
+					"rate" : 1.0,
+					"visible" : true
+				}
+			],
+			"brightness" : 1.0,
+			"color" : "1.00000 1.00000 1.00000",
+			"colorBlendMode" : 0,
+			"copybackground" : true,
+			"id" : 21,
+			"image" : "models/centurion 1080p_sheet.json",
+			"ledsource" : false,
+			"locktransforms" : false,
+			"name" : "centurion 1080p_sheet",
+			"origin" : "1153.02795 352.14566 0.00000",
+			"parallaxDepth" : "1.00000 1.00000",
+			"perspective" : false,
+			"scale" : "1.01558 1.01558 1.01558",
+			"size" : "1931.00000 1772.00000",
+			"solid" : true,
+			"visible" : true
+		},
+		{
+			"angles" : "0.00000 0.00000 0.00000",
+			"color" : "0.72157 0.35294 0.14902",
+			"id" : 29,
+			"intensity" : 
+			{
+				"script" : "'use strict';\n\n/**\n * @param {Number} value - for property 'intensity'\n * @return {Number} - update current property value\n */\nexport function update(value) {\n\treturn 1 + 0.3 * Math.sin(engine.runtime * 7.3333) + 0.2 * Math.sin(engine.runtime * 9.77777);\n}\n",
+				"value" : 1.0
+			},
+			"light" : "point",
+			"locktransforms" : false,
+			"name" : "",
+			"origin" : 
+			{
+				"script" : "'use strict';\n\n/**\n * @param {Vec3} value - for property 'origin'\n * @return {Vec3} - update current property value\n */\nexport function update(value) {\n\t\n\tvalue.y = 500 + 200 * Math.sin(engine.runtime * 0.7777);\n\tvalue.z = 500 + 200 * Math.sin(engine.runtime);\n\treturn value;\n}\n",
+				"value" : "2124.54346 536.26215 588.00000"
+			},
+			"parallaxDepth" : "1.00000 1.00000",
+			"radius" : 2048.0,
+			"scale" : "1.00000 1.00000 1.00000",
+			"visible" : true
+		},
+		{
+			"angles" : "0.00000 0.00000 0.00000",
+			"color" : "1.00000 0.85098 0.77255",
+			"id" : 33,
+			"intensity" : 1.23,
+			"light" : "point",
+			"locktransforms" : false,
+			"name" : "",
+			"origin" : "172.64957 872.01721 331.00000",
+			"parallaxDepth" : "1.00000 1.00000",
+			"radius" : 2048.0,
+			"scale" : "1.00000 1.00000 1.00000",
+			"visible" : true
+		}
+	],
+	"version" : 1
+}
