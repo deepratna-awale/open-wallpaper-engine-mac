@@ -109,7 +109,8 @@ struct MDLAnimation: Equatable {
     var linkTracks: [Track]?
     /// `MDLA` 2 and later: one per skeleton constraint.
     var constraintTracks: [ScalarTrack]?
-    /// `MDLA` 3 and later.
+    /// `MDLA` 3 and later: one per Puppet Warp texture channel, its `g_BlendMap` entry (the
+    /// clip's list at +0xd8, 0x1402646dc; the puppet update samples it at 0x1401fefa0…0x1401ffa2e).
     var scalarTracksA: [ScalarTrack]?
     /// `MDLA` 3 and later, when present: one per bone track.
     var scalarTracksB: [ScalarTrack]?

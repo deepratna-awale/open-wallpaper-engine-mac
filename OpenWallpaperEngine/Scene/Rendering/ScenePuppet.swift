@@ -50,12 +50,15 @@ final class ScenePuppetPlan {
     /// Whether every vertex sits where its texture coordinate puts it in the image
     /// (`isTextureLayout`): then the bind pose is the texture as stored.
     let bindPoseIsTextureLayout: Bool
+    /// The rig's texture channels, drawn over the image the mesh samples; nil without.
+    let channels: ScenePuppetChannelPlan?
 
     var boneCount: Int { combos.boneCount }
 
     init(rigPath: String, material: ImageMaterialPlan, combos: ImagePuppetCombos, mesh: MDLMesh, vertexData: Data,
          imageSize: SIMD2<Float>, contentPixels: SIMD2<Int>, skeleton: MDLSkeleton, clips: [MDLAnimation] = [],
-         animationLayers: [WEAnimationLayer] = [], attachments: [MDLAttachment] = [], morphs: MDLMorphTargets? = nil) {
+         animationLayers: [WEAnimationLayer] = [], attachments: [MDLAttachment] = [], morphs: MDLMorphTargets? = nil,
+         channels: ScenePuppetChannelPlan? = nil) {
         self.rigPath = rigPath
         self.material = material
         self.combos = combos
@@ -72,6 +75,7 @@ final class ScenePuppetPlan {
         self.attachments = attachments
         self.morphs = morphs
         meshFlags = mesh.flags
+        self.channels = channels
         bindPoseIsTextureLayout = Self.isTextureLayout(mesh.vertexData, format: mesh.format, imageSize: imageSize)
     }
 
@@ -212,11 +216,18 @@ final class ScenePuppetPlan {
             throw ScenePuppetError.unsupported("\(materialPath) draws no image")
         }
         let fraction = SIMD2(Float(content.x) / Float(texture.x), Float(content.y) / Float(texture.y))
+        // Channels that can't draw leave the image as it is; the rig still draws.
+        var channels: ScenePuppetChannelPlan?
+        do {
+            channels = try ScenePuppetChannelPlan.make(model: model, rigPath: rigPath, builder: builder)
+        } catch {
+            OWELog.error(.scene, "Puppet rig \(rigPath) draws without its texture channels: \(error)")
+        }
         return ScenePuppetPlan(rigPath: rigPath, material: material, combos: combos, mesh: mesh,
                                vertexData: scaledTexCoords(mesh, by: fraction), imageSize: imageSize,
                                contentPixels: content, skeleton: skeleton, clips: model.animations ?? [],
                                animationLayers: animationLayers, attachments: model.attachments ?? [],
-                               morphs: model.morphTargets?.first { $0.mesh == 0 })
+                               morphs: model.morphTargets?.first { $0.mesh == 0 }, channels: channels)
     }
 
     /// The vertices with the first texture coordinate's u and v multiplied by `scale`, as WE's copy
@@ -307,6 +318,9 @@ struct ScenePuppetPose: Equatable {
     var bonesAlpha: [Float]
     /// The blend shapes' uniforms (`SceneMorphRig.puppetUniforms`); nil for a rig without targets.
     var morph: SceneMorphUniforms? = nil
+    /// The texture channels' weights, `g_BlendMap` flattened (`ScenePuppetAnimator.channelWeights`);
+    /// empty is every channel 0.
+    var blendMap: [Float] = []
 
     static func bind(boneCount: Int) -> ScenePuppetPose {
         ScenePuppetPose(bones: Array(repeating: matrix_identity_float4x4, count: boneCount),
@@ -340,6 +354,8 @@ final class ScenePuppetRenderer {
     /// WE's "morph_<n>" texture stand-in for a `MORPHING` mesh without targets.
     private let emptyMorphTexture: MTLTexture
     private let uniformArena: SceneUniformArena
+    /// The rigs' texture channels, drawn over the image the mesh samples.
+    let channels: ScenePuppetChannelRenderer
 
     private let compileQueue = DispatchQueue(label: "owe.puppet-pipelines", qos: .userInitiated, attributes: .concurrent)
     /// Owns `pipelines`, `pending` and `failed`, which compile threads write.
@@ -377,6 +393,8 @@ final class ScenePuppetRenderer {
         var drawnSource: ObjectIdentifier?
         var drawnCanvas: ScenePuppetCanvas?
         var drawnMirrored = false
+        /// The texture channels' drawing the mesh sampled (`ScenePuppetChannelRenderer`), 0 for the image.
+        var drawnChannels: UInt64 = 0
         /// The canvas a layer without effects grows to (`canvas(_:layerID:pose:)`).
         var canvas: ScenePuppetCanvas?
         /// Which drawing `target` holds (`albedoVersion`).
@@ -407,7 +425,7 @@ final class ScenePuppetRenderer {
     private var lastVersion: UInt64 = 0
     /// Bytes of the albedo targets and the scratch (diagnostics).
     var allocatedBytes: Int {
-        layers.values.reduce(scratch?.allocatedSize ?? 0) { $0 + ($1.target?.allocatedSize ?? 0) }
+        layers.values.reduce(scratch?.allocatedSize ?? 0) { $0 + ($1.target?.allocatedSize ?? 0) } + channels.allocatedBytes
             + warps.values.reduce(0) { $0 + $1.values.reduce(0) { $0 + $1.target.allocatedSize } }
     }
 
@@ -424,7 +442,9 @@ final class ScenePuppetRenderer {
                   let function = library.makeFunction(name: "scenePuppetUnpremultiply"),
                   let warpVertex = library.makeFunction(name: "scenePuppetWarpVertex"),
                   let warpFragment = library.makeFunction(name: "scenePuppetWarpFragment"),
-                  let blendedFragment = library.makeFunction(name: "scenePuppetWarpPremultipliedFragment") else { return nil }
+                  let blendedFragment = library.makeFunction(name: "scenePuppetWarpPremultipliedFragment"),
+                  let channels = ScenePuppetChannelRenderer(device: device, library: library, archive: archive) else { return nil }
+            self.channels = channels
             unpremultiply = try device.makeComputePipelineState(function: function)
             let warp = MTLRenderPipelineDescriptor()
             warp.vertexFunction = warpVertex
@@ -480,18 +500,21 @@ final class ScenePuppetRenderer {
         layers.removeAll()
         warps.removeAll()
         scratch = nil
+        channels.releaseAll()
     }
 
     /// Frees one layer's state (e.g. a removed script clone).
     func releaseLayer(_ layerID: String) {
         layers.removeValue(forKey: layerID)
         warps.removeValue(forKey: layerID)
+        channels.releaseLayer(layerID)
     }
 
     /// Memory pressure: the scratch is remade by the next draw that needs it.
     func trimMemory() {
         scratch = nil
         uniformArena.trim()
+        channels.trimMemory()
     }
 
     /// What a puppet's draw needs this frame.
@@ -574,14 +597,23 @@ final class ScenePuppetRenderer {
             state.drawnPose = nil
         }
         guard let target = state.target else { return nil }
+        // The texture channels drawn over the image, which the mesh then samples (0x140207740).
+        let channeled = plan.channels.flatMap { channelPlan in
+            channels.composite(channelPlan, ScenePuppetChannelRenderer.Draw(
+                layerID: draw.layerID, image: draw.source, contentPixels: plan.contentPixels, imageSize: plan.imageSize,
+                blendMap: draw.pose.blendMap, frame: draw.frame, values: draw.values, assetTexture: draw.assetTexture),
+                commandBuffer: commandBuffer)
+        }
         let source = ObjectIdentifier(draw.source)
         let unchanged = state.drawnPose == draw.pose && state.drawnSource == source && state.drawnCanvas == draw.canvas
-            && state.drawnMirrored == draw.mirrored && plan.material.pass.constants.dynamic.isEmpty
+            && state.drawnMirrored == draw.mirrored && state.drawnChannels == (channeled?.version ?? 0)
+            && plan.material.pass.constants.dynamic.isEmpty
         if unchanged { return target }
 
         let content = simd_min(plan.contentPixels, size)
         guard let scratch = scratchTexture(covering: content) else { return nil }
-        let drawn = encodeMesh(plan, state: state, draw, into: scratch, content: content, commandBuffer: commandBuffer)
+        let drawn = encodeMesh(plan, state: state, draw, image: channeled?.texture ?? draw.source, into: scratch,
+                               content: content, commandBuffer: commandBuffer)
         lastVersion &+= 1
         state.version = lastVersion
         guard let compute = commandBuffer.makeComputeCommandEncoder() else { return nil }
@@ -600,6 +632,7 @@ final class ScenePuppetRenderer {
             state.drawnSource = source
             state.drawnCanvas = draw.canvas
             state.drawnMirrored = draw.mirrored
+            state.drawnChannels = channeled?.version ?? 0
         }
         return target
     }
@@ -707,11 +740,13 @@ final class ScenePuppetRenderer {
 
     /// The mesh into `scratch`'s top-left `content` texels, premultiplied, cleared to 0 first.
     /// False while the pipeline compiles or failed, or an input is missing.
-    private func encodeMesh(_ plan: ScenePuppetPlan, state: LayerState, _ draw: Draw, into scratch: MTLTexture,
-                            content: SIMD2<Int>, commandBuffer: MTLCommandBuffer) -> Bool {
+    /// `image`: what the mesh samples as the layer image, `draw.source` or it with the texture
+    /// channels drawn on it.
+    private func encodeMesh(_ plan: ScenePuppetPlan, state: LayerState, _ draw: Draw, image: MTLTexture,
+                            into scratch: MTLTexture, content: SIMD2<Int>, commandBuffer: MTLCommandBuffer) -> Bool {
         let pass = plan.material.pass
         let pipeline = self.pipeline(for: plan)
-        let bound = pipeline == nil ? nil : textures(of: plan, draw, morph: state.morphTexture)
+        let bound = pipeline == nil ? nil : textures(of: plan, draw, image: image, morph: state.morphTexture)
         let renderPass = MTLRenderPassDescriptor()
         renderPass.colorAttachments[0].texture = scratch
         renderPass.colorAttachments[0].loadAction = .clear
@@ -785,7 +820,7 @@ final class ScenePuppetRenderer {
     private typealias BoundTexture = (slot: Int, texture: MTLTexture, sampler: MTLSamplerState, contentSize: SIMD2<Float>?)
 
     /// The textures the mesh pass reads; nil when one isn't there this frame.
-    private func textures(of plan: ScenePuppetPlan, _ draw: Draw, morph: MTLTexture?) -> [BoundTexture]? {
+    private func textures(of plan: ScenePuppetPlan, _ draw: Draw, image: MTLTexture, morph: MTLTexture?) -> [BoundTexture]? {
         var bound: [BoundTexture] = []
         let pass = plan.material.pass
         for slot in pass.variant?.textureSlots ?? [] {
@@ -799,8 +834,8 @@ final class ScenePuppetRenderer {
             switch input {
             case .current, .previous:
                 let content = SIMD2(Float(plan.contentPixels.x), Float(plan.contentPixels.y))
-                let whole = SIMD2(Float(draw.source.width), Float(draw.source.height))
-                bound.append((slot, draw.source, sampler, content == whole ? nil : content))
+                let whole = SIMD2(Float(image.width), Float(image.height))
+                bound.append((slot, image, sampler, content == whole ? nil : content))
             case .asset(let key, let source):
                 guard let texture = draw.assetTexture(key, source) else { return nil }
                 bound.append((slot, texture, sampler, source.contentSize))

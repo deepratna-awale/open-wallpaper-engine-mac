@@ -111,3 +111,17 @@ fragment float4 scenePuppetWarpPremultipliedFragment(ScenePuppetWarpOut in [[sta
     float4 color = scenePuppetEdgeSample(source, in.uv);
     return float4(color.rgb * color.a, color.a);
 }
+
+// A puppet's texture channels draw over its image (`ScenePuppetChannelRenderer`): the image is
+// copied into the channel target first, texel for texel (sampled at texel centres, since it may
+// be block-compressed).
+kernel void scenePuppetChannelBase(texture2d<float> image [[texture(0)]],
+                                   texture2d<float, access::write> target [[texture(1)]],
+                                   uint2 gid [[thread_position_in_grid]]) {
+    if (gid.x >= target.get_width() || gid.y >= target.get_height()) {
+        return;
+    }
+    constexpr sampler nearest(coord::normalized, filter::nearest, address::clamp_to_edge);
+    float2 uv = (float2(gid) + 0.5) / float2(target.get_width(), target.get_height());
+    target.write(image.sample(nearest, uv, level(0)), gid);
+}

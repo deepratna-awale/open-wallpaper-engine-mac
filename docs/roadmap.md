@@ -107,7 +107,7 @@ Blocked on WE ground truth (captures on Windows): see docs/test-risks.md "needs 
 1. ~~Puppet rigs from `.mdl` (bones, weights, mesh).~~ Done (P1).
 2. ~~Skinned rendering of the puppet mesh (shares skinning with area 6).~~ Done (P1, M6).
 3. ~~Puppet animation layers (`getAnimationLayer`, blend, rate) and the script bone API.~~ Done (P2), with bone physics (springs, rigid bones, gravity, limits, impulses) matched against WE's capture, and layers attached to rig bones.
-4. Open: the mesh-flag-0x2 path (`BLENDROWCOUNT`, `g_BlendMap`, the auxiliary `fullscreenlayer` draw), which no library wallpaper uses (models-plan §5, point 17).
+4. Done: the mesh-flag-0x2 path, Puppet Warp's texture channels (models-plan §5, point 17).
 
 ### 8. Regressions and gaps from the review (2026-09-25)
 

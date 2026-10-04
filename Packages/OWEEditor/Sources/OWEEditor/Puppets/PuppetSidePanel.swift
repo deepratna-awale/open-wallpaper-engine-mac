@@ -89,6 +89,28 @@ private struct PuppetMeshPanel: View {
                 LabeledContent(PL("Selected"), value: String(workspace.selectedVertices.count))
             }
         }
+        PuppetTextureChannelsSection(channels: workspace.document?.preserved.textureChannels ?? [])
+    }
+}
+
+/// The rig's texture channels, read only: Wallpaper Engine's editor makes them (Puppet Warp ›
+/// Texture Channels), and saving writes them back as they were.
+private struct PuppetTextureChannelsSection: View {
+    let channels: [PuppetPreservedData.TextureChannelMesh]
+
+    var body: some View {
+        if !channels.isEmpty {
+            Section {
+                ForEach(Array(channels.enumerated()), id: \.offset) { _, mesh in
+                    LabeledContent(PL("Channels"), value: mesh.channelCount.formatted())
+                    LabeledContent(PL("Material")) { Text(verbatim: mesh.material).textSelection(.enabled) }
+                }
+            } header: {
+                Text(PL("Texture Channels"))
+            } footer: {
+                Text(PL("Made in Wallpaper Engine's editor. Saving keeps them as they are."))
+            }
+        }
     }
 }
 

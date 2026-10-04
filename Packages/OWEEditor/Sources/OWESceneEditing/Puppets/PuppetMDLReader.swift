@@ -19,12 +19,21 @@ public enum PuppetMDLReader {
         let meshCount = Int(try r.u32())
         guard meshCount > 0 else { throw PuppetMDLError.unsupported("no mesh") }
         var first: RawMesh?
+        var channels: [PuppetPreservedData.TextureChannelMesh] = []
         for _ in 0..<meshCount {
+            let start = r.offset
             let mesh = try readMesh(&r, version: version, legacyFormat: legacyFormat, materials: materialsPerMesh)
-            if first == nil { first = mesh }
+            if first == nil {
+                first = mesh
+            } else if mesh.flags & 2 != 0, materialsPerMesh == 1, version == 23 {
+                // Texture channels, kept byte for byte for the writer's MDLV0023.
+                channels.append(.init(material: mesh.material, blendRows: mesh.flagsExtra ?? 1,
+                                      channelCount: channelCount(mesh), bytes: Data(r.bytes[start..<r.offset])))
+            }
         }
         var document = PuppetDocument(imageSize: imageSize, material: first!.material, sourcePath: sourcePath)
         try decode(first!, into: &document)
+        if !channels.isEmpty { document.preserved.textureChannels = channels }
         guard version >= 13 else { throw PuppetMDLError.unsupported("no skeleton") }
         var boneCount = 0
         var links = 0, constraints = 0
@@ -108,6 +117,17 @@ public enum PuppetMDLReader {
         }
         return RawMesh(material: names.first ?? "", flags: flags, flagsExtra: extra, format: format, vertices: vertices,
                        indices: indices)
+    }
+
+    /// The channels a texture-channel mesh's quads name: the largest `a_BlendIndices.x` + 1.
+    private static func channelCount(_ mesh: RawMesh) -> Int {
+        let size = PuppetVertexLayout.stride(mesh.format)
+        guard size > 0, let offset = PuppetVertexLayout.offset(of: PuppetVertexLayout.blendIndices, in: mesh.format) else { return 0 }
+        let bytes = Array(mesh.vertices)
+        return stride(from: 0, to: bytes.count - size + 1, by: size).map { base -> Int in
+            let at = base + offset
+            return Int(UInt32(bytes[at]) | UInt32(bytes[at + 1]) << 8 | UInt32(bytes[at + 2]) << 16 | UInt32(bytes[at + 3]) << 24) + 1
+        }.max() ?? 0
     }
 
     private static func decode(_ mesh: RawMesh, into document: inout PuppetDocument) throws {
@@ -290,10 +310,11 @@ public enum PuppetMDLReader {
                     _ = try r.blob("constraint track")
                 }
             }
+            var channelTracks: [PuppetChannelTrack] = []
             if version >= 3 {
                 for _ in 0..<(try r.u32()) {
-                    _ = try r.u32()
-                    _ = try r.blob("scalar track")
+                    let tag = try r.u32()
+                    channelTracks.append(PuppetChannelTrack(tag: tag, samples: PuppetMDLInput.floats(try r.blob("scalar track"))))
                 }
                 if try r.u8() != 0 {
                     for _ in 0..<trackCount {
@@ -323,6 +344,7 @@ public enum PuppetMDLReader {
             let mode = PuppetClip.Mode(rawValue: modeName) ?? .loop
             var clip = PuppetClip(id: id, name: name, mode: mode, fps: fps, frames: frames, tracks: tracks,
                                   otherFlags: flags & ~PuppetClip.RootMotion.ownedFlags)
+            if !channelTracks.isEmpty { clip.channelTracks = channelTracks }
             if PuppetClip.Mode(rawValue: modeName) == nil { clip.modeName = modeName }
             if flags & PuppetClip.RootMotion.ownedFlags != 0 {
                 var motion = PuppetClip.RootMotion(matchLoop: flags & PuppetClip.RootMotion.matchLoopFlag != 0,
