@@ -14,15 +14,28 @@ extension Notification.Name {
 /// properties under its default "Wallpaper per display" layout; its "Clone single wallpaper"
 /// layout shows one wallpaper, with one set of properties, on every display. The sync setting is
 /// that choice for properties alone.
+///
+/// `isolated` is a private copy one of the Scene Editor (Live)'s modes edits (the iPhone & iPad
+/// Export mode's, named by the mode), seeded from the edited store when the mode opens and dropped
+/// when it closes (`IsolatedSceneEditSession`): what it changes runs only in that mode's private
+/// instance and its offscreen render, never on a display.
 enum WallpaperPropertyScope: Hashable, CustomStringConvertible {
     case shared
     case display(String)
+    case isolated(String)
+
+    /// No display runs this store (`isolated`).
+    var isIsolated: Bool {
+        if case .isolated = self { return true }
+        return false
+    }
 
     /// Appended to the wallpaper's settings keys (`WallpaperSettingsIdentity.key(_:scope:)`).
     var settingsSuffix: String {
         switch self {
         case .shared: return ""
         case .display(let id): return ".display.\(id)"
+        case .isolated(let id): return ".isolated.\(id)"
         }
     }
 
@@ -32,6 +45,7 @@ enum WallpaperPropertyScope: Hashable, CustomStringConvertible {
         switch self {
         case .shared: return directory.path
         case .display(let id): return directory.path + "#display=" + id
+        case .isolated(let id): return directory.path + "#isolated=" + id
         }
     }
 
@@ -39,6 +53,7 @@ enum WallpaperPropertyScope: Hashable, CustomStringConvertible {
         switch self {
         case .shared: return "shared"
         case .display(let id): return "display \(id)"
+        case .isolated(let id): return "isolated \(id)"
         }
     }
 }
