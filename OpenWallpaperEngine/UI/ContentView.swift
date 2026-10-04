@@ -267,6 +267,9 @@ struct ContentView: View {
             DownloadsView(steamCmd: viewModel.steamCmd)
         case 3:
             PlaylistView(wallpaperViewModel: wallpaperViewModel)
+        case 4:
+            WorkshopDiscoverView(model: viewModel.discoverVM, workshop: viewModel.workshopVM,
+                                 cardSize: viewModel.explorerIconSize - 5)
         default:
             EmptyView()
         }

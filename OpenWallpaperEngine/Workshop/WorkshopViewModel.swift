@@ -2,10 +2,18 @@ import Foundation
 import SwiftUI
 import Combine
 
+/// The wallpaper whose Workshop presets the browser lists (WE's "Browsing presets for: <title>").
+struct WorkshopPresetBase: Equatable {
+    let id: String
+    let title: String
+}
+
 class WorkshopViewModel: ObservableObject {
     @Published var items: [WorkshopItem] = []
     @Published var searchText = ""
     @Published var authorId: String?
+    /// Lists this wallpaper's presets instead of searching (WE's "Browse Presets").
+    @Published private(set) var presetBase: WorkshopPresetBase?
     @Published var sortOrder: WorkshopSortOrder = .trending
     @Published var isLoading = false
     @Published var errorMessage: String?
@@ -19,6 +27,10 @@ class WorkshopViewModel: ObservableObject {
     @Published private(set) var itemsPerPage = 21
 
     let steamCmd: SteamCmdService
+    /// Wallpapers and authors hidden from the results (`WorkshopBlockList`).
+    let blockList: WorkshopBlockList
+    /// Brings the Workshop browser to the front: "Related Wallpapers" from another tab opens there.
+    var showsBrowser: () -> Void = {}
     private let api = WorkshopAPIService()
     /// One QueryFiles page: search text, filter, sort, page, page size.
     typealias PageSearch = (String, WorkshopQuery, WorkshopSortOrder, Int, Int) async throws -> [WorkshopItem]
@@ -28,6 +40,7 @@ class WorkshopViewModel: ObservableObject {
     private var cancellable: AnyCancellable?
     private var downloadedIndexCancellable: AnyCancellable?
     private var favoritesCancellable: AnyCancellable?
+    private var blockListCancellable: AnyCancellable?
     private var cachedPages: [Int: [WorkshopItem]] = [:]
     /// QueryFiles result pages for the current search, so later pages and client-side filtering
     /// don't request the same source pages again.
@@ -39,8 +52,9 @@ class WorkshopViewModel: ObservableObject {
     /// (Show Only options Steam can't express): 2,000 items.
     static let maxSourcePages = 40
 
-    init(steamCmd: SteamCmdService, searchPage: PageSearch? = nil) {
+    init(steamCmd: SteamCmdService, blockList: WorkshopBlockList = WorkshopBlockList(), searchPage: PageSearch? = nil) {
         self.steamCmd = steamCmd
+        self.blockList = blockList
         let service = WorkshopAPIService()
         self.searchPage = searchPage ?? { text, query, sortOrder, page, perPage in
             try await service.searchItems(query: text, filter: query, sortOrder: sortOrder, page: page, perPage: perPage)
@@ -62,6 +76,17 @@ class WorkshopViewModel: ObservableObject {
                 self.cachedPages.removeAll()
             }
         }
+        // Blocking or unblocking changes what the pages show; the source pages stay valid.
+        self.blockListCancellable = blockList.objectWillChange.sink { [weak self] _ in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.cachedPages.removeAll()
+                self.items.removeAll(where: self.blockList.isBlocked)
+                // Only a browser that has searched shows the change; it reads no new pages for it.
+                guard !self.cachedSearchKey.isEmpty || self.authorId != nil else { return }
+                Task { @MainActor in await self.search() }
+            }
+        }
     }
 
     /// Shows the current page for the current search text, sort and filter. Searches overlap
@@ -79,7 +104,7 @@ class WorkshopViewModel: ObservableObject {
                 let results = try await api.getAuthorWorkshopItems(steamId: authorId)
                 guard generation == searchGeneration else { return }
                 // The author's items come unfiltered; the whole filter is checked here.
-                items = results.filter { query.matchesAllTags($0, isFavorite: isFavorite) }
+                items = results.filter { query.matchesAllTags($0, isFavorite: isFavorite) && !blockList.isBlocked($0) }
                 preloadThumbnails(items)
             } catch {
                 guard generation == searchGeneration else { return }
@@ -88,7 +113,7 @@ class WorkshopViewModel: ObservableObject {
             isLoading = false
             return
         }
-        let searchKey = "\(searchText)|\(sortOrder.rawValue)|\(filter.cacheKey)|\(itemsPerPage)"
+        let searchKey = "\(searchText)|\(sortOrder.rawValue)|\(filter.cacheKey)|\(itemsPerPage)|\(presetBase?.id ?? "")"
 
         if cachedSearchKey != searchKey {
             cachedPages.removeAll()
@@ -125,14 +150,53 @@ class WorkshopViewModel: ObservableObject {
 
     func showAuthor(_ steamId: String) {
         authorId = steamId
+        presetBase = nil
         searchText = ""
+        currentPage = 1
+        cachedPages.removeAll()
+        showsBrowser()
+        Task { @MainActor in await search() }
+    }
+
+    /// Lists the presets published for `base` (WE's "Browse Presets").
+    func showPresets(of base: WorkshopPresetBase) {
+        presetBase = base
+        authorId = nil
+        searchText = ""
+        currentPage = 1
+        cachedPages.removeAll()
+        showsBrowser()
+        Task { @MainActor in await search() }
+    }
+
+    func clearPresetFilter() {
+        presetBase = nil
         currentPage = 1
         cachedPages.removeAll()
         Task { @MainActor in await search() }
     }
 
+    /// The wallpaper whose presets "Browse Presets" lists for `item`, as WE offers it: a scene or
+    /// web wallpaper's own, and for a preset its base's. Nil for other items.
+    func presetBase(for item: WorkshopItem) -> WorkshopPresetBase? {
+        if item.isPreset {
+            guard let baseId = item.dependencyIds?.first else { return nil }
+            return WorkshopPresetBase(id: baseId, title: WorkshopMetadataStore.shared.item(for: baseId)?.title ?? baseId)
+        }
+        let presetTypes = ["Scene", "Web"]
+        guard item.tags.contains(where: { tag in presetTypes.contains { $0.caseInsensitiveCompare(tag) == .orderedSame } })
+        else { return nil }
+        return WorkshopPresetBase(id: item.id, title: item.title)
+    }
+
+    /// The author's persona name when known, else their Steam id.
+    func authorName(of steamId: String) -> String {
+        SteamPlayerStore.shared.player(for: steamId)?.personaName ?? steamId
+    }
+
     func clearAuthorFilter() {
         authorId = nil
+        presetBase = nil
         currentPage = 1
         cachedPages.removeAll()
         Task { @MainActor in await search() }
@@ -282,7 +346,7 @@ class WorkshopViewModel: ObservableObject {
     @MainActor
     private func displayedPageItems(for displayedPage: Int, searchKey: String) async throws -> [WorkshopItem] {
         let sourcePageSize = 50
-        let query = WorkshopQuery(filter)
+        let query = browseQuery
         let text = searchText
         let sortOrder = sortOrder
         let itemsPerPage = itemsPerPage
@@ -295,7 +359,7 @@ class WorkshopViewModel: ObservableObject {
                                                     sortOrder: sortOrder, query: query, searchKey: searchKey)
             guard !sourceItems.isEmpty else { break }
 
-            for item in sourceItems where query.matches(item, isFavorite: isFavorite) {
+            for item in sourceItems where query.matches(item, isFavorite: isFavorite) && !blockList.isBlocked(item) {
                 if skippedItems > 0 {
                     skippedItems -= 1
                 } else {
@@ -311,6 +375,16 @@ class WorkshopViewModel: ObservableObject {
         }
 
         return visibleItems
+    }
+
+    /// The filter's query, narrowed to `presetBase`'s presets when the browser lists them.
+    var browseQuery: WorkshopQuery {
+        var query = WorkshopQuery(filter)
+        if let presetBase {
+            query.childOf = presetBase.id
+            if !query.excludedTags.contains("Wallpaper") { query.excludedTags.append("Wallpaper") }
+        }
+        return query
     }
 
     @MainActor

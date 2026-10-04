@@ -241,6 +241,18 @@ struct WallpaperPreview: SubviewOfContentView {
                         sceneAudioPresence[directory] = hasAudio
                     }
                     .font(.footnote)
+
+                    if let folder = LibraryFolders().folder(containing: wallpaperViewModel.displayedWallpaper.settingsDirectory) {
+                        Label {
+                            Text(verbatim: folder.lastPathComponent)
+                        } icon: {
+                            Image(systemName: "folder")
+                        }
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .help(Text("From the library folder \(folder.path(percentEncoded: false))", comment: "%@ is a folder path"))
+                    }
                     
                     ViewThatFits(in: .horizontal) {
                         tags.animation(.spring(), value: isTagsHovered)
