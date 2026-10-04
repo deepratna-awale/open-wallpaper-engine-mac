@@ -202,6 +202,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         reloadWallpapers: { [weak self] in MainActor.assumeIsolated { self?.rebuildWallpaperWindows() } })
     /// Settings › Performance › Playback, per display (`App/Playback`).
     private(set) lazy var displayPlaybackMonitor = makeDisplayPlaybackMonitor()
+    /// Saved display profiles, which application rules' "Load profile" loads. None until display
+    /// layouts can be saved; that feature sets its own here.
+    var displayProfiles: any DisplayProfileLoading = UnavailableDisplayProfiles()
+    /// Application rules' load actions, and the restore when no rule matches any more.
+    private(set) lazy var applicationRuleLoader = makeApplicationRuleLoader()
     /// Advanced › "Pause when VRAM is exhausted", fed to `displayPlaybackMonitor`.
     private(set) lazy var videoMemoryWatch = makeVideoMemoryWatch()
     private var videoMemorySettingCancellable: AnyCancellable?
@@ -432,6 +437,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     
     func applicationWillTerminate(_ notification: Notification) {
+        // What an application rule loaded isn't the user's choice: the saved wallpapers and
+        // playlist go back to theirs before they are stored for the next launch.
+        if applicationRuleLoader.isHoldingRestorePoint { applicationRuleLoader.update(nil) }
         safeRestart.applicationWillTerminate()
         crashWatcher.applicationWillTerminate()
         mcpServerPlugin.stop()
@@ -554,9 +562,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         settingsNavigation.toolbar = toolbar
 
         self.settingsWindow.toolbar = toolbar
+        let ruleLibrary = ApplicationRuleLibrary(
+            wallpapers: { [weak self] in self?.contentViewModel.allWallpapers ?? [] },
+            playlists: { [weak self] in self?.wallpaperViewModel.playlists ?? [] },
+            profiles: { [weak self] in self?.displayProfiles ?? UnavailableDisplayProfiles() })
         self.settingsWindow.contentView = NSHostingView(rootView: SettingsView()
             .environmentObject(self.globalSettingsViewModel)
-            .environmentObject(settingsNavigation))
+            .environmentObject(settingsNavigation)
+            .environment(\.applicationRuleLibrary, ruleLibrary))
 
         // A saved frame is the size and place the user left the window at; only the first open
         // gets the computed size. The frame autosaves into UserDefaults.standard, which an
