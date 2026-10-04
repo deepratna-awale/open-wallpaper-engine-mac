@@ -92,6 +92,8 @@ struct GeneralPage: SettingsPage {
                 }
             }
             .settingsAnchor(SettingsAnchor.setup)
+            // MARK: Screenshots
+            ScreenshotSection(viewModel: viewModel)
             // MARK: Keyboard Shortcuts
             KeyboardShortcutsSection()
         }

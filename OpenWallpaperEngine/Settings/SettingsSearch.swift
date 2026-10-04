@@ -8,6 +8,7 @@ enum SettingsAnchor {
     static let macOS = "macos"
     static let setup = "setup"
     static let shortcuts = "shortcuts"
+    static let screenshots = "screenshots"
     static let playback = "playback"
     static let quality = "quality"
     static let converted = "converted"
@@ -61,6 +62,8 @@ struct SettingsSearch {
             entry("Show Wallpaper on Lock Screen", .general, SettingsAnchor.macOS),
             entry("Run Setup Again…", .general, SettingsAnchor.setup),
             entry("Keyboard Shortcuts", .general, SettingsAnchor.shortcuts),
+            entry("Screenshots", .general, SettingsAnchor.screenshots),
+            entry("Take Screenshot", .general, SettingsAnchor.screenshots),
 
             entry("Playback", .performance, SettingsAnchor.playback),
             entry("Laptop on battery", .performance, SettingsAnchor.playback),

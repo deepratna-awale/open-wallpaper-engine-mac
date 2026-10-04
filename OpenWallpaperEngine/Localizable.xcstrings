@@ -28058,6 +28058,100 @@
         }
       }
     },
+    "Display saves the wallpaper at the display's own pixels. 4K and 8K render it again at that size along the display's long side, at the display's shape." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يحفظ خيار ”شاشة العرض“ الخلفية بوحدات بكسل شاشة العرض نفسها. ويعيد 4K و8K عرضها بهذا الحجم على امتداد الضلع الأطول لشاشة العرض وبنفس أبعادها."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Display“ sichert das Hintergrundbild in den Pixeln des Displays. 4K und 8K rendern es erneut in dieser Größe entlang der langen Seite des Displays, in seinem Seitenverhältnis."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Pantalla» guarda el fondo de pantalla con los píxeles de la pantalla. 4K y 8K lo vuelven a renderizar a ese tamaño en el lado largo de la pantalla, con su forma."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "« Moniteur » enregistre le fond d’écran à la résolution du moniteur. 4K et 8K le rendent à nouveau à cette taille sur le grand côté du moniteur, dans ses proportions."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“डिस्प्ले” वॉलपेपर को डिस्प्ले के अपने पिक्सेल पर सहेजता है। 4K और 8K इसे डिस्प्ले की लंबी भुजा पर उस आकार में, डिस्प्ले के अनुपात में दोबारा रेंडर करते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Schermo” salva lo sfondo ai pixel dello schermo. 4K e 8K lo renderizzano di nuovo a quella dimensione lungo il lato lungo dello schermo, con le sue proporzioni."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「ディスプレイ」はディスプレイ自体のピクセルで壁紙を保存します。4K と 8K はディスプレイの長辺をそのサイズにして、ディスプレイの縦横比のまま改めてレンダリングします。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘디스플레이’는 디스플레이의 픽셀 그대로 배경화면을 저장합니다. 4K와 8K는 디스플레이의 긴 변을 해당 크기로 하여 디스플레이 비율대로 다시 렌더링합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Wyświetlacz” zapisuje tapetę w pikselach wyświetlacza. 4K i 8K renderują ją ponownie w tym rozmiarze wzdłuż dłuższego boku wyświetlacza, w jego proporcjach."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tela salva a imagem de fundo com os pixels da própria tela. 4K e 8K a renderizam novamente nesse tamanho no lado maior da tela, no formato dela."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Дисплей» сохраняет обои в пикселях дисплея. 4K и 8K отрисовывают их заново в этом размере по длинной стороне дисплея, с его пропорциями."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekran, duvar kâğıdını ekranın kendi piksellerinde kaydeder. 4K ve 8K onu ekranın uzun kenarı boyunca bu boyutta, ekranın en boy oranında yeniden işler."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Дисплей» зберігає шпалери в пікселях дисплея. 4K і 8K відтворюють їх наново в цьому розмірі за довгою стороною дисплея, з його пропорціями."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“显示器”以显示器自身的像素存储墙纸。4K 和 8K 会以该尺寸作为显示器的长边、按显示器的比例重新渲染。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「顯示器」會以顯示器本身的像素儲存背景圖片。4K 和 8K 會以該尺寸作為顯示器的長邊、依顯示器的比例重新算繪。"
+          }
+        }
+      }
+    },
     "Display, the default, renders at the display's size in points (a quarter of the pixels on Retina) and scales up; web wallpapers then draw at standard resolution too. Retina renders the native pixels one for one, and Full renders the wallpaper's authored size scaled to fit." : {
       "localizations" : {
         "ar" : {
@@ -37487,6 +37581,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "符合螢幕大小"
+          }
+        }
+      }
+    },
+    "Folder" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "المجلد"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordner"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carpeta"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dossier"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फ़ोल्डर"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartella"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フォルダ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "폴더"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folder"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pasta"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Папка"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klasör"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Папка"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件夹"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "檔案夾"
           }
         }
       }
@@ -66803,6 +66991,100 @@
         }
       }
     },
+    "No wallpaper is showing on this display." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا تظهر أي خلفية على شاشة العرض هذه."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf diesem Bildschirm wird kein Hintergrundbild angezeigt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se muestra ningún fondo de pantalla en esta pantalla."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun fond d’écran n’est affiché sur ce moniteur."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इस डिस्प्ले पर कोई वॉलपेपर नहीं दिख रहा है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessuno sfondo è mostrato su questo monitor."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このディスプレイには壁紙が表示されていません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 디스플레이에 표시된 배경화면이 없습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na tym monitorze nie jest wyświetlana żadna tapeta."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhuma imagem de fundo está sendo mostrada nesta tela."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На этом мониторе не показываются обои."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu ekranda duvar kâğıdı gösterilmiyor."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На цьому моніторі не показуються шпалери."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此显示器上未显示墙纸。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此顯示器上未顯示背景圖片。"
+          }
+        }
+      }
+    },
     "No wallpapers found for your search." : {
       "localizations" : {
         "ar" : {
@@ -95102,6 +95384,100 @@
         }
       }
     },
+    "Saves the wallpaper on the display under the pointer, without desktop icons or windows." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يحفظ الخلفية على شاشة العرض الموجودة أسفل المؤشر، بدون أيقونات سطح المكتب أو النوافذ."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sichert das Hintergrundbild des Bildschirms unter dem Zeiger, ohne Schreibtischsymbole oder Fenster."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guarda el fondo de pantalla de la pantalla bajo el puntero, sin iconos del escritorio ni ventanas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistre le fond d’écran du moniteur sous le pointeur, sans icônes du bureau ni fenêtres."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पॉइंटर के नीचे वाले डिस्प्ले का वॉलपेपर डेस्कटॉप आइकन या विंडो के बिना सहेजता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salva lo sfondo del monitor sotto il puntatore, senza icone della scrivania né finestre."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ポインタの下にあるディスプレイの壁紙を、デスクトップアイコンやウインドウなしで保存します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "포인터 아래에 있는 디스플레이의 배경화면을 데스크탑 아이콘이나 윈도우 없이 저장합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisuje tapetę monitora pod wskaźnikiem, bez ikon biurka i okien."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salva a imagem de fundo da tela sob o ponteiro, sem ícones da mesa ou janelas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохраняет обои монитора под указателем, без значков рабочего стола и окон."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İmlecin altındaki ekranın duvar kâğıdını masaüstü simgeleri veya pencereler olmadan kaydeder."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберігає шпалери монітора під курсором, без значків робочого столу й вікон."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "存储指针下方显示器上的墙纸，不含桌面图标或窗口。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "儲存指標下方顯示器上的背景圖片，不含桌面圖像或視窗。"
+          }
+        }
+      }
+    },
     "Save…" : {
       "localizations" : {
         "ar" : {
@@ -98023,6 +98399,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "截圖"
+          }
+        }
+      }
+    },
+    "Screenshots of wallpapers in the Chromium engine aren't supported yet." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لقطات الشاشة للخلفيات في محرك Chromium غير مدعومة بعد."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirmfotos von Hintergrundbildern in der Chromium-Engine werden noch nicht unterstützt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las capturas de pantalla de fondos de pantalla en el motor Chromium aún no son compatibles."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les captures d’écran des fonds d’écran du moteur Chromium ne sont pas encore prises en charge."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium इंजन में चल रहे वॉलपेपर के स्क्रीनशॉट अभी समर्थित नहीं हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le schermate degli sfondi nel motore Chromium non sono ancora supportate."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium エンジンの壁紙のスクリーンショットにはまだ対応していません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium 엔진의 배경화면 스크린샷은 아직 지원되지 않습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zrzuty ekranu tapet w silniku Chromium nie są jeszcze obsługiwane."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ainda não há suporte a capturas de tela de imagens de fundo no mecanismo Chromium."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Снимки экрана обоев в движке Chromium пока не поддерживаются."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chromium motorundaki duvar kâğıtlarının ekran görüntüleri henüz desteklenmiyor."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знімки екрана шпалер у рушії Chromium ще не підтримуються."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚不支持截取 Chromium 引擎中的墙纸。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚不支援擷取 Chromium 引擎中的背景圖片。"
           }
         }
       }
@@ -113694,6 +114164,194 @@
         }
       }
     },
+    "Take Screenshot" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أخذ لقطة شاشة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirmfoto aufnehmen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hacer captura de pantalla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prendre une capture d’écran"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्क्रीनशॉट लें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cattura schermata"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スクリーンショットを撮る"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "스크린샷 찍기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zrób zrzut ekranu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capturar Tela"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сделать снимок экрана"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekran Görüntüsü Al"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зробити знімок екрана"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "截屏"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "擷取螢幕畫面"
+          }
+        }
+      }
+    },
+    "Take Screenshot is also in the menu bar menu, and can have a hotkey. Each screenshot is a PNG of the wallpaper alone." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يتوفر ”أخذ لقطة شاشة“ أيضًا في قائمة شريط القائمة ويمكن تعيين اختصار له. كل لقطة شاشة هي ملف PNG للخلفية وحدها."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Bildschirmfoto aufnehmen“ gibt es auch im Menü der Menüleiste, und es kann eine Tastenkombination erhalten. Jedes Bildschirmfoto ist ein PNG nur des Hintergrundbilds."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Hacer captura de pantalla» también está en el menú de la barra de menús y puede tener una tecla de acceso rápido. Cada captura es un PNG solo del fondo de pantalla."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "« Prendre une capture d’écran » figure aussi dans le menu de la barre des menus et peut avoir un raccourci. Chaque capture est un PNG du fond d’écran seul."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“स्क्रीनशॉट लें” मेनू बार मेनू में भी है और इसके लिए हॉटकी सेट की जा सकती है। हर स्क्रीनशॉट केवल वॉलपेपर की PNG होता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Cattura schermata” è anche nel menu della barra dei menu e può avere un tasto di scelta rapida. Ogni schermata è un PNG del solo sfondo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「スクリーンショットを撮る」はメニューバーのメニューにもあり、ホットキーを割り当てられます。スクリーンショットはそれぞれ壁紙だけの PNG です。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘스크린샷 찍기’는 메뉴 막대 메뉴에도 있으며 단축키를 지정할 수 있습니다. 각 스크린샷은 배경화면만 담긴 PNG입니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„Zrób zrzut ekranu” jest też w menu na pasku menu i może mieć klawisz dostępu. Każdy zrzut to plik PNG z samą tapetą."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capturar Tela também está no menu da barra de menus e pode ter um atalho. Cada captura é um PNG somente da imagem de fundo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Сделать снимок экрана» есть и в меню строки меню, и ему можно назначить горячую клавишу. Каждый снимок — PNG только с обоями."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Ekran Görüntüsü Al” menü çubuğu menüsünde de bulunur ve bir kısayol tuşu alabilir. Her ekran görüntüsü yalnızca duvar kâğıdının PNG’sidir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Зробити знімок екрана» є й у меню рядка меню, і йому можна призначити гарячу клавішу. Кожен знімок — PNG лише зі шпалерами."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“截屏”也在菜单栏菜单中，并可设置热键。每张截屏都是仅含墙纸的 PNG。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「擷取螢幕畫面」也在選單列選單中，並可設定快速鍵。每張截圖都是僅含背景圖片的 PNG。"
+          }
+        }
+      }
+    },
     "Technology" : {
       "comment" : "Workshop genre tag",
       "localizations" : {
@@ -117854,6 +118512,100 @@
         }
       }
     },
+    "The screenshot couldn't be encoded as %@." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذر حفظ لقطة الشاشة باسم ”%@“."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Bildschirmfoto konnte nicht als „%@“ gesichert werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La captura de pantalla no se ha podido guardar como «%@»."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La capture d’écran n’a pas pu être enregistrée sous « %@ »."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्क्रीनशॉट को “%@” के रूप में सहेजा नहीं जा सका।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile salvare la schermata come “%@”."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スクリーンショットを“%@”として保存できませんでした。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "스크린샷을 ‘%@’(으)로 저장할 수 없습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie można zapisać zrzutu ekranu jako „%@”."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível salvar a captura de tela como “%@”."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось сохранить снимок экрана как «%@»."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekran görüntüsü “%@” olarak kaydedilemedi."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося зберегти знімок екрана як «%@»."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法将截屏存储为“%@”。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法將截圖儲存為「%@」。"
+          }
+        }
+      }
+    },
     "The scripts of “%@” were stopped because one of them ran for too long. The wallpaper keeps showing, without its scripted animations." : {
       "localizations" : {
         "ar" : {
@@ -118228,6 +118980,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "背景圖片的頁面未能載入，因此未錄製螢幕保護程式"
+          }
+        }
+      }
+    },
+    "The wallpaper's picture couldn't be captured." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعذر التقاط صورة الخلفية."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Bild des Hintergrundbilds konnte nicht aufgenommen werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se ha podido capturar la imagen del fondo de pantalla."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’image du fond d’écran n’a pas pu être capturée."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वॉलपेपर की तस्वीर कैप्चर नहीं की जा सकी।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile catturare l’immagine dello sfondo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "壁紙の画像を取り込めませんでした。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배경화면 이미지를 캡처할 수 없습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie można przechwycić obrazu tapety."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível capturar a imagem de fundo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось снять изображение обоев."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duvar kâğıdının görüntüsü yakalanamadı."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося зняти зображення шпалер."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法截取墙纸的画面。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法擷取背景圖片的畫面。"
           }
         }
       }

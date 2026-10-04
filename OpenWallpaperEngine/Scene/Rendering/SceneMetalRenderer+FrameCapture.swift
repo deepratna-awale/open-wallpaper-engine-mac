@@ -41,6 +41,23 @@ extension SceneMetalRenderer {
         return true
     }
 
+    /// A screenshot (WE's "Take screenshot"): the scene's current moment drawn again, without
+    /// stepping it (`redrawShared`), at `pixelSize` and 1 pixel per point, so every pass renders at
+    /// that size rather than scaling up a display's frame, then copied as `captureSharedFrame` does.
+    /// `restoring` are the displays' viewports when several share the frame: their frame is drawn
+    /// again after; with none, the extra frame is freed. False (and no completion) when there is
+    /// no content or the copy can't start. Render thread.
+    func captureScreenshot(pixelSize: SIMD2<Int>, restoring viewports: [SceneViewport],
+                           completion: @escaping @Sendable (CGImage?) -> Void) -> Bool {
+        guard hasContent, pixelSize.x > 0, pixelSize.y > 0 else { return false }
+        let size = SIMD2<Float>(Float(pixelSize.x), Float(pixelSize.y))
+        let frameRate = viewports.map(\.frameRateLimit).max() ?? 60
+        redrawShared([SceneViewport(drawableSize: size, pointSize: size, cursor: nil, frameRateLimit: frameRate)])
+        let started = captureSharedFrame(pixelSize: pixelSize, pixelsPerPoint: 1, completion: completion)
+        if viewports.isEmpty { releaseSharedFrame() } else { redrawShared(viewports) }
+        return started
+    }
+
     /// An sRGB image over `buffer`'s BGRA pixels (alpha ignored); the image keeps the buffer alive.
     private static func image(wrapping buffer: MTLBuffer, size: SIMD2<Int>, bytesPerRow: Int) -> CGImage? {
         let retained = Unmanaged.passRetained(buffer as AnyObject)
