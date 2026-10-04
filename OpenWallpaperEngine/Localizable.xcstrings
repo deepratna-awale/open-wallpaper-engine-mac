@@ -12664,6 +12664,100 @@
         }
       }
     },
+    "Audio-reactive wallpapers react only to sound at least this loud; quieter sound reads as silence. 0 reacts to everything, 10 needs about −40 dB." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا تتفاعل الخلفيات المتجاوبة مع الصوت إلا مع صوت بهذا العلو على الأقل؛ ويُعد الصوت الأخفض صمتًا. القيمة 0 تتفاعل مع كل شيء، و10 تحتاج إلى نحو −40 ديسيبل."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audioreaktive Hintergrundbilder reagieren nur auf Ton, der mindestens so laut ist; leiserer Ton gilt als Stille. 0 reagiert auf alles, 10 braucht etwa −40 dB."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los fondos de pantalla que reaccionan al audio solo reaccionan a un sonido al menos así de fuerte; uno más bajo cuenta como silencio. 0 reacciona a todo y 10 necesita unos −40 dB."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les fonds d’écran réactifs au son ne réagissent qu’à un son au moins aussi fort ; un son plus faible compte comme du silence. 0 réagit à tout, 10 demande environ −40 dB."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऑडियो पर प्रतिक्रिया देने वाले वॉलपेपर केवल कम से कम इतनी तेज़ आवाज़ पर प्रतिक्रिया देते हैं; इससे धीमी आवाज़ चुप्पी मानी जाती है। 0 हर आवाज़ पर प्रतिक्रिया देता है, 10 के लिए लगभग −40 dB चाहिए।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gli sfondi che reagiscono all’audio reagiscono solo a suoni almeno così forti; un suono più debole conta come silenzio. 0 reagisce a tutto, 10 richiede circa −40 dB."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オーディオに反応する壁紙は、この音量以上の音にだけ反応します。それより小さい音は無音として扱われます。0 はすべてに反応し、10 では約 −40 dB が必要です。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오디오에 반응하는 배경화면은 이 정도 이상의 소리에만 반응합니다. 그보다 작은 소리는 무음으로 처리됩니다. 0은 모든 소리에 반응하고, 10은 약 −40dB가 필요합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tapety reagujące na dźwięk reagują tylko na dźwięk co najmniej tak głośny; cichszy jest traktowany jak cisza. 0 reaguje na wszystko, 10 wymaga około −40 dB."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "As imagens de fundo que reagem ao áudio só reagem a sons pelo menos tão altos; sons mais baixos contam como silêncio. 0 reage a tudo; 10 precisa de cerca de −40 dB."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обои, реагирующие на звук, реагируют только на звук не тише этого; более тихий считается тишиной. 0 реагирует на всё, 10 требует около −40 дБ."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sese duyarlı duvar kâğıtları yalnızca en az bu kadar yüksek sese tepki verir; daha alçak ses sessizlik sayılır. 0 her şeye tepki verir, 10 yaklaşık −40 dB gerektirir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шпалери, що реагують на звук, реагують лише на звук не тихіший за цей; тихіший вважається тишею. 0 реагує на все, 10 потребує близько −40 дБ."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音频响应墙纸只对至少这么响的声音作出反应；更小的声音视为静音。0 对所有声音作出反应，10 约需 −40 dB。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音訊回應背景圖片只對至少這麼大的聲音作出反應；更小的聲音視為靜音。0 對所有聲音作出反應，10 約需 −40 dB。"
+          }
+        }
+      }
+    },
     "Authenticating with Steam..." : {
       "localizations" : {
         "ar" : {
@@ -87494,6 +87588,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "正在錄製循環…"
+          }
+        }
+      }
+    },
+    "Recording threshold" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حد التسجيل"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufnahmeschwelle"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Umbral de grabación"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seuil d’enregistrement"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रिकॉर्डिंग सीमा"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Soglia di registrazione"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "録音しきい値"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "녹음 임계값"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Próg nagrywania"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limiar de gravação"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порог записи"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kayıt eşiği"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поріг запису"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "录音阈值"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "錄製閾值"
           }
         }
       }

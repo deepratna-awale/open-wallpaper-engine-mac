@@ -338,6 +338,13 @@ final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate {
     /// The latest frame a scene's spectrum clock advanced to, without advancing anything.
     var audioSpectrumSnapshot: AudioSpectrumSnapshot { audioSpectrumAnalyzer.snapshot }
 
+    /// WE's "Recording threshold" (`GlobalSettings.audioRecordingThreshold`), applied to the
+    /// spectrum from the next captured buffer.
+    var recordingThreshold: Double {
+        get { audioSpectrumAnalyzer.recordingThreshold }
+        set { audioSpectrumAnalyzer.recordingThreshold = newValue }
+    }
+
     /// A consumer's own spectrum smoothing over this capture (`AudioSpectrumClock`).
     func makeAudioSpectrumClock(publishes: Bool) -> AudioSpectrumClock {
         audioSpectrumAnalyzer.makeClock(publishes: publishes)

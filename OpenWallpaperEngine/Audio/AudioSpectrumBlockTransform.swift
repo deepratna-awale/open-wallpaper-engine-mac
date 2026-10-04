@@ -17,8 +17,13 @@ import Foundation
 ///   - band value = the maximum over its bins of √(w·p).
 /// - Values are scaled by the input volume (`audioinputvolume`, default 50 → 1) · 0.001 · N / (L/2).
 ///
-/// Left then right, 64 each. A mono source passes the same samples for both. WE's
-/// `audioinputthreshold` (default 0, off) is not implemented. Audio-thread only.
+/// Left then right, 64 each. A mono source passes the same samples for both.
+///
+/// WE's "Recording threshold" (`audioinputthreshold`, 0…10, default 0 = off) gates the capture
+/// before the DFT (`0x1400d1a15`…`0x1400d1ae5`): the setting × 0.001 is a sample amplitude (so 10
+/// is −40 dBFS). When it is above `Float.ulpOfOne` and the highest first-channel sample of a capture
+/// packet, max(0, max(s)), the raw signed value rather than its magnitude, is below it, WE publishes
+/// an all-zero spectrum and drops the block being collected (`0x1400d1f25`). Audio-thread only.
 final class AudioSpectrumBlockTransform {
     static let bandCount = 64
     /// DFT bins scanned: WE's 10 (at `processor + 0xf8`) × 64.
@@ -32,6 +37,11 @@ final class AudioSpectrumBlockTransform {
     let blockLength: Int
     /// `audioinputvolume` × 0.02.
     var inputVolume: Float = 1
+    /// `audioinputthreshold` × 0.001 (`threshold(setting:)`): the sample level a packet must reach.
+    var threshold: Float = 0
+
+    /// The gate's sample level for WE's threshold setting (0…10).
+    static func threshold(setting: Double) -> Float { Float(max(setting, 0)) * 0.001 }
 
     private let dft: BluesteinDFT
     private let bandOfBin: [Int]
@@ -91,10 +101,19 @@ final class AudioSpectrumBlockTransform {
     }
 
     /// Appends one capture buffer. Returns the 128 raw values (left 64, right 64) when it completes
-    /// a block; the rest of that buffer is dropped.
+    /// a block; the rest of that buffer is dropped. A buffer below `threshold` returns 128 zeros
+    /// and drops the block collected so far.
     func append(left newLeft: UnsafeBufferPointer<Float>, right newRight: UnsafeBufferPointer<Float>) -> [Float]? {
         let count = min(newLeft.count, newRight.count)
         guard count > 0 else { return nil }
+        if threshold > Float.ulpOfOne {
+            var peak: Float = 0
+            for index in 0..<count where newLeft[index] > peak { peak = newLeft[index] }
+            if threshold > peak {
+                fill = 0
+                return [Float](repeating: 0, count: 2 * Self.bandCount)
+            }
+        }
         let taken = min(count, blockLength - fill)
         for index in 0..<taken {
             left[fill + index] = newLeft[index]

@@ -393,6 +393,9 @@ struct GlobalSettings: Codable, Equatable {
     /// WE's "Reload when changing output device": the running wallpapers reload when the default
     /// output device changes (`OutputDeviceChangeMonitor`). Capture follows the device either way.
     var reloadWhenChangingOutputDevice = true
+    /// WE's "Recording threshold" (`audioinputthreshold`, 0…10 in steps of 0.1, default 0 = off):
+    /// captured audio quieter than it reads as silence (`AudioSpectrumBlockTransform`).
+    var audioRecordingThreshold: Double = 0
 
     // MARK: Video
     var videoFramework = GSVideoFramework.preferred
@@ -436,6 +439,7 @@ struct GlobalSettings: Codable, Equatable {
         case mediaIntegration
         case cheaperShadows
         case screenshotResolution, screenshotFolder
+        case audioRecordingThreshold
     }
 }
 
@@ -508,5 +512,7 @@ extension GlobalSettings {
         read(.cheaperShadows, &cheaperShadows)
         read(.screenshotResolution, &screenshotResolution)
         read(.screenshotFolder, &screenshotFolder)
+        read(.audioRecordingThreshold, &audioRecordingThreshold)
+        audioRecordingThreshold = min(max(audioRecordingThreshold, 0), 10)
     }
 }

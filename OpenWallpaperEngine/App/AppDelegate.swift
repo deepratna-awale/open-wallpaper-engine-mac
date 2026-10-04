@@ -202,6 +202,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var audioOutputCancellable: AnyCancellable?
     private var syncPropertiesCancellable: AnyCancellable?
     private var mediaIntegrationCancellable: AnyCancellable?
+    private var recordingThresholdCancellable: AnyCancellable?
     /// Follows the default output device: capture always restarts, wallpapers reload when the
     /// setting is on. `rebuildWallpaperWindows` is the same reload an asset change uses.
     private lazy var outputDeviceMonitor = OutputDeviceChangeMonitor(
@@ -266,6 +267,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Settings › Optimizations: one set of user properties for every display, or each display's own.
         syncPropertiesCancellable = globalSettingsViewModel.$settings.map(\.syncPropertiesAcrossDisplays).removeDuplicates()
             .sink { [weak self] synced in self?.wallpaperViewModel.syncsPropertiesAcrossDisplays = synced }
+        // Settings › Optimizations › Recording threshold: quieter captured audio reads as silence.
+        recordingThresholdCancellable = globalSettingsViewModel.$settings.map(\.audioRecordingThreshold).removeDuplicates()
+            .sink { WallpaperServices.shared.audioCapture.recordingThreshold = $0 }
         // Settings › Optimizations › Media integration support: whether wallpapers hear Now Playing.
         mediaIntegrationCancellable = globalSettingsViewModel.$settings.map(\.mediaIntegration).removeDuplicates()
             .sink { [weak self] enabled in self?.mediaSession.setIntegrationEnabled(enabled) }
