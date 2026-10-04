@@ -174,6 +174,11 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// While true the scene's clock text layers (`SceneClockLayers`) draw nothing: set for the
     /// screen saver's loop video and while capturing the loading snapshot the lock screen shows.
     var hidesClockLayers = false
+    /// The pointer every frame sees instead of the mouse, normalised over the scene with y up
+    /// (`g_PointerPosition`; the centre is 0.5, 0.5); nil follows the mouse. A picture that is
+    /// previewed and rendered (the iPhone & iPad Export) holds it fixed in both, so the camera and
+    /// depth parallax, the cursor uniforms and the scripts' cursor are the same in each.
+    var fixedPointer: SIMD2<Float>?
     /// The current content's clock text layers.
     private(set) var clockLayerIDs: Set<String> = []
     /// The frames drawn (`BuiltinFrameContext.serial`).
@@ -1521,7 +1526,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // WE writes every timeline before the scripts run; a script's calls act on the next advance.
         let animationEvents = redrawing ? [] : timelines.advance(by: Float(clock.delta))
         drawProbe?.beginFrame()
-        let cursorSample = cursorTracker.update(sceneCursor(viewports), sceneSize: sceneSize)
+        let cursorSample = fixedPointer.map { (position: $0 * sceneSize, onDisplay: false) }
+            ?? cursorTracker.update(sceneCursor(viewports), sceneSize: sceneSize)
         let cursor = cursorSample.position
         // WE's scripts and `g_PointerState` see only clicks that land on the wallpaper.
         let leftDown = cursorSample.onDisplay
@@ -2773,6 +2779,13 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     }
 
     private func cursorScreenPixels(_ viewports: [SceneViewport]) -> SIMD2<Double> {
+        if let fixedPointer, let drawable = viewports.first?.drawableSize {
+            // The fixed pointer on the drawn scene, from the drawable's top-left.
+            let point = ScenePlacementScale.drawablePoint(scenePoint: fixedPointer * sceneSize, placement: placement,
+                                                          sceneSize: sceneSize, drawableSize: drawable,
+                                                          pixelsPerPoint: viewports[0].pixelsPerPoint)
+            return SIMD2(Double(point.x), Double(drawable.y - point.y))
+        }
         guard let pixels = viewports.lazy.compactMap(\.cursorScreenPixels).first else { return lastCursorScreenPixels }
         lastCursorScreenPixels = pixels
         return pixels

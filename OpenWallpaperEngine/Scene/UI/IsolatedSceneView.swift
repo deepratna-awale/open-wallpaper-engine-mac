@@ -7,6 +7,9 @@ import SwiftUI
 /// it reaches the desktop.
 struct IsolatedSceneView: NSViewRepresentable {
     let session: IsolatedSceneEditSession
+    /// How the private instance draws (`SceneWallpaperInstance.Presentation`); nil draws it as
+    /// the user's displays do.
+    var presentation: SceneWallpaperInstance.Presentation?
     static let screenID = SceneWallpaperInstance.previewScreenIDs.first!
 
     func makeCoordinator() -> SceneWallpaperPresenter { SceneWallpaperPresenter() }
@@ -19,9 +22,12 @@ struct IsolatedSceneView: NSViewRepresentable {
                                                     loadingSnapshots: nil)
         let key = session.instanceKey
         let wallpaper = session.wallpaper
+        let presentation = presentation
         let lease = SceneWallpaperPresenter.Lease(session.instances, key: key) {
-            SceneWallpaperInstance(wallpaper: wallpaper, environment: environment, screenID: Self.screenID,
-                                   properties: key.properties)
+            let instance = SceneWallpaperInstance(wallpaper: wallpaper, environment: environment, screenID: Self.screenID,
+                                                  properties: key.properties)
+            instance.presentation = presentation
+            return instance
         }
         context.coordinator.show(lease, in: view, screenID: Self.screenID)
         return view
