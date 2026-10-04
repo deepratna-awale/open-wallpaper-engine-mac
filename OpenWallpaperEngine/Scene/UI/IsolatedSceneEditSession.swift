@@ -36,11 +36,17 @@ final class IsolatedSceneEditSession {
         self.services = services
         scope = .isolated(purpose)
         targets = WallpaperPropertyTargets(wallpaper: wallpaper, scopes: [scope])
-        let source = WallpaperPropertyTargets(wallpaper: wallpaper, scopes: scopes)
-        let seed = source.identity.stored(.userProperties, scope: source.scopes[0], defaults: defaults) as? [String: String] ?? [:]
+        let seed = Self.seed(of: wallpaper, from: scopes, defaults: defaults)
         // Saved as set by the user, so the private instance loads exactly these.
         targets.save(seed, defaults: defaults)
         services.setUserProperties(seed, wallpaper: runtimeKey, replacing: true)
+    }
+
+    /// The values a session of `wallpaper` starts from: `scopes`' shown store's.
+    static func seed(of wallpaper: WEWallpaper, from scopes: [WallpaperPropertyScope],
+                     defaults: UserDefaults = .app) -> [String: String] {
+        let source = WallpaperPropertyTargets(wallpaper: wallpaper, scopes: scopes)
+        return source.identity.stored(.userProperties, scope: source.scopes[0], defaults: defaults) as? [String: String] ?? [:]
     }
 
     /// The private instance's key: the wallpaper with the isolated store.
@@ -68,6 +74,14 @@ final class IsolatedSceneEditSession {
         values.merge(changes) { _, new in new }
         targets.publish(values, services: services)
         targets.save(values, defaults: defaults)
+    }
+
+    /// Replaces every value of the isolated store with `values` (a mode's own saved version, e.g.
+    /// the screen saver's choices) and hands them to the private instance at once.
+    func replaceValues(_ values: [String: String]) {
+        guard !isEnded else { return }
+        targets.save(values, defaults: defaults)
+        services.setUserProperties(values, wallpaper: runtimeKey, replacing: true)
     }
 
     /// Shows or hides a layer in this version only.
