@@ -18,6 +18,9 @@ struct ExplorerItem: SubviewOfContentView {
 
     var wallpaper: WEWallpaper
     var index: Int
+
+    /// The tile's corner radius, which its selection stroke follows.
+    static let cornerRadius: CGFloat = 8
     
     /// project.json's tags and the Workshop item's, as the Workshop cards show them.
     private var tags: [String] {
@@ -69,13 +72,11 @@ struct ExplorerItem: SubviewOfContentView {
             .multilineTextAlignment(.center)
             .foregroundStyle(Color(white: viewModel.imageScaleIndex == index ? 0.9 : 0.7))
         }
+        .clipShape(RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous))
         .onHover { isHovered = $0 }
         .help(tooltip)
-        .selected(wallpaper.wallpaperDirectory == wallpaperViewModel.displayedWallpaper.wallpaperDirectory)
-        .overlay(
-            RoundedRectangle(cornerRadius: 2)
-            .stroke(Color.blue, lineWidth: wallpaper.wallpaperDirectory == wallpaperViewModel.displayedWallpaper.wallpaperDirectory ? 3 : 0)
-        )
+        .selectionHighlight(wallpaper.wallpaperDirectory == wallpaperViewModel.displayedWallpaper.wallpaperDirectory,
+                            cornerRadius: Self.cornerRadius)
         .overlay(alignment: .topLeading) {
             if !viewModel.selectedWallpapers.isEmpty {
                 Button {

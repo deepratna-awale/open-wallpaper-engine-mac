@@ -191,23 +191,3 @@ private struct InstalledPagination: View {
         }
     }
 }
-
-// MARK: - View Modifiers Extension
-struct SelectedItem: ViewModifier {
-    var selected: Bool
-    
-    init(_ selected: Bool) {
-        self.selected = selected
-    }
-    
-    func body(content: Content) -> some View {
-        return content
-            .border(Color.accentColor, width: selected ? 3 : 0)
-    }
-}
-
-extension View {
-    func selected(_ selected: Bool = true) -> some View {
-        return modifier(SelectedItem(selected))
-    }
-}
