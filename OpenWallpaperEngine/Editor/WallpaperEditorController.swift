@@ -204,31 +204,7 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
     /// Save as Local Wallpaper: a copy in the library with the edits in its scene.json; the
     /// wallpaper itself isn't touched.
     private func saveAsLocalWallpaper(title: String) throws -> String {
-        let source = try WallpaperEditorSource.read(wallpaper)
-        var writerSource = LocalWallpaperWriter.Source(directory: wallpaper.wallpaperDirectory,
-                                                       sceneFile: wallpaper.project.file,
-                                                       assetsDirectory: resources.assets.directory)
-        if let package = source.package {
-            var files: [String: Data] = [:]
-            for path in package.fileList where files[path] == nil {
-                if let data = package.extractFile(named: path) { files[path] = data }
-            }
-            writerSource.packageFiles = files
-            writerSource.packageName = source.packageName
-        }
-        let authoring = session.overlay.authoring
-        // The editor's puppets become `.mdl` files and the layers' references (`PuppetSceneBake`).
-        let read = EditorPuppetAssets.make(for: wallpaper).readFile
-        let baked = try PuppetSceneBake.bake(session.overlay, into: try session.overlay.applied(to: source.scene),
-                                             readFile: read)
-        // The user properties as authored in the editor go into the copy's project.json; the
-        // particle editor's documents (definitions, materials) are files of the copy.
-        let folder = try LocalWallpaperWriter().save(writerSource, scene: baked.scene, title: title,
-                                                     into: FileManager.default.wallpapersDirectory,
-                                                     editProject: { authoring?.applyProperties(to: &$0) },
-                                                     files: baked.files,
-                                                     additionalFiles: try session.overlay.particles?.assetFiles() ?? [:])
-        OWELog.info(.library, "Saved \(wallpaper.project.title) with its editor edits as \(folder.path)")
+        _ = try LocalWallpaperSave.save(wallpaper, overlay: session.overlay, assetsDirectory: resources.assets.directory, title: title)
         // Open Wallpaper Engine's library lists it.
         sync?.libraryDidChange()
         return title
