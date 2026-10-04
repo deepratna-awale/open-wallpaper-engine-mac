@@ -43,7 +43,7 @@ Legend: ✅ working · 🟡 partial (what's left is named) · ❌ missing. "Unve
 | Sound objects | ✅ | WE's modes, gain, timers, script control, spatialization (`SceneSoundLayersTests`, `SceneSoundSpatializationTests`). Edge pan unverified against WE. |
 | Bloom / HDR | ✅ | WE's LDR and HDR chains, display HDR (`SceneBloomChainTests`, `SceneHDRChainTests`, `lighting-plan.md` B1–B3). |
 | Camera parallax / shake | ✅ | WE's formulas from the binary (`CameraParallaxLibraryTests`, `SceneCameraMotionTests`). Toggling parallax still rebuilds the content (item 24, #106 open). |
-| Lights, 3D models, puppet warp | ✅ | `lighting-plan.md`, `models-plan.md` (`ModelRenderTests`, `ModelSkinningTests`, `ScenePuppetTests`). Open: puppet mesh-flag-0x2 path (no library user). |
+| Lights, 3D models, puppet warp | ✅ | `lighting-plan.md`, `models-plan.md` (`ModelRenderTests`, `ModelSkinningTests`, `ScenePuppetTests`). Texture channels (mesh flag 0x2): `ScenePuppetTextureChannelsTests` on WE 2.8.42's files. |
 | Perspective scenes | ✅ | `SceneCameraTests`, `SceneCameraPathsTests` (models-plan M2–M4). |
 | Cursor interaction | ✅ | Scene-space cursor, `solid` hit tests, clicks only on the wallpaper (`SceneScriptCursorHitTestTests`, `WECursorCaptureTests`). Pointer details without a WE capture: `test-risks.md` FX1. |
 | Tests | ✅ | 375 test classes, sharded CI (#9, #63, #66). |
@@ -92,7 +92,7 @@ All of WE's API runs on `SceneScriptRuntime`, one per wallpaper instance (`scene
   - 23. Objects without `id`: layers, visibility and binding keys use the index (04aea06); `?? -1` remains in `Scene/Loading/SceneSpatialContentBuilder.swift` and `SceneWallpaperViewModel.swift` (text keys, visibility map).
   - 24. Toggling parallax rebuilds the content (#106, open). The `_owe_effect_*` keys left are the live parallax settings, not dead code.
 - **Workshop `preset`-type items** (§1).
-- **WE ground truth:** `lighting-plan.md` §5, `models-plan.md` §5 (zoom in perspective, root motion with yaw alone, MDLV unknowns, puppet mesh flag 0x2, …), `test-risks.md` "needs WE ground truth".
+- **WE ground truth:** `lighting-plan.md` §5, `models-plan.md` §5 (zoom in perspective, root motion with yaw alone, MDLV unknowns, …), `test-risks.md` "needs WE ground truth".
 - **Other open PRs:** #102, #103 (screen saver loops), #104 (menu Next/Previous), #108 (playlist shortcuts), #110, #111 (live and stored user properties).
 
 ## History
