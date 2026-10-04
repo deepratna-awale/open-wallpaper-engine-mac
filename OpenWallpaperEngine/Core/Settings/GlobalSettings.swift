@@ -240,6 +240,41 @@ enum GSLocalization: String, CaseIterable, Identifiable, Codable {
     }
 }
 
+/// The size of WE's "Take screenshot" (`WallpaperScreenshotService`): the display's own pixels,
+/// or 4K or 8K along the display's long side, at its shape. Every pass renders at that size.
+enum GSScreenshotResolution: String, CaseIterable, Identifiable, Codable {
+    var id: Self { self }
+    case display, uhd4K, uhd8K
+
+    /// The long side a choice renders at; nil for the display's own size.
+    var longSide: Int? {
+        switch self {
+        case .display: return nil
+        case .uhd4K: return 3840
+        case .uhd8K: return 7680
+        }
+    }
+
+    /// The screenshot's pixels for a display of `display` pixels, no side over `maxSide` (the
+    /// GPU's largest texture); the display's shape is kept.
+    func pixelSize(display: SIMD2<Int>, maxSide: Int) -> SIMD2<Int> {
+        guard display.x > 0, display.y > 0 else { return .zero }
+        var width = Double(display.x)
+        var height = Double(display.y)
+        if let longSide {
+            let scale = Double(longSide) / max(width, height)
+            width *= scale
+            height *= scale
+        }
+        let largest = max(width, height)
+        if largest > Double(maxSide) {
+            width *= Double(maxSide) / largest
+            height *= Double(maxSide) / largest
+        }
+        return SIMD2(max(Int(width.rounded()), 1), max(Int(height.rounded()), 1))
+    }
+}
+
 enum GSVideoFramework: String, CaseIterable, Identifiable, Codable {
     var id: Self { self }
     case avkit
@@ -337,7 +372,13 @@ struct GlobalSettings: Codable, Equatable {
     
     // MARK: Appearance
     var appearance = GSAppearance.followSystem
-    
+
+    // MARK: Screenshots
+    /// The size screenshots render at (`GSScreenshotResolution`).
+    var screenshotResolution = GSScreenshotResolution.display
+    /// The folder screenshots are saved in; empty for Pictures › Open Wallpaper Engine.
+    var screenshotFolder = ""
+
     // MARK: Displays
     /// "Sync properties across displays": one set of user properties for a wallpaper on every
     /// display. Off is WE's default: its "Wallpaper per display" layout keeps each display's
@@ -352,7 +393,10 @@ struct GlobalSettings: Codable, Equatable {
     /// WE's "Reload when changing output device": the running wallpapers reload when the default
     /// output device changes (`OutputDeviceChangeMonitor`). Capture follows the device either way.
     var reloadWhenChangingOutputDevice = true
-    
+    /// WE's "Recording threshold" (`audioinputthreshold`, 0…10 in steps of 0.1, default 0 = off):
+    /// captured audio quieter than it reads as silence (`AudioSpectrumBlockTransform`).
+    var audioRecordingThreshold: Double = 0
+
     // MARK: Video
     var videoFramework = GSVideoFramework.preferred
     
@@ -394,6 +438,8 @@ struct GlobalSettings: Codable, Equatable {
         case syncPropertiesAcrossDisplays
         case mediaIntegration
         case cheaperShadows
+        case screenshotResolution, screenshotFolder
+        case audioRecordingThreshold
     }
 }
 
@@ -464,5 +510,9 @@ extension GlobalSettings {
         read(.syncPropertiesAcrossDisplays, &syncPropertiesAcrossDisplays)
         read(.mediaIntegration, &mediaIntegration)
         read(.cheaperShadows, &cheaperShadows)
+        read(.screenshotResolution, &screenshotResolution)
+        read(.screenshotFolder, &screenshotFolder)
+        read(.audioRecordingThreshold, &audioRecordingThreshold)
+        audioRecordingThreshold = min(max(audioRecordingThreshold, 0), 10)
     }
 }

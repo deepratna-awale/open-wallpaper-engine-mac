@@ -11,6 +11,8 @@ final class PlaylistShortcutController: ObservableObject {
     /// Playlists whose shortcut macOS refused (another app holds it, or an error), so the
     /// Playlists view can say it may not work.
     @Published private(set) var unregisteredPlaylists: Set<UUID> = []
+    /// The hotkey actions' shortcuts (`GlobalHotKeyController`), which a playlist's mustn't repeat.
+    weak var hotKeys: GlobalHotKeyController?
 
     private let viewModel: WallpaperViewModel
     private let registrar: HotKeyRegistering
@@ -97,13 +99,19 @@ final class PlaylistShortcutController: ObservableObject {
 
     // MARK: Assigning
 
-    /// What already uses `shortcut`: other playlists, this app's menus, macOS and, by trying to
-    /// register it, other apps.
+    /// What already uses `shortcut`: other playlists, the hotkey actions, this app's menus, macOS
+    /// and, by trying to register it, other apps.
     func conflicts(for shortcut: GlobalShortcut, playlistID: UUID) -> [GlobalShortcutConflict] {
-        var conflicts = finder.conflicts(for: shortcut, playlistID: playlistID, playlists: viewModel.playlists)
+        var conflicts = finder.conflicts(for: shortcut, playlistID: playlistID, playlists: viewModel.playlists,
+                                         hotKeys: hotKeys?.bindings ?? GlobalHotKeyBindings())
         let ownedHere = registered[playlistID]?.shortcut == shortcut
-        let ownedByPlaylist = conflicts.contains { if case .playlist = $0 { return true } else { return false } }
-        if !ownedHere, !ownedByPlaylist {
+        let ownedInApp = conflicts.contains {
+            switch $0 {
+            case .playlist, .action: return true
+            default: return false
+            }
+        }
+        if !ownedHere, !ownedInApp {
             // Ours are unregistered while recording, so an "exists" answer is another app's.
             switch registrar.register(shortcut, id: Self.probeID) {
             case .registered: registrar.unregister(id: Self.probeID)
@@ -120,9 +128,13 @@ final class PlaylistShortcutController: ObservableObject {
     func assign(_ shortcut: GlobalShortcut?, to playlistID: UUID, resolving conflicts: [GlobalShortcutConflict] = []) {
         var playlists = viewModel.playlists
         for conflict in conflicts {
-            if case let .playlist(otherID, _) = conflict,
-               let index = playlists.firstIndex(where: { $0.id == otherID }) {
-                playlists[index].shortcut = nil
+            switch conflict {
+            case let .playlist(otherID, _):
+                if let index = playlists.firstIndex(where: { $0.id == otherID }) { playlists[index].shortcut = nil }
+            case let .action(action):
+                hotKeys?.clear(action)
+            default:
+                break
             }
         }
         guard let index = playlists.firstIndex(where: { $0.id == playlistID }) else { return }

@@ -357,6 +357,7 @@ struct WallpaperPreview: SubviewOfContentView {
                                 .pickerStyle(.menu)
                                 .fixedSize()
                             }
+                            WallpaperDisplayOptionsSection(wallpaperViewModel: wallpaperViewModel)
                             switch wallpaperViewModel.displayedWallpaper.project.type.lowercased() {
                             case "video", "remote-video":
                                 HStack {

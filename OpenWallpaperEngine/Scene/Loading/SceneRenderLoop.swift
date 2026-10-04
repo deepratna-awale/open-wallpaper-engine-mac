@@ -217,6 +217,19 @@ final class SceneRenderLoop {
         if !started { OWELog.debug(.scene, "Loading snapshot: no frame to capture at \(pixelSize.x)×\(pixelSize.y)") }
     }
 
+    /// Main: a screenshot of the scene's current moment at `pixelSize`
+    /// (`SceneMetalRenderer.captureScreenshot`), drawn on the render thread between frames;
+    /// `completion` gets the picture, or nil, on a Metal or the render thread.
+    func captureScreenshot(pixelSize: SIMD2<Int>, completion: @escaping @Sendable (CGImage?) -> Void) {
+        thread.perform { [self] in
+            guard let renderer else { return completion(nil) }
+            let restoring = displays.count > 1 ? viewports() : []
+            if !renderer.captureScreenshot(pixelSize: pixelSize, restoring: restoring, completion: completion) {
+                completion(nil)
+            }
+        }
+    }
+
     /// Something that changes the picture happened: tick at `demand`'s rate from the next refresh.
     func wake(_ demand: FrameDemand) {
         guard let renderer, renderer.framePacing.level < demand else { return }

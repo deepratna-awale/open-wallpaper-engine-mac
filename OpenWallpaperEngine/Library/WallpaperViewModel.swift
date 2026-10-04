@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVKit
+import Combine
 
 private extension Array {
     subscript(safe index: Index) -> Element? {
@@ -917,6 +918,34 @@ class WallpaperViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Display options
+
+    /// WE's per-wallpaper display options (offset, zoom, flip, playback rate), per display.
+    let displayOptions: WallpaperDisplayOptionsStore
+    /// Republishes the options' changes as this model's, so views showing wallpapers follow them.
+    private var displayOptionsForwarding: AnyCancellable?
+
+    /// The display options of the wallpaper on `screenId` there.
+    func displayOptions(on screenId: String) -> WallpaperDisplayOptions {
+        displayOptions.options(for: wallpaper(for: screenId), on: screenId)
+    }
+
+    /// Sets `wallpaper`'s display options on `screenIds`.
+    func setDisplayOptions(_ options: WallpaperDisplayOptions, for wallpaper: WEWallpaper, on screenIds: Set<String>) {
+        displayOptions.set(options, for: wallpaper, on: screenIds)
+    }
+
+    /// The playback rate (`WallpaperDisplayOptions.playbackRate`) a video running once for every
+    /// display showing it plays at: its rate on the main display when that shows it, else on the
+    /// display with the lowest id that does; 1 when no display shows it.
+    func displayPlaybackRate(of wallpaper: WEWallpaper) -> Float {
+        let directory = wallpaper.wallpaperDirectory.standardizedFileURL
+        let screens = wallpapers.filter { $0.value.wallpaperDirectory.standardizedFileURL == directory }.keys
+        let main = NSScreen.main.map(Self.screenId(for:))
+        guard let screen = screens.first(where: { $0 == main }) ?? screens.sorted().first else { return 1 }
+        return Float(displayOptions.options(for: wallpaper, on: screen).playbackRate)
+    }
+
     var lastPlayRate: Float = 1.0
     @Published public var playRate: Float = 1.0 {
         willSet {
@@ -982,6 +1011,11 @@ class WallpaperViewModel: ObservableObject {
 
     init(persistsWallpapers: Bool = true) {
         self.persistsWallpapers = persistsWallpapers
+        // A preview's options aren't the user's: kept in memory only.
+        displayOptions = WallpaperDisplayOptionsStore(defaults: persistsWallpapers ? .app : nil)
+        displayOptionsForwarding = displayOptions.objectWillChange.sink { [weak self] _ in
+            MainActor.assumeIsolated { self?.objectWillChange.send() }
+        }
         if let storedPlacement = UserDefaults.app.string(forKey: "WallpaperPlacement"),
            let placement = WallpaperPlacement(rawValue: storedPlacement) {
             wallpaperPlacement = placement

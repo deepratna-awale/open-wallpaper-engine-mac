@@ -10,6 +10,8 @@ struct ShortcutRecorderField: View {
     var onClear: () -> Void
     /// Told when listening starts and stops, so the registered shortcuts don't fire meanwhile.
     var onRecordingChange: (Bool) -> Void = { _ in }
+    /// What the shortcut does, for the field's tooltip.
+    var help: LocalizedStringKey = "Starts this playlist from any app. Click, then press the keys."
 
     @State private var monitor: Any?
     @State private var showsModifierHint = false
@@ -31,7 +33,7 @@ struct ShortcutRecorderField: View {
                 .frame(minWidth: 110)
             }
             .glassButtonStyle(isRecording ? .prominent : .standard)
-            .help("Starts this playlist from any app. Click, then press the keys.")
+            .help(help)
             if shortcut != nil, !isRecording {
                 Button {
                     onClear()

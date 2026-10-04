@@ -124,6 +124,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     lazy var safeRestart = SafeRestart()
     /// Each playlist's system-wide shortcut (`App/GlobalShortcuts`).
     lazy var playlistShortcuts = PlaylistShortcutController(viewModel: wallpaperViewModel)
+    /// The hotkey actions' system-wide shortcuts (Settings › General › Hotkeys).
+    lazy var globalHotKeys: GlobalHotKeyController = {
+        let controller = GlobalHotKeyController(viewModel: wallpaperViewModel)
+        controller.playlistShortcuts = playlistShortcuts
+        playlistShortcuts.hotKeys = controller
+        controller.perform = { [weak self] in self?.performHotKey($0) }
+        return controller
+    }()
+    /// The wallpaper windows sit above the desktop icons, hiding them (`toggleDesktopIcons`).
+    var hidesDesktopIcons = false
     lazy var crashWatcher = CrashWatcher()
     private var processPriorityCancellable: AnyCancellable?
     private var crashWatcherCancellable: AnyCancellable?
@@ -200,6 +210,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var displayFlipCancellable: AnyCancellable?
     private var stretchCanvasCancellable: AnyCancellable?
     private var mediaIntegrationCancellable: AnyCancellable?
+    private var recordingThresholdCancellable: AnyCancellable?
     /// Follows the default output device: capture always restarts, wallpapers reload when the
     /// setting is on. `rebuildWallpaperWindows` is the same reload an asset change uses.
     private lazy var outputDeviceMonitor = OutputDeviceChangeMonitor(
@@ -274,6 +285,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Settings › Optimizations: one set of user properties for every display, or each display's own.
         syncPropertiesCancellable = globalSettingsViewModel.$settings.map(\.syncPropertiesAcrossDisplays).removeDuplicates()
             .sink { [weak self] synced in self?.wallpaperViewModel.syncsPropertiesAcrossDisplays = synced }
+        // Settings › Optimizations › Recording threshold: quieter captured audio reads as silence.
+        recordingThresholdCancellable = globalSettingsViewModel.$settings.map(\.audioRecordingThreshold).removeDuplicates()
+            .sink { WallpaperServices.shared.audioCapture.recordingThreshold = $0 }
         // Flipped clone displays mirror their window's content (`WallpaperWindowContentView`).
         displayFlipCancellable = wallpaperViewModel.$layoutResolution.map(\.flipped).removeDuplicates()
             .sink { [weak self] flipped in self?.applyDisplayFlips(flipped) }
@@ -383,8 +397,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             self.mainWindowController.window.makeKeyAndOrderFront(nil)
         }
 
-        // Registers the playlists' global shortcuts.
+        // Registers the playlists' and the hotkey actions' global shortcuts.
         _ = playlistShortcuts
+        _ = globalHotKeys
 
         // MCP clients connect once the app is set up, while the MCP Server plugin is installed.
         mcpServerPlugin.start()
@@ -620,7 +635,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
             let window = WallpaperWindow()
             window.styleMask = [.borderless, .fullSizeContentView]
-            window.level = NSWindow.Level(Int(CGWindowLevelForKey(.desktopWindow)))
+            window.level = Self.wallpaperWindowLevel(hidingDesktopIcons: hidesDesktopIcons)
             window.collectionBehavior = [.stationary, .canJoinAllSpaces]
             window.setFrame(screen.frame, display: true)
             window.isMovable = false
@@ -632,9 +647,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             window.canBecomeVisibleWithoutLogin = true
             window.isReleasedWhenClosed = false
             window.ignoresMouseEvents = true
-            let content = WallpaperWindowContentView(content: NSHostingView(rootView:
-                DisplayWallpaperView(viewModel: self.wallpaperViewModel, screenId: screenId)
-            ))
+            // The wallpaper's display options (offset, zoom, flip) place the view on the display,
+            // inside the layout's content (clone mirror, stretch canvas).
+            let content = WallpaperWindowContentView(content: WallpaperDisplayTransformView(
+                content: NSHostingView(rootView: DisplayWallpaperView(viewModel: self.wallpaperViewModel, screenId: screenId)),
+                screenID: screenId, viewModel: wallpaperViewModel))
             content.isMirrored = wallpaperViewModel.isFlipped(screenId)
             content.stretchCanvas = wallpaperViewModel.layoutResolution.canvases[screenId]
             window.contentView = content

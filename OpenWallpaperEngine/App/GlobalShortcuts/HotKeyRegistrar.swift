@@ -19,21 +19,30 @@ protocol HotKeyRegistering: AnyObject {
 }
 
 /// Global shortcuts through Carbon's `RegisterEventHotKey`, which needs no Accessibility
-/// permission: macOS delivers the press to this app whichever app is in front.
+/// permission: macOS delivers the press to this app whichever app is in front. Each registrar
+/// has its own signature and handler, and passes on the presses of hot keys it didn't register.
 @MainActor
 final class CarbonHotKeyRegistrar: HotKeyRegistering {
     var onPress: ((UInt32) -> Void)?
     private var hotKeys: [UInt32: EventHotKeyRef] = [:]
     private var handler: EventHandlerRef?
-    /// "OWEp", identifying this app's hot keys in the events.
-    private static let signature: OSType = 0x4F57_4570
+    /// Identifies this registrar's hot keys in the events.
+    private let signature: OSType
+    /// "OWEp": the playlists' shortcuts.
+    static let playlistSignature: OSType = 0x4F57_4570
+    /// "OWEh": the hotkey actions'.
+    static let actionSignature: OSType = 0x4F57_4568
+
+    init(signature: OSType = CarbonHotKeyRegistrar.playlistSignature) {
+        self.signature = signature
+    }
 
     func register(_ shortcut: GlobalShortcut, id: UInt32) -> HotKeyRegistration {
         installHandlerIfNeeded()
         unregister(id: id)
         var ref: EventHotKeyRef?
         let status = RegisterEventHotKey(UInt32(shortcut.keyCode), shortcut.carbonModifiers,
-                                         EventHotKeyID(signature: Self.signature, id: id),
+                                         EventHotKeyID(signature: signature, id: id),
                                          GetEventDispatcherTarget(), 0, &ref)
         switch status {
         case noErr:
@@ -61,14 +70,18 @@ final class CarbonHotKeyRegistrar: HotKeyRegistering {
             let status = GetEventParameter(event, EventParamName(kEventParamDirectObject),
                                            EventParamType(typeEventHotKeyID), nil,
                                            MemoryLayout<EventHotKeyID>.size, nil, &hotKeyID)
-            guard status == noErr, hotKeyID.signature == CarbonHotKeyRegistrar.signature else {
-                return OSStatus(eventNotHandledErr)
-            }
+            guard status == noErr else { return OSStatus(eventNotHandledErr) }
             let registrar = Unmanaged<CarbonHotKeyRegistrar>.fromOpaque(context).takeUnretainedValue()
             let id = hotKeyID.id
-            // Carbon dispatches on the main thread's event loop.
-            MainActor.assumeIsolated { registrar.onPress?(id) }
-            return noErr
+            // Carbon dispatches on the main thread's event loop. Another registrar's press goes on
+            // to its handler.
+            return MainActor.assumeIsolated {
+                guard hotKeyID.signature == registrar.signature, registrar.hotKeys[id] != nil else {
+                    return OSStatus(eventNotHandledErr)
+                }
+                registrar.onPress?(id)
+                return noErr
+            }
         }, 1, &spec, context, &handler)
     }
 }

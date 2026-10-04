@@ -70,8 +70,18 @@ final class AudioSpectrumAnalyzer {
         }
     }
 
+    /// WE's "Recording threshold" setting (0…10; `AudioSpectrumBlockTransform.threshold`), set from
+    /// any thread; the audio thread takes it with the next buffer. `thresholdLock` owns it.
+    var recordingThreshold: Double {
+        get { thresholdLock.withLock { pendingThreshold } }
+        set { thresholdLock.withLock { pendingThreshold = newValue } }
+    }
+    private let thresholdLock = NSLock()
+    private var pendingThreshold: Double = 0
+
     /// Adds one buffer of non-interleaved float samples. Pass the same buffer twice for mono.
     func ingest(left: UnsafeBufferPointer<Float>, right: UnsafeBufferPointer<Float>) {
+        transform?.threshold = AudioSpectrumBlockTransform.threshold(setting: recordingThreshold)
         guard let raw = transform?.append(left: left, right: right) else { return }
         feed.setLatestRaw(raw)
     }

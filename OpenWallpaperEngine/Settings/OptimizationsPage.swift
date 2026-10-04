@@ -1,4 +1,5 @@
 import SwiftUI
+import OWEInspectorKit
 
 /// Settings › Optimizations: the optional ways the app saves space and work, or changes how it
 /// renders. New optional optimizations are listed here.
@@ -97,6 +98,15 @@ struct OptimizationsPage: SettingsPage {
                 }
                 .changedFromDefault(viewModel.isChanged(\.reloadWhenChangingOutputDevice))
                 .help("Reloads the wallpapers and their audio when you switch the sound output, such as to headphones or another speaker.")
+                HStack {
+                    Text("Recording threshold")
+                    Spacer()
+                    NumericSliderInput(value: $viewModel.settings.audioRecordingThreshold, range: 0...10,
+                                       defaultValue: 0, step: 0.1, fractionDigits: 1,
+                                       sliderWidth: 150, fieldWidth: 44)
+                }
+                .changedFromDefault(viewModel.isChanged(\.audioRecordingThreshold))
+                .help("Audio-reactive wallpapers react only to sound at least this loud; quieter sound reads as silence. 0 reacts to everything, 10 needs about −40 dB.")
                 Toggle("Media integration support", isOn: $viewModel.settings.mediaIntegration)
                     .changedFromDefault(viewModel.isChanged(\.mediaIntegration))
                     .help("Lets wallpapers show the title, artist and album cover of what's playing now. Off hides it from every wallpaper.")

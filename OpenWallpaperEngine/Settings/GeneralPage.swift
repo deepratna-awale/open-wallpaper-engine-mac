@@ -92,6 +92,10 @@ struct GeneralPage: SettingsPage {
                 }
             }
             .settingsAnchor(SettingsAnchor.setup)
+            // MARK: Screenshots
+            ScreenshotSection(viewModel: viewModel)
+            // MARK: Hotkeys
+            HotKeysSection(hotKeys: AppDelegate.shared.globalHotKeys)
             // MARK: Keyboard Shortcuts
             KeyboardShortcutsSection()
         }

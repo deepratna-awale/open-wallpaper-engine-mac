@@ -115,6 +115,7 @@ extension AppDelegate {
             item("Paused: video memory is full", "memorychip", #selector(videoMemoryPauseNotice)),
             item("Next Wallpaper", "forward.fill", #selector(nextWallpaper), .nextWallpaper),
             item("Previous Wallpaper", "backward.fill", #selector(previousWallpaper), .previousWallpaper),
+            item("Take Screenshot", "camera", #selector(takeScreenshot)),
             item("Quit", "power", #selector(NSApplication.terminate(_:)), .quit),
         ]
     }

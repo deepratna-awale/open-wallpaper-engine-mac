@@ -54,7 +54,9 @@ struct WebKitVideoWallpaperView: NSViewRepresentable {
                                        paused: !wallpaperViewModel.playback(onScreen: screenId).rendersFrames,
                                        muted: muted,
                                        volume: wallpaperViewModel.playVolume,
-                                       rate: wallpaperViewModel.playRate)
+                                       // A page per display: its own playback rate (WE's option).
+                                       rate: wallpaperViewModel.playRate
+                                           * Float(wallpaperViewModel.displayOptions(on: screenId).playbackRate))
     }
 
     @MainActor
