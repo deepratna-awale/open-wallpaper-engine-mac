@@ -113,6 +113,7 @@ Al compilar desde el código fuente, la primera compilación descarga el paquete
 
 ### Workshop y biblioteca
 - Los filtros del Workshop de Wallpaper Engine: Mostrar solo, un filtro de resolución, géneros combinados con Y/O y etiquetas en cada tarjeta.
+- **Vistas previas animadas** — las miniaturas de los fondos de pantalla en la biblioteca reproducen su animación de vista previa del Workshop (GIF), para que veas un fondo de pantalla en movimiento antes de aplicarlo. Solo se reproducen mientras están visibles y se pausan cuando la ventana está oculta o en modo de bajo consumo.
 - Los fondos de pantalla instalados muestran sus etiquetas del Workshop y se pueden filtrar por ellas; los elementos que solo son recursos o dependencias no aparecen en Instalados.
 - Las dependencias del Workshop que faltan se descargan automáticamente, y las que ya no se usan se eliminan tras un borrado. Cada descarga va a la carpeta Almacenamiento de fondos de pantalla.
 - **Restablecer** en Detalles devuelve las propiedades de un fondo de pantalla, y sus cambios en el Inspector de escenas, a los valores por defecto que fijó su autor.

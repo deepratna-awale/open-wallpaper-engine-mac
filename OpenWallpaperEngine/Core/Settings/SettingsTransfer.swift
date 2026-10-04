@@ -13,10 +13,10 @@ struct SettingsTransfer: Codable, Equatable {
     static let currentVersion = 1
 
     /// The on/off preferences kept in `UserDefaults.app` outside `GlobalSettings` that travel
-    /// with the settings. Nothing secret is stored under these keys.
+    /// with the settings. Nothing secret is stored under these keys. A file from an older version
+    /// may still hold the retired Animated Thumbnails key; `decode` drops it like any unknown key.
     static let preferenceKeys: [String] = [
         "ReclaimOriginalPackages",
-        "TestAnimates",
         "HidesReleaseNotesAfterUpdate",
         "ReceiveBetaUpdates",
     ]

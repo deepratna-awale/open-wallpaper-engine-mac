@@ -113,6 +113,7 @@ Building from source fetches the Sparkle Swift package on first build. Builds fr
 
 ### Workshop & library
 - Wallpaper Engine's Workshop filters: Show Only, a resolution filter, genres combined with AND/OR, and tags on every card.
+- **Animated previews** — wallpaper tiles in the library play their Workshop preview animation (GIF), so you can see a wallpaper move before applying it. They play only while visible, and pause when the window is hidden or in Low Power Mode.
 - Installed wallpapers show and filter by their Workshop tags; asset-only and dependency-only items stay out of Installed.
 - Missing Workshop dependencies download automatically, and unused ones are removed after a delete. Every download lands in the Wallpaper Storage folder.
 - **Reset** in Details returns a wallpaper's properties, and its Scene Editor edits, to the defaults its author set.

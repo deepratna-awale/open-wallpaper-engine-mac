@@ -20,11 +20,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **The Scene Inspector is now called the Scene Editor**, in its window, the Details panel, the Window menu (⌥⌘I), tooltips and the onboarding tour, in every language.
 - **Edit Wallpaper** moved from the Details panel to the library's bottom bar, beside Create Playlist. It opens the selected wallpaper in the Wallpaper Editor and is disabled, with a tooltip saying why, when nothing is selected or the selection isn't a scene wallpaper. Window › Wallpaper Editor (⌥⌘E) works as before.
+- Animated library previews are built in and always on (no longer a plugin).
 - **Closing the last window** leaves Open Wallpaper Engine in the menu bar without a Dock icon; the icon comes back when a window opens (from the menu bar, a menu or reopening the app). A minimised window keeps the Dock icon, where it is restored from. The app also starts without a Dock icon when it opens no window.
 - **Loading a scene wallpaper** shows a full-resolution picture of the scene's own frame instead of its low-resolution Workshop preview, then crossfades to the live scene as before. The picture is taken when a wallpaper is downloaded or imported, and refreshed once per session while a wallpaper runs (and after its properties change), for each display size. It is stored in the Caches folder, capped in size, and removed with the wallpaper. The Workshop preview is still shown until a wallpaper has one.
 
 ### Fixed
 
+- **Wallpaper Editor and Scene Inspector:** a number's unit (×, %, °, px, s, fps) stays beside the number on one line in a narrow inspector or beside a long translated label, instead of the number showing above it.
 - **Settings › Assets › Update from Steam** no longer downloads Wallpaper Engine again when the assets are current: it first reads the public build from SteamCMD's app info and reports "up to date" when it matches the installed build and the files are there. If the check fails (offline, not logged in), nothing is downloaded. **Re-download** downloads regardless, to repair a damaged copy.
 
 ## [1.0.0]
