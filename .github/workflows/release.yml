@@ -337,7 +337,8 @@ jobs:
                | grep -Ev '^(/usr/lib/|/System/Library/|@rpath/Sparkle\.framework/Versions/B/Sparkle$|@rpath/OpenWallpaperEngine\.framework/Versions/A/OpenWallpaperEngine$)'; then
             echo "::error::the framework links a non-system library"; exit 1
           fi
-          # No executables besides the app's own, the Chromium helper and Sparkle's (nowPlayingAdapter.pl runs as an
+          # No executables besides the app's own, the Chromium helper, the bundled screen saver (copied to
+          # ~/Library/Screen Savers by the installer) and Sparkle's (nowPlayingAdapter.pl runs as an
           # argument to /usr/bin/perl and is a plain resource). Sparkle's are each verified; the
           # XPC services are unused (the app isn't sandboxed) but ship signed inside the framework.
           SPARKLE="$APP/Contents/Frameworks/Sparkle.framework/Versions/B"
@@ -354,6 +355,7 @@ jobs:
             "$APP/Contents/Helpers/OWE Chromium Helper (Plugin).app/Contents/MacOS/OWE Chromium Helper (Plugin)"
             "$APP/Contents/Helpers/Wallpaper Editor.app/Contents/MacOS/Wallpaper Editor"
             "$APP/Contents/Helpers/owe-mcp"
+            "$APP/Contents/Resources/Open Wallpaper Engine.saver/Contents/MacOS/Open Wallpaper Engine"
             "$FRAMEWORK_BINARY"
           )
           for helper in "${sparkle_executables[@]}"; do
@@ -361,7 +363,8 @@ jobs:
           done
           for code in "$SPARKLE/Updater.app" "$SPARKLE/Autoupdate" "$SPARKLE/XPCServices/Downloader.xpc" \
                       "$SPARKLE/XPCServices/Installer.xpc" "$APP/Contents/Frameworks/Sparkle.framework" \
-                      "$APP/Contents/Frameworks/OpenWallpaperEngine.framework"; do
+                      "$APP/Contents/Frameworks/OpenWallpaperEngine.framework" \
+                      "$APP/Contents/Resources/Open Wallpaper Engine.saver"; do
             [ -e "$code" ] || continue
             codesign --verify --strict --verbose=2 "$code"
           done
