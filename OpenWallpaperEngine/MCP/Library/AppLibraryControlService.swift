@@ -278,7 +278,7 @@ final class AppLibraryControlService: LibraryControlService {
         let depthVersion = DepthMapPluginLayout.activeModel(in: depthRoot)?.version
         let chromiumRoot = ChromiumEngineInstaller.defaultRoot
         let chromiumPin = ChromiumEnginePin.current()
-        let chromiumVersion = ChromiumEngineInstallState.read(in: chromiumRoot).active.flatMap { active in
+        let chromiumVersion = VersionedInstallState.read(in: chromiumRoot).active.flatMap { active in
             ChromiumEnginePackage.manifest(in: chromiumRoot.appending(path: active)) == nil ? nil : active
         }
         return [
