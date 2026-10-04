@@ -210,6 +210,7 @@ private struct LayerForm: View {
                     return nil
                 }()
                 HStack(spacing: 6) {
+                    Image(systemName: "slider.horizontal.3").foregroundStyle(.secondary)
                     Toggle(isOn: Binding(
                         get: { session.isEffectVisible(effect, of: layer.id) },
                         set: { visible in

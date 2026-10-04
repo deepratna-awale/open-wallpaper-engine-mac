@@ -145,18 +145,19 @@ private struct EffectTile: View {
 }
 
 /// A symbol for each of WE's effect groups, while an effect's preview renders or when it has none.
+/// Never `sparkles`, which stands for particle systems.
 enum EffectGroupSymbol {
     static func symbol(_ group: String) -> String {
         switch group.lowercased() {
         case "animate": return "wind"
         case "blur": return "aqi.medium"
         case "distort": return "water.waves"
-        case "enhance": return "sparkles"
+        case "enhance": return "wand.and.rays"
         case "simulate": return "drop"
         case "adjust", "color": return "slider.horizontal.3"
         case "interactive": return "cursorarrow.motionlines"
         case "mask": return "theatermask.and.paintbrush"
-        default: return "wand.and.stars"
+        default: return "slider.horizontal.3"
         }
     }
 }
