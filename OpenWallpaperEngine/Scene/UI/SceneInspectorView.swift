@@ -926,6 +926,9 @@ extension AppDelegate {
             defer: false
         )
         window.title = String(localized: "Scene Editor (Live)")
+        // The title names the window in the Window menu; the toolbar's mode picker already shows
+        // where the editor is, so the title isn't repeated beside it.
+        window.titleVisibility = .hidden
         window.isReleasedWhenClosed = false
         window.contentView = Self.sceneInspectorContent(wallpaper, scopes, mode)
         window.center()
@@ -1162,9 +1165,11 @@ private struct SceneInspectorContent: View {
     private var inspectorSplitView: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             sidebarColumn
-                .navigationSplitViewColumnWidth(min: 240, ideal: Self.sidebarWidth, max: 440)
                 // `sidebarToggle` takes its place, right before the modes.
                 .toolbar(removing: .sidebarToggle)
+                // Outermost, after `toolbar(removing:)`: inside it the width never reached the
+                // column, which then opened at AppKit's default of about 140 points.
+                .navigationSplitViewColumnWidth(min: 240, ideal: Self.sidebarWidth, max: 440)
         } detail: {
             modeDetail
                 .inspector(isPresented: $isMovementPresented) {
@@ -1273,13 +1278,10 @@ private struct SceneInspectorContent: View {
     private var modeDetail: some View {
         if let exportModel {
             LockScreenPreview(model: exportModel)
-                .navigationTitle(Text(SceneInspectorMode.deviceExport.title))
         } else if let androidModel {
             AndroidScreenPreview(model: androidModel)
-                .navigationTitle(Text(SceneInspectorMode.androidExport.title))
         } else if let screenSaverModel {
             ScreenSaverEditorPreview(model: screenSaverModel)
-                .navigationTitle(Text(SceneInspectorMode.screenSaver.title))
         } else {
             detailColumn
         }
@@ -1381,13 +1383,28 @@ private struct SceneInspectorContent: View {
         return nil
     }
 
+    /// A row's name takes the width beside its switch, cut in the middle (names often differ only
+    /// at their ends), with the whole name in its tooltip.
+    private static func rowTitle(_ name: String, systemImage: String) -> some View {
+        Label {
+            Text(verbatim: name)
+                .lineLimit(1)
+                .truncationMode(.middle)
+        } icon: {
+            Image(systemName: systemImage)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .layoutPriority(1)
+        .help(Text(verbatim: name))
+    }
+
     private var sidebarColumn: some View {
         List(selection: $selectedID) {
             let versions = model.items.filter(\.isVersion).filter(matches)
             if !versions.isEmpty {
                 Section("Versions") {
                     ForEach(versions) { item in
-                        Label(item.versionName ?? item.name, systemImage: "square.stack.3d.up")
+                        Self.rowTitle(item.versionName ?? item.name, systemImage: "square.stack.3d.up")
                             .tag(item.id)
                     }
                 }
@@ -1395,14 +1412,14 @@ private struct SceneInspectorContent: View {
             Section("Scene Objects") {
                 ForEach(model.items.filter { !$0.isVersion }.filter(matches)) { item in
                     HStack(spacing: 8) {
-                        Label(item.name, systemImage: Self.kindSymbol(item.kind))
-                        Spacer(minLength: 4)
+                        Self.rowTitle(item.name, systemImage: Self.kindSymbol(item.kind))
                         Toggle("Visible", isOn: Binding(
                             get: { item.visible },
                             set: { model.setObjectVisible($0, item: item) }
                         ))
                         .labelsHidden()
                         .toggleStyle(.switch)
+                        .fixedSize()
                         .help(item.visible ? "Hide object" : "Show object")
                     }
                     .contentShape(Rectangle())
@@ -1410,7 +1427,6 @@ private struct SceneInspectorContent: View {
                 }
             }
         }
-        .navigationTitle(mode == .wallpaper ? Text("Scene Editor (Live)") : Text(mode.title))
     }
 
     private var detailColumn: some View {
@@ -1474,7 +1490,6 @@ private struct SceneInspectorContent: View {
             }
             .padding()
         }
-        .navigationTitle(item.name)
     }
 
     @ViewBuilder private func effectList(for item: SceneInspectorItem) -> some View {
