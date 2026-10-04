@@ -324,16 +324,29 @@ public enum EditorPreviewScene {
         return Framing(frame: frame, shift: shift)
     }
 
+    /// How close content comes to the probe's edge, as a share of its size, to run on past it
+    /// (the content's bounds are trimmed, and a stream's ends are sparse).
+    static let probeEdge = 0.05
+
     /// The framing in which `content` (a rectangle of `probe`'s pixels, from the top left) fills
-    /// `particleFill` of the preview, centred, at `particleFrame`'s proportions.
+    /// `particleFill` of the preview, centred, at `particleFrame`'s proportions. Content reaching
+    /// the probe's edge on an axis runs on past it (rain falling out of the scene), so that axis
+    /// isn't fitted and keeps `particleFrame`'s middle; on both axes, `particleFraming` stays.
     public static func fittedFraming(content: CGRect, probe: Framing) -> Framing {
-        let unitsX: Double = Double(probe.frame.width) / Double(probe.frame.pixelWidth)
-        let unitsY: Double = Double(probe.frame.height) / Double(probe.frame.pixelHeight)
-        let contentWidth: Double = Double(content.width) * unitsX
-        let contentHeight: Double = Double(content.height) * unitsY
+        let pixelWidth = Double(probe.frame.pixelWidth)
+        let pixelHeight = Double(probe.frame.pixelHeight)
+        let edgeX: Double = pixelWidth * probeEdge
+        let edgeY: Double = pixelHeight * probeEdge
+        let runsX: Bool = Double(content.minX) <= edgeX || Double(content.maxX) >= pixelWidth - edgeX
+        let runsY: Bool = Double(content.minY) <= edgeY || Double(content.maxY) >= pixelHeight - edgeY
+        if runsX, runsY { return particleFraming }
+        let unitsX: Double = Double(probe.frame.width) / pixelWidth
+        let unitsY: Double = Double(probe.frame.height) / pixelHeight
+        let contentWidth: Double = runsX ? 0 : Double(content.width) * unitsX
+        let contentHeight: Double = runsY ? 0 : Double(content.height) * unitsY
         // Scene units have y up; pixels have it down.
-        let centreX: Double = Double(content.midX) * unitsX
-        let centreY: Double = (Double(probe.frame.pixelHeight) - Double(content.midY)) * unitsY
+        let centreX: Double = runsX ? Double(probe.frame.width) / 2 : Double(content.midX) * unitsX
+        let centreY: Double = runsY ? Double(probe.frame.height) / 2 : (pixelHeight - Double(content.midY)) * unitsY
         let aspect: Double = Double(particleFrame.width) / Double(particleFrame.height)
         let fitted: Double = max(contentWidth, contentHeight * aspect) / particleFill
         let width: Double = max(fitted, Double(particleFrame.width) * particleClosest)

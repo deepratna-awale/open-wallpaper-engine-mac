@@ -198,6 +198,23 @@ final class EditorPreviewSceneTests: XCTestCase {
         XCTAssertNil(empty.rect(), "nothing drawn: the default framing stays")
     }
 
+    func testContentRunningPastTheProbeIsNotFittedOnThatAxis() {
+        let probe = EditorPreviewScene.probeFraming
+        let width = Double(probe.frame.pixelWidth), height = Double(probe.frame.pixelHeight)
+        // Rain: a band a quarter of the probe wide, falling out of its bottom.
+        let rain = CGRect(x: width * 3 / 8, y: height / 4, width: width / 4, height: height * 3 / 4)
+        let fitted = EditorPreviewScene.fittedFraming(content: rain, probe: probe)
+        let bandWidth: Double = Double(rain.width) * Double(probe.frame.width) / width
+        XCTAssertEqual(bandWidth / Double(fitted.frame.width), EditorPreviewScene.particleFill, accuracy: 0.01,
+                       "fitted on its width alone")
+        XCTAssertEqual(fitted.shift[1], EditorPreviewScene.particleFraming.shift[1]
+                       + Double(fitted.frame.height - EditorPreviewScene.particleFrame.height) / 2, accuracy: 1,
+                       "kept on the default frame's middle vertically")
+        let full = CGRect(x: 0, y: 0, width: width, height: height)
+        XCTAssertEqual(EditorPreviewScene.fittedFraming(content: full, probe: probe), EditorPreviewScene.particleFraming,
+                       "running past both axes: the default framing")
+    }
+
     /// A 64 × 40 grey picture with a white 8-pixel square `x` pixels from the left.
     private func card(squareAt x: Int) -> CGImage? {
         canvas(width: 64, height: 40, square: CGRect(x: x, y: 16, width: 8, height: 8))
