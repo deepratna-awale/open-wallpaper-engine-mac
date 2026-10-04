@@ -11,9 +11,20 @@ extension AppDelegate {
                 return type.lowercased() == "web"
             }
         })
-        return DisplayPlaybackMonitor(sources: sources) { [weak self] states in
+        return DisplayPlaybackMonitor(sources: sources, onLoad: { [weak self] load in
+            self?.applicationRuleLoader.update(load)
+        }, apply: { [weak self] states in
             self?.applyDisplayPlayback(states)
-        }
+        })
+    }
+
+    /// Application rules' "Load wallpaper", "Load playlist" and "Load profile".
+    func makeApplicationRuleLoader() -> ApplicationRuleLoader<WallpaperRuleLoadTarget> {
+        let target = WallpaperRuleLoadTarget(
+            viewModel: wallpaperViewModel,
+            library: { [weak self] in self?.contentViewModel.allWallpapers ?? [] },
+            profiles: { [weak self] in self?.displayProfiles ?? UnavailableDisplayProfiles() })
+        return ApplicationRuleLoader(target: target)
     }
 
     /// Advanced › "Pause when VRAM is exhausted": pauses every display through the playback rules.
