@@ -75,6 +75,7 @@ If the page doesn't open on the device:
 - macOS may ask whether Open Wallpaper Engine may accept incoming network connections. Allow it.
 - Some networks (guest networks, many public ones) keep devices from reaching each other
   ("client isolation" or "AP isolation"). Use a network that doesn't, or copy the files.
+- If a download stops, keep the sheet open and tap **Download** again: it resumes.
 
 ### Security
 
