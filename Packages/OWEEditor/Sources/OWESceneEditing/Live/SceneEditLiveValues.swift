@@ -63,7 +63,8 @@ public struct SceneEditLiveValues: Hashable, Sendable {
     /// The live values that take a wallpaper built with `built` to `current`; nil when the
     /// difference needs the scene read again. `base` is `SceneEditSession.baseOutline`.
     public static func make(built: SceneEditOverlay, current: SceneEditOverlay, base: SceneOutline) -> SceneEditLiveValues? {
-        guard built.structureOnly == current.structureOnly else { return nil }
+        // The scene's settings are read when the scene is.
+        guard built.structureOnly == current.structureOnly, built.general == current.general else { return nil }
         var result = SceneEditLiveValues()
         let keys = Set(built.objects.keys).union(current.objects.keys)
         for key in keys {

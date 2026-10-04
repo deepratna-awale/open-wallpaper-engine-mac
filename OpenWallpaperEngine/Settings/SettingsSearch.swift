@@ -30,6 +30,7 @@ enum SettingsAnchor {
     static let reset = "reset"
     static let plugins = "plugins"
     static let chromium = "chromium"
+    static let depthMaps = "depthmaps"
 }
 
 /// Search in Settings: the settings people look for, where they are, and the matches for a query.
@@ -115,7 +116,7 @@ struct SettingsSearch {
             entry("Reset Config", .diagnostics, SettingsAnchor.reset),
 
             entry("Screen Saver", .plugins, SettingsAnchor.plugins),
-            entry("Depth Map Generation", .plugins, SettingsAnchor.plugins),
+            entry("Depth Map Generation", .plugins, SettingsAnchor.depthMaps),
             entry("Chromium web engine", .plugins, SettingsAnchor.chromium),
 
             entry("Credits", .about, nil),

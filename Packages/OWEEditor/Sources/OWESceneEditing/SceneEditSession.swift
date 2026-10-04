@@ -365,7 +365,10 @@ public final class SceneEditSession: ObservableObject {
         let previous = overlay
         overlay = next
         refreshOutlines(from: previous)
-        onChange?(next)
+        // Scene settings follow from the layers (depth parallax needs camera parallax); they
+        // leave the outline as it is.
+        overlay = settlingDepthParallaxCamera(next)
+        onChange?(overlay)
     }
 
     private func registerUndo(restoring snapshot: SceneEditOverlay, actionName: String) {

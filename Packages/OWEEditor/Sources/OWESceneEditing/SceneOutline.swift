@@ -10,6 +10,8 @@ public struct SceneOutline: Sendable {
     /// The scene.json it was read from, which the editor applies structural edits to
     /// (`SceneEditSession`); nil for an outline made from a decoded root.
     public let sceneData: Data?
+    /// The scene's settings (`general`), by name.
+    public let general: [String: SceneJSONValue]
 
     public init(sceneData: Data) throws {
         guard let root = try JSONSerialization.jsonObject(with: sceneData) as? [String: Any] else {
@@ -24,6 +26,11 @@ public struct SceneOutline: Sendable {
 
     init(root: [String: Any], sceneData: Data?) throws {
         self.sceneData = sceneData
+        var general: [String: SceneJSONValue] = [:]
+        for (key, value) in root["general"] as? [String: Any] ?? [:] {
+            if let value = SceneJSONValue(any: value) { general[key] = value }
+        }
+        self.general = general
         guard let objects = root["objects"] as? [[String: Any]] else { throw SceneEditOverlayError.notAScene }
         let parents = Set(objects.compactMap { ($0["parent"] as? NSNumber)?.intValue })
         var layers: [SceneLayer] = []
@@ -49,9 +56,10 @@ public struct SceneOutline: Sendable {
     }
 
     /// An outline of `layers` as they are (the editor's added and deleted objects applied).
-    init(layers: [SceneLayer], size: SIMD2<Double>?) {
+    init(layers: [SceneLayer], size: SIMD2<Double>?, general: [String: SceneJSONValue]) {
         self.layers = layers
         self.size = size
+        self.general = general
         sceneData = nil
         var byID: [Int: Int] = [:]
         for (position, layer) in layers.enumerated() where byID[layer.id] == nil { byID[layer.id] = position }
