@@ -16,8 +16,16 @@ The code is the local package `Packages/OWETheming` (Foundation, Core Graphics a
   running instance's value (live edits and presets), the value the user saved for that display's
   properties, then project.json's (`SchemeColorSource`).
 - **Main colour.** With "Use the wallpaper's main color when it has no scheme color", a wallpaper
-  without one uses the most common colour of its picture: k-means (k = 5, farthest-point seeds,
-  8 rounds) in OKLab over a 32×32 copy, off the main thread (`DominantColor`). The picture is the
+  without one uses the main colour of its picture, kept away from white, gray and black (a
+  `schemecolor` is used as it is). K-means (k = 8, farthest-point seeds, 8 rounds) in OKLab over
+  a 64×64 copy, off the main thread (`DominantColor`); each cluster scores its pixel share times a
+  chroma preference in OKLCH: chroma below 0.04 (grays, white, black) and lightness below 0.22 or
+  above 0.9 are strongly penalized, and clusters under 3% of the pixels or with chroma below 0.03
+  aren't picked, so a small chromatic area beats a white or black majority. The pick is nudged
+  into a usable range: lightness 0.40…0.78, chroma at least 0.08, the hue kept, the chroma
+  reduced (and the lightness moved toward the middle) until it is inside sRGB. A monochrome
+  picture (no cluster with chroma 0.03 or more) gets a neutral mid gray, Graphite as an accent.
+  Results are cached per picture file and version (`DominantColorCache`). The picture is the
   scene's loading snapshot, else the desktop picture OWE made of a video or web wallpaper, else
   the Workshop preview. Without this option, such a wallpaper leaves everything as it is.
 - **When.** The colour is worked out again when the main display's wallpaper changes, when its
@@ -32,7 +40,7 @@ pane and of SkyLight on macOS 27; nothing was written while finding them.
 
 | Checkbox | What it changes | Values |
 |---|---|---|
-| Menu Bar | The desktop picture OWE sets: its menu bar strip is filled with the colour. No preference. | — |
+| Menu Bar | The top of each wallpaper window and of the desktop picture OWE sets: the menu bar's strip is filled with the colour. No preference. | — |
 | Accent Color | `AppleAccentColor` (Appearance › Color) | integer: −1 Graphite, 0 Red, 1 Orange, 2 Yellow, 3 Green, 4 Blue, 5 Purple, 6 Pink; absent is Multicolor |
 | | `AppleHighlightColor` (Appearance › Text highlight color) | `"r g b Other"`, a custom colour |
 | Tinted Icon Color | `AppleIconAppearanceTheme` (Appearance › Icon & widget style) | `Tinted` + the current variant (`Automatic`, `Light`, `Dark`); the other styles are `Regular…` and `Clear…` |
@@ -42,23 +50,30 @@ pane and of SkyLight on macOS 27; nothing was written while finding them.
 
 ### Menu Bar
 
-macOS has no API for the menu bar's colour. The bar is translucent over the desktop picture, so
-the picture's top strip shows through it. When this is on, each desktop picture OWE sets gets its
-top strip filled with the colour: the menu bar's height on that display (the frame's top minus the
-visible frame's top, or the safe area's top inset when taller), mapped into the picture as macOS's
-default "Fill Screen" shows it (`MenuBarStrip`). It is drawn by one hook in OWE's per-display
-desktop pictures (`DesktopPictureSync`): over each display's composed picture, before it is
-written and shown (`DesktopPictureTheming`). Each display gets its own strip, also when it shows
-its part of a stretch, a clone or split regions. The strip's colour and height are part of the
-picture's signature, so a new colour or a display change draws the pictures again; a Space change
-or a wake shows the same pictures, strip included.
+macOS has no API for the menu bar's colour. On macOS 26 and later the bar is transparent with no
+tint of its own: it shows whatever is directly behind it, which is OWE's wallpaper window (it covers
+the desktop picture). So the strip is drawn twice:
+
+- **The wallpaper window.** Each display's wallpaper window gets a plain layer of the colour over
+  its top, as tall as the display's menu bar (`WallpaperWindowContentView.menuBarStrip`). The
+  compositor draws it; nothing renders again. This is what the menu bar shows.
+- **The desktop picture**, which shows where no wallpaper window does (and on the lock screen). Each
+  desktop picture OWE sets gets its top strip filled with the colour: the menu bar's height on that
+  display (the frame's top minus the visible frame's top, or the safe area's top inset when taller),
+  mapped into the picture as macOS's default "Fill Screen" shows it (`MenuBarStrip`). It is drawn by
+  one hook in OWE's per-display desktop pictures (`DesktopPictureSync`): over each display's
+  composed picture, before it is written and shown (`DesktopPictureTheming`). Each display gets its
+  own strip, also when it shows its part of a stretch, a clone or split regions. The strip's colour
+  and height are part of the picture's signature, so a new colour or a display change draws the
+  pictures again; a Space change or a wake shows the same pictures, strip included.
 
 Limits:
 
-- Only the pictures OWE sets get the strip: they follow the wallpaper while "Show Wallpaper on
-  Lock Screen" or "Adjust Menu Bar Color" is on. With neither, the desktop picture stays the
-  user's own and the menu bar is unchanged.
-- The bar is translucent, so the colour shows as a tint, not as the exact colour.
+- The Menu Bar checkbox alone turns OWE's desktop pictures on (as "Show Wallpaper on Lock Screen"
+  and "Adjust Menu Bar Color" do), so the pictures get the strip without either.
+- A new colour is a new picture file: the two file names per display alternate, since macOS
+  ignores setting the URL it already shows.
+- On a macOS whose menu bar is translucent, the colour shows as a tint, not as the exact colour.
 - A display whose menu bar hides itself has no strip.
 
 ### Accent Color
@@ -66,9 +81,13 @@ Limits:
 macOS 27 still has a fixed accent palette: System Settings shows eight swatches and stores an
 integer, and there is no custom accent. The colour maps to the nearest swatch by OKLab distance
 (`AccentPalette`). The text highlight colour does take a custom colour (`Other`), so it is set to
-the colour at 30% over white, which is how light macOS's own highlights are. After writing, OWE
-posts the distributed notification `AppleColorPreferencesChangedNotification`, which System
-Settings posts too, so running apps redraw.
+the colour at 30% over white, which is how light macOS's own highlights are. The keys go to the
+global domain through CFPreferences (`kCFPreferencesAnyApplication`, the current user, any host,
+then a synchronize), where System Settings keeps them. After writing, OWE posts the distributed
+notifications System Settings' Appearance pane posts (names from its binaries), delivered at once:
+`AppleAquaColorVariantChanged` (the accent), `AppleColorPreferencesChangedNotification` (the
+highlight) and `AppleInterfaceThemeChangedNotification` (apps redraw their dynamic colours).
+Posting only the second left running apps on the old accent until System Settings next opened.
 
 ### Tinted Icon Color
 
@@ -77,8 +96,13 @@ The icon and widget style of macOS 26 and later is `AppleIconAppearanceTheme`; i
 `AppleIconAppearanceCustomTintColor`. SkyLight reads them and the Dock and Finder draw the icons.
 System Settings applies a change through a private SkyLight call, and there is no public
 notification for it, so after OWE writes the keys the Dock shows the change when it starts again.
-OWE never restarts it on its own: when a write happened, the section shows **Apply Now (Restarts
-Dock)**, which runs `killall Dock` on the user's click. If an icon still doesn't change, logging out
+With **Restart the Dock automatically to apply icon and folder colors** (on by default),
+`DockRestartScheduler` runs `killall Dock` (launchd starts it again at once; there is no public
+relaunch API) 1.5 s after the last icon change, so dragging a colour picker, editing the scheme
+colour or switching wallpapers restarts it once, after the colour settles. It compares the stored
+icon keys with those the Dock last started with and skips the restart when they are equal. Quitting
+with "Restore on Quit" restarts it once more when the restore changed the keys. Off, the section
+shows **Restart Dock** while the Dock is out of date. If an icon still doesn't change, logging out
 and in applies it.
 
 ### Folder Color
@@ -102,7 +126,10 @@ keys are restored when both are off.
 - **After a crash**, the journal still says a session was running, so the next launch restores the
   originals first; theming then applies again if it is on.
 - **Isolated copies** (tests, development copies, `OWE_ISOLATED_STATE`) read the preferences but
-  never write them (`ReadOnlyAppearanceWriter`), and don't change the desktop picture.
+  never write them (`ReadOnlyAppearanceWriter`), never restart the Dock, and don't change the
+  desktop picture.
 
 All writes go through the `SystemAppearanceWriter` protocol: `GlobalPreferencesWriter` uses
-CFPreferences and the distributed notification centre, and the package's tests use a fake.
+CFPreferences (`GlobalPreferencesStore`) and the distributed notification centre
+(`DistributedNotificationPosting`), and the package's tests use fakes for each, and for the Dock
+(`DockRestarting`) and the settle timer (`SettleTimer`).

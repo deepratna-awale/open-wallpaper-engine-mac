@@ -21,17 +21,22 @@ struct ThemingSection: View {
             }
             Group {
                 Toggle("Menu Bar", isOn: theming.menuBar)
-                    .help("Fills the menu bar's strip of the desktop picture Open Wallpaper Engine sets with the color; the translucent menu bar shows it. Needs Show Wallpaper on Lock Screen for scenes, or Adjust Menu Bar Color for video and web wallpapers.")
+                    .help("Fills the top of the wallpaper behind the menu bar, and of the desktop picture Open Wallpaper Engine sets, with the color; the transparent menu bar shows it.")
                 Toggle("Accent Color", isOn: theming.accentColor)
                     .help("Sets System Settings › Appearance › Color to the closest of its colors, as macOS has no custom accent color, and the text highlight color to a light tint of the color.")
                 Toggle("Tinted Icon Color", isOn: theming.tintedIcons)
                     .help("Sets the icon and widget style to Tinted, in the color.")
                 Toggle("Folder Color", isOn: theming.folderColor)
                     .help("Sets the icon, widget and folder color, which folders use with every icon style.")
-                if controller.needsDockRestart {
+                Toggle(isOn: theming.restartsDockAutomatically) {
+                    Text("Restart the Dock automatically to apply icon and folder colors")
+                    Text("The Dock briefly reloads once the color stops changing. Your windows stay open.")
+                }
+                .help("The Dock shows a new icon style or tint only once it starts again. It restarts 1.5 seconds after the last change, and not at all when the colors are unchanged.")
+                if controller.needsDockRestart && !viewModel.settings.theming.restartsDockAutomatically {
                     HStack {
                         Spacer()
-                        Button("Apply Now (Restarts Dock)") { controller.restartDock() }
+                        Button("Restart Dock") { controller.restartDock() }
                             .help("The Dock and the icons show a new style or tint once the Dock starts again. Your windows stay open.")
                     }
                 }

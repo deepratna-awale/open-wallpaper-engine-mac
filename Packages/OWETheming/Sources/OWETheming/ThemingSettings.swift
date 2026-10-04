@@ -16,6 +16,9 @@ public struct ThemingSettings: Equatable, Codable, Sendable {
     public var usesDominantColor = false
     /// Quitting puts the user's preferences back. On by default.
     public var restoresOnQuit = true
+    /// The Dock restarts by itself once a new icon or folder colour settles, so it shows it. On by
+    /// default; off, Settings offers a button instead.
+    public var restartsDockAutomatically = true
 
     public init() {}
 
@@ -30,6 +33,7 @@ public struct ThemingSettings: Equatable, Codable, Sendable {
 
     enum CodingKeys: String, CodingKey {
         case isEnabled, menuBar, accentColor, tintedIcons, folderColor, usesDominantColor, restoresOnQuit
+        case restartsDockAutomatically
     }
 
     /// Reads each key on its own: a missing or unreadable one keeps its default.
@@ -46,5 +50,6 @@ public struct ThemingSettings: Equatable, Codable, Sendable {
         read(.folderColor, &folderColor)
         read(.usesDominantColor, &usesDominantColor)
         read(.restoresOnQuit, &restoresOnQuit)
+        read(.restartsDockAutomatically, &restartsDockAutomatically)
     }
 }

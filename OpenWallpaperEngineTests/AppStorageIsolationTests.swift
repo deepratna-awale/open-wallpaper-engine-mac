@@ -30,6 +30,19 @@ final class AppStorageIsolationTests: XCTestCase {
         XCTAssertEqual(DockBadge.kind(isIsolated: false, isReleaseBuild: true), .none)
     }
 
+    /// Every badge is the system one, so the Dock keeps drawing the real, appearance-aware icon.
+    @MainActor
+    func testTheDockBadgeKeepsTheSystemIcon() {
+        let tile = NSApp.dockTile
+        defer { DockBadge.current.apply(to: tile) }
+        let expected: [(DockBadge, String?)] = [(.none, nil), (.test, "TEST"), (.dev, "Dev")]
+        for (kind, label) in expected {
+            kind.apply(to: tile)
+            XCTAssertNil(tile.contentView, "\(kind)")
+            XCTAssertEqual(tile.badgeLabel, label, "\(kind)")
+        }
+    }
+
     func testDefaultLocationsLiveInTheIsolatedStore() {
         let store = AppStorageLocation.current
         XCTAssertTrue(SafeRestartStore.defaultFileURL.path.hasPrefix(store.supportDirectory.path))

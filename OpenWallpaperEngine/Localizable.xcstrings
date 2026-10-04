@@ -11721,100 +11721,6 @@
         }
       }
     },
-    "Apply Now (Restarts Dock)" : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تطبيق الآن (يعيد تشغيل Dock)"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jetzt anwenden (startet das Dock neu)"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aplicar ahora (reinicia el Dock)"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Appliquer maintenant (redémarre le Dock)"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "अभी लागू करें (Dock रीस्टार्ट होगा)"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Applica ora (riavvia il Dock)"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "今すぐ適用（Dockを再起動）"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "지금 적용(Dock 재시작)"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zastosuj teraz (uruchamia ponownie Dock)"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aplicar Agora (Reinicia o Dock)"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Применить сейчас (перезапускает Dock)"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Şimdi Uygula (Dock’u Yeniden Başlatır)"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Застосувати зараз (перезапускає Dock)"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "立即应用（重新启动程序坞）"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "立即套用（重新啟動 Dock）"
-          }
-        }
-      }
-    },
     "Apply this preset's properties" : {
       "comment" : "Help for the Apply button of a wallpaper preset",
       "localizations" : {
@@ -40134,6 +40040,100 @@
         }
       }
     },
+    "Fills the top of the wallpaper behind the menu bar, and of the desktop picture Open Wallpaper Engine sets, with the color; the transparent menu bar shows it." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يملأ أعلى الخلفية خلف شريط القائمة، وأعلى صورة سطح المكتب التي يضبطها Open Wallpaper Engine، باللون؛ ويُظهره شريط القائمة الشفاف."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Füllt den oberen Rand des Hintergrundbilds hinter der Menüleiste und des Schreibtischbilds, das Open Wallpaper Engine festlegt, mit der Farbe; die transparente Menüleiste zeigt sie."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rellena con el color la parte superior del fondo de pantalla detrás de la barra de menús y de la imagen de escritorio que define Open Wallpaper Engine; la barra de menús transparente lo muestra."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remplit avec la couleur le haut du fond d'écran derrière la barre des menus, et de l'image du bureau définie par Open Wallpaper Engine ; la barre des menus transparente l'affiche."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मेनू बार के पीछे वॉलपेपर के ऊपरी हिस्से, और Open Wallpaper Engine द्वारा सेट की गई डेस्कटॉप तस्वीर के ऊपरी हिस्से को रंग से भरता है; पारदर्शी मेनू बार उसे दिखाता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riempie con il colore la parte superiore dello sfondo dietro la barra dei menu e dell'immagine della scrivania impostata da Open Wallpaper Engine; la barra dei menu trasparente lo mostra."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メニューバーの背後にある壁紙の上部と、Open Wallpaper Engine が設定するデスクトップピクチャの上部をその色で塗りつぶします。透明なメニューバーにその色が表示されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "메뉴 막대 뒤의 배경화면 상단과 Open Wallpaper Engine이 설정한 데스크탑 사진의 상단을 색상으로 채웁니다. 투명한 메뉴 막대에 그 색상이 보입니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wypełnia kolorem górę tapety za paskiem menu oraz obrazka biurka ustawianego przez Open Wallpaper Engine; przezroczysty pasek menu go pokazuje."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preenche com a cor o topo do papel de parede atrás da barra de menus e da imagem da mesa definida pelo Open Wallpaper Engine; a barra de menus transparente a mostra."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заливает цветом верх обоев за строкой меню и верх картинки рабочего стола, которую задаёт Open Wallpaper Engine; прозрачная строка меню показывает его."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menü çubuğunun arkasındaki duvar kâğıdının ve Open Wallpaper Engine'in ayarladığı masaüstü resminin üst kısmını renkle doldurur; saydam menü çubuğu bunu gösterir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заливає кольором верх шпалер за рядком меню та верх зображення робочого столу, яке задає Open Wallpaper Engine; прозорий рядок меню показує його."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用该颜色填充菜单栏后方墙纸的顶部，以及 Open Wallpaper Engine 设定的桌面图片的顶部；透明的菜单栏会显示它。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用該顏色填滿選單列後方背景圖片的頂部，以及 Open Wallpaper Engine 設定的桌面圖片的頂部；透明的選單列會顯示它。"
+          }
+        }
+      }
+    },
     "FPS" : {
       "localizations" : {
         "ar" : {
@@ -41362,100 +41362,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "填滿螢幕"
-          }
-        }
-      }
-    },
-    "Fills the menu bar's strip of the desktop picture Open Wallpaper Engine sets with the color; the translucent menu bar shows it. Needs Show Wallpaper on Lock Screen for scenes, or Adjust Menu Bar Color for video and web wallpapers." : {
-      "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "يملأ شريط القائمة في صورة سطح المكتب التي يضبطها Open Wallpaper Engine باللون، فيظهر عبر شريط القائمة الشفاف. يتطلب «عرض الخلفية على شاشة القفل» للمشاهد، أو «ضبط لون شريط القائمة» لخلفيات الفيديو والويب."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Füllt den Streifen der Menüleiste im Schreibtischbild, das Open Wallpaper Engine setzt, mit der Farbe; die durchscheinende Menüleiste zeigt sie. Braucht „Hintergrundbild auf dem Sperrbildschirm zeigen“ für Szenen oder „Menüleistenfarbe anpassen“ für Video- und Web-Hintergrundbilder."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rellena con el color la franja de la barra de menús en la imagen de escritorio que establece Open Wallpaper Engine; la barra de menús translúcida la muestra. Necesita «Mostrar el fondo de pantalla en la pantalla bloqueada» para escenas, o «Ajustar color de la barra de menús» para fondos de vídeo y web."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remplit de la couleur la bande de la barre des menus dans l’image du bureau que définit Open Wallpaper Engine ; la barre des menus translucide l’affiche. Nécessite « Afficher le fond d'écran sur l'écran verrouillé » pour les scènes, ou « Ajuster la couleur de la barre des menus » pour les fonds vidéo et web."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Wallpaper Engine जो डेस्कटॉप चित्र सेट करता है, उसमें मेनू बार वाली पट्टी को इस रंग से भरता है; पारदर्शी मेनू बार उसे दिखाता है। सीन के लिए “लॉक स्क्रीन पर वॉलपेपर दिखाएँ” या वीडियो और वेब वॉलपेपर के लिए “मेनू बार का रंग एडजस्ट करें” चालू होना चाहिए।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Riempie con il colore la fascia della barra dei menu nell’immagine della scrivania impostata da Open Wallpaper Engine; la barra dei menu traslucida la mostra. Richiede «Mostra lo sfondo nella schermata di blocco» per le scene, o «Adatta il colore della barra dei menu» per gli sfondi video e web."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Wallpaper Engineが設定するデスクトップピクチャのメニューバー部分をこのカラーで塗ります。半透明のメニューバーに反映されます。シーンには「ロック画面に壁紙を表示」、ビデオとWebの壁紙には「メニューバーの色を調整」が必要です。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Wallpaper Engine이 설정하는 데스크탑 사진의 메뉴 막대 부분을 이 색상으로 채웁니다. 반투명한 메뉴 막대에 비쳐 보입니다. 장면에는 '잠금 화면에 배경화면 표시', 비디오와 웹 배경화면에는 '메뉴 막대 색상 조정'이 필요합니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wypełnia kolorem pas paska menu na obrazku biurka ustawianym przez Open Wallpaper Engine; półprzezroczysty pasek menu go pokazuje. Wymaga opcji „Pokazuj tapetę na ekranie blokady” dla scen lub „Dostosuj kolor paska menu” dla tapet wideo i web."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Preenche com a cor a faixa da barra de menus na imagem da mesa que o Open Wallpaper Engine define; a barra de menus translúcida a mostra. Requer “Mostrar Papel de Parede na Tela Bloqueada” para cenas, ou “Ajustar Cor da Barra de Menus” para papéis de parede de vídeo e web."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Заливает цветом полосу строки меню на картинке рабочего стола, которую устанавливает Open Wallpaper Engine; полупрозрачная строка меню её показывает. Нужно «Показывать обои на экране блокировки» для сцен или «Подстраивать цвет строки меню» для видео- и веб-обоев."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Wallpaper Engine’in ayarladığı masaüstü resminde menü çubuğuna denk gelen şeridi bu renkle doldurur; yarı saydam menü çubuğu onu gösterir. Sahneler için “Duvar Kâğıdını Kilit Ekranında Göster”, video ve web duvar kâğıtları için “Menü Çubuğu Rengini Ayarla” gerekir."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Заливає кольором смугу смуги меню на зображенні робочого столу, яке встановлює Open Wallpaper Engine; напівпрозора смуга меню його показує. Потрібно «Показувати шпалери на екрані блокування» для сцен або «Коригувати колір смуги меню» для відео- та вебшпалер."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "用此颜色填充 Open Wallpaper Engine 所设桌面图片中菜单栏所在的条带，半透明的菜单栏会显示出来。场景需要“在锁定屏幕上显示壁纸”，视频和网页墙纸需要“调整菜单栏颜色”。"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "以此顏色填滿 Open Wallpaper Engine 所設桌面圖片中選單列所在的條帶，半透明的選單列會顯示出來。場景需要「在鎖定畫面上顯示桌布」，影片和網頁背景圖片需要「調整選單列顏色」。"
           }
         }
       }
@@ -102649,6 +102555,100 @@
         }
       }
     },
+    "Restart Dock" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة تشغيل Dock"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock neu starten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reiniciar el Dock"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redémarrer le Dock"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock फिर से शुरू करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riavvia il Dock"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock を再起動"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock 재시작"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uruchom ponownie Dock"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reiniciar o Dock"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перезапустить Dock"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock'u yeniden başlat"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перезапустити Dock"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新启动程序坞"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新啟動 Dock"
+          }
+        }
+      }
+    },
     "Restart Now" : {
       "localizations" : {
         "ar" : {
@@ -102833,6 +102833,194 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "當機後重新啟動"
+          }
+        }
+      }
+    },
+    "Restart the Dock automatically" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة تشغيل Dock تلقائيًا"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock automatisch neu starten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reiniciar el Dock automáticamente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redémarrer le Dock automatiquement"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock को अपने-आप फिर से शुरू करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riavvia automaticamente il Dock"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock を自動的に再起動"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock 자동으로 재시작"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatycznie uruchamiaj ponownie Dock"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reiniciar o Dock automaticamente"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Автоматически перезапускать Dock"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock'u otomatik olarak yeniden başlat"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Автоматично перезапускати Dock"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动重新启动程序坞"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動重新啟動 Dock"
+          }
+        }
+      }
+    },
+    "Restart the Dock automatically to apply icon and folder colors" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة تشغيل Dock تلقائيًا لتطبيق ألوان الأيقونات والمجلدات"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock automatisch neu starten, um Symbol- und Ordnerfarben anzuwenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reiniciar el Dock automáticamente para aplicar los colores de iconos y carpetas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redémarrer le Dock automatiquement pour appliquer les couleurs des icônes et des dossiers"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आइकन और फ़ोल्डर रंग लागू करने के लिए Dock को अपने-आप फिर से शुरू करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riavvia automaticamente il Dock per applicare i colori di icone e cartelle"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アイコンとフォルダの色を適用するために Dock を自動的に再起動"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아이콘 및 폴더 색상을 적용하기 위해 Dock 자동으로 재시작"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatycznie uruchamiaj ponownie Dock, aby zastosować kolory ikon i folderów"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reiniciar o Dock automaticamente para aplicar as cores de ícones e pastas"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Автоматически перезапускать Dock для применения цвета значков и папок"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Simge ve klasör renklerini uygulamak için Dock'u otomatik olarak yeniden başlat"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Автоматично перезапускати Dock для застосування кольору іконок і папок"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动重新启动程序坞以应用图标和文件夹颜色"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動重新啟動 Dock 以套用圖像和檔案夾顏色"
           }
         }
       }
@@ -128881,6 +129069,194 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dock 重新啟動後，Dock 和圖像會顯示新的樣式或色調。你的視窗會保持開啟。"
+          }
+        }
+      }
+    },
+    "The Dock briefly reloads once the color stops changing. Your windows stay open." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يُعاد تحميل Dock لفترة وجيزة بعد توقف تغيّر اللون. تبقى نوافذك مفتوحة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Dock lädt kurz neu, sobald sich die Farbe nicht mehr ändert. Deine Fenster bleiben geöffnet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El Dock se recarga brevemente cuando el color deja de cambiar. Tus ventanas siguen abiertas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le Dock se recharge brièvement une fois que la couleur ne change plus. Vos fenêtres restent ouvertes."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "रंग बदलना रुकने पर Dock थोड़ी देर के लिए फिर से लोड होता है। आपकी विंडो खुली रहती हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il Dock si ricarica brevemente quando il colore smette di cambiare. Le finestre restano aperte."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "色の変更が止まると Dock が一瞬再読み込みされます。ウインドウは開いたままです。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "색상 변경이 멈추면 Dock이 잠시 다시 로드됩니다. 윈도우는 열린 상태로 유지됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock na chwilę się przeładuje, gdy kolor przestanie się zmieniać. Okna pozostaną otwarte."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Dock recarrega por um instante quando a cor para de mudar. Suas janelas continuam abertas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock ненадолго перезагрузится, когда цвет перестанет меняться. Окна останутся открытыми."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renk değişmeyi bıraktığında Dock kısa süreliğine yeniden yüklenir. Pencereleriniz açık kalır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock ненадовго перезавантажиться, коли колір перестане змінюватися. Вікна залишаться відкритими."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "颜色停止变化后，程序坞会短暂重新载入。你的窗口保持打开。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顏色停止變化後，Dock 會短暫重新載入。你的視窗會保持開啟。"
+          }
+        }
+      }
+    },
+    "The Dock shows a new icon style or tint only once it starts again. It restarts 1.5 seconds after the last change, and not at all when the colors are unchanged." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يعرض Dock نمط الأيقونات أو لونها الجديد إلا بعد إعادة تشغيله. يُعاد تشغيله بعد 1.5 ثانية من آخر تغيير، ولا يُعاد تشغيله إطلاقًا إذا لم تتغير الألوان."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Dock zeigt einen neuen Symbolstil oder Farbton erst nach einem Neustart. Es startet 1,5 Sekunden nach der letzten Änderung neu und gar nicht, wenn die Farben unverändert sind."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El Dock muestra un nuevo estilo o tono de iconos solo cuando se vuelve a iniciar. Se reinicia 1,5 segundos después del último cambio, y nunca si los colores no cambian."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le Dock n'affiche un nouveau style ou une nouvelle teinte d'icônes qu'après avoir redémarré. Il redémarre 1,5 seconde après la dernière modification, et pas du tout si les couleurs sont inchangées."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock नई आइकन शैली या रंगत तभी दिखाता है जब वह फिर से शुरू होता है। यह आख़िरी बदलाव के 1.5 सेकंड बाद फिर से शुरू होता है, और रंग न बदलने पर बिल्कुल नहीं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il Dock mostra un nuovo stile o tinta delle icone solo quando si riavvia. Si riavvia 1,5 secondi dopo l'ultima modifica, e mai se i colori non cambiano."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock は再起動したときにのみ新しいアイコンのスタイルや色合いを表示します。最後の変更から1.5秒後に再起動し、色が変わっていなければ再起動しません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock은 다시 시작될 때만 새 아이콘 스타일이나 색조를 표시합니다. 마지막 변경 후 1.5초 뒤에 재시작하며, 색상이 바뀌지 않았으면 재시작하지 않습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock pokazuje nowy styl lub odcień ikon dopiero po ponownym uruchomieniu. Uruchamia się ponownie 1,5 sekundy po ostatniej zmianie, a wcale, gdy kolory się nie zmieniły."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Dock só mostra um novo estilo ou tom de ícones quando reinicia. Ele reinicia 1,5 segundo após a última alteração, e não reinicia se as cores não mudarem."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock показывает новый стиль или оттенок значков только после перезапуска. Он перезапускается через 1,5 секунды после последнего изменения и не перезапускается, если цвета не изменились."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock yeni simge stilini veya tonunu yalnızca yeniden başladığında gösterir. Son değişiklikten 1,5 saniye sonra yeniden başlar; renkler değişmediyse hiç başlamaz."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock показує новий стиль або відтінок іконок лише після перезапуску. Він перезапускається через 1,5 секунди після останньої зміни і не перезапускається, якщо кольори не змінилися."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "程序坞只有在重新启动后才会显示新的图标样式或色调。它会在最后一次更改 1.5 秒后重新启动，颜色未变时则不会重新启动。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock 只有在重新啟動後才會顯示新的圖像樣式或色調。它會在最後一次更改 1.5 秒後重新啟動，顏色未變時則不會重新啟動。"
           }
         }
       }

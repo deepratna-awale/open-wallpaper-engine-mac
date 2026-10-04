@@ -37,6 +37,22 @@ public enum SystemAppearanceChange: Hashable, Sendable, CaseIterable {
     /// `AppleColorPreferencesChangedNotification`, which System Settings posts and AppKit observes.
     case colorPreferences
     /// The icon style or tint. SkyLight applies it to the Dock and Finder; there is no public
-    /// notification, so the Dock picks it up when it restarts ("Apply now").
+    /// notification, so the Dock picks it up when it restarts (`DockRestartScheduler`).
     case iconAppearance
+
+    /// The distributed notifications posted, in order, once the values are stored: what System
+    /// Settings › Appearance posts for an accent or highlight change (the names in its binaries,
+    /// docs/theming.md). AppKit re-reads the accent colour on `AppleAquaColorVariantChanged`, the
+    /// highlight colour on `AppleColorPreferencesChangedNotification`, and redraws its dynamic
+    /// colours on `AppleInterfaceThemeChangedNotification`. Without them running apps keep the old
+    /// colours until System Settings next opens and posts them.
+    public var notificationNames: [String] {
+        switch self {
+        case .colorPreferences:
+            return ["AppleAquaColorVariantChanged", "AppleColorPreferencesChangedNotification",
+                    "AppleInterfaceThemeChangedNotification"]
+        case .iconAppearance:
+            return []
+        }
+    }
 }
