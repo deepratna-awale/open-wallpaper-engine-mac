@@ -113,6 +113,7 @@ La première compilation depuis les sources télécharge le paquet Swift Sparkle
 
 ### Workshop et bibliothèque
 - Les filtres Workshop de Wallpaper Engine : Afficher uniquement, un filtre de résolution, des genres combinés en ET/OU et des tags sur chaque carte.
+- **Aperçus animés** — les vignettes des fonds d’écran de la bibliothèque lisent leur animation d’aperçu Workshop (GIF), pour voir un fond d’écran bouger avant de l’appliquer. Elles ne sont lues que lorsqu’elles sont visibles, et se mettent en pause lorsque la fenêtre est masquée ou en mode Économie d’énergie.
 - Les fonds d’écran installés affichent leurs tags Workshop et peuvent être filtrés par ces tags ; les éléments qui ne sont que des ressources ou des dépendances restent hors de Installés.
 - Les dépendances Workshop manquantes sont téléchargées automatiquement, et celles devenues inutiles sont supprimées après une suppression. Chaque téléchargement arrive dans le dossier Stockage des fonds d’écran.
 - **Réinitialiser** dans Détails rétablit les propriétés d’un fond d’écran, ainsi que ses modifications dans l’inspecteur de scène, aux valeurs par défaut choisies par son auteur.

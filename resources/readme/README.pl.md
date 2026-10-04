@@ -113,6 +113,7 @@ Pierwsza kompilacja ze źródeł pobiera pakiet Swift Sparkle. Wersje zbudowane 
 
 ### Warsztat i biblioteka
 - Filtry Warsztatu z Wallpaper Engine: Pokaż tylko, filtr rozdzielczości, gatunki łączone przez I/LUB oraz tagi na każdej karcie.
+- **Animowane podglądy** — kafelki tapet w bibliotece odtwarzają animację podglądu z Warsztatu (GIF), więc tapetę można zobaczyć w ruchu przed jej zastosowaniem. Są odtwarzane tylko wtedy, gdy są widoczne, i wstrzymują się, gdy okno jest ukryte lub włączony jest tryb niskiego zużycia energii.
 - Zainstalowane tapety pokazują swoje tagi z Warsztatu i można je według nich filtrować; elementy zawierające wyłącznie zasoby lub zależności nie trafiają do sekcji Zainstalowane.
 - Brakujące zależności z Warsztatu są pobierane automatycznie, a nieużywane są usuwane po usunięciu tapety. Każde pobranie trafia do folderu Magazyn tapet.
 - **Resetuj** w Szczegółach przywraca właściwości tapety, a także jej zmiany w inspektorze sceny, do wartości domyślnych ustawionych przez autora.

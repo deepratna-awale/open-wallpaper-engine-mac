@@ -96,8 +96,25 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private var workshopPreviewWindow: NSWindow?
     private var workshopPreviewViewModel: WallpaperViewModel?
     var sceneInspectorWindow: NSWindow?
-    /// The open Wallpaper Editor windows, one per wallpaper folder.
-    var wallpaperEditors: [URL: WallpaperEditorController] = [:]
+    /// The Wallpaper Editor, a process of its own (`WallpaperEditorAppDelegate`): opening a
+    /// wallpaper in it, and its edits reaching the wallpapers running here.
+    private(set) lazy var wallpaperEditorLauncher: WallpaperEditorLauncher = {
+        let launcher = WallpaperEditorLauncher(dependencies: .init(messaging: processMessaging, channel: .current))
+        launcher.onLaunchFailure = { error in
+            let alert = NSAlert()
+            alert.messageText = String(localized: "The Wallpaper Editor couldn’t be opened.")
+            alert.informativeText = error.localizedDescription
+            alert.runModal()
+        }
+        return launcher
+    }()
+    private lazy var editorChangeSync: WallpaperEditorChangeSync = {
+        let sync = WallpaperEditorChangeSync(role: .app, dependencies: .init(messaging: processMessaging, channel: .current))
+        sync.onLibraryChange = { [weak self] in self?.contentViewModel.refresh() }
+        sync.onOpenSettings = { [weak self] in self?.openSettings(for: $0) }
+        return sync
+    }()
+    private lazy var processMessaging: AppProcessMessaging = DistributedAppProcessMessaging()
 
     var contentViewModel = ContentViewModel()
     var wallpaperViewModel = WallpaperViewModel()
@@ -169,9 +186,27 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     
     var eventHandler: Any?
     
-    static var shared = AppDelegate()
+    private static let instance = AppDelegate()
+    /// Open Wallpaper Engine's delegate, made on first use. Never in the Wallpaper Editor's process
+    /// (`AppLaunchPlan`), whose code reaches the app through `WallpaperEditorChangeSync` instead.
+    static var shared: AppDelegate {
+        sharedAccessProbe?()
+        return instance
+    }
+    /// Told of every use of `shared` (tests: the editor's services never reach the app's delegate).
+    static var sharedAccessProbe: (() -> Void)?
+
+    override init() {
+        super.init()
+        OWELog.info(.app, "AppDelegate created (pid \(ProcessInfo.processInfo.processIdentifier))")
+        if AppLaunchMode.parse(CommandLine.arguments).isWallpaperEditor {
+            OWELog.error(.app, "AppDelegate created in the Wallpaper Editor's process: something there reached AppDelegate.shared")
+        }
+    }
     
     func applicationWillFinishLaunching(_ notification: Notification) {
+        // Animated previews are built in now; the old plugin's on/off is dropped.
+        ThumbnailAnimation.removeRetiredPreference(from: .app)
 
         workshopDependencyCancellable = wallpaperViewModel.$wallpapers.sink { [weak self] wallpapers in
             for wallpaper in wallpapers.values {
@@ -207,6 +242,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Before the wallpaper windows exist, so a wallpaper behind an unclean exit never loads.
         safeRestart.attach(to: wallpaperViewModel)
 
+        // The Wallpaper Editor's process: what it saves reaches the wallpapers running here.
+        wallpaperEditorLauncher.start()
+        editorChangeSync.start(watch: true) { [weak self] in
+            guard let self else { return [] }
+            var folders = self.wallpaperViewModel.wallpapers.values.map(\.wallpaperDirectory)
+            if let preview = self.workshopPreviewViewModel { folders.append(preview.currentWallpaper.wallpaperDirectory) }
+            return folders
+        }
+
         // Settings › Process Priority: at launch, before any render thread starts, and on change.
         processPriorityCancellable = globalSettingsViewModel.$settings.map(\.processPiority).removeDuplicates()
             .sink { ProcessPriority.apply($0) }
@@ -216,6 +260,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         // 创建设置视窗
         setSettingsWindow()
+        // Launched by the Wallpaper Editor on a Settings page (WE's assets, the depth map model).
+        if let request = AppSettingsRequest.requested(by: CommandLine.arguments) {
+            DispatchQueue.main.async { [weak self] in self?.openSettings(for: request) }
+        }
         
         // 创建桌面壁纸视窗
         setWallpaperWindows()
@@ -393,6 +441,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// Settings › Assets, where the assets scenes need are installed.
     @objc func openAssetsSettings() {
         openSettings(.assets, anchor: SettingsAnchor.assets)
+    }
+
+    /// The Settings page the Wallpaper Editor asked for.
+    func openSettings(for request: AppSettingsRequest) {
+        switch request {
+        case .assets: openAssetsSettings()
+        case .depthMaps: openSettings(.plugins, anchor: SettingsAnchor.depthMaps)
+        }
     }
 
     /// The Workshop tab, where Steam's login form is.

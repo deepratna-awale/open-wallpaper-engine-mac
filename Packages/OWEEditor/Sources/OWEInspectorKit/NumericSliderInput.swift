@@ -88,10 +88,14 @@ public struct NumericSliderInput<Value: BinaryFloatingPoint>: View where Value.S
             .frame(width: sliderWidth)
             .onTapGesture(count: 2) { value = defaultValue }
 
-            HStack(spacing: 2) {
+            // The number and its unit share one baseline and never give up width: squeezed by a
+            // narrow inspector or a long localized label, the unsized unit label wrapped and the
+            // centred stack set the number above it. The slider is what shrinks instead.
+            HStack(alignment: .firstTextBaseline, spacing: 2) {
                 TextField("", text: $text)
                     .focused($isEditing)
                     .multilineTextAlignment(.trailing)
+                    .monospacedDigit()
                     .frame(width: fieldWidth)
                     .onChange(of: text) { _, newText in
                         if isEditing { commit(newText) }
@@ -103,9 +107,14 @@ public struct NumericSliderInput<Value: BinaryFloatingPoint>: View where Value.S
                     .onKeyPress(.upArrow) { nudge(1); return .handled }
                     .onKeyPress(.downArrow) { nudge(-1); return .handled }
                 if !suffix.isEmpty {
-                    Text(suffix).foregroundStyle(.secondary)
+                    Text(verbatim: suffix)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .fixedSize()
                 }
             }
+            .fixedSize()
+            .layoutPriority(1)
         }
         .onAppear { text = formatted(displayedValue) }
         .onChange(of: value) { _, _ in

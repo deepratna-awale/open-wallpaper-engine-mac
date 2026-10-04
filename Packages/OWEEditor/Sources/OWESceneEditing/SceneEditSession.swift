@@ -98,6 +98,13 @@ public final class SceneEditSession: ObservableObject {
         if let editing = editingText, outline.layer(editing) == nil { editingText = nil }
     }
 
+    /// What `baseOutline` is for a session over `sceneData` with `overlay`: the scene with the
+    /// structural edits only. A wallpaper running in another process than the editor's measures
+    /// the editor's overlay against it (`SceneEditLiveValues`).
+    public static func baseOutline(sceneData: Data, overlay: SceneEditOverlay) throws -> SceneOutline {
+        try outline(of: sceneData, with: overlay.structureOnly)
+    }
+
     static func outline(of data: Data, with overlay: SceneEditOverlay) throws -> SceneOutline {
         guard var root = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             throw SceneEditOverlayError.notAScene
@@ -358,7 +365,10 @@ public final class SceneEditSession: ObservableObject {
         let previous = overlay
         overlay = next
         refreshOutlines(from: previous)
-        onChange?(next)
+        // Scene settings follow from the layers (depth parallax needs camera parallax); they
+        // leave the outline as it is.
+        overlay = settlingDepthParallaxCamera(next)
+        onChange?(overlay)
     }
 
     private func registerUndo(restoring snapshot: SceneEditOverlay, actionName: String) {

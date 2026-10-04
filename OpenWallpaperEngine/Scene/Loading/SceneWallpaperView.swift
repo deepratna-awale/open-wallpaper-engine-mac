@@ -21,9 +21,13 @@ struct SceneWallpaperView: NSViewRepresentable {
     func makeNSView(context: Context) -> MTKView {
         let view = SceneRenderLoop.makeView()
         let wallpaper = wallpaperViewModel.wallpaper(for: screenId)
+        // The editor's process brings its own; anywhere else the scene runs with the app's.
+        let host = wallpaperViewModel.sceneHost
+            ?? SceneWallpaperHost(settings: AppDelegate.shared.globalSettingsViewModel,
+                                  scriptServices: AppDelegate.shared.sceneScriptServices)
         let environment = SceneWallpaperEnvironment(wallpapers: wallpaperViewModel,
-                                                    settings: AppDelegate.shared.globalSettingsViewModel,
-                                                    scriptServices: AppDelegate.shared.sceneScriptServices,
+                                                    settings: host.settings,
+                                                    scriptServices: host.scriptServices,
                                                     loadingSnapshots: wallpaperViewModel.loadingSnapshots)
         let screenId = screenId
         let key = wallpaperViewModel.instanceKey(for: screenId)
