@@ -16,6 +16,11 @@ struct DisplaySettings: SubviewOfContentView {
         self.wallpaperViewModel = AppDelegate.shared.wallpaperViewModel
     }
 
+    /// Every display that shows a wallpaper, a split display's regions in its place.
+    private var allDisplays: Set<String> {
+        Set(wallpaperViewModel.layoutResolution.shownDisplays(NSScreen.screens.map(WallpaperViewModel.screenId(for:))))
+    }
+
     var body: some View {
         VStack(spacing: 16) {
             Text("Display Settings")
@@ -26,31 +31,35 @@ struct DisplaySettings: SubviewOfContentView {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
-            // WE's layouts; stretching comes later, so it can't be chosen yet.
-            Picker("Layout", selection: Binding(
-                get: { wallpaperViewModel.displayLayout.layout },
-                set: { layout in if layout != .stretch { wallpaperViewModel.setLayout(layout) } }
-            )) {
-                Text("Wallpaper per display").tag(DisplayLayoutMode.perDisplay)
-                Text("Stretch single wallpaper (Coming soon)").tag(DisplayLayoutMode.stretch)
-                    .selectionDisabled()
-                Text("Clone single wallpaper").tag(DisplayLayoutMode.clone)
+            // WE's layouts, and its profiles of the whole layout.
+            HStack(spacing: 12) {
+                Picker("Layout", selection: Binding(
+                    get: { wallpaperViewModel.displayLayout.layout },
+                    set: { wallpaperViewModel.setLayout($0) }
+                )) {
+                    Text("Wallpaper per display").tag(DisplayLayoutMode.perDisplay)
+                    Text("Stretch single wallpaper").tag(DisplayLayoutMode.stretch)
+                    Text("Clone single wallpaper").tag(DisplayLayoutMode.clone)
+                }
+                .pickerStyle(.menu)
+                .fixedSize()
+                DisplayProfilesMenu(profiles: wallpaperViewModel.displayProfiles)
             }
-            .pickerStyle(.menu)
-            .fixedSize()
 
-            Text("Right-click a display to group it with the selected displays, choose the main clone display, flip a clone or mute a display.")
+            ScreenSaverLayoutPicker(layout: $wallpaperViewModel.screenSaverLayout)
+
+            Text("Right-click a display to stretch or clone it with the selected displays, split it, choose the main clone display, flip a clone or mute a display.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
             Toggle("All Desktops", isOn: Binding(
                 get: {
-                    let screenIds = Set(NSScreen.screens.map(WallpaperViewModel.screenId(for:)))
+                    let screenIds = allDisplays
                     return !screenIds.isEmpty && wallpaperViewModel.selectedScreenIds == screenIds
                 },
                 set: { selectAll in
-                    let screenIds = Set(NSScreen.screens.map(WallpaperViewModel.screenId(for:)))
+                    let screenIds = allDisplays
                     wallpaperViewModel.selectedScreenIds = selectAll ? screenIds : [wallpaperViewModel.selectedScreenId]
                 }
             ))
@@ -60,17 +69,19 @@ struct DisplaySettings: SubviewOfContentView {
             MonitorLayoutView(wallpaperViewModel: wallpaperViewModel)
                 .frame(maxHeight: 200)
 
-            // Selected screen info
-            if let screen = NSScreen.screens.first(where: { WallpaperViewModel.screenId(for: $0) == wallpaperViewModel.selectedScreenId }) {
+            // Selected screen info (a region of a split display shows its own size)
+            let selectedScreen = DisplayLayoutResolution.screen(of: wallpaperViewModel.selectedScreenId)
+            if let screen = NSScreen.screens.first(where: { WallpaperViewModel.screenId(for: $0) == selectedScreen }) {
                 let screenId = wallpaperViewModel.selectedScreenId
                 let wp = wallpaperViewModel.wallpaper(for: screenId)
+                let size = wallpaperViewModel.displayRect(of: screenId)?.size ?? screen.frame.size
 
                 GroupBox {
                     VStack(spacing: 8) {
                         HStack {
                             Text(WallpaperViewModel.screenName(for: screen))
                                 .font(.headline)
-                            Text(verbatim: "\(Int(screen.frame.width))×\(Int(screen.frame.height))")
+                            Text(verbatim: "\(Int(size.width))×\(Int(size.height))")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                             Spacer()
@@ -86,7 +97,7 @@ struct DisplaySettings: SubviewOfContentView {
                             HStack {
                                 DisplayWallpaperPicture(wallpaper: wp,
                                                         displayName: WallpaperViewModel.screenName(for: screen),
-                                                        displaySize: screen.frame.size,
+                                                        displaySize: size,
                                                         displayScale: screen.backingScaleFactor,
                                                         placement: wallpaperViewModel.wallpaperPlacement)
 
