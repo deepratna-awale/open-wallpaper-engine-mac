@@ -39,7 +39,7 @@ extension MCPToolCatalog {
                         "save_to_photos": JSONSchema.boolean("false leaves this export out of the Photos album. It can't turn the album on when the user's setting is off."),
                     ]), "The Export Settings."),
                     "output_folder": JSONSchema.string("An existing folder's absolute path to copy the photo and movie into (files of the same name are replaced).", minLength: 1),
-                ], required: ["wallpaper_id"]), annotations: .change) { message($0) },
+                ], required: ["wallpaper_id"]), annotations: .change, longRunning: true) { message($0) },
     ]
 
     // MARK: - Screen saver
@@ -67,7 +67,7 @@ extension MCPToolCatalog {
                 description: "\"Record and Set as Screen Saver\" from the Screen Saver mode: records a seamless loop of the scene's screen saver version and makes it the screen saver, waiting for the recording (this takes minutes). It turns the Screen Saver plugin on when it is off, as the mode does. The user picks \"Open Wallpaper Engine\" in System Settings › Screen Saver.",
                 input: JSONSchema.object([
                     "wallpaper_id": JSONSchema.string("A scene wallpaper's id from list_wallpapers.", minLength: 1),
-                ], required: ["wallpaper_id"]), annotations: .change) { message($0) },
+                ], required: ["wallpaper_id"]), annotations: .change, longRunning: true) { message($0) },
         MCPTool("screensaver_stop_using", title: "Stop Using as Screen Saver",
                 description: "\"Stop Using as Screen Saver\": the screen saver goes back to looping the desktop's wallpaper.",
                 annotations: .change) { message($0) },

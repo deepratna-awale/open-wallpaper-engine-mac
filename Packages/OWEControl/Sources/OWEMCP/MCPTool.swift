@@ -17,11 +17,14 @@ public struct MCPTool: Sendable {
     public let annotations: Annotations
     /// The result has a PNG (`png_base64`), returned as image content.
     let returnsImage: Bool
+    /// The app may take minutes to answer (a render, a recording, a depth map): the call waits
+    /// the channel's long-call time (`SocketControlChannel`, 15 minutes) instead of the usual one.
+    let isLongRunning: Bool
     /// A sentence saying what happened, from the app's result.
     let summary: @Sendable (JSONValue) -> String
 
     init(_ name: String, title: String, description: String, input: JSONValue = JSONSchema.object([:]),
-         annotations: Annotations = Annotations(), returnsImage: Bool = false,
+         annotations: Annotations = Annotations(), returnsImage: Bool = false, longRunning: Bool = false,
          summary: @escaping @Sendable (JSONValue) -> String) {
         self.name = name
         self.title = title
@@ -29,6 +32,7 @@ public struct MCPTool: Sendable {
         inputSchema = input
         self.annotations = annotations
         self.returnsImage = returnsImage
+        isLongRunning = longRunning
         self.summary = summary
     }
 

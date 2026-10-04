@@ -5,6 +5,14 @@ import OWEControlProtocol
 /// tests. Throws `ControlError` for what the app refused, anything else when it couldn't be reached.
 public protocol ControlChannel: AnyObject {
     func call(_ method: String, params: [String: JSONValue]) async throws -> JSONValue
+    /// A call the app may take minutes to answer (`MCPTool.isLongRunning`).
+    func call(_ method: String, params: [String: JSONValue], longRunning: Bool) async throws -> JSONValue
+}
+
+extension ControlChannel {
+    public func call(_ method: String, params: [String: JSONValue], longRunning: Bool) async throws -> JSONValue {
+        try await call(method, params: params)
+    }
 }
 
 /// The Model Context Protocol server: JSON-RPC 2.0 messages in, responses out, one line each
@@ -162,7 +170,7 @@ public final class MCPServer {
         // How the client takes the picture is owe-mcp's business, not the app's.
         let savesToFile = tool.returnsImage && forwarded.removeValue(forKey: "format")?.stringValue == "path"
         do {
-            var result = try await channel.call(name, params: forwarded)
+            var result = try await channel.call(name, params: forwarded, longRunning: tool.isLongRunning)
             if savesToFile { result = try savingPicture(result) }
             return Self.result(id: id, Self.toolResult(tool, result, protocolVersion: negotiatedVersion))
         } catch let error as ControlError {

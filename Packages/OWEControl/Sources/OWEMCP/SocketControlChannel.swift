@@ -20,18 +20,28 @@ public final class SocketControlChannel: ControlChannel {
     private let launcher: AppLaunching?
     private let launchTimeout: TimeInterval
     private let pollInterval: TimeInterval
+    private let responseTimeout: TimeInterval
+    /// How long a long-running call (an export, a recording) may take to answer.
+    private let longCallTimeout: TimeInterval
     private var nextID = 1
 
     public init(socketURL: URL, launcher: AppLaunching?, launchTimeout: TimeInterval = 30,
-                responseTimeout: TimeInterval = 120, pollInterval: TimeInterval = 0.25) {
+                responseTimeout: TimeInterval = 120, longCallTimeout: TimeInterval = 900, pollInterval: TimeInterval = 0.25) {
         client = ControlSocketClient(url: socketURL, timeout: responseTimeout)
+        self.responseTimeout = responseTimeout
+        self.longCallTimeout = longCallTimeout
         self.launcher = launcher
         self.launchTimeout = launchTimeout
         self.pollInterval = pollInterval
     }
 
     public func call(_ method: String, params: [String: JSONValue]) async throws -> JSONValue {
+        try await call(method, params: params, longRunning: false)
+    }
+
+    public func call(_ method: String, params: [String: JSONValue], longRunning: Bool) async throws -> JSONValue {
         try await connect()
+        client.timeout = longRunning ? longCallTimeout : responseTimeout
         let request = ControlRequest(id: nextID, method: method, params: params)
         nextID += 1
         let response: ControlResponse
