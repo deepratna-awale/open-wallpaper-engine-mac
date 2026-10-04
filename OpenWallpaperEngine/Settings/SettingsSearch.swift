@@ -114,7 +114,6 @@ struct SettingsSearch {
             entry("Log Level", .diagnostics, SettingsAnchor.developer),
             entry("Reset Config", .diagnostics, SettingsAnchor.reset),
 
-            entry("Animated Thumbnails", .plugins, SettingsAnchor.plugins),
             entry("Screen Saver", .plugins, SettingsAnchor.plugins),
             entry("Depth Map Generation", .plugins, SettingsAnchor.plugins),
             entry("Chromium web engine", .plugins, SettingsAnchor.chromium),

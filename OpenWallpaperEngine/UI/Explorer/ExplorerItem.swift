@@ -13,8 +13,9 @@ struct ExplorerItem: SubviewOfContentView {
     @ObservedObject var wallpaperViewModel: WallpaperViewModel
     @ObservedObject var safeRestart = AppDelegate.shared.safeRestart
     
-    @AppStorage("TestAnimates", store: .app) var animates = false
-    
+    @ObservedObject var lowPowerMode = LowPowerModeState.shared
+    @State var isHovered = false
+
     var wallpaper: WEWallpaper
     var index: Int
     
@@ -43,7 +44,9 @@ struct ExplorerItem: SubviewOfContentView {
             // switches slow.
             GifImage(contentsOf: wallpaper.previewURL
                         ?? AppBundleLayout.wallpaperNotFoundURL,
-                     animates: animates && viewModel.isApplicationActive)
+                     animates: ThumbnailAnimation.plays(isAppActive: viewModel.isApplicationActive,
+                                                        isLowPowerMode: lowPowerMode.isEnabled,
+                                                        isHovered: isHovered))
             .resizable()
             .scaleEffect((viewModel.imageScaleIndex == index ? 1.2 : 1.0) * 1.08)
             .aspectRatio(1.0, contentMode: .fill)
@@ -75,6 +78,7 @@ struct ExplorerItem: SubviewOfContentView {
 //                    }
 //                }
         }
+        .onHover { isHovered = $0 }
         .help(tooltip)
         .selected(wallpaper.wallpaperDirectory == wallpaperViewModel.displayedWallpaper.wallpaperDirectory)
         .overlay(

@@ -44,14 +44,12 @@ final class EditorWallpaperResources {
     /// WE's built-in effects (`effects/*/effect.json` in its assets) and the Workshop effects the
     /// wallpaper's layers use.
     func effectCatalog(outline: SceneOutline) -> [EffectCatalogEntry] {
-        if catalog == nil {
+        // Read again until WE's assets are installed: the browser offers to install them.
+        if catalog?.isEmpty ?? true {
             var entries: [EffectCatalogEntry] = []
             for directory in WallpaperEngineAssets.searchDirectories {
-                let effects = directory.appending(path: "effects", directoryHint: .isDirectory)
-                let folders = (try? FileManager.default.contentsOfDirectory(at: effects, includingPropertiesForKeys: nil,
-                                                                             options: [.skipsHiddenFiles])) ?? []
-                for folder in folders where !folder.lastPathComponent.hasPrefix("_") {
-                    let file = "effects/\(folder.lastPathComponent)/effect.json"
+                for file in EffectCatalog.builtInEffectFiles(in: directory) {
+                    let folder = directory.appending(path: (file as NSString).deletingLastPathComponent, directoryHint: .isDirectory)
                     guard !entries.contains(where: { $0.file == file }),
                           let entry = entry(file, preview: Self.preview(in: folder), isWorkshop: false) else { continue }
                     entries.append(entry)
@@ -61,7 +59,11 @@ final class EditorWallpaperResources {
         }
         let builtIn = Set((catalog ?? []).map(\.folderName))
         let workshop = EffectCatalog.workshopEffects(in: outline, builtIn: builtIn).compactMap { file in
-            entry(file, preview: nil, isWorkshop: true)
+            entry(file, preview: nil, isWorkshop: true).map { entry in
+                var entry = entry
+                entry.wallpaperDirectory = wallpaper.wallpaperDirectory.path(percentEncoded: false)
+                return entry
+            }
         }
         return (catalog ?? []) + workshop
     }

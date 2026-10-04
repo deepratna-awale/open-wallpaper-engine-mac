@@ -38,6 +38,13 @@ final class WallpaperEditorChangeSync {
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) { MainActor.assumeIsolated(work) }
         }
         var now: () -> Date = Date.init
+        /// Whether Open Wallpaper Engine (isolated as this process is) runs.
+        var appIsRunning: () -> Bool = {
+            let app = AppBundleLayout.appIdentifier(for: Bundle.main.bundleIdentifier ?? AppStorageLocation.realBundleIdentifier)
+            return !AppProcessList.running(.main, bundleIdentifier: app).isEmpty
+        }
+        /// Launches Open Wallpaper Engine on its Settings › Assets.
+        var launchAppOnAssetsSettings: () -> Void = WallpaperEditorChangeSync.launchAppOnAssetsSettings
     }
 
     /// What the process applies of the other's messages.
@@ -49,8 +56,10 @@ final class WallpaperEditorChangeSync {
         static let refreshesLibrary = Role(rawValue: 1 << 1)
         /// User properties the other process saved (both).
         static let appliesProperties = Role(rawValue: 1 << 2)
+        /// Requests for Settings › Assets (the app).
+        static let opensAssetsSettings = Role(rawValue: 1 << 3)
 
-        static let app: Role = [.appliesEditorChanges, .refreshesLibrary, .appliesProperties]
+        static let app: Role = [.appliesEditorChanges, .refreshesLibrary, .appliesProperties, .opensAssetsSettings]
         static let editor: Role = [.appliesProperties]
     }
 
@@ -67,6 +76,8 @@ final class WallpaperEditorChangeSync {
     private var runningFolders: () -> [URL] = { [] }
     /// The library gained a wallpaper.
     var onLibraryChange: (() -> Void)?
+    /// The editor asked for Settings › Assets.
+    var onOpenAssetsSettings: (() -> Void)?
 
     private var identities: [URL: WallpaperSettingsIdentity] = [:]
     /// Each wallpaper's overlay as last applied here: a message and the folder watcher reporting
@@ -113,6 +124,9 @@ final class WallpaperEditorChangeSync {
         }
         if role.contains(.refreshesLibrary) {
             on(.libraryDidChange) { sync, _ in sync.onLibraryChange?() }
+        }
+        if role.contains(.opensAssetsSettings) {
+            on(.openAssetsSettings) { sync, _ in sync.onOpenAssetsSettings?() }
         }
         if role.contains(.appliesProperties) {
             on(.propertiesDidSave) { sync, folder in folder.map { sync.applySavedProperties(of: $0) } }
@@ -192,6 +206,29 @@ final class WallpaperEditorChangeSync {
     /// A wallpaper was added to the library.
     func libraryDidChange() {
         send(.libraryDidChange, folder: nil)
+    }
+
+    /// Shows the app's Settings › Assets: the running app's, else the app, launched to show it.
+    func openAssetsSettings() {
+        if dependencies.appIsRunning() {
+            send(.openAssetsSettings, folder: nil)
+        } else {
+            dependencies.launchAppOnAssetsSettings()
+        }
+    }
+
+    nonisolated static func launchAppOnAssetsSettings() {
+        let tag = AppStorageLocation.current.isolationTag
+        var arguments = [AppLaunchMode.openAssetsSettingsArgument]
+        var environment: [String: String] = [:]
+        if let tag {
+            arguments += [AppStorageLocation.argumentKey, tag]
+            environment[AppStorageLocation.environmentKey] = tag
+        }
+        let app = AppBundleLayout.appBundle.bundleURL
+        WallpaperEditorLauncher.openApp(at: app, arguments: arguments, environment: environment) { error in
+            if let error { OWELog.error(.ui, "Can't open Open Wallpaper Engine at \(app.path) on its Settings: \(error)") }
+        }
     }
 
     /// The editor window of `folder` closed: what it left for the other process goes.

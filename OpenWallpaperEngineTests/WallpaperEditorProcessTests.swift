@@ -397,6 +397,31 @@ final class WallpaperEditorProcessTests: XCTestCase {
         XCTAssertEqual(messaging.posted.filter { $0.name.rawValue.hasSuffix("properties.didSave") }.count, 1,
                        "the app doesn't send the change back")
     }
+
+    func testTheEditorOpensTheAppsAssetsSettingsOrLaunchesTheAppOnThem() {
+        let messaging = FakeProcessMessaging()
+        let app = makeSync(.app, sender: "app", messaging: messaging, local: NotificationCenter())
+        var opened = 0
+        app.onOpenAssetsSettings = { opened += 1 }
+        app.start()
+        var running = true, launched = 0
+        var dependencies = WallpaperEditorChangeSync.Dependencies(
+            messaging: messaging, channel: AppProcessChannel(isolationTag: "tests"), sender: "editor",
+            store: SceneEditOverlayStore(directory: storeDirectory), local: NotificationCenter(), defaults: defaults)
+        dependencies.appIsRunning = { running }
+        dependencies.launchAppOnAssetsSettings = { launched += 1 }
+        let editor = WallpaperEditorChangeSync(role: .editor, dependencies: dependencies)
+        editor.start()
+        defer { app.stop(); editor.stop() }
+
+        editor.openAssetsSettings()
+        XCTAssertEqual(opened, 1, "the running app shows Settings › Assets")
+        XCTAssertEqual(launched, 0)
+        running = false
+        editor.openAssetsSettings()
+        XCTAssertEqual(launched, 1, "an app that isn't running is launched on them")
+        XCTAssertEqual(opened, 1)
+    }
 }
 
 /// The distributed notification centre, in memory: every observer of a name hears each post.

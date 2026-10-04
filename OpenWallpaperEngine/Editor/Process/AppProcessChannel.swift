@@ -23,6 +23,8 @@ struct AppProcessChannel: Equatable {
         case openWallpaper = "editor.open"
         /// The editor process is ready for `openWallpaper`.
         case editorReady = "editor.ready"
+        /// Show the app's setup of WE's assets (Settings › Assets), which the editor's browsers offer.
+        case openAssetsSettings = "app.openAssetsSettings"
     }
 
     /// The `userInfo` key of the wallpaper's folder.

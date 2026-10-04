@@ -62,13 +62,16 @@ struct WallpaperExplorer: SubviewOfContentView {
                     VStack(spacing: 8) {
                         InstalledPagination(viewModel: viewModel)
                             .padding(.vertical, 8)
-                        Button {
-                            isCreatePlaylistPresented = true
-                        } label: {
-                            Label("Create Playlist", systemImage: "rectangle.stack.badge.plus")
+                        HStack(spacing: 8) {
+                            Button {
+                                isCreatePlaylistPresented = true
+                            } label: {
+                                Label("Create Playlist", systemImage: "rectangle.stack.badge.plus")
+                            }
+                            .glassButtonStyle()
+                            .disabled(viewModel.selectedWallpapers.isEmpty)
+                            EditWallpaperButton(wallpaperViewModel: wallpaperViewModel)
                         }
-                        .glassButtonStyle()
-                        .disabled(viewModel.selectedWallpapers.isEmpty)
                     }
                 }
                 .background(GeometryReader { footer in

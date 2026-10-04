@@ -111,6 +111,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private lazy var editorChangeSync: WallpaperEditorChangeSync = {
         let sync = WallpaperEditorChangeSync(role: .app, dependencies: .init(messaging: processMessaging, channel: .current))
         sync.onLibraryChange = { [weak self] in self?.contentViewModel.refresh() }
+        sync.onOpenAssetsSettings = { [weak self] in self?.openAssetsSettings() }
         return sync
     }()
     private lazy var processMessaging: AppProcessMessaging = DistributedAppProcessMessaging()
@@ -188,6 +189,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     static var shared = AppDelegate()
     
     func applicationWillFinishLaunching(_ notification: Notification) {
+        // Animated previews are built in now; the old plugin's on/off is dropped.
+        ThumbnailAnimation.removeRetiredPreference(from: .app)
 
         workshopDependencyCancellable = wallpaperViewModel.$wallpapers.sink { [weak self] wallpapers in
             for wallpaper in wallpapers.values {
@@ -241,6 +244,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         // 创建设置视窗
         setSettingsWindow()
+        // Launched by the Wallpaper Editor to set up WE's assets.
+        if CommandLine.arguments.contains(AppLaunchMode.openAssetsSettingsArgument) {
+            DispatchQueue.main.async { [weak self] in self?.openAssetsSettings() }
+        }
         
         // 创建桌面壁纸视窗
         setWallpaperWindows()

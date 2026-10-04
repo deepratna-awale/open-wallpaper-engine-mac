@@ -12,6 +12,8 @@ enum AppLaunchMode: Equatable {
     case wallpaperEditor(URL?)
 
     static let wallpaperEditorArgument = "--wallpaper-editor"
+    /// Opens Settings › Assets once the app has launched: the editor asks for it when the app isn't running.
+    static let openAssetsSettingsArgument = "--open-assets-settings"
 
     /// The mode of a process of `bundleIdentifier` launched with `arguments` (executable first):
     /// the editor's app is always the editor; the flag also runs the editor from the app's own
