@@ -2946,6 +2946,100 @@
         }
       }
     },
+    "A Live Photo moves for about 3 seconds; its photo is the middle frame." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تتحرك Live Photo لمدة 3 ثوانٍ تقريبًا، وصورتها هي الإطار الأوسط."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Live Photo bewegt sich etwa 3 Sekunden lang; das Foto ist das mittlere Bild."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una Live Photo se mueve durante unos 3 segundos; su foto es el fotograma central."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une Live Photo bouge pendant environ 3 secondes ; sa photo est l’image du milieu."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo लगभग 3 सेकंड चलती है; उसकी फ़ोटो बीच का फ़्रेम होती है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una Live Photo si muove per circa 3 secondi; la sua foto è il fotogramma centrale."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photoは約3秒間動きます。写真は中央のフレームです。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo는 약 3초간 움직이며, 사진은 가운데 프레임입니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo porusza się przez około 3 sekundy; jego zdjęcie to środkowa klatka."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uma Live Photo se move por cerca de 3 segundos; a foto é o quadro do meio."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo движется около 3 секунд; её фото — средний кадр."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bir Live Photo yaklaşık 3 saniye hareket eder; fotoğrafı ortadaki karedir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo рухається близько 3 секунд; її фото — середній кадр."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "实况照片的动态约为 3 秒；照片为中间一帧。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "原況照片的動態約為 3 秒；照片為中間一格。"
+          }
+        }
+      }
+    },
     "A Live Photo moves for up to 3 seconds; its photo is the sharpest frame near the middle." : {
       "localizations" : {
         "ar" : {
@@ -28530,6 +28624,100 @@
         }
       }
     },
+    "Do you want to undo every Scene Editor edit of “%@”? Its properties are kept." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هل تريد التراجع عن كل تعديلات محرر المشهد على «%@»؟ يتم الاحتفاظ بخصائصها."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Möchten Sie alle Änderungen an „%@“ im Szeneneditor widerrufen? Die Eigenschaften bleiben erhalten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Quieres deshacer todos los cambios del Editor de escenas en «%@»? Sus propiedades se conservan."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voulez-vous annuler toutes les modifications de « %@ » faites dans l’Éditeur de scène ? Ses propriétés sont conservées."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "क्या आप “%@” में सीन एडिटर के हर बदलाव को पहले जैसा करना चाहते हैं? इसकी प्रॉपर्टी बनी रहेंगी।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vuoi annullare ogni modifica a “%@” fatta nell’Editor scena? Le sue proprietà vengono mantenute."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」へのシーンエディタでの編集をすべて取り消しますか？プロパティは保持されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘%@’에 대한 장면 편집기 편집 내용을 모두 취소하시겠습니까? 속성은 유지됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Czy chcesz cofnąć wszystkie zmiany „%@” wprowadzone w Edytorze sceny? Jej właściwości zostaną zachowane."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deseja desfazer todas as edições do Editor de Cena em “%@”? As propriedades são mantidas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отменить все изменения «%@», сделанные в Редакторе сцены? Свойства сохранятся."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” için tüm Sahne Düzenleyicisi düzenlemelerini geri almak istiyor musunuz? Özellikleri korunur."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скасувати всі зміни «%@», зроблені в Редакторі сцени? Властивості збережуться."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要撤销场景编辑器对“%@”所做的所有编辑吗？其属性会保留。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要還原場景編輯器對「%@」所做的所有編輯嗎？其屬性會保留。"
+          }
+        }
+      }
+    },
     "Don't Ask Again" : {
       "localizations" : {
         "ar" : {
@@ -49142,6 +49330,194 @@
         }
       }
     },
+    "Inspect every layer, texture and effect in a wallpaper, tweak parameters live, and nudge or align objects." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "افحص كل طبقة ونسيج وتأثير في الخلفية، وعدّل المعلمات مباشرةً، وحرّك الكائنات قليلًا أو حاذِها."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Untersuchen Sie jede Ebene, Textur und jeden Effekt eines Hintergrundbilds, passen Sie Parameter live an und verschieben oder richten Sie Objekte aus."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspecciona cada capa, textura y efecto de un fondo de pantalla, ajusta parámetros en directo y desplaza o alinea objetos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspectez chaque calque, texture et effet d’un fond d’écran, ajustez les paramètres en direct, puis déplacez ou alignez les objets."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "किसी वॉलपेपर की हर लेयर, टेक्सचर और इफ़ेक्ट की जाँच करें, पैरामीटर लाइव बदलें, और ऑब्जेक्ट को खिसकाएँ या अलाइन करें."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esamina ogni livello, texture ed effetto di uno sfondo, modifica i parametri in tempo reale e sposta o allinea gli oggetti."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "壁紙のすべてのレイヤー、テクスチャ、エフェクトを調べ、パラメータをリアルタイムで調整し、オブジェクトを微調整したり整列したりできます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배경화면의 모든 레이어, 텍스처 및 효과를 검사하고, 매개변수를 실시간으로 조정하며, 객체를 미세하게 이동하거나 정렬할 수 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sprawdzaj każdą warstwę, teksturę i efekt tapety, zmieniaj parametry na żywo oraz przesuwaj i wyrównuj obiekty."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspecione cada camada, textura e efeito de uma imagem de fundo, ajuste parâmetros em tempo real e mova ou alinhe objetos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Изучайте каждый слой, текстуру и эффект в обоях, настраивайте параметры на лету, сдвигайте и выравнивайте объекты."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bir duvar kâğıdındaki her katmanı, dokuyu ve efekti inceleyin, parametreleri canlı olarak ayarlayın, nesneleri kaydırın veya hizalayın."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Досліджуйте кожен шар, текстуру й ефект шпалери, змінюйте параметри наживо та пересувайте або вирівнюйте обʼєкти."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "检查墙纸中的每个图层、纹理和效果，实时调整参数，以及微移或对齐对象。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "檢視背景圖片中的每個圖層、紋理和效果，即時微調參數，並微移或對齊物件。"
+          }
+        }
+      }
+    },
+    "Inspector" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "المراقب"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspektor"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspector"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspecteur"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इंस्पेक्टर"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ispettore"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "インスペクタ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "속성"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspektor"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspetor"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Инспектор"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denetçi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Інспектор"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "检查器"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "檢閱器"
+          }
+        }
+      }
+    },
     "Install" : {
       "comment" : "Button: downloads and installs a component",
       "localizations" : {
@@ -68503,6 +68879,100 @@
         }
       }
     },
+    "Only scene wallpapers can be exported to iPhone for now" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يمكن حاليًا تصدير خلفيات المشاهد فقط إلى iPhone"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Derzeit können nur Szenen-Hintergrundbilder auf das iPhone exportiert werden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Por ahora solo se pueden exportar al iPhone los fondos de escena"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pour l’instant, seuls les fonds d’écran de scène peuvent être exportés vers l’iPhone"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अभी केवल सीन वॉलपेपर iPhone पर एक्सपोर्ट किए जा सकते हैं"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Per ora solo gli sfondi scena possono essere esportati su iPhone"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在iPhoneに書き出せるのはシーン壁紙のみです"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재는 장면 배경화면만 iPhone으로 내보낼 수 있습니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na razie do iPhone’a można eksportować tylko tapety scen"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Por enquanto, só papéis de parede de cena podem ser exportados para o iPhone"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пока на iPhone можно экспортировать только обои-сцены"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Şimdilik yalnızca sahne duvar kâğıtları iPhone’a aktarılabilir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поки що на iPhone можна експортувати лише шпалери-сцени"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目前只能将场景墙纸导出到 iPhone"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目前只能將場景背景圖片輸出到 iPhone"
+          }
+        }
+      }
+    },
     "Only scene wallpapers can be exported to iPhone or iPad for now" : {
       "localizations" : {
         "ar" : {
@@ -80998,6 +81468,100 @@
         }
       }
     },
+    "Preview the wallpaper as an iPhone lock screen and export it as a Live Photo" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "معاينة الخلفية كشاشة قفل iPhone وتصديرها كـ Live Photo"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hintergrundbild als iPhone-Sperrbildschirm anzeigen und als Live Photo exportieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previsualiza el fondo como pantalla bloqueada del iPhone y expórtalo como Live Photo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prévisualiser le fond d’écran comme écran verrouillé d’iPhone et l’exporter en Live Photo"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वॉलपेपर को iPhone लॉक स्क्रीन के रूप में देखें और Live Photo के रूप में एक्सपोर्ट करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra lo sfondo come schermata di blocco di iPhone ed esportalo come Live Photo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "壁紙をiPhoneのロック画面としてプレビューし、Live Photoとして書き出します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배경화면을 iPhone 잠금 화면으로 미리 보고 Live Photo로 내보냅니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podejrzyj tapetę jako ekran blokady iPhone’a i wyeksportuj ją jako Live Photo"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pré-visualize o papel de parede como Tela Bloqueada do iPhone e exporte-o como Live Photo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Просмотреть обои как экран блокировки iPhone и экспортировать их как Live Photo"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duvar kâğıdını iPhone Kilitli Ekranı olarak önizleyin ve Live Photo olarak dışa aktarın"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переглянути шпалери як екран блокування iPhone і експортувати їх як Live Photo"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将墙纸预览为 iPhone 锁定屏幕，并导出为实况照片"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將背景圖片預覽為 iPhone 鎖定畫面，並輸出為原況照片"
+          }
+        }
+      }
+    },
     "Previous" : {
       "localizations" : {
         "ar" : {
@@ -88215,6 +88779,194 @@
         }
       }
     },
+    "Render the Live Photo and save its photo and movie to a folder" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عرض Live Photo وحفظ صورتها وفيلمها في مجلد"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo rendern und Foto und Film in einem Ordner sichern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renderiza la Live Photo y guarda su foto y su vídeo en una carpeta"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Effectuer le rendu de la Live Photo et enregistrer sa photo et sa vidéo dans un dossier"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo रेंडर करके उसकी फ़ोटो और मूवी फ़ोल्डर में सहेजें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esegui il rendering della Live Photo e salvane foto e filmato in una cartella"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photoをレンダリングして、写真とムービーをフォルダに保存します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo를 렌더링하여 사진과 동영상을 폴더에 저장합니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyrenderuj Live Photo i zachowaj zdjęcie oraz film w folderze"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renderiza a Live Photo e salva a foto e o vídeo em uma pasta"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отрисовать Live Photo и сохранить фото и видео в папку"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo’yu işleyip fotoğrafını ve filmini bir klasöre kaydeder"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відрендерити Live Photo і зберегти фото й відео в папку"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "渲染实况照片并将照片和影片存储到文件夹"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "算繪原況照片並將照片和影片儲存到檔案夾"
+          }
+        }
+      }
+    },
+    "Render the Live Photo and send it with AirDrop" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عرض Live Photo وإرسالها عبر AirDrop"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo rendern und per AirDrop senden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renderiza la Live Photo y la envía con AirDrop"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Effectuer le rendu de la Live Photo et l’envoyer avec AirDrop"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo रेंडर करके AirDrop से भेजें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esegui il rendering della Live Photo e inviala con AirDrop"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photoをレンダリングして AirDrop で送信します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo를 렌더링하여 AirDrop으로 보냅니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyrenderuj Live Photo i wyślij przez AirDrop"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renderiza a Live Photo e a envia por AirDrop"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отрисовать Live Photo и отправить через AirDrop"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo’yu işleyip AirDrop ile gönderir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відрендерити Live Photo і надіслати через AirDrop"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "渲染实况照片并通过隔空投送发送"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "算繪原況照片並透過 AirDrop 傳送"
+          }
+        }
+      }
+    },
     "Render the clip and play it in a loop" : {
       "localizations" : {
         "ar" : {
@@ -90187,6 +90939,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "重置場景編輯器（即時）編輯"
+          }
+        }
+      }
+    },
+    "Reset Scene Editor Edits" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة تعيين تعديلات محرر المشهد"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Änderungen im Szeneneditor zurücksetzen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restablecer cambios del Editor de escenas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réinitialiser les modifications de l’Éditeur de scène"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सीन एडिटर के बदलाव रीसेट करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ripristina modifiche dell’Editor scena"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シーンエディタの編集をリセット"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "장면 편집기 편집 내용 재설정"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resetuj zmiany z Edytora sceny"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redefinir Edições do Editor de Cena"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить изменения Редактора сцены"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sahne Düzenleyicisi Düzenlemelerini Sıfırla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скинути зміни Редактора сцени"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置场景编辑器编辑"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置場景編輯器編輯"
           }
         }
       }
@@ -94066,6 +94912,101 @@
         }
       }
     },
+    "Saves the current properties and Scene Editor edits. A preset with the same name is replaced." : {
+      "comment" : "Message of the prompt that names a new wallpaper preset",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يحفظ الخصائص الحالية وتعديلات محرر المشهد. يُستبدل الإعداد المسبق الذي يحمل الاسم نفسه."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sichert die aktuellen Eigenschaften und Änderungen im Szeneneditor. Eine Voreinstellung mit demselben Namen wird ersetzt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guarda las propiedades actuales y los cambios del Editor de escenas. Se reemplaza el preajuste con el mismo nombre."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistre les propriétés actuelles et les modifications de l’Éditeur de scène. Un préréglage du même nom est remplacé."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मौजूदा प्रॉपर्टी और सीन एडिटर के बदलाव सहेजता है। इसी नाम का प्रीसेट बदल दिया जाता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salva le proprietà attuali e le modifiche dell’Editor scena. Un preset con lo stesso nome viene sostituito."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在のプロパティとシーンエディタでの編集を保存します。同じ名前のプリセットは置き換えられます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 속성과 장면 편집기 편집 내용을 저장합니다. 이름이 같은 사전 설정은 대치됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisuje bieżące właściwości i zmiany z Edytora sceny. Ustawienie wstępne o tej samej nazwie zostanie zastąpione."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salva as propriedades atuais e as edições do Editor de Cena. Uma predefinição com o mesmo nome é substituída."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохраняет текущие свойства и изменения в Редакторе сцены. Пресет с таким же именем будет заменён."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geçerli özellikleri ve Sahne Düzenleyicisi düzenlemelerini kaydeder. Aynı adlı hazır ayar değiştirilir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберігає поточні властивості та зміни в Редакторі сцени. Пресет із такою самою назвою буде замінено."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存当前属性和场景编辑器中的编辑。同名预设将被替换。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "儲存目前屬性與場景編輯器中的編輯。同名的預設組合會被取代。"
+          }
+        }
+      }
+    },
     "Save…" : {
       "localizations" : {
         "ar" : {
@@ -94634,6 +95575,100 @@
         }
       }
     },
+    "Scene Editor" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "محرر المشهد"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Szeneneditor"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editor de escenas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Éditeur de scène"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सीन एडिटर"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editor scena"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シーンエディタ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "장면 편집기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edytor sceny"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editor de Cena"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Редактор сцены"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sahne Düzenleyicisi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Редактор сцени"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "场景编辑器"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "場景編輯器"
+          }
+        }
+      }
+    },
     "Scene Editor (Live)" : {
       "localizations" : {
         "ar" : {
@@ -94819,6 +95854,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "場景編輯器（即時）的編輯也會被重置。"
+          }
+        }
+      }
+    },
+    "Scene Editor edits are reset too." : {
+      "comment" : "Reset confirmation: the Scene Editor's edits go as well",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تتم إعادة تعيين تعديلات محرر المشهد أيضًا."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Änderungen im Szeneneditor werden ebenfalls zurückgesetzt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "También se restablecen los cambios del Editor de escenas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les modifications de l’Éditeur de scène sont aussi réinitialisées."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सीन एडिटर के बदलाव भी रीसेट होंगे।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vengono ripristinate anche le modifiche dell’Editor scena."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シーンエディタでの変更もリセットされます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "장면 편집기에서 편집한 내용도 재설정됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zmiany wprowadzone w Edytorze sceny również zostaną zresetowane."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "As edições do Editor de Cena também são redefinidas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Изменения, сделанные в Редакторе сцены, тоже сбрасываются."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sahne Düzenleyicisi düzenlemeleri de sıfırlanır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зміни, зроблені в Редакторі сцени, теж скидаються."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "场景编辑器中的编辑也会被重置。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "場景編輯器中的編輯也會重置。"
           }
         }
       }
@@ -98492,6 +99622,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "選擇背景圖片"
+          }
+        }
+      }
+    },
+    "Send to iPhone" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إرسال إلى iPhone"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An iPhone senden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar al iPhone"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoyer à l’iPhone"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone पर भेजें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invia a iPhone"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhoneに送信"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone으로 보내기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyślij na iPhone’a"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar para o iPhone"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отправить на iPhone"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone’a Gönder"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Надіслати на iPhone"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发送到 iPhone"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "傳送到 iPhone"
           }
         }
       }
@@ -103207,6 +104431,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "顯示 iPad 橫放時可見的圖片部分"
+          }
+        }
+      }
+    },
+    "Show where iOS draws the date and the clock" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إظهار مكان عرض iOS للتاريخ والساعة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt, wo iOS Datum und Uhrzeit anzeigt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra dónde dibuja iOS la fecha y el reloj"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher où iOS dessine la date et l’horloge"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "दिखाएँ कि iOS तारीख और घड़ी कहाँ बनाता है"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra dove iOS disegna la data e l’orologio"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOSが日付と時計を表示する位置を示します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOS가 날짜와 시계를 표시하는 위치를 보여줍니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokaż, gdzie iOS wyświetla datę i zegar"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra onde o iOS desenha a data e o relógio"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показать, где iOS выводит дату и часы"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOS’in tarihi ve saati nerede gösterdiğini gösterir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати, де iOS виводить дату й годинник"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示 iOS 绘制日期和时钟的位置"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顯示 iOS 繪製日期與時鐘的位置"
           }
         }
       }
@@ -122389,6 +123707,100 @@
         }
       }
     },
+    "Undo every change made to this wallpaper in the Scene Editor" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التراجع عن كل تغيير أُجري على خلفية الشاشة هذه في محرر المشهد"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Änderungen an diesem Hintergrundbild im Szeneneditor widerrufen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deshacer todos los cambios hechos a este fondo de pantalla en el Editor de escenas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annuler toutes les modifications apportées à ce fond d’écran dans l’Éditeur de scène"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सीन एडिटर में इस वॉलपेपर में किए गए हर बदलाव को पहले जैसा करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annulla ogni modifica fatta a questo sfondo nell’Editor scena"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シーンエディタでこの壁紙に加えたすべての変更を取り消します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "장면 편집기에서 이 배경화면에 적용한 모든 변경 사항을 취소합니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cofnij wszystkie zmiany tej tapety wprowadzone w Edytorze sceny"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desfazer todas as alterações feitas nesta imagem de fundo no Editor de Cena"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отменить все изменения этих обоев, сделанные в Редакторе сцены"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sahne Düzenleyicisi’nde bu duvar kâğıdında yapılan tüm değişiklikleri geri al"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скасувати всі зміни цієї шпалери, зроблені в Редакторі сцени"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "撤销在场景编辑器中对此墙纸所做的所有更改"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "還原在場景編輯器中對此背景圖片所做的所有變更"
+          }
+        }
+      }
+    },
     "Undo every change made to this wallpaper in the Scene Editor (Live)" : {
       "localizations" : {
         "ar" : {
@@ -133453,6 +134865,10 @@
       "shouldTranslate" : false,
       "localizations" : {}
     },
+    "iPhone" : {
+      "shouldTranslate" : false,
+      "localizations" : {}
+    },
     "iPhone & iPad Export" : {
       "comment" : "Scene Editor (Live): the mode that exports a Live Photo",
       "localizations" : {
@@ -133544,6 +134960,194 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "輸出至 iPhone 和 iPad"
+          }
+        }
+      }
+    },
+    "iPhone Live Photo" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo لـ iPhone"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone-Live Photo"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo para iPhone"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo pour iPhone"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone Live Photo"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo per iPhone"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone用Live Photo"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone Live Photo"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo na iPhone’a"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo para iPhone"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo для iPhone"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone Live Photo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo для iPhone"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone 实况照片"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone 原況照片"
+          }
+        }
+      }
+    },
+    "iPhone lock screen preview" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "معاينة شاشة قفل iPhone"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorschau des iPhone-Sperrbildschirms"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previsualización de la pantalla bloqueada del iPhone"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aperçu de l’écran verrouillé de l’iPhone"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone लॉक स्क्रीन प्रीव्यू"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anteprima della schermata di blocco di iPhone"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhoneロック画面のプレビュー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone 잠금 화면 미리보기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podgląd ekranu blokady iPhone’a"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pré-visualização da Tela Bloqueada do iPhone"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предпросмотр экрана блокировки iPhone"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone Kilitli Ekran önizlemesi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попередній перегляд екрана блокування iPhone"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone 锁定屏幕预览"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone 鎖定畫面預覽"
           }
         }
       }
