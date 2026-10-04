@@ -105,7 +105,10 @@ final class AppControlModel: ControlAppModel {
         guard let found = find(wallpaper) else { return [] }
         let scopes = scopes(of: found)
         // The Details panel's own model: applied to the running wallpapers at once, then saved.
-        SceneUserPropertiesModel(wallpaper: found, scopes: scopes).set(value, forID: key)
+        let model = SceneUserPropertiesModel(wallpaper: found, scopes: scopes)
+        model.set(value, forID: key)
+        // Saved before answering, so a get_wallpaper right after reads the new value.
+        model.saveNow()
         return scopes.map(\.description)
     }
 
