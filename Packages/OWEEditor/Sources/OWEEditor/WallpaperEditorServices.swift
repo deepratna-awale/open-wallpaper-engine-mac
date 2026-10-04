@@ -55,6 +55,14 @@ public struct WallpaperEditorServices {
     public var puppetAssets: PuppetEditorAssets?
     /// The particle editor (WE's presets and textures, restarting a system); nil leaves it out.
     public var particles: ParticleEditorServices?
+    /// The app menu's document actions for this window; nil when only the toolbar offers them.
+    public var commands: WallpaperEditorCommands?
+    /// The effect and particle browsers' rendered previews; nil shows each one's group symbol.
+    public var previews: EditorPreviewProvider?
+    /// Whether WE's assets are installed: the browsers list WE's effects and particle systems.
+    public var hasWEAssets: () -> Bool = { true }
+    /// Opens the app's setup of WE's assets (Settings › Assets).
+    public var openAssetsSetup: () -> Void = {}
 
     public init(makeCanvas: @escaping () -> AnyView, userProperties: (() -> AnyView)? = nil,
                 blendModeTitle: String, blendModes: [InspectorOption], effectHelp: @escaping (String) -> String,

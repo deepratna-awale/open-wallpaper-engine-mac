@@ -163,6 +163,6 @@ struct PlaylistView: View {
             return url
         }
         return wallpaper.previewURL
-            ?? Bundle.main.url(forResource: "WallpaperNotFound", withExtension: "mp4")!
+            ?? AppBundleLayout.wallpaperNotFoundURL
     }
 }

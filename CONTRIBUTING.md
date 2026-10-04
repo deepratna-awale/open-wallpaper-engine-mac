@@ -34,7 +34,7 @@ xcodebuild test -project OpenWallpaperEngine.xcodeproj -scheme OpenWallpaperEngi
 | Shader translation, reflection, caching | `Scene/Shaders/` |
 | Metal drawing, render passes, render targets | `Scene/Rendering/` |
 | A SceneScript API member | `Scene/Scripting/` (JS-side code in a bundled `.js` resource, not a Swift string) |
-| A settings control or scene inspector UI | `Settings/` or `Scene/UI/`; the view model sits next to its view |
+| A settings control or Scene Editor UI | `Settings/` or `Scene/UI/`; the view model sits next to its view |
 | Anything used by several features (logging, settings, asset paths) | `Core/` |
 
 There is **one type per file** unless the types are tiny and private to it. A file over about 600 lines, or a function over about 80 lines, needs a reason. Split along a real seam.
@@ -105,5 +105,5 @@ Security problems go privately through the repository's Security tab ([SECURITY.
 
 ## Changing the project file
 
-- New files: the project uses folder-synced groups, so putting a file in the right folder is enough.
+- New files: the project uses folder-synced groups, so putting a file in the right folder is enough. Everything in `OpenWallpaperEngine/` builds into the OpenWallpaperEngine framework, which both apps run ([architecture](docs/architecture.md#targets)); a resource the code reads goes there too and is read through `AppBundleLayout.framework`, not `Bundle.main`.
 - Never add Wallpaper Engine files to the repository, the app or `Tests/Fixtures`: tests get them from `OWE_ASSETS`, and fixtures are written for the project.

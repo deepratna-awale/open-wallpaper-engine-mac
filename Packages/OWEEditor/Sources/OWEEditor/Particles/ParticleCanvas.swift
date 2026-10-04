@@ -141,38 +141,25 @@ struct ParticleCanvasOverlay: View {
     }
 }
 
-/// Adds a particle system: a blank one from WE's template, or one of WE's presets.
+/// Adds a particle system: a blank one from WE's template, or, from the browser, one of WE's
+/// default systems or presets.
 struct ParticleAddMenu: View {
     @ObservedObject var services: ParticleEditorServices
+    @State private var isBrowsing = false
 
     var body: some View {
         Menu {
             Button(PartL("Blank Particle System")) {
                 services.model.addBlankSystem(name: PartL("Particle System"), actionName: PartL("Add Particle System"))
             }
-            if !services.presets.isEmpty {
-                Divider()
-                Section(PartL("Presets")) {
-                    ForEach(services.presets) { preset in
-                        if preset.variants.count == 1, let variant = preset.variants.first {
-                            Button(preset.title) { add(preset, variant) }
-                        } else {
-                            Menu(preset.title) {
-                                ForEach(preset.variants) { variant in
-                                    Button(variant.title) { add(preset, variant) }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            Divider()
+            Button(PartL("Particle Systems and Presets…")) { isBrowsing = true }
         } label: {
             Label(PartL("Add Particle System"), systemImage: "sparkles")
         }
         .help(PartL("Add a particle system: a blank one or one of WE’s presets"))
-    }
-
-    private func add(_ preset: ParticlePreset, _ variant: ParticlePreset.Variant) {
-        services.model.addPreset(preset, variant: variant, actionName: PartL("Add \(variant.title)"))
+        .sheet(isPresented: $isBrowsing) {
+            ParticleSystemBrowserView(services: services)
+        }
     }
 }

@@ -155,6 +155,50 @@ final class LocalizationCatalogTests: XCTestCase {
         XCTAssertTrue(problems.isEmpty, "\(problems.count) mismatches:\n" + problems.sorted().prefix(80).joined(separator: "\n"))
     }
 
+    /// The Scene Inspector is called the Scene Editor: no catalog (the app's or the editor
+    /// package's) names it the old way, in its keys, its English or any translation.
+    static let retiredSceneInspectorNames = [
+        "Scene Inspector", "Szeneninspektor", "Inspector de escenas", "Inspecteur de scène", "Inspetor de Cena",
+        "Inspector scena", "シーンインスペクタ", "장면 인스펙터", "场景检查器", "場景檢閱器", "Инспектор сцены",
+        "Инспектора сцены", "Инспекторе сцены", "Inspektor sceny", "Inspektora sceny", "Inspektorze sceny",
+        "Sahne Denetçisi", "Інспектор сцени", "Інспектора сцени", "Інспекторі сцени", "مراقب المشهد", "सीन इंस्पेक्टर",
+    ]
+
+    static var allCatalogURLs: [URL] {
+        let root = catalogURL.deletingLastPathComponent().deletingLastPathComponent()
+        let resources = root.appending(path: "Packages/OWEEditor/Sources/OWEEditor")
+        var urls = [catalogURL]
+        if let files = FileManager.default.enumerator(at: resources, includingPropertiesForKeys: nil) {
+            for case let url as URL in files where url.pathExtension == "xcstrings" { urls.append(url) }
+        }
+        return urls
+    }
+
+    func testNoCatalogNamesTheSceneInspector() throws {
+        let catalogs = Self.allCatalogURLs
+        XCTAssertGreaterThan(catalogs.count, 1, "the editor package's catalogs weren't found")
+        var problems: [String] = []
+        for url in catalogs {
+            let json = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
+            let strings = try XCTUnwrap(json["strings"] as? [String: [String: Any]])
+            for (key, entry) in strings {
+                var texts: [(String, String)] = [("key", key)]
+                let localizations = entry["localizations"] as? [String: [String: Any]] ?? [:]
+                for (language, localization) in localizations {
+                    for unit in units(of: localization) {
+                        texts.append(("\(language)\(unit.path)", unit.value))
+                    }
+                }
+                for (place, text) in texts {
+                    for name in Self.retiredSceneInspectorNames where text.contains(name) {
+                        problems.append("\(url.lastPathComponent): “\(key)” \(place) says “\(name)”")
+                    }
+                }
+            }
+        }
+        XCTAssertTrue(problems.isEmpty, "Scene Inspector is now the Scene Editor:\n" + problems.sorted().joined(separator: "\n"))
+    }
+
     /// The built app carries every language, and plural lookups pick the language's form.
     func testTheAppResolvesTranslationsAndPlurals() {
         let bundled = Set(Bundle.main.localizations)

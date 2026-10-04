@@ -245,7 +245,7 @@ final class NowPlayingAdapterTests: XCTestCase {
     /// The shipped script compiles under the system perl: a mistake in it would only show as a
     /// wallpaper that never gets a media event.
     func testTheAdapterScriptCompilesUnderTheSystemPerl() throws {
-        let script = try XCTUnwrap(Bundle.main.url(forResource: NowPlayingBackend.script.name,
+        let script = try XCTUnwrap(AppBundleLayout.framework.url(forResource: NowPlayingBackend.script.name,
                                                    withExtension: NowPlayingBackend.script.extension))
         let process = Process()
         process.executableURL = PerlNowPlayingAdapterProcess.perl
@@ -277,7 +277,7 @@ final class NowPlayingAdapterTests: XCTestCase {
             """#
         let available = try Self.runPerl(["-e", probe], seconds: 10)
         try XCTSkipUnless(available.hasPrefix("1"), "nothing with artwork is playing")
-        let script = try XCTUnwrap(Bundle.main.url(forResource: NowPlayingBackend.script.name,
+        let script = try XCTUnwrap(AppBundleLayout.framework.url(forResource: NowPlayingBackend.script.name,
                                                    withExtension: NowPlayingBackend.script.extension))
         let output = try Self.runPerl([script.path], seconds: 5)
         let sessions: [NSDictionary] = output.split(separator: "\n").compactMap { line in
@@ -326,8 +326,8 @@ final class NowPlayingAdapterTests: XCTestCase {
 
     func testTheAppShipsTheAdapterScript() {
         let version = OperatingSystemVersion(majorVersion: 15, minorVersion: 4, patchVersion: 0)
-        XCTAssertNotNil(Bundle.main.url(forResource: NowPlayingBackend.script.name, withExtension: NowPlayingBackend.script.extension))
-        XCTAssertTrue(NowPlayingBackend.load(version: version, bundle: .main) is NowPlayingAdapter,
+        XCTAssertNotNil(AppBundleLayout.framework.url(forResource: NowPlayingBackend.script.name, withExtension: NowPlayingBackend.script.extension))
+        XCTAssertTrue(NowPlayingBackend.load(version: version) is NowPlayingAdapter,
                       "made, not started: nothing runs until a listener registers")
         XCTAssertNil(NowPlayingBackend.load(version: version, bundle: Bundle(for: Self.self)),
                      "without the script there is no media integration")

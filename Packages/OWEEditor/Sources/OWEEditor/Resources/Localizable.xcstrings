@@ -15497,6 +15497,101 @@
         }
       }
     },
+    "Install Wallpaper Engine Assets…" : {
+      "comment" : "Wallpaper Editor",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تثبيت موارد Wallpaper Engine…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine-Assets installieren …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalar los recursos de Wallpaper Engine…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installer les ressources de Wallpaper Engine…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine ऐसेट इंस्टॉल करें…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installa le risorse di Wallpaper Engine…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine のアセットをインストール…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine 에셋 설치…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zainstaluj zasoby Wallpaper Engine…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalar Recursos do Wallpaper Engine…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Установить ресурсы Wallpaper Engine…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine Varlıklarını Yükle…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Установити ресурси Wallpaper Engine…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装 Wallpaper Engine 资源…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安裝 Wallpaper Engine 資源…"
+          }
+        }
+      }
+    },
     "Keep Proportions" : {
       "localizations" : {
         "ar" : {
@@ -22191,6 +22286,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "重新命名使用者屬性"
+          }
+        }
+      }
+    },
+    "Rendering preview" : {
+      "comment" : "Wallpaper Editor",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جارٍ عرض المعاينة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorschau wird gerendert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renderizando la previsualización"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rendu de l’aperçu"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "प्रीव्यू रेंडर हो रहा है"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rendering dell’anteprima"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "プレビューをレンダリング中"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "미리보기 렌더링 중"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renderowanie podglądu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renderizando a pré-visualização"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рендеринг предварительного просмотра"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önizleme oluşturuluyor"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рендеринг попереднього перегляду"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在渲染预览"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在渲染預覽"
           }
         }
       }
@@ -30496,6 +30686,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "未安裝 Wallpaper Engine 的效果。"
+          }
+        }
+      }
+    },
+    "Wallpaper Engine’s effects come with its assets, which aren’t installed." : {
+      "comment" : "Wallpaper Editor",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تأتي تأثيرات Wallpaper Engine مع موارده، وهي غير مثبتة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Effekte von Wallpaper Engine gehören zu seinen Assets, die nicht installiert sind."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los efectos de Wallpaper Engine vienen con sus recursos, que no están instalados."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les effets de Wallpaper Engine font partie de ses ressources, qui ne sont pas installées."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine के इफ़ेक्ट उसके ऐसेट के साथ आते हैं, जो इंस्टॉल नहीं हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gli effetti di Wallpaper Engine fanno parte delle sue risorse, che non sono installate."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine のエフェクトはアセットに含まれていますが、アセットがインストールされていません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine의 효과는 에셋에 포함되어 있지만 에셋이 설치되어 있지 않습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Efekty Wallpaper Engine są częścią jego zasobów, które nie są zainstalowane."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os efeitos do Wallpaper Engine vêm com os recursos dele, que não estão instalados."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Эффекты Wallpaper Engine входят в его ресурсы, которые не установлены."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine efektleri, yüklü olmayan varlıklarıyla birlikte gelir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ефекти Wallpaper Engine входять до його ресурсів, які не встановлено."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine 的效果包含在其资源中，但资源尚未安装。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine 的效果包含在其資源中，但資源尚未安裝。"
           }
         }
       }

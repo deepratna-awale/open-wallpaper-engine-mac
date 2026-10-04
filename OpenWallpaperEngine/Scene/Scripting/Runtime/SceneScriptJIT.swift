@@ -14,7 +14,7 @@ enum SceneScriptJIT {
     /// (`while (true) {}`) never reaches a trap: measured with a 0.3 s limit, it ran on past 15 s;
     /// with `usePollingTraps` it stopped at 0.31 s, and a tight loop costs about 10 % more.
     /// JavaScriptCore reads its options from the environment once, when its first VM starts, so the
-    /// app calls this first thing at launch (`main.swift`). An option set from outside wins.
+    /// app calls this first thing at launch (`AppMain`). An option set from outside wins.
     static func configurePollingTraps() {
         setenv("JSC_usePollingTraps", "true", 0)
     }

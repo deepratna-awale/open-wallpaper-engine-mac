@@ -57,6 +57,10 @@ struct AppStorageLocation: @unchecked Sendable { // UserDefaults is thread-safe;
         let support = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         let caches = fileManager.urls(for: .cachesDirectory, in: .userDomainMask)[0]
         self.isolationTag = isolationTag
+        // The Wallpaper Editor's app (`<app id>.editor`) keeps the app's state, not its own.
+        let appIdentifier = AppBundleLayout.appIdentifier(for: bundleIdentifier)
+        let bundleIdentifier = appIdentifier
+        let isOwnDomain = appIdentifier == (Bundle.main.bundleIdentifier ?? Self.realBundleIdentifier)
         let base: UserDefaults
         if let isolationTag {
             let suite = "\(bundleIdentifier).isolated.\(isolationTag)"
@@ -69,7 +73,8 @@ struct AppStorageLocation: @unchecked Sendable { // UserDefaults is thread-safe;
             keychainServicePrefix = suite
         } else {
             suiteName = nil
-            base = .standard
+            // The editor's process reads and writes the app's domain; nil only for its own id.
+            base = isOwnDomain ? .standard : UserDefaults(suiteName: appIdentifier) ?? .standard
             supportDirectory = support.appending(path: "Open Wallpaper Engine", directoryHint: .isDirectory)
             cachesDirectory = caches
             keychainServicePrefix = bundleIdentifier

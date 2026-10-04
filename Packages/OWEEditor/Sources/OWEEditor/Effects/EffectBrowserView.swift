@@ -3,9 +3,14 @@ import SwiftUI
 import OWESceneEditing
 
 /// Add Effect: WE's built-in effects and the Workshop effects the wallpaper uses, searchable, in
-/// WE's groups, each with its preview (or its group's symbol) and description.
+/// WE's groups, each with its preview and description. A preview is the effect at its defaults
+/// on the editor's test card, rendered on first view and cached (`EditorPreviewProvider`); a
+/// moving effect's is a short loop. Without WE's assets it offers to install them.
 struct EffectBrowserView: View {
     let entries: [EffectCatalogEntry]
+    let previews: EditorPreviewProvider?
+    let hasWEAssets: Bool
+    let openAssetsSetup: () -> Void
     let add: (EffectCatalogEntry) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
@@ -26,7 +31,10 @@ struct EffectBrowserView: View {
             Divider()
             ScrollView {
                 let groups = EffectCatalog.grouped(EffectCatalog.filter(entries, query: query))
-                if groups.isEmpty {
+                if !hasWEAssets {
+                    EditorAssetsPrompt(message: L("Wallpaper Engine’s effects come with its assets, which aren’t installed."),
+                                       openSetup: openSetup)
+                } else if groups.isEmpty {
                     Text(entries.isEmpty ? L("Wallpaper Engine’s effects aren’t installed.") : L("No effects match."))
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity)
@@ -40,7 +48,7 @@ struct EffectBrowserView: View {
                                 .foregroundStyle(.secondary)
                             LazyVGrid(columns: Self.columns, alignment: .leading, spacing: 12) {
                                 ForEach(group.entries) { entry in
-                                    EffectTile(entry: entry, isSelected: selection == entry.id)
+                                    EffectTile(entry: entry, previews: previews, isSelected: selection == entry.id)
                                         .onTapGesture(count: 2) { choose(entry) }
                                         .onTapGesture { selection = entry.id }
                                         .accessibilityAddTraits(.isButton)
@@ -73,6 +81,11 @@ struct EffectBrowserView: View {
 
     private var selectedEntry: EffectCatalogEntry? { entries.first { $0.id == selection } }
 
+    private func openSetup() {
+        dismiss()
+        openAssetsSetup()
+    }
+
     private func choose(_ entry: EffectCatalogEntry) {
         dismiss()
         add(entry)
@@ -81,6 +94,7 @@ struct EffectBrowserView: View {
 
 private struct EffectTile: View {
     let entry: EffectCatalogEntry
+    let previews: EditorPreviewProvider?
     let isSelected: Bool
     @State private var preview: NSImage?
 
@@ -92,10 +106,11 @@ private struct EffectTile: View {
                     Image(nsImage: preview)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
+                } else if entry.preview == nil, let previews {
+                    EditorPreviewView(provider: previews, subject: entry.previewSubject,
+                                      symbol: EffectGroupSymbol.symbol(entry.group))
                 } else {
-                    Image(systemName: EffectGroupSymbol.symbol(entry.group))
-                        .font(.system(size: 28))
-                        .foregroundStyle(.secondary)
+                    SymbolPreview(symbol: EffectGroupSymbol.symbol(entry.group))
                 }
             }
             .frame(height: 84)
@@ -122,13 +137,14 @@ private struct EffectTile: View {
         .contentShape(Rectangle())
         .help(entry.summary)
         .task(id: entry.preview) {
+            // A picture the effect's folder ships, where it has one.
             guard let url = entry.preview else { return }
-            preview = NSImage(contentsOf: url)
+            preview = await Task.detached(priority: .userInitiated) { NSImage(contentsOf: url) }.value
         }
     }
 }
 
-/// A symbol for each of WE's effect groups, for effects without a preview.
+/// A symbol for each of WE's effect groups, while an effect's preview renders or when it has none.
 enum EffectGroupSymbol {
     static func symbol(_ group: String) -> String {
         switch group.lowercased() {
