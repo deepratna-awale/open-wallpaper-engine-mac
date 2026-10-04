@@ -43,7 +43,7 @@ final class ChromiumEngineInstallerTests: XCTestCase {
 
     private func pin(version: String, archive: URL, sha256: String? = nil) throws -> ChromiumEnginePin {
         ChromiumEnginePin(version: version, platform: "macosarm64",
-                          sha256: try sha256 ?? ChromiumEnginePackage.sha256(of: archive),
+                          sha256: try sha256 ?? VersionedInstallStore.sha256(of: archive),
                           downloadSize: 1, installedSize: 1)
     }
 
@@ -103,16 +103,22 @@ final class ChromiumEngineInstallerTests: XCTestCase {
         XCTAssertEqual(try stagingEntries(), [], "the .partial download is deleted")
     }
 
-    func testVerifyComparesTheWholeFile() throws {
-        let file = root.appending(path: "file")
-        try Data("abc".utf8).write(to: file)
-        // SHA-256("abc"), the FIPS 180-2 test vector.
-        let abc = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
-        XCTAssertNoThrow(try ChromiumEnginePackage.verify(file, sha256: abc.uppercased()))
-        try Data("abd".utf8).write(to: file)
-        XCTAssertThrowsError(try ChromiumEnginePackage.verify(file, sha256: abc)) { error in
-            guard case ChromiumEnginePackage.Failure.checksumMismatch = error else { return XCTFail("\(error)") }
-        }
+    @MainActor
+    func testAWrongHashSaysSo() async throws {
+        let archive = try makeArchive(version: "1.0.0")
+        let installer = makeInstaller(pin: try pin(version: "1.0.0", archive: archive, sha256: String(repeating: "0", count: 64)),
+                                      downloader: CopyingDownloader(source: archive))
+        installer.install()
+        await installer.wait()
+        let mismatch = ChromiumEnginePackage.Failure.checksumMismatch(expected: "", actual: "").localizedDescription
+        XCTAssertEqual(installer.phase, .failed(mismatch))
+    }
+
+    func testOfflineHTTPAndDiskFullErrorsSaySo() {
+        XCTAssertTrue(ChromiumEngineInstaller.message(for: URLError(.notConnectedToInternet)).contains("internet connection"))
+        XCTAssertTrue(ChromiumEngineInstaller.message(for: URLSessionSteamCmdDownloader.Failure.httpStatus(404)).contains("404"))
+        XCTAssertTrue(ChromiumEngineInstaller.message(for: CocoaError(.fileWriteOutOfSpace)).contains("disk space"))
+        XCTAssertTrue(ChromiumEngineInstaller.message(for: URLError(.cannotWriteToFile)).contains("disk space"))
     }
 
     // MARK: Atomic install
@@ -210,8 +216,8 @@ final class ChromiumEngineInstallerTests: XCTestCase {
 
         XCTAssertEqual(try visibleEntries(), ["2.0.0", "3.0.0"])
         XCTAssertEqual(installer.installedVersion, "3.0.0")
-        XCTAssertEqual(ChromiumEngineInstallState.read(in: engineRoot),
-                       ChromiumEngineInstallState(active: "3.0.0", previous: "2.0.0"))
+        XCTAssertEqual(VersionedInstallState.read(in: engineRoot),
+                       VersionedInstallState(active: "3.0.0", previous: "2.0.0"))
     }
 
     @MainActor
@@ -220,8 +226,8 @@ final class ChromiumEngineInstallerTests: XCTestCase {
         _ = try await install(version: "2.0.0")
         _ = try await install(version: "2.0.0")
         XCTAssertEqual(try visibleEntries(), ["1.0.0", "2.0.0"])
-        XCTAssertEqual(ChromiumEngineInstallState.read(in: engineRoot),
-                       ChromiumEngineInstallState(active: "2.0.0", previous: "1.0.0"))
+        XCTAssertEqual(VersionedInstallState.read(in: engineRoot),
+                       VersionedInstallState(active: "2.0.0", previous: "1.0.0"))
     }
 
     @MainActor

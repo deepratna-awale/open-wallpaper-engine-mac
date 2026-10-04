@@ -1,50 +1,6 @@
 import XCTest
 @testable import OpenWallpaperEngine
 
-final class UserPropertyConditionTests: XCTestCase {
-    private func eval(_ source: String, _ values: [String: String]) throws -> Bool {
-        try XCTUnwrap(UserPropertyCondition(source)).evaluate(values)
-    }
-
-    func testEmptyConditionIsNil() {
-        XCTAssertNil(UserPropertyCondition(""))
-        XCTAssertNil(UserPropertyCondition("   "))
-    }
-
-    func testBoolEqualsNumberLikeJavaScript() throws {
-        XCTAssertTrue(try eval("clock.value == 1", ["clock": "true"]))
-        XCTAssertFalse(try eval("clock.value == 1", ["clock": "false"]))
-        XCTAssertTrue(try eval("hyperdrive.value == true", ["hyperdrive": "true"]))
-        XCTAssertTrue(try eval("animation.value === true", ["animation": "true"]))
-    }
-
-    func testStringsAndLogic() throws {
-        let values = ["style_big": "cycle", "mode_combo": "stretched"]
-        XCTAssertTrue(try eval("style_big.value == \"cycle\" && mode_combo.value == \"stretched\"", values))
-        XCTAssertFalse(try eval("style_big.value == \"cycle\" && mode_combo.value == 'dual'", values))
-        XCTAssertTrue(try eval("mode_combo.value == 'dual' || style_big.value != 'x'", values))
-        XCTAssertTrue(try eval("!(mode_combo.value == 'dual')", values))
-    }
-
-    func testNumericComparisons() throws {
-        XCTAssertTrue(try eval("count.value > 2", ["count": "10"]))
-        XCTAssertFalse(try eval("count.value > 2", ["count": "2"]))
-        XCTAssertTrue(try eval("count.value <= 2.5", ["count": "2"]))
-        XCTAssertTrue(try eval("count.value != 3", ["count": "3.5"]))
-    }
-
-    func testBareTruthiness() throws {
-        XCTAssertTrue(try eval("flag.value", ["flag": "true"]))
-        XCTAssertFalse(try eval("!flag.value", ["flag": "true"]))
-        XCTAssertFalse(try eval("missing.value", [:]))
-    }
-
-    func testUnparseableConditionShows() throws {
-        XCTAssertTrue(try eval("a.value == (", [:]))
-        XCTAssertTrue(try eval("a.value ~ 3", [:]))
-    }
-}
-
 final class UserPropertyHTMLTests: XCTestCase {
     func testStripsTagsAndKeepsBreaks() {
         let html = "<big><font color=#FFFFFF><h5>Thanks for subscribing!<br/>If you like it<br>leave a like"

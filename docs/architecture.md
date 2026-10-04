@@ -54,7 +54,7 @@ These are folders in the framework target today. The scene engine (`Scene/`, `Au
 | `Scene/Rendering/` | Metal: layers, the effect pass graph, render targets, text, particles and the camera. | `SceneMetalRenderer`, `SceneShaders.metal` |
 | `Scene/Scripting/` | The SceneScript runtime (JavaScriptCore), one per wallpaper instance on its own thread, and the WE JS API surface as extensions; `Host/` ties a runtime to the renderer (docs/scenescript-plan.md). | `SceneScriptRuntime`, `SceneScriptWallpaper`, `SceneScriptSceneMirror` |
 | `Scene/Loading/` | Turns a wallpaper into render content: loads, resolves and builds. | `SceneWallpaperViewModel` (to be split) |
-| `Scene/UI/` | Scene-specific SwiftUI: the inspector and user properties. These are the **only** scene files allowed to import SwiftUI views. | `SceneInspectorView`, `SceneUserPropertiesView`, `SceneHelp` |
+| `Scene/UI/` | Scene-specific SwiftUI: the Scene Editor (Live) and user properties, and the isolated sessions its export modes edit. These are the **only** scene files allowed to import SwiftUI views. | `SceneInspectorView`, `SceneUserPropertiesView`, `SceneHelp`, `IsolatedSceneEditSession` |
 
 ### `Audio/`
 
@@ -76,6 +76,7 @@ These are folders in the framework target today. The scene engine (`Scene/`, `Au
   - Deleting a wallpaper removes the dependency-only items nothing left in the library references (`WorkshopDependencyCleanup`, logged). WE leaves required items to Steam, where the user can still see and unsubscribe them; here they are hidden, so keeping them would leave them on disk with no way to remove them.
 - **`Workshop/`:** steamcmd and the Workshop API. Steam secrets live in the keychain (`Core/Keychain`, `SteamCredentials`): the Web API key and the steamcmd account name. The password and Steam Guard code are piped to steamcmd on stdin and never stored; steamcmd keeps its own login token. The API key goes in the `x-webapi-key` header, never a URL.
   - Every download lands in the Wallpaper Storage folder as `<storage>/<id>` (`WorkshopItemInstaller`): steamcmd's `force_install_dir` is a hidden `.owe-steamcmd` folder inside it, the finished item is renamed into place and the staging folder deleted. A preview the user applies moves from the preview cache into storage the same way (copied into a hidden folder there, then renamed). A storage folder on a disconnected volume fails the download with that reason; nothing falls back to another folder. steamcmd runs through `SteamCmdRunning`, so tests use a fake.
+- **`Installs/`:** what the optional on-demand installs share (the Chromium engine, `Web/Chromium/ChromiumEngineInstaller`, and the depth model, `DepthMaps/DepthMapPluginInstaller`). `VersionedInstallStore` downloads each pinned file, checks its SHA-256, stages the install and renames it into place, keeping the active and the previous version (`VersionedInstallState`); `VersionedInstaller` is the main-actor side (phase, progress, cancel, remove) and `VersionedInstallFailure` the messages for being offline, an HTTP error and a full disk. Each installer keeps only its URLs and files, its install folder and its own step (unpacking the engine, compiling the model).
 - **`Settings/`:** settings pages.
 - **`UI/`:** the main window and shared components.
 - **`App/`:** the entry point, `AppDelegate`, windows and menus.
@@ -118,6 +119,19 @@ A wallpaper runs **once**, however many displays show it with the same user prop
 - **Web:** a `WKWebView` can't be in two windows, so each display keeps its page. Only the page on the wallpaper's audible display plays sound; the others are muted (`WebPageAudio`).
 - **Sound** (`WallpaperAudioRouting`): each running wallpaper plays its sound once; a web wallpaper's from its audible display (the main display when it shows it, else the lowest display id), and a wallpaper running as several instances (different properties) from the instance on that display. Different wallpapers on different displays each play theirs. Settings → Audio Output silences all of them; volume and mute (the status menu) apply to all.
 - **The watchdog** gets one frame time per rendered frame of an instance, not one per display.
+
+## Isolated edits (the Scene Editor (Live)'s export modes)
+
+- **The session.** A mode that previews and renders its own version of a wallpaper (the iPhone & iPad Export mode now, a Screen Saver mode next) opens an `IsolatedSceneEditSession` (`Scene/UI/`). It copies the edited store's values (user properties and the Scene Editor's layer edits) into an isolated store, `WallpaperPropertyScope.isolated(<purpose>)`, saved under that suffix and run under its own runtime key. The Scene Editor's own models are pointed at that scope, so the mode's layer and property edits use the same code as the Wallpaper mode; `setValues` and `setLayerVisible` do the same from code. A save to an isolated store doesn't regroup the displays.
+- **The private instance.** `IsolatedSceneView` runs the wallpaper from the session's own `WallpaperInstanceRegistry` under `WallpaperInstanceKey(wallpaper, properties: .isolated(…))`: never the displays' shared instance, silent (a preview screen), and without loading snapshots, so the desktop's snapshots and lock-screen picture don't change.
+- **The render hook.** `values` is everything an offscreen render of that version takes: the Live Photo job's properties (`LivePhotoJob`), rendered by the helper with exactly these.
+- **Lifetime.** Leaving the mode, closing the Scene Editor (Live)'s window or showing another wallpaper ends the session: the isolated store is removed and its running store emptied.
+
+## Live Photo export (`LivePhoto/`)
+
+- The iPhone & iPad Export mode frames the private instance as the chosen device's lock screen (`DeviceModel`, `LockScreenLayout`, `LivePhotoCrop`); the Export Settings (`LivePhotoExportSettingsView`) are its panel and the sheet before an export.
+- The helper run `--render-live-photo <job.json>` (`LivePhotoRenderer`) renders offscreen through the real loader and renderer. A motion job renders the first 8 s small and writes each frame's difference from the last (`LivePhotoMotion`, `ScreenSaverFrameSignature`); the app moves the clip to the window with the most motion. An export renders the clip into a near-lossless intermediate movie while choosing the still (`LivePhotoKeyFrame`), writes the HEIC, then encodes the movie (`LivePhotoMovieEncoder`, `IntermediateReader`) with the still-image-time track at the still's frame and the screen saver's crossfade into the still at both ends.
+- With "Also Save to Photos Album" on, the pair goes into a regular Photos album through PhotoKit (`LivePhotoAlbumSync` over `LivePhotoLibrary`, `PhotoKitLibrary`).
 
 ## Lock screen and screen saver
 

@@ -1,40 +1,10 @@
 import CoreGraphics
 import Foundation
 
-/// The iPhones a Live Photo wallpaper is made for: the lock screen's size in pixels.
-enum IPhoneModel: String, CaseIterable, Identifiable {
-    case proMax, pro, standard
-
-    var id: String { rawValue }
-
-    /// The screen in pixels, portrait.
-    var pixelSize: SIMD2<Int> {
-        switch self {
-        case .proMax: return SIMD2(1320, 2868)
-        case .pro: return SIMD2(1206, 2622)
-        case .standard: return SIMD2(1179, 2556)
-        }
-    }
-
-    /// Product names stay as Apple writes them.
-    var name: String {
-        switch self {
-        case .proMax: return "iPhone 16/17 Pro Max"
-        case .pro: return "iPhone 16/17 Pro"
-        case .standard: return "iPhone 16/17"
-        }
-    }
-
-    /// The default: the most pixels.
-    static var largest: IPhoneModel {
-        allCases.max { $0.pixelSize.x * $0.pixelSize.y < $1.pixelSize.x * $1.pixelSize.y }!
-    }
-}
-
 /// The portrait window a Live Photo shows of a scene, and how large the scene is rendered for it.
 ///
 /// Scene units are the scene's authored pixels, origin top-left. At zoom 1 the window is the
-/// largest rectangle at the phone's aspect the scene covers (cover-fit); zoom (up to
+/// largest rectangle at the device's aspect the scene covers (cover-fit); zoom (up to
 /// `maximumZoom`) shrinks it about its centre. The centre is kept so the window never leaves the
 /// scene. The scene is rendered whole at `renderScale` of its authored size: at least 1 (WE's
 /// "Full" render resolution, the authored size) and at least what makes the window cover the
@@ -46,11 +16,14 @@ struct LivePhotoCrop: Equatable {
     static let maximumRenderDimension = Double(SceneRenderResolution.maximumTextureDimension)
 
     var sceneSize: SIMD2<Double>
-    /// The output, in pixels (the phone's screen, or a smaller preview of it).
+    /// The output, in pixels (the device's portrait screen, or a smaller preview of it).
     var outputPixels: SIMD2<Int>
     private(set) var zoom = 1.0
     /// The window's centre, in scene units.
     private(set) var center: SIMD2<Double>
+    /// The least the scene is rendered at: its authored size for an export; less for a render
+    /// that only measures the scene (`LivePhotoMotion`).
+    var minimumRenderScale = 1.0
 
     init(sceneSize: SIMD2<Double>, outputPixels: SIMD2<Int>, zoom: Double = 1, center: SIMD2<Double>? = nil) {
         self.sceneSize = SIMD2(max(sceneSize.x, 1), max(sceneSize.y, 1))
@@ -95,6 +68,14 @@ struct LivePhotoCrop: Equatable {
         center = SIMD2(clamp(value.x, half.x, sceneSize.x - half.x), clamp(value.y, half.y, sceneSize.y - half.y))
     }
 
+    /// What an iPad shows of the window in landscape, in scene units: the lock screen turns and
+    /// the same picture fills the wider screen, so its full width and a band of its middle show.
+    var landscapeRect: CGRect {
+        let rect = cropRect
+        let height = rect.width * aspect
+        return CGRect(x: rect.minX, y: rect.midY - height / 2, width: rect.width, height: height)
+    }
+
     /// Moves the window by `delta` scene units.
     mutating func pan(by delta: SIMD2<Double>) { setCenter(center + delta) }
 
@@ -102,7 +83,7 @@ struct LivePhotoCrop: Equatable {
     /// to cover the output's pixels, within what the GPU allocates.
     var renderScale: Double {
         let needed = max(Double(outputPixels.x) / cropSize.x, Double(outputPixels.y) / cropSize.y)
-        let wanted = max(1, needed)
+        let wanted = max(minimumRenderScale, needed)
         let fits = Self.maximumRenderDimension / max(sceneSize.x, sceneSize.y)
         return min(wanted, max(fits, 1))
     }
@@ -149,14 +130,23 @@ struct LivePhotoClip: Equatable {
     /// How far into the scene a clip can start, plus its length: the scrubber's range.
     static let timelineLength = 30.0
 
+    /// The shortest clip the Export Settings offer.
+    static let shortestChosen = 1.0
+
     /// Seconds of scene time from load to the clip's first frame.
     private(set) var start: Double = 0
     /// The clip's length in seconds: one frame up to `duration`.
-    let length: Double
+    private(set) var length: Double = LivePhotoClip.duration
 
     init(start: Double = 0, length: Double = LivePhotoClip.duration) {
+        setLength(length)
+        setStart(start)
+    }
+
+    /// One frame up to `duration`; the start moves back when the clip would run past the timeline.
+    mutating func setLength(_ value: Double) {
         let frame = 1 / Double(Self.frameRate)
-        self.length = length.isFinite ? min(max(length, frame), Self.duration) : Self.duration
+        length = value.isFinite ? min(max(value, frame), Self.duration) : Self.duration
         setStart(start)
     }
 

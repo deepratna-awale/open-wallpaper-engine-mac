@@ -49,6 +49,13 @@ struct WallpaperPropertyTargets {
             defaults.set(values, forKey: identity.key(.userProperties, scope: scope))
             defaults.set(true, forKey: identity.key(.explicitUserProperties, scope: scope))
         }
+        postSaved()
+    }
+
+    /// Lets the displays regroup, unless only isolated stores changed, which no display runs
+    /// (`WallpaperPropertyScope.isolated`).
+    private func postSaved() {
+        guard scopes.contains(where: { !$0.isIsolated }) else { return }
         NotificationCenter.default.post(name: .wallpaperPropertiesDidSave, object: directory.path)
     }
 
@@ -97,7 +104,7 @@ struct WallpaperPropertyTargets {
             publish(scope.runtimeKey(directory: directory), values)
             if shown == nil { shown = values }
         }
-        NotificationCenter.default.post(name: .wallpaperPropertiesDidSave, object: directory.path)
+        postSaved()
         return shown ?? [:]
     }
 }

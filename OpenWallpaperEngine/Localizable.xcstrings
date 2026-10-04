@@ -2945,6 +2945,100 @@
         }
       }
     },
+    "A Live Photo moves for up to 3 seconds; its photo is the sharpest frame near the middle." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تتحرك Live Photo لمدة تصل إلى 3 ثوانٍ؛ وصورتها هي أوضح إطار قرب المنتصف."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Live Photo bewegt sich bis zu 3 Sekunden lang; das Foto ist das schärfste Bild nahe der Mitte."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una Live Photo se mueve hasta 3 segundos; su foto es el fotograma más nítido cerca del centro."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une Live Photo s’anime jusqu’à 3 secondes ; sa photo est l’image la plus nette vers le milieu."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo 3 सेकंड तक चलती है; इसकी फ़ोटो बीच के पास का सबसे साफ़ फ़्रेम होती है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una Live Photo si muove fino a 3 secondi; la sua foto è il fotogramma più nitido vicino al centro."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photoは最大3秒間動きます。写真には中央付近で最も鮮明なフレームが使われます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo는 최대 3초간 움직이며, 사진은 가운데 부근에서 가장 선명한 프레임입니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo porusza się do 3 sekund; jego zdjęciem jest najostrzejsza klatka blisko środka."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uma Live Photo se move por até 3 segundos; sua foto é o quadro mais nítido perto do meio."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo движется до 3 секунд; его фото — самый резкий кадр ближе к середине."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo en fazla 3 saniye hareket eder; fotoğrafı ortaya yakın en net karedir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo рухається до 3 секунд; його фото — найчіткіший кадр ближче до середини."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "实况照片最多动 3 秒；其照片是中间附近最清晰的一帧。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "原況照片最多動 3 秒；其照片是中間附近最清晰的一格。"
+          }
+        }
+      }
+    },
     "A Steam Web API key is required to browse." : {
       "localizations" : {
         "ar" : {
@@ -6910,6 +7004,100 @@
         }
       }
     },
+    "Album" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الألبوم"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Album"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Álbum"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Album"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एल्बम"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Album"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アルバム"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "앨범"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Album"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Álbum"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Альбом"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Albüm"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Альбом"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "相簿"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "相簿"
+          }
+        }
+      }
+    },
     "Align Bottom" : {
       "localizations" : {
         "ar" : {
@@ -8322,6 +8510,100 @@
         }
       }
     },
+    "Also Save to Photos Album" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الحفظ أيضًا في ألبوم الصور"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auch in Album in „Fotos“ sichern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar también en un álbum de Fotos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrer aussi dans un album de Photos"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फ़ोटो एल्बम में भी सेव करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salva anche in un album di Foto"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“写真”のアルバムにも保存"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사진 앨범에도 저장"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zachowaj też w albumie w Zdjęciach"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salvar Também em Álbum do Fotos"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Также сохранять в альбом «Фото»"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fotoğraflar Albümüne de Kaydet"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Також зберігати в альбом «Фото»"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同时存储到“照片”相簿"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同時儲存到「照片」相簿"
+          }
+        }
+      }
+    },
     "Also add Wallpaper Engine's default wallpapers" : {
       "localizations" : {
         "ar" : {
@@ -9450,6 +9732,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "外觀"
+          }
+        }
+      }
+    },
+    "Appears on your iPhone and iPad when iCloud Photos is on in Photos settings." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تظهر على iPhone وiPad عند تشغيل صور iCloud في إعدادات الصور."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erscheint auf Ihrem iPhone und iPad, wenn „iCloud-Fotos“ in den Einstellungen von „Fotos“ aktiviert ist."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aparece en tu iPhone y iPad cuando Fotos de iCloud está activado en los ajustes de Fotos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apparaît sur votre iPhone et votre iPad lorsque Photos iCloud est activé dans les réglages de Photos."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Photos सेटिंग्स में iCloud फ़ोटो चालू होने पर यह आपके iPhone और iPad पर दिखता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compare su iPhone e iPad quando Foto di iCloud è attivo nelle impostazioni di Foto."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“写真”の設定で“iCloud写真”がオンのとき、iPhoneとiPadに表示されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사진 설정에서 iCloud 사진이 켜져 있으면 iPhone과 iPad에 나타납니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pojawia się na iPhonie i iPadzie, gdy w ustawieniach Zdjęć włączone są Zdjęcia iCloud."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aparece no iPhone e iPad quando Fotos do iCloud está ativado nos ajustes do Fotos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Появляется на iPhone и iPad, когда в настройках «Фото» включено «Фото iCloud»."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fotoğraflar ayarlarında iCloud Fotoğrafları açıkken iPhone’unuzda ve iPad’inizde görünür."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "З’являється на iPhone та iPad, коли в параметрах «Фото» ввімкнено «Фото iCloud»."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在“照片”设置中打开“iCloud 照片”时，会出现在你的 iPhone 和 iPad 上。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在「照片」設定中開啟「iCloud 照片」時，會出現在你的 iPhone 和 iPad 上。"
           }
         }
       }
@@ -13414,6 +13790,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "讓影像彎曲，彷彿透過波紋玻璃觀看。"
+          }
+        }
+      }
+    },
+    "Best" : {
+      "comment" : "Live Photo export quality: the largest file",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الأفضل"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beste"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Máxima"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optimale"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सबसे अच्छी"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Massima"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最高"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "최상"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Najlepsza"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Máxima"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Наилучшее"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En İyi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Найкраща"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最佳"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最佳"
           }
         }
       }
@@ -18624,6 +19095,100 @@
         }
       }
     },
+    "Choose the iPhone or iPad the Live Photo is made for" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختر iPhone أو iPad الذي تُصنع له Live Photo"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone oder iPad wählen, für das das Live Photo erstellt wird"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige el iPhone o iPad para el que se crea la Live Photo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisir l’iPhone ou l’iPad auquel la Live Photo est destinée"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वह iPhone या iPad चुनें जिसके लिए Live Photo बनाई जा रही है"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli l’iPhone o l’iPad per cui creare la Live Photo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photoを作成するiPhoneまたはiPadを選択します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo를 만들 iPhone 또는 iPad를 선택합니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wybierz iPhone’a lub iPada, dla którego powstaje Live Photo"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escolha o iPhone ou iPad para o qual a Live Photo é criada"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите iPhone или iPad, для которого создается Live Photo"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo’nun hazırlanacağı iPhone’u veya iPad’i seçin"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виберіть iPhone чи iPad, для якого створюється Live Photo"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择要为其制作实况照片的 iPhone 或 iPad"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選擇要為其製作原況照片的 iPhone 或 iPad"
+          }
+        }
+      }
+    },
     "Choose what happens on battery, when another app goes fullscreen, or when your displays sleep — from lowering the frame rate to pausing entirely." : {
       "localizations" : {
         "ar" : {
@@ -19656,6 +20221,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "按一下顯示器來選取。按住 Shift 並按一下可選取多個桌面。"
+          }
+        }
+      }
+    },
+    "Clip Length" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "طول المقطع"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cliplänge"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duración del clip"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Durée de l’extrait"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "क्लिप की लंबाई"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Durata clip"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "クリップの長さ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "클립 길이"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Długość klipu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duração do Clipe"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Длина клипа"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klip Uzunluğu"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тривалість кліпу"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "片段长度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "片段長度"
           }
         }
       }
@@ -27491,6 +28150,100 @@
         }
       }
     },
+    "Do you want to undo every Scene Editor (Live) edit of “%@”? Its properties are kept." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هل تريد التراجع عن كل تعديلات محرر المشهد (مباشر) على «%@»؟ يتم الاحتفاظ بخصائصها."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Möchten Sie alle Änderungen an „%@“ im Szeneneditor (Live) widerrufen? Die Eigenschaften bleiben erhalten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Quieres deshacer todos los cambios del Editor de escenas (en vivo) en «%@»? Sus propiedades se conservan."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voulez-vous annuler toutes les modifications de « %@ » faites dans l’Éditeur de scène (en direct) ? Ses propriétés sont conservées."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "क्या आप “%@” में सीन एडिटर (लाइव) के हर बदलाव को पहले जैसा करना चाहते हैं? इसकी प्रॉपर्टी बनी रहेंगी।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vuoi annullare ogni modifica a “%@” fatta nell’Editor scena (live)? Le sue proprietà vengono mantenute."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」へのシーンエディタ（ライブ）での編集をすべて取り消しますか？プロパティは保持されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘%@’에 대한 장면 편집기(라이브) 편집 내용을 모두 취소하시겠습니까? 속성은 유지됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Czy chcesz cofnąć wszystkie zmiany „%@” wprowadzone w Edytorze sceny (na żywo)? Jej właściwości zostaną zachowane."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deseja desfazer todas as edições do Editor de Cena (ao vivo) em “%@”? As propriedades são mantidas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отменить все изменения «%@», сделанные в Редакторе сцены (вживую)? Свойства сохранятся."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” için tüm Sahne Düzenleyicisi (Canlı) düzenlemelerini geri almak istiyor musunuz? Özellikleri korunur."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скасувати всі зміни «%@», зроблені в Редакторі сцени (наживо)? Властивості збережуться."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要撤销场景编辑器（实时）对“%@”所做的所有编辑吗？其属性会保留。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要還原場景編輯器（即時）對「%@」所做的所有編輯嗎？其屬性會保留。"
+          }
+        }
+      }
+    },
     "Do you want to undo every Scene Editor edit of “%@”? Its properties are kept." : {
       "localizations" : {
         "ar" : {
@@ -31264,6 +32017,100 @@
         }
       }
     },
+    "Drag to move the clip." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اسحب لتحريك المقطع."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ziehen Sie, um den Clip zu verschieben."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrastra para mover el clip."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Faites glisser pour déplacer l’extrait."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "क्लिप खिसकाने के लिए ड्रैग करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trascina per spostare la clip."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ドラッグしてクリップを移動します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "드래그하여 클립을 이동하십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przeciągnij, aby przesunąć klip."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arraste para mover o clipe."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перетащите, чтобы сдвинуть клип."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klibi taşımak için sürükleyin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перетягніть, щоб посунути кліп."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拖移以移动片段。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拖移以移動片段。"
+          }
+        }
+      }
+    },
     "Drag to move the picture; pinch to zoom" : {
       "localizations" : {
         "ar" : {
@@ -32205,6 +33052,194 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "同時編輯 X 和 Y"
+          }
+        }
+      }
+    },
+    "Edit layers and effects live on the running wallpaper, or switch to iPhone & iPad Export to make a Live Photo lock screen without changing your desktop." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عدّل الطبقات والتأثيرات مباشرة على الخلفية قيد التشغيل، أو انتقل إلى التصدير إلى iPhone وiPad لإنشاء شاشة قفل Live Photo دون تغيير سطح المكتب."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bearbeiten Sie Ebenen und Effekte live am laufenden Hintergrundbild oder wechseln Sie zu „iPhone- & iPad-Export“, um einen Live-Photo-Sperrbildschirm zu erstellen, ohne den Schreibtisch zu ändern."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edita capas y efectos en vivo sobre el fondo en ejecución, o cambia a Exportar a iPhone y iPad para crear una pantalla bloqueada con Live Photo sin cambiar tu escritorio."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifiez les calques et les effets en direct sur le fond d’écran en cours, ou passez à Exportation iPhone et iPad pour créer un écran verrouillé Live Photo sans changer votre bureau."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "चल रहे वॉलपेपर पर लेयर और इफ़ेक्ट लाइव बदलें, या डेस्कटॉप बदले बिना Live Photo लॉक स्क्रीन बनाने के लिए iPhone और iPad के लिए एक्सपोर्ट पर जाएँ।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifica livelli ed effetti dal vivo sullo sfondo in esecuzione, oppure passa a Esporta per iPhone e iPad per creare una schermata di blocco con Live Photo senza cambiare la scrivania."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "実行中の壁紙でレイヤーとエフェクトをライブで編集できます。“iPhone・iPad用に書き出す”に切り替えると、デスクトップを変えずにLive Photoのロック画面を作成できます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실행 중인 배경화면에서 레이어와 효과를 실시간으로 편집하거나, iPhone 및 iPad로 내보내기로 전환하여 데스크탑을 바꾸지 않고 Live Photo 잠금 화면을 만드십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edytuj warstwy i efekty na żywo w uruchomionej tapecie albo przełącz na Eksport na iPhone’a i iPada, aby utworzyć ekran blokady z Live Photo bez zmiany biurka."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edite camadas e efeitos ao vivo no papel de parede em execução, ou mude para Exportar para iPhone e iPad para criar uma Tela Bloqueada com Live Photo sem alterar a mesa."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Редактируйте слои и эффекты вживую на запущенных обоях или перейдите в «Экспорт для iPhone и iPad», чтобы сделать экран блокировки с Live Photo, не меняя рабочий стол."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çalışan duvar kâğıdında katmanları ve efektleri canlı düzenleyin ya da masaüstünüzü değiştirmeden Live Photo Kilitli Ekranı hazırlamak için iPhone ve iPad için Dışa Aktar’a geçin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Редагуйте шари й ефекти наживо на запущених шпалерах або перейдіть до «Експорт для iPhone та iPad», щоб створити екран блокування з Live Photo, не змінюючи робочий стіл."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在正在运行的墙纸上实时编辑图层和效果，或切换到“导出到 iPhone 和 iPad”，在不更改桌面的情况下制作实况照片锁定屏幕。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在執行中的背景圖片上即時編輯圖層和效果，或切換到「輸出至 iPhone 和 iPad」，在不更改桌面的情況下製作原況照片鎖定畫面。"
+          }
+        }
+      }
+    },
+    "Edit the running wallpaper, or preview it as an iPhone or iPad lock screen and export a Live Photo without changing your desktop" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عدّل الخلفية قيد التشغيل، أو عاينها كشاشة قفل iPhone أو iPad وصدّر Live Photo دون تغيير سطح المكتب"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laufendes Hintergrundbild bearbeiten oder als iPhone- bzw. iPad-Sperrbildschirm anzeigen und ein Live Photo exportieren, ohne den Schreibtisch zu ändern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edita el fondo en ejecución, o previsualízalo como pantalla bloqueada del iPhone o iPad y exporta una Live Photo sin cambiar tu escritorio"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifier le fond d’écran en cours, ou le prévisualiser comme écran verrouillé d’iPhone ou d’iPad et exporter une Live Photo sans changer votre bureau"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "चल रहे वॉलपेपर में बदलाव करें, या डेस्कटॉप बदले बिना उसे iPhone या iPad लॉक स्क्रीन के रूप में देखें और Live Photo एक्सपोर्ट करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifica lo sfondo in esecuzione, oppure mostralo come schermata di blocco di iPhone o iPad ed esporta una Live Photo senza cambiare la scrivania"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "実行中の壁紙を編集するか、デスクトップを変えずにiPhoneやiPadのロック画面としてプレビューしてLive Photoを書き出します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실행 중인 배경화면을 편집하거나, 데스크탑을 바꾸지 않고 iPhone 또는 iPad 잠금 화면으로 미리 보고 Live Photo를 내보냅니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edytuj uruchomioną tapetę albo podejrzyj ją jako ekran blokady iPhone’a lub iPada i wyeksportuj Live Photo bez zmiany biurka"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edite o papel de parede em execução, ou pré-visualize-o como Tela Bloqueada do iPhone ou iPad e exporte uma Live Photo sem alterar a mesa"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Изменить запущенные обои или просмотреть их как экран блокировки iPhone или iPad и экспортировать Live Photo, не меняя рабочий стол"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çalışan duvar kâğıdını düzenleyin ya da masaüstünüzü değiştirmeden iPhone veya iPad Kilitli Ekranı olarak önizleyip Live Photo olarak dışa aktarın"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Редагувати запущені шпалери або переглянути їх як екран блокування iPhone чи iPad і експортувати Live Photo, не змінюючи робочий стіл"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "编辑正在运行的墙纸，或将其预览为 iPhone 或 iPad 锁定屏幕并导出实况照片，而不更改桌面"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "編輯執行中的背景圖片，或將其預覽為 iPhone 或 iPad 鎖定畫面並輸出原況照片，而不更改桌面"
           }
         }
       }
@@ -33716,6 +34751,194 @@
         }
       }
     },
+    "Export Settings" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعدادات التصدير"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exporteinstellungen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes de exportación"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réglages d’exportation"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एक्सपोर्ट सेटिंग्स"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impostazioni di esportazione"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "書き出し設定"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내보내기 설정"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ustawienia eksportu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes de Exportação"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настройки экспорта"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dışa Aktarma Ayarları"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Параметри експорту"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出设置"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "輸出設定"
+          }
+        }
+      }
+    },
+    "Export Settings Panel" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لوحة إعدادات التصدير"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exporteinstellungen-Bereich"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Panel de ajustes de exportación"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Panneau des réglages d’exportation"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एक्सपोर्ट सेटिंग्स पैनल"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pannello impostazioni di esportazione"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "書き出し設定パネル"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내보내기 설정 패널"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Panel ustawień eksportu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Painel de Ajustes de Exportação"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Панель настроек экспорта"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dışa Aktarma Ayarları Paneli"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Панель параметрів експорту"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出设置面板"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "輸出設定面板"
+          }
+        }
+      }
+    },
     "Export Settings…" : {
       "localizations" : {
         "ar" : {
@@ -35036,6 +36259,194 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "篩選結果"
+          }
+        }
+      }
+    },
+    "Find Best Motion" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "العثور على أفضل حركة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beste Bewegung finden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar el mejor movimiento"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trouver le meilleur mouvement"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सबसे अच्छी हलचल खोजें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trova il movimento migliore"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最適な動きを探す"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "최적의 움직임 찾기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Znajdź najlepszy ruch"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encontrar Melhor Movimento"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Найти лучшее движение"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En İyi Hareketi Bul"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знайти найкращий рух"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查找最佳动态"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尋找最佳動態"
+          }
+        }
+      }
+    },
+    "Find Best Motion Again" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "العثور على أفضل حركة مجددًا"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beste Bewegung erneut finden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volver a buscar el mejor movimiento"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retrouver le meilleur mouvement"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सबसे अच्छी हलचल फिर से खोजें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trova di nuovo il movimento migliore"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最適な動きをもう一度探す"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "최적의 움직임 다시 찾기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Znajdź najlepszy ruch ponownie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encontrar Melhor Movimento Novamente"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Снова найти лучшее движение"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En İyi Hareketi Yeniden Bul"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знову знайти найкращий рух"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新查找最佳动态"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新尋找最佳動態"
           }
         }
       }
@@ -50466,6 +51877,100 @@
         }
       }
     },
+    "Layer Adjustments" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ضبط الطبقة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ebenenanpassungen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes de capa"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustements du calque"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लेयर एडजस्टमेंट"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regolazioni del livello"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "レイヤーの調整"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "레이어 조절"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dostosowanie warstwy"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes da Camada"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настройка слоя"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Katman Ayarları"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Налаштування шару"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图层调整"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "圖層調整"
+          }
+        }
+      }
+    },
     "Layer Details" : {
       "localizations" : {
         "ar" : {
@@ -51686,6 +53191,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "鎖定螢幕"
+          }
+        }
+      }
+    },
+    "Lock screen preview" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "معاينة شاشة القفل"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorschau des Sperrbildschirms"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vista previa de la pantalla bloqueada"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aperçu de l’écran verrouillé"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लॉक स्क्रीन प्रीव्यू"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anteprima della schermata di blocco"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ロック画面のプレビュー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "잠금 화면 미리 보기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podgląd ekranu blokady"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pré-visualização da Tela Bloqueada"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Просмотр экрана блокировки"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kilitli Ekran önizlemesi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перегляд екрана блокування"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "锁定屏幕预览"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "鎖定畫面預覽"
           }
         }
       }
@@ -53384,6 +54983,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "低（10,000）"
+          }
+        }
+      }
+    },
+    "Lower quality makes a smaller movie." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الجودة الأقل تنتج فيلمًا أصغر."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine geringere Qualität ergibt einen kleineren Film."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una calidad menor genera un vídeo más pequeño."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une qualité plus faible produit une vidéo plus petite."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कम क्वालिटी से मूवी छोटी बनती है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una qualità inferiore produce un filmato più piccolo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "品質を下げるとムービーが小さくなります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화질을 낮추면 동영상이 작아집니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niższa jakość daje mniejszy film."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uma qualidade menor gera um vídeo menor."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чем ниже качество, тем меньше видео."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daha düşük kalite daha küçük bir film oluşturur."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нижча якість дає менше відео."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "质量越低，影片越小。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "品質越低，影片越小。"
           }
         }
       }
@@ -57362,6 +59055,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "動態"
+          }
+        }
+      }
+    },
+    "Motion timeline" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "المخطط الزمني للحركة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bewegungszeitleiste"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Línea de tiempo del movimiento"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chronologie du mouvement"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "हलचल टाइमलाइन"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Timeline del movimento"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "動きのタイムライン"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "움직임 타임라인"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oś czasu ruchu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linha do tempo do movimento"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шкала движения"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hareket zaman çizelgesi"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шкала руху"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "动态时间线"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "動態時間列"
           }
         }
       }
@@ -62361,6 +64148,100 @@
         }
       }
     },
+    "No matching devices" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا توجد أجهزة مطابقة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine passenden Geräte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay dispositivos que coincidan"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun appareil correspondant"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कोई मेल खाता डिवाइस नहीं"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessun dispositivo corrispondente"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一致するデバイスはありません"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일치하는 기기 없음"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brak pasujących urządzeń"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhum dispositivo correspondente"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет подходящих устройств"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eşleşen aygıt yok"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає відповідних пристроїв"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有匹配的设备"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "沒有符合的裝置"
+          }
+        }
+      }
+    },
     "No originals ready to remove" : {
       "localizations" : {
         "ar" : {
@@ -65199,6 +67080,100 @@
         }
       }
     },
+    "Only scene wallpapers can be exported to iPhone or iPad for now" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حاليًا يمكن تصدير خلفيات المشاهد فقط إلى iPhone أو iPad"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Derzeit können nur Szenen-Hintergrundbilder auf iPhone oder iPad exportiert werden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Por ahora solo se pueden exportar fondos de escena al iPhone o iPad"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pour l’instant, seuls les fonds d’écran de scène peuvent être exportés vers l’iPhone ou l’iPad"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अभी केवल सीन वॉलपेपर ही iPhone या iPad पर एक्सपोर्ट किए जा सकते हैं"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Per ora si possono esportare su iPhone o iPad solo gli sfondi scena"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在、iPhoneまたはiPadに書き出せるのはシーン壁紙のみです"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재는 장면 배경화면만 iPhone 또는 iPad로 내보낼 수 있습니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na razie na iPhone’a lub iPada można eksportować tylko tapety scen"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Por enquanto, apenas papéis de parede de cena podem ser exportados para o iPhone ou iPad"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пока на iPhone или iPad можно экспортировать только обои-сцены"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Şimdilik yalnızca sahne duvar kâğıtları iPhone veya iPad’e aktarılabilir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поки що на iPhone чи iPad можна експортувати лише шпалери-сцени"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目前只有场景墙纸可以导出到 iPhone 或 iPad"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目前只有場景背景圖片可以輸出至 iPhone 或 iPad"
+          }
+        }
+      }
+    },
     "Only the selected display is reset." : {
       "comment" : "Reset confirmation, one display selected",
       "localizations" : {
@@ -65483,6 +67458,100 @@
         }
       }
     },
+    "Only this export changes. The wallpaper on your desktop keeps its properties and edits." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يتغير هذا التصدير فقط. تحتفظ الخلفية على سطح المكتب بخصائصها وتعديلاتها."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur dieser Export ändert sich. Das Hintergrundbild auf dem Schreibtisch behält seine Eigenschaften und Änderungen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo cambia esta exportación. El fondo de tu escritorio conserva sus propiedades y cambios."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seule cette exportation change. Le fond d’écran de votre bureau garde ses propriétés et ses modifications."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "केवल यह एक्सपोर्ट बदलता है। आपके डेस्कटॉप का वॉलपेपर अपनी प्रॉपर्टी और बदलाव बनाए रखता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambia solo questa esportazione. Lo sfondo sulla scrivania mantiene le sue proprietà e modifiche."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "変わるのはこの書き出しだけです。デスクトップの壁紙のプロパティと編集はそのままです。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 내보내기만 변경됩니다. 데스크탑의 배경화면은 속성과 편집 내용을 유지합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zmienia się tylko ten eksport. Tapeta na biurku zachowuje swoje właściwości i zmiany."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apenas esta exportação muda. O papel de parede da mesa mantém suas propriedades e edições."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Меняется только этот экспорт. Обои на рабочем столе сохраняют свои свойства и изменения."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yalnızca bu dışa aktarma değişir. Masaüstünüzdeki duvar kâğıdı özelliklerini ve düzenlemelerini korur."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Змінюється лише цей експорт. Шпалери на робочому столі зберігають свої властивості й зміни."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只有此导出会更改。桌面上的墙纸会保留其属性和编辑。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只有此輸出會更改。桌面上的背景圖片會保留其屬性和編輯。"
+          }
+        }
+      }
+    },
     "Only wallpapers you haven't customized" : {
       "comment" : "Choice when applying a preset to all wallpapers: leave customized ones alone",
       "localizations" : {
@@ -65574,6 +67643,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "僅限你未自訂的背景圖片"
+          }
+        }
+      }
+    },
+    "Opacity" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "العتامة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deckkraft"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opacidad"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opacité"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपारदर्शिता"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opacità"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不透明度"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "불투명도"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Krycie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opacidade"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Непрозрачность"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opaklık"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Непрозорість"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不透明度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不透明度"
           }
         }
       }
@@ -67089,6 +69252,100 @@
         }
       }
     },
+    "Open Wallpaper Engine isn't allowed to add to your Photos library. Allow it in Privacy & Security, then turn this on again." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يُسمح لـ Open Wallpaper Engine بالإضافة إلى مكتبة الصور. اسمح بذلك في الخصوصية والأمن، ثم شغّل هذا الخيار مجددًا."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine darf nichts zu Ihrer Fotomediathek hinzufügen. Erlauben Sie es unter „Datenschutz & Sicherheit“ und aktivieren Sie die Option dann erneut."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine no tiene permiso para añadir a tu fototeca. Permítelo en Privacidad y seguridad y vuelve a activar esta opción."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine n’est pas autorisé à ajouter des éléments à votre photothèque. Autorisez-le dans Confidentialité et sécurité, puis réactivez cette option."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine को आपकी फ़ोटो लाइब्रेरी में जोड़ने की अनुमति नहीं है। गोपनीयता और सुरक्षा में इसकी अनुमति दें, फिर इसे दोबारा चालू करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine non ha il permesso di aggiungere elementi alla libreria di Foto. Consentilo in Privacy e sicurezza, poi riattiva questa opzione."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engineには写真ライブラリへの追加が許可されていません。“プライバシーとセキュリティ”で許可してから、もう一度オンにしてください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine에 사진 보관함에 추가할 권한이 없습니다. 개인정보 보호 및 보안에서 허용한 다음 이 옵션을 다시 켜십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine nie ma pozwolenia na dodawanie do biblioteki Zdjęć. Zezwól na to w sekcji Prywatność i ochrona, a następnie włącz tę opcję ponownie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Open Wallpaper Engine não tem permissão para adicionar itens à fototeca. Permita em Privacidade e Segurança e ative esta opção novamente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine не разрешено добавлять в медиатеку «Фото». Разрешите это в разделе «Конфиденциальность и безопасность», затем снова включите этот параметр."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine’in Fotoğraflar arşivinize ekleme izni yok. Gizlilik ve Güvenlik’te izin verin, sonra bunu yeniden açın."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine не має дозволу додавати до медіатеки «Фото». Дозвольте це в розділі «Приватність і безпека», а потім знову ввімкніть цей параметр."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 未获准添加到你的照片图库。请在“隐私与安全性”中允许，然后再次打开此选项。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Wallpaper Engine 未獲准加入你的照片圖庫。請在「隱私權與安全性」中允許，然後再次開啟此選項。"
+          }
+        }
+      }
+    },
     "Open Wallpaper Engine needs Screen & System Audio Recording permission to read system audio for audio bars and other audio-reactive wallpapers. Audio capture starts on its own once the permission is granted." : {
       "comment" : "Screen & System Audio Recording is the name of the macOS privacy setting",
       "localizations" : {
@@ -67840,6 +70097,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在網站上打開"
+          }
+        }
+      }
+    },
+    "Open the export settings: device, crop, clip, quality, layers and properties" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "فتح إعدادات التصدير: الجهاز والقص والمقطع والجودة والطبقات والخصائص"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exporteinstellungen öffnen: Gerät, Ausschnitt, Clip, Qualität, Ebenen und Eigenschaften"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre los ajustes de exportación: dispositivo, recorte, clip, calidad, capas y propiedades"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir les réglages d’exportation : appareil, recadrage, extrait, qualité, calques et propriétés"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एक्सपोर्ट सेटिंग्स खोलें: डिवाइस, क्रॉप, क्लिप, क्वालिटी, लेयर और प्रॉपर्टी"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri le impostazioni di esportazione: dispositivo, ritaglio, clip, qualità, livelli e proprietà"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "書き出し設定を開きます：デバイス、切り取り、クリップ、品質、レイヤー、プロパティ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내보내기 설정 열기: 기기, 자르기, 클립, 화질, 레이어 및 속성"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otwórz ustawienia eksportu: urządzenie, kadr, klip, jakość, warstwy i właściwości"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre os ajustes de exportação: dispositivo, recorte, clipe, qualidade, camadas e propriedades"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть настройки экспорта: устройство, кадрирование, клип, качество, слои и свойства"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dışa aktarma ayarlarını açar: aygıt, kırpma, klip, kalite, katmanlar ve özellikler"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити параметри експорту: пристрій, кадрування, кліп, якість, шари й властивості"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开导出设置：设备、裁剪、片段、质量、图层和属性"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打開輸出設定：裝置、裁切、片段、品質、圖層和屬性"
           }
         }
       }
@@ -76565,6 +78916,100 @@
         }
       }
     },
+    "Preview in Landscape" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "المعاينة بالوضع الأفقي"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Querformat anzeigen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previsualizar en horizontal"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prévisualiser en paysage"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लैंडस्केप में प्रीव्यू करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anteprima in orizzontale"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "横向きでプレビュー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "가로 모드로 미리 보기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podgląd w poziomie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pré-visualizar na Horizontal"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Просмотр в альбомной ориентации"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yatay Önizle"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перегляд в альбомній орієнтації"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以横向预览"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以橫向預覽"
+          }
+        }
+      }
+    },
     "Preview the wallpaper as an iPhone lock screen and export it as a Live Photo" : {
       "localizations" : {
         "ar" : {
@@ -83594,6 +86039,100 @@
         }
       }
     },
+    "Render the first seconds of the scene small and move the clip to where it moves the most" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "عرض الثواني الأولى من المشهد بحجم صغير ونقل المقطع إلى حيث تكون الحركة أكثر"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die ersten Sekunden der Szene klein rendern und den Clip dorthin verschieben, wo sie sich am meisten bewegt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renderiza en pequeño los primeros segundos de la escena y mueve el clip a donde más se mueve"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Effectuer un rendu réduit des premières secondes de la scène et déplacer l’extrait là où elle bouge le plus"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सीन के पहले कुछ सेकंड छोटे आकार में रेंडर करें और क्लिप को वहाँ ले जाएँ जहाँ सबसे ज़्यादा हलचल है"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esegui un rendering ridotto dei primi secondi della scena e sposta la clip dove si muove di più"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シーンの最初の数秒を縮小してレンダリングし、最も動きの多い位置にクリップを移動します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "장면의 처음 몇 초를 작게 렌더링하고 움직임이 가장 많은 곳으로 클립을 옮깁니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyrenderuj w małym rozmiarze pierwsze sekundy sceny i przesuń klip tam, gdzie jest najwięcej ruchu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renderiza em tamanho pequeno os primeiros segundos da cena e move o clipe para onde há mais movimento"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отрисовать первые секунды сцены в малом размере и сдвинуть клип туда, где больше всего движения"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sahnenin ilk saniyelerini küçük boyutta işler ve klibi en çok hareketin olduğu yere taşır"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відрендерити перші секунди сцени в малому розмірі й посунути кліп туди, де найбільше руху"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以小尺寸渲染场景的前几秒，并将片段移到动态最多的位置"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "以小尺寸算繪場景的前幾秒，並將片段移到動態最多的位置"
+          }
+        }
+      }
+    },
     "Render web wallpapers at standard resolution" : {
       "localizations" : {
         "ar" : {
@@ -85284,6 +87823,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "重置屬性"
+          }
+        }
+      }
+    },
+    "Reset Scene Editor (Live) Edits" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة تعيين تعديلات محرر المشهد (مباشر)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Änderungen im Szeneneditor (Live) zurücksetzen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restablecer cambios del Editor de escenas (en vivo)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réinitialiser les modifications de l’Éditeur de scène (en direct)"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सीन एडिटर (लाइव) के बदलाव रीसेट करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ripristina modifiche dell’Editor scena (live)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シーンエディタ（ライブ）の編集をリセット"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "장면 편집기(라이브) 편집 내용 재설정"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resetuj zmiany z Edytora sceny (na żywo)"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redefinir Edições do Editor de Cena (ao vivo)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить изменения Редактора сцены (вживую)"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sahne Düzenleyicisi (Canlı) Düzenlemelerini Sıfırla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скинути зміни Редактора сцени (наживо)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置场景编辑器（实时）编辑"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置場景編輯器（即時）編輯"
           }
         }
       }
@@ -87081,6 +89714,194 @@
         }
       }
     },
+    "Review the export settings, then render the Live Photo and save its photo and movie to a folder" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "راجع إعدادات التصدير، ثم اعرض Live Photo واحفظ صورتها وفيلمها في مجلد"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exporteinstellungen prüfen, dann das Live Photo rendern und Foto und Film in einem Ordner sichern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revisa los ajustes de exportación y luego renderiza la Live Photo y guarda su foto y su vídeo en una carpeta"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vérifier les réglages d’exportation, puis effectuer le rendu de la Live Photo et enregistrer sa photo et sa vidéo dans un dossier"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एक्सपोर्ट सेटिंग्स देखें, फिर Live Photo रेंडर करके उसकी फ़ोटो और मूवी किसी फ़ोल्डर में सेव करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controlla le impostazioni di esportazione, poi esegui il rendering della Live Photo e salvane foto e filmato in una cartella"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "書き出し設定を確認してから、Live Photoをレンダリングして写真とムービーをフォルダに保存します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내보내기 설정을 확인한 다음 Live Photo를 렌더링하여 사진과 동영상을 폴더에 저장합니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przejrzyj ustawienia eksportu, a następnie wyrenderuj Live Photo i zachowaj jego zdjęcie i film w folderze"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revise os ajustes de exportação e depois renderize a Live Photo e salve sua foto e seu vídeo em uma pasta"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверить настройки экспорта, затем отрисовать Live Photo и сохранить его фото и видео в папку"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dışa aktarma ayarlarını gözden geçirin, ardından Live Photo’yu işleyip fotoğrafını ve filmini bir klasöre kaydedin"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переглянути параметри експорту, потім відрендерити Live Photo і зберегти його фото й відео в папку"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "检查导出设置，然后渲染实况照片并将其照片和影片存储到文件夹"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "檢查輸出設定，然後算繪原況照片並將其照片和影片儲存到檔案夾"
+          }
+        }
+      }
+    },
+    "Review the export settings, then render the Live Photo and send it with AirDrop" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "راجع إعدادات التصدير، ثم اعرض Live Photo وأرسلها عبر AirDrop"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exporteinstellungen prüfen, dann das Live Photo rendern und per AirDrop senden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revisa los ajustes de exportación y luego renderiza la Live Photo y envíala con AirDrop"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vérifier les réglages d’exportation, puis effectuer le rendu de la Live Photo et l’envoyer avec AirDrop"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एक्सपोर्ट सेटिंग्स देखें, फिर Live Photo रेंडर करके AirDrop से भेजें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controlla le impostazioni di esportazione, poi esegui il rendering della Live Photo e inviala con AirDrop"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "書き出し設定を確認してから、Live PhotoをレンダリングしてAirDropで送信します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내보내기 설정을 확인한 다음 Live Photo를 렌더링하여 AirDrop으로 보냅니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przejrzyj ustawienia eksportu, a następnie wyrenderuj Live Photo i wyślij przez AirDrop"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revise os ajustes de exportação e depois renderize a Live Photo e envie-a por AirDrop"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверить настройки экспорта, затем отрисовать Live Photo и отправить через AirDrop"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dışa aktarma ayarlarını gözden geçirin, ardından Live Photo’yu işleyip AirDrop ile gönderin"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переглянути параметри експорту, потім відрендерити Live Photo і надіслати через AirDrop"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "检查导出设置，然后渲染实况照片并通过隔空投送发送"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "檢查輸出設定，然後算繪原況照片並透過 AirDrop 傳送"
+          }
+        }
+      }
+    },
     "Right" : {
       "localizations" : {
         "ar" : {
@@ -88785,6 +91606,195 @@
         }
       }
     },
+    "Saved to the “%@” album in Photos." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم الحفظ في ألبوم «%@» في الصور."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Album „%@“ in „Fotos“ gesichert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardada en el álbum «%@» de Fotos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrée dans l’album « %@ » de Photos."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Photos में “%@” एल्बम में सेव किया गया।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salvata nell’album “%@” di Foto."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“写真”のアルバム「%@」に保存しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사진의 ‘%@’ 앨범에 저장되었습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zachowano w albumie „%@” w Zdjęciach."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salva no álbum “%@” do Fotos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохранено в альбом «%@» в «Фото»."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fotoğraflar’daki “%@” albümüne kaydedildi."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збережено в альбом «%@» у «Фото»."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已存储到“照片”中的“%@”相簿。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已儲存到「照片」中的「%@」相簿。"
+          }
+        }
+      }
+    },
+    "Saves the current properties and Scene Editor (Live) edits. A preset with the same name is replaced." : {
+      "comment" : "Message of the prompt that names a new wallpaper preset",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يحفظ الخصائص الحالية وتعديلات محرر المشهد (مباشر). يتم استبدال الإعداد المسبق الذي يحمل الاسم نفسه."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sichert die aktuellen Eigenschaften und Änderungen im Szeneneditor (Live). Eine Voreinstellung mit demselben Namen wird ersetzt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guarda las propiedades actuales y los cambios del Editor de escenas (en vivo). Se reemplaza el preajuste con el mismo nombre."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistre les propriétés actuelles et les modifications de l’Éditeur de scène (en direct). Un préréglage du même nom est remplacé."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मौजूदा प्रॉपर्टी और सीन एडिटर (लाइव) के बदलाव सेव करता है। इसी नाम का प्रीसेट बदल दिया जाता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salva le proprietà attuali e le modifiche dell’Editor scena (live). Una preimpostazione con lo stesso nome viene sostituita."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在のプロパティとシーンエディタ（ライブ）での編集を保存します。同じ名前のプリセットは置き換えられます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 속성과 장면 편집기(라이브) 편집 내용을 저장합니다. 같은 이름의 사전 설정은 대치됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zachowuje bieżące właściwości i zmiany z Edytora sceny (na żywo). Ustawienie o tej samej nazwie zostanie zastąpione."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salva as propriedades atuais e as edições do Editor de Cena (ao vivo). Um preajuste com o mesmo nome é substituído."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохраняет текущие свойства и изменения Редактора сцены (вживую). Пресет с тем же названием заменяется."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geçerli özellikleri ve Sahne Düzenleyicisi (Canlı) düzenlemelerini kaydeder. Aynı adlı hazır ayar değiştirilir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберігає поточні властивості й зміни Редактора сцени (наживо). Пресет із такою самою назвою замінюється."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "存储当前属性和场景编辑器（实时）的编辑。同名的预设会被替换。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "儲存目前屬性和場景編輯器（即時）的編輯。同名的預設會被取代。"
+          }
+        }
+      }
+    },
     "Saves the current properties and Scene Editor edits. A preset with the same name is replaced." : {
       "comment" : "Message of the prompt that names a new wallpaper preset",
       "localizations" : {
@@ -89538,6 +92548,195 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "場景編輯器"
+          }
+        }
+      }
+    },
+    "Scene Editor (Live)" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "محرر المشهد (مباشر)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Szeneneditor (Live)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editor de escenas (en vivo)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Éditeur de scène (en direct)"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सीन एडिटर (लाइव)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editor scena (live)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シーンエディタ（ライブ）"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "장면 편집기(라이브)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edytor sceny (na żywo)"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editor de Cena (ao vivo)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Редактор сцены (вживую)"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sahne Düzenleyicisi (Canlı)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Редактор сцени (наживо)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "场景编辑器（实时）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "場景編輯器（即時）"
+          }
+        }
+      }
+    },
+    "Scene Editor (Live) edits are reset too." : {
+      "comment" : "Reset confirmation: the Scene Editor (Live)'s edits go as well",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تتم إعادة تعيين تعديلات محرر المشهد (مباشر) أيضًا."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Änderungen im Szeneneditor (Live) werden ebenfalls zurückgesetzt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los cambios del Editor de escenas (en vivo) también se restablecen."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les modifications de l’Éditeur de scène (en direct) sont aussi réinitialisées."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सीन एडिटर (लाइव) के बदलाव भी रीसेट हो जाते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anche le modifiche dell’Editor scena (live) vengono ripristinate."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シーンエディタ（ライブ）での編集もリセットされます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "장면 편집기(라이브) 편집 내용도 재설정됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zmiany z Edytora sceny (na żywo) również zostaną zresetowane."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "As edições do Editor de Cena (ao vivo) também são redefinidas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Изменения Редактора сцены (вживую) тоже сбрасываются."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sahne Düzenleyicisi (Canlı) düzenlemeleri de sıfırlanır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зміни Редактора сцени (наживо) теж скидаються."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "场景编辑器（实时）的编辑也会被重置。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "場景編輯器（即時）的編輯也會被重置。"
           }
         }
       }
@@ -91616,6 +94815,100 @@
         }
       }
     },
+    "Search by name, year or resolution" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "البحث بالاسم أو السنة أو الدقة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach Name, Jahr oder Auflösung suchen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar por nombre, año o resolución"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechercher par nom, année ou résolution"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "नाम, साल या रेज़ोल्यूशन से खोजें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerca per nome, anno o risoluzione"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "名前、年、解像度で検索"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이름, 연도 또는 해상도로 검색"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Szukaj według nazwy, roku lub rozdzielczości"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar por nome, ano ou resolução"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поиск по названию, году или разрешению"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ada, yıla veya çözünürlüğe göre ara"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пошук за назвою, роком або роздільністю"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按名称、年份或分辨率搜索"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "依名稱、年份或解析度搜尋"
+          }
+        }
+      }
+    },
     "Search the Steam Workshop" : {
       "localizations" : {
         "ar" : {
@@ -92368,6 +95661,100 @@
         }
       }
     },
+    "Select a layer in the list to adjust it here." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختر طبقة في القائمة لضبطها هنا."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wählen Sie eine Ebene in der Liste aus, um sie hier anzupassen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selecciona una capa en la lista para ajustarla aquí."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sélectionnez un calque dans la liste pour l’ajuster ici."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इसे यहाँ एडजस्ट करने के लिए सूची में कोई लेयर चुनें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seleziona un livello nell’elenco per regolarlo qui."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リストでレイヤーを選択すると、ここで調整できます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "목록에서 레이어를 선택하면 여기에서 조절할 수 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wybierz warstwę z listy, aby ją tu dostosować."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selecione uma camada na lista para ajustá-la aqui."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите слой в списке, чтобы настроить его здесь."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Burada ayarlamak için listeden bir katman seçin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виберіть шар у списку, щоб налаштувати його тут."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在列表中选择一个图层，即可在此调整。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在列表中選擇一個圖層，即可在此調整。"
+          }
+        }
+      }
+    },
     "Select a wallpaper to edit it" : {
       "comment" : "Tooltip of the library bottom bar’s Edit Wallpaper button while no wallpaper is selected",
       "localizations" : {
@@ -93024,6 +96411,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "傳送到 iPhone"
+          }
+        }
+      }
+    },
+    "Send with AirDrop" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إرسال عبر AirDrop"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Per AirDrop senden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar con AirDrop"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoyer avec AirDrop"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirDrop से भेजें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invia con AirDrop"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirDropで送信"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirDrop으로 보내기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyślij przez AirDrop"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar por AirDrop"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отправить через AirDrop"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AirDrop ile Gönder"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Надіслати через AirDrop"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通过隔空投送发送"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "透過 AirDrop 傳送"
           }
         }
       }
@@ -96897,6 +100378,100 @@
         }
       }
     },
+    "Show or hide the Export Settings panel" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إظهار لوحة إعدادات التصدير أو إخفاؤها"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bereich „Exporteinstellungen“ ein- oder ausblenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra u oculta el panel de ajustes de exportación"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher ou masquer le panneau des réglages d’exportation"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "एक्सपोर्ट सेटिंग्स पैनल दिखाएँ या छिपाएँ"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra o nascondi il pannello delle impostazioni di esportazione"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "書き出し設定パネルを表示または非表示にします"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내보내기 설정 패널을 보거나 가립니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokaż lub ukryj panel ustawień eksportu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra ou oculta o painel de ajustes de exportação"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показать или скрыть панель настроек экспорта"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dışa Aktarma Ayarları panelini gösterir veya gizler"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати або сховати панель параметрів експорту"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示或隐藏导出设置面板"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顯示或隱藏輸出設定面板"
+          }
+        }
+      }
+    },
     "Show or hide the filters" : {
       "localizations" : {
         "ar" : {
@@ -97273,6 +100848,100 @@
         }
       }
     },
+    "Show the part of the picture an iPad shows when it is turned sideways" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إظهار جزء الصورة الذي يعرضه iPad عند تدويره أفقيًا"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt den Teil des Bildes, den ein iPad im Querformat anzeigt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra la parte de la imagen que se ve en un iPad cuando se gira de lado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher la partie de l’image visible sur un iPad tourné en paysage"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPad को आड़ा घुमाने पर तस्वीर का जो हिस्सा दिखता है, वह दिखाएँ"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra la parte dell’immagine visibile su un iPad girato in orizzontale"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPadを横向きにしたときに表示される画像の部分を表示します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPad를 가로로 돌렸을 때 보이는 사진 부분을 보여줍니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokazuje część obrazu widoczną na iPadzie obróconym poziomo"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra a parte da imagem exibida quando o iPad é girado na horizontal"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показывает часть изображения, видную на iPad в альбомной ориентации"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPad yan çevrildiğinde resmin görünen kısmını gösterir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показує частину зображення, видиму на iPad в альбомній орієнтації"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示 iPad 横置时可见的图片部分"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顯示 iPad 橫放時可見的圖片部分"
+          }
+        }
+      }
+    },
     "Show where iOS draws the date and the clock" : {
       "localizations" : {
         "ar" : {
@@ -97363,6 +101032,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "顯示 iOS 繪製日期與時鐘的位置"
+          }
+        }
+      }
+    },
+    "Show where the lock screen draws the date and the clock" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إظهار مكان عرض التاريخ والساعة على شاشة القفل"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt, wo der Sperrbildschirm Datum und Uhrzeit anzeigt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra dónde la pantalla bloqueada dibuja la fecha y el reloj"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher où l’écran verrouillé affiche la date et l’heure"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "दिखाएँ कि लॉक स्क्रीन पर तारीख और घड़ी कहाँ दिखती है"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra dove la schermata di blocco disegna la data e l’ora"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ロック画面で日付と時刻が表示される位置を表示します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "잠금 화면에서 날짜와 시계가 표시되는 위치를 보여줍니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokazuje, gdzie ekran blokady wyświetla datę i zegar"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra onde a Tela Bloqueada exibe a data e o relógio"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показывает, где экран блокировки выводит дату и часы"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kilitli Ekran’ın tarihi ve saati nerede gösterdiğini gösterir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показує, де екран блокування виводить дату й годинник"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示锁定屏幕绘制日期和时钟的位置"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顯示鎖定畫面繪製日期和時鐘的位置"
           }
         }
       }
@@ -99063,6 +102826,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "小型圖像"
+          }
+        }
+      }
+    },
+    "Smaller File" : {
+      "comment" : "Live Photo export quality: more compression",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ملف أصغر"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kleinere Datei"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archivo más pequeño"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fichier plus petit"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "छोटी फ़ाइल"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File più piccolo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "小さいファイル"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "더 작은 파일"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mniejszy plik"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arquivo Menor"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Меньший файл"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daha Küçük Dosya"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Менший файл"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "较小文件"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "較小檔案"
           }
         }
       }
@@ -107287,6 +111145,194 @@
         }
       }
     },
+    "The Live Photo is exported in portrait. In landscape, iPad turns the lock screen and crops the picture to fill it." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يتم تصدير Live Photo بالوضع الرأسي. في الوضع الأفقي، يدير iPad شاشة القفل ويقص الصورة لملئها."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Live Photo wird im Hochformat exportiert. Im Querformat dreht das iPad den Sperrbildschirm und schneidet das Bild passend zu."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La Live Photo se exporta en vertical. En horizontal, el iPad gira la pantalla bloqueada y recorta la imagen para llenarla."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La Live Photo est exportée en portrait. En paysage, l’iPad fait pivoter l’écran verrouillé et recadre l’image pour le remplir."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo पोर्ट्रेट में एक्सपोर्ट होती है। लैंडस्केप में iPad लॉक स्क्रीन घुमाता है और उसे भरने के लिए तस्वीर क्रॉप करता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La Live Photo viene esportata in verticale. In orizzontale, iPad ruota la schermata di blocco e ritaglia l’immagine per riempirla."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photoは縦向きで書き出されます。横向きでは、iPadがロック画面を回転させ、画面いっぱいになるよう画像を切り取ります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo는 세로 방향으로 내보내집니다. 가로 모드에서는 iPad가 잠금 화면을 회전하고 화면을 채우도록 사진을 자릅니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo jest eksportowane w pionie. W poziomie iPad obraca ekran blokady i kadruje obraz, aby go wypełnić."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A Live Photo é exportada na vertical. Na horizontal, o iPad gira a Tela Bloqueada e recorta a imagem para preenchê-la."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo экспортируется в книжной ориентации. В альбомной iPad поворачивает экран блокировки и обрезает изображение, чтобы заполнить его."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo dikey olarak dışa aktarılır. Yatay konumda iPad Kilitli Ekran’ı döndürür ve resmi ekranı dolduracak şekilde kırpar."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo експортується в книжковій орієнтації. В альбомній iPad повертає екран блокування й обрізає зображення, щоб заповнити його."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "实况照片以竖向导出。横向时，iPad 会旋转锁定屏幕并裁剪图片以填满屏幕。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "原況照片以直向輸出。橫向時，iPad 會旋轉鎖定畫面並裁切圖片以填滿畫面。"
+          }
+        }
+      }
+    },
+    "The Live Photo was exported but couldn't be saved to Photos: %@" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم تصدير Live Photo لكن تعذر حفظها في الصور: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Live Photo wurde exportiert, konnte aber nicht in „Fotos“ gesichert werden: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La Live Photo se exportó, pero no se pudo guardar en Fotos: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La Live Photo a été exportée, mais n’a pas pu être enregistrée dans Photos : %@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo एक्सपोर्ट हो गई, लेकिन Photos में सेव नहीं हो सकी: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La Live Photo è stata esportata ma non è stato possibile salvarla in Foto: %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photoは書き出されましたが、“写真”に保存できませんでした：%@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo를 내보냈지만 사진에 저장할 수 없습니다: %@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo zostało wyeksportowane, ale nie można go zachować w Zdjęciach: %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A Live Photo foi exportada, mas não pôde ser salva no Fotos: %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo экспортировано, но его не удалось сохранить в «Фото»: %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo dışa aktarıldı ancak Fotoğraflar’a kaydedilemedi: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Photo експортовано, але його не вдалося зберегти у «Фото»: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "实况照片已导出，但无法存储到“照片”：%@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "原況照片已輸出，但無法儲存到「照片」：%@"
+          }
+        }
+      }
+    },
     "The Live Photo's movie couldn't be written." : {
       "localizations" : {
         "ar" : {
@@ -110028,6 +114074,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "背景圖片的頁面未能載入，因此未錄製螢幕保護程式"
+          }
+        }
+      }
+    },
+    "The window with the most motion is picked. Drag to choose another." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم اختيار المقطع الأكثر حركة. اسحب لاختيار غيره."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Abschnitt mit der meisten Bewegung ist ausgewählt. Ziehen Sie, um einen anderen zu wählen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se elige el tramo con más movimiento. Arrastra para elegir otro."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le passage le plus animé est choisi. Faites glisser pour en choisir un autre."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सबसे ज़्यादा हलचल वाला हिस्सा चुना गया है। दूसरा चुनने के लिए ड्रैग करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Viene scelto il tratto con più movimento. Trascina per sceglierne un altro."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最も動きの多い区間が選ばれています。ドラッグして別の区間を選べます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "움직임이 가장 많은 구간이 선택됩니다. 드래그하여 다른 구간을 선택하십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wybrano fragment z największym ruchem. Przeciągnij, aby wybrać inny."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O trecho com mais movimento é escolhido. Arraste para escolher outro."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выбран отрезок с наибольшим движением. Перетащите, чтобы выбрать другой."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En çok hareket olan bölüm seçilir. Başka birini seçmek için sürükleyin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вибрано відрізок із найбільшим рухом. Перетягніть, щоб вибрати інший."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已选取动态最多的区段。拖移可选择其他区段。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已選取動態最多的區段。拖移可選擇其他區段。"
           }
         }
       }
@@ -115221,6 +119361,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "還原在場景編輯器中對此背景圖片所做的所有變更"
+          }
+        }
+      }
+    },
+    "Undo every change made to this wallpaper in the Scene Editor (Live)" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التراجع عن كل تغيير أُجري على هذه الخلفية في محرر المشهد (مباشر)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Änderungen an diesem Hintergrundbild im Szeneneditor (Live) widerrufen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deshace todos los cambios hechos en este fondo en el Editor de escenas (en vivo)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annuler toutes les modifications apportées à ce fond d’écran dans l’Éditeur de scène (en direct)"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सीन एडिटर (लाइव) में इस वॉलपेपर में किए गए हर बदलाव को पहले जैसा करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annulla ogni modifica fatta a questo sfondo nell’Editor scena (live)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シーンエディタ（ライブ）でこの壁紙に加えた変更をすべて取り消します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "장면 편집기(라이브)에서 이 배경화면에 한 모든 변경 사항을 취소합니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cofnij wszystkie zmiany tej tapety wprowadzone w Edytorze sceny (na żywo)"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desfaz todas as alterações feitas neste papel de parede no Editor de Cena (ao vivo)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отменить все изменения этих обоев, сделанные в Редакторе сцены (вживую)"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu duvar kâğıdında Sahne Düzenleyicisi (Canlı) ile yapılan tüm değişiklikleri geri alır"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скасувати всі зміни цих шпалер, зроблені в Редакторі сцени (наживо)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "撤销在场景编辑器（实时）中对此墙纸所做的所有更改"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "還原在場景編輯器（即時）中對此背景圖片所做的所有更改"
           }
         }
       }
@@ -120622,6 +124856,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "WE 著色器會在場景首次使用時，依每種選項組合進行轉譯，之後重複使用。"
+          }
+        }
+      }
+    },
+    "Wallpaper" : {
+      "comment" : "Scene Editor (Live): the mode that edits the running wallpaper",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الخلفية"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hintergrundbild"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fondo de pantalla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fond d’écran"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वॉलपेपर"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sfondo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "壁紙"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배경화면"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tapeta"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Papel de Parede"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обои"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duvar Kâğıdı"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шпалери"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "墙纸"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "背景圖片"
           }
         }
       }
@@ -126103,6 +130432,101 @@
     "iPhone" : {
       "shouldTranslate" : false,
       "localizations" : {}
+    },
+    "iPhone & iPad Export" : {
+      "comment" : "Scene Editor (Live): the mode that exports a Live Photo",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "التصدير إلى iPhone وiPad"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone- & iPad-Export"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar a iPhone y iPad"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportation iPhone et iPad"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone और iPad के लिए एक्सपोर्ट"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esporta per iPhone e iPad"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone・iPad用に書き出す"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone 및 iPad로 내보내기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eksport na iPhone’a i iPada"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar para iPhone e iPad"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Экспорт для iPhone и iPad"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone ve iPad için Dışa Aktar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експорт для iPhone та iPad"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导出到 iPhone 和 iPad"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "輸出至 iPhone 和 iPad"
+          }
+        }
+      }
     },
     "iPhone Live Photo" : {
       "localizations" : {
