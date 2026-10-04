@@ -210,6 +210,10 @@ jobs:
           set -euo pipefail
           APP="$RUNNER_TEMP/export/$APP_NAME.app"
           BINARY="$APP/Contents/MacOS/$APP_NAME"
+          # The code: the OpenWallpaperEngine framework, which the app's and the editor's small
+          # executables both run.
+          FRAMEWORK_BINARY="$APP/Contents/Frameworks/OpenWallpaperEngine.framework/Versions/A/OpenWallpaperEngine"
+          test -f "$FRAMEWORK_BINARY" || { echo "::error::OpenWallpaperEngine.framework is missing"; exit 1; }
 
           test ! -e "$APP/Contents/Resources/shader-tools" \
             || { echo "::error::stale shader-tools in the bundle"; exit 1; }
@@ -252,6 +256,40 @@ jobs:
             echo "::error::get-task-allow is set on the Chromium helper"; exit 1
           fi
 
+          # The Wallpaper Editor's own app (target WallpaperEditor): <app id>.editor, the app's
+          # version, team and entitlements (library validation on), nothing linked but the app's
+          # framework, and no copy of the code. The Mach-O loop above checked its Developer ID,
+          # hardened runtime and timestamp; notarization covers it inside the app.
+          EDITOR="$APP/Contents/Helpers/Wallpaper Editor.app"
+          EDITOR_BINARY="$EDITOR/Contents/MacOS/Wallpaper Editor"
+          test -f "$EDITOR_BINARY" || { echo "::error::the Wallpaper Editor app is missing"; exit 1; }
+          codesign --verify --strict --verbose=2 "$EDITOR"
+          editor_plist() { /usr/libexec/PlistBuddy -c "Print :$1" "$EDITOR/Contents/Info.plist"; }
+          app_plist() { /usr/libexec/PlistBuddy -c "Print :$1" "$APP/Contents/Info.plist"; }
+          test "$(editor_plist CFBundleIdentifier)" = "$(app_plist CFBundleIdentifier).editor" \
+            || { echo "::error::the Wallpaper Editor's bundle id is not <app id>.editor"; exit 1; }
+          test "$(editor_plist CFBundleShortVersionString)" = "$(app_plist CFBundleShortVersionString)" \
+            || { echo "::error::the Wallpaper Editor's version is not the app's"; exit 1; }
+          test "$(editor_plist LSUIElement)" = "false" \
+            || { echo "::error::the Wallpaper Editor must have its own Dock tile"; exit 1; }
+          team() { codesign -dv --verbose=4 "$1" 2>&1 | sed -n 's/^TeamIdentifier=//p'; }
+          test -n "$(team "$APP")" && test "$(team "$EDITOR")" = "$(team "$APP")" \
+            || { echo "::error::the Wallpaper Editor isn't signed by the app's team"; exit 1; }
+          EDITOR_ENTS=$(codesign -d --entitlements - --xml "$EDITOR" 2>/dev/null | plutil -p - || true)
+          echo "$EDITOR_ENTS"
+          if grep -Eq "get-task-allow|disable-library-validation" <<<"$EDITOR_ENTS"; then
+            echo "::error::the Wallpaper Editor's entitlements allow debugging or disable library validation"; exit 1
+          fi
+          grep -q "com.apple.security.cs.allow-jit" <<<"$EDITOR_ENTS" \
+            || { echo "::error::the Wallpaper Editor lacks the app's entitlements (allow-jit)"; exit 1; }
+          if otool -L "$EDITOR_BINARY" | grep -v ':$' | awk '{print $1}' \
+               | grep -Ev '^(/usr/lib/|/System/Library/|@rpath/OpenWallpaperEngine\.framework/Versions/A/OpenWallpaperEngine$)'; then
+            echo "::error::the Wallpaper Editor links a library besides the system's and the app's framework"; exit 1
+          fi
+          EDITOR_KB=$(du -sk "$EDITOR" | cut -f1)
+          echo "Wallpaper Editor.app: ${EDITOR_KB} KB"
+          test "$EDITOR_KB" -lt 20480 || { echo "::error::the Wallpaper Editor app is ${EDITOR_KB} KB; it carries code of its own"; exit 1; }
+
           INFO="$APP/Contents/Info.plist"
           plist() { /usr/libexec/PlistBuddy -c "Print :$1" "$INFO"; }
           echo "version $(plist CFBundleShortVersionString) ($(plist CFBundleVersion)), label $(plist OWEVersionLabel)"
@@ -265,11 +303,17 @@ jobs:
           test "$(plist SUFeedURL)" = "https://deepratna-awale.github.io/open-wallpaper-engine-mac/appcast.xml" \
             || { echo "::error::unexpected SUFeedURL"; exit 1; }
 
-          # Only system libraries and the embedded Sparkle.framework: nothing from Homebrew or
-          # elsewhere. (A universal binary lists each architecture under a "<path> (architecture …):" line.)
+          # The app and its framework link only system libraries, the framework and the embedded
+          # Sparkle.framework (which the app links so that it embeds it): nothing from Homebrew or
+          # elsewhere. (A universal binary lists each architecture under a "<path> (architecture …):"
+          # line; the framework lists its own install name.)
           if otool -L "$BINARY" | grep -v ':$' | awk '{print $1}' \
-               | grep -Ev '^(/usr/lib/|/System/Library/|@rpath/Sparkle\.framework/Versions/B/Sparkle$)'; then
+               | grep -Ev '^(/usr/lib/|/System/Library/|@rpath/Sparkle\.framework/Versions/B/Sparkle$|@rpath/OpenWallpaperEngine\.framework/Versions/A/OpenWallpaperEngine$)'; then
             echo "::error::the app links a non-system library"; exit 1
+          fi
+          if otool -L "$FRAMEWORK_BINARY" | grep -v ':$' | awk '{print $1}' \
+               | grep -Ev '^(/usr/lib/|/System/Library/|@rpath/Sparkle\.framework/Versions/B/Sparkle$|@rpath/OpenWallpaperEngine\.framework/Versions/A/OpenWallpaperEngine$)'; then
+            echo "::error::the framework links a non-system library"; exit 1
           fi
           # No executables besides the app's own, the Chromium helper and Sparkle's (nowPlayingAdapter.pl runs as an
           # argument to /usr/bin/perl and is a plain resource). Sparkle's are each verified; the
@@ -286,12 +330,15 @@ jobs:
             "$APP/Contents/Helpers/OWE Chromium Helper (Renderer).app/Contents/MacOS/OWE Chromium Helper (Renderer)"
             "$APP/Contents/Helpers/OWE Chromium Helper (GPU).app/Contents/MacOS/OWE Chromium Helper (GPU)"
             "$APP/Contents/Helpers/OWE Chromium Helper (Plugin).app/Contents/MacOS/OWE Chromium Helper (Plugin)"
+            "$APP/Contents/Helpers/Wallpaper Editor.app/Contents/MacOS/Wallpaper Editor"
+            "$FRAMEWORK_BINARY"
           )
           for helper in "${sparkle_executables[@]}"; do
             test -f "$helper" || { echo "::error::missing Sparkle executable: $helper"; exit 1; }
           done
           for code in "$SPARKLE/Updater.app" "$SPARKLE/Autoupdate" "$SPARKLE/XPCServices/Downloader.xpc" \
-                      "$SPARKLE/XPCServices/Installer.xpc" "$APP/Contents/Frameworks/Sparkle.framework"; do
+                      "$SPARKLE/XPCServices/Installer.xpc" "$APP/Contents/Frameworks/Sparkle.framework" \
+                      "$APP/Contents/Frameworks/OpenWallpaperEngine.framework"; do
             [ -e "$code" ] || continue
             codesign --verify --strict --verbose=2 "$code"
           done

@@ -6,6 +6,14 @@ import OWESceneEditing
 /// the scene again. The loaded scene was read with one overlay (`loadedEditOverlay`); the editor's
 /// latest is drawn as the difference (`SceneEditLiveValues`), which a later read folds in.
 extension SceneWallpaperInstance {
+    /// Whether the editor's change of the wallpaper in `folder` is this instance's. By path: the
+    /// Wallpaper Editor's process names the folder in a message (`WallpaperEditorChangeSync`), so
+    /// its URL may differ from this instance's in a trailing slash.
+    func runsWallpaper(in folder: URL?) -> Bool {
+        guard let folder else { return false }
+        return folder.standardizedFileURL.path == viewModel.currentWallpaper.wallpaperDirectory.standardizedFileURL.path
+    }
+
     /// Takes the editor's overlay; true when the renderer draws it live (no reload needed).
     func applyEditorEdits(overlay: SceneEditOverlay?, base: SceneOutline?) -> Bool {
         guard let overlay, let base else { return false }

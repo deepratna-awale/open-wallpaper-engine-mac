@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 import OWESceneEditing
 
@@ -64,6 +65,15 @@ public struct WallpaperEditorView: View {
             show(Notice(text: problem, isError: true))
         }
         .environmentObject(authoring)
+        .onReceive(services.commands?.requests.eraseToAnyPublisher()
+                   ?? Empty<WallpaperEditorCommands.Command, Never>().eraseToAnyPublisher()) { command in
+            switch command {
+            case .saveAsLocalWallpaper: isSaving = true
+            case .revert:
+                guard session.overlay.hasSceneEdits || session.overlay.hasPuppetEdits else { return }
+                isConfirmingRevert = true
+            }
+        }
         .sheet(item: $authoring.bindingTarget) { target in
             BindPropertySheet(authoring: authoring, target: target)
         }

@@ -2,8 +2,8 @@ import AppKit
 import OWEEditor
 import OWESceneEditing
 
-/// The Depth Map Generation plugin as both editors use it: one generator per process (the app's
-/// `depthMapGenerator`), which reads the installed model from the shared Application Support
+/// The Depth Map Generation plugin as both editors use it: one generator per process
+/// (`generator`, the app's or the Wallpaper Editor process's own), which reads the installed model from the shared Application Support
 /// folder (`DepthMapPluginLayout`), so the Wallpaper Editor finds it from its own process too;
 /// and the services a depth map section needs for one wallpaper.
 @MainActor
@@ -17,8 +17,13 @@ enum DepthMapPlugin {
         }
     }
 
-    /// A generator reading the installed model from this process's support folder (the app keeps
-    /// one, `AppDelegate.depthMapGenerator`). The model loads only while it generates.
+    /// This process's one generator, made on first use: the Scene Editor's in the app, the
+    /// editor windows' in the Wallpaper Editor's process. Its model is loaded only while it
+    /// generates, and released when idle (`DepthMapGenerator.idleGrace`) in each process.
+    static let generator = makeGenerator()
+
+    /// A generator reading the installed model from this process's support folder. The model
+    /// loads only while it generates.
     static func makeGenerator(root: URL = DepthMapPluginInstaller.defaultRoot, cache: URL = DepthMapPlugin.cacheDirectory) -> DepthMapGenerator {
         DepthMapGenerator(locateModel: { DepthMapPluginLayout.activeModel(in: root) },
                           cache: DepthMapCache(directory: cache),
@@ -34,10 +39,12 @@ enum DepthMapPlugin {
     static let effectEntry = EffectCatalogEntry(file: SceneDepthParallax.effectFile, title: "Depth Parallax", group: "interactive")
 
     /// The section's services for `wallpaper`, reading its files through `resources`.
+    /// `openPlugins`: shows Settings › Plugins › Depth Map Generation (the app's, from either process).
     static func services(for wallpaper: WEWallpaper, resources: EditorWallpaperResources,
-                         generator: DepthMapGenerator? = nil) -> DepthMapEditorServices {
+                         generator: DepthMapGenerator? = nil,
+                         openPlugins: @escaping @MainActor () -> Void) -> DepthMapEditorServices {
         DepthMapEditorServices(
-            generator: generator ?? AppDelegate.shared.depthMapGenerator,
+            generator: generator ?? DepthMapPlugin.generator,
             assetStore: resources.assets,
             source: { request in try await DepthMapPlugin.source(for: request, wallpaper: wallpaper, resources: resources) },
             prepareEffect: {
@@ -46,7 +53,7 @@ enum DepthMapPlugin {
                 try resources.prepareEffect(DepthMapPlugin.effectEntry)
             },
             texture: { resources.texture($0) },
-            openPlugins: { AppDelegate.shared.openSettings(.plugins, anchor: SettingsAnchor.depthMaps) })
+            openPlugins: openPlugins)
     }
 
     /// A still image layer's own texture as it is; anything else drawn (`DepthMapSceneCapture`).

@@ -105,5 +105,5 @@ Security problems go privately through the repository's Security tab ([SECURITY.
 
 ## Changing the project file
 
-- New files: the project uses folder-synced groups, so putting a file in the right folder is enough.
+- New files: the project uses folder-synced groups, so putting a file in the right folder is enough. Everything in `OpenWallpaperEngine/` builds into the OpenWallpaperEngine framework, which both apps run ([architecture](docs/architecture.md#targets)); a resource the code reads goes there too and is read through `AppBundleLayout.framework`, not `Bundle.main`.
 - Never add Wallpaper Engine files to the repository, the app or `Tests/Fixtures`: tests get them from `OWE_ASSETS`, and fixtures are written for the project.

@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The Wallpaper Editor runs as its own app**, inside Open Wallpaper Engine. It has its own Dock icon and menu bar ("Wallpaper Editor"), one process for every wallpaper you edit. Quitting Open Wallpaper Engine leaves it open, closing it leaves Open Wallpaper Engine as it was, and a crash of one doesn't take the other down. Edits, drags and property changes still show on the desktop as you make them; the editor quits when its last window closes.
 - **The Scene Inspector is now called the Scene Editor**, in its window, the Details panel, the Window menu (⌥⌘I), tooltips and the onboarding tour, in every language.
 - **Edit Wallpaper** moved from the Details panel to the library's bottom bar, beside Create Playlist. It opens the selected wallpaper in the Wallpaper Editor and is disabled, with a tooltip saying why, when nothing is selected or the selection isn't a scene wallpaper. Window › Wallpaper Editor (⌥⌘E) works as before.
 - Animated library previews are built in and always on (no longer a plugin).

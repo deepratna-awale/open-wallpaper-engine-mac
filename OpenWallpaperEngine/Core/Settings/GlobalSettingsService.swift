@@ -49,7 +49,10 @@ class GlobalSettingsViewModel: ObservableObject {
     var didChangeLockScreenPictureCancellable: Cancellable?
     var didChangeScreenSaverCancellable: Cancellable?
     
-    init() {
+    /// `followsLaunch`: at launch, the settings that act on the system (launch at login, the menu
+    /// bar tint and lock-screen pictures, the screen saver) start following the app's wallpaper.
+    /// Only Open Wallpaper Engine's own settings do; the Wallpaper Editor's process reads them.
+    init(followsLaunch: Bool = true) {
         let loaded: GlobalSettings = Self.loadSettings(from: UserDefaults.app.data(forKey: "GlobalSettings"),
                                                        backupDirectory: AppStorageLocation.current.supportDirectory)
         self.settings = loaded
@@ -57,6 +60,7 @@ class GlobalSettingsViewModel: ObservableObject {
         OWELog.apply(logLevel: settings.logLevel)
 
         // Add observers
+        guard followsLaunch else { return }
         self.didFinishLaunchingNotificationCancellable =
         NotificationCenter.default.publisher(for: NSApplication.didFinishLaunchingNotification)
             .sink { [weak self] _ in self?.didFinishLaunchingNotification() }
