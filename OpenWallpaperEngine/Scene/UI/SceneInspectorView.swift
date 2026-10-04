@@ -68,14 +68,15 @@ private struct SceneInspectorTexture: Identifiable {
 }
 
 /// The Scene Editor (Live)'s modes: the wallpaper's objects, edited on the running wallpaper, or
-/// the iPhone & iPad Export mode's lock screen, edited on the mode's own copy
-/// (`IsolatedSceneEditSession`). The picker lists them in this order.
+/// the Screen Saver mode's recording or the iPhone & iPad Export mode's lock screen, each edited
+/// on the mode's own copy (`IsolatedSceneEditSession`). The picker lists them in this order.
 enum SceneInspectorMode: CaseIterable {
-    case wallpaper, deviceExport
+    case wallpaper, screenSaver, deviceExport
 
     var title: LocalizedStringResource {
         switch self {
         case .wallpaper: return LocalizedStringResource("Wallpaper", comment: "Scene Editor (Live): the mode that edits the running wallpaper")
+        case .screenSaver: return LocalizedStringResource("Screen Saver", comment: "Scene Editor (Live): the mode that records the screen saver")
         case .deviceExport: return LocalizedStringResource("iPhone & iPad Export", comment: "Scene Editor (Live): the mode that exports a Live Photo")
         }
     }
@@ -960,13 +961,14 @@ extension AppDelegate {
 }
 
 /// The Scene Editor (Live): its mode, and the editor for it. The Wallpaper mode edits the stores
-/// the running wallpaper reads; the iPhone & iPad Export mode edits an isolated copy of them made
-/// when it opens (`IsolatedSceneEditSession`), shown by the mode's private instance and exported,
-/// and dropped when it closes.
+/// the running wallpaper reads; the Screen Saver and iPhone & iPad Export modes each edit an
+/// isolated copy of them made when the mode opens (`IsolatedSceneEditSession`), shown by the
+/// mode's private instance and recorded or exported, and dropped when it closes.
 struct SceneInspectorView: View {
     private let wallpaper: WEWallpaper
     private let scopes: [WallpaperPropertyScope]
     @State private var exportModel: LivePhotoExportModel?
+    @State private var screenSaverModel: ScreenSaverEditorModel?
 
     init(wallpaper: WEWallpaper, scopes: [WallpaperPropertyScope] = [.shared]) {
         self.wallpaper = wallpaper
@@ -976,28 +978,53 @@ struct SceneInspectorView: View {
     var body: some View {
         if let exportModel {
             SceneInspectorContent(wallpaper: wallpaper, scopes: [exportModel.session.scope], isolated: exportModel.session,
-                                  exportModel: exportModel, onModeChange: setMode)
+                                  exportModel: exportModel, screenSaverModel: nil, onModeChange: setMode)
                 .id(SceneInspectorMode.deviceExport)
+        } else if let screenSaverModel {
+            SceneInspectorContent(wallpaper: wallpaper, scopes: [screenSaverModel.session.scope],
+                                  isolated: screenSaverModel.session, exportModel: nil, screenSaverModel: screenSaverModel,
+                                  onModeChange: setMode)
+                .id(SceneInspectorMode.screenSaver)
         } else {
             SceneInspectorContent(wallpaper: wallpaper, scopes: scopes, isolated: nil, exportModel: nil,
-                                  onModeChange: setMode)
+                                  screenSaverModel: nil, onModeChange: setMode)
                 .id(SceneInspectorMode.wallpaper)
         }
     }
 
-    /// Opening the export mode copies the edited store's values into its isolated store; leaving
-    /// it drops them, once its preview (and with it the private instance) is gone.
+    /// Opening an isolated mode copies the edited store's values into its isolated store (the
+    /// Screen Saver mode then takes its own saved choices, when it has any); leaving it drops
+    /// them, once its preview (and with it the private instance) is gone.
     private func setMode(_ mode: SceneInspectorMode, sceneSize: SIMD2<Double>) {
+        leaveIsolatedModes(except: mode)
         switch mode {
         case .deviceExport:
             guard exportModel == nil else { return }
             let session = IsolatedSceneEditSession(wallpaper: wallpaper, purpose: LivePhotoExportModel.purpose,
                                                    seededFrom: scopes)
             exportModel = LivePhotoExportModel(session: session, sceneSize: sceneSize)
+        case .screenSaver:
+            guard screenSaverModel == nil else { return }
+            let session = IsolatedSceneEditSession(wallpaper: wallpaper, purpose: ScreenSaverEditorModel.purpose,
+                                                   seededFrom: scopes)
+            let recordings = AppDelegate.shared.screenSaverRecordings
+            screenSaverModel = ScreenSaverEditorModel(session: session, seededFrom: scopes, recordings: recordings,
+                                                      schedule: AppDelegate.shared.screenSaverSchedule,
+                                                      store: recordings.store)
         case .wallpaper:
-            guard let model = exportModel else { return }
+            break
+        }
+    }
+
+    private func leaveIsolatedModes(except mode: SceneInspectorMode) {
+        if mode != .deviceExport, let model = exportModel {
             exportModel = nil
             model.cancel()
+            DispatchQueue.main.async { model.session.end() }
+        }
+        if mode != .screenSaver, let model = screenSaverModel {
+            screenSaverModel = nil
+            model.close()
             DispatchQueue.main.async { model.session.end() }
         }
     }
@@ -1023,17 +1050,23 @@ private struct SceneInspectorContent: View {
     /// An isolated mode's session; nil in the Wallpaper mode.
     private let isolated: IsolatedSceneEditSession?
     private let exportModel: LivePhotoExportModel?
+    private let screenSaverModel: ScreenSaverEditorModel?
     private let onModeChange: (SceneInspectorMode, SIMD2<Double>) -> Void
 
-    private var mode: SceneInspectorMode { exportModel == nil ? .wallpaper : .deviceExport }
+    private var mode: SceneInspectorMode {
+        if exportModel != nil { return .deviceExport }
+        return screenSaverModel == nil ? .wallpaper : .screenSaver
+    }
 
     init(wallpaper: WEWallpaper, scopes: [WallpaperPropertyScope], isolated: IsolatedSceneEditSession?,
-         exportModel: LivePhotoExportModel?, onModeChange: @escaping (SceneInspectorMode, SIMD2<Double>) -> Void) {
+         exportModel: LivePhotoExportModel?, screenSaverModel: ScreenSaverEditorModel?,
+         onModeChange: @escaping (SceneInspectorMode, SIMD2<Double>) -> Void) {
         wallpaperDirectory = wallpaper.wallpaperDirectory
         self.wallpaper = wallpaper
         self.scopes = scopes
         self.isolated = isolated
         self.exportModel = exportModel
+        self.screenSaverModel = screenSaverModel
         self.onModeChange = onModeChange
         _model = StateObject(wrappedValue: SceneInspectorModel(wallpaper: wallpaper, scopes: scopes))
         _depthMaps = StateObject(wrappedValue: SceneEditorDepthMapHost(wallpaper: wallpaper))
@@ -1069,7 +1102,11 @@ private struct SceneInspectorContent: View {
                 loadSelectedTextures()
             }
             .onChange(of: selectedID) { _, _ in loadSelectedTextures() }
-            .onDisappear { isolated?.end() }
+            .onDisappear {
+                // The screen saver's last choices are saved before its store goes.
+                screenSaverModel?.close()
+                isolated?.end()
+            }
     }
 
     /// Both side columns (the object list and the movement controls) start at one width.
@@ -1102,6 +1139,10 @@ private struct SceneInspectorContent: View {
                                 layerAdjustments(for: model.items.first(where: { $0.id == selectedID }))
                             }
                             .id(exportPanelRevision)
+                        } else if let screenSaverModel {
+                            ScreenSaverEditorPanel(model: screenSaverModel) {
+                                layerAdjustments(for: model.items.first(where: { $0.id == selectedID }))
+                            }
                         } else {
                             movementColumn(for: model.items.first(where: { $0.id == selectedID }))
                         }
@@ -1190,6 +1231,9 @@ private struct SceneInspectorContent: View {
         if let exportModel {
             LockScreenPreview(model: exportModel)
                 .navigationTitle(Text(SceneInspectorMode.deviceExport.title))
+        } else if let screenSaverModel {
+            ScreenSaverEditorPreview(model: screenSaverModel)
+                .navigationTitle(Text(SceneInspectorMode.screenSaver.title))
         } else {
             detailColumn
         }
@@ -1200,14 +1244,21 @@ private struct SceneInspectorContent: View {
         Button {
             withAnimation { isMovementPresented.toggle() }
         } label: {
-            if exportModel == nil {
-                Label("Move & Align", systemImage: "sidebar.right")
-            } else {
-                Label("Export Settings Panel", systemImage: "sidebar.right")
+            switch mode {
+            case .wallpaper: Label("Move & Align", systemImage: "sidebar.right")
+            case .screenSaver: Label("Screen Saver Panel", systemImage: "sidebar.right")
+            case .deviceExport: Label("Export Settings Panel", systemImage: "sidebar.right")
             }
         }
-        .help(exportModel == nil ? Text("Show or hide the move, size and align controls")
-                                 : Text("Show or hide the Export Settings panel"))
+        .help(panelToggleHelp)
+    }
+
+    private var panelToggleHelp: Text {
+        switch mode {
+        case .wallpaper: return Text("Show or hide the move, size and align controls")
+        case .screenSaver: return Text("Show or hide the Screen Saver panel")
+        case .deviceExport: return Text("Show or hide the Export Settings panel")
+        }
     }
 
     /// The Wallpaper mode's Reset Edits, or the export mode's Export Settings.
@@ -1220,6 +1271,14 @@ private struct SceneInspectorContent: View {
                 Label("Export Settings", systemImage: "slider.horizontal.3")
             }
             .help("Open the export settings: device, crop, clip, quality, layers and properties")
+        } else if let screenSaverModel {
+            Button {
+                screenSaverModel.record()
+            } label: {
+                Label("Record", systemImage: "record.circle")
+            }
+            .disabled(screenSaverModel.isRecording)
+            .help("Record a seamless loop of this version of the wallpaper and make it the screen saver")
         } else {
             Button {
                 isConfirmingReset = true
@@ -1230,8 +1289,8 @@ private struct SceneInspectorContent: View {
         }
     }
 
-    /// The modes; only a scene wallpaper can leave the Wallpaper mode (a Live Photo is rendered
-    /// from a scene).
+    /// The modes; only a scene wallpaper can leave the Wallpaper mode (a screen saver recording and
+    /// a Live Photo are rendered from a scene).
     private var modePicker: some View {
         let eligible = LivePhotoExportModel.isEligible(wallpaper)
         return Picker("Mode", selection: Binding(get: { mode }, set: { newValue in
@@ -1244,8 +1303,8 @@ private struct SceneInspectorContent: View {
         }
         .pickerStyle(.segmented)
         .disabled(!eligible)
-        .help(eligible ? Text("Edit the running wallpaper, or preview it as an iPhone or iPad lock screen and export a Live Photo without changing your desktop")
-                       : Text("Only scene wallpapers can be exported to iPhone or iPad for now"))
+        .help(eligible ? Text("Edit the running wallpaper, record it as your screen saver, or preview it as an iPhone or iPad lock screen and export a Live Photo, without changing your desktop")
+                       : Text("Only scene wallpapers can be made into a screen saver here or exported to iPhone or iPad for now"))
     }
 
     /// ⌘K. macOS 15 focuses a search field through `searchFocused`; macOS 14 has no API for it,
@@ -1298,7 +1357,7 @@ private struct SceneInspectorContent: View {
                 }
             }
         }
-        .navigationTitle(exportModel == nil ? Text("Scene Editor (Live)") : Text(SceneInspectorMode.deviceExport.title))
+        .navigationTitle(mode == .wallpaper ? Text("Scene Editor (Live)") : Text(mode.title))
     }
 
     private var detailColumn: some View {
