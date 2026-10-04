@@ -20,7 +20,6 @@ struct Particle {
     let spriteFrame: Int
     var history: [SIMD2<Float>]
     var historyStart: Int
-    var historyTimer: Float = 0
     /// Spawn order within the system; with the system's seed it names the particle's random draws.
     var serial: UInt32 = 0
     /// The instance it belongs to, in an instanced system (`ParticleChildLink`).
@@ -93,6 +92,9 @@ final class ParticleSystemRuntime {
     var ropeFrame = SIMD3<Float>(1, 1, 0)
     /// Particles that died of age since the system started (a scrolling rope's shift), on the CPU.
     var died: UInt32 = 0
+    /// Seconds until the particles next record their trail history (`ParticleTrailHistory`): WE's
+    /// countdown, one per system.
+    var trailTimer: Float = 0
     /// Control points a remap wrote over a point the instance override drives: the override then,
     /// and the point in the system's space (`keepWrittenControlPoints`).
     var writtenOverridePoints: [Int: (override: SIMD3<Float>, point: SIMD3<Float>)] = [:]
@@ -446,15 +448,12 @@ enum ParticleCPUSimulation {
         particle.zVelocity = state.velocity.z
         // A deleted particle dies when it next ages (WE sets its age to its lifetime).
         if dies { particle.age = particle.lifetime }
-        // Only the ropetrail renderer reads history, and it wants samples spread over the
-        // renderer's `length` in seconds rather than one per frame.
+        // Only the ropetrail renderer reads history: every particle records a sample when the
+        // system's countdown runs out (`ParticleTrailHistory`), a new one at once.
         let history = configuration.trailHistory
         if history.kept {
-            let historyLimit = max(history.segments, 1)
-            let interval = max(history.length, 0.001) / Float(historyLimit)
-            particle.historyTimer += inputs.deltaTime
-            if particle.historyTimer >= interval || particle.history.isEmpty {
-                particle.historyTimer = 0
+            let historyLimit = history.limit
+            if inputs.samplesTrail || particle.history.isEmpty {
                 if particle.history.count < historyLimit {
                     particle.history.append(particle.position)
                 } else {
@@ -487,6 +486,7 @@ extension ParticleSystemRuntime {
         elapsedTime = simulation.elapsedTime
         frameIndex = simulation.frameIndex
         died = simulation.died
+        trailTimer = simulation.trailTimer
         ropeFrame = simulation.ropeFrame
         drawLinear = simulation.drawLinear
         spriteLinear = configuration.orientation.spriteLinear(linear: drawLinear)

@@ -17,7 +17,7 @@ struct ParticleState {
     float4 alphaRotation;    // alpha, base alpha, rotation, angular velocity
     float4 color;
     float4 baseColor;
-    float4 trail;            // history timer, -, instance
+    float4 trail;            // -, -, instance
     uint4 identity;          // serial, sprite frame, history count, history start
     float4 depth;            // z, z velocity (along the system's z), -, -
     float4 spin;             // rotation about x and y, angular velocity about x and y
@@ -98,7 +98,7 @@ struct ParticleFrame {
     uint4 extra;             // control points that stay put in every instance, maximum, collisions, initializers | operators << 16
     float4 spawnScale;       // instance overrides: size, alpha, lifetime, speed
     float4 colorScale;       // instance overrides: tint times brightness
-    uint4 emission;          // substeps, emitters
+    uint4 emission;          // substeps, emitters, the trail history is recorded this step (1)
     float4 spriteLinear;     // a built-in sprite's quad axes (`spriteLinear`): column 0 xy, column 1 xy
     float4 rope;             // `ParticleRopeUV.layout`: rate, lifetime, frame-rate limit, 1 / uvscale
 };

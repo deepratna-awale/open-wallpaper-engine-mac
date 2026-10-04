@@ -123,6 +123,146 @@ final class SceneSoundLayersTests: XCTestCase {
         XCTAssertNil(layers.playback(of: 7))
     }
 
+    /// A mono file of `seconds` at a constant `value`.
+    private func constant(_ name: String, value: Float, seconds: Double) throws -> URL {
+        let url = directory.appending(path: name)
+        let mono = try XCTUnwrap(AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1))
+        let frames = AVAudioFrameCount(seconds * 44_100)
+        let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: mono, frameCapacity: frames))
+        buffer.frameLength = frames
+        for index in 0..<Int(frames) { buffer.floatChannelData![0][index] = value }
+        let file = try AVAudioFile(forWriting: url, settings: mono.settings)
+        try file.write(from: buffer)
+        return url
+    }
+
+    /// The left channel's samples of `frames` rendered offline.
+    private func samples(_ layers: SceneSoundLayers, frames: Int) throws -> [Float] {
+        let engine = try XCTUnwrap(layers.soundMixer?.engine)
+        let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: engine.manualRenderingFormat, frameCapacity: 4096))
+        var out: [Float] = [], remaining = frames
+        while remaining > 0 {
+            let count = AVAudioFrameCount(min(remaining, 4096))
+            XCTAssertEqual(try engine.renderOffline(count, to: buffer), .success)
+            out += UnsafeBufferPointer(start: buffer.floatChannelData![0], count: Int(buffer.frameLength))
+            remaining -= Int(count)
+        }
+        return out
+    }
+
+    /// WE's sound starts at the wallpaper's volume (its fade is 1 from the constructor 0x14010dc00
+    /// and a loaded wallpaper takes it at once, 0x140114950): no fade-in at the start.
+    func testAWallpaperStartsAtItsVolumeWithoutAFadeIn() throws {
+        let layers = SceneSoundLayers(label: "test", offline: format)
+        layers.setTarget(level: 0.5, audible: true)
+        layers.setContent([content(try constant("dc.wav", value: 0.5, seconds: 0.2))])
+        XCTAssertEqual(layers.gain, 0.5)
+        let level = 0.5 * SceneSoundSpatialization.monoLevel * 0.5
+        let rendered = try samples(layers, frames: 2048)
+        let first = try XCTUnwrap(rendered.firstIndex { $0 > 0 })
+        XCTAssertEqual(rendered[first], level, accuracy: 1e-4, "the first sample is at full level")
+        XCTAssertEqual(rendered.last ?? 0, level, accuracy: 1e-4)
+    }
+
+    /// The wallpaper's volume (WE's +0x178, 0x140114e20/0x140115361) applies at once; only being
+    /// heard (WE's +0x174: mute, pause) fades.
+    func testAVolumeChangeAppliesAtOnceAndOnlyMuteOrPauseFades() throws {
+        let layers = SceneSoundLayers(label: "test", offline: format)
+        layers.setTarget(level: 1, audible: true)
+        layers.setContent([content(try tone("tone.wav"))])
+        layers.setTarget(level: 0.4, audible: true)
+        XCTAssertEqual(layers.gain, 0.4, "no fade for a volume change")
+        XCTAssertEqual(layers.playback(of: 7)?.sceneGain, 0.4)
+
+        layers.setTarget(level: 0.4, audible: false)
+        XCTAssertEqual(layers.gain, 0.4, "a mute fades out from where the sound was")
+        layers.stepFade(1.0 / 60)
+        XCTAssertEqual(layers.gain, 0.36, accuracy: 1e-6)
+
+        // The app mutes by setting its volume to 0: the level is kept, and the sound fades.
+        let muted = SceneSoundLayers(label: "test", offline: format)
+        muted.setTarget(level: 0.8, audible: true)
+        muted.setContent([content(try tone("tone2.wav"))])
+        muted.setTarget(level: 0, audible: true)
+        XCTAssertEqual(muted.gain, 0.8)
+        muted.stepFade(1.0 / 60)
+        XCTAssertEqual(muted.gain, 0.72, accuracy: 1e-6)
+    }
+
+    /// WE's ease, stepped at 60 Hz: the gap shrinks by a tenth a frame and snaps once under 0.01,
+    /// so a fade-out takes 45 frames (0.75 s) and a fade-in as long.
+    func testFadeOutAndInFollowWEsEase() throws {
+        let layers = SceneSoundLayers(label: "test", offline: format)
+        layers.setTarget(level: 1, audible: true)
+        layers.setContent([content(try tone("tone.wav"))])
+
+        layers.setTarget(level: 1, audible: false)
+        var frames = 0, last = layers.gain
+        while layers.gain > 0 {
+            layers.stepFade(1.0 / 60)
+            frames += 1
+            if layers.gain > 0 { XCTAssertEqual(layers.gain / last, 0.9, accuracy: 1e-4, "frame \(frames)") }
+            last = layers.gain
+        }
+        XCTAssertEqual(frames, 45, "silent after 0.75 s")
+        XCTAssertEqual(layers.playback(of: 7)?.hasSoundingVoice, false, "paused once silent")
+
+        layers.setTarget(level: 1, audible: true)
+        layers.stepFade(1.0 / 60)
+        XCTAssertEqual(layers.gain, 0.1, accuracy: 1e-6)
+        XCTAssertEqual(layers.playback(of: 7)?.hasSoundingVoice, true, "resumed as the fade-in starts")
+        frames = 1
+        while layers.gain < 1 {
+            layers.stepFade(1.0 / 60)
+            frames += 1
+        }
+        XCTAssertEqual(frames, 45)
+    }
+
+    /// Each step of the fade sets the players' volume once a frame; the mixer ramps it sample by
+    /// sample, so the envelope has no steps (a step would be a tenth of the level, a click).
+    func testAFadeRampsSampleBySample() throws {
+        let layers = SceneSoundLayers(label: "test", offline: format)
+        layers.setTarget(level: 1, audible: true)
+        layers.setContent([content(try constant("dc.wav", value: 0.5, seconds: 1))])
+        let level = 0.5 * SceneSoundSpatialization.monoLevel
+        _ = try samples(layers, frames: 2048)
+
+        layers.setTarget(level: 1, audible: false)
+        var rendered: [Float] = []
+        while layers.gain > 0.05 {
+            layers.stepFade(1.0 / 60)
+            let frame = try samples(layers, frames: 735)
+            XCTAssertEqual(frame.last ?? 0, level * layers.gain, accuracy: 1e-3, "the frame ends at its gain")
+            rendered += frame
+        }
+        let jumps = zip(rendered.dropFirst(), rendered).map { abs($0 - $1) }
+        XCTAssertLessThan(jumps.max() ?? 1, level * 0.1 / 20, "no step: the first 10% drop spreads over many samples")
+    }
+
+    /// One looping file wraps with no gap and no discontinuity: a 0.1 s 440 Hz tone (44 whole
+    /// cycles) rendered across its loop point changes no faster than the sine itself.
+    func testTheLoopPointIsSeamless() throws {
+        let layers = SceneSoundLayers(label: "test", offline: format)
+        layers.setTarget(level: 1, audible: true)
+        layers.setContent([content(try tone("tone.wav"))])
+        let rendered = try samples(layers, frames: 7_000)
+        let first = try XCTUnwrap(rendered.firstIndex { $0 != 0 })
+        let playing = Array(rendered[first...])
+        XCTAssertGreaterThan(playing.count, 4_410 + 1_000, "renders past the loop point")
+        let peak = playing.map(abs).max() ?? 0
+        XCTAssertGreaterThan(peak, 0.5)
+        let slope = 2 * Float.pi * 440 / 44_100 * peak
+        let jumps = zip(playing.dropFirst(), playing).map { abs($0 - $1) }
+        XCTAssertLessThanOrEqual(jumps.max() ?? 1, slope * 1.02, "no click at the loop point")
+        var silentRun = 0, longest = 0
+        for sample in playing {
+            silentRun = abs(sample) < 1e-4 ? silentRun + 1 : 0
+            longest = max(longest, silentRun)
+        }
+        XCTAssertLessThanOrEqual(longest, 1, "no gap: only the sine's own zero crossings")
+    }
+
     func testTheBuilderFindsFilesAndLeavesOutWhatItCantDecode() throws {
         let loose = try tone("loose.wav", seconds: 0.5)
         let packaged = try Data(contentsOf: try tone("packaged.wav", seconds: 0.25))

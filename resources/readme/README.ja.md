@@ -64,6 +64,15 @@ Xcode で署名証明書を自分のものに変更するか「Sign to Run Local
 - **zip：** ファイル > 読み込む、または壁紙パッケージを含む `.zip` ファイルをドラッグ＆ドロップします
 - **手動：** 壁紙フォルダを `~/Documents/Open Wallpaper Engine/` に直接コピーします
 
+## 1.0.0-beta.5 の新機能
+
+- **シーンエディタ（Live）**：壁紙、スクリーンセーバ、iPhone/iPad 書き出しの各タブ。**壁紙エディタ**（⌥⌘E）は独立した App として動作し、レイヤー、エフェクト、タイムライン、SceneScript、ユーザープロパティ、パーティクル、Puppet Warp を編集できます。深度マップにも対応（[depth-maps.md](../../docs/depth-maps.md)）。
+- Wallpaper Engine と同じ**ディスプレイレイアウト**：ディスプレイごと、引き伸ばし、クローン、グループ、分割、プロファイル（[display-layouts.md](../../docs/display-layouts.md)）。
+- **書き出し**：iPhone と iPad 用の Live Photos（[iphone-ipad-export.md](../../docs/iphone-ipad-export.md)）、Android 版 Wallpaper Engine 用の `.mpkg` パッケージと Wi-Fi 経由の送信（[android-export.md](../../docs/android-export.md)）。
+- **スクリーンセーバ**とロック画面の画像（[screen-saver.md](../../docs/screen-saver.md)）。
+- **MCP サーバ**プラグイン（[mcp.md](../../docs/mcp.md)）と、壁紙の色に macOS を合わせる**テーマ**（[theming.md](../../docs/theming.md)）。
+- アプリケーションルール、グローバルショートカット、スクリーンショット、ディスカバー、ライブラリフォルダ。すべての変更：[CHANGELOG.md](../../CHANGELOG.md)。
+
 ## 1.0.0 の対応機能
 
 ### セットアップ・ライブラリ・アップデート

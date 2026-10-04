@@ -66,6 +66,15 @@ open "OpenWallpaperEngine.xcodeproj"
 - **Zip:** ملف > استيراد أو اسحب وأفلت ملف `.zip` يحتوي على حزم خلفيات الشاشة
 - **يدويًا:** انسخ مجلدات خلفيات الشاشة مباشرةً إلى `~/Documents/Open Wallpaper Engine/`
 
+## الجديد في الإصدار 1.0.0-beta.5
+
+- **محرر المشهد (Live)** بعلامات التبويب الخلفية وشاشة التوقف والتصدير إلى iPhone وiPad؛ و**محرر الخلفيات** (⌥⌘E) يعمل كتطبيق مستقل: الطبقات والتأثيرات والمخطط الزمني وSceneScript وخصائص المستخدم والجسيمات وPuppet Warp؛ وخرائط العمق ([depth-maps.md](../../docs/depth-maps.md)).
+- **تخطيطات الشاشات** كما في Wallpaper Engine: خلفية لكل شاشة، أو ممتدة، أو مستنسخة، ومجموعات وتقسيمات وملفات تعريف ([display-layouts.md](../../docs/display-layouts.md)).
+- **التصدير**: صور Live Photos لأجهزة iPhone وiPad ([iphone-ipad-export.md](../../docs/iphone-ipad-export.md)) وحزم `.mpkg` لتطبيق Wallpaper Engine على Android، مع الإرسال عبر Wi-Fi ([android-export.md](../../docs/android-export.md)).
+- **شاشة التوقف** وصورة شاشة القفل ([screen-saver.md](../../docs/screen-saver.md)).
+- مكوّن **خادم MCP** ([mcp.md](../../docs/mcp.md)) و**السمات** التي تلوّن macOS بلون الخلفية ([theming.md](../../docs/theming.md)).
+- قواعد التطبيقات، واختصارات عامة، ولقطات الشاشة، واستكشاف، ومجلدات المكتبة. جميع التغييرات: [CHANGELOG.md](../../CHANGELOG.md).
+
 ## ما يدعمه الإصدار 1.0.0
 
 ### الإعداد والمكتبة والتحديثات

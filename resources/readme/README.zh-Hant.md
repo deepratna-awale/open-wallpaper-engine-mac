@@ -64,6 +64,15 @@ open "OpenWallpaperEngine.xcodeproj"
 - **zip：** 檔案 > 輸入，或拖放包含背景圖片套件的 `.zip` 檔案
 - **手動：** 將背景圖片檔案夾直接拷貝至 `~/Documents/Open Wallpaper Engine/`
 
+## 1.0.0-beta.5 新增功能
+
+- **場景編輯器（Live）**：背景圖片、螢幕保護程式和 iPhone 與 iPad 輸出三個標籤頁；**背景圖片編輯器**（⌥⌘E）以獨立 App 執行，可編輯圖層、效果、時間軸、SceneScript、使用者屬性、粒子和 Puppet Warp；支援深度圖（[depth-maps.md](../../docs/depth-maps.md)）。
+- 與 Wallpaper Engine 相同的**顯示器佈局**：每台顯示器各自、延展、複製、群組、分割和描述檔（[display-layouts.md](../../docs/display-layouts.md)）。
+- **輸出**：iPhone 和 iPad 的原況照片（[iphone-ipad-export.md](../../docs/iphone-ipad-export.md)），以及 Android 版 Wallpaper Engine 的 `.mpkg` 套件，可透過 Wi-Fi 傳送（[android-export.md](../../docs/android-export.md)）。
+- **螢幕保護程式**和鎖定畫面圖片（[screen-saver.md](../../docs/screen-saver.md)）。
+- **MCP 伺服器**外掛程式（[mcp.md](../../docs/mcp.md)），以及讓 macOS 跟隨背景圖片顏色的**主題**（[theming.md](../../docs/theming.md)）。
+- App 規則、全域快速鍵、截圖、探索、資料庫資料夾。所有變更：[CHANGELOG.md](../../CHANGELOG.md)。
+
 ## 1.0.0 支援的功能
 
 ### 設定、資料庫與更新

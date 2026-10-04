@@ -64,6 +64,15 @@ Xcode에서 서명 인증서를 본인의 인증서로 변경하거나 'Sign to 
 - **zip:** 파일 > 가져오기를 사용하거나, 배경화면 패키지가 포함된 `.zip` 파일을 드래그 앤 드롭합니다
 - **수동:** 배경화면 폴더를 `~/Documents/Open Wallpaper Engine/`에 직접 복사합니다
 
+## 1.0.0-beta.5의 새로운 기능
+
+- **장면 편집기(Live)**: 배경화면, 화면 보호기, iPhone 및 iPad 내보내기 탭. **배경화면 편집기**(⌥⌘E)는 별도의 앱으로 실행되며 레이어, 효과, 타임라인, SceneScript, 사용자 속성, 파티클, Puppet Warp를 편집합니다. 깊이 맵도 지원합니다([depth-maps.md](../../docs/depth-maps.md)).
+- Wallpaper Engine과 같은 **디스플레이 레이아웃**: 디스플레이별, 늘리기, 복제, 그룹, 분할, 프로필([display-layouts.md](../../docs/display-layouts.md)).
+- **내보내기**: iPhone 및 iPad용 Live Photos([iphone-ipad-export.md](../../docs/iphone-ipad-export.md)), Android용 Wallpaper Engine의 `.mpkg` 패키지와 Wi-Fi로 보내기([android-export.md](../../docs/android-export.md)).
+- **화면 보호기**와 잠금 화면 이미지([screen-saver.md](../../docs/screen-saver.md)).
+- **MCP 서버** 플러그인([mcp.md](../../docs/mcp.md))과 배경화면 색상으로 macOS를 꾸미는 **테마**([theming.md](../../docs/theming.md)).
+- 앱 규칙, 전역 단축키, 스크린샷, 둘러보기, 라이브러리 폴더. 전체 변경 사항: [CHANGELOG.md](../../CHANGELOG.md).
+
 ## 1.0.0에서 지원하는 기능
 
 ### 설정, 보관함 및 업데이트
