@@ -73,5 +73,5 @@ final class AppSceneEditorControl: SceneEditorControl {
         return folder
     }
 
-    var isDepthMapPluginInstalled: Bool { app.depthMapGenerator.isInstalled }
+    var isDepthMapPluginInstalled: Bool { DepthMapPlugin.generator.isInstalled }
 }

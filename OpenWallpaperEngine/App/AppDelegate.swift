@@ -162,9 +162,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         desktopWallpaper: { [unowned self] in wallpaperViewModel.currentWallpaper }))
     /// The screen saver's daily re-recording, while the app runs.
     lazy var screenSaverSchedule = ScreenSaverDailyScheduler(service: screenSaverRecordings)
-    /// Settings › Plugins › Depth Map Generation: the process's one generator, which both editors
-    /// share; its model is loaded only while it generates.
-    lazy var depthMapGenerator = DepthMapPlugin.makeGenerator()
     lazy var sceneScriptServices: SceneScriptServices = {
         if !SceneScriptJIT.isEnabled {
             OWELog.info(.script, "JavaScriptCore runs without its JIT (no \(SceneScriptJIT.entitlement)): scripts run several times slower")

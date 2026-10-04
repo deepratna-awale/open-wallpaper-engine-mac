@@ -35,7 +35,7 @@ final class SceneControlRequests: ControlRequestGroup {
         let service = HeadlessSceneEditService(dependencies: .init(
             resources: { [unowned app] wallpaper in
                 guard let found = model.find(wallpaper) else { throw AppControlModel.missing(wallpaper) }
-                return try WallpaperSceneEditResources(wallpaper: found, depthMapGenerator: app.depthMapGenerator)
+                return try WallpaperSceneEditResources(wallpaper: found, depthMapGenerator: DepthMapPlugin.generator)
             },
             announce: { [unowned app] folder, overlay, actionName in
                 app.editorChangeSync.appOverlayDidSave(folder: folder, overlay: overlay, actionName: actionName)
