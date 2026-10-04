@@ -3,6 +3,7 @@ import Combine
 import SwiftUI
 import ServiceManagement
 import Metal
+import OWETheming
 
 extension GlobalSettings {
     /// The render resolution and upscaling a quality preset sets: Low draws half of each side and
@@ -373,6 +374,11 @@ struct GlobalSettings: Codable, Equatable {
     // MARK: Appearance
     var appearance = GSAppearance.followSystem
 
+    // MARK: Theming
+    /// Settings › General › Theming: macOS follows the wallpaper's scheme colour
+    /// (`ThemingController`, docs/theming.md). Everything off by default.
+    var theming = ThemingSettings()
+
     // MARK: Screenshots
     /// The size screenshots render at (`GSScreenshotResolution`).
     var screenshotResolution = GSScreenshotResolution.display
@@ -440,6 +446,7 @@ struct GlobalSettings: Codable, Equatable {
         case cheaperShadows
         case screenshotResolution, screenshotFolder
         case audioRecordingThreshold
+        case theming
     }
 }
 
@@ -513,6 +520,7 @@ extension GlobalSettings {
         read(.screenshotResolution, &screenshotResolution)
         read(.screenshotFolder, &screenshotFolder)
         read(.audioRecordingThreshold, &audioRecordingThreshold)
+        read(.theming, &theming)
         audioRecordingThreshold = min(max(audioRecordingThreshold, 0), 10)
     }
 }

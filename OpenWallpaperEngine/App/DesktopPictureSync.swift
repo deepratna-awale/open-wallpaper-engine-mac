@@ -1,5 +1,6 @@
 import CoreGraphics
 import Foundation
+import OWETheming
 
 /// Keeps each display's system desktop picture, which the lock screen and the menu bar's tint
 /// show, a picture of what the display shows (`DesktopPicturePlan`): a scene's loading snapshot,
@@ -14,6 +15,9 @@ import Foundation
 ///   reset it; `reassert` shows each display's current picture again where something else shows.
 /// - **Work.** Sources are looked up, decoded and drawn off the main thread, one update at a time;
 ///   a plain display (one frame at its own size) copies its snapshot without decoding it.
+/// - **Theming.** With Settings › Theming › Menu Bar on, each display's picture gets its menu bar
+///   strip in the scheme colour (`DesktopPictureTheming`), drawn over the composed picture; the
+///   strip is part of the picture's signature, so a new colour draws the pictures again.
 @MainActor
 final class DesktopPictureSync {
     struct Shown: Equatable {
@@ -29,7 +33,7 @@ final class DesktopPictureSync {
     /// The latest snapshot of each web wallpaper's page, by folder path.
     private var webFrames: [String: CGImage] = [:]
     private var running = false
-    private var pending: (plans: [DesktopPicturePlan], placement: WallpaperPlacement)?
+    private var pending: (plans: [DesktopPicturePlan], placement: WallpaperPlacement, strips: DesktopPictureStrips?)?
 
     init(setter: DesktopPictureSetting, files: LockScreenPicture, loader: DisplayPictureLoader) {
         self.setter = setter
@@ -43,14 +47,15 @@ final class DesktopPictureSync {
     }
 
     /// Brings each planned display's picture up to date. An update asked for while one runs runs
-    /// after it, with the latest plans only.
-    func update(_ plans: [DesktopPicturePlan], placement: WallpaperPlacement) async {
-        pending = (plans, placement)
+    /// after it, with the latest plans only. `strips` are theming's menu bar strips, if any.
+    func update(_ plans: [DesktopPicturePlan], placement: WallpaperPlacement,
+                strips: DesktopPictureStrips? = nil) async {
+        pending = (plans, placement, strips)
         guard !running else { return }
         running = true
         while let next = pending {
             pending = nil
-            await run(next.plans, placement: next.placement)
+            await run(next.plans, placement: next.placement, strips: next.strips)
         }
         running = false
     }
@@ -96,6 +101,7 @@ final class DesktopPictureSync {
         var showing: URL?
         var previous: Shown?
         var webFrames: [String: CGImage]
+        var strips: DesktopPictureStrips?
     }
 
     private enum Outcome: Sendable {
@@ -104,10 +110,11 @@ final class DesktopPictureSync {
         case failed
     }
 
-    private func run(_ plans: [DesktopPicturePlan], placement: WallpaperPlacement) async {
+    private func run(_ plans: [DesktopPicturePlan], placement: WallpaperPlacement, strips: DesktopPictureStrips?) async {
         let jobs = plans.map { plan in
             Job(plan: plan, showing: setter.picture(for: plan.display), previous: shown[plan.display],
-                webFrames: webFrames.filter { key, _ in plan.layers.contains { Self.key($0.wallpaperDirectory) == key } })
+                webFrames: webFrames.filter { key, _ in plan.layers.contains { Self.key($0.wallpaperDirectory) == key } },
+                strips: strips)
         }
         let files = files
         let loader = loader
@@ -190,11 +197,13 @@ final class DesktopPictureSync {
             }
         }
         let signature = "\(plan)|" + sources.map(\.signature).joined(separator: ";")
+            + DesktopPictureTheming.signature(job.strips, display: plan.display)
+        let hasStrip = job.strips?.displays[plan.display] != nil
         if let previous = job.previous, previous.signature == signature, LockScreenPicture.fileExists(previous.url) {
             return .unchanged
         }
         do {
-            if plan.isPlain, case .file(let url, _, true) = sources.first {
+            if plan.isPlain, !hasStrip, case .file(let url, _, true) = sources.first {
                 return .written(try files.write(snapshot: url, display: plan.display, showing: job.showing), signature: signature)
             }
             let images = zip(plan.layers, sources).map { layer, source -> DesktopPictureComposer.Source? in
@@ -210,8 +219,9 @@ final class DesktopPictureSync {
                     return nil
                 }
             }
-            guard let picture = DesktopPictureComposer.compose(plan, sources: images),
-                  let (data, fileExtension) = SceneLoadingSnapshotStore.encoded(picture) else {
+            guard let composed = DesktopPictureComposer.compose(plan, sources: images),
+                  let (data, fileExtension) = SceneLoadingSnapshotStore.encoded(
+                      DesktopPictureTheming.draw(job.strips, over: composed, display: plan.display)) else {
                 OWELog.error(.app, "Desktop picture of display \(plan.display) could not be drawn")
                 return .failed
             }

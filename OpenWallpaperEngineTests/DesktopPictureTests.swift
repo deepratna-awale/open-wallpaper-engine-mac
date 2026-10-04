@@ -2,6 +2,7 @@ import XCTest
 import CoreGraphics
 import ImageIO
 import UniformTypeIdentifiers
+import OWETheming
 @testable import OpenWallpaperEngine
 
 /// Each display's desktop picture (lock screen, menu bar tint) is a picture of what that display
@@ -231,6 +232,37 @@ final class DesktopPictureTests: XCTestCase {
         let sets = setter.sets.count
         await sync.update(plans(["1": a, "2": a]), placement: .fill)
         XCTAssertEqual(setter.sets.count, sets)
+    }
+
+    /// Settings › Theming › Menu Bar: every display's picture gets its own menu bar strip in the
+    /// scheme colour, stretched or split as well as plain; a new colour draws the pictures again.
+    func testThemingsMenuBarStripIsDrawnIntoEachDisplaysPicture() async throws {
+        let a = try wallpaper("a")
+        let b = try wallpaper("b")
+        try saveSnapshot(a, red, width: 320)
+        try saveSnapshot(b, blue)
+        let bar = MenuBarStripDisplay(size: CGSize(width: 160, height: 90), menuBarHeight: 18)
+        let white = DesktopPictureStrips(color: ThemeColor(red: 1, green: 1, blue: 1), displays: [1: bar, 2: bar])
+        var layout = DisplayLayoutConfiguration()
+        layout.addGroup(["UUID-A", "UUID-B"], layout: .stretch)
+        await sync.update(plans(["1": a], layout: layout), placement: .fill, strips: white)
+        for display: CGDirectDisplayID in [1, 2] {
+            assertColor(try color(setter.pictures[display], x: 0.5, y: 0.05), [255, 255, 255], "display \(display)'s strip")
+            assertColor(try color(setter.pictures[display], x: 0.5, y: 0.6), red, "display \(display)'s part of the canvas")
+        }
+
+        await sync.update(plans(["1": a, "2": b]), placement: .fill, strips: white)
+        assertColor(try color(setter.pictures[2], x: 0.5, y: 0.05), [255, 255, 255], "a plain display gets its strip too")
+        assertColor(try color(setter.pictures[2], x: 0.5, y: 0.6), blue)
+
+        let sets = setter.sets.count
+        let green = DesktopPictureStrips(color: ThemeColor(red: 0, green: 96.0 / 255, blue: 0), displays: [1: bar, 2: bar])
+        await sync.update(plans(["1": a, "2": b]), placement: .fill, strips: green)
+        XCTAssertEqual(setter.sets.count, sets + 2, "a new colour draws both pictures again")
+        assertColor(try color(setter.pictures[1], x: 0.5, y: 0.05), self.green)
+
+        await sync.update(plans(["1": a, "2": b]), placement: .fill)
+        assertColor(try color(setter.pictures[2], x: 0.5, y: 0.05), blue, "Menu Bar off: the strip goes")
     }
 
     /// macOS sets a picture on the current Space only, and a wake or a reconnection may reset it.

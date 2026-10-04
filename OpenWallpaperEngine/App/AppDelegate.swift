@@ -11,6 +11,7 @@ import SwiftUI
 import AVKit
 import WebKit
 import OWEInspectorKit
+import OWETheming
 
 private final class WorkshopPreviewWindow: NSWindow {
     var onDismiss: (() -> Void)?
@@ -148,6 +149,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// the desktop's left clicks.
     /// Settings › Plugins › Screen Saver: the loop videos and the bundled saver.
     lazy var screenSaver = ScreenSaverPlugin()
+    /// Settings › General › Theming: macOS follows the wallpaper's scheme colour.
+    private(set) lazy var theming = ThemingController.make { [unowned self] in
+        desktopPictures.refresh()
+    }
     /// Each display's desktop picture, which the lock screen and the menu bar's tint show.
     lazy var desktopPictures = DesktopPictureController.system()
     /// Settings › Plugins › MCP Server: MCP clients' control of the app while installed (`MCP/`).
@@ -406,6 +411,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // MCP clients connect once the app is set up, while the MCP Server plugin is installed.
         mcpServerPlugin.start()
 
+        // Theming: puts back what a crashed session changed, then follows the wallpaper's colour.
+        DesktopPictureTheming.provider = { [unowned self] in theming.strips }
+        theming.start(settings: globalSettingsViewModel.$settings.map(\.theming).eraseToAnyPublisher(),
+                      wallpapers: wallpaperViewModel)
+
         // Launched into the menu bar only, the Dock icon goes until a window opens.
         dockPresence.start()
 
@@ -488,6 +498,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         crashWatcher.applicationWillTerminate()
         mcpServerPlugin.stop()
         updater.stopShaderPrewarm()
+        // The system colours go back when the user chose "Restore on quit".
+        theming.stop()
         // The user's pictures go back where they still exist; OWE's pictures stay on disk, since
         // a Space macOS doesn't let OWE reach may still show one. Full-screen TIFFs earlier
         // versions left in Caches go to the Trash.

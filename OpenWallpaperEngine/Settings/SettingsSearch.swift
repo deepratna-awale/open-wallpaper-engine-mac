@@ -6,6 +6,7 @@ enum SettingsAnchor {
     static let language = "language"
     static let appearance = "appearance"
     static let macOS = "macos"
+    static let theming = "theming"
     static let setup = "setup"
     static let shortcuts = "shortcuts"
     static let hotKeys = "hotkeys"
@@ -63,6 +64,10 @@ struct SettingsSearch {
             entry("Theme", .general, SettingsAnchor.appearance),
             entry("Adjust Menu Bar Color", .general, SettingsAnchor.macOS),
             entry("Show Wallpaper on Lock Screen", .general, SettingsAnchor.macOS),
+            entry("Theming", .general, SettingsAnchor.theming),
+            entry("Accent Color", .general, SettingsAnchor.theming),
+            entry("Tinted Icon Color", .general, SettingsAnchor.theming),
+            entry("Folder Color", .general, SettingsAnchor.theming),
             entry("Run Setup Again…", .general, SettingsAnchor.setup),
             entry("Keyboard Shortcuts", .general, SettingsAnchor.shortcuts),
             entry("Hotkeys", .general, SettingsAnchor.hotKeys),

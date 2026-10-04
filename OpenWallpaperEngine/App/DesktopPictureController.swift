@@ -21,7 +21,8 @@ struct WebWallpaperPageSnapshot {
 /// options), and updates after any of those change, a scene saves a snapshot or a page draws one.
 /// A Space change, a wake or a display change shows the current pictures again, since macOS
 /// sets a picture on the current Space only. Turning both settings off, or quitting, puts the
-/// user's pictures back.
+/// user's pictures back. Theming's menu bar strips (`DesktopPictureTheming`) are read at each
+/// refresh, and theming refreshes when they change.
 @MainActor
 final class DesktopPictureController {
     private static let fallbackKey = "OSWallpaper"
@@ -116,7 +117,8 @@ final class DesktopPictureController {
             },
             options: { viewModel.displayOptions(on: $0) })
         let placement = viewModel.wallpaperPlacement
-        Task { await sync.update(plans, placement: placement) }
+        let strips = DesktopPictureTheming.strips()
+        Task { await sync.update(plans, placement: placement, strips: strips) }
     }
 
     /// The current Space, a wake or a display change may show another picture: shows each
