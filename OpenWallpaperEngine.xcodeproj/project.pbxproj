@@ -13,10 +13,16 @@
 		EE3000000000000000000001 /* ShaderToolchain in Frameworks */ = {isa = PBXBuildFile; productRef = EE3000000000000000000002 /* ShaderToolchain */; };
 		EE4000000000000000000011 /* CHANGELOG.md in Resources */ = {isa = PBXBuildFile; fileRef = EE4000000000000000000010 /* CHANGELOG.md */; };
 		EE4000000000000000000001 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = EE4000000000000000000002 /* Sparkle */; };
+		FA1000000000000000000022 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = FA1000000000000000000023 /* Sparkle */; };
 		EE500000000000000000000B /* Open Wallpaper Engine.saver in Embed Screen Saver */ = {isa = PBXBuildFile; fileRef = EE5000000000000000000003 /* Open Wallpaper Engine.saver */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		ED7000000000000000000011 /* OWEInspectorKit in Frameworks */ = {isa = PBXBuildFile; productRef = ED7000000000000000000012 /* OWEInspectorKit */; };
 		ED7000000000000000000021 /* OWESceneEditing in Frameworks */ = {isa = PBXBuildFile; productRef = ED7000000000000000000022 /* OWESceneEditing */; };
 		ED7000000000000000000031 /* OWEEditor in Frameworks */ = {isa = PBXBuildFile; productRef = ED7000000000000000000032 /* OWEEditor */; };
+		FA1000000000000000000010 /* OpenWallpaperEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA1000000000000000000002 /* OpenWallpaperEngine.framework */; };
+		FA1000000000000000000011 /* OpenWallpaperEngine.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = FA1000000000000000000002 /* OpenWallpaperEngine.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		FA1000000000000000000012 /* OpenWallpaperEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA1000000000000000000002 /* OpenWallpaperEngine.framework */; };
+		FA1000000000000000000013 /* OpenWallpaperEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA1000000000000000000002 /* OpenWallpaperEngine.framework */; };
+		FB1000000000000000000010 /* Wallpaper Editor.app in Embed Wallpaper Editor */ = {isa = PBXBuildFile; fileRef = FB1000000000000000000002 /* Wallpaper Editor.app */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		EE6000000000000000000015 /* owe-chromium-helper.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = EE6000000000000000000003 /* owe-chromium-helper.xpc */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -43,6 +49,28 @@
 			name = "Embed XPC Services";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		FA1000000000000000000014 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				FA1000000000000000000011 /* OpenWallpaperEngine.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FB1000000000000000000011 /* Embed Wallpaper Editor */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Helpers";
+			dstSubfolderSpec = 16;
+			files = (
+				FB1000000000000000000010 /* Wallpaper Editor.app in Embed Wallpaper Editor */,
+			);
+			name = "Embed Wallpaper Editor";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -63,29 +91,60 @@
 		B4AD1D0F2AA24E8200471AC8 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		EE2000000000000000000003 /* OpenWallpaperEngineTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OpenWallpaperEngineTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		EE5000000000000000000003 /* Open Wallpaper Engine.saver */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Open Wallpaper Engine.saver"; sourceTree = BUILT_PRODUCTS_DIR; };
+		FA1000000000000000000002 /* OpenWallpaperEngine.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = OpenWallpaperEngine.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		FB1000000000000000000002 /* Wallpaper Editor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Wallpaper Editor.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		EE6000000000000000000003 /* owe-chromium-helper.xpc */ = {isa = PBXFileReference; explicitFileType = "wrapper.xpc-service"; includeInIndex = 0; path = "owe-chromium-helper.xpc"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		EE10000000000000000FE001 /* Exceptions for "OpenWallpaperEngine" folder in "OpenWallpaperEngine" target */ = {
+		EE10000000000000000FE001 /* Exceptions for "OpenWallpaperEngine" folder in "OpenWallpaperEngineFramework" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				"OpenWallpaperEngine-Bridging-Header.h",
+				Localizable.xcstrings,
 				OpenWallpaperEngine.entitlements,
+				Resources/AppIcon.icon,
+				Resources/Assets.xcassets,
+			);
+			publicHeaders = (
 				Core/ObjCExceptionCatcher.h,
+				OpenWallpaperEngine.h,
+			);
+			target = FA1000000000000000000001 /* OpenWallpaperEngineFramework */;
+		};
+		FA1000000000000000000019 /* Exceptions for "OpenWallpaperEngine" folder in "OpenWallpaperEngine" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Localizable.xcstrings,
+				Resources/AppIcon.icon,
+				Resources/Assets.xcassets,
 			);
 			target = 5EC47E752A2DB2E600120CCC /* OpenWallpaperEngine */;
 		};
-		EE500000000000000000000E /* Exceptions for "OpenWallpaperEngineSaver" folder in "OpenWallpaperEngine" target */ = {
+		FB1000000000000000000014 /* Exceptions for "OpenWallpaperEngine" folder in "WallpaperEditor" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Localizable.xcstrings,
+				Resources/Assets.xcassets,
+			);
+			target = FB1000000000000000000001 /* WallpaperEditor */;
+		};
+		FB1000000000000000000016 /* Exceptions for "EditorHelper" folder in "WallpaperEditor" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = FB1000000000000000000001 /* WallpaperEditor */;
+		};
+		EE500000000000000000000E /* Exceptions for "OpenWallpaperEngineSaver" folder in "OpenWallpaperEngineFramework" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				OWESaverView.swift,
 				thumbnail.png,
 				"thumbnail@2x.png",
 			);
-			target = 5EC47E752A2DB2E600120CCC /* OpenWallpaperEngine */;
+			target = FA1000000000000000000001 /* OpenWallpaperEngineFramework */;
 		};
-		EE6000000000000000000012 /* Exceptions for "OWEChromiumHelper" folder in "OpenWallpaperEngine" target */ = {
+		EE6000000000000000000012 /* Exceptions for "OWEChromiumHelper" folder in "OpenWallpaperEngineFramework" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				ChromiumHelperService.swift,
@@ -96,7 +155,7 @@
 				"OWEChromiumHelper-Bridging-Header.h",
 				OWEChromiumHelper.entitlements,
 			);
-			target = 5EC47E752A2DB2E600120CCC /* OpenWallpaperEngine */;
+			target = FA1000000000000000000001 /* OpenWallpaperEngineFramework */;
 		};
 		EE6000000000000000000013 /* Exceptions for "OWEChromiumHelper" folder in "OWEChromiumHelper" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
@@ -112,9 +171,24 @@
 		5EC47E782A2DB2E600120CCC /* OpenWallpaperEngine */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				EE10000000000000000FE001 /* Exceptions for "OpenWallpaperEngine" folder in "OpenWallpaperEngine" target */,
+				EE10000000000000000FE001 /* Exceptions for "OpenWallpaperEngine" folder in "OpenWallpaperEngineFramework" target */,
+				FA1000000000000000000019 /* Exceptions for "OpenWallpaperEngine" folder in "OpenWallpaperEngine" target */,
+				FB1000000000000000000014 /* Exceptions for "OpenWallpaperEngine" folder in "WallpaperEditor" target */,
 			);
 			path = OpenWallpaperEngine;
+			sourceTree = "<group>";
+		};
+		FA1000000000000000000021 /* OpenWallpaperEngineApp */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = OpenWallpaperEngineApp;
+			sourceTree = "<group>";
+		};
+		FB1000000000000000000015 /* EditorHelper */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				FB1000000000000000000016 /* Exceptions for "EditorHelper" folder in "WallpaperEditor" target */,
+			);
+			path = EditorHelper;
 			sourceTree = "<group>";
 		};
 		EE2000000000000000000002 /* OpenWallpaperEngineTests */ = {
@@ -125,7 +199,7 @@
 		EE5000000000000000000002 /* OpenWallpaperEngineSaver */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				EE500000000000000000000E /* Exceptions for "OpenWallpaperEngineSaver" folder in "OpenWallpaperEngine" target */,
+				EE500000000000000000000E /* Exceptions for "OpenWallpaperEngineSaver" folder in "OpenWallpaperEngineFramework" target */,
 			);
 			path = OpenWallpaperEngineSaver;
 			sourceTree = "<group>";
@@ -133,7 +207,7 @@
 		EE6000000000000000000002 /* OWEChromiumHelper */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				EE6000000000000000000012 /* Exceptions for "OWEChromiumHelper" folder in "OpenWallpaperEngine" target */,
+				EE6000000000000000000012 /* Exceptions for "OWEChromiumHelper" folder in "OpenWallpaperEngineFramework" target */,
 				EE6000000000000000000013 /* Exceptions for "OWEChromiumHelper" folder in "OWEChromiumHelper" target */,
 			);
 			path = OWEChromiumHelper;
@@ -142,6 +216,23 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		FA1000000000000000000020 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FA1000000000000000000010 /* OpenWallpaperEngine.framework in Frameworks */,
+				FA1000000000000000000022 /* Sparkle in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FB1000000000000000000004 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FA1000000000000000000012 /* OpenWallpaperEngine.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		5EC47E732A2DB2E600120CCC /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -168,6 +259,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FA1000000000000000000013 /* OpenWallpaperEngine.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -201,6 +293,8 @@
 				5EF4C24C2A4C98FA009831E5 /* README.md */,
 				5EEE8D5D2A7501C800DCE41A /* resources */,
 				5EC47E782A2DB2E600120CCC /* OpenWallpaperEngine */,
+				FA1000000000000000000021 /* OpenWallpaperEngineApp */,
+				FB1000000000000000000015 /* EditorHelper */,
 				EE2000000000000000000002 /* OpenWallpaperEngineTests */,
 				EE5000000000000000000002 /* OpenWallpaperEngineSaver */,
 				EE6000000000000000000002 /* OWEChromiumHelper */,
@@ -214,6 +308,8 @@
 			isa = PBXGroup;
 			children = (
 				5EC47E762A2DB2E600120CCC /* Open Wallpaper Engine.app */,
+				FA1000000000000000000002 /* OpenWallpaperEngine.framework */,
+				FB1000000000000000000002 /* Wallpaper Editor.app */,
 				EE2000000000000000000003 /* OpenWallpaperEngineTests.xctest */,
 				EE5000000000000000000003 /* Open Wallpaper Engine.saver */,
 				EE6000000000000000000003 /* owe-chromium-helper.xpc */,
@@ -241,25 +337,52 @@
 			buildConfigurationList = 5EC47EA02A2DB2E700120CCC /* Build configuration list for PBXNativeTarget "OpenWallpaperEngine" */;
 			buildPhases = (
 				5EC47E722A2DB2E600120CCC /* Sources */,
-				5EC47E732A2DB2E600120CCC /* Frameworks */,
+				FA1000000000000000000020 /* Frameworks */,
 				5EC47E742A2DB2E600120CCC /* Resources */,
+				FA1000000000000000000014 /* Embed Frameworks */,
 				EE500000000000000000000A /* Embed Screen Saver */,
 				EE6000000000000000000014 /* Embed XPC Services */,
 				EE6000000000000000000018 /* Chromium Helper Apps */,
-				ED8000000000000000000001 /* Wallpaper Editor Helper */,
+				FB1000000000000000000011 /* Embed Wallpaper Editor */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				FA1000000000000000000016 /* PBXTargetDependency */,
+				FB1000000000000000000013 /* PBXTargetDependency */,
 				EE500000000000000000000C /* PBXTargetDependency */,
 				EE6000000000000000000016 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				FA1000000000000000000021 /* OpenWallpaperEngineApp */,
+			);
+			name = OpenWallpaperEngine;
+			packageProductDependencies = (
+				FA1000000000000000000023 /* Sparkle */,
+			);
+			productName = OpenWallpaperEngine;
+			productReference = 5EC47E762A2DB2E600120CCC /* Open Wallpaper Engine.app */;
+			productType = "com.apple.product-type.application";
+		};
+		FA1000000000000000000001 /* OpenWallpaperEngineFramework */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FA1000000000000000000006 /* Build configuration list for PBXNativeTarget "OpenWallpaperEngineFramework" */;
+			buildPhases = (
+				FA1000000000000000000003 /* Headers */,
+				FA1000000000000000000004 /* Sources */,
+				5EC47E732A2DB2E600120CCC /* Frameworks */,
+				FA1000000000000000000005 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
 				5EC47E782A2DB2E600120CCC /* OpenWallpaperEngine */,
 				EE5000000000000000000002 /* OpenWallpaperEngineSaver */,
 				EE6000000000000000000002 /* OWEChromiumHelper */,
 			);
-			name = OpenWallpaperEngine;
+			name = OpenWallpaperEngineFramework;
 			packageProductDependencies = (
 				EE3000000000000000000002 /* ShaderToolchain */,
 				EE4000000000000000000002 /* Sparkle */,
@@ -268,7 +391,29 @@
 				ED7000000000000000000012 /* OWEInspectorKit */,
 			);
 			productName = OpenWallpaperEngine;
-			productReference = 5EC47E762A2DB2E600120CCC /* Open Wallpaper Engine.app */;
+			productReference = FA1000000000000000000002 /* OpenWallpaperEngine.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		FB1000000000000000000001 /* WallpaperEditor */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FB1000000000000000000006 /* Build configuration list for PBXNativeTarget "WallpaperEditor" */;
+			buildPhases = (
+				FB1000000000000000000003 /* Sources */,
+				FB1000000000000000000004 /* Frameworks */,
+				FB1000000000000000000005 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FA1000000000000000000018 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				FA1000000000000000000021 /* OpenWallpaperEngineApp */,
+				FB1000000000000000000015 /* EditorHelper */,
+			);
+			name = WallpaperEditor;
+			productName = "Wallpaper Editor";
+			productReference = FB1000000000000000000002 /* Wallpaper Editor.app */;
 			productType = "com.apple.product-type.application";
 		};
 		EE2000000000000000000001 /* OpenWallpaperEngineTests */ = {
@@ -356,6 +501,27 @@
 			remoteGlobalIDString = EE6000000000000000000001;
 			remoteInfo = OWEChromiumHelper;
 		};
+		FA1000000000000000000015 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5EC47E6E2A2DB2E600120CCC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FA1000000000000000000001;
+			remoteInfo = OpenWallpaperEngineFramework;
+		};
+		FA1000000000000000000017 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5EC47E6E2A2DB2E600120CCC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FA1000000000000000000001;
+			remoteInfo = OpenWallpaperEngineFramework;
+		};
+		FB1000000000000000000012 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5EC47E6E2A2DB2E600120CCC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FB1000000000000000000001;
+			remoteInfo = WallpaperEditor;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXTargetDependency section */
@@ -373,6 +539,21 @@
 			isa = PBXTargetDependency;
 			target = EE6000000000000000000001 /* OWEChromiumHelper */;
 			targetProxy = EE6000000000000000000017 /* PBXContainerItemProxy */;
+		};
+		FA1000000000000000000016 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FA1000000000000000000001 /* OpenWallpaperEngineFramework */;
+			targetProxy = FA1000000000000000000015 /* PBXContainerItemProxy */;
+		};
+		FA1000000000000000000018 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FA1000000000000000000001 /* OpenWallpaperEngineFramework */;
+			targetProxy = FA1000000000000000000017 /* PBXContainerItemProxy */;
+		};
+		FB1000000000000000000013 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FB1000000000000000000001 /* WallpaperEditor */;
+			targetProxy = FB1000000000000000000012 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -423,12 +604,24 @@
 			projectRoot = "";
 			targets = (
 				5EC47E752A2DB2E600120CCC /* OpenWallpaperEngine */,
+				FA1000000000000000000001 /* OpenWallpaperEngineFramework */,
+				FB1000000000000000000001 /* WallpaperEditor */,
 				EE2000000000000000000001 /* OpenWallpaperEngineTests */,
 				EE5000000000000000000001 /* OpenWallpaperEngineSaver */,
 				EE6000000000000000000001 /* OWEChromiumHelper */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXHeadersBuildPhase section */
+		FA1000000000000000000003 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
 
 /* Begin PBXResourcesBuildPhase section */		5EC47E742A2DB2E600120CCC /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
@@ -459,6 +652,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		FA1000000000000000000005 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FB1000000000000000000005 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
@@ -479,26 +686,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -euo pipefail\n# CEF's helper apps, in CEF's macOS naming: \"<helper>.app\" and its (Renderer), (GPU) and (Plugin)\n# variants, which Chromium launches by name. The installer copies them into the engine bundle\n# (<version>/OWE Chromium.app/Contents/Frameworks) beside the framework, so CEF's sandbox, which\n# allows its main bundle, covers them. Same executable and entitlements as the XPC helper.\nHELPERS=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Helpers\"\nSOURCE=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/XPCServices/owe-chromium-helper.xpc/Contents\"\nrm -rf \"$HELPERS\"\nmkdir -p \"$HELPERS\"\nfor VARIANT in \"\" \" (Renderer)\" \" (GPU)\" \" (Plugin)\"; do\n  NAME=\"OWE Chromium Helper$VARIANT\"\n  SUFFIX=$(printf '%s' \"$VARIANT\" | tr -d ' ()' | tr '[:upper:]' '[:lower:]')\n  APP=\"$HELPERS/$NAME.app\"\n  mkdir -p \"$APP/Contents/MacOS\"\n  cp \"$SOURCE/MacOS/owe-chromium-helper\" \"$APP/Contents/MacOS/$NAME\"\n  cp \"$SOURCE/Info.plist\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleExecutable -string \"$NAME\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleName -string \"$NAME\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleDisplayName -string \"$NAME\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleIdentifier -string \"com.winddog.wallpaper-engine.chromium-helper${SUFFIX:+.$SUFFIX}.app\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundlePackageType -string APPL \"$APP/Contents/Info.plist\"\n  plutil -remove XPCService \"$APP/Contents/Info.plist\"\n  if [ -n \"${EXPANDED_CODE_SIGN_IDENTITY:-}\" ]; then\n    codesign --force --sign \"$EXPANDED_CODE_SIGN_IDENTITY\" --options runtime ${OTHER_CODE_SIGN_FLAGS:-} --entitlements \"${SRCROOT}/OWEChromiumHelper/OWEChromiumHelper.entitlements\" \"$APP\"\n  fi\ndone\nrm -rf \"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/XPCServices/owe-chromium-helper (Renderer).app\"\n";
-		};
-		ED8000000000000000000001 /* Wallpaper Editor Helper */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Wallpaper Editor Helper";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# The Wallpaper Editor's own app, <app>/Contents/Helpers/Wallpaper Editor.app (docs/editor-plan.md).\n# After \"Chromium Helper Apps\", which recreates Contents/Helpers.\nexec \"${SRCROOT}/Scripts/build-editor-helper.sh\"\n";
+			shellScript = "set -euo pipefail\n# CEF's helper apps, in CEF's macOS naming: \"<helper>.app\" and its (Renderer), (GPU) and (Plugin)\n# variants, which Chromium launches by name. The installer copies them into the engine bundle\n# (<version>/OWE Chromium.app/Contents/Frameworks) beside the framework, so CEF's sandbox, which\n# allows its main bundle, covers them. Same executable and entitlements as the XPC helper.\nHELPERS=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Helpers\"\nSOURCE=\"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/XPCServices/owe-chromium-helper.xpc/Contents\"\nrm -rf \"$HELPERS\"/\"OWE Chromium Helper\"*.app\nmkdir -p \"$HELPERS\"\nfor VARIANT in \"\" \" (Renderer)\" \" (GPU)\" \" (Plugin)\"; do\n  NAME=\"OWE Chromium Helper$VARIANT\"\n  SUFFIX=$(printf '%s' \"$VARIANT\" | tr -d ' ()' | tr '[:upper:]' '[:lower:]')\n  APP=\"$HELPERS/$NAME.app\"\n  mkdir -p \"$APP/Contents/MacOS\"\n  cp \"$SOURCE/MacOS/owe-chromium-helper\" \"$APP/Contents/MacOS/$NAME\"\n  cp \"$SOURCE/Info.plist\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleExecutable -string \"$NAME\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleName -string \"$NAME\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleDisplayName -string \"$NAME\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundleIdentifier -string \"com.winddog.wallpaper-engine.chromium-helper${SUFFIX:+.$SUFFIX}.app\" \"$APP/Contents/Info.plist\"\n  plutil -replace CFBundlePackageType -string APPL \"$APP/Contents/Info.plist\"\n  plutil -remove XPCService \"$APP/Contents/Info.plist\"\n  if [ -n \"${EXPANDED_CODE_SIGN_IDENTITY:-}\" ]; then\n    codesign --force --sign \"$EXPANDED_CODE_SIGN_IDENTITY\" --options runtime ${OTHER_CODE_SIGN_FLAGS:-} --entitlements \"${SRCROOT}/OWEChromiumHelper/OWEChromiumHelper.entitlements\" \"$APP\"\n  fi\ndone\nrm -rf \"${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/XPCServices/owe-chromium-helper (Renderer).app\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -525,6 +713,20 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		EE6000000000000000000004 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FA1000000000000000000004 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FB1000000000000000000003 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -672,10 +874,8 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_ASSET_PATHS = "\"OpenWallpaperEngine/Preview Content\"";
 				DEVELOPMENT_TEAM = C33D7BSFGS;
 				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "OpenWallpaperEngine-Info.plist";
 				OWE_VERSION_LABEL = "$(MARKETING_VERSION)";
@@ -688,16 +888,14 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
-					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0.0;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.winddog.wallpaper-engine";
-				PRODUCT_MODULE_NAME = OpenWallpaperEngine;
+				PRODUCT_MODULE_NAME = OpenWallpaperEngineApp;
 				PRODUCT_NAME = "Open Wallpaper Engine";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "OpenWallpaperEngine/OpenWallpaperEngine-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
@@ -714,10 +912,8 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_ASSET_PATHS = "\"OpenWallpaperEngine/Preview Content\"";
 				DEVELOPMENT_TEAM = C33D7BSFGS;
 				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "OpenWallpaperEngine-Info.plist";
 				OWE_VERSION_LABEL = "$(MARKETING_VERSION)";
@@ -730,15 +926,13 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
-					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.winddog.wallpaper-engine";
-				PRODUCT_MODULE_NAME = OpenWallpaperEngine;
+				PRODUCT_MODULE_NAME = OpenWallpaperEngineApp;
 				PRODUCT_NAME = "Open Wallpaper Engine";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "OpenWallpaperEngine/OpenWallpaperEngine-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
@@ -746,7 +940,6 @@
 		EE200000000000000000000A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = C33D7BSFGS;
@@ -765,7 +958,6 @@
 		EE200000000000000000000B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = C33D7BSFGS;
@@ -889,6 +1081,134 @@
 			};
 			name = Release;
 		};
+		FA1000000000000000000007 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_ASSET_PATHS = "\"OpenWallpaperEngine/Preview Content\"";
+				DEVELOPMENT_TEAM = C33D7BSFGS;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.winddog.wallpaper-engine.framework";
+				PRODUCT_MODULE_NAME = OpenWallpaperEngine;
+				PRODUCT_NAME = OpenWallpaperEngine;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		FA1000000000000000000008 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_ASSET_PATHS = "\"OpenWallpaperEngine/Preview Content\"";
+				DEVELOPMENT_TEAM = C33D7BSFGS;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.winddog.wallpaper-engine.framework";
+				PRODUCT_MODULE_NAME = OpenWallpaperEngine;
+				PRODUCT_NAME = OpenWallpaperEngine;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		FB1000000000000000000007 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = OpenWallpaperEngine/OpenWallpaperEngine.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = C33D7BSFGS;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = EditorHelper/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.winddog.wallpaper-engine.editor";
+				PRODUCT_MODULE_NAME = WallpaperEditor;
+				PRODUCT_NAME = "Wallpaper Editor";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		FB1000000000000000000008 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = OpenWallpaperEngine/OpenWallpaperEngine.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = C33D7BSFGS;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = EditorHelper/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.winddog.wallpaper-engine.editor";
+				PRODUCT_MODULE_NAME = WallpaperEditor;
+				PRODUCT_NAME = "Wallpaper Editor";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -937,6 +1257,24 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		FA1000000000000000000006 /* Build configuration list for PBXNativeTarget "OpenWallpaperEngineFramework" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FA1000000000000000000007 /* Debug */,
+				FA1000000000000000000008 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FB1000000000000000000006 /* Build configuration list for PBXNativeTarget "WallpaperEditor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FB1000000000000000000007 /* Debug */,
+				FB1000000000000000000008 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 /* Begin XCLocalSwiftPackageReference section */
 		EE3000000000000000000003 /* XCLocalSwiftPackageReference "Vendor/ShaderToolchain" */ = {
@@ -966,6 +1304,11 @@
 			productName = ShaderToolchain;
 		};
 		EE4000000000000000000002 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EE4000000000000000000003 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+		FA1000000000000000000023 /* Sparkle */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = EE4000000000000000000003 /* XCRemoteSwiftPackageReference "Sparkle" */;
 			productName = Sparkle;

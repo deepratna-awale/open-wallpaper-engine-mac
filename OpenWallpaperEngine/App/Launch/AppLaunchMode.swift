@@ -1,7 +1,7 @@
 import Foundation
 
 /// What this launch of the app's executable is, read from its bundle and arguments before any app
-/// lifecycle starts (`main.swift`). The helper runs (`ShaderPrewarmCommand`, `CrashWatcher`) exit
+/// lifecycle starts (`AppMain`). The helper runs (`ShaderPrewarmCommand`, `CrashWatcher`) exit
 /// before this is asked.
 enum AppLaunchMode: Equatable {
     /// Open Wallpaper Engine: the desktop wallpapers, the menu bar item, the library.

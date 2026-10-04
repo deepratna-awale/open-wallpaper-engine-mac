@@ -69,7 +69,7 @@ struct GifImage: NSViewRepresentable {
     private func loadImage(into nsView: NSImageView, coordinator: Coordinator) {
         let source = gifUrl?.path ?? gifName
         guard coordinator.loadedSource != source else { return }
-        let url = gifUrl ?? gifName.flatMap { Bundle.main.url(forResource: $0, withExtension: "gif") }
+        let url = gifUrl ?? gifName.flatMap { AppBundleLayout.framework.url(forResource: $0, withExtension: "gif") }
         guard let url, let source else { return }
         if let cached = Self.imageCache.object(forKey: source as NSString) {
             nsView.image = cached

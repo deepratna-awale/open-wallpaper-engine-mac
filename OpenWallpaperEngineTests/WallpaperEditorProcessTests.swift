@@ -100,17 +100,49 @@ final class WallpaperEditorProcessTests: XCTestCase {
         XCTAssertEqual(AppBundleLayout.editorIdentifier(for: "com.winddog.wallpaper-engine"), "com.winddog.wallpaper-engine.editor")
         XCTAssertEqual(AppBundleLayout.appIdentifier(for: "com.winddog.wallpaper-engine.editor"), "com.winddog.wallpaper-engine")
         XCTAssertEqual(AppBundleLayout.appIdentifier(for: "com.winddog.wallpaper-engine"), "com.winddog.wallpaper-engine")
-        XCTAssertTrue(AppBundleLayout.appBundle === Bundle.main, "the app reads its own resources")
-        XCTAssertNotNil(AppBundleLayout.appBundle.url(forResource: "WallpaperNotFound", withExtension: "mp4"))
+        XCTAssertTrue(AppBundleLayout.appBundle === Bundle.main, "the app reads its own Info.plist")
+    }
+
+    /// Both apps are small executables running the OpenWallpaperEngine framework: the code and its
+    /// own resources are in the framework, once; what is per app stays in each app's bundle.
+    func testTheCodeAndItsResourcesAreInTheFramework() throws {
+        let framework = AppBundleLayout.framework
+        XCTAssertFalse(framework === Bundle.main)
+        XCTAssertEqual(framework.bundleURL.lastPathComponent, "OpenWallpaperEngine.framework")
+        XCTAssertNotNil(framework.url(forResource: "default", withExtension: "metallib"), "the engine's Metal library")
+        XCTAssertNotNil(framework.url(forResource: "WallpaperNotFound", withExtension: "mp4"))
+        XCTAssertNotNil(framework.url(forResource: "nowPlayingAdapter", withExtension: "pl"))
+        XCTAssertNil(Bundle.main.url(forResource: "default", withExtension: "metallib"), "no second Metal library in the app")
+        // SwiftUI and `String(localized:)` read the strings and the asset catalog from the app's own bundle.
+        XCTAssertTrue(Bundle.main.localizations.contains("de"))
+        XCTAssertNotNil(Bundle.main.url(forResource: "Assets", withExtension: "car"))
+        XCTAssertNotNil(Bundle.main.privateFrameworksURL.flatMap {
+            Bundle(url: $0.appending(path: "OpenWallpaperEngine.framework", directoryHint: .isDirectory))
+        }, "the app embeds the framework")
+    }
+
+    /// The editor's app is built and embedded: its own executable, strings and asset catalog, and
+    /// the app's framework, which it links through `@executable_path/../../../../Frameworks`.
+    func testTheBuiltEditorAppIsSmallAndLinksTheAppsFramework() throws {
+        let editorURL = AppBundleLayout.editorURL(inApp: Bundle.main.bundleURL)
+        let editor = try XCTUnwrap(Bundle(url: editorURL), "the app embeds the editor's app")
+        XCTAssertEqual(editor.bundleIdentifier, AppBundleLayout.editorIdentifier(for: Bundle.main.bundleIdentifier ?? ""))
+        XCTAssertEqual(editor.infoDictionary?["CFBundleShortVersionString"] as? String,
+                       Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String)
+        XCTAssertTrue(editor.localizations.contains("de"))
+        let ownFrameworks: URL = editorURL.appending(path: "Contents/Frameworks", directoryHint: .isDirectory)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: ownFrameworks.path), "no frameworks of its own")
+        let executable = try XCTUnwrap(editor.executableURL)
+        let size = try XCTUnwrap(try executable.resourceValues(forKeys: [.fileSizeKey]).fileSize)
+        XCTAssertLessThan(size, 5_000_000, "the editor's executable only starts the framework")
     }
 
     func testTheEditorsAppHasItsOwnIdentity() throws {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
         let data = try Data(contentsOf: root.appending(path: "EditorHelper/Info.plist"))
         let info = try XCTUnwrap(PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any])
-        XCTAssertEqual(info["CFBundleIdentifier"] as? String, "com.winddog.wallpaper-engine.editor")
-        XCTAssertEqual(info["CFBundleIdentifier"] as? String,
-                       AppBundleLayout.editorIdentifier(for: AppStorageLocation.realBundleIdentifier))
+        XCTAssertEqual(info["CFBundleIdentifier"] as? String, "$(PRODUCT_BUNDLE_IDENTIFIER)")
+        XCTAssertEqual(info["CFBundleShortVersionString"] as? String, "$(MARKETING_VERSION)", "the app's version")
         XCTAssertEqual(info["CFBundleName"] as? String, AppBundleLayout.editorName)
         XCTAssertEqual(info["CFBundleDisplayName"] as? String, AppBundleLayout.editorName)
         XCTAssertEqual(info["CFBundleExecutable"] as? String, AppBundleLayout.editorName)
@@ -121,8 +153,9 @@ final class WallpaperEditorProcessTests: XCTestCase {
         XCTAssertNil(info["CFBundleIconName"], "the badged icon, not the app's from the asset catalog")
         XCTAssertTrue(FileManager.default.fileExists(atPath: root.appending(path: "EditorHelper/\(icon).icns").path))
         XCTAssertNil(info["SUFeedURL"], "the editor's app never updates itself")
-        let script = try String(contentsOf: root.appending(path: "Scripts/build-editor-helper.sh"), encoding: .utf8)
-        XCTAssertTrue(script.contains("${PRODUCT_BUNDLE_IDENTIFIER}.editor"), "the build keeps the id beside the app's")
+        let project = try String(contentsOf: root.appending(path: "OpenWallpaperEngine.xcodeproj/project.pbxproj"), encoding: .utf8)
+        let identifier: String = AppBundleLayout.editorIdentifier(for: AppStorageLocation.realBundleIdentifier)
+        XCTAssertTrue(project.contains("PRODUCT_BUNDLE_IDENTIFIER = \"\(identifier)\";"), "the editor's id is the app's plus .editor")
     }
 
     func testTheEditorsAppKeepsTheAppsState() {

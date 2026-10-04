@@ -1,6 +1,6 @@
 import AppKit
 
-/// What a launch starts, by mode (`AppLaunchMode`). `main.swift` reads it to pick the process's
+/// What a launch starts, by mode (`AppLaunchMode`). `AppMain` reads it to pick the process's
 /// delegate: Open Wallpaper Engine's (`AppDelegate`), which starts every main-app service, or the
 /// Wallpaper Editor's (`WallpaperEditorAppDelegate`), which starts none of them. The editor never
 /// creates `AppDelegate.shared`, so nothing the main app does at launch runs in its process.

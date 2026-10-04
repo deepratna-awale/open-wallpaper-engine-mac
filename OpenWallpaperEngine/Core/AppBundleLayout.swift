@@ -1,10 +1,11 @@
 import Foundation
 
 /// Where Open Wallpaper Engine's two apps are: the app, and the Wallpaper Editor's own app inside
-/// it, `<app>/Contents/Helpers/Wallpaper Editor.app` (`Scripts/build-editor-helper.sh`). The editor's
-/// app runs a copy of the same executable under its own bundle id, `<app id>.editor`, so macOS
-/// gives it its own Dock tile and LaunchServices identity; it shares the app's defaults, folders
-/// and keychain (`AppStorageLocation`) and reads the app's large resources and update key from it.
+/// it, `<app>/Contents/Helpers/Wallpaper Editor.app` (target WallpaperEditor). Both are small
+/// executables that run the OpenWallpaperEngine framework in the app's `Contents/Frameworks`; the
+/// editor's app has its own bundle id, `<app id>.editor`, so macOS gives it its own Dock tile and
+/// LaunchServices identity. It shares the app's defaults, folders and keychain
+/// (`AppStorageLocation`) and reads the app's update key from it.
 enum AppBundleLayout {
     /// The editor app's name: its bundle, executable and `CFBundleName`.
     static let editorName = "Wallpaper Editor"
@@ -42,9 +43,15 @@ enum AppBundleLayout {
         appIdentifier(for: bundleIdentifier) + editorIdentifierSuffix
     }
 
+    /// The OpenWallpaperEngine framework both apps run. The code's own resources are in it (the
+    /// Metal library, SceneScript's JavaScript, the placeholder media, the legal documents); each
+    /// app's bundle (`Bundle.main`) has what is per app: its Info.plist, icon, asset catalog and
+    /// strings, which SwiftUI and `String(localized:)` look up there.
+    static let framework = Bundle(for: FrameworkBundleToken.self)
+    private final class FrameworkBundleToken {}
+
     /// Open Wallpaper Engine's own bundle: this process's, or, in the editor's app, the app it is
-    /// inside. Its resources the editor's app leaves out (the placeholder video) and its
-    /// Info.plist (the update key, `AppUpdateConfiguration`) are read here.
+    /// inside. Its Info.plist (the update key, `AppUpdateConfiguration`) is read here.
     static let appBundle: Bundle = {
         guard isEditor(bundleIdentifier: Bundle.main.bundleIdentifier),
               let app = appURL(containingHelper: Bundle.main.bundleURL), let bundle = Bundle(url: app) else {
@@ -55,7 +62,7 @@ enum AppBundleLayout {
 
     /// The video shown for a missing wallpaper.
     static var wallpaperNotFoundURL: URL {
-        // The app always ships it (`Resources/WallpaperNotFound.mp4`).
-        appBundle.url(forResource: "WallpaperNotFound", withExtension: "mp4")!
+        // The framework always ships it (`Resources/WallpaperNotFound.mp4`).
+        framework.url(forResource: "WallpaperNotFound", withExtension: "mp4")!
     }
 }
