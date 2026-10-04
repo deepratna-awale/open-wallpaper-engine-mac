@@ -1,18 +1,21 @@
 import Foundation
 import OWEControlProtocol
 
-/// The tools `owe-mcp` offers. Nothing here touches Steam accounts, logins, Workshop
-/// subscriptions or deletes anything.
+/// The tools `owe-mcp` offers, grouped by area (the scene and editors, the library, the system
+/// features in their own files). Nothing here touches Steam accounts, logins, Workshop
+/// subscriptions, plugins or anything outside the app's own data; a tool that deletes needs
+/// `confirm: true`.
 public enum MCPToolCatalog {
     public static let tools: [MCPTool] = library + playback + properties + playlists + windows
+        + sceneTools + libraryTools + systemTools
 
     public static func tool(named name: String) -> MCPTool? {
         tools.first { $0.name == name }
     }
 
-    private static let display = JSONSchema.string(
+    static let display = JSONSchema.string(
         "A display's id from list_displays. Omit it for every display.", minLength: 1)
-    private static let wallpaperID = JSONSchema.string(
+    static let wallpaperID = JSONSchema.string(
         "A wallpaper's id from list_wallpapers (its folder name; a folder path also works).", minLength: 1)
 
     // MARK: - Library and displays
@@ -186,6 +189,11 @@ public enum MCPToolCatalog {
 
     // MARK: - Summaries
 
+    /// The sentence the app wrote in the result's `message`, which the newer tools all carry.
+    static func message(_ result: JSONValue) -> String {
+        result["message"]?.stringValue ?? "Done."
+    }
+
     static func wallpaperName(_ wallpaper: JSONValue?) -> String {
         guard let wallpaper, !wallpaper.isNull else { return "no wallpaper" }
         let title = wallpaper["title"]?.stringValue ?? wallpaper["id"]?.stringValue ?? "?"
@@ -209,7 +217,7 @@ public enum MCPToolCatalog {
             .joined(separator: ", ")
     }
 
-    private static func count(_ number: Int, _ singular: String, plural: String? = nil) -> String {
+    static func count(_ number: Int, _ singular: String, plural: String? = nil) -> String {
         "\(number) \(number == 1 ? singular : plural ?? singular + "s")"
     }
 }

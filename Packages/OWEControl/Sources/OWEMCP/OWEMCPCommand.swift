@@ -96,6 +96,8 @@ public enum OWEMCPCommand {
                                            launchTimeout: options.launchTimeout)
         let server = MCPServer(channel: channel, version: version)
         let output = FileHandle.standardOutput
+        // A long call's progress goes out while its answer is awaited; each line is one write.
+        server.sendNotification = { line in try? output.write(contentsOf: line + Data([0x0A])) }
         // A client that goes away mid-answer ends the loop with an error, not a signal.
         signal(SIGPIPE, SIG_IGN)
         do {

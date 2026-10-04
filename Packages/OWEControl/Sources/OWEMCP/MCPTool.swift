@@ -17,11 +17,14 @@ public struct MCPTool: Sendable {
     public let annotations: Annotations
     /// The result has a PNG (`png_base64`), returned as image content.
     let returnsImage: Bool
+    /// The app may take minutes to answer (a render, a recording, a depth map): the call waits
+    /// the channel's long-call time (`SocketControlChannel`, 15 minutes) instead of the usual one.
+    let isLongRunning: Bool
     /// A sentence saying what happened, from the app's result.
     let summary: @Sendable (JSONValue) -> String
 
     init(_ name: String, title: String, description: String, input: JSONValue = JSONSchema.object([:]),
-         annotations: Annotations = Annotations(), returnsImage: Bool = false,
+         annotations: Annotations = Annotations(), returnsImage: Bool = false, longRunning: Bool = false,
          summary: @escaping @Sendable (JSONValue) -> String) {
         self.name = name
         self.title = title
@@ -29,6 +32,7 @@ public struct MCPTool: Sendable {
         inputSchema = input
         self.annotations = annotations
         self.returnsImage = returnsImage
+        isLongRunning = longRunning
         self.summary = summary
     }
 
@@ -73,6 +77,9 @@ extension MCPTool.Annotations {
     static let readOnly = MCPTool.Annotations(readOnly: true, destructive: false, idempotent: true)
     static let idempotent = MCPTool.Annotations(readOnly: false, destructive: false, idempotent: true)
     static let change = MCPTool.Annotations(readOnly: false, destructive: false, idempotent: false)
+    /// Removes or replaces something the user made (a playlist, a wallpaper, edits): clients ask first.
+    static let destructive = MCPTool.Annotations(readOnly: false, destructive: true, idempotent: false)
+    static let destructiveIdempotent = MCPTool.Annotations(readOnly: false, destructive: true, idempotent: true)
 }
 
 /// The MCP revisions `owe-mcp` speaks, and what each allows in its messages.
@@ -91,6 +98,8 @@ public enum MCPProtocolVersion {
     public static func hasStructuredContent(_ version: String) -> Bool { version >= "2025-06-18" }
     /// Tool annotations (`readOnlyHint`…).
     public static func hasToolAnnotations(_ version: String) -> Bool { version >= "2025-03-26" }
+    /// A `message` in `notifications/progress`.
+    public static func hasProgressMessages(_ version: String) -> Bool { version >= "2025-03-26" }
     /// JSON-RPC batches: allowed before 2025-06-18, which removed them.
     public static func allowsBatches(_ version: String) -> Bool { version < "2025-06-18" }
 }

@@ -108,7 +108,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
         return launcher
     }()
-    private lazy var editorChangeSync: WallpaperEditorChangeSync = {
+    private(set) lazy var editorChangeSync: WallpaperEditorChangeSync = {
         let sync = WallpaperEditorChangeSync(role: .app, dependencies: .init(messaging: processMessaging, channel: .current))
         sync.onLibraryChange = { [weak self] in self?.contentViewModel.refresh() }
         sync.onOpenSettings = { [weak self] in self?.openSettings(for: $0) }
@@ -140,7 +140,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     lazy var screenSaver = ScreenSaverPlugin()
     /// Settings › Plugins › MCP Server: MCP clients' control of the app while installed (`MCP/`).
     private(set) lazy var mcpServerPlugin: MCPServerPlugin = {
-        let router = ControlRequestRouter(model: AppControlModel(app: self))
+        let model = AppControlModel(app: self)
+        let router = ControlRequestRouter(model: model, groups: [
+            SceneControlRequests.make(app: self, model: model),
+            LibraryControlRequests.make(app: self, model: model),
+            SystemControlRequests.make(app: self, model: model),
+        ])
         return MCPServerPlugin(handler: { request in await router.handle(request) })
     }()
     /// The Scene Editor (Live)'s Screen Saver mode's recordings, set as the screen saver.

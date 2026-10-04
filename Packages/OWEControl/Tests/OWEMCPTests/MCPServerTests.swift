@@ -81,12 +81,29 @@ final class MCPServerTests: XCTestCase {
     func testToolsListHasEveryToolWithValidSchemas() async throws {
         let tools = try await unwrapped(request("tools/list")?["result"]?["tools"]?.arrayValue)
         let names = tools.compactMap { $0["name"]?.stringValue }
-        XCTAssertEqual(Set(names), [
+        XCTAssertTrue(Set(names).isSuperset(of: [
             "list_displays", "get_status", "list_wallpapers", "get_wallpaper", "set_wallpaper",
             "pause", "resume", "toggle_playback", "set_volume", "set_muted", "set_user_property",
             "list_playlists", "play_playlist", "next_wallpaper", "previous_wallpaper",
             "import_wallpaper", "open_editor", "snapshot",
-        ])
+        ]), "the basic tools stay")
+        XCTAssertTrue(Set(names).isSuperset(of: [
+            "scene_get", "scene_apply_edits", "scene_undo", "scene_redo", "scene_save", "scene_save_as_local_wallpaper",
+            "scene_revert", "effects_catalog", "particles_catalog", "particles_get", "particles_restart", "puppets_list",
+            "timeline_get", "timeline_preview", "script_get", "script_set", "script_check", "user_properties_get",
+            "depth_generate", "depth_apply", "depth_remove", "editor_close", "editor_set_tab",
+        ]), "the scene and editors' tools")
+        XCTAssertTrue(Set(names).isSuperset(of: [
+            "playlist_create", "playlist_update", "playlist_add_items", "playlist_remove_items", "playlist_move_item",
+            "playlist_delete", "wallpaper_set_favorite", "wallpaper_delete", "display_settings_get", "display_settings_set",
+            "settings_get", "settings_set", "plugin_status",
+        ]), "the library and app's tools")
+        XCTAssertTrue(Set(names).isSuperset(of: [
+            "devices_list", "export_settings_get", "export_live_photo", "screensaver_get", "screensaver_set_layers",
+            "screensaver_record", "screensaver_stop_using", "screensaver_schedule_get", "screensaver_schedule_set",
+            "lock_screen_get", "lock_screen_set", "lock_screen_refresh",
+        ]), "the system features' tools")
+        XCTAssertEqual(names, MCPToolCatalog.tools.map(\.name))
         XCTAssertEqual(names.count, Set(names).count, "names are unique")
         for tool in tools {
             let name = tool["name"]?.stringValue ?? "?"
@@ -232,5 +249,42 @@ final class MCPServerTests: XCTestCase {
 
         let missing = await request("resources/read", params: ["uri": "owe://nothing"])
         XCTAssertEqual(missing?["error"]?["code"], -32002)
+    }
+
+    func testLongCallsReportProgressWhenAskedTo() async throws {
+        final class SlowChannel: ControlChannel {
+            func call(_ method: String, params: [String: JSONValue]) async throws -> JSONValue {
+                try await Task.sleep(nanoseconds: 300_000_000)
+                return ["photo": "/tmp/a.heic", "movie": "/tmp/a.mov"]
+            }
+        }
+        final class Lines: @unchecked Sendable {
+            private let lock = NSLock()
+            private var values: [JSONValue] = []
+            func append(_ data: Data) { lock.lock(); values.append((try? JSONValue.decode(data)) ?? .null); lock.unlock() }
+            var all: [JSONValue] { lock.lock(); defer { lock.unlock() }; return values }
+        }
+        let server = MCPServer(channel: SlowChannel(), version: "1", progressInterval: 0.05)
+        let lines = Lines()
+        server.sendNotification = { lines.append($0) }
+        _ = await server.handle(message: ["jsonrpc": "2.0", "id": 1, "method": "initialize", "params": ["protocolVersion": "2025-06-18"]])
+        let call: JSONValue = ["jsonrpc": "2.0", "id": 2, "method": "tools/call",
+                               "params": ["name": "export_live_photo", "arguments": ["wallpaper_id": "42"], "_meta": ["progressToken": "t1"]]]
+        let response = await server.handle(message: call)
+        XCTAssertEqual(response?["result"]?["isError"], false)
+        let reports = lines.all
+        XCTAssertGreaterThanOrEqual(reports.count, 2)
+        XCTAssertTrue(reports.allSatisfy { $0["method"] == "notifications/progress" && $0["params"]?["progressToken"] == "t1" && $0["id"] == nil })
+        XCTAssertEqual(reports.compactMap { $0["params"]?["progress"]?.doubleValue }, (1...reports.count).map(Double.init))
+        XCTAssertNotNil(reports.first?["params"]?["message"]?.stringValue)
+        // Nothing after the answer, and nothing without a token or for a quick tool.
+        try await Task.sleep(nanoseconds: 150_000_000)
+        XCTAssertEqual(lines.all.count, reports.count)
+        var plain = call
+        if case .object(var object) = plain, case .object(var params) = object["params"] {
+            params.removeValue(forKey: "_meta"); object["params"] = .object(params); plain = .object(object)
+        }
+        _ = await server.handle(message: plain)
+        XCTAssertEqual(lines.all.count, reports.count)
     }
 }

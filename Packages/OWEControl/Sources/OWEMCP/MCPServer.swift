@@ -5,6 +5,14 @@ import OWEControlProtocol
 /// tests. Throws `ControlError` for what the app refused, anything else when it couldn't be reached.
 public protocol ControlChannel: AnyObject {
     func call(_ method: String, params: [String: JSONValue]) async throws -> JSONValue
+    /// A call the app may take minutes to answer (`MCPTool.isLongRunning`).
+    func call(_ method: String, params: [String: JSONValue], longRunning: Bool) async throws -> JSONValue
+}
+
+extension ControlChannel {
+    public func call(_ method: String, params: [String: JSONValue], longRunning: Bool) async throws -> JSONValue {
+        try await call(method, params: params)
+    }
 }
 
 /// The Model Context Protocol server: JSON-RPC 2.0 messages in, responses out, one line each
@@ -14,6 +22,9 @@ public protocol ControlChannel: AnyObject {
 /// - A tool call checks its arguments against the tool's schema, then becomes the control request
 ///   of the same name. Its result comes back as structured content, with a one-line summary and
 ///   the JSON as text for clients without structured content; a snapshot's PNG as image content.
+/// - A long-running tool call (`MCPTool.isLongRunning`) whose request carries
+///   `_meta.progressToken` gets `notifications/progress` every `progressInterval` until it is
+///   answered, so a client that resets its timeout on progress keeps waiting.
 /// - What the app refuses, and an app that can't be reached, are tool errors (`isError`) with a
 ///   message saying why and what to do. An unknown tool or method is a JSON-RPC error.
 public final class MCPServer {
@@ -41,12 +52,18 @@ public final class MCPServer {
     private var cancelled: Set<JSONValue> = []
     /// Where `snapshot` with `format: "path"` saves its PNGs.
     private let snapshotDirectory: URL
+    /// Writes a notification line (without its newline) to the client, between responses.
+    public var sendNotification: (@Sendable (Data) -> Void)?
+    /// How often a long-running call with a progress token reports that it is still working.
+    let progressInterval: TimeInterval
 
     public init(channel: ControlChannel, version: String,
-                snapshotDirectory: URL = FileManager.default.temporaryDirectory.appending(path: "owe-mcp-snapshots", directoryHint: .isDirectory)) {
+                snapshotDirectory: URL = FileManager.default.temporaryDirectory.appending(path: "owe-mcp-snapshots", directoryHint: .isDirectory),
+                progressInterval: TimeInterval = 5) {
         self.channel = channel
         self.version = version
         self.snapshotDirectory = snapshotDirectory
+        self.progressInterval = progressInterval
     }
 
     /// The response line (without its newline) to one line read from the client; nil when the
@@ -137,9 +154,12 @@ public final class MCPServer {
             "serverInfo": .object(serverInfo),
             "instructions": """
             Controls Open Wallpaper Engine, the wallpaper player on this Mac: its displays, library, \
-            playback, user properties, playlists and editors. Ids come from list_wallpapers and \
-            list_displays; get_wallpaper lists a wallpaper's user properties. The app's MCP Server plugin \
-            must be installed (Settings › Plugins); owe-mcp starts the app when it isn't running.
+            playback, user properties, playlists, settings and editors. Ids come from list_wallpapers and \
+            list_displays; get_wallpaper lists a wallpaper's user properties. A scene wallpaper is edited \
+            as its editors edit it: scene_get lists its layers, scene_apply_edits changes them (one undo \
+            step, shown live and in open editors), scene_undo takes it back. Tools that delete need \
+            confirm: true; ask the user first. The app's MCP Server plugin must be installed \
+            (Settings › Plugins); owe-mcp starts the app when it isn't running.
             """,
         ]
     }
@@ -161,14 +181,36 @@ public final class MCPServer {
         var forwarded = values
         // How the client takes the picture is owe-mcp's business, not the app's.
         let savesToFile = tool.returnsImage && forwarded.removeValue(forKey: "format")?.stringValue == "path"
+        let progress = tool.isLongRunning ? reportProgress(token: params["_meta"]?["progressToken"], tool: name) : nil
+        defer { progress?.cancel() }
         do {
-            var result = try await channel.call(name, params: forwarded)
+            var result = try await channel.call(name, params: forwarded, longRunning: tool.isLongRunning)
             if savesToFile { result = try savingPicture(result) }
             return Self.result(id: id, Self.toolResult(tool, result, protocolVersion: negotiatedVersion))
         } catch let error as ControlError {
             return Self.result(id: id, Self.toolError(error.message))
         } catch {
             return Self.result(id: id, Self.toolError(Self.unreachableMessage(error)))
+        }
+    }
+
+    /// Reports every `progressInterval` that the call is still running, until cancelled: the app
+    /// doesn't say how far a render or a recording is, so the progress counts the reports and has
+    /// no total. Nil without a token or a way to send.
+    private func reportProgress(token: JSONValue?, tool: String) -> Task<Void, Never>? {
+        guard let token, Self.isValidID(token), let send = sendNotification else { return nil }
+        let interval = progressInterval, withMessage = MCPProtocolVersion.hasProgressMessages(negotiatedVersion)
+        return Task {
+            var reports = 0
+            while true {
+                do { try await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000)) } catch { return }
+                reports += 1
+                var params: [String: JSONValue] = ["progressToken": token, "progress": .number(Double(reports))]
+                if withMessage {
+                    params["message"] = .string("\(tool) is still running (\(Int((Double(reports) * interval).rounded())) s).")
+                }
+                send(Self.encode(["jsonrpc": "2.0", "method": "notifications/progress", "params": .object(params)]))
+            }
         }
     }
 
@@ -188,19 +230,32 @@ public final class MCPServer {
         return .object(object)
     }
 
-    /// `arguments` with a number or boolean given for a string property as its text: strict
-    /// clients only see string properties, and some models still send `2` for `"2"`.
+    /// `arguments` with a number or boolean given for a string property as its text, and a list of
+    /// numbers as WE writes a vector (`[1, 0.5, 0]` is `"1 0.5 0"`): strict clients only see string
+    /// properties, and some models still send `2` for `"2"`. Objects inside the arguments
+    /// (`scene_apply_edits`' edits) are read the same way.
     static func coercingScalarsToStrings(_ arguments: JSONValue, schema: JSONValue) -> JSONValue {
         guard case .object(var object) = arguments, let properties = schema["properties"]?.objectValue else { return arguments }
-        for (key, value) in object where properties[key]?["type"]?.stringValue == "string" {
-            switch value {
-            case .bool(let flag): object[key] = .string(flag ? "true" : "false")
-            case .number(let number):
-                object[key] = .string(number.rounded() == number && abs(number) < 1e15 ? String(Int64(number)) : String(number))
+        for (key, value) in object {
+            guard let property = properties[key] else { continue }
+            switch (property["type"]?.stringValue, value) {
+            case ("string", .bool(let flag)): object[key] = .string(flag ? "true" : "false")
+            case ("string", .number(let number)): object[key] = .string(text(of: number))
+            case ("string", .array(let items)) where !items.isEmpty && items.allSatisfy({ $0.doubleValue != nil }):
+                object[key] = .string(items.compactMap(\.doubleValue).map(text(of:)).joined(separator: " "))
+            case ("object", .object):
+                object[key] = coercingScalarsToStrings(value, schema: property)
+            case ("array", .array(let items)) where property["items"]?["type"]?.stringValue == "object":
+                let item = property["items"] ?? .null
+                object[key] = .array(items.map { coercingScalarsToStrings($0, schema: item) })
             default: break
             }
         }
         return .object(object)
+    }
+
+    private static func text(of number: Double) -> String {
+        number.rounded() == number && abs(number) < 1e15 ? String(Int64(number)) : String(number)
     }
 
     static func toolResult(_ tool: MCPTool, _ result: JSONValue,

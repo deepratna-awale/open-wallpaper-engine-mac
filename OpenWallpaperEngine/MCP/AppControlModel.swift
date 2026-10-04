@@ -204,7 +204,7 @@ final class AppControlModel: ControlAppModel {
 
     // MARK: - Helpers
 
-    private func control(_ wallpaper: WEWallpaper) -> ControlWallpaper {
+    func control(_ wallpaper: WEWallpaper) -> ControlWallpaper {
         let folder = wallpaper.settingsDirectory
         let projectID = wallpaper.project.workshopid?.rawValue
         let folderName = folder.lastPathComponent
@@ -215,7 +215,8 @@ final class AppControlModel: ControlAppModel {
                                 description: wallpaper.project.description, contentRating: wallpaper.project.contentrating)
     }
 
-    private func find(_ wallpaper: ControlWallpaper) -> WEWallpaper? {
+    /// The library's wallpaper a control result names; nil when it is no longer there.
+    func find(_ wallpaper: ControlWallpaper) -> WEWallpaper? {
         let path = wallpaper.folder.standardizedFileURL.path
         return contentViewModel.allWallpapers.first { $0.settingsDirectory.standardizedFileURL.path == path }
             ?? wallpaperViewModel.wallpapers.values.first { $0.settingsDirectory.standardizedFileURL.path == path }
@@ -223,7 +224,7 @@ final class AppControlModel: ControlAppModel {
 
     /// The property stores of the displays showing `wallpaper` (the shared one while synced, or
     /// when no display shows it), as the Details panel edits them.
-    private func scopes(of wallpaper: WEWallpaper) -> [WallpaperPropertyScope] {
+    func scopes(of wallpaper: WEWallpaper) -> [WallpaperPropertyScope] {
         let model = wallpaperViewModel
         let path = wallpaper.settingsDirectory.standardizedFileURL.path
         var scopes: [WallpaperPropertyScope] = []
@@ -256,7 +257,7 @@ final class AppControlModel: ControlAppModel {
         }
     }
 
-    private static func missing(_ wallpaper: ControlWallpaper) -> ControlError {
+    static func missing(_ wallpaper: ControlWallpaper) -> ControlError {
         ControlError(.notFound, "\"\(wallpaper.title)\" is no longer in the library.")
     }
 }

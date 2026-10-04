@@ -52,7 +52,7 @@ final class MCPCompatibilityTests: XCTestCase {
             XCTAssertNil(initialized)
 
             let tools = await request("tools/list", id: 2)?["result"]?["tools"]?.arrayValue ?? []
-            XCTAssertEqual(tools.count, 18, version)
+            XCTAssertEqual(tools.count, MCPToolCatalog.tools.count, version)
             for tool in tools {
                 let name = tool["name"]?.stringValue ?? "?"
                 XCTAssertEqual(tool["title"] != nil, modern, "\(version) \(name): title")
@@ -129,14 +129,47 @@ final class MCPCompatibilityTests: XCTestCase {
                 XCTAssertFalse(["$ref", "$defs", "definitions", "oneOf", "anyOf", "allOf", "not", "additionalProperties", "$schema"].contains(key),
                                "\(name) uses \(key)")
             }
-            for (key, property) in schema["properties"]?.objectValue ?? [:] {
-                XCTAssertNotNil(property["type"]?.stringValue, "\(name).\(key): one simple type")
-                XCTAssertFalse(property["description"]?.stringValue?.isEmpty ?? true, "\(name).\(key) is described")
-                if let choices = property["enum"]?.arrayValue {
-                    XCTAssertTrue(choices.allSatisfy { $0.stringValue != nil }, "\(name).\(key): string enum")
-                }
-                if property["type"] == "array" { XCTAssertNotNil(property["items"]?["type"], "\(name).\(key) items") }
+            Self.checkProperties(of: schema, at: name)
+        }
+    }
+
+    /// Clients ask before what may destroy: a read-only tool is idempotent and never destructive, and
+    /// every tool that deletes, removes or reverts says it may destroy.
+    func testAnnotationsTellClientsWhatToAskAbout() {
+        for tool in MCPToolCatalog.tools {
+            let hints = tool.annotations
+            if hints.readOnly { XCTAssertTrue(hints.idempotent && !hints.destructive, tool.name) }
+            if ["delete", "remove", "revert"].contains(where: { tool.name.contains($0) }) {
+                XCTAssertTrue(hints.destructive, "\(tool.name) is destructive")
             }
+            if tool.name.hasSuffix("_get") || tool.name.hasPrefix("list_") || tool.name.hasSuffix("_catalog") {
+                XCTAssertTrue(hints.readOnly, "\(tool.name) only reads")
+            }
+        }
+    }
+
+    /// A render, a recording or a depth map may take minutes: those calls wait longer for the app.
+    func testLongCallsWaitLonger() {
+        let long = Set(MCPToolCatalog.tools.filter(\.isLongRunning).map(\.name))
+        XCTAssertEqual(long, ["export_live_photo", "screensaver_record", "depth_generate"])
+    }
+
+    /// Every property, and every property of an object inside one (a list of edits' items), has one
+    /// simple type, a description and a snake_case name.
+    private static func checkProperties(of schema: JSONValue, at path: String) {
+        for (key, property) in schema["properties"]?.objectValue ?? [:] {
+            let name = "\(path).\(key)"
+            XCTAssertNotNil(key.range(of: "^[a-z][a-z0-9_]*$", options: .regularExpression), "\(name): snake_case")
+            XCTAssertNotNil(property["type"]?.stringValue, "\(name): one simple type")
+            XCTAssertFalse(property["description"]?.stringValue?.isEmpty ?? true, "\(name) is described")
+            if let choices = property["enum"]?.arrayValue {
+                XCTAssertTrue(choices.allSatisfy { $0.stringValue != nil }, "\(name): string enum")
+            }
+            if property["type"] == "array" {
+                XCTAssertNotNil(property["items"]?["type"], "\(name) items")
+                if property["items"]?["type"] == "object" { checkProperties(of: property["items"] ?? .null, at: name + "[]") }
+            }
+            if property["type"] == "object" { checkProperties(of: property, at: name) }
         }
     }
 
@@ -158,6 +191,36 @@ final class MCPCompatibilityTests: XCTestCase {
         _ = await request("tools/call", id: 2, params: ["name": "set_user_property", "arguments": ["id": 42, "key": "on", "value": true]])
         XCTAssertEqual(channel.calls.map { $0.params["value"] }, ["0.5", "true"])
         XCTAssertEqual(channel.calls.last?.params["id"], "42")
+    }
+
+    /// scene_apply_edits' edits are objects inside the arguments: checked against their schema
+    /// (unknown keys and ops refused) and coerced like top-level arguments (a vector as numbers).
+    func testEditsInsideArgumentsAreCheckedAndCoerced() async throws {
+        _ = await initialize("2025-06-18")
+        channel.answers["scene_apply_edits"] = ["message": "Applied."]
+        let ok = await request("tools/call", params: ["name": "scene_apply_edits", "arguments": [
+            "wallpaper_id": "42",
+            "edits": [["op": "set_origin", "layer": 4, "value": [1, 2.5, 0]], ["op": "set_text", "layer": 5, "text": 12]],
+        ]])
+        XCTAssertEqual(ok?["result"]?["isError"], false)
+        let edits = channel.calls.last?.params["edits"]?.arrayValue ?? []
+        XCTAssertEqual(edits.first?["value"], "1 2.5 0", "a vector as WE writes it")
+        XCTAssertEqual(edits.last?["text"], "12")
+
+        let unknown = await request("tools/call", id: 2, params: ["name": "scene_apply_edits", "arguments": [
+            "wallpaper_id": "42", "edits": [["op": "set_origin", "layer": 4, "bogus": 1]],
+        ]])
+        XCTAssertEqual(unknown?["result"]?["isError"], true)
+        XCTAssertTrue(unknown?["result"]?["content"]?.arrayValue?.first?["text"]?.stringValue?.contains("edits[0].bogus") ?? false)
+        let badOp = await request("tools/call", id: 3, params: ["name": "scene_apply_edits", "arguments": [
+            "wallpaper_id": "42", "edits": [["op": "explode"]],
+        ]])
+        XCTAssertEqual(badOp?["result"]?["isError"], true)
+        XCTAssertEqual(channel.calls.count, 1, "neither reached the app")
+        let description = MCPToolCatalog.tool(named: "scene_apply_edits")?.description ?? ""
+        for operation in ControlSceneEdits.operations {
+            XCTAssertTrue(description.contains("- \(operation.name) ("), "\(operation.name) is described")
+        }
     }
 
     // MARK: - Pictures for clients without image content
