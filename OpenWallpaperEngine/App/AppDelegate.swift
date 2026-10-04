@@ -221,9 +221,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         reloadWallpapers: { [weak self] in MainActor.assumeIsolated { self?.rebuildWallpaperWindows() } })
     /// Settings › Performance › Playback, per display (`App/Playback`).
     private(set) lazy var displayPlaybackMonitor = makeDisplayPlaybackMonitor()
-    /// Saved display profiles, which application rules' "Load profile" loads. None until display
-    /// layouts can be saved; that feature sets its own here.
-    var displayProfiles: any DisplayProfileLoading = UnavailableDisplayProfiles()
+    /// Saved display profiles, which application rules' "Load profile" loads.
+    var displayProfiles: any DisplayProfileLoading { wallpaperViewModel.displayProfiles }
     /// Application rules' load actions, and the restore when no rule matches any more.
     private(set) lazy var applicationRuleLoader = makeApplicationRuleLoader()
     /// Advanced › "Pause when VRAM is exhausted", fed to `displayPlaybackMonitor`.

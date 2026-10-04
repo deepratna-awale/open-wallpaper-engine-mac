@@ -7,14 +7,16 @@ import Foundation
 /// A rule's wallpaper doesn't enter the displays' history or the recent wallpapers, since the
 /// user didn't choose it, and the playlist holds still while it shows. A wallpaper that runs code
 /// and isn't trusted yet isn't loaded: a rule can't answer the trust question for the user.
-/// After a profile, the displays' wallpapers and the playlist come back; whatever else the
-/// profile changed is its own (`DisplayProfileLoading`).
+/// After a profile, the display layout, the displays' wallpapers (regions included) and the
+/// playlist come back.
 @MainActor
 final class WallpaperRuleLoadTarget: ApplicationRuleLoadTarget {
     struct RestorePoint {
         var wallpapers: [String: WEWallpaper]
+        var displayLayout: DisplayLayoutConfiguration
         var activePlaylistID: UUID?
         var playlistEnabled: Bool
+        var selectedScreenId: String
         var selectedScreenIds: Set<String>
     }
 
@@ -31,8 +33,9 @@ final class WallpaperRuleLoadTarget: ApplicationRuleLoadTarget {
     }
 
     func restorePoint() -> RestorePoint {
-        RestorePoint(wallpapers: viewModel.wallpapers, activePlaylistID: viewModel.activePlaylistID,
-                     playlistEnabled: viewModel.playlistEnabled, selectedScreenIds: viewModel.selectedScreenIds)
+        RestorePoint(wallpapers: viewModel.wallpapers, displayLayout: viewModel.displayLayout,
+                     activePlaylistID: viewModel.activePlaylistID, playlistEnabled: viewModel.playlistEnabled,
+                     selectedScreenId: viewModel.selectedScreenId, selectedScreenIds: viewModel.selectedScreenIds)
     }
 
     func load(_ load: ApplicationRuleLoad) -> Bool {
@@ -56,6 +59,7 @@ final class WallpaperRuleLoadTarget: ApplicationRuleLoadTarget {
             viewModel.startPlaylist(id: id)
             return true
         case .profile:
+            // A deleted profile changes nothing; the loader logs it.
             return profiles().load(name: load.file)
         }
     }
@@ -64,14 +68,18 @@ final class WallpaperRuleLoadTarget: ApplicationRuleLoadTarget {
         // The playlist's timer stays off until its state is back, so it can't step in between.
         viewModel.playlistEnabled = false
         viewModel.activePlaylistID = point.activePlaylistID
+        if viewModel.displayLayout != point.displayLayout { viewModel.displayLayout = point.displayLayout }
+        viewModel.selectedScreenId = point.selectedScreenId
         viewModel.selectedScreenIds = point.selectedScreenIds
-        let changed = point.wallpapers.contains { screenId, wallpaper in
+        // A display the point had gets all its selections back, so a profile's regions go. A
+        // display connected since the load keeps the rule's wallpaper; it had none before.
+        let screens = Set(point.wallpapers.keys.map(DisplayLayoutResolution.screen(of:)))
+        let restored = viewModel.wallpapers.filter { !screens.contains(DisplayLayoutResolution.screen(of: $0.key)) }
+            .merging(point.wallpapers) { _, before in before }
+        let changed = restored.count != viewModel.wallpapers.count || restored.contains { screenId, wallpaper in
             viewModel.wallpapers[screenId].map { !$0.isSameWallpaper(as: wallpaper) } ?? true
         }
-        if changed {
-            // A display connected since the load keeps the rule's wallpaper; it had none before.
-            viewModel.wallpapers.merge(point.wallpapers) { _, before in before }
-        }
+        if changed { viewModel.wallpapers = restored }
         viewModel.playlistEnabled = point.playlistEnabled
     }
 }
