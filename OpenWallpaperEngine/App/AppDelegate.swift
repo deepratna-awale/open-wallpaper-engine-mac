@@ -121,6 +121,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// the desktop's left clicks.
     /// Settings › Plugins › Screen Saver: the loop videos and the bundled saver.
     lazy var screenSaver = ScreenSaverPlugin()
+    /// The Scene Editor (Live)'s Screen Saver mode's recordings, set as the screen saver.
+    lazy var screenSaverRecordings = ScreenSaverRecordingService(plugin: screenSaver, environment: .init(
+        screens: {
+            NSScreen.screens.map { screen in
+                (pixels: SIMD2(Int(screen.frame.width * screen.backingScaleFactor), Int(screen.frame.height * screen.backingScaleFactor)),
+                 points: SIMD2(Int(screen.frame.width), Int(screen.frame.height)))
+            }
+        },
+        renderResolution: { [unowned self] in globalSettingsViewModel.settings.renderResolution },
+        isPluginEnabled: { [unowned self] in globalSettingsViewModel.settings.screenSaver },
+        enablePlugin: { [unowned self] in globalSettingsViewModel.settings.screenSaver = true },
+        desktopWallpaper: { [unowned self] in wallpaperViewModel.currentWallpaper }))
+    /// The screen saver's daily re-recording, while the app runs.
+    lazy var screenSaverSchedule = ScreenSaverDailyScheduler(service: screenSaverRecordings)
     /// Settings › Plugins › Depth Map Generation: the process's one generator, which both editors
     /// share; its model is loaded only while it generates.
     lazy var depthMapGenerator = DepthMapPlugin.makeGenerator()
@@ -289,6 +303,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         // Launched into the menu bar only, the Dock icon goes until a window opens.
         dockPresence.start()
+
+        // The screen saver's daily re-recording: catches up a run missed while the app was quit.
+        screenSaverSchedule.start()
 
         // Workshop downloads need SteamCMD; set it up from Valve in the background when it's missing.
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in

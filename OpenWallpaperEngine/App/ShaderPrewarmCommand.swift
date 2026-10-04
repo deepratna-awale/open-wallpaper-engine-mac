@@ -24,6 +24,10 @@ enum ShaderPrewarmCommand {
     /// Exits 0 when the video is written, `pageDidNotLoadStatus` when a page didn't load,
     /// `doesNotLoopStatus` when a page has no smooth loop, 1 otherwise.
     static let screenSaverArgument = "--render-screensaver-loop"
+    /// Added to `screenSaverArgument` for a Screen Saver mode recording (`ScreenSaverPlugin.Target.isRecording`):
+    /// a scene renders with the properties JSON (user properties and layer edits) and draws its
+    /// clock layers, which the layer choices show or hide like any other.
+    static let screenSaverRecordingArgument = "--screensaver-recording"
     static let pageDidNotLoadStatus: Int32 = 3
     static let doesNotLoopStatus: Int32 = 4
 
@@ -52,7 +56,8 @@ enum ShaderPrewarmCommand {
 
     @MainActor
     private static func renderScreenSaverLoop(_ arguments: ArraySlice<String>) -> Int32 {
-        let values = Array(arguments)
+        let isRecording = arguments.contains(screenSaverRecordingArgument)
+        let values = arguments.filter { $0 != screenSaverRecordingArgument }
         guard values.count >= 4, let pixels = size(values[1]), let points = size(values[2]),
               let wallpaper = InstalledLibrary.wallpaper(at: URL(filePath: values[0], directoryHint: .isDirectory), hiding: []),
               ScreenSaverPlugin.isScene(wallpaper) || ScreenSaverWebLoopRecorder.records(wallpaper) else {
@@ -75,10 +80,15 @@ enum ShaderPrewarmCommand {
         let scratch = FileManager.default.temporaryDirectory
             .appending(path: "owe-screensaver-\(ProcessInfo.processInfo.processIdentifier)", directoryHint: .isDirectory)
         defer { try? FileManager.default.removeItem(at: scratch) } // Optional: a scratch folder.
-        let renderer = ScreenSaverLoopRenderer(wallpaper: wallpaper, pixelSize: pixels,
+        if isRecording {
+            ScreenSaverLoopRenderer.useValues(values.count > 4 ? ScreenSaverPlugin.decodeProperties(values[4]) : [:],
+                                              for: wallpaper, defaults: .app)
+        }
+        var renderer = ScreenSaverLoopRenderer(wallpaper: wallpaper, pixelSize: pixels,
                                                pointSize: SIMD2(Float(points.x), Float(points.y)),
                                                output: output,
                                                defaults: .app, scratchDirectory: scratch)
+        renderer.hidesClockLayers = !isRecording
         return renderer.run() ? 0 : 1
     }
 

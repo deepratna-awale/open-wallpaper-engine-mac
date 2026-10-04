@@ -13,6 +13,9 @@ import Combine
 ///   change renders the new key and the manifest moves to it once it exists.
 /// - Only the user's own copy installs the saver and writes where it reads
 ///   (`ScreenSaverInstaller.mayInstall`, `ScreenSaverVideoStore`'s isolated folder).
+/// - While a recording from the Scene Editor (Live)'s Screen Saver mode is set as the screen saver
+///   (`ScreenSaverSettingsStore.selection`), or one is being made (`beginRecording`), the saver
+///   plays that and nothing is rendered for the desktop's wallpaper (`ScreenSaverRecordingService`).
 @MainActor
 final class ScreenSaverPlugin: ObservableObject {
     /// What the Details pane says about a wallpaper's loop video.
@@ -53,8 +56,12 @@ final class ScreenSaverPlugin: ObservableObject {
         var pixelSize: SIMD2<Int>
         var pointSize: SIMD2<Int>
         var fileName: String
-        /// The user properties a web page is recorded with (scenes read their own).
+        /// The user properties a web page is recorded with (scenes read their own, unless `isRecording`).
         var properties: [String: String] = [:]
+        /// A Screen Saver mode recording: the scene renders with `properties` (its user properties
+        /// and layer edits) and its clock layers are drawn like any other, the user's layer
+        /// choices deciding what shows.
+        var isRecording = false
     }
 
     typealias Runner = @Sendable (_ wallpaper: URL, _ target: Target, _ output: URL) -> RunResult
@@ -63,6 +70,9 @@ final class ScreenSaverPlugin: ObservableObject {
     private let store: ScreenSaverVideoStore
     private let installer: ScreenSaverInstaller
     private let runner: Runner
+    private let settingsStore: ScreenSaverSettingsStore
+    /// Recordings being made (`beginRecording`): nothing else is rendered or listed meanwhile.
+    private var recordings = 0
     @Published private(set) var isEnabled = false
     /// The shown wallpaper's status, for its current content and properties only; a failed or
     /// cancelled render leaves no entry.
@@ -76,11 +86,13 @@ final class ScreenSaverPlugin: ObservableObject {
     private static let fileQueue = DispatchQueue(label: "OWE.ScreenSaverPlugin", qos: .utility)
 
     init(pool: PreparationPool = .shared, store: ScreenSaverVideoStore = .current,
-         installer: ScreenSaverInstaller = .current, runner: @escaping Runner = { ScreenSaverPlugin.runHelper($0, $1, $2) }) {
+         installer: ScreenSaverInstaller = .current, runner: @escaping Runner = { ScreenSaverPlugin.runHelper($0, $1, $2) },
+         settingsStore: ScreenSaverSettingsStore = ScreenSaverSettingsStore()) {
         self.pool = pool
         self.store = store
         self.installer = installer
         self.runner = runner
+        self.settingsStore = settingsStore
         // The shared pool's library jobs wait on the power policy once its scheduler exists.
         if pool === PreparationPool.shared { _ = LibraryPreparationScheduler.shared }
     }
@@ -169,6 +181,8 @@ final class ScreenSaverPlugin: ObservableObject {
         isEnabled = enabled
         let store = store, installer = installer
         guard enabled else {
+            // The videos go, so a recording set as the screen saver goes with them.
+            settingsStore.selection = nil
             if wasEnabled { Self.fileQueue.async { installer.uninstall(); store.removeAll() } }
             return
         }
@@ -177,6 +191,8 @@ final class ScreenSaverPlugin: ObservableObject {
                 installer.install()
             }
         }
+        // A recording set as the screen saver (or being made) plays instead; its manifest stays.
+        guard recordings == 0, settingsStore.selection == nil else { return }
         guard let wallpaper else { return }
         let screens = NSScreen.screens.map { screen in
             (pixels: SIMD2(Int(screen.frame.width * screen.backingScaleFactor), Int(screen.frame.height * screen.backingScaleFactor)),
@@ -202,6 +218,25 @@ final class ScreenSaverPlugin: ObservableObject {
                 self?.schedule(targets, key: key, ready: ready, wallpaper: directory, generation: generation)
             }
         }
+    }
+
+    /// A Screen Saver mode recording starts: renders and manifest writes for the desktop's
+    /// wallpaper stop (a finished one of an older generation is dropped), so none replaces it.
+    func beginRecording() {
+        recordings += 1
+        generation += 1
+        jobs.forEach { $0.cancel() }
+        jobs = []
+        statuses = [:]
+        currentVideo = nil
+    }
+
+    /// The recording finished (installed or not); the plugin follows `wallpaper` again unless a
+    /// recording is set as the screen saver.
+    func endRecording(wallpaper: WEWallpaper?) {
+        recordings = max(recordings - 1, 0)
+        guard recordings == 0, settingsStore.selection == nil else { return }
+        update(enabled: isEnabled, wallpaper: wallpaper)
     }
 
     private func schedule(_ targets: [Target], key: StatusKey?, ready: Bool, wallpaper: URL, generation: Int) {
@@ -346,6 +381,7 @@ final class ScreenSaverPlugin: ObservableObject {
         process.arguments = [ShaderPrewarmCommand.screenSaverArgument, wallpaper.path(percentEncoded: false),
                              "\(target.pixelSize.x)x\(target.pixelSize.y)", "\(target.pointSize.x)x\(target.pointSize.y)",
                              output.path(percentEncoded: false), encodeProperties(target.properties)]
+            + (target.isRecording ? [ShaderPrewarmCommand.screenSaverRecordingArgument] : [])
         var environment = ProcessInfo.processInfo.environment
         if let tag = AppStorageLocation.current.isolationTag { environment[AppStorageLocation.environmentKey] = tag }
         process.environment = environment
