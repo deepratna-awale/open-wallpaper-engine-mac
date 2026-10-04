@@ -17,7 +17,7 @@ final class SceneControlRequests: ControlRequestGroup {
 
     /// The tabs `editor_set_tab` names, and the Scene Editor (Live)'s modes they are.
     static let tabs: [String: SceneInspectorMode] = [
-        "wallpaper": .wallpaper, "screen_saver": .screenSaver, "iphone_ipad_export": .deviceExport,
+        "wallpaper": .wallpaper, "screen_saver": .screenSaver, "iphone_ipad_export": .deviceExport, "android_export": .androidExport,
     ]
 
     private let service: HeadlessSceneEditService

@@ -128,7 +128,7 @@ struct AndroidExportSheet: View {
                 HStack(spacing: 6) {
                     ForEach(modes, id: \.self) { mode in
                         Button {
-                            model.options.choose(mode)
+                            model.choose(mode)
                         } label: {
                             VStack(spacing: 8) {
                                 Text(Self.label(mode))
@@ -228,6 +228,14 @@ struct AndroidExportSheet: View {
                     .glassButtonStyle(.prominent)
                     .keyboardShortcut(.defaultAction)
             } else {
+                if model.editableScene != nil {
+                    Button("Edit in Scene Editor…") {
+                        model.editInSceneEditor()
+                        dismiss()
+                    }
+                    .glassButtonStyle()
+                    .help("Open the Scene Editor (Live)'s Android Export tab: choose the device, crop, parallax and layers, then export")
+                }
                 Button("Cancel", role: .cancel) { dismiss() }
                     .glassButtonStyle()
                     .keyboardShortcut(.cancelAction)

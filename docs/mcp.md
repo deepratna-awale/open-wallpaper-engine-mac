@@ -199,7 +199,7 @@ change at once.
 | `depth_remove` | `wallpaper_id`, `layer?` | Removes the depth parallax (and the fullscreen layer that carried it). One undo step. |
 | `open_editor` | `id`, `editor` (`scene`, `wallpaper`) | Opens either editor on a scene wallpaper (above). |
 | `editor_close` | `editor`, `wallpaper_id?` | Closes the Scene Editor (Live), or the Wallpaper Editor's window of a wallpaper (`wallpaper_id`). Edits are kept. |
-| `editor_set_tab` | `wallpaper_id`, `tab` (`wallpaper`, `screen_saver`, `iphone_ipad_export`) | Opens the Scene Editor (Live) on the wallpaper in that tab. |
+| `editor_set_tab` | `wallpaper_id`, `tab` (`wallpaper`, `screen_saver`, `iphone_ipad_export`, `android_export`) | Opens the Scene Editor (Live) on the wallpaper in that tab. |
 
 #### Scene edits
 
