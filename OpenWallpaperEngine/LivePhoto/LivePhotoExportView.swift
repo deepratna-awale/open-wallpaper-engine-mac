@@ -20,6 +20,8 @@ final class LivePhotoExportModel: NSObject, ObservableObject, NSSharingServiceDe
     /// The mode's own store and private instance.
     let session: IsolatedSceneEditSession
     let defaults: UserDefaults
+    /// Names the wallpaper's own export settings (`LivePhotoParallax`).
+    let identity: WallpaperSettingsIdentity
     /// The Photos library exports also go to (`LivePhotoAlbumSync`).
     let photos: LivePhotoLibrary
 
@@ -38,6 +40,11 @@ final class LivePhotoExportModel: NSObject, ObservableObject, NSSharingServiceDe
     @Published private(set) var crop: LivePhotoCrop
     @Published private(set) var clip = LivePhotoClip()
     @Published var quality = LivePhotoQuality.best
+    /// Where the pointer rests in the preview and the export (`LivePhotoParallax`), kept per wallpaper.
+    @Published private(set) var parallaxPosition: SIMD2<Double>
+    /// Whether the scene follows the pointer (`LivePhotoParallax.followsPointer`); nil until the
+    /// private instance has loaded it.
+    @Published private(set) var followsPointer: Bool?
     /// The scene's measured motion (`LivePhotoMotion`), once measured.
     @Published var motion: LivePhotoMotion.Analysis?
     /// The clip is the window with the most motion; false once the user moves it.
@@ -74,6 +81,8 @@ final class LivePhotoExportModel: NSObject, ObservableObject, NSSharingServiceDe
         let device = DeviceModel.model(id: defaults.string(forKey: Self.deviceKey))
         self.device = device
         crop = LivePhotoCrop(sceneSize: sceneSize, outputPixels: device.pixelSize)
+        identity = WallpaperSettingsIdentity.resolve(session.wallpaper, defaults: defaults)
+        parallaxPosition = LivePhotoParallax.position(for: identity, defaults: defaults)
         savesToPhotos = defaults.bool(forKey: Self.savesToPhotosKey)
         photosAlbum = defaults.string(forKey: Self.photosAlbumKey) ?? LivePhotoAlbumSync.defaultAlbumName
     }
@@ -82,9 +91,28 @@ final class LivePhotoExportModel: NSObject, ObservableObject, NSSharingServiceDe
         wallpaper.project.type.caseInsensitiveCompare("scene") == .orderedSame
     }
 
-    /// What the export renders: the panel's device, crop, clip and quality.
+    /// What the export renders: the panel's device, crop, clip, quality and parallax position.
     var settings: LivePhotoExportSettings {
-        LivePhotoExportSettings(device: device, crop: crop, clip: clip, quality: quality)
+        LivePhotoExportSettings(device: device, crop: crop, clip: clip, quality: quality, parallaxPosition: parallaxPosition)
+    }
+
+    /// How the preview draws the scene: as the export does, with the same pointer.
+    var presentation: SceneWallpaperInstance.Presentation {
+        LivePhotoRenderer.presentation(pointer: parallaxPosition)
+    }
+
+    /// Moves the pointer (held inside the scene) and keeps it for the wallpaper.
+    func setParallaxPosition(_ position: SIMD2<Double>) {
+        let position = LivePhotoParallax.clamped(position)
+        guard position != parallaxPosition else { return }
+        parallaxPosition = position
+        LivePhotoParallax.setPosition(position, for: identity, defaults: defaults)
+        previewFrames = []
+    }
+
+    /// The private instance loaded `content`.
+    func sceneLoaded(_ content: SceneMetalContent) {
+        followsPointer = LivePhotoParallax.followsPointer(content)
     }
 
     /// The values the export renders with: the isolated store's, never the desktop's.
@@ -349,7 +377,8 @@ struct LockScreenPreview: View {
         if model.previewFrames.isEmpty {
             if !model.session.isEnded {
                 let layout = Self.Layout(window: window, sceneSize: model.sceneSize, scale: scale)
-                Self.pinned(IsolatedSceneView(session: model.session, presentation: LivePhotoRenderer.presentation),
+                Self.pinned(IsolatedSceneView(session: model.session, presentation: model.presentation,
+                                              onContent: { [weak model = self.model] in model?.sceneLoaded($0) }),
                             size: layout.sceneViewSize, at: layout.sceneViewOffset, in: frame)
                     .allowsHitTesting(false)
             }
@@ -368,7 +397,7 @@ struct LockScreenPreview: View {
 
     /// The preview's geometry: the screen's frame, its points per scene unit, and the scene's
     /// view (the whole scene at that scale, drawn as the export draws it,
-    /// `LivePhotoRenderer.presentation`) moved so the window's top-left is the frame's.
+    /// `LivePhotoExportModel.presentation`) moved so the window's top-left is the frame's.
     struct Layout {
         let frame: CGSize
         let scale: CGFloat

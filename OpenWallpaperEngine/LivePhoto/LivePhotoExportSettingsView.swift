@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// The Export Settings: the device, the lock-screen guide, the crop and zoom, the clip (its
-/// motion timeline, start and length), the movie's quality, the Photos album, then the selected
+/// The Export Settings: the device, the lock-screen guide, the crop and zoom, where the pointer
+/// rests (for a scene with parallax), the clip (its motion timeline, start and length), the
+/// movie's quality, the Photos album, then the selected
 /// layer's adjustments and the user properties, all of them the export mode's own (`IsolatedSceneEditSession`). The same view is the
 /// mode's right-hand panel and the sheet shown before an export.
 struct LivePhotoExportSettingsView<Layer: View>: View {
@@ -17,6 +18,10 @@ struct LivePhotoExportSettingsView<Layer: View>: View {
                 deviceSection
                 Divider()
                 zoomSection
+                if let followsPointer = model.followsPointer {
+                    Divider()
+                    parallaxSection(followsPointer)
+                }
                 Divider()
                 motionSection
                 Divider()
@@ -85,6 +90,35 @@ struct LivePhotoExportSettingsView<Layer: View>: View {
             Text("Drag the preview to move the picture.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder
+    private func parallaxSection(_ followsPointer: Bool) -> some View {
+        if followsPointer {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Parallax Position")
+                    .font(.headline)
+                HStack(alignment: .bottom, spacing: 12) {
+                    LivePhotoParallaxPad(position: model.parallaxPosition,
+                                         aspect: Double(model.device.pixelSize.x) / Double(max(model.device.pixelSize.y, 1)),
+                                         onChange: { model.setParallaxPosition($0) })
+                        .help("Drag the dot to where the pointer rests over the wallpaper")
+                    Button("Reset to Center") { model.setParallaxPosition(LivePhotoParallax.centre) }
+                        .glassButtonStyle()
+                        .disabled(model.parallaxPosition == LivePhotoParallax.centre)
+                        .help("Put the pointer back in the middle of the wallpaper")
+                }
+                Text("The preview and the Live Photo show the parallax as if the pointer rested here.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        } else {
+            Text("Parallax Position: this wallpaper doesn't follow the pointer.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 

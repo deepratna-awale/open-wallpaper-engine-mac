@@ -64,8 +64,8 @@ enum LivePhotoHelper {
     static func exportJob(_ wallpaper: WEWallpaper, properties: [String: String], settings: LivePhotoExportSettings,
                           files: Files) -> LivePhotoJob {
         LivePhotoJob(wallpaperDirectory: wallpaper.wallpaperDirectory, properties: properties, crop: settings.crop,
-                     clip: settings.clip, quality: settings.quality, still: files.still, movie: files.movie,
-                     identifier: files.identifier)
+                     clip: settings.clip, quality: settings.quality, parallaxPosition: settings.parallaxPosition,
+                     still: files.still, movie: files.movie, identifier: files.identifier)
     }
 
     /// The clip's frames at `settings`' crop (a small output size), for previewing the loop.
@@ -77,8 +77,8 @@ enum LivePhotoHelper {
         defer { try? FileManager.default.removeItem(at: directory) } // Optional: a temporary folder.
         let movie = directory.appending(path: "preview.MOV")
         let job = LivePhotoJob(wallpaperDirectory: wallpaper.wallpaperDirectory, properties: properties, crop: settings.crop,
-                               clip: settings.clip, quality: settings.quality, still: nil, movie: movie,
-                               identifier: UUID().uuidString)
+                               clip: settings.clip, quality: settings.quality, parallaxPosition: settings.parallaxPosition,
+                               still: nil, movie: movie, identifier: UUID().uuidString)
         try await run(job, in: directory, progress: progress)
         return try await frames(of: movie, count: settings.clip.frameCount)
     }
@@ -93,8 +93,8 @@ enum LivePhotoHelper {
         defer { try? FileManager.default.removeItem(at: directory) } // Optional: a temporary folder.
         let output = directory.appending(path: "motion.json")
         var job = LivePhotoJob(wallpaperDirectory: wallpaper.wallpaperDirectory, properties: properties, crop: settings.crop,
-                               clip: settings.clip, quality: settings.quality, still: nil,
-                               movie: directory.appending(path: "unused.MOV"), identifier: UUID().uuidString)
+                               clip: settings.clip, quality: settings.quality, parallaxPosition: settings.parallaxPosition,
+                               still: nil, movie: directory.appending(path: "unused.MOV"), identifier: UUID().uuidString)
         job.analysisPath = output.path(percentEncoded: false)
         job.analysisSeconds = LivePhotoMotion.analysisSeconds
         try await run(job, in: directory, progress: progress)

@@ -179,6 +179,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// previewed and rendered (the iPhone & iPad Export) holds it fixed in both, so the camera and
     /// depth parallax, the cursor uniforms and the scripts' cursor are the same in each.
     var fixedPointer: SIMD2<Float>?
+    /// The fixed pointer the camera parallax last reached: a new one is reached at once, not over
+    /// `cameraparallaxdelay`, so a render starts where its preview has settled.
+    private var parallaxSettledPointer: SIMD2<Float>?
     /// The current content's clock text layers.
     private(set) var clockLayerIDs: Set<String> = []
     /// The frames drawn (`BuiltinFrameContext.serial`).
@@ -753,6 +756,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             lastCameraMotion = nil
             lastTextSizes.removeAll()
             cameraParallax = SceneCameraParallax(sceneSize: sceneSize)
+            parallaxSettledPointer = nil
             cursorTracker = SceneCursorTracker()
             deferredReleases.removeAll()
             lastCommandBuffer = nil
@@ -838,6 +842,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 self.cameraGeneral = content.general
                 self.clearColor = content.clearColor
                 self.cameraParallax = SceneCameraParallax(sceneSize: content.size, enabled: Self.parallaxEnabled(content.camera))
+                self.parallaxSettledPointer = nil
                 self.lastCameraMotion = nil
                 self.lastTextSizes.removeAll()
                 self.textFrameCache.removeAll()
@@ -2825,10 +2830,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // Read every frame: turning parallax on or off eases in or out (`SceneCameraParallax.weight`).
         cameraParallax.ease(enabled: parallaxEnabled, deltaTime: deltaTime)
         if cameraParallax.isActive {
+            let settles = fixedPointer != nil && fixedPointer != parallaxSettledPointer
             cameraParallax.update(cursor: pointer, eye: SIMD2(shake.x, shake.y), sceneSize: sceneSize,
                                   influence: sceneSetting(.cameraparallaxmouseinfluence) ?? camera.parallaxMouseInfluence,
-                                  delay: sceneSetting(.cameraparallaxdelay) ?? camera.parallaxDelay,
+                                  delay: settles ? 0 : sceneSetting(.cameraparallaxdelay) ?? camera.parallaxDelay,
                                   deltaTime: deltaTime)
+            parallaxSettledPointer = fixedPointer
             // `_owe_effect_parallax_amount` is an app extra, 1 (WE's amount) by default.
             let amount = (sceneSetting(.cameraparallaxamount) ?? camera.parallaxAmount)
                 * WallpaperServices.shared.userPropertyValue("_owe_effect_parallax_amount", fallback: 1)
