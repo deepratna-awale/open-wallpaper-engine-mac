@@ -86,13 +86,23 @@ final class MCPServerTests: XCTestCase {
             "pause", "resume", "toggle_playback", "set_volume", "set_muted", "set_user_property",
             "list_playlists", "play_playlist", "next_wallpaper", "previous_wallpaper",
             "import_wallpaper", "open_editor", "snapshot",
-        ]), "the first release's tools stay")
+        ]), "the basic tools stay")
         XCTAssertTrue(Set(names).isSuperset(of: [
             "scene_get", "scene_apply_edits", "scene_undo", "scene_redo", "scene_save", "scene_save_as_local_wallpaper",
             "scene_revert", "effects_catalog", "particles_catalog", "particles_get", "particles_restart", "puppets_list",
             "timeline_get", "timeline_preview", "script_get", "script_set", "script_check", "user_properties_get",
             "depth_generate", "depth_apply", "depth_remove", "editor_close", "editor_set_tab",
         ]), "the scene and editors' tools")
+        XCTAssertTrue(Set(names).isSuperset(of: [
+            "playlist_create", "playlist_update", "playlist_add_items", "playlist_remove_items", "playlist_move_item",
+            "playlist_delete", "wallpaper_set_favorite", "wallpaper_delete", "display_settings_get", "display_settings_set",
+            "settings_get", "settings_set", "plugin_status",
+        ]), "the library and app's tools")
+        XCTAssertTrue(Set(names).isSuperset(of: [
+            "devices_list", "export_settings_get", "export_live_photo", "screensaver_get", "screensaver_set_layers",
+            "screensaver_record", "screensaver_stop_using", "screensaver_schedule_get", "screensaver_schedule_set",
+            "lock_screen_get", "lock_screen_set", "lock_screen_refresh",
+        ]), "the system features' tools")
         XCTAssertEqual(names, MCPToolCatalog.tools.map(\.name))
         XCTAssertEqual(names.count, Set(names).count, "names are unique")
         for tool in tools {

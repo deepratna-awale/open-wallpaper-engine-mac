@@ -66,7 +66,7 @@ Building from source fetches the Sparkle Swift package on first build. Builds fr
 
 ### Control from MCP Clients
 
-Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI assistants and other tools that speak the Model Context Protocol) can list and set wallpapers, pause and resume, change the volume and user properties, play playlists, import wallpapers and take snapshots, through a local connection only your account can open. Setup, every tool and the security model: [docs/mcp.md](docs/mcp.md).
+Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI assistants and other tools that speak the Model Context Protocol) can do what the app's own controls do, through a local connection only your account can open: set wallpapers, playback, volume, user properties, playlists and settings; edit scenes through the Wallpaper Editor's edit model (shown live in open editors, with Undo); export Live Photos; and set up the screen saver and the lock-screen picture. Setup, every tool and the security model: [docs/mcp.md](docs/mcp.md).
 
 ## What 1.0.0 Supports
 
