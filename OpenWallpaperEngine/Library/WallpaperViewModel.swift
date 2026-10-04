@@ -693,7 +693,10 @@ class WallpaperViewModel: ObservableObject {
     func refreshDisplayPlayback() {
         var states = rulePlayback
         for screen in layoutResolution.muted { states[screen] = max(states[screen] ?? .run, .mute) }
-        if states != displayPlayback { displayPlayback = states }
+        guard states != displayPlayback else { return }
+        displayPlayback = states
+        let summary = states.keys.sorted().map { "\($0)=\(states[$0] ?? .run)" }.joined(separator: ", ")
+        OWELog.debug(.app, "Display playback with mute: \(summary.isEmpty ? "all run" : summary)")
     }
 
     /// `screenId`'s own playback: whether its view draws new frames.
