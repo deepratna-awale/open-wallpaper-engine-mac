@@ -64,6 +64,15 @@ Kaynaktan ilk derleme Sparkle Swift paketini indirir. Kaynaktan derlenen sürüm
 - **Zip:** Dosya > İçe Aktar’ı kullanın veya duvar kâğıdı paketleri içeren bir `.zip` dosyasını sürükleyip bırakın
 - **Elle:** Duvar kâğıdı klasörlerini doğrudan `~/Documents/Open Wallpaper Engine/` içine kopyalayın
 
+## 1.0.0-beta.5 Sürümündeki Yenilikler
+
+- Duvar Kâğıdı, Ekran Koruyucu ve iPhone ve iPad’e Dışa Aktar sekmeleriyle **Sahne Düzenleyicisi (Live)**; **Duvar Kâğıdı Düzenleyici** (⌥⌘E) ayrı bir uygulama olarak çalışır: katmanlar, efektler, zaman çizelgesi, SceneScript, kullanıcı özellikleri, parçacıklar ve Puppet Warp; derinlik haritaları ([depth-maps.md](../../docs/depth-maps.md)).
+- Wallpaper Engine’deki gibi **ekran düzenleri**: her ekrana ayrı, uzatılmış, kopyalanmış, gruplar, bölmeler ve profiller ([display-layouts.md](../../docs/display-layouts.md)).
+- **Dışa aktarma**: iPhone ve iPad için Live Photos ([iphone-ipad-export.md](../../docs/iphone-ipad-export.md)) ve Android’deki Wallpaper Engine için Wi-Fi ile gönderilebilen `.mpkg` paketleri ([android-export.md](../../docs/android-export.md)).
+- **Ekran koruyucu** ve kilit ekranı resmi ([screen-saver.md](../../docs/screen-saver.md)).
+- **MCP Sunucusu** eklentisi ([mcp.md](../../docs/mcp.md)) ve macOS’i duvar kâğıdının rengine uyduran **temalar** ([theming.md](../../docs/theming.md)).
+- Uygulama kuralları, genel kısayollar, ekran görüntüleri, Keşfet, arşiv klasörleri. Tüm değişiklikler: [CHANGELOG.md](../../CHANGELOG.md).
+
 ## 1.0.0 Sürümünün Destekledikleri
 
 ### Kurulum, kitaplık ve güncellemeler

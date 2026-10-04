@@ -64,6 +64,15 @@ Xcode में, साइनिंग सर्टिफ़िकेट को 
 - **Zip:** फ़ाइल > इंपोर्ट करें, या वॉलपेपर पैकेज वाली `.zip` फ़ाइल को ड्रैग-एंड-ड्रॉप करें
 - **मैन्युअल:** वॉलपेपर फ़ोल्डर सीधे `~/Documents/Open Wallpaper Engine/` में कॉपी करें
 
+## 1.0.0-beta.5 में नया
+
+- **सीन एडिटर (Live)** में वॉलपेपर, स्क्रीन सेवर और iPhone व iPad एक्सपोर्ट टैब; **वॉलपेपर एडिटर** (⌥⌘E) अपनी अलग ऐप के रूप में चलता है: लेयर, इफ़ेक्ट, टाइमलाइन, SceneScript, यूज़र प्रॉपर्टी, पार्टिकल और Puppet Warp; डेप्थ मैप ([depth-maps.md](../../docs/depth-maps.md))।
+- Wallpaper Engine जैसे **डिस्प्ले लेआउट**: हर डिस्प्ले का अलग वॉलपेपर, स्ट्रेच, क्लोन, ग्रुप, स्प्लिट और प्रोफ़ाइल ([display-layouts.md](../../docs/display-layouts.md))।
+- **एक्सपोर्ट**: iPhone और iPad के लिए Live Photos ([iphone-ipad-export.md](../../docs/iphone-ipad-export.md)) और Android पर Wallpaper Engine के लिए `.mpkg` पैकेज, Wi-Fi से भेजने की सुविधा के साथ ([android-export.md](../../docs/android-export.md))।
+- **स्क्रीन सेवर** और लॉक स्क्रीन की तस्वीर ([screen-saver.md](../../docs/screen-saver.md))।
+- **MCP सर्वर** प्लग-इन ([mcp.md](../../docs/mcp.md)) और macOS को वॉलपेपर के रंग में रंगने वाली **थीमिंग** ([theming.md](../../docs/theming.md))।
+- ऐप नियम, ग्लोबल शॉर्टकट, स्क्रीनशॉट, डिस्कवर, लाइब्रेरी फ़ोल्डर। सभी बदलाव: [CHANGELOG.md](../../CHANGELOG.md)।
+
 ## 1.0.0 क्या सपोर्ट करता है
 
 ### सेटअप, लाइब्रेरी और अपडेट

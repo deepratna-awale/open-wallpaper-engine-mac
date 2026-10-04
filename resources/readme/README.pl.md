@@ -64,6 +64,15 @@ Pierwsza kompilacja ze źródeł pobiera pakiet Swift Sparkle. Wersje zbudowane 
 - **Zip:** Plik > Importuj lub przeciągnij i upuść plik `.zip` zawierający pakiety tapet
 - **Ręcznie:** skopiuj foldery tapet bezpośrednio do `~/Documents/Open Wallpaper Engine/`
 
+## Nowości w wersji 1.0.0-beta.5
+
+- **Edytor sceny (Live)** z kartami Tapeta, Wygaszacz ekranu i Eksport na iPhone’a i iPada; **Edytor tapet** (⌥⌘E) działa jako osobna aplikacja: warstwy, efekty, oś czasu, SceneScript, właściwości użytkownika, cząsteczki i Puppet Warp; mapy głębi ([depth-maps.md](../../docs/depth-maps.md)).
+- **Układy monitorów** jak w Wallpaper Engine: tapeta na każdy monitor, rozciągnięta, sklonowana, grupy, podziały i profile ([display-layouts.md](../../docs/display-layouts.md)).
+- **Eksport**: Live Photos na iPhone’a i iPada ([iphone-ipad-export.md](../../docs/iphone-ipad-export.md)) oraz pakiety `.mpkg` dla Wallpaper Engine na Androidzie, z wysyłaniem przez Wi-Fi ([android-export.md](../../docs/android-export.md)).
+- **Wygaszacz ekranu** i obraz ekranu blokady ([screen-saver.md](../../docs/screen-saver.md)).
+- Wtyczka **Serwer MCP** ([mcp.md](../../docs/mcp.md)) i **motywy** macOS w kolorze tapety ([theming.md](../../docs/theming.md)).
+- Reguły aplikacji, globalne skróty, zrzuty ekranu, Odkrywaj, foldery biblioteki. Wszystkie zmiany: [CHANGELOG.md](../../CHANGELOG.md).
+
 ## Co obsługuje wersja 1.0.0
 
 ### Konfiguracja, biblioteka i aktualizacje

@@ -64,6 +64,15 @@ A primeira compilação a partir do código-fonte baixa o pacote Swift Sparkle. 
 - **Zip:** Arquivo > Importar ou arraste e solte um arquivo `.zip` que contenha pacotes de imagens de fundo
 - **Manual:** Copie as pastas de imagens de fundo diretamente para `~/Documents/Open Wallpaper Engine/`
 
+## Novidades da versão 1.0.0-beta.5
+
+- **Editor de Cena (Live)** com as abas Imagem de Fundo, Protetor de Tela e Exportação para iPhone e iPad; o **Editor de Imagem de Fundo** (⌥⌘E) é um app próprio: camadas, efeitos, linha do tempo, SceneScript, propriedades do usuário, partículas e Puppet Warp; mapas de profundidade ([depth-maps.md](../../docs/depth-maps.md)).
+- **Layouts de telas** como no Wallpaper Engine: uma imagem por tela, esticada, clonada, grupos, divisões e perfis ([display-layouts.md](../../docs/display-layouts.md)).
+- **Exportação**: Live Photos para iPhone e iPad ([iphone-ipad-export.md](../../docs/iphone-ipad-export.md)) e pacotes `.mpkg` para o Wallpaper Engine no Android, com envio por Wi-Fi ([android-export.md](../../docs/android-export.md)).
+- **Protetor de tela** e imagem da tela bloqueada ([screen-saver.md](../../docs/screen-saver.md)).
+- Plugin **Servidor MCP** ([mcp.md](../../docs/mcp.md)) e **Temas** do macOS na cor da imagem de fundo ([theming.md](../../docs/theming.md)).
+- Regras de aplicativos, atalhos globais, capturas de tela, Descobrir, pastas da biblioteca. Todas as mudanças: [CHANGELOG.md](../../CHANGELOG.md).
+
 ## O que a versão 1.0.0 suporta
 
 ### Configuração, biblioteca e atualizações

@@ -64,6 +64,15 @@ open "OpenWallpaperEngine.xcodeproj"
 - **Zip:** Файл > Імпортувати або перетягніть файл `.zip` із пакетами шпалер
 - **Вручну:** скопіюйте папки шпалер безпосередньо в `~/Documents/Open Wallpaper Engine/`
 
+## Нове у версії 1.0.0-beta.5
+
+- **Редактор сцени (Live)** із вкладками «Шпалери», «Заставка» та «Експорт для iPhone і iPad»; **Редактор шпалер** (⌥⌘E) працює як окрема програма: шари, ефекти, часова шкала, SceneScript, властивості користувача, частинки та Puppet Warp; карти глибини ([depth-maps.md](../../docs/depth-maps.md)).
+- **Розкладки дисплеїв**, як у Wallpaper Engine: шпалери на кожен дисплей, розтягування, клонування, групи, поділ і профілі ([display-layouts.md](../../docs/display-layouts.md)).
+- **Експорт**: Live Photos для iPhone і iPad ([iphone-ipad-export.md](../../docs/iphone-ipad-export.md)) та пакети `.mpkg` для Wallpaper Engine на Android із надсиланням через Wi-Fi ([android-export.md](../../docs/android-export.md)).
+- **Заставка** й зображення екрана блокування ([screen-saver.md](../../docs/screen-saver.md)).
+- Плагін **MCP-сервер** ([mcp.md](../../docs/mcp.md)) і **теми** macOS у кольорі шпалер ([theming.md](../../docs/theming.md)).
+- Правила програм, глобальні сполучення клавіш, знімки екрана, «Огляд», папки медіатеки. Усі зміни: [CHANGELOG.md](../../CHANGELOG.md).
+
 ## Що підтримує версія 1.0.0
 
 ### Налаштування, бібліотека й оновлення

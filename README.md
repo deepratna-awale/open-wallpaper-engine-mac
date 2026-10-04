@@ -22,6 +22,13 @@ Open Wallpaper Engine is a free, open-source macOS player for Wallpaper Engine w
 |---------|-------------|---------|
 | Browsing / downloading from Steam Workshop | `steamcmd` | Automatic (optional: `brew install steamcmd`) |
 | Audio visualizers & audio-reactive SceneScript | System Audio Recording permission (Screen & System Audio Recording before macOS 14.2) | Settings → Permissions |
+| App Rules' "Is playing audio" condition | macOS 14.2 or later | — |
+| Now Playing in wallpapers | macOS 15.4 or later for live updates | — |
+| Web wallpapers that need Chromium | The optional Chromium web engine | Settings → Plugins |
+| Depth maps in the editors | The Depth Map Generation plugin | Settings → Plugins |
+| Control from MCP clients | The MCP Server plugin | Settings → Plugins |
+| Live Photo lock screens | iPhone or iPad with iOS / iPadOS 17 or later | — |
+| Android export | Wallpaper Engine's Android app on the device | — |
 
 #### Shaders
 
@@ -63,6 +70,25 @@ Building from source fetches the Sparkle Swift package on first build. Builds fr
 - **Folder:** File > Import > Wallpaper from Folder — select wallpaper folders containing `project.json`
 - **Zip:** File > Import or drag-and-drop a `.zip` file containing wallpaper packages
 - **Manual:** Copy wallpaper folders directly into `~/Documents/Open Wallpaper Engine/`
+
+### Edit Wallpapers
+
+- **Scene Editor (Live)** (Details › Scene Editor (Live), ⌥⌘I) has three tabs. **Wallpaper** edits the running wallpaper: show, hide, move, resize, recolour and fade layers and change effects, live on the desktop. **Screen Saver** records a version of the wallpaper as your screen saver ([docs/screen-saver.md](docs/screen-saver.md)). **iPhone & iPad Export** turns it into a Live Photo lock screen ([docs/iphone-ipad-export.md](docs/iphone-ipad-export.md)).
+- **Wallpaper Editor** (Edit Wallpaper in the library's bottom bar, ⌥⌘E) is an editor in the spirit of Wallpaper Engine's, running as an app of its own: add, arrange and group layers; add effects from Wallpaper Engine's catalog with rendered previews; animate on a timeline; write SceneScript with autocomplete; author user properties; edit particle systems and Puppet Warp rigs. Edits are kept beside the wallpaper, never in its files, can all be undone, and show on the desktop as you make them; **Save as Local Wallpaper** writes a copy with them. The plan and its phases: [docs/editor-plan.md](docs/editor-plan.md).
+- **Depth maps** — with the Depth Map Generation plugin, both editors make a depth map of a layer or the whole scene on your Mac and apply Wallpaper Engine's Depth Parallax effect to it ([docs/depth-maps.md](docs/depth-maps.md)).
+
+### Several Displays
+
+**Displays** in the toolbar sets Wallpaper Engine's display layouts: a wallpaper per display, one stretched across every display, or one cloned onto every display, plus stretch and clone groups of some displays, flipped clones, muted displays and displays split into regions, saved as profiles. A clone or stretch renders once. Each display has a miniature of what it shows. [docs/display-layouts.md](docs/display-layouts.md)
+
+### Export to iPhone, iPad and Android
+
+- **iPhone & iPad** — the Scene Editor (Live)'s export tab frames a scene as any of 63 iPhones' and iPads' lock screens and exports a Live Photo, with AirDrop, to a folder or into a Photos album, without changing your desktop. [docs/iphone-ipad-export.md](docs/iphone-ipad-export.md)
+- **Android** — **Export for Android…** (the library's context menu) writes Wallpaper Engine's `.mpkg` packages for its Android app, for one wallpaper or a selection: scenes as live **Dynamic** scenes or a **Pre-Rendered** video, videos as they are. **Send over Wi-Fi** lets the device download them from the Mac with a QR code. [docs/android-export.md](docs/android-export.md)
+
+### Theme macOS
+
+Settings › General › **Theming** lets the menu bar, the accent and highlight colours, tinted icons and folders follow the scheme colour of the wallpaper on the main display, and restores your own colours when it's turned off. [docs/theming.md](docs/theming.md)
 
 ### Control from MCP Clients
 
@@ -109,19 +135,33 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 - **Sound layers** play on the scene's clock, with **spatial sound** placed as in Wallpaper Engine.
 
 ### Displays & playback
+- **Display layouts** — per display, stretch, clone, groups, flip, mute, splits and profiles, as in Wallpaper Engine ([docs/display-layouts.md](docs/display-layouts.md)).
 - **Pause per Display** or **Pause All**, with the playback rules checked for each display, including Wallpaper Engine's maximized-window rule.
+- **Application Rules** — pause, stop or mute wallpapers, or load a wallpaper, playlist or display profile, while an app is running, focused, maximized, in full screen or playing audio.
+- **Hotkeys** for Wallpaper Engine's actions and for each playlist, system-wide, with no Accessibility permission; **Next and Previous Wallpaper** in the menu bar menu.
+- **Take Screenshot** of the wallpaper alone, at the display's size, 4K or 8K.
+- Per-wallpaper **position, zoom and flip** on each display, and a video's playback rate.
 - Per-display user properties, with "Sync properties across displays".
 - A wallpaper shown on several displays renders once and is presented on each.
-- New quality settings: Render Resolution, Texture Resolution, Match Display scene detail, reflections, shadows and volumetrics.
+- Quality settings: Render Resolution (Display, Retina, Full) with MetalFX upscaling, Texture Resolution, Match Display scene detail, reflections, shadows and volumetrics.
 - **Safe restart** — a wallpaper that stalled or crashed the app is skipped on the next launch and marked in the library.
 
+### Screen saver, lock screen & theming
+- **Screen saver** — a plugin records a seamless loop of a scene, web or WebM wallpaper (videos play their own file) and installs a macOS screen saver that plays it; the Scene Editor (Live)'s Screen Saver tab records your own version and can re-record it daily ([docs/screen-saver.md](docs/screen-saver.md)).
+- **Lock screen** — each display's desktop picture, which the lock screen shows, is a picture of its wallpaper.
+- **Theming** — the menu bar, accent, tinted icons and folders follow the wallpaper's colour ([docs/theming.md](docs/theming.md)).
+
 ### Workshop & library
-- Wallpaper Engine's Workshop filters: Show Only, a resolution filter, genres combined with AND/OR, and tags on every card.
+- Wallpaper Engine's Workshop filters: Show Only, a resolution filter, genres combined with AND/OR, a Wallpaper/Preset category, and tags on every card.
+- **Discover** — Wallpaper Engine's curated Workshop lists; Workshop items can be blocked (or their author), reported in Steam, and lead to related wallpapers.
+- **Workshop preset items** play their base wallpaper with the preset's values, as in Wallpaper Engine.
+- **Library folders** — add folders of wallpapers beside Wallpaper Storage (Settings › Assets); they're watched and never written to.
 - **Animated previews** — wallpaper tiles in the library play their Workshop preview animation (GIF), so you can see a wallpaper move before applying it. They play only while visible, and pause when the window is hidden or in Low Power Mode.
 - Installed wallpapers show and filter by their Workshop tags; asset-only and dependency-only items stay out of Installed.
 - Missing Workshop dependencies download automatically, and unused ones are removed after a delete. Every download lands in the Wallpaper Storage folder.
 - **Reset** in Details returns a wallpaper's properties, and its Scene Editor (Live) edits, to the defaults its author set.
 - **iPhone & iPad Export** in the Scene Editor (Live) turns a scene wallpaper into a Live Photo lock screen for any iPhone or iPad that shows one, with AirDrop, to a folder or into a Photos album, without changing your desktop.
+- **Export for Android…** writes Wallpaper Engine's `.mpkg` packages for its Android app, sent to the device over Wi-Fi or copied.
 - Property conditions, text rows and slider formats from the wallpaper's settings are honoured.
 - Steam passwords are never stored, and the Steam Web API key is kept in the Keychain.
 
@@ -135,20 +175,20 @@ Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI 
 | Type | Status |
 |------|--------|
 | Video (.mp4, .webm) | Working |
-| Web (HTML/WebGL) | Working |
+| Web (HTML/WebGL) | Working (WebKit, or the optional Chromium engine) |
 | Scene — image layers & timelines | Working (Metal) |
 | Scene — DXT1/DXT3/DXT5 textures | Working (Metal GPU decode) |
 | Scene — TEXS sprites / alpha timelines | Working |
 | Scene — sprite particles | Working |
-| Scene — advanced particles | Partial (see Limitations) |
+| Scene — advanced particles | Working |
 | Scene — Wallpaper Engine and Workshop effects (WE's own shaders) | Working |
-| Scene — SceneScript | Partial (see Limitations) |
+| Scene — SceneScript | Working |
 | Scene — 3D models / rigging / puppet warp | Working |
 | Application | Not supported |
 
 ## Privacy
 
-Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and SteamCMD's login. Open Wallpaper Engine has no server and collects no data or analytics. It contacts Valve (Steam when you use the Workshop or install assets, and Valve's server to download SteamCMD) and GitHub, to check for app updates (the appcast on GitHub Pages) and download them from GitHub Releases, without sending any personal data. Update checks can be turned off in Settings › Updates. Web wallpapers may load their own online content. Your Steam password and Steam Guard code go straight to SteamCMD and are never stored, logged or sent anywhere else; only your account name is remembered, to reuse SteamCMD's saved login.
+Everything Open Wallpaper Engine saves stays on your Mac: your settings, library, cache and SteamCMD's login. Open Wallpaper Engine has no server and collects no data or analytics. It contacts Valve (Steam when you use the Workshop or install assets, and Valve's server to download SteamCMD) and GitHub, to check for app updates (the appcast on GitHub Pages) and download them from GitHub Releases, without sending any personal data. Update checks can be turned off in Settings › Updates. Optional plugins download only when you install them: the Chromium web engine from the Chromium Embedded Framework's builds, and the depth model from Apple's Hugging Face repository, each checked against the version the app expects. Send over Wi-Fi serves an Android export only to devices on your local network, for 15 minutes. Web wallpapers may load their own online content. Your Steam password and Steam Guard code go straight to SteamCMD and are never stored, logged or sent anywhere else; only your account name is remembered, to reuse SteamCMD's saved login.
 
 ## Project Layout
 
@@ -160,6 +200,12 @@ Everything Open Wallpaper Engine saves stays on your Mac: your settings, library
 - `OpenWallpaperEngine/Scene/Rendering/SceneMetalRenderer.swift`, `SceneShaders.metal` — the Metal scene renderer and shader library
 - `OpenWallpaperEngine/Workshop/SteamCmdService.swift`, `WorkshopAPIService.swift`, `WorkshopViewModel.swift` — Steam Workshop browsing and downloads
 - `OpenWallpaperEngine/Library/WallpaperDirectory.swift`, `ZipImporter.swift`, `WallpaperPackageConverter.swift` — library storage, import, and package conversion
+- `OpenWallpaperEngine/Library/DisplayLayout/` — display layouts, groups, splits and profiles ([docs/display-layouts.md](docs/display-layouts.md))
+- `OpenWallpaperEngine/Editor/`, `Packages/OWEEditor/` — the Wallpaper Editor ([docs/editor-plan.md](docs/editor-plan.md))
+- `OpenWallpaperEngine/ScreenSaver/`, `OpenWallpaperEngineSaver/` — screen saver loops and the screen saver itself ([docs/screen-saver.md](docs/screen-saver.md))
+- `OpenWallpaperEngine/LivePhoto/`, `OpenWallpaperEngine/AndroidExport/` — iPhone & iPad and Android export ([docs/iphone-ipad-export.md](docs/iphone-ipad-export.md), [docs/android-export.md](docs/android-export.md))
+- `OpenWallpaperEngine/DepthMaps/` — the Depth Map Generation plugin ([docs/depth-maps.md](docs/depth-maps.md))
+- `OpenWallpaperEngine/Theming/`, `Packages/OWETheming/` — Theming ([docs/theming.md](docs/theming.md))
 - `OpenWallpaperEngine/MCP/`, `Packages/OWEControl/`, `MCPServer/` — the MCP Server plugin: the app's control socket and the `owe-mcp` server ([docs/mcp.md](docs/mcp.md))
 - `Scripts/fill-assets-cache.sh` — development helper: copies the assets subset of a Wallpaper Engine install into a local folder or the Wallpaper Storage cache
 - `Scripts/scene-api-coverage.py` — reports which SceneScript APIs installed wallpapers use versus what is implemented
