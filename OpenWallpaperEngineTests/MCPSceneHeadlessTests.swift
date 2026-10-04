@@ -124,7 +124,7 @@ final class MCPSceneHeadlessTests: XCTestCase {
             editorSync.overlayDidSave(folder: fixture!.folder, identity: fixture!.identity)
         }
         var heard: [(URL, String)] = []
-        editorSync.onAppOverlay = { [fixture] folder, actionName in
+        editorSync.onAppOverlay = { [fixture] folder, actionName, _ in
             heard.append((folder, actionName))
             guard let stored = try? fixture!.store.overlay(for: fixture!.identity.rawValue) else { return } // Read just saved.
             adopting = true
@@ -132,8 +132,8 @@ final class MCPSceneHeadlessTests: XCTestCase {
             adopting = false
         }
 
-        let service = fixture.service(center: appCenter, announce: { folder, overlay, name in
-            appSync.appOverlayDidSave(folder: folder, overlay: overlay, actionName: name)
+        let service = fixture.service(center: appCenter, announce: { folder, overlay, name, step in
+            appSync.appOverlayDidSave(folder: folder, overlay: overlay, actionName: name, step: step)
         })
         let document = try service.document(for: fixture.wallpaper)
         _ = try document.apply([edit(["op": "set_alpha", "layer": 4, "alpha": 0.25])], actionName: "Fade Picture")
@@ -181,5 +181,104 @@ final class MCPSceneHeadlessTests: XCTestCase {
         editor.session.undo()
         XCTAssertFalse(editor.session.canUndo, "the same save twice is one step")
         XCTAssertTrue(try store.overlay(for: identity.rawValue)?.isEmpty ?? true, "Undo in the window is saved")
+    }
+
+    /// The client's Undo and Redo, through the change sync, move the open window's history: one
+    /// edit is one step there however often the client undoes and redoes it.
+    func testTheClientsUndoAndRedoMoveTheWindowsHistory() throws {
+        let wallpaper = try XCTUnwrap(InstalledLibrary.wallpaper(at: fixture.folder, hiding: []))
+        let identity = WallpaperSettingsIdentity.resolve(directory: wallpaper.wallpaperDirectory)
+        let store = SceneEditOverlayFiles.defaultStore
+        defer { try? store.remove(identity.rawValue) } // The isolated tests' store.
+        let messaging = MCPFakeProcessMessaging()
+        let channel = AppProcessChannel(isolationTag: "tests")
+        func sync(_ role: WallpaperEditorChangeSync.Role, _ sender: String) -> WallpaperEditorChangeSync {
+            var dependencies = WallpaperEditorChangeSync.Dependencies(messaging: messaging, channel: channel, sender: sender,
+                                                                      store: store, local: NotificationCenter(),
+                                                                      defaults: fixture.defaults)
+            dependencies.readScene = { _ in MCPSceneFixture.scene }
+            dependencies.schedule = { _, work in work() }
+            return WallpaperEditorChangeSync(role: role, dependencies: dependencies)
+        }
+        let appSync = sync(.app, "app"), editorSync = sync(.editor, "editor")
+        let editor = try WallpaperEditorController(wallpaper: wallpaper, host: WallpaperEditorAppDelegate.makeSceneHost(),
+                                                   sync: editorSync)
+        defer { editor.window.close() }
+        var steps: [AppProcessChannel.OverlayStep] = []
+        editorSync.onAppOverlay = { _, actionName, step in
+            steps.append(step)
+            editor.adoptSavedOverlay(actionName: actionName, step: step)
+        }
+        appSync.start()
+        editorSync.start()
+        defer { appSync.stop(); editorSync.stop() }
+        let resources = FakeSceneEditResources(folder: wallpaper.wallpaperDirectory, identity: identity,
+                                               assets: EditorAssetStore(directory: fixture.root.appending(path: "assets")))
+        let service = HeadlessSceneEditService(dependencies: .init(
+            store: store, center: NotificationCenter(), resources: { _ in resources },
+            announce: { folder, overlay, name, step in
+                appSync.appOverlayDidSave(folder: folder, overlay: overlay, actionName: name, step: step)
+            }))
+        let document = try service.document(for: fixture.wallpaper)
+        let undoManager = editor.session.undoManager
+        let name = HeadlessSceneDocument.defaultActionName
+        // The window groups its undo steps by event: each message is one.
+        func nextEvent() { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
+
+        _ = try document.apply([edit(["op": "set_alpha", "layer": 4, "alpha": 0.25])], actionName: nil)
+        nextEvent()
+        let edited = document.session.overlay
+        XCTAssertEqual(editor.session.overlay, edited)
+        XCTAssertTrue(undoManager.canUndo)
+        XCTAssertFalse(undoManager.canRedo)
+        XCTAssertEqual(undoManager.undoActionName, name)
+
+        XCTAssertTrue(document.undo())
+        nextEvent()
+        XCTAssertEqual(editor.session.overlay, document.session.overlay, "the window shows the client's Undo")
+        XCTAssertFalse(undoManager.canUndo, "the window undid the step instead of taking the Undo as one of its own")
+        XCTAssertTrue(undoManager.canRedo)
+        XCTAssertEqual(undoManager.redoActionName, name)
+
+        XCTAssertTrue(document.redo())
+        nextEvent()
+        XCTAssertEqual(editor.session.overlay, edited, "the window shows the client's Redo")
+        XCTAssertTrue(undoManager.canUndo)
+        XCTAssertFalse(undoManager.canRedo)
+        XCTAssertEqual(undoManager.undoActionName, name)
+        XCTAssertEqual(steps, [.edit, .undo, .redo])
+
+        // One step in the window: one Undo there goes back to the start.
+        editor.session.undo()
+        XCTAssertFalse(undoManager.canUndo, "exactly one MCP Edit step")
+        XCTAssertTrue(editor.session.overlay.isEmpty)
+        XCTAssertTrue(try store.overlay(for: identity.rawValue)?.isEmpty ?? true, "Undo in the window is saved")
+    }
+
+    /// A client's Undo the window can't follow (the user's own step is on top) is taken as a step,
+    /// and the user's step stays.
+    func testTheClientsUndoUnderTheUsersStepIsTakenAsAStep() throws {
+        let wallpaper = try XCTUnwrap(InstalledLibrary.wallpaper(at: fixture.folder, hiding: []))
+        let identity = WallpaperSettingsIdentity.resolve(directory: wallpaper.wallpaperDirectory)
+        let store = SceneEditOverlayFiles.defaultStore
+        defer { try? store.remove(identity.rawValue) } // The isolated tests' store.
+        let editor = try WallpaperEditorController(wallpaper: wallpaper, host: WallpaperEditorAppDelegate.makeSceneHost())
+        defer { editor.window.close() }
+        func nextEvent() { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
+        editor.session.setValue(.number(0.5), for: "alpha", of: 5, actionName: "Opacity")
+        nextEvent()
+        // The app saved an overlay the window's Undo wouldn't give (as after the client's Undo of an
+        // edit the window never saw).
+        var stored = editor.session.overlay
+        let other = SceneEditSession(outline: try SceneOutline(sceneData: MCPSceneFixture.scene), overlay: stored)
+        other.setValue(.number(0.75), for: "alpha", of: 4, actionName: "Opacity")
+        stored = other.overlay
+        try store.save(stored, for: identity.rawValue)
+        editor.adoptSavedOverlay(actionName: "Opacity", step: .undo)
+        nextEvent()
+        XCTAssertEqual(editor.session.overlay, stored)
+        XCTAssertEqual(editor.session.undoManager.undoActionName, "Opacity")
+        editor.session.undo()
+        XCTAssertEqual(editor.session.overlay.field("alpha", of: 5), .number(0.5), "the user's step stays")
     }
 }

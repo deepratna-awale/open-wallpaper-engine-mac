@@ -12,7 +12,7 @@ final class HeadlessSceneEditService {
         var center: NotificationCenter = .default
         /// The wallpaper's scene, files and services.
         var resources: @MainActor (ControlWallpaper) throws -> SceneEditResources
-        var announce: @MainActor (URL, SceneEditOverlay, String) -> Void = { _, _, _ in }
+        var announce: @MainActor (URL, SceneEditOverlay, String, AppProcessChannel.OverlayStep) -> Void = { _, _, _, _ in }
         var particleSchema: () throws -> ParticleEditorSchema = { try ParticleEditorServices.bundledSchema() }
     }
 

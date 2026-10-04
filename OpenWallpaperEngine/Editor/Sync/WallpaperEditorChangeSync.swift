@@ -86,8 +86,8 @@ final class WallpaperEditorChangeSync {
     /// The editor asked for a Settings page.
     var onOpenSettings: ((AppSettingsRequest) -> Void)?
     /// Open Wallpaper Engine saved the overlay of the wallpaper in the folder for an MCP client, as
-    /// the named undo step (the editor's process).
-    var onAppOverlay: ((URL, String) -> Void)?
+    /// the named undo step, or as its Undo or Redo (the editor's process).
+    var onAppOverlay: ((URL, String, AppProcessChannel.OverlayStep) -> Void)?
 
     private var identities: [URL: WallpaperSettingsIdentity] = [:]
     /// Each wallpaper's overlay as last applied here: a message and the folder watcher reporting
@@ -143,7 +143,8 @@ final class WallpaperEditorChangeSync {
         if role.contains(.adoptsAppEdits) {
             tokens.append(messaging.observe(channel.name(.appOverlayDidSave)) { [weak self] sender, info in
                 guard let self, sender != self.dependencies.sender, let path = info[AppProcessChannel.folderKey] else { return }
-                self.onAppOverlay?(URL(filePath: path, directoryHint: .isDirectory), info[AppProcessChannel.actionKey] ?? "")
+                let step = info[AppProcessChannel.stepKey].flatMap(AppProcessChannel.OverlayStep.init(rawValue:)) ?? .edit
+                self.onAppOverlay?(URL(filePath: path, directoryHint: .isDirectory), info[AppProcessChannel.actionKey] ?? "", step)
             })
         }
         if role.contains(.appliesProperties) {
@@ -223,10 +224,13 @@ final class WallpaperEditorChangeSync {
 
     /// Open Wallpaper Engine saved `folder`'s overlay for an MCP client and applied it to its own
     /// instances (`HeadlessSceneDocument`): the same overlay from the folder watcher isn't applied
-    /// again, and the editor's open window of the wallpaper takes it as the undo step `actionName`.
-    func appOverlayDidSave(folder: URL, overlay: SceneEditOverlay, actionName: String) {
+    /// again, and the editor's open window of the wallpaper takes it as the undo step `actionName`
+    /// (the client's Undo or Redo, `step`: undoes or redoes that step).
+    func appOverlayDidSave(folder: URL, overlay: SceneEditOverlay, actionName: String,
+                           step: AppProcessChannel.OverlayStep = .edit) {
         applied[Self.normalized(folder)] = overlay
-        send(.appOverlayDidSave, folder: folder, extra: [AppProcessChannel.actionKey: actionName])
+        send(.appOverlayDidSave, folder: folder,
+             extra: [AppProcessChannel.actionKey: actionName, AppProcessChannel.stepKey: step.rawValue])
     }
 
     /// A wallpaper was added to the library.

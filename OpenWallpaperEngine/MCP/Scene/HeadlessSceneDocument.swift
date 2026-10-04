@@ -19,8 +19,10 @@ final class HeadlessSceneDocument {
         /// This process's own notifications: the running instances listen there.
         var center: NotificationCenter
         /// Tells the Wallpaper Editor's process (and the app's change sync) that the overlay of the
-        /// wallpaper in `folder` was saved here, with the undo step's name.
-        var announce: @MainActor (_ folder: URL, _ overlay: SceneEditOverlay, _ actionName: String) -> Void
+        /// wallpaper in `folder` was saved here, with the undo step's name and whether it was that
+        /// step, or its Undo or Redo.
+        var announce: @MainActor (_ folder: URL, _ overlay: SceneEditOverlay, _ actionName: String,
+                                  _ step: AppProcessChannel.OverlayStep) -> Void
         var particleSchema: () throws -> ParticleEditorSchema
     }
 
@@ -35,6 +37,8 @@ final class HeadlessSceneDocument {
     private var savedSceneDigest: String
     /// The name of the step being saved, for the editor window that takes it.
     private var pendingActionName: String?
+    /// Whether the change being saved is a new step, or an Undo or Redo of one.
+    private var pendingStep: AppProcessChannel.OverlayStep = .edit
     /// Depth maps generated but not applied yet, by layer (`sceneDepthKey` for the scene).
     private var depthModels: [Int: DepthMapSectionModel] = [:]
     static let sceneDepthKey = Int.min
@@ -143,16 +147,28 @@ final class HeadlessSceneDocument {
         return try await change(session)
     }
 
+    /// Undoes the last step; an open editor window of the wallpaper undoes the same step (`announce`).
     func undo() -> Bool {
         guard session.canUndo else { return false }
-        session.undo()
+        move(.undo, named: session.undoManager.undoActionName) { $0.undo() }
         return true
     }
 
+    /// Redoes the last undone step, as an open editor window of the wallpaper does.
     func redo() -> Bool {
         guard session.canRedo else { return false }
-        session.redo()
+        move(.redo, named: session.undoManager.redoActionName) { $0.redo() }
         return true
+    }
+
+    private func move(_ step: AppProcessChannel.OverlayStep, named name: String, _ change: (SceneEditSession) -> Void) {
+        pendingStep = step
+        pendingActionName = name.isEmpty ? nil : name
+        defer {
+            pendingStep = .edit
+            pendingActionName = nil
+        }
+        change(session)
     }
 
     /// Drops every edit (locks stay), one undo step, as File › Revert does.
@@ -200,7 +216,7 @@ final class HeadlessSceneDocument {
             }
         }
         savedSceneDigest = digest
-        dependencies.announce(resources.folder, overlay, pendingActionName ?? Self.defaultActionName)
+        dependencies.announce(resources.folder, overlay, pendingActionName ?? Self.defaultActionName, pendingStep)
     }
 
     private static func sceneDigest(_ overlay: SceneEditOverlay) -> String {
