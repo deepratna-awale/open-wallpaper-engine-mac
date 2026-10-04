@@ -1,0 +1,14 @@
+== mo_tc_off capture K:\DeepWorkspace\wem-images2\tools\peer\requests\rd_grab\cap\we_frame724.rdc draws 5
+  eid 22 ID3D11DeviceContext::DrawIndexed() idx=2475 inst=0
+  eid 37 ID3D11DeviceContext::Draw() idx=3 inst=0
+  eid 50 ID3D11DeviceContext::Draw() idx=3 inst=0
+  eid 63 ID3D11DeviceContext::Draw() idx=3 inst=0
+  eid 77 ID3D11DeviceContext::Draw() idx=3 inst=0
+== mo_tc_on capture K:\DeepWorkspace\wem-images2\tools\peer\requests\rd_grab\cap\we_frame885.rdc draws 7
+  eid 23 ID3D11DeviceContext::DrawIndexed() idx=6 inst=0
+  eid 41 ID3D11DeviceContext::DrawIndexed() idx=6 inst=0
+  eid 60 ID3D11DeviceContext::DrawIndexed() idx=2475 inst=0
+  eid 76 ID3D11DeviceContext::Draw() idx=3 inst=0
+  eid 89 ID3D11DeviceContext::Draw() idx=3 inst=0
+  eid 102 ID3D11DeviceContext::Draw() idx=3 inst=0
+  eid 116 ID3D11DeviceContext::Draw() idx=3 inst=0

@@ -32,6 +32,16 @@
 - **Second material:** the ON .mdl has a second material string, `materials/rope_channelmap.json`, at 0x9941, before `MDLS0004`.
 - **Diff count:** 891 differing bytes in total, mostly the vertex stream, which gains blend data (`a_TexCoordVec4` plus `uvec4 a_BlendIndices`).
 
-## Not captured yet
-- On/off stills and RenderDoc of the puppettexturechannels draw.
-- **Why:** the PC is being used by someone, and both need the screen. The files above are all ground truth from WE's own editor.
+## Render (RenderDoc, `renderdoc/`)
+- **Capture:** the wallpaper running under RenderDoc, driven by the command line only. The puppet has no animation, so both stills show the same pose.
+  - `mo_tc_off.png` and `mo_tc_on.png` are the swapchain images; `off_vs_on_crop.png` puts them side by side.
+  - **They look identical:** the channel is not visible by default.
+- **Draws:** OFF has 1 puppet draw (2475 indices) plus 4 post passes. **ON adds two 6-index draws before the puppet**, both into an offscreen **96x512 RGBA8 render target**, the size of the base texture:
+  1. ev23: a plain textured quad (POSITION, TEXCOORD float2) copies the base texture (96x512) into the RT.
+  2. ev41: **puppettexturechannels**. The vertex input is `POSITION float3 @0`, `BLENDINDICES uint4 @12`, `TEXCOORD float4 @28` (stride 44).
+     - SRV0 = the channel atlas (64x512); SRV1 = the base (96x512); `g_Texture1Resolution = 96 512 96 512`.
+     - **`g_BlendMap = [0, 0, 0, 0]`**, so the channel's blend weight is 0 and it adds nothing.
+  3. The puppet draw then samples **the composed RT (SRV0 = RT 96x512)** in place of the raw texture.
+- **Conclusion:** channels are composed offscreen once per frame. Their visibility is a per-channel weight in `g_BlendMap` (index = the BLENDINDICES.x of the channel quad), and it defaults to 0.
+  - Presumably animations or scripts drive it (texture channel switching). DOUBLEBUFFERED was not active (only 2 SRVs: atlas plus base).
+- **Details:** `renderdoc/inspect_report.txt` and `rd_draws_report.txt`, with the bound textures as PNGs.
