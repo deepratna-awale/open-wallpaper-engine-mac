@@ -135,7 +135,7 @@ class ContentViewModel: ObservableObject, DropDelegate {
     private let tagSync = InstalledWorkshopTagSync()
 
     /// The Installed wallpapers, before search and filters: no asset items, no dependency-only items.
-    private var allWallpapers: [WEWallpaper] {
+    var allWallpapers: [WEWallpaper] {
         let wallpapers = library.wallpapers(in: FileManager.default.wallpapersDirectory,
                                             hiding: steamCmd.dependencyIndex.ids)
         tagSync.schedule(wallpapers)

@@ -23,6 +23,9 @@
 		FA1000000000000000000012 /* OpenWallpaperEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA1000000000000000000002 /* OpenWallpaperEngine.framework */; };
 		FA1000000000000000000013 /* OpenWallpaperEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA1000000000000000000002 /* OpenWallpaperEngine.framework */; };
 		FB1000000000000000000010 /* Wallpaper Editor.app in Embed Wallpaper Editor */ = {isa = PBXBuildFile; fileRef = FB1000000000000000000002 /* Wallpaper Editor.app */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		EC1000000000000000000011 /* OWEControlProtocol in Frameworks */ = {isa = PBXBuildFile; productRef = EC1000000000000000000012 /* OWEControlProtocol */; };
+		EC1000000000000000000021 /* OWEMCP in Frameworks */ = {isa = PBXBuildFile; productRef = EC1000000000000000000022 /* OWEMCP */; };
+		EC2000000000000000000010 /* owe-mcp in Embed MCP Server */ = {isa = PBXBuildFile; fileRef = EC2000000000000000000002 /* owe-mcp */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		EE6000000000000000000015 /* owe-chromium-helper.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = EE6000000000000000000003 /* owe-chromium-helper.xpc */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -71,6 +74,17 @@
 			name = "Embed Wallpaper Editor";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		EC2000000000000000000011 /* Embed MCP Server */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Helpers";
+			dstSubfolderSpec = 16;
+			files = (
+				EC2000000000000000000010 /* owe-mcp in Embed MCP Server */,
+			);
+			name = "Embed MCP Server";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -93,6 +107,7 @@
 		EE5000000000000000000003 /* Open Wallpaper Engine.saver */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Open Wallpaper Engine.saver"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FA1000000000000000000002 /* OpenWallpaperEngine.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = OpenWallpaperEngine.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		FB1000000000000000000002 /* Wallpaper Editor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Wallpaper Editor.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		EC2000000000000000000002 /* owe-mcp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "owe-mcp"; sourceTree = BUILT_PRODUCTS_DIR; };
 		EE6000000000000000000003 /* owe-chromium-helper.xpc */ = {isa = PBXFileReference; explicitFileType = "wrapper.xpc-service"; includeInIndex = 0; path = "owe-chromium-helper.xpc"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -213,6 +228,11 @@
 			path = OWEChromiumHelper;
 			sourceTree = "<group>";
 		};
+		EC2000000000000000000015 /* MCPServer */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = MCPServer;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -245,6 +265,7 @@
 				ED7000000000000000000031 /* OWEEditor in Frameworks */,
 				ED7000000000000000000021 /* OWESceneEditing in Frameworks */,
 				ED7000000000000000000011 /* OWEInspectorKit in Frameworks */,
+				EC1000000000000000000011 /* OWEControlProtocol in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -267,6 +288,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EC2000000000000000000004 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EC1000000000000000000021 /* OWEMCP in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -295,6 +324,7 @@
 				5EC47E782A2DB2E600120CCC /* OpenWallpaperEngine */,
 				FA1000000000000000000021 /* OpenWallpaperEngineApp */,
 				FB1000000000000000000015 /* EditorHelper */,
+				EC2000000000000000000015 /* MCPServer */,
 				EE2000000000000000000002 /* OpenWallpaperEngineTests */,
 				EE5000000000000000000002 /* OpenWallpaperEngineSaver */,
 				EE6000000000000000000002 /* OWEChromiumHelper */,
@@ -313,6 +343,7 @@
 				EE2000000000000000000003 /* OpenWallpaperEngineTests.xctest */,
 				EE5000000000000000000003 /* Open Wallpaper Engine.saver */,
 				EE6000000000000000000003 /* owe-chromium-helper.xpc */,
+				EC2000000000000000000002 /* owe-mcp */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -344,6 +375,7 @@
 				EE6000000000000000000014 /* Embed XPC Services */,
 				EE6000000000000000000018 /* Chromium Helper Apps */,
 				FB1000000000000000000011 /* Embed Wallpaper Editor */,
+				EC2000000000000000000011 /* Embed MCP Server */,
 			);
 			buildRules = (
 			);
@@ -352,6 +384,7 @@
 				FB1000000000000000000013 /* PBXTargetDependency */,
 				EE500000000000000000000C /* PBXTargetDependency */,
 				EE6000000000000000000016 /* PBXTargetDependency */,
+				EC2000000000000000000013 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				FA1000000000000000000021 /* OpenWallpaperEngineApp */,
@@ -389,6 +422,7 @@
 				ED7000000000000000000032 /* OWEEditor */,
 				ED7000000000000000000022 /* OWESceneEditing */,
 				ED7000000000000000000012 /* OWEInspectorKit */,
+				EC1000000000000000000012 /* OWEControlProtocol */,
 			);
 			productName = OpenWallpaperEngine;
 			productReference = FA1000000000000000000002 /* OpenWallpaperEngine.framework */;
@@ -477,6 +511,28 @@
 			productReference = EE6000000000000000000003 /* owe-chromium-helper.xpc */;
 			productType = "com.apple.product-type.xpc-service";
 		};
+		EC2000000000000000000001 /* OWEMCPServer */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EC2000000000000000000006 /* Build configuration list for PBXNativeTarget "OWEMCPServer" */;
+			buildPhases = (
+				EC2000000000000000000003 /* Sources */,
+				EC2000000000000000000004 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				EC2000000000000000000015 /* MCPServer */,
+			);
+			name = OWEMCPServer;
+			packageProductDependencies = (
+				EC1000000000000000000022 /* OWEMCP */,
+			);
+			productName = "owe-mcp";
+			productReference = EC2000000000000000000002 /* owe-mcp */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXContainerItemProxy section */
@@ -522,6 +578,13 @@
 			remoteGlobalIDString = FB1000000000000000000001;
 			remoteInfo = WallpaperEditor;
 		};
+		EC2000000000000000000012 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5EC47E6E2A2DB2E600120CCC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EC2000000000000000000001;
+			remoteInfo = OWEMCPServer;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXTargetDependency section */
@@ -554,6 +617,11 @@
 			isa = PBXTargetDependency;
 			target = FB1000000000000000000001 /* WallpaperEditor */;
 			targetProxy = FB1000000000000000000012 /* PBXContainerItemProxy */;
+		};
+		EC2000000000000000000013 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EC2000000000000000000001 /* OWEMCPServer */;
+			targetProxy = EC2000000000000000000012 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -595,6 +663,7 @@
 			packageReferences = (
 				EE3000000000000000000003 /* XCLocalSwiftPackageReference "Vendor/ShaderToolchain" */,
 				ED7000000000000000000003 /* XCLocalSwiftPackageReference "Packages/OWEEditor" */,
+				EC1000000000000000000003 /* XCLocalSwiftPackageReference "Packages/OWEControl" */,
 				EE4000000000000000000003 /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -609,6 +678,7 @@
 				EE2000000000000000000001 /* OpenWallpaperEngineTests */,
 				EE5000000000000000000001 /* OpenWallpaperEngineSaver */,
 				EE6000000000000000000001 /* OWEChromiumHelper */,
+				EC2000000000000000000001 /* OWEMCPServer */,
 			);
 		};
 /* End PBXProject section */
@@ -727,6 +797,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		FB1000000000000000000003 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EC2000000000000000000003 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1209,6 +1286,52 @@
 			};
 			name = Release;
 		};
+		EC2000000000000000000007 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = C33D7BSFGS;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.winddog.wallpaper-engine.mcp";
+				PRODUCT_MODULE_NAME = OWEMCPServer;
+				PRODUCT_NAME = "owe-mcp";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		EC2000000000000000000008 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = C33D7BSFGS;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.winddog.wallpaper-engine.mcp";
+				PRODUCT_MODULE_NAME = OWEMCPServer;
+				PRODUCT_NAME = "owe-mcp";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1275,6 +1398,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		EC2000000000000000000006 /* Build configuration list for PBXNativeTarget "OWEMCPServer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EC2000000000000000000007 /* Debug */,
+				EC2000000000000000000008 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 /* Begin XCLocalSwiftPackageReference section */
 		EE3000000000000000000003 /* XCLocalSwiftPackageReference "Vendor/ShaderToolchain" */ = {
@@ -1284,6 +1416,10 @@
 		ED7000000000000000000003 /* XCLocalSwiftPackageReference "Packages/OWEEditor" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Packages/OWEEditor;
+		};
+		EC1000000000000000000003 /* XCLocalSwiftPackageReference "Packages/OWEControl" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/OWEControl;
 		};
 /* End XCLocalSwiftPackageReference section */
 
@@ -1324,6 +1460,14 @@
 		ED7000000000000000000032 /* OWEEditor */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = OWEEditor;
+		};
+		EC1000000000000000000012 /* OWEControlProtocol */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = OWEControlProtocol;
+		};
+		EC1000000000000000000022 /* OWEMCP */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = OWEMCP;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

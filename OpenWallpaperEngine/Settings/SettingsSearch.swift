@@ -31,6 +31,7 @@ enum SettingsAnchor {
     static let plugins = "plugins"
     static let chromium = "chromium"
     static let depthMaps = "depthmaps"
+    static let mcpServer = "mcpserver"
 }
 
 /// Search in Settings: the settings people look for, where they are, and the matches for a query.
@@ -118,6 +119,7 @@ struct SettingsSearch {
             entry("Screen Saver", .plugins, SettingsAnchor.plugins),
             entry("Depth Map Generation", .plugins, SettingsAnchor.depthMaps),
             entry("Chromium web engine", .plugins, SettingsAnchor.chromium),
+            entry("MCP Server", .plugins, SettingsAnchor.mcpServer),
 
             entry("Credits", .about, nil),
         ] + AppShortcut.all.map { entry($0.title, .general, SettingsAnchor.shortcuts) }

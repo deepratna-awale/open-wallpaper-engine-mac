@@ -64,6 +64,13 @@ final class WallpaperStepTests: XCTestCase {
         XCTAssertNil(WallpaperViewModel.randomPick(from: [], excluding: shown[1]))
     }
 
+    func testRandomPickSkipsTheShownFolderWhateverItsSpelling() {
+        let project = WEProject(file: "scene.json", preview: "p.jpg", title: "same", type: "scene")
+        let listed = WEWallpaper(using: project, where: URL(fileURLWithPath: "/tmp/lib/same", isDirectory: false))
+        let stored = WEWallpaper(using: project, where: URL(string: "file:///tmp/lib/same/")!)
+        XCTAssertNil(WallpaperViewModel.randomPick(from: [listed], excluding: stored))
+    }
+
     func testRandomPickComesFromTheShownList() {
         let shown = [wallpaper("x"), wallpaper("y")]
         var seen: Set<String> = []

@@ -290,6 +290,28 @@ jobs:
           echo "Wallpaper Editor.app: ${EDITOR_KB} KB"
           test "$EDITOR_KB" -lt 20480 || { echo "::error::the Wallpaper Editor app is ${EDITOR_KB} KB; it carries code of its own"; exit 1; }
 
+          # The MCP Server plugin's owe-mcp (target OWEMCPServer), which the plugin copies out of
+          # the app when installed: signed by the app's team with the hardened runtime (the Mach-O
+          # loop above also checked Developer ID and the timestamp), no entitlements that weaken
+          # it, linking only system libraries, and small.
+          MCP="$APP/Contents/Helpers/owe-mcp"
+          test -x "$MCP" || { echo "::error::owe-mcp is missing from Contents/Helpers"; exit 1; }
+          codesign --verify --strict --verbose=2 "$MCP"
+          MCP_INFO=$(codesign -dv --verbose=4 "$MCP" 2>&1)
+          grep -Eq "flags=.*runtime" <<<"$MCP_INFO" || { echo "::error::owe-mcp lacks the hardened runtime"; exit 1; }
+          grep -q "Authority=Developer ID Application" <<<"$MCP_INFO" || { echo "::error::owe-mcp isn't Developer ID signed"; exit 1; }
+          test "$(team "$MCP")" = "$(team "$APP")" || { echo "::error::owe-mcp isn't signed by the app's team"; exit 1; }
+          MCP_ENTS=$(codesign -d --entitlements - --xml "$MCP" 2>/dev/null | plutil -p - 2>/dev/null || true)
+          if grep -Eq "get-task-allow|disable-library-validation|allow-jit|allow-unsigned" <<<"$MCP_ENTS"; then
+            echo "::error::owe-mcp's entitlements weaken the hardened runtime"; exit 1
+          fi
+          if otool -L "$MCP" | grep -v ':$' | awk '{print $1}' | grep -Ev '^(/usr/lib/|/System/Library/)'; then
+            echo "::error::owe-mcp links a library besides the system's"; exit 1
+          fi
+          MCP_KB=$(du -k "$MCP" | cut -f1)
+          echo "owe-mcp: ${MCP_KB} KB"
+          test "$MCP_KB" -lt 10240 || { echo "::error::owe-mcp is ${MCP_KB} KB; it should link only what it needs"; exit 1; }
+
           INFO="$APP/Contents/Info.plist"
           plist() { /usr/libexec/PlistBuddy -c "Print :$1" "$INFO"; }
           echo "version $(plist CFBundleShortVersionString) ($(plist CFBundleVersion)), label $(plist OWEVersionLabel)"
@@ -331,6 +353,7 @@ jobs:
             "$APP/Contents/Helpers/OWE Chromium Helper (GPU).app/Contents/MacOS/OWE Chromium Helper (GPU)"
             "$APP/Contents/Helpers/OWE Chromium Helper (Plugin).app/Contents/MacOS/OWE Chromium Helper (Plugin)"
             "$APP/Contents/Helpers/Wallpaper Editor.app/Contents/MacOS/Wallpaper Editor"
+            "$APP/Contents/Helpers/owe-mcp"
             "$FRAMEWORK_BINARY"
           )
           for helper in "${sparkle_executables[@]}"; do

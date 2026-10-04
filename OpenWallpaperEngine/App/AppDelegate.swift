@@ -138,6 +138,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// the desktop's left clicks.
     /// Settings › Plugins › Screen Saver: the loop videos and the bundled saver.
     lazy var screenSaver = ScreenSaverPlugin()
+    /// Settings › Plugins › MCP Server: MCP clients' control of the app while installed (`MCP/`).
+    private(set) lazy var mcpServerPlugin: MCPServerPlugin = {
+        let router = ControlRequestRouter(model: AppControlModel(app: self))
+        return MCPServerPlugin(handler: { request in await router.handle(request) })
+    }()
     /// The Scene Editor (Live)'s Screen Saver mode's recordings, set as the screen saver.
     lazy var screenSaverRecordings = ScreenSaverRecordingService(plugin: screenSaver, environment: .init(
         screens: {
@@ -344,6 +349,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Registers the playlists' global shortcuts.
         _ = playlistShortcuts
 
+        // MCP clients connect once the app is set up, while the MCP Server plugin is installed.
+        mcpServerPlugin.start()
+
         // Launched into the menu bar only, the Dock icon goes until a window opens.
         dockPresence.start()
 
@@ -421,6 +429,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         safeRestart.applicationWillTerminate()
         crashWatcher.applicationWillTerminate()
+        mcpServerPlugin.stop()
         updater.stopShaderPrewarm()
         // The lock-screen pictures go back to each display's own picture, the rest to the one saved
         // at launch.

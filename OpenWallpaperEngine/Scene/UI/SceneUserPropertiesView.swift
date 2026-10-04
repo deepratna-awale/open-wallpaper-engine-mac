@@ -91,6 +91,14 @@ final class SceneUserPropertiesModel: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.12, execute: work)
     }
 
+    /// Saves an edit `set` scheduled, now: for a caller that reads the stores back at once.
+    func saveNow() {
+        guard let pendingSave else { return }
+        pendingSave.cancel()
+        self.pendingSave = nil
+        targets.save(ownValues)
+    }
+
     /// WE's Reset (`WallpaperPropertyReset`): every property shown here back to its default (the
     /// author's project.json value; the app's own settings at theirs), in every edited store, and
     /// applied to the running wallpapers at once, which rebuild what the dropped Scene Inspector

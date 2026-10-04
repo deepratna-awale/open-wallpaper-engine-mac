@@ -7,9 +7,9 @@
 
 import SwiftUI
 
-/// Settings › Plugins: optional features. Screen Saver, and the Chromium engine and Depth Map
-/// Generation, which are downloaded on demand. Animated library previews are built in
-/// (`ThumbnailAnimation`).
+/// Settings › Plugins: optional features. Screen Saver; the Chromium engine and Depth Map
+/// Generation, which are downloaded on demand; and the MCP Server, installed from the app's own
+/// copy. Animated library previews are built in (`ThumbnailAnimation`).
 struct PluginsPage: SettingsPage {
     @ObservedObject var viewModel: GlobalSettingsViewModel
 
@@ -38,6 +38,8 @@ struct PluginsPage: SettingsPage {
                     .settingsAnchor(SettingsAnchor.chromium)
                 DepthMapPluginSection()
                     .settingsAnchor(SettingsAnchor.depthMaps)
+                MCPServerPluginSection(plugin: AppDelegate.shared.mcpServerPlugin)
+                    .settingsAnchor(SettingsAnchor.mcpServer)
             } header: {
                 Label("Plugins", systemImage: "puzzlepiece.extension.fill")
             } footer: {
