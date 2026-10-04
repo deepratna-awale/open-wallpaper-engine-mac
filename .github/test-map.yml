@@ -149,7 +149,7 @@ map:
   "OpenWallpaperEngine/Scene/Loading/**": ["@scene", "@script", "@audio"]
   "OpenWallpaperEngine/Scene/Values/**": ["@scene", "@script"]
   "OpenWallpaperEngine/Scene/Prewarm/**": ["Shader*", "UpdateShaderPrewarmer*"]
-  "OpenWallpaperEngine/Scene/UI/**": ["Scene*", "UserProperty*", "WallpaperProperty*", "NumericSlider*", "LivePhoto*"]
+  "OpenWallpaperEngine/Scene/UI/**": ["Scene*", "UserProperty*", "WallpaperProperty*", "NumericSlider*", "LivePhoto*", "ScreenSaver*"]
   "OpenWallpaperEngine/LivePhoto/**": ["LivePhoto*"]
   "OpenWallpaperEngine/Web/**": ["Web*", "UserPropertyHTML*", "WallpaperProperty*", "Display*"]
   "OpenWallpaperEngine/Video/**": ["Video*", "WebKitVideo*", "MediaThumbnail*", "Display*"]

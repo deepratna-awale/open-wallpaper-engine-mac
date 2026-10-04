@@ -113,8 +113,8 @@ struct AppStorageLocation: @unchecked Sendable { // UserDefaults is thread-safe;
             return tag
         }
         if let value = environment[environmentKey], let tag = sanitized(value) { return tag }
-        let runsTests = isRunningTests || environment["XCTestConfigurationFilePath"] != nil
-            || environment["XCTestBundlePath"] != nil
+        let runsTests = AppHostContext.isTestHost(environment: environment, xcTestLoaded: isRunningTests,
+                                                  loadedBundlePaths: [])
         return runsTests ? testsTag : nil
     }
 

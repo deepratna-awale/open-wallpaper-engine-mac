@@ -143,6 +143,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let router = ControlRequestRouter(model: AppControlModel(app: self))
         return MCPServerPlugin(handler: { request in await router.handle(request) })
     }()
+    /// The Scene Editor (Live)'s Screen Saver mode's recordings, set as the screen saver.
+    lazy var screenSaverRecordings = ScreenSaverRecordingService(plugin: screenSaver, environment: .init(
+        screens: {
+            NSScreen.screens.map { screen in
+                (pixels: SIMD2(Int(screen.frame.width * screen.backingScaleFactor), Int(screen.frame.height * screen.backingScaleFactor)),
+                 points: SIMD2(Int(screen.frame.width), Int(screen.frame.height)))
+            }
+        },
+        renderResolution: { [unowned self] in globalSettingsViewModel.settings.renderResolution },
+        isPluginEnabled: { [unowned self] in globalSettingsViewModel.settings.screenSaver },
+        enablePlugin: { [unowned self] in globalSettingsViewModel.settings.screenSaver = true },
+        desktopWallpaper: { [unowned self] in wallpaperViewModel.currentWallpaper }))
+    /// The screen saver's daily re-recording, while the app runs.
+    lazy var screenSaverSchedule = ScreenSaverDailyScheduler(service: screenSaverRecordings)
     lazy var sceneScriptServices: SceneScriptServices = {
         if !SceneScriptJIT.isEnabled {
             OWELog.info(.script, "JavaScriptCore runs without its JIT (no \(SceneScriptJIT.entitlement)): scripts run several times slower")
@@ -340,6 +354,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         // Launched into the menu bar only, the Dock icon goes until a window opens.
         dockPresence.start()
+
+        // The screen saver's daily re-recording: catches up a run missed while the app was quit.
+        screenSaverSchedule.start()
 
         // Workshop downloads need SteamCMD; set it up from Valve in the background when it's missing.
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
