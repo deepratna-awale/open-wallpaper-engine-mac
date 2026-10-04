@@ -1,0 +1,16 @@
+
+LocalAddress LocalPort RemoteAddress RemotePort  State
+------------ --------- ------------- ----------  -----
+0.0.0.0           7889 0.0.0.0                0 Listen
+
+
+
+
+LocalAddress LocalPort
+------------ ---------
+0.0.0.0          59116
+0.0.0.0          59115
+0.0.0.0          59114
+
+
+

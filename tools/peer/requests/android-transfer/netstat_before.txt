@@ -1,0 +1,8 @@
+
+
+LocalAddress LocalPort OwningProcess
+------------ --------- -------------
+0.0.0.0          63339          1596
+
+
+
