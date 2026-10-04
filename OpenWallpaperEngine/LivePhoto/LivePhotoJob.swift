@@ -3,7 +3,7 @@ import Foundation
 /// One Live Photo render, handed to the helper run (`ShaderPrewarmCommand`, `--render-live-photo
 /// <job.json>`) as a JSON file: the wallpaper, the isolated store's values (its user properties and
 /// layer edits, `IsolatedSceneEditSession.values`), the crop, the device's pixels, the clip, the
-/// movie's quality and where the files go. With `analysisPath` it renders no movie: it measures the
+/// movie's quality, where the pointer rests and where the files go. With `analysisPath` it renders no movie: it measures the
 /// scene's motion over its first `analysisSeconds` (`LivePhotoMotion`) and writes that there.
 struct LivePhotoJob: Codable, Equatable {
     var wallpaperDirectory: String
@@ -17,6 +17,8 @@ struct LivePhotoJob: Codable, Equatable {
     var clipLength: Double
     /// `LivePhotoQuality`'s raw value.
     var quality: String
+    /// The fixed pointer (`LivePhotoParallax`), normalised over the scene with y up.
+    var parallaxPosition: [Double]
     /// The HEIC; nil renders the movie only (the clip's preview).
     var stillPath: String?
     var moviePath: String
@@ -26,7 +28,8 @@ struct LivePhotoJob: Codable, Equatable {
     var analysisSeconds: Double = 0
 
     init(wallpaperDirectory: URL, properties: [String: String], crop: LivePhotoCrop, clip: LivePhotoClip,
-         quality: LivePhotoQuality = .best, still: URL?, movie: URL, identifier: String) {
+         quality: LivePhotoQuality = .best, parallaxPosition: SIMD2<Double> = LivePhotoParallax.centre, still: URL?,
+         movie: URL, identifier: String) {
         self.wallpaperDirectory = wallpaperDirectory.path(percentEncoded: false)
         self.properties = properties
         sceneSize = [crop.sceneSize.x, crop.sceneSize.y]
@@ -36,6 +39,7 @@ struct LivePhotoJob: Codable, Equatable {
         clipStart = clip.start
         clipLength = clip.length
         self.quality = quality.rawValue
+        self.parallaxPosition = [parallaxPosition.x, parallaxPosition.y]
         stillPath = still?.path(percentEncoded: false)
         moviePath = movie.path(percentEncoded: false)
         self.identifier = identifier
@@ -49,6 +53,10 @@ struct LivePhotoJob: Codable, Equatable {
 
     var clip: LivePhotoClip { LivePhotoClip(start: clipStart, length: clipLength) }
     var qualityLevel: LivePhotoQuality { LivePhotoQuality(rawValue: quality) ?? .best }
+    var pointer: SIMD2<Double> {
+        guard parallaxPosition.count == 2 else { return LivePhotoParallax.centre }
+        return LivePhotoParallax.clamped(SIMD2(parallaxPosition[0], parallaxPosition[1]))
+    }
     var analysis: URL? { analysisPath.map { URL(filePath: $0, directoryHint: .notDirectory) } }
     var still: URL? { stillPath.map { URL(filePath: $0, directoryHint: .notDirectory) } }
     var movie: URL { URL(filePath: moviePath, directoryHint: .notDirectory) }

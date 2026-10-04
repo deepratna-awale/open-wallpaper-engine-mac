@@ -68,10 +68,13 @@ final class LivePhotoRenderer {
 
     /// How the export draws its scene, and its preview too (`IsolatedSceneView`), so the preview
     /// shows what is exported: the whole scene filling a drawable of its own aspect, from which
-    /// `LivePhotoCrop` cuts the window; the pointer held at the scene's centre, so the camera and
-    /// depth parallax and the cursor uniforms don't follow the mouse; no clock layers.
-    static let presentation = SceneWallpaperInstance.Presentation(placement: .fill, pointer: SIMD2(0.5, 0.5),
-                                                                  hidesClockLayers: Policy.hidesClockLayers)
+    /// `LivePhotoCrop` cuts the window; the pointer held at `pointer` (Export Settings' Parallax
+    /// Position, `LivePhotoParallax`; the scene's centre by default), so the camera and depth
+    /// parallax and the cursor uniforms don't follow the mouse; no clock layers.
+    static func presentation(pointer: SIMD2<Double> = LivePhotoParallax.centre) -> SceneWallpaperInstance.Presentation {
+        SceneWallpaperInstance.Presentation(placement: .fill, pointer: SIMD2<Float>(LivePhotoParallax.clamped(pointer)),
+                                            hidesClockLayers: Policy.hidesClockLayers)
+    }
 
     /// The scene's drawable for `crop`: the whole scene at `LivePhotoCrop.renderScale`, one pixel a
     /// point, without a cursor (`presentation` fixes the pointer).
@@ -81,10 +84,10 @@ final class LivePhotoRenderer {
         return SceneViewport(drawableSize: drawable, pointSize: drawable, cursor: nil, frameRateLimit: LivePhotoClip.frameRate)
     }
 
-    /// The renderer's configuration for a Live Photo.
-    static func configure(_ renderer: SceneMetalRenderer) {
+    /// The renderer's configuration for a Live Photo with the pointer at `pointer`.
+    static func configure(_ renderer: SceneMetalRenderer, pointer: SIMD2<Double> = LivePhotoParallax.centre) {
         renderer.rendersScreenSaver = true
-        presentation.apply(to: renderer)
+        presentation(pointer: pointer).apply(to: renderer)
         if Policy.muted { renderer.sounds.setTargetGain(0) }
         renderer.audioSpectrumFrame = { _ in .silent }
     }
@@ -108,7 +111,8 @@ final class LivePhotoRenderer {
                     FileHandle.standardOutput.write(Data(LivePhotoJob.progressLine(fraction).utf8))
                 }
                 if let analysis = job.analysis {
-                    try await renderer.analyse(crop: crop, seconds: job.analysisSeconds, into: analysis, progress: progress)
+                    try await renderer.analyse(crop: crop, pointer: job.pointer, seconds: job.analysisSeconds, into: analysis,
+                                               progress: progress)
                 } else {
                     try await renderer.write(job, crop: crop, progress: progress)
                 }
@@ -140,7 +144,8 @@ final class LivePhotoRenderer {
                 throw Failure.movie
             }
             do {
-                try await render(crop: crop, leadIn: clip.leadInFrames, frames: clip.frameCount, progress: progress) { index, image in
+                try await render(crop: crop, pointer: job.pointer, leadIn: clip.leadInFrames, frames: clip.frameCount,
+                                 progress: progress) { index, image in
                     guard writer.append(image, overlay: nil, weight: 0, frame: index) else { throw Failure.movie }
                 }
             } catch {
@@ -160,7 +165,7 @@ final class LivePhotoRenderer {
         var sharpness: [Int: Double] = [:]
         var keyImage: (index: Int, score: Double, image: CGImage)?
         do {
-            try await render(crop: crop, leadIn: clip.leadInFrames, frames: clip.frameCount,
+            try await render(crop: crop, pointer: job.pointer, leadIn: clip.leadInFrames, frames: clip.frameCount,
                              progress: { progress($0 * 0.85) }) { index, image in
                 guard intermediate.append(image, overlay: nil, weight: 0, frame: index) else { throw Failure.movie }
                 guard candidates.contains(index) else { return }
@@ -199,7 +204,8 @@ final class LivePhotoRenderer {
 
     /// Renders the scene's first `seconds` small (the crop at about `LivePhotoMotion.analysisPixels`)
     /// and writes each frame's motion to `url` (`LivePhotoMotion.Analysis`).
-    func analyse(crop: LivePhotoCrop, seconds: Double, into url: URL, progress: @escaping (Double) -> Void) async throws {
+    func analyse(crop: LivePhotoCrop, pointer: SIMD2<Double> = LivePhotoParallax.centre, seconds: Double, into url: URL,
+                 progress: @escaping (Double) -> Void) async throws {
         let scale = Double(LivePhotoMotion.analysisPixels) / Double(max(crop.outputPixels.x, crop.outputPixels.y, 1))
         let small = SIMD2(max(16, Int(Double(crop.outputPixels.x) * min(scale, 1))),
                           max(16, Int(Double(crop.outputPixels.y) * min(scale, 1))))
@@ -208,7 +214,7 @@ final class LivePhotoRenderer {
         let frames = max(2, Int((min(max(seconds, 1), LivePhotoClip.timelineLength) * Double(LivePhotoClip.frameRate)).rounded()))
         var signatures: [ScreenSaverFrameSignature] = []
         signatures.reserveCapacity(frames)
-        try await render(crop: analysisCrop, leadIn: 0, frames: frames, progress: progress) { _, image in
+        try await render(crop: analysisCrop, pointer: pointer, leadIn: 0, frames: frames, progress: progress) { _, image in
             guard let signature = ScreenSaverFrameSignature(image) else { throw Failure.readBack }
             signatures.append(signature)
         }
@@ -219,9 +225,11 @@ final class LivePhotoRenderer {
 
     // MARK: Rendering
 
-    /// Loads the scene, runs it `leadIn` frames (to the clip's start) and hands each of the next
-    /// `frames` frames, cut to `crop`, to `frame`. Checks for cancellation between frames.
-    private func render(crop: LivePhotoCrop, leadIn: Int, frames: Int, progress: @escaping (Double) -> Void,
+    /// Loads the scene with the pointer at `pointer`, runs it `leadIn` frames (to the clip's start)
+    /// and hands each of the next `frames` frames, cut to `crop`, to `frame`. Checks for
+    /// cancellation between frames.
+    private func render(crop: LivePhotoCrop, pointer: SIMD2<Double>, leadIn: Int, frames: Int,
+                        progress: @escaping (Double) -> Void,
                         frame: (Int, CGImage) throws -> Void) async throws {
         let name = wallpaper.wallpaperDirectory.lastPathComponent
         let scratch = FileManager.default.temporaryDirectory.appending(path: "owe-livephoto-\(UUID().uuidString)",
@@ -239,7 +247,7 @@ final class LivePhotoRenderer {
         defer { renderer.releaseContent() }
         let pixelSize = crop.renderPixelSize
         let startTime: CFTimeInterval = 1000
-        Self.configure(renderer)
+        Self.configure(renderer, pointer: pointer)
         renderer.renderSettings = settings
         renderer.wallTime = { startTime }
         renderer.holdsClock = true

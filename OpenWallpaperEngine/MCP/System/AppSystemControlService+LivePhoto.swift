@@ -4,8 +4,8 @@ import Photos
 
 /// The iPhone & iPad Export mode's Save, for the control channel: the same render helper
 /// (`LivePhotoHelper`), the same values the mode starts from (the wallpaper's own, as the editor
-/// would copy them into its isolated store), the same motion window, the same Photos album and the
-/// same copy into a folder.
+/// would copy them into its isolated store), the same motion window, the parallax position the mode
+/// keeps for the wallpaper, the same Photos album and the same copy into a folder.
 extension AppSystemControlService {
     var exportDefaults: SystemExportDefaults {
         let defaults = UserDefaults.app
@@ -35,7 +35,8 @@ extension AppSystemControlService {
                                  zoom: request.zoom, center: request.center)
         var settings = LivePhotoExportSettings(device: request.device, crop: crop,
                                                clip: LivePhotoClip(start: request.clipStart ?? 0, length: request.clipLength),
-                                               quality: request.quality)
+                                               quality: request.quality,
+                                               parallaxPosition: LivePhotoParallax.position(for: wallpaper))
         let name = wallpaper.wallpaperDirectory.lastPathComponent
         if request.clipStart == nil {
             OWELog.info(.app, "MCP: measuring \(name)'s motion for its Live Photo clip")
