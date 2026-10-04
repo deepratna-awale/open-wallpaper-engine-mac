@@ -1,4 +1,5 @@
 import AppKit
+import OWEControlProtocol
 import SwiftUI
 
 /// Settings › Plugins › MCP Server: install or remove the plugin (`MCPServerPlugin`), and what an
@@ -57,18 +58,7 @@ struct MCPServerPluginSection: View {
     @ViewBuilder private var buttons: some View {
         HStack {
             if plugin.isInstalled {
-                Button {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(plugin.clientConfiguration, forType: .string)
-                    copied = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) { copied = false }
-                } label: {
-                    if copied {
-                        Text("Copied")
-                    } else {
-                        Text("Copy MCP Client Configuration", comment: "Settings › Plugins › MCP Server: copies the JSON an MCP client needs")
-                    }
-                }
+                copyMenu
                 Button("Show in Finder") {
                     NSWorkspace.shared.activateFileViewerSelecting([plugin.layout.executable])
                 }
@@ -83,6 +73,34 @@ struct MCPServerPluginSection: View {
             }
             Spacer()
         }
+    }
+
+    /// Copy Configuration For › each client: its snippet, with the installed path.
+    private var copyMenu: some View {
+        Menu {
+            ForEach(MCPClientConfiguration.allCases) { client in
+                Button {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(plugin.configuration(for: client), forType: .string)
+                    copied = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) { copied = false }
+                } label: {
+                    if let name = client.clientName {
+                        Text(verbatim: name)
+                    } else {
+                        Text("Generic stdio client", comment: "Settings › Plugins › MCP Server › Copy Configuration For: any other MCP client")
+                    }
+                }
+                .help(Text(verbatim: client.location))
+            }
+        } label: {
+            if copied {
+                Text("Copied")
+            } else {
+                Text("Copy Configuration For", comment: "Settings › Plugins › MCP Server: menu of MCP clients; copies the chosen client's configuration")
+            }
+        }
+        .fixedSize()
     }
 
     private func run(_ action: () throws -> Void) {

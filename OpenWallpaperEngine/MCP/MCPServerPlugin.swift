@@ -123,19 +123,16 @@ final class MCPServerPlugin: ObservableObject {
 
     // MARK: - Client setup
 
-    /// What an MCP client's configuration needs to start the installed server.
-    var clientConfiguration: String {
-        let configuration: JSONValue = ["mcpServers": ["open-wallpaper-engine": ["command": .string(layout.executable.path)]]]
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
-        // A value of strings always encodes.
-        return (try? encoder.encode(configuration)).map { String(decoding: $0, as: UTF8.self) } ?? ""
+    /// What `client`'s configuration needs to start the installed server (`MCPClientConfiguration`).
+    func configuration(for client: MCPClientConfiguration) -> String {
+        client.snippet(executablePath: layout.executable.path)
     }
 
+    /// The `mcpServers` entry most clients read (Claude Desktop's format).
+    var clientConfiguration: String { configuration(for: .claudeDesktop) }
+
     /// The same for Claude Code's command line.
-    var addCommand: String {
-        "claude mcp add open-wallpaper-engine -- '\(layout.executable.path.replacingOccurrences(of: "'", with: "'\\''"))'"
-    }
+    var addCommand: String { configuration(for: .claudeCode) }
 
     // MARK: - Files
 

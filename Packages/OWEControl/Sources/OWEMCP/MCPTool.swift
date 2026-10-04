@@ -32,22 +32,40 @@ public struct MCPTool: Sendable {
         self.summary = summary
     }
 
-    /// The tool as `tools/list` lists it.
-    var definition: JSONValue {
-        [
+    /// The tool as `tools/list` lists it to a client of `protocolVersion`: `title` from
+    /// 2025-06-18, `annotations` from 2025-03-26, and the input schema as plain JSON Schema that
+    /// strict clients accept (no `additionalProperties`; unknown arguments are still refused).
+    func definition(protocolVersion: String = MCPProtocolVersion.latest) -> JSONValue {
+        var definition: [String: JSONValue] = [
             "name": .string(name),
-            "title": .string(title),
             "description": .string(description),
-            "inputSchema": inputSchema,
-            "annotations": [
+            "inputSchema": Self.portable(inputSchema),
+        ]
+        if MCPProtocolVersion.hasTitles(protocolVersion) { definition["title"] = .string(title) }
+        if MCPProtocolVersion.hasToolAnnotations(protocolVersion) {
+            definition["annotations"] = [
                 "title": .string(title),
                 "readOnlyHint": .bool(annotations.readOnly),
                 "destructiveHint": .bool(annotations.destructive),
                 "idempotentHint": .bool(annotations.idempotent),
                 // Everything happens in the app on this Mac.
                 "openWorldHint": false,
-            ],
-        ]
+            ]
+        }
+        return .object(definition)
+    }
+
+    /// `schema` without `additionalProperties`, which some clients reject or strip.
+    static func portable(_ schema: JSONValue) -> JSONValue {
+        switch schema {
+        case .object(var object):
+            object.removeValue(forKey: "additionalProperties")
+            return .object(object.mapValues(portable))
+        case .array(let items):
+            return .array(items.map(portable))
+        default:
+            return schema
+        }
     }
 }
 
@@ -55,4 +73,24 @@ extension MCPTool.Annotations {
     static let readOnly = MCPTool.Annotations(readOnly: true, destructive: false, idempotent: true)
     static let idempotent = MCPTool.Annotations(readOnly: false, destructive: false, idempotent: true)
     static let change = MCPTool.Annotations(readOnly: false, destructive: false, idempotent: false)
+}
+
+/// The MCP revisions `owe-mcp` speaks, and what each allows in its messages.
+public enum MCPProtocolVersion {
+    public static let latest = "2025-06-18"
+    /// Newest first; a client asking for another gets `latest`.
+    public static let supported = ["2025-06-18", "2025-03-26", "2024-11-05"]
+
+    /// The version to answer a client's `initialize` with.
+    public static func negotiate(_ requested: String?) -> String {
+        requested.flatMap { supported.contains($0) ? $0 : nil } ?? latest
+    }
+
+    /// `title` on tools, resources and `serverInfo`; structured tool results; `outputSchema`.
+    public static func hasTitles(_ version: String) -> Bool { version >= "2025-06-18" }
+    public static func hasStructuredContent(_ version: String) -> Bool { version >= "2025-06-18" }
+    /// Tool annotations (`readOnlyHint`…).
+    public static func hasToolAnnotations(_ version: String) -> Bool { version >= "2025-03-26" }
+    /// JSON-RPC batches: allowed before 2025-06-18, which removed them.
+    public static func allowsBatches(_ version: String) -> Bool { version < "2025-06-18" }
 }

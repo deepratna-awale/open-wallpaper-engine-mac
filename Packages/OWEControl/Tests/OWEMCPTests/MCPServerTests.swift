@@ -95,7 +95,7 @@ final class MCPServerTests: XCTestCase {
             XCTAssertNotNil(tool["title"]?.stringValue, name)
             let schema = try XCTUnwrap(tool["inputSchema"], name)
             XCTAssertEqual(schema["type"], "object", name)
-            XCTAssertEqual(schema["additionalProperties"], false, name)
+            XCTAssertNil(schema["additionalProperties"], "\(name): strict clients reject or strip it")
             let properties = try XCTUnwrap(schema["properties"]?.objectValue, name)
             for required in schema["required"]?.arrayValue ?? [] {
                 XCTAssertNotNil(properties[required.stringValue ?? ""], "\(name) requires an undeclared \(required)")

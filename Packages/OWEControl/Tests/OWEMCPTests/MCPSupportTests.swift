@@ -9,7 +9,7 @@ final class MCPSupportTests: XCTestCase {
             "editor": JSONSchema.string("which", oneOf: ["scene", "wallpaper"]),
             "limit": JSONSchema.integer("n", minimum: 1, maximum: 5),
             "tags": JSONSchema.stringArray("tags", maxItems: 2),
-            "value": JSONSchema.anyOf(types: ["string", "number", "boolean"], "v"),
+            "value": ["type": ["string", "number", "boolean"], "description": "v"],
         ], required: ["id"])
         XCTAssertEqual(JSONSchema.problems(["id": "a", "editor": "scene", "limit": 3, "tags": ["x"], "value": true], against: schema), [])
         XCTAssertEqual(JSONSchema.problems([:], against: schema), ["id: required"])

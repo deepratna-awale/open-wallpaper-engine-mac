@@ -17,9 +17,9 @@ public protocol ControlChannel: AnyObject {
 /// - What the app refuses, and an app that can't be reached, are tool errors (`isError`) with a
 ///   message saying why and what to do. An unknown tool or method is a JSON-RPC error.
 public final class MCPServer {
-    public static let protocolVersion = "2025-06-18"
+    public static let protocolVersion = MCPProtocolVersion.latest
     /// The versions a client may ask for; any other gets `protocolVersion`.
-    public static let supportedVersions = ["2025-06-18", "2025-03-26", "2024-11-05"]
+    public static let supportedVersions = MCPProtocolVersion.supported
     public static let libraryResource = "owe://library"
     public static let statusResource = "owe://status"
 
@@ -34,10 +34,19 @@ public final class MCPServer {
 
     private let channel: ControlChannel
     private let version: String
+    /// The revision agreed in `initialize`; what the messages may contain follows it.
+    public private(set) var negotiatedVersion = MCPProtocolVersion.latest
+    /// Requests the client cancelled before they were read (`notifications/cancelled`): answered
+    /// with nothing. Requests run one at a time, so one already answered can't be cancelled.
+    private var cancelled: Set<JSONValue> = []
+    /// Where `snapshot` with `format: "path"` saves its PNGs.
+    private let snapshotDirectory: URL
 
-    public init(channel: ControlChannel, version: String) {
+    public init(channel: ControlChannel, version: String,
+                snapshotDirectory: URL = FileManager.default.temporaryDirectory.appending(path: "owe-mcp-snapshots", directoryHint: .isDirectory)) {
         self.channel = channel
         self.version = version
+        self.snapshotDirectory = snapshotDirectory
     }
 
     /// The response line (without its newline) to one line read from the client; nil when the
@@ -55,6 +64,14 @@ public final class MCPServer {
 
     /// The response to one JSON-RPC message, or nil for a notification or a response.
     public func handle(message: JSONValue) async -> JSONValue? {
+        if case .array(let batch) = message, MCPProtocolVersion.allowsBatches(negotiatedVersion), !batch.isEmpty {
+            // 2024-11-05 and 2025-03-26 allow JSON-RPC batches: one array of the answers.
+            var responses: [JSONValue] = []
+            for item in batch {
+                if let response = await handle(message: item), response.arrayValue == nil { responses.append(response) }
+            }
+            return responses.isEmpty ? nil : .array(responses)
+        }
         guard case .object(let object) = message else {
             // Batches were removed from MCP in 2025-06-18.
             return Self.error(id: .null, code: ErrorCode.invalidRequest, message: "Invalid request: expected one JSON-RPC object.")
@@ -70,8 +87,10 @@ public final class MCPServer {
             if object["id"] != nil {
                 return Self.error(id: .null, code: ErrorCode.invalidRequest, message: "Invalid request: the id must be a string or a number.")
             }
-            return nil // A notification (`notifications/initialized`, `notifications/cancelled`…).
+            notify(method, params: object["params"])
+            return nil
         }
+        if cancelled.remove(id) != nil { return nil }
         let params = object["params"] ?? .object([:])
         guard case .object(let parameters) = params else {
             return Self.error(id: id, code: ErrorCode.invalidParams, message: "Invalid params: expected an object.")
@@ -79,9 +98,11 @@ public final class MCPServer {
         switch method {
         case "initialize": return Self.result(id: id, initialize(parameters))
         case "ping": return Self.result(id: id, .object([:]))
-        case "tools/list": return Self.result(id: id, ["tools": .array(MCPToolCatalog.tools.map(\.definition))])
+        case "tools/list":
+            let version = negotiatedVersion
+            return Self.result(id: id, ["tools": .array(MCPToolCatalog.tools.map { $0.definition(protocolVersion: version) })])
         case "tools/call": return await callTool(id: id, parameters)
-        case "resources/list": return Self.result(id: id, ["resources": .array(Self.resources)])
+        case "resources/list": return Self.result(id: id, ["resources": .array(Self.resources(protocolVersion: negotiatedVersion))])
         case "resources/templates/list": return Self.result(id: id, ["resourceTemplates": []])
         case "resources/read": return await readResource(id: id, parameters)
         default:
@@ -91,20 +112,29 @@ public final class MCPServer {
 
     // MARK: - Lifecycle
 
+    /// A notification: none is answered. `notifications/initialized` needs nothing more,
+    /// `notifications/cancelled` drops a request not read yet, and any other is ignored.
+    private func notify(_ method: String, params: JSONValue?) {
+        switch method {
+        case "notifications/cancelled":
+            if let requestID = params?["requestId"], Self.isValidID(requestID) { cancelled.insert(requestID) }
+        default:
+            break // `notifications/initialized`, and notifications this server doesn't use.
+        }
+    }
+
     private func initialize(_ params: [String: JSONValue]) -> JSONValue {
-        let requested = params["protocolVersion"]?.stringValue
-        let agreed = requested.flatMap { Self.supportedVersions.contains($0) ? $0 : nil } ?? Self.protocolVersion
+        let agreed = MCPProtocolVersion.negotiate(params["protocolVersion"]?.stringValue)
+        negotiatedVersion = agreed
+        var serverInfo: [String: JSONValue] = ["name": "open-wallpaper-engine", "version": .string(version)]
+        if MCPProtocolVersion.hasTitles(agreed) { serverInfo["title"] = "Open Wallpaper Engine" }
         return [
             "protocolVersion": .string(agreed),
             "capabilities": [
                 "tools": ["listChanged": false],
                 "resources": ["listChanged": false, "subscribe": false],
             ],
-            "serverInfo": [
-                "name": "open-wallpaper-engine",
-                "title": "Open Wallpaper Engine",
-                "version": .string(version),
-            ],
+            "serverInfo": .object(serverInfo),
             "instructions": """
             Controls Open Wallpaper Engine, the wallpaper player on this Mac: its displays, library, \
             playback, user properties, playlists and editors. Ids come from list_wallpapers and \
@@ -123,14 +153,18 @@ public final class MCPServer {
         guard let tool = MCPToolCatalog.tool(named: name) else {
             return Self.error(id: id, code: ErrorCode.invalidParams, message: "Unknown tool: \(name)")
         }
-        let arguments = params["arguments"] ?? .object([:])
+        let arguments = Self.coercingScalarsToStrings(params["arguments"] ?? .object([:]), schema: tool.inputSchema)
         let problems = JSONSchema.problems(arguments, against: tool.inputSchema)
         guard problems.isEmpty, case .object(let values) = arguments else {
             return Self.result(id: id, Self.toolError("Invalid arguments for \(name): " + problems.joined(separator: "; ") + "."))
         }
+        var forwarded = values
+        // How the client takes the picture is owe-mcp's business, not the app's.
+        let savesToFile = tool.returnsImage && forwarded.removeValue(forKey: "format")?.stringValue == "path"
         do {
-            let result = try await channel.call(name, params: values)
-            return Self.result(id: id, Self.toolResult(tool, result))
+            var result = try await channel.call(name, params: forwarded)
+            if savesToFile { result = try savingPicture(result) }
+            return Self.result(id: id, Self.toolResult(tool, result, protocolVersion: negotiatedVersion))
         } catch let error as ControlError {
             return Self.result(id: id, Self.toolError(error.message))
         } catch {
@@ -138,17 +172,54 @@ public final class MCPServer {
         }
     }
 
-    static func toolResult(_ tool: MCPTool, _ result: JSONValue) -> JSONValue {
+    /// `result` with its PNG saved to a file of its own (owner-only) instead: `path` replaces
+    /// `png_base64`, for clients that can't show image content.
+    private func savingPicture(_ result: JSONValue) throws -> JSONValue {
+        guard case .object(var object) = result, let encoded = object.removeValue(forKey: "png_base64")?.stringValue,
+              let png = Data(base64Encoded: encoded) else { return result }
+        let fileManager = FileManager.default
+        try fileManager.createDirectory(at: snapshotDirectory, withIntermediateDirectories: true,
+                                        attributes: [.posixPermissions: 0o700])
+        let url = snapshotDirectory.appending(path: "snapshot-\(UUID().uuidString).png", directoryHint: .notDirectory)
+        guard fileManager.createFile(atPath: url.path, contents: png, attributes: [.posixPermissions: 0o600]) else {
+            throw CocoaError(.fileWriteUnknown, userInfo: [NSFilePathErrorKey: url.path])
+        }
+        object["path"] = .string(url.path)
+        return .object(object)
+    }
+
+    /// `arguments` with a number or boolean given for a string property as its text: strict
+    /// clients only see string properties, and some models still send `2` for `"2"`.
+    static func coercingScalarsToStrings(_ arguments: JSONValue, schema: JSONValue) -> JSONValue {
+        guard case .object(var object) = arguments, let properties = schema["properties"]?.objectValue else { return arguments }
+        for (key, value) in object where properties[key]?["type"]?.stringValue == "string" {
+            switch value {
+            case .bool(let flag): object[key] = .string(flag ? "true" : "false")
+            case .number(let number):
+                object[key] = .string(number.rounded() == number && abs(number) < 1e15 ? String(Int64(number)) : String(number))
+            default: break
+            }
+        }
+        return .object(object)
+    }
+
+    static func toolResult(_ tool: MCPTool, _ result: JSONValue,
+                           protocolVersion: String = MCPProtocolVersion.latest) -> JSONValue {
         var structured = result
         var content: [JSONValue] = []
         if tool.returnsImage, case .object(var object) = result, let png = object.removeValue(forKey: "png_base64") {
             structured = .object(object)
             content.append(["type": "image", "data": png, "mimeType": "image/png"])
         }
-        content.insert(["type": "text", "text": .string(tool.summary(result))], at: 0)
+        var summary = tool.summary(result)
+        if tool.returnsImage, let path = result["path"]?.stringValue { summary += " The PNG is at \(path)." }
+        content.insert(["type": "text", "text": .string(summary)], at: 0)
         // Clients from before structured content read the result as text.
         if let json = try? structured.encodedLine(), let text = String(data: json, encoding: .utf8) { // Encoding a decoded value can't fail.
             content.append(["type": "text", "text": .string(text)])
+        }
+        guard MCPProtocolVersion.hasStructuredContent(protocolVersion) else {
+            return ["content": .array(content), "isError": false]
         }
         return ["content": .array(content), "structuredContent": structured, "isError": false]
     }
@@ -164,6 +235,15 @@ public final class MCPServer {
     }
 
     // MARK: - Resources
+
+    static func resources(protocolVersion: String) -> [JSONValue] {
+        guard !MCPProtocolVersion.hasTitles(protocolVersion) else { return resources }
+        return resources.map { resource in
+            guard case .object(var object) = resource else { return resource }
+            object.removeValue(forKey: "title")
+            return .object(object)
+        }
+    }
 
     static let resources: [JSONValue] = [
         [

@@ -46,11 +46,6 @@ enum JSONSchema {
         return .object(schema)
     }
 
-    /// A value of any of `types`.
-    static func anyOf(types: [String], _ description: String) -> JSONValue {
-        ["type": .array(types.map { .string($0) }), "description": .string(description)]
-    }
-
     /// What is wrong with `value` against `schema`, one message per problem; empty when it fits.
     static func problems(_ value: JSONValue, against schema: JSONValue, at path: String = "") -> [String] {
         let label = path.isEmpty ? "arguments" : path

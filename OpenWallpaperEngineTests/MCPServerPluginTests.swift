@@ -64,6 +64,9 @@ final class MCPServerPluginTests: XCTestCase {
         let configuration = try JSONValue.decode(Data(plugin.clientConfiguration.utf8))
         XCTAssertEqual(configuration["mcpServers"]?["open-wallpaper-engine"]?["command"], .string(layout.executable.path))
         XCTAssertTrue(plugin.addCommand.hasPrefix("claude mcp add open-wallpaper-engine -- '"))
+        for client in MCPClientConfiguration.allCases {
+            XCTAssertTrue(plugin.configuration(for: client).contains(layout.executable.path), "\(client)")
+        }
 
         try plugin.remove()
         XCTAssertFalse(plugin.isInstalled)

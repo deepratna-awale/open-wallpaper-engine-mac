@@ -82,8 +82,10 @@ public enum MCPToolCatalog {
         },
         MCPTool("snapshot", title: "Snapshot",
                 description: "A PNG picture of the wallpaper a display shows (the main display when omitted), at most 960 pixels wide: the scene's frame, a video's current frame, or the wallpaper's preview when no frame is available. The result says which.",
-                input: JSONSchema.object(["display": JSONSchema.string(
-                    "A display's id from list_displays. Omit it for the main display.", minLength: 1)]),
+                input: JSONSchema.object([
+                    "display": JSONSchema.string("A display's id from list_displays. Omit it for the main display.", minLength: 1),
+                    "format": JSONSchema.string("\"image\" (the default) returns the PNG as image content; \"path\" saves it to a temporary file and returns its path, for clients that can't show images.", oneOf: ["image", "path"]),
+                ]),
                 annotations: .readOnly, returnsImage: true) { result in
             let size = "\(result["width"]?.intValue ?? 0)×\(result["height"]?.intValue ?? 0)"
             let source = result["source"]?.stringValue?.replacingOccurrences(of: "_", with: " ") ?? "picture"
@@ -139,7 +141,7 @@ public enum MCPToolCatalog {
                 input: JSONSchema.object([
                     "id": wallpaperID,
                     "key": JSONSchema.string("The property's key, from get_wallpaper.", minLength: 1),
-                    "value": JSONSchema.anyOf(types: ["string", "number", "boolean"], "The new value."),
+                    "value": JSONSchema.string("The new value as text: a number for a slider, true or false for a checkbox, a combo's option value, a colour as \"r g b\" or #rrggbb, or text. A JSON number or boolean is accepted too."),
                 ], required: ["id", "key", "value"]), annotations: .idempotent) { result in
             "Set \(result["key"]?.stringValue ?? "the property") of \(result["title"]?.stringValue ?? "the wallpaper") to \(result["value"]?.stringValue ?? "the value")."
         },
