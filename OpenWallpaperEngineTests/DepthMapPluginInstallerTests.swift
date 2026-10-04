@@ -212,9 +212,24 @@ final class DepthMapPluginInstallerTests: XCTestCase {
         XCTAssertNil(DepthMapPluginLayout.activeModel(in: pluginRoot))
     }
 
-    func testOfflineAndHTTPErrorsSaySo() {
+    func testOfflineHTTPAndDiskFullErrorsSaySo() {
         XCTAssertTrue(DepthMapPluginInstaller.message(for: URLError(.notConnectedToInternet)).contains("Hugging Face"))
         XCTAssertTrue(DepthMapPluginInstaller.message(for: URLSessionSteamCmdDownloader.Failure.httpStatus(404)).contains("404"))
+        let diskFull = DepthMapPluginInstaller.message(for: CocoaError(.fileWriteOutOfSpace))
+        XCTAssertTrue(diskFull.contains("disk space"), diskFull)
+        XCTAssertEqual(DepthMapPluginInstaller.message(for: URLError(.cannotWriteToFile)), diskFull,
+                       "a download that can't be written is a full disk, as for the Chromium engine")
+    }
+
+    @MainActor
+    func testAMismatchedFileSaysWhichDownloadWasWrong() async throws {
+        var files = Self.files
+        files["Manifest.json"] = Data("tampered".utf8)
+        let installer = makeInstaller(pin: pin(), downloader: FakeFileServer(files: files))
+        installer.install()
+        await installer.wait()
+        let mismatch = DepthMapPluginInstallJob.Failure.checksumMismatch(path: "Manifest.json").localizedDescription
+        XCTAssertEqual(installer.phase, .failed(mismatch))
     }
 }
 

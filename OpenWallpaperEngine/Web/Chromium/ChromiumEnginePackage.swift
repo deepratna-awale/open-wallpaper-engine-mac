@@ -1,8 +1,7 @@
-import CryptoKit
 import Foundation
 
 /// Checking and unpacking a downloaded CEF archive. Nothing here trusts the archive before its
-/// SHA-256 matches the pin.
+/// SHA-256 matches the pin (`VersionedInstallStore.fetch`).
 enum ChromiumEnginePackage {
     static let frameworkName = "Chromium Embedded Framework.framework"
     static let frameworkBinary = "Chromium Embedded Framework"
@@ -36,25 +35,6 @@ enum ChromiumEnginePackage {
                 return String(localized: "The Chromium download has no Chromium Embedded Framework.",
                               comment: "Chromium engine install error; Chromium Embedded Framework is a product name")
             }
-        }
-    }
-
-    /// Lowercase hex SHA-256 of `file`, read in 1 MiB chunks.
-    static func sha256(of file: URL) throws -> String {
-        let handle = try FileHandle(forReadingFrom: file)
-        defer { try? handle.close() } // Closing a read handle has nothing to report.
-        var hasher = SHA256()
-        while let chunk = try handle.read(upToCount: 1 << 20), !chunk.isEmpty {
-            hasher.update(data: chunk)
-        }
-        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
-    }
-
-    /// Throws unless `file`'s SHA-256 is `expected`.
-    static func verify(_ file: URL, sha256 expected: String) throws {
-        let actual = try sha256(of: file)
-        guard actual == expected.lowercased() else {
-            throw Failure.checksumMismatch(expected: expected.lowercased(), actual: actual)
         }
     }
 

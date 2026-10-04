@@ -9,8 +9,6 @@ import SwiftUI
 
 protocol SubviewOfContentView: View {
     var viewModel: ContentViewModel { get set }
-    
-//    init(contentViewModel viewModel: ContentViewModel)
 }
 
 struct ContentView: View {

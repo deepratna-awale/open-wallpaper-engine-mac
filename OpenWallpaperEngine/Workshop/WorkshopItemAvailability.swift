@@ -43,6 +43,12 @@ enum WorkshopItemAvailability: Equatable {
         return URL(string: "https://steamcommunity.com/sharedfiles/filedetails/?id=\(id)")
     }
 
+    /// The item's page in the Steam client.
+    static func steamClientPageURL(for id: String) -> URL? {
+        guard WorkshopCollection.isID(id) else { return nil }
+        return URL(string: "steam://url/CommunityFilePage/\(id)")
+    }
+
     /// The POST body of GetPublishedFileDetails for `ids` (at most `WorkshopCollection.detailsBatchSize`).
     static func detailsBody(ids: [String]) -> Data {
         var parts = ["itemcount=\(ids.count)"]

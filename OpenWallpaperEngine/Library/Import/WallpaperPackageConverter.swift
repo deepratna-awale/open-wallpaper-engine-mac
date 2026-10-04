@@ -246,11 +246,6 @@ enum WallpaperPackageConverter {
         return nil
     }
 
-    static func isFullyMigrated(_ wallpaperDirectory: URL) -> Bool {
-        guard let manifest = manifest(in: wallpaperDirectory) else { return false }
-        return ineligibilityReason(for: manifest, directory: wallpaperDirectory) == nil
-    }
-
     /// Records that the converted files actually produced a scene.
     static func markVerified(wallpaperDirectory: URL, objectCount: Int) {
         guard var current = manifest(in: wallpaperDirectory), current.verifiedAt == nil, objectCount > 0 else { return }

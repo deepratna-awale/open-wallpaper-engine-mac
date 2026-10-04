@@ -31,7 +31,7 @@ final class WebEngineRoutingTests: XCTestCase {
         try Data().write(to: framework.appending(path: ChromiumEnginePackage.frameworkBinary))
         let manifest = ChromiumEnginePackage.Manifest(version: version, platform: "macosarm64", sha256: "00")
         try JSONEncoder().encode(manifest).write(to: folder.appending(path: ChromiumEnginePackage.manifestName))
-        try ChromiumEngineInstallState(active: version, previous: nil).write(in: root)
+        try VersionedInstallState(active: version, previous: nil).write(in: root)
     }
 
     private func page(_ script: String) throws {

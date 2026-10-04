@@ -360,10 +360,6 @@ private final class SceneInspectorModel: ObservableObject {
         SceneBlendModeOptions.groupTitle(key)
     }
 
-    private static func displayEffectValue(_ value: Double, key: String) -> Double {
-        value
-    }
-
     func setEffectValue(_ value: Double, control: SceneInspectorEffectControl) {
         effectValues[control.id] = value
         // A linked vec2 moves both components together, as WE's linked slider does.
@@ -496,10 +492,6 @@ private final class SceneInspectorModel: ObservableObject {
 
     private func musicAmountKey(for control: SceneInspectorEffectControl) -> String {
         "\(overrideKey(for: control) ?? control.id)_musicAmount"
-    }
-
-    func resetEffectValue(_ control: SceneInspectorEffectControl) {
-        setEffectValue(control.defaultValue, control: control)
     }
 
     func setEffectEnabled(_ enabled: Bool, effect: SceneInspectorEffect) {
@@ -1843,14 +1835,6 @@ private struct SceneInspectorContent: View {
                 Text(title).font(.headline)
                 ForEach(values, id: \.self) { Text($0).font(.caption.monospaced()) }
             }
-        }
-    }
-
-    private func sourceBlock(_ title: String, _ text: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(.headline)
-            Text(text).font(.caption.monospaced()).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)
-                .padding(8).background(Color(nsColor: .controlBackgroundColor)).clipShape(RoundedRectangle(cornerRadius: 6))
         }
     }
 
