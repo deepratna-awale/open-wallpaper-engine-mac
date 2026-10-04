@@ -17,6 +17,12 @@ enum AppBundleLayout {
         app.appending(path: "Contents/Helpers/\(editorName).app", directoryHint: .isDirectory)
     }
 
+    /// The MCP Server plugin's `owe-mcp` as the app ships it (target OWEMCPServer), which the
+    /// plugin copies into place when installed (`MCPServerPlugin`).
+    static func mcpServerURL(inApp app: URL) -> URL {
+        app.appending(path: "Contents/Helpers/owe-mcp", directoryHint: .notDirectory)
+    }
+
     /// The app a helper app sits in (`<app>/Contents/Helpers/<helper>.app`); nil when `helper`
     /// isn't inside one.
     static func appURL(containingHelper helper: URL) -> URL? {

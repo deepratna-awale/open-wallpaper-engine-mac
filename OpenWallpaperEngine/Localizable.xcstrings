@@ -22302,6 +22302,101 @@
         }
       }
     },
+    "Copy MCP Client Configuration" : {
+      "comment" : "Settings › Plugins › MCP Server: copies the JSON an MCP client needs",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "نسخ إعداد عميل MCP"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP-Client-Konfiguration kopieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar configuración del cliente MCP"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copier la configuration du client MCP"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP क्लाइंट कॉन्फ़िगरेशन कॉपी करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia configurazione client MCP"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP クライアントの構成をコピー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP 클라이언트 구성 복사"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopiuj konfigurację klienta MCP"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar Configuração do Cliente MCP"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скопировать конфигурацию MCP-клиента"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP İstemci Yapılandırmasını Kopyala"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скопіювати конфігурацію MCP-клієнта"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拷贝 MCP 客户端配置"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拷貝 MCP 用戶端設定"
+          }
+        }
+      }
+    },
     "Copy Path" : {
       "localizations" : {
         "ar" : {
@@ -25974,6 +26069,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "立即刪除已準備好的原始檔案，無須等到下次啟動。"
+          }
+        }
+      }
+    },
+    "Deletes the owe-mcp command, stops accepting MCP clients and closes their connections." : {
+      "comment" : "Settings › Plugins › MCP Server: Remove button help",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يحذف الأمر owe-mcp، ويتوقف عن قبول عملاء MCP، ويغلق اتصالاتهم."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Löscht den Befehl owe-mcp, nimmt keine MCP-Clients mehr an und schließt ihre Verbindungen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Borra el comando owe-mcp, deja de aceptar clientes MCP y cierra sus conexiones."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprime la commande owe-mcp, cesse d’accepter les clients MCP et ferme leurs connexions."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "owe-mcp कमांड डिलीट करता है, MCP क्लाइंट स्वीकार करना बंद करता है और उनके कनेक्शन बंद करता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elimina il comando owe-mcp, smette di accettare client MCP e chiude le loro connessioni."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "owe-mcp コマンドを削除し、MCP クライアントの受け付けを停止して、その接続を閉じます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "owe-mcp 명령을 삭제하고 MCP 클라이언트 연결을 더 이상 받지 않으며 기존 연결을 닫습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usuwa polecenie owe-mcp, przestaje przyjmować klientów MCP i zamyka ich połączenia."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apaga o comando owe-mcp, deixa de aceitar clientes MCP e fecha as conexões deles."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удаляет команду owe-mcp, перестает принимать MCP-клиентов и закрывает их соединения."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "owe-mcp komutunu siler, MCP istemcilerini kabul etmeyi durdurur ve bağlantılarını kapatır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видаляє команду owe-mcp, припиняє приймати MCP-клієнтів і закриває їхні зʼєднання."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除 owe-mcp 命令，停止接受 MCP 客户端并关闭它们的连接。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "刪除 owe-mcp 指令，停止接受 MCP 用戶端並關閉它們的連線。"
           }
         }
       }
@@ -49094,6 +49284,101 @@
         }
       }
     },
+    "Installing puts the owe-mcp command in Application Support and lets MCP clients connect while the app runs, through a local connection only your user account can open. Removing it deletes the command and stops accepting them." : {
+      "comment" : "Settings › Plugins › MCP Server: what installing and removing do",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يضع التثبيت الأمر owe-mcp في مجلد Application Support ويتيح لعملاء MCP الاتصال أثناء تشغيل التطبيق، عبر اتصال محلي لا يفتحه إلا حساب المستخدم الخاص بك. وتؤدي الإزالة إلى حذف الأمر والتوقف عن قبولهم."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Installation legt den Befehl owe-mcp in „Application Support“ ab und lässt MCP-Clients sich verbinden, solange die App läuft – über eine lokale Verbindung, die nur Ihr Benutzeraccount öffnen kann. Beim Entfernen wird der Befehl gelöscht und es werden keine Clients mehr angenommen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Al instalarlo, el comando owe-mcp se coloca en Application Support y los clientes MCP pueden conectarse mientras la app está abierta, mediante una conexión local que solo tu cuenta de usuario puede abrir. Al eliminarlo, se borra el comando y se dejan de aceptar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’installation place la commande owe-mcp dans Application Support et permet aux clients MCP de se connecter tant que l’app est ouverte, par une connexion locale que seul votre compte utilisateur peut ouvrir. La suppression efface la commande et cesse de les accepter."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इंस्टॉल करने से owe-mcp कमांड Application Support में रखी जाती है और ऐप चलते समय MCP क्लाइंट एक लोकल कनेक्शन से जुड़ सकते हैं, जिसे सिर्फ़ आपका यूज़र अकाउंट खोल सकता है। हटाने से कमांड डिलीट हो जाती है और क्लाइंट स्वीकार करना बंद हो जाता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’installazione mette il comando owe-mcp in Application Support e consente ai client MCP di connettersi mentre l’app è in esecuzione, tramite una connessione locale che solo il tuo account utente può aprire. La rimozione elimina il comando e smette di accettarli."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "インストールすると owe-mcp コマンドが Application Support に置かれ、App の実行中は、お使いのユーザアカウントだけが開けるローカル接続で MCP クライアントが接続できるようになります。削除するとコマンドが削除され、受け付けを停止します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "설치하면 owe-mcp 명령이 Application Support에 놓이고, 앱이 실행되는 동안 사용자 계정만 열 수 있는 로컬 연결로 MCP 클라이언트가 연결할 수 있습니다. 제거하면 명령이 삭제되고 더 이상 연결을 받지 않습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalacja umieszcza polecenie owe-mcp w folderze Application Support i pozwala klientom MCP łączyć się, gdy aplikacja działa, przez połączenie lokalne, które może otworzyć tylko Twoje konto użytkownika. Usunięcie kasuje polecenie i przestaje przyjmować klientów."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A instalação coloca o comando owe-mcp em Application Support e permite que clientes MCP se conectem enquanto o app está aberto, por uma conexão local que só a sua conta de usuário pode abrir. A remoção apaga o comando e deixa de aceitá-los."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "При установке команда owe-mcp помещается в Application Support, и пока приложение работает, MCP-клиенты могут подключаться по локальному соединению, которое может открыть только ваша учетная запись. При удалении команда стирается и подключения больше не принимаются."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yükleme, owe-mcp komutunu Application Support klasörüne koyar ve uygulama çalışırken MCP istemcilerinin yalnızca sizin kullanıcı hesabınızın açabildiği yerel bir bağlantıyla bağlanmasına izin verir. Kaldırma, komutu siler ve istemcileri kabul etmeyi durdurur."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Під час встановлення команда owe-mcp потрапляє в Application Support, і поки програма працює, MCP-клієнти можуть підʼєднуватися через локальне зʼєднання, яке може відкрити лише ваш обліковий запис. Вилучення видаляє команду й припиняє приймати клієнтів."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装会将 owe-mcp 命令放到 Application Support 中，并在 App 运行时让 MCP 客户端通过只有你的用户账户才能打开的本地连接进行连接。移除会删除该命令并停止接受连接。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安裝會將 owe-mcp 指令放到 Application Support 中，並在 App 執行時讓 MCP 用戶端透過只有你的使用者帳號能開啟的本機連線進行連線。移除會刪除該指令並停止接受連線。"
+          }
+        }
+      }
+    },
     "Installing…" : {
       "localizations" : {
         "ar" : {
@@ -49184,6 +49469,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "安裝中⋯"
+          }
+        }
+      }
+    },
+    "Installs the owe-mcp command that ships with the app and starts accepting MCP clients." : {
+      "comment" : "Settings › Plugins › MCP Server: Install button help",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يثبّت الأمر owe-mcp المرفق بالتطبيق ويبدأ في قبول عملاء MCP."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installiert den mit der App gelieferten Befehl owe-mcp und nimmt ab dann MCP-Clients an."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instala el comando owe-mcp que incluye la app y empieza a aceptar clientes MCP."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installe la commande owe-mcp fournie avec l’app et commence à accepter les clients MCP."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऐप के साथ आने वाली owe-mcp कमांड इंस्टॉल करता है और MCP क्लाइंट स्वीकार करना शुरू करता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installa il comando owe-mcp fornito con l’app e inizia ad accettare client MCP."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App に付属する owe-mcp コマンドをインストールし、MCP クライアントの受け付けを開始します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "앱에 포함된 owe-mcp 명령을 설치하고 MCP 클라이언트 연결을 받기 시작합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instaluje polecenie owe-mcp dostarczane z aplikacją i zaczyna przyjmować klientów MCP."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instala o comando owe-mcp que acompanha o app e começa a aceitar clientes MCP."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Устанавливает команду owe-mcp из комплекта приложения и начинает принимать MCP-клиентов."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uygulamayla birlikte gelen owe-mcp komutunu yükler ve MCP istemcilerini kabul etmeye başlar."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Установлює команду owe-mcp, що постачається з програмою, і починає приймати MCP-клієнтів."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装 App 自带的 owe-mcp 命令，并开始接受 MCP 客户端。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安裝 App 附帶的 owe-mcp 指令，並開始接受 MCP 用戶端。"
           }
         }
       }
@@ -52208,6 +52588,101 @@
         }
       }
     },
+    "Lets MCP clients, such as AI assistants and automation tools, control Open Wallpaper Engine on this Mac with the Model Context Protocol: list and set wallpapers, pause and resume, change the volume and user properties, play playlists, import wallpapers and open the editors." : {
+      "comment" : "Settings › Plugins › MCP Server: what the plugin does",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يتيح لعملاء MCP، مثل مساعدي الذكاء الاصطناعي وأدوات الأتمتة، التحكم في Open Wallpaper Engine على هذا الـ Mac عبر Model Context Protocol: عرض الخلفيات وتعيينها، والإيقاف المؤقت والاستئناف، وتغيير مستوى الصوت وخصائص المستخدم، وتشغيل قوائم التشغيل، واستيراد الخلفيات، وفتح المحررات."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lässt MCP-Clients wie KI-Assistenten und Automatisierungswerkzeuge Open Wallpaper Engine auf diesem Mac über das Model Context Protocol steuern: Hintergrundbilder auflisten und festlegen, pausieren und fortsetzen, Lautstärke und Benutzereigenschaften ändern, Playlists abspielen, Hintergrundbilder importieren und die Editoren öffnen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permite que los clientes MCP, como asistentes de IA y herramientas de automatización, controlen Open Wallpaper Engine en este Mac con el Model Context Protocol: listar y poner fondos de pantalla, pausar y reanudar, cambiar el volumen y las propiedades de usuario, reproducir playlists, importar fondos de pantalla y abrir los editores."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permet aux clients MCP, comme les assistants IA et les outils d’automatisation, de contrôler Open Wallpaper Engine sur ce Mac avec le Model Context Protocol : lister et définir des fonds d’écran, mettre en pause et reprendre, modifier le volume et les propriétés utilisateur, lire des playlists, importer des fonds d’écran et ouvrir les éditeurs."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP क्लाइंट, जैसे AI असिस्टेंट और ऑटोमेशन टूल, को Model Context Protocol से इस Mac पर Open Wallpaper Engine नियंत्रित करने देता है: वॉलपेपर की सूची देखना और सेट करना, पॉज़ करना और फिर से शुरू करना, वॉल्यूम और यूज़र प्रॉपर्टी बदलना, प्लेलिस्ट चलाना, वॉलपेपर इंपोर्ट करना और एडिटर खोलना।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consente ai client MCP, come assistenti IA e strumenti di automazione, di controllare Open Wallpaper Engine su questo Mac con il Model Context Protocol: elencare e impostare sfondi, mettere in pausa e riprendere, cambiare il volume e le proprietà utente, riprodurre playlist, importare sfondi e aprire gli editor."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI アシスタントや自動化ツールなどの MCP クライアントが、Model Context Protocol でこの Mac の Open Wallpaper Engine を操作できるようにします。壁紙の一覧表示と設定、一時停止と再開、音量とユーザプロパティの変更、プレイリストの再生、壁紙の読み込み、エディタを開くことができます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI 어시스턴트와 자동화 도구 같은 MCP 클라이언트가 Model Context Protocol로 이 Mac의 Open Wallpaper Engine을 제어할 수 있게 합니다. 배경화면 목록 보기 및 설정, 일시 정지 및 재개, 음량 및 사용자 속성 변경, 플레이리스트 재생, 배경화면 가져오기, 편집기 열기를 할 수 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pozwala klientom MCP, takim jak asystenci AI i narzędzia automatyzacji, sterować Open Wallpaper Engine na tym Macu za pomocą Model Context Protocol: wyświetlać i ustawiać tapety, wstrzymywać i wznawiać, zmieniać głośność i właściwości użytkownika, odtwarzać playlisty, importować tapety i otwierać edytory."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permite que clientes MCP, como assistentes de IA e ferramentas de automação, controlem o Open Wallpaper Engine neste Mac com o Model Context Protocol: listar e definir imagens de fundo, pausar e retomar, alterar o volume e as propriedades do usuário, reproduzir playlists, importar imagens de fundo e abrir os editores."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Позволяет MCP-клиентам, например ИИ-ассистентам и средствам автоматизации, управлять Open Wallpaper Engine на этом Mac по Model Context Protocol: показывать и устанавливать обои, ставить на паузу и продолжать, менять громкость и пользовательские свойства, воспроизводить плейлисты, импортировать обои и открывать редакторы."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yapay zekâ asistanları ve otomasyon araçları gibi MCP istemcilerinin bu Mac’teki Open Wallpaper Engine’i Model Context Protocol ile denetlemesini sağlar: duvar kâğıtlarını listeleme ve ayarlama, duraklatma ve sürdürme, ses düzeyini ve kullanıcı özelliklerini değiştirme, çalma listelerini oynatma, duvar kâğıtlarını içe aktarma ve düzenleyicileri açma."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дає змогу MCP-клієнтам, як-от ШІ-асистентам і засобам автоматизації, керувати Open Wallpaper Engine на цьому Mac через Model Context Protocol: показувати й установлювати шпалери, призупиняти й відновлювати, змінювати гучність і властивості користувача, відтворювати списки відтворення, імпортувати шпалери та відкривати редактори."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "让 MCP 客户端（例如 AI 助手和自动化工具）通过 Model Context Protocol 控制这台 Mac 上的 Open Wallpaper Engine：列出和设置墙纸、暂停和继续、更改音量和用户属性、播放播放列表、导入墙纸以及打开编辑器。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "讓 MCP 用戶端（例如 AI 助理和自動化工具）透過 Model Context Protocol 控制這台 Mac 上的 Open Wallpaper Engine：列出和設定背景圖片、暫停和繼續、更改音量和使用者屬性、播放播放列表、輸入背景圖片，以及打開編輯器。"
+          }
+        }
+      }
+    },
     "Lets scenes draw their reflection effects, such as water or glass. Off skips that work in scenes that use them." : {
       "localizations" : {
         "ar" : {
@@ -55128,6 +55603,196 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "驅動扭曲的最低頻段。調高可忽略低音。"
+          }
+        }
+      }
+    },
+    "MCP Server" : {
+      "comment" : "Settings › Plugins: the plugin that lets MCP clients control the app",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "خادم MCP"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP-Server"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Servidor MCP"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serveur MCP"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP सर्वर"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server MCP"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP サーバ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP 서버"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serwer MCP"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Servidor MCP"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сервер MCP"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP Sunucusu"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сервер MCP"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP 服务器"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP 伺服器"
+          }
+        }
+      }
+    },
+    "MCP clients can’t connect: %@" : {
+      "comment" : "Settings › Plugins › MCP Server: the control socket couldn't be opened; %@ is the reason",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يمكن لعملاء MCP الاتصال: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP-Clients können sich nicht verbinden: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los clientes MCP no pueden conectarse: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les clients MCP ne peuvent pas se connecter : %@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP क्लाइंट कनेक्ट नहीं हो सकते: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I client MCP non possono connettersi: %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP クライアントが接続できません: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP 클라이언트가 연결할 수 없습니다: %@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klienci MCP nie mogą się połączyć: %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os clientes MCP não conseguem se conectar: %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP-клиенты не могут подключиться: %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP istemcileri bağlanamıyor: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP-клієнти не можуть підʼєднатися: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP 客户端无法连接：%@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP 用戶端無法連線：%@"
           }
         }
       }
@@ -73353,6 +74018,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "貼上任何影片或影像的連結。影像會轉換為場景，因此效果堆疊也能套用。"
+          }
+        }
+      }
+    },
+    "Paste the configuration into your MCP client’s settings, or add it from Terminal:" : {
+      "comment" : "Settings › Plugins › MCP Server: how to add the server to an MCP client",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الصق الإعداد في إعدادات عميل MCP، أو أضِفه من تطبيق Terminal:"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fügen Sie die Konfiguration in die Einstellungen Ihres MCP-Clients ein oder fügen Sie den Server im Terminal hinzu:"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pega la configuración en los ajustes de tu cliente MCP, o añádelo desde Terminal:"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collez la configuration dans les réglages de votre client MCP, ou ajoutez-le depuis le Terminal :"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कॉन्फ़िगरेशन को अपने MCP क्लाइंट की सेटिंग में पेस्ट करें, या इसे Terminal से जोड़ें:"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incolla la configurazione nelle impostazioni del tuo client MCP, oppure aggiungilo dal Terminale:"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "構成を MCP クライアントの設定にペーストするか、ターミナルから追加します:"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "구성을 MCP 클라이언트 설정에 붙여넣거나 터미널에서 추가하십시오:"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wklej konfigurację do ustawień klienta MCP lub dodaj serwer w Terminalu:"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cole a configuração nos ajustes do seu cliente MCP, ou adicione-o pelo Terminal:"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вставьте конфигурацию в настройки MCP-клиента или добавьте сервер в Терминале:"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yapılandırmayı MCP istemcinizin ayarlarına yapıştırın veya Terminal’den ekleyin:"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вставте конфігурацію в параметри MCP-клієнта або додайте сервер у Терміналі:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将配置粘贴到 MCP 客户端的设置中，或在“终端”中添加："
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將設定貼到 MCP 用戶端的設定中，或在「終端機」中加入："
           }
         }
       }
@@ -113746,6 +114506,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "此工作坊項目已被作者移除或設為私人。"
+          }
+        }
+      }
+    },
+    "This build of the app doesn’t include owe-mcp." : {
+      "comment" : "Settings › Plugins › MCP Server: the app bundle has no owe-mcp to install",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا يتضمن هذا الإصدار من التطبيق الأمر owe-mcp."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Build der App enthält owe-mcp nicht."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta compilación de la app no incluye owe-mcp."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette version de l’app n’inclut pas owe-mcp."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऐप के इस बिल्ड में owe-mcp शामिल नहीं है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questa build dell’app non include owe-mcp."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この App のビルドには owe-mcp が含まれていません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 앱 빌드에는 owe-mcp가 포함되어 있지 않습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ta kompilacja aplikacji nie zawiera owe-mcp."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta versão do app não inclui o owe-mcp."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Эта сборка приложения не содержит owe-mcp."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uygulamanın bu derlemesi owe-mcp içermiyor."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ця збірка програми не містить owe-mcp."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此版本的 App 不包含 owe-mcp。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此版本的 App 不包含 owe-mcp。"
           }
         }
       }
