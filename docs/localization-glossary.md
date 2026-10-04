@@ -111,6 +111,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | Bildschirmfüllend / An Bildschirm anpassen / Zentriert / Bildschirmfüllend vergrößern / Zoomen | [Apple](https://support.apple.com/de-de/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | Plug-ins / Diagnose / Berechtigungen / Leistung / Allgemein / Info | WE `ui_de-de.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | Hintergrundbild-Speicher | derived from “Wallpaper” |
+| Scene Editor / Wallpaper Editor (the app’s two editing windows; formerly “Scene Inspector”) | Szeneneditor / Hintergrundbild-Editor | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) (editor) · derived from “Scene” |
 
 ## Français (fr)
 
@@ -153,6 +154,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | Occuper tout l’écran / Adapter à l’écran / Centrer / Étirer pour remplir l’écran / Zoomer | [Apple](https://support.apple.com/fr-fr/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | Plug-ins / Diagnostic / Autorisations / Performances / Général / À propos | WE `ui_fr-fr.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | Stockage des fonds d’écran | derived from “Wallpaper” |
+| Scene Editor / Wallpaper Editor (the app’s two editing windows; formerly “Scene Inspector”) | Éditeur de scène / Éditeur de fond d’écran | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) (editor) · derived from “Scene” |
 
 ## Español (España) (es)
 
@@ -195,6 +197,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | Llenar pantalla / Ajustar a pantalla / Centrar / Ampliar para rellenar / Acercar | [Apple](https://support.apple.com/es-es/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | Complementos / Diagnóstico / Permisos / Rendimiento / General / Acerca de | WE `ui_es-es.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | Almacenamiento de fondos de pantalla | derived from “Wallpaper” |
+| Scene Editor / Wallpaper Editor (the app’s two editing windows; formerly “Scene Inspector”) | Editor de escenas / Editor de fondos de pantalla | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) (editor) · derived from “Scene” |
 
 ## Português (Brasil) (pt-BR)
 
@@ -237,6 +240,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | Preencher Tela / Ajustar à Tela / Centralizar / Estender e Preencher Tela / Zoom | [Apple](https://support.apple.com/pt-br/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | Plug-ins / Diagnóstico / Permissões / Desempenho / Geral / Sobre | WE `ui_pt-br.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | Armazenamento de Imagens de Fundo | derived from “Wallpaper” |
+| Scene Editor / Wallpaper Editor (the app’s two editing windows; formerly “Scene Inspector”) | Editor de Cena / Editor de Imagem de Fundo | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) (editor) · derived from “Scene” |
 
 ## Italiano (it)
 
@@ -279,6 +283,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | A schermo pieno / Adatta allo schermo / Centro / Amplia per riempire lo schermo / Zoom | [Apple](https://support.apple.com/it-it/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | Plug-in / Diagnosi / Autorizzazioni / Prestazioni / Generali / Informazioni | WE `ui_it-it.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | Archivio sfondi | derived from “Wallpaper” |
+| Scene Editor / Wallpaper Editor (the app’s two editing windows; formerly “Scene Inspector”) | Editor scena / Editor sfondi | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) (editor) · derived from “Scene” |
 
 ## 日本語 (ja)
 
@@ -321,6 +326,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | 画面全体に表示 / 画面に収まるサイズで表示 / 中央に配置 / 引き伸ばして画面全体に表示 / ズーム | [Apple](https://support.apple.com/ja-jp/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | プラグイン / 診断 / アクセス権 / パフォーマンス / 一般 / 情報 | WE `ui_ja-jp.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | 壁紙の保存場所 | derived from “Wallpaper” |
+| Scene Editor / Wallpaper Editor (the app’s two editing windows; formerly “Scene Inspector”) | シーンエディタ / 壁紙エディタ | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) (editor) · derived from “Scene” |
 
 ## 한국어 (ko)
 
@@ -363,6 +369,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | 화면 채우기 / 화면에 맞추기 / 중앙 정렬 / 전체 화면으로 펼치기 / 확대 | [Apple](https://support.apple.com/ko-kr/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | 플러그인 / 진단 / 권한 / 성능 / 일반 / 정보 | WE `ui_ko-kr.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | 배경화면 저장 공간 | derived from “Wallpaper” |
+| Scene Editor / Wallpaper Editor (the app’s two editing windows; formerly “Scene Inspector”) | 장면 편집기 / 배경화면 편집기 | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) (editor) · derived from “Scene” |
 
 ## 简体中文 (zh-Hans)
 
@@ -405,6 +412,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | 充满屏幕 / 适合于屏幕 / 居中 / 拉伸以充满屏幕 / 缩放 | [Apple](https://support.apple.com/zh-cn/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | 插件 / 诊断 / 权限 / 性能 / 通用 / 关于 | WE `ui_zh-chs.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | 墙纸存储位置 | derived from “Wallpaper” |
+| Scene Editor / Wallpaper Editor (the app’s two editing windows; formerly “Scene Inspector”) | 场景编辑器 / 墙纸编辑器 | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) (editor) · derived from “Scene” |
 
 ## 繁體中文 (zh-Hant)
 
@@ -447,6 +455,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | 填滿螢幕 / 符合螢幕大小 / 置中 / 擴展至填滿螢幕 / 縮放 | [Apple](https://support.apple.com/zh-tw/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | 外掛程式 / 診斷 / 權限 / 效能 / 一般 / 關於 | WE `ui_zh-cht.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | 背景圖片儲存位置 | derived from “Wallpaper” |
+| Scene Editor / Wallpaper Editor (the app’s two editing windows; formerly “Scene Inspector”) | 場景編輯器 / 背景圖片編輯器 | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) (editor) · derived from “Scene” |
 
 ## Русский (ru)
 
@@ -489,6 +498,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | Во весь экран / По размеру экрана / По центру / Заполнить весь экран / Масштаб | [Apple](https://support.apple.com/ru-ru/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | Плагины / Диагностика / Разрешения / Производительность / Основные / О программе | WE `ui_ru-ru.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | Хранилище обоев | derived from “Wallpaper” |
+| Scene Editor / Wallpaper Editor (the app’s two editing windows; formerly “Scene Inspector”) | Редактор сцены / Редактор обоев | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) (editor) · derived from “Scene” |
 
 ## Polski (pl)
 
@@ -531,6 +541,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | Wypełnij ekran / Dopasuj do ekranu / Na środku / Rozciągnij, aby wypełnić ekran / Powiększ | [Apple](https://support.apple.com/pl-pl/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | Wtyczki / Diagnostyka / Uprawnienia / Wydajność / Ogólne / Informacje | WE `ui_pl-pl.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | Magazyn tapet | derived from “Wallpaper” |
+| Scene Editor / Wallpaper Editor (the app’s two editing windows; formerly “Scene Inspector”) | Edytor sceny / Edytor tapet | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) (editor) · derived from “Scene” |
 
 ## Türkçe (tr)
 
@@ -573,6 +584,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | Ekranı Doldur / Ekrana Sığdır / Ortala / Ekranı Dolduracak Şekilde Büyüt / Yakınlaştır | [Apple](https://support.apple.com/tr-tr/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | Eklentiler / Tanılar / İzinler / Performans / Genel / Hakkında | WE `ui_tr-tr.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | Duvar Kâğıdı Deposu | derived from “Wallpaper” |
+| Scene Editor / Wallpaper Editor (the app’s two editing windows; formerly “Scene Inspector”) | Sahne Düzenleyicisi / Duvar Kâğıdı Düzenleyici | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) (editor) · derived from “Scene” |
 
 ## Українська (uk)
 
@@ -615,6 +627,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | Заповнити екран / Припасувати до екрана / По центру / Розтягнути до заповнення екрана / Масштаб | [Apple](https://support.apple.com/uk-ua/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | Плагіни / Діагностика / Дозволи / Продуктивність / Загальні / Про програму | WE `ui_uk-ua.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | Сховище шпалер | derived from “Wallpaper” |
+| Scene Editor / Wallpaper Editor (the app’s two editing windows; formerly “Scene Inspector”) | Редактор сцени / Редактор шпалер | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) (editor) · derived from “Scene” |
 
 ## العربية (ar)
 
@@ -657,6 +670,7 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | تعبئة الشاشة / الاحتواء ضمن الشاشة / الوسط / التمديد لتعبئة الشاشة / تكبير | [Apple](https://support.apple.com/ar-ae/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | الإضافات / التشخيصات / الأذونات / الأداء / عام / حول | WE `ui_ar-sa.json` · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | مخزن خلفيات الشاشة | derived from “Wallpaper” |
+| Scene Editor / Wallpaper Editor (the app’s two editing windows; formerly “Scene Inspector”) | محرر المشهد / محرر الخلفيات | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) (editor) · derived from “Scene” |
 
 ## हिन्दी (hi)
 
@@ -699,3 +713,4 @@ Steam Guard, macOS, Finder (except where Apple translates it: 访达, فايند
 | Placement: Fill (=Fill Screen) / Fit (=Fit to Screen) / Center / Stretch (=Stretch to Fill Screen) / Zoom | फ़ुल स्क्रीन / स्क्रीन पर फ़िट करें / सेंटर / फ़ुल स्क्रीन पर स्ट्रेच करें / ज़ूम | [Apple](https://support.apple.com/hi-in/guide/mac-help/mchlp1103/13.0/mac/13.0) |
 | Plugins / Diagnostics / Permissions / Performance / General / About | प्लग-इन / डायग्नॉस्टिक / अनुमतियाँ / परफ़ॉर्मेंस / सामान्य / जानकारी | WE (no file for this language) · [macOS strings](#sources) |
 | Wallpaper Storage (the library-folder setting) | वॉलपेपर स्टोरेज | derived from “Wallpaper” |
+| Scene Editor / Wallpaper Editor (the app’s two editing windows; formerly “Scene Inspector”) | सीन एडिटर / वॉलपेपर एडिटर | [Microsoft Terminology](https://learn.microsoft.com/en-us/globalization/reference/microsoft-terminology) (editor) · derived from “Scene” |

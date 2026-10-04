@@ -302,21 +302,11 @@ struct WallpaperPreview: SubviewOfContentView {
                                 AppDelegate.shared.showSceneInspector(for: wallpaperViewModel.displayedWallpaper,
                                                                       scopes: wallpaperViewModel.editedPropertyScopes(of: wallpaperViewModel.displayedWallpaper))
                             } label: {
-                                Label("Scene Inspector", systemImage: "square.stack.3d.up")
+                                Label("Scene Editor", systemImage: "square.stack.3d.up")
                                     .frame(maxWidth: .infinity)
                             }
                             .glassButtonStyle()
-                            .help("Scene Inspector", shortcut: .sceneInspector)
-                            let editable = WallpaperEditorController.canEdit(wallpaperViewModel.displayedWallpaper)
-                            Button {
-                                AppDelegate.shared.showWallpaperEditor(for: wallpaperViewModel.displayedWallpaper)
-                            } label: {
-                                Label("Edit Wallpaper", systemImage: "square.and.pencil")
-                                    .frame(maxWidth: .infinity)
-                            }
-                            .glassButtonStyle()
-                            .disabled(!editable)
-                            .modifier(EditWallpaperHelp(editable: editable))
+                            .help("Scene Editor", shortcut: .sceneInspector)
                         }
                     }
                     // MARK: Properties
@@ -793,19 +783,6 @@ extension URL {
         return try FileManager.default.contentsOfDirectory(at: self, includingPropertiesForKeys: nil).lazy.reduce(0) {
                  (try $1.resourceValues(forKeys: [.totalFileAllocatedSizeKey])
                     .totalFileAllocatedSize ?? 0) + $0
-        }
-    }
-}
-
-/// The Edit Wallpaper button's tooltip: the editor and its shortcut, or why it is unavailable.
-private struct EditWallpaperHelp: ViewModifier {
-    let editable: Bool
-
-    func body(content: Content) -> some View {
-        if editable {
-            content.help("Wallpaper Editor", shortcut: .wallpaperEditor)
-        } else {
-            content.help("Only scene wallpapers can be edited")
         }
     }
 }
