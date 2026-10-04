@@ -5,7 +5,7 @@ import Foundation
 /// crashes (`CrashRelaunchPolicy`).
 ///
 /// The watcher is a copy of the app's own executable run with `--crash-watcher`, handled in
-/// `main.swift` before any app lifecycle: no Dock icon, no windows, no playback. The app holds the
+/// `AppMain` before any app lifecycle: no Dock icon, no windows, no playback. The app holds the
 /// write end of a pipe to the watcher's standard input and writes a line before it goes away
 /// cleanly: `quit` (from `applicationWillTerminate`, which a normal quit, SIGTERM, a logout and an
 /// update relaunch all reach) or `stop` (the setting turned off). If the pipe closes with no line,

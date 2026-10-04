@@ -553,7 +553,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
           pipelineArchiveDirectory: URL? = EffectPipelineArchive.defaultDirectory) {
         guard let device = MTLCreateSystemDefaultDevice(),
               let commandQueue = device.makeCommandQueue(),
-              let library = device.makeDefaultLibrary(),
+              let library = SceneMetalLibrary.make(device: device),
               let vertex = library.makeFunction(name: "sceneVertex"),
               let fragment = library.makeFunction(name: "sceneFragment"),
               let placedVertex = library.makeFunction(name: "sceneVertex3D"),

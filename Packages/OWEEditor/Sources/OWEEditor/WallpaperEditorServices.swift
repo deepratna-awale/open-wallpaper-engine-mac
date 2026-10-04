@@ -55,6 +55,8 @@ public struct WallpaperEditorServices {
     public var puppetAssets: PuppetEditorAssets?
     /// The particle editor (WE's presets and textures, restarting a system); nil leaves it out.
     public var particles: ParticleEditorServices?
+    /// The app menu's document actions for this window; nil when only the toolbar offers them.
+    public var commands: WallpaperEditorCommands?
     /// Depth maps for depth parallax (the Depth Map Generation plugin); nil leaves the sections out.
     public var depthMaps: DepthMapEditorServices?
     /// The effect and particle browsers' rendered previews; nil shows each one's group symbol.

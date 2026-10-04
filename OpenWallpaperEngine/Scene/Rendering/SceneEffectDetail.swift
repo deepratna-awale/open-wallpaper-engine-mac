@@ -74,7 +74,7 @@ final class SceneEffectDetail {
     private(set) var copiesMade = 0
 
     init?(device: MTLDevice) {
-        guard let library = device.makeDefaultLibrary(),
+        guard let library = SceneMetalLibrary.make(device: device),
               let vertex = library.makeFunction(name: "effectDetailVertex"),
               let fragment = library.makeFunction(name: "effectDetailDownsample") else { return nil }
         var pipelines: [MTLPixelFormat: MTLRenderPipelineState] = [:]

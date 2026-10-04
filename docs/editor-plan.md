@@ -88,7 +88,8 @@ Properties. Later phases add a timeline under the canvas (P4) and an asset strip
   edited. The scene cache key covers the overlay's digest.
 - **Live**: saving posts `sceneEditOverlayDidChange`; every running instance of the wallpaper (the
   canvas and the desktop) reloads through its existing coalesced reload path. Gizmo drags draw a
-  preview and commit once on release.
+  preview and commit once on release. The desktop runs in Open Wallpaper Engine's process, the
+  canvas in the editor's: `WallpaperEditorChangeSync` carries the change across (see Architecture).
 - **Stored** per wallpaper in `<Application Support>/Open Wallpaper Engine/editor/<identity>.json`
   (the settings identity: Workshop id, else a project hash), never in the wallpaper's folder or the
   property store. An empty overlay removes its file.
@@ -168,6 +169,42 @@ Each phase ships on its own; effort is focused engineering time.
 - `OpenWallpaperEngine/Editor`: the app side: `WallpaperEditorController` (window, canvas through
   `WallpaperView` on a preview `WallpaperViewModel`, services the module needs), user-property undo,
   scene reading. `Scene/Loading/SceneEditOverlayFiles` stores overlays; `ScenePreparation` applies them.
+- **Separate app** (`Editor/Process`, `Editor/Sync`, `EditorHelper/`). The editor is an app of its
+  own, `Open Wallpaper Engine.app/Contents/Helpers/Wallpaper Editor.app`: bundle id
+  `<app id>.editor`, its own name, Dock tile, menu bar and badged icon (`EditorHelper/Info.plist`,
+  `EditorHelper/WallpaperEditor.icns`, `LSUIElement` false). So macOS never takes it for Open
+  Wallpaper Engine: the app's Dock tile and opening the app from Finder always mean the app.
+  - **How it is built.** The WallpaperEditor target, which the app embeds in `Contents/Helpers`
+    (one codebase: the app's code is the OpenWallpaperEngine framework in the app's
+    `Contents/Frameworks`, and both apps' executables are the same `main.swift`, which calls
+    `AppMain.run()`; the bundle id puts it in editor mode, `AppLaunchMode`). It finds the framework,
+    and through it Sparkle.framework, with its rpath `@executable_path/../../../../Frameworks`, so
+    it costs its executable, strings and asset catalog, not a second copy of the code. Its Info.plist
+    takes the app's version from the build settings. It is signed with the app's identity, hardened
+    runtime and entitlements, so library validation holds (one team) and the release's Developer ID
+    export, notarization and checks cover it (`release.yml`).
+  - **Its process.** `AppLaunchPlan` gives it `WallpaperEditorAppDelegate`: none of the main app's
+    services start (no desktop wallpapers, menu bar item, screen saver, lock-screen picture,
+    Workshop sync, updater, crash watcher or safe restart) and `AppDelegate` is never made; the canvas
+    gets its own settings and SceneScript services (`SceneWallpaperHost`). It keeps the app's state:
+    `AppStorageLocation` maps its bundle id to the app's (same defaults, folders, keychain and
+    isolation), and the app passes its language (`-AppleLanguages`). It has a menu of its own
+    (`WallpaperEditorMenu`) and quits with its last window; quitting either app leaves the other
+    running, and neither's crash reaches the other (the crash watcher and safe restart are the app's).
+  - **Opening.** Edit Wallpaper / ⌥⌘E (`WallpaperEditorLauncher`) opens the editor's app through
+    LaunchServices with `--wallpaper-editor <folder>` (not a child process), isolated as the app is,
+    or, when one runs (`AppProcessList`), asks it to open the wallpaper (`WallpaperEditorRequests`):
+    one editor process for every wallpaper. The messages go through the session's distributed
+    notification centre (`AppProcessChannel`): a name and the wallpaper's folder, never data.
+  - **Live sync** (`WallpaperEditorChangeSync`). The editor saves overlays as before and names the
+    wallpaper in a message; the app reads the overlay and posts its own
+    `sceneEditOverlayDidChange` / `sceneEditParticlesDidChange`, so its instances draw or reload
+    exactly as in one process. A gizmo drag goes as `<identity>.preview.json` beside the overlay
+    (at most 30 a second), a particle restart as `<identity>.restart.json`. The app also watches the
+    overlay folder, so a missed message still arrives. User-property saves go both ways, and Save as
+    Local Wallpaper refreshes the app's library.
+  - Development: `--wallpaper-editor <folder>` also runs the editor from the app's own executable,
+    under the app's bundle id (one Dock identity with the app).
 - **Timeline (P4)**, in `Timeline` folders of each target. `OWESceneEditing/Timeline`: `TimelineClip`
   (WE's `animation` block read with WE's rules and written back in its format; the overlay's
   `timelines` store clips in that same JSON), `TimelineCurve` (the player's float32 sampler, held
