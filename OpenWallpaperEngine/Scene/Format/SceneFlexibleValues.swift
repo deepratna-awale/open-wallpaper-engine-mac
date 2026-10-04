@@ -125,10 +125,4 @@ extension String {
             parts.count > 1 ? parts[1] : 0
         )
     }
-
-    /// Parse "r g b" color string (0-1 range) to NSColor
-    func parseColor() -> (r: Double, g: Double, b: Double) {
-        let v = self.parseVector3()
-        return (r: v.0, g: v.1, b: v.2)
-    }
 }
