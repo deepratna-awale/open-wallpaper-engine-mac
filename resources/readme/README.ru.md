@@ -64,6 +64,15 @@ open "OpenWallpaperEngine.xcodeproj"
 - **Zip:** «Файл» > «Импорт» или перетащите файл `.zip` с пакетами обоев
 - **Вручную:** скопируйте папки с обоями прямо в `~/Documents/Open Wallpaper Engine/`
 
+## Новое в версии 1.0.0-beta.5
+
+- **Редактор сцены (Live)** с вкладками «Обои», «Заставка» и «Экспорт для iPhone и iPad»; **Редактор обоев** (⌥⌘E) работает как отдельное приложение: слои, эффекты, шкала времени, SceneScript, пользовательские свойства, частицы и Puppet Warp; карты глубины ([depth-maps.md](../../docs/depth-maps.md)).
+- **Раскладки дисплеев**, как в Wallpaper Engine: обои на каждый дисплей, растяжение, клонирование, группы, разделение и профили ([display-layouts.md](../../docs/display-layouts.md)).
+- **Экспорт**: Live Photos для iPhone и iPad ([iphone-ipad-export.md](../../docs/iphone-ipad-export.md)) и пакеты `.mpkg` для Wallpaper Engine на Android с отправкой по Wi-Fi ([android-export.md](../../docs/android-export.md)).
+- **Заставка** и картинка экрана блокировки ([screen-saver.md](../../docs/screen-saver.md)).
+- Плагин **MCP-сервер** ([mcp.md](../../docs/mcp.md)) и **оформление** macOS в цвет обоев ([theming.md](../../docs/theming.md)).
+- Правила приложений, глобальные сочетания клавиш, снимки экрана, «Обзор», папки медиатеки. Все изменения: [CHANGELOG.md](../../CHANGELOG.md).
+
 ## Что поддерживает версия 1.0.0
 
 ### Настройка, медиатека и обновления

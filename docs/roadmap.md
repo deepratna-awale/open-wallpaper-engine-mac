@@ -2,7 +2,7 @@
 
 Order: finish what is **most implemented** first, then what is **partly implemented**, then what is **not implemented**. Within each area, smaller items come first. The goal is to run every Wallpaper Engine wallpaper except the `application` type (see [`architecture.md`](architecture.md)).
 
-**Status: 2026-10-02**, `main`. Current coverage: [`progress-snapshot.md`](progress-snapshot.md).
+**Status: 2026-10-04**, `main`. Current coverage: [`progress-snapshot.md`](progress-snapshot.md).
 
 ## Done
 
@@ -17,6 +17,7 @@ Order: finish what is **most implemented** first, then what is **partly implemen
 - Area 4 SceneScript, WP0–WP11 (docs/scenescript-plan.md): every scene's scripts run on `SceneScriptRuntime`, one per wallpaper instance, feeding the renderer through the object table; the legacy engine's scripting is deleted. Then WP11's gaps and the optimisation pass: WE's sound layers play, clicks count only on the wallpaper, a draw shows its own script frame, `createLayer` makes particle systems and sounds, `brightness`/`size` scripts are drawn, and JavaScriptCore JIT-compiles the scripts.
 - Area 3 Timeline animations, T0–T7 (docs/timeline-plan.md): WE's timeline format and maths, bit for bit against a reference model; one set per wallpaper instance driving layer fields, effect constants, scene settings, particle overrides and sprite sheets (layers, effects and materials); the script API (`IAnimation`, `ITextureAnimation`, `animationEvent`); a render sweep of every animated library scene; and an optimisation pass (the library's timelines cost under 4 µs a frame).
 - One instance per wallpaper, however many displays show it (architecture.md "Wallpaper instances"): an app-level registry of shared instances, reference-counted by the displays; a scene loads, scripts, simulates and renders once (at the largest scene target its displays need) and each display presents the frame at its own size and placement; one player per video; web pages on the other displays muted; each wallpaper's sound plays once, and Settings → Audio Output works. Two 1080p displays of one scene: the frame's CPU time falls to 0.38–0.56 of two renderers', its GPU time mostly to 0.25–0.74 (`SceneSharedInstanceBenchmarkTests`).
+- Area 8 (regressions and gaps from the review): every item done (19–24 in #105, #106, #107, #129). Workshop `preset` items play their base with the preset's values (#128), and Puppet Warp's texture channels draw as in WE (#175).
 
 ## Work queue (autonomous loop, from 2026-09-25 night)
 
@@ -30,7 +31,7 @@ Each step: research → parallel agents by file ownership + tester → fix the t
 6. ~~Area 6 3D models (with particle collisionmodel) → tester → optimise.~~ Done (models-plan T and O, 2026-09-27).
 7. ~~Area 7 Puppet warp → tester → optimise.~~ Done.
 8. Gaps queue, worked in alongside when their files are free:
-   - A shader-compiler helper process (hung compile with no Homebrew fallback): in #107 (open), with item 20.
+   - ~~A shader-compiler helper process (hung compile with no Homebrew fallback)~~: done in #107, with item 20.
    - Music-sync settings keyed by stable identity, not the path.
    - Text with effects, blend modes or emoji through WE's font path.
    - UI: stray line under the seek bar — fixed be620ce (a stepped `Slider` drew a tick mark per step; `NumericSliderInput` now snaps the value instead).
@@ -138,4 +139,4 @@ Ranked; the area each item belongs to is in brackets.
 21. ~~The text cache clears completely past 128 entries and thrashes with animated scale~~: done. LRU under a 32 MB byte budget; an animating scale reuses quantised (2^(1/4)) rasters drawn scaled on the GPU, and text at rest gets an exact raster after 30 still frames (`SceneTextRasterScale.Tracker`, #105).
 22. ~~Script clones share `layer.id` with their source (text and effect state), and effect state is never pruned.~~ Done (WP11): created layers get their own ids and free their state when destroyed. [4]
 23. ~~Objects without an `id`~~: done. Every site keys an id-less object by its index (`SceneObjectIdentity.id(of:at:)`, 04aea06 and this fix): parent links, layers, text property keys, the visibility map, bindings and the spatial content. `SceneIDLessObjectTests`.
-24. Dead `_owe_effect_*` UI code; toggling parallax triggers a full rebuild. [new] The `_owe_effect_*` keys left are the live parallax settings; the rebuild is fixed in #106 (open).
+24. ~~Dead `_owe_effect_*` UI code; toggling parallax triggers a full rebuild.~~ Done: the `_owe_effect_*` keys left are the live parallax settings, and parallax now eases in and out without a rebuild (#106, `LiveParallaxTests`).

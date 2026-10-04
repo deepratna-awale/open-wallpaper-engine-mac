@@ -64,6 +64,15 @@ open "OpenWallpaperEngine.xcodeproj"
 - **zip：** 文件 > 导入，或拖放包含墙纸包的 `.zip` 文件
 - **手动：** 将墙纸文件夹直接拷贝到 `~/Documents/Open Wallpaper Engine/`
 
+## 1.0.0-beta.5 新增功能
+
+- **场景编辑器（Live）**：墙纸、屏幕保护程序和 iPhone 与 iPad 导出三个标签页；**墙纸编辑器**（⌥⌘E）作为独立的 App 运行，可编辑图层、效果、时间线、SceneScript、用户属性、粒子和 Puppet Warp；支持深度图（[depth-maps.md](../../docs/depth-maps.md)）。
+- 与 Wallpaper Engine 相同的**显示器布局**：每个显示器单独、拉伸、克隆、分组、分割和配置文件（[display-layouts.md](../../docs/display-layouts.md)）。
+- **导出**：iPhone 和 iPad 的实况照片（[iphone-ipad-export.md](../../docs/iphone-ipad-export.md)），以及 Android 版 Wallpaper Engine 的 `.mpkg` 包，可通过 Wi-Fi 发送（[android-export.md](../../docs/android-export.md)）。
+- **屏幕保护程序**和锁定屏幕图片（[screen-saver.md](../../docs/screen-saver.md)）。
+- **MCP 服务器**插件（[mcp.md](../../docs/mcp.md)），以及让 macOS 跟随墙纸颜色的**主题**（[theming.md](../../docs/theming.md)）。
+- 应用规则、全局快捷键、截屏、发现、资源库文件夹。全部更改：[CHANGELOG.md](../../CHANGELOG.md)。
+
 ## 1.0.0 支持的功能
 
 ### 设置、资源库与更新

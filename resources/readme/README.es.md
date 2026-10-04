@@ -64,6 +64,15 @@ Al compilar desde el código fuente, la primera compilación descarga el paquete
 - **Zip:** Archivo > Importar, o arrastra y suelta un archivo `.zip` que contenga paquetes de fondos de pantalla
 - **Manual:** copia las carpetas de fondos de pantalla directamente en `~/Documents/Open Wallpaper Engine/`
 
+## Novedades de la versión 1.0.0-beta.5
+
+- **Editor de escenas (Live)** con las pestañas Fondo de pantalla, Salvapantallas y Exportación para iPhone y iPad; el **Editor de fondos de pantalla** (⌥⌘E) es una app propia: capas, efectos, línea de tiempo, SceneScript, propiedades de usuario, partículas y Puppet Warp; mapas de profundidad ([depth-maps.md](../../docs/depth-maps.md)).
+- **Disposiciones de pantallas** como en Wallpaper Engine: un fondo por pantalla, estirado, clonado, grupos, divisiones y perfiles ([display-layouts.md](../../docs/display-layouts.md)).
+- **Exportación**: Live Photos para iPhone y iPad ([iphone-ipad-export.md](../../docs/iphone-ipad-export.md)) y paquetes `.mpkg` para Wallpaper Engine en Android, con envío por Wi-Fi ([android-export.md](../../docs/android-export.md)).
+- **Salvapantallas** e imagen de la pantalla bloqueada ([screen-saver.md](../../docs/screen-saver.md)).
+- Plugin **Servidor MCP** ([mcp.md](../../docs/mcp.md)) y **Temas** de macOS con el color del fondo de pantalla ([theming.md](../../docs/theming.md)).
+- Reglas de aplicaciones, atajos globales, capturas de pantalla, Descubrir, carpetas de biblioteca. Todos los cambios: [CHANGELOG.md](../../CHANGELOG.md).
+
 ## Funciones compatibles de la versión 1.0.0
 
 ### Configuración, biblioteca y actualizaciones
