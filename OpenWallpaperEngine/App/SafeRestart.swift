@@ -60,10 +60,11 @@ final class SafeRestart: ObservableObject {
         viewModel.renderWatchdog = watchdog
         viewModel.confirmApply = { [weak self] wallpaper in self?.confirmApplying(wallpaper) ?? true }
         viewModel.isFlaggedBySafeRestart = { [weak self] wallpaper in self?.ledger.isFlagged(wallpaper) ?? false }
+        // What the displays show: a clone member shows its main clone display's wallpaper.
         sessionCancellable = viewModel.$wallpapers
-            .combineLatest(viewModel.$enabledScreens)
-            .sink { [weak self] wallpapers, enabledScreens in
-                self?.recordSession(wallpapers: wallpapers, enabledScreens: enabledScreens)
+            .combineLatest(viewModel.$layoutResolution, viewModel.$enabledScreens)
+            .sink { [weak self] wallpapers, resolution, enabledScreens in
+                self?.recordSession(wallpapers: resolution.shown(wallpapers), enabledScreens: enabledScreens)
             }
         watchdog.start { [weak self] trip in self?.watchdogTripped(trip) }
         // A sudden-terminated app never hears `applicationWillTerminate`, which would leave the
@@ -94,7 +95,10 @@ final class SafeRestart: ObservableObject {
     // MARK: - Session tracking
 
     private func recordSession(wallpapers: [String: WEWallpaper], enabledScreens: Set<String>) {
-        let showing = wallpapers.filter { enabledScreens.contains($0.key) && $0.value.project != .invalid }
+        // A split display's regions are on their display.
+        let showing = wallpapers.filter {
+            enabledScreens.contains(DisplayLayoutResolution.screen(of: $0.key)) && $0.value.project != .invalid
+        }
         let previous = ledger.activeSession ?? [:]
         let unchanged = showing.count == previous.count && showing.allSatisfy { screenId, wallpaper in
             previous[screenId].map(SafeRestartLedger.key(for:)) == SafeRestartLedger.key(for: wallpaper)

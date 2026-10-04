@@ -179,6 +179,9 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     /// previewed and rendered (the iPhone & iPad Export) holds it fixed in both, so the camera and
     /// depth parallax, the cursor uniforms and the scripts' cursor are the same in each.
     var fixedPointer: SIMD2<Float>?
+    /// The fixed pointer the camera parallax last reached: a new one is reached at once, not over
+    /// `cameraparallaxdelay`, so a render starts where its preview has settled.
+    private var parallaxSettledPointer: SIMD2<Float>?
     /// The current content's clock text layers.
     private(set) var clockLayerIDs: Set<String> = []
     /// The frames drawn (`BuiltinFrameContext.serial`).
@@ -753,6 +756,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
             lastCameraMotion = nil
             lastTextSizes.removeAll()
             cameraParallax = SceneCameraParallax(sceneSize: sceneSize)
+            parallaxSettledPointer = nil
             cursorTracker = SceneCursorTracker()
             deferredReleases.removeAll()
             lastCommandBuffer = nil
@@ -838,6 +842,7 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
                 self.cameraGeneral = content.general
                 self.clearColor = content.clearColor
                 self.cameraParallax = SceneCameraParallax(sceneSize: content.size, enabled: Self.parallaxEnabled(content.camera))
+                self.parallaxSettledPointer = nil
                 self.lastCameraMotion = nil
                 self.lastTextSizes.removeAll()
                 self.textFrameCache.removeAll()
@@ -1235,7 +1240,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     }
 
     /// Shows the latest shared frame (`renderShared`) on `view`, at its size and the user's
-    /// placement: one pass per display.
+    /// placement: one pass per display. A stretched display shows its rect of the frame placed on
+    /// the whole canvas.
     func present(in view: MTKView) {
         let headroom = viewHeadroom(view)
         sharedHeadrooms[ObjectIdentifier(view)] = headroom
@@ -1247,21 +1253,26 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
               let drawable = view.currentDrawable, let commandBuffer = commandQueue.makeCommandBuffer(),
               let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor) else { return }
         let size = SIMD2<Float>(Float(drawable.texture.width), Float(drawable.texture.height))
-        let pointWidth = SceneViewSnapshots.snapshot(of: view).map { CGFloat($0.pointSize.x) } ?? view.bounds.width
+        let snapshot = SceneViewSnapshots.snapshot(of: view)
+        let pointWidth = snapshot.map { CGFloat($0.pointSize.x) } ?? view.bounds.width
         let pixelsPerPoint = pointWidth > 0 ? size.x / Float(pointWidth) : 1
         encodePlaced(frame, onto: encoder, size: size, pixelsPerPoint: pixelsPerPoint,
-                     pipeline: extended ? layerPipelines.pipelines(for: frame.pixelFormat).copy : copyPipeline)
+                     pipeline: extended ? layerPipelines.pipelines(for: frame.pixelFormat).copy : copyPipeline,
+                     span: snapshot.flatMap { SceneCanvasSpan(snapshot: $0, pixelsPerPoint: pixelsPerPoint) })
         encoder.endEncoding()
         commandBuffer.present(drawable)
         commandBuffer.commit()
         lastPresentCommandBuffer = commandBuffer
     }
 
-    /// Draws `frame` onto a `size`-pixel target at the user's placement, as a display shows it.
+    /// Draws `frame` onto a `size`-pixel target at the user's placement, as a display shows it; on
+    /// a stretch, placed on the canvas and seen through the display's rect of it (`span`).
     private func encodePlaced(_ frame: MTLTexture, onto encoder: MTLRenderCommandEncoder, size: SIMD2<Float>,
-                              pixelsPerPoint: Float, pipeline: MTLRenderPipelineState) {
-        var uniform = layerUniform(position: sceneSize / 2, size: sceneSize, opacity: 1, drawableSize: size,
+                              pixelsPerPoint: Float, pipeline: MTLRenderPipelineState, span: SceneCanvasSpan? = nil) {
+        var uniform = layerUniform(position: sceneSize / 2, size: sceneSize, opacity: 1,
+                                   drawableSize: span?.canvasPixels ?? size,
                                    placement: placement, pixelsPerPoint: pixelsPerPoint)
+        if let span { span.apply(to: &uniform, drawableSize: size) }
         encoder.setRenderPipelineState(pipeline)
         encoder.setVertexBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
         encoder.setFragmentTexture(frame, index: 0)
@@ -2819,10 +2830,12 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
         // Read every frame: turning parallax on or off eases in or out (`SceneCameraParallax.weight`).
         cameraParallax.ease(enabled: parallaxEnabled, deltaTime: deltaTime)
         if cameraParallax.isActive {
+            let settles = fixedPointer != nil && fixedPointer != parallaxSettledPointer
             cameraParallax.update(cursor: pointer, eye: SIMD2(shake.x, shake.y), sceneSize: sceneSize,
                                   influence: sceneSetting(.cameraparallaxmouseinfluence) ?? camera.parallaxMouseInfluence,
-                                  delay: sceneSetting(.cameraparallaxdelay) ?? camera.parallaxDelay,
+                                  delay: settles ? 0 : sceneSetting(.cameraparallaxdelay) ?? camera.parallaxDelay,
                                   deltaTime: deltaTime)
+            parallaxSettledPointer = fixedPointer
             // `_owe_effect_parallax_amount` is an app extra, 1 (WE's amount) by default.
             let amount = (sceneSetting(.cameraparallaxamount) ?? camera.parallaxAmount)
                 * WallpaperServices.shared.userPropertyValue("_owe_effect_parallax_amount", fallback: 1)

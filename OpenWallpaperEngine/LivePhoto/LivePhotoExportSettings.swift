@@ -33,13 +33,15 @@ enum LivePhotoQuality: String, CaseIterable, Identifiable, Codable {
 }
 
 /// What the Export Settings panel sets for one Live Photo: the device it is made for, the
-/// window of the scene it shows, the clip and the movie's quality. The export renders exactly
-/// these, with the isolated store's values (`IsolatedSceneEditSession.values`).
+/// window of the scene it shows, the clip, the movie's quality and where the pointer rests. The
+/// export renders exactly these, with the isolated store's values (`IsolatedSceneEditSession.values`).
 struct LivePhotoExportSettings: Equatable {
     var device: DeviceModel
     var crop: LivePhotoCrop
     var clip: LivePhotoClip
     var quality: LivePhotoQuality
+    /// The pointer the preview and the render hold (`LivePhotoParallax`).
+    var parallaxPosition = LivePhotoParallax.centre
 }
 
 /// What the Export Settings sheet runs once confirmed.

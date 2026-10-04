@@ -20,7 +20,9 @@ enum SettingsAnchor {
     static let assets = "assets"
     static let steamCmd = "steamcmd"
     static let storage = "storage"
+    static let libraryFolders = "libraryfolders"
     static let apiKey = "apikey"
+    static let blockList = "blocklist"
     static let updates = "updates"
     static let privacy = "privacy"
     static let legal = "legal"
@@ -103,6 +105,8 @@ struct SettingsSearch {
             entry("Wallpaper Engine Assets", .assets, SettingsAnchor.assets),
             entry("SteamCMD", .assets, SettingsAnchor.steamCmd),
             entry("Wallpaper Storage", .assets, SettingsAnchor.storage),
+            entry("Library Folders", .assets, SettingsAnchor.libraryFolders),
+            entry("Manage Blocklist", .assets, SettingsAnchor.blockList),
             entry("Steam Web API Key", .assets, SettingsAnchor.apiKey),
 
             entry("Update automatically", .updates, SettingsAnchor.updates),

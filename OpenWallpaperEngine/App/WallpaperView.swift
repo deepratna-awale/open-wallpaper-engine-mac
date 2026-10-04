@@ -20,6 +20,11 @@ struct WallpaperView: View {
         // switches wallpaper, or whose properties split from the others', gets a new view, and
         // with it the other instance. An AVKit video has no properties: one player per video.
         let instance = viewModel.instanceKey(for: screenId)
+        // A stretched display shows its rect of the canvas: a scene renders the canvas once and
+        // each display presents its rect (`SceneCanvasSpan`); a video's one player and each page
+        // are sized to the canvas and offset in the display's window.
+        let canvas = viewModel.layoutResolution.canvases[screenId]
+        let display = canvas == nil ? nil : viewModel.displayRect(of: screenId)
         switch wallpaper.project.type.lowercased() {
         // A remote video is the same pipeline as a local one; only the URL differs.
         case "video", "remote-video":
@@ -29,8 +34,10 @@ struct WallpaperView: View {
                 if webEngine.engine(for: wallpaper) == .chromium {
                     ChromiumVideoWallpaperView(wallpaperViewModel: viewModel, screenId: screenId)
                         .id("\(instance.wallpaper)-chromium")
+                        .stretched(on: canvas, display: display)
                 } else {
                     WebKitVideoWallpaperView(wallpaperViewModel: viewModel, screenId: screenId).id(instance.wallpaper)
+                        .stretched(on: canvas, display: display)
                 }
             // The Metal path draws video as a scene layer so the effect stack applies to it; that
             // needs the assets' shaders, so without them video plays through AVKit.
@@ -39,6 +46,7 @@ struct WallpaperView: View {
                 SceneWallpaperView(wallpaperViewModel: viewModel, screenId: screenId).id(instance)
             } else {
                 AudioReactiveVideoWallpaperView(wallpaperViewModel: viewModel, screenId: screenId).id(instance.wallpaper)
+                    .stretched(on: canvas, display: display)
             }
         case "scene":
             if WallpaperEngineAssets.directory != nil {
@@ -52,12 +60,15 @@ struct WallpaperView: View {
             if webEngine.engine(for: wallpaper) == .chromium {
                 ChromiumWebWallpaperView(wallpaperViewModel: viewModel, screenId: screenId)
                     .id("\(viewModel.propertyScope(for: screenId))-chromium")
+                    .stretched(on: canvas, display: display)
             } else {
                 WebWallpaperView(wallpaperViewModel: viewModel, screenId: screenId)
                     .id(viewModel.propertyScope(for: screenId))
+                    .stretched(on: canvas, display: display)
             }
         case "remote-image":
             RemoteImageWallpaperView(url: URL(string: wallpaper.project.file))
+                .stretched(on: canvas, display: display)
         default:
             EmptyView()
         }

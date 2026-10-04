@@ -174,9 +174,7 @@ struct WallpaperPreview: SubviewOfContentView {
                                         
                                         wallpaper.project.title = title
                                         
-                                        guard let data = try? JSONEncoder().encode(wallpaper.project) else { return }
-                                        
-                                        try? data.write(to: wallpaper.wallpaperDirectory.appending(path: "project.json"), options: .atomic)
+                                        guard WallpaperProjectFileEdit.setLogging(["title": wallpaper.project.title], inProjectAt: wallpaper.wallpaperDirectory) else { return }
                                         
                                         wallpaperViewModel.inspect(wallpaper)
                                         
@@ -243,6 +241,18 @@ struct WallpaperPreview: SubviewOfContentView {
                         sceneAudioPresence[directory] = hasAudio
                     }
                     .font(.footnote)
+
+                    if let folder = LibraryFolders().folder(containing: wallpaperViewModel.displayedWallpaper.settingsDirectory) {
+                        Label {
+                            Text(verbatim: folder.lastPathComponent)
+                        } icon: {
+                            Image(systemName: "folder")
+                        }
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .help(Text("From the library folder \(folder.path(percentEncoded: false))", comment: "%@ is a folder path"))
+                    }
                     
                     ViewThatFits(in: .horizontal) {
                         tags.animation(.spring(), value: isTagsHovered)
@@ -282,9 +292,7 @@ struct WallpaperPreview: SubviewOfContentView {
                                     
                                     wallpaper.project.tags = tags.sorted()
                                     
-                                    guard let data = try? JSONEncoder().encode(wallpaper.project) else { return }
-                                    
-                                    try? data.write(to: wallpaper.wallpaperDirectory.appending(path: "project.json"), options: .atomic)
+                                    guard WallpaperProjectFileEdit.setLogging(["tags": wallpaper.project.tags], inProjectAt: wallpaper.wallpaperDirectory) else { return }
                                     
                                     wallpaperViewModel.inspect(wallpaper)
                                 }
@@ -551,9 +559,7 @@ struct WallpaperPreview: SubviewOfContentView {
                                     
                                     wallpaper.project.tags = tags
                                     
-                                    guard let data = try? JSONEncoder().encode(wallpaper.project) else { return }
-                                    
-                                    try? data.write(to: wallpaper.wallpaperDirectory.appending(path: "project.json"), options: .atomic)
+                                    guard WallpaperProjectFileEdit.setLogging(["tags": wallpaper.project.tags], inProjectAt: wallpaper.wallpaperDirectory) else { return }
                                     
                                     wallpaperViewModel.inspect(wallpaper)
                                 } label: {

@@ -1,5 +1,6 @@
 import AppKit
 import simd
+import SwiftUI
 import XCTest
 @testable import OpenWallpaperEngine
 
@@ -206,8 +207,10 @@ final class LivePhotoExportTests: XCTestCase {
         model.clipStart = 3
         model.quality = .smaller
         model.pan(by: SIMD2(40, -20))
+        model.setParallaxPosition(SIMD2(0.2, 0.75))
 
         let settings = model.settings
+        XCTAssertEqual(settings.parallaxPosition, SIMD2(0.2, 0.75))
         let files = LivePhotoHelper.Files(directory: directory, still: directory.appending(path: "a.HEIC"),
                                           movie: directory.appending(path: "a.MOV"), identifier: "id")
         let job = LivePhotoHelper.exportJob(wallpaper, properties: model.exportProperties, settings: settings, files: files)
@@ -219,13 +222,49 @@ final class LivePhotoExportTests: XCTestCase {
         XCTAssertEqual(decoded.clip.length, 2, accuracy: 1e-9)
         XCTAssertEqual(decoded.clip.start, 3, accuracy: 1e-9)
         XCTAssertEqual(decoded.qualityLevel, .smaller)
+        XCTAssertEqual(decoded.pointer, SIMD2(0.2, 0.75))
         XCTAssertEqual(decoded.properties, session.values)
         XCTAssertEqual(decoded.properties["speed"], "0.75")
         XCTAssertEqual(decoded.still?.path(percentEncoded: false), files.still.path(percentEncoded: false))
         XCTAssertEqual(decoded.movie.path(percentEncoded: false), files.movie.path(percentEncoded: false))
 
-        // The device chosen is the next model's too.
-        XCTAssertEqual(LivePhotoExportModel(session: session, sceneSize: SIMD2(1920, 1080), defaults: defaults).device, iPad)
+        // The device chosen is the next model's too, and the wallpaper's parallax position.
+        let next = LivePhotoExportModel(session: session, sceneSize: SIMD2(1920, 1080), defaults: defaults)
+        XCTAssertEqual(next.device, iPad)
+        XCTAssertEqual(next.parallaxPosition, SIMD2(0.2, 0.75))
+        XCTAssertEqual(LivePhotoParallax.position(for: wallpaper, defaults: defaults), SIMD2(0.2, 0.75))
+        // Held inside the scene; back at the centre, nothing is stored.
+        next.setParallaxPosition(SIMD2(-1, 3))
+        XCTAssertEqual(next.parallaxPosition, SIMD2(0, 1))
+        next.setParallaxPosition(LivePhotoParallax.centre)
+        XCTAssertNil(defaults.object(forKey: LivePhotoParallax.positionKey(next.identity)))
+        XCTAssertEqual(LivePhotoExportModel(session: session, sceneSize: SIMD2(1920, 1080), defaults: defaults).parallaxPosition,
+                       LivePhotoParallax.centre)
+    }
+
+    /// The preview's private instance and the export's renderer hold the same pointer: the panel's
+    /// parallax position, through the export job.
+    @MainActor
+    func testPreviewAndExportJobGetTheSamePointer() throws {
+        let wallpaper = try wallpaper()
+        let session = IsolatedSceneEditSession(wallpaper: wallpaper, purpose: "pointer-test", seededFrom: [.shared],
+                                               defaults: defaults)
+        defer { session.end() }
+        let model = LivePhotoExportModel(session: session, sceneSize: SIMD2(1920, 1080), defaults: defaults)
+        XCTAssertEqual(model.presentation, LivePhotoRenderer.presentation())
+        model.setParallaxPosition(SIMD2(0.3, 0.9))
+
+        let files = LivePhotoHelper.Files(directory: directory, still: directory.appending(path: "a.HEIC"),
+                                          movie: directory.appending(path: "a.MOV"), identifier: "id")
+        let job = LivePhotoHelper.exportJob(wallpaper, properties: model.exportProperties, settings: model.settings, files: files)
+        let decoded = try JSONDecoder().decode(LivePhotoJob.self, from: JSONEncoder().encode(job))
+        let previewRenderer = try XCTUnwrap(SceneMetalRenderer(pixelFormat: .bgra8Unorm))
+        let exportRenderer = try XCTUnwrap(SceneMetalRenderer(pixelFormat: .bgra8Unorm))
+        model.presentation.apply(to: previewRenderer)
+        LivePhotoRenderer.configure(exportRenderer, pointer: decoded.pointer)
+        XCTAssertEqual(previewRenderer.fixedPointer, SIMD2<Float>(0.3, 0.9))
+        XCTAssertEqual(exportRenderer.fixedPointer, previewRenderer.fixedPointer)
+        XCTAssertEqual(model.presentation, LivePhotoRenderer.presentation(pointer: decoded.pointer))
     }
 
     @MainActor
@@ -245,16 +284,19 @@ final class LivePhotoExportTests: XCTestCase {
 
     /// A test card through both paths, for an iPhone and an iPad, zoomed and panned: the preview
     /// (the lock-screen view's geometry, `LockScreenPreview.layout`, over the private instance's
-    /// renderer drawn as `LivePhotoRenderer.presentation` says, at a Retina view's pixels, with
+    /// renderer drawn as `LivePhotoRenderer.presentation(pointer:)` says, at a Retina view's pixels, with
     /// the mouse in a corner) and the export (`LivePhotoRenderer.viewport` cut by
     /// `LivePhotoCrop.outputImage`) put the marker at the same place, within 1% of the picture,
-    /// with camera parallax off and on.
+    /// with camera parallax off and on, and on with the pointer held away from the centre
+    /// (Parallax Position).
     @MainActor
     func testPreviewAndExportFrameTheSameWithAndWithoutParallax() throws {
         let sceneSize = SIMD2<Double>(1600, 900)
         let marker = SIMD2<Double>(1150, 600)  // Scene units, origin top-left.
-        for parallax in [false, true] {
+        let moved = SIMD2<Double>(0.15, 0.8)
+        for (parallax, pointer) in [(false, LivePhotoParallax.centre), (true, LivePhotoParallax.centre), (true, moved)] {
             let content = try Self.testCard(sceneSize: sceneSize, marker: marker, parallax: parallax)
+            XCTAssertEqual(LivePhotoParallax.followsPointer(content), parallax)
             for name in ["iPhone 17 Pro", "iPad Pro 11-inch (M5)"] {
                 let device = DeviceModel.model(id: name)
                 XCTAssertEqual(device.name, name)
@@ -264,14 +306,14 @@ final class LivePhotoExportTests: XCTestCase {
 
                 let exported = try XCTUnwrap(crop.outputImage(from: try render(content, LivePhotoRenderer.viewport(for: crop),
                                                                                   pixels: crop.renderPixelSize) {
-                    LivePhotoRenderer.configure($0)
+                    LivePhotoRenderer.configure($0, pointer: pointer)
                 }))
                 XCTAssertEqual(exported.width, device.pixelSize.x)
                 XCTAssertEqual(exported.height, device.pixelSize.y)
-                let previewed = try preview(content, crop: crop, fixed: true)
+                let previewed = try preview(content, crop: crop, fixed: true, pointer: pointer)
                 let exportMarker = try XCTUnwrap(Self.markerCentre(in: exported), "\(name): marker in the export")
                 let previewMarker = try XCTUnwrap(Self.markerCentre(in: previewed), "\(name): marker in the preview")
-                let label = "\(name), parallax \(parallax)"
+                let label = "\(name), parallax \(parallax), pointer \(pointer)"
                 XCTAssertEqual(previewMarker.x, exportMarker.x, accuracy: 0.01, label)
                 XCTAssertEqual(previewMarker.y, exportMarker.y, accuracy: 0.01, label)
                 if !parallax {
@@ -280,19 +322,152 @@ final class LivePhotoExportTests: XCTestCase {
                     let expected = SIMD2((marker.x - window.minX) / window.width, (marker.y - window.minY) / window.height)
                     XCTAssertEqual(exportMarker.x, expected.x, accuracy: 0.01, label)
                     XCTAssertEqual(exportMarker.y, expected.y, accuracy: 0.01, label)
-                } else {
+                } else if pointer == LivePhotoParallax.centre {
                     // Following the mouse instead, the preview would move the marker away.
                     let following = try XCTUnwrap(Self.markerCentre(in: try preview(content, crop: crop, fixed: false)))
                     XCTAssertGreaterThan(simd_length(following - exportMarker), 0.02, label)
+                } else {
+                    // The moved pointer moves the marker away from where the centre puts it.
+                    let centred = try XCTUnwrap(Self.markerCentre(in: try preview(content, crop: crop, fixed: true)))
+                    XCTAssertGreaterThan(simd_length(centred - exportMarker), 0.02, label)
                 }
             }
         }
     }
 
+    // MARK: The crop reaches every edge
+
+    /// A tall iPhone, an iPad and the same iPad turned.
+    private static let edgeDevices: [(name: String, landscape: Bool)] = [
+        ("iPhone 17 Pro Max", false), ("iPad Pro 13-inch (M5)", false), ("iPad Pro 13-inch (M5)", true),
+    ]
+
+    /// Panned as far as it goes each way, at zoom 1 and 2, in a landscape and a portrait scene,
+    /// the window's edge is the scene's.
+    func testPanReachesEachEdgeOfTheScene() {
+        for scene in [SIMD2<Double>(1600, 900), SIMD2(900, 1600)] {
+            for (name, landscape) in Self.edgeDevices {
+                for zoom in [1.0, 2.0] {
+                    let label = "\(name)\(landscape ? " landscape" : ""), zoom \(zoom), scene \(scene)"
+                    var crop = LivePhotoCrop(sceneSize: scene, outputPixels: DeviceModel.model(id: name).pixelSize, zoom: zoom)
+                    func window() -> CGRect { landscape ? crop.landscapeRect : crop.cropRect }
+                    crop.pan(by: SIMD2(-100_000, 0))
+                    XCTAssertEqual(window().minX, 0, accuracy: 1e-9, label)
+                    crop.pan(by: SIMD2(100_000, 0))
+                    XCTAssertEqual(window().maxX, scene.x, accuracy: 1e-9, label)
+                    // The portrait window reaches the top and bottom; turned, an iPad shows its middle band.
+                    crop.pan(by: SIMD2(0, -100_000))
+                    XCTAssertEqual(crop.cropRect.minY, 0, accuracy: 1e-9, label)
+                    XCTAssertEqual(window().midY, crop.cropRect.midY, accuracy: 1e-9, label)
+                    crop.pan(by: SIMD2(0, 100_000))
+                    XCTAssertEqual(crop.cropRect.maxY, scene.y, accuracy: 1e-9, label)
+                    XCTAssertEqual(window().midY, crop.cropRect.midY, accuracy: 1e-9, label)
+                }
+            }
+        }
+    }
+
+    /// Panned as far as it goes each way, the lock-screen view shows the scene's edge at the
+    /// screen's: a card with a coloured stripe on each side, placed in the screen as the view
+    /// places the scene (`LockScreenPreview.pinned`), has the left stripe in the screen's first
+    /// column when panned far left, and so on.
+    @MainActor
+    func testPreviewShowsTheScenesEdgeAtEachEnd() throws {
+        let scene = SIMD2<Double>(1600, 900)
+        let stripes: [(edge: Edge, color: SIMD3<Int>)] = [
+            (.leading, SIMD3(255, 0, 0)), (.trailing, SIMD3(0, 0, 255)), (.top, SIMD3(0, 255, 0)), (.bottom, SIMD3(255, 255, 0)),
+        ]
+        func stripe(_ edge: Edge) -> some View {
+            let color = stripes.first { $0.edge == edge }!.color
+            let across = edge == .leading || edge == .trailing
+            return Color(.sRGB, red: Double(color.x) / 255, green: Double(color.y) / 255, blue: Double(color.z) / 255)
+                .frame(width: across ? 3 : nil, height: across ? nil : 3)
+                .padding(across ? .vertical : .horizontal, 6)
+        }
+        let card = Color.gray
+            .overlay(alignment: .leading) { stripe(.leading) }
+            .overlay(alignment: .trailing) { stripe(.trailing) }
+            .overlay(alignment: .top) { stripe(.top) }
+            .overlay(alignment: .bottom) { stripe(.bottom) }
+        for (name, landscape) in Self.edgeDevices {
+            for zoom in [1.0, 2.0] {
+                var crop = LivePhotoCrop(sceneSize: scene, outputPixels: DeviceModel.model(id: name).pixelSize, zoom: zoom)
+                // Turned, an iPad shows the portrait window's middle band, never its top or bottom.
+                for (edge, color) in stripes where !landscape || edge == .leading || edge == .trailing {
+                    switch edge {
+                    case .leading: crop.pan(by: SIMD2(-100_000, 0))
+                    case .trailing: crop.pan(by: SIMD2(100_000, 0))
+                    case .top: crop.pan(by: SIMD2(0, -100_000))
+                    case .bottom: crop.pan(by: SIMD2(0, 100_000))
+                    }
+                    let window = landscape ? crop.landscapeRect : crop.cropRect
+                    let space = landscape ? CGSize(width: 640, height: 420) : CGSize(width: 420, height: 640)
+                    let layout = LockScreenPreview.layout(window: window, sceneSize: scene, in: space)
+                    let screen = ZStack(alignment: .topLeading) {
+                        Color.black
+                        LockScreenPreview.pinned(card, size: layout.sceneViewSize, at: layout.sceneViewOffset, in: layout.frame)
+                    }
+                    .frame(width: layout.frame.width, height: layout.frame.height)
+                    .clipped()
+                    let renderer = ImageRenderer(content: screen)
+                    renderer.scale = 1
+                    let image = try XCTUnwrap(renderer.cgImage)
+                    let point: SIMD2<Int> = switch edge {
+                    case .leading: SIMD2(0, image.height / 2)
+                    case .trailing: SIMD2(image.width - 1, image.height / 2)
+                    case .top: SIMD2(image.width / 2, 0)
+                    case .bottom: SIMD2(image.width / 2, image.height - 1)
+                    }
+                    let pixel = try XCTUnwrap(Self.pixel(in: image, at: point))
+                    let label = "\(name)\(landscape ? " landscape" : ""), zoom \(zoom), \(edge): \(pixel)"
+                    let difference = pixel &- color
+                    XCTAssertLessThanOrEqual(max(abs(difference.x), abs(difference.y), abs(difference.z)), 40, label)
+                }
+            }
+        }
+    }
+
+    /// Panned as far as it goes left (right), the export's first (last) column is the scene's: a
+    /// marker centred on the scene's left (right) edge shows in it.
+    @MainActor
+    func testExportOfAnEdgeCropContainsTheScenesEdgeColumn() throws {
+        let scene = SIMD2<Double>(1600, 900)
+        for left in [true, false] {
+            let content = try Self.testCard(sceneSize: scene, marker: SIMD2(left ? 0 : scene.x, 450), parallax: false)
+            for name in ["iPhone 17 Pro Max", "iPad Pro 13-inch (M5)"] {
+                for zoom in [1.0, 2.0] {
+                    var crop = LivePhotoCrop(sceneSize: scene, outputPixels: DeviceModel.model(id: name).pixelSize, zoom: zoom)
+                    crop.pan(by: SIMD2(left ? -100_000 : 100_000, 0))
+                    let exported = try XCTUnwrap(crop.outputImage(from: try render(content, LivePhotoRenderer.viewport(for: crop),
+                                                                                      pixels: crop.renderPixelSize) {
+                        LivePhotoRenderer.configure($0)
+                    }))
+                    let row = Int((450 - crop.cropRect.minY) / crop.cropRect.height * Double(exported.height))
+                    let pixel = try XCTUnwrap(Self.pixel(in: exported, at: SIMD2(left ? 0 : exported.width - 1, row)))
+                    let label = "\(name), zoom \(zoom), \(left ? "left" : "right"): \(pixel)"
+                    XCTAssertGreaterThan(pixel.x, 180, label)
+                    XCTAssertLessThan(pixel.y, 90, label)
+                    XCTAssertLessThan(pixel.z, 90, label)
+                }
+            }
+        }
+    }
+
+    /// The sRGB red, green and blue of `image` at `point` (pixels, origin top-left).
+    private static func pixel(in image: CGImage, at point: SIMD2<Int>) -> SIMD3<Int>? {
+        guard let context = CGContext(data: nil, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4,
+                                      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                      bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue) else { return nil }
+        context.draw(image, in: CGRect(x: -point.x, y: point.y - image.height + 1, width: image.width, height: image.height))
+        guard let data = context.data?.assumingMemoryBound(to: UInt8.self) else { return nil }
+        return SIMD3(Int(data[0]), Int(data[1]), Int(data[2]))
+    }
+
     /// The preview's picture: the scene drawn into the lock-screen view's scene view (2 pixels a
     /// point, the mouse at its bottom-left corner) and the screen's frame cut out of it.
     @MainActor
-    private func preview(_ content: SceneMetalContent, crop: LivePhotoCrop, fixed: Bool) throws -> CGImage {
+    private func preview(_ content: SceneMetalContent, crop: LivePhotoCrop, fixed: Bool,
+                         pointer: SIMD2<Double> = LivePhotoParallax.centre) throws -> CGImage {
         let layout = LockScreenPreview.layout(window: crop.cropRect, sceneSize: crop.sceneSize,
                                               in: CGSize(width: 420, height: 640))
         let points = SIMD2(Float(layout.sceneViewSize.width), Float(layout.sceneViewSize.height))
@@ -300,7 +475,7 @@ final class LivePhotoExportTests: XCTestCase {
         let viewport = SceneViewport(drawableSize: SIMD2(Float(pixels.x), Float(pixels.y)), pointSize: points,
                                      cursor: SIMD2(4, 4), frameRateLimit: 30)
         let frame = try render(content, viewport, pixels: pixels) { renderer in
-            LivePhotoRenderer.presentation.apply(to: renderer)
+            LivePhotoRenderer.presentation(pointer: pointer).apply(to: renderer)
             if !fixed { renderer.fixedPointer = nil }
         }
         let rect = CGRect(x: -layout.sceneViewOffset.x * 2, y: -layout.sceneViewOffset.y * 2,

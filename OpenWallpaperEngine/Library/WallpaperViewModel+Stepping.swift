@@ -60,7 +60,7 @@ extension WallpaperViewModel {
             previousPlaylistWallpaper()
             return
         }
-        for screenId in selectedScreenIds {
+        for screenId in layoutResolution.targets(of: selectedScreenIds) {
             guard let previous = wallpaperHistory.back(for: screenId, showing: wallpaper(for: screenId)),
                   confirmApply?(previous) ?? true else { continue }
             wallpapers[screenId] = previous

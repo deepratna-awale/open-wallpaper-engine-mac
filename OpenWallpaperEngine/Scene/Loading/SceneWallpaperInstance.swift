@@ -84,8 +84,12 @@ final class SceneWallpaperInstance {
         }
     }
 
-    /// Set once, before the instance is shown.
+    /// Set before the instance is shown; a change applies on the next `update()` (the export's
+    /// Parallax Position moves the pointer while it is dragged).
     var presentation: Presentation?
+    /// Called on the main thread with each content the instance loads (the export's Parallax
+    /// Position shows only for a scene that follows the pointer, `LivePhotoParallax`).
+    var onContent: ((SceneMetalContent) -> Void)?
     /// Objects a structural property change rebuilds alone, and the pending rebuild.
     private var pendingObjects = Set<Int>()
     private var pendingObjectRebuild: DispatchWorkItem?
@@ -261,6 +265,7 @@ final class SceneWallpaperInstance {
                 $0.setEditorLiveValues(live)
             }
             self.updateVideoPlayback()
+            if let content { self.onContent?(content) }
         }
     }
 

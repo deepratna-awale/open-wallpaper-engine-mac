@@ -131,6 +131,7 @@ groups:
     - "Workshop*"
     - "Playlist*"
     - "Display*"
+    - "ScreenSaverLayout*"
     - "Desktop*"
     - "Steam*"
     - "ImportedFolder*"
@@ -157,7 +158,7 @@ map:
   "OpenWallpaperEngine/Library/**": ["@library"]
   "OpenWallpaperEngine/Workshop/**": ["Workshop*", "Steam*", "WallpaperEngineAssets*", "ImportedFolder*", "Installed*"]
   "OpenWallpaperEngine/Settings/**": ["Settings*", "ApplicationRules*", "Quality*", "PowerPolicy*", "DisplayHDR*", "ReadOnlyDefaults*", "SteamCmd*", "AppUpdate*", "Update*", "WhatsNew*", "MenuShortcut*", "WallpaperEngineAssets*", "GlobalHotKey*", "WallpaperScreenshot*", "AudioRecording*"]
-  "OpenWallpaperEngine/UI/**": ["DisplayWallpaperPicture*", "Onboarding*", "WhatsNew*", "FilterResults*", "SortBy*", "Menu*", "Playlist*", "Installed*", "NumericSlider*", "Legal*", "Desktop*", "Workshop*", "Steam*", "WallpaperPreset*", "Settings*", "WallpaperDisplayOptions*"]
+  "OpenWallpaperEngine/UI/**": ["DisplayWallpaperPicture*", "Onboarding*", "WhatsNew*", "FilterResults*", "SortBy*", "Menu*", "Playlist*", "Installed*", "NumericSlider*", "Legal*", "Desktop*", "Display*", "Workshop*", "Steam*", "WallpaperPreset*", "Settings*", "WallpaperDisplayOptions*"]
   "OpenWallpaperEngine/Localizable.xcstrings": ["Localization*"]
   "OpenWallpaperEngine/DepthMaps/**": ["DepthMap*", "DepthParallax*", "Localization*"]
   "OpenWallpaperEngine/MCP/**": ["MCP*", "Localization*"]

@@ -202,6 +202,21 @@ private struct WorkshopBrowserView: View {
 
     @ToolbarContentBuilder private var browserToolbar: some ToolbarContent {
         ToolbarItemGroup {
+            if let base = viewModel.presetBase {
+                Label {
+                    Text("Browsing presets for: \(base.title)", comment: "%@ is a wallpaper title")
+                } icon: {
+                    Image(systemName: "slider.horizontal.below.square.filled.and.square")
+                }
+                .labelStyle(.titleAndIcon)
+                .foregroundStyle(.secondary)
+                Button {
+                    viewModel.clearPresetFilter()
+                } label: {
+                    Label("Clear preset filter", systemImage: "xmark.circle.fill")
+                }
+                .help("Clear preset filter")
+            }
             if viewModel.authorId != nil {
                 Label("Author Workshop", systemImage: "person.fill")
                     .labelStyle(.titleAndIcon)
@@ -405,11 +420,11 @@ private struct WorkshopPagination: View {
 }
 
 /// The Workshop tab's filters, in the main window's sidebar. Every change searches again.
-/// Within Show Only, Rating, Type and Resolution any checked option matches (OR); genres match
+/// Within Show Only, Rating, Type, Category and Resolution any checked option matches (OR); genres match
 /// all or any, as the toggle beside them says; the sections narrow the results together.
 struct WorkshopFiltersSidebar: View {
     @ObservedObject var viewModel: WorkshopViewModel
-    @State private var expandedSections: Set<String> = ["Show Only", "Rating", "Type", "Resolution", "Genre"]
+    @State private var expandedSections: Set<String> = ["Show Only", "Rating", "Type", "Category", "Resolution", "Genre"]
 
     var body: some View {
         List {
@@ -436,6 +451,7 @@ struct WorkshopFiltersSidebar: View {
             }
             tagSection("Rating", id: "Rating", tags: WorkshopTags.ratings, \.ratings)
             tagSection("Type", id: "Type", tags: WorkshopTags.types, \.types)
+            tagSection("Category", id: "Category", tags: WorkshopTags.categories, \.categories)
             Section("Resolution", isExpanded: isExpanded("Resolution")) {
                 ResolutionFilterRows(
                     isOn: { viewModel.filter.resolutions.contains($0) },
@@ -509,7 +525,9 @@ struct WorkshopFiltersSidebar: View {
 
 // MARK: - Workshop Item Card
 
-private struct WorkshopItemCard: View {
+/// A Workshop result in the Workshop and Discover tabs: its preview, title and tags, the download
+/// control and the item's context menu.
+struct WorkshopItemCard: View {
     let item: WorkshopItem
     @ObservedObject var viewModel: WorkshopViewModel
 
@@ -670,6 +688,78 @@ private struct WorkshopItemMenu: View {
         } label: {
             Label(viewModel.isFavorite(item) ? "Remove from Favorites" : "Add to Favorites",
                   systemImage: viewModel.isFavorite(item) ? "heart.slash" : "heart.fill")
+        }
+
+        Divider()
+
+        Button {
+            WorkshopPageLink.open(item.id)
+        } label: {
+            Label("Open in Workshop", systemImage: "cloud.fill")
+        }
+        WorkshopRelatedMenu(viewModel: viewModel, authorId: item.creatorId, presetBase: viewModel.presetBase(for: item))
+
+        Divider()
+
+        Button {
+            WorkshopPageLink.open(item.id)
+        } label: {
+            Label("Report…", systemImage: "exclamationmark.triangle")
+        }
+        .help("Opens the wallpaper's Steam Workshop page, where you can report it to Steam")
+        Button {
+            viewModel.blockList.block(item)
+        } label: {
+            Label("Block Wallpaper", systemImage: "eye.slash")
+        }
+        .help("Hides this wallpaper from the Workshop and Discover tabs on this Mac. Settings › Assets lists what you blocked.")
+        if let author = item.creatorId {
+            let name = viewModel.authorName(of: author)
+            if viewModel.blockList.isAuthorBlocked(author) {
+                Button {
+                    viewModel.blockList.unblockAuthor(author)
+                } label: {
+                    Label("Unblock \(name)", systemImage: "person.crop.circle.badge.checkmark")
+                }
+            } else {
+                Button {
+                    viewModel.blockList.blockAuthor(author, name: name)
+                } label: {
+                    Label("Block \(name)", systemImage: "person.crop.circle.badge.xmark")
+                }
+                .help("Hides this author's wallpapers from the Workshop and Discover tabs on this Mac")
+            }
+        }
+    }
+}
+
+/// WE's "Related Wallpapers" submenu: the author's other Workshop items, and the presets
+/// published for the wallpaper (or, for a preset, for its base), listed in the Workshop browser.
+struct WorkshopRelatedMenu: View {
+    @ObservedObject var viewModel: WorkshopViewModel
+    let authorId: String?
+    let presetBase: WorkshopPresetBase?
+
+    var body: some View {
+        if authorId != nil || presetBase != nil {
+            Menu {
+                if let authorId {
+                    Button {
+                        viewModel.showAuthor(authorId)
+                    } label: {
+                        Label("Browse All by \(viewModel.authorName(of: authorId))", systemImage: "person.fill")
+                    }
+                }
+                if let presetBase {
+                    Button {
+                        viewModel.showPresets(of: presetBase)
+                    } label: {
+                        Label("Browse Presets", systemImage: "slider.horizontal.below.square.filled.and.square")
+                    }
+                }
+            } label: {
+                Label("Related Wallpapers", systemImage: "rectangle.stack")
+            }
         }
     }
 }

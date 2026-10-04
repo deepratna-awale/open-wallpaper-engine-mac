@@ -170,7 +170,7 @@ struct ContentView: View {
         .sheet(isPresented: $viewModel.isDisplaySettingsReveal) {
             DisplaySettings(viewModel: viewModel)
                 .padding()
-                .frame(width: 520, height: 450)
+                .frame(width: 600, height: 600)
                 .presentationBackground(.regularMaterial)
         }
         .overlay(alignment: .bottomTrailing) {
@@ -267,6 +267,9 @@ struct ContentView: View {
             DownloadsView(steamCmd: viewModel.steamCmd)
         case 3:
             PlaylistView(wallpaperViewModel: wallpaperViewModel)
+        case 4:
+            WorkshopDiscoverView(model: viewModel.discoverVM, workshop: viewModel.workshopVM,
+                                 cardSize: viewModel.explorerIconSize - 5)
         default:
             EmptyView()
         }

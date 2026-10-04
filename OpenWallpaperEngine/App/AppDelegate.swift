@@ -192,6 +192,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         contentViewModel?.steamCmd.detectSteamCmd()
     })
     private var assetsCancellable: AnyCancellable?
+    /// Lists wallpapers added to or removed from the library folders as they change.
+    private lazy var libraryFolderWatcher: LibraryFolderWatcher = {
+        let watcher = LibraryFolderWatcher()
+        watcher.onChange = { [weak self] in self?.contentViewModel.refresh() }
+        return watcher
+    }()
     /// Fetches the Workshop items shown wallpapers borrow assets from.
     lazy var workshopDependencies = WorkshopDependencyService(steamCmd: contentViewModel.steamCmd)
     private var workshopDependencyCancellable: AnyCancellable?
@@ -201,6 +207,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                                                    wallpaperViewModel: wallpaperViewModel)
     private var audioOutputCancellable: AnyCancellable?
     private var syncPropertiesCancellable: AnyCancellable?
+    private var displayFlipCancellable: AnyCancellable?
+    private var stretchCanvasCancellable: AnyCancellable?
     private var mediaIntegrationCancellable: AnyCancellable?
     private var recordingThresholdCancellable: AnyCancellable?
     /// Follows the default output device: capture always restarts, wallpapers reload when the
@@ -213,6 +221,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         reloadWallpapers: { [weak self] in MainActor.assumeIsolated { self?.rebuildWallpaperWindows() } })
     /// Settings › Performance › Playback, per display (`App/Playback`).
     private(set) lazy var displayPlaybackMonitor = makeDisplayPlaybackMonitor()
+    /// Saved display profiles, which application rules' "Load profile" loads. None until display
+    /// layouts can be saved; that feature sets its own here.
+    var displayProfiles: any DisplayProfileLoading = UnavailableDisplayProfiles()
+    /// Application rules' load actions, and the restore when no rule matches any more.
+    private(set) lazy var applicationRuleLoader = makeApplicationRuleLoader()
     /// Advanced › "Pause when VRAM is exhausted", fed to `displayPlaybackMonitor`.
     private(set) lazy var videoMemoryWatch = makeVideoMemoryWatch()
     private var videoMemorySettingCancellable: AnyCancellable?
@@ -235,7 +248,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         super.init()
         OWELog.info(.app, "AppDelegate created (pid \(ProcessInfo.processInfo.processIdentifier))")
         if AppLaunchMode.parse(CommandLine.arguments).isWallpaperEditor {
-            OWELog.error(.app, "AppDelegate created in the Wallpaper Editor's process: something there reached AppDelegate.shared")
+            let caller = Thread.callStackSymbols.prefix(12).joined(separator: "\n")
+            OWELog.error(.app, "AppDelegate created in the Wallpaper Editor's process: something there reached AppDelegate.shared from\n\(caller)")
+            // Debug builds stop here; a release keeps running with the app's delegate made.
+            assertionFailure("AppDelegate.shared reached in the Wallpaper Editor's process")
         }
     }
     
@@ -250,6 +266,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             // After the change is applied, so the old wallpaper counts as no longer shown.
             DispatchQueue.main.async { self?.staleBundleRefresher?.shownWallpapersChanged() }
         }
+
+        libraryFolderWatcher.watch(LibraryFolders().folders)
 
         // New or removed assets: scripts, the library (default wallpapers) and every scene reload.
         assetsCancellable = assets.assetsChanged.sink { [weak self] in
@@ -270,6 +288,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Settings › Optimizations › Recording threshold: quieter captured audio reads as silence.
         recordingThresholdCancellable = globalSettingsViewModel.$settings.map(\.audioRecordingThreshold).removeDuplicates()
             .sink { WallpaperServices.shared.audioCapture.recordingThreshold = $0 }
+        // Flipped clone displays mirror their window's content (`WallpaperWindowContentView`).
+        displayFlipCancellable = wallpaperViewModel.$layoutResolution.map(\.flipped).removeDuplicates()
+            .sink { [weak self] flipped in self?.applyDisplayFlips(flipped) }
+        // Stretched displays name their canvas to the scene views in their windows.
+        stretchCanvasCancellable = wallpaperViewModel.$layoutResolution.map(\.canvases).removeDuplicates()
+            .sink { [weak self] canvases in self?.applyStretchCanvases(canvases) }
+        // The screen saver's loops follow the displays' wallpapers and layouts.
+        screenSaver.observe(wallpaperViewModel)
         // Settings › Optimizations › Media integration support: whether wallpapers hear Now Playing.
         mediaIntegrationCancellable = globalSettingsViewModel.$settings.map(\.mediaIntegration).removeDuplicates()
             .sink { [weak self] enabled in self?.mediaSession.setIntegrationEnabled(enabled) }
@@ -338,6 +364,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     
 // MARK: - delegate methods
+    /// Settings › Library Folders changed: watch the new set and list its wallpapers.
+    func libraryFoldersDidChange() {
+        libraryFolderWatcher.watch(LibraryFolders().folders)
+        contentViewModel.refresh()
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         // A test copy wears "TEST", a local build "Dev", on its Dock icon (`DockBadge`).
         DockBadge.current.apply()
@@ -447,6 +479,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     
     func applicationWillTerminate(_ notification: Notification) {
+        // What an application rule loaded isn't the user's choice: the saved wallpapers and
+        // playlist go back to theirs before they are stored for the next launch.
+        if applicationRuleLoader.isHoldingRestorePoint { applicationRuleLoader.update(nil) }
         safeRestart.applicationWillTerminate()
         crashWatcher.applicationWillTerminate()
         mcpServerPlugin.stop()
@@ -569,9 +604,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         settingsNavigation.toolbar = toolbar
 
         self.settingsWindow.toolbar = toolbar
+        let ruleLibrary = ApplicationRuleLibrary(
+            wallpapers: { [weak self] in self?.contentViewModel.allWallpapers ?? [] },
+            playlists: { [weak self] in self?.wallpaperViewModel.playlists ?? [] },
+            profiles: { [weak self] in self?.displayProfiles ?? UnavailableDisplayProfiles() })
         self.settingsWindow.contentView = NSHostingView(rootView: SettingsView()
             .environmentObject(self.globalSettingsViewModel)
-            .environmentObject(settingsNavigation))
+            .environmentObject(settingsNavigation)
+            .environment(\.applicationRuleLibrary, ruleLibrary))
 
         // A saved frame is the size and place the user left the window at; only the first open
         // gets the computed size. The frame autosaves into UserDefaults.standard, which an
@@ -607,11 +647,29 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             window.canBecomeVisibleWithoutLogin = true
             window.isReleasedWhenClosed = false
             window.ignoresMouseEvents = true
-            // The wallpaper's display options (offset, zoom, flip) place the view on the display.
-            window.contentView = WallpaperDisplayTransformView(
-                content: NSHostingView(rootView: WallpaperView(viewModel: self.wallpaperViewModel, screenId: screenId)),
-                screenID: screenId, viewModel: wallpaperViewModel)
+            // The wallpaper's display options (offset, zoom, flip) place the view on the display,
+            // inside the layout's content (clone mirror, stretch canvas).
+            let content = WallpaperWindowContentView(content: WallpaperDisplayTransformView(
+                content: NSHostingView(rootView: DisplayWallpaperView(viewModel: self.wallpaperViewModel, screenId: screenId)),
+                screenID: screenId, viewModel: wallpaperViewModel))
+            content.isMirrored = wallpaperViewModel.isFlipped(screenId)
+            content.stretchCanvas = wallpaperViewModel.layoutResolution.canvases[screenId]
+            window.contentView = content
             wallpaperWindows[screenId] = window
+        }
+    }
+
+    /// Mirrors the windows of flipped clone displays and only those.
+    private func applyDisplayFlips(_ flipped: Set<String>) {
+        for (screenId, window) in wallpaperWindows {
+            (window.contentView as? WallpaperWindowContentView)?.isMirrored = flipped.contains(screenId)
+        }
+    }
+
+    /// Names each stretched display's canvas in its window; the others have none.
+    private func applyStretchCanvases(_ canvases: [String: CGRect]) {
+        for (screenId, window) in wallpaperWindows {
+            (window.contentView as? WallpaperWindowContentView)?.stretchCanvas = canvases[screenId]
         }
     }
 
@@ -686,6 +744,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         for id in connectedIds where !wallpaperViewModel.enabledScreens.contains(id) {
             wallpaperViewModel.enabledScreens.insert(id)
         }
+        // Groups whose displays came back wake up; those left with one display go dormant.
+        wallpaperViewModel.refreshDisplayLayout()
         rebuildWallpaperWindows()
     }
     
@@ -707,10 +767,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
             // Find the WKWebView in whichever wallpaper window the event lands on
             let mouseLocation = NSEvent.mouseLocation
+            // A split display has a page per region, and a stretched page is the canvas's size.
             guard let targetWindow = self.wallpaperWindows.values.first(where: { $0.frame.contains(mouseLocation) }),
-                  // The content is the display-options view, holding the hosting view.
-                  let webview = targetWindow.contentView?.subviews.first?.subviews.first?.subviews.first,
-                  webview is WKWebView else { return }
+                  let webview = targetWindow.contentView?.webView(at: mouseLocation) else { return }
 
             switch event.type {
             case .scrollWheel:

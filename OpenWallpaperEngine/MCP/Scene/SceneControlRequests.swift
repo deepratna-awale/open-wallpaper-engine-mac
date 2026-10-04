@@ -37,8 +37,8 @@ final class SceneControlRequests: ControlRequestGroup {
                 guard let found = model.find(wallpaper) else { throw AppControlModel.missing(wallpaper) }
                 return try WallpaperSceneEditResources(wallpaper: found, depthMapGenerator: DepthMapPlugin.generator)
             },
-            announce: { [unowned app] folder, overlay, actionName in
-                app.editorChangeSync.appOverlayDidSave(folder: folder, overlay: overlay, actionName: actionName)
+            announce: { [unowned app] folder, overlay, actionName, step in
+                app.editorChangeSync.appOverlayDidSave(folder: folder, overlay: overlay, actionName: actionName, step: step)
             }))
         return SceneControlRequests(service: service, editors: AppSceneEditorControl(app: app, model: model))
     }

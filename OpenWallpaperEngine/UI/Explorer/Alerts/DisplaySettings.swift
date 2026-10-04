@@ -16,6 +16,11 @@ struct DisplaySettings: SubviewOfContentView {
         self.wallpaperViewModel = AppDelegate.shared.wallpaperViewModel
     }
 
+    /// Every display that shows a wallpaper, a split display's regions in its place.
+    private var allDisplays: Set<String> {
+        Set(wallpaperViewModel.layoutResolution.shownDisplays(NSScreen.screens.map(WallpaperViewModel.screenId(for:))))
+    }
+
     var body: some View {
         VStack(spacing: 16) {
             Text("Display Settings")
@@ -26,13 +31,35 @@ struct DisplaySettings: SubviewOfContentView {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
+            // WE's layouts, and its profiles of the whole layout.
+            HStack(spacing: 12) {
+                Picker("Layout", selection: Binding(
+                    get: { wallpaperViewModel.displayLayout.layout },
+                    set: { wallpaperViewModel.setLayout($0) }
+                )) {
+                    Text("Wallpaper per display").tag(DisplayLayoutMode.perDisplay)
+                    Text("Stretch single wallpaper").tag(DisplayLayoutMode.stretch)
+                    Text("Clone single wallpaper").tag(DisplayLayoutMode.clone)
+                }
+                .pickerStyle(.menu)
+                .fixedSize()
+                DisplayProfilesMenu(profiles: wallpaperViewModel.displayProfiles)
+            }
+
+            ScreenSaverLayoutPicker(layout: $wallpaperViewModel.screenSaverLayout)
+
+            Text("Right-click a display to stretch or clone it with the selected displays, split it, choose the main clone display, flip a clone or mute a display.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+
             Toggle("All Desktops", isOn: Binding(
                 get: {
-                    let screenIds = Set(NSScreen.screens.map(WallpaperViewModel.screenId(for:)))
+                    let screenIds = allDisplays
                     return !screenIds.isEmpty && wallpaperViewModel.selectedScreenIds == screenIds
                 },
                 set: { selectAll in
-                    let screenIds = Set(NSScreen.screens.map(WallpaperViewModel.screenId(for:)))
+                    let screenIds = allDisplays
                     wallpaperViewModel.selectedScreenIds = selectAll ? screenIds : [wallpaperViewModel.selectedScreenId]
                 }
             ))
@@ -42,17 +69,19 @@ struct DisplaySettings: SubviewOfContentView {
             MonitorLayoutView(wallpaperViewModel: wallpaperViewModel)
                 .frame(maxHeight: 200)
 
-            // Selected screen info
-            if let screen = NSScreen.screens.first(where: { WallpaperViewModel.screenId(for: $0) == wallpaperViewModel.selectedScreenId }) {
+            // Selected screen info (a region of a split display shows its own size)
+            let selectedScreen = DisplayLayoutResolution.screen(of: wallpaperViewModel.selectedScreenId)
+            if let screen = NSScreen.screens.first(where: { WallpaperViewModel.screenId(for: $0) == selectedScreen }) {
                 let screenId = wallpaperViewModel.selectedScreenId
                 let wp = wallpaperViewModel.wallpaper(for: screenId)
+                let size = wallpaperViewModel.displayRect(of: screenId)?.size ?? screen.frame.size
 
                 GroupBox {
                     VStack(spacing: 8) {
                         HStack {
                             Text(WallpaperViewModel.screenName(for: screen))
                                 .font(.headline)
-                            Text(verbatim: "\(Int(screen.frame.width))×\(Int(screen.frame.height))")
+                            Text(verbatim: "\(Int(size.width))×\(Int(size.height))")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                             Spacer()
@@ -68,7 +97,7 @@ struct DisplaySettings: SubviewOfContentView {
                             HStack {
                                 DisplayWallpaperPicture(wallpaper: wp,
                                                         displayName: WallpaperViewModel.screenName(for: screen),
-                                                        displaySize: screen.frame.size,
+                                                        displaySize: size,
                                                         displayScale: screen.backingScaleFactor,
                                                         placement: wallpaperViewModel.wallpaperPlacement)
 
@@ -82,7 +111,9 @@ struct DisplaySettings: SubviewOfContentView {
                                 }
                                 Spacer()
                                 Button("Remove") {
-                                    wallpaperViewModel.wallpapers.removeValue(forKey: screenId)
+                                    // A clone shows its main display's wallpaper: removing it removes that.
+                                    wallpaperViewModel.wallpapers.removeValue(
+                                        forKey: wallpaperViewModel.layoutResolution.source(of: screenId))
                                 }
                                 .glassButtonStyle()
                                 .controlSize(.small)
@@ -110,102 +141,5 @@ struct DisplaySettings: SubviewOfContentView {
             }
         }
         .padding(.horizontal, 40)
-    }
-}
-
-// MARK: - Monitor Layout View
-
-private struct MonitorLayoutView: View {
-    @ObservedObject var wallpaperViewModel: WallpaperViewModel
-
-    var body: some View {
-        let screens = NSScreen.screens
-        let bounds = combinedBounds(screens)
-
-        GeometryReader { geo in
-            let scale = min(
-                geo.size.width / max(bounds.width, 1),
-                geo.size.height / max(bounds.height, 1)
-            ) * 0.85
-
-            ZStack {
-                ForEach(screens, id: \.self) { screen in
-                    let screenId = WallpaperViewModel.screenId(for: screen)
-                    let isSelected = wallpaperViewModel.selectedScreenIds.contains(screenId)
-                    let isEnabled = wallpaperViewModel.isScreenEnabled(screenId)
-                    let frame = screen.frame
-
-                    let x = (frame.origin.x - bounds.origin.x) * scale
-                    let y = (bounds.height - (frame.origin.y - bounds.origin.y) - frame.height) * scale
-                    let w = frame.width * scale
-                    let h = frame.height * scale
-
-                    MonitorRectangle(
-                        name: WallpaperViewModel.screenName(for: screen),
-                        wallpaperTitle: wallpaperViewModel.wallpaper(for: screenId).project.title,
-                        isSelected: isSelected,
-                        isEnabled: isEnabled,
-                        isMain: screen == .main
-                    )
-                    .frame(width: w, height: h)
-                    .position(x: x + w / 2 + (geo.size.width - bounds.width * scale) / 2,
-                              y: y + h / 2 + (geo.size.height - bounds.height * scale) / 2)
-                    .onTapGesture {
-                        wallpaperViewModel.selectScreen(
-                            screenId,
-                            extendingSelection: NSEvent.modifierFlags.contains(.shift)
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    private func combinedBounds(_ screens: [NSScreen]) -> CGRect {
-        screens.reduce(.zero) { $0.union($1.frame) }
-    }
-}
-
-// MARK: - Monitor Rectangle
-
-private struct MonitorRectangle: View {
-    let name: String
-    let wallpaperTitle: String
-    let isSelected: Bool
-    let isEnabled: Bool
-    let isMain: Bool
-
-    var body: some View {
-        RoundedRectangle(cornerRadius: 6)
-            .fill(isEnabled ? Color(nsColor: .controlBackgroundColor) : Color(nsColor: .separatorColor).opacity(0.3))
-            .overlay(
-                RoundedRectangle(cornerRadius: 6)
-                    .stroke(isSelected ? Color.accentColor : Color(nsColor: .separatorColor), lineWidth: isSelected ? 3 : 1)
-            )
-            .overlay {
-                VStack(spacing: 2) {
-                    HStack(spacing: 4) {
-                        if isMain {
-                            Image(systemName: "star.fill")
-                                .font(.caption2)
-                                .foregroundStyle(.yellow)
-                        }
-                        Text(name)
-                            .font(.caption)
-                            .fontWeight(.medium)
-                    }
-                    if isEnabled {
-                        Text(wallpaperTitle.isEmpty ? String(localized: "No wallpaper") : wallpaperTitle)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    } else {
-                        Text("Disabled")
-                            .font(.caption2)
-                            .foregroundStyle(.tertiary)
-                    }
-                }
-                .padding(4)
-            }
     }
 }

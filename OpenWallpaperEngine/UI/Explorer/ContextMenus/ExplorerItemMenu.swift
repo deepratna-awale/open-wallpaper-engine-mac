@@ -67,11 +67,22 @@ struct ExplorerItemMenu: SubviewOfContentView {
             
             Section {
                 Button {
-                    if let id = workshopId { openWorkshopPage(for: id) }
+                    if let id = workshopId { WorkshopPageLink.open(id) }
                 } label: {
                     Label("Open in Workshop", systemImage: "cloud.fill")
                 }
                 .disabled(workshopId == nil)
+                if let workshopId {
+                    WorkshopRelatedMenu(viewModel: viewModel.workshopVM,
+                                        authorId: WorkshopMetadataStore.shared.item(for: workshopId)?.creatorId,
+                                        presetBase: presetBase)
+                    Button {
+                        WorkshopPageLink.open(workshopId)
+                    } label: {
+                        Label("Report…", systemImage: "exclamationmark.triangle")
+                    }
+                    .help("Opens the wallpaper's Steam Workshop page, where you can report it to Steam")
+                }
                 Button {
                     NSWorkspace.shared.selectFile(nil,
                                                   inFileViewerRootedAtPath: hoveredWallpaper.wallpaperDirectory.path(percentEncoded: false))
@@ -83,13 +94,16 @@ struct ExplorerItemMenu: SubviewOfContentView {
         .labelStyle(.titleAndIcon)
     }
 
-    /// Opens the item's page in the Steam client, or on the web when Steam isn't installed.
-    private func openWorkshopPage(for id: String) {
-        if let steam = WorkshopItemAvailability.steamClientPageURL(for: id),
-           NSWorkspace.shared.urlForApplication(toOpen: steam) != nil {
-            NSWorkspace.shared.open(steam)
-        } else if let page = WorkshopItemAvailability.workshopPageURL(for: id) {
-            NSWorkspace.shared.open(page)
+    /// The wallpaper whose Workshop presets "Browse Presets" lists: a preset item's base, else a
+    /// scene or web wallpaper itself, as WE offers it.
+    private var presetBase: WorkshopPresetBase? {
+        if hoveredWallpaper.isWorkshopPreset {
+            let baseId = hoveredWallpaper.wallpaperDirectory.lastPathComponent
+            guard WorkshopCollection.isID(baseId), hoveredWallpaper.wallpaperDirectory != hoveredWallpaper.presetDirectory
+            else { return nil }
+            return WorkshopPresetBase(id: baseId, title: WorkshopMetadataStore.shared.item(for: baseId)?.title ?? baseId)
         }
+        guard let workshopId, ["scene", "web"].contains(hoveredWallpaper.project.type.lowercased()) else { return nil }
+        return WorkshopPresetBase(id: workshopId, title: hoveredWallpaper.project.displayTitle)
     }
 }

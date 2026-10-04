@@ -10,6 +10,8 @@ struct IsolatedSceneView: NSViewRepresentable {
     /// How the private instance draws (`SceneWallpaperInstance.Presentation`); nil draws it as
     /// the user's displays do.
     var presentation: SceneWallpaperInstance.Presentation?
+    /// Each content the private instance loads (`SceneWallpaperInstance.onContent`).
+    var onContent: ((SceneMetalContent) -> Void)?
     static let screenID = SceneWallpaperInstance.previewScreenIDs.first!
 
     func makeCoordinator() -> SceneWallpaperPresenter { SceneWallpaperPresenter() }
@@ -23,10 +25,12 @@ struct IsolatedSceneView: NSViewRepresentable {
         let key = session.instanceKey
         let wallpaper = session.wallpaper
         let presentation = presentation
+        let onContent = onContent
         let lease = SceneWallpaperPresenter.Lease(session.instances, key: key) {
             let instance = SceneWallpaperInstance(wallpaper: wallpaper, environment: environment, screenID: Self.screenID,
                                                   properties: key.properties)
             instance.presentation = presentation
+            instance.onContent = onContent
             return instance
         }
         context.coordinator.show(lease, in: view, screenID: Self.screenID)
@@ -34,7 +38,11 @@ struct IsolatedSceneView: NSViewRepresentable {
     }
 
     func updateNSView(_ view: MTKView, context: Context) {
-        context.coordinator.instance?.update()
+        guard let instance = context.coordinator.instance else { return }
+        // A moved pointer (the export's Parallax Position) applies with the update.
+        instance.presentation = presentation
+        instance.onContent = onContent
+        instance.update()
     }
 
     static func dismantleNSView(_ view: MTKView, coordinator: SceneWallpaperPresenter) {

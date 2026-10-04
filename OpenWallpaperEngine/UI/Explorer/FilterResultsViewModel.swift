@@ -44,18 +44,34 @@ struct FRType: FilterResultsModel {
         "Video",
         "Web",
         "Application"
-//        "Wallpaper",
-//        "Preset"
     ]
     static let scene            = FRType(rawValue: 1 << 0)
     static let video            = FRType(rawValue: 1 << 1)
     static let web              = FRType(rawValue: 1 << 2)
     static let application      = FRType(rawValue: 1 << 3)
-//    static let wallpaper        = FRType(rawValue: 1 << 4)
-//    static let preset           = FRType(rawValue: 1 << 5)
     
-    static let all: FRType      = [.scene, .video, .web, .application/*, .wallpaper, .preset*/]
+    static let all: FRType      = [.scene, .video, .web, .application]
     static let none: FRType     = []
+}
+
+/// WE's Category filter (`getWallpaperCategoryTags`): an ordinary wallpaper, or a Workshop preset
+/// item (`WorkshopPresetItem`), which plays its base (`dependency`) with its own values. The
+/// Workshop tab filters the same way through the items' `Wallpaper` and `Preset` tags.
+struct FRCategory: FilterResultsModel {
+    let rawValue: Int
+
+    static let allOptions = WorkshopTags.categories
+
+    static let wallpaper        = FRCategory(rawValue: 1 << 0)
+    static let preset           = FRCategory(rawValue: 1 << 1)
+
+    static let all: FRCategory  = [.wallpaper, .preset]
+    static let none: FRCategory = []
+
+    /// The category `wallpaper` belongs to.
+    static func of(_ wallpaper: WEWallpaper) -> FRCategory {
+        wallpaper.isWorkshopPreset ? .preset : .wallpaper
+    }
 }
 
 struct FRAgeRating: FilterResultsModel {
