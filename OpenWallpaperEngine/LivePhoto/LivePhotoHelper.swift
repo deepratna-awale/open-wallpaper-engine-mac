@@ -118,14 +118,22 @@ enum LivePhotoHelper {
     /// Runs the helper on `job` and waits for it; cancelling the task terminates it.
     @MainActor
     private static func run(_ job: LivePhotoJob, in directory: URL, progress: @escaping @MainActor (Double) -> Void) async throws {
-        guard let executable = AppRelauncher.helperExecutable else { throw Failure.noExecutable }
         let jobFile = directory.appending(path: "job.json")
         try JSONEncoder().encode(job).write(to: jobFile)
         defer { try? FileManager.default.removeItem(at: jobFile) } // Optional: the job is read at start.
+        try await runHelper(argument: ShaderPrewarmCommand.livePhotoArgument, jobFile: jobFile, progress: progress)
+    }
 
+    /// Runs this app's executable with `argument` and `jobFile` in this process's isolated state,
+    /// reporting the progress lines it writes (`LivePhotoJob.progressLine`), and waits for it;
+    /// cancelling the task terminates it. A render job of another kind (the Android export's
+    /// video, `AndroidVideoJob`) runs through it too.
+    @MainActor
+    static func runHelper(argument: String, jobFile: URL, progress: @escaping @MainActor (Double) -> Void) async throws {
+        guard let executable = AppRelauncher.helperExecutable else { throw Failure.noExecutable }
         let process = Process()
         process.executableURL = executable
-        process.arguments = [ShaderPrewarmCommand.livePhotoArgument, jobFile.path(percentEncoded: false)]
+        process.arguments = [argument, jobFile.path(percentEncoded: false)]
         var environment = ProcessInfo.processInfo.environment
         if let tag = AppStorageLocation.current.isolationTag { environment[AppStorageLocation.environmentKey] = tag }
         process.environment = environment
@@ -156,7 +164,7 @@ enum LivePhotoHelper {
         }
         try Task.checkCancellation()
         guard status == 0 else {
-            OWELog.error(.app, "Live Photo: the render helper failed (\(status))")
+            OWELog.error(.app, "\(argument): the render helper failed (\(status))")
             throw Failure.failed(status)
         }
     }
