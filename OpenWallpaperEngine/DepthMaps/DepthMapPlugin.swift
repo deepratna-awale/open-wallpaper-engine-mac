@@ -35,9 +35,9 @@ enum DepthMapPlugin {
 
     /// The section's services for `wallpaper`, reading its files through `resources`.
     static func services(for wallpaper: WEWallpaper, resources: EditorWallpaperResources,
-                         generator: DepthMapGenerator = AppDelegate.shared.depthMapGenerator) -> DepthMapEditorServices {
+                         generator: DepthMapGenerator? = nil) -> DepthMapEditorServices {
         DepthMapEditorServices(
-            generator: generator,
+            generator: generator ?? AppDelegate.shared.depthMapGenerator,
             assetStore: resources.assets,
             source: { request in try await DepthMapPlugin.source(for: request, wallpaper: wallpaper, resources: resources) },
             prepareEffect: {

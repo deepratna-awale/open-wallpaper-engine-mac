@@ -20,7 +20,7 @@ public final class DepthMapGenerator: ObservableObject {
     /// Sources larger than this on their long side are processed at this size: the effect samples
     /// the depth map in the layer's UV space, so its resolution is free, and a bigger one only
     /// costs time and memory.
-    public static let maximumSide = 4096
+    nonisolated public static let maximumSide = 4096
 
     public enum Phase: Equatable, Sendable {
         case idle
@@ -263,7 +263,7 @@ public protocol DepthMapIdleScheduler: AnyObject {
 /// The real clock: the main queue.
 @MainActor
 public final class DispatchDepthMapIdleScheduler: DepthMapIdleScheduler {
-    public init() {}
+    nonisolated public init() {}
 
     private final class Pending: DepthMapIdleTimer {
         let item: DispatchWorkItem

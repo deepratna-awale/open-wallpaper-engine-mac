@@ -27,7 +27,7 @@ enum DepthMapSceneCapture {
     /// Scene seconds from load to the still.
     static let stillTime = 2.0
     static let frameRate = 30
-    static let maximumSide = 4096
+    nonisolated static let maximumSide = 4096
     static var timeoutSeconds: TimeInterval = 60
 
     /// The overlay with every layer not in `drawn` hidden.
