@@ -206,6 +206,7 @@ Particle systems now compile their initializers and operators into records the w
 | trail length | ⚠ 1 in the simulation, 0.05 / 10 for the shader | one value: `spritetrail` `length` 0.05, `maxlength` 10, `minlength` 0 (the shader's stretch); `ropetrail` `length` 1 s of history | fixed |
 | `subdivision` | ⚠ 4 in the simulation, 0 for `TRAILSUBDIVISION` | `rope` 4, `ropetrail` 1, clamped 0…32, for both | fixed |
 | `segments` | ?? 4 | 4 | kept |
+| `ropetrail` sampling | ⚠ a timer per particle; texture offset fixed at 1, so the tail jumped a segment per sample | one countdown per system ([system+0x24c], 0x140232cad): at 0 it restarts at `length / segments` and every particle records; `g_RenderVar0` = (segments − 1, 0, the countdown's progress, segments − 0.5), each segment's trail length the sample count ÷ uvscale | fixed |
 | built-in trail | `speed · 0.08` | WE's stretch, as the shader | fixed |
 | particle size | the shaders read half | WE's size (the base 0.5 × the random) is the quad's width everywhere | fixed |
 | refract-amount opacity 0.04…1 | heuristic | built-in draw only | keep (it only affects the fallback draw) |

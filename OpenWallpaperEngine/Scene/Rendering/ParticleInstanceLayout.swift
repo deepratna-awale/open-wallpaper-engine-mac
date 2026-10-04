@@ -58,7 +58,8 @@ struct ParticleSpriteInstance {
 struct ParticleRopeSegmentInstance {
     /// `a_PositionVec4`: start point and its size (half the ribbon width).
     var start: SIMD4<Float>
-    /// `a_TexCoordVec4`: end point; w is the trail's point count (`in_ParticleTrailLength`).
+    /// `a_TexCoordVec4`: end point; w is the trail's point count (`in_ParticleTrailLength`): a
+    /// rope's points, a `ropetrail`'s samples over uvscale, or a scrolling one's segment index.
     var end: SIMD4<Float>
     /// `a_TexCoordVec4C1`: the point before `start` (spline control); w is the segment index.
     var previous: SIMD4<Float>

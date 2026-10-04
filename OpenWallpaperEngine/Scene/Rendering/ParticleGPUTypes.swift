@@ -13,7 +13,7 @@ struct ParticleGPUState {
     var alphaRotation: SIMD4<Float>
     var color: SIMD4<Float>
     var baseColor: SIMD4<Float>
-    /// History timer, -, instance.
+    /// -, -, instance.
     var trail: SIMD4<Float>
     /// Serial, sprite frame, history count, history start.
     var identity: SIMD4<UInt32>
@@ -116,7 +116,7 @@ struct ParticleGPUFrame {
     var spawnScale: SIMD4<Float>
     /// `ParticleFrameInputs.colorScale`.
     var colorScale: SIMD4<Float>
-    /// `ParticleFrameInputs.substeps`, emitters (`ParticleGPUEmitterStep`), -, -.
+    /// `ParticleFrameInputs.substeps`, emitters (`ParticleGPUEmitterStep`), `samplesTrail` (1), -.
     var emission: SIMD4<UInt32>
     /// `ParticleFrameInputs.spriteLinear`, column 0 xy, column 1 xy.
     var spriteLinear: SIMD4<Float>
@@ -164,7 +164,7 @@ struct ParticleGPUFrame {
                       UInt32(inputs.initializers.count) | UInt32(inputs.operators.count) << 16)
         spawnScale = inputs.spawnScale
         colorScale = SIMD4(inputs.colorScale, 1)
-        emission = SIMD4(UInt32(inputs.substeps), UInt32(inputs.emitters.count), 0, 0)
+        emission = SIMD4(UInt32(inputs.substeps), UInt32(inputs.emitters.count), inputs.samplesTrail ? 1 : 0, 0)
     }
 
     static func columns(_ matrix: simd_float2x2) -> SIMD4<Float> {
@@ -203,12 +203,12 @@ struct ParticleGPUParameters {
         // The history is the simulation's (a `ropetrail` among the system's renderers); the rest is
         // the renderer's.
         let history = c.trailHistory
-        let historyLimit = max(history.segments, 1)
+        let historyLimit = history.limit
         if history.kept { flags.insert(.history) }
         if c.ropeUV.smoothing { flags.insert(.ropeSmoothing) }
         if c.ropeUV.scrolling { flags.insert(.ropeScrolling) }
         let fades: Float = (c.fadeTrailAlpha ? 1 : 0) + (c.fadeTrailSize ? 2 : 0)
-        trail = SIMD4(max(history.length, 0.001) / Float(historyLimit), c.trailLength, Float(max(c.ropeSubdivision, 1)), fades)
+        trail = SIMD4(history.interval, c.trailLength, Float(max(c.ropeSubdivision, 1)), fades)
         trailLimits = SIMD4(c.trailLengthLimits.x, c.trailLengthLimits.y, 0, 0)
         if let sheet = c.spriteSheet {
             flags.insert(.spriteSheet)

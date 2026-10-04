@@ -212,6 +212,8 @@ kernel void particleWriteRopeTrails(device const ParticleState *particles [[buff
     device const float2 *own = history + gid * p.counts.w;
     const uint base = offsets[gid] + blockSums[gid / kGroup];
     const uint points = count + 1;
+    // WE's `in_ParticleTrailLength`: the samples over uvscale (`f.rope.w`).
+    const float trailLength = float(count) * f.rope.w;
     const float4 rgba = recordColor(particle, p, f);
     const float size = particle.life.z * f.motionExtras.w;
     for (uint segment = 0; segment < points - 1; ++segment) {
@@ -222,7 +224,7 @@ kernel void particleWriteRopeTrails(device const ParticleState *particles [[buff
         RopeRecord record;
         record.start = float4(start, 0, size);
         // Scrolling trails read the segment as their vertex index (`in_TrailVertexIndex`).
-        record.end = float4(end, 0, (p.counts.y & kRopeScrolling) ? float(segment) : float(points));
+        record.end = float4(end, 0, (p.counts.y & kRopeScrolling) ? float(segment) : trailLength);
         record.previous = float4(previous, 0, float(segment));
         record.next = float4(next, 0, size);
         record.endColor = rgba;
