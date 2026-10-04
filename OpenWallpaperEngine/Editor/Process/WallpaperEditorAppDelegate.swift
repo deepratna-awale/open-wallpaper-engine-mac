@@ -50,8 +50,8 @@ final class WallpaperEditorAppDelegate: NSObject, NSApplicationDelegate, Wallpap
         WallpaperEditorMenu.install(WallpaperEditorMenu.make(helpTarget: self, help: #selector(openHelp)))
         requests.start()
         // An MCP client's edit the app saved: the open window of the wallpaper takes it as an undo step.
-        changeSync.onAppOverlay = { [weak self] folder, actionName in
-            self?.editor(of: folder)?.adoptSavedOverlay(actionName: actionName)
+        changeSync.onAppOverlay = { [weak self] folder, actionName, step in
+            self?.editor(of: folder)?.adoptSavedOverlay(actionName: actionName, step: step)
         }
         changeSync.start()
     }
@@ -126,15 +126,7 @@ final class WallpaperEditorAppDelegate: NSObject, NSApplicationDelegate, Wallpap
     }
 
     func controlTimeline(of folder: URL, command: String, seconds: Double?) {
-        guard let timeline = editor(of: folder)?.timeline else { return }
-        switch command {
-        case "play": timeline.isActive = true; timeline.play()
-        case "pause": timeline.pause()
-        case "seek":
-            timeline.isActive = true
-            timeline.setPlayhead(seconds ?? 0)
-        default: OWELog.error(.ui, "The Wallpaper Editor got an unknown timeline command \(command)")
-        }
+        editor(of: folder)?.controlTimeline(command: command, seconds: seconds)
     }
 
     private func showCantOpen(title: String) {

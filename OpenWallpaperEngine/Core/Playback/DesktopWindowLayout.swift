@@ -40,9 +40,12 @@ struct DisplayConditions: Equatable {
     /// The bundle identifier of the application whose window is focused here (Application Rules'
     /// "is focused").
     var focusedApplication: String?
-    /// The bundle identifiers of the applications with a window filling this display, full screen
-    /// or maximized (Application Rules' "is fullscreen").
-    var fillingApplications: Set<String> = []
+    /// The bundle identifiers of the applications with a window covering this whole display
+    /// (Application Rules' "is fullscreen").
+    var fullscreenApplications: Set<String> = []
+    /// The bundle identifiers of the applications with a window filling this display's visible
+    /// area but not the whole display (Application Rules' "is maximized").
+    var maximizedApplications: Set<String> = []
 }
 
 /// Which display each window belongs to, and what that means for the playback rules.
@@ -102,16 +105,13 @@ enum DesktopWindowLayout {
                 conditions.focused = true
                 conditions.focusedApplication = bundleIdentifiers[window.ownerPID]
             }
-            var fills = true
+            let application = bundleIdentifiers[window.ownerPID]
             if coversFrame(window.bounds, of: display) {
                 conditions.fullscreen = true
+                if let application { conditions.fullscreenApplications.insert(application) }
             } else if coversVisibleArea(window.bounds, of: display) {
                 conditions.maximized = true
-            } else {
-                fills = false
-            }
-            if fills, let application = bundleIdentifiers[window.ownerPID] {
-                conditions.fillingApplications.insert(application)
+                if let application { conditions.maximizedApplications.insert(application) }
             }
             result[display.id] = conditions
         }

@@ -13,6 +13,8 @@ struct SceneViewport {
     var cursor: SIMD2<Float>?
     /// The view's frame-rate limit (WE's fps setting steers particles' half steps).
     var frameRateLimit: Int
+    /// The display is part of a stretch: the sizes and the cursor are the canvas's.
+    var spansCanvas = false
 
     var pixelsPerPoint: Float { pointSize.x > 0 ? drawableSize.x / pointSize.x : 1 }
 
@@ -48,8 +50,18 @@ extension SceneViewport {
         self.drawableSize = drawableSize ?? SIMD2(Float(view.drawableSize.width), Float(view.drawableSize.height))
         // A view drawn on a render thread is read through its main-thread snapshot.
         if let snapshot = SceneViewSnapshots.snapshot(of: view) {
-            pointSize = snapshot.pointSize
             frameRateLimit = snapshot.frameRateLimit
+            if let canvas = snapshot.canvas {
+                // A stretched display needs the whole canvas at its own density (WE renders a span
+                // once); it presents its rect of it (`SceneMetalRenderer.present(in:)`).
+                let pixelsPerPoint = snapshot.pointSize.x > 0 ? self.drawableSize.x / snapshot.pointSize.x : 1
+                pointSize = SIMD2(Float(canvas.width), Float(canvas.height))
+                self.drawableSize = (pointSize * pixelsPerPoint).rounded(.toNearestOrAwayFromZero)
+                cursor = snapshot.canvasCursor(at: NSEvent.mouseLocation)
+                spansCanvas = true
+                return
+            }
+            pointSize = snapshot.pointSize
             cursor = snapshot.cursor(at: NSEvent.mouseLocation)
             return
         }
@@ -59,7 +71,10 @@ extension SceneViewport {
         let mouse = NSEvent.mouseLocation
         guard let window = view.window, let screen = window.screen, screen.frame.contains(mouse) else { return }
         let point = view.convert(window.convertPoint(fromScreen: mouse), from: nil)
-        cursor = SIMD2(Float(point.x), Float(point.y))
+        guard view.bounds.contains(point) else { return }
+        // A flipped clone shows the view mirrored (`NSView.isMirroredOnScreen`).
+        let x = view.isMirroredOnScreen ? view.bounds.width - point.x : point.x
+        cursor = SIMD2(Float(x), Float(point.y))
     }
 }
 

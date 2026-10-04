@@ -61,7 +61,7 @@ final class MCPSceneFixture {
 
     /// The headless service over the fixture, saving into its own store and posting on `center`.
     func service(center: NotificationCenter = NotificationCenter(),
-                 announce: @escaping @MainActor (URL, SceneEditOverlay, String) -> Void = { _, _, _ in }) -> HeadlessSceneEditService {
+                 announce: @escaping @MainActor (URL, SceneEditOverlay, String, AppProcessChannel.OverlayStep) -> Void = { _, _, _, _ in }) -> HeadlessSceneEditService {
         let resources = resources()
         return HeadlessSceneEditService(dependencies: .init(store: store, center: center, resources: { _ in resources },
                                                             announce: announce))

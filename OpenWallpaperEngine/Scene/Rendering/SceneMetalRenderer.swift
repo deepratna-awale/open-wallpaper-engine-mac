@@ -1240,7 +1240,8 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
     }
 
     /// Shows the latest shared frame (`renderShared`) on `view`, at its size and the user's
-    /// placement: one pass per display.
+    /// placement: one pass per display. A stretched display shows its rect of the frame placed on
+    /// the whole canvas.
     func present(in view: MTKView) {
         let headroom = viewHeadroom(view)
         sharedHeadrooms[ObjectIdentifier(view)] = headroom
@@ -1252,21 +1253,26 @@ final class SceneMetalRenderer: NSObject, MTKViewDelegate {
               let drawable = view.currentDrawable, let commandBuffer = commandQueue.makeCommandBuffer(),
               let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor) else { return }
         let size = SIMD2<Float>(Float(drawable.texture.width), Float(drawable.texture.height))
-        let pointWidth = SceneViewSnapshots.snapshot(of: view).map { CGFloat($0.pointSize.x) } ?? view.bounds.width
+        let snapshot = SceneViewSnapshots.snapshot(of: view)
+        let pointWidth = snapshot.map { CGFloat($0.pointSize.x) } ?? view.bounds.width
         let pixelsPerPoint = pointWidth > 0 ? size.x / Float(pointWidth) : 1
         encodePlaced(frame, onto: encoder, size: size, pixelsPerPoint: pixelsPerPoint,
-                     pipeline: extended ? layerPipelines.pipelines(for: frame.pixelFormat).copy : copyPipeline)
+                     pipeline: extended ? layerPipelines.pipelines(for: frame.pixelFormat).copy : copyPipeline,
+                     span: snapshot.flatMap { SceneCanvasSpan(snapshot: $0, pixelsPerPoint: pixelsPerPoint) })
         encoder.endEncoding()
         commandBuffer.present(drawable)
         commandBuffer.commit()
         lastPresentCommandBuffer = commandBuffer
     }
 
-    /// Draws `frame` onto a `size`-pixel target at the user's placement, as a display shows it.
+    /// Draws `frame` onto a `size`-pixel target at the user's placement, as a display shows it; on
+    /// a stretch, placed on the canvas and seen through the display's rect of it (`span`).
     private func encodePlaced(_ frame: MTLTexture, onto encoder: MTLRenderCommandEncoder, size: SIMD2<Float>,
-                              pixelsPerPoint: Float, pipeline: MTLRenderPipelineState) {
-        var uniform = layerUniform(position: sceneSize / 2, size: sceneSize, opacity: 1, drawableSize: size,
+                              pixelsPerPoint: Float, pipeline: MTLRenderPipelineState, span: SceneCanvasSpan? = nil) {
+        var uniform = layerUniform(position: sceneSize / 2, size: sceneSize, opacity: 1,
+                                   drawableSize: span?.canvasPixels ?? size,
                                    placement: placement, pixelsPerPoint: pixelsPerPoint)
+        if let span { span.apply(to: &uniform, drawableSize: size) }
         encoder.setRenderPipelineState(pipeline)
         encoder.setVertexBytes(&uniform, length: MemoryLayout<LayerUniform>.stride, index: 0)
         encoder.setFragmentTexture(frame, index: 0)

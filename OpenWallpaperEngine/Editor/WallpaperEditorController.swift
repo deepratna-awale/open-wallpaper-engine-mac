@@ -220,7 +220,9 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
     /// Open Wallpaper Engine saved an overlay of this wallpaper for an MCP client and applied it to
     /// its own instances (`HeadlessSceneDocument`): the window takes it as the undo step
     /// `actionName`, so Undo here undoes it (and that Undo is saved and reaches the app as any edit).
-    func adoptSavedOverlay(actionName: String) {
+    /// The client's Undo or Redo (`step`) of a step the window took undoes or redoes it here, so
+    /// the history stays one step per client edit.
+    func adoptSavedOverlay(actionName: String, step: AppProcessChannel.OverlayStep = .edit) {
         let stored: SceneEditOverlay
         do {
             stored = try SceneEditOverlayFiles.defaultStore.overlay(for: identity.rawValue) ?? SceneEditOverlay()
@@ -229,9 +231,44 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
             return
         }
         guard stored != session.overlay else { return }
+        let name = actionName.isEmpty ? HeadlessSceneDocument.defaultActionName : actionName
         isAdopting = true
-        session.edit(actionName: actionName.isEmpty ? HeadlessSceneDocument.defaultActionName : actionName) { $0 = stored }
-        isAdopting = false
+        defer { isAdopting = false }
+        if follow(step, named: name, to: stored) { return }
+        session.edit(actionName: name) { $0 = stored }
+    }
+
+    /// Undoes (or redoes) the window's next step when it is the client's step `name` and leads to
+    /// `stored`; true when it did. Anything else (the user's own step on top) is left as it was.
+    private func follow(_ step: AppProcessChannel.OverlayStep, named name: String, to stored: SceneEditOverlay) -> Bool {
+        let undoManager = session.undoManager
+        switch step {
+        case .edit:
+            return false
+        case .undo:
+            guard session.canUndo, undoManager.undoActionName == name else { return false }
+            session.undo()
+            if session.overlay == stored { return true }
+            session.redo()
+        case .redo:
+            guard session.canRedo, undoManager.redoActionName == name else { return false }
+            session.redo()
+            if session.overlay == stored { return true }
+            session.undo()
+        }
+        return false
+    }
+
+    /// An MCP client's timeline command (`play`, `pause`, `seek` to `seconds`).
+    func controlTimeline(command: String, seconds: Double?) {
+        switch command {
+        case "play": timeline.isActive = true; timeline.play()
+        case "pause": timeline.pause()
+        case "seek":
+            timeline.isActive = true
+            timeline.setPlayhead(seconds ?? 0)
+        default: OWELog.error(.ui, "The Wallpaper Editor got an unknown timeline command \(command)")
+        }
     }
 
     /// Save as Local Wallpaper: a copy in the library with the edits in its scene.json; the

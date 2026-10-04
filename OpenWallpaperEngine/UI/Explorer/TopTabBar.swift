@@ -27,6 +27,8 @@ struct TopTabBar: SubviewOfContentView {
             }
         )) {
             segment("Installed", systemImage: "square.and.arrow.down.fill").tag(0)
+            // Tags are stored (`UpdateRelaunchState`), so Discover takes the next free one.
+            segment("Discover", systemImage: "sparkles").tag(4)
             segment("Workshop", systemImage: "cloud.fill").tag(1)
             segment("Downloads", systemImage: "arrow.down.circle.fill").tag(2)
             segment("Playlists", systemImage: "rectangle.stack.fill").tag(3)
