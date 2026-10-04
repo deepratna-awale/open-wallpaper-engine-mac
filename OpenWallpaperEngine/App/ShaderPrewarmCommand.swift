@@ -35,6 +35,10 @@ enum ShaderPrewarmCommand {
     /// writing its progress to standard output.
     static let livePhotoArgument = "--render-live-photo"
 
+    /// `--render-android-video <job.json>` renders an Android export's pre-rendered video
+    /// (`AndroidVideoJob`, `AndroidVideoRenderer`), writing its progress to standard output.
+    static let androidVideoArgument = "--render-android-video"
+
     /// `--render-editor-previews <job.json>` renders the Wallpaper Editor's previews of effects
     /// and particle systems (`EditorPreviewJob`, `EditorPreviewRenderer`), writing a line to
     /// standard output as each is done.
@@ -45,6 +49,7 @@ enum ShaderPrewarmCommand {
             || arguments.contains(ShaderCompileHelperServer.argument)
             || arguments.contains(prepareArgument) || arguments.contains(screenSaverArgument)
             || arguments.contains(livePhotoArgument) || arguments.contains(editorPreviewArgument)
+            || arguments.contains(androidVideoArgument)
     }
 
     /// `<width>x<height>` as numbers, nil otherwise.
@@ -115,6 +120,23 @@ enum ShaderPrewarmCommand {
             NSApplication.shared.setActivationPolicy(.prohibited)
             exitWithParent()
             return renderScreenSaverLoop(arguments[(index + 1)...])
+        }
+        if let index = arguments.firstIndex(of: androidVideoArgument) {
+            defer { AppStorageLocation.current.discardReadOnlyScratch() }
+            // The user waits for it: user-initiated, not background, priority.
+            NSApplication.shared.setActivationPolicy(.prohibited)
+            exitWithParent()
+            guard index + 1 < arguments.count else {
+                OWELog.error(.app, "Android export: no video job file")
+                return 2
+            }
+            do {
+                let data = try Data(contentsOf: URL(filePath: arguments[index + 1], directoryHint: .notDirectory))
+                return AndroidVideoRenderer.run(try JSONDecoder().decode(AndroidVideoJob.self, from: data))
+            } catch {
+                OWELog.error(.app, "Android export: unreadable video job: \(error)")
+                return 2
+            }
         }
         if let index = arguments.firstIndex(of: livePhotoArgument) {
             defer { AppStorageLocation.current.discardReadOnlyScratch() }

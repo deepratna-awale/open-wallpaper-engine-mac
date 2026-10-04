@@ -298,7 +298,9 @@ final class FrameCapture: @unchecked Sendable {
     }
 }
 
-/// An HEVC `.mov` written frame by frame from `CGImage`s (the screen saver's loop, a Live Photo's movie).
+/// An HEVC `.mov` written frame by frame from `CGImage`s (the screen saver's loop, a Live Photo's
+/// movie), or another codec and container when a caller names them (the Android export's H.264
+/// `.mp4`, `AndroidVideoRenderer`).
 final class HEVCWriter {
     /// HEVC encoder quality (0…1) for the loop video.
     static let quality: Double = 0.95
@@ -311,10 +313,13 @@ final class HEVCWriter {
     /// `prepare` adds what else the movie holds (metadata, more inputs) before writing starts.
     /// `bitRate` (bits per second) replaces the constant quality with an average bitrate;
     /// `colorProperties` tags the track's colour (`AVVideoColorPropertiesKey`).
+    /// `codec`, `fileType` and `compression` (more compression properties, e.g. a profile) choose
+    /// another format than HEVC in a `.mov`.
     init?(url: URL, pixelSize: SIMD2<Int>, frameRate: Int, quality: Double = HEVCWriter.quality, bitRate: Int? = nil,
-          colorProperties: [String: String]? = nil, prepare: (AVAssetWriter) throws -> Void = { _ in }) {
+          colorProperties: [String: String]? = nil, codec: AVVideoCodecType = .hevc, fileType: AVFileType = .mov,
+          compression extraCompression: [String: Any] = [:], prepare: (AVAssetWriter) throws -> Void = { _ in }) {
         do {
-            writer = try AVAssetWriter(outputURL: url, fileType: .mov)
+            writer = try AVAssetWriter(outputURL: url, fileType: fileType)
         } catch {
             OWELog.error(.app, "Screen saver: can't create the video writer: \(error)")
             return nil
@@ -323,13 +328,14 @@ final class HEVCWriter {
         // of a calm scene (a fixed 0.07 bit per pixel smeared them), and a still scene stays small.
         // A caller with a size budget (a Live Photo) passes its bitrate instead.
         var compression: [String: Any] = [AVVideoExpectedSourceFrameRateKey: frameRate]
+        compression.merge(extraCompression) { _, extra in extra }
         if let bitRate {
             compression[AVVideoAverageBitRateKey] = bitRate
         } else {
             compression[AVVideoQualityKey] = quality
         }
         var settings: [String: Any] = [
-            AVVideoCodecKey: AVVideoCodecType.hevc,
+            AVVideoCodecKey: codec,
             AVVideoWidthKey: pixelSize.x,
             AVVideoHeightKey: pixelSize.y,
             AVVideoCompressionPropertiesKey: compression,
@@ -345,7 +351,7 @@ final class HEVCWriter {
         self.pixelSize = pixelSize
         self.frameRate = frameRate
         guard writer.canAdd(input) else {
-            OWELog.error(.app, "Screen saver: the video writer takes no HEVC input")
+            OWELog.error(.app, "The video writer takes no \(codec.rawValue) input")
             return nil
         }
         writer.add(input)

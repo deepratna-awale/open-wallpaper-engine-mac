@@ -328,6 +328,17 @@ struct WallpaperPreview: SubviewOfContentView {
                             }
                             .glassButtonStyle()
                             .help("Scene Editor (Live)", shortcut: .sceneInspector)
+                            Button {
+                                viewModel.androidExport = AndroidExportSelection(wallpapers: [wallpaperViewModel.displayedWallpaper])
+                            } label: {
+                                Label("Export for Android…", systemImage: "iphone.and.arrow.forward")
+                                    .frame(maxWidth: .infinity)
+                            }
+                            .glassButtonStyle()
+                            .disabled(AndroidPackageBuilder.kind(of: wallpaperViewModel.displayedWallpaper) == nil)
+                            .help(AndroidPackageBuilder.kind(of: wallpaperViewModel.displayedWallpaper) == nil
+                                  ? String(localized: "Wallpaper type not supported on Android devices")
+                                  : String(localized: "Export for Android…"))
                         }
                     }
                     // MARK: Properties

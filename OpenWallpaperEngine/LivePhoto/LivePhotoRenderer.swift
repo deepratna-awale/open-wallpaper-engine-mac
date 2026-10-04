@@ -71,23 +71,26 @@ final class LivePhotoRenderer {
     /// `LivePhotoCrop` cuts the window; the pointer held at `pointer` (Export Settings' Parallax
     /// Position, `LivePhotoParallax`; the scene's centre by default), so the camera and depth
     /// parallax and the cursor uniforms don't follow the mouse; no clock layers.
-    static func presentation(pointer: SIMD2<Double> = LivePhotoParallax.centre) -> SceneWallpaperInstance.Presentation {
+    /// `hidesClockLayers` false draws them (the Android export's pre-rendered video, which WE records as it plays).
+    static func presentation(pointer: SIMD2<Double> = LivePhotoParallax.centre,
+                             hidesClockLayers: Bool = Policy.hidesClockLayers) -> SceneWallpaperInstance.Presentation {
         SceneWallpaperInstance.Presentation(placement: .fill, pointer: SIMD2<Float>(LivePhotoParallax.clamped(pointer)),
-                                            hidesClockLayers: Policy.hidesClockLayers)
+                                            hidesClockLayers: hidesClockLayers)
     }
 
     /// The scene's drawable for `crop`: the whole scene at `LivePhotoCrop.renderScale`, one pixel a
     /// point, without a cursor (`presentation` fixes the pointer).
-    static func viewport(for crop: LivePhotoCrop) -> SceneViewport {
+    static func viewport(for crop: LivePhotoCrop, frameRate: Int = LivePhotoClip.frameRate) -> SceneViewport {
         let pixelSize = crop.renderPixelSize
         let drawable = SIMD2(Float(pixelSize.x), Float(pixelSize.y))
-        return SceneViewport(drawableSize: drawable, pointSize: drawable, cursor: nil, frameRateLimit: LivePhotoClip.frameRate)
+        return SceneViewport(drawableSize: drawable, pointSize: drawable, cursor: nil, frameRateLimit: frameRate)
     }
 
     /// The renderer's configuration for a Live Photo with the pointer at `pointer`.
-    static func configure(_ renderer: SceneMetalRenderer, pointer: SIMD2<Double> = LivePhotoParallax.centre) {
+    static func configure(_ renderer: SceneMetalRenderer, pointer: SIMD2<Double> = LivePhotoParallax.centre,
+                          hidesClockLayers: Bool = Policy.hidesClockLayers) {
         renderer.rendersScreenSaver = true
-        presentation(pointer: pointer).apply(to: renderer)
+        presentation(pointer: pointer, hidesClockLayers: hidesClockLayers).apply(to: renderer)
         if Policy.muted { renderer.sounds.setTargetGain(0) }
         renderer.audioSpectrumFrame = { _ in .silent }
     }
@@ -226,11 +229,13 @@ final class LivePhotoRenderer {
     // MARK: Rendering
 
     /// Loads the scene with the pointer at `pointer`, runs it `leadIn` frames (to the clip's start)
-    /// and hands each of the next `frames` frames, cut to `crop`, to `frame`. Checks for
-    /// cancellation between frames.
-    private func render(crop: LivePhotoCrop, pointer: SIMD2<Double>, leadIn: Int, frames: Int,
-                        progress: @escaping (Double) -> Void,
-                        frame: (Int, CGImage) throws -> Void) async throws {
+    /// and hands each of the next `frames` frames, cut to `crop`, to `frame`, one every
+    /// `1 / frameRate` s of scene time. Checks for cancellation between frames. The Android
+    /// export's pre-rendered video renders through it too (`AndroidVideoRenderer`).
+    func render(crop: LivePhotoCrop, pointer: SIMD2<Double>, leadIn: Int, frames: Int,
+                frameRate: Int = LivePhotoClip.frameRate, hidesClockLayers: Bool = Policy.hidesClockLayers,
+                progress: @escaping (Double) -> Void,
+                frame: (Int, CGImage) throws -> Void) async throws {
         let name = wallpaper.wallpaperDirectory.lastPathComponent
         let scratch = FileManager.default.temporaryDirectory.appending(path: "owe-livephoto-\(UUID().uuidString)",
                                                                        directoryHint: .isDirectory)
@@ -247,12 +252,12 @@ final class LivePhotoRenderer {
         defer { renderer.releaseContent() }
         let pixelSize = crop.renderPixelSize
         let startTime: CFTimeInterval = 1000
-        Self.configure(renderer, pointer: pointer)
+        Self.configure(renderer, pointer: pointer, hidesClockLayers: hidesClockLayers)
         renderer.renderSettings = settings
         renderer.wallTime = { startTime }
         renderer.holdsClock = true
         renderer.setContent(content)
-        let viewport = Self.viewport(for: crop)
+        let viewport = Self.viewport(for: crop, frameRate: frameRate)
         let deadline = Date().addingTimeInterval(timeoutSeconds)
         while !renderer.hasContent, Date() < deadline {
             try await Task.sleep(for: .milliseconds(10))
@@ -271,7 +276,7 @@ final class LivePhotoRenderer {
         let total = Double(leadIn + frames)
         for index in 0..<(leadIn + frames) {
             try Task.checkCancellation()
-            let time = startTime + Double(index) / Double(LivePhotoClip.frameRate)
+            let time = startTime + Double(index) / Double(frameRate)
             renderer.wallTime = { time }
             renderer.renderShared([viewport])
             if index < leadIn {

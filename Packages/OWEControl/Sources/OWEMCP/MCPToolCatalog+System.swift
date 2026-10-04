@@ -5,7 +5,7 @@ import OWEControlProtocol
 /// and Screen Saver modes, the screen saver's daily re-recording, and the lock-screen picture. None
 /// of them opens System Settings or makes macOS ask the user for a permission.
 extension MCPToolCatalog {
-    static let systemTools: [MCPTool] = exportTools + screenSaverTools + lockScreenTools
+    static let systemTools: [MCPTool] = exportTools + androidTools + screenSaverTools + lockScreenTools
 
     // MARK: - iPhone & iPad Export
 
@@ -40,6 +40,27 @@ extension MCPToolCatalog {
                     ]), "The Export Settings."),
                     "output_folder": JSONSchema.string("An existing folder's absolute path to copy the photo and movie into (files of the same name are replaced).", minLength: 1),
                 ], required: ["wallpaper_id"]), annotations: .change, longRunning: true) { message($0) },
+    ]
+
+    // MARK: - Android export
+
+    private static let androidTools: [MCPTool] = [
+        MCPTool("export_android", title: "Export for Android",
+                description: "Wallpaper Engine's \"Export .mpkg\" for its Android app, as the library's \"Export for Android…\" does: writes one <title>.mpkg per wallpaper (unique names) into output_folder and waits for it (a pre-rendered scene takes a while). Videos are packed as they are; scenes are Dynamic (the scene itself, rendered on the device: high_quality or balanced) or pre_rendered (a 30 s H.264 loop of the scene). Web and application wallpapers are skipped with the reason. Returns each package's path, size and preview, and what was skipped or failed. The user copies the files to the device and imports them in the app.",
+                input: JSONSchema.object([
+                    "wallpaper_id": JSONSchema.string("A wallpaper's id from list_wallpapers. Give this or wallpaper_ids.", minLength: 1),
+                    "wallpaper_ids": JSONSchema.stringArray("Several wallpapers' ids from list_wallpapers, exported in this order.", maxItems: 200),
+                    "mode": JSONSchema.string("How scenes are exported: high_quality (Dynamic, full-size textures), balanced (Dynamic, textures at half size; the default) or pre_rendered (a video).", oneOf: ["high_quality", "balanced", "pre_rendered"]),
+                    "options": described(JSONSchema.object([
+                        "pixel_art": JSONSchema.boolean("Pixel art optimization: textures keep every pixel, uncompressed, with nearest filtering (Dynamic)."),
+                        "texture_reduction": JSONSchema.integer("Divides colour textures' sides by 1, 2 or 4 (Dynamic); the mode sets it otherwise.", minimum: 1, maximum: 4),
+                        "cropping": JSONSchema.string("Video Cropping (pre_rendered): phone fits a 9:16 portrait screen (the default); original keeps the scene's shape.", oneOf: ["phone", "original"]),
+                        "video_preset": JSONSchema.string("Video Preset (pre_rendered): full_hd (1080 pixels on the short side, the default), uhd_4k (2160) or original (the scene's own size).", oneOf: ["original", "full_hd", "uhd_4k"]),
+                        "fps": JSONSchema.integer("Frames per second of the video (pre_rendered): 24, 30 (the default) or 60.", minimum: 24, maximum: 60),
+                        "alignment": JSONSchema.number("Where the portrait crop sits across the scene (pre_rendered): 0 left, 0.5 centre (the default), 1 right.", minimum: 0, maximum: 1),
+                    ]), "The dialog's advanced and video settings."),
+                    "output_folder": JSONSchema.string("An existing folder's absolute path for the packages. Omitted: the app's export cache folder.", minLength: 1),
+                ]), annotations: .change, longRunning: true) { message($0) },
     ]
 
     // MARK: - Screen saver

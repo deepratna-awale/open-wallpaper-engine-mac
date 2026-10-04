@@ -63,6 +63,24 @@ private final class FakeSystemService: SystemControlService {
     var refreshes = 0
 
     var exportDefaults: SystemExportDefaults { defaults }
+    var androidExports: [SystemAndroidRequest] = []
+
+    func exportAndroid(_ request: SystemAndroidRequest) async throws -> AndroidExportBatch {
+        androidExports.append(request)
+        let folder = request.outputFolder ?? URL(fileURLWithPath: "/cache/AndroidExport")
+        var batch = AndroidExportBatch(folder: folder)
+        for wallpaper in request.wallpapers {
+            guard wallpaper.type == "scene" || wallpaper.type == "video" else {
+                batch.skipped.append(.init(wallpaperID: wallpaper.id, title: wallpaper.title,
+                                           reason: "Wallpaper type not supported on Android devices"))
+                continue
+            }
+            batch.outputs.append(.init(wallpaperID: wallpaper.id, title: wallpaper.title, type: wallpaper.type,
+                                       mode: wallpaper.type == "scene" ? request.options.mode : nil,
+                                       url: folder.appending(path: "\(wallpaper.title).mpkg"), size: 1000, previewURL: nil))
+        }
+        return batch
+    }
 
     func sceneSize(of wallpaper: ControlWallpaper) throws -> SIMD2<Double> { size }
 
