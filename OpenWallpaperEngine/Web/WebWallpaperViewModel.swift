@@ -401,12 +401,18 @@ class WebWallpaperViewModel: NSObject, ObservableObject, WKNavigationDelegate {
         if isMuted { page.setPageMuted(true) }
         if isPaused { applyPaused(to: page) }
 
-        if settings.settings.adjustMenuBarTint {
-            // The display this page shows on gets its snapshot (small, under a stable name).
-            page.snapshot { [weak page] image in
-                guard let image else { return }
-                guard let screen = page?.hostWindow?.screen ?? NSScreen.main else { return }
-                DesktopSnapshotCache.setDesktopPicture(image, for: [screen])
+        if settings.settings.adjustMenuBarTint || settings.settings.lockScreenPicture {
+            // The displays showing this page get its snapshot as their desktop picture
+            // (`DesktopPictureController`), once the page has drawn: at load it is often still
+            // blank (white), which would tint the menu bar white.
+            let directory = currentWallpaper.wallpaperDirectory
+            DispatchQueue.main.asyncAfter(deadline: .now() + SceneLoadingSnapshotCapture.delay) { [weak self, weak page] in
+                guard let page, self?.page === page else { return }
+                page.snapshot { image in
+                    guard let image else { return }
+                    NotificationCenter.default.post(name: .webWallpaperPageSnapshot,
+                                                    object: WebWallpaperPageSnapshot(wallpaperDirectory: directory, image: image))
+                }
             }
         }
     }

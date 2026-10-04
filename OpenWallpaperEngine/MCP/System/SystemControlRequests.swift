@@ -51,7 +51,7 @@ final class SystemControlRequests: ControlRequestGroup {
         let state = service.lockScreen
         let follows = state.follows.map { "\"\($0.title)\"" } ?? "no wallpaper"
         var sentence = state.enabled
-            ? "Show Wallpaper on Lock Screen is on: each display's lock screen shows \(follows)'s snapshot, the wallpaper Open Wallpaper Engine shows on its selected display (it follows that wallpaper on every display; there is no other choice)."
+            ? "Show Wallpaper on Lock Screen is on: each display's lock screen shows a picture of the wallpaper it shows (\(follows) on the selected display): a scene's snapshot, a video's frame or a web page's snapshot, or its preview until there is one."
             : "Show Wallpaper on Lock Screen is off: the lock screens show your own desktop pictures."
         if !state.mayChangeDesktopPicture { sentence += " This copy runs isolated and never changes the desktop picture." }
         return [
@@ -76,7 +76,7 @@ final class SystemControlRequests: ControlRequestGroup {
         let changed = state.enabled != enabled
         service.setLockScreenEnabled(enabled)
         var message = enabled
-            ? (changed ? "Turned on Show Wallpaper on Lock Screen: the lock screens show the scene's snapshot." : "Show Wallpaper on Lock Screen was already on.")
+            ? (changed ? "Turned on Show Wallpaper on Lock Screen: each display's lock screen shows a picture of its wallpaper." : "Show Wallpaper on Lock Screen was already on.")
             : (changed ? "Turned off Show Wallpaper on Lock Screen: your own desktop pictures are back." : "Show Wallpaper on Lock Screen was already off.")
         if !state.mayChangeDesktopPicture { message += " This copy runs isolated, so it changes no picture." }
         return lockScreen(message: message)
@@ -90,12 +90,9 @@ final class SystemControlRequests: ControlRequestGroup {
         guard state.enabled else {
             throw ControlError(.refused, "Show Wallpaper on Lock Screen is off. Turn it on with lock_screen_set (enabled: true), which shows the pictures at once.")
         }
-        guard let follows = state.follows, follows.type == "scene" else {
-            let what = state.follows.map { "\"\($0.title)\" is a \($0.type) wallpaper" } ?? "No wallpaper is shown"
-            return lockScreen(message: "\(what): the lock screen shows scene wallpapers' snapshots only, so no picture changed.")
-        }
         service.refreshLockScreen()
-        return lockScreen(message: "Showing \"\(follows.title)\"'s snapshot on every display's lock screen. A display with no snapshot of it yet keeps its picture until the running scene captures one.")
+        let follows = state.follows.map { " (\"\($0.title)\" on the selected display)" } ?? ""
+        return lockScreen(message: "Drawing each display's lock-screen picture again from the wallpaper it shows\(follows). A scene with no snapshot yet shows its preview until the running scene captures one.")
     }
 
     // MARK: - Writing
