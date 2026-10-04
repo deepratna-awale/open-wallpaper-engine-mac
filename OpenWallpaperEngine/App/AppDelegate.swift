@@ -254,6 +254,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Stretched displays name their canvas to the scene views in their windows.
         stretchCanvasCancellable = wallpaperViewModel.$layoutResolution.map(\.canvases).removeDuplicates()
             .sink { [weak self] canvases in self?.applyStretchCanvases(canvases) }
+        // The screen saver's loops follow the displays' wallpapers and layouts.
+        screenSaver.observe(wallpaperViewModel)
         // Settings › Optimizations › Media integration support: whether wallpapers hear Now Playing.
         mediaIntegrationCancellable = globalSettingsViewModel.$settings.map(\.mediaIntegration).removeDuplicates()
             .sink { [weak self] enabled in self?.mediaSession.setIntegrationEnabled(enabled) }
