@@ -247,7 +247,8 @@ enum ETC2TestDecoder {
             }
             if !(0...31).contains(b + db) {
                 let ro = e6(Int(word >> 57 & 63)), go = e7(Int((word >> 56 & 1) << 6 | word >> 49 & 63))
-                let bo = e6(Int((word >> 48 & 1) << 5 | (word >> 43 & 3) << 3 | word >> 39 & 7))
+                let boHigh: UInt64 = (word >> 48 & 1) << 5, boMiddle: UInt64 = (word >> 43 & 3) << 3
+                let bo = e6(Int(boHigh | boMiddle | word >> 39 & 7))
                 let rh = e6(Int((word >> 34 & 31) << 1 | word >> 32 & 1)), gh = e7(Int(word >> 25 & 127)), bh = e6(Int(word >> 19 & 63))
                 let rv = e6(Int(word >> 13 & 63)), gv = e7(Int(word >> 6 & 127)), bv = e6(Int(word & 63))
                 return (0..<16).map { k in
