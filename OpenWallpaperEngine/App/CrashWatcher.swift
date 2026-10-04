@@ -1,5 +1,5 @@
+import AppKit
 import Darwin
-import Foundation
 
 /// Settings › Restart after crashing: a small watcher process that opens the app again when it
 /// crashes (`CrashRelaunchPolicy`).
@@ -12,6 +12,12 @@ import Foundation
 /// the app crashed or was killed, and the watcher opens it again once the rate limit allows.
 /// Each launch starts its own watcher; the old one exits after relaunching.
 ///
+/// Only the user's own launch has a watcher (`AppHostContext.shouldWatchForCrashes`): a test host,
+/// a preview, a run under a debugger and an isolated copy never start one. The watcher inherits
+/// the app's environment and checks it again before relaunching, and the relaunch carries the
+/// app's isolated state (`AppRelauncher.configuration`), so it can't open a copy that runs on
+/// other state than the app it watched.
+///
 /// `SafeRestart` still decides what comes back: after an unclean exit the wallpapers that were
 /// showing stay unloaded, so a crashing wallpaper is never replayed by the relaunch.
 @MainActor
@@ -22,17 +28,17 @@ final class CrashWatcher {
 
     private var process: Process?
     private var pipe: Pipe?
-    private let isIsolated: Bool
+    private let host: AppHostContext
 
-    init(isIsolated: Bool = AppStorageLocation.current.isIsolated) {
-        self.isIsolated = isIsolated
+    init(host: AppHostContext = .current) {
+        self.host = host
     }
 
     var isRunning: Bool { process?.isRunning ?? false }
 
     /// Starts or stops the watcher for the setting's value: at launch, and on every change.
     func update(enabled: Bool) {
-        if CrashRelaunchPolicy.shouldWatch(enabled: enabled, isIsolated: isIsolated) {
+        if CrashRelaunchPolicy.shouldWatch(enabled: enabled, host: host) {
             start()
         } else {
             send(Self.stopMessage)
@@ -53,6 +59,9 @@ final class CrashWatcher {
         process.executableURL = executable
         process.arguments = [Self.argument, Bundle.main.bundleURL.path(percentEncoded: false),
                              AppStorageLocation.current.supportDirectory.path(percentEncoded: false)]
+        var environment = ProcessInfo.processInfo.environment
+        environment[AppStorageLocation.environmentKey] = host.isolationTag
+        process.environment = environment
         process.standardInput = pipe
         process.standardOutput = FileHandle.nullDevice
         process.standardError = FileHandle.nullDevice
@@ -90,7 +99,11 @@ final class CrashWatcher {
         setpriority(PRIO_PROCESS, 0, 10)
         // A terminated watcher (logout, shutdown) ends with the default SIGTERM action: no relaunch.
         let ending = readEnding(from: FileHandle.standardInput)
-        let decision = CrashRelaunchPolicy.decide(ending, isIsolated: false, history: history.load(), now: Date())
+        // The watcher's own context: the app's environment, which it inherits.
+        let host = AppHostContext.detect(environment: ProcessInfo.processInfo.environment, arguments: arguments,
+                                         xcTestLoaded: NSClassFromString("XCTestCase") != nil,
+                                         loadedBundlePaths: Bundle.allBundles.map(\.bundlePath), isDebugged: false)
+        let decision = CrashRelaunchPolicy.decide(ending, host: host, history: history.load(), now: Date())
         switch decision {
         case .stay:
             return 0
@@ -102,18 +115,25 @@ final class CrashWatcher {
             OWELog.info(.app, "Open Wallpaper Engine crashed; restarting it")
             // Lets the crashed process finish going away so the new one isn't refused as a duplicate.
             Thread.sleep(forTimeInterval: 1)
-            let open = Process()
-            open.executableURL = URL(filePath: "/usr/bin/open")
-            open.arguments = [bundle.path(percentEncoded: false)]
-            do {
-                try open.run()
-                open.waitUntilExit()
-            } catch {
-                OWELog.error(.app, "Can't restart Open Wallpaper Engine: \(error)")
-                return 1
-            }
-            return 0
+            return relaunch(bundle, host: host) ? 0 : 1
         }
+    }
+
+    /// Opens the app at `bundle` through LaunchServices in `host`'s isolated state, and waits.
+    private nonisolated static func relaunch(_ bundle: URL, host: AppHostContext) -> Bool {
+        let configuration = AppRelauncher.configuration(arguments: [], host: host, newInstance: false)
+        let done = DispatchSemaphore(value: 0)
+        nonisolated(unsafe) var failure: Error? // Written by the completion before `done` is signalled.
+        NSWorkspace.shared.openApplication(at: bundle, configuration: configuration) { _, error in
+            failure = error
+            done.signal()
+        }
+        done.wait()
+        if let failure {
+            OWELog.error(.app, "Can't restart Open Wallpaper Engine: \(failure)")
+            return false
+        }
+        return true
     }
 
     /// Reads the app's lines until it says it quits, says stop, or the pipe closes.

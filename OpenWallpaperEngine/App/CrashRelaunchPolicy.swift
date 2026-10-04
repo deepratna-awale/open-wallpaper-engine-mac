@@ -8,7 +8,8 @@ import Foundation
 ///   the watcher being told to stop (the setting turned off) or being terminated itself (logout).
 /// - At most `maxRelaunches` in `window`, so a crash loop ends. `SafeRestart` keeps the wallpaper
 ///   that was showing from loading again after the relaunch.
-/// - Never for an isolated copy (`AppStorageLocation.isIsolated`).
+/// - Never for an isolated copy, a test or preview host, or a run under a debugger
+///   (`AppHostContext.shouldWatchForCrashes`).
 struct CrashRelaunchPolicy {
     static let maxRelaunches = 3
     static let window: TimeInterval = 5 * 60
@@ -34,12 +35,15 @@ struct CrashRelaunchPolicy {
     }
 
     /// Whether the watcher runs at all.
-    static func shouldWatch(enabled: Bool, isIsolated: Bool) -> Bool {
-        enabled && !isIsolated
+    static func shouldWatch(enabled: Bool, host: AppHostContext) -> Bool {
+        host.shouldWatchForCrashes(enabled: enabled)
     }
 
-    static func decide(_ ending: Ending, isIsolated: Bool, history: [Date], now: Date) -> Decision {
-        guard ending == .vanished, !isIsolated else { return .stay }
+    /// What the watcher does when the app ended this way. `host` is the watcher's own context,
+    /// inherited from the app: a watcher that finds itself in a test host or an isolated copy
+    /// never relaunches, whoever started it.
+    static func decide(_ ending: Ending, host: AppHostContext, history: [Date], now: Date) -> Decision {
+        guard ending == .vanished, host.mayRelaunch, !host.isIsolated else { return .stay }
         let recent = history.filter { now.timeIntervalSince($0) < window && $0 <= now }
         guard recent.count < maxRelaunches else { return .rateLimited }
         return .relaunch(history: recent + [now])
