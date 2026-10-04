@@ -68,6 +68,7 @@ struct SettingsSearch {
             entry("Accent Color", .general, SettingsAnchor.theming),
             entry("Tinted Icon Color", .general, SettingsAnchor.theming),
             entry("Folder Color", .general, SettingsAnchor.theming),
+            entry("Restart the Dock automatically", .general, SettingsAnchor.theming),
             entry("Run Setup Again…", .general, SettingsAnchor.setup),
             entry("Keyboard Shortcuts", .general, SettingsAnchor.shortcuts),
             entry("Hotkeys", .general, SettingsAnchor.hotKeys),
