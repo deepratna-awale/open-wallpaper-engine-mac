@@ -38,5 +38,8 @@ Exports were made from WE 2.8.42 via right-click → Send to Mobile Device → E
 - **The clock and date are baked into the video at render time:** frames show "03:16 PM" and then "03:17 PM", "Sunday, 4 October" (`lonelycat_prerendered_clock_frames.png`). On the device the video loops, so the shown time is frozen to the export moment and repeats every 30 s.
 - **Audio:** the bars are rendered with whatever audio was playing on the PC during export (here, silent). No audio file is included.
 
-## Device behaviour (Tab S9)
-- **Not tested yet:** importing the Lonely Cat files, i.e. whether the Dynamic clock ticks live, the bars react to tablet audio, and the system font renders. Pending the user.
+## Device behaviour (Tab S9): Dynamic (Balanced) sent via WE's Wi-Fi "Send to device", confirmed by the user
+- **The SceneScript clock and date run live:** they show the real current time and keep updating, so the app executes SceneScript.
+- **Audio-reactive bars react to music playing on the tablet:** the app feeds device audio into the audio-spectrum input.
+- **User properties are available in the app:** the wallpaper's settings, including toggling the clock on or off, can be changed on the tablet. So `general.properties` from project.json is honoured.
+- **Pre-Rendered:** the clock is frozen at render time (see above); not separately checked on the device.
