@@ -102,10 +102,9 @@ struct DisplaySettings: SubviewOfContentView {
                                 }
                                 Spacer()
                                 Button("Remove") {
-                                    // A clone shows one wallpaper: it leaves every display of it.
-                                    for screen in wallpaperViewModel.layoutResolution.expandingClones([screenId]) {
-                                        wallpaperViewModel.wallpapers.removeValue(forKey: screen)
-                                    }
+                                    // A clone shows its main display's wallpaper: removing it removes that.
+                                    wallpaperViewModel.wallpapers.removeValue(
+                                        forKey: wallpaperViewModel.layoutResolution.source(of: screenId))
                                 }
                                 .glassButtonStyle()
                                 .controlSize(.small)

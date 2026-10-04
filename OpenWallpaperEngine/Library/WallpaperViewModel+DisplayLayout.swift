@@ -3,29 +3,14 @@ import Foundation
 /// The display layout's side of the displays' wallpapers (docs/architecture.md "Display layouts"):
 /// the Displays sheet changes it by display id, the model keeps it by display identity.
 extension WallpaperViewModel {
-    /// Resolves the layout on the connected displays, gives every clone member its main display's
-    /// wallpaper, and regroups the instances and the displays' playback.
+    /// Resolves the layout on the connected displays (a clone member then shows its main display's
+    /// wallpaper, `wallpaper(for:)`, its own selection untouched) and regroups the instances and
+    /// the displays' playback.
     func refreshDisplayLayout() {
         let resolution = DisplayLayoutResolution(displayLayout, displays: connectedDisplays())
         if resolution != layoutResolution { layoutResolution = resolution }
-        syncCloneMembers()
         refreshInstanceKeys()
         refreshDisplayPlayback()
-    }
-
-    /// A clone member's saved wallpaper is its main display's, so whatever reads a display's
-    /// wallpaper, and the member once it leaves the clone, sees the clone's.
-    private func syncCloneMembers() {
-        var synced = wallpapers
-        var changed = false
-        for (member, source) in layoutResolution.cloneSources {
-            let wallpaper = synced[source]
-            guard wallpaper?.wallpaperDirectory != synced[member]?.wallpaperDirectory
-                    || wallpaper?.project != synced[member]?.project else { continue }
-            synced[member] = wallpaper
-            changed = true
-        }
-        if changed { wallpapers = synced }
     }
 
     // MARK: Changes from the Displays sheet, by display id

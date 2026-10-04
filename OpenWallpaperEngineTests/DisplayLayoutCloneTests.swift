@@ -57,6 +57,39 @@ final class DisplayLayoutCloneTests: XCTestCase {
         XCTAssertEqual(["1", "2", "3"].map { model.wallpaper(for: $0).project.title }, ["d", "d", "c"])
     }
 
+    // WE keeps each monitor's `selectedwallpapers` entry under a clone: a member's own pick stays.
+
+    func testLeavingTheCloneLayoutRestoresEachDisplaysOwnWallpaper() {
+        let model = model()
+        model.setLayout(.clone)
+        XCTAssertEqual(["1", "2", "3"].map { model.wallpaper(for: $0).project.title }, ["a", "a", "a"])
+        XCTAssertEqual(model.wallpapers.mapValues(\.project.title), ["1": "a", "2": "b", "3": "c"],
+                       "the clone doesn't overwrite the members' own picks")
+        model.setLayout(.perDisplay)
+        XCTAssertEqual(["1", "2", "3"].map { model.wallpaper(for: $0).project.title }, ["a", "b", "c"])
+        XCTAssertNotEqual(model.instanceKey(for: "1"), model.instanceKey(for: "2"))
+    }
+
+    func testRemovingOneMemberOfAGroupRestoresOnlyThatOne() {
+        let model = model()
+        model.addCloneGroup(["1", "2", "3"])
+        XCTAssertEqual(["1", "2", "3"].map { model.wallpaper(for: $0).project.title }, ["a", "a", "a"])
+        model.removeFromGroup("3")
+        XCTAssertEqual(["1", "2", "3"].map { model.wallpaper(for: $0).project.title }, ["a", "a", "c"])
+        XCTAssertEqual(model.instanceKey(for: "2"), model.instanceKey(for: "1"), "display 2 still clones display 1")
+    }
+
+    func testChangingTheClonesWallpaperLeavesTheMembersOwnPicks() {
+        let model = model()
+        model.addCloneGroup(["1", "2"])
+        model.setWallpaper(wallpaper("d"), for: ["2"])
+        model.setWallpaper(wallpaper("e"), for: ["1", "2", "3"])
+        XCTAssertEqual(["1", "2", "3"].map { model.wallpaper(for: $0).project.title }, ["e", "e", "e"])
+        XCTAssertEqual(model.wallpapers["2"]?.project.title, "b", "the member's own pick stays")
+        model.removeFromGroup("2")
+        XCTAssertEqual(["1", "2", "3"].map { model.wallpaper(for: $0).project.title }, ["e", "b", "e"])
+    }
+
     func testTheCloneLayoutShowsTheMainDisplaysWallpaperEverywhere() {
         let model = model()
         model.setMainCloneDisplay("3", true) // Not in a clone yet: nothing changes.

@@ -63,6 +63,14 @@ struct DisplayLayoutResolution: Equatable {
     /// The display whose wallpaper `screenId` shows: its main clone display, or itself.
     func source(of screenId: String) -> String { cloneSources[screenId] ?? screenId }
 
+    /// What each display of `selections` (each display's own) shows: a clone member its main
+    /// clone display's, the others their own.
+    func shown<Wallpaper>(_ selections: [String: Wallpaper]) -> [String: Wallpaper] {
+        var shown = selections
+        for (member, source) in cloneSources { shown[member] = selections[source] }
+        return shown
+    }
+
     /// The clone `screenId` is part of.
     func clone(containing screenId: String) -> Clone? {
         clones.first { $0.screens.contains(screenId) }
