@@ -537,9 +537,9 @@ or makes macOS ask for a permission.
 | `screensaver_stop_using` | none | "Stop Using as Screen Saver": the screen saver loops the desktop's wallpaper again. `stopped` is false when nothing was set. |
 | `screensaver_schedule_get` | none | The daily re-recording: `enabled`, `hour`, `minute`, `time`, `anchor` (when it last ran, or was turned on or moved) and `next_run`. |
 | `screensaver_schedule_set` | `enabled`, `hour?`, `minute?` | "Re-record Every Day at": on or off, and its time (only with `enabled: true`, as the mode's time picker). |
-| `lock_screen_get` | none | `enabled`, `may_change_desktop_picture` (false in an isolated copy), `follows` (the wallpaper whose snapshot it shows) and per display its `wallpaper`, `picture` (the desktop picture the lock screen shows) and `is_lock_screen_picture`. |
+| `lock_screen_get` | none | `enabled`, `may_change_desktop_picture` (false in an isolated copy), `follows` (the selected display's wallpaper) and per display its `wallpaper`, `picture` (the desktop picture the lock screen shows) and `is_lock_screen_picture`. |
 | `lock_screen_set` | `enabled` | Turns Show Wallpaper on Lock Screen on (the pictures are applied at once) or off (the user's pictures come back), as Settings › General does. |
-| `lock_screen_refresh` | none | Shows the followed scene's latest snapshot on every display now, as turning the setting on does. |
+| `lock_screen_refresh` | none | Draws each display's picture again now from the wallpaper it shows, as turning the setting on does. |
 
 Export a Live Photo for an iPhone into a folder, keeping the clip's automatic start:
 
