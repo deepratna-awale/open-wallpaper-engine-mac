@@ -5,12 +5,12 @@ import SwiftUI
 /// The Scene Inspector's iPhone mode: the wallpaper as it plays, framed as an iPhone lock screen,
 /// with the crop, the clip and the Live Photo export.
 @MainActor
-final class IPhoneLivePhotoModel: NSObject, ObservableObject, NSSharingServiceDelegate {
+final class LivePhotoExportModel: NSObject, ObservableObject, NSSharingServiceDelegate {
     let wallpaper: WEWallpaper
     let properties: WallpaperPropertyScope
     let sceneSize: SIMD2<Double>
 
-    @Published var device = IPhoneModel.largest {
+    @Published var device = DeviceModel.largest {
         didSet { crop = LivePhotoCrop(sceneSize: sceneSize, outputPixels: device.pixelSize, zoom: crop.zoom, center: crop.center) }
     }
     @Published var showsLockScreenGuide = true
@@ -29,7 +29,7 @@ final class IPhoneLivePhotoModel: NSObject, ObservableObject, NSSharingServiceDe
         self.wallpaper = wallpaper
         self.properties = properties
         self.sceneSize = sceneSize
-        crop = LivePhotoCrop(sceneSize: sceneSize, outputPixels: IPhoneModel.largest.pixelSize)
+        crop = LivePhotoCrop(sceneSize: sceneSize, outputPixels: DeviceModel.largest.pixelSize)
     }
 
     static func isEligible(_ wallpaper: WEWallpaper) -> Bool {
@@ -157,8 +157,8 @@ final class IPhoneLivePhotoModel: NSObject, ObservableObject, NSSharingServiceDe
 }
 
 /// The lock screen: the live scene (or the clip's preview) through the portrait crop.
-struct IPhoneLockScreenPreview: View {
-    @ObservedObject var model: IPhoneLivePhotoModel
+struct LockScreenPreview: View {
+    @ObservedObject var model: LivePhotoExportModel
     @State private var dragStart: SIMD2<Double>?
     @State private var zoomStart: Double?
 
@@ -170,7 +170,7 @@ struct IPhoneLockScreenPreview: View {
             ZStack(alignment: .topLeading) {
                 Color.black
                 if model.previewFrames.isEmpty {
-                    IPhoneLiveScene(wallpaper: model.wallpaper, properties: model.properties)
+                    LivePhotoExportScene(wallpaper: model.wallpaper, properties: model.properties)
                         .frame(width: model.sceneSize.x * scale, height: model.sceneSize.y * scale)
                         .offset(x: -crop.minX * scale, y: -crop.minY * scale)
                         .allowsHitTesting(false)
@@ -250,7 +250,7 @@ private struct LockScreenGuide: View {
 /// The wallpaper's shared instance (`SceneWallpaperInstance`) drawn in a view of the scene's
 /// aspect: the same renderer and properties as the desktop, or a new instance when no display
 /// shows it with these properties.
-private struct IPhoneLiveScene: NSViewRepresentable {
+private struct LivePhotoExportScene: NSViewRepresentable {
     let wallpaper: WEWallpaper
     let properties: WallpaperPropertyScope
     static let screenID = SceneWallpaperInstance.previewScreenIDs.first!
@@ -286,15 +286,15 @@ private struct IPhoneLiveScene: NSViewRepresentable {
 }
 
 /// The iPhone mode's controls: device, guide, crop, clip and export, then the user properties.
-struct IPhoneLivePhotoControls: View {
-    @ObservedObject var model: IPhoneLivePhotoModel
+struct LivePhotoExportSettingsView: View {
+    @ObservedObject var model: LivePhotoExportModel
     let scopes: [WallpaperPropertyScope]
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 Picker("Device", selection: $model.device) {
-                    ForEach(IPhoneModel.allCases) { device in
+                    ForEach(DeviceModel.allCases) { device in
                         Text(verbatim: device.name).tag(device)
                     }
                 }

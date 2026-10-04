@@ -9,14 +9,14 @@ final class LivePhotoTests: XCTestCase {
     // MARK: Crop and scale
 
     func testDefaultDeviceIsTheLargest() {
-        XCTAssertEqual(IPhoneModel.largest, .proMax)
-        XCTAssertEqual(IPhoneModel.proMax.pixelSize, SIMD2(1320, 2868))
-        XCTAssertEqual(IPhoneModel.pro.pixelSize, SIMD2(1206, 2622))
-        XCTAssertEqual(IPhoneModel.standard.pixelSize, SIMD2(1179, 2556))
+        XCTAssertEqual(DeviceModel.largest, .proMax)
+        XCTAssertEqual(DeviceModel.proMax.pixelSize, SIMD2(1320, 2868))
+        XCTAssertEqual(DeviceModel.pro.pixelSize, SIMD2(1206, 2622))
+        XCTAssertEqual(DeviceModel.standard.pixelSize, SIMD2(1179, 2556))
     }
 
     func testCoverFitIsTheTallestPortraitWindowInALandscapeScene() {
-        let crop = LivePhotoCrop(sceneSize: landscape, outputPixels: IPhoneModel.proMax.pixelSize)
+        let crop = LivePhotoCrop(sceneSize: landscape, outputPixels: DeviceModel.proMax.pixelSize)
         XCTAssertEqual(crop.coverSize.y, 1080, accuracy: 1e-9)
         XCTAssertEqual(crop.coverSize.x, 1080 * 1320 / 2868, accuracy: 1e-9)
         XCTAssertEqual(crop.cropRect.midX, 960, accuracy: 1e-9)
@@ -24,13 +24,13 @@ final class LivePhotoTests: XCTestCase {
     }
 
     func testCoverFitInAPortraitSceneUsesItsWidth() {
-        let crop = LivePhotoCrop(sceneSize: SIMD2(1000, 4000), outputPixels: IPhoneModel.proMax.pixelSize)
+        let crop = LivePhotoCrop(sceneSize: SIMD2(1000, 4000), outputPixels: DeviceModel.proMax.pixelSize)
         XCTAssertEqual(crop.coverSize.x, 1000, accuracy: 1e-9)
         XCTAssertEqual(crop.coverSize.y, 1000 * 2868 / 1320, accuracy: 1e-9)
     }
 
     func testPanIsClampedInsideTheScene() {
-        var crop = LivePhotoCrop(sceneSize: landscape, outputPixels: IPhoneModel.proMax.pixelSize)
+        var crop = LivePhotoCrop(sceneSize: landscape, outputPixels: DeviceModel.proMax.pixelSize)
         crop.pan(by: SIMD2(-10_000, -10_000))
         XCTAssertEqual(crop.cropRect.minX, 0, accuracy: 1e-9)
         XCTAssertEqual(crop.cropRect.minY, 0, accuracy: 1e-9)
@@ -40,7 +40,7 @@ final class LivePhotoTests: XCTestCase {
     }
 
     func testZoomIsClampedAndShrinksTheWindow() {
-        var crop = LivePhotoCrop(sceneSize: landscape, outputPixels: IPhoneModel.proMax.pixelSize)
+        var crop = LivePhotoCrop(sceneSize: landscape, outputPixels: DeviceModel.proMax.pixelSize)
         crop.setZoom(0.2)
         XCTAssertEqual(crop.zoom, 1)
         crop.setZoom(10)
@@ -54,7 +54,7 @@ final class LivePhotoTests: XCTestCase {
     }
 
     func testRenderScaleIsNeverBelowAuthoredNorThePhonesPixels() {
-        for device in IPhoneModel.allCases {
+        for device in DeviceModel.allCases {
             for zoom in [1.0, 1.5, 2, 3] {
                 let crop = LivePhotoCrop(sceneSize: landscape, outputPixels: device.pixelSize, zoom: zoom)
                 XCTAssertGreaterThanOrEqual(crop.renderScale, 1)
@@ -64,7 +64,7 @@ final class LivePhotoTests: XCTestCase {
             }
         }
         // A scene far larger than the phone renders at its authored size.
-        let large = LivePhotoCrop(sceneSize: SIMD2(7680, 4320), outputPixels: IPhoneModel.proMax.pixelSize)
+        let large = LivePhotoCrop(sceneSize: SIMD2(7680, 4320), outputPixels: DeviceModel.proMax.pixelSize)
         XCTAssertEqual(large.renderScale, 1)
         XCTAssertEqual(large.renderPixelSize, SIMD2(7680, 4320))
     }
@@ -133,7 +133,7 @@ final class LivePhotoTests: XCTestCase {
     // MARK: Helper job
 
     func testJobRoundTripsTheCropClipAndProperties() throws {
-        let crop = LivePhotoCrop(sceneSize: landscape, outputPixels: IPhoneModel.pro.pixelSize, zoom: 2,
+        let crop = LivePhotoCrop(sceneSize: landscape, outputPixels: DeviceModel.pro.pixelSize, zoom: 2,
                                  center: SIMD2(300, 400))
         let clip = LivePhotoClip(start: 4.5)
         let job = LivePhotoJob(wallpaperDirectory: URL(filePath: "/tmp/w", directoryHint: .isDirectory),

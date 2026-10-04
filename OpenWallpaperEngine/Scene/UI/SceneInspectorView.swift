@@ -69,7 +69,7 @@ private struct SceneInspectorTexture: Identifiable {
 
 /// What the Scene Inspector shows: the scene's objects, or the iPhone Live Photo preview.
 private enum SceneInspectorMode {
-    case inspector, iPhone
+    case inspector, deviceExport
 }
 
 private enum SceneHorizontalSnap {
@@ -917,7 +917,7 @@ struct SceneInspectorView: View {
     @State private var isMovementPresented = true
     @State private var isConfirmingReset = false
     @State private var mode = SceneInspectorMode.inspector
-    @State private var iPhoneModel: IPhoneLivePhotoModel?
+    @State private var exportModel: LivePhotoExportModel?
     @FocusState private var isSearchFocused: Bool
     private let wallpaperDirectory: URL
     private let wallpaper: WEWallpaper
@@ -986,8 +986,8 @@ struct SceneInspectorView: View {
             modeDetail
                 .inspector(isPresented: $isMovementPresented) {
                     Group {
-                        if mode == .iPhone, let iPhoneModel {
-                            IPhoneLivePhotoControls(model: iPhoneModel, scopes: scopes)
+                        if mode == .deviceExport, let exportModel {
+                            LivePhotoExportSettingsView(model: exportModel, scopes: scopes)
                         } else {
                             movementColumn(for: model.items.first(where: { $0.id == selectedID }))
                         }
@@ -1054,8 +1054,8 @@ struct SceneInspectorView: View {
     /// The detail column: the selected object, or the iPhone lock screen.
     @ViewBuilder
     private var modeDetail: some View {
-        if mode == .iPhone, let iPhoneModel {
-            IPhoneLockScreenPreview(model: iPhoneModel)
+        if mode == .deviceExport, let exportModel {
+            LockScreenPreview(model: exportModel)
                 .navigationTitle(Text("iPhone Live Photo"))
         } else {
             detailColumn
@@ -1064,17 +1064,17 @@ struct SceneInspectorView: View {
 
     /// Inspector or iPhone; only a scene wallpaper can be made into a Live Photo for now.
     private var modePicker: some View {
-        let eligible = IPhoneLivePhotoModel.isEligible(wallpaper)
+        let eligible = LivePhotoExportModel.isEligible(wallpaper)
         return Picker("Mode", selection: Binding(get: { mode }, set: { newValue in
-            if newValue == .iPhone, iPhoneModel == nil {
-                iPhoneModel = IPhoneLivePhotoModel(wallpaper: wallpaper, properties: scopes.first ?? .shared,
+            if newValue == .deviceExport, exportModel == nil {
+                exportModel = LivePhotoExportModel(wallpaper: wallpaper, properties: scopes.first ?? .shared,
                                                    sceneSize: model.sceneSize)
             }
-            if newValue == .iPhone { isMovementPresented = true }
+            if newValue == .deviceExport { isMovementPresented = true }
             mode = newValue
         })) {
             Text("Inspector").tag(SceneInspectorMode.inspector)
-            Text("iPhone").tag(SceneInspectorMode.iPhone)
+            Text("iPhone").tag(SceneInspectorMode.deviceExport)
         }
         .pickerStyle(.segmented)
         .disabled(!eligible)

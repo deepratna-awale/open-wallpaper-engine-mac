@@ -2,7 +2,7 @@ import CoreGraphics
 import Foundation
 
 /// The iPhones a Live Photo wallpaper is made for: the lock screen's size in pixels.
-enum IPhoneModel: String, CaseIterable, Identifiable {
+enum DeviceModel: String, CaseIterable, Identifiable {
     case proMax, pro, standard
 
     var id: String { rawValue }
@@ -26,7 +26,7 @@ enum IPhoneModel: String, CaseIterable, Identifiable {
     }
 
     /// The default: the most pixels.
-    static var largest: IPhoneModel {
+    static var largest: DeviceModel {
         allCases.max { $0.pixelSize.x * $0.pixelSize.y < $1.pixelSize.x * $1.pixelSize.y }!
     }
 }
