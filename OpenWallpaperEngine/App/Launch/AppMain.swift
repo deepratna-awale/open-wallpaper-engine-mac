@@ -30,7 +30,10 @@ public enum AppMain {
             // Unit tests are hosted in the app; skip the delegate so a test run doesn't open
             // wallpaper windows, start playback or overwrite the user's saved state.
             var delegate: NSApplicationDelegate?
-            if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
+            let isTestHost = AppHostContext.isTestHost(environment: ProcessInfo.processInfo.environment,
+                                                       xcTestLoaded: NSClassFromString("XCTestCase") != nil,
+                                                       loadedBundlePaths: Bundle.allBundles.map(\.bundlePath))
+            if !isTestHost {
                 // Open Wallpaper Engine, or the Wallpaper Editor in a process of its own (`AppLaunchPlan`).
                 let mode: AppLaunchMode = AppLaunchMode.parse(ProcessInfo.processInfo.arguments)
                 delegate = AppLaunchPlan.plan(for: mode).makeDelegate()
