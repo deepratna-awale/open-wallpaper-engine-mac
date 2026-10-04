@@ -160,17 +160,24 @@ class ContentViewModel: ObservableObject, DropDelegate {
     /// shown in an alert.
     func deleteWallpapers(at directories: [URL], toTrash: Bool, wallpaperViewModel: WallpaperViewModel) {
         Task { @MainActor in
-            let result: (deleted: [URL], failure: WallpaperDeletion.Failure?) = await Task.detached(priority: .userInitiated) {
-                WallpaperDeletion.delete(directories, toTrash: toTrash)
-            }.value
-            for directory in result.deleted { forgetDeletedWallpaper(at: directory) }
-            for directory in directories { wallpaperViewModel.removeWallpaperFromAllScreens(directory: directory) }
-            removeUnusedWorkshopDependencies()
-            if let failure = result.failure {
+            if let failure = await deleteWallpapersNow(at: directories, toTrash: toTrash, wallpaperViewModel: wallpaperViewModel) {
                 deletionAlertError = failure
                 deletionAlertPresented = true
             }
         }
+    }
+
+    /// `deleteWallpapers`' steps, awaited: returns the failure instead of showing it (the MCP
+    /// `wallpaper_delete` tool answers with it).
+    @MainActor func deleteWallpapersNow(at directories: [URL], toTrash: Bool,
+                                        wallpaperViewModel: WallpaperViewModel) async -> WallpaperDeletion.Failure? {
+        let result: (deleted: [URL], failure: WallpaperDeletion.Failure?) = await Task.detached(priority: .userInitiated) {
+            WallpaperDeletion.delete(directories, toTrash: toTrash)
+        }.value
+        for directory in result.deleted { forgetDeletedWallpaper(at: directory) }
+        for directory in directories { wallpaperViewModel.removeWallpaperFromAllScreens(directory: directory) }
+        removeUnusedWorkshopDependencies()
+        return result.failure
     }
 
     /// After wallpapers were deleted: removes the dependency-only items none of the remaining ones use.
