@@ -29,6 +29,9 @@ struct AndroidExportSheet: View {
         .padding(20)
         .frame(width: 640, height: 640)
         .onDisappear { model.close() }
+        .sheet(item: $model.wifiSend) { request in
+            AndroidWiFiSendSheet(session: AndroidWiFiSession(batch: request.batch), dismiss: { model.wifiSend = nil })
+        }
     }
 
     @ViewBuilder
@@ -210,9 +213,17 @@ struct AndroidExportSheet: View {
             if let queue = model.queue, queue.isRunning {
                 Button("Cancel", role: .cancel) { model.cancelExport() }
                     .glassButtonStyle()
-            } else if model.batch != nil {
+            } else if let batch = model.batch {
                 Button("Show in Finder") { model.showInFinder() }
                     .glassButtonStyle()
+                if !batch.outputs.isEmpty {
+                    Button {
+                        model.sendOverWiFi()
+                    } label: {
+                        Label("Send over Wi-Fi…", systemImage: "wifi")
+                    }
+                    .glassButtonStyle()
+                }
                 Button("Done") { dismiss() }
                     .glassButtonStyle(.prominent)
                     .keyboardShortcut(.defaultAction)

@@ -151,7 +151,7 @@ final class MCPCompatibilityTests: XCTestCase {
     /// A render, a recording or a depth map may take minutes: those calls wait longer for the app.
     func testLongCallsWaitLonger() {
         let long = Set(MCPToolCatalog.tools.filter(\.isLongRunning).map(\.name))
-        XCTAssertEqual(long, ["export_live_photo", "export_android", "screensaver_record", "depth_generate"])
+        XCTAssertEqual(long, ["export_live_photo", "export_android", "android_send_wifi", "screensaver_record", "depth_generate"])
     }
 
     /// Every property, and every property of an object inside one (a list of edits' items), has one

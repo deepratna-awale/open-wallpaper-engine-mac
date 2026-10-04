@@ -44,23 +44,36 @@ extension MCPToolCatalog {
 
     // MARK: - Android export
 
+    /// The export's choices, which `android_send_wifi` takes too when it exports first.
+    private static let androidExportChoices: [String: JSONValue] = [
+        "mode": JSONSchema.string("How scenes are exported: high_quality (Dynamic, full-size textures), balanced (Dynamic, textures at half size; the default) or pre_rendered (a video).", oneOf: ["high_quality", "balanced", "pre_rendered"]),
+        "options": described(JSONSchema.object([
+            "pixel_art": JSONSchema.boolean("Pixel art optimization: textures keep every pixel, uncompressed, with nearest filtering (Dynamic)."),
+            "texture_reduction": JSONSchema.integer("Divides colour textures' sides by 1, 2 or 4 (Dynamic); the mode sets it otherwise.", minimum: 1, maximum: 4),
+            "cropping": JSONSchema.string("Video Cropping (pre_rendered): phone fits a 9:16 portrait screen (the default); original keeps the scene's shape.", oneOf: ["phone", "original"]),
+            "video_preset": JSONSchema.string("Video Preset (pre_rendered): full_hd (1080 pixels on the short side, the default), uhd_4k (2160) or original (the scene's own size).", oneOf: ["original", "full_hd", "uhd_4k"]),
+            "fps": JSONSchema.integer("Frames per second of the video (pre_rendered): 24, 30 (the default) or 60.", minimum: 24, maximum: 60),
+            "alignment": JSONSchema.number("Where the portrait crop sits across the scene (pre_rendered): 0 left, 0.5 centre (the default), 1 right.", minimum: 0, maximum: 1),
+        ]), "The dialog's advanced and video settings."),
+    ]
+
     private static let androidTools: [MCPTool] = [
         MCPTool("export_android", title: "Export for Android",
                 description: "Wallpaper Engine's \"Export .mpkg\" for its Android app, as the library's \"Export for Android…\" does: writes one <title>.mpkg per wallpaper (unique names) into output_folder and waits for it (a pre-rendered scene takes a while). Videos are packed as they are; scenes are Dynamic (the scene itself, rendered on the device: high_quality or balanced) or pre_rendered (a 30 s H.264 loop of the scene). Web and application wallpapers are skipped with the reason. Returns each package's path, size and preview, and what was skipped or failed. The user copies the files to the device and imports them in the app.",
-                input: JSONSchema.object([
+                input: JSONSchema.object(androidExportChoices.merging([
                     "wallpaper_id": JSONSchema.string("A wallpaper's id from list_wallpapers. Give this or wallpaper_ids.", minLength: 1),
                     "wallpaper_ids": JSONSchema.stringArray("Several wallpapers' ids from list_wallpapers, exported in this order.", maxItems: 200),
-                    "mode": JSONSchema.string("How scenes are exported: high_quality (Dynamic, full-size textures), balanced (Dynamic, textures at half size; the default) or pre_rendered (a video).", oneOf: ["high_quality", "balanced", "pre_rendered"]),
-                    "options": described(JSONSchema.object([
-                        "pixel_art": JSONSchema.boolean("Pixel art optimization: textures keep every pixel, uncompressed, with nearest filtering (Dynamic)."),
-                        "texture_reduction": JSONSchema.integer("Divides colour textures' sides by 1, 2 or 4 (Dynamic); the mode sets it otherwise.", minimum: 1, maximum: 4),
-                        "cropping": JSONSchema.string("Video Cropping (pre_rendered): phone fits a 9:16 portrait screen (the default); original keeps the scene's shape.", oneOf: ["phone", "original"]),
-                        "video_preset": JSONSchema.string("Video Preset (pre_rendered): full_hd (1080 pixels on the short side, the default), uhd_4k (2160) or original (the scene's own size).", oneOf: ["original", "full_hd", "uhd_4k"]),
-                        "fps": JSONSchema.integer("Frames per second of the video (pre_rendered): 24, 30 (the default) or 60.", minimum: 24, maximum: 60),
-                        "alignment": JSONSchema.number("Where the portrait crop sits across the scene (pre_rendered): 0 left, 0.5 centre (the default), 1 right.", minimum: 0, maximum: 1),
-                    ]), "The dialog's advanced and video settings."),
                     "output_folder": JSONSchema.string("An existing folder's absolute path for the packages. Omitted: the app's export cache folder.", minLength: 1),
-                ]), annotations: .change, longRunning: true) { message($0) },
+                ]) { $1 }), annotations: .change, longRunning: true) { message($0) },
+        MCPTool("android_send_wifi", title: "Send to Android over Wi-Fi",
+                description: "The Android export's \"Send over Wi-Fi\": starts a small web server on the Mac's local network (not the internet) that serves only these packages, behind a random 128-bit token in the URL, for 15 minutes, and returns the URL and when it expires. Open the URL in a browser on the Android device (same Wi-Fi): it lists every package with a Download button and Download All; then import each file in the Wallpaper Engine app. Give package_paths (what export_android returned), or wallpaper_id / wallpaper_ids to export them first (with mode, options and output_folder as export_android takes them; a pre-rendered scene takes a while). A new call replaces the previous one. The first phone that connects may make macOS ask whether the app may accept incoming connections.",
+                input: JSONSchema.object(androidExportChoices.merging([
+                    "package_paths": JSONSchema.stringArray("Absolute paths of .mpkg packages export_android wrote, in the order the page lists them.", maxItems: 200),
+                    "wallpaper_id": JSONSchema.string("A wallpaper's id from list_wallpapers, exported first. Give this, wallpaper_ids or package_paths.", minLength: 1),
+                    "wallpaper_ids": JSONSchema.stringArray("Several wallpapers' ids from list_wallpapers, exported first in this order.", maxItems: 200),
+                    "output_folder": JSONSchema.string("With wallpaper ids: an existing folder's absolute path for the packages. Omitted: the app's export cache folder.", minLength: 1),
+                    "address": JSONSchema.string("One of the Mac's local-network IPv4 addresses to serve on (the result lists them). Omitted: the primary interface's.", minLength: 7),
+                ]) { $1 }), annotations: .change, longRunning: true) { message($0) },
     ]
 
     // MARK: - Screen saver

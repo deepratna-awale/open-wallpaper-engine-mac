@@ -82,6 +82,20 @@ private final class FakeSystemService: SystemControlService {
         return batch
     }
 
+    var wifiSends: [SystemAndroidSendRequest] = []
+
+    func sendAndroidOverWiFi(_ request: SystemAndroidSendRequest) async throws -> SystemAndroidSendResult {
+        wifiSends.append(request)
+        var batch: AndroidExportBatch?
+        if let export = request.export { batch = try await exportAndroid(export) }
+        let files = batch.map(AndroidWiFiFile.files(of:)) ?? request.packages.enumerated().map { index, url in
+            AndroidWiFiFile(index: index, title: url.deletingPathExtension().lastPathComponent, kind: .sceneDynamic, url: url,
+                            size: 10, previewURL: nil, downloadName: url.lastPathComponent)
+        }
+        return SystemAndroidSendResult(url: URL(string: "http://192.168.1.2:50000/token/")!, expiry: Date().addingTimeInterval(900),
+                                       files: files, addresses: ["192.168.1.2"], batch: batch)
+    }
+
     func sceneSize(of wallpaper: ControlWallpaper) throws -> SIMD2<Double> { size }
 
     func exportLivePhoto(_ request: SystemLivePhotoRequest) async throws -> SystemLivePhotoResult {
@@ -392,5 +406,25 @@ final class MCPSystemRouterTests: XCTestCase {
         service.lock.mayChangeDesktopPicture = false
         let isolated = await error("lock_screen_refresh")
         XCTAssertEqual(isolated?.code, .unavailable)
+    }
+
+    // MARK: - Android
+
+    func testSendOverWiFiServesPackagesOrExportsFirst() async throws {
+        let sent = try await result("android_send_wifi", ["wallpaper_ids": ["100", "200"], "mode": "pre_rendered"])
+        XCTAssertEqual(sent["url"], "http://192.168.1.2:50000/token/")
+        XCTAssertNotNil(sent["expires_at"]?.stringValue)
+        XCTAssertEqual(sent["files"]?.arrayValue?.map { $0["title"] }, ["Rainy Window", "City Lights"])
+        XCTAssertEqual(service.wifiSends.last?.export?.options.mode, .preRendered)
+        let packages = try await result("android_send_wifi", ["package_paths": ["/tmp/A.mpkg"], "address": "192.168.1.2"])
+        XCTAssertEqual(packages["files"]?.arrayValue?.count, 1)
+        XCTAssertEqual(service.wifiSends.last?.packages, [URL(fileURLWithPath: "/tmp/A.mpkg")])
+        XCTAssertEqual(service.wifiSends.last?.address, "192.168.1.2")
+        let both = await error("android_send_wifi", ["package_paths": ["/tmp/A.mpkg"], "wallpaper_id": "100"])
+        XCTAssertEqual(both?.code, .invalidParams)
+        let neither = await error("android_send_wifi")
+        XCTAssertEqual(neither?.code, .invalidParams)
+        let relative = await error("android_send_wifi", ["package_paths": ["A.mpkg"]])
+        XCTAssertEqual(relative?.code, .invalidParams)
     }
 }

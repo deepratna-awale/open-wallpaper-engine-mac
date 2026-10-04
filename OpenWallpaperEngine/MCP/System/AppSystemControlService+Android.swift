@@ -27,4 +27,68 @@ extension AppSystemControlService {
             Task { @MainActor in queue.cancel() }
         }
     }
+
+    /// As the sheet's "Send over Wi-Fi", without the sheet: it serves until it expires or another
+    /// call replaces it.
+    func sendAndroidOverWiFi(_ request: SystemAndroidSendRequest) async throws -> SystemAndroidSendResult {
+        var batch: AndroidExportBatch?
+        let files: [AndroidWiFiFile]
+        if let export = request.export {
+            let exported = try await exportAndroid(export)
+            batch = exported
+            files = AndroidWiFiFile.files(of: exported)
+        } else {
+            files = try await Task.detached(priority: .userInitiated) { [packages = request.packages] in
+                try Self.wifiFiles(packages: packages)
+            }.value
+        }
+        guard !files.isEmpty else { throw ControlError(.failed, "There is nothing to send: no package was exported.") }
+        wifiSession?.stop()
+        let session = AndroidWiFiSession(files: files)
+        wifiSession = session
+        await session.start(preferred: request.address)
+        let addresses = session.addresses.map(\.host)
+        if let address = request.address, !addresses.contains(address) {
+            session.stop()
+            throw ControlError(.invalidParams, "address must be one of the Mac's local-network addresses: \(addresses.joined(separator: ", ")).")
+        }
+        switch session.state {
+        case .noNetwork:
+            throw ControlError(.unavailable, "This Mac has no Wi-Fi or local-network address. Connect it to the Android device's network, or copy the packages another way.")
+        case .failed(let reason):
+            throw ControlError(.failed, "The server couldn't start: \(reason)")
+        default:
+            break
+        }
+        guard let url = session.url else { throw ControlError(.failed, "The server stopped before it started serving.") }
+        return SystemAndroidSendResult(url: url, expiry: session.expiry, files: files, addresses: addresses, batch: batch)
+    }
+
+    /// Packages an export already wrote, read from their own project.json: only `.mpkg` files that
+    /// are WE mobile packages (`PKGM`), so nothing else on the Mac can be served.
+    nonisolated static func wifiFiles(packages: [URL]) throws -> [AndroidWiFiFile] {
+        let titles = try packages.map { url -> (title: String, kind: AndroidWiFiFile.Kind, size: Int64) in
+            guard url.pathExtension.lowercased() == AndroidExportNaming.fileExtension,
+                  let size = AndroidWiFiRouter.size(of: url) else {
+                throw ControlError(.invalidParams, "\(url.path(percentEncoded: false)) isn't an exported .mpkg file.")
+            }
+            let package: PKGParser
+            do {
+                package = try PKGParser(url: url, magic: "PKGM")
+            } catch {
+                throw ControlError(.invalidParams, "\(url.path(percentEncoded: false)) isn't a Wallpaper Engine mobile package: \(error.localizedDescription)")
+            }
+            let project = try package.extractFile(named: "project.json").map { try JSONSerialization.jsonObject(with: $0) as? [String: Any] } ?? nil
+            let stem = url.deletingPathExtension().lastPathComponent
+            let type = (project?["type"] as? String)?.lowercased() ?? "scene"
+            let file = project?["file"] as? String
+            let kind: AndroidWiFiFile.Kind = type == "video" ? .video : file == AndroidPackageBuilder.videoFileName ? .scenePreRendered : .sceneDynamic
+            return ((project?["title"] as? String) ?? stem, kind, size)
+        }
+        let names = AndroidExportNaming.uniqueNames(titles.map(\.title), taken: [])
+        return packages.indices.map { index in
+            AndroidWiFiFile(index: index, title: titles[index].title, kind: titles[index].kind, url: packages[index],
+                            size: titles[index].size, previewURL: nil, downloadName: names[index])
+        }
+    }
 }

@@ -9,7 +9,7 @@ import OWEControlProtocol
 @MainActor
 final class SystemControlRequests: ControlRequestGroup {
     let methods: Set<String> = [
-        "devices_list", "export_settings_get", "export_live_photo", "export_android",
+        "devices_list", "export_settings_get", "export_live_photo", "export_android", "android_send_wifi",
         "screensaver_get", "screensaver_set_layers", "screensaver_record", "screensaver_stop_using",
         "screensaver_schedule_get", "screensaver_schedule_set",
         "lock_screen_get", "lock_screen_set", "lock_screen_refresh",
@@ -31,6 +31,7 @@ final class SystemControlRequests: ControlRequestGroup {
         case "export_settings_get": return try exportSettings(params, lookup: lookup)
         case "export_live_photo": return try await exportLivePhoto(params, lookup: lookup)
         case "export_android": return try await exportAndroid(params, lookup: lookup)
+        case "android_send_wifi": return try await sendAndroidOverWiFi(params, lookup: lookup)
         case "screensaver_get": return try screenSaver(params, lookup: lookup)
         case "screensaver_set_layers": return try setScreenSaverLayers(params, lookup: lookup)
         case "screensaver_record": return try await recordScreenSaver(params, lookup: lookup)
