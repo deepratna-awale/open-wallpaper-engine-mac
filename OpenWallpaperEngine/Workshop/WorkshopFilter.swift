@@ -5,6 +5,9 @@ import Foundation
 enum WorkshopTags {
     static let ratings = ["Everyone", "Questionable", "Mature"]
     static let types = ["Scene", "Video", "Web", "Application"]
+    /// WE's Category filter: every Workshop item has one of these tags, `Preset` for a preset of
+    /// another wallpaper (its base is the item's dependency, `WorkshopItem.dependencyIds`).
+    static let categories = ["Wallpaper", "Preset"]
     static let genres = [
         "Abstract", "Animal", "Anime", "Cartoon", "CGI", "Cyberpunk", "Fantasy", "Game", "Girls", "Guys",
         "Landscape", "Medieval", "Memes", "MMD", "Music", "Nature", "Pixel art", "Relaxing", "Retro",
@@ -72,13 +75,15 @@ enum WorkshopTagMatch: String, Hashable {
     case any
 }
 
-/// What the Workshop tab's filter sidebar asks for. Within Show Only, Rating, Type and Resolution
-/// a result needs any one of the checked options (OR); genres combine by `genreMatch`; the groups
-/// narrow the results together (AND). A group with nothing or everything checked doesn't filter.
+/// What the Workshop tab's filter sidebar asks for. Within Show Only, Rating, Type, Category and
+/// Resolution a result needs any one of the checked options (OR); genres combine by `genreMatch`;
+/// the groups narrow the results together (AND). A group with nothing or everything checked
+/// doesn't filter.
 struct WorkshopFilter: Equatable {
     var showOnly: Set<WorkshopShowOnly> = []
     var ratings: Set<String> = ["Everyone"]
     var types: Set<String> = []
+    var categories: Set<String> = []
     var resolutions: Set<String> = []
     var genres: Set<String> = []
     var genreMatch: WorkshopTagMatch = .all
@@ -87,6 +92,7 @@ struct WorkshopFilter: Equatable {
     var cacheKey: String {
         [showOnly.map { String($0.rawValue) }.sorted().joined(separator: ","),
          ratings.sorted().joined(separator: ","), types.sorted().joined(separator: ","),
+         categories.sorted().joined(separator: ","),
          resolutions.sorted().joined(separator: ","), genres.sorted().joined(separator: ","),
          genreMatch.rawValue].joined(separator: "|")
     }
@@ -95,7 +101,7 @@ struct WorkshopFilter: Equatable {
 /// A `WorkshopFilter` as one QueryFiles request plus what has to be checked on the results.
 ///
 /// The OR groups are sent the way WE's own browser sends them: the unchecked tags of a group
-/// become `excludedtags` (Rating, Type, Resolution are exclusive categories, so "none of the
+/// become `excludedtags` (Rating, Type, Category, Resolution are exclusive groups, so "none of the
 /// unchecked" is "any of the checked").
 ///
 /// QueryFiles over the Web API doesn't AND tags: with `match_all_tags=true` and two or more
@@ -134,6 +140,7 @@ struct WorkshopQuery: Equatable {
         }
         excludedTags = exclusions(filter.ratings, of: WorkshopTags.ratings)
             + exclusions(filter.types, of: WorkshopTags.types)
+            + exclusions(filter.categories, of: WorkshopTags.categories)
             + exclusions(filter.resolutions, of: WEResolutionTags.all)
 
         let genres = WorkshopTags.genres.filter(filter.genres.contains)

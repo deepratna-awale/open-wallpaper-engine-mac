@@ -18,6 +18,14 @@ struct WorkshopItem: Identifiable, Codable {
     /// Steam's `time_updated` (Unix seconds): when the item last changed. Nil for items stored
     /// before it was read.
     var timeUpdated: Int? = nil
+    /// The items this one requires (QueryFiles `children`): a preset's base wallpaper, or the
+    /// assets a wallpaper borrows. Nil when the response didn't list them.
+    var dependencyIds: [String]? = nil
+
+    /// A Workshop preset item (the `Preset` category tag) rather than a wallpaper.
+    var isPreset: Bool {
+        tags.contains { $0.caseInsensitiveCompare("Preset") == .orderedSame }
+    }
 
     var previewImageURL: URL? {
         guard let urlString = previewURL else { return nil }
@@ -206,6 +214,7 @@ class WorkshopAPIService {
             URLQueryItem(name: "return_metadata", value: "true"),
             URLQueryItem(name: "return_short_description", value: "true"),
             URLQueryItem(name: "return_details", value: "true"),
+            URLQueryItem(name: "return_children", value: "true"),
         ]
         if !text.isEmpty {
             queryItems.append(URLQueryItem(name: "search_text", value: text))
@@ -456,8 +465,18 @@ class WorkshopAPIService {
             votesUp: votesUp,
             votesDown: votesDown,
             kvTags: parseKVTags(from: dict["kvtags"]),
-            timeUpdated: dict["time_updated"] as? Int
+            timeUpdated: dict["time_updated"] as? Int,
+            dependencyIds: parseChildren(from: dict["children"])
         )
+    }
+
+    /// `children` as `[{"publishedfileid": …, "sortorder": …, "file_type": …}]`; nil when absent.
+    private static func parseChildren(from value: Any?) -> [String]? {
+        guard let children = value as? [[String: Any]] else { return nil }
+        return children.compactMap { child in
+            let id = (child["publishedfileid"] as? String) ?? (child["publishedfileid"] as? NSNumber)?.stringValue
+            return id.flatMap { WorkshopCollection.isID($0) ? $0 : nil }
+        }
     }
 
     /// `kvtags` as `[{"key": …, "value": …}]`; nil when the response has none.

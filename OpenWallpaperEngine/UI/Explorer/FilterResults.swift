@@ -11,7 +11,7 @@ import SwiftUI
 struct FilterResults: View {
     @ObservedObject var viewModel: FilterResultsViewModel
 
-    @State private var expandedSections: Set<String> = ["Show Only", "Type", "Age Rating", "Resolution", "Source", "Tags"]
+    @State private var expandedSections: Set<String> = ["Show Only", "Type", "Category", "Age Rating", "Resolution", "Source", "Tags"]
 
     var body: some View {
         List {
@@ -39,6 +39,9 @@ struct FilterResults: View {
             }
             Section("Type", isExpanded: isExpanded("Type")) {
                 toggles(\.type, name: "type")
+            }
+            Section("Category", isExpanded: isExpanded("Category")) {
+                toggles(\.category, name: "category")
             }
             Section("Age Rating", isExpanded: isExpanded("Age Rating")) {
                 toggles(\.ageRating, name: "ageRating")

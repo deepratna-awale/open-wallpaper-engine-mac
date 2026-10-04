@@ -16,6 +16,7 @@ class ContentViewModel: ObservableObject, DropDelegate {
     
     @AppStorage("FRShowOnly", store: .app)                   public var showOnly                     =                   FRShowOnly.all
     @AppStorage("FRType", store: .app)                       public var type                         =                       FRType.all
+    @AppStorage("FRCategory", store: .app)                   public var category                     =                   FRCategory.all
     @AppStorage("FRAgeRating", store: .app)                  public var ageRating                    =                  FRAgeRating.all
     @AppStorage("FRWidescreenResolution", store: .app)       public var widescreenResolution         =       FRWidescreenResolution.all
     @AppStorage("FRUltraWidescreenResolution", store: .app)  public var ultraWidescreenResolution    =  FRUltraWidescreenResolution.all
@@ -264,6 +265,7 @@ class ContentViewModel: ObservableObject, DropDelegate {
                 break
             }
             guard self.type.contains(type) else { return false }
+            guard self.category.contains(FRCategory.of(wallpaper)) else { return false }
             
             // 
             
@@ -490,8 +492,7 @@ class ContentViewModel: ObservableObject, DropDelegate {
     public func reset() {
         self.showOnly                   = .none // notice it's show ONLY, it acts oppositely to the others
         self.type                       = .all
-        self.ageRating                  = .all
-        self.type                       = .all
+        self.category                   = .all
         self.ageRating                  = .all
         self.widescreenResolution       = .all
         self.ultraWidescreenResolution  = .all

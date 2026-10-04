@@ -405,11 +405,11 @@ private struct WorkshopPagination: View {
 }
 
 /// The Workshop tab's filters, in the main window's sidebar. Every change searches again.
-/// Within Show Only, Rating, Type and Resolution any checked option matches (OR); genres match
+/// Within Show Only, Rating, Type, Category and Resolution any checked option matches (OR); genres match
 /// all or any, as the toggle beside them says; the sections narrow the results together.
 struct WorkshopFiltersSidebar: View {
     @ObservedObject var viewModel: WorkshopViewModel
-    @State private var expandedSections: Set<String> = ["Show Only", "Rating", "Type", "Resolution", "Genre"]
+    @State private var expandedSections: Set<String> = ["Show Only", "Rating", "Type", "Category", "Resolution", "Genre"]
 
     var body: some View {
         List {
@@ -436,6 +436,7 @@ struct WorkshopFiltersSidebar: View {
             }
             tagSection("Rating", id: "Rating", tags: WorkshopTags.ratings, \.ratings)
             tagSection("Type", id: "Type", tags: WorkshopTags.types, \.types)
+            tagSection("Category", id: "Category", tags: WorkshopTags.categories, \.categories)
             Section("Resolution", isExpanded: isExpanded("Resolution")) {
                 ResolutionFilterRows(
                     isOn: { viewModel.filter.resolutions.contains($0) },
