@@ -73,7 +73,7 @@ extension View {
     }
 }
 
-#Preview("Selection highlight") {
+#Preview("Selection highlight") { // l10n-ignore: Xcode preview name, not UI text
     HStack(spacing: 8) {
         ForEach([true, false], id: \.self) { selected in
             Rectangle()
