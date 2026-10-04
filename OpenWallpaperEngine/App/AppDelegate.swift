@@ -151,6 +151,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     lazy var screenSaver = ScreenSaverPlugin()
     /// Settings › General › Theming: macOS follows the wallpaper's scheme colour.
     private(set) lazy var theming = ThemingController.make { [unowned self] in
+        applyMenuBarStrips()
         desktopPictures.refresh()
     }
     /// Each display's desktop picture, which the lock screen and the menu bar's tint show.
@@ -660,6 +661,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             content.stretchCanvas = wallpaperViewModel.layoutResolution.canvases[screenId]
             window.contentView = content
             wallpaperWindows[screenId] = window
+        }
+        applyMenuBarStrips()
+    }
+
+    /// Fills each wallpaper window's menu bar strip with theming's colour, or clears it.
+    func applyMenuBarStrips() {
+        let strips = theming.strips
+        for (screenId, window) in wallpaperWindows {
+            (window.contentView as? WallpaperWindowContentView)?.menuBarStrip =
+                MenuBarStripFill(strips, display: CGDirectDisplayID(screenId))
         }
     }
 

@@ -256,9 +256,14 @@ final class DesktopPictureTests: XCTestCase {
         assertColor(try color(setter.pictures[2], x: 0.5, y: 0.6), blue)
 
         let sets = setter.sets.count
+        let whiteURLs = [setter.pictures[1], setter.pictures[2]]
         let green = DesktopPictureStrips(color: ThemeColor(red: 0, green: 96.0 / 255, blue: 0), displays: [1: bar, 2: bar])
         await sync.update(plans(["1": a, "2": b]), placement: .fill, strips: green)
         XCTAssertEqual(setter.sets.count, sets + 2, "a new colour draws both pictures again")
+        for (index, display) in [CGDirectDisplayID(1), 2].enumerated() {
+            XCTAssertNotEqual(setter.pictures[display], whiteURLs[index],
+                              "display \(display): a new colour is a new file name, which macOS doesn't cache")
+        }
         assertColor(try color(setter.pictures[1], x: 0.5, y: 0.05), self.green)
 
         await sync.update(plans(["1": a, "2": b]), placement: .fill)

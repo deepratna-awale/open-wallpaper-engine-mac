@@ -2,13 +2,32 @@ import CoreGraphics
 import Foundation
 import ImageIO
 
-/// The main colour of a picture, for a wallpaper without a scheme colour: k-means in OKLab over a
-/// small copy of it, the largest cluster's mean. Deterministic; call it off the main thread.
+/// The main colour of a picture, for a wallpaper without a scheme colour (its own `schemecolor` is
+/// used as it is). K-means in OKLab over a 64×64 copy, then the clusters are scored in OKLCH by
+/// pixel share times a chroma preference: grays, white and black (low chroma) and very dark or
+/// very light clusters score almost nothing, so a chromatic minority (down to 3% of the pixels)
+/// wins over a white or black majority. The pick is then nudged into a usable range (lightness
+/// 0.40…0.78, chroma at least 0.08, the hue kept, inside sRGB). A monochrome picture (no cluster
+/// with chroma 0.03 or more) gets a neutral mid gray, which the accent palette maps to Graphite.
+/// Deterministic; call it off the main thread.
 public enum DominantColor {
-    /// The side of the square the picture is reduced to: 1 024 samples.
-    public static let sampleSide = 32
-    public static let clusterCount = 5
+    /// The side of the square the picture is reduced to: 4 096 samples.
+    public static let sampleSide = 64
+    public static let clusterCount = 8
     public static let iterations = 8
+    /// The smallest share of the pixels a picked cluster may have.
+    public static let minimumShare = 0.03
+    /// Below this chroma a cluster is gray, white or black, and isn't picked at all.
+    public static let chromaticChroma = 0.03
+    /// Below this chroma a cluster is strongly penalized.
+    public static let lowChroma = 0.04
+    /// Outside these lightnesses a cluster is strongly penalized.
+    public static let usableLightness = 0.22...0.9
+    /// The range the picked colour is nudged into.
+    public static let outputLightness = 0.40...0.78
+    public static let minimumOutputChroma = 0.08
+    /// A monochrome picture's colour: a neutral mid gray (the Graphite accent).
+    public static let neutral = AccentPalette.graphite.color
 
     /// The main colour of the picture file at `url`; nil when it can't be read.
     public static func of(fileAt url: URL) -> ThemeColor? {
@@ -42,34 +61,76 @@ public enum DominantColor {
         return dominant(of: colors)
     }
 
-    /// The mean of the largest k-means cluster of `colors`.
+    /// The best-scoring chromatic k-means cluster of `colors`, nudged into the usable range; the
+    /// neutral gray when none is chromatic; nil without colours.
     public static func dominant(of colors: [ThemeColor]) -> ThemeColor? {
         guard !colors.isEmpty else { return nil }
         let points = colors.map(OKLab.init)
         var centers = seeds(points)
         var assignment = [Int](repeating: 0, count: points.count)
-        for _ in 0..<iterations {
+        var sizes = [Int](repeating: 0, count: centers.count)
+        for iteration in 0...iterations {
             for (index, point) in points.enumerated() {
                 assignment[index] = nearest(point, in: centers)
             }
-            centers = centers.indices.map { cluster -> OKLab in
-                let members = points.indices.filter { assignment[$0] == cluster }
-                guard !members.isEmpty else { return centers[cluster] }
-                let count = Double(members.count)
-                return OKLab(lightness: members.reduce(0) { $0 + points[$1].lightness } / count,
-                             a: members.reduce(0) { $0 + points[$1].a } / count,
-                             b: members.reduce(0) { $0 + points[$1].b } / count)
+            var sums = [(l: Double, a: Double, b: Double)](repeating: (0, 0, 0), count: centers.count)
+            sizes = [Int](repeating: 0, count: centers.count)
+            for (index, cluster) in assignment.enumerated() {
+                sums[cluster].l += points[index].lightness
+                sums[cluster].a += points[index].a
+                sums[cluster].b += points[index].b
+                sizes[cluster] += 1
             }
+            for cluster in centers.indices where sizes[cluster] > 0 {
+                let count = Double(sizes[cluster])
+                centers[cluster] = OKLab(lightness: sums[cluster].l / count, a: sums[cluster].a / count,
+                                         b: sums[cluster].b / count)
+            }
+            if iteration == iterations { break }
         }
-        var sizes = [Int](repeating: 0, count: centers.count)
-        for cluster in assignment { sizes[cluster] += 1 }
-        guard let largest = sizes.indices.max(by: { sizes[$0] < sizes[$1] }) else { return nil }
-        // The cluster's mean in sRGB: the members' average colour, not the OKLab centre's inverse.
-        let members = colors.indices.filter { assignment[$0] == largest }
-        let count = Double(members.count)
-        return ThemeColor(red: members.reduce(0) { $0 + colors[$1].red } / count,
-                          green: members.reduce(0) { $0 + colors[$1].green } / count,
-                          blue: members.reduce(0) { $0 + colors[$1].blue } / count)
+        let total = Double(points.count)
+        var best: (center: OKLab, score: Double)?
+        for cluster in centers.indices {
+            let share = Double(sizes[cluster]) / total
+            let center = centers[cluster]
+            guard share >= minimumShare, center.chroma >= chromaticChroma else { continue }
+            let score = share * preference(center)
+            if score > (best?.score ?? 0) { best = (center, score) }
+        }
+        guard let best else { return neutral }
+        return usable(best.center).themeColor
+    }
+
+    /// How much a cluster's colour is wanted, 0…1: chroma up to 0.12 counts more; low chroma
+    /// and extreme lightness are strongly penalized.
+    static func preference(_ color: OKLab) -> Double {
+        let chroma = color.chroma
+        var preference = chroma < lowChroma ? 0.02 : 0.5 + 0.5 * min(1, (chroma - lowChroma) / 0.08)
+        if !usableLightness.contains(color.lightness) { preference *= 0.05 }
+        return preference
+    }
+
+    /// `color` with its lightness clamped to `outputLightness` and its chroma raised to at least
+    /// `minimumOutputChroma`, the hue kept; the chroma is then reduced until it is inside sRGB.
+    public static func usable(_ color: OKLab) -> OKLab {
+        var lightness = min(max(color.lightness, outputLightness.lowerBound), outputLightness.upperBound)
+        let hue = color.hue
+        let chroma = max(color.chroma, minimumOutputChroma)
+        // Where sRGB can't hold the minimum chroma at this lightness (a light blue, a dark
+        // yellow), the lightness moves toward the middle of the range until it can.
+        let middle = (outputLightness.lowerBound + outputLightness.upperBound) / 2
+        while !OKLab(lightness: lightness, chroma: minimumOutputChroma, hue: hue).isInSRGBGamut,
+              abs(lightness - middle) > 0.005 {
+            lightness += lightness < middle ? 0.01 : -0.01
+        }
+        let wanted = OKLab(lightness: lightness, chroma: chroma, hue: hue)
+        if wanted.isInSRGBGamut { return wanted }
+        var low = 0.0, high = chroma
+        for _ in 0..<24 {
+            let candidate = (low + high) / 2
+            if OKLab(lightness: lightness, chroma: candidate, hue: hue).isInSRGBGamut { low = candidate } else { high = candidate }
+        }
+        return OKLab(lightness: lightness, chroma: low, hue: hue)
     }
 
     /// Farthest-point seeds: the first point, then each time the point farthest from every seed.
@@ -102,5 +163,48 @@ public enum DominantColor {
             }
         }
         return best
+    }
+}
+
+/// The main colours already found, by picture file: a file's path, size and modification date, so
+/// a rewritten snapshot is looked at again. Bounded; safe from any thread.
+public final class DominantColorCache: @unchecked Sendable {
+    private struct Key: Hashable {
+        var path: String
+        var size: Int
+        var modified: Date
+    }
+
+    private let lock = NSLock()
+    private var colors: [Key: ThemeColor] = [:]
+    private var order: [Key] = []
+    private let capacity: Int
+    private let compute: (URL) -> ThemeColor?
+
+    public init(capacity: Int = 32, compute: @escaping (URL) -> ThemeColor? = DominantColor.of(fileAt:)) {
+        self.capacity = capacity
+        self.compute = compute
+    }
+
+    /// The main colour of the file at `url`, computed once per version of the file; nil when it
+    /// can't be read (not cached, so a later version is tried).
+    public func color(fileAt url: URL) -> ThemeColor? {
+        let path = url.standardizedFileURL.path
+        // Read fresh each time (a URL caches its resource values). Optional: part of the key only.
+        let attributes = try? FileManager.default.attributesOfItem(atPath: path)
+        let key = Key(path: path, size: (attributes?[.size] as? NSNumber)?.intValue ?? 0,
+                      modified: attributes?[.modificationDate] as? Date ?? .distantPast)
+        lock.lock()
+        let cached = colors[key]
+        lock.unlock()
+        if let cached { return cached }
+        guard let color = compute(url) else { return nil }
+        lock.lock()
+        defer { lock.unlock() }
+        if colors.updateValue(color, forKey: key) == nil {
+            order.append(key)
+            if order.count > capacity { colors[order.removeFirst()] = nil }
+        }
+        return color
     }
 }
