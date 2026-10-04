@@ -40,6 +40,19 @@ enum JSONSchema {
         ["type": "boolean", "description": .string(description)]
     }
 
+    /// A list of objects shaped by `item` (an `object(…)` schema).
+    static func objectArray(_ description: String, item: JSONValue, maxItems: Int? = nil) -> JSONValue {
+        var schema: [String: JSONValue] = ["type": "array", "items": item, "description": .string(description)]
+        if let maxItems { schema["maxItems"] = .number(Double(maxItems)) }
+        return .object(schema)
+    }
+
+    static func integerArray(_ description: String, maxItems: Int? = nil) -> JSONValue {
+        var schema: [String: JSONValue] = ["type": "array", "items": ["type": "integer"], "description": .string(description)]
+        if let maxItems { schema["maxItems"] = .number(Double(maxItems)) }
+        return .object(schema)
+    }
+
     static func stringArray(_ description: String, maxItems: Int? = nil) -> JSONValue {
         var schema: [String: JSONValue] = ["type": "array", "items": ["type": "string"], "description": .string(description)]
         if let maxItems { schema["maxItems"] = .number(Double(maxItems)) }

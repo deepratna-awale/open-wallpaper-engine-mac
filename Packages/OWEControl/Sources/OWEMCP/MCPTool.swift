@@ -73,6 +73,9 @@ extension MCPTool.Annotations {
     static let readOnly = MCPTool.Annotations(readOnly: true, destructive: false, idempotent: true)
     static let idempotent = MCPTool.Annotations(readOnly: false, destructive: false, idempotent: true)
     static let change = MCPTool.Annotations(readOnly: false, destructive: false, idempotent: false)
+    /// Removes or replaces something the user made (a playlist, a wallpaper, edits): clients ask first.
+    static let destructive = MCPTool.Annotations(readOnly: false, destructive: true, idempotent: false)
+    static let destructiveIdempotent = MCPTool.Annotations(readOnly: false, destructive: true, idempotent: true)
 }
 
 /// The MCP revisions `owe-mcp` speaks, and what each allows in its messages.

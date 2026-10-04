@@ -11,14 +11,18 @@ final class ControlRequestRouter {
     static let maxLimit = 500
 
     private let model: ControlAppModel
+    /// The other areas' requests: the scene and its editors, the library, the system features.
+    private let groups: [ControlRequestGroup]
+    private var lookup: ControlLookup { ControlLookup(model: model) }
 
-    init(model: ControlAppModel) {
+    init(model: ControlAppModel, groups: [ControlRequestGroup] = []) {
         self.model = model
+        self.groups = groups
     }
 
     func handle(_ request: ControlRequest) async -> ControlResponse {
         do {
-            return ControlResponse(id: request.id, result: try await result(for: request.method, Parameters(request.params)))
+            return ControlResponse(id: request.id, result: try await result(for: request.method, ControlParameters(request.params)))
         } catch let error as ControlError {
             return ControlResponse(id: request.id, error: error)
         } catch {
@@ -27,7 +31,7 @@ final class ControlRequestRouter {
         }
     }
 
-    private func result(for method: String, _ params: Parameters) async throws -> JSONValue {
+    private func result(for method: String, _ params: ControlParameters) async throws -> JSONValue {
         switch method {
         case "list_displays": return ["displays": .array(model.displays().map(json))]
         case "get_status": return try status(params)
@@ -45,13 +49,16 @@ final class ControlRequestRouter {
         case "open_editor": return try openEditor(params)
         case "snapshot": return try await snapshot(params)
         default:
+            if let group = groups.first(where: { $0.methods.contains(method) }) {
+                return try await group.result(for: method, params, lookup: lookup)
+            }
             throw ControlError(.unknownMethod, "The app doesn't know \"\(method)\". Update Open Wallpaper Engine or the MCP Server plugin.")
         }
     }
 
     // MARK: - Library and displays
 
-    private func status(_ params: Parameters) throws -> JSONValue {
+    private func status(_ params: ControlParameters) throws -> JSONValue {
         let displays = try targetDisplays(params)
         let playback = model.playback
         let active = model.playlists().first(where: \.isActive)
@@ -71,7 +78,7 @@ final class ControlRequestRouter {
         ]
     }
 
-    private func listWallpapers(_ params: Parameters) throws -> JSONValue {
+    private func listWallpapers(_ params: ControlParameters) throws -> JSONValue {
         let query = try params.string("query")?.trimmingCharacters(in: .whitespaces).lowercased() ?? ""
         let type = try params.string("type")?.lowercased()
         let tags = try params.strings("tags").map { $0.lowercased() }
@@ -96,7 +103,7 @@ final class ControlRequestRouter {
         ]
     }
 
-    private func getWallpaper(_ params: Parameters) throws -> JSONValue {
+    private func getWallpaper(_ params: ControlParameters) throws -> JSONValue {
         let wallpaper = try findWallpaper(params.required("id"))
         guard case .object(var object) = json(wallpaper, detailed: true) else { return .null }
         object["displays"] = .array(model.displays().filter { model.wallpaper(onDisplay: $0.id)?.folder == wallpaper.folder }
@@ -105,14 +112,14 @@ final class ControlRequestRouter {
         return ["wallpaper": .object(object)]
     }
 
-    private func setWallpaper(_ params: Parameters) throws -> JSONValue {
+    private func setWallpaper(_ params: ControlParameters) throws -> JSONValue {
         let wallpaper = try findWallpaper(params.required("id"))
         let displays = try targetDisplays(params).map(\.id)
         try model.setWallpaper(wallpaper, displays: displays)
         return ["wallpaper": json(wallpaper), "displays": .array(displays.map { .string($0) })]
     }
 
-    private func importWallpaper(_ params: Parameters) async throws -> JSONValue {
+    private func importWallpaper(_ params: ControlParameters) async throws -> JSONValue {
         let path = (try params.required("path") as NSString).expandingTildeInPath
         guard path.hasPrefix("/") else { throw ControlError(.invalidParams, "path must be an absolute path.") }
         let url = URL(fileURLWithPath: path)
@@ -126,7 +133,7 @@ final class ControlRequestRouter {
         ]
     }
 
-    private func snapshot(_ params: Parameters) async throws -> JSONValue {
+    private func snapshot(_ params: ControlParameters) async throws -> JSONValue {
         let display = try params.string("display").map(findDisplay)
             ?? model.displays().first(where: \.isMain) ?? model.displays().first
         guard let display else { throw ControlError(.unavailable, "There is no display.") }
@@ -154,7 +161,7 @@ final class ControlRequestRouter {
         return ["paused": .bool(model.playback.paused)]
     }
 
-    private func setVolume(_ params: Parameters) throws -> JSONValue {
+    private func setVolume(_ params: ControlParameters) throws -> JSONValue {
         guard let level = try params.double("level"), (0...1).contains(level) else {
             throw ControlError(.invalidParams, "level must be a number from 0 to 1.")
         }
@@ -162,7 +169,7 @@ final class ControlRequestRouter {
         return volume()
     }
 
-    private func setMuted(_ params: Parameters) throws -> JSONValue {
+    private func setMuted(_ params: ControlParameters) throws -> JSONValue {
         guard let muted = try params.bool("muted") else { throw ControlError(.invalidParams, "muted must be true or false.") }
         model.setMuted(muted)
         return volume()
@@ -173,7 +180,7 @@ final class ControlRequestRouter {
         return ["volume": .number(volume), "muted": .bool(volume == 0)]
     }
 
-    private func step(_ params: Parameters, forward: Bool) throws -> JSONValue {
+    private func step(_ params: ControlParameters, forward: Bool) throws -> JSONValue {
         let displays = try targetDisplays(params).map(\.id)
         let shown = model.step(forward: forward, displays: displays)
         return ["displays": .array(displays.map { id in
@@ -183,7 +190,7 @@ final class ControlRequestRouter {
 
     // MARK: - User properties and playlists
 
-    private func setUserProperty(_ params: Parameters) throws -> JSONValue {
+    private func setUserProperty(_ params: ControlParameters) throws -> JSONValue {
         let wallpaper = try findWallpaper(params.required("id"))
         let key = try params.required("key")
         guard let value = params.raw["value"] else { throw ControlError(.invalidParams, "value is required.") }
@@ -201,7 +208,7 @@ final class ControlRequestRouter {
         ]
     }
 
-    private func playPlaylist(_ params: Parameters) throws -> JSONValue {
+    private func playPlaylist(_ params: ControlParameters) throws -> JSONValue {
         let name = try params.required("name")
         let playlists = model.playlists()
         guard let playlist = playlists.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame })
@@ -217,7 +224,7 @@ final class ControlRequestRouter {
         return ["playlist": .string(playlist.name), "displays": .array(displays.map { .string($0) })]
     }
 
-    private func openEditor(_ params: Parameters) throws -> JSONValue {
+    private func openEditor(_ params: ControlParameters) throws -> JSONValue {
         let wallpaper = try findWallpaper(params.required("id"))
         guard let editor = ControlEditor(rawValue: try params.required("editor")) else {
             throw ControlError(.invalidParams, "editor must be \"scene\" or \"wallpaper\".")
@@ -231,34 +238,11 @@ final class ControlRequestRouter {
 
     // MARK: - Lookups
 
-    /// A wallpaper by its folder name, its Workshop id or its folder's path.
-    private func findWallpaper(_ id: String) throws -> ControlWallpaper {
-        let wallpapers = model.wallpapers()
-        let path = URL(fileURLWithPath: (id as NSString).expandingTildeInPath).standardizedFileURL.path
-        if let found = wallpapers.first(where: { $0.id == id })
-            ?? wallpapers.first(where: { $0.workshopID == id })
-            ?? wallpapers.first(where: { $0.folder.standardizedFileURL.path == path }) {
-            return found
-        }
-        throw ControlError(.notFound, "No wallpaper with the id \"\(id)\" in the library. list_wallpapers lists them.")
-    }
+    private func findWallpaper(_ id: String) throws -> ControlWallpaper { try lookup.wallpaper(id) }
 
-    private func findDisplay(_ id: String) throws -> ControlDisplay {
-        let displays = model.displays()
-        if let display = displays.first(where: { $0.id == id || $0.name.caseInsensitiveCompare(id) == .orderedSame }) {
-            return display
-        }
-        let known = displays.map { "\($0.id) (\($0.name))" }.joined(separator: ", ")
-        throw ControlError(.notFound, "No display \"\(id)\". Displays: \(known).")
-    }
+    private func findDisplay(_ id: String) throws -> ControlDisplay { try lookup.display(id) }
 
-    /// The display the request names, or every display wallpapers are shown on.
-    private func targetDisplays(_ params: Parameters) throws -> [ControlDisplay] {
-        if let id = try params.string("display") { return [try findDisplay(id)] }
-        let displays = model.displays()
-        let enabled = displays.filter(\.isEnabled)
-        return enabled.isEmpty ? displays : enabled
-    }
+    private func targetDisplays(_ params: ControlParameters) throws -> [ControlDisplay] { try lookup.targetDisplays(params) }
 
     // MARK: - JSON
 
@@ -315,46 +299,3 @@ final class ControlRequestRouter {
     }
 }
 
-/// A request's parameters, read with their expected types.
-private struct Parameters {
-    let raw: [String: JSONValue]
-
-    init(_ raw: [String: JSONValue]) { self.raw = raw }
-
-    func string(_ key: String) throws -> String? {
-        guard let value = raw[key], !value.isNull else { return nil }
-        guard let text = value.stringValue else { throw ControlError(.invalidParams, "\(key) must be a string.") }
-        return text
-    }
-
-    func required(_ key: String) throws -> String {
-        guard let text = try string(key), !text.isEmpty else { throw ControlError(.invalidParams, "\(key) is required.") }
-        return text
-    }
-
-    func strings(_ key: String) throws -> [String] {
-        guard let value = raw[key], !value.isNull else { return [] }
-        guard let items = value.arrayValue?.compactMap(\.stringValue), items.count == value.arrayValue?.count else {
-            throw ControlError(.invalidParams, "\(key) must be a list of strings.")
-        }
-        return items
-    }
-
-    func int(_ key: String) throws -> Int? {
-        guard let value = raw[key], !value.isNull else { return nil }
-        guard let number = value.intValue else { throw ControlError(.invalidParams, "\(key) must be a whole number.") }
-        return number
-    }
-
-    func double(_ key: String) throws -> Double? {
-        guard let value = raw[key], !value.isNull else { return nil }
-        guard let number = value.doubleValue else { throw ControlError(.invalidParams, "\(key) must be a number.") }
-        return number
-    }
-
-    func bool(_ key: String) throws -> Bool? {
-        guard let value = raw[key], !value.isNull else { return nil }
-        guard let flag = value.boolValue else { throw ControlError(.invalidParams, "\(key) must be true or false.") }
-        return flag
-    }
-}

@@ -188,19 +188,32 @@ public final class MCPServer {
         return .object(object)
     }
 
-    /// `arguments` with a number or boolean given for a string property as its text: strict
-    /// clients only see string properties, and some models still send `2` for `"2"`.
+    /// `arguments` with a number or boolean given for a string property as its text, and a list of
+    /// numbers as WE writes a vector (`[1, 0.5, 0]` is `"1 0.5 0"`): strict clients only see string
+    /// properties, and some models still send `2` for `"2"`. Objects inside the arguments
+    /// (`scene_apply_edits`' edits) are read the same way.
     static func coercingScalarsToStrings(_ arguments: JSONValue, schema: JSONValue) -> JSONValue {
         guard case .object(var object) = arguments, let properties = schema["properties"]?.objectValue else { return arguments }
-        for (key, value) in object where properties[key]?["type"]?.stringValue == "string" {
-            switch value {
-            case .bool(let flag): object[key] = .string(flag ? "true" : "false")
-            case .number(let number):
-                object[key] = .string(number.rounded() == number && abs(number) < 1e15 ? String(Int64(number)) : String(number))
+        for (key, value) in object {
+            guard let property = properties[key] else { continue }
+            switch (property["type"]?.stringValue, value) {
+            case ("string", .bool(let flag)): object[key] = .string(flag ? "true" : "false")
+            case ("string", .number(let number)): object[key] = .string(text(of: number))
+            case ("string", .array(let items)) where !items.isEmpty && items.allSatisfy({ $0.doubleValue != nil }):
+                object[key] = .string(items.compactMap(\.doubleValue).map(text(of:)).joined(separator: " "))
+            case ("object", .object):
+                object[key] = coercingScalarsToStrings(value, schema: property)
+            case ("array", .array(let items)) where property["items"]?["type"]?.stringValue == "object":
+                let item = property["items"] ?? .null
+                object[key] = .array(items.map { coercingScalarsToStrings($0, schema: item) })
             default: break
             }
         }
         return .object(object)
+    }
+
+    private static func text(of number: Double) -> String {
+        number.rounded() == number && abs(number) < 1e15 ? String(Int64(number)) : String(number)
     }
 
     static func toolResult(_ tool: MCPTool, _ result: JSONValue,

@@ -52,7 +52,7 @@ final class MCPCompatibilityTests: XCTestCase {
             XCTAssertNil(initialized)
 
             let tools = await request("tools/list", id: 2)?["result"]?["tools"]?.arrayValue ?? []
-            XCTAssertEqual(tools.count, 18, version)
+            XCTAssertEqual(tools.count, MCPToolCatalog.tools.count, version)
             for tool in tools {
                 let name = tool["name"]?.stringValue ?? "?"
                 XCTAssertEqual(tool["title"] != nil, modern, "\(version) \(name): title")
@@ -129,14 +129,26 @@ final class MCPCompatibilityTests: XCTestCase {
                 XCTAssertFalse(["$ref", "$defs", "definitions", "oneOf", "anyOf", "allOf", "not", "additionalProperties", "$schema"].contains(key),
                                "\(name) uses \(key)")
             }
-            for (key, property) in schema["properties"]?.objectValue ?? [:] {
-                XCTAssertNotNil(property["type"]?.stringValue, "\(name).\(key): one simple type")
-                XCTAssertFalse(property["description"]?.stringValue?.isEmpty ?? true, "\(name).\(key) is described")
-                if let choices = property["enum"]?.arrayValue {
-                    XCTAssertTrue(choices.allSatisfy { $0.stringValue != nil }, "\(name).\(key): string enum")
-                }
-                if property["type"] == "array" { XCTAssertNotNil(property["items"]?["type"], "\(name).\(key) items") }
+            Self.checkProperties(of: schema, at: name)
+        }
+    }
+
+    /// Every property, and every property of an object inside one (a list of edits' items), has one
+    /// simple type, a description and a snake_case name.
+    private static func checkProperties(of schema: JSONValue, at path: String) {
+        for (key, property) in schema["properties"]?.objectValue ?? [:] {
+            let name = "\(path).\(key)"
+            XCTAssertNotNil(key.range(of: "^[a-z][a-z0-9_]*$", options: .regularExpression), "\(name): snake_case")
+            XCTAssertNotNil(property["type"]?.stringValue, "\(name): one simple type")
+            XCTAssertFalse(property["description"]?.stringValue?.isEmpty ?? true, "\(name) is described")
+            if let choices = property["enum"]?.arrayValue {
+                XCTAssertTrue(choices.allSatisfy { $0.stringValue != nil }, "\(name): string enum")
             }
+            if property["type"] == "array" {
+                XCTAssertNotNil(property["items"]?["type"], "\(name) items")
+                if property["items"]?["type"] == "object" { checkProperties(of: property["items"] ?? .null, at: name + "[]") }
+            }
+            if property["type"] == "object" { checkProperties(of: property, at: name) }
         }
     }
 
