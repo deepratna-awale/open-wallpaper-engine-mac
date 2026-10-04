@@ -70,7 +70,7 @@ final class MobilePackageTests: XCTestCase {
                                          "project.json", "shaders/effects/pulse.frag"], "sorted by bytes, as WE lists them")
         for entry in entries {
             guard case .data(let bytes) = entry.source else { continue }
-            XCTAssertEqual(parser.extractFile(named: entry.path).map(Data.init), bytes, entry.path)
+            XCTAssertEqual(parser.extractFile(named: entry.path), bytes, entry.path)
         }
     }
 
@@ -80,7 +80,7 @@ final class MobilePackageTests: XCTestCase {
         let video = Data((0..<200_000).map { UInt8(truncatingIfNeeded: $0 * 31) })
         try video.write(to: file)
         let data = try MobilePackageWriter.data([.init(path: "clip.mp4", file: file), .init(path: "project.json", data: Data("{}".utf8))])
-        XCTAssertEqual(try PKGParser(data: data, magic: "PKGM").extractFile(named: "clip.mp4").map(Data.init), video)
+        XCTAssertEqual(try PKGParser(data: data, magic: "PKGM").extractFile(named: "clip.mp4"), video)
     }
 
     func testDuplicatePathsAreRefused() {
