@@ -22,6 +22,9 @@ struct ParticleFrameInputs {
     var timeOfDay: Float = 0
     /// Steps taken, this one included.
     var frameIndex: UInt32 = 0
+    /// The system's trail countdown ran out this step: every particle records its trail history
+    /// (`ParticleTrailHistory`).
+    var samplesTrail = false
     /// Each emitter's part of the step, in the order WE runs them (0x1402378a0); the first is
     /// `emissionRate`, `burst`, `startsPeriod`, `periodLimit` and `onePerFrame`.
     var emitters = [ParticleEmitterStep()]
@@ -168,6 +171,7 @@ struct ParticleFrameInputs {
         inputs.elapsedTime = system.elapsedTime
         inputs.engineTime = system.elapsedTime
         inputs.frameIndex = system.frameIndex
+        inputs.samplesTrail = advanceTrailTimer(system, deltaTime: deltaTime)
         inputs.timeOfDay = system.timeOfDay()
         let world = emitter ?? childEmitter(system) ?? configuration.authoredWorld
         inputs.motion = motion(of: system, to: world)
@@ -303,6 +307,18 @@ struct ParticleFrameInputs {
         inputs.emitters = system.configuration.emitters.map { _ in ParticleEmitterStep() }
         inputs.clears = true
         return inputs
+    }
+
+    /// Takes `deltaTime` off the system's trail countdown, and starts it again from the interval
+    /// once it runs out, which is when the particles record their trail history: WE's
+    /// [system+0x24c] (0x140232cad…0x140232ce0).
+    private static func advanceTrailTimer(_ system: ParticleSystemRuntime, deltaTime: Float) -> Bool {
+        let history = system.configuration.trailHistory
+        guard history.kept else { return false }
+        system.trailTimer -= deltaTime
+        guard system.trailTimer <= 0 else { return false }
+        system.trailTimer = history.interval
+        return true
     }
 
     /// A child's emitter this frame: from its parent's, which stepped first.

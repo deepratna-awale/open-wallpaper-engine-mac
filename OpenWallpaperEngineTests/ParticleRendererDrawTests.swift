@@ -99,6 +99,85 @@ final class ParticleRendererDrawTests: XCTestCase {
         XCTAssertEqual(trail.elapsedTime, simulation.elapsedTime)
     }
 
+    // MARK: - Rope trail motion
+
+    /// A star moving at a steady speed, drawn as a `ropetrail` (3 s, 4 segments: a sample every
+    /// 0.75 s) and stepped at an even 60 fps: where its texture ends must move on steadily with
+    /// the star. Mapping the texture by segment index instead of by the samples'
+    /// age (WE's segment time offset, `ParticleRecordWriter.ropeRenderVar`) leaves the end on the
+    /// oldest sample until the next one is taken, then jumps it a quarter of the trail.
+    func testARopeTrailsTextureEndMovesEvenly() throws {
+        var test = ParticleTestSystem()
+        test.rendererName = "ropetrail"
+        test.trailLength = 3
+        test.trailSegments = 4
+        test.maximum = 1
+        test.emissionRate = 1000
+        test.lifetime = 20...20
+        test.spawnExtent = .zero
+        test.spins = false
+        test.minimumVelocity = SIMD2(300, 0)
+        test.maximumVelocity = SIMD2(300, 0)
+        let system = ParticleSystemRuntime(texture: texture, configuration: test.configuration, seed: 1)
+        let step: Float = 1 / 60
+        var heads: [Float] = [], ends: [Float] = []
+        for frame in 0..<270 {
+            ParticleCPUSimulation.step(system, inputs: ParticleFrameInputs.advance(system, deltaTime: step, cursor: .zero))
+            // From 3.5 s on the trail is full.
+            guard frame >= 210 else { continue }
+            XCTAssertEqual(system.particles.count, 1)
+            heads.append(system.particles[0].position.x)
+            ends.append(try XCTUnwrap(Self.textureEnd(system)).x)
+        }
+        let expected = 300 * step
+        for (index, pair) in zip(heads, heads.dropFirst()).enumerated() {
+            XCTAssertEqual(pair.1 - pair.0, expected, accuracy: 0.01, "head, frame \(index)")
+        }
+        let steps = zip(ends, ends.dropFirst()).map { $1 - $0 }
+        print("ropetrail texture end steps per 1/60 s:", steps.map { String(format: "%.2f", $0) }.joined(separator: " "))
+        // WE starts the countdown again from the interval (dropping what the step overshot), so
+        // with 1/60 s steps a sample comes every 46 frames, not 45: the end holds for the one
+        // frame a sample is taken in. It never jumps.
+        for (index, advance) in steps.enumerated() {
+            XCTAssertGreaterThanOrEqual(advance, 0, "texture end, frame \(index)")
+            XCTAssertLessThan(advance, expected * 1.1, "texture end, frame \(index)")
+        }
+        XCTAssertLessThanOrEqual(steps.filter { $0 < expected * 0.9 }.count, 2, "one held frame per sample at most")
+        XCTAssertEqual(steps.reduce(0, +) / Float(steps.count), expected, accuracy: expected * 0.05)
+        // The texture spans three samples' worth of age behind the head.
+        for (head, end) in zip(heads, ends) { XCTAssertEqual(head - end, 300 * 2.25, accuracy: 300 * 2.25 * 0.03) }
+    }
+
+    /// Where `system`'s first strand reaches texture coordinate 1, as `genericropeparticle.vert`'s
+    /// `TRAILRENDERER` branch maps its records with `g_RenderVar0`.
+    private static func textureEnd(_ system: ParticleSystemRuntime) -> SIMD2<Float>? {
+        let count = ParticleRecordWriter.recordCount(system, format: .rope)
+        var records = [ParticleRopeSegmentInstance](repeating: ParticleRopeSegmentInstance(
+            start: .zero, end: .zero, previous: .zero, next: .zero, endColor: .zero, color: .zero), count: count)
+        records.withUnsafeMutableBytes { bytes in
+            ParticleRecordWriter.write(system, format: .rope, count: count, into: bytes.baseAddress!, opacity: { _ in 1 })
+        }
+        let renderVar = ParticleRecordWriter.ropeRenderVar(system)
+        let offset = renderVar.z, maximum = renderVar.w
+        var oldest: SIMD2<Float>?
+        for record in records {
+            let length = record.end.w, position = record.previous.w
+            var usable = length - 1
+            if length < maximum { usable += offset }
+            guard usable > 0 else { continue }
+            var minimum = (position - (1 - offset)) / usable
+            var delta = 1 / usable
+            if position < 0.5 {
+                minimum = 0
+                delta = offset / usable
+            }
+            let start = SIMD2(record.start.x, record.start.y), end = SIMD2(record.end.x, record.end.y)
+            oldest = end
+            if delta > 0, minimum <= 1, minimum + delta >= 1 { return start + (end - start) * ((1 - minimum) / delta) }
+        }
+        return oldest
+    }
+
     // MARK: - GPU
 
     /// One GPU step, three draws: the sprites, a sprite trail and a rope trail, each with its own

@@ -36,22 +36,24 @@ enum ParticleRecordWriter {
         }
     }
 
-    /// `g_RenderVar0` for a rope: `(points, 0, segment time offset, points)`. Trails are sampled at
-    /// the particle, so the newest segment is always whole (offset 1). A scrolling `ropetrail`
-    /// (`TRAILSCROLLALPHA`) takes WE's `(slots − 1, 0, offset, (slots − 1) / uvscale)` (0x14023699a…).
+    /// `g_RenderVar0` for a rope: `(points, 0, 1, points)`. A `ropetrail` takes WE's
+    /// `(slots − 1, 0, offset, slots − 0.5)`, or `(slots − 1, 0, offset, (slots − 1) / uvscale)`
+    /// when it scrolls (`TRAILSCROLLALPHA`), where the offset is how far the system's trail
+    /// countdown has run, 0 at a sample and 1 at the next (0x14023695b…0x1402369d0). The shader
+    /// maps the texture by it: the newest segment, from the particle to its last sample, takes that
+    /// much of a segment's span, and every older one is pushed along by it, so the texture stays
+    /// on the samples as they age instead of jumping a segment at each sample.
     static func ropeRenderVar(_ system: ParticleSystemRuntime) -> SIMD4<Float> {
         let configuration = system.configuration
-        if configuration.rendererName == "ropetrail", configuration.ropeUV.scrolling {
-            let slots = Float(max(configuration.trailSegments, 1))
-            return SIMD4(slots - 1, 0, 1, (slots - 1) * configuration.ropeUV.inverseScale)
+        guard configuration.rendererName == "ropetrail" else {
+            let points = Float(system.particles.count)
+            return SIMD4(points, 0, 1, points)
         }
-        let points: Float
-        if configuration.rendererName == "ropetrail" {
-            points = Float(max(configuration.trailSegments, 1) + 1)
-        } else {
-            points = Float(system.particles.count)
-        }
-        return SIMD4(points, 0, 1, points)
+        let history = configuration.trailHistory
+        let slots = Float(history.limit)
+        let offset = 1 - min(max(system.trailTimer, 0) / history.interval, 1)
+        let scale = configuration.ropeUV.scrolling ? (slots - 1) * configuration.ropeUV.inverseScale : slots - 0.5
+        return SIMD4(slots - 1, 0, offset, scale)
     }
 
     /// The size WE's particle shaders read: the particle's size (a sprite's quad is this wide, a
@@ -135,7 +137,10 @@ enum ParticleRecordWriter {
         }
     }
 
-    /// `ropetrail`: one strand per particle through its history, newest point first.
+    /// `ropetrail`: one strand per particle through its history, newest point first. Each segment
+    /// holds the strand's sample count over uvscale (WE's `in_ParticleTrailLength`,
+    /// 0x1402334be…0x1402334d8), or its own index when the trail scrolls, and its index
+    /// (`in_ParticleTrailPosition`).
     private static func writeRopeTrails(_ system: ParticleSystemRuntime, into records: UnsafeMutablePointer<ParticleRopeSegmentInstance>,
                                         count: Int, opacity: (Particle) -> Float) {
         var written = 0
@@ -151,6 +156,7 @@ enum ParticleRecordWriter {
                 index == 0 ? particle.position : history[(newest - (index - 1) + history.count * 2) % history.count]
             }
             let points = history.count + 1
+            let length = Float(history.count) * system.configuration.ropeUV.inverseScale
             let rgba = color(particle, opacity: opacity)
             let size = shaderSize(particle, scale: scale)
             for segment in 0..<(points - 1) where written < count {
@@ -160,7 +166,7 @@ enum ParticleRecordWriter {
                 let next = point(min(segment + 2, points - 1))
                 records[written] = ParticleRopeSegmentInstance(
                     start: SIMD4(start.x, start.y, 0, size),
-                    end: SIMD4(end.x, end.y, 0, scrolling ? Float(segment) : Float(points)),
+                    end: SIMD4(end.x, end.y, 0, scrolling ? Float(segment) : length),
                     previous: SIMD4(previous.x, previous.y, 0, Float(segment)),
                     next: SIMD4(next.x, next.y, 0, size),
                     endColor: rgba, color: rgba)

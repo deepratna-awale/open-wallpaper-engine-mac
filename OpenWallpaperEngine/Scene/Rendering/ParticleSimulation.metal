@@ -465,10 +465,9 @@ static void endSimulate(uint gid, ParticleState particle, ProgramState state, th
     particle.spin = float4(state.rotationXY, state.angularVelocityXY);
     if (flags & kHistory) {
 
+        // The system's countdown ran out (`ParticleFrameInputs.samplesTrail`), or the particle is new.
         const uint limit = p.counts.w;
-        particle.trail.x += f.time.x;
-        if (particle.trail.x >= p.trail.x || particle.identity.z == 0) {
-            particle.trail.x = 0;
+        if (f.emission.z != 0 || particle.identity.z == 0) {
             if (particle.identity.z < limit) {
                 own[particle.identity.z] = position;
                 particle.identity.z += 1;
