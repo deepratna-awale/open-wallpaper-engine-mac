@@ -124,6 +124,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     lazy var safeRestart = SafeRestart()
     /// Each playlist's system-wide shortcut (`App/GlobalShortcuts`).
     lazy var playlistShortcuts = PlaylistShortcutController(viewModel: wallpaperViewModel)
+    /// The hotkey actions' system-wide shortcuts (Settings › General › Hotkeys).
+    lazy var globalHotKeys: GlobalHotKeyController = {
+        let controller = GlobalHotKeyController(viewModel: wallpaperViewModel)
+        controller.playlistShortcuts = playlistShortcuts
+        playlistShortcuts.hotKeys = controller
+        controller.perform = { [weak self] in self?.performHotKey($0) }
+        return controller
+    }()
+    /// The wallpaper windows sit above the desktop icons, hiding them (`toggleDesktopIcons`).
+    var hidesDesktopIcons = false
     lazy var crashWatcher = CrashWatcher()
     private var processPriorityCancellable: AnyCancellable?
     private var crashWatcherCancellable: AnyCancellable?
@@ -351,8 +361,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             self.mainWindowController.window.makeKeyAndOrderFront(nil)
         }
 
-        // Registers the playlists' global shortcuts.
+        // Registers the playlists' and the hotkey actions' global shortcuts.
         _ = playlistShortcuts
+        _ = globalHotKeys
 
         // MCP clients connect once the app is set up, while the MCP Server plugin is installed.
         mcpServerPlugin.start()
@@ -580,7 +591,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
             let window = WallpaperWindow()
             window.styleMask = [.borderless, .fullSizeContentView]
-            window.level = NSWindow.Level(Int(CGWindowLevelForKey(.desktopWindow)))
+            window.level = Self.wallpaperWindowLevel(hidingDesktopIcons: hidesDesktopIcons)
             window.collectionBehavior = [.stationary, .canJoinAllSpaces]
             window.setFrame(screen.frame, display: true)
             window.isMovable = false

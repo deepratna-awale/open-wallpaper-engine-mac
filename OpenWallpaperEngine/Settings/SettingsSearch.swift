@@ -8,6 +8,7 @@ enum SettingsAnchor {
     static let macOS = "macos"
     static let setup = "setup"
     static let shortcuts = "shortcuts"
+    static let hotKeys = "hotkeys"
     static let screenshots = "screenshots"
     static let playback = "playback"
     static let quality = "quality"
@@ -62,6 +63,7 @@ struct SettingsSearch {
             entry("Show Wallpaper on Lock Screen", .general, SettingsAnchor.macOS),
             entry("Run Setup Again…", .general, SettingsAnchor.setup),
             entry("Keyboard Shortcuts", .general, SettingsAnchor.shortcuts),
+            entry("Hotkeys", .general, SettingsAnchor.hotKeys),
             entry("Screenshots", .general, SettingsAnchor.screenshots),
             entry("Take Screenshot", .general, SettingsAnchor.screenshots),
 
@@ -126,6 +128,7 @@ struct SettingsSearch {
 
             entry("Credits", .about, nil),
         ] + AppShortcut.all.map { entry($0.title, .general, SettingsAnchor.shortcuts) }
+            + GlobalHotKeyAction.allCases.map { entry($0.title, .general, SettingsAnchor.hotKeys) }
     }()
 
     /// The entries whose title (in the app's language, or in English) contains every word of

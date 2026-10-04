@@ -9644,6 +9644,100 @@
         }
       }
     },
+    "Another app holds this shortcut, so it may not work." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يستخدم تطبيق آخر هذا الاختصار، لذا قد لا يعمل."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine andere App belegt diesen Kurzbefehl, daher funktioniert er eventuell nicht."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otra app usa esta función rápida, así que puede que no funcione."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une autre app utilise ce raccourci, il risque donc de ne pas fonctionner."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह शॉर्टकट किसी दूसरे ऐप के पास है, इसलिए यह शायद काम न करे।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un’altra app usa questa abbreviazione, quindi potrebbe non funzionare."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "別のアプリがこのショートカットを使用しているため、機能しない場合があります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다른 앱이 이 단축키를 사용하고 있어 작동하지 않을 수 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ten skrót jest zajęty przez inną aplikację, więc może nie działać."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Outro app usa este atalho, então ele pode não funcionar."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Это сочетание клавиш занято другим приложением, поэтому оно может не работать."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu kısayolu başka bir uygulama kullanıyor, bu yüzden çalışmayabilir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Це скорочення зайняте іншою програмою, тому воно може не працювати."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "另一个 App 占用了此快捷键，因此它可能无法使用。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "另一個 App 佔用了此快速鍵，因此它可能無法使用。"
+          }
+        }
+      }
+    },
     "Another app uses this shortcut. Use Anyway saves it, but it may not work while that app holds it." : {
       "localizations" : {
         "ar" : {
@@ -15589,6 +15683,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "瀏覽工作坊"
+          }
+        }
+      }
+    },
+    "Browse wallpapers" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تصفح الخلفيات"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hintergrundbilder durchsuchen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Explorar fondos de pantalla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parcourir les fonds d’écran"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वॉलपेपर ब्राउज़ करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sfoglia gli sfondi"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "壁紙を閲覧"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배경화면 탐색"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przeglądaj tapety"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Explorar imagens de fundo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обзор обоев"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duvar kâğıtlarına göz at"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Огляд шпалер"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "浏览墙纸"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "瀏覽背景圖片"
           }
         }
       }
@@ -41275,6 +41463,100 @@
         }
       }
     },
+    "Hide desktop icons" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إخفاء أيقونات سطح المكتب"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schreibtischsymbole ausblenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar iconos del escritorio"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Masquer les icônes du bureau"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "डेस्कटॉप आइकन छिपाएँ"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nascondi le icone della scrivania"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デスクトップアイコンを隠す"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "데스크탑 아이콘 가리기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ukryj ikony biurka"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar ícones da mesa"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скрыть значки рабочего стола"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Masaüstü simgelerini gizle"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сховати значки робочого столу"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐藏桌面图标"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隱藏桌面圖像"
+          }
+        }
+      }
+    },
     "Hide object" : {
       "localizations" : {
         "ar" : {
@@ -42498,6 +42780,194 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "水平速度。負值會反向移動，0 為停止。"
+          }
+        }
+      }
+    },
+    "Hotkeys" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختصارات"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tastenkombinationen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teclas de acceso rápido"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raccourcis"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "हॉटकी"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tasti di scelta rapida"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ホットキー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "단축키"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klawisze dostępu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atalhos"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Горячие клавиши"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kısayol tuşları"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Гарячі клавіші"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "热键"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速鍵"
+          }
+        }
+      }
+    },
+    "Hotkeys work in every app and need no permission. Each needs ⌘, ⌥ or ⌃. Playlists have their own, set in the playlist's header." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعمل الاختصارات في كل تطبيق ولا تحتاج إلى أي إذن. يحتاج كل منها إلى ⌘ أو ⌥ أو ⌃. لقوائم التشغيل اختصاراتها الخاصة، وتُعيَّن في رأس قائمة التشغيل."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tastenkombinationen funktionieren in jeder App und brauchen keine Berechtigung. Jede braucht ⌘, ⌥ oder ⌃. Playlists haben eigene, die im Kopf der Playlist festgelegt werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las teclas de acceso rápido funcionan en todas las apps y no necesitan permisos. Cada una necesita ⌘, ⌥ o ⌃. Las playlists tienen las suyas, que se definen en su encabezado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les raccourcis fonctionnent dans toutes les apps et ne demandent aucune autorisation. Chacun nécessite ⌘, ⌥ ou ⌃. Les playlists ont les leurs, définis dans leur en-tête."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "हॉटकी हर ऐप में काम करती हैं और इन्हें किसी अनुमति की ज़रूरत नहीं होती। हर एक में ⌘, ⌥ या ⌃ होना चाहिए। प्लेलिस्ट की अपनी हॉटकी होती हैं, जो प्लेलिस्ट के हेडर में सेट की जाती हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I tasti di scelta rapida funzionano in ogni app e non richiedono permessi. Ognuno richiede ⌘, ⌥ o ⌃. Le playlist hanno i propri, impostati nella loro intestazione."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ホットキーはどのアプリでも機能し、アクセス権は不要です。それぞれに ⌘、⌥、⌃ のいずれかが必要です。プレイリストには独自のホットキーがあり、プレイリストのヘッダで設定します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "단축키는 모든 앱에서 작동하며 권한이 필요하지 않습니다. 각 단축키에는 ⌘, ⌥ 또는 ⌃가 필요합니다. 플레이리스트에는 자체 단축키가 있으며 플레이리스트 헤더에서 설정합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klawisze dostępu działają w każdej aplikacji i nie wymagają uprawnień. Każdy wymaga ⌘, ⌥ lub ⌃. Playlisty mają własne, ustawiane w ich nagłówku."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os atalhos funcionam em todos os apps e não precisam de permissão. Cada um precisa de ⌘, ⌥ ou ⌃. As playlists têm os próprios, definidos no cabeçalho da playlist."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Горячие клавиши работают в любом приложении и не требуют разрешений. Каждой нужна ⌘, ⌥ или ⌃. У плейлистов свои, они задаются в заголовке плейлиста."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kısayol tuşları her uygulamada çalışır ve izin gerektirmez. Her biri ⌘, ⌥ veya ⌃ içermelidir. Çalma listelerinin kendi kısayolları vardır; çalma listesinin başlığında ayarlanır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Гарячі клавіші працюють у будь-якій програмі й не потребують дозволів. Кожній потрібна ⌘, ⌥ або ⌃. Списки відтворення мають власні, їх задають у заголовку списку."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "热键在所有 App 中都有效，且无需权限。每个热键都需要 ⌘、⌥ 或 ⌃。播放列表有自己的热键，在播放列表的标题栏中设置。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速鍵在所有 App 中都有效，且不需權限。每個快速鍵都需要 ⌘、⌥ 或 ⌃。播放列表有自己的快速鍵，在播放列表的標題列中設定。"
           }
         }
       }
@@ -63968,6 +64438,100 @@
         }
       }
     },
+    "Mute wallpapers" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "كتم صوت الخلفيات"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hintergrundbilder stummschalten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Silenciar fondos de pantalla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couper le son des fonds d’écran"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वॉलपेपर म्यूट करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disattiva l’audio degli sfondi"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "壁紙を消音"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배경화면 소리 끔"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wycisz tapety"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Silenciar imagens de fundo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выключить звук обоев"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duvar kâğıtlarının sesini kapat"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вимкнути звук шпалер"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将墙纸静音"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將背景圖片靜音"
+          }
+        }
+      }
+    },
     "My Favourites" : {
       "comment" : "Filter: wallpapers the user marked as favourite",
       "localizations" : {
@@ -65473,6 +66037,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "播放列表中的下一張背景圖片"
+          }
+        }
+      }
+    },
+    "Next wallpaper" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الخلفية التالية"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nächstes Hintergrundbild"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siguiente fondo de pantalla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fond d’écran suivant"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अगला वॉलपेपर"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sfondo successivo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "次の壁紙"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다음 배경화면"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Następna tapeta"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Próxima imagem de fundo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Следующие обои"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sonraki duvar kâğıdı"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Наступні шпалери"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下一张墙纸"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下一張背景圖片"
           }
         }
       }
@@ -77087,6 +77745,100 @@
         }
       }
     },
+    "Pause wallpapers" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إيقاف الخلفيات مؤقتًا"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hintergrundbilder pausieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausar fondos de pantalla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre en pause les fonds d’écran"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वॉलपेपर रोकें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metti in pausa gli sfondi"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "壁紙を一時停止"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배경화면 일시정지"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wstrzymaj tapety"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausar imagens de fundo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приостановить обои"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duvar kâğıtlarını duraklat"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Призупинити шпалери"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂停墙纸"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暫停背景圖片"
+          }
+        }
+      }
+    },
     "Pause when VRAM is exhausted" : {
       "localizations" : {
         "ar" : {
@@ -82311,6 +83063,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "播放列表中的上一張背景圖片"
+          }
+        }
+      }
+    },
+    "Previous wallpaper" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الخلفية السابقة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorheriges Hintergrundbild"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fondo de pantalla anterior"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fond d’écran précédent"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पिछला वॉलपेपर"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sfondo precedente"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前の壁紙"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이전 배경화면"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poprzednia tapeta"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imagem de fundo anterior"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предыдущие обои"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Önceki duvar kâğıdı"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попередні шпалери"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上一张墙纸"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上一張背景圖片"
           }
         }
       }
@@ -94622,6 +95468,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "讓柔和的高光掠過圖層。"
+          }
+        }
+      }
+    },
+    "Runs this command from any app. Click, then press the keys." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يشغّل هذا الأمر من أي تطبيق. انقر، ثم اضغط على المفاتيح."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Führt diesen Befehl aus jeder App aus. Klicken Sie und drücken Sie dann die Tasten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ejecuta este comando desde cualquier app. Haz clic y pulsa las teclas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exécute cette commande depuis n’importe quelle app. Cliquez, puis appuyez sur les touches."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "किसी भी ऐप से यह कमांड चलाता है। क्लिक करें, फिर कुंजियाँ दबाएँ।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esegue questo comando da qualsiasi app. Fai clic, poi premi i tasti."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "どのアプリからでもこのコマンドを実行します。クリックしてからキーを押してください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "어떤 앱에서든 이 명령을 실행합니다. 클릭한 다음 키를 누르십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wykonuje to polecenie z dowolnej aplikacji. Kliknij, a następnie naciśnij klawisze."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Executa este comando em qualquer app. Clique e pressione as teclas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выполняет эту команду из любого приложения. Нажмите, а затем нажмите клавиши."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu komutu herhangi bir uygulamadan çalıştırır. Tıklayın, sonra tuşlara basın."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виконує цю команду з будь-якої програми. Клацніть, а потім натисніть клавіші."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从任何 App 中运行此命令。点按，然后按下按键。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從任何 App 中執行此指令。按一下，然後按下按鍵。"
           }
         }
       }
@@ -108970,6 +109910,100 @@
         }
       }
     },
+    "Start screensaver" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "بدء شاشة التوقف"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirmschoner starten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar salvapantallas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lancer l’économiseur d’écran"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्क्रीन सेवर शुरू करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvia salvaschermo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スクリーンセーバを開始"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면 보호기 시작"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uruchom wygaszacz ekranu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar protetor de tela"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запустить заставку"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekran koruyucuyu başlat"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запустити заставку"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启动屏幕保护程序"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "啟動螢幕保護程式"
+          }
+        }
+      }
+    },
     "Start with macOS" : {
       "localizations" : {
         "ar" : {
@@ -114352,6 +115386,100 @@
         }
       }
     },
+    "Take screenshot" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "أخذ لقطة شاشة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirmfoto aufnehmen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hacer captura de pantalla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prendre une capture d’écran"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्क्रीनशॉट लें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cattura schermata"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スクリーンショットを撮る"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "스크린샷 찍기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zrób zrzut ekranu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capturar tela"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сделать снимок экрана"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ekran görüntüsü al"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зробити знімок екрана"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "截屏"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "擷取螢幕畫面"
+          }
+        }
+      }
+    },
     "Technology" : {
       "comment" : "Workshop genre tag",
       "localizations" : {
@@ -117287,6 +118415,194 @@
         }
       }
     },
+    "The hotkey “%@” uses this shortcut. Use Anyway moves it to this hotkey." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يستخدم الاختصار ”%@“ هذه المفاتيح. يؤدي «الاستخدام على أي حال» إلى نقلها إلى هذا الاختصار."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Tastenkombination „%@“ verwendet diesen Kurzbefehl. „Trotzdem verwenden“ überträgt ihn auf diese Tastenkombination."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La tecla de acceso rápido «%@» usa esta función rápida. «Usar de todos modos» la pasa a esta tecla de acceso rápido."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le raccourci « %@ » utilise cette combinaison. « Utiliser quand même » la déplace vers ce raccourci."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "हॉटकी “%@” यह शॉर्टकट इस्तेमाल करती है। “फिर भी इस्तेमाल करें” इसे इस हॉटकी पर ले आता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il tasto di scelta rapida “%@” usa questa abbreviazione. “Usa comunque” la sposta su questo tasto di scelta rapida."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ホットキー「%@」がこのショートカットを使用しています。「このまま使用」を選ぶと、このホットキーに移動します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘%@’ 단축키가 이 키 조합을 사용합니다. ‘그래도 사용’을 선택하면 이 단축키로 옮겨집니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klawisz dostępu „%@” używa tego skrótu. „Użyj mimo to” przenosi go do tego klawisza dostępu."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O atalho “%@” usa esta combinação. Usar Mesmo Assim a move para este atalho."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Горячая клавиша «%@» использует это сочетание клавиш. «Всё равно использовать» переносит его на эту горячую клавишу."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” kısayol tuşu bu kısayolu kullanıyor. “Yine de Kullan” onu bu kısayol tuşuna taşır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Гаряча клавіша «%@» використовує це скорочення. «Усе одно використати» переносить його на цю гарячу клавішу."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "热键“%@”使用了此快捷键。“仍然使用”会将它移到此热键。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速鍵「%@」使用了此按鍵組合。「仍要使用」會將它移到此快速鍵。"
+          }
+        }
+      }
+    },
+    "The hotkey “%@” uses this shortcut. Use Anyway moves it to this playlist." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يستخدم الاختصار ”%@“ هذه المفاتيح. يؤدي «الاستخدام على أي حال» إلى نقلها إلى قائمة التشغيل هذه."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Tastenkombination „%@“ verwendet diesen Kurzbefehl. „Trotzdem verwenden“ überträgt ihn auf diese Playlist."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La tecla de acceso rápido «%@» usa esta función rápida. «Usar de todos modos» la pasa a esta playlist."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le raccourci « %@ » utilise cette combinaison. « Utiliser quand même » la déplace vers cette playlist."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "हॉटकी “%@” यह शॉर्टकट इस्तेमाल करती है। “फिर भी इस्तेमाल करें” इसे इस प्लेलिस्ट पर ले आता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il tasto di scelta rapida “%@” usa questa abbreviazione. “Usa comunque” la sposta su questa playlist."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ホットキー「%@」がこのショートカットを使用しています。「このまま使用」を選ぶと、このプレイリストに移動します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘%@’ 단축키가 이 키 조합을 사용합니다. ‘그래도 사용’을 선택하면 이 플레이리스트로 옮겨집니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klawisz dostępu „%@” używa tego skrótu. „Użyj mimo to” przenosi go do tej playlisty."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O atalho “%@” usa esta combinação. Usar Mesmo Assim a move para esta playlist."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Горячая клавиша «%@» использует это сочетание клавиш. «Всё равно использовать» переносит его на этот плейлист."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” kısayol tuşu bu kısayolu kullanıyor. “Yine de Kullan” onu bu çalma listesine taşır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Гаряча клавіша «%@» використовує це скорочення. «Усе одно використати» переносить його на цей список відтворення."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "热键“%@”使用了此快捷键。“仍然使用”会将它移到此播放列表。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速鍵「%@」使用了此按鍵組合。「仍要使用」會將它移到此播放列表。"
+          }
+        }
+      }
+    },
     "The language of the app's windows and menus. Follow System uses your Mac's language; a change applies after the app restarts." : {
       "localizations" : {
         "ar" : {
@@ -117377,6 +118693,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "App 視窗和選單的語言。「跟隨系統」使用 Mac 的語言；變更會在 App 重新啟動後生效。"
+          }
+        }
+      }
+    },
+    "The menu command “%@” uses this shortcut. Use Anyway gives it to this hotkey, and the menu command no longer responds to it." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يستخدم أمر القائمة ”%@“ هذا الاختصار. يؤدي «الاستخدام على أي حال» إلى منحه لهذا الاختصار، ولن يستجيب له أمر القائمة بعد ذلك."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Menübefehl „%@“ verwendet diesen Kurzbefehl. „Trotzdem verwenden“ gibt ihn dieser Tastenkombination, und der Menübefehl reagiert nicht mehr darauf."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El comando de menú «%@» usa esta función rápida. «Usar de todos modos» la asigna a esta tecla de acceso rápido y el comando de menú deja de responder a ella."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La commande de menu « %@ » utilise ce raccourci. « Utiliser quand même » l’attribue à ce raccourci, et la commande de menu n’y répond plus."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मेनू कमांड “%@” यह शॉर्टकट इस्तेमाल करती है। “फिर भी इस्तेमाल करें” इसे इस हॉटकी को दे देता है, और मेनू कमांड इस पर प्रतिक्रिया नहीं देती।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il comando di menu “%@” usa questa abbreviazione. “Usa comunque” la assegna a questo tasto di scelta rapida e il comando di menu non risponde più."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メニューコマンド「%@」がこのショートカットを使用しています。「このまま使用」を選ぶとこのホットキーに割り当てられ、メニューコマンドは反応しなくなります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘%@’ 메뉴 명령이 이 단축키를 사용합니다. ‘그래도 사용’을 선택하면 이 단축키에 할당되며 메뉴 명령은 더 이상 반응하지 않습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Polecenie menu „%@” używa tego skrótu. „Użyj mimo to” przypisuje go temu klawiszowi dostępu, a polecenie menu przestaje na niego reagować."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O comando de menu “%@” usa este atalho. Usar Mesmo Assim o atribui a este atalho, e o comando de menu deixa de responder a ele."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Команда меню «%@» использует это сочетание клавиш. «Всё равно использовать» отдаёт его этой горячей клавише, и команда меню перестаёт на него реагировать."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” menü komutu bu kısayolu kullanıyor. “Yine de Kullan” onu bu kısayol tuşuna verir ve menü komutu artık ona yanıt vermez."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Команда меню «%@» використовує це скорочення. «Усе одно використати» віддає його цій гарячій клавіші, і команда меню більше не реагує на нього."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "菜单命令“%@”使用了此快捷键。“仍然使用”会将它分配给此热键，菜单命令将不再响应它。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選單指令「%@」使用了此快速鍵。「仍要使用」會將它指定給此快速鍵，選單指令將不再回應它。"
           }
         }
       }
@@ -117659,6 +119069,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "單一背景圖片可容納的粒子數上限。粒子較多的背景圖片會讓每個粒子系統繪製得較稀疏，同時保持原有外觀。"
+          }
+        }
+      }
+    },
+    "The playlist “%@” uses this shortcut. Use Anyway moves it to this hotkey." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تستخدم قائمة التشغيل ”%@“ هذا الاختصار. يؤدي «الاستخدام على أي حال» إلى نقله إلى هذا الاختصار."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Playlist „%@“ verwendet diesen Kurzbefehl. „Trotzdem verwenden“ überträgt ihn auf diese Tastenkombination."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La playlist «%@» usa esta función rápida. «Usar de todos modos» la pasa a esta tecla de acceso rápido."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La playlist « %@ » utilise ce raccourci. « Utiliser quand même » le déplace vers ce raccourci."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "प्लेलिस्ट “%@” यह शॉर्टकट इस्तेमाल करती है। “फिर भी इस्तेमाल करें” इसे इस हॉटकी पर ले आता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La playlist “%@” usa questa abbreviazione. “Usa comunque” la sposta su questo tasto di scelta rapida."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "プレイリスト「%@」がこのショートカットを使用しています。「このまま使用」を選ぶと、このホットキーに移動します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘%@’ 플레이리스트가 이 단축키를 사용합니다. ‘그래도 사용’을 선택하면 이 단축키로 옮겨집니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Playlista „%@” używa tego skrótu. „Użyj mimo to” przenosi go do tego klawisza dostępu."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A playlist “%@” usa este atalho. Usar Mesmo Assim o move para este atalho."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Плейлист «%@» использует это сочетание клавиш. «Всё равно использовать» переносит его на эту горячую клавишу."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” çalma listesi bu kısayolu kullanıyor. “Yine de Kullan” onu bu kısayol tuşuna taşır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Список відтворення «%@» використовує це скорочення. «Усе одно використати» переносить його на цю гарячу клавішу."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播放列表“%@”使用了此快捷键。“仍然使用”会将它移到此热键。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "播放列表「%@」使用了此快速鍵。「仍要使用」會將它移到此快速鍵。"
           }
         }
       }
@@ -122378,6 +123882,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "切換桌面背景圖片視窗（除錯）"
+          }
+        }
+      }
+    },
+    "Toggle audio recording" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تبديل تسجيل الصوت"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audioaufnahme ein/aus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activar/desactivar grabación de audio"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activer/désactiver l’enregistrement audio"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऑडियो रिकॉर्डिंग चालू/बंद करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attiva/disattiva registrazione audio"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オーディオ録音の切り替え"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오디오 녹음 전환"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przełącz nagrywanie dźwięku"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alternar gravação de áudio"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переключить запись звука"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ses kaydını aç/kapat"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перемкнути запис звуку"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切换录音"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切換音訊錄製"
           }
         }
       }
@@ -133333,6 +134931,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Вікно"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "窗口"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "視窗"
+          }
+        }
+      }
+    },
+    "Windows" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "النوافذ"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ventanas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenêtres"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "विंडो"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finestre"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ウインドウ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "윈도우"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Okna"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Janelas"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Окна"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pencereler"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікна"
           }
         },
         "zh-Hans" : {

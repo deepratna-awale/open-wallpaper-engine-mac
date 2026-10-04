@@ -75,7 +75,11 @@ struct PlaylistView: View {
                             isRecording: $isRecordingShortcut,
                             onRecord: { record($0, for: playlist.id) },
                             onClear: { shortcuts.assign(nil, to: playlist.id) },
-                            onRecordingChange: { $0 ? shortcuts.suspend() : shortcuts.resume() }
+                            // The hotkeys and the playlists' shortcuts stop while it listens.
+                            onRecordingChange: { recording in
+                                let hotKeys = AppDelegate.shared.globalHotKeys
+                                recording ? hotKeys.suspend() : hotKeys.resume()
+                            }
                         )
                         Button(role: .destructive) {
                             playlistPendingDeletion = playlist

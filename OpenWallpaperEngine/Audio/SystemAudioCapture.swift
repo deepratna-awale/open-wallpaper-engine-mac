@@ -114,7 +114,22 @@ final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate {
         guard permissionGate.becameGranted() else { return }
         OWELog.info(.audio, "System audio permission granted; starting system audio capture.")
         restartScheduler.reset()
-        if demand.isDemanded { restartScheduler.requestRestart() }
+        if demand.isDemanded, isRecordingEnabled { restartScheduler.requestRestart() }
+    }
+
+    /// WE's "Toggle audio recording" hotkey: off stops capture whatever the wallpapers need, so
+    /// audio-reactive wallpapers hear silence; on starts it again when one needs it. Not saved:
+    /// every launch records.
+    @MainActor var isRecordingEnabled = true {
+        didSet {
+            guard isRecordingEnabled != oldValue else { return }
+            OWELog.info(.audio, "Audio recording turned \(isRecordingEnabled ? "on" : "off").")
+            if isRecordingEnabled {
+                restartSystemAudioCapture(reason: "audio recording turned on")
+            } else {
+                stopSystemAudioCapture()
+            }
+        }
     }
 
     /// Starts capture when the first consumer arrives and stops it once the last one has been
@@ -149,7 +164,7 @@ final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate {
 
     @MainActor
     private func restartSystemAudioCapture(reason: String) {
-        guard demand.isDemanded, permissionGate.canCapture() else { return }
+        guard isRecordingEnabled, demand.isDemanded, permissionGate.canCapture() else { return }
         OWELog.info(.audio, "Restarting system audio capture: \(reason).")
         restartScheduler.requestRestart()
     }
@@ -207,7 +222,7 @@ final class SystemAudioCapture: NSObject, SCStreamOutput, SCStreamDelegate {
             await MainActor.run { [weak self] in
                 guard let self else { return }
                 // The last consumer left while the capture was starting.
-                if success, !self.demand.isDemanded { self.stopSystemAudioCapture() }
+                if success, !self.demand.isDemanded || !self.isRecordingEnabled { self.stopSystemAudioCapture() }
                 if self.restartScheduler.finished(success: success) {
                     OWELog.error(.audio, "Giving up on system audio capture after \(self.restartScheduler.maxFailures) failed attempts; it restarts on the next wake, display change or permission change.")
                 }
