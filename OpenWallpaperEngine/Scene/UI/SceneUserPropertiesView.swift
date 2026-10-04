@@ -1,6 +1,7 @@
 import SwiftUI
 import UniformTypeIdentifiers
 import OWEInspectorKit
+import OWESceneEditing
 
 /// Wallpaper Engine authors often put a localization key in a property's `text` field rather than
 /// a label. WE's own translation (`WallpaperEngineLabels`, from the bundled locale files) is used;
@@ -34,7 +35,7 @@ struct SceneUserProperty: Identifiable {
     let minimum: Double
     let maximum: Double
     /// project.json `condition`; nil when always shown.
-    var condition: UserPropertyCondition? = nil
+    var condition: UserPropertyConditionExpression? = nil
     /// Raw (possibly HTML) label, kept for `text`/untyped notice rows.
     var rawText: String = ""
     var fraction: Bool = true
@@ -138,7 +139,7 @@ final class SceneUserPropertiesModel: ObservableObject {
                                              defaultValue: presetDefaults[definition.key] ?? definition.defaultValue,
                                              options: definition.options.map { (sceneUserPropertyTitle($0.label, labels: labels), $0.value) },
                                              minimum: definition.minimum, maximum: definition.maximum)
-            property.condition = definition.condition.flatMap(UserPropertyCondition.init)
+            property.condition = definition.condition.map(UserPropertyConditionExpression.init)
             // WE translates the whole `text` when it is a localisation key.
             property.rawText = labels.translation(definition.text) ?? definition.text
             property.fraction = definition.fraction
@@ -251,7 +252,7 @@ final class SceneUserPropertiesModel: ObservableObject {
                 property.fraction = false
                 property.step = 1
             }
-            property.condition = key.condition.flatMap(UserPropertyCondition.init)
+            property.condition = key.condition.map(UserPropertyConditionExpression.init)
             property.rawText = title
             return property
         }

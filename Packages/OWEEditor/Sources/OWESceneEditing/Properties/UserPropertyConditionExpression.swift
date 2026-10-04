@@ -1,12 +1,13 @@
 import Foundation
 
-/// A property's `condition` (`clock.value == 1`, `style.value == "cycle" && mode.value != "dual"`)
-/// for the editor: evaluated for the live preview, and read as a rule the condition builder can
-/// show when it is one comparison. WE evaluates conditions as JavaScript over the other properties;
-/// like the app's sidebar this reads the subset authors use: `name.value`, string, number and
-/// flag literals, `== != === !== < <= > >=`, `! && ||` and parentheses. Values are the sidebar's
-/// strings; a comparison is numeric when both sides are numbers (flags count as 1 and 0, as
-/// JavaScript's loose `==` compares them), else textual. A condition outside the subset holds.
+/// A property's `condition` (`clock.value == 1`, `style.value == "cycle" && mode.value != "dual"`):
+/// the one evaluator the app's property sidebar and the editor's live preview share, so they can't
+/// disagree, and read as a rule the condition builder can show when it is one comparison. WE
+/// evaluates conditions as JavaScript over the other properties; this reads the subset authors use:
+/// `name.value`, string, number and flag literals, `== != === !== < <= > >=`, `! && ||` and
+/// parentheses, with JavaScript's precedence. Values are the sidebar's strings; a comparison is
+/// numeric when both sides are numbers (flags count as 1 and 0, as JavaScript's loose `==` compares
+/// them), else textual. An empty condition, or one outside the subset, holds.
 public struct UserPropertyConditionExpression: Sendable {
     private indirect enum Node: Sendable {
         case literal(String)
@@ -180,26 +181,28 @@ public struct UserPropertyConditionExpression: Sendable {
         }
 
         mutating func parseAnd() -> Node? {
-            guard var lhs = parseUnary() else { return nil }
+            guard var lhs = parseComparison() else { return nil }
             while accept("&&") {
-                guard let rhs = parseUnary() else { return nil }
+                guard let rhs = parseComparison() else { return nil }
                 lhs = .and(lhs, rhs)
             }
             return lhs
         }
 
-        mutating func parseUnary() -> Node? {
-            if accept("!") { return parseUnary().map { .not($0) } }
-            return parseComparison()
-        }
-
         mutating func parseComparison() -> Node? {
-            guard let lhs = parsePrimary() else { return nil }
+            guard let lhs = parseUnary() else { return nil }
             for op in ["===", "!==", "==", "!=", "<=", ">=", "<", ">"] where accept(op) {
-                guard let rhs = parsePrimary() else { return nil }
+                guard let rhs = parseUnary() else { return nil }
                 return .compare(op, lhs, rhs)
             }
             return lhs
+        }
+
+        /// `!` binds tighter than a comparison, as in JavaScript: `!a.value == 1` is
+        /// `(!a.value) == 1`, and `a.value == !b.value` negates the right-hand side.
+        mutating func parseUnary() -> Node? {
+            if accept("!") { return parseUnary().map { .not($0) } }
+            return parsePrimary()
         }
 
         mutating func parsePrimary() -> Node? {

@@ -163,17 +163,11 @@ final class WallpaperEditorScriptingTests: XCTestCase {
         XCTAssertEqual(definitions[2].defaultValue, "1 0 0")
         XCTAssertEqual(definitions[2].text, "<b>Tint</b>")
 
-        // The editor's preview and the app's sidebar agree on the condition.
-        let condition = try XCTUnwrap(definitions[1].condition)
-        let app = try XCTUnwrap(UserPropertyCondition(condition))
-        let editor = UserPropertyConditionExpression(condition)
-        for values in [["mode": "night"], ["mode": "day"], [:]] {
-            XCTAssertEqual(app.evaluate(values), editor.evaluate(values), "\(values)")
-        }
-        for expression in ["clock.value == 1", "!clock.value", #"mode.value != "day" && clock.value"#, "x.value >= 2"] {
-            let values = ["clock": "true", "mode": "night", "x": "3"]
-            XCTAssertEqual(UserPropertyCondition(expression)?.evaluate(values),
-                           UserPropertyConditionExpression(expression).evaluate(values), expression)
-        }
+        // The condition reads back as written (the sidebar and the preview share one evaluator).
+        let condition = UserPropertyConditionExpression(try XCTUnwrap(definitions[1].condition))
+        XCTAssertTrue(condition.isUnderstood)
+        XCTAssertTrue(condition.evaluate(["mode": "night"]))
+        XCTAssertFalse(condition.evaluate(["mode": "day"]))
+        XCTAssertFalse(condition.evaluate([:]))
     }
 }
