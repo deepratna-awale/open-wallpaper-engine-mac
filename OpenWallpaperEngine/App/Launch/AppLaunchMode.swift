@@ -12,8 +12,6 @@ enum AppLaunchMode: Equatable {
     case wallpaperEditor(URL?)
 
     static let wallpaperEditorArgument = "--wallpaper-editor"
-    /// Opens Settings › Assets once the app has launched: the editor asks for it when the app isn't running.
-    static let openAssetsSettingsArgument = "--open-assets-settings"
 
     /// The mode of a process of `bundleIdentifier` launched with `arguments` (executable first):
     /// the editor's app is always the editor; the flag also runs the editor from the app's own
@@ -48,5 +46,34 @@ enum AppLaunchMode: Equatable {
     var isWallpaperEditor: Bool {
         if case .wallpaperEditor = self { return true }
         return false
+    }
+}
+
+/// A page of Open Wallpaper Engine's Settings the Wallpaper Editor's process shows: a message to
+/// the running app (`AppProcessChannel`), or an argument that launches the app on it.
+enum AppSettingsRequest: CaseIterable {
+    /// Settings › Assets, where WE's assets the browsers offer are set up.
+    case assets
+    /// Settings › Plugins › Depth Map Generation, where its model is installed.
+    case depthMaps
+
+    var message: AppProcessChannel.Message {
+        switch self {
+        case .assets: .openAssetsSettings
+        case .depthMaps: .openDepthMapSettings
+        }
+    }
+
+    /// Opens the page once the app has launched: the editor asks for it when the app isn't running.
+    var launchArgument: String {
+        switch self {
+        case .assets: "--open-assets-settings"
+        case .depthMaps: "--open-depth-map-settings"
+        }
+    }
+
+    /// The page an app launched with `arguments` opens, if any.
+    static func requested(by arguments: [String]) -> AppSettingsRequest? {
+        allCases.first { arguments.contains($0.launchArgument) }
     }
 }

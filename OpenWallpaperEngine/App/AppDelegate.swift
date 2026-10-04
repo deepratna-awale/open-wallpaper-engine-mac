@@ -111,7 +111,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private lazy var editorChangeSync: WallpaperEditorChangeSync = {
         let sync = WallpaperEditorChangeSync(role: .app, dependencies: .init(messaging: processMessaging, channel: .current))
         sync.onLibraryChange = { [weak self] in self?.contentViewModel.refresh() }
-        sync.onOpenAssetsSettings = { [weak self] in self?.openAssetsSettings() }
+        sync.onOpenSettings = { [weak self] in self?.openSettings(for: $0) }
         return sync
     }()
     private lazy var processMessaging: AppProcessMessaging = DistributedAppProcessMessaging()
@@ -138,9 +138,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// the desktop's left clicks.
     /// Settings › Plugins › Screen Saver: the loop videos and the bundled saver.
     lazy var screenSaver = ScreenSaverPlugin()
-    /// Settings › Plugins › Depth Map Generation: the process's one generator, which both editors
-    /// share; its model is loaded only while it generates.
-    lazy var depthMapGenerator = DepthMapPlugin.makeGenerator()
     lazy var sceneScriptServices: SceneScriptServices = {
         if !SceneScriptJIT.isEnabled {
             OWELog.info(.script, "JavaScriptCore runs without its JIT (no \(SceneScriptJIT.entitlement)): scripts run several times slower")
@@ -189,7 +186,23 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     
     var eventHandler: Any?
     
-    static var shared = AppDelegate()
+    private static let instance = AppDelegate()
+    /// Open Wallpaper Engine's delegate, made on first use. Never in the Wallpaper Editor's process
+    /// (`AppLaunchPlan`), whose code reaches the app through `WallpaperEditorChangeSync` instead.
+    static var shared: AppDelegate {
+        sharedAccessProbe?()
+        return instance
+    }
+    /// Told of every use of `shared` (tests: the editor's services never reach the app's delegate).
+    static var sharedAccessProbe: (() -> Void)?
+
+    override init() {
+        super.init()
+        OWELog.info(.app, "AppDelegate created (pid \(ProcessInfo.processInfo.processIdentifier))")
+        if AppLaunchMode.parse(CommandLine.arguments).isWallpaperEditor {
+            OWELog.error(.app, "AppDelegate created in the Wallpaper Editor's process: something there reached AppDelegate.shared")
+        }
+    }
     
     func applicationWillFinishLaunching(_ notification: Notification) {
         // Animated previews are built in now; the old plugin's on/off is dropped.
@@ -247,9 +260,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         // 创建设置视窗
         setSettingsWindow()
-        // Launched by the Wallpaper Editor to set up WE's assets.
-        if CommandLine.arguments.contains(AppLaunchMode.openAssetsSettingsArgument) {
-            DispatchQueue.main.async { [weak self] in self?.openAssetsSettings() }
+        // Launched by the Wallpaper Editor on a Settings page (WE's assets, the depth map model).
+        if let request = AppSettingsRequest.requested(by: CommandLine.arguments) {
+            DispatchQueue.main.async { [weak self] in self?.openSettings(for: request) }
         }
         
         // 创建桌面壁纸视窗
@@ -428,6 +441,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// Settings › Assets, where the assets scenes need are installed.
     @objc func openAssetsSettings() {
         openSettings(.assets, anchor: SettingsAnchor.assets)
+    }
+
+    /// The Settings page the Wallpaper Editor asked for.
+    func openSettings(for request: AppSettingsRequest) {
+        switch request {
+        case .assets: openAssetsSettings()
+        case .depthMaps: openSettings(.plugins, anchor: SettingsAnchor.depthMaps)
+        }
     }
 
     /// The Workshop tab, where Steam's login form is.

@@ -16,7 +16,7 @@ final class SceneEditorDepthMapHost: ObservableObject {
     private var sceneData: Data?
     private var observer: NSObjectProtocol?
 
-    /// `generator`: the app's (`AppDelegate.depthMapGenerator`) unless given.
+    /// `generator`: the process's (`DepthMapPlugin.generator`) unless given.
     init(wallpaper: WEWallpaper, generator: DepthMapGenerator? = nil) {
         self.wallpaper = wallpaper
         guard WallpaperEditorController.canEdit(wallpaper) else { return }
@@ -28,7 +28,8 @@ final class SceneEditorDepthMapHost: ObservableObject {
             let resources = EditorWallpaperResources(wallpaper: wallpaper, package: source.package,
                                                      assets: SceneEditOverlayFiles.assets(for: identity))
             services = DepthMapPlugin.services(for: wallpaper, resources: resources,
-                                                generator: generator ?? AppDelegate.shared.depthMapGenerator)
+                                                generator: generator,
+                                                openPlugins: { AppDelegate.shared.openSettings(for: .depthMaps) })
             makeSession(overlay: SceneEditOverlayFiles.overlay(for: identity) ?? SceneEditOverlay())
         } catch {
             OWELog.error(.ui, "Scene Editor: no depth maps for \(wallpaper.wallpaperDirectory.lastPathComponent): \(error)")

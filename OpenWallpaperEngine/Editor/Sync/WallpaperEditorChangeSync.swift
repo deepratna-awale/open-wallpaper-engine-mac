@@ -43,8 +43,8 @@ final class WallpaperEditorChangeSync {
             let app = AppBundleLayout.appIdentifier(for: Bundle.main.bundleIdentifier ?? AppStorageLocation.realBundleIdentifier)
             return !AppProcessList.running(.main, bundleIdentifier: app).isEmpty
         }
-        /// Launches Open Wallpaper Engine on its Settings › Assets.
-        var launchAppOnAssetsSettings: () -> Void = WallpaperEditorChangeSync.launchAppOnAssetsSettings
+        /// Launches Open Wallpaper Engine on one of its Settings pages.
+        var launchAppOnSettings: (AppSettingsRequest) -> Void = WallpaperEditorChangeSync.launchApp(on:)
     }
 
     /// What the process applies of the other's messages.
@@ -56,10 +56,10 @@ final class WallpaperEditorChangeSync {
         static let refreshesLibrary = Role(rawValue: 1 << 1)
         /// User properties the other process saved (both).
         static let appliesProperties = Role(rawValue: 1 << 2)
-        /// Requests for Settings › Assets (the app).
-        static let opensAssetsSettings = Role(rawValue: 1 << 3)
+        /// Requests for a Settings page (Assets, Plugins › Depth Map Generation: the app).
+        static let opensSettings = Role(rawValue: 1 << 3)
 
-        static let app: Role = [.appliesEditorChanges, .refreshesLibrary, .appliesProperties, .opensAssetsSettings]
+        static let app: Role = [.appliesEditorChanges, .refreshesLibrary, .appliesProperties, .opensSettings]
         static let editor: Role = [.appliesProperties]
     }
 
@@ -76,8 +76,8 @@ final class WallpaperEditorChangeSync {
     private var runningFolders: () -> [URL] = { [] }
     /// The library gained a wallpaper.
     var onLibraryChange: (() -> Void)?
-    /// The editor asked for Settings › Assets.
-    var onOpenAssetsSettings: (() -> Void)?
+    /// The editor asked for a Settings page.
+    var onOpenSettings: ((AppSettingsRequest) -> Void)?
 
     private var identities: [URL: WallpaperSettingsIdentity] = [:]
     /// Each wallpaper's overlay as last applied here: a message and the folder watcher reporting
@@ -125,8 +125,10 @@ final class WallpaperEditorChangeSync {
         if role.contains(.refreshesLibrary) {
             on(.libraryDidChange) { sync, _ in sync.onLibraryChange?() }
         }
-        if role.contains(.opensAssetsSettings) {
-            on(.openAssetsSettings) { sync, _ in sync.onOpenAssetsSettings?() }
+        if role.contains(.opensSettings) {
+            for request in AppSettingsRequest.allCases {
+                on(request.message) { sync, _ in sync.onOpenSettings?(request) }
+            }
         }
         if role.contains(.appliesProperties) {
             on(.propertiesDidSave) { sync, folder in folder.map { sync.applySavedProperties(of: $0) } }
@@ -208,18 +210,18 @@ final class WallpaperEditorChangeSync {
         send(.libraryDidChange, folder: nil)
     }
 
-    /// Shows the app's Settings › Assets: the running app's, else the app, launched to show it.
-    func openAssetsSettings() {
+    /// Shows one of the app's Settings pages: the running app's, else the app, launched to show it.
+    func openSettings(_ request: AppSettingsRequest) {
         if dependencies.appIsRunning() {
-            send(.openAssetsSettings, folder: nil)
+            send(request.message, folder: nil)
         } else {
-            dependencies.launchAppOnAssetsSettings()
+            dependencies.launchAppOnSettings(request)
         }
     }
 
-    nonisolated static func launchAppOnAssetsSettings() {
+    nonisolated static func launchApp(on request: AppSettingsRequest) {
         let tag = AppStorageLocation.current.isolationTag
-        var arguments = [AppLaunchMode.openAssetsSettingsArgument]
+        var arguments = [request.launchArgument]
         var environment: [String: String] = [:]
         if let tag {
             arguments += [AppStorageLocation.argumentKey, tag]

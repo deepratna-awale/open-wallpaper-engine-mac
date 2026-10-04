@@ -108,7 +108,8 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         window.setFrameAutosaveName("WallpaperEditor")
     }
 
-    private func makeServices() -> WallpaperEditorServices {
+    /// Internal for tests (`WallpaperEditorProcessTests`).
+    func makeServices() -> WallpaperEditorServices {
         let labels = WallpaperEngineLabels.load()
         let preview = self.preview, wallpaper = self.wallpaper, userPropertyUndo = self.userPropertyUndo
         let resources = self.resources, session = self.session
@@ -137,14 +138,16 @@ final class WallpaperEditorController: NSObject, NSWindowDelegate {
         services.timeline = timeline
         services.puppetAssets = EditorPuppetAssets.make(for: wallpaper)
         services.commands = commands
-        services.depthMaps = DepthMapPlugin.services(for: wallpaper, resources: resources)
+        // In the editor's own process the app's Settings are another process's (`sync`).
+        let openSettings: @MainActor (AppSettingsRequest) -> Void = { [sync] request in
+            if let sync { sync.openSettings(request) } else { AppDelegate.shared.openSettings(for: request) }
+        }
+        services.depthMaps = DepthMapPlugin.services(for: wallpaper, resources: resources,
+                                                     openPlugins: { openSettings(.depthMaps) })
         // The browsers' previews, rendered for the WE assets in use when the window opened.
         let previews = EditorPreviewHelper.provider()
         let hasWEAssets = { WallpaperEngineAssets.directory != nil }
-        // In the editor's own process the app's Settings are another process's (`sync`).
-        let openAssetsSetup = { [sync] in
-            if let sync { sync.openAssetsSettings() } else { AppDelegate.shared.openAssetsSettings() }
-        }
+        let openAssetsSetup = { openSettings(.assets) }
         services.previews = previews
         services.hasWEAssets = hasWEAssets
         services.openAssetsSetup = openAssetsSetup

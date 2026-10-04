@@ -25,6 +25,9 @@ struct AppProcessChannel: Equatable {
         case editorReady = "editor.ready"
         /// Show the app's setup of WE's assets (Settings › Assets), which the editor's browsers offer.
         case openAssetsSettings = "app.openAssetsSettings"
+        /// Show the app's Settings › Plugins › Depth Map Generation, where the editor's depth map
+        /// section sends the user to install its model.
+        case openDepthMapSettings = "app.openDepthMapSettings"
     }
 
     /// The `userInfo` key of the wallpaper's folder.

@@ -1,5 +1,6 @@
 import XCTest
 import OWESceneEditing
+import OWEEditor
 @testable import OpenWallpaperEngine
 
 /// The Wallpaper Editor as a process of its own: its launch mode and plan, the messages between
@@ -398,29 +399,60 @@ final class WallpaperEditorProcessTests: XCTestCase {
                        "the app doesn't send the change back")
     }
 
-    func testTheEditorOpensTheAppsAssetsSettingsOrLaunchesTheAppOnThem() {
+    func testTheEditorOpensTheAppsSettingsPagesOrLaunchesTheAppOnThem() {
         let messaging = FakeProcessMessaging()
         let app = makeSync(.app, sender: "app", messaging: messaging, local: NotificationCenter())
-        var opened = 0
-        app.onOpenAssetsSettings = { opened += 1 }
+        var opened: [AppSettingsRequest] = []
+        app.onOpenSettings = { opened.append($0) }
         app.start()
-        var running = true, launched = 0
-        var dependencies = WallpaperEditorChangeSync.Dependencies(
-            messaging: messaging, channel: AppProcessChannel(isolationTag: "tests"), sender: "editor",
-            store: SceneEditOverlayStore(directory: storeDirectory), local: NotificationCenter(), defaults: defaults)
+        var running = true
+        var launched: [AppSettingsRequest] = []
+        var dependencies = editorDependencies(messaging: messaging)
         dependencies.appIsRunning = { running }
-        dependencies.launchAppOnAssetsSettings = { launched += 1 }
+        dependencies.launchAppOnSettings = { launched.append($0) }
         let editor = WallpaperEditorChangeSync(role: .editor, dependencies: dependencies)
         editor.start()
         defer { app.stop(); editor.stop() }
 
-        editor.openAssetsSettings()
-        XCTAssertEqual(opened, 1, "the running app shows Settings › Assets")
-        XCTAssertEqual(launched, 0)
+        editor.openSettings(.assets)
+        editor.openSettings(.depthMaps)
+        XCTAssertEqual(opened, [.assets, .depthMaps], "the running app shows Settings › Assets, › Plugins › Depth Maps")
+        XCTAssertEqual(launched, [])
         running = false
-        editor.openAssetsSettings()
-        XCTAssertEqual(launched, 1, "an app that isn't running is launched on them")
-        XCTAssertEqual(opened, 1)
+        editor.openSettings(.depthMaps)
+        XCTAssertEqual(launched, [.depthMaps], "an app that isn't running is launched on them")
+        XCTAssertEqual(AppSettingsRequest.requested(by: ["/app", AppSettingsRequest.depthMaps.launchArgument]), .depthMaps)
+        XCTAssertEqual(opened.count, 2)
+    }
+
+    /// The editor's window and its services (depth maps, the browsers' asset setup) run in the
+    /// editor's process: none of it may make or use Open Wallpaper Engine's delegate.
+    func testTheEditorsServicesNeverReachTheAppsDelegate() throws {
+        var reached = 0
+        AppDelegate.sharedAccessProbe = { reached += 1 }
+        defer { AppDelegate.sharedAccessProbe = nil }
+        var launched: [AppSettingsRequest] = []
+        var dependencies = editorDependencies(messaging: FakeProcessMessaging())
+        dependencies.appIsRunning = { false }
+        dependencies.launchAppOnSettings = { launched.append($0) }
+        let sync = WallpaperEditorChangeSync(role: .editor, dependencies: dependencies)
+        let wallpaper = try XCTUnwrap(InstalledLibrary.wallpaper(at: folder, hiding: []))
+        let editor = try WallpaperEditorController(wallpaper: wallpaper, host: WallpaperEditorAppDelegate.makeSceneHost(),
+                                                   sync: sync)
+        defer { editor.window.close() }
+        let services = editor.makeServices()
+        let depthMaps = try XCTUnwrap(services.depthMaps)
+        XCTAssertTrue(depthMaps.generator === DepthMapPlugin.generator, "the process's own generator")
+        depthMaps.openPlugins()
+        services.openAssetsSetup()
+        XCTAssertEqual(launched, [.depthMaps, .assets], "the app's Settings, through the channel")
+        XCTAssertEqual(reached, 0, "AppDelegate.shared used from the editor's services")
+    }
+
+    private func editorDependencies(messaging: FakeProcessMessaging) -> WallpaperEditorChangeSync.Dependencies {
+        WallpaperEditorChangeSync.Dependencies(
+            messaging: messaging, channel: AppProcessChannel(isolationTag: "tests"), sender: "editor",
+            store: SceneEditOverlayStore(directory: storeDirectory), local: NotificationCenter(), defaults: defaults)
     }
 }
 

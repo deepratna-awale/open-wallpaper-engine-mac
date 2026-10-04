@@ -22,18 +22,24 @@ final class WallpaperEditorAppDelegate: NSObject, NSApplicationDelegate, Wallpap
         role: .editor, dependencies: .init(messaging: messaging, channel: channel))
     /// The settings the canvas runs with, read from the app's, and the process's own SceneScript
     /// services (`localStorage` is the app's folder; Now Playing registers per process).
-    private lazy var sceneHost = SceneWallpaperHost(
-        settings: GlobalSettingsViewModel(followsLaunch: false),
-        scriptServices: SceneScriptServices(prelude: SceneScriptPrelude.load(),
-                                            storage: SceneScriptStorage(directory: SceneScriptStorage.defaultDirectory),
-                                            media: MacMediaSessionSource(),
-                                            spectrum: { WallpaperServices.shared.audioSpectrumSnapshot }))
+    private lazy var sceneHost = Self.makeSceneHost()
 
     /// `messaging` nil: the login session's (`DistributedAppProcessMessaging`).
     init(initialFolder: URL?, messaging: AppProcessMessaging? = nil, channel: AppProcessChannel = .current) {
         self.initialFolder = initialFolder
         self.messaging = messaging ?? DistributedAppProcessMessaging()
         self.channel = channel
+        super.init()
+        OWELog.info(.app, "WallpaperEditorAppDelegate created (pid \(ProcessInfo.processInfo.processIdentifier))")
+    }
+
+    static func makeSceneHost() -> SceneWallpaperHost {
+        SceneWallpaperHost(
+            settings: GlobalSettingsViewModel(followsLaunch: false),
+            scriptServices: SceneScriptServices(prelude: SceneScriptPrelude.load(),
+                                                storage: SceneScriptStorage(directory: SceneScriptStorage.defaultDirectory),
+                                                media: MacMediaSessionSource(),
+                                                spectrum: { WallpaperServices.shared.audioSpectrumSnapshot }))
     }
 
     // MARK: NSApplicationDelegate
