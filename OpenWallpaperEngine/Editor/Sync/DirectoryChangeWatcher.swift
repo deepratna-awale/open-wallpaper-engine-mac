@@ -7,26 +7,33 @@ import Foundation
 final class DirectoryChangeWatcher {
     let directory: URL
     private let debounce: TimeInterval
+    private let createsMissingDirectory: Bool
     private let onChange: @MainActor () -> Void
     private var source: DispatchSourceFileSystemObject?
     private var pending: DispatchWorkItem?
 
-    init(directory: URL, debounce: TimeInterval = 0.2, onChange: @escaping @MainActor () -> Void) {
+    /// `createsMissingDirectory` false: a missing folder (a user's folder on an unmounted volume)
+    /// isn't made, and `start()` fails instead.
+    init(directory: URL, debounce: TimeInterval = 0.2, createsMissingDirectory: Bool = true,
+         onChange: @escaping @MainActor () -> Void) {
         self.directory = directory
         self.debounce = debounce
+        self.createsMissingDirectory = createsMissingDirectory
         self.onChange = onChange
     }
 
-    /// Starts watching, making the folder when it doesn't exist yet. False when it can't be opened
-    /// (logged).
+    /// Starts watching, making the folder when it doesn't exist yet (unless told not to). False when
+    /// it can't be opened (logged).
     @discardableResult
     func start() -> Bool {
         guard source == nil else { return true }
-        do {
-            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        } catch {
-            OWELog.error(.app, "Can't create \(directory.path) to watch it: \(error)")
-            return false
+        if createsMissingDirectory {
+            do {
+                try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            } catch {
+                OWELog.error(.app, "Can't create \(directory.path) to watch it: \(error)")
+                return false
+            }
         }
         let descriptor = open(directory.path(percentEncoded: false), O_EVTONLY)
         guard descriptor >= 0 else {

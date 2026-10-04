@@ -22,6 +22,12 @@ struct DisplayPlaybackSources: @unchecked Sendable {
     var onBattery: () -> Bool
     /// The running applications' bundle identifiers by process (Application Rules). Main thread.
     var applications: () -> [pid_t: String] = { [:] }
+    /// The bundle identifiers of the processes playing sound now, this app's left out
+    /// (Application Rules' "is playing audio"). Any thread.
+    var audioProcesses: () -> Set<String> = { [] }
+    /// Starts following which processes play sound; `changed` is called on any thread when that
+    /// changes. The returned closure stops following.
+    var observeAudioProcesses: (_ changed: @escaping @Sendable () -> Void) -> (() -> Void) = { _ in {} }
 }
 
 extension DisplayPlaybackSources {
@@ -31,6 +37,7 @@ extension DisplayPlaybackSources {
     static func system(showsWebWallpaper: @escaping @MainActor () -> Bool) -> DisplayPlaybackSources {
         let ownPID = ProcessInfo.processInfo.processIdentifier
         let audio = OtherApplicationAudio(ownPID: ownPID)
+        let audioProcesses = ProcessAudioOutputWatch(ownPID: ownPID)
         return DisplayPlaybackSources(
             windows: { DesktopWindowList.onScreen() },
             displays: { DesktopWindowList.displays() },
@@ -52,6 +59,11 @@ extension DisplayPlaybackSources {
                     if let bundleIdentifier = app.bundleIdentifier { applications[app.processIdentifier] = bundleIdentifier }
                 }
                 return applications
+            },
+            audioProcesses: { audioProcesses.playingBundleIdentifiers },
+            observeAudioProcesses: { changed in
+                audioProcesses.start(changed: changed)
+                return { audioProcesses.stop() }
             })
     }
 }

@@ -611,17 +611,7 @@ private final class SceneInspectorModel: ObservableObject {
     }
 
     private static func sceneSize(for scene: WEScene) -> SIMD2<Double> {
-        if case .orthographic(let width, let height) = scene.general.projection {
-            return SIMD2<Double>(Double(width), Double(height))
-        }
-        let bounds = scene.objects.compactMap { object -> SIMD2<Double>? in
-            guard let origin = object.origin?.parseVector3(), let size = object.size?.parseVector2() else { return nil }
-            return SIMD2<Double>(origin.0 + size.0 / 2, origin.1 + size.1 / 2)
-        }
-        guard let width = bounds.map(\.x).max(), let height = bounds.map(\.y).max(), width > 0, height > 0 else {
-            return SIMD2<Double>(1920, 1080)
-        }
-        return SIMD2<Double>(width, height)
+        LivePhotoSceneSize.of(scene)
     }
 
     private static func rawObject(_ rawObject: String, settingOrigin origin: String) -> String {
@@ -917,9 +907,11 @@ private final class SceneInspectorModel: ObservableObject {
 
 extension AppDelegate {
     /// `scopes`: whose properties its edits change (`WallpaperViewModel.editedPropertyScopes`).
-    func showSceneInspector(for wallpaper: WEWallpaper, scopes: [WallpaperPropertyScope] = [.shared]) {
+    /// `mode`: the mode it opens in (an MCP client's `editor_set_tab`).
+    func showSceneInspector(for wallpaper: WEWallpaper, scopes: [WallpaperPropertyScope] = [.shared],
+                            mode: SceneInspectorMode = .wallpaper) {
         if let sceneInspectorWindow {
-            sceneInspectorWindow.contentView = Self.sceneInspectorContent(wallpaper, scopes)
+            sceneInspectorWindow.contentView = Self.sceneInspectorContent(wallpaper, scopes, mode)
             // A closed inspector (kept, not released) edits again.
             if !sceneInspectorWindow.isVisible { WallpaperServices.shared.propertyEditing.begin() }
             sceneInspectorWindow.makeKeyAndOrderFront(nil)
@@ -933,7 +925,7 @@ extension AppDelegate {
         )
         window.title = String(localized: "Scene Editor (Live)")
         window.isReleasedWhenClosed = false
-        window.contentView = Self.sceneInspectorContent(wallpaper, scopes)
+        window.contentView = Self.sceneInspectorContent(wallpaper, scopes, mode)
         window.center()
         // The inspector edits properties while it is open (`ScenePropertyEditing`). The window is
         // kept for the app's life, and so is this observer.
@@ -953,8 +945,9 @@ extension AppDelegate {
 
     /// The window can't shrink below the view's minimum size: a smaller window laid the columns
     /// out at their minimum and centred them, pushing their tops under the toolbar.
-    private static func sceneInspectorContent(_ wallpaper: WEWallpaper, _ scopes: [WallpaperPropertyScope]) -> NSView {
-        let view = NSHostingView(rootView: SceneInspectorView(wallpaper: wallpaper, scopes: scopes))
+    private static func sceneInspectorContent(_ wallpaper: WEWallpaper, _ scopes: [WallpaperPropertyScope],
+                                              _ mode: SceneInspectorMode) -> NSView {
+        let view = NSHostingView(rootView: SceneInspectorView(wallpaper: wallpaper, scopes: scopes, initialMode: mode))
         view.sizingOptions = [.minSize]
         return view
     }
@@ -969,25 +962,31 @@ struct SceneInspectorView: View {
     private let scopes: [WallpaperPropertyScope]
     @State private var exportModel: LivePhotoExportModel?
     @State private var screenSaverModel: ScreenSaverEditorModel?
+    /// The mode the editor opens in, entered once its scene size is known.
+    private let initialMode: SceneInspectorMode
+    @State private var didEnterInitialMode = false
 
-    init(wallpaper: WEWallpaper, scopes: [WallpaperPropertyScope] = [.shared]) {
+    init(wallpaper: WEWallpaper, scopes: [WallpaperPropertyScope] = [.shared], initialMode: SceneInspectorMode = .wallpaper) {
         self.wallpaper = wallpaper
         self.scopes = scopes
+        self.initialMode = initialMode
     }
 
     var body: some View {
         if let exportModel {
             SceneInspectorContent(wallpaper: wallpaper, scopes: [exportModel.session.scope], isolated: exportModel.session,
-                                  exportModel: exportModel, screenSaverModel: nil, onModeChange: setMode)
+                                  exportModel: exportModel, screenSaverModel: nil, onModeChange: setMode,
+                                  initialMode: .deviceExport)
                 .id(SceneInspectorMode.deviceExport)
         } else if let screenSaverModel {
             SceneInspectorContent(wallpaper: wallpaper, scopes: [screenSaverModel.session.scope],
                                   isolated: screenSaverModel.session, exportModel: nil, screenSaverModel: screenSaverModel,
-                                  onModeChange: setMode)
+                                  onModeChange: setMode, initialMode: .screenSaver)
                 .id(SceneInspectorMode.screenSaver)
         } else {
             SceneInspectorContent(wallpaper: wallpaper, scopes: scopes, isolated: nil, exportModel: nil,
-                                  screenSaverModel: nil, onModeChange: setMode)
+                                  screenSaverModel: nil, onModeChange: setMode,
+                                  initialMode: didEnterInitialMode ? .wallpaper : initialMode)
                 .id(SceneInspectorMode.wallpaper)
         }
     }
@@ -996,6 +995,7 @@ struct SceneInspectorView: View {
     /// Screen Saver mode then takes its own saved choices, when it has any); leaving it drops
     /// them, once its preview (and with it the private instance) is gone.
     private func setMode(_ mode: SceneInspectorMode, sceneSize: SIMD2<Double>) {
+        didEnterInitialMode = true
         leaveIsolatedModes(except: mode)
         switch mode {
         case .deviceExport:
@@ -1052,6 +1052,9 @@ private struct SceneInspectorContent: View {
     private let exportModel: LivePhotoExportModel?
     private let screenSaverModel: ScreenSaverEditorModel?
     private let onModeChange: (SceneInspectorMode, SIMD2<Double>) -> Void
+    /// The mode to enter once the scene's size is known (`showSceneInspector(…mode:)`). An isolated
+    /// mode's content passes its own mode, so appearing doesn't switch straight back to Wallpaper.
+    private let initialMode: SceneInspectorMode
 
     private var mode: SceneInspectorMode {
         if exportModel != nil { return .deviceExport }
@@ -1060,7 +1063,8 @@ private struct SceneInspectorContent: View {
 
     init(wallpaper: WEWallpaper, scopes: [WallpaperPropertyScope], isolated: IsolatedSceneEditSession?,
          exportModel: LivePhotoExportModel?, screenSaverModel: ScreenSaverEditorModel?,
-         onModeChange: @escaping (SceneInspectorMode, SIMD2<Double>) -> Void) {
+         onModeChange: @escaping (SceneInspectorMode, SIMD2<Double>) -> Void, initialMode: SceneInspectorMode = .wallpaper) {
+        self.initialMode = initialMode
         wallpaperDirectory = wallpaper.wallpaperDirectory
         self.wallpaper = wallpaper
         self.scopes = scopes
@@ -1100,6 +1104,7 @@ private struct SceneInspectorContent: View {
             .onAppear {
                 selectedID = model.initiallySelectedID
                 loadSelectedTextures()
+                if initialMode != mode, LivePhotoExportModel.isEligible(wallpaper) { onModeChange(initialMode, model.sceneSize) }
             }
             .onChange(of: selectedID) { _, _ in loadSelectedTextures() }
             .onDisappear {

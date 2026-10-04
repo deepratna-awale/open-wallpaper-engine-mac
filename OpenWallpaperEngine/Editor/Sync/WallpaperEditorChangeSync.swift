@@ -12,6 +12,10 @@ import OWESceneEditing
 ///   through a file beside the overlay (`SceneEditLiveFiles`), at most `previewInterval` apart.
 ///   The app also watches the overlay folder (`DirectoryChangeWatcher`), so a save whose message
 ///   was missed still arrives; the same overlay twice is applied once.
+/// - **App → editor.** An MCP client's edit, which the app saves and applies itself
+///   (`HeadlessSceneDocument`), is announced (`appOverlayDidSave`, with the undo step's name); the
+///   editor's open window of the wallpaper takes it as an undo step of its own, so Undo there
+///   undoes it, and that Undo comes back to the app as any editor save does.
 /// - **Both ways.** A wallpaper's saved user properties (`wallpaperPropertiesDidSave`) reach the
 ///   other process's running store, and a wallpaper added to the library (Save as Local
 ///   Wallpaper) refreshes the app's library.
@@ -58,9 +62,12 @@ final class WallpaperEditorChangeSync {
         static let appliesProperties = Role(rawValue: 1 << 2)
         /// Requests for a Settings page (Assets, Plugins › Depth Map Generation: the app).
         static let opensSettings = Role(rawValue: 1 << 3)
+        /// Overlays Open Wallpaper Engine saved for an MCP client, which an open window takes as an
+        /// undo step (the editor).
+        static let adoptsAppEdits = Role(rawValue: 1 << 4)
 
         static let app: Role = [.appliesEditorChanges, .refreshesLibrary, .appliesProperties, .opensSettings]
-        static let editor: Role = [.appliesProperties]
+        static let editor: Role = [.appliesProperties, .adoptsAppEdits]
     }
 
     /// The gap between two drag previews another process draws.
@@ -78,6 +85,9 @@ final class WallpaperEditorChangeSync {
     var onLibraryChange: (() -> Void)?
     /// The editor asked for a Settings page.
     var onOpenSettings: ((AppSettingsRequest) -> Void)?
+    /// Open Wallpaper Engine saved the overlay of the wallpaper in the folder for an MCP client, as
+    /// the named undo step, or as its Undo or Redo (the editor's process).
+    var onAppOverlay: ((URL, String, AppProcessChannel.OverlayStep) -> Void)?
 
     private var identities: [URL: WallpaperSettingsIdentity] = [:]
     /// Each wallpaper's overlay as last applied here: a message and the folder watcher reporting
@@ -129,6 +139,13 @@ final class WallpaperEditorChangeSync {
             for request in AppSettingsRequest.allCases {
                 on(request.message) { sync, _ in sync.onOpenSettings?(request) }
             }
+        }
+        if role.contains(.adoptsAppEdits) {
+            tokens.append(messaging.observe(channel.name(.appOverlayDidSave)) { [weak self] sender, info in
+                guard let self, sender != self.dependencies.sender, let path = info[AppProcessChannel.folderKey] else { return }
+                let step = info[AppProcessChannel.stepKey].flatMap(AppProcessChannel.OverlayStep.init(rawValue:)) ?? .edit
+                self.onAppOverlay?(URL(filePath: path, directoryHint: .isDirectory), info[AppProcessChannel.actionKey] ?? "", step)
+            })
         }
         if role.contains(.appliesProperties) {
             on(.propertiesDidSave) { sync, folder in folder.map { sync.applySavedProperties(of: $0) } }
@@ -205,6 +222,17 @@ final class WallpaperEditorChangeSync {
         }
     }
 
+    /// Open Wallpaper Engine saved `folder`'s overlay for an MCP client and applied it to its own
+    /// instances (`HeadlessSceneDocument`): the same overlay from the folder watcher isn't applied
+    /// again, and the editor's open window of the wallpaper takes it as the undo step `actionName`
+    /// (the client's Undo or Redo, `step`: undoes or redoes that step).
+    func appOverlayDidSave(folder: URL, overlay: SceneEditOverlay, actionName: String,
+                           step: AppProcessChannel.OverlayStep = .edit) {
+        applied[Self.normalized(folder)] = overlay
+        send(.appOverlayDidSave, folder: folder,
+             extra: [AppProcessChannel.actionKey: actionName, AppProcessChannel.stepKey: step.rawValue])
+    }
+
     /// A wallpaper was added to the library.
     func libraryDidChange() {
         send(.libraryDidChange, folder: nil)
@@ -239,8 +267,8 @@ final class WallpaperEditorChangeSync {
         liveFiles.remove(for: identity)
     }
 
-    private func send(_ message: AppProcessChannel.Message, folder: URL?) {
-        var info: [String: String] = [:]
+    private func send(_ message: AppProcessChannel.Message, folder: URL?, extra: [String: String] = [:]) {
+        var info = extra
         if let folder { info[AppProcessChannel.folderKey] = Self.normalized(folder).path }
         dependencies.messaging.post(dependencies.channel.name(message), sender: dependencies.sender, userInfo: info)
     }

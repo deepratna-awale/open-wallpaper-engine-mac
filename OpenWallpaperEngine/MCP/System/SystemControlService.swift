@@ -1,0 +1,45 @@
+import Foundation
+
+/// What the control channel's system requests (`SystemControlRequests`) do in the app: the Scene
+/// Editor (Live)'s iPhone & iPad Export and Screen Saver modes, the screen saver's daily
+/// re-recording and Settings › General's lock-screen picture, through the code those use
+/// (`AppSystemControlService`), or a fake in tests. Every call is on the main actor.
+@MainActor
+protocol SystemControlService: AnyObject {
+    // MARK: iPhone & iPad Export
+
+    /// What the export mode remembers: the device, "Also Save to Photos Album" and its album.
+    var exportDefaults: SystemExportDefaults { get }
+    /// The scene's authored size, which the crop is measured in.
+    func sceneSize(of wallpaper: ControlWallpaper) throws -> SIMD2<Double>
+    /// Renders a Live Photo as the mode's Save does, and waits for it.
+    func exportLivePhoto(_ request: SystemLivePhotoRequest) async throws -> SystemLivePhotoResult
+
+    // MARK: Screen saver
+
+    var screenSaver: SystemScreenSaverState { get }
+    /// The scene's layers as scene.json lists them.
+    func layers(of wallpaper: ControlWallpaper) throws -> [SystemSceneLayer]
+    /// The values the screen saver records the wallpaper with: its own saved choices, or the
+    /// wallpaper's values while it has none.
+    func screenSaverValues(of wallpaper: ControlWallpaper) throws -> SystemScreenSaverValues
+    /// Saves `values` as the screen saver's choices for the wallpaper, as the Screen Saver mode
+    /// does; false when nothing was saved because they are the wallpaper's own values, which the
+    /// screen saver follows until its choices first differ.
+    func setScreenSaverValues(_ values: [String: String], of wallpaper: ControlWallpaper) throws -> Bool
+    /// "Record and Set as Screen Saver", waiting for the recording.
+    func recordScreenSaver(_ wallpaper: ControlWallpaper) async throws -> SystemScreenSaverRecording
+    /// "Stop Using as Screen Saver".
+    func stopUsingScreenSaver()
+    var schedule: SystemScreenSaverSchedule { get }
+    func setScheduleEnabled(_ enabled: Bool)
+    func setScheduleTime(hour: Int, minute: Int)
+
+    // MARK: Lock screen
+
+    var lockScreen: SystemLockScreenState { get }
+    /// Settings › General › "Show Wallpaper on Lock Screen".
+    func setLockScreenEnabled(_ enabled: Bool)
+    /// Shows the followed wallpaper's snapshot on every display now, as turning the setting on does.
+    func refreshLockScreen()
+}

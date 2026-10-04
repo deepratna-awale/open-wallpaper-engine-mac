@@ -16,6 +16,7 @@ class ContentViewModel: ObservableObject, DropDelegate {
     
     @AppStorage("FRShowOnly", store: .app)                   public var showOnly                     =                   FRShowOnly.all
     @AppStorage("FRType", store: .app)                       public var type                         =                       FRType.all
+    @AppStorage("FRCategory", store: .app)                   public var category                     =                   FRCategory.all
     @AppStorage("FRAgeRating", store: .app)                  public var ageRating                    =                  FRAgeRating.all
     @AppStorage("FRWidescreenResolution", store: .app)       public var widescreenResolution         =       FRWidescreenResolution.all
     @AppStorage("FRUltraWidescreenResolution", store: .app)  public var ultraWidescreenResolution    =  FRUltraWidescreenResolution.all
@@ -65,7 +66,15 @@ class ContentViewModel: ObservableObject, DropDelegate {
         }
         return svc
     }()
-    lazy var workshopVM: WorkshopViewModel = WorkshopViewModel(steamCmd: steamCmd)
+    /// Workshop wallpapers and authors hidden from the Workshop and Discover tabs.
+    lazy var workshopBlockList = WorkshopBlockList()
+    lazy var workshopVM: WorkshopViewModel = {
+        let model = WorkshopViewModel(steamCmd: steamCmd, blockList: workshopBlockList)
+        model.showsBrowser = { [weak self] in self?.topTabBarSelection = 1 }
+        return model
+    }()
+    /// The Discover tab's lists.
+    lazy var discoverVM = WorkshopDiscoverViewModel(blockList: workshopBlockList)
     private var steamCmdCancellable: AnyCancellable?
 
     @Published var searchText = ""
@@ -134,9 +143,11 @@ class ContentViewModel: ObservableObject, DropDelegate {
     /// Reads the Steam tags of installed wallpapers whose project.json has too few.
     private let tagSync = InstalledWorkshopTagSync()
 
-    /// The Installed wallpapers, before search and filters: no asset items, no dependency-only items.
-    private var allWallpapers: [WEWallpaper] {
+    /// The Installed wallpapers, before search and filters: the storage folder's and the library
+    /// folders', without asset items or dependency-only items.
+    var allWallpapers: [WEWallpaper] {
         let wallpapers = library.wallpapers(in: FileManager.default.wallpapersDirectory,
+                                            libraryFolders: LibraryFolders().folders,
                                             hiding: steamCmd.dependencyIndex.ids)
         tagSync.schedule(wallpapers)
         return wallpapers
@@ -160,17 +171,24 @@ class ContentViewModel: ObservableObject, DropDelegate {
     /// shown in an alert.
     func deleteWallpapers(at directories: [URL], toTrash: Bool, wallpaperViewModel: WallpaperViewModel) {
         Task { @MainActor in
-            let result: (deleted: [URL], failure: WallpaperDeletion.Failure?) = await Task.detached(priority: .userInitiated) {
-                WallpaperDeletion.delete(directories, toTrash: toTrash)
-            }.value
-            for directory in result.deleted { forgetDeletedWallpaper(at: directory) }
-            for directory in directories { wallpaperViewModel.removeWallpaperFromAllScreens(directory: directory) }
-            removeUnusedWorkshopDependencies()
-            if let failure = result.failure {
+            if let failure = await deleteWallpapersNow(at: directories, toTrash: toTrash, wallpaperViewModel: wallpaperViewModel) {
                 deletionAlertError = failure
                 deletionAlertPresented = true
             }
         }
+    }
+
+    /// `deleteWallpapers`' steps, awaited: returns the failure instead of showing it (the MCP
+    /// `wallpaper_delete` tool answers with it).
+    @MainActor func deleteWallpapersNow(at directories: [URL], toTrash: Bool,
+                                        wallpaperViewModel: WallpaperViewModel) async -> WallpaperDeletion.Failure? {
+        let result: (deleted: [URL], failure: WallpaperDeletion.Failure?) = await Task.detached(priority: .userInitiated) {
+            WallpaperDeletion.delete(directories, toTrash: toTrash)
+        }.value
+        for directory in result.deleted { forgetDeletedWallpaper(at: directory) }
+        for directory in directories { wallpaperViewModel.removeWallpaperFromAllScreens(directory: directory) }
+        removeUnusedWorkshopDependencies()
+        return result.failure
     }
 
     /// After wallpapers were deleted: removes the dependency-only items none of the remaining ones use.
@@ -255,6 +273,7 @@ class ContentViewModel: ObservableObject, DropDelegate {
                 break
             }
             guard self.type.contains(type) else { return false }
+            guard self.category.contains(FRCategory.of(wallpaper)) else { return false }
             
             // 
             
@@ -481,8 +500,7 @@ class ContentViewModel: ObservableObject, DropDelegate {
     public func reset() {
         self.showOnly                   = .none // notice it's show ONLY, it acts oppositely to the others
         self.type                       = .all
-        self.ageRating                  = .all
-        self.type                       = .all
+        self.category                   = .all
         self.ageRating                  = .all
         self.widescreenResolution       = .all
         self.ultraWidescreenResolution  = .all

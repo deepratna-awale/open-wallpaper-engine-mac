@@ -49,6 +49,10 @@ final class WallpaperEditorAppDelegate: NSObject, NSApplicationDelegate, Wallpap
         if let policy = plan.activationPolicy { NSApp.setActivationPolicy(policy) }
         WallpaperEditorMenu.install(WallpaperEditorMenu.make(helpTarget: self, help: #selector(openHelp)))
         requests.start()
+        // An MCP client's edit the app saved: the open window of the wallpaper takes it as an undo step.
+        changeSync.onAppOverlay = { [weak self] folder, actionName, step in
+            self?.editor(of: folder)?.adoptSavedOverlay(actionName: actionName, step: step)
+        }
         changeSync.start()
     }
 
@@ -109,6 +113,20 @@ final class WallpaperEditorAppDelegate: NSObject, NSApplicationDelegate, Wallpap
             showCantOpen(title: wallpaper.project.displayTitle)
             return false
         }
+    }
+
+    /// The open editor of the wallpaper in `folder`, however its path was spelt.
+    private func editor(of folder: URL) -> WallpaperEditorController? {
+        let path = folder.standardizedFileURL.path
+        return editors.first { $0.key.standardizedFileURL.path == path }?.value
+    }
+
+    func closeEditor(of folder: URL) {
+        editor(of: folder)?.window.close()
+    }
+
+    func controlTimeline(of folder: URL, command: String, seconds: Double?) {
+        editor(of: folder)?.controlTimeline(command: command, seconds: seconds)
     }
 
     private func showCantOpen(title: String) {

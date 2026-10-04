@@ -135,6 +135,7 @@ groups:
     - "Desktop*"
     - "Steam*"
     - "ImportedFolder*"
+    - "FolderImport*"
     - "FilterResults*"
     - "SortBy*"
     - "UserProperty*"
@@ -160,4 +161,6 @@ map:
   "OpenWallpaperEngine/UI/**": ["DisplayWallpaperPicture*", "Onboarding*", "WhatsNew*", "FilterResults*", "SortBy*", "Menu*", "Playlist*", "Installed*", "NumericSlider*", "Legal*", "Desktop*", "Display*", "Workshop*", "Steam*", "WallpaperPreset*", "Settings*"]
   "OpenWallpaperEngine/Localizable.xcstrings": ["Localization*"]
   "OpenWallpaperEngine/DepthMaps/**": ["DepthMap*", "DepthParallax*", "Localization*"]
+  "OpenWallpaperEngine/MCP/**": ["MCP*", "Localization*"]
+  "MCPServer/**": ["MCPServerProcess*"]
   "OpenWallpaperEngine/Installs/**": ["VersionedInstall*", "ChromiumEngine*", "DepthMapPlugin*", "WebEngineRouting*"]

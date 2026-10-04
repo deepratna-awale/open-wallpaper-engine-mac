@@ -1,0 +1,108 @@
+import Foundation
+import OWEControlProtocol
+
+/// The system features OWE drives (`docs/mcp.md`): the Scene Editor (Live)'s iPhone & iPad Export
+/// and Screen Saver modes, the screen saver's daily re-recording, and the lock-screen picture. None
+/// of them opens System Settings or makes macOS ask the user for a permission.
+extension MCPToolCatalog {
+    static let systemTools: [MCPTool] = exportTools + screenSaverTools + lockScreenTools
+
+    // MARK: - iPhone & iPad Export
+
+    private static let exportTools: [MCPTool] = [
+        MCPTool("devices_list", title: "List Export Devices",
+                description: "The iPhones and iPads the Scene Editor (Live)'s iPhone & iPad Export mode makes Live Photo lock screens for: each device's id (its name), family, screen size in pixels (portrait) and year, newest first. The query narrows them as the mode's device search does (name, family, year or resolution such as \"1320x2868\").",
+                input: JSONSchema.object([
+                    "query": JSONSchema.string("Words to find in the device's name, family, year or resolution."),
+                ]), annotations: .readOnly) { message($0) },
+        MCPTool("export_settings_get", title: "Get Export Settings",
+                description: "What the iPhone & iPad Export mode remembers (the device, and \"Also Save to Photos Album\" with its album and whether Photos access is granted) and the ranges export_live_photo takes. With wallpaper_id, also the scene's size in scene units, which the crop's centre is measured in.",
+                input: JSONSchema.object([
+                    "wallpaper_id": JSONSchema.string("A scene wallpaper's id from list_wallpapers, to read its scene size.", minLength: 1),
+                ]), annotations: .readOnly) { message($0) },
+        MCPTool("export_live_photo", title: "Export Live Photo",
+                description: "Renders a scene wallpaper as a Live Photo (a HEIC photo and its MOV) for an iPhone or iPad lock screen, as the iPhone & iPad Export mode's Save does, with the wallpaper's own property values and edits, and waits for it (this takes a while). Returns both files' paths. Without output_folder they stay in the app's cache until the mode's next export; when the user has \"Also Save to Photos Album\" on and Photos access granted, it also goes to that album (never asking for access).",
+                input: JSONSchema.object([
+                    "wallpaper_id": JSONSchema.string("A scene wallpaper's id from list_wallpapers.", minLength: 1),
+                    "device": JSONSchema.string("A device's id from devices_list (any case; a search that finds one device works too). Omit it for the device the export remembers.", minLength: 1),
+                    "crop": described(JSONSchema.object([
+                        "zoom": JSONSchema.number("1 shows the largest window at the device's shape the scene covers; up to 3 zooms in.", minimum: 1, maximum: 3),
+                        "center_x": JSONSchema.number("The window's centre, in scene units from the left (export_settings_get gives the scene's size). Omitted: the middle."),
+                        "center_y": JSONSchema.number("The window's centre, in scene units from the top. Omitted: the middle."),
+                    ]), "The part of the scene the lock screen shows, as the mode's drag and pinch set it; kept inside the scene."),
+                    "clip": described(JSONSchema.object([
+                        "start": JSONSchema.number("Seconds into the scene the clip starts. Omitted: the window with the most motion, as the mode picks when it opens.", minimum: 0, maximum: 29),
+                        "length": JSONSchema.number("The clip's length in seconds, 1 to 3 (3 by default).", minimum: 1, maximum: 3),
+                    ]), "The seconds of the scene the Live Photo moves through."),
+                    "settings": described(JSONSchema.object([
+                        "quality": JSONSchema.string("How much the movie is compressed: best (the default), high or smaller.", oneOf: ["best", "high", "smaller"]),
+                        "save_to_photos": JSONSchema.boolean("false leaves this export out of the Photos album. It can't turn the album on when the user's setting is off."),
+                    ]), "The Export Settings."),
+                    "output_folder": JSONSchema.string("An existing folder's absolute path to copy the photo and movie into (files of the same name are replaced).", minLength: 1),
+                ], required: ["wallpaper_id"]), annotations: .change, longRunning: true) { message($0) },
+    ]
+
+    // MARK: - Screen saver
+
+    private static let screenSaverTools: [MCPTool] = [
+        MCPTool("screensaver_get", title: "Get Screen Saver",
+                description: "The screen saver: whether the Screen Saver plugin is on, the recording set as the screen saver (wallpaper, when it was recorded, size), whether a recording is running, and the daily re-recording. With wallpaper_id, also that wallpaper's screen saver version: its layers as the screen saver shows them and its user property values, from the Screen Saver mode's saved choices or else the wallpaper's own.",
+                input: JSONSchema.object([
+                    "wallpaper_id": JSONSchema.string("A wallpaper's id from list_wallpapers.", minLength: 1),
+                ]), annotations: .readOnly) { message($0) },
+        MCPTool("screensaver_set_layers", title: "Set Screen Saver Layers",
+                description: "Shows or hides a scene's layers and sets its user properties in its screen saver version only, as the Scene Editor (Live)'s Screen Saver mode does: saved as the screen saver's own choices for that wallpaper, never touching the desktop. The next recording uses them.",
+                input: JSONSchema.object([
+                    "wallpaper_id": JSONSchema.string("A scene wallpaper's id from list_wallpapers.", minLength: 1),
+                    "layers": JSONSchema.objectArray("Layers to show or hide.", item: JSONSchema.object([
+                        "layer": JSONSchema.string("The layer's id or name, from screensaver_get.", minLength: 1),
+                        "visible": JSONSchema.boolean("true shows it, false hides it."),
+                    ], required: ["layer", "visible"]), maxItems: 500),
+                    "properties": JSONSchema.objectArray("User properties to set, checked as set_user_property checks them.", item: JSONSchema.object([
+                        "key": JSONSchema.string("The property's key, from get_wallpaper.", minLength: 1),
+                        "value": JSONSchema.string("The value as text, as set_user_property takes it."),
+                    ], required: ["key", "value"]), maxItems: 200),
+                ], required: ["wallpaper_id"]), annotations: .idempotent) { message($0) },
+        MCPTool("screensaver_record", title: "Record Screen Saver",
+                description: "\"Record and Set as Screen Saver\" from the Screen Saver mode: records a seamless loop of the scene's screen saver version and makes it the screen saver, waiting for the recording (this takes minutes). It turns the Screen Saver plugin on when it is off, as the mode does. The user picks \"Open Wallpaper Engine\" in System Settings › Screen Saver.",
+                input: JSONSchema.object([
+                    "wallpaper_id": JSONSchema.string("A scene wallpaper's id from list_wallpapers.", minLength: 1),
+                ], required: ["wallpaper_id"]), annotations: .change, longRunning: true) { message($0) },
+        MCPTool("screensaver_stop_using", title: "Stop Using as Screen Saver",
+                description: "\"Stop Using as Screen Saver\": the screen saver goes back to looping the desktop's wallpaper.",
+                annotations: .change) { message($0) },
+        MCPTool("screensaver_schedule_get", title: "Get Screen Saver Schedule",
+                description: "The screen saver's daily re-recording: whether it is on, its time, when it last ran (or was turned on or moved) and when it runs next.",
+                annotations: .readOnly) { message($0) },
+        MCPTool("screensaver_schedule_set", title: "Set Screen Saver Schedule",
+                description: "Turns the daily re-recording (\"Re-record Every Day at\") on or off and sets its time. It records the screen saver's recording again each day while the app runs.",
+                input: JSONSchema.object([
+                    "enabled": JSONSchema.boolean("true turns it on, false off."),
+                    "hour": JSONSchema.integer("The hour, 0 to 23, with enabled true.", minimum: 0, maximum: 23),
+                    "minute": JSONSchema.integer("The minute, 0 to 59, with enabled true.", minimum: 0, maximum: 59),
+                ], required: ["enabled"]), annotations: .idempotent) { message($0) },
+    ]
+
+    // MARK: - Lock screen
+
+    private static let lockScreenTools: [MCPTool] = [
+        MCPTool("lock_screen_get", title: "Get Lock Screen",
+                description: "Settings › General › \"Show Wallpaper on Lock Screen\": whether it is on, the wallpaper whose snapshot it shows, and each display's wallpaper and desktop picture (which the lock screen shows), and whether this copy may change the desktop picture.",
+                annotations: .readOnly) { message($0) },
+        MCPTool("lock_screen_set", title: "Set Lock Screen",
+                description: "Turns \"Show Wallpaper on Lock Screen\" on (the lock screens show the scene's snapshot) or off (the user's own desktop pictures come back), as Settings › General does.",
+                input: JSONSchema.object([
+                    "enabled": JSONSchema.boolean("true turns it on, false off."),
+                ], required: ["enabled"]), annotations: .idempotent) { message($0) },
+        MCPTool("lock_screen_refresh", title: "Refresh Lock Screen",
+                description: "Shows the followed scene's latest snapshot on every display's lock screen now, as turning the setting on does. The setting must be on.",
+                annotations: .change) { message($0) },
+    ]
+
+    /// `schema` (an object) with a description, for an object nested in a tool's arguments.
+    private static func described(_ schema: JSONValue, _ description: String) -> JSONValue {
+        guard case .object(var object) = schema else { return schema }
+        object["description"] = .string(description)
+        return .object(object)
+    }
+}

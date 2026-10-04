@@ -64,6 +64,10 @@ Building from source fetches the Sparkle Swift package on first build. Builds fr
 - **Zip:** File > Import or drag-and-drop a `.zip` file containing wallpaper packages
 - **Manual:** Copy wallpaper folders directly into `~/Documents/Open Wallpaper Engine/`
 
+### Control from MCP Clients
+
+Install the **MCP Server** plugin in *Settings › Plugins* and MCP clients (AI assistants and other tools that speak the Model Context Protocol) can do what the app's own controls do, through a local connection only your account can open: set wallpapers, playback, volume, user properties, playlists and settings; edit scenes through the Wallpaper Editor's edit model (shown live in open editors, with Undo); export Live Photos; and set up the screen saver and the lock-screen picture. Setup, every tool and the security model: [docs/mcp.md](docs/mcp.md).
+
 ## What 1.0.0 Supports
 
 ### Setup, library & updates
@@ -156,6 +160,7 @@ Everything Open Wallpaper Engine saves stays on your Mac: your settings, library
 - `OpenWallpaperEngine/Scene/Rendering/SceneMetalRenderer.swift`, `SceneShaders.metal` — the Metal scene renderer and shader library
 - `OpenWallpaperEngine/Workshop/SteamCmdService.swift`, `WorkshopAPIService.swift`, `WorkshopViewModel.swift` — Steam Workshop browsing and downloads
 - `OpenWallpaperEngine/Library/WallpaperDirectory.swift`, `ZipImporter.swift`, `WallpaperPackageConverter.swift` — library storage, import, and package conversion
+- `OpenWallpaperEngine/MCP/`, `Packages/OWEControl/`, `MCPServer/` — the MCP Server plugin: the app's control socket and the `owe-mcp` server ([docs/mcp.md](docs/mcp.md))
 - `Scripts/fill-assets-cache.sh` — development helper: copies the assets subset of a Wallpaper Engine install into a local folder or the Wallpaper Storage cache
 - `Scripts/scene-api-coverage.py` — reports which SceneScript APIs installed wallpapers use versus what is implemented
 

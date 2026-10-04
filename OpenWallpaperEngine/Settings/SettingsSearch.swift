@@ -18,7 +18,9 @@ enum SettingsAnchor {
     static let assets = "assets"
     static let steamCmd = "steamcmd"
     static let storage = "storage"
+    static let libraryFolders = "libraryfolders"
     static let apiKey = "apikey"
+    static let blockList = "blocklist"
     static let updates = "updates"
     static let privacy = "privacy"
     static let legal = "legal"
@@ -31,6 +33,7 @@ enum SettingsAnchor {
     static let plugins = "plugins"
     static let chromium = "chromium"
     static let depthMaps = "depthmaps"
+    static let mcpServer = "mcpserver"
 }
 
 /// Search in Settings: the settings people look for, where they are, and the matches for a query.
@@ -96,6 +99,8 @@ struct SettingsSearch {
             entry("Wallpaper Engine Assets", .assets, SettingsAnchor.assets),
             entry("SteamCMD", .assets, SettingsAnchor.steamCmd),
             entry("Wallpaper Storage", .assets, SettingsAnchor.storage),
+            entry("Library Folders", .assets, SettingsAnchor.libraryFolders),
+            entry("Manage Blocklist", .assets, SettingsAnchor.blockList),
             entry("Steam Web API Key", .assets, SettingsAnchor.apiKey),
 
             entry("Update automatically", .updates, SettingsAnchor.updates),
@@ -118,6 +123,7 @@ struct SettingsSearch {
             entry("Screen Saver", .plugins, SettingsAnchor.plugins),
             entry("Depth Map Generation", .plugins, SettingsAnchor.depthMaps),
             entry("Chromium web engine", .plugins, SettingsAnchor.chromium),
+            entry("MCP Server", .plugins, SettingsAnchor.mcpServer),
 
             entry("Credits", .about, nil),
         ] + AppShortcut.all.map { entry($0.title, .general, SettingsAnchor.shortcuts) }

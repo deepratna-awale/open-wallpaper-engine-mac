@@ -108,7 +108,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
         return launcher
     }()
-    private lazy var editorChangeSync: WallpaperEditorChangeSync = {
+    private(set) lazy var editorChangeSync: WallpaperEditorChangeSync = {
         let sync = WallpaperEditorChangeSync(role: .app, dependencies: .init(messaging: processMessaging, channel: .current))
         sync.onLibraryChange = { [weak self] in self?.contentViewModel.refresh() }
         sync.onOpenSettings = { [weak self] in self?.openSettings(for: $0) }
@@ -138,6 +138,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     /// the desktop's left clicks.
     /// Settings › Plugins › Screen Saver: the loop videos and the bundled saver.
     lazy var screenSaver = ScreenSaverPlugin()
+    /// Settings › Plugins › MCP Server: MCP clients' control of the app while installed (`MCP/`).
+    private(set) lazy var mcpServerPlugin: MCPServerPlugin = {
+        let model = AppControlModel(app: self)
+        let router = ControlRequestRouter(model: model, groups: [
+            SceneControlRequests.make(app: self, model: model),
+            LibraryControlRequests.make(app: self, model: model),
+            SystemControlRequests.make(app: self, model: model),
+        ])
+        return MCPServerPlugin(handler: { request in await router.handle(request) })
+    }()
     /// The Scene Editor (Live)'s Screen Saver mode's recordings, set as the screen saver.
     lazy var screenSaverRecordings = ScreenSaverRecordingService(plugin: screenSaver, environment: .init(
         screens: {
@@ -172,6 +182,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         contentViewModel?.steamCmd.detectSteamCmd()
     })
     private var assetsCancellable: AnyCancellable?
+    /// Lists wallpapers added to or removed from the library folders as they change.
+    private lazy var libraryFolderWatcher: LibraryFolderWatcher = {
+        let watcher = LibraryFolderWatcher()
+        watcher.onChange = { [weak self] in self?.contentViewModel.refresh() }
+        return watcher
+    }()
     /// Fetches the Workshop items shown wallpapers borrow assets from.
     lazy var workshopDependencies = WorkshopDependencyService(steamCmd: contentViewModel.steamCmd)
     private var workshopDependencyCancellable: AnyCancellable?
@@ -194,6 +210,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         reloadWallpapers: { [weak self] in MainActor.assumeIsolated { self?.rebuildWallpaperWindows() } })
     /// Settings › Performance › Playback, per display (`App/Playback`).
     private(set) lazy var displayPlaybackMonitor = makeDisplayPlaybackMonitor()
+    /// Saved display profiles, which application rules' "Load profile" loads. None until display
+    /// layouts can be saved; that feature sets its own here.
+    var displayProfiles: any DisplayProfileLoading = UnavailableDisplayProfiles()
+    /// Application rules' load actions, and the restore when no rule matches any more.
+    private(set) lazy var applicationRuleLoader = makeApplicationRuleLoader()
     /// Advanced › "Pause when VRAM is exhausted", fed to `displayPlaybackMonitor`.
     private(set) lazy var videoMemoryWatch = makeVideoMemoryWatch()
     private var videoMemorySettingCancellable: AnyCancellable?
@@ -216,7 +237,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         super.init()
         OWELog.info(.app, "AppDelegate created (pid \(ProcessInfo.processInfo.processIdentifier))")
         if AppLaunchMode.parse(CommandLine.arguments).isWallpaperEditor {
-            OWELog.error(.app, "AppDelegate created in the Wallpaper Editor's process: something there reached AppDelegate.shared")
+            let caller = Thread.callStackSymbols.prefix(12).joined(separator: "\n")
+            OWELog.error(.app, "AppDelegate created in the Wallpaper Editor's process: something there reached AppDelegate.shared from\n\(caller)")
+            // Debug builds stop here; a release keeps running with the app's delegate made.
+            assertionFailure("AppDelegate.shared reached in the Wallpaper Editor's process")
         }
     }
     
@@ -231,6 +255,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             // After the change is applied, so the old wallpaper counts as no longer shown.
             DispatchQueue.main.async { self?.staleBundleRefresher?.shownWallpapersChanged() }
         }
+
+        libraryFolderWatcher.watch(LibraryFolders().folders)
 
         // New or removed assets: scripts, the library (default wallpapers) and every scene reload.
         assetsCancellable = assets.assetsChanged.sink { [weak self] in
@@ -324,6 +350,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     
 // MARK: - delegate methods
+    /// Settings › Library Folders changed: watch the new set and list its wallpapers.
+    func libraryFoldersDidChange() {
+        libraryFolderWatcher.watch(LibraryFolders().folders)
+        contentViewModel.refresh()
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         // A test copy wears "TEST", a local build "Dev", on its Dock icon (`DockBadge`).
         DockBadge.current.apply()
@@ -353,6 +385,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
         // Registers the playlists' global shortcuts.
         _ = playlistShortcuts
+
+        // MCP clients connect once the app is set up, while the MCP Server plugin is installed.
+        mcpServerPlugin.start()
 
         // Launched into the menu bar only, the Dock icon goes until a window opens.
         dockPresence.start()
@@ -429,8 +464,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     
     func applicationWillTerminate(_ notification: Notification) {
+        // What an application rule loaded isn't the user's choice: the saved wallpapers and
+        // playlist go back to theirs before they are stored for the next launch.
+        if applicationRuleLoader.isHoldingRestorePoint { applicationRuleLoader.update(nil) }
         safeRestart.applicationWillTerminate()
         crashWatcher.applicationWillTerminate()
+        mcpServerPlugin.stop()
         updater.stopShaderPrewarm()
         // The lock-screen pictures go back to each display's own picture, the rest to the one saved
         // at launch.
@@ -550,9 +589,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         settingsNavigation.toolbar = toolbar
 
         self.settingsWindow.toolbar = toolbar
+        let ruleLibrary = ApplicationRuleLibrary(
+            wallpapers: { [weak self] in self?.contentViewModel.allWallpapers ?? [] },
+            playlists: { [weak self] in self?.wallpaperViewModel.playlists ?? [] },
+            profiles: { [weak self] in self?.displayProfiles ?? UnavailableDisplayProfiles() })
         self.settingsWindow.contentView = NSHostingView(rootView: SettingsView()
             .environmentObject(self.globalSettingsViewModel)
-            .environmentObject(settingsNavigation))
+            .environmentObject(settingsNavigation)
+            .environment(\.applicationRuleLibrary, ruleLibrary))
 
         // A saved frame is the size and place the user left the window at; only the first open
         // gets the computed size. The frame autosaves into UserDefaults.standard, which an

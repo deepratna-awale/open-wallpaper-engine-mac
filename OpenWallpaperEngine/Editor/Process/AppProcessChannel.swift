@@ -2,8 +2,9 @@ import Foundation
 
 /// The messages Open Wallpaper Engine and its Wallpaper Editor process exchange, through the
 /// login session's distributed notification centre. A message is a name and, at most, a
-/// wallpaper's folder as its key: never the edits or any other data, which each process reads
-/// from the files and defaults they share.
+/// wallpaper's folder as its key, with an undo step's name or a timeline command where the message
+/// says: never the edits or any other data, which each process reads from the files and defaults
+/// they share.
 ///
 /// Names carry the process's isolation (`AppStorageLocation`): an isolated copy only talks to
 /// processes isolated under the same tag, never to the user's own app.
@@ -28,10 +29,32 @@ struct AppProcessChannel: Equatable {
         /// Show the app's Settings › Plugins › Depth Map Generation, where the editor's depth map
         /// section sends the user to install its model.
         case openDepthMapSettings = "app.openDepthMapSettings"
+        /// Open Wallpaper Engine saved a wallpaper's overlay for an MCP client (`HeadlessSceneDocument`):
+        /// the editor's open window of it takes the change as an undo step (`actionKey` names it), or
+        /// undoes or redoes the step it took (`stepKey`).
+        case appOverlayDidSave = "app.overlayDidSave"
+        /// Close the editor window of a wallpaper.
+        case closeWallpaper = "editor.close"
+        /// Play, pause or seek the timeline of a wallpaper's editor window (`timelineCommandKey`,
+        /// `secondsKey`).
+        case timeline = "editor.timeline"
     }
 
     /// The `userInfo` key of the wallpaper's folder.
     static let folderKey = "folder"
+    /// The `userInfo` key of an undo step's name (`appOverlayDidSave`).
+    static let actionKey = "action"
+    /// The `userInfo` key of what the save was (`OverlayStep`, `appOverlayDidSave`).
+    static let stepKey = "step"
+    /// The `userInfo` keys of a timeline command (`play`, `pause`, `seek`) and its time in seconds.
+    static let timelineCommandKey = "command"
+    static let secondsKey = "seconds"
+
+    /// What an MCP client's save of an overlay was: a new undo step, or an Undo or Redo of one,
+    /// which the editor's window follows in its own history.
+    enum OverlayStep: String {
+        case edit, undo, redo
+    }
 
     let prefix: String
 

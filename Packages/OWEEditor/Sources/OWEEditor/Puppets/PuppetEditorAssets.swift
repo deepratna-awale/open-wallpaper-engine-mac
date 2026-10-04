@@ -51,23 +51,23 @@ extension PuppetImage {
 
 /// An image layer's puppet as the wallpaper has it: its model, the rig the model names, the
 /// picture and the layer's animation layers.
-struct PuppetSource {
+public struct PuppetSource {
     /// The layer's `image`: its model JSON.
-    var modelPath: String
+    public var modelPath: String
     /// The model's `material`.
-    var material: String
+    public var material: String
     /// The model's `puppet`, when it has one.
-    var rigPath: String?
-    var image: CGImage?
-    var texture: PuppetImage?
+    public var rigPath: String?
+    public var image: CGImage?
+    public var texture: PuppetImage?
     /// The picture's size in pixels (the layer's `size` when the picture can't be read).
-    var imageSize: SIMD2<Float>
+    public var imageSize: SIMD2<Float>
     /// The rig as the wallpaper has it, with the layer's animation layers.
-    var document: PuppetDocument?
+    public var document: PuppetDocument?
     /// Why the rig couldn't be read.
-    var error: String?
+    public var error: String?
 
-    static func load(layer: SceneLayer, assets: PuppetEditorAssets) -> PuppetSource? {
+    public static func load(layer: SceneLayer, assets: PuppetEditorAssets) -> PuppetSource? {
         guard let modelPath = layer.fields["image"]?.stringValue else { return nil }
         let model = assets.readFile(modelPath).flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] } ?? [:]
         let image = assets.image(modelPath)

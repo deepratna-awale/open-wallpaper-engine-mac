@@ -21,14 +21,7 @@ struct SceneWallpaperView: NSViewRepresentable {
     func makeNSView(context: Context) -> MTKView {
         let view = SceneRenderLoop.makeView()
         let wallpaper = wallpaperViewModel.wallpaper(for: screenId)
-        // The editor's process brings its own; anywhere else the scene runs with the app's.
-        let host = wallpaperViewModel.sceneHost
-            ?? SceneWallpaperHost(settings: AppDelegate.shared.globalSettingsViewModel,
-                                  scriptServices: AppDelegate.shared.sceneScriptServices)
-        let environment = SceneWallpaperEnvironment(wallpapers: wallpaperViewModel,
-                                                    settings: host.settings,
-                                                    scriptServices: host.scriptServices,
-                                                    loadingSnapshots: wallpaperViewModel.loadingSnapshots)
+        let environment = Self.environment(of: wallpaperViewModel)
         let screenId = screenId
         let key = wallpaperViewModel.instanceKey(for: screenId)
         let lease = SceneWallpaperPresenter.Lease(wallpaperViewModel.sceneInstances, key: key) {
@@ -37,6 +30,20 @@ struct SceneWallpaperView: NSViewRepresentable {
         }
         context.coordinator.show(lease, in: view, screenID: screenId)
         return view
+    }
+
+    /// What the model's scenes run with. The editor's process brings its own host; anywhere else the
+    /// scene runs with the app's. A host's canvas isn't a display, so it takes no loading snapshots
+    /// (whose saving updates the lock-screen picture, the app's).
+    static func environment(of wallpaperViewModel: WallpaperViewModel) -> SceneWallpaperEnvironment {
+        if let host = wallpaperViewModel.sceneHost {
+            return SceneWallpaperEnvironment(wallpapers: wallpaperViewModel, settings: host.settings,
+                                             scriptServices: host.scriptServices, loadingSnapshots: nil)
+        }
+        return SceneWallpaperEnvironment(wallpapers: wallpaperViewModel,
+                                         settings: AppDelegate.shared.globalSettingsViewModel,
+                                         scriptServices: AppDelegate.shared.sceneScriptServices,
+                                         loadingSnapshots: wallpaperViewModel.loadingSnapshots)
     }
 
     func updateNSView(_ view: MTKView, context: Context) {

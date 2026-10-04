@@ -10,8 +10,14 @@ import IOKit.ps
 /// woke, the power source changed), at most ten times a second. Windows moved or zoomed within an
 /// application post no event, so while a rule about windows or other applications' audio is on
 /// it also looks twice a second; with those rules off, or the displays asleep, it doesn't poll.
-/// Application Rules never poll: launching, quitting and activating an application, and a window
-/// entering full screen (a Space change), are the events they follow.
+/// Application Rules follow launching, quitting and activating an application, and a window
+/// entering full screen (a Space change); "is playing audio" follows Core Audio's listeners
+/// (`ProcessAudioOutputWatch`). Only "is maximized" polls, once a second and only while one of
+/// its applications runs, since zooming a window posts no event: a window-list read costs about
+/// 0.1 ms of CPU.
+///
+/// Besides each display's playback, the answer names what the first matching rule with a load
+/// action loads (`onLoad`, `ApplicationRuleLoader`).
 ///
 /// The main thread only gathers what AppKit owns (the displays, the active application) and
 /// applies a changed answer. Reading the window list, Core Audio and the power source, and
@@ -23,17 +29,28 @@ final class DisplayPlaybackMonitor {
     static let throttle: TimeInterval = 0.1
     /// How often windows and audio are looked at while a rule needs them.
     static let pollInterval: TimeInterval = 0.5
+    /// How often the windows are looked at while only an "is maximized" application rule needs
+    /// them.
+    static let maximizedRulePollInterval: TimeInterval = 1
 
     private let sources: DisplayPlaybackSources
     private let apply: ([String: DisplayPlayback]) -> Void
+    private let onLoad: (ApplicationRuleLoad?) -> Void
     private(set) var rules = PlaybackRules()
     private(set) var displaysAsleep = false
     /// Video memory ran out (`VideoMemoryWatch`, only while its setting is on).
     private(set) var videoMemoryExhausted = false
     /// The last states handed to `apply`.
     private(set) var states: [String: DisplayPlayback]?
+    /// The last load handed to `onLoad`.
+    private(set) var load: ApplicationRuleLoad?
     private var evaluationPending = false
     private var pollTimer: DispatchSourceTimer?
+    private var pollTimerInterval: TimeInterval?
+    /// An application named by an "is maximized" rule runs, so its windows are polled.
+    private var maximizedRuleApplicationRuns = false
+    /// Stops following Core Audio's processes; set while an "is playing audio" rule is on.
+    private var stopObservingAudioProcesses: (() -> Void)?
     /// Where the expensive reads run; nil reads everything on the calling thread (tests).
     private let scanQueue: DispatchQueue?
     /// What the scan needs from the main thread, and the last answer, shared with `scanQueue`.
@@ -46,9 +63,11 @@ final class DisplayPlaybackMonitor {
 
     init(sources: DisplayPlaybackSources,
          scanQueue: DispatchQueue? = DispatchQueue(label: "OpenWallpaperEngine.DisplayPlaybackMonitor", qos: .utility),
+         onLoad: @escaping (ApplicationRuleLoad?) -> Void = { _ in },
          apply: @escaping ([String: DisplayPlayback]) -> Void) {
         self.sources = sources
         self.scanQueue = scanQueue
+        self.onLoad = onLoad
         self.apply = apply
     }
 
@@ -74,11 +93,15 @@ final class DisplayPlaybackMonitor {
         powerSource = nil
         pollTimer?.cancel()
         pollTimer = nil
+        pollTimerInterval = nil
+        stopObservingAudioProcesses?()
+        stopObservingAudioProcesses = nil
     }
 
     func setRules(_ rules: PlaybackRules) {
         self.rules = rules
         updatePolling()
+        updateAudioProcessObservation()
         evaluate()
     }
 
@@ -115,6 +138,11 @@ final class DisplayPlaybackMonitor {
                             applications: rules.watchesApplications ? sources.applications() : [:],
                             videoMemoryExhausted: videoMemoryExhausted)
         shared.set(inputs: inputs)
+        let maximizedRuns = !rules.maximizedRuleApplications.isDisjoint(with: inputs.applications.values)
+        if maximizedRuns != maximizedRuleApplicationRuns {
+            maximizedRuleApplicationRuns = maximizedRuns
+            updatePolling()
+        }
         generation &+= 1
         let generation = generation
         guard let scanQueue, inputs.needsScan else {
@@ -130,18 +158,29 @@ final class DisplayPlaybackMonitor {
         }
     }
 
-    private func finish(_ next: [String: DisplayPlayback], generation: UInt64) {
-        guard generation == self.generation, next != states else { return }
-        states = next
-        shared.set(states: next)
-        let summary: [String] = next.keys.sorted().map { (screen: String) -> String in "\(screen)=\(next[screen] ?? .run)" }
+    private func finish(_ next: Outcome, generation: UInt64) {
+        guard generation == self.generation, next != shared.outcome else { return }
+        shared.set(outcome: next)
+        if next.load != load {
+            load = next.load
+            onLoad(next.load)
+        }
+        guard next.states != states else { return }
+        states = next.states
+        let summary: [String] = next.states.keys.sorted().map { (screen: String) -> String in "\(screen)=\(next.states[screen] ?? .run)" }
         OWELog.debug(.app, "Playback per display: \(summary.joined(separator: ", "))")
-        apply(next)
+        apply(next.states)
+    }
+
+    /// What the rules ask for: each display's playback, and what a load action loads.
+    struct Outcome: Equatable {
+        var states: [String: DisplayPlayback]
+        var load: ApplicationRuleLoad?
     }
 
     /// The rules' answer for `inputs`, reading the windows, audio and power as they need.
     /// Runs on the scan queue.
-    nonisolated private static func playback(_ inputs: Inputs, sources: DisplayPlaybackSources) -> [String: DisplayPlayback] {
+    nonisolated private static func playback(_ inputs: Inputs, sources: DisplayPlaybackSources) -> Outcome {
         let rules = inputs.rules
         let conditions = rules.watchesWindows || rules.applicationRulesWatchWindows
             ? DesktopWindowLayout.conditions(windows: sources.windows(), displays: inputs.displays,
@@ -153,8 +192,10 @@ final class DisplayPlaybackMonitor {
             displaysAsleep: inputs.displaysAsleep,
             onBattery: rules.watchesPower && sources.onBattery(),
             runningApplications: Set(inputs.applications.values),
+            audioProcesses: rules.applicationRulesWatchAudio ? sources.audioProcesses() : [],
             videoMemoryExhausted: inputs.videoMemoryExhausted)
-        return rules.playback(displays: inputs.displays.map(\.id), conditions: conditions, system: system)
+        return Outcome(states: rules.playback(displays: inputs.displays.map(\.id), conditions: conditions, system: system),
+                       load: rules.load(conditions: conditions, system: system))
     }
 
     /// One poll on the scan queue: hops to the main thread only when the answer changed.
@@ -162,7 +203,7 @@ final class DisplayPlaybackMonitor {
                                          monitor: DisplayPlaybackMonitor?) {
         guard let inputs = shared.inputs else { return }
         let next = playback(inputs, sources: sources)
-        guard next != shared.states else { return }
+        guard next != shared.outcome else { return }
         DispatchQueue.main.async { [weak monitor] in
             // The main thread may have moved on (new rules, displays); evaluate afresh.
             MainActor.assumeIsolated { monitor?.evaluate() }
@@ -190,32 +231,54 @@ final class DisplayPlaybackMonitor {
     private final class Shared: @unchecked Sendable {
         private let lock = NSLock()
         private var _inputs: Inputs?
-        private var _states: [String: DisplayPlayback]?
+        private var _outcome: Outcome?
         var inputs: Inputs? { lock.lock(); defer { lock.unlock() }; return _inputs }
-        var states: [String: DisplayPlayback]? { lock.lock(); defer { lock.unlock() }; return _states }
+        var outcome: Outcome? { lock.lock(); defer { lock.unlock() }; return _outcome }
         func set(inputs: Inputs) { lock.lock(); _inputs = inputs; lock.unlock() }
-        func set(states: [String: DisplayPlayback]) { lock.lock(); _states = states; lock.unlock() }
+        func set(outcome: Outcome) { lock.lock(); _outcome = outcome; lock.unlock() }
     }
 
     // MARK: - Events
 
+    /// The poll's interval while a rule needs it; nil: no poll.
+    var neededPollInterval: TimeInterval? {
+        guard !displaysAsleep else { return nil }
+        if rules.watchesWindows || rules.watchesAudio { return Self.pollInterval }
+        if maximizedRuleApplicationRuns { return Self.maximizedRulePollInterval }
+        return nil
+    }
+
     private func updatePolling() {
-        let needed = (rules.watchesWindows || rules.watchesAudio) && !displaysAsleep
-        guard needed != isPolling else { return }
-        if needed {
+        let needed = neededPollInterval
+        guard needed != pollTimerInterval else { return }
+        pollTimer?.cancel()
+        pollTimer = nil
+        pollTimerInterval = needed
+        if let needed {
             let queue = scanQueue ?? DispatchQueue.main
             let timer = DispatchSource.makeTimerSource(queue: queue)
-            let interval = DispatchTimeInterval.milliseconds(Int(Self.pollInterval * 1000))
+            let interval = DispatchTimeInterval.milliseconds(Int(needed * 1000))
             timer.schedule(deadline: .now() + interval, repeating: interval,
-                           leeway: .milliseconds(Int(Self.pollInterval * 500)))
+                           leeway: .milliseconds(Int(needed * 500)))
             let shared = shared
             let sources = sources
             timer.setEventHandler { [weak self] in Self.poll(shared, sources: sources, monitor: self) }
             timer.resume()
             pollTimer = timer
+        }
+    }
+
+    /// Follows Core Audio's processes while an "is playing audio" rule is on.
+    private func updateAudioProcessObservation() {
+        let needed = rules.applicationRulesWatchAudio
+        guard needed != (stopObservingAudioProcesses != nil) else { return }
+        if needed {
+            stopObservingAudioProcesses = sources.observeAudioProcesses { [weak self] in
+                DispatchQueue.main.async { MainActor.assumeIsolated { self?.setNeedsEvaluation() } }
+            }
         } else {
-            pollTimer?.cancel()
-            pollTimer = nil
+            stopObservingAudioProcesses?()
+            stopObservingAudioProcesses = nil
         }
     }
 
