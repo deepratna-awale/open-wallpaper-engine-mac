@@ -62,10 +62,11 @@ public enum PuppetMDLWriter {
         let morphs = hasMorphs(document) ? document.preserved.morphIndices : nil
         let vertexCount = document.mesh.vertices.count
         let wide = vertexCount > Int(UInt16.max)
+        let channels = document.preserved.textureChannels ?? []
         out.cstring(meshTag)
         out.u32(PuppetVertexLayout.puppet) // the legacy format WE's editor still fills in
         out.u32(1)
-        out.u32(1)
+        out.u32(UInt32(1 + channels.count))
         out.cstring(document.material)
         var flags = document.preserved.meshFlags & ~1
         if wide { flags |= 1 }
@@ -96,6 +97,8 @@ public enum PuppetMDLWriter {
         out.u8(0) // no second position set
         out.u8(0) // no vector4 block
         out.u32(0) // no groups
+        // The texture channels' meshes as they were: their quads are in the image's pixels, not the puppet's mesh.
+        for channel in channels { out.raw([UInt8](channel.bytes)) }
     }
 
     static func boundsOf(_ points: [SIMD2<Float>]) -> (min: SIMD2<Float>, max: SIMD2<Float>) {
@@ -212,7 +215,15 @@ public enum PuppetMDLWriter {
                 }
                 out.blob(blob.bytes)
             }
-            out.u32(0) // A3: no scalar tracks
+            // A3: the texture channels' tracks, one sample a frame (the last held past its end).
+            let channelTracks = clip.channelTracks ?? []
+            out.u32(UInt32(channelTracks.count))
+            for track in channelTracks {
+                out.u32(track.tag)
+                var blob = PuppetMDLOutput()
+                for frame in 0...frames { blob.f32(track.sample(frame)) }
+                out.blob(blob.bytes)
+            }
             out.u8(0)  // A3: no per-bone scalar tracks
             out.u8(0)  // A4: no morph-weight tracks
             let bounds = animatedBounds(document, rig: rig, clip: index)

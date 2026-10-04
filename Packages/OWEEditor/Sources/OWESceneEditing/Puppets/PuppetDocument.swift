@@ -670,6 +670,9 @@ public struct PuppetClip: Codable, Hashable, Sendable {
     /// Flag bits the editor doesn't own, kept.
     public var otherFlags: UInt32
     public var events: [PuppetClipEvent]
+    /// The texture channels' weight tracks (`MDLA` 3's first scalar list, one per channel), as
+    /// the file had them: Wallpaper Engine's editor keys them, this one keeps them.
+    public var channelTracks: [PuppetChannelTrack]?
 
     public init(id: UInt64, name: String, mode: Mode = .loop, fps: Float = 30, frames: Int = 60, tracks: [PuppetTrack] = [],
                 rootMotion: RootMotion? = nil, otherFlags: UInt32 = 0, events: [PuppetClipEvent] = []) {
@@ -699,6 +702,22 @@ public struct PuppetClip: Codable, Hashable, Sendable {
     public mutating func setFrames(_ count: Int) {
         frames = max(1, count)
         for track in tracks.indices { tracks[track].keys = tracks[track].keys.filter { $0.key <= frames } }
+    }
+}
+
+/// One texture channel's weight per frame (`g_BlendMap`), with the u32 the file has before it.
+public struct PuppetChannelTrack: Codable, Hashable, Sendable {
+    public var tag: UInt32
+    public var samples: [Float]
+
+    public init(tag: UInt32, samples: [Float]) {
+        self.tag = tag
+        self.samples = samples
+    }
+
+    /// The weight at `frame`, the last sample past the end.
+    public func sample(_ frame: Int) -> Float {
+        samples.isEmpty ? 0 : samples[max(0, min(frame, samples.count - 1))]
     }
 }
 
@@ -819,6 +838,21 @@ public struct PuppetPreservedData: Codable, Hashable, Sendable {
     /// The first mesh's flags and the u32 after them (flag 0x2), kept for the same vertices.
     public var meshFlags: UInt32 = 0
     public var meshFlagsExtra: UInt32?
+    /// The texture channels' meshes (flag 0x2 after the puppet's), which Wallpaper Engine's
+    /// editor makes; written back as they were.
+    public var textureChannels: [TextureChannelMesh]?
+
+    /// A texture-channel mesh: its quads in the image's pixels, drawn through `material` over the
+    /// image the puppet samples.
+    public struct TextureChannelMesh: Codable, Hashable, Sendable {
+        public var material: String
+        /// `BLENDROWCOUNT`, the u32 after the flags.
+        public var blendRows: UInt32
+        /// The channels its quads name (the largest blend index + 1).
+        public var channelCount: Int
+        /// The mesh record as the file has it, from its material to its groups.
+        public var bytes: Data
+    }
 
     public init() {}
 
