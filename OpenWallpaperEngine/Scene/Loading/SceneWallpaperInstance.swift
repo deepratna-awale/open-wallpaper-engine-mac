@@ -173,8 +173,8 @@ final class SceneWallpaperInstance {
         renderLoop.detach(id)
         displays[id] = nil
         // A display leaving a preview alone silences it.
-        let gain = soundGain
-        renderLoop.perform { $0.sounds.setTargetGain(gain) }
+        let sound = soundTarget
+        renderLoop.perform { $0.sounds.setTarget(level: sound.level, audible: sound.audible) }
     }
 
     var displayCount: Int { displays.count }
@@ -244,12 +244,12 @@ final class SceneWallpaperInstance {
         viewModel.setEmbeddedVideoRate(playback.paused || !shown ? 0 : wallpapers.playRate)
         let presentation = presentation
         let placement = wallpapers.wallpaperPlacement
-        let gain = soundGain
+        let sound = soundTarget
         let limits = FramePacing.Limits(environment.settings.settings, power: PowerPolicyMonitor.shared.policy)
         // Thread boundary: main → render thread (applied before the playback, which reads the rate).
         renderLoop.perform { renderer in
             if let presentation { presentation.apply(to: renderer) } else { renderer.setPlacement(placement) }
-            renderer.sounds.setTargetGain(gain)
+            renderer.sounds.setTarget(level: sound.level, audible: sound.audible)
             renderer.framePacing.limits = limits
         }
         renderLoop.update(playback)
@@ -295,15 +295,23 @@ final class SceneWallpaperInstance {
         return Float(UserDefaults.app.double(forKey: key))
     }
 
-    /// The wallpaper's sound gain (its sound layers fade to it): the app's volume times this
-    /// wallpaper's music volume, and 0 with the app's audio output off, or while muted, paused or
-    /// with its music turned off, as WE's wallpaper volume goes to 0 then. A wallpaper running as
-    /// several instances (displays with different properties) plays from one of them. The playback
-    /// rules silence it only when every display showing the wallpaper is muted, paused or stopped.
-    private var soundGain: Float {
-        guard !isPreviewOnly, let wallpapers = environment.wallpapers, wallpapers.playsAudio(for: key), sceneMusicEnabled,
-              wallpapers.playRate != 0, wallpapers.wallpaperPlayback(of: key).playsSound else { return 0 }
-        return wallpapers.playVolume * sceneMusicVolume
+    /// The wallpaper's sound (`SceneSoundLayers.setTarget`): its level, the app's volume times this
+    /// wallpaper's music volume, which applies at once, and whether it is heard, which fades: not
+    /// with the app's audio output off, or while muted, paused or with its music turned off, as
+    /// WE's wallpaper volume fades to 0 then. A wallpaper running as several instances (displays
+    /// with different properties) plays from one of them. The playback rules silence it only when
+    /// every display showing the wallpaper is muted, paused or stopped.
+    private struct SoundTarget {
+        var level: Float
+        var audible: Bool
+    }
+
+    private var soundTarget: SoundTarget {
+        guard let wallpapers = environment.wallpapers else { return SoundTarget(level: 0, audible: false) }
+        let level = wallpapers.playVolume * sceneMusicVolume
+        let audible = !isPreviewOnly && wallpapers.playsAudio(for: key) && sceneMusicEnabled && wallpapers.playRate != 0
+            && wallpapers.wallpaperPlayback(of: key).playsSound
+        return SoundTarget(level: level, audible: audible)
     }
 
     // MARK: - Setup
@@ -311,7 +319,7 @@ final class SceneWallpaperInstance {
     /// Sets the renderer up before any frame (no frame runs until a display attaches).
     private func configureRenderer(_ renderer: SceneMetalRenderer?) {
         guard let renderer else { return }
-        renderer.sounds.setTargetGain(soundGain)
+        renderer.sounds.setTarget(level: soundTarget.level, audible: soundTarget.audible)
         renderer.scripts.onHalt = { [weak self] error in
             // Thread boundary: `take()` reports it from the renderer's draw, on the render thread.
             DispatchQueue.main.async { MainActor.assumeIsolated { self?.showScriptsHalted(error: error) } }
@@ -449,8 +457,8 @@ final class SceneWallpaperInstance {
             let path = notification.userInfo?["path"] as? String
             MainActor.assumeIsolated {
                 guard let self, path == nil || path == self.viewModel.currentWallpaper.wallpaperDirectory.path else { return }
-                let gain = self.soundGain
-                self.renderLoop.perform { $0.sounds.setTargetGain(gain) }
+                let sound = self.soundTarget
+                self.renderLoop.perform { $0.sounds.setTarget(level: sound.level, audible: sound.audible) }
             }
         })
         // Zoom/tilt/saturation amounts are baked into the layer when content is built, so the
