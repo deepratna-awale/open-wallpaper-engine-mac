@@ -67,7 +67,7 @@ struct GifImage: NSViewRepresentable {
     /// Loads a downsampled still, or every frame once the image is to play. A paused image keeps
     /// its frames; a still is replaced when the image starts playing.
     private func loadImage(into nsView: PreviewImageView, coordinator: Coordinator) {
-        let url = gifUrl ?? gifName.flatMap { Bundle.main.url(forResource: $0, withExtension: "gif") }
+        let url = gifUrl ?? gifName.flatMap { AppBundleLayout.framework.url(forResource: $0, withExtension: "gif") }
         guard let url else { return }
         let animatedKey = url.path + "#animated"
         if !animates, coordinator.loadedKey == animatedKey { return }

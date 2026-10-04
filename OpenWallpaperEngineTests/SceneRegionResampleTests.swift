@@ -20,7 +20,7 @@ final class SceneRegionResampleTests: XCTestCase {
     override func setUpWithError() throws {
         device = try XCTUnwrap(MTLCreateSystemDefaultDevice())
         queue = try XCTUnwrap(device.makeCommandQueue())
-        let library = try XCTUnwrap(device.makeDefaultLibrary())
+        let library = try XCTUnwrap(SceneMetalLibrary.make(device: device))
         let copy = MTLRenderPipelineDescriptor()
         copy.vertexFunction = library.makeFunction(name: "sceneVertex")
         copy.fragmentFunction = library.makeFunction(name: "sceneCopyFragment")

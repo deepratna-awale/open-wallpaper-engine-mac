@@ -21,21 +21,14 @@ enum OWEFrameMetrics {
     nonisolated(unsafe) private static var lastReportTime = CACurrentMediaTime()
 
     nonisolated(unsafe) private static var lockAcquisitions = 0
-    nonisolated(unsafe) private static var scriptEvaluations = 0
     nonisolated(unsafe) private static var sceneReloads = 0
     nonisolated(unsafe) private static var textureDecodes = 0
     nonisolated(unsafe) private static var layersDrawn = 0
     nonisolated(unsafe) private static var particlesUpdated = 0
-    nonisolated(unsafe) private static var effectStackBuilds = 0
 
     static func countLockAcquisition() {
         guard isReportingEnabled else { return }
         lockAcquisitions &+= 1
-    }
-
-    static func countScriptEvaluation() {
-        guard isReportingEnabled else { return }
-        scriptEvaluations &+= 1
     }
 
     static func countSceneReload() {
@@ -46,11 +39,6 @@ enum OWEFrameMetrics {
     static func countTextureDecode() {
         guard isReportingEnabled else { return }
         textureDecodes &+= 1
-    }
-
-    static func countEffectStackBuild() {
-        guard isReportingEnabled else { return }
-        effectStackBuilds &+= 1
     }
 
     static func recordFrame(seconds: Double, layers: Int, particles: Int) {
@@ -75,21 +63,18 @@ enum OWEFrameMetrics {
         let perFrame = { (value: Int) in Double(value) / Double(frameCount) }
 
         OWELog.info(.perf, String(format:
-            "fps %.1f | frame avg %.2fms p-worst %.2fms | layers/f %.1f particles/f %.0f | locks/f %.1f scripts/f %.1f | stacks/f %.2f | reloads %d texDecodes %d",
+            "fps %.1f | frame avg %.2fms p-worst %.2fms | layers/f %.1f particles/f %.0f | locks/f %.1f | reloads %d texDecodes %d",
             fps, averageMs, worstMs,
             perFrame(layersDrawn), perFrame(particlesUpdated),
-            perFrame(lockAcquisitions), perFrame(scriptEvaluations),
-            perFrame(effectStackBuilds),
+            perFrame(lockAcquisitions),
             sceneReloads, textureDecodes))
 
         frameCount = 0
         accumulatedFrameSeconds = 0
         worstFrameSeconds = 0
         lockAcquisitions = 0
-        scriptEvaluations = 0
         layersDrawn = 0
         particlesUpdated = 0
-        effectStackBuilds = 0
         sceneReloads = 0
         textureDecodes = 0
     }

@@ -344,7 +344,7 @@ final class SceneDepthDrawTests: XCTestCase {
                 pixelFormat: format, depth: depthStates, encoder: encoder, commandBuffer: buffer))
         }
         if !nativeQuads.isEmpty {
-            let library = try XCTUnwrap(device.makeDefaultLibrary())
+            let library = try XCTUnwrap(SceneMetalLibrary.make(device: device))
             let pipelines = try SceneLayerPipelines(
                 device: device, vertex: try XCTUnwrap(library.makeFunction(name: "sceneVertex")),
                 fragment: try XCTUnwrap(library.makeFunction(name: "sceneFragment")),

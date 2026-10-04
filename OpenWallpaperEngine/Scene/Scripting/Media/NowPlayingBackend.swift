@@ -18,7 +18,7 @@ enum NowPlayingBackend: Equatable {
 
     /// The framework for this system, or nil (logged once) when it can't work.
     static func load(version: OperatingSystemVersion = ProcessInfo.processInfo.operatingSystemVersion,
-                     bundle: Bundle = .main) -> NowPlayingFramework? {
+                     bundle: Bundle = AppBundleLayout.framework) -> NowPlayingFramework? {
         switch forSystem(version) {
         case .mediaRemote:
             return MediaRemote.load()

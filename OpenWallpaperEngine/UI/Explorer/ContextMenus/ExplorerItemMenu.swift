@@ -21,6 +21,11 @@ struct ExplorerItemMenu: SubviewOfContentView {
         self.hoveredWallpaper = hoveredWallpaper
     }
     
+    /// The wallpaper's Workshop id; nil for a local wallpaper.
+    private var workshopId: String? {
+        SceneWallpaperViewModel.workshopId(of: hoveredWallpaper)
+    }
+
     var body: some View {
         Group {
             Section {
@@ -62,38 +67,11 @@ struct ExplorerItemMenu: SubviewOfContentView {
             
             Section {
                 Button {
-                    
+                    if let id = workshopId { openWorkshopPage(for: id) }
                 } label: {
                     Label("Open in Workshop", systemImage: "cloud.fill")
-                }.disabled(true)
-                Menu("Related Wallpapers") {
-                    Link(destination: URL(string: "https://github.com/deepratna-awale/open-wallpaper-engine-mac")!) {
-                        Label("Browse All By", systemImage: "person.fill")
-                    }
-                    Link(destination: URL(string: "https://github.com/deepratna-awale/open-wallpaper-engine-mac")!) {
-                        Label("Browse Presets", systemImage: "cloud.fill")
-                    }
-                }.disabled(true)
-                Menu("Report & Block") {
-                    Button(role: .destructive) {
-                        
-                    } label: {
-                        Label("Report", systemImage: "exclamationmark.triangle.fill")
-                    }
-                    Button {
-                        
-                    } label: {
-                        Label("Manage Blocklist", systemImage: "hand.raised.fill")
-                    }
-                }.disabled(true)
-            }
-            
-            Section {
-                Button {
-                    
-                } label: {
-                    Label("Assign Hotkey", systemImage: "command.square")
-                }.disabled(true)
+                }
+                .disabled(workshopId == nil)
                 Button {
                     NSWorkspace.shared.selectFile(nil,
                                                   inFileViewerRootedAtPath: hoveredWallpaper.wallpaperDirectory.path(percentEncoded: false))
@@ -103,5 +81,15 @@ struct ExplorerItemMenu: SubviewOfContentView {
             }
         }
         .labelStyle(.titleAndIcon)
+    }
+
+    /// Opens the item's page in the Steam client, or on the web when Steam isn't installed.
+    private func openWorkshopPage(for id: String) {
+        if let steam = WorkshopItemAvailability.steamClientPageURL(for: id),
+           NSWorkspace.shared.urlForApplication(toOpen: steam) != nil {
+            NSWorkspace.shared.open(steam)
+        } else if let page = WorkshopItemAvailability.workshopPageURL(for: id) {
+            NSWorkspace.shared.open(page)
+        }
     }
 }

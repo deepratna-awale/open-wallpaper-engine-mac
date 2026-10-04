@@ -104,7 +104,7 @@ final class UpdatePreservesUserStateTests: XCTestCase {
         let bundleLocations: [String] = ["Bundle.main.bundleURL", "Bundle.main.bundlePath", "Bundle.main.resourceURL",
                                          "Bundle.main.resourcePath", "Bundle.main.executableURL"]
         let bundleReaders: Set<String> = ["AppRelauncher.swift", "ScreenSaverInstaller.swift", "CrashWatcher.swift",
-                                          "ChromiumEnginePackage.swift"]
+                                          "ChromiumEnginePackage.swift", "AppBundleLayout.swift", "WallpaperEditorLauncher.swift"]
         var problems: [String] = []
         let enumerator = try XCTUnwrap(FileManager.default.enumerator(at: sources, includingPropertiesForKeys: nil))
         for case let file as URL in enumerator where file.pathExtension == "swift" {
@@ -115,8 +115,9 @@ final class UpdatePreservesUserStateTests: XCTestCase {
             }
             // Relaunching opens the bundle, the crash watcher is handed its path to reopen it, the
             // screen saver installer copies the bundled .saver out to ~/Library/Screen Savers and the
-            // Chromium engine copies the bundled helper apps out into its install in storage (all
-            // only read the bundle); nothing else may use its location.
+            // Chromium engine copies the bundled helper apps out into its install in storage, and the
+            // Wallpaper Editor's app is found inside the app and the app around it (all only read
+            // the bundle); nothing else may use its location.
             if !bundleReaders.contains(name), let hit = bundleLocations.first(where: text.contains) {
                 problems.append("\(name) uses \(hit)")
             }
