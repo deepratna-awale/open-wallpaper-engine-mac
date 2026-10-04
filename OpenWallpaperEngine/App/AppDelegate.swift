@@ -182,6 +182,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         contentViewModel?.steamCmd.detectSteamCmd()
     })
     private var assetsCancellable: AnyCancellable?
+    /// Lists wallpapers added to or removed from the library folders as they change.
+    private lazy var libraryFolderWatcher: LibraryFolderWatcher = {
+        let watcher = LibraryFolderWatcher()
+        watcher.onChange = { [weak self] in self?.contentViewModel.refresh() }
+        return watcher
+    }()
     /// Fetches the Workshop items shown wallpapers borrow assets from.
     lazy var workshopDependencies = WorkshopDependencyService(steamCmd: contentViewModel.steamCmd)
     private var workshopDependencyCancellable: AnyCancellable?
@@ -243,6 +249,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             // After the change is applied, so the old wallpaper counts as no longer shown.
             DispatchQueue.main.async { self?.staleBundleRefresher?.shownWallpapersChanged() }
         }
+
+        libraryFolderWatcher.watch(LibraryFolders().folders)
 
         // New or removed assets: scripts, the library (default wallpapers) and every scene reload.
         assetsCancellable = assets.assetsChanged.sink { [weak self] in
@@ -331,6 +339,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     
 // MARK: - delegate methods
+    /// Settings › Library Folders changed: watch the new set and list its wallpapers.
+    func libraryFoldersDidChange() {
+        libraryFolderWatcher.watch(LibraryFolders().folders)
+        contentViewModel.refresh()
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         // A test copy wears "TEST", a local build "Dev", on its Dock icon (`DockBadge`).
         DockBadge.current.apply()

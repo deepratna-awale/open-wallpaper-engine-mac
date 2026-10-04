@@ -28,31 +28,52 @@ final class InstalledLibraryCache {
     /// Called with each wallpaper that appears after the first pass (a download or an import).
     var onArrival: (WEWallpaper) -> Void = { _ in }
 
-    /// The listed wallpapers in `directory`, in folder order, without `dependencyIds`.
-    func wallpapers(in directory: URL, hiding dependencyIds: Set<String>) -> [WEWallpaper] {
-        let folders: [URL]
-        do {
-            folders = try FileManager.default.contentsOfDirectory(
-                at: directory, includingPropertiesForKeys: [.contentModificationDateKey], options: .skipsHiddenFiles)
-        } catch {
-            OWELog.error(.library, "Can't list the wallpaper library at \(directory.path): \(error)")
-            entries.removeAll()
-            return []
-        }
+    /// The listed wallpapers in `directory`, in folder order, without `dependencyIds`, then those of
+    /// each of `libraryFolders` (Settings › Library Folders). In a library folder only folders with
+    /// a project.json count (it may hold anything else), dependency-only items aren't a thing, and
+    /// a Workshop item already listed from an earlier folder isn't listed twice. A library folder
+    /// that can't be read (an unmounted volume) is logged and skipped.
+    func wallpapers(in directory: URL, libraryFolders: [URL] = [], hiding dependencyIds: Set<String>) -> [WEWallpaper] {
         var seen = Set<URL>()
         var result: [WEWallpaper] = []
-        for folder in folders {
+        var listedIds = Set<String>()
+        for folder in Self.contents(of: directory) ?? [] {
             seen.insert(folder)
             guard !dependencyIds.contains(folder.lastPathComponent) else { continue }
-            let arrived = listedOnce && entries[folder] == nil
-            if let wallpaper = entry(for: folder).wallpaper {
-                result.append(wallpaper)
-                if arrived { onArrival(wallpaper) }
+            append(folder, to: &result, listedIds: &listedIds)
+        }
+        for libraryFolder in libraryFolders where libraryFolder.standardizedFileURL != directory.standardizedFileURL {
+            for folder in Self.contents(of: libraryFolder) ?? [] {
+                seen.insert(folder)
+                let id = folder.lastPathComponent
+                guard !(WorkshopCollection.isID(id) && listedIds.contains(id)),
+                      FileManager.default.fileExists(atPath: folder.appending(path: "project.json").path(percentEncoded: false))
+                else { continue }
+                append(folder, to: &result, listedIds: &listedIds)
             }
         }
         entries = entries.filter { seen.contains($0.key) }
         listedOnce = true
         return result
+    }
+
+    private func append(_ folder: URL, to result: inout [WEWallpaper], listedIds: inout Set<String>) {
+        let arrived = listedOnce && entries[folder] == nil
+        guard let wallpaper = entry(for: folder).wallpaper else { return }
+        result.append(wallpaper)
+        listedIds.insert(folder.lastPathComponent)
+        if arrived { onArrival(wallpaper) }
+    }
+
+    /// The folder's items, or nil when it can't be listed (logged).
+    private static func contents(of directory: URL) -> [URL]? {
+        do {
+            return try FileManager.default.contentsOfDirectory(
+                at: directory, includingPropertiesForKeys: [.contentModificationDateKey], options: .skipsHiddenFiles)
+        } catch {
+            OWELog.error(.library, "Can't list the wallpaper library at \(directory.path): \(error)")
+            return nil
+        }
     }
 
     /// The wallpaper's size on disk, measured once per change of its folder or project.json.

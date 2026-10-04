@@ -5022,6 +5022,100 @@
         }
       }
     },
+    "Add Folder…" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إضافة مجلد…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordner hinzufügen …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir carpeta…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter un dossier…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फ़ोल्डर जोड़ें…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiungi cartella…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フォルダを追加…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "폴더 추가…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dodaj folder…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionar Pasta…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавить папку…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klasör Ekle…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додати папку…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加文件夹…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加入檔案夾⋯"
+          }
+        }
+      }
+    },
     "Add Rule" : {
       "comment" : "Application Rules: button that adds a rule for an application",
       "localizations" : {
@@ -5866,6 +5960,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "疊加"
+          }
+        }
+      }
+    },
+    "Adds a folder of wallpapers to the Installed tab" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يضيف مجلد خلفيات إلى علامة التبويب «المثبتة»"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fügt einen Ordner mit Hintergrundbildern zum Tab „Installiert“ hinzu"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añade una carpeta de fondos de pantalla a la pestaña Instalados"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajoute un dossier de fonds d’écran à l’onglet Installés"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "वॉलपेपर का एक फ़ोल्डर इंस्टॉल किए गए टैब में जोड़ता है"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aggiunge una cartella di sfondi al pannello Installati"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "壁紙のフォルダを「インストール済み」タブに追加します"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배경화면 폴더를 설치됨 탭에 추가합니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dodaje folder tapet do karty Zainstalowane"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adiciona uma pasta de imagens de fundo à aba Instaladas"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавляет папку с обоями на вкладку «Установленные»"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bir duvar kâğıdı klasörünü Yüklü sekmesine ekler"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додає папку зі шпалерами на вкладку «Встановлені»"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将一个墙纸文件夹添加到“已安装”标签页"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將一個背景圖片檔案夾加入「已安裝」標籤頁"
           }
         }
       }
@@ -19374,6 +19562,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "選擇用於儲存原況照片之照片和影片的檔案夾。"
+          }
+        }
+      }
+    },
+    "Choose folders of wallpapers to add to the library" : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اختر مجلدات خلفيات لإضافتها إلى المكتبة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordner mit Hintergrundbildern auswählen, die zur Mediathek hinzugefügt werden sollen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige carpetas de fondos de pantalla para añadirlas a la biblioteca"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisissez les dossiers de fonds d’écran à ajouter à la bibliothèque"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लाइब्रेरी में जोड़ने के लिए वॉलपेपर के फ़ोल्डर चुनें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scegli le cartelle di sfondi da aggiungere alla libreria"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ライブラリに追加する壁紙のフォルダを選択"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "라이브러리에 추가할 배경화면 폴더 선택"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wybierz foldery tapet do dodania do biblioteki"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escolha pastas de imagens de fundo para adicionar à biblioteca"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите папки с обоями, чтобы добавить их в библиотеку"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kütüphaneye eklenecek duvar kâğıdı klasörlerini seçin"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виберіть папки зі шпалерами, щоб додати їх до бібліотеки"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选取要添加到资料库的墙纸文件夹"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選擇要加入資料庫的背景圖片檔案夾"
           }
         }
       }
@@ -38810,6 +39092,101 @@
         }
       }
     },
+    "From the library folder %@" : {
+      "comment" : "%@ is a folder path",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "من مجلد المكتبة %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aus dem Mediathekordner %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De la carpeta de biblioteca %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Provenant du dossier de bibliothèque %@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लाइब्रेरी फ़ोल्डर %@ से"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dalla cartella della libreria %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ライブラリフォルダ %@ から"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "라이브러리 폴더 %@에서"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Z folderu biblioteki %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Da pasta de biblioteca %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Из папки библиотеки %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ kütüphane klasöründen"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "З папки бібліотеки %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "来自资料库文件夹 %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "來自資料庫檔案夾 %@"
+          }
+        }
+      }
+    },
     "Full" : {
       "comment" : "Render resolution: the wallpaper's authored size",
       "localizations" : {
@@ -54615,6 +54992,101 @@
         }
       }
     },
+    "Library Folders" : {
+      "comment" : "Settings section: extra folders whose wallpapers the library lists",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مجلدات المكتبة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mediathekordner"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carpetas de biblioteca"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dossiers de bibliothèque"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लाइब्रेरी फ़ोल्डर"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartelle della libreria"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ライブラリフォルダ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "라이브러리 폴더"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foldery biblioteki"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pastas de Biblioteca"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Папки библиотеки"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kütüphane Klasörleri"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Папки бібліотеки"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "资料库文件夹"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "資料庫檔案夾"
+          }
+        }
+      }
+    },
     "Light" : {
       "localizations" : {
         "ar" : {
@@ -66790,6 +67262,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "沒有可用的資源"
+          }
+        }
+      }
+    },
+    "No library folders" : {
+      "comment" : "Shown in Settings when no library folders were added",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "لا توجد مجلدات مكتبة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Mediathekordner"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay carpetas de biblioteca"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun dossier de bibliothèque"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कोई लाइब्रेरी फ़ोल्डर नहीं"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessuna cartella della libreria"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ライブラリフォルダはありません"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "라이브러리 폴더 없음"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brak folderów biblioteki"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhuma Pasta de Biblioteca"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет папок библиотеки"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kütüphane Klasörü Yok"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає папок бібліотеки"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有资料库文件夹"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "沒有資料庫檔案夾"
           }
         }
       }
@@ -89336,6 +89903,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "移除已下載的資源，並可選擇移除預設背景圖片，以釋放磁碟空間。在你重新安裝之前，場景將無法顯示。"
+          }
+        }
+      }
+    },
+    "Removes the folder from the library. Its wallpapers stay on disk." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يزيل المجلد من المكتبة. وتبقى خلفياته على القرص."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entfernt den Ordner aus der Mediathek. Seine Hintergrundbilder bleiben auf dem Volume."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quita la carpeta de la biblioteca. Sus fondos de pantalla se quedan en el disco."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retire le dossier de la bibliothèque. Ses fonds d’écran restent sur le disque."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फ़ोल्डर को लाइब्रेरी से हटाता है। इसके वॉलपेपर डिस्क पर बने रहते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rimuove la cartella dalla libreria. I suoi sfondi restano sul disco."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フォルダをライブラリから取り除きます。その壁紙はディスクに残ります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "라이브러리에서 폴더를 제거합니다. 해당 배경화면은 디스크에 남습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usuwa folder z biblioteki. Jego tapety zostają na dysku."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove a pasta da biblioteca. As imagens de fundo dela continuam no disco."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Убирает папку из библиотеки. Её обои остаются на диске."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klasörü kütüphaneden kaldırır. Duvar kâğıtları diskte kalır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прибирає папку з бібліотеки. Її шпалери залишаються на диску."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从资料库中移除该文件夹。其中的墙纸仍保留在磁盘上。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從資料庫中移除該檔案夾。其中的背景圖片仍保留在磁碟上。"
           }
         }
       }
@@ -116333,6 +116994,100 @@
         }
       }
     },
+    "The Installed tab also lists the wallpapers in these folders, and follows their changes. Each wallpaper is a folder with a project.json. Downloads and imports still go into the Wallpaper Storage folder." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تعرض علامة التبويب «المثبتة» أيضًا الخلفيات الموجودة في هذه المجلدات وتتابع تغييراتها. كل خلفية مجلد يحتوي على ملف project.json. وتظل التنزيلات وعمليات الاستيراد تُحفظ في مجلد مخزن خلفيات الشاشة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Tab „Installiert“ zeigt auch die Hintergrundbilder in diesen Ordnern und folgt ihren Änderungen. Jedes Hintergrundbild ist ein Ordner mit einer project.json. Downloads und Importe kommen weiterhin in den Ordner „Hintergrundbild-Speicher“."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La pestaña Instalados también muestra los fondos de pantalla de estas carpetas y sigue sus cambios. Cada fondo de pantalla es una carpeta con un project.json. Las descargas y las importaciones siguen yendo a la carpeta de almacenamiento de fondos de pantalla."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’onglet Installés affiche aussi les fonds d’écran de ces dossiers et suit leurs changements. Chaque fond d’écran est un dossier contenant un project.json. Les téléchargements et les importations vont toujours dans le dossier de stockage des fonds d’écran."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इंस्टॉल किए गए टैब में इन फ़ोल्डरों के वॉलपेपर भी दिखते हैं और इनके बदलाव अपने-आप दिखते हैं। हर वॉलपेपर एक फ़ोल्डर है जिसमें project.json होती है। डाउनलोड और इंपोर्ट अब भी वॉलपेपर स्टोरेज फ़ोल्डर में जाते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il pannello Installati mostra anche gli sfondi di queste cartelle e ne segue le modifiche. Ogni sfondo è una cartella con un file project.json. Download e importazioni vanno sempre nella cartella Archivio sfondi."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「インストール済み」タブには、これらのフォルダの壁紙も表示され、変更が反映されます。各壁紙は project.json を含むフォルダです。ダウンロードと読み込みは引き続き壁紙の保存場所のフォルダに入ります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "설치됨 탭에 이 폴더의 배경화면도 표시되며 변경 사항이 반영됩니다. 각 배경화면은 project.json이 있는 폴더입니다. 다운로드와 가져오기는 계속 배경화면 저장 공간 폴더에 저장됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Karta Zainstalowane pokazuje też tapety z tych folderów i śledzi ich zmiany. Każda tapeta to folder z plikiem project.json. Pobrane i zaimportowane tapety nadal trafiają do folderu Magazynu tapet."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A aba Instaladas também mostra as imagens de fundo destas pastas e acompanha as alterações nelas. Cada imagem de fundo é uma pasta com um project.json. Os downloads e as importações continuam indo para a pasta de Armazenamento de Imagens de Fundo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вкладка «Установленные» также показывает обои из этих папок и следит за их изменениями. Каждые обои — это папка с файлом project.json. Загрузки и импорт по-прежнему попадают в папку хранилища обоев."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yüklü sekmesi bu klasörlerdeki duvar kâğıtlarını da listeler ve değişikliklerini izler. Her duvar kâğıdı, project.json içeren bir klasördür. İndirmeler ve içe aktarmalar yine Duvar Kâğıdı Deposu klasörüne gider."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вкладка «Встановлені» також показує шпалери з цих папок і стежить за їхніми змінами. Кожні шпалери — це папка з файлом project.json. Завантаження та імпорт і далі потрапляють до папки сховища шпалер."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“已安装”标签页也会列出这些文件夹中的墙纸，并跟随其更改。每张墙纸都是一个包含 project.json 的文件夹。下载和导入的内容仍会存入墙纸存储位置文件夹。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「已安裝」標籤頁也會列出這些檔案夾中的背景圖片，並跟隨其變更。每張背景圖片都是包含 project.json 的檔案夾。下載和匯入的內容仍會存入背景圖片儲存位置檔案夾。"
+          }
+        }
+      }
+    },
     "The Live Photo couldn't be rendered." : {
       "localizations" : {
         "ar" : {
@@ -120962,6 +121717,194 @@
         }
       }
     },
+    "This folder can't be found. Its wallpapers are hidden until it is back." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يتعذر العثور على هذا المجلد. تُخفى خلفياته حتى يعود."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Ordner wurde nicht gefunden. Seine Hintergrundbilder sind ausgeblendet, bis er wieder verfügbar ist."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se encuentra esta carpeta. Sus fondos de pantalla se ocultan hasta que vuelva a estar disponible."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce dossier est introuvable. Ses fonds d’écran sont masqués jusqu’à son retour."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह फ़ोल्डर नहीं मिल रहा। इसके वापस आने तक इसके वॉलपेपर छिपे रहेंगे।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossibile trovare questa cartella. I suoi sfondi restano nascosti finché non torna disponibile."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このフォルダが見つかりません。フォルダが戻るまで、その壁紙は表示されません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 폴더를 찾을 수 없습니다. 폴더가 다시 연결될 때까지 해당 배경화면이 숨겨집니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie można znaleźć tego folderu. Jego tapety są ukryte, dopóki nie będzie znów dostępny."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta pasta não foi encontrada. As imagens de fundo dela ficam ocultas até que ela volte."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удаётся найти эту папку. Её обои скрыты, пока она не появится снова."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu klasör bulunamıyor. Klasör geri gelene kadar duvar kâğıtları gizlenir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдається знайти цю папку. Її шпалери приховано, доки вона не з’явиться знову."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找不到此文件夹。在它恢复之前，其中的墙纸会被隐藏。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找不到此檔案夾。在它恢復之前，其中的背景圖片會被隱藏。"
+          }
+        }
+      }
+    },
+    "This folder is already in the library." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هذا المجلد موجود بالفعل في المكتبة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Ordner ist schon in der Mediathek."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta carpeta ya está en la biblioteca."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce dossier fait déjà partie de la bibliothèque."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह फ़ोल्डर पहले से लाइब्रेरी में है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questa cartella è già nella libreria."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このフォルダはすでにライブラリにあります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 폴더는 이미 라이브러리에 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ten folder jest już w bibliotece."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta pasta já está na biblioteca."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Эта папка уже есть в библиотеке."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu klasör zaten kütüphanede."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ця папка вже є в бібліотеці."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此文件夹已在资料库中。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此檔案夾已在資料庫中。"
+          }
+        }
+      }
+    },
     "This is a macOS shortcut. Use Anyway saves it and opens Keyboard Shortcuts in System Settings, where you can turn the macOS one off." : {
       "localizations" : {
         "ar" : {
@@ -121052,6 +121995,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "這是 macOS 快速鍵。「仍要使用」會儲存它並打開系統設定中的鍵盤快速鍵，你可以在那裡關閉 macOS 的快速鍵。"
+          }
+        }
+      }
+    },
+    "This is the Wallpaper Storage folder, which is always in the library." : {
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "هذا مجلد مخزن خلفيات الشاشة، وهو موجود دائمًا في المكتبة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dies ist der Ordner „Hintergrundbild-Speicher“, der immer zur Mediathek gehört."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es la carpeta de almacenamiento de fondos de pantalla, que siempre forma parte de la biblioteca."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il s’agit du dossier de stockage des fonds d’écran, qui fait toujours partie de la bibliothèque."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह वॉलपेपर स्टोरेज फ़ोल्डर है, जो हमेशा लाइब्रेरी में रहता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questa è la cartella Archivio sfondi, che fa sempre parte della libreria."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "これは壁紙の保存場所のフォルダで、常にライブラリに含まれています。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "배경화면 저장 공간 폴더이며 항상 라이브러리에 포함됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To folder Magazynu tapet, który zawsze należy do biblioteki."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta é a pasta de Armazenamento de Imagens de Fundo, que sempre faz parte da biblioteca."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Это папка хранилища обоев, она всегда входит в библиотеку."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu, her zaman kütüphanede olan Duvar Kâğıdı Deposu klasörü."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Це папка сховища шпалер, вона завжди входить до бібліотеки."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这是墙纸存储位置文件夹，它始终在资料库中。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "這是背景圖片儲存位置檔案夾，它一律在資料庫中。"
           }
         }
       }

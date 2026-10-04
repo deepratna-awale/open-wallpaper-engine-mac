@@ -134,9 +134,11 @@ class ContentViewModel: ObservableObject, DropDelegate {
     /// Reads the Steam tags of installed wallpapers whose project.json has too few.
     private let tagSync = InstalledWorkshopTagSync()
 
-    /// The Installed wallpapers, before search and filters: no asset items, no dependency-only items.
+    /// The Installed wallpapers, before search and filters: the storage folder's and the library
+    /// folders', without asset items or dependency-only items.
     var allWallpapers: [WEWallpaper] {
         let wallpapers = library.wallpapers(in: FileManager.default.wallpapersDirectory,
+                                            libraryFolders: LibraryFolders().folders,
                                             hiding: steamCmd.dependencyIndex.ids)
         tagSync.schedule(wallpapers)
         return wallpapers

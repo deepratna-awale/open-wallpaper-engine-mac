@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 
 /// Settings › Assets: the Wallpaper Engine assets scenes need, from the user's own Steam copy,
-/// SteamCMD, the Wallpaper Storage folder and the Steam Web API key. Shows which copy is in use
+/// SteamCMD, the Wallpaper Storage folder, the library folders and the Steam Web API key. Shows which copy is in use
 /// and installs, updates or removes it. Changes apply at once; the
 /// window's OK and Cancel don't cover them.
 struct AssetsPage: SettingsPage {
@@ -43,6 +43,9 @@ struct AssetsPage: SettingsPage {
 
             WallpaperStorageSection()
                 .settingsAnchor(SettingsAnchor.storage)
+
+            LibraryFoldersSection()
+                .settingsAnchor(SettingsAnchor.libraryFolders)
 
             Section {
                 SteamWebAPIKeyView()
