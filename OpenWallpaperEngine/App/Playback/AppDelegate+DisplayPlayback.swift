@@ -25,7 +25,7 @@ extension AppDelegate {
 
     /// Hands each display's playback to its wallpaper, and hides the windows of stopped displays.
     private func applyDisplayPlayback(_ states: [String: DisplayPlayback]) {
-        wallpaperViewModel.displayPlayback = states
+        wallpaperViewModel.rulePlayback = states
         orderWallpaperWindowsFront()
     }
 

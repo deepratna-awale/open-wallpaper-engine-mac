@@ -48,6 +48,22 @@ class WallpaperViewModel: ObservableObject {
         }
     }
 
+    /// How wallpapers spread over the displays: a wallpaper per display (with clone groups of some
+    /// of them) or one cloned onto every display (docs/architecture.md "Display layouts").
+    @Published var displayLayout = DisplayLayoutConfiguration() {
+        didSet {
+            guard displayLayout != oldValue else { return }
+            if persistsWallpapers { displayLayout.save(to: .app) }
+            refreshDisplayLayout()
+        }
+    }
+
+    /// The display layout on the displays connected now (`refreshDisplayLayout`).
+    @Published internal(set) var layoutResolution = DisplayLayoutResolution.empty
+
+    /// The connected displays with their identities, main display first; tests pass their own.
+    var connectedDisplays: @MainActor () -> [DisplayIdentity] = { DisplayIdentity.connected() }
+
     /// Screens where wallpaper display is enabled.
     @Published var enabledScreens: Set<String> = [] {
         didSet {
@@ -269,8 +285,10 @@ class WallpaperViewModel: ObservableObject {
         setWallpaper(wallpaper, for: [screenId])
     }
 
+    /// Sets `wallpaper` on `screenIds` and on every display that clones one of them, as WE sets a
+    /// clone group's wallpaper on the group.
     func setWallpaper(_ wallpaper: WEWallpaper, for screenIds: Set<String>) {
-        for screenId in screenIds {
+        for screenId in layoutResolution.expandingClones(screenIds).sorted() {
             // The outgoing one too: it may have been restored at launch rather than set.
             wallpaperHistory.push(self.wallpaper(for: screenId), for: screenId)
             wallpaperHistory.push(wallpaper, for: screenId)
@@ -662,8 +680,21 @@ class WallpaperViewModel: ObservableObject {
     // MARK: - Playback rules per display
 
     /// Each display's playback under Settings › Performance › Playback (`PlaybackRules`), set by the
-    /// app delegate's `DisplayPlaybackMonitor`. Empty in the Workshop preview: every display plays.
-    @Published var displayPlayback: [String: DisplayPlayback] = [:]
+    /// app delegate's `DisplayPlaybackMonitor`.
+    var rulePlayback: [String: DisplayPlayback] = [:] {
+        didSet { refreshDisplayPlayback() }
+    }
+
+    /// Each display's playback: the playback rules', and muted where the display is muted
+    /// (`DisplayLayoutConfiguration.muted`). Empty in the Workshop preview: every display plays.
+    @Published private(set) var displayPlayback: [String: DisplayPlayback] = [:]
+
+    /// Merges the displays' mute into the playback rules' states.
+    func refreshDisplayPlayback() {
+        var states = rulePlayback
+        for screen in layoutResolution.muted { states[screen] = max(states[screen] ?? .run, .mute) }
+        if states != displayPlayback { displayPlayback = states }
+    }
 
     /// `screenId`'s own playback: whether its view draws new frames.
     func playback(onScreen screenId: String) -> DisplayPlayback {
@@ -725,8 +756,9 @@ class WallpaperViewModel: ObservableObject {
 
     /// Whose properties editing `screenId`'s wallpaper changes: the shared store while synced
     /// (and in the Workshop preview, which has no real display), else the display's own.
+    /// A display that clones another edits and runs its main clone display's.
     func propertyScope(for screenId: String) -> WallpaperPropertyScope {
-        syncsPropertiesAcrossDisplays || !persistsWallpapers ? .shared : .display(screenId)
+        syncsPropertiesAcrossDisplays || !persistsWallpapers ? .shared : .display(layoutResolution.source(of: screenId))
     }
 
     /// The scopes an edit of `wallpaper`'s properties in the sidebar or inspector goes to: the
@@ -748,10 +780,15 @@ class WallpaperViewModel: ObservableObject {
     func refreshInstanceKeys() {
         let synced = syncsPropertiesAcrossDisplays || !persistsWallpapers
         let assignments = wallpapers.mapValues { WallpaperInstanceKey($0) }
-        let keys = WallpaperPropertyGroups.instanceKeys(assignments: assignments, synced: synced) { [self] key, scope in
+        var keys = WallpaperPropertyGroups.instanceKeys(assignments: assignments, synced: synced) { [self] key, scope in
             guard let identity = settingsIdentity(directory: key.directory) else { return [:] }
             identity.seed(scope)
             return identity.stored(.userProperties, scope: scope) as? [String: String] ?? [:]
+        }
+        // A clone runs once: its members show their main display's instance, whatever their own
+        // properties (WE renders a clone once and mirrors it).
+        for (member, source) in layoutResolution.cloneSources {
+            if let key = keys[source] { keys[member] = key }
         }
         if keys != instanceKeys { instanceKeys = keys }
     }
@@ -892,7 +929,8 @@ class WallpaperViewModel: ObservableObject {
             ? true : UserDefaults.app.bool(forKey: "WallpaperPlaylistRepeats")
         self.playlistEnabled = UserDefaults.app.bool(forKey: "WallpaperPlaylistEnabled")
 
-        // Load per-screen wallpapers
+        // Load per-screen wallpapers. They stay as they are: without a saved display layout every
+        // display shows its own.
         if let data = UserDefaults.app.data(forKey: "ScreenWallpapers"),
            let saved = try? JSONDecoder().decode([String: WEWallpaper].self, from: data) {
             // Filter out any compound keys (screenId_spaceId) from previous per-space experiment
@@ -915,6 +953,9 @@ class WallpaperViewModel: ObservableObject {
         // Default the active screen to main while assigning wallpapers to all desktops.
         self.selectedScreenId = Self.mainScreenId()
         self.selectedScreenIds = Set(NSScreen.screens.map { Self.screenId(for: $0) })
+
+        displayLayout = DisplayLayoutConfiguration.load(from: .app)
+        refreshDisplayLayout()
 
         // Load recent wallpapers
         loadRecents()

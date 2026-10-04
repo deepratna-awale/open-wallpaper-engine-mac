@@ -167,6 +167,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                                                    wallpaperViewModel: wallpaperViewModel)
     private var audioOutputCancellable: AnyCancellable?
     private var syncPropertiesCancellable: AnyCancellable?
+    private var displayFlipCancellable: AnyCancellable?
     private var mediaIntegrationCancellable: AnyCancellable?
     /// Follows the default output device: capture always restarts, wallpapers reload when the
     /// setting is on. `rebuildWallpaperWindows` is the same reload an asset change uses.
@@ -232,6 +233,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         // Settings › Optimizations: one set of user properties for every display, or each display's own.
         syncPropertiesCancellable = globalSettingsViewModel.$settings.map(\.syncPropertiesAcrossDisplays).removeDuplicates()
             .sink { [weak self] synced in self?.wallpaperViewModel.syncsPropertiesAcrossDisplays = synced }
+        // Flipped clone displays mirror their window's content (`WallpaperWindowContentView`).
+        displayFlipCancellable = wallpaperViewModel.$layoutResolution.map(\.flipped).removeDuplicates()
+            .sink { [weak self] flipped in self?.applyDisplayFlips(flipped) }
         // Settings › Optimizations › Media integration support: whether wallpapers hear Now Playing.
         mediaIntegrationCancellable = globalSettingsViewModel.$settings.map(\.mediaIntegration).removeDuplicates()
             .sink { [weak self] enabled in self?.mediaSession.setIntegrationEnabled(enabled) }
@@ -561,10 +565,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             window.canBecomeVisibleWithoutLogin = true
             window.isReleasedWhenClosed = false
             window.ignoresMouseEvents = true
-            window.contentView = NSHostingView(rootView:
+            let content = WallpaperWindowContentView(content: NSHostingView(rootView:
                 WallpaperView(viewModel: self.wallpaperViewModel, screenId: screenId)
-            )
+            ))
+            content.isMirrored = wallpaperViewModel.isFlipped(screenId)
+            window.contentView = content
             wallpaperWindows[screenId] = window
+        }
+    }
+
+    /// Mirrors the windows of flipped clone displays and only those.
+    private func applyDisplayFlips(_ flipped: Set<String>) {
+        for (screenId, window) in wallpaperWindows {
+            (window.contentView as? WallpaperWindowContentView)?.isMirrored = flipped.contains(screenId)
         }
     }
 
@@ -639,6 +652,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         for id in connectedIds where !wallpaperViewModel.enabledScreens.contains(id) {
             wallpaperViewModel.enabledScreens.insert(id)
         }
+        // Groups whose displays came back wake up; those left with one display go dormant.
+        wallpaperViewModel.refreshDisplayLayout()
         rebuildWallpaperWindows()
     }
     
@@ -661,7 +676,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             // Find the WKWebView in whichever wallpaper window the event lands on
             let mouseLocation = NSEvent.mouseLocation
             guard let targetWindow = self.wallpaperWindows.values.first(where: { $0.frame.contains(mouseLocation) }),
-                  let webview = targetWindow.contentView?.subviews.first?.subviews.first,
+                  let webview = (targetWindow.contentView as? WallpaperWindowContentView)?.content?.subviews.first?.subviews.first,
                   webview is WKWebView else { return }
 
             switch event.type {
