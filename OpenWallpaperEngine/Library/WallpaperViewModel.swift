@@ -84,6 +84,9 @@ class WallpaperViewModel: ObservableObject {
         }
     }
 
+    /// The user's display profiles (WE's "Save Profile" / "Load Profile"), applied to these displays.
+    lazy var displayProfiles = DisplayProfiles(model: self, fileURL: DisplayProfiles.defaultURL)
+
     /// The connected displays with their identities, main display first; tests pass their own.
     var connectedDisplays: @MainActor () -> [DisplayIdentity] = { DisplayIdentity.connected() }
 
