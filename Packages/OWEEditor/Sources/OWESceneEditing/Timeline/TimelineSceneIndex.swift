@@ -43,7 +43,7 @@ public struct TimelineSceneIndex: Sendable {
         guard let root = try JSONSerialization.jsonObject(with: sceneData) as? [String: Any],
               let objects = root["objects"] as? [[String: Any]] else { throw SceneEditOverlayError.notAScene }
         for (index, object) in objects.enumerated() {
-            let id = (object["id"] as? NSNumber)?.intValue ?? index
+            let id = SceneObjects.objectID(object, index: index)
             guard fields[id] == nil else { continue }
             layers.append(id)
             var layerFields: [String: SceneJSONValue] = [:]

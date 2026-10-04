@@ -53,7 +53,7 @@ extension SceneEditSession {
               var root = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
         try? overlay.apply(to: &root)
         let objects = root["objects"] as? [[String: Any]] ?? []
-        for (index, object) in objects.enumerated() where ((object["id"] as? NSNumber)?.intValue ?? index) == layerID {
+        for (index, object) in objects.enumerated() where SceneObjects.objectID(object, index: index) == layerID {
             return object
         }
         return nil

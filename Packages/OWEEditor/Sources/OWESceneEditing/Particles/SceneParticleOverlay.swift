@@ -38,7 +38,7 @@ public struct SceneParticleOverlay: Codable, Hashable, Sendable {
         guard !removedObjects.isEmpty else { return }
         let removed = Set(removedObjects)
         objects = objects.enumerated().filter { index, object in
-            !removed.contains((object["id"] as? NSNumber)?.intValue ?? index)
+            !removed.contains(SceneObjects.objectID(object, index: index))
         }.map(\.element)
     }
 
