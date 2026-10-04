@@ -27,29 +27,42 @@ final class AndroidExporter: AndroidExportWorking {
             try await Self.package(to: url, progress: progress) { _ in try AndroidPackageBuilder.videoEntries(wallpaper) }
         case .scene where !item.usesGPU:
             let options = item.options
+            let baked = item.bakedValues
             try await Self.package(to: url, progress: progress) { report in
-                try AndroidPackageBuilder.dynamicEntries(wallpaper, options: options, progress: { report($0 * 0.85) })
+                try AndroidPackageBuilder.dynamicEntries(wallpaper, options: options, baking: baked, progress: { report($0 * 0.85) })
             }
         case .scene:
+            let options = item.options
             let directory = Self.cacheDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             defer { try? FileManager.default.removeItem(at: directory) } // Optional: a temporary folder.
             let video = directory.appending(path: AndroidPackageBuilder.videoFileName)
-            let sceneSize = try await Task.detached(priority: .userInitiated) { try AndroidPackageBuilder.sceneSize(wallpaper) }.value
-            let crop = item.options.crop(sceneSize: sceneSize)
-            let job = AndroidVideoJob(wallpaperDirectory: wallpaper.wallpaperDirectory, properties: item.properties, crop: crop,
-                                      frameRate: item.options.frameRate,
-                                      bitRate: item.options.videoBitRate(pixelSize: crop.outputPixels), output: video)
+            let framing: AndroidVideoFraming
+            if let given = item.framing {
+                framing = given
+            } else {
+                let sceneSize = try await Task.detached(priority: .userInitiated) { try AndroidPackageBuilder.sceneSize(wallpaper) }.value
+                framing = AndroidVideoFraming(crop: item.options.crop(sceneSize: sceneSize))
+            }
+            let job = Self.videoJob(item, framing: framing, output: video)
             let jobFile = directory.appending(path: "job.json")
             try JSONEncoder().encode(job).write(to: jobFile)
             try await LivePhotoHelper.runHelper(argument: ShaderPrewarmCommand.androidVideoArgument, jobFile: jobFile) { progress($0 * 0.9) }
             try await Self.package(to: url, progress: { progress(0.9 + $0 * 0.1) }) { _ in
-                try AndroidPackageBuilder.preRenderedEntries(wallpaper, video: video)
+                try AndroidPackageBuilder.preRenderedEntries(wallpaper, video: video, options: options)
             }
         case nil:
             throw AndroidPackageBuilder.Failure.unsupported
         }
         OWELog.info(.app, "Android export: wrote \(url.lastPathComponent)")
+    }
+
+    /// The helper's job for `item`'s pre-render framed by `framing`.
+    static func videoJob(_ item: AndroidExportItem, framing: AndroidVideoFraming, output: URL) -> AndroidVideoJob {
+        AndroidVideoJob(wallpaperDirectory: item.wallpaper.wallpaperDirectory, properties: item.properties, crop: framing.crop,
+                        frameRate: item.options.frameRate, seconds: framing.seconds,
+                        bitRate: item.options.videoBitRate(pixelSize: framing.crop.outputPixels), output: output,
+                        pointer: framing.pointer)
     }
 
     /// Builds the entries and writes the package off the main thread; cancelling stops it.

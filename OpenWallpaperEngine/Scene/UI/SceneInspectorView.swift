@@ -68,16 +68,18 @@ private struct SceneInspectorTexture: Identifiable {
 }
 
 /// The Scene Editor (Live)'s modes: the wallpaper's objects, edited on the running wallpaper, or
-/// the Screen Saver mode's recording or the iPhone & iPad Export mode's lock screen, each edited
-/// on the mode's own copy (`IsolatedSceneEditSession`). The picker lists them in this order.
+/// the Screen Saver mode's recording, the iPhone & iPad Export mode's lock screen or the Android
+/// Export mode's screen, each edited on the mode's own copy (`IsolatedSceneEditSession`). The
+/// picker lists them in this order.
 enum SceneInspectorMode: CaseIterable {
-    case wallpaper, screenSaver, deviceExport
+    case wallpaper, screenSaver, deviceExport, androidExport
 
     var title: LocalizedStringResource {
         switch self {
         case .wallpaper: return LocalizedStringResource("Wallpaper", comment: "Scene Editor (Live): the mode that edits the running wallpaper")
         case .screenSaver: return LocalizedStringResource("Screen Saver", comment: "Scene Editor (Live): the mode that records the screen saver")
         case .deviceExport: return LocalizedStringResource("iPhone & iPad Export", comment: "Scene Editor (Live): the mode that exports a Live Photo")
+        case .androidExport: return LocalizedStringResource("Android Export", comment: "Scene Editor (Live): the mode that exports a .mpkg for Wallpaper Engine's Android app")
         }
     }
 }
@@ -962,6 +964,7 @@ struct SceneInspectorView: View {
     private let scopes: [WallpaperPropertyScope]
     @State private var exportModel: LivePhotoExportModel?
     @State private var screenSaverModel: ScreenSaverEditorModel?
+    @State private var androidModel: AndroidExportEditorModel?
     /// The mode the editor opens in, entered once its scene size is known.
     private let initialMode: SceneInspectorMode
     @State private var didEnterInitialMode = false
@@ -978,6 +981,11 @@ struct SceneInspectorView: View {
                                   exportModel: exportModel, screenSaverModel: nil, onModeChange: setMode,
                                   initialMode: .deviceExport)
                 .id(SceneInspectorMode.deviceExport)
+        } else if let androidModel {
+            SceneInspectorContent(wallpaper: wallpaper, scopes: [androidModel.session.scope], isolated: androidModel.session,
+                                  exportModel: nil, screenSaverModel: nil, androidModel: androidModel, onModeChange: setMode,
+                                  initialMode: .androidExport)
+                .id(SceneInspectorMode.androidExport)
         } else if let screenSaverModel {
             SceneInspectorContent(wallpaper: wallpaper, scopes: [screenSaverModel.session.scope],
                                   isolated: screenSaverModel.session, exportModel: nil, screenSaverModel: screenSaverModel,
@@ -1003,6 +1011,11 @@ struct SceneInspectorView: View {
             let session = IsolatedSceneEditSession(wallpaper: wallpaper, purpose: LivePhotoExportModel.purpose,
                                                    seededFrom: scopes)
             exportModel = LivePhotoExportModel(session: session, sceneSize: sceneSize)
+        case .androidExport:
+            guard androidModel == nil else { return }
+            let session = IsolatedSceneEditSession(wallpaper: wallpaper, purpose: AndroidExportEditorModel.purpose,
+                                                   seededFrom: scopes)
+            androidModel = AndroidExportEditorModel(session: session, sceneSize: sceneSize)
         case .screenSaver:
             guard screenSaverModel == nil else { return }
             let session = IsolatedSceneEditSession(wallpaper: wallpaper, purpose: ScreenSaverEditorModel.purpose,
@@ -1025,6 +1038,11 @@ struct SceneInspectorView: View {
         if mode != .screenSaver, let model = screenSaverModel {
             screenSaverModel = nil
             model.close()
+            DispatchQueue.main.async { model.session.end() }
+        }
+        if mode != .androidExport, let model = androidModel {
+            androidModel = nil
+            model.cancel()
             DispatchQueue.main.async { model.session.end() }
         }
     }
@@ -1051,6 +1069,7 @@ private struct SceneInspectorContent: View {
     private let isolated: IsolatedSceneEditSession?
     private let exportModel: LivePhotoExportModel?
     private let screenSaverModel: ScreenSaverEditorModel?
+    private let androidModel: AndroidExportEditorModel?
     private let onModeChange: (SceneInspectorMode, SIMD2<Double>) -> Void
     /// The mode to enter once the scene's size is known (`showSceneInspector(…mode:)`). An isolated
     /// mode's content passes its own mode, so appearing doesn't switch straight back to Wallpaper.
@@ -1058,11 +1077,12 @@ private struct SceneInspectorContent: View {
 
     private var mode: SceneInspectorMode {
         if exportModel != nil { return .deviceExport }
+        if androidModel != nil { return .androidExport }
         return screenSaverModel == nil ? .wallpaper : .screenSaver
     }
 
     init(wallpaper: WEWallpaper, scopes: [WallpaperPropertyScope], isolated: IsolatedSceneEditSession?,
-         exportModel: LivePhotoExportModel?, screenSaverModel: ScreenSaverEditorModel?,
+         exportModel: LivePhotoExportModel?, screenSaverModel: ScreenSaverEditorModel?, androidModel: AndroidExportEditorModel? = nil,
          onModeChange: @escaping (SceneInspectorMode, SIMD2<Double>) -> Void, initialMode: SceneInspectorMode = .wallpaper) {
         self.initialMode = initialMode
         wallpaperDirectory = wallpaper.wallpaperDirectory
@@ -1071,6 +1091,7 @@ private struct SceneInspectorContent: View {
         self.isolated = isolated
         self.exportModel = exportModel
         self.screenSaverModel = screenSaverModel
+        self.androidModel = androidModel
         self.onModeChange = onModeChange
         _model = StateObject(wrappedValue: SceneInspectorModel(wallpaper: wallpaper, scopes: scopes))
         _depthMaps = StateObject(wrappedValue: SceneEditorDepthMapHost(wallpaper: wallpaper))
@@ -1153,6 +1174,11 @@ private struct SceneInspectorContent: View {
                                 layerAdjustments(for: model.items.first(where: { $0.id == selectedID }))
                             }
                             .id(exportPanelRevision)
+                        } else if let androidModel {
+                            AndroidExportSettingsView(model: androidModel) {
+                                layerAdjustments(for: model.items.first(where: { $0.id == selectedID }))
+                            }
+                            .id(exportPanelRevision)
                         } else if let screenSaverModel {
                             ScreenSaverEditorPanel(model: screenSaverModel) {
                                 layerAdjustments(for: model.items.first(where: { $0.id == selectedID }))
@@ -1164,6 +1190,9 @@ private struct SceneInspectorContent: View {
                     .inspectorColumnWidth(min: 260, ideal: Self.sidebarWidth, max: 400)
                 }
                 .modifier(LivePhotoExportSheetHost(model: exportModel, onClose: { exportPanelRevision += 1 }) {
+                    layerAdjustments(for: model.items.first(where: { $0.id == selectedID }))
+                })
+                .modifier(AndroidExportSheetHost(model: androidModel, onClose: { exportPanelRevision += 1 }) {
                     layerAdjustments(for: model.items.first(where: { $0.id == selectedID }))
                 })
                 .toolbar {
@@ -1245,6 +1274,9 @@ private struct SceneInspectorContent: View {
         if let exportModel {
             LockScreenPreview(model: exportModel)
                 .navigationTitle(Text(SceneInspectorMode.deviceExport.title))
+        } else if let androidModel {
+            AndroidScreenPreview(model: androidModel)
+                .navigationTitle(Text(SceneInspectorMode.androidExport.title))
         } else if let screenSaverModel {
             ScreenSaverEditorPreview(model: screenSaverModel)
                 .navigationTitle(Text(SceneInspectorMode.screenSaver.title))
@@ -1261,7 +1293,7 @@ private struct SceneInspectorContent: View {
             switch mode {
             case .wallpaper: Label("Move & Align", systemImage: "sidebar.right")
             case .screenSaver: Label("Screen Saver Panel", systemImage: "sidebar.right")
-            case .deviceExport: Label("Export Settings Panel", systemImage: "sidebar.right")
+            case .deviceExport, .androidExport: Label("Export Settings Panel", systemImage: "sidebar.right")
             }
         }
         .help(panelToggleHelp)
@@ -1271,7 +1303,7 @@ private struct SceneInspectorContent: View {
         switch mode {
         case .wallpaper: return Text("Show or hide the move, size and align controls")
         case .screenSaver: return Text("Show or hide the Screen Saver panel")
-        case .deviceExport: return Text("Show or hide the Export Settings panel")
+        case .deviceExport, .androidExport: return Text("Show or hide the Export Settings panel")
         }
     }
 
@@ -1285,6 +1317,13 @@ private struct SceneInspectorContent: View {
                 Label("Export Settings", systemImage: "slider.horizontal.3")
             }
             .help("Open the export settings: device, crop, clip, quality, layers and properties")
+        } else if let androidModel {
+            Button {
+                androidModel.showSettings()
+            } label: {
+                Label("Export Settings", systemImage: "slider.horizontal.3")
+            }
+            .help("Open the export settings: device, crop, output, layers and properties")
         } else if let screenSaverModel {
             Button {
                 screenSaverModel.record()
@@ -1317,8 +1356,8 @@ private struct SceneInspectorContent: View {
         }
         .pickerStyle(.segmented)
         .disabled(!eligible)
-        .help(eligible ? Text("Edit the running wallpaper, record it as your screen saver, or preview it as an iPhone or iPad lock screen and export a Live Photo, without changing your desktop")
-                       : Text("Only scene wallpapers can be made into a screen saver here or exported to iPhone or iPad for now"))
+        .help(eligible ? Text("Edit the running wallpaper, record it as your screen saver, preview it as an iPhone or iPad lock screen and export a Live Photo, or frame it for an Android device and export a .mpkg, without changing your desktop")
+                       : Text("Only scene wallpapers can be made into a screen saver here or exported to iPhone, iPad or Android for now"))
     }
 
     /// ⌘K. macOS 15 focuses a search field through `searchFocused`; macOS 14 has no API for it,

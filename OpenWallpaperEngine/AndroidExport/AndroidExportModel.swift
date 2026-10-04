@@ -37,6 +37,9 @@ final class AndroidExportModel: ObservableObject {
         didSet { if options.mode != oldValue.mode { modes = [:] } }
     }
     @Published var modes: [String: AndroidExportOptions.Mode] = [:]
+    /// The column of WE's preset table for the selection: from its resolution tags at once, then
+    /// from its scenes' sizes once they are read (`AndroidExportOptions.ResolutionClass`).
+    @Published private(set) var resolution: AndroidExportOptions.ResolutionClass
     @Published var showsAdvancedSettings = false
     /// The scene the crop preview shows.
     @Published private(set) var previewID: String?
@@ -56,6 +59,7 @@ final class AndroidExportModel: ObservableObject {
     private let scopes: (WEWallpaper) -> [WallpaperPropertyScope]
     private let worker: AndroidExportWorking
     private var sceneSizeTask: Task<Void, Never>?
+    private var resolutionTask: Task<Void, Never>?
 
     /// `scopes` names the stores whose values a wallpaper's pre-render starts from (the
     /// displays' that show it, as the Scene Editor (Live) copies them).
@@ -69,7 +73,40 @@ final class AndroidExportModel: ObservableObject {
         self.worker = worker ?? AndroidExporter()
         usesFolder = defaults.bool(forKey: Self.usesFolderKey)
         folder = defaults.string(forKey: Self.folderKey).map { URL(filePath: $0, directoryHint: .isDirectory) }
+        let tags = rows.flatMap { $0.wallpaper.project.tags ?? [] }
+        resolution = .of(tags: tags, sceneSizes: [])
+        options = AndroidExportOptions(mode: .balanced, resolution: resolution)
         showPreview(of: rows.first(where: \.isScene)?.id)
+        measureScenes(tags: tags)
+    }
+
+    /// Chooses a quality button: its mode with WE's preset for the selection.
+    func choose(_ mode: AndroidExportOptions.Mode) {
+        options.choose(mode, resolution: resolution)
+    }
+
+    /// Reads the scenes' sizes, as WE's dialog asks for them (`getWallpaperResolutions`), and
+    /// presets the options again for the column they give.
+    private func measureScenes(tags: [String]) {
+        let scenes = rows.filter(\.isScene).map(\.wallpaper)
+        guard !scenes.isEmpty else { return }
+        resolutionTask = Task { [weak self] in
+            let sizes = await Task.detached(priority: .utility) {
+                scenes.compactMap { wallpaper -> SIMD2<Double>? in
+                    do {
+                        return try AndroidPackageBuilder.sceneSize(wallpaper)
+                    } catch {
+                        OWELog.error(.app, "Android export: \(wallpaper.wallpaperDirectory.lastPathComponent)'s size can't be read: \(error)")
+                        return nil
+                    }
+                }
+            }.value
+            guard let self, !Task.isCancelled else { return }
+            let resolution = AndroidExportOptions.ResolutionClass.of(tags: tags, sceneSizes: sizes)
+            guard resolution != self.resolution else { return }
+            self.resolution = resolution
+            self.options.choose(self.options.mode, resolution: resolution)
+        }
     }
 
     var title: String { rows.count == 1 ? rows[0].wallpaper.project.displayTitle : String(localized: "\(rows.count) wallpapers") }
@@ -90,7 +127,8 @@ final class AndroidExportModel: ObservableObject {
     /// A row's options: the shared ones with its own mode.
     func options(for row: Row) -> AndroidExportOptions {
         var options = options
-        options.mode = mode(of: row)
+        // A row of its own mode takes that mode's preset; the shared mode keeps the advanced settings.
+        if mode(of: row) != options.mode { options.choose(mode(of: row), resolution: resolution) }
         return options
     }
 
@@ -126,6 +164,7 @@ final class AndroidExportModel: ObservableObject {
     func close() {
         queue?.cancel()
         sceneSizeTask?.cancel()
+        resolutionTask?.cancel()
         session?.end()
         session = nil
     }
@@ -205,6 +244,19 @@ final class AndroidExportModel: ObservableObject {
     }
 
     func cancelExport() { queue?.cancel() }
+
+    /// The one scene this sheet exports, which "Edit in Scene Editor…" opens in the Scene Editor
+    /// (Live)'s Android Export mode; nil for a batch or a video.
+    var editableScene: WEWallpaper? { rows.count == 1 && rows[0].isScene ? rows[0].wallpaper : nil }
+
+    /// Opens the scene in the Scene Editor (Live)'s Android Export mode, editing the stores this
+    /// sheet's preview started from.
+    func editInSceneEditor() {
+        guard let wallpaper = editableScene else { return }
+        let scopes = scopes(wallpaper)
+        close()
+        DispatchQueue.main.async { AppDelegate.shared.showSceneInspector(for: wallpaper, scopes: scopes, mode: .androidExport) }
+    }
 
     /// Opens "Send over Wi-Fi" for the exported packages.
     func sendOverWiFi() {

@@ -6,9 +6,11 @@ import Foundation
 /// - **Video:** the wallpaper's video file byte for byte, under its own name, its preview, and a
 ///   project.json of only `file`, `preview`, `title` and `type: "video"`.
 /// - **Scene, Dynamic:** the scene itself, loose: every file of its scene.pkg (or, without one, of
-///   its folder), project.json and the preview as they are, scene.json written again with
+///   its folder) but its sound files (WE drops the music; the sound layer keeps naming it),
+///   project.json and the preview as they are, scene.json written again with
 ///   `general.texturereduction`, shaders made GLSL ES-safe (`MobileShaderCompatibility`) and
-///   `.tex` files converted (`MobileTextureConverter`).
+///   `.tex` files converted (`MobileTextureConverter`). From the Scene Editor (Live)'s Android
+///   Export mode, its layer edits and user properties are baked in (`AndroidSceneBake`).
 /// - **Scene, Pre-Rendered:** `wallpaper.mp4` (`AndroidVideoRenderer`), scene.json (with
 ///   `texturereduction` 4, as WE's has it), project.json with `file` set to `wallpaper.mp4`
 ///   (its `type` stays `Scene`), and the preview.
@@ -68,11 +70,15 @@ enum AndroidPackageBuilder {
     // MARK: Scene
 
     /// The Dynamic package: the scene's files, converted for `options`. Runs off the main thread.
-    static func dynamicEntries(_ wallpaper: WEWallpaper, options: AndroidExportOptions,
+    /// `baking`: values whose layer edits and user properties are baked into scene.json, the
+    /// files they replace and project.json (`AndroidSceneBake`); nil packs them as they are.
+    static func dynamicEntries(_ wallpaper: WEWallpaper, options: AndroidExportOptions, baking: [String: String]? = nil,
                                progress: ((Double) -> Void)? = nil) throws -> [Entry] {
         ThreadGuards.assertBackground("AndroidPackageBuilder.dynamicEntries")
         guard kind(of: wallpaper) == .scene else { throw Failure.unsupported }
-        let files = try sceneFiles(wallpaper)
+        // WE leaves the music out of a mobile package; the sound layer still names its file.
+        var files = try sceneFiles(wallpaper).filter { !isAudio($0.path) }
+        if let baking { files = AndroidSceneBake.replacingFiles(files, values: baking) }
         let secondary = secondaryTextures(in: files)
         let reduction = options.effectiveTextureReduction.rawValue
         var entries: [Entry] = []
@@ -80,7 +86,8 @@ enum AndroidPackageBuilder {
             try Task.checkCancellation()
             let lowered = file.path.lowercased()
             if file.path == wallpaper.project.file {
-                entries.append(Entry(path: file.path, data: try scene(file.data, textureReduction: options.sceneTextureReduction)))
+                let data = try baking.map { try AndroidSceneBake.scene(file.data, values: $0) } ?? file.data
+                entries.append(Entry(path: file.path, data: try scene(data, textureReduction: options.sceneTextureReduction)))
             } else if lowered.hasPrefix("shaders/"), lowered.hasSuffix(".frag") || lowered.hasSuffix(".vert") {
                 let source = String(decoding: file.data, as: UTF8.self)
                 entries.append(Entry(path: file.path, data: Data(MobileShaderCompatibility.rewrite(source).utf8)))
@@ -93,14 +100,17 @@ enum AndroidPackageBuilder {
             }
             progress?(Double(index + 1) / Double(files.count))
         }
-        return try entries + projectAndPreview(wallpaper, project: nil)
+        let project = try baking.map { try AndroidSceneBake.project(projectData(wallpaper), values: $0) }
+        return try entries + projectAndPreview(wallpaper, project: project)
     }
 
-    /// The Pre-Rendered package around the rendered `video`.
-    static func preRenderedEntries(_ wallpaper: WEWallpaper, video: URL) throws -> [Entry] {
+    /// The Pre-Rendered package around the rendered `video`: scene.json with the options'
+    /// `texturereduction` (4 for WE's preset), no sound file.
+    static func preRenderedEntries(_ wallpaper: WEWallpaper, video: URL,
+                                   options: AndroidExportOptions = AndroidExportOptions(mode: .preRendered)) throws -> [Entry] {
         guard kind(of: wallpaper) == .scene else { throw Failure.unsupported }
         let sceneFile = wallpaper.project.file
-        let scene = try scene(sceneData(wallpaper), textureReduction: AndroidExportOptions.Mode.preRendered.textureReduction.rawValue)
+        let scene = try scene(sceneData(wallpaper), textureReduction: options.sceneTextureReduction)
         var project = try projectDocument(wallpaper)
         project["file"] = .string(videoFileName)
         return try [Entry(path: videoFileName, file: video), Entry(path: sceneFile, data: scene)]
@@ -153,6 +163,13 @@ enum AndroidPackageBuilder {
         }
     }
 
+    /// The sound files a mobile package leaves out.
+    static let audioExtensions: Set<String> = ["mp3", "ogg", "wav", "m4a", "flac"]
+
+    static func isAudio(_ path: String) -> Bool {
+        audioExtensions.contains((path as NSString).pathExtension.lowercased())
+    }
+
     struct File {
         var path: String
         var data: Data
@@ -201,18 +218,16 @@ enum AndroidPackageBuilder {
 
     /// project.json (as it is, or `project`) and the preview.
     private static func projectAndPreview(_ wallpaper: WEWallpaper, project: Data?) throws -> [Entry] {
-        let url = wallpaper.settingsDirectory.appending(path: "project.json")
-        let data: Data
-        if let project {
-            data = project
-        } else {
-            do {
-                data = try Data(contentsOf: url)
-            } catch {
-                throw Failure.unreadable("project.json", error)
-            }
+        [Entry(path: "project.json", data: try project ?? projectData(wallpaper))] + (previewEntry(wallpaper).map { [$0] } ?? [])
+    }
+
+    /// project.json's bytes.
+    static func projectData(_ wallpaper: WEWallpaper) throws -> Data {
+        do {
+            return try Data(contentsOf: wallpaper.settingsDirectory.appending(path: "project.json"))
+        } catch {
+            throw Failure.unreadable("project.json", error)
         }
-        return [Entry(path: "project.json", data: data)] + (previewEntry(wallpaper).map { [$0] } ?? [])
     }
 
     private static func projectDocument(_ wallpaper: WEWallpaper) throws -> WEJSONDocument {

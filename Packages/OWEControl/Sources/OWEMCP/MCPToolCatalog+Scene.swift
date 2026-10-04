@@ -254,10 +254,10 @@ extension MCPToolCatalog {
                     "wallpaper_id": JSONSchema.string("The wallpaper whose Wallpaper Editor window to close.", minLength: 1),
                 ], required: ["editor"]), annotations: .idempotent) { message($0) },
         MCPTool("editor_set_tab", title: "Switch Scene Editor Tab",
-                description: "Opens the Scene Editor (Live) on a scene wallpaper in one of its tabs: Wallpaper (edits the running wallpaper), Screen Saver, or iPhone & iPad Export.",
+                description: "Opens the Scene Editor (Live) on a scene wallpaper in one of its tabs: Wallpaper (edits the running wallpaper), Screen Saver, iPhone & iPad Export, or Android Export (frames it for an Android device or a custom size and exports a .mpkg: a pre-rendered loop of the edited version, or the scene with its edits baked in).",
                 input: JSONSchema.object([
                     "wallpaper_id": sceneWallpaper,
-                    "tab": JSONSchema.string("The tab.", oneOf: ["wallpaper", "screen_saver", "iphone_ipad_export"]),
+                    "tab": JSONSchema.string("The tab.", oneOf: ["wallpaper", "screen_saver", "iphone_ipad_export", "android_export"]),
                 ], required: ["wallpaper_id", "tab"]), annotations: .idempotent) { message($0) },
     ]
 }

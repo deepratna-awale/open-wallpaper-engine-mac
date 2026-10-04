@@ -1,12 +1,21 @@
 import Foundation
 
 /// One wallpaper an Android export packages: its options (each scene can have its own mode) and,
-/// for a pre-rendered scene, the user-property values it renders with.
+/// for a pre-rendered scene, the user-property values it renders with. The Scene Editor (Live)'s
+/// Android Export mode also gives a pre-render its own framing, and a Dynamic scene the values to
+/// bake into its files.
 struct AndroidExportItem: Identifiable, Equatable {
     var wallpaper: WEWallpaper
     var options: AndroidExportOptions
     /// The values a pre-render uses (an isolated session's, or the wallpaper's own).
     var properties: [String: String] = [:]
+    /// A pre-render's crop, pointer and length (the Android Export mode's); nil frames it by the
+    /// options (`AndroidExportOptions.crop`), the pointer centred, WE's 30 s.
+    var framing: AndroidVideoFraming?
+    /// Dynamic: values baked into the package's scene.json and project.json
+    /// (`AndroidSceneBake`), the Android Export mode's layer edits and user properties; nil packs
+    /// the scene as it is.
+    var bakedValues: [String: String]?
 
     var id: String { wallpaper.identityPath }
     var kind: AndroidPackageBuilder.Kind? { AndroidPackageBuilder.kind(of: wallpaper) }
@@ -14,8 +23,17 @@ struct AndroidExportItem: Identifiable, Equatable {
     var usesGPU: Bool { kind == .scene && options.mode == .preRendered }
 
     static func == (lhs: AndroidExportItem, rhs: AndroidExportItem) -> Bool {
-        lhs.id == rhs.id && lhs.options == rhs.options && lhs.properties == rhs.properties
+        lhs.id == rhs.id && lhs.options == rhs.options && lhs.properties == rhs.properties && lhs.framing == rhs.framing
+            && lhs.bakedValues == rhs.bakedValues
     }
+}
+
+/// How a pre-rendered video frames the scene: the window and its pixels, where the pointer rests
+/// (`LivePhotoParallax`) and the loop's length.
+struct AndroidVideoFraming: Equatable {
+    var crop: LivePhotoCrop
+    var pointer = LivePhotoParallax.centre
+    var seconds = AndroidExportOptions.videoSeconds
 }
 
 /// What an Android export made, in the selection's order: each package with what a later step

@@ -6,7 +6,7 @@ import VideoToolbox
 /// app's helper run (`--render-android-video`), never on the app's main or render thread:
 ///
 /// - the real loader and renderer, offscreen, on a fixed frame step (`LivePhotoRenderer.render`,
-///   as the Live Photo export draws: the job's user properties, silent, the pointer centred, the
+///   as the Live Photo export draws: the job's user properties, silent, the job's pointer, the
 ///   whole scene at its authored size or more), cut to the job's crop at the video's pixels;
 /// - WE's format: H.264 Constrained Baseline (CAVLC, no B-frames), yuv420p, BT.709, at the
 ///   job's size, frame rate and average bit rate, a 30.0 s loop in an `.mp4`;
@@ -81,7 +81,7 @@ enum AndroidVideoRenderer {
         }
         var head: [CGImage] = []
         do {
-            try await renderer.render(crop: crop, pointer: LivePhotoParallax.centre, leadIn: 0, frames: frames + fade,
+            try await renderer.render(crop: crop, pointer: job.pointerPosition, leadIn: 0, frames: frames + fade,
                                       frameRate: job.frameRate, hidesClockLayers: false, progress: progress) { rendered, image in
                 if rendered < fade {
                     head.append(image)
