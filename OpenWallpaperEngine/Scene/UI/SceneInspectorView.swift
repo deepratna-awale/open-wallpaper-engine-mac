@@ -975,12 +975,13 @@ struct SceneInspectorView: View {
     var body: some View {
         if let exportModel {
             SceneInspectorContent(wallpaper: wallpaper, scopes: [exportModel.session.scope], isolated: exportModel.session,
-                                  exportModel: exportModel, screenSaverModel: nil, onModeChange: setMode)
+                                  exportModel: exportModel, screenSaverModel: nil, onModeChange: setMode,
+                                  initialMode: .deviceExport)
                 .id(SceneInspectorMode.deviceExport)
         } else if let screenSaverModel {
             SceneInspectorContent(wallpaper: wallpaper, scopes: [screenSaverModel.session.scope],
                                   isolated: screenSaverModel.session, exportModel: nil, screenSaverModel: screenSaverModel,
-                                  onModeChange: setMode)
+                                  onModeChange: setMode, initialMode: .screenSaver)
                 .id(SceneInspectorMode.screenSaver)
         } else {
             SceneInspectorContent(wallpaper: wallpaper, scopes: scopes, isolated: nil, exportModel: nil,
@@ -1051,7 +1052,8 @@ private struct SceneInspectorContent: View {
     private let exportModel: LivePhotoExportModel?
     private let screenSaverModel: ScreenSaverEditorModel?
     private let onModeChange: (SceneInspectorMode, SIMD2<Double>) -> Void
-    /// The mode to enter once the scene's size is known (`showSceneInspector(…mode:)`).
+    /// The mode to enter once the scene's size is known (`showSceneInspector(…mode:)`). An isolated
+    /// mode's content passes its own mode, so appearing doesn't switch straight back to Wallpaper.
     private let initialMode: SceneInspectorMode
 
     private var mode: SceneInspectorMode {
