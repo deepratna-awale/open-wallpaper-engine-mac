@@ -12,8 +12,9 @@ import UniformTypeIdentifiers
 /// Each preview's small wallpaper (`EditorPreviewFolder`) is loaded by the real loader and drawn
 /// offscreen by its own real renderer, as the screen saver's loop and Live Photos are: muted, a
 /// silent spectrum, on a fixed frame step from load. An effect is drawn for `effectFrames`; when
-/// its picture doesn't change over the first half second it is a still (HEIC), else a loop. A
-/// particle system runs `particleLeadIn` frames first, so it is under way, and is always a loop.
+/// no frame of its first two seconds differs from its first it is a still (HEIC), else a loop. A
+/// particle system is always a loop, after a lead-in, both as long as its systems' cycle; a 2D
+/// one is framed on where it draws.
 /// A loop is HEVC, its last frames crossfaded into its first so it wraps without a jump.
 @MainActor
 final class EditorPreviewRenderer {
@@ -34,13 +35,15 @@ final class EditorPreviewRenderer {
     static let effectFrames = 24
     static let effectFrameRate = 12
     static let effectFade = 4
-    /// A particle system's loop: 2 s at 24 frames per second after 1.5 s of lead-in.
-    static let particleFrames = 48
+    /// A particle system's loop, at 24 frames per second; its length and lead-in follow its
+    /// systems (`EditorPreviewScene.particleTiming`).
     static let particleFrameRate = 24
-    static let particleLeadIn = 36
     static let particleFade = 6
-    /// The frame an effect is compared at to tell a still from a loop: half a second in.
-    static let stillProbeFrame = 6
+    /// Every how many frames the zoomed-out probe of a 2D particle system is read back.
+    static let probeStride = 4
+    /// The frames an effect is compared over to tell a still from a loop: two seconds, a whole
+    /// loop.
+    static let stillProbeFrames = 24
     /// The HEIC still's quality.
     static let stillQuality = 0.85
 
@@ -86,34 +89,63 @@ final class EditorPreviewRenderer {
         let folder = scratch.appending(path: UUID().uuidString, directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: folder) } // Optional: a scratch folder.
-        let frame = try EditorPreviewFolder.write(subject, into: folder)
-        guard let wallpaper = InstalledLibrary.wallpaper(at: folder, hiding: []) else { throw Failure.noScene }
         try FileManager.default.createDirectory(at: outputBase.deletingLastPathComponent(), withIntermediateDirectories: true)
-        let session = try await Session.start(wallpaper, frame: frame, scratch: folder, timeout: timeoutSeconds)
+        if subject.isParticle { return try await renderParticles(subject, folder: folder, to: outputBase) }
+        let session = try await start(subject, framing: EditorPreviewScene.particleFraming, folder: folder)
         defer { session.end() }
-        if subject.isParticle {
-            for _ in 0..<Self.particleLeadIn { session.advance(by: Self.particleFrameRate, capture: false) }
-            return try await writeLoop(session, frames: Self.particleFrames, frameRate: Self.particleFrameRate,
-                                       fade: Self.particleFade, head: [], to: outputBase)
-        }
-        // A still unless the picture moves over the first half second.
+        // A still unless any frame of the probe differs from the first: a small or periodic
+        // motion may not show at a single instant.
         var head: [CGImage] = []
         guard let first = await session.capture() else { throw Failure.readBack }
         head.append(first)
-        let reference = ScreenSaverFrameSignature(first)
         var moves = false
-        for _ in 1...Self.stillProbeFrame {
+        while !moves, head.count <= Self.stillProbeFrames {
             session.advance(by: Self.effectFrameRate, capture: true)
             guard let image = await session.capture() else { throw Failure.readBack }
             head.append(image)
-            if let reference, let signature = ScreenSaverFrameSignature(image),
-               signature.difference(reference) > ScreenSaverSeamFinder.invisibleDifference {
-                moves = true
-            }
+            moves = EditorPreviewScene.moved(image, from: first)
         }
         guard moves else { return try writeStill(first, to: outputBase) }
         return try await writeLoop(session, frames: Self.effectFrames, frameRate: Self.effectFrameRate, fade: Self.effectFade,
                                    head: head, to: outputBase)
+    }
+
+    /// A particle system's loop. Its lead-in and loop each hold a whole cycle of its systems
+    /// (`EditorPreviewScene.particleTiming`), so a burst after a launch is seen. A 2D one is first
+    /// run zoomed out (`probeFraming`) to find where it draws, then framed on that.
+    private func renderParticles(_ subject: EditorPreviewSubject, folder: URL, to outputBase: URL) async throws -> URL {
+        let probeFraming = subject.is3D ? EditorPreviewScene.particleFraming : EditorPreviewScene.probeFraming
+        var session = try await start(subject, framing: probeFraming, folder: folder)
+        let timing = EditorPreviewScene.particleTiming(cycle: EditorPreviewFolder.particleCycleSeconds(in: folder))
+        let leadIn = Int((timing.leadIn * Double(Self.particleFrameRate)).rounded())
+        let frames = Int((timing.loop * Double(Self.particleFrameRate)).rounded())
+        if !subject.is3D {
+            var bounds = EditorPreviewScene.ContentBounds(pixelWidth: session.pixelSize.x, pixelHeight: session.pixelSize.y)
+            for index in 1...(leadIn + frames) {
+                let capture = index % Self.probeStride == 0
+                session.advance(by: Self.particleFrameRate, capture: capture)
+                guard capture else { continue }
+                guard let image = await session.capture() else {
+                    session.end()
+                    throw Failure.readBack
+                }
+                bounds.add(image)
+            }
+            session.end()
+            let framing = bounds.rect().map { EditorPreviewScene.fittedFraming(content: $0, probe: probeFraming) }
+            session = try await start(subject, framing: framing ?? EditorPreviewScene.particleFraming, folder: folder)
+        }
+        defer { session.end() }
+        for _ in 0..<leadIn { session.advance(by: Self.particleFrameRate, capture: false) }
+        return try await writeLoop(session, frames: frames, frameRate: Self.particleFrameRate,
+                                   fade: Self.particleFade, head: [], to: outputBase)
+    }
+
+    /// Writes the subject's wallpaper into `folder` in `framing` and loads it.
+    private func start(_ subject: EditorPreviewSubject, framing: EditorPreviewScene.Framing, folder: URL) async throws -> Session {
+        let frame = try EditorPreviewFolder.write(subject, framing: framing, into: folder)
+        guard let wallpaper = InstalledLibrary.wallpaper(at: folder, hiding: []) else { throw Failure.noScene }
+        return try await Session.start(wallpaper, frame: frame, scratch: folder, timeout: timeoutSeconds)
     }
 
     /// Writes a loop of `frames` frames: `head` holds the frames already captured, from the

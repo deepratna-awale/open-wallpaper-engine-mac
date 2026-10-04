@@ -24,16 +24,18 @@ enum EditorPreviewFolder {
         }
     }
 
-    /// Writes the subject's wallpaper into `folder` (an empty folder) and returns its frame.
-    static func write(_ subject: EditorPreviewSubject, into folder: URL) throws -> EditorPreviewScene.Frame {
+    /// Writes the subject's wallpaper into `folder` and returns its frame; a 2D particle system is
+    /// seen in `framing`.
+    static func write(_ subject: EditorPreviewSubject, framing: EditorPreviewScene.Framing = EditorPreviewScene.particleFraming,
+                      into folder: URL) throws -> EditorPreviewScene.Frame {
         switch subject {
         case .effect(let file, let wallpaper):
             try writeEffect(file, wallpaper: wallpaper.map { URL(filePath: $0, directoryHint: .isDirectory) }, into: folder)
             return EditorPreviewScene.effectFrame
         case .particleSystem(let path, let is3D):
             try store(EditorPreviewScene.particleFiles(objects: EditorPreviewScene.systemObjects(path: path, is3D: is3D),
-                                                       is3D: is3D), in: folder)
-            return EditorPreviewScene.particleFrame
+                                                       is3D: is3D, framing: framing), in: folder)
+            return framing.frame
         case .particlePreset(let directory, let index, let is3D):
             let presetFolder = URL(filePath: directory, directoryHint: .isDirectory)
             guard let preset = ParticlePresetCatalog.preset(in: presetFolder, translate: { _ in nil }),
@@ -46,9 +48,27 @@ enum EditorPreviewFolder {
                 try copy(source, to: dependency, in: folder)
             }
             let objects = EditorPreviewScene.presetObjects(variant.objects, is3D: is3D)
-            try store(EditorPreviewScene.particleFiles(objects: objects, is3D: is3D), in: folder)
-            return EditorPreviewScene.particleFrame
+            try store(EditorPreviewScene.particleFiles(objects: objects, is3D: is3D, framing: framing), in: folder)
+            return framing.frame
         }
+    }
+
+    /// How long the particle systems of the preview written in `folder` take to play out
+    /// (`EditorPreviewScene.cycleSeconds`), children included: the longest of its objects'.
+    static func particleCycleSeconds(in folder: URL) -> Double {
+        let read = folderReader(folder)
+        // Optional: a scene that can't be read has no systems (the load reports it).
+        guard let data = read("scene.json"),
+              let scene = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return 0 }
+        let objects = scene["objects"] as? [[String: Any]] ?? []
+        let paths: [String] = objects.compactMap { $0["particle"] as? String }
+        let definition: (String) -> ParticleDefinition? = { path in
+            // Optional: a system that can't be read plays nothing (the load reports it).
+            guard let data = read(path), let object = try? WETolerantJSON.object(from: data) else { return nil }
+            return SceneJSONValue(any: object).flatMap { ParticleDefinition(json: $0) }
+        }
+        let cycles: [Double] = paths.map { EditorPreviewScene.cycleSeconds(ofSystem: $0, read: definition) }
+        return cycles.max() ?? 0
     }
 
     // MARK: Effects

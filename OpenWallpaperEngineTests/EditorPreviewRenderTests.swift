@@ -68,11 +68,31 @@ final class EditorPreviewRenderTests: XCTestCase {
         XCTAssertEqual(url.pathExtension, EditorPreviewCache.movieExtension)
         let asset = AVURLAsset(url: url)
         let duration = try await asset.load(.duration).seconds
-        XCTAssertEqual(duration, Double(EditorPreviewRenderer.particleFrames) / Double(EditorPreviewRenderer.particleFrameRate),
-                       accuracy: 0.1)
+        let loop = EditorPreviewScene.particleLoopSeconds
+        XCTAssertGreaterThanOrEqual(duration, loop.lowerBound - 0.1, "a whole cycle of the preset's systems")
+        XCTAssertLessThanOrEqual(duration, loop.upperBound + 0.1)
         let decoded = try await firstFrame(of: url)
         let frame = try XCTUnwrap(decoded)
         XCTAssertEqual(frame.width, EditorPreviewScene.particleFrame.pixelWidth)
+        var bounds = EditorPreviewScene.ContentBounds(pixelWidth: frame.width, pixelHeight: frame.height)
+        bounds.add(frame)
+        if let content = bounds.rect() {
+            let centreX: Double = Double(content.midX) / Double(frame.width)
+            let centreY: Double = Double(content.midY) / Double(frame.height)
+            XCTAssertEqual(centreX, 0.5, accuracy: 0.25, "framed on what it draws")
+            XCTAssertEqual(centreY, 0.5, accuracy: 0.25)
+        }
+    }
+
+    func testAPeriodicEffectIsALoop() async throws {
+        let assets = try Fixtures.assets()
+        let file = "effects/shake/effect.json"
+        guard EffectCatalog.builtInEffectFiles(in: assets).contains(file) else { throw XCTSkip("the assets have no \(file)") }
+        let subject = EditorPreviewSubject.effect(file: file, wallpaper: nil)
+        let cache = EditorPreviewCache(cachesDirectory: scratch, build: EditorPreviewCache.assetsBuild(of: assets))
+        let url = try await EditorPreviewRenderer(scratch: scratch.appending(path: "work"))
+            .render(subject, outputBase: cache.outputBase(for: subject))
+        XCTAssertEqual(url.pathExtension, EditorPreviewCache.movieExtension, "a small, slow motion is still motion")
     }
 
     // MARK: Helpers
