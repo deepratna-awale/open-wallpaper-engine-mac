@@ -30,6 +30,9 @@ struct ScreenSaverLoopRenderer {
     var output: URL
     var defaults: UserDefaults
     var timeoutSeconds: TimeInterval = 120
+    /// The automatic loop leaves the clock, day and date layers out (`SceneClockLayers`); a Screen
+    /// Saver mode recording draws them, at the time it is recorded, when the user keeps them shown.
+    var hidesClockLayers = true
     /// The scripts run as they do on the desktop, with `engine.isScreensaver()` true, no media
     /// session and no sound; their `localStorage` is a scratch folder, so the loop never changes
     /// what the wallpaper's scripts saved.
@@ -120,7 +123,7 @@ struct ScreenSaverLoopRenderer {
         }
         let startTime: CFTimeInterval = 1000
         renderer.rendersScreenSaver = true
-        renderer.hidesClockLayers = true
+        renderer.hidesClockLayers = hidesClockLayers
         renderer.renderSettings = renderSettings
         renderer.sounds.setTargetGain(0)
         audioClock.seconds = 0
@@ -254,6 +257,14 @@ struct ScreenSaverLoopRenderer {
         }
     }
 
+    /// The scene loads with `values` as its stored user properties (the shared store of the
+    /// helper's scratch defaults, never the app's): a Screen Saver mode recording's version.
+    static func useValues(_ values: [String: String], for wallpaper: WEWallpaper, defaults: UserDefaults) {
+        let identity = WallpaperSettingsIdentity.resolve(wallpaper, defaults: defaults)
+        defaults.set(values, forKey: identity.key(.userProperties, scope: .shared))
+        defaults.set(true, forKey: identity.key(.explicitUserProperties, scope: .shared))
+    }
+
     static func globalSettings(from defaults: UserDefaults) -> GlobalSettings {
         guard let data = defaults.data(forKey: "GlobalSettings") else { return GlobalSettings() }
         do {
@@ -298,8 +309,10 @@ final class HEVCWriter {
     private let frameRate: Int
 
     /// `prepare` adds what else the movie holds (metadata, more inputs) before writing starts.
-    init?(url: URL, pixelSize: SIMD2<Int>, frameRate: Int, quality: Double = HEVCWriter.quality,
-          prepare: (AVAssetWriter) throws -> Void = { _ in }) {
+    /// `bitRate` (bits per second) replaces the constant quality with an average bitrate;
+    /// `colorProperties` tags the track's colour (`AVVideoColorPropertiesKey`).
+    init?(url: URL, pixelSize: SIMD2<Int>, frameRate: Int, quality: Double = HEVCWriter.quality, bitRate: Int? = nil,
+          colorProperties: [String: String]? = nil, prepare: (AVAssetWriter) throws -> Void = { _ in }) {
         do {
             writer = try AVAssetWriter(outputURL: url, fileType: .mov)
         } catch {
@@ -308,13 +321,21 @@ final class HEVCWriter {
         }
         // Constant quality, not a bitrate: rain, particles and glow need several times the bits
         // of a calm scene (a fixed 0.07 bit per pixel smeared them), and a still scene stays small.
-        input = AVAssetWriterInput(mediaType: .video, outputSettings: [
+        // A caller with a size budget (a Live Photo) passes its bitrate instead.
+        var compression: [String: Any] = [AVVideoExpectedSourceFrameRateKey: frameRate]
+        if let bitRate {
+            compression[AVVideoAverageBitRateKey] = bitRate
+        } else {
+            compression[AVVideoQualityKey] = quality
+        }
+        var settings: [String: Any] = [
             AVVideoCodecKey: AVVideoCodecType.hevc,
             AVVideoWidthKey: pixelSize.x,
             AVVideoHeightKey: pixelSize.y,
-            AVVideoCompressionPropertiesKey: [AVVideoQualityKey: quality,
-                                              AVVideoExpectedSourceFrameRateKey: frameRate],
-        ])
+            AVVideoCompressionPropertiesKey: compression,
+        ]
+        if let colorProperties { settings[AVVideoColorPropertiesKey] = colorProperties }
+        input = AVAssetWriterInput(mediaType: .video, outputSettings: settings)
         input.expectsMediaDataInRealTime = false
         adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: input, sourcePixelBufferAttributes: [
             kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,

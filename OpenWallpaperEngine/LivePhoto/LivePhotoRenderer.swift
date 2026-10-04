@@ -13,8 +13,14 @@ import Metal
 /// silent spectrum, the clock, day and date layers hidden (iOS draws its own,
 /// `SceneClockLayers`), on a fixed frame step from load, so frame `i` shows scene time
 /// `i / frameRate`. The whole scene is drawn at `LivePhotoCrop.renderScale` (never below its
-/// authored size nor below the phone's pixels), whatever the user's playback settings, and the
-/// crop is cut out at the phone's exact pixel size.
+/// authored size nor below the device's pixels), whatever the user's playback settings, and the
+/// crop is cut out at the device's exact pixel size.
+///
+/// A Live Photo is written in two passes: the clip's frames go into a near-lossless intermediate
+/// movie while the still is chosen among them (`LivePhotoKeyFrame`, at full resolution), then the
+/// final movie is encoded from it with the still marked and blended in at both ends
+/// (`LivePhotoMovieEncoder`). A motion analysis job renders the scene's first seconds small and
+/// writes each frame's motion (`LivePhotoMotion`).
 @MainActor
 final class LivePhotoRenderer {
     enum Failure: LocalizedError {
@@ -50,7 +56,7 @@ final class LivePhotoRenderer {
     /// The export's quality: the user's settings with WE's full scene detail, no upscaling and
     /// full-size textures. The scene target is sized for the export's drawable, which
     /// `LivePhotoCrop` sizes to the scene's authored size or more ("Full" render resolution's
-    /// floor, raised to the phone's pixels when they need more).
+    /// floor, raised to the device's pixels when they need more).
     nonisolated static func renderSettings(from settings: GlobalSettings) -> SceneRenderSettings {
         var render = SceneRenderSettings(settings)
         render.renderResolution = .retina
@@ -83,8 +89,13 @@ final class LivePhotoRenderer {
         var status: Int32?
         Task { @MainActor in
             do {
-                try await renderer.write(job, crop: crop) { fraction in
+                let progress: (Double) -> Void = { fraction in
                     FileHandle.standardOutput.write(Data(LivePhotoJob.progressLine(fraction).utf8))
+                }
+                if let analysis = job.analysis {
+                    try await renderer.analyse(crop: crop, seconds: job.analysisSeconds, into: analysis, progress: progress)
+                } else {
+                    try await renderer.write(job, crop: crop, progress: progress)
                 }
                 status = 0
             } catch {
@@ -103,45 +114,99 @@ final class LivePhotoRenderer {
         defaults.set(true, forKey: identity.key(.explicitUserProperties, scope: .shared))
     }
 
-    /// Writes the job's movie, and its still when it has one.
+    /// Writes the job's movie, and its still when it has one: the clip's preview in one pass, a
+    /// Live Photo in two (see the type's notes).
     func write(_ job: LivePhotoJob, crop: LivePhotoCrop, progress: @escaping (Double) -> Void) async throws {
         let clip = job.clip
-        var stillAdaptor: AVAssetWriterInputMetadataAdaptor?
-        let paired = job.still != nil
-        guard let writer = HEVCWriter(url: job.movie, pixelSize: crop.outputPixels, frameRate: LivePhotoClip.frameRate,
-                                      prepare: { writer in
-                                          guard paired else { return }
-                                          writer.metadata = [LivePhotoMetadata.contentIdentifierItem(job.identifier)]
-                                          stillAdaptor = try LivePhotoMetadata.addStillImageTimeInput(to: writer)
-                                      }) else { throw Failure.movie }
-        if let stillAdaptor {
-            // The still's moment is known up front: written first, its track is done before the frames.
-            let keyTime = CMTime(value: CMTimeValue(clip.keyFrameIndex), timescale: CMTimeScale(LivePhotoClip.frameRate))
-            guard stillAdaptor.append(LivePhotoMetadata.stillImageTimeGroup(at: keyTime, frameRate: LivePhotoClip.frameRate)) else {
-                writer.cancel()
+        let bitRate = job.qualityLevel.bitRate(for: crop.outputPixels, frameRate: LivePhotoClip.frameRate)
+        guard let still = job.still else {
+            guard let writer = HEVCWriter(url: job.movie, pixelSize: crop.outputPixels, frameRate: LivePhotoClip.frameRate,
+                                          bitRate: bitRate, colorProperties: LivePhotoMovieEncoder.colorProperties) else {
                 throw Failure.movie
             }
-            stillAdaptor.assetWriterInput.markAsFinished()
-        }
-        do {
-            try await render(crop: crop, clip: clip, progress: progress) { index, image in
-                if index == clip.keyFrameIndex, let still = job.still {
-                    try LivePhotoMetadata.writeStill(image, to: still, identifier: job.identifier)
+            do {
+                try await render(crop: crop, leadIn: clip.leadInFrames, frames: clip.frameCount, progress: progress) { index, image in
+                    guard writer.append(image, overlay: nil, weight: 0, frame: index) else { throw Failure.movie }
                 }
-                guard writer.append(image, overlay: nil, weight: 0, frame: index) else { throw Failure.movie }
+            } catch {
+                writer.cancel()
+                throw error
+            }
+            guard writer.finish() else { throw Failure.movie }
+            return
+        }
+
+        // Pass 1: the frames, near-lossless, and the still among them.
+        let pass = job.movie.deletingLastPathComponent().appending(path: ".pass-\(job.identifier).mov", directoryHint: .notDirectory)
+        defer { try? FileManager.default.removeItem(at: pass) } // Optional: a temporary file.
+        guard let intermediate = HEVCWriter(url: pass, pixelSize: crop.outputPixels, frameRate: LivePhotoClip.frameRate,
+                                            quality: 1) else { throw Failure.movie }
+        let candidates = LivePhotoKeyFrame.candidates(frameCount: clip.frameCount)
+        var sharpness: [Int: Double] = [:]
+        var keyImage: (index: Int, score: Double, image: CGImage)?
+        do {
+            try await render(crop: crop, leadIn: clip.leadInFrames, frames: clip.frameCount,
+                             progress: { progress($0 * 0.85) }) { index, image in
+                guard intermediate.append(image, overlay: nil, weight: 0, frame: index) else { throw Failure.movie }
+                guard candidates.contains(index) else { return }
+                let value = LivePhotoKeyFrame.sharpness(of: image)
+                sharpness[index] = value
+                let score = value * LivePhotoKeyFrame.weight(index: index, frameCount: clip.frameCount)
+                if keyImage.map({ score > $0.score }) ?? true { keyImage = (index, score, image) }
             }
         } catch {
-            writer.cancel()
+            intermediate.cancel()
             throw error
         }
-        guard writer.finish() else { throw Failure.movie }
+        guard intermediate.finish() else { throw Failure.movie }
+        let keyFrame = LivePhotoKeyFrame.choose(sharpness: sharpness, frameCount: clip.frameCount)
+        guard let keyImage, keyImage.index == keyFrame else { throw Failure.readBack }
+        try LivePhotoMetadata.writeStill(keyImage.image, to: still, identifier: job.identifier)
+
+        // Pass 2: the movie, the still marked and blended in at both ends.
+        guard let reader = IntermediateReader(url: pass) else { throw Failure.movie }
+        defer { reader.cancel() }
+        do {
+            try LivePhotoMovieEncoder.write(to: job.movie, pixelSize: crop.outputPixels, frameRate: LivePhotoClip.frameRate,
+                                            frameCount: clip.frameCount, keyFrame: keyFrame, still: keyImage.image,
+                                            identifier: job.identifier, bitRate: bitRate) { index in
+                try Task.checkCancellation()
+                progress(0.85 + 0.15 * Double(index + 1) / Double(clip.frameCount))
+                return reader.next()
+            }
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            OWELog.error(.app, "Live Photo: \(wallpaper.wallpaperDirectory.lastPathComponent)'s movie failed: \(error)")
+            throw Failure.movie
+        }
+    }
+
+    /// Renders the scene's first `seconds` small (the crop at about `LivePhotoMotion.analysisPixels`)
+    /// and writes each frame's motion to `url` (`LivePhotoMotion.Analysis`).
+    func analyse(crop: LivePhotoCrop, seconds: Double, into url: URL, progress: @escaping (Double) -> Void) async throws {
+        let scale = Double(LivePhotoMotion.analysisPixels) / Double(max(crop.outputPixels.x, crop.outputPixels.y, 1))
+        let small = SIMD2(max(16, Int(Double(crop.outputPixels.x) * min(scale, 1))),
+                          max(16, Int(Double(crop.outputPixels.y) * min(scale, 1))))
+        var analysisCrop = LivePhotoCrop(sceneSize: crop.sceneSize, outputPixels: small, zoom: crop.zoom, center: crop.center)
+        analysisCrop.minimumRenderScale = 0
+        let frames = max(2, Int((min(max(seconds, 1), LivePhotoClip.timelineLength) * Double(LivePhotoClip.frameRate)).rounded()))
+        var signatures: [ScreenSaverFrameSignature] = []
+        signatures.reserveCapacity(frames)
+        try await render(crop: analysisCrop, leadIn: 0, frames: frames, progress: progress) { _, image in
+            guard let signature = ScreenSaverFrameSignature(image) else { throw Failure.readBack }
+            signatures.append(signature)
+        }
+        let analysis = LivePhotoMotion.Analysis(frameRate: LivePhotoClip.frameRate,
+                                                differences: LivePhotoMotion.differences(signatures))
+        try JSONEncoder().encode(analysis).write(to: url)
     }
 
     // MARK: Rendering
 
-    /// Loads the scene, runs it to the clip's start and hands each of the clip's frames, cut to
-    /// `crop`, to `frame`. Checks for cancellation between frames.
-    private func render(crop: LivePhotoCrop, clip: LivePhotoClip, progress: @escaping (Double) -> Void,
+    /// Loads the scene, runs it `leadIn` frames (to the clip's start) and hands each of the next
+    /// `frames` frames, cut to `crop`, to `frame`. Checks for cancellation between frames.
+    private func render(crop: LivePhotoCrop, leadIn: Int, frames: Int, progress: @escaping (Double) -> Void,
                         frame: (Int, CGImage) throws -> Void) async throws {
         let name = wallpaper.wallpaperDirectory.lastPathComponent
         let scratch = FileManager.default.temporaryDirectory.appending(path: "owe-livephoto-\(UUID().uuidString)",
@@ -182,18 +247,18 @@ final class LivePhotoRenderer {
         guard renderer.hasContent, settled >= 3 else { throw Failure.loadTimedOut }
         renderer.holdsClock = false
 
-        let total = Double(clip.leadInFrames + clip.frameCount)
-        for index in 0..<(clip.leadInFrames + clip.frameCount) {
+        let total = Double(leadIn + frames)
+        for index in 0..<(leadIn + frames) {
             try Task.checkCancellation()
             let time = startTime + Double(index) / Double(LivePhotoClip.frameRate)
             renderer.wallTime = { time }
             renderer.renderShared([viewport])
-            if index < clip.leadInFrames {
+            if index < leadIn {
                 renderer.lastCommandBuffer?.waitUntilCompleted()
             } else {
                 guard let image = await capture(renderer, pixelSize: pixelSize),
                       let output = crop.outputImage(from: image) else { throw Failure.readBack }
-                try frame(index - clip.leadInFrames, output)
+                try frame(index - leadIn, output)
             }
             progress(Double(index + 1) / total)
             await Task.yield()

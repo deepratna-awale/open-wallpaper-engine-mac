@@ -84,7 +84,7 @@ struct WallpaperPresetsSection: View {
             Button("Save") { model.saveCurrent(named: newPresetName) }
             Button("Cancel", role: .cancel) { }
         } message: {
-            Text("Saves the current properties and Scene Editor edits. A preset with the same name is replaced.")
+            Text("Saves the current properties and Scene Editor (Live) edits. A preset with the same name is replaced.")
         }
         .alert("Rename Preset", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
             TextField("Preset Name", text: $renameText)
