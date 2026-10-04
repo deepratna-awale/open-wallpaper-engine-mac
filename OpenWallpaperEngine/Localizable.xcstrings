@@ -18235,6 +18235,101 @@
         }
       }
     },
+    "Can't connect?" : {
+      "comment" : "Send over Wi-Fi sheet: troubleshooting tips",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يتعذر الاتصال؟"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Verbindung?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿No puedes conectarte?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de se connecter ?"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कनेक्ट नहीं हो रहा?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non riesci a connetterti?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接続できない場合"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "연결할 수 없습니까?"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie możesz się połączyć?"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não consegue conectar?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удается подключиться?"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bağlanamıyor musunuz?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдається підʼєднатися?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法连接？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法連線？"
+          }
+        }
+      }
+    },
     "Can't create the Wallpaper Storage folder %@: %@" : {
       "comment" : "The first %@ is a folder path, the second the system's reason",
       "localizations" : {
@@ -24664,6 +24759,101 @@
         }
       }
     },
+    "Connect it to the same network as your Android device and try again, or save the files to a folder and copy them to the device another way." : {
+      "comment" : "Send over Wi-Fi sheet: no network",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "وصّله بالشبكة نفسها التي يتصل بها جهاز Android وأعد المحاولة، أو احفظ الملفات في مجلد وانسخها إلى الجهاز بطريقة أخرى."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinden Sie ihn mit demselben Netzwerk wie Ihr Android-Gerät und versuchen Sie es erneut, oder sichern Sie die Dateien in einem Ordner und kopieren Sie sie auf anderem Weg auf das Gerät."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conéctalo a la misma red que tu dispositivo Android y vuelve a intentarlo, o guarda los archivos en una carpeta y cópialos al dispositivo de otra forma."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connectez-le au même réseau que votre appareil Android et réessayez, ou enregistrez les fichiers dans un dossier et copiez-les sur l’appareil d’une autre manière."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इसे अपने Android डिवाइस वाले नेटवर्क से कनेक्ट करके फिर से कोशिश करें, या फ़ाइलें किसी फ़ोल्डर में सहेजकर उन्हें किसी और तरीके से डिवाइस पर कॉपी करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connettilo alla stessa rete del dispositivo Android e riprova, oppure salva i file in una cartella e copiali sul dispositivo in un altro modo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Android デバイスと同じネットワークに Mac を接続してもう一度試すか、ファイルをフォルダに保存して別の方法でデバイスにコピーしてください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac을 Android 기기와 같은 네트워크에 연결한 다음 다시 시도하거나, 파일을 폴더에 저장한 후 다른 방법으로 기기에 복사하십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Połącz go z tą samą siecią co urządzenie z Androidem i spróbuj ponownie lub zachowaj pliki w folderze i skopiuj je na urządzenie w inny sposób."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conecte-o à mesma rede do seu dispositivo Android e tente novamente, ou salve os arquivos em uma pasta e copie-os para o dispositivo de outra forma."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подключите его к той же сети, что и устройство Android, и повторите попытку или сохраните файлы в папку и скопируйте их на устройство другим способом."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac’i Android aygıtınızla aynı ağa bağlayıp yeniden deneyin veya dosyaları bir klasöre kaydedip aygıta başka bir yolla kopyalayın."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Підключіть його до тієї ж мережі, що й пристрій Android, і спробуйте ще раз, або збережіть файли в папку й скопіюйте їх на пристрій іншим способом."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请将 Mac 连接到与 Android 设备相同的网络后重试，或将文件存储到文件夹中，再通过其他方式拷贝到设备。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請將 Mac 連接到與 Android 裝置相同的網路後再試一次，或將檔案儲存到檔案夾，再以其他方式拷貝到裝置。"
+          }
+        }
+      }
+    },
     "Content Rating" : {
       "localizations" : {
         "ar" : {
@@ -25509,6 +25699,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "拷貝"
+          }
+        }
+      }
+    },
+    "Copy Address" : {
+      "comment" : "Send over Wi-Fi sheet: copy the URL",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "نسخ العنوان"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adresse kopieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar dirección"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copier l’adresse"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पता कॉपी करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia indirizzo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アドレスをコピー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "주소 복사"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopiuj adres"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar Endereço"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скопировать адрес"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adresi Kopyala"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати адресу"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拷贝地址"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拷貝位址"
           }
         }
       }
@@ -34093,6 +34378,101 @@
         }
       }
     },
+    "Download the files to this device." : {
+      "comment" : "Send over Wi-Fi page on the phone: first step",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "نزّل الملفات إلى هذا الجهاز."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laden Sie die Dateien auf dieses Gerät."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descarga los archivos en este dispositivo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Téléchargez les fichiers sur cet appareil."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फ़ाइलें इस डिवाइस पर डाउनलोड करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scarica i file su questo dispositivo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ファイルをこのデバイスにダウンロードします。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "파일을 이 기기에 다운로드합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pobierz pliki na to urządzenie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baixe os arquivos neste dispositivo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Загрузите файлы на это устройство."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dosyaları bu aygıta indirin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Викачайте файли на цей пристрій."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将文件下载到此设备。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將檔案下載到此裝置。"
+          }
+        }
+      }
+    },
     "Download the items of a Workshop collection" : {
       "localizations" : {
         "ar" : {
@@ -34372,6 +34752,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已下載"
+          }
+        }
+      }
+    },
+    "Downloaded by %@" : {
+      "comment" : "Send over Wi-Fi sheet: list of device IP addresses",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "نزّله: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geladen von %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descargado por %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Téléchargé par %@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "इसके द्वारा डाउनलोड किया गया: %@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scaricato da %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ がダウンロードしました"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@에서 다운로드함"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pobrane przez: %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baixado por %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Загружено: %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İndiren: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Викачано: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已由 %@ 下载"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已由 %@ 下載"
           }
         }
       }
@@ -39280,6 +39755,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "所有內容都保留在你的 Mac 上。沒有伺服器、帳號、分析或追蹤。"
+          }
+        }
+      }
+    },
+    "Expires in %@" : {
+      "comment" : "Send over Wi-Fi sheet: countdown, e.g. 14:32",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تنتهي الصلاحية خلال %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Läuft ab in %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caduca en %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expire dans %@"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ में समाप्त होगा"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scade tra %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有効期限まで %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 후 만료"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wygasa za %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expira em %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Истекает через %@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ sonra sona erecek"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спливає через %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@后过期"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 後過期"
           }
         }
       }
@@ -151932,6 +152502,101 @@
       "shouldTranslate" : false,
       "localizations" : {}
     },
+    "If downloads stop, keep this window open and tap Download again: it resumes." : {
+      "comment" : "Send over Wi-Fi sheet: resume tip",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إذا توقفت التنزيلات، فأبقِ هذه النافذة مفتوحة واضغط على «تنزيل» مرة أخرى: سيُستأنف التنزيل."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falls Downloads stoppen, lassen Sie dieses Fenster geöffnet und tippen Sie erneut auf „Laden“: Der Download wird fortgesetzt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Si las descargas se detienen, mantén esta ventana abierta y vuelve a tocar «Descargar»: la descarga se reanuda."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Si les téléchargements s’arrêtent, gardez cette fenêtre ouverte et touchez à nouveau « Télécharger » : le téléchargement reprend."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अगर डाउनलोड रुक जाएँ, तो यह विंडो खुली रखें और फिर से “डाउनलोड करें” पर टैप करें: डाउनलोड वहीं से फिर शुरू हो जाता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se i download si interrompono, tieni aperta questa finestra e tocca di nuovo “Scarica”: il download riprende."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ダウンロードが止まった場合は、このウインドウを開いたまま「ダウンロード」をもう一度タップしてください。続きから再開されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다운로드가 멈추면 이 윈도우를 열어 둔 채로 ‘다운로드’를 다시 탭하십시오. 이어서 다운로드됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeśli pobieranie się zatrzyma, nie zamykaj tego okna i ponownie stuknij w „Pobierz”: pobieranie zostanie wznowione."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se os downloads pararem, mantenha esta janela aberta e toque em Baixar novamente: o download será retomado."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Если загрузка остановилась, не закрывайте это окно и снова нажмите «Загрузить»: загрузка продолжится."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İndirmeler durursa bu pencereyi açık tutun ve İndir’e yeniden dokunun: İndirme kaldığı yerden devam eder."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Якщо викачування зупинилося, не закривайте це вікно й знову торкніться «Викачати»: викачування продовжиться."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "如果下载停止，请保持此窗口打开并再次轻点“下载”，下载将继续。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "如果下載停止，請保持此視窗開啟並再點一下「下載」，下載將會繼續。"
+          }
+        }
+      }
+    },
     "iPhone" : {
       "shouldTranslate" : false,
       "localizations" : {}
@@ -152412,6 +153077,196 @@
         }
       }
     },
+    "Network" : {
+      "comment" : "Send over Wi-Fi sheet: which network interface to serve on",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "الشبكة"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Netzwerk"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Red"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réseau"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "नेटवर्क"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rete"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ネットワーク"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "네트워크"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sieć"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rede"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сеть"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ağ"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Мережа"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "网络"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "網路"
+          }
+        }
+      }
+    },
+    "Open the Wallpaper Engine app, then import each file from your device's storage." : {
+      "comment" : "Send over Wi-Fi page on the phone: second step",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "افتح تطبيق Wallpaper Engine، ثم استورد كل ملف من مساحة تخزين جهازك."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnen Sie die App „Wallpaper Engine“ und importieren Sie dann jede Datei aus dem Speicher Ihres Geräts."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre la app Wallpaper Engine y, después, importa cada archivo desde el almacenamiento del dispositivo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrez l’app Wallpaper Engine, puis importez chaque fichier depuis le stockage de votre appareil."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine ऐप खोलें, फिर अपने डिवाइस के स्टोरेज से हर फ़ाइल इंपोर्ट करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri l’app Wallpaper Engine, quindi importa ciascun file dalla memoria del dispositivo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine アプリを開き、デバイスのストレージから各ファイルを読み込みます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine 앱을 연 다음 기기 저장 공간에서 각 파일을 가져옵니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otwórz aplikację Wallpaper Engine, a następnie zaimportuj każdy plik z pamięci urządzenia."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abra o app Wallpaper Engine e importe cada arquivo do armazenamento do seu dispositivo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Откройте приложение Wallpaper Engine и импортируйте каждый файл из хранилища устройства."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine uygulamasını açın, ardından her dosyayı aygıtınızın depolama alanından içe aktarın."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрийте програму Wallpaper Engine, а потім імпортуйте кожен файл зі сховища пристрою."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开 Wallpaper Engine App，然后从设备存储空间中导入每个文件。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打開 Wallpaper Engine App，然後從裝置的儲存空間輸入每個檔案。"
+          }
+        }
+      }
+    },
     "Original" : {
       "comment" : "Android export: Wallpaper Engine's own wording (ui_browse_mobile_upload_modal_video_preset_original)",
       "localizations" : {
@@ -152887,6 +153742,196 @@
         }
       }
     },
+    "QR code of the address" : {
+      "comment" : "Send over Wi-Fi sheet: accessibility label of the QR code",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "رمز QR للعنوان"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR-Code der Adresse"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Código QR de la dirección"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code QR de l’adresse"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पते का QR कोड"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codice QR dell’indirizzo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アドレスの QR コード"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "주소의 QR 코드"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kod QR adresu"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Código QR do endereço"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR-код адреса"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adresin QR kodu"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "QR-код адреси"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "地址的二维码"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位址的 QR 碼"
+          }
+        }
+      }
+    },
+    "Save to Folder…" : {
+      "comment" : "Send over Wi-Fi sheet: copy the packages into a folder",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "حفظ في مجلد…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In Ordner sichern …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar en carpeta…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrer dans un dossier…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फ़ोल्डर में सहेजें…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salva nella cartella…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フォルダに保存…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "폴더에 저장…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zachowaj w folderze…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salvar na Pasta…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохранить в папку…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klasöre Kaydet…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберегти в папку…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "存储到文件夹…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "儲存到檔案夾⋯"
+          }
+        }
+      }
+    },
     "Save to the Same Folder Each Time" : {
       "comment" : "Android export",
       "localizations" : {
@@ -152982,6 +154027,671 @@
         }
       }
     },
+    "Scan the code with your Android device's camera, or open the address in its browser. Both devices must be on the same network." : {
+      "comment" : "Send over Wi-Fi sheet: instructions beside the QR code",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "امسح الرمز ضوئيًا بكاميرا جهاز Android، أو افتح العنوان في متصفحه. يجب أن يكون الجهازان على الشبكة نفسها."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scannen Sie den Code mit der Kamera Ihres Android-Geräts oder öffnen Sie die Adresse in dessen Browser. Beide Geräte müssen mit demselben Netzwerk verbunden sein."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escanea el código con la cámara de tu dispositivo Android o abre la dirección en su navegador. Ambos dispositivos deben estar en la misma red."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scannez le code avec l’appareil photo de votre appareil Android, ou ouvrez l’adresse dans son navigateur. Les deux appareils doivent être sur le même réseau."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपने Android डिवाइस के कैमरे से कोड स्कैन करें, या उसके ब्राउज़र में पता खोलें। दोनों डिवाइस एक ही नेटवर्क पर होने चाहिए।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scansiona il codice con la fotocamera del dispositivo Android oppure apri l’indirizzo nel suo browser. Entrambi i dispositivi devono essere sulla stessa rete."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Android デバイスのカメラでコードをスキャンするか、デバイスのブラウザでアドレスを開きます。両方のデバイスが同じネットワークに接続されている必要があります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Android 기기의 카메라로 코드를 스캔하거나 기기의 브라우저에서 주소를 엽니다. 두 기기가 같은 네트워크에 연결되어 있어야 합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeskanuj kod aparatem urządzenia z Androidem lub otwórz adres w jego przeglądarce. Oba urządzenia muszą być w tej samej sieci."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escaneie o código com a câmera do seu dispositivo Android ou abra o endereço no navegador dele. Os dois dispositivos precisam estar na mesma rede."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отсканируйте код камерой устройства Android или откройте адрес в его браузере. Оба устройства должны быть в одной сети."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kodu Android aygıtınızın kamerasıyla tarayın veya adresi aygıtın tarayıcısında açın. İki aygıt da aynı ağda olmalıdır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відскануйте код камерою пристрою Android або відкрийте адресу в його браузері. Обидва пристрої мають бути в одній мережі."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用 Android 设备的相机扫描代码，或在其浏览器中打开该地址。两台设备必须连接到同一网络。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用 Android 裝置的相機掃描代碼，或在其瀏覽器中打開該位址。兩部裝置必須連接同一個網路。"
+          }
+        }
+      }
+    },
+    "Scene (Dynamic)" : {
+      "comment" : "Android package type: a scene exported as Dynamic",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مشهد (متحرك)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Szene (dynamisch)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escena (dinámica)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scène (dynamique)"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सीन (डायनैमिक)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scena (dinamica)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シーン（ダイナミック）"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "장면(동적)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scena (dynamiczna)"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cena (Dinâmica)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сцена (динамическая)"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sahne (Değişken)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сцена (динамічна)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "场景（动态）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "場景（動態）"
+          }
+        }
+      }
+    },
+    "Scene (Pre-Rendered)" : {
+      "comment" : "Android package type: a scene exported as a pre-rendered video",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "مشهد (مرندر مسبقًا)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Szene (vorgerendert)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escena (preprocesada)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scène (prérendue)"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सीन (प्री-रेंडर्ड)"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scena (pre-renderizzata)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "シーン（プリレンダリング済）"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "장면(사전 렌더링)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scena (prerenderowana)"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cena (Pré-renderizada)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сцена (пререндеринг)"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sahne (Önceden İşlenmiş)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сцена (попередньо відмальована)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "场景（预渲染）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "場景（預先轉譯）"
+          }
+        }
+      }
+    },
+    "Send Again" : {
+      "comment" : "Send over Wi-Fi sheet: start again with a new link",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إعادة الإرسال"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneut senden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volver a enviar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoyer à nouveau"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फिर से भेजें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invia di nuovo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "もう一度送信"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다시 보내기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyślij ponownie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar Novamente"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отправить снова"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yeniden Gönder"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Надіслати ще раз"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再次发送"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再次傳送"
+          }
+        }
+      }
+    },
+    "Send over Wi-Fi" : {
+      "comment" : "Send over Wi-Fi sheet: title",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إرسال عبر Wi-Fi"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Über WLAN senden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar por Wi-Fi"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoyer via Wi-Fi"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wi-Fi से भेजें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invia tramite Wi-Fi"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wi-Fi で送信"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wi-Fi로 보내기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyślij przez Wi-Fi"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar por Wi-Fi"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отправить по Wi-Fi"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wi-Fi ile Gönder"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Надіслати через Wi-Fi"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通过 Wi-Fi 发送"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "透過 Wi-Fi 傳送"
+          }
+        }
+      }
+    },
+    "Send over Wi-Fi…" : {
+      "comment" : "Android export sheet: open Send over Wi-Fi",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إرسال عبر Wi-Fi…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Über WLAN senden …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar por Wi-Fi…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoyer via Wi-Fi…"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wi-Fi से भेजें…"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invia tramite Wi-Fi…"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wi-Fi で送信…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wi-Fi로 보내기…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyślij przez Wi-Fi…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar por Wi-Fi…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отправить по Wi-Fi…"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wi-Fi ile Gönder…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Надіслати через Wi-Fi…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通过 Wi-Fi 发送…"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "透過 Wi-Fi 傳送⋯"
+          }
+        }
+      }
+    },
+    "Sending stopped." : {
+      "comment" : "Send over Wi-Fi sheet: status",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تم إيقاف الإرسال."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Senden beendet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envío detenido."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoi arrêté."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "भेजना रोका गया।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invio interrotto."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "送信を停止しました。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "보내기가 중지되었습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wysyłanie zatrzymane."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envio interrompido."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отправка остановлена."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gönderme durduruldu."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Надсилання зупинено."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已停止发送。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已停止傳送。"
+          }
+        }
+      }
+    },
     "Show advanced settings" : {
       "comment" : "Android export: Wallpaper Engine's own wording (ui_browse_mobile_upload_modal_show_advanced_settings)",
       "localizations" : {
@@ -153073,6 +154783,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "顯示進階設定"
+          }
+        }
+      }
+    },
+    "Some networks (guest and public Wi-Fi, some mesh systems) keep devices from reaching each other. Use your home network, or turn off client isolation (\"AP isolation\") in the router's settings." : {
+      "comment" : "Send over Wi-Fi sheet: client isolation tip",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تمنع بعض الشبكات (شبكات Wi-Fi للضيوف والشبكات العامة، وبعض أنظمة Mesh) الأجهزة من الوصول إلى بعضها. استخدم شبكتك المنزلية، أو أوقف عزل العملاء («AP isolation») في إعدادات الموجّه."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manche Netzwerke (Gast- und öffentliches WLAN, einige Mesh-Systeme) verhindern, dass Geräte einander erreichen. Verwenden Sie Ihr Heimnetzwerk oder deaktivieren Sie die Client-Isolation („AP-Isolation“) in den Einstellungen des Routers."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algunas redes (Wi-Fi de invitados y públicas, algunos sistemas en malla) impiden que los dispositivos se comuniquen entre sí. Usa tu red doméstica o desactiva el aislamiento de clientes («AP isolation») en los ajustes del router."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certains réseaux (Wi-Fi invité et public, certains systèmes maillés) empêchent les appareils de communiquer entre eux. Utilisez votre réseau domestique, ou désactivez l’isolation des clients (« AP isolation ») dans les réglages du routeur."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कुछ नेटवर्क (गेस्ट और सार्वजनिक Wi-Fi, कुछ मेश सिस्टम) डिवाइसों को एक-दूसरे तक पहुँचने से रोकते हैं। अपने होम नेटवर्क का उपयोग करें, या राउटर की सेटिंग्स में क्लाइंट आइसोलेशन (“AP isolation”) बंद करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alcune reti (Wi-Fi ospiti e pubbliche, alcuni sistemi mesh) impediscono ai dispositivi di comunicare tra loro. Usa la rete di casa oppure disattiva l’isolamento dei client (“AP isolation”) nelle impostazioni del router."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一部のネットワーク（ゲストや公衆 Wi-Fi、一部のメッシュシステム）では、デバイス同士が通信できません。自宅のネットワークを使用するか、ルーターの設定でクライアント分離（「AP アイソレーション」）をオフにしてください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일부 네트워크(게스트 및 공용 Wi-Fi, 일부 메시 시스템)는 기기 간 통신을 차단합니다. 집 네트워크를 사용하거나 라우터 설정에서 클라이언트 격리(‘AP 격리’)를 끄십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niektóre sieci (gościnne i publiczne Wi-Fi, niektóre systemy mesh) uniemożliwiają urządzeniom komunikację ze sobą. Użyj sieci domowej lub wyłącz izolację klientów („AP isolation”) w ustawieniach routera."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algumas redes (Wi-Fi de convidados e públicas, alguns sistemas mesh) impedem que os dispositivos se comuniquem entre si. Use a sua rede doméstica ou desative o isolamento de clientes (“AP isolation”) nos ajustes do roteador."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Некоторые сети (гостевые и общественные Wi-Fi, некоторые mesh-системы) не позволяют устройствам связываться друг с другом. Используйте домашнюю сеть или отключите изоляцию клиентов («AP isolation») в настройках роутера."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bazı ağlar (misafir ve herkese açık Wi-Fi, bazı mesh sistemleri) aygıtların birbirine erişmesini engeller. Ev ağınızı kullanın veya yönlendiricinin ayarlarında istemci yalıtımını (“AP isolation”) kapatın."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Деякі мережі (гостьові та публічні Wi-Fi, деякі mesh-системи) не дають пристроям звʼязуватися між собою. Використовуйте домашню мережу або вимкніть ізоляцію клієнтів («AP isolation») у налаштуваннях роутера."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "某些网络（访客和公共 Wi-Fi、部分 Mesh 系统）会阻止设备相互访问。请使用家庭网络，或在路由器设置中关闭客户端隔离（“AP 隔离”）。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "某些網路（訪客與公共 Wi-Fi、部分 Mesh 系統）會阻止裝置互相連線。請使用家用網路，或在路由器設定中關閉用戶端隔離（「AP 隔離」）。"
           }
         }
       }
@@ -153650,6 +155455,101 @@
       "shouldTranslate" : false,
       "localizations" : {}
     },
+    "Stop Sending" : {
+      "comment" : "Send over Wi-Fi sheet: close and stop the server",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "إيقاف الإرسال"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Senden beenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detener envío"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrêter l’envoi"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "भेजना रोकें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interrompi invio"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "送信を停止"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "보내기 중단"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zatrzymaj wysyłanie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parar Envio"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Остановить отправку"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Göndermeyi Durdur"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зупинити надсилання"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止发送"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止傳送"
+          }
+        }
+      }
+    },
     "Texture Reduction" : {
       "comment" : "Android export: Wallpaper Engine's own wording (ui_browse_mobile_upload_modal_texture_reduction)",
       "localizations" : {
@@ -153741,6 +155641,386 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "紋理降低"
+          }
+        }
+      }
+    },
+    "The first time a device connects, macOS may ask whether Open Wallpaper Engine may accept incoming network connections. Click Allow." : {
+      "comment" : "Send over Wi-Fi sheet: firewall prompt tip",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "في المرة الأولى التي يتصل فيها جهاز، قد يسأل macOS عما إذا كان يمكن لـ Open Wallpaper Engine قبول اتصالات الشبكة الواردة. انقر على «سماح»."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wenn sich zum ersten Mal ein Gerät verbindet, fragt macOS eventuell, ob Open Wallpaper Engine eingehende Netzwerkverbindungen akzeptieren darf. Klicken Sie auf „Erlauben“."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La primera vez que se conecte un dispositivo, puede que macOS pregunte si Open Wallpaper Engine puede aceptar conexiones de red entrantes. Haz clic en «Permitir»."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La première fois qu’un appareil se connecte, macOS peut demander si Open Wallpaper Engine peut accepter les connexions réseau entrantes. Cliquez sur « Autoriser »."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "जब कोई डिवाइस पहली बार कनेक्ट होता है, तो macOS पूछ सकता है कि क्या Open Wallpaper Engine आने वाले नेटवर्क कनेक्शन स्वीकार कर सकता है। “अनुमति दें” पर क्लिक करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La prima volta che un dispositivo si connette, macOS potrebbe chiedere se Open Wallpaper Engine può accettare connessioni di rete in entrata. Fai clic su “Consenti”."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デバイスが初めて接続するとき、Open Wallpaper Engine へのネットワーク受信接続を許可するかどうかを macOS が尋ねる場合があります。「許可」をクリックしてください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기기가 처음 연결될 때 macOS에서 Open Wallpaper Engine이 수신 네트워크 연결을 허용할지 물어볼 수 있습니다. ‘허용’을 클릭하십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gdy urządzenie połączy się po raz pierwszy, macOS może zapytać, czy Open Wallpaper Engine może akceptować przychodzące połączenia sieciowe. Kliknij w „Pozwól”."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na primeira vez que um dispositivo se conectar, o macOS pode perguntar se o Open Wallpaper Engine pode aceitar conexões de rede de entrada. Clique em Permitir."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Когда устройство подключается впервые, macOS может спросить, разрешить ли Open Wallpaper Engine принимать входящие сетевые подключения. Нажмите «Разрешить»."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bir aygıt ilk kez bağlandığında macOS, Open Wallpaper Engine’in gelen ağ bağlantılarını kabul edip etmeyeceğini sorabilir. İzin Ver’i tıklayın."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коли пристрій підключається вперше, macOS може запитати, чи дозволити Open Wallpaper Engine приймати вхідні мережеві підключення. Натисніть «Дозволити»."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设备首次连接时，macOS 可能会询问是否允许 Open Wallpaper Engine 接受传入网络连接。请点按“允许”。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "裝置首次連線時，macOS 可能會詢問是否允許 Open Wallpaper Engine 接受傳入的網路連線。請按一下「允許」。"
+          }
+        }
+      }
+    },
+    "The link expired. Send again to make a new one." : {
+      "comment" : "Send over Wi-Fi sheet: status",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "انتهت صلاحية الرابط. أعد الإرسال لإنشاء رابط جديد."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Link ist abgelaufen. Senden Sie erneut, um einen neuen zu erstellen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El enlace ha caducado. Vuelve a enviar para crear uno nuevo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le lien a expiré. Envoyez à nouveau pour en créer un nouveau."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "लिंक की समय-सीमा समाप्त हो गई। नया लिंक बनाने के लिए फिर से भेजें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il link è scaduto. Invia di nuovo per crearne uno nuovo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "リンクの有効期限が切れました。もう一度送信すると新しいリンクが作成されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "링크가 만료되었습니다. 다시 보내 새 링크를 만드십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Łącze wygasło. Wyślij ponownie, aby utworzyć nowe."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O link expirou. Envie novamente para criar um novo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Срок действия ссылки истек. Отправьте снова, чтобы создать новую."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bağlantının süresi doldu. Yeni bir bağlantı oluşturmak için yeniden gönderin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Термін дії посилання сплив. Надішліть ще раз, щоб створити нове."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "链接已过期。再次发送以创建新链接。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "連結已過期。再次傳送以建立新的連結。"
+          }
+        }
+      }
+    },
+    "This Mac isn't connected to a Wi-Fi or local network." : {
+      "comment" : "Send over Wi-Fi: no local-network address",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "جهاز Mac هذا غير متصل بشبكة Wi-Fi أو شبكة محلية."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieser Mac ist mit keinem WLAN- oder lokalen Netzwerk verbunden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este Mac no está conectado a ninguna red Wi-Fi o local."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce Mac n’est connecté à aucun réseau Wi-Fi ou local."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "यह Mac किसी Wi-Fi या लोकल नेटवर्क से कनेक्ट नहीं है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questo Mac non è connesso a una rete Wi-Fi o locale."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この Mac は Wi-Fi またはローカルネットワークに接続されていません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 Mac이 Wi-Fi 또는 로컬 네트워크에 연결되어 있지 않습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ten Mac nie jest połączony z siecią Wi-Fi ani siecią lokalną."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este Mac não está conectado a uma rede Wi-Fi ou local."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Этот Mac не подключен к сети Wi-Fi или локальной сети."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu Mac bir Wi-Fi’ye veya yerel ağa bağlı değil."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цей Mac не підключено до мережі Wi-Fi чи локальної мережі."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这台 Mac 未连接到 Wi-Fi 或本地网络。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "這部 Mac 未連接 Wi-Fi 或區域網路。"
+          }
+        }
+      }
+    },
+    "This page stops working when the Send over Wi-Fi window on the Mac closes, or after 15 minutes." : {
+      "comment" : "Send over Wi-Fi page on the phone: footer",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "تتوقف هذه الصفحة عن العمل عند إغلاق نافذة «إرسال عبر Wi-Fi» على الـ Mac، أو بعد 15 دقيقة."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Seite funktioniert nicht mehr, sobald das Fenster „Über WLAN senden“ auf dem Mac geschlossen wird, oder nach 15 Minuten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta página deja de funcionar cuando se cierra la ventana «Enviar por Wi-Fi» en el Mac o pasados 15 minutos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette page cesse de fonctionner à la fermeture de la fenêtre « Envoyer via Wi-Fi » sur le Mac, ou au bout de 15 minutes."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mac पर “Wi-Fi से भेजें” विंडो बंद होने पर या 15 मिनट बाद यह पेज काम करना बंद कर देता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Questa pagina smette di funzionare quando la finestra “Invia tramite Wi-Fi” sul Mac viene chiusa, oppure dopo 15 minuti."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このページは、Mac の「Wi-Fi で送信」ウインドウを閉じたとき、または 15 分後に使用できなくなります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 페이지는 Mac에서 ‘Wi-Fi로 보내기’ 윈도우를 닫거나 15분이 지나면 작동하지 않습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ta strona przestanie działać po zamknięciu okna „Wyślij przez Wi-Fi” na Macu lub po 15 minutach."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta página deixa de funcionar quando a janela “Enviar por Wi-Fi” do Mac é fechada ou após 15 minutos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Эта страница перестанет работать, когда на Mac будет закрыто окно «Отправить по Wi-Fi», или через 15 минут."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bu sayfa, Mac’teki Wi-Fi ile Gönder penceresi kapatıldığında veya 15 dakika sonra çalışmayı durdurur."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ця сторінка перестане працювати, коли на Mac буде закрито вікно «Надіслати через Wi-Fi», або через 15 хвилин."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Mac 上关闭“通过 Wi-Fi 发送”窗口后或 15 分钟后，此页面将停止工作。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 Mac 上關閉「透過 Wi-Fi 傳送」視窗後或 15 分鐘後，此頁面將無法使用。"
           }
         }
       }
@@ -154125,6 +156405,101 @@
         }
       }
     },
+    "Wallpapers for Wallpaper Engine" : {
+      "comment" : "Send over Wi-Fi page on the phone: heading",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "خلفيات لتطبيق Wallpaper Engine"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hintergrundbilder für Wallpaper Engine"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fondos de pantalla para Wallpaper Engine"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fonds d’écran pour Wallpaper Engine"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine के लिए वॉलपेपर"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sfondi per Wallpaper Engine"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine 用の壁紙"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine용 배경화면"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tapety do Wallpaper Engine"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imagens de fundo para o Wallpaper Engine"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обои для Wallpaper Engine"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallpaper Engine için duvar kâğıtları"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шпалери для Wallpaper Engine"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "适用于 Wallpaper Engine 的墙纸"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "適用於 Wallpaper Engine 的背景圖片"
+          }
+        }
+      }
+    },
     "Wallpapers larger than 4GB can currently not be transferred to mobile devices." : {
       "comment" : "Android export: Wallpaper Engine's own wording (ui_browse_mobile_upload_size_warning_message)",
       "localizations" : {
@@ -154216,6 +156591,101 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "大於 4GB 的桌布目前無法傳輸至行動裝置。"
+          }
+        }
+      }
+    },
+    "Your browser may ask once to allow downloading multiple files: allow it, then wait for every download to finish." : {
+      "comment" : "Send over Wi-Fi page on the phone: note under Download All",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "قد يطلب المتصفح مرة واحدة السماح بتنزيل ملفات متعددة: اسمح بذلك، ثم انتظر حتى تكتمل جميع التنزيلات."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ihr Browser fragt eventuell einmal, ob mehrere Dateien geladen werden dürfen: Erlauben Sie es und warten Sie dann, bis alle Downloads abgeschlossen sind."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puede que el navegador pida una vez permiso para descargar varios archivos: permítelo y espera a que terminen todas las descargas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre navigateur peut demander une fois l’autorisation de télécharger plusieurs fichiers : autorisez-le, puis attendez la fin de chaque téléchargement."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपका ब्राउज़र एक बार कई फ़ाइलें डाउनलोड करने की अनुमति माँग सकता है: अनुमति दें, फिर सभी डाउनलोड पूरे होने तक प्रतीक्षा करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il browser potrebbe chiedere una volta di consentire il download di più file: consentilo, quindi attendi il completamento di tutti i download."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ブラウザで複数ファイルのダウンロードを許可するよう一度求められる場合があります。許可してから、すべてのダウンロードが完了するまでお待ちください。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "브라우저에서 여러 파일 다운로드를 허용할지 한 번 물어볼 수 있습니다. 허용한 다음 모든 다운로드가 끝날 때까지 기다리십시오."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przeglądarka może raz poprosić o zgodę na pobieranie wielu plików: zezwól, a następnie poczekaj na zakończenie wszystkich pobrań."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O navegador pode pedir uma vez permissão para baixar vários arquivos: permita e aguarde até que todos os downloads terminem."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Браузер может один раз спросить разрешение на загрузку нескольких файлов: разрешите и дождитесь окончания всех загрузок."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tarayıcınız birden fazla dosyanın indirilmesine izin vermek için bir kez sorabilir: İzin verin, ardından tüm indirmelerin bitmesini bekleyin."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Браузер може один раз запитати дозвіл на викачування кількох файлів: дозвольте, а потім дочекайтеся завершення всіх викачувань."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "浏览器可能会询问一次是否允许下载多个文件：请允许，然后等待所有下载完成。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "瀏覽器可能會詢問一次是否允許下載多個檔案：請允許，然後等待所有下載完成。"
           }
         }
       }

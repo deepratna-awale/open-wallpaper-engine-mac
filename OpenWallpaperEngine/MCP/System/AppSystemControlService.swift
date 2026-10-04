@@ -13,6 +13,8 @@ final class AppSystemControlService: SystemControlService {
     let model: AppControlModel
     /// A Live Photo export from the control channel is rendering.
     var isExporting = false
+    /// The "Send over Wi-Fi" an MCP client started; a new one replaces it.
+    var wifiSession: AndroidWiFiSession?
 
     init(app: AppDelegate, model: AppControlModel) {
         self.app = app
