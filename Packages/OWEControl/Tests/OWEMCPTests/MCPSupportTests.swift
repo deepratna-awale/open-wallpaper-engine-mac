@@ -50,6 +50,15 @@ final class MCPSupportTests: XCTestCase {
         XCTAssertEqual(OWEAppLauncher(appURL: nil, isolationTag: nil).openArguments, ["-g", "-b", "com.winddog.wallpaper-engine"])
     }
 
+    /// The user's own app doesn't count as a running isolated copy, nor the other way round.
+    func testRunningCopiesAreToldApartByIsolation() {
+        XCTAssertNil(OWEAppLauncher.isolationTag(arguments: ["/A.app/Contents/MacOS/A", "HOME=/Users/u"]))
+        XCTAssertEqual(OWEAppLauncher.isolationTag(arguments: ["/A", "-OWEIsolatedState", "shots", "OWE_ISOLATED_STATE=x"]), "shots")
+        XCTAssertEqual(OWEAppLauncher.isolationTag(arguments: ["/A", "-CustomWallpapersDirectory", "/l", "OWE_ISOLATED_STATE=mcp"]), "mcp")
+        // This test process reads its own arguments back.
+        XCTAssertFalse(OWEAppLauncher.arguments(of: getpid()).isEmpty)
+    }
+
     /// The channel launches a missing app and waits for its socket; a running app without one is
     /// reported as control being off.
     func testChannelLaunchesAndExplains() async throws {

@@ -46,8 +46,36 @@ public struct OWEAppLauncher: AppLaunching {
         return app
     }
 
+    /// Whether this copy of the app runs: one with the app's bundle id and the same isolation
+    /// (every copy shares the bundle id, so the user's own app doesn't count for an isolated one).
     public func isRunning() -> Bool {
-        !NSRunningApplication.runningApplications(withBundleIdentifier: Self.bundleIdentifier).isEmpty
+        NSRunningApplication.runningApplications(withBundleIdentifier: Self.bundleIdentifier).contains { app in
+            Self.isolationTag(arguments: Self.arguments(of: app.processIdentifier)) == isolationTag
+        }
+    }
+
+    /// The isolation a process of the app runs under, read from its arguments and environment
+    /// (`-OWEIsolatedState <tag>` first, as the app reads them).
+    static func isolationTag(arguments: [String]) -> String? {
+        if let index = arguments.firstIndex(of: "-OWEIsolatedState"), arguments.indices.contains(index + 1),
+           let tag = ControlSocketLocation.sanitizedTag(arguments[index + 1]) {
+            return tag
+        }
+        let prefix = ControlSocketLocation.isolationEnvironmentKey + "="
+        return arguments.last { $0.hasPrefix(prefix) }.flatMap { ControlSocketLocation.sanitizedTag(String($0.dropFirst(prefix.count))) }
+    }
+
+    /// A process's arguments followed by its environment (`KERN_PROCARGS2`, readable for the
+    /// user's own processes); empty when they can't be read.
+    static func arguments(of pid: pid_t) -> [String] {
+        var mib: [Int32] = [CTL_KERN, KERN_PROCARGS2, pid]
+        var size = 0
+        guard sysctl(&mib, 3, nil, &size, nil, 0) == 0, size > MemoryLayout<Int32>.size else { return [] }
+        var buffer = [UInt8](repeating: 0, count: size)
+        guard sysctl(&mib, 3, &buffer, &size, nil, 0) == 0 else { return [] }
+        // argc, then the executable's path, padding, argv and the environment, each NUL-terminated.
+        return buffer[MemoryLayout<Int32>.size..<size].split(separator: 0).dropFirst()
+            .map { String(decoding: $0, as: UTF8.self) }
     }
 
     /// `open`'s arguments: in the background (`-g`); a new instance for an isolated copy (`-n`),
