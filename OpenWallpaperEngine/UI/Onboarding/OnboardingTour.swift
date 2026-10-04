@@ -93,7 +93,7 @@ extension OnboardingTour {
                             text: "Zoom, pace, tilt and saturation can pulse with audio. A wallpaper with its own soundtrack follows that; when it is silent, it follows whatever else is playing.",
                             systemImage: "waveform",
                             imageColor: .pink),
-                    Section(title: "Scene Inspector",
+                    Section(title: "Scene Editor",
                             text: "Inspect every layer, texture and effect in a wallpaper, tweak parameters live, and nudge or align objects.",
                             systemImage: "square.stack.3d.up",
                             imageColor: .orange)

@@ -25,7 +25,7 @@ enum PropertyResetConfirmation {
         } else {
             reach = String(localized: "Only the selected display is reset.", comment: "Reset confirmation, one display selected")
         }
-        let inspector = String(localized: "Scene Inspector edits are reset too.", comment: "Reset confirmation: the Scene Inspector's edits go as well")
+        let inspector = String(localized: "Scene Editor edits are reset too.", comment: "Reset confirmation: the Scene Editor's edits go as well")
         return [question, reach, inspector].joined(separator: " ")
     }
 }
