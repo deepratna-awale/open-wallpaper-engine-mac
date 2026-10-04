@@ -19,6 +19,26 @@ struct SystemAndroidRequest: Equatable {
     var outputFolder: URL?
 }
 
+/// "Send over Wi-Fi" for an MCP client: a new export of `export`'s wallpapers, or packages an
+/// export already wrote (`.mpkg` files).
+struct SystemAndroidSendRequest: Equatable {
+    var export: SystemAndroidRequest?
+    var packages: [URL] = []
+    /// One of the Mac's local-network IPv4 addresses; nil uses the primary interface's.
+    var address: String?
+}
+
+/// A "Send over Wi-Fi" that is serving.
+struct SystemAndroidSendResult: Equatable {
+    var url: URL
+    var expiry: Date
+    var files: [AndroidWiFiFile]
+    /// Every local-network address the Mac has; `url` uses one of them.
+    var addresses: [String]
+    /// The export it made first, if it made one.
+    var batch: AndroidExportBatch?
+}
+
 /// One Live Photo export, as the mode's Export Settings would set it.
 struct SystemLivePhotoRequest: Equatable {
     var wallpaper: ControlWallpaper
