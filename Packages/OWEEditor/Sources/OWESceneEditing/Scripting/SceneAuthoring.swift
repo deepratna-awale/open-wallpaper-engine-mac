@@ -49,7 +49,7 @@ public struct SceneAuthoring: Codable, Hashable, Sendable {
     public func applyDrivers(to root: inout [String: Any]) {
         guard changesScene, var objects = root["objects"] as? [[String: Any]] else { return }
         for index in objects.indices {
-            let objectID = (objects[index]["id"] as? NSNumber)?.intValue ?? index
+            let objectID = SceneObjects.objectID(objects[index], index: index)
             guard let fields = drivers[String(objectID)] else { continue }
             for (pathText, edit) in fields.sorted(by: { $0.key < $1.key }) where !edit.isEmpty {
                 let path = SceneFieldPath(pathText)

@@ -131,7 +131,7 @@ extension SceneEditSession {
         guard let data = authored.sceneData,
               let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let objects = root["objects"] as? [[String: Any]] else { return 0 }
-        for (index, object) in objects.enumerated() where ((object["id"] as? NSNumber)?.intValue ?? index) == layerID {
+        for (index, object) in objects.enumerated() where SceneObjects.objectID(object, index: index) == layerID {
             return (object["effects"] as? [Any])?.count ?? 0
         }
         return 0

@@ -55,7 +55,7 @@ public struct SceneTimelineEdits: Codable, Hashable, Sendable {
         guard !tracks.isEmpty else { return }
         var positions: [Int: Int] = [:]
         for index in objects.indices {
-            let id = (objects[index]["id"] as? NSNumber)?.intValue ?? index
+            let id = SceneObjects.objectID(objects[index], index: index)
             if positions[id] == nil { positions[id] = index }
         }
         for track in tracks {

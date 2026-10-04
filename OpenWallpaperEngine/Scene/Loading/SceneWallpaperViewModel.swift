@@ -547,14 +547,39 @@ class SceneWallpaperViewModel: ObservableObject {
         var stored = identity.userSetValues(scope: propertyScope, defaults: defaults)
         // A Workshop preset item's values are its defaults: the user's own edits still win.
         stored.merge(WorkshopPresetItem.defaultValues(for: wallpaper)) { user, _ in user }
+        // Text layers' fonts and sizes that earlier versions stored from the layers themselves.
+        if stored.keys.contains(where: SceneTextLayerSettings.isLayerSetting) {
+            var layerValues: [[String: String]] = [SceneTextLayerSettings.layerValues(in: scene)]
+            if let authored = authoredScene(of: wallpaper) { layerValues.append(SceneTextLayerSettings.layerValues(in: authored)) }
+            stored = SceneTextLayerSettings.removingLayerValues(from: stored, matching: layerValues)
+        }
         let values = Self.userPropertyValues(stored: stored,
                                              declared: Self.declaredUserProperties(in: wallpaper.wallpaperDirectory),
                                              scene: scene)
         // A display's own store keeps what the user saved, so displays whose properties are equal
         // stay equal (`WallpaperPropertyGroups` compares the stores) whichever of them loaded.
-        if propertyScope == .shared { defaults.set(values, forKey: key) }
+        // Text layers' own fonts and sizes run but aren't saved (`SceneTextLayerSettings`).
+        if propertyScope == .shared {
+            let saved: [String: String] = values.filter { stored[$0.key] != nil || !SceneTextLayerSettings.isLayerSetting($0.key) }
+            defaults.set(saved, forKey: key)
+        }
         WallpaperServices.shared.setUserProperties(values, wallpaper: propertyScope.runtimeKey(directory: wallpaper.settingsDirectory),
                                                            replacing: true)
+    }
+
+    /// The scene file as authored, without the Wallpaper Editor's and the Scene Inspector's edits;
+    /// nil, logged, when it can't be read.
+    private func authoredScene(of wallpaper: WEWallpaper) -> WEScene? {
+        let sceneFile = wallpaper.project.file
+        do {
+            let data: Data? = try pkgParser?.extractFile(named: sceneFile)
+                ?? AssetPathResolver.data(sceneFile, in: wallpaper.wallpaperDirectory)
+            guard let data else { return nil }
+            return try JSONDecoder().decode(WEScene.self, from: data)
+        } catch {
+            OWELog.error(.scene, "\(wallpaper.project.title): \(sceneFile) can't be read for its text layers: \(error)")
+            return nil
+        }
     }
 
     /// The wallpaper's property values: what the user stored, else project.json's defaults (the
@@ -571,17 +596,7 @@ class SceneWallpaperViewModel: ObservableObject {
                 values[name] = sceneUserPropertyString(option)
             }
         }
-        for (index, object) in scene.objects.enumerated() where object.textValue != nil {
-            let prefix = "_owe_text_\(SceneObjectIdentity.id(of: object, at: index))_"
-            if values[prefix + "font"] == nil, let font = object.font {
-                values[prefix + "font"] = font
-            }
-            // A user-bound point size follows its property; a seeded override would pin it.
-            if values[prefix + "size"] == nil, object.values[.pointsize]?.userPropertyName == nil,
-               let pointSize = object.pointsize {
-                values[prefix + "size"] = String(pointSize)
-            }
-        }
+        values.merge(SceneTextLayerSettings.layerValues(in: scene)) { stored, _ in stored }
         return values
     }
 

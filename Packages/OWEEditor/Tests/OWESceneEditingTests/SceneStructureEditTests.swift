@@ -23,7 +23,7 @@ final class SceneStructureEditTests: XCTestCase {
     }
 
     private func ids(_ objects: [[String: Any]]) -> [Int] {
-        objects.map { ($0["id"] as? NSNumber)?.intValue ?? -1 }
+        objects.enumerated().map { SceneObjects.objectID($1, index: $0) }
     }
 
     /// The overlay survives its file, and a fresh session over it shows the same scene.
@@ -162,6 +162,15 @@ final class SceneStructureEditTests: XCTestCase {
         let objects: [[String: Any]] = [["id": 1], ["id": 2], ["id": 9], ["id": 3]]
         let ordered = SceneEditOverlay.ordered(objects, by: [3, 2, 1])
         XCTAssertEqual(ordered.map { ($0["id"] as? Int) ?? -1 }, [3, 2, 9, 1], "9 stays after 2, which it followed")
+    }
+
+    /// An object without an `id` is known by its index, in the order as everywhere else.
+    func testAnObjectWithoutAnIDIsOrderedByItsIndex() {
+        let objects: [[String: Any]] = [["id": 3], ["name": "unnamed"], ["id": 2]]
+        XCTAssertEqual(SceneObjects.objectID(objects[0], index: 0), 3)
+        XCTAssertEqual(SceneObjects.objectID(objects[1], index: 1), 1)
+        let ordered = SceneEditOverlay.ordered(objects, by: [2, 1, 3])
+        XCTAssertEqual(ordered.map { ($0["id"] as? Int) ?? -1 }, [2, -1, 3], "the object at index 1 is placed as id 1")
     }
 
     // MARK: Parents

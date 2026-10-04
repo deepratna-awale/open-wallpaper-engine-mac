@@ -58,14 +58,14 @@ enum ScenePreparation {
         if let overlay, overlay.hasSceneEdits { try overlay.apply(to: &root) }
         guard var objects = root["objects"] as? [[String: Any]] else { return data }
         for index in objects.indices {
-            let objectID = (objects[index]["id"] as? NSNumber)?.intValue ?? index
+            let objectID = SceneObjects.objectID(objects[index], index: index)
             guard let override = values["_owe_scene_object_\(objectID)_json"],
                   let overrideData = override.data(using: .utf8),
                   let replacement = try? JSONSerialization.jsonObject(with: overrideData) as? [String: Any] else { continue }
             objects[index] = replacement
         }
         for index in objects.indices {
-            let objectID = (objects[index]["id"] as? NSNumber)?.intValue ?? index
+            let objectID = SceneObjects.objectID(objects[index], index: index)
             if let origin = values["_owe_scene_object_\(objectID)_origin"] {
                 objects[index]["origin"] = origin
             }
