@@ -32,7 +32,7 @@ file data
 
 ## Android app side
 The app has an import entry: "Choose a video, GIF, or an exported wallpaper stored on your mobile and use it as a live wallpaper".
-- **Import test: confirmed working.** The user copied an exported .mpkg to the Tab S9 over USB, imported it with that option, and it works as a live wallpaper. No PC connection is needed. Which of the exported files was used isn't recorded yet.
+- **Import test: confirmed working.** The user copied an exported .mpkg to the Tab S9 over USB, imported it with that option, and it works as a live wallpaper. No PC connection is needed. Tested file: **`scene_dynamic_balanced_2515150033.mpkg`** (Dynamic scene, loose files). The pre-rendered scene and video packages are not yet tested.
 
 ## Implication for OWE
 - **Generating packages:** OWE can generate `.mpkg` files on the Mac with no protocol reversing.
