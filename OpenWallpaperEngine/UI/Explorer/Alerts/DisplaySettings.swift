@@ -26,6 +26,24 @@ struct DisplaySettings: SubviewOfContentView {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
+            // WE's layouts; stretching comes later, so it can't be chosen yet.
+            Picker("Layout", selection: Binding(
+                get: { wallpaperViewModel.displayLayout.layout },
+                set: { layout in if layout != .stretch { wallpaperViewModel.setLayout(layout) } }
+            )) {
+                Text("Wallpaper per display").tag(DisplayLayoutMode.perDisplay)
+                Text("Stretch single wallpaper (Coming soon)").tag(DisplayLayoutMode.stretch)
+                    .selectionDisabled()
+                Text("Clone single wallpaper").tag(DisplayLayoutMode.clone)
+            }
+            .pickerStyle(.menu)
+            .fixedSize()
+
+            Text("Right-click a display to group it with the selected displays, choose the main clone display, flip a clone or mute a display.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+
             Toggle("All Desktops", isOn: Binding(
                 get: {
                     let screenIds = Set(NSScreen.screens.map(WallpaperViewModel.screenId(for:)))
@@ -84,7 +102,10 @@ struct DisplaySettings: SubviewOfContentView {
                                 }
                                 Spacer()
                                 Button("Remove") {
-                                    wallpaperViewModel.wallpapers.removeValue(forKey: screenId)
+                                    // A clone shows one wallpaper: it leaves every display of it.
+                                    for screen in wallpaperViewModel.layoutResolution.expandingClones([screenId]) {
+                                        wallpaperViewModel.wallpapers.removeValue(forKey: screen)
+                                    }
                                 }
                                 .glassButtonStyle()
                                 .controlSize(.small)

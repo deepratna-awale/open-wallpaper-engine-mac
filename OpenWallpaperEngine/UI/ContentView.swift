@@ -170,7 +170,7 @@ struct ContentView: View {
         .sheet(isPresented: $viewModel.isDisplaySettingsReveal) {
             DisplaySettings(viewModel: viewModel)
                 .padding()
-                .frame(width: 520, height: 450)
+                .frame(width: 560, height: 520)
                 .presentationBackground(.regularMaterial)
         }
         .overlay(alignment: .bottomTrailing) {
