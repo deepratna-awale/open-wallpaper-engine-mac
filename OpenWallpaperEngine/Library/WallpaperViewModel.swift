@@ -333,13 +333,6 @@ class WallpaperViewModel: ObservableObject {
         playlists[playlistIndex].items.swapAt(itemIndex, destination)
     }
 
-    func setPlaylistItemDuration(_ duration: TimeInterval, itemID: UUID, playlistID: UUID? = nil) {
-          guard let id = playlistID ?? activePlaylistID,
-              let playlistIndex = playlists.firstIndex(where: { $0.id == id }) else { return }
-          playlists[playlistIndex].duration = max(duration, 1)
-        restartPlaylistTimer()
-    }
-
         func setPlaylistDuration(_ duration: TimeInterval, playlistID: UUID? = nil) {
           guard let id = playlistID ?? activePlaylistID,
               let index = playlists.firstIndex(where: { $0.id == id }) else { return }

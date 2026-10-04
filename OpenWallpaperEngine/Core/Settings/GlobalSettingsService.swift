@@ -224,9 +224,4 @@ class GlobalSettingsViewModel: ObservableObject {
             NSApp.appearance = nil
         }
     }
-    
-    private func saveAndValidate() {
-        save()
-        validate()
-    }
 }

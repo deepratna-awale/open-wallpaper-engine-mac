@@ -108,11 +108,6 @@ final class SceneSoundVoices: SceneSoundOutput {
         if let stage = voices[index].stage { SceneSoundMixer.setGains(gains, of: stage) }
     }
 
-    /// Whether a voice is playing (tests).
-    func isVoicePlaying(_ index: Int) -> Bool {
-        voices.indices.contains(index) && voices[index].attached && voices[index].node.isPlaying
-    }
-
     // MARK: - Private
 
     /// The voice with its file open and its node in the mixer; nil (logged once) when the file

@@ -68,15 +68,6 @@ struct ExplorerItem: SubviewOfContentView {
             .background(Color(white: 0, opacity: viewModel.imageScaleIndex == index ? 0.4 : 0.2))
             .multilineTextAlignment(.center)
             .foregroundStyle(Color(white: viewModel.imageScaleIndex == index ? 0.9 : 0.7))
-            
-//            Spacer()
-//                .onHover { onHover in
-//                    if onHover {
-//                        viewModel.imageScaleIndex = index
-//                    } else {
-//                        viewModel.imageScaleIndex = -1
-//                    }
-//                }
         }
         .onHover { isHovered = $0 }
         .help(tooltip)

@@ -10,28 +10,6 @@ import Combine
 import SwiftUI
 import UniformTypeIdentifiers
 
-private struct URLListStorage: RawRepresentable {
-    var urls: [URL] = []
-
-    init() {}
-
-    init?(rawValue: String) {
-        guard let data = rawValue.data(using: .utf8),
-              let urls = try? JSONDecoder().decode([URL].self, from: data) else {
-            return nil
-        }
-        self.urls = urls
-    }
-
-    var rawValue: String {
-        guard let data = try? JSONEncoder().encode(urls),
-              let value = String(data: data, encoding: .utf8) else {
-            return "[]"
-        }
-        return value
-    }
-}
-
 class ContentViewModel: ObservableObject, DropDelegate {
     @AppStorage("SortingBy", store: .app) var sortingBy: WEWallpaperSortingMethod = .name
     @AppStorage("SortingSequence", store: .app) var sortingSequence: WEWallpaperSortingSequence = .increase
@@ -49,8 +27,6 @@ class ContentViewModel: ObservableObject, DropDelegate {
     @AppStorage("FRTag", store: .app)                        public var tag                          =                        FRTag.all
     
     @AppStorage("FilterReveal", store: .app) var isFilterReveal = false
-    @AppStorage("WallpaperURLs", store: .app) private var storedWallpaperUrls = URLListStorage()
-    @AppStorage("SelectedIndex", store: .app) var selectedIndex = 0
     
     @AppStorage("ExplorerIconSize", store: .app) var explorerIconSize: Double = 200
     
@@ -81,11 +57,6 @@ class ContentViewModel: ObservableObject, DropDelegate {
     @Published var selectedWallpapers = Set<URL>()
     @Published var isBatchUnsubscribeConfirming = false
     private var selectionAnchor: URL?
-
-    var wallpaperUrls: [URL] {
-        get { storedWallpaperUrls.urls }
-        set { storedWallpaperUrls.urls = newValue }
-    }
 
     lazy var steamCmd: SteamCmdService = {
         let svc = SteamCmdService()
@@ -142,11 +113,6 @@ class ContentViewModel: ObservableObject, DropDelegate {
     
     /// current page index number is starting from '1'
     @Published public var currentPage: Int = 1
-//    {
-//        willSet {
-//            self.currentPage = newValue > self.maxPage ? self.maxPage : newValue
-//        }
-//    }
     
     /// Re-reads only the wallpapers that changed on disk.
     private let library: InstalledLibraryCache = {
@@ -324,8 +290,6 @@ class ContentViewModel: ObservableObject, DropDelegate {
                  { return false }
                 
                 return true
-//            case .favorite:
-//                return false
             case .fileSize:
                 if library.size(of: $0) <= library.size(of: $1),
                       sortingSequence == .increase
@@ -343,10 +307,6 @@ class ContentViewModel: ObservableObject, DropDelegate {
                     return firstDate < secondDate
                 }
                 return firstDate > secondDate
-//            case .subDate:
-//                return false
-//            case .lastUpdated:
-//                return false
             }
         }
     }

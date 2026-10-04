@@ -60,12 +60,6 @@ extension SceneEditOverlay {
         objects[String(objectID)]?.effects[key]
     }
 
-    /// The effect keys of the object in order, given how many effects it authors.
-    public func effectKeys(of objectID: Int, authoredCount: Int) -> [String] {
-        let edit = objects[String(objectID)]
-        return edit?.effectOrder ?? Self.defaultEffectOrder(authoredCount: authoredCount, added: edit?.addedEffects)
-    }
-
     // MARK: Layers
 
     /// The added layer with `id`.

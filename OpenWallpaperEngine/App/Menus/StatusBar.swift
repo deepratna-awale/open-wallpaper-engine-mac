@@ -25,10 +25,6 @@ extension AppDelegate {
         self.wallpaperViewModel.playRate = self.wallpaperViewModel.lastPlayRate == 0 ? 1 : self.wallpaperViewModel.lastPlayRate
     }
 
-    @objc func takeScreenshot() {
-        try! Process.run(URL(filePath: "/usr/sbin/screencapture"), arguments: ["-Cmup", "~/Picturesscreenshot.png"])
-    }
-
     @objc func browseWorkshop() {
         // Change tab selection to `Workshop`
         self.contentViewModel.topTabBarSelection = 1
