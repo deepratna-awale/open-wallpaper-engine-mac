@@ -50,8 +50,10 @@ extension WallpaperViewModel {
     /// A random wallpaper of `shown` other than `current`; nil when there is none.
     static func randomPick(from shown: [WEWallpaper], excluding current: WEWallpaper,
                            random: (Range<Int>) -> Int = { Int.random(in: $0) }) -> WEWallpaper? {
+        // By path: the same folder may come as `…/name` from the library and `…/name/` from storage.
+        let currentPath = current.wallpaperDirectory.standardizedFileURL.path
         let candidates = shown.filter {
-            $0.project != .invalid && $0.wallpaperDirectory != current.wallpaperDirectory
+            $0.project != .invalid && $0.wallpaperDirectory.standardizedFileURL.path != currentPath
         }
         guard !candidates.isEmpty else { return nil }
         return candidates[random(candidates.indices)]
