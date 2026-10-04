@@ -68,19 +68,4 @@ extension AppDelegate {
             }
         }
     }
-    
-    @objc func openImportFromFoldersPanel() {
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = false
-        panel.canChooseDirectories = true
-        panel.allowsMultipleSelection = true
-        panel.beginSheetModal(for: self.mainWindowController.window) { response in
-            if response != .OK { return }
-            OWELog.debug(.importer, "Import panel selection: \(panel.urls)")
-            
-            DispatchQueue.main.async {
-                self.contentViewModel.wallpaperUrls.append(contentsOf: panel.urls)
-            }
-        }
-    }
 }

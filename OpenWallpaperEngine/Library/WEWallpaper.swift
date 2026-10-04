@@ -106,11 +106,8 @@ enum WEWallpaperSortingMethod: String, CaseIterable, Identifiable {
     
     case name = "Name"
     case rating = "Rating"
-//    case favorite = "Favorite"
     case fileSize = "File Size"
     case dateAdded = "Date Added"
-//    case subDate = "Subscription Date"
-//    case lastUpdated = "Last Updated"
 
     var displayName: LocalizedStringResource {
         switch self {
@@ -124,23 +121,4 @@ enum WEWallpaperSortingMethod: String, CaseIterable, Identifiable {
 
 enum WEWallpaperSortingSequence: Int {
     case decrease = 0, increase = 1
-}
-
-enum WEInitError: Error {
-    enum WEJSONProjectInitError: Error {
-        case notFound, corrupted, mismatched, unkownError
-    }
-    
-    enum WEResourcesInitError: Error {
-        case notFound, mismatchedFormat, corrupted, unkownError
-    }
-    
-    enum WEPreviewInitError: Error {
-        case notFound, notImage, unkownError
-    }
-    
-    case badDirectoryPath
-    case JSONProject(was: WEJSONProjectInitError)
-    case resources(was: WEResourcesInitError)
-    case preview(was: WEPreviewInitError)
 }

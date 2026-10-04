@@ -1,11 +1,5 @@
 import Foundation
 
-/// Many WE scene fields can be either a plain value or a {"script":"..","value":..} object.
-/// This wrapper decodes the plain value and silently ignores script objects.
-func decodeFlexible<T: Decodable>(_ type: T.Type, container: KeyedDecodingContainer<WESceneObject.CodingKeys>, key: WESceneObject.CodingKeys) -> T? {
-    try? container.decodeIfPresent(T.self, forKey: key)
-}
-
 struct WESceneObject: Decodable {
     // Common
     var id: Int?
