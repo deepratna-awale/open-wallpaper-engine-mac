@@ -225,23 +225,35 @@ struct AndroidExportSettingsView<Layer: View>: View {
     }
 }
 
-/// "Save .mpkg…" and "Send over Wi-Fi…", each after the Export Settings sheet.
+/// "Save .mpkg…" and "Send over Wi-Fi…", each after the Export Settings sheet: side by side, or
+/// stacked at full width when the panel is too narrow for both labels.
 private struct AndroidEditorExportButtons: View {
     @ObservedObject var model: AndroidExportEditorModel
 
     var body: some View {
-        HStack {
-            Button {
-                model.requestExport(.wifi)
-            } label: {
-                Label("Send over Wi-Fi…", systemImage: "wifi")
-            }
-            .glassButtonStyle(.prominent)
-            .help("Review the export settings, then export the .mpkg and serve it to your Android device on this network")
-            Button("Save .mpkg…") { model.requestExport(.save) }
-                .glassButtonStyle()
-                .help("Review the export settings, then export the .mpkg to a file")
+        ViewThatFits(in: .horizontal) {
+            HStack { buttons(fill: false) }
+            VStack(alignment: .leading) { buttons(fill: true) }
         }
+    }
+
+    @ViewBuilder private func buttons(fill: Bool) -> some View {
+        Button {
+            model.requestExport(.wifi)
+        } label: {
+            Label("Send over Wi-Fi…", systemImage: "wifi")
+                .frame(maxWidth: fill ? .infinity : nil)
+        }
+        .glassButtonStyle(.prominent)
+        .help("Review the export settings, then export the .mpkg and serve it to your Android device on this network")
+        Button {
+            model.requestExport(.save)
+        } label: {
+            Text("Save .mpkg…")
+                .frame(maxWidth: fill ? .infinity : nil)
+        }
+        .glassButtonStyle()
+        .help("Review the export settings, then export the .mpkg to a file")
     }
 }
 
@@ -262,21 +274,26 @@ private struct AndroidEditorExportProgress: View {
             VStack(alignment: .leading, spacing: 6) {
                 AndroidEditorExportButtons(model: model)
                 if let batch = model.batch, !batch.outputs.isEmpty {
-                    HStack {
-                        Button("Show in Finder") { model.showInFinder() }
-                            .glassButtonStyle()
-                        if model.wifiSend == nil {
-                            Button {
-                                model.wifiSend = AndroidWiFiSendRequest(batch: batch)
-                            } label: {
-                                Label("Send Again", systemImage: "wifi")
-                            }
-                            .glassButtonStyle()
-                            .help("Serve the exported .mpkg over Wi-Fi again")
-                        }
+                    ViewThatFits(in: .horizontal) {
+                        HStack { outputButtons(batch) }
+                        VStack(alignment: .leading) { outputButtons(batch) }
                     }
                 }
             }
+        }
+    }
+
+    @ViewBuilder private func outputButtons(_ batch: AndroidExportBatch) -> some View {
+        Button("Show in Finder") { model.showInFinder() }
+            .glassButtonStyle()
+        if model.wifiSend == nil {
+            Button {
+                model.wifiSend = AndroidWiFiSendRequest(batch: batch)
+            } label: {
+                Label("Send Again", systemImage: "wifi")
+            }
+            .glassButtonStyle()
+            .help("Serve the exported .mpkg over Wi-Fi again")
         }
     }
 }

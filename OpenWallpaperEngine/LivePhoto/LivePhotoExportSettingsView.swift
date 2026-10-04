@@ -205,19 +205,31 @@ struct LivePhotoExportSettingsView<Layer: View>: View {
                 Button("Cancel", role: .cancel) { model.cancel() }
             }
         } else {
-            HStack {
-                Button {
-                    model.requestExport(.airDrop)
-                } label: {
-                    Label("Send with AirDrop", systemImage: "square.and.arrow.up")
-                }
-                .glassButtonStyle(.prominent)
-                .help("Review the export settings, then render the Live Photo and send it with AirDrop")
-                Button("Save…") { model.requestExport(.save) }
-                    .glassButtonStyle()
-                    .help("Review the export settings, then render the Live Photo and save its photo and movie to a folder")
+            // Side by side, or stacked at full width when the panel is too narrow for both labels.
+            ViewThatFits(in: .horizontal) {
+                HStack { exportButtons(fill: false) }
+                VStack(alignment: .leading) { exportButtons(fill: true) }
             }
         }
+    }
+
+    @ViewBuilder private func exportButtons(fill: Bool) -> some View {
+        Button {
+            model.requestExport(.airDrop)
+        } label: {
+            Label("Send with AirDrop", systemImage: "square.and.arrow.up")
+                .frame(maxWidth: fill ? .infinity : nil)
+        }
+        .glassButtonStyle(.prominent)
+        .help("Review the export settings, then render the Live Photo and send it with AirDrop")
+        Button {
+            model.requestExport(.save)
+        } label: {
+            Text("Save…")
+                .frame(maxWidth: fill ? .infinity : nil)
+        }
+        .glassButtonStyle()
+        .help("Review the export settings, then render the Live Photo and save its photo and movie to a folder")
     }
 }
 
