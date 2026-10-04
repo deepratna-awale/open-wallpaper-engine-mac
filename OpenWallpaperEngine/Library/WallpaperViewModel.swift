@@ -23,7 +23,8 @@ class WallpaperViewModel: ObservableObject {
     WEWallpaper(using: .invalid, where: AppBundleLayout.wallpaperNotFoundURL) {
         willSet {
             guard confirmApply?(newValue) ?? true else { return }
-            if ["web", "application"].contains(newValue.project.type) {
+            // Whatever its case, as the library reads project.json's type ("Web" is common).
+            if ["web", "application"].contains(newValue.project.type.lowercased()) {
                 if let trustedWallpapers = UserDefaults.app.array(forKey: "TrustedWallpapers") as? [String],
                    trustedWallpapers.contains(newValue.wallpaperDirectory.path(percentEncoded: false)) {
                     self.setWallpaper(newValue, for: selectedScreenIds)
