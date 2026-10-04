@@ -84,13 +84,11 @@ struct DisplaySettings: SubviewOfContentView {
 
                         if wallpaperViewModel.isScreenEnabled(screenId) {
                             HStack {
-                                // Preview thumbnail
-                                GifImage(contentsOf: previewURL(for: wp), animates: false)
-                                    .resizable()
-                                    .aspectRatio(16/9, contentMode: .fit)
-                                    .frame(height: 60)
-                                    .cornerRadius(4)
-                                    .background(Color(nsColor: .controlBackgroundColor))
+                                DisplayWallpaperPicture(wallpaper: wp,
+                                                        displayName: WallpaperViewModel.screenName(for: screen),
+                                                        displaySize: screen.frame.size,
+                                                        displayScale: screen.backingScaleFactor,
+                                                        placement: wallpaperViewModel.wallpaperPlacement)
 
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(wp.project.title.isEmpty ? String(localized: "No wallpaper") : wp.project.title)
@@ -132,15 +130,5 @@ struct DisplaySettings: SubviewOfContentView {
             }
         }
         .padding(.horizontal, 40)
-    }
-
-    private func previewURL(for wallpaper: WEWallpaper) -> URL {
-        if let project = try? JSONDecoder().decode(
-            WEProject.self,
-            from: Data(contentsOf: wallpaper.wallpaperDirectory.appending(path: "project.json"))
-        ), let preview = project.previewURL(in: wallpaper.wallpaperDirectory) {
-            return preview
-        }
-        return AppBundleLayout.wallpaperNotFoundURL
     }
 }
