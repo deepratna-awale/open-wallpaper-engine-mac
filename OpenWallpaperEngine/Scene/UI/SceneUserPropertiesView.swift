@@ -63,6 +63,8 @@ final class SceneUserPropertiesModel: ObservableObject {
     private let targets: WallpaperPropertyTargets
     private var pendingSave: DispatchWorkItem?
     private let wallpaperPath: String
+    /// The text layers' Font and Size settings that hold the user's own value.
+    private var userLayerSettings: Set<String> = []
 
     init(wallpaper: WEWallpaper, scopes: [WallpaperPropertyScope]) {
         wallpaperPath = wallpaper.settingsDirectory.path
@@ -77,11 +79,12 @@ final class SceneUserPropertiesModel: ObservableObject {
     func set(_ value: String, forID id: String) {
         guard values[id] != value else { return }
         values[id] = value
+        if SceneTextLayerSettings.isLayerSetting(id) { userLayerSettings.insert(id) }
         NotificationCenter.default.post(name: .wallpaperUserPropertyChanged, object: wallpaperPath,
                                         userInfo: ["key": id, "value": value, "stores": targets.runtimeKeys])
-        targets.publish(values, defaults: defaultValues)
+        targets.publish(ownValues, defaults: defaultValues)
         pendingSave?.cancel()
-        let snapshot = values
+        let snapshot = ownValues
         let work = DispatchWorkItem { [targets] in targets.save(snapshot) }
         pendingSave = work
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.12, execute: work)
@@ -96,12 +99,23 @@ final class SceneUserPropertiesModel: ObservableObject {
         pendingSave = nil
         let defaults = defaultValues
         let previous = values
-        values = targets.reset(to: defaults)
+        // Text layers' Font and Size go back to following the layers, so they aren't stored.
+        values = targets.reset(to: defaults.filter { !SceneTextLayerSettings.isLayerSetting($0.key) })
+        userLayerSettings = []
         // Web pages take a change key by key (WE's `applyUserProperties`).
         for (key, value) in values where previous[key] != value {
             NotificationCenter.default.post(name: .wallpaperUserPropertyChanged, object: wallpaperPath,
                                             userInfo: ["key": key, "value": value, "stores": targets.runtimeKeys])
         }
+        for property in properties where values[property.id] == nil {
+            values[property.id] = property.defaultValue
+        }
+    }
+
+    /// The values to run and save: all but the text layers' Font and Size the user hasn't set,
+    /// which show the layer's own (`SceneTextLayerSettings`).
+    private var ownValues: [String: String] {
+        values.filter { !SceneTextLayerSettings.isLayerSetting($0.key) || userLayerSettings.contains($0.key) }
     }
 
     private func trailingOrder(offset: Int, index: Int) -> Int {
@@ -199,11 +213,14 @@ final class SceneUserPropertiesModel: ObservableObject {
             extra.precision = 3
             return extra
         }
-        values = targets.storedValues
+        // A stored Font or Size equal to the layer's own is one earlier versions stored: dropped.
+        let layerDefaults: [String: String] = defaultValues.filter { SceneTextLayerSettings.isLayerSetting($0.key) }
+        values = SceneTextLayerSettings.removingLayerValues(from: targets.storedValues, matching: [layerDefaults])
+        userLayerSettings = Set(values.keys.filter(SceneTextLayerSettings.isLayerSetting))
         for property in properties where values[property.id] == nil {
             values[property.id] = property.defaultValue
         }
-        targets.publish(values, defaults: defaultValues)
+        targets.publish(ownValues, defaults: defaultValues)
     }
 
     /// Each shown property's default: what a wallpaper takes while its store lacks the key.

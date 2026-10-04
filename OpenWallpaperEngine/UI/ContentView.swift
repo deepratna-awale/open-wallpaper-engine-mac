@@ -95,20 +95,12 @@ struct ContentView: View {
                             isPresented: $viewModel.isUnsubscribeConfirming) {
             if let url = viewModel.hoveredWallpaper?.wallpaperDirectory {
                 Button("Delete Immediately", role: .destructive) {
-                    if (try? FileManager.default.removeItem(at: url)) != nil {
-                        viewModel.forgetDeletedWallpaper(at: url)
-                    }
-                    wallpaperViewModel.removeWallpaperFromAllScreens(directory: url)
+                    viewModel.deleteWallpapers(at: [url], toTrash: false, wallpaperViewModel: wallpaperViewModel)
                     viewModel.hoveredWallpaper = nil
-                    viewModel.removeUnusedWorkshopDependencies()
                 }
                 Button("Move to Trash") {
-                    if (try? FileManager.default.trashItem(at: url, resultingItemURL: nil)) != nil {
-                        viewModel.forgetDeletedWallpaper(at: url)
-                    }
-                    wallpaperViewModel.removeWallpaperFromAllScreens(directory: url)
+                    viewModel.deleteWallpapers(at: [url], toTrash: true, wallpaperViewModel: wallpaperViewModel)
                     viewModel.hoveredWallpaper = nil
-                    viewModel.removeUnusedWorkshopDependencies()
                 }
             }
             Button("Cancel", role: .cancel) {
@@ -120,30 +112,23 @@ struct ContentView: View {
         .confirmationDialog("Batch Unsubscribe Confirmation",
                             isPresented: $viewModel.isBatchUnsubscribeConfirming) {
             Button("Delete All \(viewModel.selectedWallpapers.count) Immediately", role: .destructive) {
-                for url in viewModel.selectedWallpapers {
-                    if (try? FileManager.default.removeItem(at: url)) != nil {
-                        viewModel.forgetDeletedWallpaper(at: url)
-                    }
-                    wallpaperViewModel.removeWallpaperFromAllScreens(directory: url)
-                }
+                viewModel.deleteWallpapers(at: Array(viewModel.selectedWallpapers), toTrash: false,
+                                           wallpaperViewModel: wallpaperViewModel)
                 viewModel.clearSelection()
-                viewModel.removeUnusedWorkshopDependencies()
             }
             Button("Move All \(viewModel.selectedWallpapers.count) to Trash") {
-                for url in viewModel.selectedWallpapers {
-                    if (try? FileManager.default.trashItem(at: url, resultingItemURL: nil)) != nil {
-                        viewModel.forgetDeletedWallpaper(at: url)
-                    }
-                    wallpaperViewModel.removeWallpaperFromAllScreens(directory: url)
-                }
+                viewModel.deleteWallpapers(at: Array(viewModel.selectedWallpapers), toTrash: true,
+                                           wallpaperViewModel: wallpaperViewModel)
                 viewModel.clearSelection()
-                viewModel.removeUnusedWorkshopDependencies()
             }
             Button("Cancel", role: .cancel) {}
         } message: {
             batchUnsubscribeMessage
         }
         .alert(isPresented: $viewModel.importAlertPresented, error: viewModel.importAlertError) {
+
+        }
+        .alert(isPresented: $viewModel.deletionAlertPresented, error: viewModel.deletionAlertError) {
 
         }
         .sheet(isPresented: onboardingPresented, onDismiss: openOnboardingShortcut) {

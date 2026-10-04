@@ -36,7 +36,7 @@ extension SceneEditOverlay {
             // Added, deleted or moved layers would shift the index an object without an id is
             // known by: it keeps that index as its id.
             for index in objects.indices where objects[index]["id"] == nil { objects[index]["id"] = index }
-            var taken = Set(objects.map(Self.objectID))
+            var taken = Set(objects.enumerated().map { SceneObjects.objectID($1, index: $0) })
             for added in added ?? [] {
                 guard case .object = added.object, var object = added.object.any as? [String: Any],
                       taken.insert(added.id).inserted else { continue }
@@ -54,7 +54,7 @@ extension SceneEditOverlay {
             objects = root["objects"] as? [[String: Any]] ?? objects
         }
         for index in objects.indices {
-            let objectID = (objects[index]["id"] as? NSNumber)?.intValue ?? index
+            let objectID = SceneObjects.objectID(objects[index], index: index)
             let edit = self.objects[String(objectID)]
             if let edit, edit.hasSceneEdits {
                 for (name, value) in edit.fields {
@@ -72,15 +72,13 @@ extension SceneEditOverlay {
         particles?.removeDeleted(from: &objects)
         if let removed, !removed.isEmpty {
             let gone = Set(removed)
-            objects.removeAll { gone.contains(Self.objectID($0)) }
+            objects = objects.enumerated()
+                .filter { !gone.contains(SceneObjects.objectID($1, index: $0)) }
+                .map(\.element)
         }
         if let order { objects = Self.ordered(objects, by: order) }
         timelines?.apply(to: &objects)
         root["objects"] = objects
-    }
-
-    static func objectID(_ object: [String: Any]) -> Int {
-        (object["id"] as? NSNumber)?.intValue ?? -1
     }
 
     /// `objects` in `order` (by id); an object the order doesn't name keeps its place after the
@@ -88,19 +86,20 @@ extension SceneEditOverlay {
     static func ordered(_ objects: [[String: Any]], by order: [Int]) -> [[String: Any]] {
         var position: [Int: Int] = [:]
         for (index, id) in order.enumerated() where position[id] == nil { position[id] = index }
+        let ids: [Int] = objects.enumerated().map { SceneObjects.objectID($1, index: $0) }
         var result: [[String: Any]] = []
         var unplaced: [(after: Int?, object: [String: Any])] = []
         var previous: Int?
-        for object in objects {
-            let id = objectID(object)
+        for (object, id) in zip(objects, ids) {
             if position[id] == nil { unplaced.append((previous, object)) } else { previous = id }
         }
-        let placed = objects.filter { position[objectID($0)] != nil }
-            .sorted { position[objectID($0)]! < position[objectID($1)]! }
+        let placed: [(object: [String: Any], id: Int)] = zip(objects, ids)
+            .filter { position[$0.1] != nil }
+            .sorted { position[$0.1]! < position[$1.1]! }
+            .map { (object: $0.0, id: $0.1) }
         for object in unplaced where object.after == nil { result.append(object.object) }
-        for object in placed {
+        for (object, id) in placed {
             result.append(object)
-            let id = objectID(object)
             for follower in unplaced where follower.after == id { result.append(follower.object) }
         }
         return result

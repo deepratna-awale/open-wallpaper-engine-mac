@@ -35,7 +35,7 @@ public struct SceneOutline: Sendable {
         let parents = Set(objects.compactMap { ($0["parent"] as? NSNumber)?.intValue })
         var layers: [SceneLayer] = []
         for (index, object) in objects.enumerated() {
-            let id = (object["id"] as? NSNumber)?.intValue ?? index
+            let id = SceneObjects.objectID(object, index: index)
             var fields: [String: SceneJSONValue] = [:]
             for (key, value) in object where key != "effects" {
                 if let value = SceneJSONValue(any: value) { fields[key] = value }
