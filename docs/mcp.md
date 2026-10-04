@@ -649,8 +649,11 @@ What these tools don't do, and why:
   the mode next saves (as it does after each change and when it closes).
 
 `export_live_photo`, `screensaver_record` and `depth_generate` render, so `owe-mcp` waits up to
-15 minutes for them instead of the usual two. A client that gives up sooner gets no answer, but
-the app finishes the work; `screensaver_get` and the export's folder show the result.
+15 minutes for them instead of the usual two. When the call carries `_meta.progressToken`,
+`owe-mcp` sends `notifications/progress` every 5 seconds until it answers (a count with no total:
+the app doesn't say how far it is), so a client that resets its timeout on progress keeps
+waiting. A client that gives up sooner gets no answer, but the app finishes the work;
+`screensaver_get` and the export's folder show the result.
 
 ### What clients can't do
 

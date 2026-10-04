@@ -22,6 +22,9 @@ extension ControlChannel {
 /// - A tool call checks its arguments against the tool's schema, then becomes the control request
 ///   of the same name. Its result comes back as structured content, with a one-line summary and
 ///   the JSON as text for clients without structured content; a snapshot's PNG as image content.
+/// - A long-running tool call (`MCPTool.isLongRunning`) whose request carries
+///   `_meta.progressToken` gets `notifications/progress` every `progressInterval` until it is
+///   answered, so a client that resets its timeout on progress keeps waiting.
 /// - What the app refuses, and an app that can't be reached, are tool errors (`isError`) with a
 ///   message saying why and what to do. An unknown tool or method is a JSON-RPC error.
 public final class MCPServer {
@@ -49,12 +52,18 @@ public final class MCPServer {
     private var cancelled: Set<JSONValue> = []
     /// Where `snapshot` with `format: "path"` saves its PNGs.
     private let snapshotDirectory: URL
+    /// Writes a notification line (without its newline) to the client, between responses.
+    public var sendNotification: (@Sendable (Data) -> Void)?
+    /// How often a long-running call with a progress token reports that it is still working.
+    let progressInterval: TimeInterval
 
     public init(channel: ControlChannel, version: String,
-                snapshotDirectory: URL = FileManager.default.temporaryDirectory.appending(path: "owe-mcp-snapshots", directoryHint: .isDirectory)) {
+                snapshotDirectory: URL = FileManager.default.temporaryDirectory.appending(path: "owe-mcp-snapshots", directoryHint: .isDirectory),
+                progressInterval: TimeInterval = 5) {
         self.channel = channel
         self.version = version
         self.snapshotDirectory = snapshotDirectory
+        self.progressInterval = progressInterval
     }
 
     /// The response line (without its newline) to one line read from the client; nil when the
@@ -172,6 +181,8 @@ public final class MCPServer {
         var forwarded = values
         // How the client takes the picture is owe-mcp's business, not the app's.
         let savesToFile = tool.returnsImage && forwarded.removeValue(forKey: "format")?.stringValue == "path"
+        let progress = tool.isLongRunning ? reportProgress(token: params["_meta"]?["progressToken"], tool: name) : nil
+        defer { progress?.cancel() }
         do {
             var result = try await channel.call(name, params: forwarded, longRunning: tool.isLongRunning)
             if savesToFile { result = try savingPicture(result) }
@@ -180,6 +191,26 @@ public final class MCPServer {
             return Self.result(id: id, Self.toolError(error.message))
         } catch {
             return Self.result(id: id, Self.toolError(Self.unreachableMessage(error)))
+        }
+    }
+
+    /// Reports every `progressInterval` that the call is still running, until cancelled: the app
+    /// doesn't say how far a render or a recording is, so the progress counts the reports and has
+    /// no total. Nil without a token or a way to send.
+    private func reportProgress(token: JSONValue?, tool: String) -> Task<Void, Never>? {
+        guard let token, Self.isValidID(token), let send = sendNotification else { return nil }
+        let interval = progressInterval, withMessage = MCPProtocolVersion.hasProgressMessages(negotiatedVersion)
+        return Task {
+            var reports = 0
+            while true {
+                do { try await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000)) } catch { return }
+                reports += 1
+                var params: [String: JSONValue] = ["progressToken": token, "progress": .number(Double(reports))]
+                if withMessage {
+                    params["message"] = .string("\(tool) is still running (\(Int((Double(reports) * interval).rounded())) s).")
+                }
+                send(Self.encode(["jsonrpc": "2.0", "method": "notifications/progress", "params": .object(params)]))
+            }
         }
     }
 

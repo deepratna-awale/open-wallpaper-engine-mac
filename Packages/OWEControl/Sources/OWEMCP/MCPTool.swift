@@ -98,6 +98,8 @@ public enum MCPProtocolVersion {
     public static func hasStructuredContent(_ version: String) -> Bool { version >= "2025-06-18" }
     /// Tool annotations (`readOnlyHint`…).
     public static func hasToolAnnotations(_ version: String) -> Bool { version >= "2025-03-26" }
+    /// A `message` in `notifications/progress`.
+    public static func hasProgressMessages(_ version: String) -> Bool { version >= "2025-03-26" }
     /// JSON-RPC batches: allowed before 2025-06-18, which removed them.
     public static func allowsBatches(_ version: String) -> Bool { version < "2025-06-18" }
 }
