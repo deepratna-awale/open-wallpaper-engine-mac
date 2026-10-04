@@ -1,3 +1,4 @@
+import AppKit
 import CoreGraphics
 import ImageIO
 import OWETheming
@@ -29,6 +30,42 @@ final class ThemingSettingsTests: XCTestCase {
         settings.theming.isEnabled = true
         XCTAssertTrue(SettingsTab.general.fields.contains { $0.isChanged(settings) })
         XCTAssertEqual(SettingsTab.general.resetting(settings).theming, ThemingSettings())
+    }
+
+    /// Theming › Menu Bar alone turns the desktop pictures on, so their strips appear.
+    func testThemingsMenuBarAloneMakesTheDesktopPicturesFollowTheWallpapers() {
+        var settings = GlobalSettings()
+        settings.lockScreenPicture = false
+        settings.adjustMenuBarTint = false
+        XCTAssertFalse(DesktopPictureController.followsWallpapers(settings))
+        settings.theming.menuBar = true
+        XCTAssertFalse(DesktopPictureController.followsWallpapers(settings), "the master switch is off")
+        settings.theming.isEnabled = true
+        XCTAssertTrue(DesktopPictureController.followsWallpapers(settings))
+    }
+
+    /// The menu bar is transparent over the wallpaper window, so the window's top gets the strip.
+    @MainActor
+    func testTheWallpaperWindowGetsTheStripOfItsDisplay() throws {
+        let strips = DesktopPictureStrips(color: ThemeColor(red: 1, green: 0, blue: 0),
+                                          displays: [7: MenuBarStripDisplay(size: CGSize(width: 400, height: 300),
+                                                                             menuBarHeight: 30)])
+        XCTAssertNil(MenuBarStripFill(strips, display: 8), "no menu bar on display 8")
+        XCTAssertNil(MenuBarStripFill(nil, display: 7))
+        let fill = try XCTUnwrap(MenuBarStripFill(strips, display: 7))
+        XCTAssertEqual(fill.height, 30)
+
+        let view = WallpaperWindowContentView(content: NSView())
+        view.frame = NSRect(x: 0, y: 0, width: 400, height: 300)
+        view.menuBarStrip = fill
+        view.layoutSubtreeIfNeeded()
+        let strip = try XCTUnwrap(view.subviews.last)
+        XCTAssertFalse(strip === view.content, "the strip is above the wallpaper")
+        XCTAssertEqual(strip.frame, NSRect(x: 0, y: 270, width: 400, height: 30), "the top 30 points")
+        XCTAssertEqual(strip.layer?.backgroundColor, fill.cgColor)
+
+        view.menuBarStrip = nil
+        XCTAssertEqual(view.subviews.count, 1, "Menu Bar off: the strip goes")
     }
 
     @MainActor

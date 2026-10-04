@@ -191,8 +191,9 @@ struct MonitorRectangle: View {
             .fill(isEnabled ? Color(nsColor: .controlBackgroundColor) : Color(nsColor: .separatorColor).opacity(0.3))
             .overlay(
                 RoundedRectangle(cornerRadius: 6)
-                    .stroke(isSelected ? Color.accentColor : Color(nsColor: .separatorColor), lineWidth: isSelected ? 3 : 1)
+                    .strokeBorder(Color(nsColor: .separatorColor), lineWidth: isSelected ? 0 : 1)
             )
+            .selectionHighlight(isSelected, cornerRadius: 6)
             .overlay {
                 VStack(spacing: 2) {
                     HStack(spacing: 4) {

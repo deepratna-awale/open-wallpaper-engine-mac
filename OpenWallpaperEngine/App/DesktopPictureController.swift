@@ -14,8 +14,9 @@ struct WebWallpaperPageSnapshot {
 }
 
 /// The app's side of the desktop pictures (`DesktopPictureSync`): on while Settings shows the
-/// wallpaper on the lock screen or tints the menu bar with it (both read the desktop picture), and
-/// only in a copy that may change it (`DesktopSnapshotCache.mayChangeDesktopPicture`).
+/// wallpaper on the lock screen, tints the menu bar with it (both read the desktop picture) or
+/// themes the menu bar (Theming › Menu Bar), and only in a copy that may change it
+/// (`DesktopSnapshotCache.mayChangeDesktopPicture`).
 ///
 /// It plans every display from the wallpapers each one shows (clones, stretches, splits, display
 /// options), and updates after any of those change, a scene saves a snapshot or a page draws one.
@@ -47,7 +48,13 @@ final class DesktopPictureController {
     /// Whether the desktop pictures follow the wallpapers.
     var isActive: Bool {
         guard mayChange, let settings = settings?.settings else { return false }
-        return settings.lockScreenPicture || settings.adjustMenuBarTint
+        return Self.followsWallpapers(settings)
+    }
+
+    /// Whether `settings` want the desktop pictures to follow the wallpapers. Theming's menu bar
+    /// strip alone is enough.
+    nonisolated static func followsWallpapers(_ settings: GlobalSettings) -> Bool {
+        settings.lockScreenPicture || settings.adjustMenuBarTint || settings.theming.wantsMenuBarStrip
     }
 
     private var displays: [DesktopPicturePlan.Display] {
@@ -77,7 +84,7 @@ final class DesktopPictureController {
             viewModel.$layoutResolution.map { _ in () }.eraseToAnyPublisher(),
             viewModel.$wallpaperPlacement.map { _ in () }.eraseToAnyPublisher(),
             viewModel.displayOptions.$entries.map { _ in () }.eraseToAnyPublisher(),
-            settings.$settings.map { [$0.lockScreenPicture, $0.adjustMenuBarTint] }.removeDuplicates()
+            settings.$settings.map(Self.followsWallpapers).removeDuplicates()
                 .map { _ in () }.eraseToAnyPublisher(),
             center.publisher(for: .sceneLoadingSnapshotSaved).map { _ in () }.eraseToAnyPublisher(),
             center.publisher(for: .webWallpaperPageSnapshot).map { _ in () }.eraseToAnyPublisher(),
