@@ -152,7 +152,7 @@ map:
   "OpenWallpaperEngine/Scene/Prewarm/**": ["Shader*", "UpdateShaderPrewarmer*"]
   "OpenWallpaperEngine/Scene/UI/**": ["Scene*", "UserProperty*", "WallpaperProperty*", "NumericSlider*", "LivePhoto*", "ScreenSaver*"]
   "OpenWallpaperEngine/LivePhoto/**": ["LivePhoto*", "AndroidExport*"]
-  "OpenWallpaperEngine/AndroidExport/**": ["AndroidExport*", "MobilePackage*", "MobileFormat*", "MCPSystem*"]
+  "OpenWallpaperEngine/AndroidExport/**": ["AndroidExport*", "AndroidWiFi*", "MobilePackage*", "MobileFormat*", "MCPSystem*"]
   "OpenWallpaperEngine/Web/**": ["Web*", "UserPropertyHTML*", "WallpaperProperty*", "Display*"]
   "OpenWallpaperEngine/Video/**": ["Video*", "WebKitVideo*", "MediaThumbnail*", "Display*"]
   "OpenWallpaperEngine/Audio/**": ["@audio"]

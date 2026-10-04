@@ -21,6 +21,10 @@ protocol SystemControlService: AnyObject {
     /// and waits for them.
     func exportAndroid(_ request: SystemAndroidRequest) async throws -> AndroidExportBatch
 
+    /// Starts "Send over Wi-Fi" for the request's packages (exporting them first when it names
+    /// wallpapers), replacing the one an MCP client started before.
+    func sendAndroidOverWiFi(_ request: SystemAndroidSendRequest) async throws -> SystemAndroidSendResult
+
     // MARK: Screen saver
 
     var screenSaver: SystemScreenSaverState { get }

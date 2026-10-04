@@ -1,0 +1,321 @@
+import CoreImage
+import Foundation
+import XCTest
+@testable import OpenWallpaperEngine
+
+/// "Send over Wi-Fi": the router's token, method and index rules, ranges, the phone's page, the
+/// QR code, and the real listener on loopback (tests only; the app never listens there) driven by
+/// URLSession, including its expiry.
+@MainActor
+final class AndroidWiFiSendTests: XCTestCase {
+    private var directory: URL!
+    private let token = "AAAAAAAAAAAAAAAAAAAAAA"
+    private static let loopback = AndroidLANAddress(interface: "lo0", displayName: nil, address: 0x7F00_0001, netmask: 0xFF00_0000)
+
+    override func setUpWithError() throws {
+        directory = FileManager.default.temporaryDirectory.appending(path: "owe-wifi-\(UUID().uuidString)", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    }
+
+    override func tearDownWithError() throws {
+        try? FileManager.default.removeItem(at: directory) // scratch cleanup
+    }
+
+    /// Two packages (the first with a preview) of known bytes.
+    private func files() throws -> [AndroidWiFiFile] {
+        let first = directory.appending(path: "Rain.mpkg"), second = directory.appending(path: "City.mpkg")
+        let preview = directory.appending(path: "preview.jpg")
+        try Data((0..<1000).map { UInt8($0 % 251) }).write(to: first)
+        try Data(repeating: 7, count: 300_000).write(to: second)
+        try Data([0xFF, 0xD8, 0xFF]).write(to: preview)
+        return [
+            AndroidWiFiFile(index: 0, title: "Rain <b>& \"Snow\"", kind: .sceneDynamic, url: first, size: 1000, previewURL: preview,
+                            downloadName: "Rain & Snow.mpkg"),
+            AndroidWiFiFile(index: 1, title: "City", kind: .video, url: second, size: 300_000, previewURL: nil, downloadName: "City.mpkg"),
+        ]
+    }
+
+    private func request(_ target: String, method: String = "GET", headers: [String: String] = [:]) -> AndroidWiFiHTTP.Request {
+        AndroidWiFiHTTP.Request(method: method, target: target, headers: Dictionary(uniqueKeysWithValues: headers.map { ($0.key.lowercased(), $0.value) }))
+    }
+
+    // MARK: Router
+
+    func testTokensAreRandom128BitAndCheckedWhole() throws {
+        let made = try AndroidWiFiRouter.makeToken()
+        XCTAssertEqual(made.count, 22, "16 bytes, base64url without padding")
+        XCTAssertNotEqual(made, try AndroidWiFiRouter.makeToken())
+        XCTAssertTrue(made.allSatisfy { $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" })
+        let router = AndroidWiFiRouter(token: token, files: try files(), expiry: .distantFuture)
+        XCTAssertEqual(router.route(request("/\(token)/"), now: Date()), .page)
+        XCTAssertEqual(router.route(request("/\(token)"), now: Date()), .page)
+        for wrong in ["/", "/AAAAAAAAAAAAAAAAAAAAAB/", "/AAAAAAAAAAAAAAAAAAAAA/", "/\(token)A/", "/\(token.lowercased())/", "/favicon.ico"] {
+            XCTAssertEqual(router.route(request(wrong), now: Date()), .notFound, wrong)
+            XCTAssertEqual(router.response(to: request(wrong), now: Date()).status, 404, wrong)
+        }
+    }
+
+    func testAnExpiredTokenIsNotFound() throws {
+        let expiry = Date()
+        let router = AndroidWiFiRouter(token: token, files: try files(), expiry: expiry)
+        XCTAssertEqual(router.route(request("/\(token)/file/0"), now: expiry.addingTimeInterval(-1)), .file(0))
+        XCTAssertEqual(router.route(request("/\(token)/file/0"), now: expiry), .notFound)
+        XCTAssertEqual(router.response(to: request("/\(token)/"), now: expiry.addingTimeInterval(60)).status, 404)
+    }
+
+    func testOnlyGETIsAccepted() throws {
+        let router = AndroidWiFiRouter(token: token, files: try files(), expiry: .distantFuture)
+        for method in ["POST", "PUT", "DELETE", "HEAD", "OPTIONS", "PATCH", "CONNECT", "TRACE"] {
+            let response = router.response(to: request("/\(token)/file/0", method: method), now: Date())
+            XCTAssertEqual(response.status, 405, method)
+            XCTAssertEqual(response.header("Allow"), "GET")
+        }
+        XCTAssertEqual(router.response(to: request("/\(token)/file/0"), now: Date()).status, 200)
+    }
+
+    func testFilesAreServedByIndexOnly() throws {
+        let router = AndroidWiFiRouter(token: token, files: try files(), expiry: .distantFuture)
+        XCTAssertEqual(router.route(request("/\(token)/file/1"), now: Date()), .file(1))
+        XCTAssertEqual(router.route(request("/\(token)/preview/0"), now: Date()), .preview(0))
+        XCTAssertEqual(router.route(request("/\(token)/preview/1"), now: Date()), .notFound, "no preview")
+        for target in ["/\(token)/file/2", "/\(token)/file/-1", "/\(token)/file/01x", "/\(token)/file/../../etc/passwd",
+                       "/\(token)/file/%2e%2e%2fetc%2fpasswd", "/\(token)/file/Rain.mpkg", "/\(token)/../\(token)/file/0",
+                       "/\(token)/file/0/", "/\(token)/file/9999999", "/\(token)/file/", "/\(token)//file/0", "/\(token)/files/0",
+                       "/\(token)/file/\(directory.appending(path: "Rain.mpkg").path)"] {
+            XCTAssertEqual(router.route(request(target), now: Date()), .notFound, target)
+        }
+        let response = router.response(to: request("/\(token)/file/0?x=1"), now: Date())
+        XCTAssertEqual(response.body, .file(url: directory.appending(path: "Rain.mpkg"), index: 0, range: 0...999))
+        XCTAssertEqual(response.header("Content-Type"), "application/octet-stream")
+        XCTAssertEqual(response.header("Content-Length"), "1000")
+        XCTAssertEqual(response.header("Accept-Ranges"), "bytes")
+        XCTAssertEqual(response.header("Content-Disposition"),
+                       "attachment; filename=\"Rain & Snow.mpkg\"; filename*=UTF-8''Rain%20&%20Snow.mpkg")
+        XCTAssertEqual(AndroidWiFiRouter.disposition("Ünicode \"x\".mpkg"),
+                       "attachment; filename=\"_nicode _x_.mpkg\"; filename*=UTF-8''%C3%9Cnicode%20%22x%22.mpkg")
+    }
+
+    func testRangeRequests() throws {
+        XCTAssertEqual(AndroidWiFiHTTP.range("bytes=0-99", size: 1000), .partial(0...99))
+        XCTAssertEqual(AndroidWiFiHTTP.range("bytes=500-", size: 1000), .partial(500...999))
+        XCTAssertEqual(AndroidWiFiHTTP.range("bytes=-100", size: 1000), .partial(900...999))
+        XCTAssertEqual(AndroidWiFiHTTP.range("bytes=-5000", size: 1000), .partial(0...999))
+        XCTAssertEqual(AndroidWiFiHTTP.range("bytes=900-5000", size: 1000), .partial(900...999))
+        XCTAssertEqual(AndroidWiFiHTTP.range("bytes=1000-", size: 1000), .unsatisfiable)
+        XCTAssertEqual(AndroidWiFiHTTP.range("bytes=-0", size: 1000), .unsatisfiable)
+        for ignored in [nil, "", "items=0-1", "bytes=0-1,5-6", "bytes=5-1", "bytes=a-b", "bytes=-"] {
+            XCTAssertEqual(AndroidWiFiHTTP.range(ignored, size: 1000), .whole, ignored ?? "nil")
+        }
+        let router = AndroidWiFiRouter(token: token, files: try files(), expiry: .distantFuture)
+        let partial = router.response(to: request("/\(token)/file/0", headers: ["Range": "bytes=100-199"]), now: Date())
+        XCTAssertEqual(partial.status, 206)
+        XCTAssertEqual(partial.header("Content-Range"), "bytes 100-199/1000")
+        XCTAssertEqual(partial.header("Content-Length"), "100")
+        let tag = try XCTUnwrap(partial.header("ETag"))
+        let resumed = router.response(to: request("/\(token)/file/0", headers: ["Range": "bytes=100-", "If-Range": tag]), now: Date())
+        XCTAssertEqual(resumed.status, 206)
+        let changed = router.response(to: request("/\(token)/file/0", headers: ["Range": "bytes=100-", "If-Range": "\"other\""]), now: Date())
+        XCTAssertEqual(changed.status, 200, "a changed file is sent whole")
+        let outside = router.response(to: request("/\(token)/file/0", headers: ["Range": "bytes=2000-"]), now: Date())
+        XCTAssertEqual(outside.status, 416)
+        XCTAssertEqual(outside.header("Content-Range"), "bytes */1000")
+    }
+
+    func testRequestParsing() {
+        let parsed = AndroidWiFiHTTP.parse(Data("GET /a/b HTTP/1.1\r\nHost: x\r\nRange: bytes=0-1\r\n\r\n".utf8))
+        XCTAssertEqual(parsed, .request(.init(method: "GET", target: "/a/b", headers: ["host": "x", "range": "bytes=0-1"])))
+        XCTAssertEqual(AndroidWiFiHTTP.parse(Data("GET / HTTP/1.1\r\nHost: x\r\n".utf8)), .incomplete)
+        XCTAssertEqual(AndroidWiFiHTTP.parse(Data("GET http://evil/ HTTP/1.1\r\n\r\n".utf8)), .invalid)
+        XCTAssertEqual(AndroidWiFiHTTP.parse(Data("GET / HTTP/2\r\n\r\n".utf8)), .invalid)
+        XCTAssertEqual(AndroidWiFiHTTP.parse(Data("get / HTTP/1.1\r\n\r\n".utf8)), .invalid)
+        XCTAssertEqual(AndroidWiFiHTTP.parse(Data(repeating: 65, count: AndroidWiFiHTTP.maximumHeaderBytes + 1)), .invalid)
+        let split = AndroidWiFiHTTP.Response(status: 200, headers: [("X", "a\r\nSet-Cookie: b")])
+        XCTAssertFalse(String(decoding: split.head, as: UTF8.self).contains("\r\nSet-Cookie"), "no response splitting")
+    }
+
+    // MARK: Page
+
+    func testThePageListsEveryFileWithDownloadAll() throws {
+        let files = try files()
+        let router = AndroidWiFiRouter(token: token, files: files, expiry: .distantFuture)
+        let response = router.response(to: request("/\(token)/"), now: Date())
+        XCTAssertEqual(response.status, 200)
+        guard case .data(let body) = response.body else { return XCTFail("the page") }
+        let html = String(decoding: body, as: UTF8.self)
+        for file in files {
+            XCTAssertTrue(html.contains("href=\"/\(token)/file/\(file.index)\""), "file \(file.index)")
+        }
+        XCTAssertEqual(html.components(separatedBy: "class=\"button download\"").count - 1, files.count)
+        XCTAssertTrue(html.contains("src=\"/\(token)/preview/0\""))
+        XCTAssertFalse(html.contains("/preview/1"))
+        XCTAssertTrue(html.contains("Rain &lt;b&gt;&amp; &quot;Snow&quot;"), "titles are escaped")
+        XCTAssertFalse(html.contains("<b>&"))
+        XCTAssertTrue(html.contains("id=\"all\""), "Download All")
+        XCTAssertFalse(html.contains("http://") || html.contains("https://"), "no outside resources")
+        let csp = try XCTUnwrap(response.header("Content-Security-Policy"))
+        let nonce = try XCTUnwrap(csp.components(separatedBy: "'nonce-").last?.components(separatedBy: "'").first)
+        XCTAssertTrue(html.contains("<script nonce=\"\(nonce)\">"))
+        XCTAssertFalse(html.contains(AndroidWiFiPage.noncePlaceholder))
+        XCTAssertEqual(response.header("Referrer-Policy"), "no-referrer")
+    }
+
+    func testFilesOfABatchAreNamedByTitle() {
+        var batch = AndroidExportBatch(folder: directory)
+        for (title, type, mode) in [("Rain", "scene", AndroidExportOptions.Mode.balanced), ("Rain", "scene", .preRendered), ("Sea", "video", nil)] {
+            batch.outputs.append(.init(wallpaperID: title, title: title, type: type, mode: mode,
+                                       url: directory.appending(path: "\(title).mpkg"), size: 1, previewURL: nil))
+        }
+        let files = AndroidWiFiFile.files(of: batch)
+        XCTAssertEqual(files.map(\.downloadName), ["Rain.mpkg", "Rain 2.mpkg", "Sea.mpkg"])
+        XCTAssertEqual(files.map(\.kind), [.sceneDynamic, .scenePreRendered, .video])
+        XCTAssertEqual(files.map(\.index), [0, 1, 2])
+    }
+
+    // MARK: QR code and addresses
+
+    func testTheQRCodeHoldsTheURL() throws {
+        let url = "http://192.168.1.23:52731/\(token)/"
+        let image = try XCTUnwrap(AndroidWiFiQRCode.image(for: url))
+        let detector = try XCTUnwrap(CIDetector(ofType: CIDetectorTypeQRCode, context: nil, options: [CIDetectorAccuracy: CIDetectorAccuracyHigh]))
+        let found = detector.features(in: CIImage(cgImage: image)).compactMap { ($0 as? CIQRCodeFeature)?.messageString }
+        XCTAssertEqual(found, [url])
+    }
+
+    func testOnlyLocalNetworkAddressesCount() throws {
+        for local in ["10.0.0.5", "172.16.1.1", "172.31.255.1", "192.168.1.23", "169.254.3.4"] {
+            XCTAssertTrue(AndroidLANAddress.isLocalNetwork(try XCTUnwrap(AndroidLANAddress.parse(local))), local)
+        }
+        for other in ["8.8.8.8", "172.32.0.1", "100.64.0.1", "127.0.0.1", "192.169.0.1"] {
+            XCTAssertFalse(AndroidLANAddress.isLocalNetwork(try XCTUnwrap(AndroidLANAddress.parse(other))), other)
+        }
+        let home = AndroidLANAddress(interface: "en0", displayName: "Wi-Fi", address: try XCTUnwrap(AndroidLANAddress.parse("192.168.1.23")),
+                                     netmask: 0xFFFF_FF00)
+        XCTAssertTrue(home.contains(try XCTUnwrap(AndroidLANAddress.parse("192.168.1.80"))))
+        XCTAssertFalse(home.contains(try XCTUnwrap(AndroidLANAddress.parse("192.168.2.80"))))
+        XCTAssertEqual(home.host, "192.168.1.23")
+        let wired = AndroidLANAddress(interface: "en1", displayName: nil, address: 0x0A00_0001, netmask: 0xFF00_0000)
+        XCTAssertEqual(AndroidLANAddress.order([home, wired], primary: "en1"), [wired, home], "the primary interface first")
+        XCTAssertTrue(AndroidLANAddress.current().allSatisfy { AndroidLANAddress.isLocalNetwork($0.address) })
+    }
+
+    // MARK: The listener
+
+    private func session(lifetime: TimeInterval = 60) throws -> AndroidWiFiSession {
+        AndroidWiFiSession(files: try files(), lifetime: lifetime, addresses: { [Self.loopback] })
+    }
+
+    private static func get(_ url: URL, method: String = "GET", headers: [String: String] = [:]) async throws -> (Data, HTTPURLResponse) {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.connectionProxyDictionary = [:]
+        configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
+        let session = URLSession(configuration: configuration)
+        defer { session.invalidateAndCancel() }
+        var request = URLRequest(url: url, timeoutInterval: 10)
+        request.httpMethod = method
+        for (name, value) in headers { request.setValue(value, forHTTPHeaderField: name) }
+        let (data, response) = try await session.data(for: request)
+        return (data, try XCTUnwrap(response as? HTTPURLResponse))
+    }
+
+    func testURLSessionDownloadsFromTheListener() async throws {
+        let session = try session()
+        await session.start()
+        defer { session.stop() }
+        XCTAssertEqual(session.state, .serving)
+        let base = try XCTUnwrap(session.url)
+        XCTAssertTrue(base.absoluteString.hasPrefix("http://127.0.0.1:"))
+        XCTAssertTrue(base.absoluteString.hasSuffix("/\(session.token)/"))
+
+        let (page, pageResponse) = try await Self.get(base)
+        XCTAssertEqual(pageResponse.statusCode, 200)
+        XCTAssertEqual(pageResponse.value(forHTTPHeaderField: "Content-Type"), "text/html; charset=utf-8")
+        XCTAssertEqual(String(decoding: page, as: UTF8.self).components(separatedBy: "class=\"button download\"").count - 1, 2)
+
+        let file = base.appending(path: "file/1")
+        let (whole, wholeResponse) = try await Self.get(file)
+        XCTAssertEqual(wholeResponse.statusCode, 200)
+        XCTAssertEqual(whole, try Data(contentsOf: directory.appending(path: "City.mpkg")), "every chunk, in order")
+        XCTAssertEqual(wholeResponse.value(forHTTPHeaderField: "Content-Disposition")?.hasPrefix("attachment; filename=\"City.mpkg\""), true)
+
+        let (part, partResponse) = try await Self.get(base.appending(path: "file/0"), headers: ["Range": "bytes=10-19"])
+        XCTAssertEqual(partResponse.statusCode, 206)
+        XCTAssertEqual(part, try Data(contentsOf: directory.appending(path: "Rain.mpkg"))[10...19])
+
+        let (_, preview) = try await Self.get(base.appending(path: "preview/0"))
+        XCTAssertEqual(preview.value(forHTTPHeaderField: "Content-Type"), "image/jpeg")
+
+        let wrong = try XCTUnwrap(URL(string: base.absoluteString.replacingOccurrences(of: session.token, with: String(repeating: "B", count: 22))))
+        let (_, missing) = try await Self.get(wrong.appending(path: "file/0"))
+        XCTAssertEqual(missing.statusCode, 404)
+        let (_, posted) = try await Self.get(file, method: "POST")
+        XCTAssertEqual(posted.statusCode, 405)
+
+        // The sheet's progress comes from the server's reports on the main actor.
+        try await waitUntil { session.progress[1]?.completedBy == ["127.0.0.1"] }
+        XCTAssertEqual(session.progress[1]?.position, 300_000)
+        XCTAssertEqual(session.devices, ["127.0.0.1"])
+        XCTAssertNil(session.progress[0]?.completedBy.first, "a range short of the end isn't a completed download")
+    }
+
+    func testABurstOfRequestsIsRateLimited() async throws {
+        var limits = AndroidWiFiServer.Limits()
+        limits.requestBurst = 3
+        limits.requestsPerSecond = 0.01
+        let session = AndroidWiFiSession(files: try files(), limits: limits, addresses: { [Self.loopback] })
+        await session.start()
+        defer { session.stop() }
+        let base = try XCTUnwrap(session.url)
+        var statuses: [Int] = []
+        for _ in 0..<5 { statuses.append(try await Self.get(base).1.statusCode) }
+        XCTAssertEqual(statuses, [200, 200, 200, 429, 429])
+    }
+
+    func testExpiryStopsTheListener() async throws {
+        let session = try session(lifetime: 0.5)
+        await session.start()
+        let base = try XCTUnwrap(session.url)
+        let (_, before) = try await Self.get(base)
+        XCTAssertEqual(before.statusCode, 200)
+        try await waitUntil { session.state == .stopped(.expired) }
+        XCTAssertNil(session.url)
+        do {
+            let (_, after) = try await Self.get(base)
+            XCTFail("the listener still answers: \(after.statusCode)")
+        } catch {
+            XCTAssertTrue(error is URLError, "\(error)")
+        }
+    }
+
+    func testStoppingClosesTheListenerAndANewStartHasANewToken() async throws {
+        let session = try session()
+        await session.start()
+        let first = session.token
+        let base = try XCTUnwrap(session.url)
+        session.stop()
+        XCTAssertEqual(session.state, .stopped(.closed))
+        try await Task.sleep(for: .milliseconds(200))
+        do {
+            _ = try await Self.get(base)
+            XCTFail("the listener still answers")
+        } catch {}
+        await session.start()
+        defer { session.stop() }
+        XCTAssertNotEqual(session.token, first)
+        XCTAssertEqual(session.state, .serving)
+    }
+
+    func testNoNetworkSaysSo() async throws {
+        let session = AndroidWiFiSession(files: try files(), addresses: { [] })
+        await session.start()
+        XCTAssertEqual(session.state, .noNetwork)
+        XCTAssertNil(session.url)
+    }
+
+    private func waitUntil(timeout: TimeInterval = 5, _ condition: @MainActor () -> Bool) async throws {
+        let deadline = Date().addingTimeInterval(timeout)
+        while !condition() {
+            guard Date() < deadline else { return XCTFail("timed out") }
+            try await Task.sleep(for: .milliseconds(20))
+        }
+    }
+}

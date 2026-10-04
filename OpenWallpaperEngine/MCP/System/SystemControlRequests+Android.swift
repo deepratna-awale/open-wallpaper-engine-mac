@@ -5,14 +5,60 @@ import OWEControlProtocol
 /// (`AndroidExportOptions`, `AndroidExportQueue`).
 extension SystemControlRequests {
     func exportAndroid(_ params: ControlParameters, lookup: ControlLookup) async throws -> JSONValue {
+        let request = try Self.androidRequest(params, lookup: lookup)
+        let batch = try await service.exportAndroid(request)
+        return Self.json(batch)
+    }
+
+    /// `wallpaper_id`/`wallpaper_ids` with the export's mode, options and folder.
+    static func androidRequest(_ params: ControlParameters, lookup: ControlLookup) throws -> SystemAndroidRequest {
         var ids = try params.strings("wallpaper_ids")
         if let id = try params.string("wallpaper_id") { ids.insert(id, at: 0) }
         guard !ids.isEmpty else { throw ControlError(.invalidParams, "Give wallpaper_id or wallpaper_ids.") }
         let wallpapers = try ids.map { try lookup.wallpaper($0) }
-        let request = SystemAndroidRequest(wallpapers: wallpapers, options: try Self.androidOptions(params),
-                                           outputFolder: try params.string("output_folder").map(Self.outputFolder))
-        let batch = try await service.exportAndroid(request)
-        return Self.json(batch)
+        return SystemAndroidRequest(wallpapers: wallpapers, options: try androidOptions(params),
+                                    outputFolder: try params.string("output_folder").map(outputFolder))
+    }
+
+    /// "Send over Wi-Fi": serves `package_paths` (what `export_android` wrote), or exports the
+    /// wallpapers first, on the Mac's local network until it expires.
+    func sendAndroidOverWiFi(_ params: ControlParameters, lookup: ControlLookup) async throws -> JSONValue {
+        let paths = try params.strings("package_paths")
+        let names = params.has("wallpaper_id") || params.has("wallpaper_ids")
+        guard paths.isEmpty == names else {
+            throw ControlError(.invalidParams, "Give package_paths (from export_android) or wallpaper_id / wallpaper_ids, not both.")
+        }
+        var request = SystemAndroidSendRequest(address: try params.string("address"))
+        if names {
+            request.export = try Self.androidRequest(params, lookup: lookup)
+        } else {
+            request.packages = try paths.map { path in
+                let expanded = (path as NSString).expandingTildeInPath
+                guard expanded.hasPrefix("/") else { throw ControlError(.invalidParams, "package_paths must be absolute paths.") }
+                return URL(fileURLWithPath: expanded).standardizedFileURL
+            }
+        }
+        let sent = try await service.sendAndroidOverWiFi(request)
+        let seconds = max(0, Int(sent.expiry.timeIntervalSinceNow.rounded()))
+        var message = "Serving \(sent.files.count) \(sent.files.count == 1 ? "package" : "packages") at \(sent.url.absoluteString) "
+            + "until \(sent.expiry.ISO8601Format()) (\(seconds / 60) min). Open it in the Android device's browser on the same network, "
+            + "download the files, then import them in the Wallpaper Engine app."
+        if let batch = sent.batch, !batch.skipped.isEmpty || !batch.failed.isEmpty {
+            message += " Not sent: " + (batch.skipped + batch.failed).map { "\"\($0.title)\" (\($0.reason))" }.joined(separator: ", ") + "."
+        }
+        return [
+            "url": .string(sent.url.absoluteString),
+            "expires_at": .string(sent.expiry.ISO8601Format()),
+            "expires_in_seconds": .number(Double(seconds)),
+            "addresses": .array(sent.addresses.map { .string($0) }),
+            "files": .array(sent.files.map { file in
+                ["index": .number(Double(file.index)), "title": .string(file.title), "type": .string(file.kind.rawValue),
+                 "size": .number(Double(file.size)), "path": .string(file.url.path(percentEncoded: false)),
+                 "download_name": .string(file.downloadName)]
+            }),
+            "export": sent.batch.map(Self.json) ?? .null,
+            "message": .string(message),
+        ]
     }
 
     /// The request's mode and options, checked as the sheet's controls limit them.
