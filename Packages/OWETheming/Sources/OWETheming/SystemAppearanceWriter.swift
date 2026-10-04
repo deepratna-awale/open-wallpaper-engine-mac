@@ -12,15 +12,68 @@ public protocol SystemAppearanceWriter: AnyObject {
     func post(_ change: SystemAppearanceChange)
 }
 
-/// The real writer: the current user's global preferences through CFPreferences, and the
-/// distributed notification System Settings posts.
-public final class GlobalPreferencesWriter: SystemAppearanceWriter {
+/// The current user's global preferences (`NSGlobalDomain`, any host), the store
+/// `GlobalPreferencesWriter` reads and writes. A seam, so tests check the path without the Mac's
+/// settings.
+public protocol GlobalPreferencesStore: AnyObject {
+    func copyValue(forKey key: String) -> CFPropertyList?
+    /// Stores `value`, or removes the key for nil.
+    func setValue(_ value: CFPropertyList?, forKey key: String)
+    /// Flushes to cfprefsd, which hands the new values to every process reading the domain.
+    func synchronize()
+}
+
+/// The real global domain: `kCFPreferencesAnyApplication`, the current user, any host, which is
+/// where System Settings keeps these keys (`defaults read -g` shows them). Not a `UserDefaults`
+/// suite, which would land in the app's own domain.
+public final class CFGlobalPreferencesStore: GlobalPreferencesStore {
     public init() {}
 
+    public func copyValue(forKey key: String) -> CFPropertyList? {
+        CFPreferencesCopyValue(key as CFString, kCFPreferencesAnyApplication, kCFPreferencesCurrentUser,
+                               kCFPreferencesAnyHost)
+    }
+
+    public func setValue(_ value: CFPropertyList?, forKey key: String) {
+        CFPreferencesSetValue(key as CFString, value, kCFPreferencesAnyApplication, kCFPreferencesCurrentUser,
+                              kCFPreferencesAnyHost)
+    }
+
+    public func synchronize() {
+        CFPreferencesSynchronize(kCFPreferencesAnyApplication, kCFPreferencesCurrentUser, kCFPreferencesAnyHost)
+    }
+}
+
+/// Posts a distributed notification to every app at once. A seam for the tests.
+public protocol DistributedNotificationPosting: AnyObject {
+    func post(_ name: String)
+}
+
+/// `DistributedNotificationCenter`, delivered immediately (also to suspended apps), as System
+/// Settings does.
+public final class SystemDistributedNotifications: DistributedNotificationPosting {
+    public init() {}
+
+    public func post(_ name: String) {
+        DistributedNotificationCenter.default().postNotificationName(
+            NSNotification.Name(name), object: nil, userInfo: nil, deliverImmediately: true)
+    }
+}
+
+/// The real writer: the global preferences (`CFGlobalPreferencesStore`), then the distributed
+/// notifications System Settings posts (`SystemAppearanceChange.notificationNames`).
+public final class GlobalPreferencesWriter: SystemAppearanceWriter {
+    private let store: GlobalPreferencesStore
+    private let notifications: DistributedNotificationPosting
+
+    public init(store: GlobalPreferencesStore = CFGlobalPreferencesStore(),
+                notifications: DistributedNotificationPosting = SystemDistributedNotifications()) {
+        self.store = store
+        self.notifications = notifications
+    }
+
     public func value(for key: SystemPreferenceKey) -> PreferenceValue? {
-        let stored: CFPropertyList? = CFPreferencesCopyValue(key.rawValue as CFString, kCFPreferencesAnyApplication,
-                                                             kCFPreferencesCurrentUser, kCFPreferencesAnyHost)
-        return Self.decode(stored)
+        Self.decode(store.copyValue(forKey: key.rawValue))
     }
 
     public func setValue(_ value: PreferenceValue?, for key: SystemPreferenceKey) {
@@ -30,21 +83,12 @@ public final class GlobalPreferencesWriter: SystemAppearanceWriter {
         case .string(let text): stored = text as NSString
         case nil: stored = nil
         }
-        CFPreferencesSetValue(key.rawValue as CFString, stored, kCFPreferencesAnyApplication,
-                              kCFPreferencesCurrentUser, kCFPreferencesAnyHost)
-        CFPreferencesSynchronize(kCFPreferencesAnyApplication, kCFPreferencesCurrentUser, kCFPreferencesAnyHost)
+        store.setValue(stored, forKey: key.rawValue)
+        store.synchronize()
     }
 
     public func post(_ change: SystemAppearanceChange) {
-        switch change {
-        case .colorPreferences:
-            DistributedNotificationCenter.default().postNotificationName(
-                NSNotification.Name("AppleColorPreferencesChangedNotification"), object: nil, userInfo: nil,
-                deliverImmediately: true)
-        case .iconAppearance:
-            // No public notification; the Dock reads the style when it starts (docs/theming.md).
-            break
-        }
+        change.notificationNames.forEach(notifications.post)
     }
 
     static func decode(_ stored: CFPropertyList?) -> PreferenceValue? {

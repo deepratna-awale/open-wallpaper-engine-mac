@@ -27,9 +27,47 @@ public struct OKLab: Equatable, Sendable {
     /// Chroma: how far from grey.
     public var chroma: Double { (a * a + b * b).squareRoot() }
 
+    /// The hue angle in radians.
+    public var hue: Double { atan2(b, a) }
+
+    /// The colour of `lightness`, `chroma` and `hue` (OKLCH).
+    public init(lightness: Double, chroma: Double, hue: Double) {
+        self.init(lightness: lightness, a: chroma * cos(hue), b: chroma * sin(hue))
+    }
+
+    /// The sRGB components (gamma encoded), unclamped: outside 0…1 when out of gamut.
+    public var rgb: (red: Double, green: Double, blue: Double) {
+        let l = pow(lightness + 0.3963377774 * a + 0.2158037573 * b, 3)
+        let m = pow(lightness - 0.1055613458 * a - 0.0638541728 * b, 3)
+        let s = pow(lightness - 0.0894841775 * a - 1.2914855480 * b, 3)
+        let r = 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s
+        let g = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s
+        let bl = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s
+        return (Self.encoded(r), Self.encoded(g), Self.encoded(bl))
+    }
+
+    /// Whether the colour is inside sRGB.
+    public var isInSRGBGamut: Bool {
+        let tolerance = 1e-6
+        let (r, g, b) = rgb
+        return [r, g, b].allSatisfy { $0 >= -tolerance && $0 <= 1 + tolerance }
+    }
+
+    /// The sRGB colour, clamped to the gamut.
+    public var themeColor: ThemeColor {
+        let (r, g, b) = rgb
+        return ThemeColor(red: r, green: g, blue: b)
+    }
+
     public func distance(to other: OKLab) -> Double {
         let dl = lightness - other.lightness, da = a - other.a, db = b - other.b
         return (dl * dl + da * da + db * db).squareRoot()
+    }
+
+    private static func encoded(_ value: Double) -> Double {
+        let magnitude = abs(value)
+        let encoded = magnitude <= 0.0031308 ? magnitude * 12.92 : 1.055 * pow(magnitude, 1 / 2.4) - 0.055
+        return value < 0 ? -encoded : encoded
     }
 
     private static func linear(_ value: Double) -> Double {
